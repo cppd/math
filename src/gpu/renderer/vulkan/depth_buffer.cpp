@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "graphics/vulkan/commands.h"
 #include "graphics/vulkan/create.h"
-#include "graphics/vulkan/pipeline.h"
 #include "graphics/vulkan/print.h"
 
 #include <algorithm>
@@ -38,6 +37,8 @@ constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 };
 // clang-format on
 
+constexpr VkSampleCountFlagBits SAMPLE_COUNT = VK_SAMPLE_COUNT_1_BIT;
+
 namespace gpu_vulkan
 {
 namespace
@@ -48,7 +49,7 @@ vulkan::RenderPass create_render_pass_depth(VkDevice device, VkFormat depth_form
 
         // Depth
         attachments[0].format = depth_format;
-        attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachments[0].samples = SAMPLE_COUNT;
         attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -102,7 +103,7 @@ void check_buffers(const std::vector<vulkan::DepthAttachment>& depth)
         ASSERT(std::all_of(depth.cbegin(), depth.cend(),
                            [](const vulkan::DepthAttachment& d) { return d.usage() & VK_IMAGE_USAGE_SAMPLED_BIT; }));
         ASSERT(std::all_of(depth.cbegin(), depth.cend(),
-                           [](const vulkan::DepthAttachment& d) { return d.sample_count() == VK_SAMPLE_COUNT_1_BIT; }));
+                           [](const vulkan::DepthAttachment& d) { return d.sample_count() == SAMPLE_COUNT; }));
 
         if (depth.empty())
         {
@@ -188,21 +189,18 @@ class Impl final : public RendererDepthBuffers
         std::vector<vulkan::Framebuffer> m_framebuffers;
 
         std::list<vulkan::CommandBuffers> m_command_buffers;
-        std::vector<vulkan::Pipeline> m_pipelines;
 
         //
 
         const vulkan::DepthAttachment* texture(unsigned index) const override;
+        unsigned width() const override;
+        unsigned height() const override;
+        VkRenderPass render_pass() const override;
+        VkSampleCountFlagBits sample_count() const override;
 
         std::vector<VkCommandBuffer> create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands) override;
 
         void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) override;
-
-        VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
-                                   const std::vector<const vulkan::SpecializationConstant*>& constants,
-                                   const vulkan::PipelineLayout& pipeline_layout,
-                                   const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override;
 
 public:
         Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapchain,
@@ -239,8 +237,8 @@ Impl::Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapc
                         depth_formats = DEPTH_IMAGE_FORMATS;
                 }
                 constexpr bool sampled = true;
-                m_depth_attachments.emplace_back(m_device, attachment_family_indices, depth_formats, VK_SAMPLE_COUNT_1_BIT, width,
-                                                 height, sampled);
+                m_depth_attachments.emplace_back(m_device, attachment_family_indices, depth_formats, SAMPLE_COUNT, width, height,
+                                                 sampled);
         }
 
         VkFormat depth_format = m_depth_attachments[0].format();
@@ -303,42 +301,26 @@ const vulkan::DepthAttachment* Impl::texture(unsigned index) const
         return &m_depth_attachments[index];
 }
 
-VkPipeline Impl::create_pipeline(VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
-                                 const std::vector<const vulkan::SpecializationConstant*>& constants,
-                                 const vulkan::PipelineLayout& pipeline_layout,
-                                 const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                 const std::vector<VkVertexInputAttributeDescription>& vertex_attribute)
+unsigned Impl::width() const
 {
-        ASSERT(pipeline_layout != VK_NULL_HANDLE);
         ASSERT(m_depth_attachments.size() > 0 && m_depth_attachments.size() == m_framebuffers.size());
-        ASSERT(shaders.size() == constants.size());
+        return m_depth_attachments[0].width();
+}
 
-        unsigned width = m_depth_attachments[0].width();
-        unsigned height = m_depth_attachments[0].height();
+unsigned Impl::height() const
+{
+        ASSERT(m_depth_attachments.size() > 0 && m_depth_attachments.size() == m_framebuffers.size());
+        return m_depth_attachments[0].height();
+}
 
-        vulkan::GraphicsPipelineCreateInfo info;
+VkRenderPass Impl::render_pass() const
+{
+        return m_render_pass;
+}
 
-        info.device = &m_device;
-        info.render_pass = m_render_pass;
-        info.sub_pass = 0;
-        info.sample_count = VK_SAMPLE_COUNT_1_BIT;
-        info.sample_shading = false;
-        info.pipeline_layout = pipeline_layout;
-        info.viewport_x = 0;
-        info.viewport_y = 0;
-        info.viewport_width = width;
-        info.viewport_height = height;
-        info.primitive_topology = primitive_topology;
-        info.shaders = &shaders;
-        info.constants = &constants;
-        info.binding_descriptions = &vertex_binding;
-        info.attribute_descriptions = &vertex_attribute;
-        info.depth_bias = true;
-        info.color_blend = false;
-
-        m_pipelines.push_back(vulkan::create_graphics_pipeline(info));
-
-        return m_pipelines.back();
+VkSampleCountFlagBits Impl::sample_count() const
+{
+        return SAMPLE_COUNT;
 }
 }
 

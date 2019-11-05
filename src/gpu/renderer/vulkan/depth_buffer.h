@@ -36,18 +36,15 @@ struct RendererDepthBuffers
         virtual ~RendererDepthBuffers() = default;
 
         virtual const vulkan::DepthAttachment* texture(unsigned index) const = 0;
+        virtual unsigned width() const = 0;
+        virtual unsigned height() const = 0;
+        virtual VkRenderPass render_pass() const = 0;
+        virtual VkSampleCountFlagBits sample_count() const = 0;
 
         virtual std::vector<VkCommandBuffer> create_command_buffers(
                 const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
 
         virtual void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) = 0;
-
-        virtual VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology,
-                                           const std::vector<const vulkan::Shader*>& shaders,
-                                           const std::vector<const vulkan::SpecializationConstant*>& constants,
-                                           const vulkan::PipelineLayout& pipeline_layout,
-                                           const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                           const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) = 0;
 };
 
 enum class RendererDepthBufferCount

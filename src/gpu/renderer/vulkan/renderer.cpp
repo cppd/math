@@ -390,8 +390,8 @@ class Impl final : public Renderer
         void delete_shadow_buffers()
         {
                 m_shadow_command_buffers.clear();
-                m_shadow_buffers.reset();
                 m_shadow_program.delete_pipeline();
+                m_shadow_buffers.reset();
         }
 
         void create_shadow_buffers()
@@ -413,7 +413,8 @@ class Impl final : public Renderer
 
                 m_triangles_shared_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
 
-                m_shadow_program.create_pipeline(m_shadow_buffers.get());
+                m_shadow_program.create_pipeline(m_shadow_buffers->render_pass(), m_shadow_buffers->sample_count(), 0, 0,
+                                                 m_shadow_buffers->width(), m_shadow_buffers->height());
         }
 
         void set_matrices()

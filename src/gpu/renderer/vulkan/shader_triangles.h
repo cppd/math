@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "depth_buffer.h"
-
 #include "com/color/color.h"
 #include "com/matrix.h"
 #include "com/matrix_alg.h"
@@ -281,7 +279,7 @@ class RendererShadowProgram final
         vulkan::PipelineLayout m_pipeline_layout;
         vulkan::VertexShader m_vertex_shader;
         vulkan::FragmentShader m_fragment_shader;
-        VkPipeline m_pipeline;
+        vulkan::Pipeline m_pipeline;
 
 public:
         RendererShadowProgram(const vulkan::Device& device);
@@ -293,7 +291,8 @@ public:
         RendererShadowProgram(RendererShadowProgram&&) = default;
         ~RendererShadowProgram() = default;
 
-        void create_pipeline(RendererDepthBuffers* render_buffers);
+        void create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, unsigned x, unsigned y, unsigned width,
+                             unsigned height);
         void delete_pipeline();
 
         VkDescriptorSetLayout descriptor_set_layout() const;
