@@ -41,10 +41,7 @@ struct RendererDepthBuffers
         virtual VkRenderPass render_pass() const = 0;
         virtual VkSampleCountFlagBits sample_count() const = 0;
 
-        virtual std::vector<VkCommandBuffer> create_command_buffers(
-                const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
-
-        virtual void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) = 0;
+        virtual vulkan::CommandBuffers create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
 };
 
 enum class RendererDepthBufferCount
@@ -56,6 +53,7 @@ enum class RendererDepthBufferCount
 std::unique_ptr<RendererDepthBuffers> create_renderer_depth_buffers(RendererDepthBufferCount buffer_count,
                                                                     const vulkan::Swapchain& swapchain,
                                                                     const std::unordered_set<uint32_t>& attachment_family_indices,
-                                                                    VkCommandPool command_pool, const vulkan::Device& device,
-                                                                    unsigned width, unsigned height, double zoom);
+                                                                    VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                                                                    const vulkan::Device& device, unsigned width, unsigned height,
+                                                                    double zoom);
 }

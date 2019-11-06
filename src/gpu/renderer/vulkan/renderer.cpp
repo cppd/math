@@ -104,8 +104,10 @@ class Impl final : public Renderer
 
         RenderBuffers3D* m_render_buffers = nullptr;
         std::vector<VkCommandBuffer> m_render_command_buffers;
+
         std::unique_ptr<RendererDepthBuffers> m_shadow_buffers;
-        std::vector<VkCommandBuffer> m_shadow_command_buffers;
+        std::optional<vulkan::Pipeline> m_shadow_pipeline;
+        std::optional<vulkan::CommandBuffers> m_shadow_command_buffers;
 
         const vulkan::ImageWithMemory* m_object_image = nullptr;
 
@@ -302,12 +304,13 @@ class Impl final : public Renderer
                 }
                 else
                 {
-                        ASSERT(m_shadow_command_buffers.size() == m_swapchain->image_views().size() ||
-                               m_shadow_command_buffers.size() == 1);
+                        ASSERT(m_shadow_command_buffers->count() == m_swapchain->image_views().size() ||
+                               m_shadow_command_buffers->count() == 1);
 
-                        const unsigned shadow_index = m_shadow_command_buffers.size() == 1 ? 0 : image_index;
+                        const unsigned shadow_index = m_shadow_command_buffers->count() == 1 ? 0 : image_index;
 
-                        vulkan::queue_submit(m_shadow_command_buffers[shadow_index], m_shadow_signal_semaphore, graphics_queue);
+                        vulkan::queue_submit((*m_shadow_command_buffers)[shadow_index], m_shadow_signal_semaphore,
+                                             graphics_queue);
 
                         //
 
@@ -389,8 +392,8 @@ class Impl final : public Renderer
 
         void delete_shadow_buffers()
         {
-                m_shadow_command_buffers.clear();
-                m_shadow_program.delete_pipeline();
+                m_shadow_command_buffers.reset();
+                m_shadow_pipeline.reset();
                 m_shadow_buffers.reset();
         }
 
@@ -407,14 +410,15 @@ class Impl final : public Renderer
                 //
 
                 constexpr RendererDepthBufferCount buffer_count = RendererDepthBufferCount::One;
-                m_shadow_buffers =
-                        create_renderer_depth_buffers(buffer_count, *m_swapchain, {m_graphics_queue.family_index()},
-                                                      m_graphics_command_pool, m_device, m_width, m_height, m_shadow_zoom);
+                m_shadow_buffers = create_renderer_depth_buffers(buffer_count, *m_swapchain, {m_graphics_queue.family_index()},
+                                                                 m_graphics_command_pool, m_graphics_queue, m_device, m_width,
+                                                                 m_height, m_shadow_zoom);
 
                 m_triangles_shared_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
 
-                m_shadow_program.create_pipeline(m_shadow_buffers->render_pass(), m_shadow_buffers->sample_count(), 0, 0,
-                                                 m_shadow_buffers->width(), m_shadow_buffers->height());
+                m_shadow_pipeline =
+                        m_shadow_program.create_pipeline(m_shadow_buffers->render_pass(), m_shadow_buffers->sample_count(), 0, 0,
+                                                         m_shadow_buffers->width(), m_shadow_buffers->height());
         }
 
         void set_matrices()
@@ -491,7 +495,7 @@ class Impl final : public Renderer
                 ShadowInfo info;
 
                 info.triangles_pipeline_layout = m_shadow_program.pipeline_layout();
-                info.triangles_pipeline = m_shadow_program.pipeline();
+                info.triangles_pipeline = *m_shadow_pipeline;
                 info.triangles_set = m_shadow_memory.descriptor_set();
                 info.triangles_set_number = m_shadow_memory.set_number();
 
@@ -520,7 +524,7 @@ class Impl final : public Renderer
 
                 ASSERT(m_shadow_buffers);
 
-                m_shadow_buffers->delete_command_buffers(&m_shadow_command_buffers);
+                m_shadow_command_buffers.reset();
                 m_shadow_command_buffers = m_shadow_buffers->create_command_buffers(
                         std::bind(&Impl::draw_shadow_commands, this, std::placeholders::_1));
         }
@@ -541,10 +545,10 @@ class Impl final : public Renderer
 
                 //
 
-                ASSERT(m_render_buffers && m_shadow_buffers);
+                ASSERT(m_render_buffers);
 
                 m_render_buffers->delete_command_buffers(&m_render_command_buffers);
-                m_shadow_buffers->delete_command_buffers(&m_shadow_command_buffers);
+                m_shadow_command_buffers.reset();
         }
 
 public:

@@ -38,6 +38,7 @@ constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 // clang-format on
 
 constexpr VkSampleCountFlagBits SAMPLE_COUNT = VK_SAMPLE_COUNT_1_BIT;
+constexpr VkImageLayout IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 namespace gpu_vulkan
 {
@@ -55,7 +56,7 @@ vulkan::RenderPass create_render_pass_depth(VkDevice device, VkFormat depth_form
         attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachments[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        attachments[0].finalLayout = IMAGE_LAYOUT;
 
         VkAttachmentReference depth_reference = {};
         depth_reference.attachment = 0;
@@ -141,29 +142,6 @@ std::string buffer_info(const std::vector<vulkan::DepthAttachment>& depth, doubl
         return oss.str();
 }
 
-void delete_buffers(std::list<vulkan::CommandBuffers>* command_buffers, std::vector<VkCommandBuffer>* buffers)
-{
-        ASSERT(command_buffers && buffers);
-
-        if (buffers->size() == 0)
-        {
-                return;
-        }
-
-        // Буферов не предполагается много, поэтому достаточно искать перебором
-        for (auto iter = command_buffers->cbegin(); iter != command_buffers->cend(); ++iter)
-        {
-                if (iter->buffers() == *buffers)
-                {
-                        command_buffers->erase(iter);
-                        buffers->clear();
-                        return;
-                }
-        }
-
-        error_fatal("Depth command buffers not found");
-}
-
 unsigned compute_buffer_count(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapchain)
 {
         switch (buffer_count)
@@ -188,8 +166,6 @@ class Impl final : public RendererDepthBuffers
         vulkan::RenderPass m_render_pass;
         std::vector<vulkan::Framebuffer> m_framebuffers;
 
-        std::list<vulkan::CommandBuffers> m_command_buffers;
-
         //
 
         const vulkan::DepthAttachment* texture(unsigned index) const override;
@@ -198,14 +174,12 @@ class Impl final : public RendererDepthBuffers
         VkRenderPass render_pass() const override;
         VkSampleCountFlagBits sample_count() const override;
 
-        std::vector<VkCommandBuffer> create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands) override;
-
-        void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) override;
+        vulkan::CommandBuffers create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands) override;
 
 public:
         Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-             const std::unordered_set<uint32_t>& attachment_family_indices, VkCommandPool command_pool,
-             const vulkan::Device& device, unsigned width, unsigned height, double zoom);
+             const std::unordered_set<uint32_t>& attachment_family_indices, VkCommandPool graphics_command_pool,
+             VkQueue graphics_queue, const vulkan::Device& device, unsigned width, unsigned height, double zoom);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
@@ -213,9 +187,9 @@ public:
 };
 
 Impl::Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-           const std::unordered_set<uint32_t>& attachment_family_indices, VkCommandPool command_pool,
-           const vulkan::Device& device, unsigned width, unsigned height, double zoom)
-        : m_device(device), m_command_pool(command_pool)
+           const std::unordered_set<uint32_t>& attachment_family_indices, VkCommandPool graphics_command_pool,
+           VkQueue graphics_queue, const vulkan::Device& device, unsigned width, unsigned height, double zoom)
+        : m_device(device), m_command_pool(graphics_command_pool)
 {
         ASSERT(attachment_family_indices.size() > 0);
 
@@ -238,7 +212,7 @@ Impl::Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapc
                 }
                 constexpr bool sampled = true;
                 m_depth_attachments.emplace_back(m_device, attachment_family_indices, depth_formats, SAMPLE_COUNT, width, height,
-                                                 sampled);
+                                                 sampled, graphics_command_pool, graphics_queue, IMAGE_LAYOUT);
         }
 
         VkFormat depth_format = m_depth_attachments[0].format();
@@ -260,20 +234,17 @@ Impl::Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapc
         LOG(buffer_info(m_depth_attachments, zoom, width, height));
 }
 
-std::vector<VkCommandBuffer> Impl::create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands)
+vulkan::CommandBuffers Impl::create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands)
 {
         ASSERT(m_depth_attachments.size() > 0 && m_depth_attachments.size() == m_framebuffers.size());
-
-        unsigned width = m_depth_attachments[0].width();
-        unsigned height = m_depth_attachments[0].height();
 
         std::array<VkClearValue, 1> clear_values;
         clear_values[0] = vulkan::depth_stencil_clear_value();
 
         vulkan::CommandBufferCreateInfo info;
         info.device = m_device;
-        info.width = width;
-        info.height = height;
+        info.width = m_depth_attachments[0].width();
+        info.height = m_depth_attachments[0].height();
         info.render_pass = m_render_pass;
         info.framebuffers.emplace(m_framebuffers);
         info.command_pool = m_command_pool;
@@ -281,14 +252,7 @@ std::vector<VkCommandBuffer> Impl::create_command_buffers(const std::function<vo
         info.before_render_pass_commands = std::nullopt;
         info.render_pass_commands = commands;
 
-        m_command_buffers.push_back(vulkan::create_command_buffers(info));
-
-        return m_command_buffers.back().buffers();
-}
-
-void Impl::delete_command_buffers(std::vector<VkCommandBuffer>* buffers)
-{
-        delete_buffers(&m_command_buffers, buffers);
+        return vulkan::create_command_buffers(info);
 }
 
 const vulkan::DepthAttachment* Impl::texture(unsigned index) const
@@ -327,10 +291,11 @@ VkSampleCountFlagBits Impl::sample_count() const
 std::unique_ptr<RendererDepthBuffers> create_renderer_depth_buffers(RendererDepthBufferCount buffer_count,
                                                                     const vulkan::Swapchain& swapchain,
                                                                     const std::unordered_set<uint32_t>& attachment_family_indices,
-                                                                    VkCommandPool command_pool, const vulkan::Device& device,
-                                                                    unsigned width, unsigned height, double zoom)
+                                                                    VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                                                                    const vulkan::Device& device, unsigned width, unsigned height,
+                                                                    double zoom)
 {
-        return std::make_unique<Impl>(buffer_count, swapchain, attachment_family_indices, command_pool, device, width, height,
-                                      zoom);
+        return std::make_unique<Impl>(buffer_count, swapchain, attachment_family_indices, graphics_command_pool, graphics_queue,
+                                      device, width, height, zoom);
 }
 }

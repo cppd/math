@@ -587,14 +587,8 @@ VkPipelineLayout RendererShadowProgram::pipeline_layout() const
         return m_pipeline_layout;
 }
 
-VkPipeline RendererShadowProgram::pipeline() const
-{
-        ASSERT(m_pipeline != VK_NULL_HANDLE);
-        return m_pipeline;
-}
-
-void RendererShadowProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, unsigned x, unsigned y,
-                                            unsigned width, unsigned height)
+vulkan::Pipeline RendererShadowProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, unsigned x,
+                                                        unsigned y, unsigned width, unsigned height)
 {
         ASSERT(sample_count = VK_SAMPLE_COUNT_1_BIT);
         ASSERT(x < width && y < height);
@@ -628,11 +622,6 @@ void RendererShadowProgram::create_pipeline(VkRenderPass render_pass, VkSampleCo
                 RendererTrianglesVertex::shadow_attribute_descriptions();
         info.attribute_descriptions = &attribute_descriptions;
 
-        m_pipeline = vulkan::create_graphics_pipeline(info);
-}
-
-void RendererShadowProgram::delete_pipeline()
-{
-        m_pipeline = vulkan::Pipeline();
+        return vulkan::create_graphics_pipeline(info);
 }
 }

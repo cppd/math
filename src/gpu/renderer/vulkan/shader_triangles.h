@@ -279,7 +279,6 @@ class RendererShadowProgram final
         vulkan::PipelineLayout m_pipeline_layout;
         vulkan::VertexShader m_vertex_shader;
         vulkan::FragmentShader m_fragment_shader;
-        vulkan::Pipeline m_pipeline;
 
 public:
         RendererShadowProgram(const vulkan::Device& device);
@@ -291,12 +290,10 @@ public:
         RendererShadowProgram(RendererShadowProgram&&) = default;
         ~RendererShadowProgram() = default;
 
-        void create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, unsigned x, unsigned y, unsigned width,
-                             unsigned height);
-        void delete_pipeline();
+        vulkan::Pipeline create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, unsigned x, unsigned y,
+                                         unsigned width, unsigned height);
 
         VkDescriptorSetLayout descriptor_set_layout() const;
         VkPipelineLayout pipeline_layout() const;
-        VkPipeline pipeline() const;
 };
 }
