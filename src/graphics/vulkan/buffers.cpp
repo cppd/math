@@ -286,8 +286,8 @@ void copy_buffer_to_image(VkDevice device, VkCommandPool command_pool, VkQueue q
         end_commands(queue, command_buffer);
 }
 
-void cmd_transition_texture_layout(VkCommandBuffer command_buffer, VkImage image, VkImageLayout old_layout,
-                                   VkImageLayout new_layout)
+void cmd_transition_texture_layout(VkImageAspectFlags aspect_mask, VkCommandBuffer command_buffer, VkImage image,
+                                   VkImageLayout old_layout, VkImageLayout new_layout)
 {
         VkImageMemoryBarrier barrier = {};
 
@@ -301,7 +301,7 @@ void cmd_transition_texture_layout(VkCommandBuffer command_buffer, VkImage image
 
         barrier.image = image;
 
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.aspectMask = aspect_mask;
         barrier.subresourceRange.baseMipLevel = 0;
         barrier.subresourceRange.levelCount = 1;
         barrier.subresourceRange.baseArrayLayer = 0;
@@ -343,14 +343,26 @@ void cmd_transition_texture_layout(VkCommandBuffer command_buffer, VkImage image
         vkCmdPipelineBarrier(command_buffer, source_stage, destination_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
-void transition_texture_layout(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkImage image,
-                               VkImageLayout old_layout, VkImageLayout new_layout)
+void transition_texture_layout_color(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkImage image,
+                                     VkImageLayout old_layout, VkImageLayout new_layout)
 {
         CommandBuffer command_buffer(device, command_pool);
 
         begin_commands(command_buffer);
 
-        cmd_transition_texture_layout(command_buffer, image, old_layout, new_layout);
+        cmd_transition_texture_layout(VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, old_layout, new_layout);
+
+        end_commands(queue, command_buffer);
+}
+
+void transition_texture_layout_depth(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkImage image,
+                                     VkImageLayout old_layout, VkImageLayout new_layout)
+{
+        CommandBuffer command_buffer(device, command_pool);
+
+        begin_commands(command_buffer);
+
+        cmd_transition_texture_layout(VK_IMAGE_ASPECT_DEPTH_BIT, command_buffer, image, old_layout, new_layout);
 
         end_commands(queue, command_buffer);
 }
@@ -397,13 +409,13 @@ void staging_image_copy(const Device& device, const CommandPool& graphics_comman
 
         copy_host_to_device(staging_device_memory, 0, pixels.data(), data_size);
 
-        transition_texture_layout(device, graphics_command_pool, graphics_queue, image, old_image_layout,
-                                  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        transition_texture_layout_color(device, graphics_command_pool, graphics_queue, image, old_image_layout,
+                                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
         copy_buffer_to_image(device, transfer_command_pool, transfer_queue, image, staging_buffer, width, height);
 
-        transition_texture_layout(device, graphics_command_pool, graphics_queue, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                                  new_image_layout);
+        transition_texture_layout_color(device, graphics_command_pool, graphics_queue, image,
+                                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, new_image_layout);
 }
 
 ImageView create_image_view(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect_flags)
@@ -673,8 +685,8 @@ ImageWithMemory::ImageWithMemory(const Device& device, const CommandPool& graphi
 
         init(device, family_indices, format_candidates, width, height, storage);
 
-        transition_texture_layout(device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
-                                  image_layout);
+        transition_texture_layout_color(device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
+                                        image_layout);
 }
 
 VkImage ImageWithMemory::image() const
@@ -779,6 +791,19 @@ DepthAttachment::DepthAttachment(const Device& device, const std::unordered_set<
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
         m_sample_count = samples;
+}
+
+DepthAttachment::DepthAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices,
+                                 const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width,
+                                 uint32_t height, bool sampled, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                                 VkImageLayout image_layout)
+        : DepthAttachment(device, family_indices, formats, samples, width, height, sampled)
+{
+        if (image_layout != VK_IMAGE_LAYOUT_UNDEFINED)
+        {
+                transition_texture_layout_depth(device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
+                                                image_layout);
+        }
 }
 
 VkImage DepthAttachment::image() const

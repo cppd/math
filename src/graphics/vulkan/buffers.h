@@ -232,6 +232,9 @@ public:
         DepthAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices,
                         const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width, uint32_t height,
                         bool sampled);
+        DepthAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices,
+                        const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width, uint32_t height,
+                        bool sampled, VkCommandPool graphics_command_pool, VkQueue graphics_queue, VkImageLayout image_layout);
 
         DepthAttachment(const DepthAttachment&) = delete;
         DepthAttachment& operator=(const DepthAttachment&) = delete;
