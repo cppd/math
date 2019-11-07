@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/matrix.h"
 #include "com/vec.h"
 #include "gpu/com/glsl.h"
-#include "gpu/vulkan_interfaces.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
@@ -115,8 +114,6 @@ class RendererPointsProgram final
         vulkan::VertexShader m_vertex_shader_0d;
         vulkan::VertexShader m_vertex_shader_1d;
         vulkan::FragmentShader m_fragment_shader;
-        VkPipeline m_pipeline_0d;
-        VkPipeline m_pipeline_1d;
 
 public:
         RendererPointsProgram(const vulkan::Device& device);
@@ -128,12 +125,11 @@ public:
         RendererPointsProgram(RendererPointsProgram&&) = default;
         ~RendererPointsProgram() = default;
 
-        void create_pipelines(RenderBuffers3D* render_buffers, unsigned x, unsigned y, unsigned width, unsigned height);
-        void delete_pipelines();
+        vulkan::Pipeline create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
+                                         VkPrimitiveTopology primitive_topology, unsigned x, unsigned y, unsigned width,
+                                         unsigned height);
 
         VkDescriptorSetLayout descriptor_set_layout() const;
         VkPipelineLayout pipeline_layout() const;
-        VkPipeline pipeline_0d() const;
-        VkPipeline pipeline_1d() const;
 };
 }

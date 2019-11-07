@@ -544,24 +544,38 @@ VkPipelineLayout RendererTrianglesProgram::pipeline_layout() const
         return m_pipeline_layout;
 }
 
-VkPipeline RendererTrianglesProgram::pipeline() const
+vulkan::Pipeline RendererTrianglesProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
+                                                           bool sample_shading, unsigned x, unsigned y, unsigned width,
+                                                           unsigned height)
 {
-        ASSERT(m_pipeline != VK_NULL_HANDLE);
-        return m_pipeline;
-}
+        vulkan::GraphicsPipelineCreateInfo info;
 
-void RendererTrianglesProgram::create_pipeline(RenderBuffers3D* render_buffers, bool sample_shading, unsigned x, unsigned y,
-                                               unsigned width, unsigned height)
-{
-        m_pipeline = render_buffers->create_pipeline(
-                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, sample_shading, {&m_vertex_shader, &m_geometry_shader, &m_fragment_shader},
-                {nullptr, nullptr, nullptr}, m_pipeline_layout, RendererTrianglesVertex::binding_descriptions(),
-                RendererTrianglesVertex::triangles_attribute_descriptions(), x, y, width, height);
-}
+        info.device = &m_device;
+        info.render_pass = render_pass;
+        info.sub_pass = 0;
+        info.sample_count = sample_count;
+        info.sample_shading = sample_shading;
+        info.pipeline_layout = m_pipeline_layout;
+        info.viewport_x = x;
+        info.viewport_y = y;
+        info.viewport_width = width;
+        info.viewport_height = height;
+        info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        info.depth_bias = false;
+        info.color_blend = false;
 
-void RendererTrianglesProgram::delete_pipeline()
-{
-        m_pipeline = VK_NULL_HANDLE;
+        const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader, &m_geometry_shader, &m_fragment_shader};
+        const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr, nullptr};
+        const std::vector<VkVertexInputBindingDescription> binding_descriptions = RendererTrianglesVertex::binding_descriptions();
+        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
+                RendererTrianglesVertex::triangles_attribute_descriptions();
+
+        info.shaders = &shaders;
+        info.constants = &constants;
+        info.binding_descriptions = &binding_descriptions;
+        info.attribute_descriptions = &attribute_descriptions;
+
+        return vulkan::create_graphics_pipeline(info);
 }
 
 //

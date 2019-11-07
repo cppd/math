@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "graphics/vulkan/create.h"
+#include "graphics/vulkan/pipeline.h"
 
 namespace gpu_vulkan
 {
@@ -217,35 +218,49 @@ VkPipelineLayout RendererPointsProgram::pipeline_layout() const
         return m_pipeline_layout;
 }
 
-VkPipeline RendererPointsProgram::pipeline_0d() const
+vulkan::Pipeline RendererPointsProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
+                                                        VkPrimitiveTopology primitive_topology, unsigned x, unsigned y,
+                                                        unsigned width, unsigned height)
 {
-        ASSERT(m_pipeline_0d != VK_NULL_HANDLE);
-        return m_pipeline_0d;
-}
+        vulkan::GraphicsPipelineCreateInfo info;
 
-VkPipeline RendererPointsProgram::pipeline_1d() const
-{
-        ASSERT(m_pipeline_1d != VK_NULL_HANDLE);
-        return m_pipeline_1d;
-}
+        info.device = &m_device;
+        info.render_pass = render_pass;
+        info.sub_pass = 0;
+        info.sample_count = sample_count;
+        info.sample_shading = false;
+        info.pipeline_layout = m_pipeline_layout;
+        info.viewport_x = x;
+        info.viewport_y = y;
+        info.viewport_width = width;
+        info.viewport_height = height;
+        info.primitive_topology = primitive_topology;
+        info.depth_bias = false;
+        info.color_blend = false;
 
-void RendererPointsProgram::create_pipelines(RenderBuffers3D* render_buffers, unsigned x, unsigned y, unsigned width,
-                                             unsigned height)
-{
-        m_pipeline_0d = render_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false,
-                                                        {&m_vertex_shader_0d, &m_fragment_shader}, {nullptr, nullptr},
-                                                        m_pipeline_layout, RendererPointsVertex::binding_descriptions(),
-                                                        RendererPointsVertex::attribute_descriptions(), x, y, width, height);
+        std::vector<const vulkan::Shader*> shaders;
+        if (primitive_topology == VK_PRIMITIVE_TOPOLOGY_POINT_LIST)
+        {
+                shaders = {&m_vertex_shader_0d, &m_fragment_shader};
+        }
+        else if (primitive_topology == VK_PRIMITIVE_TOPOLOGY_LINE_LIST)
+        {
+                shaders = {&m_vertex_shader_1d, &m_fragment_shader};
+        }
+        else
+        {
+                error_fatal("Unsupported primitive topology for renderer points program");
+        }
+        const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
+        const std::vector<VkVertexInputBindingDescription> binding_descriptions = RendererPointsVertex::binding_descriptions();
+        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
+                RendererPointsVertex::attribute_descriptions();
 
-        m_pipeline_1d = render_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_LINE_LIST, false,
-                                                        {&m_vertex_shader_1d, &m_fragment_shader}, {nullptr, nullptr},
-                                                        m_pipeline_layout, RendererPointsVertex::binding_descriptions(),
-                                                        RendererPointsVertex::attribute_descriptions(), x, y, width, height);
-}
+        info.shaders = &shaders;
+        info.constants = &constants;
+        info.binding_descriptions = &binding_descriptions;
+        info.attribute_descriptions = &attribute_descriptions;
 
-void RendererPointsProgram::delete_pipelines()
-{
-        m_pipeline_0d = VK_NULL_HANDLE;
-        m_pipeline_1d = VK_NULL_HANDLE;
+        return vulkan::create_graphics_pipeline(info);
 }
 }

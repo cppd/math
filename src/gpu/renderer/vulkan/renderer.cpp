@@ -103,7 +103,10 @@ class Impl final : public Renderer
         RendererPointsMemory m_points_memory;
 
         RenderBuffers3D* m_render_buffers = nullptr;
-        std::vector<VkCommandBuffer> m_render_command_buffers;
+        std::optional<vulkan::Pipeline> m_render_triangles_pipeline;
+        std::optional<vulkan::Pipeline> m_render_points_pipeline;
+        std::optional<vulkan::Pipeline> m_render_lines_pipeline;
+        std::optional<vulkan::CommandBuffers> m_render_command_buffers;
 
         std::unique_ptr<RendererDepthBuffers> m_shadow_buffers;
         std::optional<vulkan::Pipeline> m_shadow_pipeline;
@@ -293,14 +296,15 @@ class Impl final : public Renderer
                 ASSERT(graphics_queue.family_index() == m_graphics_queue.family_index());
 
                 ASSERT(image_index < m_swapchain->image_views().size());
-                ASSERT(m_render_command_buffers.size() == m_swapchain->image_views().size() ||
-                       m_render_command_buffers.size() == 1);
+                ASSERT(m_render_command_buffers->count() == m_swapchain->image_views().size() ||
+                       m_render_command_buffers->count() == 1);
 
-                const unsigned render_index = m_render_command_buffers.size() == 1 ? 0 : image_index;
+                const unsigned render_index = m_render_command_buffers->count() == 1 ? 0 : image_index;
 
                 if (!m_show_shadow || !m_storage.object() || !m_storage.object()->has_shadow())
                 {
-                        vulkan::queue_submit(m_render_command_buffers[render_index], m_render_signal_semaphore, graphics_queue);
+                        vulkan::queue_submit((*m_render_command_buffers)[render_index], m_render_signal_semaphore,
+                                             graphics_queue);
                 }
                 else
                 {
@@ -315,7 +319,8 @@ class Impl final : public Renderer
                         //
 
                         vulkan::queue_submit(m_shadow_signal_semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                             m_render_command_buffers[render_index], m_render_signal_semaphore, graphics_queue);
+                                             (*m_render_command_buffers)[render_index], m_render_signal_semaphore,
+                                             graphics_queue);
                 }
 
                 return m_render_signal_semaphore;
@@ -364,9 +369,10 @@ class Impl final : public Renderer
 
         void delete_render_buffers()
         {
-                m_render_command_buffers.clear();
-                m_points_program.delete_pipelines();
-                m_triangles_program.delete_pipeline();
+                m_render_command_buffers.reset();
+                m_render_triangles_pipeline.reset();
+                m_render_points_pipeline.reset();
+                m_render_lines_pipeline.reset();
         }
 
         void create_render_buffers()
@@ -386,8 +392,15 @@ class Impl final : public Renderer
                 m_triangles_shared_memory.set_object_image(m_object_image);
                 m_points_memory.set_object_image(m_object_image);
 
-                m_triangles_program.create_pipeline(m_render_buffers, m_sample_shading, m_x, m_y, m_width, m_height);
-                m_points_program.create_pipelines(m_render_buffers, m_x, m_y, m_width, m_height);
+                m_render_triangles_pipeline =
+                        m_triangles_program.create_pipeline(m_render_buffers->render_pass(), m_render_buffers->sample_count(),
+                                                            m_sample_shading, m_x, m_y, m_width, m_height);
+                m_render_points_pipeline =
+                        m_points_program.create_pipeline(m_render_buffers->render_pass(), m_render_buffers->sample_count(),
+                                                         VK_PRIMITIVE_TOPOLOGY_POINT_LIST, m_x, m_y, m_width, m_height);
+                m_render_lines_pipeline =
+                        m_points_program.create_pipeline(m_render_buffers->render_pass(), m_render_buffers->sample_count(),
+                                                         VK_PRIMITIVE_TOPOLOGY_LINE_LIST, m_x, m_y, m_width, m_height);
         }
 
         void delete_shadow_buffers()
@@ -464,17 +477,17 @@ class Impl final : public Renderer
                 DrawInfo info;
 
                 info.triangles_pipeline_layout = m_triangles_program.pipeline_layout();
-                info.triangles_pipeline = m_triangles_program.pipeline();
+                info.triangles_pipeline = *m_render_triangles_pipeline;
                 info.triangles_shared_set = m_triangles_shared_memory.descriptor_set();
                 info.triangles_shared_set_number = m_triangles_shared_memory.set_number();
 
                 info.points_pipeline_layout = m_points_program.pipeline_layout();
-                info.points_pipeline = m_points_program.pipeline_0d();
+                info.points_pipeline = *m_render_points_pipeline;
                 info.points_set = m_points_memory.descriptor_set();
                 info.points_set_number = m_points_memory.set_number();
 
                 info.lines_pipeline_layout = m_points_program.pipeline_layout();
-                info.lines_pipeline = m_points_program.pipeline_1d();
+                info.lines_pipeline = *m_render_lines_pipeline;
                 info.lines_set = m_points_memory.descriptor_set();
                 info.lines_set_number = m_points_memory.set_number();
 
@@ -510,7 +523,7 @@ class Impl final : public Renderer
 
                 ASSERT(m_render_buffers);
 
-                m_render_buffers->delete_command_buffers(&m_render_command_buffers);
+                m_render_command_buffers.reset();
                 m_render_command_buffers = m_render_buffers->create_command_buffers(
                         m_clear_color, std::bind(&Impl::before_render_pass_commands, this, std::placeholders::_1),
                         std::bind(&Impl::draw_commands, this, std::placeholders::_1));
@@ -547,7 +560,7 @@ class Impl final : public Renderer
 
                 ASSERT(m_render_buffers);
 
-                m_render_buffers->delete_command_buffers(&m_render_command_buffers);
+                m_render_command_buffers.reset();
                 m_shadow_command_buffers.reset();
         }
 

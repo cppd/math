@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/matrix_alg.h"
 #include "com/vec.h"
 #include "gpu/com/glsl.h"
-#include "gpu/vulkan_interfaces.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
@@ -249,7 +248,6 @@ class RendererTrianglesProgram final
         vulkan::VertexShader m_vertex_shader;
         vulkan::GeometryShader m_geometry_shader;
         vulkan::FragmentShader m_fragment_shader;
-        VkPipeline m_pipeline;
 
 public:
         RendererTrianglesProgram(const vulkan::Device& device);
@@ -261,14 +259,12 @@ public:
         RendererTrianglesProgram(RendererTrianglesProgram&&) = default;
         ~RendererTrianglesProgram() = default;
 
-        void create_pipeline(RenderBuffers3D* render_buffers, bool sample_shading, unsigned x, unsigned y, unsigned width,
-                             unsigned height);
-        void delete_pipeline();
+        vulkan::Pipeline create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, bool sample_shading,
+                                         unsigned x, unsigned y, unsigned width, unsigned height);
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
         VkDescriptorSetLayout descriptor_set_layout_material() const;
         VkPipelineLayout pipeline_layout() const;
-        VkPipeline pipeline() const;
 };
 
 class RendererShadowProgram final
