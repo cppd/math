@@ -78,6 +78,7 @@ function(SetCompilerWarnings source_files)
                         -Wno-weak-vtables
 
                         -Wno-undefined-func-template
+                        -Wno-ctad-maybe-unsupported
 
                         # Из-за файлов Qt отключить для всех файлов
                         # с последующим включением для файлов проекта
