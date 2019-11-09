@@ -43,6 +43,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <thread>
 
+namespace
+{
 template <size_t N>
 constexpr int MAX_FACETS_PER_LINE = 1;
 template <>
@@ -90,8 +92,6 @@ constexpr bool str_equal(const char* s1, const char* s2)
 static_assert(str_equal("ab", "ab") && str_equal("", "") && !str_equal("", "ab") && !str_equal("ab", "") &&
               !str_equal("ab", "ac") && !str_equal("ba", "ca") && !str_equal("a", "xyz"));
 
-namespace
-{
 std::string obj_type_name(size_t N)
 {
         return "OBJ-" + to_string(N);

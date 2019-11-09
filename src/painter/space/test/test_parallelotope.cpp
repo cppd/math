@@ -37,6 +37,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <utility>
 
+namespace
+{
 constexpr bool PRINT_ALL = false;
 
 constexpr int POINT_COUNT = 10000;
@@ -59,8 +61,6 @@ constexpr double MAX_DOT_PRODUCT_OF_EDGES<double> = 0.9;
 template <typename Parallelotope>
 using VectorP = Vector<Parallelotope::DIMENSION, typename Parallelotope::DataType>;
 
-namespace
-{
 void print_separator()
 {
         if (PRINT_ALL)
