@@ -84,7 +84,7 @@ public:
                 ASSERT(!m_working);
 
                 m_working = true;
-                m_thread = std::thread([ this, func = std::forward<F>(function) ]() noexcept {
+                m_thread = std::thread([this, func = std::forward<F>(function)]() noexcept {
                         try
                         {
                                 std::string message;

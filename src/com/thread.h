@@ -278,8 +278,7 @@ public:
                         ASSERT(m_thread_id == std::this_thread::get_id());
                         try
                         {
-                                auto lambda = [&, thread_num = m_threads.size(), f = std::forward<F>(function) ]() noexcept
-                                {
+                                auto lambda = [&, thread_num = m_threads.size(), f = std::forward<F>(function)]() noexcept {
                                         try
                                         {
                                                 try
