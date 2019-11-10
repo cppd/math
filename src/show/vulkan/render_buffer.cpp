@@ -213,13 +213,13 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
 
         std::vector<VkClearValue> m_clear_values;
 
-        vulkan::RenderPass m_render_pass_depth;
-        std::vector<vulkan::Framebuffer> m_framebuffers_depth;
-        std::vector<VkFramebuffer> m_framebuffers_depth_handles;
+        vulkan::RenderPass m_3d_render_pass;
+        std::vector<vulkan::Framebuffer> m_3d_framebuffers;
+        std::vector<VkFramebuffer> m_3d_framebuffers_handles;
 
-        vulkan::RenderPass m_render_pass;
-        std::vector<vulkan::Framebuffer> m_framebuffers;
-        std::vector<VkFramebuffer> m_framebuffers_handles;
+        vulkan::RenderPass m_2d_render_pass;
+        std::vector<vulkan::Framebuffer> m_2d_framebuffers;
+        std::vector<VkFramebuffer> m_2d_framebuffers_handles;
 
         vulkan::RenderPass m_resolve_render_pass;
         std::vector<vulkan::Framebuffer> m_resolve_framebuffers;
@@ -353,7 +353,7 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
 
         //
 
-        m_render_pass_depth = show_vulkan::render_pass_color_depth(m_device, swapchain.format(), depth_format, sample_count);
+        m_3d_render_pass = show_vulkan::render_pass_color_depth(m_device, swapchain.format(), depth_format, sample_count);
 
         attachments.resize(2);
         for (unsigned i = 0; i < buffer_count; ++i)
@@ -361,23 +361,23 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
                 attachments[0] = m_color_attachments[i].image_view();
                 attachments[1] = m_depth_attachments[i].image_view();
 
-                m_framebuffers_depth.push_back(vulkan::create_framebuffer(m_device, m_render_pass_depth, swapchain.width(),
-                                                                          swapchain.height(), attachments));
-                m_framebuffers_depth_handles.push_back(m_framebuffers_depth.back());
+                m_3d_framebuffers.push_back(vulkan::create_framebuffer(m_device, m_3d_render_pass, swapchain.width(),
+                                                                       swapchain.height(), attachments));
+                m_3d_framebuffers_handles.push_back(m_3d_framebuffers.back());
         }
 
         //
 
-        m_render_pass = show_vulkan::render_pass_color(m_device, swapchain.format(), sample_count);
+        m_2d_render_pass = show_vulkan::render_pass_color(m_device, swapchain.format(), sample_count);
 
         attachments.resize(1);
         for (unsigned i = 0; i < buffer_count; ++i)
         {
                 attachments[0] = m_color_attachments[i].image_view();
 
-                m_framebuffers.push_back(
-                        vulkan::create_framebuffer(m_device, m_render_pass, swapchain.width(), swapchain.height(), attachments));
-                m_framebuffers_handles.push_back(m_framebuffers.back());
+                m_2d_framebuffers.push_back(vulkan::create_framebuffer(m_device, m_2d_render_pass, swapchain.width(),
+                                                                       swapchain.height(), attachments));
+                m_2d_framebuffers_handles.push_back(m_2d_framebuffers.back());
         }
 
         //
@@ -475,8 +475,8 @@ vulkan::CommandBuffers Impl::create_command_buffers_3d(
         info.device = m_device;
         info.width = m_depth_attachments[0].width();
         info.height = m_depth_attachments[0].height();
-        info.render_pass = m_render_pass_depth;
-        info.framebuffers = &m_framebuffers_depth_handles;
+        info.render_pass = m_3d_render_pass;
+        info.framebuffers = &m_3d_framebuffers_handles;
         info.command_pool = m_command_pool;
         info.before_render_pass_commands = before_render_pass_commands;
         info.render_pass_commands = commands;
@@ -490,7 +490,7 @@ vulkan::CommandBuffers Impl::create_command_buffers_3d(
 
 VkRenderPass Impl::render_pass_3d() const
 {
-        return m_render_pass_depth;
+        return m_3d_render_pass;
 }
 
 VkSampleCountFlagBits Impl::sample_count_3d() const
@@ -508,8 +508,8 @@ vulkan::CommandBuffers Impl::create_command_buffers_2d(
         info.device = m_device;
         info.width = m_depth_attachments[0].width();
         info.height = m_depth_attachments[0].height();
-        info.render_pass = m_render_pass;
-        info.framebuffers = &m_framebuffers_handles;
+        info.render_pass = m_2d_render_pass;
+        info.framebuffers = &m_2d_framebuffers_handles;
         info.command_pool = m_command_pool;
         info.before_render_pass_commands = before_render_pass_commands;
         info.render_pass_commands = commands;
@@ -519,7 +519,7 @@ vulkan::CommandBuffers Impl::create_command_buffers_2d(
 
 VkRenderPass Impl::render_pass_2d() const
 {
-        return m_render_pass;
+        return m_2d_render_pass;
 }
 
 VkSampleCountFlagBits Impl::sample_count_2d() const
