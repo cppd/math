@@ -196,16 +196,9 @@ class Impl2D : public gpu_vulkan::RenderBuffers2D
         virtual std::vector<VkCommandBuffer> create_command_buffers_2d(
                 const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
                 const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
-
         virtual void delete_command_buffers_2d(std::vector<VkCommandBuffer>* buffers) = 0;
-
-        virtual VkPipeline create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
-                                              const std::vector<const vulkan::Shader*>& shaders,
-                                              const std::vector<const vulkan::SpecializationConstant*>& constants,
-                                              VkPipelineLayout pipeline_layout,
-                                              const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                              const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
-                                              unsigned y, unsigned width, unsigned height) = 0;
+        virtual VkRenderPass render_pass_2d() const = 0;
+        virtual VkSampleCountFlagBits sample_count_2d() const = 0;
 
         //
 
@@ -215,22 +208,17 @@ class Impl2D : public gpu_vulkan::RenderBuffers2D
         {
                 return create_command_buffers_2d(before_render_pass_commands, commands);
         }
-
         void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) override final
         {
                 delete_command_buffers_2d(buffers);
         }
-
-        VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
-                                   const std::vector<const vulkan::Shader*>& shaders,
-                                   const std::vector<const vulkan::SpecializationConstant*>& constants,
-                                   VkPipelineLayout pipeline_layout,
-                                   const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x, unsigned y,
-                                   unsigned width, unsigned height) override final
+        VkRenderPass render_pass() const override final
         {
-                return create_pipeline_2d(primitive_topology, sample_shading, color_blend, shaders, constants, pipeline_layout,
-                                          vertex_binding, vertex_attribute, x, y, width, height);
+                return render_pass_2d();
+        }
+        VkSampleCountFlagBits sample_count() const override final
+        {
+                return sample_count_2d();
         }
 
 protected:
@@ -257,7 +245,6 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
         std::vector<vulkan::Framebuffer> m_framebuffers;
 
         std::list<vulkan::CommandBuffers> m_command_buffers;
-        std::vector<vulkan::Pipeline> m_pipelines;
 
         vulkan::RenderPass m_resolve_render_pass;
         std::vector<vulkan::Framebuffer> m_resolve_framebuffers;
@@ -297,24 +284,12 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
                 const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
                 const std::function<void(VkCommandBuffer buffer)>& commands) override;
 
-        //
-
         void delete_command_buffers_2d(std::vector<VkCommandBuffer>* buffers) override;
-
-        //
-
-        VkPipeline create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
-                                      const std::vector<const vulkan::Shader*>& shaders,
-                                      const std::vector<const vulkan::SpecializationConstant*>& constants,
-                                      VkPipelineLayout pipeline_layout,
-                                      const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
-                                      unsigned y, unsigned width, unsigned height) override;
-
-        //
 
         VkRenderPass render_pass_3d() const override;
         VkSampleCountFlagBits sample_count_3d() const override;
+        VkRenderPass render_pass_2d() const override;
+        VkSampleCountFlagBits sample_count_2d() const override;
 
 public:
         Impl(show_vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
@@ -619,40 +594,14 @@ VkSampleCountFlagBits Impl::sample_count_3d() const
         return m_color_attachments.size() > 0 ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
 }
 
-VkPipeline Impl::create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
-                                    const std::vector<const vulkan::Shader*>& shaders,
-                                    const std::vector<const vulkan::SpecializationConstant*>& constants,
-                                    VkPipelineLayout pipeline_layout,
-                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
-                                    unsigned y, unsigned width, unsigned height)
+VkRenderPass Impl::render_pass_2d() const
 {
-        ASSERT(pipeline_layout != VK_NULL_HANDLE);
-        ASSERT(m_depth_attachments.size() > 0);
+        return m_render_pass;
+}
 
-        vulkan::GraphicsPipelineCreateInfo info;
-
-        info.device = &m_device;
-        info.render_pass = m_render_pass;
-        info.sub_pass = 0;
-        info.sample_count = m_color_attachments.size() > 0 ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
-        info.sample_shading = sample_shading;
-        info.pipeline_layout = pipeline_layout;
-        info.viewport_x = x;
-        info.viewport_y = y;
-        info.viewport_width = width;
-        info.viewport_height = height;
-        info.primitive_topology = primitive_topology;
-        info.shaders = &shaders;
-        info.constants = &constants;
-        info.binding_descriptions = &vertex_binding;
-        info.attribute_descriptions = &vertex_attribute;
-        info.depth_bias = false;
-        info.color_blend = color_blend;
-
-        m_pipelines.push_back(vulkan::create_graphics_pipeline(info));
-
-        return m_pipelines.back();
+VkSampleCountFlagBits Impl::sample_count_2d() const
+{
+        return m_color_attachments.size() > 0 ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
 }
 }
 

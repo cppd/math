@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/font/vertices.h"
 #include "graphics/vulkan/create.h"
+#include "graphics/vulkan/pipeline.h"
 
 namespace gpu_vulkan
 {
@@ -211,23 +212,37 @@ VkPipelineLayout TextShowProgram::pipeline_layout() const
         return m_pipeline_layout;
 }
 
-VkPipeline TextShowProgram::pipeline() const
+vulkan::Pipeline TextShowProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
+                                                  bool sample_shading, unsigned x, unsigned y, unsigned width, unsigned height)
 {
-        ASSERT(m_pipeline != VK_NULL_HANDLE);
-        return m_pipeline;
-}
+        vulkan::GraphicsPipelineCreateInfo info;
 
-void TextShowProgram::create_pipeline(RenderBuffers2D* render_buffers, bool sample_shading, unsigned x, unsigned y,
-                                      unsigned width, unsigned height)
-{
-        m_pipeline = render_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, sample_shading, true /*color_blend*/,
-                                                     {&m_vertex_shader, &m_fragment_shader}, {nullptr, nullptr},
-                                                     m_pipeline_layout, TextShowVertex::binding_descriptions(),
-                                                     TextShowVertex::attribute_descriptions(), x, y, width, height);
-}
+        info.device = &m_device;
+        info.render_pass = render_pass;
+        info.sub_pass = 0;
+        info.sample_count = sample_count;
+        info.sample_shading = sample_shading;
+        info.pipeline_layout = m_pipeline_layout;
+        info.viewport_x = x;
+        info.viewport_y = y;
+        info.viewport_width = width;
+        info.viewport_height = height;
+        info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        info.depth_bias = false;
+        info.color_blend = true;
 
-void TextShowProgram::delete_pipeline()
-{
-        m_pipeline = VK_NULL_HANDLE;
+        const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader, &m_fragment_shader};
+        info.shaders = &shaders;
+
+        const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
+        info.constants = &constants;
+
+        const std::vector<VkVertexInputBindingDescription> binding_descriptions = TextShowVertex::binding_descriptions();
+        info.binding_descriptions = &binding_descriptions;
+
+        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions = TextShowVertex::attribute_descriptions();
+        info.attribute_descriptions = &attribute_descriptions;
+
+        return vulkan::create_graphics_pipeline(info);
 }
 }

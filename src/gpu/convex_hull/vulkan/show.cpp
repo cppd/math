@@ -61,6 +61,7 @@ class Impl final : public ConvexHullShow
         ConvexHullShowMemory m_memory;
         std::optional<vulkan::BufferWithMemory> m_points;
         vulkan::BufferWithMemory m_indirect_buffer;
+        std::optional<vulkan::Pipeline> m_pipeline;
         std::vector<VkCommandBuffer> m_command_buffers;
 
         std::unique_ptr<ConvexHullCompute> m_compute;
@@ -74,7 +75,7 @@ class Impl final : public ConvexHullShow
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline());
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
 
                 vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
                                         ConvexHullShowMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
@@ -106,7 +107,8 @@ class Impl final : public ConvexHullShow
                 mat4 t = translate(vec3(0.5, 0.5, 0));
                 m_memory.set_matrix(p * t);
 
-                m_program.create_pipeline(render_buffers, m_sample_shading, x, y, width, height);
+                m_pipeline = m_program.create_pipeline(render_buffers->render_pass(), render_buffers->sample_count(),
+                                                       m_sample_shading, x, y, width, height);
 
                 m_compute->create_buffers(objects, x, y, width, height, *m_points, m_indirect_buffer, m_family_index);
 
@@ -122,7 +124,7 @@ class Impl final : public ConvexHullShow
                 //
 
                 m_command_buffers.clear();
-
+                m_pipeline.reset();
                 m_compute->delete_buffers();
                 m_points.reset();
         }

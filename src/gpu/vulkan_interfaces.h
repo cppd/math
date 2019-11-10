@@ -54,12 +54,7 @@ public:
 
         virtual void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) = 0;
 
-        virtual VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
-                                           const std::vector<const vulkan::Shader*>& shaders,
-                                           const std::vector<const vulkan::SpecializationConstant*>& constants,
-                                           VkPipelineLayout pipeline_layout,
-                                           const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                           const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
-                                           unsigned y, unsigned width, unsigned height) = 0;
+        virtual VkRenderPass render_pass() const = 0;
+        virtual VkSampleCountFlagBits sample_count() const = 0;
 };
 }

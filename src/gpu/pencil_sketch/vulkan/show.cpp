@@ -63,6 +63,7 @@ class Impl final : public PencilSketchShow
         std::unique_ptr<vulkan::BufferWithMemory> m_vertices;
         vulkan::Sampler m_sampler;
         std::unique_ptr<vulkan::ImageWithMemory> m_image;
+        std::optional<vulkan::Pipeline> m_pipeline;
         std::vector<VkCommandBuffer> m_command_buffers;
 
         std::unique_ptr<PencilSketchCompute> m_compute;
@@ -73,7 +74,7 @@ class Impl final : public PencilSketchShow
 
                 //
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline());
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
 
                 vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
                                         PencilSketchShowMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
@@ -101,7 +102,8 @@ class Impl final : public PencilSketchShow
 
                 m_memory.set_image(m_sampler, *m_image);
 
-                m_program.create_pipeline(render_buffers, x, y, width, height);
+                m_pipeline = m_program.create_pipeline(render_buffers->render_pass(), render_buffers->sample_count(), x, y, width,
+                                                       height);
 
                 m_compute->create_buffers(m_sampler, input, objects, x, y, width, height, *m_image);
 
@@ -117,7 +119,7 @@ class Impl final : public PencilSketchShow
                 //
 
                 m_command_buffers.clear();
-                m_program.delete_pipeline();
+                m_pipeline.reset();
                 m_compute->delete_buffers();
                 m_image.reset();
         }

@@ -106,6 +106,7 @@ class Impl final : public TextShow
         std::optional<vulkan::BufferWithMemory> m_vertex_buffer;
         vulkan::BufferWithMemory m_indirect_buffer;
         RenderBuffers2D* m_render_buffers = nullptr;
+        std::optional<vulkan::Pipeline> m_pipeline;
         std::vector<VkCommandBuffer> m_command_buffers;
 
         uint32_t m_graphics_family_index;
@@ -121,7 +122,7 @@ class Impl final : public TextShow
 
                 ASSERT(m_vertex_buffer && m_vertex_buffer->size() > 0);
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline());
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
 
                 vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
                                         TextShowMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
@@ -143,7 +144,8 @@ class Impl final : public TextShow
 
                 m_render_buffers = render_buffers;
 
-                m_program.create_pipeline(m_render_buffers, m_sample_shading, x, y, width, height);
+                m_pipeline = m_program.create_pipeline(m_render_buffers->render_pass(), m_render_buffers->sample_count(),
+                                                       m_sample_shading, x, y, width, height);
 
                 m_command_buffers = m_render_buffers->create_command_buffers(
                         std::nullopt, std::bind(&Impl::draw_commands, this, std::placeholders::_1));
@@ -165,7 +167,7 @@ class Impl final : public TextShow
                 //
 
                 m_command_buffers.clear();
-                m_program.delete_pipeline();
+                m_pipeline.reset();
         }
 
         VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index,

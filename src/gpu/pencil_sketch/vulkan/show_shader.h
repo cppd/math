@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/matrix.h"
-#include "gpu/vulkan_interfaces.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
@@ -76,7 +75,6 @@ class PencilSketchShowProgram final
         vulkan::PipelineLayout m_pipeline_layout;
         vulkan::VertexShader m_vertex_shader;
         vulkan::FragmentShader m_fragment_shader;
-        VkPipeline m_pipeline;
 
 public:
         PencilSketchShowProgram(const vulkan::Device& device);
@@ -88,11 +86,10 @@ public:
         PencilSketchShowProgram(PencilSketchShowProgram&&) = default;
         ~PencilSketchShowProgram() = default;
 
-        void create_pipeline(RenderBuffers2D* render_buffers, unsigned x, unsigned y, unsigned width, unsigned height);
-        void delete_pipeline();
+        vulkan::Pipeline create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, unsigned x, unsigned y,
+                                         unsigned width, unsigned height);
 
         VkDescriptorSetLayout descriptor_set_layout() const;
         VkPipelineLayout pipeline_layout() const;
-        VkPipeline pipeline() const;
 };
 }
