@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "render_pass.h"
 
+#include <array>
+
 namespace show_vulkan
 {
 #if 0
