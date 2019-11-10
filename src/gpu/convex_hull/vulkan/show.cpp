@@ -62,7 +62,7 @@ class Impl final : public ConvexHullShow
         std::optional<vulkan::BufferWithMemory> m_points;
         vulkan::BufferWithMemory m_indirect_buffer;
         std::optional<vulkan::Pipeline> m_pipeline;
-        std::vector<VkCommandBuffer> m_command_buffers;
+        std::optional<vulkan::CommandBuffers> m_command_buffers;
 
         std::unique_ptr<ConvexHullCompute> m_compute;
 
@@ -123,7 +123,7 @@ class Impl final : public ConvexHullShow
 
                 //
 
-                m_command_buffers.clear();
+                m_command_buffers.reset();
                 m_pipeline.reset();
                 m_compute->delete_buffers();
                 m_points.reset();
@@ -142,11 +142,11 @@ class Impl final : public ConvexHullShow
 
                 //
 
-                ASSERT(m_command_buffers.size() == 1 || image_index < m_command_buffers.size());
+                ASSERT(m_command_buffers->count() == 1 || image_index < m_command_buffers->count());
 
-                const unsigned buffer_index = m_command_buffers.size() == 1 ? 0 : image_index;
+                const unsigned buffer_index = m_command_buffers->count() == 1 ? 0 : image_index;
 
-                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, m_command_buffers[buffer_index],
+                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[buffer_index],
                                      m_semaphore, queue);
 
                 return m_semaphore;

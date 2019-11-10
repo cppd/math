@@ -124,29 +124,6 @@ std::string buffer_info(const std::vector<vulkan::ColorAttachment>& color, const
         return oss.str();
 }
 
-void delete_buffers(std::list<vulkan::CommandBuffers>* command_buffers, std::vector<VkCommandBuffer>* buffers)
-{
-        ASSERT(command_buffers && buffers);
-
-        if (buffers->size() == 0)
-        {
-                return;
-        }
-
-        // Буферов не предполагается много, поэтому достаточно искать перебором
-        for (auto iter = command_buffers->cbegin(); iter != command_buffers->cend(); ++iter)
-        {
-                if (iter->buffers() == *buffers)
-                {
-                        command_buffers->erase(iter);
-                        buffers->clear();
-                        return;
-                }
-        }
-
-        error_fatal("Command buffers not found");
-}
-
 unsigned compute_buffer_count(show_vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain)
 {
         switch (buffer_count)
@@ -193,24 +170,19 @@ protected:
 
 class Impl2D : public gpu_vulkan::RenderBuffers2D
 {
-        virtual std::vector<VkCommandBuffer> create_command_buffers_2d(
+        virtual vulkan::CommandBuffers create_command_buffers_2d(
                 const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
                 const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
-        virtual void delete_command_buffers_2d(std::vector<VkCommandBuffer>* buffers) = 0;
         virtual VkRenderPass render_pass_2d() const = 0;
         virtual VkSampleCountFlagBits sample_count_2d() const = 0;
 
         //
 
-        std::vector<VkCommandBuffer> create_command_buffers(
+        vulkan::CommandBuffers create_command_buffers(
                 const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
                 const std::function<void(VkCommandBuffer buffer)>& commands) override final
         {
                 return create_command_buffers_2d(before_render_pass_commands, commands);
-        }
-        void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) override final
-        {
-                delete_command_buffers_2d(buffers);
         }
         VkRenderPass render_pass() const override final
         {
@@ -244,11 +216,9 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
         std::vector<vulkan::Framebuffer> m_framebuffers_depth;
         std::vector<vulkan::Framebuffer> m_framebuffers;
 
-        std::list<vulkan::CommandBuffers> m_command_buffers;
-
         vulkan::RenderPass m_resolve_render_pass;
         std::vector<vulkan::Framebuffer> m_resolve_framebuffers;
-        std::vector<VkCommandBuffer> m_resolve_command_buffers;
+        vulkan::CommandBuffers m_resolve_command_buffers;
         std::vector<vulkan::Semaphore> m_resolve_signal_semaphores;
 
         void create_color_buffer_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
@@ -279,15 +249,12 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
                 const Color& clear_color,
                 const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
                 const std::function<void(VkCommandBuffer buffer)>& commands) override;
-
-        std::vector<VkCommandBuffer> create_command_buffers_2d(
-                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
-                const std::function<void(VkCommandBuffer buffer)>& commands) override;
-
-        void delete_command_buffers_2d(std::vector<VkCommandBuffer>* buffers) override;
-
         VkRenderPass render_pass_3d() const override;
         VkSampleCountFlagBits sample_count_3d() const override;
+
+        vulkan::CommandBuffers create_command_buffers_2d(
+                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
+                const std::function<void(VkCommandBuffer buffer)>& commands) override;
         VkRenderPass render_pass_2d() const override;
         VkSampleCountFlagBits sample_count_2d() const override;
 
@@ -510,7 +477,17 @@ vulkan::CommandBuffers Impl::create_command_buffers_3d(
         return vulkan::create_command_buffers(info);
 }
 
-std::vector<VkCommandBuffer> Impl::create_command_buffers_2d(
+VkRenderPass Impl::render_pass_3d() const
+{
+        return m_render_pass_depth;
+}
+
+VkSampleCountFlagBits Impl::sample_count_3d() const
+{
+        return m_color_attachments.size() > 0 ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
+}
+
+vulkan::CommandBuffers Impl::create_command_buffers_2d(
         const std::optional<std::function<void(VkCommandBuffer command_buffer)>>& before_render_pass_commands,
         const std::function<void(VkCommandBuffer buffer)>& commands)
 {
@@ -526,16 +503,24 @@ std::vector<VkCommandBuffer> Impl::create_command_buffers_2d(
         info.before_render_pass_commands = before_render_pass_commands;
         info.render_pass_commands = commands;
 
-        m_command_buffers.push_back(vulkan::create_command_buffers(info));
+        return vulkan::create_command_buffers(info);
+}
 
-        return m_command_buffers.back().buffers();
+VkRenderPass Impl::render_pass_2d() const
+{
+        return m_render_pass;
+}
+
+VkSampleCountFlagBits Impl::sample_count_2d() const
+{
+        return m_color_attachments.size() > 0 ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
 }
 
 void Impl::create_resolve_command_buffers()
 {
         ASSERT(m_depth_attachments.size() > 0);
 
-        delete_buffers(&m_command_buffers, &m_resolve_command_buffers);
+        m_resolve_command_buffers = vulkan::CommandBuffers();
 
         if (m_color_attachments.empty())
         {
@@ -550,16 +535,14 @@ void Impl::create_resolve_command_buffers()
         info.framebuffers.emplace(m_resolve_framebuffers);
         info.command_pool = m_command_pool;
 
-        m_command_buffers.push_back(vulkan::create_command_buffers(info));
-
-        m_resolve_command_buffers = m_command_buffers.back().buffers();
+        m_resolve_command_buffers = vulkan::create_command_buffers(info);
 }
 
 VkSemaphore Impl::resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSemaphore swapchain_image_semaphore,
                                        VkSemaphore wait_semaphore, unsigned image_index) const
 {
         ASSERT(graphics_queue.family_index() == m_command_pool.family_index());
-        ASSERT(image_index < m_resolve_command_buffers.size());
+        ASSERT(image_index < m_resolve_command_buffers.count());
         ASSERT(m_resolve_signal_semaphores.size() == 1 || image_index < m_resolve_signal_semaphores.size());
 
         const unsigned semaphore_index = m_resolve_signal_semaphores.size() == 1 ? 0 : image_index;
@@ -577,31 +560,6 @@ VkSemaphore Impl::resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSe
                              m_resolve_signal_semaphores[semaphore_index], graphics_queue);
 
         return m_resolve_signal_semaphores[semaphore_index];
-}
-
-void Impl::delete_command_buffers_2d(std::vector<VkCommandBuffer>* buffers)
-{
-        delete_buffers(&m_command_buffers, buffers);
-}
-
-VkRenderPass Impl::render_pass_3d() const
-{
-        return m_render_pass_depth;
-}
-
-VkSampleCountFlagBits Impl::sample_count_3d() const
-{
-        return m_color_attachments.size() > 0 ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
-}
-
-VkRenderPass Impl::render_pass_2d() const
-{
-        return m_render_pass;
-}
-
-VkSampleCountFlagBits Impl::sample_count_2d() const
-{
-        return m_color_attachments.size() > 0 ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
 }
 }
 

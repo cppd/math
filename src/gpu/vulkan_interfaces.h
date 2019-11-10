@@ -48,11 +48,9 @@ protected:
         virtual ~RenderBuffers2D() = default;
 
 public:
-        virtual std::vector<VkCommandBuffer> create_command_buffers(
+        virtual vulkan::CommandBuffers create_command_buffers(
                 const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
                 const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
-
-        virtual void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) = 0;
 
         virtual VkRenderPass render_pass() const = 0;
         virtual VkSampleCountFlagBits sample_count() const = 0;

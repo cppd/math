@@ -64,7 +64,7 @@ class Impl final : public PencilSketchShow
         vulkan::Sampler m_sampler;
         std::unique_ptr<vulkan::ImageWithMemory> m_image;
         std::optional<vulkan::Pipeline> m_pipeline;
-        std::vector<VkCommandBuffer> m_command_buffers;
+        std::optional<vulkan::CommandBuffers> m_command_buffers;
 
         std::unique_ptr<PencilSketchCompute> m_compute;
 
@@ -118,7 +118,7 @@ class Impl final : public PencilSketchShow
 
                 //
 
-                m_command_buffers.clear();
+                m_command_buffers.reset();
                 m_pipeline.reset();
                 m_compute->delete_buffers();
                 m_image.reset();
@@ -131,11 +131,11 @@ class Impl final : public PencilSketchShow
                 //
 
                 ASSERT(queue.family_index() == m_graphics_family_index);
-                ASSERT(m_command_buffers.size() == 1 || image_index < m_command_buffers.size());
+                ASSERT(m_command_buffers->count() == 1 || image_index < m_command_buffers->count());
 
-                const unsigned buffer_index = m_command_buffers.size() == 1 ? 0 : image_index;
+                const unsigned buffer_index = m_command_buffers->count() == 1 ? 0 : image_index;
 
-                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, m_command_buffers[buffer_index],
+                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[buffer_index],
                                      m_signal_semaphore, queue);
 
                 return m_signal_semaphore;

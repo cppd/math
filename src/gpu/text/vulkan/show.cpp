@@ -107,7 +107,7 @@ class Impl final : public TextShow
         vulkan::BufferWithMemory m_indirect_buffer;
         RenderBuffers2D* m_render_buffers = nullptr;
         std::optional<vulkan::Pipeline> m_pipeline;
-        std::vector<VkCommandBuffer> m_command_buffers;
+        std::optional<vulkan::CommandBuffers> m_command_buffers;
 
         uint32_t m_graphics_family_index;
 
@@ -166,7 +166,7 @@ class Impl final : public TextShow
 
                 //
 
-                m_command_buffers.clear();
+                m_command_buffers.reset();
                 m_pipeline.reset();
         }
 
@@ -190,7 +190,7 @@ class Impl final : public TextShow
                 {
                         vulkan::queue_wait_idle(queue);
 
-                        m_render_buffers->delete_command_buffers(&m_command_buffers);
+                        m_command_buffers.reset();
 
                         m_vertex_buffer.emplace(vulkan::BufferMemoryType::HostVisible, m_device,
                                                 std::unordered_set({m_graphics_family_index}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -211,12 +211,12 @@ class Impl final : public TextShow
 
                 //
 
-                ASSERT(m_command_buffers.size() == 1 || image_index < m_command_buffers.size());
+                ASSERT(m_command_buffers->count() == 1 || image_index < m_command_buffers->count());
 
-                const unsigned buffer_index = m_command_buffers.size() == 1 ? 0 : image_index;
+                const unsigned buffer_index = m_command_buffers->count() == 1 ? 0 : image_index;
 
                 vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                                     m_command_buffers[buffer_index], m_semaphore, queue);
+                                     (*m_command_buffers)[buffer_index], m_semaphore, queue);
 
                 return m_semaphore;
         }
