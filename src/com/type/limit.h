@@ -123,12 +123,11 @@ public:
         static constexpr int radix = std::numeric_limits<T>::radix;
 };
 
-template <>
-class limits<unsigned __int128, std::enable_if_t<!std::numeric_limits<unsigned __int128>::is_specialized>>
+template <typename T>
+class limits<T, std::enable_if_t<std::is_same_v<T, unsigned __int128> && !std::numeric_limits<unsigned __int128>::is_specialized>>
 {
-        static_assert(!std::numeric_limits<unsigned __int128>::is_specialized);
-
-        using T = unsigned __int128;
+        static_assert(!std::numeric_limits<T>::is_specialized);
+        static_assert(std::is_same_v<T, unsigned __int128>);
 
 public:
         static constexpr T max()
@@ -144,12 +143,11 @@ public:
         static constexpr int radix = 2;
 };
 
-template <>
-class limits<signed __int128, std::enable_if_t<!std::numeric_limits<signed __int128>::is_specialized>>
+template <typename T>
+class limits<T, std::enable_if_t<std::is_same_v<T, signed __int128> && !std::numeric_limits<signed __int128>::is_specialized>>
 {
-        static_assert(!std::numeric_limits<signed __int128>::is_specialized);
-
-        using T = signed __int128;
+        static_assert(!std::numeric_limits<T>::is_specialized);
+        static_assert(std::is_same_v<T, signed __int128>);
 
 public:
         static constexpr T max()
@@ -165,12 +163,11 @@ public:
         static constexpr int radix = 2;
 };
 
-template <>
-class limits<__float128, std::enable_if_t<!std::numeric_limits<__float128>::is_specialized>>
+template <typename T>
+class limits<T, std::enable_if_t<std::is_same_v<T, __float128> && !std::numeric_limits<__float128>::is_specialized>>
 {
-        static_assert(!std::numeric_limits<__float128>::is_specialized);
-
-        using T = __float128;
+        static_assert(!std::numeric_limits<T>::is_specialized);
+        static_assert(std::is_same_v<T, __float128>);
 
         // epsilon = strtoflt128("1.92592994438723585305597794258492732e-34", nullptr)
         // max = strtoflt128("1.18973149535723176508575932662800702e4932", nullptr)
