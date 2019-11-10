@@ -211,13 +211,19 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
         std::vector<vulkan::DepthAttachment> m_depth_attachments;
         std::vector<vulkan::ColorAttachment> m_color_attachments;
 
+        std::vector<VkClearValue> m_clear_values;
+
         vulkan::RenderPass m_render_pass_depth;
-        vulkan::RenderPass m_render_pass;
         std::vector<vulkan::Framebuffer> m_framebuffers_depth;
+        std::vector<VkFramebuffer> m_framebuffers_depth_handles;
+
+        vulkan::RenderPass m_render_pass;
         std::vector<vulkan::Framebuffer> m_framebuffers;
+        std::vector<VkFramebuffer> m_framebuffers_handles;
 
         vulkan::RenderPass m_resolve_render_pass;
         std::vector<vulkan::Framebuffer> m_resolve_framebuffers;
+        std::vector<VkFramebuffer> m_resolve_framebuffers_handles;
         vulkan::CommandBuffers m_resolve_command_buffers;
         std::vector<vulkan::Semaphore> m_resolve_signal_semaphores;
 
@@ -357,6 +363,7 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
 
                 m_framebuffers_depth.push_back(vulkan::create_framebuffer(m_device, m_render_pass_depth, swapchain.width(),
                                                                           swapchain.height(), attachments));
+                m_framebuffers_depth_handles.push_back(m_framebuffers_depth.back());
         }
 
         //
@@ -370,6 +377,7 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
 
                 m_framebuffers.push_back(
                         vulkan::create_framebuffer(m_device, m_render_pass, swapchain.width(), swapchain.height(), attachments));
+                m_framebuffers_handles.push_back(m_framebuffers.back());
         }
 
         //
@@ -384,12 +392,16 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
 
                 m_resolve_framebuffers.push_back(vulkan::create_framebuffer(m_device, m_resolve_render_pass, swapchain.width(),
                                                                             swapchain.height(), attachments));
+                m_resolve_framebuffers_handles.push_back(m_resolve_framebuffers.back());
         }
 
         for (unsigned i = 0; i < buffer_count; ++i)
         {
                 m_resolve_signal_semaphores.emplace_back(m_device);
         }
+
+        m_clear_values.resize(2);
+        m_clear_values[1] = vulkan::depth_stencil_clear_value();
 }
 
 std::vector<VkImage> Impl::images() const
@@ -464,15 +476,14 @@ vulkan::CommandBuffers Impl::create_command_buffers_3d(
         info.width = m_depth_attachments[0].width();
         info.height = m_depth_attachments[0].height();
         info.render_pass = m_render_pass_depth;
-        info.framebuffers.emplace(m_framebuffers_depth);
+        info.framebuffers = &m_framebuffers_depth_handles;
         info.command_pool = m_command_pool;
         info.before_render_pass_commands = before_render_pass_commands;
         info.render_pass_commands = commands;
 
-        std::array<VkClearValue, 2> clear_values;
-        clear_values[0] = vulkan::color_clear_value(m_swapchain_format, m_swapchain_color_space, clear_color);
-        clear_values[1] = vulkan::depth_stencil_clear_value();
-        info.clear_values.emplace(clear_values);
+        ASSERT(m_clear_values.size() == 2);
+        m_clear_values[0] = vulkan::color_clear_value(m_swapchain_format, m_swapchain_color_space, clear_color);
+        info.clear_values = &m_clear_values;
 
         return vulkan::create_command_buffers(info);
 }
@@ -498,7 +509,7 @@ vulkan::CommandBuffers Impl::create_command_buffers_2d(
         info.width = m_depth_attachments[0].width();
         info.height = m_depth_attachments[0].height();
         info.render_pass = m_render_pass;
-        info.framebuffers.emplace(m_framebuffers);
+        info.framebuffers = &m_framebuffers_handles;
         info.command_pool = m_command_pool;
         info.before_render_pass_commands = before_render_pass_commands;
         info.render_pass_commands = commands;
@@ -532,7 +543,7 @@ void Impl::create_resolve_command_buffers()
         info.width = m_depth_attachments[0].width();
         info.height = m_depth_attachments[0].height();
         info.render_pass = m_resolve_render_pass;
-        info.framebuffers.emplace(m_resolve_framebuffers);
+        info.framebuffers = &m_resolve_framebuffers_handles;
         info.command_pool = m_command_pool;
 
         m_resolve_command_buffers = vulkan::create_command_buffers(info);

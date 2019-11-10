@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-#include "com/span.h"
-
 #include <array>
 #include <functional>
 #include <optional>
@@ -35,11 +33,11 @@ struct CommandBufferCreateInfo
         std::optional<uint32_t> width;
         std::optional<uint32_t> height;
         std::optional<VkRenderPass> render_pass;
-        std::optional<Span<Framebuffer>> framebuffers;
+        std::optional<const std::vector<VkFramebuffer>*> framebuffers;
         std::optional<VkCommandPool> command_pool;
 
         // Эти значения могут быть не заданы
-        std::optional<Span<VkClearValue>> clear_values;
+        std::optional<const std::vector<VkClearValue>*> clear_values;
         std::optional<std::function<void(VkCommandBuffer command_buffer)>> before_render_pass_commands;
         std::optional<std::function<void(VkCommandBuffer command_buffer)>> render_pass_commands;
 };

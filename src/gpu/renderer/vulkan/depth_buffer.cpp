@@ -165,6 +165,8 @@ class Impl final : public RendererDepthBuffers
         std::vector<vulkan::DepthAttachment> m_depth_attachments;
         vulkan::RenderPass m_render_pass;
         std::vector<vulkan::Framebuffer> m_framebuffers;
+        std::vector<VkFramebuffer> m_framebuffers_handles;
+        std::vector<VkClearValue> m_clear_values;
 
         //
 
@@ -227,7 +229,10 @@ Impl::Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapc
                 attachments[0] = depth_attachment.image_view();
 
                 m_framebuffers.push_back(create_framebuffer(m_device, m_render_pass, depth_width, depth_height, attachments));
+                m_framebuffers_handles.push_back(m_framebuffers.back());
         }
+
+        m_clear_values.push_back(vulkan::depth_stencil_clear_value());
 
         check_buffers(m_depth_attachments);
 
@@ -237,18 +242,17 @@ Impl::Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapc
 vulkan::CommandBuffers Impl::create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands)
 {
         ASSERT(m_depth_attachments.size() > 0 && m_depth_attachments.size() == m_framebuffers.size());
-
-        std::array<VkClearValue, 1> clear_values;
-        clear_values[0] = vulkan::depth_stencil_clear_value();
+        ASSERT(m_framebuffers.size() == m_framebuffers_handles.size());
+        ASSERT(m_clear_values.size() == 1);
 
         vulkan::CommandBufferCreateInfo info;
         info.device = m_device;
         info.width = m_depth_attachments[0].width();
         info.height = m_depth_attachments[0].height();
         info.render_pass = m_render_pass;
-        info.framebuffers.emplace(m_framebuffers);
+        info.framebuffers = &m_framebuffers_handles;
         info.command_pool = m_command_pool;
-        info.clear_values.emplace(clear_values);
+        info.clear_values = &m_clear_values;
         info.before_render_pass_commands = std::nullopt;
         info.render_pass_commands = commands;
 

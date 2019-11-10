@@ -25,7 +25,7 @@ CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
 {
         VkResult result;
 
-        CommandBuffers command_buffers(info.device.value(), info.command_pool.value(), info.framebuffers.value().size());
+        CommandBuffers command_buffers(info.device.value(), info.command_pool.value(), info.framebuffers.value()->size());
 
         for (uint32_t i = 0; i < command_buffers.count(); ++i)
         {
@@ -48,7 +48,7 @@ CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
                 VkRenderPassBeginInfo render_pass_info = {};
                 render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
                 render_pass_info.renderPass = info.render_pass.value();
-                render_pass_info.framebuffer = info.framebuffers.value()[i];
+                render_pass_info.framebuffer = (*info.framebuffers.value())[i];
                 render_pass_info.renderArea.offset.x = 0;
                 render_pass_info.renderArea.offset.y = 0;
                 render_pass_info.renderArea.extent.width = info.width.value();
@@ -56,8 +56,8 @@ CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
 
                 if (info.clear_values)
                 {
-                        render_pass_info.clearValueCount = info.clear_values->size();
-                        render_pass_info.pClearValues = info.clear_values->data();
+                        render_pass_info.clearValueCount = (*info.clear_values)->size();
+                        render_pass_info.pClearValues = (*info.clear_values)->data();
                 }
                 else
                 {
