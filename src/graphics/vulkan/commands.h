@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-#include <array>
 #include <functional>
 #include <optional>
 #include <vector>
@@ -30,8 +29,7 @@ struct CommandBufferCreateInfo
 {
         // std::optional для проверки, что значения заданы
         std::optional<VkDevice> device;
-        std::optional<uint32_t> width;
-        std::optional<uint32_t> height;
+        std::optional<VkRect2D> render_area;
         std::optional<VkRenderPass> render_pass;
         std::optional<const std::vector<VkFramebuffer>*> framebuffers;
         std::optional<VkCommandPool> command_pool;

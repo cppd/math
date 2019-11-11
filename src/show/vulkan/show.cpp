@@ -761,8 +761,8 @@ public:
                                                       m_instance->transfer_command_pool(), m_instance->transfer_queue(),
                                                       VULKAN_SAMPLE_SHADING, m_frame_rate.text_size(), text_color);
 
-                m_convex_hull =
-                        gpu_vulkan::create_convex_hull_show(*m_instance, graphics_queue.family_index(), VULKAN_SAMPLE_SHADING);
+                m_convex_hull = gpu_vulkan::create_convex_hull_show(*m_instance, m_instance->graphics_command_pool(),
+                                                                    graphics_queue.family_index(), VULKAN_SAMPLE_SHADING);
 
                 m_pencil_sketch = gpu_vulkan::create_convex_hull_show(*m_instance, m_instance->graphics_command_pool(),
                                                                       graphics_queue, m_instance->transfer_command_pool(),

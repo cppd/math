@@ -41,6 +41,7 @@ struct ConvexHullShow
         virtual void reset_timer() = 0;
 };
 
-std::unique_ptr<ConvexHullShow> create_convex_hull_show(const vulkan::VulkanInstance& instance, uint32_t family_index,
+std::unique_ptr<ConvexHullShow> create_convex_hull_show(const vulkan::VulkanInstance& instance,
+                                                        VkCommandPool graphics_command_pool, uint32_t family_index,
                                                         bool sample_shading);
 }

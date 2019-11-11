@@ -49,10 +49,7 @@ CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
                 render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
                 render_pass_info.renderPass = info.render_pass.value();
                 render_pass_info.framebuffer = (*info.framebuffers.value())[i];
-                render_pass_info.renderArea.offset.x = 0;
-                render_pass_info.renderArea.offset.y = 0;
-                render_pass_info.renderArea.extent.width = info.width.value();
-                render_pass_info.renderArea.extent.height = info.height.value();
+                render_pass_info.renderArea = info.render_area.value();
 
                 if (info.clear_values)
                 {

@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/merge.h"
 #include "com/time.h"
 #include "gpu/convex_hull/com/com.h"
+#include "graphics/vulkan/commands.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/queue.h"
@@ -55,6 +56,7 @@ class Impl final : public ConvexHullShow
         const uint32_t m_family_index;
 
         const vulkan::VulkanInstance& m_instance;
+        VkCommandPool m_graphics_command_pool;
 
         vulkan::Semaphore m_semaphore;
         ConvexHullShowProgram m_program;
@@ -112,9 +114,21 @@ class Impl final : public ConvexHullShow
 
                 m_compute->create_buffers(objects, x, y, width, height, *m_points, m_indirect_buffer, m_family_index);
 
-                m_command_buffers = render_buffers->create_command_buffers(
-                        [&](VkCommandBuffer command_buffer) { m_compute->compute_commands(command_buffer); },
-                        std::bind(&Impl::draw_commands, this, std::placeholders::_1));
+                vulkan::CommandBufferCreateInfo info;
+                info.device = m_instance.device();
+                info.render_area.emplace();
+                info.render_area->offset.x = 0;
+                info.render_area->offset.y = 0;
+                info.render_area->extent.width = render_buffers->width();
+                info.render_area->extent.height = render_buffers->height();
+                info.render_pass = render_buffers->render_pass();
+                info.framebuffers = &render_buffers->framebuffers();
+                info.command_pool = m_graphics_command_pool;
+                info.before_render_pass_commands = [this](VkCommandBuffer command_buffer) {
+                        m_compute->compute_commands(command_buffer);
+                };
+                info.render_pass_commands = [this](VkCommandBuffer command_buffer) { draw_commands(command_buffer); };
+                m_command_buffers = vulkan::create_command_buffers(info);
         }
 
         void delete_buffers() override
@@ -163,10 +177,12 @@ class Impl final : public ConvexHullShow
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance, uint32_t family_index, bool sample_shading)
+        Impl(const vulkan::VulkanInstance& instance, VkCommandPool graphics_command_pool, uint32_t family_index,
+             bool sample_shading)
                 : m_sample_shading(sample_shading),
                   m_family_index(family_index),
                   m_instance(instance),
+                  m_graphics_command_pool(graphics_command_pool),
                   m_semaphore(instance.device()),
                   m_program(instance.device()),
                   m_memory(instance.device(), m_program.descriptor_set_layout(), {m_family_index}),
@@ -194,9 +210,10 @@ std::vector<vulkan::PhysicalDeviceFeatures> ConvexHullShow::required_device_feat
                                                      ConvexHullCompute::required_device_features());
 }
 
-std::unique_ptr<ConvexHullShow> create_convex_hull_show(const vulkan::VulkanInstance& instance, uint32_t family_index,
+std::unique_ptr<ConvexHullShow> create_convex_hull_show(const vulkan::VulkanInstance& instance,
+                                                        VkCommandPool graphics_command_pool, uint32_t family_index,
                                                         bool sample_shading)
 {
-        return std::make_unique<Impl>(instance, family_index, sample_shading);
+        return std::make_unique<Impl>(instance, graphics_command_pool, family_index, sample_shading);
 }
 }

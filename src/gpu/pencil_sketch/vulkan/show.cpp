@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/container.h"
 #include "com/error.h"
 #include "com/merge.h"
+#include "graphics/vulkan/commands.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/queue.h"
 
@@ -107,9 +108,21 @@ class Impl final : public PencilSketchShow
 
                 m_compute->create_buffers(m_sampler, input, objects, x, y, width, height, *m_image);
 
-                m_command_buffers = render_buffers->create_command_buffers(
-                        [&](VkCommandBuffer command_buffer) { m_compute->compute_commands(command_buffer); },
-                        std::bind(&Impl::draw_commands, this, std::placeholders::_1));
+                vulkan::CommandBufferCreateInfo info;
+                info.device = m_device;
+                info.render_area.emplace();
+                info.render_area->offset.x = 0;
+                info.render_area->offset.y = 0;
+                info.render_area->extent.width = render_buffers->width();
+                info.render_area->extent.height = render_buffers->height();
+                info.render_pass = render_buffers->render_pass();
+                info.framebuffers = &render_buffers->framebuffers();
+                info.command_pool = m_graphics_command_pool;
+                info.before_render_pass_commands = [this](VkCommandBuffer command_buffer) {
+                        m_compute->compute_commands(command_buffer);
+                };
+                info.render_pass_commands = [this](VkCommandBuffer command_buffer) { draw_commands(command_buffer); };
+                m_command_buffers = vulkan::create_command_buffers(info);
         }
 
         void delete_buffers() override

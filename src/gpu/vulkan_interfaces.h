@@ -18,12 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/color.h"
-#include "graphics/vulkan/constant.h"
-#include "graphics/vulkan/shader.h"
 
-#include <functional>
-#include <optional>
 #include <vector>
+#include <vulkan/vulkan.h>
 
 namespace gpu_vulkan
 {
@@ -33,13 +30,12 @@ protected:
         virtual ~RenderBuffers3D() = default;
 
 public:
-        virtual vulkan::CommandBuffers create_command_buffers(
-                const Color& clear_color,
-                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
-                const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
-
+        virtual unsigned width() const = 0;
+        virtual unsigned height() const = 0;
         virtual VkRenderPass render_pass() const = 0;
         virtual VkSampleCountFlagBits sample_count() const = 0;
+        virtual const std::vector<VkFramebuffer>& framebuffers() const = 0;
+        virtual std::vector<VkClearValue> clear_values(const Color& clear_color) const = 0;
 };
 
 class RenderBuffers2D
@@ -48,11 +44,10 @@ protected:
         virtual ~RenderBuffers2D() = default;
 
 public:
-        virtual vulkan::CommandBuffers create_command_buffers(
-                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
-                const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
-
+        virtual unsigned width() const = 0;
+        virtual unsigned height() const = 0;
         virtual VkRenderPass render_pass() const = 0;
         virtual VkSampleCountFlagBits sample_count() const = 0;
+        virtual const std::vector<VkFramebuffer>& framebuffers() const = 0;
 };
 }

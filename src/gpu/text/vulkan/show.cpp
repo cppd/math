@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/matrix_alg.h"
 #include "com/merge.h"
 #include "graphics/vulkan/buffers.h"
+#include "graphics/vulkan/commands.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/queue.h"
 #include "graphics/vulkan/sync.h"
@@ -95,6 +96,7 @@ class Impl final : public TextShow
 
         const vulkan::VulkanInstance& m_instance;
         const vulkan::Device& m_device;
+        VkCommandPool m_graphics_command_pool;
 
         vulkan::ImageWithMemory m_glyph_texture;
         std::unordered_map<char32_t, FontGlyph> m_glyphs;
@@ -136,6 +138,22 @@ class Impl final : public TextShow
                 vkCmdDrawIndirect(command_buffer, m_indirect_buffer, 0, 1, sizeof(VkDrawIndirectCommand));
         }
 
+        vulkan::CommandBuffers create_commands()
+        {
+                vulkan::CommandBufferCreateInfo info;
+                info.device = m_instance.device();
+                info.render_area.emplace();
+                info.render_area->offset.x = 0;
+                info.render_area->offset.y = 0;
+                info.render_area->extent.width = m_render_buffers->width();
+                info.render_area->extent.height = m_render_buffers->height();
+                info.render_pass = m_render_buffers->render_pass();
+                info.framebuffers = &m_render_buffers->framebuffers();
+                info.command_pool = m_graphics_command_pool;
+                info.render_pass_commands = [this](VkCommandBuffer command_buffer) { draw_commands(command_buffer); };
+                return vulkan::create_command_buffers(info);
+        }
+
         void create_buffers(RenderBuffers2D* render_buffers, unsigned x, unsigned y, unsigned width, unsigned height) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
@@ -147,8 +165,7 @@ class Impl final : public TextShow
                 m_pipeline = m_program.create_pipeline(m_render_buffers->render_pass(), m_render_buffers->sample_count(),
                                                        m_sample_shading, x, y, width, height);
 
-                m_command_buffers = m_render_buffers->create_command_buffers(
-                        std::nullopt, std::bind(&Impl::draw_commands, this, std::placeholders::_1));
+                m_command_buffers = create_commands();
 
                 // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
                 double left = 0;
@@ -196,8 +213,7 @@ class Impl final : public TextShow
                                                 std::unordered_set({m_graphics_family_index}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                                 std::max(m_vertex_buffer->size() * 2, data_size));
 
-                        m_command_buffers = m_render_buffers->create_command_buffers(
-                                std::nullopt, std::bind(&Impl::draw_commands, this, std::placeholders::_1));
+                        m_command_buffers = create_commands();
                 }
 
                 vulkan::map_and_write_to_buffer(*m_vertex_buffer, vertices);
@@ -227,6 +243,7 @@ class Impl final : public TextShow
                 : m_sample_shading(sample_shading),
                   m_instance(instance),
                   m_device(m_instance.device()),
+                  m_graphics_command_pool(graphics_command_pool),
                   m_glyph_texture(m_device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
                                   std::unordered_set({graphics_queue.family_index(), transfer_queue.family_index()}),
                                   GRAYSCALE_IMAGE_FORMATS, glyphs.width(), glyphs.height(),

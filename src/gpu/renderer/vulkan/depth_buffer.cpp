@@ -20,12 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
-#include "graphics/vulkan/commands.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/print.h"
 
 #include <algorithm>
-#include <list>
 #include <sstream>
 
 // clang-format off
@@ -158,7 +156,6 @@ unsigned compute_buffer_count(RendererDepthBufferCount buffer_count, const vulka
 class Impl final : public RendererDepthBuffers
 {
         const vulkan::Device& m_device;
-        VkCommandPool m_command_pool;
 
         //
 
@@ -175,8 +172,8 @@ class Impl final : public RendererDepthBuffers
         unsigned height() const override;
         VkRenderPass render_pass() const override;
         VkSampleCountFlagBits sample_count() const override;
-
-        vulkan::CommandBuffers create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands) override;
+        const std::vector<VkFramebuffer>& framebuffers() const override;
+        const std::vector<VkClearValue>& clear_values() const override;
 
 public:
         Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapchain,
@@ -191,7 +188,7 @@ public:
 Impl::Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapchain,
            const std::unordered_set<uint32_t>& attachment_family_indices, VkCommandPool graphics_command_pool,
            VkQueue graphics_queue, const vulkan::Device& device, unsigned width, unsigned height, double zoom)
-        : m_device(device), m_command_pool(graphics_command_pool)
+        : m_device(device)
 {
         ASSERT(attachment_family_indices.size() > 0);
 
@@ -239,26 +236,6 @@ Impl::Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapc
         LOG(buffer_info(m_depth_attachments, zoom, width, height));
 }
 
-vulkan::CommandBuffers Impl::create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands)
-{
-        ASSERT(m_depth_attachments.size() > 0 && m_depth_attachments.size() == m_framebuffers.size());
-        ASSERT(m_framebuffers.size() == m_framebuffers_handles.size());
-        ASSERT(m_clear_values.size() == 1);
-
-        vulkan::CommandBufferCreateInfo info;
-        info.device = m_device;
-        info.width = m_depth_attachments[0].width();
-        info.height = m_depth_attachments[0].height();
-        info.render_pass = m_render_pass;
-        info.framebuffers = &m_framebuffers_handles;
-        info.command_pool = m_command_pool;
-        info.clear_values = &m_clear_values;
-        info.before_render_pass_commands = std::nullopt;
-        info.render_pass_commands = commands;
-
-        return vulkan::create_command_buffers(info);
-}
-
 const vulkan::DepthAttachment* Impl::texture(unsigned index) const
 {
         ASSERT(index < m_depth_attachments.size());
@@ -289,6 +266,19 @@ VkRenderPass Impl::render_pass() const
 VkSampleCountFlagBits Impl::sample_count() const
 {
         return SAMPLE_COUNT;
+}
+
+const std::vector<VkFramebuffer>& Impl::framebuffers() const
+{
+        ASSERT(m_depth_attachments.size() > 0 && m_depth_attachments.size() == m_framebuffers.size());
+        ASSERT(m_framebuffers.size() == m_framebuffers_handles.size());
+        return m_framebuffers_handles;
+}
+
+const std::vector<VkClearValue>& Impl::clear_values() const
+{
+        ASSERT(m_clear_values.size() == 1);
+        return m_clear_values;
 }
 }
 

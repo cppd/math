@@ -25,13 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/commands.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
-#include "graphics/vulkan/pipeline.h"
 #include "graphics/vulkan/print.h"
 #include "graphics/vulkan/query.h"
 #include "graphics/vulkan/queue.h"
 
 #include <algorithm>
-#include <list>
 #include <sstream>
 
 // clang-format off
@@ -139,21 +137,22 @@ unsigned compute_buffer_count(show_vulkan::RenderBufferCount buffer_count, const
 
 class Impl3D : public gpu_vulkan::RenderBuffers3D
 {
-        virtual vulkan::CommandBuffers create_command_buffers_3d(
-                const Color& clear_color,
-                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
-                const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
+        virtual unsigned width_3d() const = 0;
+        virtual unsigned height_3d() const = 0;
         virtual VkRenderPass render_pass_3d() const = 0;
         virtual VkSampleCountFlagBits sample_count_3d() const = 0;
+        virtual const std::vector<VkFramebuffer>& framebuffers_3d() const = 0;
+        virtual std::vector<VkClearValue> clear_values_3d(const Color& clear_color) const = 0;
 
         //
 
-        vulkan::CommandBuffers create_command_buffers(
-                const Color& clear_color,
-                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
-                const std::function<void(VkCommandBuffer buffer)>& commands) override final
+        unsigned width() const override final
         {
-                return create_command_buffers_3d(clear_color, before_render_pass_commands, commands);
+                return width_3d();
+        }
+        unsigned height() const override final
+        {
+                return height_3d();
         }
         VkRenderPass render_pass() const override final
         {
@@ -163,6 +162,14 @@ class Impl3D : public gpu_vulkan::RenderBuffers3D
         {
                 return sample_count_3d();
         }
+        const std::vector<VkFramebuffer>& framebuffers() const override final
+        {
+                return framebuffers_3d();
+        }
+        std::vector<VkClearValue> clear_values(const Color& clear_color) const override final
+        {
+                return clear_values_3d(clear_color);
+        }
 
 protected:
         ~Impl3D() override = default;
@@ -170,19 +177,21 @@ protected:
 
 class Impl2D : public gpu_vulkan::RenderBuffers2D
 {
-        virtual vulkan::CommandBuffers create_command_buffers_2d(
-                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
-                const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
+        virtual unsigned width_2d() const = 0;
+        virtual unsigned height_2d() const = 0;
         virtual VkRenderPass render_pass_2d() const = 0;
         virtual VkSampleCountFlagBits sample_count_2d() const = 0;
+        virtual const std::vector<VkFramebuffer>& framebuffers_2d() const = 0;
 
         //
 
-        vulkan::CommandBuffers create_command_buffers(
-                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
-                const std::function<void(VkCommandBuffer buffer)>& commands) override final
+        unsigned width() const override final
         {
-                return create_command_buffers_2d(before_render_pass_commands, commands);
+                return width_2d();
+        }
+        unsigned height() const override final
+        {
+                return height_2d();
         }
         VkRenderPass render_pass() const override final
         {
@@ -191,6 +200,10 @@ class Impl2D : public gpu_vulkan::RenderBuffers2D
         VkSampleCountFlagBits sample_count() const override final
         {
                 return sample_count_2d();
+        }
+        const std::vector<VkFramebuffer>& framebuffers() const override final
+        {
+                return framebuffers_2d();
         }
 
 protected:
@@ -251,18 +264,18 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
 
         //
 
-        vulkan::CommandBuffers create_command_buffers_3d(
-                const Color& clear_color,
-                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
-                const std::function<void(VkCommandBuffer buffer)>& commands) override;
+        unsigned width_3d() const override;
+        unsigned height_3d() const override;
         VkRenderPass render_pass_3d() const override;
         VkSampleCountFlagBits sample_count_3d() const override;
+        const std::vector<VkFramebuffer>& framebuffers_3d() const override;
+        std::vector<VkClearValue> clear_values_3d(const Color& clear_color) const override;
 
-        vulkan::CommandBuffers create_command_buffers_2d(
-                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
-                const std::function<void(VkCommandBuffer buffer)>& commands) override;
+        unsigned width_2d() const override;
+        unsigned height_2d() const override;
         VkRenderPass render_pass_2d() const override;
         VkSampleCountFlagBits sample_count_2d() const override;
+        const std::vector<VkFramebuffer>& framebuffers_2d() const override;
 
 public:
         Impl(show_vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
@@ -464,28 +477,16 @@ void Impl::create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapc
 }
 #endif
 
-vulkan::CommandBuffers Impl::create_command_buffers_3d(
-        const Color& clear_color,
-        const std::optional<std::function<void(VkCommandBuffer command_buffer)>>& before_render_pass_commands,
-        const std::function<void(VkCommandBuffer buffer)>& commands)
+unsigned Impl::width_3d() const
 {
         ASSERT(m_depth_attachments.size() > 0);
+        return m_depth_attachments[0].width();
+}
 
-        vulkan::CommandBufferCreateInfo info;
-        info.device = m_device;
-        info.width = m_depth_attachments[0].width();
-        info.height = m_depth_attachments[0].height();
-        info.render_pass = m_3d_render_pass;
-        info.framebuffers = &m_3d_framebuffers_handles;
-        info.command_pool = m_command_pool;
-        info.before_render_pass_commands = before_render_pass_commands;
-        info.render_pass_commands = commands;
-
-        ASSERT(m_clear_values.size() == 2);
-        m_clear_values[0] = vulkan::color_clear_value(m_swapchain_format, m_swapchain_color_space, clear_color);
-        info.clear_values = &m_clear_values;
-
-        return vulkan::create_command_buffers(info);
+unsigned Impl::height_3d() const
+{
+        ASSERT(m_depth_attachments.size() > 0);
+        return m_depth_attachments[0].height();
 }
 
 VkRenderPass Impl::render_pass_3d() const
@@ -498,23 +499,30 @@ VkSampleCountFlagBits Impl::sample_count_3d() const
         return m_color_attachments.size() > 0 ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
 }
 
-vulkan::CommandBuffers Impl::create_command_buffers_2d(
-        const std::optional<std::function<void(VkCommandBuffer command_buffer)>>& before_render_pass_commands,
-        const std::function<void(VkCommandBuffer buffer)>& commands)
+const std::vector<VkFramebuffer>& Impl::framebuffers_3d() const
+{
+        ASSERT(!m_3d_framebuffers.empty() && m_3d_framebuffers.size() == m_3d_framebuffers_handles.size());
+        return m_3d_framebuffers_handles;
+}
+
+std::vector<VkClearValue> Impl::clear_values_3d(const Color& clear_color) const
+{
+        std::vector<VkClearValue> clear_values(2);
+        clear_values[0] = vulkan::color_clear_value(m_swapchain_format, m_swapchain_color_space, clear_color);
+        clear_values[1] = vulkan::depth_stencil_clear_value();
+        return clear_values;
+}
+
+unsigned Impl::width_2d() const
 {
         ASSERT(m_depth_attachments.size() > 0);
+        return m_depth_attachments[0].width();
+}
 
-        vulkan::CommandBufferCreateInfo info;
-        info.device = m_device;
-        info.width = m_depth_attachments[0].width();
-        info.height = m_depth_attachments[0].height();
-        info.render_pass = m_2d_render_pass;
-        info.framebuffers = &m_2d_framebuffers_handles;
-        info.command_pool = m_command_pool;
-        info.before_render_pass_commands = before_render_pass_commands;
-        info.render_pass_commands = commands;
-
-        return vulkan::create_command_buffers(info);
+unsigned Impl::height_2d() const
+{
+        ASSERT(m_depth_attachments.size() > 0);
+        return m_depth_attachments[0].height();
 }
 
 VkRenderPass Impl::render_pass_2d() const
@@ -525,6 +533,12 @@ VkRenderPass Impl::render_pass_2d() const
 VkSampleCountFlagBits Impl::sample_count_2d() const
 {
         return m_color_attachments.size() > 0 ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
+}
+
+const std::vector<VkFramebuffer>& Impl::framebuffers_2d() const
+{
+        ASSERT(!m_2d_framebuffers.empty() && m_2d_framebuffers.size() == m_2d_framebuffers_handles.size());
+        return m_2d_framebuffers_handles;
 }
 
 void Impl::create_resolve_command_buffers()
@@ -540,8 +554,11 @@ void Impl::create_resolve_command_buffers()
 
         vulkan::CommandBufferCreateInfo info;
         info.device = m_device;
-        info.width = m_depth_attachments[0].width();
-        info.height = m_depth_attachments[0].height();
+        info.render_area.emplace();
+        info.render_area->offset.x = 0;
+        info.render_area->offset.y = 0;
+        info.render_area->extent.width = m_depth_attachments[0].width();
+        info.render_area->extent.height = m_depth_attachments[0].height();
         info.render_pass = m_resolve_render_pass;
         info.framebuffers = &m_resolve_framebuffers_handles;
         info.command_pool = m_command_pool;

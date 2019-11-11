@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "com/vec.h"
 #include "gpu/renderer/com/storage.h"
+#include "graphics/vulkan/commands.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/device.h"
 #include "graphics/vulkan/error.h"
@@ -524,9 +525,24 @@ class Impl final : public Renderer
                 ASSERT(m_render_buffers);
 
                 m_render_command_buffers.reset();
-                m_render_command_buffers = m_render_buffers->create_command_buffers(
-                        m_clear_color, std::bind(&Impl::before_render_pass_commands, this, std::placeholders::_1),
-                        std::bind(&Impl::draw_commands, this, std::placeholders::_1));
+
+                vulkan::CommandBufferCreateInfo info;
+                info.device = m_device;
+                info.render_area.emplace();
+                info.render_area->offset.x = 0;
+                info.render_area->offset.y = 0;
+                info.render_area->extent.width = m_render_buffers->width();
+                info.render_area->extent.height = m_render_buffers->height();
+                info.render_pass = m_render_buffers->render_pass();
+                info.framebuffers = &m_render_buffers->framebuffers();
+                info.command_pool = m_graphics_command_pool;
+                info.before_render_pass_commands = [this](VkCommandBuffer command_buffer) {
+                        before_render_pass_commands(command_buffer);
+                };
+                info.render_pass_commands = [this](VkCommandBuffer command_buffer) { draw_commands(command_buffer); };
+                const std::vector<VkClearValue> clear_values = m_render_buffers->clear_values(m_clear_color);
+                info.clear_values = &clear_values;
+                m_render_command_buffers = vulkan::create_command_buffers(info);
         }
 
         void create_shadow_command_buffers()
@@ -538,8 +554,20 @@ class Impl final : public Renderer
                 ASSERT(m_shadow_buffers);
 
                 m_shadow_command_buffers.reset();
-                m_shadow_command_buffers = m_shadow_buffers->create_command_buffers(
-                        std::bind(&Impl::draw_shadow_commands, this, std::placeholders::_1));
+
+                vulkan::CommandBufferCreateInfo info;
+                info.device = m_device;
+                info.render_area.emplace();
+                info.render_area->offset.x = 0;
+                info.render_area->offset.y = 0;
+                info.render_area->extent.width = m_shadow_buffers->width();
+                info.render_area->extent.height = m_shadow_buffers->height();
+                info.render_pass = m_shadow_buffers->render_pass();
+                info.framebuffers = &m_shadow_buffers->framebuffers();
+                info.command_pool = m_graphics_command_pool;
+                info.clear_values = &m_shadow_buffers->clear_values();
+                info.render_pass_commands = [this](VkCommandBuffer command_buffer) { draw_shadow_commands(command_buffer); };
+                m_shadow_command_buffers = vulkan::create_command_buffers(info);
         }
 
         void create_all_command_buffers()
