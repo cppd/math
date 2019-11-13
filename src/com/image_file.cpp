@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QImage>
 #include <QImageWriter>
+#include <cstring>
 #include <set>
 
 namespace
@@ -120,6 +121,31 @@ void save_srgb_image_to_file(const std::string& file_name, int width, int height
                         std::uint_least8_t b = pixels[pixel++];
                         image_line[col] = qRgb(r, g, b);
                 }
+        }
+
+        std::string f = file_name_with_extension(file_name);
+        if (!image.save(f.c_str()))
+        {
+                error("Error saving pixels to the file " + f);
+        }
+}
+
+void save_srgb_image_to_file_bgr(const std::string& file_name, int width, int height,
+                                 const std::vector<std::uint_least32_t>& pixels)
+{
+        if (1ull * width * height != pixels.size())
+        {
+                error("Error image size");
+        }
+
+        static_assert(std::is_same_v<quint32, std::uint_least32_t>);
+        const size_t bytes_in_row = sizeof(std::uint_least32_t) * width;
+        QImage image(width, height, QImage::Format_RGB32);
+        const std::uint_least32_t* pixels_line = pixels.data();
+        for (int row = 0; row < height; ++row, pixels_line += width)
+        {
+                QRgb* image_line = reinterpret_cast<QRgb*>(image.scanLine(row));
+                std::memcpy(image_line, pixels_line, bytes_in_row);
         }
 
         std::string f = file_name_with_extension(file_name);
