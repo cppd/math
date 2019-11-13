@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter_window_2d.h"
 
 #include "com/error.h"
-#include "com/file/file_sys.h"
+#include "com/image_file.h"
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
@@ -38,7 +38,7 @@ constexpr int DIFFERENCE_INTERVAL_MILLISECONDS = 10 * UPDATE_INTERVAL_MILLISECON
 
 constexpr bool SHOW_THREADS = true;
 
-constexpr const char IMAGE_FILE_FORMAT[] = "png";
+constexpr const char SAVE_IMAGE_FILE_FORMAT[] = "png";
 
 namespace
 {
@@ -322,7 +322,9 @@ void PainterWindow2d::update_statistics()
 
 void PainterWindow2d::update_points()
 {
-        std::memcpy(m_image.bits(), pixel_pointer(ui.checkBox_show_threads->isChecked()), m_image_byte_count);
+        static_assert(std::is_same_v<quint32,
+                                     std::remove_cvref_t<decltype(*bgr_pixel_pointer(ui.checkBox_show_threads->isChecked()))>>);
+        std::memcpy(m_image.bits(), bgr_pixel_pointer(ui.checkBox_show_threads->isChecked()), m_image_byte_count);
         ui.label_points->setPixmap(QPixmap::fromImage(m_image));
         ui.label_points->update();
 }
@@ -338,15 +340,13 @@ void PainterWindow2d::on_pushButton_save_to_file_clicked()
         catch_all([&](std::string* msg) {
                 *msg = "Save to file";
 
-                QImage image(m_image.width(), m_image.height(), m_image.format());
-                std::memcpy(image.bits(), pixel_pointer(false), m_image_byte_count);
+                std::vector<std::uint_least32_t> pixels(1ull * m_image.width() * m_image.height());
+                std::memcpy(pixels.data(), bgr_pixel_pointer(false), m_image_byte_count);
 
+                const std::string caption = "Save";
+                const std::string filter = file_filter("Images", SAVE_IMAGE_FILE_FORMAT);
+                const bool read_only = true;
                 std::string file_name;
-
-                std::string caption = "Save";
-                std::string filter = file_filter("Images", IMAGE_FILE_FORMAT);
-                bool read_only = true;
-
                 QPointer ptr(this);
                 if (!dialog::save_file(this, caption, filter, read_only, &file_name))
                 {
@@ -356,25 +356,7 @@ void PainterWindow2d::on_pushButton_save_to_file_clicked()
                 {
                         return;
                 }
-
-                std::string ext = file_extension(file_name);
-                if (ext.size() > 0)
-                {
-                        if (ext != IMAGE_FILE_FORMAT)
-                        {
-                                error("Unsupported image file format " + ext);
-                        }
-                }
-                else
-                {
-                        file_name += "."; // может оказаться 2 точки подряд
-                        file_name += IMAGE_FILE_FORMAT;
-                }
-
-                if (!image.save(file_name.c_str()))
-                {
-                        error("Error saving image to file " + file_name);
-                }
+                save_srgb_image_to_file_bgr(file_name, m_image.width(), m_image.height(), pixels);
         });
 }
 

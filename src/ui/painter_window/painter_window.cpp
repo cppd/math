@@ -25,14 +25,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 constexpr int PANTBRUSH_WIDTH = 20;
 
-constexpr QRgb DEFAULT_COLOR_LIGHT = qRgb(100, 150, 200);
-constexpr QRgb DEFAULT_COLOR_DARK = qRgb(0, 0, 0);
+constexpr Srgb8 DEFAULT_COLOR_LIGHT(100, 150, 200);
+constexpr Srgb8 DEFAULT_COLOR_DARK(0, 0, 0);
 
 namespace
 {
-void initial_picture(int width, int height, std::vector<quint32>* data)
+constexpr std::uint_least32_t make_bgr(std::uint_least8_t r, std::uint_least8_t g, std::uint_least8_t b)
 {
-        static_assert(sizeof(QRgb) == sizeof(quint32));
+        return (r << 16u) | (g << 8u) | b;
+}
+
+constexpr std::uint_least32_t make_bgr(const Srgb8& c)
+{
+        return make_bgr(c.red, c.green, c.blue);
+}
+
+void initial_picture(int width, int height, std::vector<std::uint_least32_t>* data)
+{
+        constexpr std::uint_least32_t light_color = make_bgr(DEFAULT_COLOR_LIGHT);
+        constexpr std::uint_least32_t dark_color = make_bgr(DEFAULT_COLOR_DARK);
 
         unsigned slice_size = width * height;
 
@@ -47,8 +58,7 @@ void initial_picture(int width, int height, std::vector<quint32>* data)
                 {
                         for (int x = 0; x < width; ++x)
                         {
-                                quint32 v = ((x + y) & 1) ? DEFAULT_COLOR_LIGHT : DEFAULT_COLOR_DARK;
-                                (*data)[index] = v;
+                                (*data)[index] = ((x + y) & 1) ? light_color : dark_color;
                                 ++index;
                         }
                 }
@@ -107,7 +117,7 @@ void PainterWindow<N, T>::slider_positions_change_event(const std::vector<int>& 
 }
 
 template <size_t N, typename T>
-const quint32* PainterWindow<N, T>::pixel_pointer(bool show_threads) const
+const std::uint_least32_t* PainterWindow<N, T>::bgr_pixel_pointer(bool show_threads) const
 {
         return (show_threads ? m_data.data() : m_data_clean.data()) + m_slice_offset;
 }
@@ -149,7 +159,7 @@ void PainterWindow<N, T>::set_pixel(long long index, const Color& color)
         unsigned char g = color_conversion::rgb_float_to_srgb_uint8(color.green());
         unsigned char b = color_conversion::rgb_float_to_srgb_uint8(color.blue());
 
-        quint32 c = (r << 16u) | (g << 8u) | b;
+        std::uint_least32_t c = make_bgr(r, g, b);
 
         m_data[index] = c;
         m_data_clean[index] = c;

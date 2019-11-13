@@ -42,7 +42,7 @@ class PainterWindow final : public PainterWindow2d, public PainterNotifier<N - 1
         const std::thread::id m_window_thread_id;
 
         long long m_slice_offset;
-        std::vector<quint32> m_data, m_data_clean;
+        std::vector<std::uint_least32_t> m_data, m_data_clean;
 
         VisibleBarPaintbrush<N_IMAGE> m_paintbrush;
         std::atomic_bool m_stop;
@@ -61,7 +61,7 @@ class PainterWindow final : public PainterWindow2d, public PainterNotifier<N - 1
         void painter_statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
                                 double* previous_pass_duration) const override;
         void slider_positions_change_event(const std::vector<int>& slider_positions) override;
-        const quint32* pixel_pointer(bool show_threads) const override;
+        const std::uint_least32_t* bgr_pixel_pointer(bool show_threads) const override;
 
         // IPainterNotifier
         void painter_pixel_before(const std::array<int_least16_t, N_IMAGE>& pixel) override;
