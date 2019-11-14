@@ -59,11 +59,11 @@ public:
                 }
         }
 
-        void painter_pixel_before(const std::array<int_least16_t, 3>&) override
+        void painter_pixel_before(unsigned, const std::array<int_least16_t, 3>&) override
         {
         }
 
-        void painter_pixel_after(const std::array<int_least16_t, 3>& pixel, const Color& color) override
+        void painter_pixel_after(unsigned, const std::array<int_least16_t, 3>& pixel, const Color& color) override
         {
                 try
                 {

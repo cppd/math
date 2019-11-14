@@ -42,7 +42,7 @@ class PainterWindow final : public PainterWindow2d, public PainterNotifier<N - 1
         const std::thread::id m_window_thread_id;
 
         long long m_slice_offset;
-        std::vector<std::uint_least32_t> m_data, m_data_clean;
+        std::vector<std::uint_least32_t> m_data;
 
         VisibleBarPaintbrush<N_IMAGE> m_paintbrush;
         std::atomic_bool m_stop;
@@ -50,22 +50,25 @@ class PainterWindow final : public PainterWindow2d, public PainterNotifier<N - 1
 
         std::thread m_thread;
 
+        std::vector<long long> m_busy_pixels;
+
         static std::vector<int> initial_slider_positions();
 
         long long pixel_index(const std::array<int_least16_t, N_IMAGE>& pixel) const;
         long long offset_for_slider_positions(const std::vector<int>& slider_positions) const;
-        void set_pixel(long long index, const Color& color);
-        void mark_pixel_busy(long long index);
 
         // PainterWindow2d
         void painter_statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
                                 double* previous_pass_duration) const override;
         void slider_positions_change_event(const std::vector<int>& slider_positions) override;
-        const std::uint_least32_t* bgr_pixel_pointer(bool show_threads) const override;
+        const std::vector<std::uint_least32_t>& pixels_bgr() const override;
+        long long pixels_offset() const override;
+        const std::vector<long long>& pixels_busy() const override;
 
         // IPainterNotifier
-        void painter_pixel_before(const std::array<int_least16_t, N_IMAGE>& pixel) override;
-        void painter_pixel_after(const std::array<int_least16_t, N_IMAGE>& pixel, const Color& color) override;
+        void painter_pixel_before(unsigned thread_number, const std::array<int_least16_t, N_IMAGE>& pixel) override;
+        void painter_pixel_after(unsigned thread_number, const std::array<int_least16_t, N_IMAGE>& pixel,
+                                 const Color& color) override;
         void painter_error_message(const std::string& msg) override;
 
 public:

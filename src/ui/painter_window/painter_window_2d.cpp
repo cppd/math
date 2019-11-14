@@ -97,6 +97,7 @@ PainterWindow2d::PainterWindow2d(const std::string& title, std::vector<int>&& sc
           m_screen_size(std::move(screen_size)),
           m_width(m_screen_size[0]),
           m_height(m_screen_size[1]),
+          m_pixel_count(m_width * m_height),
           m_image(m_width, m_height, QImage::Format_RGB32),
           m_image_byte_count(m_width * m_height * sizeof(quint32)),
           m_first_show(true),
@@ -322,9 +323,21 @@ void PainterWindow2d::update_statistics()
 
 void PainterWindow2d::update_points()
 {
-        static_assert(std::is_same_v<quint32,
-                                     std::remove_cvref_t<decltype(*bgr_pixel_pointer(ui.checkBox_show_threads->isChecked()))>>);
-        std::memcpy(m_image.bits(), bgr_pixel_pointer(ui.checkBox_show_threads->isChecked()), m_image_byte_count);
+        static_assert(std::is_same_v<quint32, std::uint_least32_t>);
+
+        long long offset = pixels_offset();
+        std::memcpy(m_image.bits(), &pixels_bgr()[offset], m_image_byte_count);
+        if (ui.checkBox_show_threads->isChecked())
+        {
+                for (long long index : pixels_busy())
+                {
+                        long long index_in_image = index - offset;
+                        if (index_in_image >= 0 && index_in_image < m_pixel_count)
+                        {
+                                reinterpret_cast<quint32*>(m_image.bits())[index_in_image] ^= 0x00ff'ffff;
+                        }
+                }
+        }
         ui.label_points->setPixmap(QPixmap::fromImage(m_image));
         ui.label_points->update();
 }
@@ -341,7 +354,7 @@ void PainterWindow2d::on_pushButton_save_to_file_clicked()
                 *msg = "Save to file";
 
                 std::vector<std::uint_least32_t> pixels(1ull * m_image.width() * m_image.height());
-                std::memcpy(pixels.data(), bgr_pixel_pointer(false), m_image_byte_count);
+                std::memcpy(pixels.data(), &pixels_bgr()[pixels_offset()], m_image_byte_count);
 
                 const std::string caption = "Save";
                 const std::string filter = file_filter("Images", SAVE_IMAGE_FILE_FORMAT);

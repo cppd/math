@@ -117,52 +117,50 @@ void PainterWindow<N, T>::slider_positions_change_event(const std::vector<int>& 
 }
 
 template <size_t N, typename T>
-const std::uint_least32_t* PainterWindow<N, T>::bgr_pixel_pointer(bool show_threads) const
+const std::vector<std::uint_least32_t>& PainterWindow<N, T>::pixels_bgr() const
 {
-        return (show_threads ? m_data.data() : m_data_clean.data()) + m_slice_offset;
+        return m_data;
 }
 
 template <size_t N, typename T>
-void PainterWindow<N, T>::painter_pixel_before(const std::array<int_least16_t, N_IMAGE>& pixel)
+long long PainterWindow<N, T>::pixels_offset() const
+{
+        return m_slice_offset;
+}
+
+template <size_t N, typename T>
+const std::vector<long long>& PainterWindow<N, T>::pixels_busy() const
+{
+        return m_busy_pixels;
+}
+
+template <size_t N, typename T>
+void PainterWindow<N, T>::painter_pixel_before(unsigned thread_number, const std::array<int_least16_t, N_IMAGE>& pixel)
 {
         std::array<int_least16_t, N_IMAGE> p = pixel;
         p[1] = m_height - 1 - pixel[1];
 
-        mark_pixel_busy(pixel_index(p));
+        m_busy_pixels[thread_number] = pixel_index(p);
 }
 
 template <size_t N, typename T>
-void PainterWindow<N, T>::painter_pixel_after(const std::array<int_least16_t, N_IMAGE>& pixel, const Color& color)
+void PainterWindow<N, T>::painter_pixel_after(unsigned /*thread_number*/, const std::array<int_least16_t, N_IMAGE>& pixel,
+                                              const Color& color)
 {
         std::array<int_least16_t, N_IMAGE> p = pixel;
         p[1] = m_height - 1 - pixel[1];
 
-        set_pixel(pixel_index(p), color);
+        unsigned char r = color_conversion::rgb_float_to_srgb_uint8(color.red());
+        unsigned char g = color_conversion::rgb_float_to_srgb_uint8(color.green());
+        unsigned char b = color_conversion::rgb_float_to_srgb_uint8(color.blue());
+
+        m_data[pixel_index(p)] = make_bgr(r, g, b);
 }
 
 template <size_t N, typename T>
 void PainterWindow<N, T>::painter_error_message(const std::string& msg)
 {
         PainterWindow2d::error_message(msg);
-}
-
-template <size_t N, typename T>
-void PainterWindow<N, T>::mark_pixel_busy(long long index)
-{
-        m_data[index] ^= 0x00ff'ffffu;
-}
-
-template <size_t N, typename T>
-void PainterWindow<N, T>::set_pixel(long long index, const Color& color)
-{
-        unsigned char r = color_conversion::rgb_float_to_srgb_uint8(color.red());
-        unsigned char g = color_conversion::rgb_float_to_srgb_uint8(color.green());
-        unsigned char b = color_conversion::rgb_float_to_srgb_uint8(color.blue());
-
-        std::uint_least32_t c = make_bgr(r, g, b);
-
-        m_data[index] = c;
-        m_data_clean[index] = c;
 }
 
 template <size_t N, typename T>
@@ -181,13 +179,13 @@ PainterWindow<N, T>::PainterWindow(const std::string& title, unsigned thread_cou
           m_window_thread_id(std::this_thread::get_id()),
           m_paintbrush(m_paint_objects->projector().screen_size(), PANTBRUSH_WIDTH, -1),
           m_stop(false),
-          m_thread_working(false)
+          m_thread_working(false),
+          m_busy_pixels(thread_count, -1)
 {
         m_slice_offset = offset_for_slider_positions(initial_slider_positions());
 
         m_data.resize(multiply_all<long long>(m_paint_objects->projector().screen_size()));
         initial_picture(m_paint_objects->projector().screen_size()[0], m_paint_objects->projector().screen_size()[1], &m_data);
-        m_data_clean = m_data;
 
         m_stop = false;
         m_thread_working = true;

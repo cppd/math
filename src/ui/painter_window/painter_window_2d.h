@@ -73,11 +73,13 @@ private:
         virtual void painter_statistics(long long* pass_count, long long* pixel_count, long long* ray_count,
                                         long long* sample_count, double* previous_pass_duration) const = 0;
         virtual void slider_positions_change_event(const std::vector<int>& slider_positions) = 0;
-        virtual const std::uint_least32_t* bgr_pixel_pointer(bool show_threads) const = 0;
+        virtual const std::vector<std::uint_least32_t>& pixels_bgr() const = 0;
+        virtual long long pixels_offset() const = 0;
+        virtual const std::vector<long long>& pixels_busy() const = 0;
 
         const std::thread::id m_window_thread_id;
         const std::vector<int> m_screen_size;
-        const int m_width, m_height;
+        const int m_width, m_height, m_pixel_count;
         QImage m_image;
         const int m_image_byte_count;
         QTimer m_timer;

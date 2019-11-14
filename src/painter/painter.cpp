@@ -411,9 +411,10 @@ Vector<N, VectorType> array_to_vector(const std::array<ArrayType, N>& array)
 }
 
 template <size_t N, typename T>
-void paint_pixels(PainterRandomEngine<T>& random_engine, std::vector<Vector<N - 1, T>>* samples, std::atomic_bool& stop,
-                  const Projector<N, T>& projector, const PaintData<N, T>& paint_data, PainterNotifier<N - 1>* painter_notifier,
-                  Paintbrush<N - 1>* paintbrush, const PainterSampler<N - 1, T>& sampler, Pixels<N - 1>* pixels)
+void paint_pixels(unsigned thread_number, PainterRandomEngine<T>& random_engine, std::vector<Vector<N - 1, T>>* samples,
+                  std::atomic_bool& stop, const Projector<N, T>& projector, const PaintData<N, T>& paint_data,
+                  PainterNotifier<N - 1>* painter_notifier, Paintbrush<N - 1>* paintbrush,
+                  const PainterSampler<N - 1, T>& sampler, Pixels<N - 1>* pixels)
 {
         std::array<int_least16_t, N - 1> pixel;
 
@@ -421,7 +422,7 @@ void paint_pixels(PainterRandomEngine<T>& random_engine, std::vector<Vector<N - 
 
         while (!stop && paintbrush->next_pixel(ray_count, sample_count, &pixel))
         {
-                painter_notifier->painter_pixel_before(pixel);
+                painter_notifier->painter_pixel_before(thread_number, pixel);
 
                 Vector<N - 1, T> screen_point = array_to_vector<T>(pixel);
 
@@ -446,7 +447,7 @@ void paint_pixels(PainterRandomEngine<T>& random_engine, std::vector<Vector<N - 
 
                 Color pixel_color = pixels->add_color_and_samples(pixel, color, samples->size());
 
-                painter_notifier->painter_pixel_after(pixel, pixel_color);
+                painter_notifier->painter_pixel_after(thread_number, pixel, pixel_color);
         }
 }
 
@@ -466,8 +467,8 @@ void work_thread(unsigned thread_number, ThreadBarrier& barrier, std::atomic_boo
 
                         while (true)
                         {
-                                paint_pixels(random_engine, &samples, stop, projector, paint_data, painter_notifier, paintbrush,
-                                             sampler, pixels);
+                                paint_pixels(thread_number, random_engine, &samples, stop, projector, paint_data,
+                                             painter_notifier, paintbrush, sampler, pixels);
 
                                 barrier.wait();
 
