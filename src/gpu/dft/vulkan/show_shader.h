@@ -18,9 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/matrix.h"
+#include "com/vec.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
+#include "graphics/vulkan/shader.h"
 
 #include <unordered_set>
 #include <vector>
@@ -34,9 +36,6 @@ class DftShowMemory final
         static constexpr int IMAGE_BINDING = 1;
         static constexpr int DATA_BINDING = 0;
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
 
@@ -48,7 +47,11 @@ class DftShowMemory final
         };
 
 public:
-        DftShowMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        DftShowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
+                      const std::unordered_set<uint32_t>& family_indices);
 
         DftShowMemory(const DftShowMemory&) = delete;
         DftShowMemory& operator=(const DftShowMemory&) = delete;
@@ -59,13 +62,46 @@ public:
 
         //
 
-        static unsigned set_number();
-        VkDescriptorSetLayout descriptor_set_layout() const;
         const VkDescriptorSet& descriptor_set() const;
 
         //
 
         void set_data(const vec4& background_color, const vec4& foreground_color, float brightness) const;
         void set_image(VkSampler sampler, const vulkan::ImageWithMemory& image) const;
+};
+
+struct DftShowVertex
+{
+        vec4f position;
+        vec2f texture_coordinates;
+
+        static std::vector<VkVertexInputBindingDescription> binding_descriptions();
+        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
+};
+
+class DftShowProgram final
+{
+        const vulkan::Device& m_device;
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::PipelineLayout m_pipeline_layout;
+        vulkan::VertexShader m_vertex_shader;
+        vulkan::FragmentShader m_fragment_shader;
+
+public:
+        DftShowProgram(const vulkan::Device& device);
+
+        DftShowProgram(const DftShowProgram&) = delete;
+        DftShowProgram& operator=(const DftShowProgram&) = delete;
+        DftShowProgram& operator=(DftShowProgram&&) = delete;
+
+        DftShowProgram(DftShowProgram&&) = default;
+        ~DftShowProgram() = default;
+
+        vulkan::Pipeline create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, unsigned x, unsigned y,
+                                         unsigned width, unsigned height);
+
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkPipelineLayout pipeline_layout() const;
 };
 }
