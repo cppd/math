@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/constant.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
+#include "graphics/vulkan/shader.h"
 
 #include <vector>
 
@@ -33,9 +34,6 @@ class DftFftGlobalMemory final
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
 
@@ -46,7 +44,11 @@ class DftFftGlobalMemory final
         };
 
 public:
-        DftFftGlobalMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        DftFftGlobalMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
+                           const std::unordered_set<uint32_t>& family_indices);
 
         DftFftGlobalMemory(const DftFftGlobalMemory&) = delete;
         DftFftGlobalMemory& operator=(const DftFftGlobalMemory&) = delete;
@@ -57,8 +59,6 @@ public:
 
         //
 
-        static unsigned set_number();
-        VkDescriptorSetLayout descriptor_set_layout() const;
         const VkDescriptorSet& descriptor_set() const;
 
         //
@@ -87,5 +87,35 @@ public:
         DftFftGlobalConstant();
 
         void set(uint32_t group_size, bool inverse, uint32_t data_size, uint32_t n);
+};
+
+class DftFftGlobalProgram final
+{
+        const vulkan::Device& m_device;
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::PipelineLayout m_pipeline_layout;
+        DftFftGlobalConstant m_constant;
+        vulkan::ComputeShader m_shader;
+        vulkan::Pipeline m_pipeline_forward;
+        vulkan::Pipeline m_pipeline_inverse;
+
+public:
+        DftFftGlobalProgram(const vulkan::Device& device);
+
+        DftFftGlobalProgram(const DftFftGlobalProgram&) = delete;
+        DftFftGlobalProgram& operator=(const DftFftGlobalProgram&) = delete;
+        DftFftGlobalProgram& operator=(DftFftGlobalProgram&&) = delete;
+
+        DftFftGlobalProgram(DftFftGlobalProgram&&) = default;
+        ~DftFftGlobalProgram() = default;
+
+        void create_pipelines(uint32_t group_size, uint32_t data_size, uint32_t n);
+        void delete_pipelines();
+
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkPipelineLayout pipeline_layout() const;
+        VkPipeline pipeline_forward() const;
+        VkPipeline pipeline_inverse() const;
 };
 }

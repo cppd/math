@@ -17,6 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_fft_global.h"
 
+#include "shader_source.h"
+
+#include "graphics/vulkan/create.h"
+#include "graphics/vulkan/pipeline.h"
+
 namespace gpu_vulkan
 {
 std::vector<VkDescriptorSetLayoutBinding> DftFftGlobalMemory::descriptor_set_layout_bindings()
@@ -46,9 +51,9 @@ std::vector<VkDescriptorSetLayoutBinding> DftFftGlobalMemory::descriptor_set_lay
         return bindings;
 }
 
-DftFftGlobalMemory::DftFftGlobalMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
+DftFftGlobalMemory::DftFftGlobalMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
+                                       const std::unordered_set<uint32_t>& family_indices)
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -73,11 +78,6 @@ DftFftGlobalMemory::DftFftGlobalMemory(const vulkan::Device& device, const std::
 unsigned DftFftGlobalMemory::set_number()
 {
         return SET_NUMBER;
-}
-
-VkDescriptorSetLayout DftFftGlobalMemory::descriptor_set_layout() const
-{
-        return m_descriptor_set_layout;
 }
 
 const VkDescriptorSet& DftFftGlobalMemory::descriptor_set() const
@@ -164,5 +164,69 @@ const void* DftFftGlobalConstant::data() const
 size_t DftFftGlobalConstant::size() const
 {
         return sizeof(m_data);
+}
+
+//
+
+DftFftGlobalProgram::DftFftGlobalProgram(const vulkan::Device& device)
+        : m_device(device),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, DftFftGlobalMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {DftFftGlobalMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, dft_fft_global_comp(), "main")
+{
+}
+
+VkDescriptorSetLayout DftFftGlobalProgram::descriptor_set_layout() const
+{
+        return m_descriptor_set_layout;
+}
+
+VkPipelineLayout DftFftGlobalProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+VkPipeline DftFftGlobalProgram::pipeline_forward() const
+{
+        ASSERT(m_pipeline_forward != VK_NULL_HANDLE);
+        return m_pipeline_forward;
+}
+
+VkPipeline DftFftGlobalProgram::pipeline_inverse() const
+{
+        ASSERT(m_pipeline_inverse != VK_NULL_HANDLE);
+        return m_pipeline_inverse;
+}
+
+void DftFftGlobalProgram::create_pipelines(uint32_t group_size, uint32_t data_size, uint32_t n)
+{
+        {
+                m_constant.set(group_size, false, data_size, n);
+
+                vulkan::ComputePipelineCreateInfo info;
+                info.device = &m_device;
+                info.pipeline_layout = m_pipeline_layout;
+                info.shader = &m_shader;
+                info.constants = &m_constant;
+                m_pipeline_forward = create_compute_pipeline(info);
+        }
+        {
+                m_constant.set(group_size, true, data_size, n);
+
+                vulkan::ComputePipelineCreateInfo info;
+                info.device = &m_device;
+                info.pipeline_layout = m_pipeline_layout;
+                info.shader = &m_shader;
+                info.constants = &m_constant;
+                m_pipeline_inverse = create_compute_pipeline(info);
+        }
+}
+
+void DftFftGlobalProgram::delete_pipelines()
+{
+        m_pipeline_forward = vulkan::Pipeline();
+        m_pipeline_inverse = vulkan::Pipeline();
 }
 }
