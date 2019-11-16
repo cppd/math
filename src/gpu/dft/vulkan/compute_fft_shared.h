@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/constant.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
+#include "graphics/vulkan/shader.h"
 
 #include <vector>
 
@@ -32,13 +33,13 @@ class DftFftSharedMemory final
 
         static constexpr int BUFFER_BINDING = 0;
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
 
 public:
-        DftFftSharedMemory(const vulkan::Device& device);
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        DftFftSharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
         DftFftSharedMemory(const DftFftSharedMemory&) = delete;
         DftFftSharedMemory& operator=(const DftFftSharedMemory&) = delete;
@@ -49,8 +50,6 @@ public:
 
         //
 
-        static unsigned set_number();
-        VkDescriptorSetLayout descriptor_set_layout() const;
         const VkDescriptorSet& descriptor_set() const;
 
         //
@@ -83,5 +82,36 @@ public:
 
         void set(bool inverse, uint32_t data_size, uint32_t n, uint32_t n_mask, uint32_t n_bits, uint32_t shared_size,
                  bool reverse_input, uint32_t group_size);
+};
+
+class DftFftSharedProgram final
+{
+        const vulkan::Device& m_device;
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::PipelineLayout m_pipeline_layout;
+        DftFftSharedConstant m_constant;
+        vulkan::ComputeShader m_shader;
+        vulkan::Pipeline m_pipeline_forward;
+        vulkan::Pipeline m_pipeline_inverse;
+
+public:
+        DftFftSharedProgram(const vulkan::Device& device);
+
+        DftFftSharedProgram(const DftFftSharedProgram&) = delete;
+        DftFftSharedProgram& operator=(const DftFftSharedProgram&) = delete;
+        DftFftSharedProgram& operator=(DftFftSharedProgram&&) = delete;
+
+        DftFftSharedProgram(DftFftSharedProgram&&) = default;
+        ~DftFftSharedProgram() = default;
+
+        void create_pipelines(uint32_t data_size, uint32_t n, uint32_t n_mask, uint32_t n_bits, uint32_t shared_size,
+                              bool reverse_input, uint32_t group_size);
+        void delete_pipelines();
+
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkPipelineLayout pipeline_layout() const;
+        VkPipeline pipeline_forward() const;
+        VkPipeline pipeline_inverse() const;
 };
 }

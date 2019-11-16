@@ -17,6 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_fft_shared.h"
 
+#include "shader_source.h"
+
+#include "graphics/vulkan/create.h"
+#include "graphics/vulkan/pipeline.h"
+
 namespace gpu_vulkan
 {
 std::vector<VkDescriptorSetLayoutBinding> DftFftSharedMemory::descriptor_set_layout_bindings()
@@ -37,20 +42,14 @@ std::vector<VkDescriptorSetLayoutBinding> DftFftSharedMemory::descriptor_set_lay
         return bindings;
 }
 
-DftFftSharedMemory::DftFftSharedMemory(const vulkan::Device& device)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
+DftFftSharedMemory::DftFftSharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
 unsigned DftFftSharedMemory::set_number()
 {
         return SET_NUMBER;
-}
-
-VkDescriptorSetLayout DftFftSharedMemory::descriptor_set_layout() const
-{
-        return m_descriptor_set_layout;
 }
 
 const VkDescriptorSet& DftFftSharedMemory::descriptor_set() const
@@ -166,5 +165,70 @@ const void* DftFftSharedConstant::data() const
 size_t DftFftSharedConstant::size() const
 {
         return sizeof(m_data);
+}
+
+//
+
+DftFftSharedProgram::DftFftSharedProgram(const vulkan::Device& device)
+        : m_device(device),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, DftFftSharedMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {DftFftSharedMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, dft_fft_shared_comp(), "main")
+{
+}
+
+VkDescriptorSetLayout DftFftSharedProgram::descriptor_set_layout() const
+{
+        return m_descriptor_set_layout;
+}
+
+VkPipelineLayout DftFftSharedProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+VkPipeline DftFftSharedProgram::pipeline_forward() const
+{
+        ASSERT(m_pipeline_forward != VK_NULL_HANDLE);
+        return m_pipeline_forward;
+}
+
+VkPipeline DftFftSharedProgram::pipeline_inverse() const
+{
+        ASSERT(m_pipeline_inverse != VK_NULL_HANDLE);
+        return m_pipeline_inverse;
+}
+
+void DftFftSharedProgram::create_pipelines(uint32_t data_size, uint32_t n, uint32_t n_mask, uint32_t n_bits, uint32_t shared_size,
+                                           bool reverse_input, uint32_t group_size)
+{
+        {
+                m_constant.set(false, data_size, n, n_mask, n_bits, shared_size, reverse_input, group_size);
+
+                vulkan::ComputePipelineCreateInfo info;
+                info.device = &m_device;
+                info.pipeline_layout = m_pipeline_layout;
+                info.shader = &m_shader;
+                info.constants = &m_constant;
+                m_pipeline_forward = create_compute_pipeline(info);
+        }
+        {
+                m_constant.set(true, data_size, n, n_mask, n_bits, shared_size, reverse_input, group_size);
+
+                vulkan::ComputePipelineCreateInfo info;
+                info.device = &m_device;
+                info.pipeline_layout = m_pipeline_layout;
+                info.shader = &m_shader;
+                info.constants = &m_constant;
+                m_pipeline_inverse = create_compute_pipeline(info);
+        }
+}
+
+void DftFftSharedProgram::delete_pipelines()
+{
+        m_pipeline_forward = vulkan::Pipeline();
+        m_pipeline_inverse = vulkan::Pipeline();
 }
 }
