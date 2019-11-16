@@ -17,6 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_copy_output.h"
 
+#include "shader_source.h"
+
+#include "graphics/vulkan/create.h"
+#include "graphics/vulkan/pipeline.h"
+
 namespace gpu_vulkan
 {
 std::vector<VkDescriptorSetLayoutBinding> DftCopyOutputMemory::descriptor_set_layout_bindings()
@@ -47,20 +52,14 @@ std::vector<VkDescriptorSetLayoutBinding> DftCopyOutputMemory::descriptor_set_la
         return bindings;
 }
 
-DftCopyOutputMemory::DftCopyOutputMemory(const vulkan::Device& device)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
+DftCopyOutputMemory::DftCopyOutputMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
 unsigned DftCopyOutputMemory::set_number()
 {
         return SET_NUMBER;
-}
-
-VkDescriptorSetLayout DftCopyOutputMemory::descriptor_set_layout() const
-{
-        return m_descriptor_set_layout;
 }
 
 const VkDescriptorSet& DftCopyOutputMemory::descriptor_set() const
@@ -119,18 +118,14 @@ DftCopyOutputConstant::DftCopyOutputConstant()
         }
 }
 
-void DftCopyOutputConstant::set_group_size(uint32_t x, uint32_t y)
+void DftCopyOutputConstant::set(uint32_t local_size_x, uint32_t local_size_y, float to_mul)
 {
-        static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(x)>);
-        m_data.local_size_x = x;
-        static_assert(std::is_same_v<decltype(m_data.local_size_y), decltype(y)>);
-        m_data.local_size_y = y;
-}
-
-void DftCopyOutputConstant::set_to_mul(float v)
-{
-        static_assert(std::is_same_v<decltype(m_data.to_mul), decltype(v)>);
-        m_data.to_mul = v;
+        static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
+        m_data.local_size_x = local_size_x;
+        static_assert(std::is_same_v<decltype(m_data.local_size_y), decltype(local_size_y)>);
+        m_data.local_size_y = local_size_y;
+        static_assert(std::is_same_v<decltype(m_data.to_mul), decltype(to_mul)>);
+        m_data.to_mul = to_mul;
 }
 
 const std::vector<VkSpecializationMapEntry>& DftCopyOutputConstant::entries() const
@@ -146,5 +141,50 @@ const void* DftCopyOutputConstant::data() const
 size_t DftCopyOutputConstant::size() const
 {
         return sizeof(m_data);
+}
+
+//
+
+DftCopyOutputProgram::DftCopyOutputProgram(const vulkan::Device& device)
+        : m_device(device),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, DftCopyOutputMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {DftCopyOutputMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, dft_copy_output_comp(), "main")
+{
+}
+
+VkDescriptorSetLayout DftCopyOutputProgram::descriptor_set_layout() const
+{
+        return m_descriptor_set_layout;
+}
+
+VkPipelineLayout DftCopyOutputProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+VkPipeline DftCopyOutputProgram::pipeline() const
+{
+        ASSERT(m_pipeline != VK_NULL_HANDLE);
+        return m_pipeline;
+}
+
+void DftCopyOutputProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y, float to_mul)
+{
+        m_constant.set(local_size_x, local_size_y, to_mul);
+
+        vulkan::ComputePipelineCreateInfo info;
+        info.device = &m_device;
+        info.pipeline_layout = m_pipeline_layout;
+        info.shader = &m_shader;
+        info.constants = &m_constant;
+        m_pipeline = create_compute_pipeline(info);
+}
+
+void DftCopyOutputProgram::delete_pipeline()
+{
+        m_pipeline = vulkan::Pipeline();
 }
 }

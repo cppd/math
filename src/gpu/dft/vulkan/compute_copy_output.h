@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/constant.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
+#include "graphics/vulkan/shader.h"
 
 #include <vector>
 
@@ -33,13 +34,13 @@ class DftCopyOutputMemory final
         static constexpr int SRC_BINDING = 0;
         static constexpr int DST_BINDING = 1;
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
 
 public:
-        DftCopyOutputMemory(const vulkan::Device& device);
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        DftCopyOutputMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
         DftCopyOutputMemory(const DftCopyOutputMemory&) = delete;
         DftCopyOutputMemory& operator=(const DftCopyOutputMemory&) = delete;
@@ -50,8 +51,6 @@ public:
 
         //
 
-        static unsigned set_number();
-        VkDescriptorSetLayout descriptor_set_layout() const;
         const VkDescriptorSet& descriptor_set() const;
 
         //
@@ -78,7 +77,34 @@ class DftCopyOutputConstant final : public vulkan::SpecializationConstant
 public:
         DftCopyOutputConstant();
 
-        void set_group_size(uint32_t x, uint32_t y);
-        void set_to_mul(float v);
+        void set(uint32_t local_size_x, uint32_t local_size_y, float to_mul);
+};
+
+class DftCopyOutputProgram final
+{
+        const vulkan::Device& m_device;
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::PipelineLayout m_pipeline_layout;
+        DftCopyOutputConstant m_constant;
+        vulkan::ComputeShader m_shader;
+        vulkan::Pipeline m_pipeline;
+
+public:
+        DftCopyOutputProgram(const vulkan::Device& device);
+
+        DftCopyOutputProgram(const DftCopyOutputProgram&) = delete;
+        DftCopyOutputProgram& operator=(const DftCopyOutputProgram&) = delete;
+        DftCopyOutputProgram& operator=(DftCopyOutputProgram&&) = delete;
+
+        DftCopyOutputProgram(DftCopyOutputProgram&&) = default;
+        ~DftCopyOutputProgram() = default;
+
+        void create_pipeline(uint32_t local_size_x, uint32_t local_size_y, float to_mul);
+        void delete_pipeline();
+
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkPipelineLayout pipeline_layout() const;
+        VkPipeline pipeline() const;
 };
 }
