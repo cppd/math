@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/constant.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
+#include "graphics/vulkan/shader.h"
 
 #include <vector>
 
@@ -33,13 +34,13 @@ class DftCopyInputMemory final
         static constexpr int SRC_BINDING = 1;
         static constexpr int DST_BINDING = 0;
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
 
 public:
-        DftCopyInputMemory(const vulkan::Device& device);
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        DftCopyInputMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
         DftCopyInputMemory(const DftCopyInputMemory&) = delete;
         DftCopyInputMemory& operator=(const DftCopyInputMemory&) = delete;
@@ -50,8 +51,6 @@ public:
 
         //
 
-        static unsigned set_number();
-        VkDescriptorSetLayout descriptor_set_layout() const;
         const VkDescriptorSet& descriptor_set() const;
 
         //
@@ -82,5 +81,33 @@ public:
         DftCopyInputConstant();
 
         void set(int32_t local_size_x, int32_t local_size_y, int32_t x, int32_t y, int32_t width, int32_t height);
+};
+
+class DftCopyInputProgram final
+{
+        const vulkan::Device& m_device;
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::PipelineLayout m_pipeline_layout;
+        DftCopyInputConstant m_constant;
+        vulkan::ComputeShader m_shader;
+        vulkan::Pipeline m_pipeline;
+
+public:
+        DftCopyInputProgram(const vulkan::Device& device);
+
+        DftCopyInputProgram(const DftCopyInputProgram&) = delete;
+        DftCopyInputProgram& operator=(const DftCopyInputProgram&) = delete;
+        DftCopyInputProgram& operator=(DftCopyInputProgram&&) = delete;
+
+        DftCopyInputProgram(DftCopyInputProgram&&) = default;
+        ~DftCopyInputProgram() = default;
+
+        void create_pipeline(int32_t local_size_x, int32_t local_size_y, int32_t x, int32_t y, int32_t width, int32_t height);
+        void delete_pipeline();
+
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkPipelineLayout pipeline_layout() const;
+        VkPipeline pipeline() const;
 };
 }

@@ -17,6 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_copy_input.h"
 
+#include "shader_source.h"
+
+#include "graphics/vulkan/create.h"
+#include "graphics/vulkan/pipeline.h"
+
 namespace gpu_vulkan
 {
 std::vector<VkDescriptorSetLayoutBinding> DftCopyInputMemory::descriptor_set_layout_bindings()
@@ -47,20 +52,14 @@ std::vector<VkDescriptorSetLayoutBinding> DftCopyInputMemory::descriptor_set_lay
         return bindings;
 }
 
-DftCopyInputMemory::DftCopyInputMemory(const vulkan::Device& device)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
+DftCopyInputMemory::DftCopyInputMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
 unsigned DftCopyInputMemory::set_number()
 {
         return SET_NUMBER;
-}
-
-VkDescriptorSetLayout DftCopyInputMemory::descriptor_set_layout() const
-{
-        return m_descriptor_set_layout;
 }
 
 const VkDescriptorSet& DftCopyInputMemory::descriptor_set() const
@@ -169,5 +168,51 @@ const void* DftCopyInputConstant::data() const
 size_t DftCopyInputConstant::size() const
 {
         return sizeof(m_data);
+}
+
+//
+
+DftCopyInputProgram::DftCopyInputProgram(const vulkan::Device& device)
+        : m_device(device),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, DftCopyInputMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {DftCopyInputMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, dft_copy_input_comp(), "main")
+{
+}
+
+VkDescriptorSetLayout DftCopyInputProgram::descriptor_set_layout() const
+{
+        return m_descriptor_set_layout;
+}
+
+VkPipelineLayout DftCopyInputProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+VkPipeline DftCopyInputProgram::pipeline() const
+{
+        ASSERT(m_pipeline != VK_NULL_HANDLE);
+        return m_pipeline;
+}
+
+void DftCopyInputProgram::create_pipeline(int32_t local_size_x, int32_t local_size_y, int32_t x, int32_t y, int32_t width,
+                                          int32_t height)
+{
+        m_constant.set(local_size_x, local_size_y, x, y, width, height);
+
+        vulkan::ComputePipelineCreateInfo info;
+        info.device = &m_device;
+        info.pipeline_layout = m_pipeline_layout;
+        info.shader = &m_shader;
+        info.constants = &m_constant;
+        m_pipeline = create_compute_pipeline(info);
+}
+
+void DftCopyInputProgram::delete_pipeline()
+{
+        m_pipeline = vulkan::Pipeline();
 }
 }
