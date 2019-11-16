@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/constant.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
+#include "graphics/vulkan/shader.h"
 
 #include <vector>
 
@@ -32,13 +33,13 @@ class DftBitReverseMemory final
 
         static constexpr int BUFFER_BINDING = 0;
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
 
 public:
-        DftBitReverseMemory(const vulkan::Device& device);
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        DftBitReverseMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
         DftBitReverseMemory(const DftBitReverseMemory&) = delete;
         DftBitReverseMemory& operator=(const DftBitReverseMemory&) = delete;
@@ -49,8 +50,6 @@ public:
 
         //
 
-        static unsigned set_number();
-        VkDescriptorSetLayout descriptor_set_layout() const;
         const VkDescriptorSet& descriptor_set() const;
 
         //
@@ -78,5 +77,33 @@ public:
         DftBitReverseConstant();
 
         void set(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits);
+};
+
+class DftBitReverseProgram final
+{
+        const vulkan::Device& m_device;
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::PipelineLayout m_pipeline_layout;
+        DftBitReverseConstant m_constant;
+        vulkan::ComputeShader m_shader;
+        vulkan::Pipeline m_pipeline;
+
+public:
+        DftBitReverseProgram(const vulkan::Device& device);
+
+        DftBitReverseProgram(const DftBitReverseProgram&) = delete;
+        DftBitReverseProgram& operator=(const DftBitReverseProgram&) = delete;
+        DftBitReverseProgram& operator=(DftBitReverseProgram&&) = delete;
+
+        DftBitReverseProgram(DftBitReverseProgram&&) = default;
+        ~DftBitReverseProgram() = default;
+
+        void create_pipeline(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits);
+        void delete_pipeline();
+
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkPipelineLayout pipeline_layout() const;
+        VkPipeline pipeline() const;
 };
 }

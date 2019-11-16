@@ -17,6 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_bit_reverse.h"
 
+#include "shader_source.h"
+
+#include "graphics/vulkan/create.h"
+#include "graphics/vulkan/pipeline.h"
+
 namespace gpu_vulkan
 {
 std::vector<VkDescriptorSetLayoutBinding> DftBitReverseMemory::descriptor_set_layout_bindings()
@@ -37,20 +42,14 @@ std::vector<VkDescriptorSetLayoutBinding> DftBitReverseMemory::descriptor_set_la
         return bindings;
 }
 
-DftBitReverseMemory::DftBitReverseMemory(const vulkan::Device& device)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
+DftBitReverseMemory::DftBitReverseMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
 unsigned DftBitReverseMemory::set_number()
 {
         return SET_NUMBER;
-}
-
-VkDescriptorSetLayout DftBitReverseMemory::descriptor_set_layout() const
-{
-        return m_descriptor_set_layout;
 }
 
 const VkDescriptorSet& DftBitReverseMemory::descriptor_set() const
@@ -129,5 +128,50 @@ const void* DftBitReverseConstant::data() const
 size_t DftBitReverseConstant::size() const
 {
         return sizeof(m_data);
+}
+
+//
+
+DftBitReverseProgram::DftBitReverseProgram(const vulkan::Device& device)
+        : m_device(device),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, DftBitReverseMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {DftBitReverseMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, dft_bit_reverse_comp(), "main")
+{
+}
+
+VkDescriptorSetLayout DftBitReverseProgram::descriptor_set_layout() const
+{
+        return m_descriptor_set_layout;
+}
+
+VkPipelineLayout DftBitReverseProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+VkPipeline DftBitReverseProgram::pipeline() const
+{
+        ASSERT(m_pipeline != VK_NULL_HANDLE);
+        return m_pipeline;
+}
+
+void DftBitReverseProgram::create_pipeline(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits)
+{
+        m_constant.set(group_size, data_size, n_mask, n_bits);
+
+        vulkan::ComputePipelineCreateInfo info;
+        info.device = &m_device;
+        info.pipeline_layout = m_pipeline_layout;
+        info.shader = &m_shader;
+        info.constants = &m_constant;
+        m_pipeline = create_compute_pipeline(info);
+}
+
+void DftBitReverseProgram::delete_pipeline()
+{
+        m_pipeline = vulkan::Pipeline();
 }
 }
