@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/constant.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
+#include "graphics/vulkan/shader.h"
 
 #include <vector>
 
@@ -33,13 +34,13 @@ class DftMulDMemory final
         static constexpr int DIAGONAL_BINDING = 0;
         static constexpr int DATA_BINDING = 1;
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
 
 public:
-        DftMulDMemory(const vulkan::Device& device);
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        DftMulDMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
         DftMulDMemory(const DftMulDMemory&) = delete;
         DftMulDMemory& operator=(const DftMulDMemory&) = delete;
@@ -50,8 +51,6 @@ public:
 
         //
 
-        static unsigned set_number();
-        VkDescriptorSetLayout descriptor_set_layout() const;
         const VkDescriptorSet& descriptor_set() const;
 
         //
@@ -80,5 +79,35 @@ public:
         DftMulDConstant();
 
         void set(uint32_t group_size_x, uint32_t group_size_y, int32_t rows, int32_t columns);
+};
+
+class DftMulDProgram final
+{
+        const vulkan::Device& m_device;
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::PipelineLayout m_pipeline_layout;
+        DftMulDConstant m_constant;
+        vulkan::ComputeShader m_shader;
+        vulkan::Pipeline m_pipeline_rows;
+        vulkan::Pipeline m_pipeline_columns;
+
+public:
+        DftMulDProgram(const vulkan::Device& device);
+
+        DftMulDProgram(const DftMulDProgram&) = delete;
+        DftMulDProgram& operator=(const DftMulDProgram&) = delete;
+        DftMulDProgram& operator=(DftMulDProgram&&) = delete;
+
+        DftMulDProgram(DftMulDProgram&&) = default;
+        ~DftMulDProgram() = default;
+
+        void create_pipelines(uint32_t group_size, uint32_t n1, uint32_t n2, uint32_t m1, uint32_t m2);
+        void delete_pipelines();
+
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkPipelineLayout pipeline_layout() const;
+        VkPipeline pipeline_rows() const;
+        VkPipeline pipeline_columns() const;
 };
 }

@@ -17,6 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_mul_d.h"
 
+#include "shader_source.h"
+
+#include "graphics/vulkan/create.h"
+#include "graphics/vulkan/pipeline.h"
+
 namespace gpu_vulkan
 {
 std::vector<VkDescriptorSetLayoutBinding> DftMulDMemory::descriptor_set_layout_bindings()
@@ -48,20 +53,14 @@ std::vector<VkDescriptorSetLayoutBinding> DftMulDMemory::descriptor_set_layout_b
         return bindings;
 }
 
-DftMulDMemory::DftMulDMemory(const vulkan::Device& device)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
+DftMulDMemory::DftMulDMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
 unsigned DftMulDMemory::set_number()
 {
         return SET_NUMBER;
-}
-
-VkDescriptorSetLayout DftMulDMemory::descriptor_set_layout() const
-{
-        return m_descriptor_set_layout;
 }
 
 const VkDescriptorSet& DftMulDMemory::descriptor_set() const
@@ -153,5 +152,67 @@ const void* DftMulDConstant::data() const
 size_t DftMulDConstant::size() const
 {
         return sizeof(m_data);
+}
+
+//
+
+DftMulDProgram::DftMulDProgram(const vulkan::Device& device)
+        : m_device(device),
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, DftMulDMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(device, {DftMulDMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, dft_mul_d_comp(), "main")
+{
+}
+
+VkDescriptorSetLayout DftMulDProgram::descriptor_set_layout() const
+{
+        return m_descriptor_set_layout;
+}
+
+VkPipelineLayout DftMulDProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+VkPipeline DftMulDProgram::pipeline_rows() const
+{
+        ASSERT(m_pipeline_rows != VK_NULL_HANDLE);
+        return m_pipeline_rows;
+}
+
+VkPipeline DftMulDProgram::pipeline_columns() const
+{
+        ASSERT(m_pipeline_columns != VK_NULL_HANDLE);
+        return m_pipeline_columns;
+}
+
+void DftMulDProgram::create_pipelines(uint32_t group_size, uint32_t n1, uint32_t n2, uint32_t m1, uint32_t m2)
+{
+        {
+                m_constant.set(group_size, group_size, n2, m1);
+
+                vulkan::ComputePipelineCreateInfo info;
+                info.device = &m_device;
+                info.pipeline_layout = m_pipeline_layout;
+                info.shader = &m_shader;
+                info.constants = &m_constant;
+                m_pipeline_rows = create_compute_pipeline(info);
+        }
+        {
+                m_constant.set(group_size, group_size, n1, m2);
+
+                vulkan::ComputePipelineCreateInfo info;
+                info.device = &m_device;
+                info.pipeline_layout = m_pipeline_layout;
+                info.shader = &m_shader;
+                info.constants = &m_constant;
+                m_pipeline_columns = create_compute_pipeline(info);
+        }
+}
+
+void DftMulDProgram::delete_pipelines()
+{
+        m_pipeline_rows = vulkan::Pipeline();
+        m_pipeline_columns = vulkan::Pipeline();
 }
 }
