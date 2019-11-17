@@ -17,6 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_mul.h"
 
+#include "shader_source.h"
+
+#include "graphics/vulkan/create.h"
+#include "graphics/vulkan/pipeline.h"
+
 namespace gpu_vulkan
 {
 std::vector<VkDescriptorSetLayoutBinding> DftMulMemory::descriptor_set_layout_bindings()
@@ -48,20 +53,14 @@ std::vector<VkDescriptorSetLayoutBinding> DftMulMemory::descriptor_set_layout_bi
         return bindings;
 }
 
-DftMulMemory::DftMulMemory(const vulkan::Device& device)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
+DftMulMemory::DftMulMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
 unsigned DftMulMemory::set_number()
 {
         return SET_NUMBER;
-}
-
-VkDescriptorSetLayout DftMulMemory::descriptor_set_layout() const
-{
-        return m_descriptor_set_layout;
 }
 
 const VkDescriptorSet& DftMulMemory::descriptor_set() const
@@ -155,11 +154,8 @@ DftMulConstant::DftMulConstant()
         }
 }
 
-void DftMulConstant::set(int32_t function_index, int32_t n1, int32_t n2, int32_t m1, int32_t m2, bool inverse,
-                         uint32_t group_size_x, uint32_t group_size_y)
+void DftMulConstant::set_data(int32_t n1, int32_t n2, int32_t m1, int32_t m2, uint32_t group_size_x, uint32_t group_size_y)
 {
-        static_assert(std::is_same_v<decltype(m_data.function_index), int32_t>);
-        m_data.function_index = function_index;
         static_assert(std::is_same_v<decltype(m_data.n1), decltype(n1)>);
         m_data.n1 = n1;
         static_assert(std::is_same_v<decltype(m_data.n2), decltype(n2)>);
@@ -168,12 +164,18 @@ void DftMulConstant::set(int32_t function_index, int32_t n1, int32_t n2, int32_t
         m_data.m1 = m1;
         static_assert(std::is_same_v<decltype(m_data.m2), decltype(m2)>);
         m_data.m2 = m2;
-        static_assert(std::is_same_v<decltype(m_data.inverse), uint32_t>);
-        m_data.inverse = inverse ? 1 : 0;
         static_assert(std::is_same_v<decltype(m_data.group_size_x), decltype(group_size_x)>);
         m_data.group_size_x = group_size_x;
         static_assert(std::is_same_v<decltype(m_data.group_size_y), decltype(group_size_y)>);
         m_data.group_size_y = group_size_y;
+}
+
+void DftMulConstant::set_function(int32_t function_index, bool inverse)
+{
+        static_assert(std::is_same_v<decltype(m_data.function_index), int32_t>);
+        m_data.function_index = function_index;
+        static_assert(std::is_same_v<decltype(m_data.inverse), uint32_t>);
+        m_data.inverse = inverse ? 1 : 0;
 }
 
 const std::vector<VkSpecializationMapEntry>& DftMulConstant::entries() const
@@ -189,5 +191,116 @@ const void* DftMulConstant::data() const
 size_t DftMulConstant::size() const
 {
         return sizeof(m_data);
+}
+
+//
+
+DftMulProgram::DftMulProgram(const vulkan::Device& device)
+        : m_device(device),
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, DftMulMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(device, {DftMulMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, dft_mul_comp(), "main")
+{
+}
+
+VkDescriptorSetLayout DftMulProgram::descriptor_set_layout() const
+{
+        return m_descriptor_set_layout;
+}
+
+VkPipelineLayout DftMulProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+VkPipeline DftMulProgram::pipeline_rows_to_buffer_forward() const
+{
+        ASSERT(m_pipeline_rows_to_buffer_forward != VK_NULL_HANDLE);
+        return m_pipeline_rows_to_buffer_forward;
+}
+
+VkPipeline DftMulProgram::pipeline_rows_to_buffer_inverse() const
+{
+        ASSERT(m_pipeline_rows_to_buffer_inverse != VK_NULL_HANDLE);
+        return m_pipeline_rows_to_buffer_inverse;
+}
+
+VkPipeline DftMulProgram::pipeline_rows_from_buffer_forward() const
+{
+        ASSERT(m_pipeline_rows_from_buffer_forward != VK_NULL_HANDLE);
+        return m_pipeline_rows_from_buffer_forward;
+}
+
+VkPipeline DftMulProgram::pipeline_rows_from_buffer_inverse() const
+{
+        ASSERT(m_pipeline_rows_from_buffer_inverse != VK_NULL_HANDLE);
+        return m_pipeline_rows_from_buffer_inverse;
+}
+
+VkPipeline DftMulProgram::pipeline_columns_to_buffer_forward() const
+{
+        ASSERT(m_pipeline_columns_to_buffer_forward != VK_NULL_HANDLE);
+        return m_pipeline_columns_to_buffer_forward;
+}
+
+VkPipeline DftMulProgram::pipeline_columns_to_buffer_inverse() const
+{
+        ASSERT(m_pipeline_columns_to_buffer_inverse != VK_NULL_HANDLE);
+        return m_pipeline_columns_to_buffer_inverse;
+}
+
+VkPipeline DftMulProgram::pipeline_columns_from_buffer_forward() const
+{
+        ASSERT(m_pipeline_columns_from_buffer_forward != VK_NULL_HANDLE);
+        return m_pipeline_columns_from_buffer_forward;
+}
+
+VkPipeline DftMulProgram::pipeline_columns_from_buffer_inverse() const
+{
+        ASSERT(m_pipeline_columns_from_buffer_inverse != VK_NULL_HANDLE);
+        return m_pipeline_columns_from_buffer_inverse;
+}
+
+void DftMulProgram::create_pipelines(int32_t n1, int32_t n2, int32_t m1, int32_t m2, uint32_t group_size_x, uint32_t group_size_y)
+{
+        m_constant.set_data(n1, n2, m1, m2, group_size_x, group_size_y);
+
+        vulkan::ComputePipelineCreateInfo info;
+        info.device = &m_device;
+        info.pipeline_layout = m_pipeline_layout;
+        info.shader = &m_shader;
+        info.constants = &m_constant;
+
+        m_constant.set_function(0, false);
+        m_pipeline_rows_to_buffer_forward = create_compute_pipeline(info);
+        m_constant.set_function(0, true);
+        m_pipeline_rows_to_buffer_inverse = create_compute_pipeline(info);
+
+        m_constant.set_function(1, false);
+        m_pipeline_rows_from_buffer_forward = create_compute_pipeline(info);
+        m_constant.set_function(1, true);
+        m_pipeline_rows_from_buffer_inverse = create_compute_pipeline(info);
+
+        m_constant.set_function(2, false);
+        m_pipeline_columns_to_buffer_forward = create_compute_pipeline(info);
+        m_constant.set_function(2, true);
+        m_pipeline_columns_to_buffer_inverse = create_compute_pipeline(info);
+
+        m_constant.set_function(3, false);
+        m_pipeline_columns_from_buffer_forward = create_compute_pipeline(info);
+        m_constant.set_function(3, true);
+        m_pipeline_columns_from_buffer_inverse = create_compute_pipeline(info);
+}
+
+void DftMulProgram::delete_pipelines()
+{
+        m_pipeline_rows_to_buffer_forward = vulkan::Pipeline();
+        m_pipeline_rows_to_buffer_inverse = vulkan::Pipeline();
+        m_pipeline_rows_from_buffer_forward = vulkan::Pipeline();
+        m_pipeline_rows_from_buffer_inverse = vulkan::Pipeline();
+        m_pipeline_columns_to_buffer_forward = vulkan::Pipeline();
+        m_pipeline_columns_to_buffer_inverse = vulkan::Pipeline();
+        m_pipeline_columns_from_buffer_forward = vulkan::Pipeline();
+        m_pipeline_columns_from_buffer_inverse = vulkan::Pipeline();
 }
 }
