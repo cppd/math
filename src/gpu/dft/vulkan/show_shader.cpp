@@ -84,13 +84,22 @@ const VkDescriptorSet& DftShowMemory::descriptor_set() const
         return m_descriptors.descriptor_set(0);
 }
 
-void DftShowMemory::set_data(const vec4& background_color, const vec4& foreground_color, float brightness) const
+void DftShowMemory::set_background_color(const vec4f& background_color) const
 {
-        Data d;
-        d.background_color = background_color;
-        d.foreground_color = foreground_color;
-        d.brightness = brightness;
-        vulkan::map_and_write_to_buffer(m_uniform_buffers[0], d);
+        decltype(Data().background_color) v = background_color;
+        vulkan::map_and_write_to_buffer(m_uniform_buffers[0], offsetof(Data, background_color), v);
+}
+
+void DftShowMemory::set_foreground_color(const vec4f& foreground_color) const
+{
+        decltype(Data().foreground_color) v = foreground_color;
+        vulkan::map_and_write_to_buffer(m_uniform_buffers[0], offsetof(Data, foreground_color), v);
+}
+
+void DftShowMemory::set_brightness(float brightness) const
+{
+        decltype(Data().brightness) v = brightness;
+        vulkan::map_and_write_to_buffer(m_uniform_buffers[0], offsetof(Data, brightness), v);
 }
 
 void DftShowMemory::set_image(VkSampler sampler, const vulkan::ImageWithMemory& image) const

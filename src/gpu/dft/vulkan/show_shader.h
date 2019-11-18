@@ -41,8 +41,8 @@ class DftShowMemory final
 
         struct Data
         {
-                vec4 background_color;
-                vec4 foreground_color;
+                vec4f background_color;
+                vec4f foreground_color;
                 float brightness;
         };
 
@@ -66,7 +66,9 @@ public:
 
         //
 
-        void set_data(const vec4& background_color, const vec4& foreground_color, float brightness) const;
+        void set_background_color(const vec4f& background_color) const;
+        void set_foreground_color(const vec4f& foreground_color) const;
+        void set_brightness(float brightness) const;
         void set_image(VkSampler sampler, const vulkan::ImageWithMemory& image) const;
 };
 
