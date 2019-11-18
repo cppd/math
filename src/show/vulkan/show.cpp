@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "com/type/limit.h"
 #include "gpu/convex_hull/vulkan/show.h"
+#include "gpu/dft/vulkan/show.h"
 #include "gpu/pencil_sketch/vulkan/show.h"
 #include "gpu/renderer/vulkan/renderer.h"
 #include "gpu/text/vulkan/show.h"
@@ -148,6 +149,7 @@ class Impl final : public Show, public WindowEvent
         std::unique_ptr<gpu_vulkan::TextShow> m_text;
         std::unique_ptr<gpu_vulkan::ConvexHullShow> m_convex_hull;
         std::unique_ptr<gpu_vulkan::PencilSketchShow> m_pencil_sketch;
+        std::unique_ptr<gpu_vulkan::DftShow> m_dft;
 
         //
 
@@ -309,19 +311,25 @@ class Impl final : public Show, public WindowEvent
                 }
         }
 
-        void set_dft_brightness(double /*v*/) override
+        void set_dft_brightness(double v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                m_dft->set_brightness(v);
         }
 
-        void set_dft_background_color(const Color& /*c*/) override
+        void set_dft_background_color(const Color& c) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                m_dft->set_background_color(c);
         }
 
-        void set_dft_color(const Color& /*c*/) override
+        void set_dft_color(const Color& c) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                m_dft->set_color(c);
         }
 
         void show_convex_hull_2d(bool v) override
@@ -546,6 +554,7 @@ class Impl final : public Show, public WindowEvent
                 m_text->delete_buffers();
                 m_convex_hull->delete_buffers();
                 m_pencil_sketch->delete_buffers();
+                m_dft->delete_buffers();
                 m_renderer->delete_buffers();
 
                 m_object_image.reset();
@@ -634,6 +643,9 @@ class Impl final : public Show, public WindowEvent
                         ASSERT(w2_x >= 0 && w2_y >= 0 && w2_w > 0 && w2_h > 0);
                         ASSERT(w2_x + w2_w <= static_cast<int>(m_swapchain->width()));
                         ASSERT(w2_y + w2_h <= static_cast<int>(m_swapchain->height()));
+
+                        m_dft->create_buffers(&m_render_buffers->buffers_2d(), *m_resolve_texture, w1_x, w1_y, w1_w, w1_h, w2_x,
+                                              w2_y, w2_w, w2_h);
                 }
 
                 //
@@ -675,6 +687,12 @@ class Impl final : public Show, public WindowEvent
                 {
                         wait_semaphore = resolve_to_texture(graphics_queue, wait_semaphore, image_index);
                         wait_semaphore = m_pencil_sketch->draw(graphics_queue, wait_semaphore, image_index);
+                }
+
+                if (m_dft_active)
+                {
+                        wait_semaphore = resolve_to_texture(graphics_queue, wait_semaphore, image_index);
+                        wait_semaphore = m_dft->draw(graphics_queue, wait_semaphore, image_index);
                 }
 
                 if (m_convex_hull_active)
@@ -767,6 +785,10 @@ public:
                 m_pencil_sketch = gpu_vulkan::create_convex_hull_show(*m_instance, m_instance->graphics_command_pool(),
                                                                       graphics_queue, m_instance->transfer_command_pool(),
                                                                       m_instance->transfer_queue(), VULKAN_SAMPLE_SHADING);
+
+                m_dft = gpu_vulkan::create_dft_show(*m_instance, m_instance->graphics_command_pool(), graphics_queue,
+                                                    m_instance->transfer_command_pool(), m_instance->transfer_queue(),
+                                                    VULKAN_SAMPLE_SHADING);
 
                 //
 
