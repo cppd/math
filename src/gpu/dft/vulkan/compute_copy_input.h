@@ -55,8 +55,7 @@ public:
 
         //
 
-        void set_input(VkSampler sampler, const vulkan::ImageWithMemory& image) const;
-        void set_output(const vulkan::BufferWithMemory& buffer) const;
+        void set(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::BufferWithMemory& output) const;
 };
 
 class DftCopyInputConstant final : public vulkan::SpecializationConstant

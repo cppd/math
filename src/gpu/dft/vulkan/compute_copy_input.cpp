@@ -67,28 +67,27 @@ const VkDescriptorSet& DftCopyInputMemory::descriptor_set() const
         return m_descriptors.descriptor_set(0);
 }
 
-void DftCopyInputMemory::set_input(VkSampler sampler, const vulkan::ImageWithMemory& image) const
+void DftCopyInputMemory::set(VkSampler sampler, const vulkan::ImageWithMemory& input,
+                             const vulkan::BufferWithMemory& output) const
 {
-        ASSERT(image.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+        {
+                ASSERT(input.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                image_info.imageView = input.image_view();
+                image_info.sampler = sampler;
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = image.image_view();
-        image_info.sampler = sampler;
+                m_descriptors.update_descriptor_set(0, SRC_BINDING, image_info);
+        }
+        {
+                ASSERT(output.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = output;
+                buffer_info.offset = 0;
+                buffer_info.range = output.size();
 
-        m_descriptors.update_descriptor_set(0, SRC_BINDING, image_info);
-}
-
-void DftCopyInputMemory::set_output(const vulkan::BufferWithMemory& buffer) const
-{
-        ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
-
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer;
-        buffer_info.offset = 0;
-        buffer_info.range = buffer.size();
-
-        m_descriptors.update_descriptor_set(0, DST_BINDING, buffer_info);
+                m_descriptors.update_descriptor_set(0, DST_BINDING, buffer_info);
+        }
 }
 
 //
