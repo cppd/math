@@ -67,28 +67,28 @@ const VkDescriptorSet& DftCopyOutputMemory::descriptor_set() const
         return m_descriptors.descriptor_set(0);
 }
 
-void DftCopyOutputMemory::set_input(const vulkan::BufferWithMemory& buffer) const
+void DftCopyOutputMemory::set(const vulkan::BufferWithMemory& input, const vulkan::ImageWithMemory& output) const
 {
-        ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        {
+                ASSERT(input.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer;
-        buffer_info.offset = 0;
-        buffer_info.range = buffer.size();
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = input;
+                buffer_info.offset = 0;
+                buffer_info.range = input.size();
 
-        m_descriptors.update_descriptor_set(0, SRC_BINDING, buffer_info);
-}
+                m_descriptors.update_descriptor_set(0, SRC_BINDING, buffer_info);
+        }
+        {
+                ASSERT(output.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+                ASSERT(output.format() == VK_FORMAT_R32_SFLOAT);
 
-void DftCopyOutputMemory::set_output(const vulkan::ImageWithMemory& image) const
-{
-        ASSERT(image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
-        ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+                image_info.imageView = output.image_view();
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image.image_view();
-
-        m_descriptors.update_descriptor_set(0, DST_BINDING, image_info);
+                m_descriptors.update_descriptor_set(0, DST_BINDING, image_info);
+        }
 }
 
 //

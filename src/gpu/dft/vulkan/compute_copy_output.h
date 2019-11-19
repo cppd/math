@@ -55,8 +55,7 @@ public:
 
         //
 
-        void set_input(const vulkan::BufferWithMemory& buffer) const;
-        void set_output(const vulkan::ImageWithMemory& image) const;
+        void set(const vulkan::BufferWithMemory& input, const vulkan::ImageWithMemory& output) const;
 };
 
 class DftCopyOutputConstant final : public vulkan::SpecializationConstant
