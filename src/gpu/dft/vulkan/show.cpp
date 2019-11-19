@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show.h"
 
+#include "compute.h"
 #include "sampler.h"
 #include "show_shader.h"
 
@@ -71,7 +72,7 @@ class Impl final : public DftShow
         std::optional<vulkan::Pipeline> m_pipeline;
         std::optional<vulkan::CommandBuffers> m_command_buffers;
 
-        // std::unique_ptr<DftCompute> m_compute;
+        std::unique_ptr<DftCompute> m_compute;
 
         void draw_commands(VkCommandBuffer command_buffer) const
         {
@@ -91,9 +92,9 @@ class Impl final : public DftShow
                 vkCmdDraw(command_buffer, VERTEX_COUNT, 1, 0, 0);
         }
 
-        void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& /*input*/, unsigned /*src_x*/,
-                            unsigned /*src_y*/, unsigned src_width, unsigned src_height, unsigned dst_x, unsigned dst_y,
-                            unsigned dst_width, unsigned dst_height) override
+        void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& input, unsigned src_x, unsigned src_y,
+                            unsigned src_width, unsigned src_height, unsigned dst_x, unsigned dst_y, unsigned dst_width,
+                            unsigned dst_height) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -112,7 +113,8 @@ class Impl final : public DftShow
                 m_pipeline = m_program.create_pipeline(render_buffers->render_pass(), render_buffers->sample_count(), dst_x,
                                                        dst_y, dst_width, dst_height);
 
-                // m_compute->create_buffers(m_sampler, input, x, y, width, height, *m_image);
+                m_compute->create_buffers(m_sampler, input, *m_image, src_x, src_y, src_width, src_height,
+                                          m_graphics_command_pool.family_index());
 
                 vulkan::CommandBufferCreateInfo info;
                 info.device = m_device;
@@ -124,9 +126,9 @@ class Impl final : public DftShow
                 info.render_pass = render_buffers->render_pass();
                 info.framebuffers = &render_buffers->framebuffers();
                 info.command_pool = m_graphics_command_pool;
-                // info.before_render_pass_commands = [this](VkCommandBuffer command_buffer) {
-                //        m_compute->compute_commands(command_buffer);
-                //};
+                info.before_render_pass_commands = [this](VkCommandBuffer command_buffer) {
+                        m_compute->compute_commands(command_buffer);
+                };
                 info.render_pass_commands = [this](VkCommandBuffer command_buffer) { draw_commands(command_buffer); };
                 m_command_buffers = vulkan::create_command_buffers(info);
         }
@@ -139,7 +141,7 @@ class Impl final : public DftShow
 
                 m_command_buffers.reset();
                 m_pipeline.reset();
-                // m_compute->delete_buffers();
+                m_compute->delete_buffers();
                 m_image.reset();
         }
 
@@ -154,9 +156,7 @@ class Impl final : public DftShow
 
                 const unsigned buffer_index = m_command_buffers->count() == 1 ? 0 : image_index;
 
-                // vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[buffer_index],
-                //                     m_signal_semaphore, queue);
-                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, (*m_command_buffers)[buffer_index],
+                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[buffer_index],
                                      m_signal_semaphore, queue);
 
                 return m_signal_semaphore;
@@ -211,8 +211,8 @@ public:
                   m_signal_semaphore(instance.device()),
                   m_program(instance.device()),
                   m_memory(instance.device(), m_program.descriptor_set_layout(), {graphics_queue.family_index()}),
-                  m_sampler(create_dft_sampler(instance.device()))
-        // m_compute(create_dft_compute(instance))
+                  m_sampler(create_dft_sampler(instance.device())),
+                  m_compute(create_dft_compute(instance))
         {
                 create_vertices();
         }
@@ -223,7 +223,7 @@ public:
 
                 //
 
-                m_instance.device_wait_idle_noexcept("the Vulkan pencil sketch show destructor");
+                m_instance.device_wait_idle_noexcept("the Vulkan DFT show destructor");
         }
 };
 }
