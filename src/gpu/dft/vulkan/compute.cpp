@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/groups.h"
+#include "gpu/dft/com/com.h"
 
 #include <optional>
 #include <thread>
@@ -44,6 +45,34 @@ namespace gpu_vulkan
 {
 namespace
 {
+// int shared_size(int dft_size, const VkPhysicalDeviceLimits& limits)
+//{
+//        return dft_shared_size<std::complex<float>>(dft_size, limits.maxComputeSharedMemorySize);
+//}
+
+// int group_size(int dft_size, const VkPhysicalDeviceLimits& limits)
+//{
+//        return dft_group_size<std::complex<float>>(dft_size, limits.maxComputeWorkGroupSize[0],
+//                                                   limits.maxComputeWorkGroupInvocations, limits.maxComputeSharedMemorySize);
+//}
+
+class DeviceMemory final
+{
+        vulkan::BufferWithMemory m_buffer;
+
+public:
+        DeviceMemory(const vulkan::Device& device, uint32_t family_index, int size)
+                : m_buffer(vulkan::BufferMemoryType::DeviceLocal, device, std::unordered_set({family_index}),
+                           VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, size * 2 * sizeof(float))
+        {
+        }
+
+        operator const vulkan::BufferWithMemory&() const
+        {
+                return m_buffer;
+        }
+};
+
 void image_barrier_before(VkCommandBuffer command_buffer, VkImage image)
 {
         ASSERT(command_buffer != VK_NULL_HANDLE && image != VK_NULL_HANDLE);
@@ -113,9 +142,11 @@ class Impl final : public DftCompute
         DftCopyOutputProgram m_copy_output_program;
         DftCopyOutputMemory m_copy_output_memory;
 
+        int m_n1 = -1, m_n2 = -1, m_m1 = -1, m_m2 = -1;
+
         vec2i m_group_count_copy = vec2i(0, 0);
 
-        std::optional<vulkan::BufferWithMemory> m_x_d;
+        std::optional<DeviceMemory> m_x_d, m_buffer;
         VkImage m_output = VK_NULL_HANDLE;
 
         void compute_commands(VkCommandBuffer command_buffer) const override
@@ -145,16 +176,20 @@ class Impl final : public DftCompute
                 ASSERT(width > 0 && height > 0);
                 ASSERT(x + width <= input.width() && y + height <= input.height());
 
-                m_x_d.emplace(vulkan::BufferMemoryType::DeviceLocal, m_instance.device(), std::unordered_set({family_index}),
-                              VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, width * height * 2 * sizeof(float));
+                m_n1 = width;
+                m_n2 = height;
+                m_m1 = dft_compute_m(m_n1);
+                m_m2 = dft_compute_m(m_n2);
+                m_group_count_copy = group_count(width, height, GROUP_SIZE_2D);
+
+                m_x_d.emplace(m_instance.device(), family_index, m_n1 * m_n2);
+                m_buffer.emplace(m_instance.device(), family_index, std::max(m_m1 * m_n2, m_m2 * m_n1));
 
                 m_copy_input_memory.set(sampler, input, *m_x_d);
                 m_copy_input_program.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], x, y, width, height);
 
                 m_copy_output_memory.set(*m_x_d, output);
                 m_copy_output_program.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], 1.0 / (1ull * width * height));
-
-                m_group_count_copy = group_count(width, height, GROUP_SIZE_2D);
         }
 
         void delete_buffers() override
@@ -163,12 +198,13 @@ class Impl final : public DftCompute
 
                 //
 
-                m_group_count_copy = vec2i(0, 0);
-
                 m_copy_output_program.delete_pipeline();
                 m_copy_input_program.delete_pipeline();
 
+                m_buffer.reset();
                 m_x_d.reset();
+                m_group_count_copy = vec2i(0, 0);
+                m_n1 = m_n2 = m_m1 = m_m2 = -1;
 
                 m_output = VK_NULL_HANDLE;
         }
