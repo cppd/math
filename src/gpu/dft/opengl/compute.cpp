@@ -15,55 +15,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*
-По книге
-
-Eleanor Chu, Alan George.
-INSIDE the FFT BLACK BOX. Serial and Parallel Fast Fourier Transform Algorithms.
-CRC Press LLC, 2000.
-
-Chapter 13: FFTs for Arbitrary N.
-
-В этой книге в главе 13 есть ошибки при вычислении H2
-
-  В примере 13.4.
-    Написано:
-      h0, h1, h2, h3, h4, h5, 0, 0, 0, 0, 0,  0, h4, h3, h2, h1.
-    Надо:
-      h0, h1, h2, h3, h4, h5, 0, 0, 0, 0, 0, h5, h4, h3, h2, h1.
-
-  В формулах 13.11, 13.23, 13.24, 13.25.
-    Написано:
-      h2(l) = h(l) для l = 0,...,N - 1,
-      h2(l) = 0 для l = N,..., M - N + 1,
-      h2(l) = h(M - l) для l = M - N + 2,..., M - 1.
-    Надо:
-      h2(l) = h(l) для l = 0,...,N - 1,
-      h2(l) = 0 для l = N,..., M - N,
-      h2(l) = h(M - l) для l = M - N + 1,..., M - 1.
-*/
-
 #include "compute.h"
 
 #include "compute_memory.h"
 #include "compute_program.h"
 
-#include "com/bits.h"
 #include "com/error.h"
 #include "com/groups.h"
 #include "com/log.h"
-#include "com/math.h"
 #include "com/print.h"
 #include "com/time.h"
+#include "gpu/dft/com/com.h"
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/query.h"
 #include "graphics/opengl/time.h"
 
-#include <complex>
+#include <functional>
 #include <optional>
-#include <sstream>
-#include <type_traits>
-#include <vector>
 
 constexpr const int GROUP_SIZE_1D = 256;
 constexpr const vec2i GROUP_SIZE_2D = vec2i(16, 16);
@@ -179,76 +147,6 @@ public:
         }
 };
 
-// Или само число степень двух,
-// или минимальная степень двух, равная или больше 2N-2
-int compute_m(int n)
-{
-        int log2_n = log_2(n);
-        if ((1 << log2_n) == n)
-        {
-                return n;
-        }
-
-        int t = (2 * n - 2);
-        int log2_t = log_2(t);
-        if ((1 << log2_t) == t)
-        {
-                return t;
-        }
-        else
-        {
-                return (1 << log2_t) << 1;
-        }
-}
-
-// Compute the symmetric Toeplitz H: for given N, compute the scalar constants
-// Формулы 13.4, 13.22.
-std::vector<std::complex<double>> compute_h(int n, bool inverse, double coef)
-{
-        std::vector<std::complex<double>> h(n);
-
-        for (int l = 0; l <= n - 1; ++l)
-        {
-                // theta = (inverse ? 1 : -1) * 2 * pi / n * (-0.5 * l * l) = (inverse ? -pi : pi) / n * l * l
-
-                // h[l] = std::polar(Coef, (inverse ? -PI : PI) / n * l * l);
-
-                // Вместо l * l / n нужно вычислить mod(l * l / n, 2), чтобы в тригонометрические функции
-                // поступало не больше 2 * PI.
-                long long dividend = l * l;
-                long long quotient = dividend / n;
-                long long remainder = dividend - quotient * n;
-                // factor = (quotient mod 2) + (remainder / n).
-                double factor = (quotient & 1) + static_cast<double>(remainder) / n;
-
-                h[l] = std::polar(coef, (inverse ? -PI<double> : PI<double>)*factor);
-        }
-
-        return h;
-}
-
-// Embed H in the circulant H(2)
-// На основе исправленных формул 13.11, 13.23, 13.24, 13.25.
-// Об исправлении в комментарии о книге.
-std::vector<std::complex<double>> compute_h2(int n, int m, const std::vector<std::complex<double>>& h)
-{
-        std::vector<std::complex<double>> h2(m);
-
-        for (int l = 0; l <= n - 1; ++l)
-        {
-                h2[l] = h[l];
-        }
-        for (int l = n; l <= m - n; ++l)
-        {
-                h2[l] = std::complex<double>(0, 0);
-        }
-        for (int l = m - n + 1; l <= m - 1; ++l)
-        {
-                h2[l] = h[m - l];
-        }
-        return h2;
-}
-
 template <typename Dst, typename Src>
 std::vector<std::complex<Dst>> conv(const std::vector<std::complex<Src>>& data)
 {
@@ -276,20 +174,14 @@ std::enable_if_t<std::is_same_v<Dst, Src>, std::vector<std::complex<Dst>>&&> con
 template <typename FP>
 int shared_size(int dft_size)
 {
-        // минимум из
-        // 1) требуемый размер, но не меньше 128, чтобы в группе было хотя бы 64 потока по потоку на 2 элемента:
-        //   NVIDIA работает по 32 потока вместе (warp), AMD по 64 потока вместе (wavefront).
-        // 2) максимальная степень 2, которая меньше или равна вместимости разделяемой памяти
-        return std::min(std::max(128, dft_size), 1 << log_2(opengl::max_compute_shared_memory() / sizeof(std::complex<FP>)));
+        return dft_shared_size<std::complex<FP>>(dft_size, opengl::max_compute_shared_memory());
 }
 
 template <typename FP>
 int group_size(int dft_size)
 {
-        // не больше 1 потока на 2 элемента
-        int max_threads_required = shared_size<FP>(dft_size) / 2;
-        int max_threads_supported = std::min(opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations());
-        return std::min(max_threads_required, max_threads_supported);
+        return dft_group_size<std::complex<FP>>(dft_size, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
+                                                opengl::max_compute_shared_memory());
 }
 
 template <typename FP>
@@ -365,7 +257,7 @@ public:
 template <typename FP>
 class Impl final : public DFTCompute, public DFTComputeTexture
 {
-        const int m_n1, m_n2, m_m1, m_m2, m_m1_bin, m_m2_bin;
+        const int m_n1, m_n2, m_m1, m_m2;
         DeviceMemory<std::complex<FP>> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
         DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
         std::optional<DftProgramCopyInput<FP>> m_copy_input;
@@ -442,16 +334,16 @@ class Impl final : public DFTCompute, public DFTComputeTexture
                 // Compute the diagonal D in Lemma 13.2: use the radix-2 FFT
                 // Формулы 13.13, 13.26.
 
-                m_d1_fwd.write(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, false, 1.0))));
+                m_d1_fwd.write(conv<FP>(dft_compute_h2(m_n1, m_m1, dft_compute_h(m_n1, false, 1.0))));
                 fft_1_m1.exec(false, &m_d1_fwd);
 
-                m_d1_inv.write(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, true, m1_div_n1))));
+                m_d1_inv.write(conv<FP>(dft_compute_h2(m_n1, m_m1, dft_compute_h(m_n1, true, m1_div_n1))));
                 fft_1_m1.exec(true, &m_d1_inv);
 
-                m_d2_fwd.write(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, false, 1.0))));
+                m_d2_fwd.write(conv<FP>(dft_compute_h2(m_n2, m_m2, dft_compute_h(m_n2, false, 1.0))));
                 fft_1_m2.exec(false, &m_d2_fwd);
 
-                m_d2_inv.write(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, true, m2_div_n2))));
+                m_d2_inv.write(conv<FP>(dft_compute_h2(m_n2, m_m2, dft_compute_h(m_n2, true, m2_div_n2))));
                 fft_1_m2.exec(true, &m_d2_inv);
         }
 
@@ -524,10 +416,8 @@ public:
         Impl(unsigned x, unsigned y, unsigned n1, unsigned n2, const opengl::Texture* source, const opengl::Texture* result)
                 : m_n1(n1),
                   m_n2(n2),
-                  m_m1(compute_m(m_n1)),
-                  m_m2(compute_m(m_n2)),
-                  m_m1_bin(binary_size(m_m1)),
-                  m_m2_bin(binary_size(m_m2)),
+                  m_m1(dft_compute_m(m_n1)),
+                  m_m2(dft_compute_m(m_n2)),
                   m_d1_fwd(m_m1),
                   m_d1_inv(m_m1),
                   m_d2_fwd(m_m2),
