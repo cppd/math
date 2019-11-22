@@ -58,12 +58,13 @@ namespace
 
 class DeviceMemory final
 {
+        static constexpr VkDeviceSize COMPLEX_SIZE = 2 * sizeof(float);
         vulkan::BufferWithMemory m_buffer;
 
 public:
-        DeviceMemory(const vulkan::Device& device, uint32_t family_index, int size)
-                : m_buffer(vulkan::BufferMemoryType::DeviceLocal, device, std::unordered_set({family_index}),
-                           VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, size * 2 * sizeof(float))
+        DeviceMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices, VkDeviceSize size)
+                : m_buffer(vulkan::BufferMemoryType::DeviceLocal, device, family_indices, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                           size * COMPLEX_SIZE)
         {
         }
 
@@ -136,6 +137,7 @@ class Impl final : public DftCompute
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
         const vulkan::VulkanInstance& m_instance;
+        const vulkan::Device& m_device;
 
         DftCopyInputProgram m_copy_input_program;
         DftCopyInputMemory m_copy_input_memory;
@@ -146,6 +148,7 @@ class Impl final : public DftCompute
 
         vec2i m_group_count_copy = vec2i(0, 0);
 
+        std::optional<DeviceMemory> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
         std::optional<DeviceMemory> m_x_d, m_buffer;
         VkImage m_output = VK_NULL_HANDLE;
 
@@ -155,7 +158,19 @@ class Impl final : public DftCompute
 
                 //
 
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_input_program.pipeline());
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_input_program.pipeline_layout(),
+                                        DftCopyInputMemory::set_number(), 1, &m_copy_input_memory.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, m_group_count_copy[0], m_group_count_copy[1], 1);
+
+                //
+
                 image_barrier_before(command_buffer, m_output);
+
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_output_program.pipeline());
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_output_program.pipeline_layout(),
+                                        DftCopyOutputMemory::set_number(), 1, &m_copy_output_memory.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, m_group_count_copy[0], m_group_count_copy[1], 1);
 
                 image_barrier_after(command_buffer, m_output);
         }
@@ -180,16 +195,21 @@ class Impl final : public DftCompute
                 m_n2 = height;
                 m_m1 = dft_compute_m(m_n1);
                 m_m2 = dft_compute_m(m_n2);
-                m_group_count_copy = group_count(width, height, GROUP_SIZE_2D);
+                m_group_count_copy = group_count(m_n1, m_n2, GROUP_SIZE_2D);
 
-                m_x_d.emplace(m_instance.device(), family_index, m_n1 * m_n2);
-                m_buffer.emplace(m_instance.device(), family_index, std::max(m_m1 * m_n2, m_m2 * m_n1));
+                const std::unordered_set<uint32_t> family_indices = {family_index};
+                m_d1_fwd.emplace(m_device, family_indices, m_m1);
+                m_d1_inv.emplace(m_device, family_indices, m_m1);
+                m_d2_fwd.emplace(m_device, family_indices, m_m2);
+                m_d2_inv.emplace(m_device, family_indices, m_m2);
+                m_x_d.emplace(m_device, family_indices, m_n1 * m_n2);
+                m_buffer.emplace(m_device, family_indices, std::max(m_m1 * m_n2, m_m2 * m_n1));
 
                 m_copy_input_memory.set(sampler, input, *m_x_d);
                 m_copy_input_program.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], x, y, width, height);
 
                 m_copy_output_memory.set(*m_x_d, output);
-                m_copy_output_program.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], 1.0 / (1ull * width * height));
+                m_copy_output_program.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], 1.0 / (m_n1 * m_n2));
         }
 
         void delete_buffers() override
@@ -201,8 +221,13 @@ class Impl final : public DftCompute
                 m_copy_output_program.delete_pipeline();
                 m_copy_input_program.delete_pipeline();
 
-                m_buffer.reset();
+                m_d1_fwd.reset();
+                m_d1_inv.reset();
+                m_d2_fwd.reset();
+                m_d2_inv.reset();
                 m_x_d.reset();
+                m_buffer.reset();
+
                 m_group_count_copy = vec2i(0, 0);
                 m_n1 = m_n2 = m_m1 = m_m2 = -1;
 
@@ -212,6 +237,7 @@ class Impl final : public DftCompute
 public:
         Impl(const vulkan::VulkanInstance& instance)
                 : m_instance(instance),
+                  m_device(instance.device()),
                   m_copy_input_program(instance.device()),
                   m_copy_input_memory(instance.device(), m_copy_input_program.descriptor_set_layout()),
                   m_copy_output_program(instance.device()),

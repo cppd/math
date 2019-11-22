@@ -114,7 +114,7 @@ class Impl final : public DftShow
                                                        dst_y, dst_width, dst_height);
 
                 m_compute->create_buffers(m_sampler, input, *m_image, src_x, src_y, src_width, src_height,
-                                          m_graphics_command_pool.family_index());
+                                          m_graphics_family_index);
 
                 vulkan::CommandBufferCreateInfo info;
                 info.device = m_device;
