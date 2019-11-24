@@ -115,7 +115,6 @@ public:
 
         VkDescriptorSetLayout descriptor_set_layout() const;
         VkPipelineLayout pipeline_layout() const;
-        VkPipeline pipeline_forward() const;
-        VkPipeline pipeline_inverse() const;
+        VkPipeline pipeline(bool inverse) const;
 };
 }

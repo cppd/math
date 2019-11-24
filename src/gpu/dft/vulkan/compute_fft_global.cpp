@@ -188,16 +188,18 @@ VkPipelineLayout DftFftGlobalProgram::pipeline_layout() const
         return m_pipeline_layout;
 }
 
-VkPipeline DftFftGlobalProgram::pipeline_forward() const
+VkPipeline DftFftGlobalProgram::pipeline(bool inverse) const
 {
-        ASSERT(m_pipeline_forward != VK_NULL_HANDLE);
-        return m_pipeline_forward;
-}
-
-VkPipeline DftFftGlobalProgram::pipeline_inverse() const
-{
-        ASSERT(m_pipeline_inverse != VK_NULL_HANDLE);
-        return m_pipeline_inverse;
+        if (inverse)
+        {
+                ASSERT(m_pipeline_inverse != VK_NULL_HANDLE);
+                return m_pipeline_inverse;
+        }
+        else
+        {
+                ASSERT(m_pipeline_forward != VK_NULL_HANDLE);
+                return m_pipeline_forward;
+        }
 }
 
 void DftFftGlobalProgram::create_pipelines(uint32_t group_size, uint32_t data_size, uint32_t n)
