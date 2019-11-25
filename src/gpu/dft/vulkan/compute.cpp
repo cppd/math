@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/groups.h"
 #include "gpu/dft/com/com.h"
+#include "graphics/vulkan/error.h"
 
 #include <optional>
 #include <thread>
@@ -46,6 +47,49 @@ namespace gpu_vulkan
 {
 namespace
 {
+void begin_commands(VkCommandBuffer command_buffer)
+{
+        VkResult result;
+
+        VkCommandBufferBeginInfo command_buffer_info = {};
+        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
+        }
+}
+
+void end_commands(VkQueue queue, VkCommandBuffer command_buffer)
+{
+        VkResult result;
+
+        result = vkEndCommandBuffer(command_buffer);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkEndCommandBuffer", result);
+        }
+
+        VkSubmitInfo submit_info = {};
+        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit_info.commandBufferCount = 1;
+        submit_info.pCommandBuffers = &command_buffer;
+
+        result = vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkQueueSubmit", result);
+        }
+
+        result = vkQueueWaitIdle(queue);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkQueueWaitIdle", result);
+        }
+}
+
 int shared_size(int dft_size, const VkPhysicalDeviceLimits& limits)
 {
         return dft_shared_size<std::complex<float>>(dft_size, limits.maxComputeSharedMemorySize);
@@ -72,6 +116,15 @@ public:
         {
         }
 
+        DeviceMemory(const vulkan::Device& device, const vulkan::CommandPool& transfer_command_pool,
+                     const vulkan::Queue& transfer_queue, const std::unordered_set<uint32_t>& family_indices,
+                     const std::vector<std::complex<double>>& data)
+                : m_size(data.size()),
+                  m_buffer(device, transfer_command_pool, transfer_queue, family_indices, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                           data.size() * COMPLEX_SIZE, conv<float>(data))
+        {
+        }
+
         unsigned size() const
         {
                 return m_size;
@@ -85,6 +138,8 @@ public:
 
 class Fft1d
 {
+        const vulkan::VulkanInstance& m_instance;
+
         unsigned m_n;
         unsigned m_data_size;
         unsigned m_n_shared;
@@ -102,7 +157,6 @@ class Fft1d
         std::vector<DftFftGlobalMemory> m_fft_g_memory;
         int m_fft_g_group_count;
 
-#if 0
         void commands_fft(VkCommandBuffer command_buffer, bool inverse) const
         {
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_fft_program->pipeline(inverse));
@@ -131,10 +185,10 @@ class Fft1d
                         vkCmdDispatch(command_buffer, m_fft_g_group_count, 1, 1);
                 }
         }
-#endif
 
 public:
         Fft1d(const vulkan::VulkanInstance& instance, const std::unordered_set<uint32_t>& family_indices, int count, int n)
+                : m_instance(instance)
         {
                 if (n == 1)
                 {
@@ -206,7 +260,6 @@ public:
                 }
         }
 
-#if 0
         void commands(VkCommandBuffer command_buffer, bool inverse) const
         {
                 if (m_n == 1)
@@ -229,7 +282,20 @@ public:
                 // Досчитать до нужного размера уже в глобальной памяти без разделяемой
                 commands_fft_g(command_buffer, inverse);
         }
-#endif
+
+        void run_for_data(bool inverse, const DeviceMemory& data)
+        {
+                ASSERT(data.size() == m_data_size);
+
+                set_data(data);
+
+                vulkan::CommandBuffer command_buffer(m_instance.device(), m_instance.graphics_command_pool());
+                begin_commands(command_buffer);
+
+                commands(command_buffer, inverse);
+
+                end_commands(m_instance.graphics_queues()[0], command_buffer);
+        }
 };
 
 void image_barrier_before(VkCommandBuffer command_buffer, VkImage image)
@@ -336,6 +402,38 @@ class Impl final : public DftCompute
                 image_barrier_after(command_buffer, m_output);
         }
 
+        void create_diagonals(uint32_t family_index)
+        {
+                // Compute the diagonal D in Lemma 13.2: use the radix-2 FFT
+                // Формулы 13.13, 13.26.
+
+                const std::unordered_set<uint32_t> indices = {family_index, m_instance.transfer_command_pool().family_index()};
+                const vulkan::CommandPool& p = m_instance.transfer_command_pool();
+                const vulkan::Queue& q = m_instance.transfer_queue();
+
+                // Для обратного преобразования нужна корректировка данных с умножением на коэффициент,
+                // так как разный размер у исходного вектора N и его расширенного M.
+                double m1_div_n1 = static_cast<double>(m_m1) / m_n1;
+                double m2_div_n2 = static_cast<double>(m_m2) / m_n2;
+
+                m_d1_fwd.emplace(m_device, p, q, indices, dft_compute_h2(m_n1, m_m1, dft_compute_h(m_n1, false, 1.0)));
+                m_d1_inv.emplace(m_device, p, q, indices, dft_compute_h2(m_n1, m_m1, dft_compute_h(m_n1, true, m1_div_n1)));
+
+                m_d2_fwd.emplace(m_device, p, q, indices, dft_compute_h2(m_n2, m_m2, dft_compute_h(m_n2, false, 1.0)));
+                m_d2_inv.emplace(m_device, p, q, indices, dft_compute_h2(m_n2, m_m2, dft_compute_h(m_n2, true, m2_div_n2)));
+
+                {
+                        Fft1d fft(m_instance, {family_index}, 1, m_m1);
+                        fft.run_for_data(false, *m_d1_fwd);
+                        fft.run_for_data(true, *m_d1_inv);
+                }
+                {
+                        Fft1d fft(m_instance, {family_index}, 1, m_m2);
+                        fft.run_for_data(false, *m_d2_fwd);
+                        fft.run_for_data(true, *m_d2_inv);
+                }
+        }
+
         void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::ImageWithMemory& output,
                             unsigned x, unsigned y, unsigned width, unsigned height, uint32_t family_index) override
         {
@@ -358,12 +456,10 @@ class Impl final : public DftCompute
                 m_m2 = dft_compute_m(m_n2);
                 m_group_count_copy = group_count(m_n1, m_n2, GROUP_SIZE_2D);
 
+                create_diagonals(family_index);
+
                 const std::unordered_set<uint32_t> family_indices = {family_index};
 
-                m_d1_fwd.emplace(m_device, family_indices, m_m1);
-                m_d1_inv.emplace(m_device, family_indices, m_m1);
-                m_d2_fwd.emplace(m_device, family_indices, m_m2);
-                m_d2_inv.emplace(m_device, family_indices, m_m2);
                 m_x_d.emplace(m_device, family_indices, m_n1 * m_n2);
                 m_buffer.emplace(m_device, family_indices, std::max(m_m1 * m_n2, m_m2 * m_n1));
 
