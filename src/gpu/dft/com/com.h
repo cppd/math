@@ -28,3 +28,27 @@ template <typename T>
 int dft_shared_size(unsigned dft_size, unsigned max_shared_memory_size);
 template <typename T>
 int dft_group_size(unsigned dft_size, unsigned max_group_size_x, unsigned max_group_invocations, unsigned max_shared_memory_size);
+
+template <typename Dst, typename Src>
+std::vector<std::complex<Dst>> conv(const std::vector<std::complex<Src>>& data)
+{
+        if constexpr (std::is_same_v<Dst, Src>)
+        {
+                return data;
+        }
+        else
+        {
+                std::vector<std::complex<Dst>> res(data.size());
+                for (size_t i = 0; i < data.size(); ++i)
+                {
+                        res[i] = {static_cast<Dst>(data[i].real()), static_cast<Dst>(data[i].imag())};
+                }
+                return res;
+        }
+}
+
+template <typename Dst, typename Src>
+std::enable_if_t<std::is_same_v<Dst, Src>, std::vector<std::complex<Dst>>&&> conv(std::vector<std::complex<Src>>&& data)
+{
+        return std::move(data);
+}
