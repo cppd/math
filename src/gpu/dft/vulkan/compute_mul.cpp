@@ -68,28 +68,28 @@ const VkDescriptorSet& DftMulMemory::descriptor_set() const
         return m_descriptors.descriptor_set(0);
 }
 
-void DftMulMemory::set_data(const vulkan::BufferWithMemory& data) const
+void DftMulMemory::set(const vulkan::BufferWithMemory& data, const vulkan::BufferWithMemory& buffer) const
 {
-        ASSERT(data.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        {
+                ASSERT(data.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = data;
-        buffer_info.offset = 0;
-        buffer_info.range = data.size();
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = data;
+                buffer_info.offset = 0;
+                buffer_info.range = data.size();
 
-        m_descriptors.update_descriptor_set(0, DATA_BINDING, buffer_info);
-}
+                m_descriptors.update_descriptor_set(0, DATA_BINDING, buffer_info);
+        }
+        {
+                ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-void DftMulMemory::set_buffer(const vulkan::BufferWithMemory& buffer) const
-{
-        ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = buffer;
+                buffer_info.offset = 0;
+                buffer_info.range = buffer.size();
 
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = buffer;
-        buffer_info.offset = 0;
-        buffer_info.range = buffer.size();
-
-        m_descriptors.update_descriptor_set(0, BUFFER_BINDING, buffer_info);
+                m_descriptors.update_descriptor_set(0, BUFFER_BINDING, buffer_info);
+        }
 }
 
 //

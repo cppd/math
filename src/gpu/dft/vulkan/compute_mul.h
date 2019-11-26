@@ -55,8 +55,7 @@ public:
 
         //
 
-        void set_data(const vulkan::BufferWithMemory& data) const;
-        void set_buffer(const vulkan::BufferWithMemory& buffer) const;
+        void set(const vulkan::BufferWithMemory& data, const vulkan::BufferWithMemory& buffer) const;
 };
 
 class DftMulConstant final : public vulkan::SpecializationConstant
