@@ -38,5 +38,9 @@ struct DftCompute
         virtual void delete_buffers() = 0;
 };
 
-std::unique_ptr<DftCompute> create_dft_compute(const vulkan::VulkanInstance& instance);
+std::unique_ptr<DftCompute> create_dft_compute(const vulkan::VulkanInstance& instance,
+                                               const vulkan::CommandPool& compute_command_pool,
+                                               const vulkan::Queue& compute_queue,
+                                               const vulkan::CommandPool& transfer_command_pool,
+                                               const vulkan::Queue& transfer_queue);
 }

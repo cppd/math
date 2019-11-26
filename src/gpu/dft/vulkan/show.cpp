@@ -212,7 +212,8 @@ public:
                   m_program(instance.device()),
                   m_memory(instance.device(), m_program.descriptor_set_layout(), {graphics_queue.family_index()}),
                   m_sampler(create_dft_sampler(instance.device())),
-                  m_compute(create_dft_compute(instance))
+                  m_compute(create_dft_compute(instance, graphics_command_pool, graphics_queue, transfer_command_pool,
+                                               transfer_queue))
         {
                 create_vertices();
         }
