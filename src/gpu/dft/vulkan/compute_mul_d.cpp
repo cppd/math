@@ -68,28 +68,28 @@ const VkDescriptorSet& DftMulDMemory::descriptor_set() const
         return m_descriptors.descriptor_set(0);
 }
 
-void DftMulDMemory::set_diagonal(const vulkan::BufferWithMemory& diagonal) const
+void DftMulDMemory::set(const vulkan::BufferWithMemory& diagonal, const vulkan::BufferWithMemory& data) const
 {
-        ASSERT(diagonal.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        {
+                ASSERT(diagonal.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = diagonal;
-        buffer_info.offset = 0;
-        buffer_info.range = diagonal.size();
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = diagonal;
+                buffer_info.offset = 0;
+                buffer_info.range = diagonal.size();
 
-        m_descriptors.update_descriptor_set(0, DIAGONAL_BINDING, buffer_info);
-}
+                m_descriptors.update_descriptor_set(0, DIAGONAL_BINDING, buffer_info);
+        }
+        {
+                ASSERT(data.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-void DftMulDMemory::set_data(const vulkan::BufferWithMemory& data) const
-{
-        ASSERT(data.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = data;
+                buffer_info.offset = 0;
+                buffer_info.range = data.size();
 
-        VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = data;
-        buffer_info.offset = 0;
-        buffer_info.range = data.size();
-
-        m_descriptors.update_descriptor_set(0, DATA_BINDING, buffer_info);
+                m_descriptors.update_descriptor_set(0, DATA_BINDING, buffer_info);
+        }
 }
 
 //
@@ -186,10 +186,11 @@ VkPipeline DftMulDProgram::pipeline_columns() const
         return m_pipeline_columns;
 }
 
-void DftMulDProgram::create_pipelines(uint32_t group_size, uint32_t n1, uint32_t n2, uint32_t m1, uint32_t m2)
+void DftMulDProgram::create_pipelines(uint32_t n1, uint32_t n2, uint32_t m1, uint32_t m2, uint32_t group_size_x,
+                                      uint32_t group_size_y)
 {
         {
-                m_constant.set(group_size, group_size, n2, m1);
+                m_constant.set(group_size_x, group_size_y, n2, m1);
 
                 vulkan::ComputePipelineCreateInfo info;
                 info.device = &m_device;
@@ -199,7 +200,7 @@ void DftMulDProgram::create_pipelines(uint32_t group_size, uint32_t n1, uint32_t
                 m_pipeline_rows = create_compute_pipeline(info);
         }
         {
-                m_constant.set(group_size, group_size, n1, m2);
+                m_constant.set(group_size_x, group_size_y, n1, m2);
 
                 vulkan::ComputePipelineCreateInfo info;
                 info.device = &m_device;

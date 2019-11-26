@@ -55,8 +55,7 @@ public:
 
         //
 
-        void set_diagonal(const vulkan::BufferWithMemory& diagonal) const;
-        void set_data(const vulkan::BufferWithMemory& data) const;
+        void set(const vulkan::BufferWithMemory& diagonal, const vulkan::BufferWithMemory& data) const;
 };
 
 class DftMulDConstant final : public vulkan::SpecializationConstant
@@ -102,7 +101,7 @@ public:
         DftMulDProgram(DftMulDProgram&&) = default;
         ~DftMulDProgram() = default;
 
-        void create_pipelines(uint32_t group_size, uint32_t n1, uint32_t n2, uint32_t m1, uint32_t m2);
+        void create_pipelines(uint32_t n1, uint32_t n2, uint32_t m1, uint32_t m2, uint32_t group_size_x, uint32_t group_size_y);
         void delete_pipelines();
 
         VkDescriptorSetLayout descriptor_set_layout() const;
