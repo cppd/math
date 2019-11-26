@@ -117,13 +117,9 @@ public:
 
         VkDescriptorSetLayout descriptor_set_layout() const;
         VkPipelineLayout pipeline_layout() const;
-        VkPipeline pipeline_rows_to_buffer_forward() const;
-        VkPipeline pipeline_rows_to_buffer_inverse() const;
-        VkPipeline pipeline_rows_from_buffer_forward() const;
-        VkPipeline pipeline_rows_from_buffer_inverse() const;
-        VkPipeline pipeline_columns_to_buffer_forward() const;
-        VkPipeline pipeline_columns_to_buffer_inverse() const;
-        VkPipeline pipeline_columns_from_buffer_forward() const;
-        VkPipeline pipeline_columns_from_buffer_inverse() const;
+        VkPipeline pipeline_rows_to_buffer(bool inverse) const;
+        VkPipeline pipeline_rows_from_buffer(bool inverse) const;
+        VkPipeline pipeline_columns_to_buffer(bool inverse) const;
+        VkPipeline pipeline_columns_from_buffer(bool inverse) const;
 };
 }

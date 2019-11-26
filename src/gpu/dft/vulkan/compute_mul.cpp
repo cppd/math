@@ -213,52 +213,60 @@ VkPipelineLayout DftMulProgram::pipeline_layout() const
         return m_pipeline_layout;
 }
 
-VkPipeline DftMulProgram::pipeline_rows_to_buffer_forward() const
+VkPipeline DftMulProgram::pipeline_rows_to_buffer(bool inverse) const
 {
-        ASSERT(m_pipeline_rows_to_buffer_forward != VK_NULL_HANDLE);
-        return m_pipeline_rows_to_buffer_forward;
+        if (!inverse)
+        {
+                ASSERT(m_pipeline_rows_to_buffer_forward != VK_NULL_HANDLE);
+                return m_pipeline_rows_to_buffer_forward;
+        }
+        else
+        {
+                ASSERT(m_pipeline_rows_to_buffer_inverse != VK_NULL_HANDLE);
+                return m_pipeline_rows_to_buffer_inverse;
+        }
 }
 
-VkPipeline DftMulProgram::pipeline_rows_to_buffer_inverse() const
+VkPipeline DftMulProgram::pipeline_rows_from_buffer(bool inverse) const
 {
-        ASSERT(m_pipeline_rows_to_buffer_inverse != VK_NULL_HANDLE);
-        return m_pipeline_rows_to_buffer_inverse;
+        if (!inverse)
+        {
+                ASSERT(m_pipeline_rows_from_buffer_forward != VK_NULL_HANDLE);
+                return m_pipeline_rows_from_buffer_forward;
+        }
+        else
+        {
+                ASSERT(m_pipeline_rows_from_buffer_inverse != VK_NULL_HANDLE);
+                return m_pipeline_rows_from_buffer_inverse;
+        }
 }
 
-VkPipeline DftMulProgram::pipeline_rows_from_buffer_forward() const
+VkPipeline DftMulProgram::pipeline_columns_to_buffer(bool inverse) const
 {
-        ASSERT(m_pipeline_rows_from_buffer_forward != VK_NULL_HANDLE);
-        return m_pipeline_rows_from_buffer_forward;
+        if (!inverse)
+        {
+                ASSERT(m_pipeline_columns_to_buffer_forward != VK_NULL_HANDLE);
+                return m_pipeline_columns_to_buffer_forward;
+        }
+        else
+        {
+                ASSERT(m_pipeline_columns_to_buffer_inverse != VK_NULL_HANDLE);
+                return m_pipeline_columns_to_buffer_inverse;
+        }
 }
 
-VkPipeline DftMulProgram::pipeline_rows_from_buffer_inverse() const
+VkPipeline DftMulProgram::pipeline_columns_from_buffer(bool inverse) const
 {
-        ASSERT(m_pipeline_rows_from_buffer_inverse != VK_NULL_HANDLE);
-        return m_pipeline_rows_from_buffer_inverse;
-}
-
-VkPipeline DftMulProgram::pipeline_columns_to_buffer_forward() const
-{
-        ASSERT(m_pipeline_columns_to_buffer_forward != VK_NULL_HANDLE);
-        return m_pipeline_columns_to_buffer_forward;
-}
-
-VkPipeline DftMulProgram::pipeline_columns_to_buffer_inverse() const
-{
-        ASSERT(m_pipeline_columns_to_buffer_inverse != VK_NULL_HANDLE);
-        return m_pipeline_columns_to_buffer_inverse;
-}
-
-VkPipeline DftMulProgram::pipeline_columns_from_buffer_forward() const
-{
-        ASSERT(m_pipeline_columns_from_buffer_forward != VK_NULL_HANDLE);
-        return m_pipeline_columns_from_buffer_forward;
-}
-
-VkPipeline DftMulProgram::pipeline_columns_from_buffer_inverse() const
-{
-        ASSERT(m_pipeline_columns_from_buffer_inverse != VK_NULL_HANDLE);
-        return m_pipeline_columns_from_buffer_inverse;
+        if (!inverse)
+        {
+                ASSERT(m_pipeline_columns_from_buffer_forward != VK_NULL_HANDLE);
+                return m_pipeline_columns_from_buffer_forward;
+        }
+        else
+        {
+                ASSERT(m_pipeline_columns_from_buffer_inverse != VK_NULL_HANDLE);
+                return m_pipeline_columns_from_buffer_inverse;
+        }
 }
 
 void DftMulProgram::create_pipelines(int32_t n1, int32_t n2, int32_t m1, int32_t m2, uint32_t group_size_x, uint32_t group_size_y)
