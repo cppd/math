@@ -93,14 +93,14 @@ class DftMulProgram final
         vulkan::PipelineLayout m_pipeline_layout;
         DftMulConstant m_constant;
         vulkan::ComputeShader m_shader;
-        VkPipeline m_pipeline_rows_to_buffer_forward;
-        VkPipeline m_pipeline_rows_to_buffer_inverse;
-        VkPipeline m_pipeline_rows_from_buffer_forward;
-        VkPipeline m_pipeline_rows_from_buffer_inverse;
-        VkPipeline m_pipeline_columns_to_buffer_forward;
-        VkPipeline m_pipeline_columns_to_buffer_inverse;
-        VkPipeline m_pipeline_columns_from_buffer_forward;
-        VkPipeline m_pipeline_columns_from_buffer_inverse;
+        vulkan::Pipeline m_pipeline_rows_to_buffer_forward;
+        vulkan::Pipeline m_pipeline_rows_to_buffer_inverse;
+        vulkan::Pipeline m_pipeline_rows_from_buffer_forward;
+        vulkan::Pipeline m_pipeline_rows_from_buffer_inverse;
+        vulkan::Pipeline m_pipeline_columns_to_buffer_forward;
+        vulkan::Pipeline m_pipeline_columns_to_buffer_inverse;
+        vulkan::Pipeline m_pipeline_columns_from_buffer_forward;
+        vulkan::Pipeline m_pipeline_columns_from_buffer_inverse;
 
 public:
         DftMulProgram(const vulkan::Device& device);
