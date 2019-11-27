@@ -130,11 +130,38 @@ public:
                 return m_size;
         }
 
-        operator const vulkan::BufferWithMemory&() const
+        operator const vulkan::BufferWithMemory&() const&
         {
                 return m_buffer;
         }
+
+        operator VkBuffer() const&
+        {
+                return m_buffer;
+        }
+
+        operator const vulkan::BufferWithMemory&() const&& = delete;
+        operator VkBuffer() const&& = delete;
 };
+
+void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer)
+{
+        ASSERT(command_buffer != VK_NULL_HANDLE);
+        ASSERT(buffer != VK_NULL_HANDLE);
+
+        VkBufferMemoryBarrier barrier = {};
+        barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+        barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.buffer = buffer;
+        barrier.offset = 0;
+        barrier.size = VK_WHOLE_SIZE;
+
+        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                             VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 1, &barrier, 0, nullptr);
+}
 
 class Fft1d
 {
@@ -155,12 +182,16 @@ class Fft1d
         std::vector<DftFftGlobalMemory> m_fft_g_memory;
         int m_fft_g_groups;
 
+        VkBuffer m_buffer = VK_NULL_HANDLE;
+
         void commands_fft(VkCommandBuffer command_buffer, bool inverse) const
         {
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_fft_program->pipeline(inverse));
                 vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_fft_program->pipeline_layout(),
                                         DftFftSharedMemory::set_number(), 1, &m_fft_memory->descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, m_fft_groups, 1, 1);
+
+                buffer_barrier(command_buffer, m_buffer);
         }
 
         void commands_bit_reverse(VkCommandBuffer command_buffer) const
@@ -170,6 +201,8 @@ class Fft1d
                                         DftBitReverseMemory::set_number(), 1, &m_bit_reverse_memory->descriptor_set(), 0,
                                         nullptr);
                 vkCmdDispatch(command_buffer, m_bit_reverse_groups, 1, 1);
+
+                buffer_barrier(command_buffer, m_buffer);
         }
 
         void commands_fft_g(VkCommandBuffer command_buffer, bool inverse) const
@@ -181,6 +214,8 @@ class Fft1d
                                                 m_fft_g_program->pipeline_layout(), DftFftGlobalMemory::set_number(), 1,
                                                 &m.descriptor_set(), 0, nullptr);
                         vkCmdDispatch(command_buffer, m_fft_g_groups, 1, 1);
+
+                        buffer_barrier(command_buffer, m_buffer);
                 }
         }
 
@@ -238,13 +273,14 @@ public:
                 ASSERT(m_n == (m_n_shared << m_fft_g_memory.size()));
         }
 
-        void set_data(const DeviceMemory& data) const
+        void set_data(const DeviceMemory& data)
         {
                 ASSERT(data.size() >= m_data_size);
                 if (m_n == 1)
                 {
                         return;
                 }
+                m_buffer = data;
                 m_fft_memory->set_buffer(data);
                 if (m_only_shared)
                 {
@@ -280,7 +316,7 @@ public:
                 commands_fft_g(command_buffer, inverse);
         }
 
-        void run_for_data(bool inverse, const DeviceMemory& data, VkDevice device, VkCommandPool pool, VkQueue queue) const
+        void run_for_data(bool inverse, const DeviceMemory& data, VkDevice device, VkCommandPool pool, VkQueue queue)
         {
                 ASSERT(data.size() == m_data_size);
 
@@ -403,16 +439,104 @@ class Impl final : public DftCompute
 
         VkImage m_output = VK_NULL_HANDLE;
 
+        void rows_to_buffer(VkCommandBuffer command_buffer, bool inverse) const
+        {
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_program.pipeline_rows_to_buffer(inverse));
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_program.pipeline_layout(),
+                                        DftMulMemory::set_number(), 1, &m_mul_memory.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, m_mul_rows_to_buffer_groups[0], m_mul_rows_to_buffer_groups[1], 1);
+
+                buffer_barrier(command_buffer, *m_buffer);
+        }
+
+        void rows_mul_d(VkCommandBuffer command_buffer, bool inverse) const
+        {
+                const VkDescriptorSet* set = inverse ? &m_mul_d_d1_inv.descriptor_set() : &m_mul_d_d1_fwd.descriptor_set();
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_d_program.pipeline_rows());
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_d_program.pipeline_layout(),
+                                        DftMulDMemory::set_number(), 1, set, 0, nullptr);
+                vkCmdDispatch(command_buffer, m_mul_d_row_groups[0], m_mul_d_row_groups[1], 1);
+
+                buffer_barrier(command_buffer, *m_buffer);
+        }
+
+        void rows_from_buffer(VkCommandBuffer command_buffer, bool inverse) const
+        {
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE,
+                                  m_mul_program.pipeline_rows_from_buffer(inverse));
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_program.pipeline_layout(),
+                                        DftMulMemory::set_number(), 1, &m_mul_memory.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, m_mul_rows_from_buffer_groups[0], m_mul_rows_from_buffer_groups[1], 1);
+
+                buffer_barrier(command_buffer, *m_x_d);
+        }
+
+        void columns_to_buffer(VkCommandBuffer command_buffer, bool inverse) const
+        {
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE,
+                                  m_mul_program.pipeline_columns_to_buffer(inverse));
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_program.pipeline_layout(),
+                                        DftMulMemory::set_number(), 1, &m_mul_memory.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, m_mul_columns_to_buffer_groups[0], m_mul_columns_to_buffer_groups[1], 1);
+
+                buffer_barrier(command_buffer, *m_buffer);
+        }
+
+        void columns_mul_d(VkCommandBuffer command_buffer, bool inverse) const
+        {
+                const VkDescriptorSet* set = inverse ? &m_mul_d_d2_inv.descriptor_set() : &m_mul_d_d2_fwd.descriptor_set();
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_d_program.pipeline_columns());
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_d_program.pipeline_layout(),
+                                        DftMulDMemory::set_number(), 1, set, 0, nullptr);
+                vkCmdDispatch(command_buffer, m_mul_d_column_groups[0], m_mul_d_column_groups[1], 1);
+
+                buffer_barrier(command_buffer, *m_buffer);
+        }
+
+        void columns_from_buffer(VkCommandBuffer command_buffer, bool inverse) const
+        {
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE,
+                                  m_mul_program.pipeline_columns_from_buffer(inverse));
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_program.pipeline_layout(),
+                                        DftMulMemory::set_number(), 1, &m_mul_memory.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, m_mul_columns_from_buffer_groups[0], m_mul_columns_from_buffer_groups[1], 1);
+
+                buffer_barrier(command_buffer, *m_x_d);
+        }
+
         void compute_commands(VkCommandBuffer command_buffer) const override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 //
 
+                constexpr bool inverse = false;
+
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_input_program.pipeline());
                 vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_input_program.pipeline_layout(),
                                         DftCopyInputMemory::set_number(), 1, &m_copy_input_memory.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, m_copy_groups[0], m_copy_groups[1], 1);
+
+                buffer_barrier(command_buffer, *m_x_d);
+
+                //
+
+                if (m_n1 > 1)
+                {
+                        rows_to_buffer(command_buffer, inverse);
+                        m_fft_n2_m1->commands(command_buffer, inverse);
+                        rows_mul_d(command_buffer, inverse);
+                        m_fft_n2_m1->commands(command_buffer, !inverse);
+                        rows_from_buffer(command_buffer, inverse);
+                }
+                if (m_n2 > 1)
+                {
+                        columns_to_buffer(command_buffer, inverse);
+                        m_fft_n1_m2->commands(command_buffer, inverse);
+                        columns_mul_d(command_buffer, inverse);
+                        m_fft_n1_m2->commands(command_buffer, !inverse);
+                        columns_from_buffer(command_buffer, inverse);
+                }
 
                 //
 
@@ -452,12 +576,12 @@ class Impl final : public DftCompute
                 m_d2_inv.emplace(m_device, m_transfer_command_pool, m_transfer_queue, family_indices, d2_inv);
 
                 {
-                        const Fft1d fft(m_instance, {m_compute_command_pool.family_index()}, 1, m_m1);
+                        Fft1d fft(m_instance, {m_compute_command_pool.family_index()}, 1, m_m1);
                         fft.run_for_data(false, *m_d1_fwd, m_device, m_compute_command_pool, m_compute_queue);
                         fft.run_for_data(true, *m_d1_inv, m_device, m_compute_command_pool, m_compute_queue);
                 }
                 {
-                        const Fft1d fft(m_instance, {m_compute_command_pool.family_index()}, 1, m_m2);
+                        Fft1d fft(m_instance, {m_compute_command_pool.family_index()}, 1, m_m2);
                         fft.run_for_data(false, *m_d2_fwd, m_device, m_compute_command_pool, m_compute_queue);
                         fft.run_for_data(true, *m_d2_inv, m_device, m_compute_command_pool, m_compute_queue);
                 }
