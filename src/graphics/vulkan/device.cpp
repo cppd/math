@@ -292,7 +292,7 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR su
         ASSERT(m_queue_families.size() == m_presentation_supported.size());
 }
 
-PhysicalDevice::operator VkPhysicalDevice() const
+PhysicalDevice::operator VkPhysicalDevice() const&
 {
         return m_physical_device;
 }

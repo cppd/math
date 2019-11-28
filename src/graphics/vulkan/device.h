@@ -48,7 +48,8 @@ class PhysicalDevice final
 public:
         PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
 
-        operator VkPhysicalDevice() const;
+        operator VkPhysicalDevice() const&;
+        operator VkPhysicalDevice() const&& = delete;
 
         const VkPhysicalDeviceFeatures& features() const;
         const VkPhysicalDeviceProperties& properties() const;
