@@ -53,7 +53,7 @@ GLbitfield Buffer::flags() const
         return m_flags;
 }
 
-Buffer::operator GLuint() const
+Buffer::operator GLuint() const&
 {
         return m_buffer;
 }
@@ -347,7 +347,7 @@ GLenum Texture::format() const
         return m_format;
 }
 
-Texture::operator GLuint() const
+Texture::operator GLuint() const&
 {
         return m_texture;
 }
@@ -365,7 +365,7 @@ DepthFramebuffer::DepthFramebuffer(GLenum depth_format, GLsizei width, GLsizei h
         }
 }
 
-DepthFramebuffer::operator GLuint() const
+DepthFramebuffer::operator GLuint() const&
 {
         return m_framebuffer;
 }
@@ -392,7 +392,7 @@ ColorFramebuffer::ColorFramebuffer(GLenum color_format, GLsizei width, GLsizei h
         glNamedFramebufferDrawBuffers(m_framebuffer, 1, &COLOR_ATTACHMENT);
 }
 
-ColorFramebuffer::operator GLuint() const
+ColorFramebuffer::operator GLuint() const&
 {
         return m_framebuffer;
 }
@@ -425,7 +425,7 @@ ColorDepthFramebufferMultisample::ColorDepthFramebufferMultisample(GLenum color_
         glNamedFramebufferDrawBuffers(m_framebuffer, 1, &COLOR_ATTACHMENT);
 }
 
-ColorDepthFramebufferMultisample::operator GLuint() const
+ColorDepthFramebufferMultisample::operator GLuint() const&
 {
         return m_framebuffer;
 }

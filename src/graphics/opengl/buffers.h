@@ -53,7 +53,8 @@ public:
 
         unsigned long long size() const;
         GLbitfield flags() const;
-        operator GLuint() const;
+        operator GLuint() const&;
+        operator GLuint() const&& = delete;
 };
 
 class BufferMapper final
@@ -191,7 +192,8 @@ public:
         int height() const;
         GLenum format() const;
 
-        operator GLuint() const;
+        operator GLuint() const&;
+        operator GLuint() const&& = delete;
 };
 
 class DepthFramebuffer final
@@ -202,7 +204,8 @@ class DepthFramebuffer final
 public:
         DepthFramebuffer(GLenum depth_format, GLsizei width, GLsizei height);
 
-        operator GLuint() const;
+        operator GLuint() const&;
+        operator GLuint() const&& = delete;
         const Texture& texture() const;
 };
 
@@ -214,7 +217,8 @@ class ColorFramebuffer final
 public:
         ColorFramebuffer(GLenum color_format, GLsizei width, GLsizei height);
 
-        operator GLuint() const;
+        operator GLuint() const&;
+        operator GLuint() const&& = delete;
         const Texture& texture() const;
 };
 
@@ -228,7 +232,8 @@ public:
         ColorDepthFramebufferMultisample(GLenum color_format, GLenum depth_format, GLsizei samples, GLsizei width,
                                          GLsizei height);
 
-        operator GLuint() const;
+        operator GLuint() const&;
+        operator GLuint() const&& = delete;
 };
 
 class FramebufferBinder final
