@@ -88,7 +88,8 @@ public:
 
         //
 
-        operator VkBuffer() const;
+        operator VkBuffer() const&;
+        operator VkBuffer() const&& = delete;
         VkDeviceSize size() const;
         bool usage(VkBufferUsageFlagBits flag) const;
         VkMemoryPropertyFlags memory_properties() const;

@@ -565,7 +565,7 @@ BufferWithMemory::BufferWithMemory(BufferMemoryType memory_type, const Device& d
         ASSERT(size > 0);
 }
 
-BufferWithMemory::operator VkBuffer() const
+BufferWithMemory::operator VkBuffer() const&
 {
         return m_buffer;
 }
