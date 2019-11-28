@@ -72,7 +72,7 @@ InstanceHandle& InstanceHandle::operator=(InstanceHandle&& from) noexcept
         return *this;
 }
 
-InstanceHandle::operator VkInstance() const noexcept
+InstanceHandle::operator VkInstance() const& noexcept
 {
         return m_instance;
 }
@@ -132,7 +132,7 @@ DebugReportCallback& DebugReportCallback::operator=(DebugReportCallback&& from) 
         return *this;
 }
 
-DebugReportCallback::operator VkDebugReportCallbackEXT() const noexcept
+DebugReportCallback::operator VkDebugReportCallbackEXT() const& noexcept
 {
         return m_callback;
 }
@@ -186,7 +186,7 @@ DeviceHandle& DeviceHandle::operator=(DeviceHandle&& from) noexcept
         return *this;
 }
 
-DeviceHandle::operator VkDevice() const noexcept
+DeviceHandle::operator VkDevice() const& noexcept
 {
         return m_device;
 }
@@ -288,7 +288,7 @@ SurfaceKHR& SurfaceKHR::operator=(SurfaceKHR&& from) noexcept
         return *this;
 }
 
-SurfaceKHR::operator VkSurfaceKHR() const noexcept
+SurfaceKHR::operator VkSurfaceKHR() const& noexcept
 {
         return m_surface;
 }
@@ -348,7 +348,7 @@ SwapchainKHR& SwapchainKHR::operator=(SwapchainKHR&& from) noexcept
         return *this;
 }
 
-SwapchainKHR::operator VkSwapchainKHR() const noexcept
+SwapchainKHR::operator VkSwapchainKHR() const& noexcept
 {
         return m_swapchain;
 }
@@ -408,7 +408,7 @@ ImageView& ImageView::operator=(ImageView&& from) noexcept
         return *this;
 }
 
-ImageView::operator VkImageView() const noexcept
+ImageView::operator VkImageView() const& noexcept
 {
         return m_image_view;
 }
@@ -482,7 +482,7 @@ ShaderModule& ShaderModule::operator=(ShaderModule&& from) noexcept
         return *this;
 }
 
-ShaderModule::operator VkShaderModule() const noexcept
+ShaderModule::operator VkShaderModule() const& noexcept
 {
         return m_shader_module;
 }
@@ -542,7 +542,7 @@ RenderPass& RenderPass::operator=(RenderPass&& from) noexcept
         return *this;
 }
 
-RenderPass::operator VkRenderPass() const noexcept
+RenderPass::operator VkRenderPass() const& noexcept
 {
         return m_render_pass;
 }
@@ -602,7 +602,7 @@ PipelineLayout& PipelineLayout::operator=(PipelineLayout&& from) noexcept
         return *this;
 }
 
-PipelineLayout::operator VkPipelineLayout() const noexcept
+PipelineLayout::operator VkPipelineLayout() const& noexcept
 {
         return m_pipeline_layout;
 }
@@ -679,7 +679,7 @@ Pipeline& Pipeline::operator=(Pipeline&& from) noexcept
         return *this;
 }
 
-Pipeline::operator VkPipeline() const noexcept
+Pipeline::operator VkPipeline() const& noexcept
 {
         return m_pipeline;
 }
@@ -739,7 +739,7 @@ Framebuffer& Framebuffer::operator=(Framebuffer&& from) noexcept
         return *this;
 }
 
-Framebuffer::operator VkFramebuffer() const noexcept
+Framebuffer::operator VkFramebuffer() const& noexcept
 {
         return m_framebuffer;
 }
@@ -802,7 +802,7 @@ CommandPool& CommandPool::operator=(CommandPool&& from) noexcept
         return *this;
 }
 
-CommandPool::operator VkCommandPool() const noexcept
+CommandPool::operator VkCommandPool() const& noexcept
 {
         return m_command_pool;
 }
@@ -872,7 +872,7 @@ Semaphore& Semaphore::operator=(Semaphore&& from) noexcept
         return *this;
 }
 
-Semaphore::operator VkSemaphore() const noexcept
+Semaphore::operator VkSemaphore() const& noexcept
 {
         return m_semaphore;
 }
@@ -941,7 +941,7 @@ Fence& Fence::operator=(Fence&& from) noexcept
         return *this;
 }
 
-Fence::operator VkFence() const noexcept
+Fence::operator VkFence() const& noexcept
 {
         return m_fence;
 }
@@ -1123,7 +1123,7 @@ CommandBuffer& CommandBuffer::operator=(CommandBuffer&& from) noexcept
         return *this;
 }
 
-CommandBuffer::operator VkCommandBuffer() const noexcept
+CommandBuffer::operator VkCommandBuffer() const& noexcept
 {
         return m_command_buffer;
 }
@@ -1268,7 +1268,7 @@ DescriptorSetLayout& DescriptorSetLayout::operator=(DescriptorSetLayout&& from) 
         return *this;
 }
 
-DescriptorSetLayout::operator VkDescriptorSetLayout() const noexcept
+DescriptorSetLayout::operator VkDescriptorSetLayout() const& noexcept
 {
         return m_descriptor_set_layout;
 }
@@ -1328,7 +1328,7 @@ DescriptorPool& DescriptorPool::operator=(DescriptorPool&& from) noexcept
         return *this;
 }
 
-DescriptorPool::operator VkDescriptorPool() const noexcept
+DescriptorPool::operator VkDescriptorPool() const& noexcept
 {
         return m_descriptor_pool;
 }
@@ -1406,7 +1406,7 @@ DescriptorSet& DescriptorSet::operator=(DescriptorSet&& from) noexcept
         return *this;
 }
 
-DescriptorSet::operator VkDescriptorSet() const noexcept
+DescriptorSet::operator VkDescriptorSet() const& noexcept
 {
         return m_descriptor_set;
 }
@@ -1558,7 +1558,7 @@ Image& Image::operator=(Image&& from) noexcept
         return *this;
 }
 
-Image::operator VkImage() const noexcept
+Image::operator VkImage() const& noexcept
 {
         return m_image;
 }
@@ -1618,7 +1618,7 @@ Sampler& Sampler::operator=(Sampler&& from) noexcept
         return *this;
 }
 
-Sampler::operator VkSampler() const noexcept
+Sampler::operator VkSampler() const& noexcept
 {
         return m_sampler;
 }
