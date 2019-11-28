@@ -38,7 +38,8 @@ public:
         ShaderHandle(ShaderHandle&& from) noexcept;
         ShaderHandle& operator=(ShaderHandle&& from) noexcept;
 
-        operator GLuint() const noexcept;
+        operator GLuint() const& noexcept;
+        operator GLuint() const&& noexcept = delete;
 };
 
 class ProgramHandle final
@@ -58,7 +59,8 @@ public:
         ProgramHandle(ProgramHandle&& from) noexcept;
         ProgramHandle& operator=(ProgramHandle&& from) noexcept;
 
-        operator GLuint() const noexcept;
+        operator GLuint() const& noexcept;
+        operator GLuint() const&& noexcept = delete;
 };
 
 class Texture2DHandle final
@@ -78,7 +80,8 @@ public:
         Texture2DHandle(Texture2DHandle&& from) noexcept;
         Texture2DHandle& operator=(Texture2DHandle&& from) noexcept;
 
-        operator GLuint() const noexcept;
+        operator GLuint() const& noexcept;
+        operator GLuint() const&& noexcept = delete;
 };
 
 class Texture2DMultisampleHandle final
@@ -98,7 +101,8 @@ public:
         Texture2DMultisampleHandle(Texture2DMultisampleHandle&& from) noexcept;
         Texture2DMultisampleHandle& operator=(Texture2DMultisampleHandle&& from) noexcept;
 
-        operator GLuint() const noexcept;
+        operator GLuint() const& noexcept;
+        operator GLuint() const&& noexcept = delete;
 };
 
 class FramebufferHandle final
@@ -118,7 +122,8 @@ public:
         FramebufferHandle(FramebufferHandle&& from) noexcept;
         FramebufferHandle& operator=(FramebufferHandle&& from) noexcept;
 
-        operator GLuint() const noexcept;
+        operator GLuint() const& noexcept;
+        operator GLuint() const&& noexcept = delete;
 };
 
 class RenderbufferHandle final
@@ -138,7 +143,8 @@ public:
         RenderbufferHandle(RenderbufferHandle&& from) noexcept;
         RenderbufferHandle& operator=(RenderbufferHandle&& from) noexcept;
 
-        operator GLuint() const noexcept;
+        operator GLuint() const& noexcept;
+        operator GLuint() const&& noexcept = delete;
 };
 
 class BufferHandle final
@@ -158,7 +164,8 @@ public:
         BufferHandle(BufferHandle&& from) noexcept;
         BufferHandle& operator=(BufferHandle&& from) noexcept;
 
-        operator GLuint() const noexcept;
+        operator GLuint() const& noexcept;
+        operator GLuint() const&& noexcept = delete;
 };
 
 class VertexArrayHandle final
@@ -178,7 +185,8 @@ public:
         VertexArrayHandle(VertexArrayHandle&& from) noexcept;
         VertexArrayHandle& operator=(VertexArrayHandle&& from) noexcept;
 
-        operator GLuint() const noexcept;
+        operator GLuint() const& noexcept;
+        operator GLuint() const&& noexcept = delete;
 };
 
 class TimeElapsedQueryHandle final
@@ -198,6 +206,7 @@ public:
         TimeElapsedQueryHandle(TimeElapsedQueryHandle&& from) noexcept;
         TimeElapsedQueryHandle& operator=(TimeElapsedQueryHandle&& from) noexcept;
 
-        operator GLuint() const noexcept;
+        operator GLuint() const& noexcept;
+        operator GLuint() const&& noexcept = delete;
 };
 }

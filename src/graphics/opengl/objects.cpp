@@ -60,7 +60,7 @@ ShaderHandle& ShaderHandle::operator=(ShaderHandle&& from) noexcept
         return *this;
 }
 
-ShaderHandle::operator GLuint() const noexcept
+ShaderHandle::operator GLuint() const& noexcept
 {
         return m_shader;
 }
@@ -106,7 +106,7 @@ ProgramHandle& ProgramHandle::operator=(ProgramHandle&& from) noexcept
         return *this;
 }
 
-ProgramHandle::operator GLuint() const noexcept
+ProgramHandle::operator GLuint() const& noexcept
 {
         return m_program;
 }
@@ -155,7 +155,7 @@ Texture2DHandle& Texture2DHandle::operator=(Texture2DHandle&& from) noexcept
         return *this;
 }
 
-Texture2DHandle::operator GLuint() const noexcept
+Texture2DHandle::operator GLuint() const& noexcept
 {
         return m_texture;
 }
@@ -201,7 +201,7 @@ Texture2DMultisampleHandle& Texture2DMultisampleHandle::operator=(Texture2DMulti
         return *this;
 }
 
-Texture2DMultisampleHandle::operator GLuint() const noexcept
+Texture2DMultisampleHandle::operator GLuint() const& noexcept
 {
         return m_texture;
 }
@@ -247,7 +247,7 @@ FramebufferHandle& FramebufferHandle::operator=(FramebufferHandle&& from) noexce
         return *this;
 }
 
-FramebufferHandle::operator GLuint() const noexcept
+FramebufferHandle::operator GLuint() const& noexcept
 {
         return m_framebuffer;
 }
@@ -293,7 +293,7 @@ RenderbufferHandle& RenderbufferHandle::operator=(RenderbufferHandle&& from) noe
         return *this;
 }
 
-RenderbufferHandle::operator GLuint() const noexcept
+RenderbufferHandle::operator GLuint() const& noexcept
 {
         return m_renderbuffer;
 }
@@ -339,7 +339,7 @@ BufferHandle& BufferHandle::operator=(BufferHandle&& from) noexcept
         return *this;
 }
 
-BufferHandle::operator GLuint() const noexcept
+BufferHandle::operator GLuint() const& noexcept
 {
         return m_buffer;
 }
@@ -385,7 +385,7 @@ VertexArrayHandle& VertexArrayHandle::operator=(VertexArrayHandle&& from) noexce
         return *this;
 }
 
-VertexArrayHandle::operator GLuint() const noexcept
+VertexArrayHandle::operator GLuint() const& noexcept
 {
         return m_vertex_array;
 }
@@ -431,7 +431,7 @@ TimeElapsedQueryHandle& TimeElapsedQueryHandle::operator=(TimeElapsedQueryHandle
         return *this;
 }
 
-TimeElapsedQueryHandle::operator GLuint() const noexcept
+TimeElapsedQueryHandle::operator GLuint() const& noexcept
 {
         return m_query;
 }
