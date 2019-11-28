@@ -31,11 +31,11 @@ layout(std140, binding = 4) uniform Images
         sampler2D texture_j;
 };
 #else
-layout(local_size_x_id = 0, local_size_y_id = 0) in;
-layout(constant_id = 1) const int RADIUS = 1;
-layout(constant_id = 2) const int ITERATION_COUNT = 1;
-layout(constant_id = 3) const float STOP_MOVE_SQUARE = 1;
-layout(constant_id = 4) const float MIN_DETERMINANT = 1;
+layout(local_size_x_id = 0, local_size_y_id = 1) in;
+layout(constant_id = 2) const int RADIUS = 1;
+layout(constant_id = 3) const int ITERATION_COUNT = 1;
+layout(constant_id = 4) const float STOP_MOVE_SQUARE = 1;
+layout(constant_id = 5) const float MIN_DETERMINANT = 1;
 layout(binding = 4, r32f) readonly restrict uniform image2D image_dx;
 layout(binding = 5, r32f) readonly restrict uniform image2D image_dy;
 layout(binding = 6, r32f) readonly restrict uniform image2D image_i;
