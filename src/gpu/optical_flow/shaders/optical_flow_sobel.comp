@@ -26,7 +26,7 @@ layout(std140, binding = 0) uniform Images
         layout(r32f) writeonly restrict image2D image_dy;
 };
 #else
-layout(local_size_x_id = 0, local_size_y_id = 0) in;
+layout(local_size_x_id = 0, local_size_y_id = 1) in;
 layout(binding = 0, r32f) readonly restrict uniform image2D image_i;
 layout(binding = 1, r32f) writeonly restrict uniform image2D image_dx;
 layout(binding = 2, r32f) writeonly restrict uniform image2D image_dy;
