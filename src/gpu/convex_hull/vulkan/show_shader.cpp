@@ -134,7 +134,7 @@ VkPipelineLayout ConvexHullShowProgram::pipeline_layout() const
 
 vulkan::Pipeline ConvexHullShowProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
                                                         bool sample_shading, unsigned x, unsigned y, unsigned width,
-                                                        unsigned height)
+                                                        unsigned height) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 

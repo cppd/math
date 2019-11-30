@@ -213,7 +213,8 @@ VkPipelineLayout TextShowProgram::pipeline_layout() const
 }
 
 vulkan::Pipeline TextShowProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
-                                                  bool sample_shading, unsigned x, unsigned y, unsigned width, unsigned height)
+                                                  bool sample_shading, unsigned x, unsigned y, unsigned width,
+                                                  unsigned height) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 

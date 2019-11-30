@@ -91,7 +91,7 @@ public:
         ~ConvexHullShowProgram() = default;
 
         vulkan::Pipeline create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, bool sample_shading,
-                                         unsigned x, unsigned y, unsigned width, unsigned height);
+                                         unsigned x, unsigned y, unsigned width, unsigned height) const;
 
         VkDescriptorSetLayout descriptor_set_layout() const;
         VkPipelineLayout pipeline_layout() const;

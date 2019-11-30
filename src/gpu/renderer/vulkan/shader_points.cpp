@@ -220,7 +220,7 @@ VkPipelineLayout RendererPointsProgram::pipeline_layout() const
 
 vulkan::Pipeline RendererPointsProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
                                                         VkPrimitiveTopology primitive_topology, unsigned x, unsigned y,
-                                                        unsigned width, unsigned height)
+                                                        unsigned width, unsigned height) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 

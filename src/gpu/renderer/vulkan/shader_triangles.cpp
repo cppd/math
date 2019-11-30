@@ -546,7 +546,7 @@ VkPipelineLayout RendererTrianglesProgram::pipeline_layout() const
 
 vulkan::Pipeline RendererTrianglesProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
                                                            bool sample_shading, unsigned x, unsigned y, unsigned width,
-                                                           unsigned height)
+                                                           unsigned height) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -602,7 +602,7 @@ VkPipelineLayout RendererShadowProgram::pipeline_layout() const
 }
 
 vulkan::Pipeline RendererShadowProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, unsigned x,
-                                                        unsigned y, unsigned width, unsigned height)
+                                                        unsigned y, unsigned width, unsigned height) const
 {
         ASSERT(sample_count = VK_SAMPLE_COUNT_1_BIT);
         ASSERT(x < width && y < height);

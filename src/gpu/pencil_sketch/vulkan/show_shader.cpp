@@ -136,7 +136,7 @@ VkPipelineLayout PencilSketchShowProgram::pipeline_layout() const
 }
 
 vulkan::Pipeline PencilSketchShowProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
-                                                          unsigned x, unsigned y, unsigned width, unsigned height)
+                                                          unsigned x, unsigned y, unsigned width, unsigned height) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 

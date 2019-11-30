@@ -180,7 +180,7 @@ VkPipelineLayout DftShowProgram::pipeline_layout() const
 }
 
 vulkan::Pipeline DftShowProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, unsigned x,
-                                                 unsigned y, unsigned width, unsigned height)
+                                                 unsigned y, unsigned width, unsigned height) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 

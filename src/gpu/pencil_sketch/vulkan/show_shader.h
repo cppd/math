@@ -87,7 +87,7 @@ public:
         ~PencilSketchShowProgram() = default;
 
         vulkan::Pipeline create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, unsigned x, unsigned y,
-                                         unsigned width, unsigned height);
+                                         unsigned width, unsigned height) const;
 
         VkDescriptorSetLayout descriptor_set_layout() const;
         VkPipelineLayout pipeline_layout() const;
