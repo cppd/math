@@ -21,22 +21,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shader_source.h"
 
 #include "com/container.h"
-#include "com/conversion.h"
 #include "com/error.h"
 #include "com/matrix.h"
 #include "com/matrix_alg.h"
 #include "com/time.h"
 #include "com/type/limit.h"
 #include "com/vec.h"
+#include "gpu/optical_flow/com/show.h"
 #include "graphics/opengl/buffers.h"
-#include "graphics/opengl/capabilities.h"
+//#include "graphics/opengl/capabilities.h"
 #include "graphics/opengl/shader.h"
 
 #include <optional>
 #include <vector>
-
-// Расстояние между точками потока на экране в миллиметрах
-constexpr double DISTANCE_BETWEEN_POINTS = 2;
 
 // Интервал ожидания для расчёта потока не для каждого кадра
 // constexpr double COMPUTE_INTERVAL_SECONDS = 1.0 / 10;
@@ -90,49 +87,6 @@ public:
                 glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_buffer);
         }
 };
-
-void create_points_for_top_level(int width, int height, int distance, int* point_count_x, int* point_count_y,
-                                 std::vector<vec2i>* points)
-{
-        points->clear();
-
-        if (width <= 0 || height <= 0 || distance < 0)
-        {
-                *point_count_x = 0;
-                *point_count_y = 0;
-                return;
-        }
-
-        int lw = width - 2 * distance;
-        int lh = height - 2 * distance;
-
-        if (lw <= 0 || lh <= 0)
-        {
-                *point_count_x = 0;
-                *point_count_y = 0;
-                return;
-        }
-
-        int size = distance + 1;
-        *point_count_x = (lw + size - 1) / size;
-        *point_count_y = (lh + size - 1) / size;
-
-        int point_count = *point_count_x * *point_count_y;
-
-        points->clear();
-        points->resize(point_count);
-
-        int index = 0;
-        for (int y = distance; y < height - distance; y += size)
-        {
-                for (int x = distance; x < width - distance; x += size)
-                {
-                        (*points)[index++] = vec2i(x, y);
-                }
-        }
-
-        ASSERT(index == point_count);
-}
 
 class Impl final : public OpticalFlowShow
 {
@@ -215,10 +169,7 @@ public:
         {
                 std::vector<vec2i> points;
                 int point_count_x, point_count_y;
-                create_points_for_top_level(m_width, m_height, millimeters_to_pixels(DISTANCE_BETWEEN_POINTS, window_ppi),
-                                            &point_count_x, &point_count_y, &points);
-
-                ASSERT(static_cast<size_t>(point_count_x) * point_count_y == points.size());
+                create_top_level_optical_flow_points(m_width, m_height, window_ppi, &point_count_x, &point_count_y, &points);
 
                 m_top_point_count = points.size();
 
