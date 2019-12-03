@@ -231,8 +231,8 @@ public:
 
 std::vector<vulkan::PhysicalDeviceFeatures> DftShow::required_device_features()
 {
-        return merge<vulkan::PhysicalDeviceFeatures>(std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES)
-                                                     /*DftCompute::required_device_features()*/);
+        return merge<vulkan::PhysicalDeviceFeatures>(std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),
+                                                     DftCompute::required_device_features());
 }
 
 std::unique_ptr<DftShow> create_dft_show(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
