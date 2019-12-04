@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show.h"
 
-//#include "compute.h"
+#include "compute.h"
 #include "sampler.h"
 #include "show_shader.h"
 
@@ -68,7 +68,7 @@ class Impl final : public OpticalFlowShow
 
         int m_top_point_count;
 
-        // std::unique_ptr<OpticalFlowCompute> m_compute;
+        std::unique_ptr<OpticalFlowCompute> m_compute;
 
         void draw_commands(VkCommandBuffer command_buffer) const
         {
@@ -91,8 +91,8 @@ class Impl final : public OpticalFlowShow
                 vkCmdDraw(command_buffer, m_top_point_count * 2, 1, 0, 0);
         }
 
-        void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& /*input*/, double window_ppi,
-                            unsigned x, unsigned y, unsigned width, unsigned height) override
+        void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& input, double window_ppi, unsigned x,
+                            unsigned y, unsigned width, unsigned height) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -124,7 +124,8 @@ class Impl final : public OpticalFlowShow
                 m_memory.set_points(*m_top_points);
                 m_memory.set_flow(*m_top_flow);
 
-                // m_compute->create_buffers
+                m_compute->create_buffers(m_sampler, input, x, y, width, height, point_count_x, point_count_y, *m_top_points,
+                                          *m_top_flow, m_graphics_command_pool.family_index());
 
                 // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
                 double left = 0;
@@ -146,9 +147,9 @@ class Impl final : public OpticalFlowShow
                 info.render_pass = render_buffers->render_pass();
                 info.framebuffers = &render_buffers->framebuffers();
                 info.command_pool = m_graphics_command_pool;
-                // info.before_render_pass_commands = [this](VkCommandBuffer command_buffer) {
-                //        m_compute->compute_commands(command_buffer);
-                //};
+                info.before_render_pass_commands = [this](VkCommandBuffer command_buffer) {
+                        m_compute->compute_commands(command_buffer);
+                };
                 info.render_pass_commands = [this](VkCommandBuffer command_buffer) { draw_commands(command_buffer); };
                 m_command_buffers = vulkan::create_command_buffers(info);
         }
@@ -162,7 +163,7 @@ class Impl final : public OpticalFlowShow
                 m_command_buffers.reset();
                 m_pipeline_points.reset();
                 m_pipeline_lines.reset();
-                // m_compute->delete_buffers();
+                m_compute->delete_buffers();
                 m_top_points.reset();
                 m_top_flow.reset();
         }
@@ -196,7 +197,7 @@ class Impl final : public OpticalFlowShow
                         return;
                 }
 
-                // m_compute->reset();
+                m_compute->reset();
         }
 
 public:
@@ -213,9 +214,9 @@ public:
                   m_signal_semaphore(instance.device()),
                   m_program(instance.device()),
                   m_memory(instance.device(), m_program.descriptor_set_layout(), {graphics_queue.family_index()}),
-                  m_sampler(create_optical_flow_sampler(instance.device()))
-        // m_compute(create_optical_flow_compute(instance, graphics_command_pool, graphics_queue, transfer_command_pool,
-        //                              transfer_queue))
+                  m_sampler(create_optical_flow_sampler(instance.device())),
+                  m_compute(create_optical_flow_compute(instance, graphics_command_pool, graphics_queue, transfer_command_pool,
+                                                        transfer_queue))
         {
         }
 
@@ -232,8 +233,8 @@ public:
 
 std::vector<vulkan::PhysicalDeviceFeatures> OpticalFlowShow::required_device_features()
 {
-        return merge<vulkan::PhysicalDeviceFeatures>(std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES)
-                                                     /*OpticalFlowCompute::required_device_features()*/);
+        return merge<vulkan::PhysicalDeviceFeatures>(std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),
+                                                     OpticalFlowCompute::required_device_features());
 }
 
 std::unique_ptr<OpticalFlowShow> create_optical_flow_show(const vulkan::VulkanInstance& instance,
