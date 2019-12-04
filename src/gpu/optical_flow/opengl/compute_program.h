@@ -30,7 +30,7 @@ class OpticalFlowGrayscaleProgram final
         opengl::ComputeProgram m_program;
 
 public:
-        OpticalFlowGrayscaleProgram(unsigned group_size, unsigned x, unsigned y, unsigned width, unsigned height);
+        OpticalFlowGrayscaleProgram(const vec2i& group_size, unsigned x, unsigned y, unsigned width, unsigned height);
 
         void exec(const vec2i& groups, const OpticalFlowGrayscaleMemory& memory) const;
 };
@@ -40,7 +40,7 @@ class OpticalFlowDownsampleProgram final
         opengl::ComputeProgram m_program;
 
 public:
-        OpticalFlowDownsampleProgram(unsigned group_size);
+        OpticalFlowDownsampleProgram(const vec2i& group_size);
 
         void exec(const vec2i& groups, const OpticalFlowDownsampleMemory& memory) const;
 };
@@ -50,7 +50,7 @@ class OpticalFlowSobelProgram final
         opengl::ComputeProgram m_program;
 
 public:
-        OpticalFlowSobelProgram(unsigned group_size);
+        OpticalFlowSobelProgram(const vec2i& group_size);
 
         void exec(const vec2i& groups, const OpticalFlowSobelMemory& memory) const;
 };
@@ -60,7 +60,7 @@ class OpticalFlowFlowProgram final
         opengl::ComputeProgram m_program;
 
 public:
-        OpticalFlowFlowProgram(unsigned group_size, int radius, int iteration_count, double stop_move_square,
+        OpticalFlowFlowProgram(const vec2i& group_size, int radius, int iteration_count, double stop_move_square,
                                double min_determinant);
 
         void exec(const vec2i& groups, const OpticalFlowDataMemory& data, const OpticalFlowImagesMemory& images) const;

@@ -41,71 +41,16 @@ Chapter 5. Tracking Objects in Videos.
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
+#include "gpu/optical_flow/com/compute.h"
 
 #include <array>
 
 constexpr GLenum IMAGE_FORMAT = GL_R32F;
 
-// Размер по X и по Y группы потоков вычислительных шейдеров
-constexpr int GROUP_SIZE = 16;
-// Минимальный размер изображения для пирамиды изображений
-constexpr int BOTTOM_IMAGE_SIZE = 16;
-
-// Параметры алгоритма для передачи в вычислительный шейдер
-// Радиус окрестности точки
-constexpr int RADIUS = 6;
-// Максимальное количество итераций
-constexpr int ITERATION_COUNT = 10;
-// Если на итерации квадрат потока меньше этого значения, то выход из цикла
-constexpr float STOP_MOVE_SQUARE = square(1e-3f);
-// Если определитель матрицы G меньше этого значения, то считается, что нет потока
-constexpr float MIN_DETERMINANT = 1;
-
 namespace gpu_opengl
 {
 namespace
 {
-std::vector<vec2i> pyramid_sizes(int width, int height, int min_size)
-{
-        std::vector<vec2i> sizes;
-
-        sizes.emplace_back(width, height);
-
-        while (true)
-        {
-                int new_width = (width + 1) / 2;
-                int new_height = (height + 1) / 2;
-
-                if (new_width < min_size)
-                {
-                        new_width = width;
-                }
-                if (new_height < min_size)
-                {
-                        new_height = height;
-                }
-
-                if (new_width == width && new_height == height)
-                {
-                        break;
-                }
-
-                sizes.emplace_back(new_width, new_height);
-
-                width = new_width;
-                height = new_height;
-        }
-
-#if 0
-        for (const vec2i& v : sizes)
-        {
-                LOG(to_string(v[0]) + " x " + to_string(v[1]));
-        }
-#endif
-
-        return sizes;
-}
-
 std::vector<opengl::Texture> create_images(const std::vector<vec2i>& sizes)
 {
         std::vector<opengl::Texture> images;
@@ -138,14 +83,6 @@ std::array<OpticalFlowGrayscaleMemory, 2> create_grayscale_memory(const opengl::
         return {OpticalFlowGrayscaleMemory(source, images[0][0]), OpticalFlowGrayscaleMemory(source, images[1][0])};
 }
 
-vec2i create_grayscale_groups(const std::vector<vec2i>& sizes)
-{
-        int x = group_count(sizes[0][0], GROUP_SIZE);
-        int y = group_count(sizes[0][1], GROUP_SIZE);
-
-        return {x, y};
-}
-
 std::array<std::vector<OpticalFlowDownsampleMemory>, 2> create_downsample_memory(
         const std::array<std::vector<opengl::Texture>, 2>& images)
 {
@@ -160,20 +97,6 @@ std::array<std::vector<OpticalFlowDownsampleMemory>, 2> create_downsample_memory
         }
 
         return downsample_images;
-}
-
-std::vector<vec2i> create_downsample_groups(const std::vector<vec2i>& sizes)
-{
-        std::vector<vec2i> groups;
-
-        for (unsigned i = 1; i < sizes.size(); ++i)
-        {
-                int x = group_count(sizes[i][0], GROUP_SIZE);
-                int y = group_count(sizes[i][1], GROUP_SIZE);
-                groups.push_back({x, y});
-        }
-
-        return groups;
 }
 
 std::array<std::vector<OpticalFlowSobelMemory>, 2> create_sobel_memory(const std::array<std::vector<opengl::Texture>, 2>& images,
@@ -193,20 +116,6 @@ std::array<std::vector<OpticalFlowSobelMemory>, 2> create_sobel_memory(const std
         }
 
         return sobel_images;
-}
-
-std::vector<vec2i> create_sobel_groups(const std::vector<vec2i>& sizes)
-{
-        std::vector<vec2i> groups;
-
-        for (size_t i = 0; i < sizes.size(); ++i)
-        {
-                int x = group_count(sizes[i][0], GROUP_SIZE);
-                int y = group_count(sizes[i][1], GROUP_SIZE);
-                groups.push_back({x, y});
-        }
-
-        return groups;
 }
 
 std::vector<OpticalFlowDataMemory> create_flow_data_memory(const std::vector<vec2i>& sizes,
@@ -290,22 +199,6 @@ std::array<std::vector<OpticalFlowImagesMemory>, 2> create_flow_images_memory(
         }
 
         return flow_images;
-}
-
-std::vector<vec2i> create_flow_groups(const std::vector<vec2i>& sizes, int top_point_count_x, int top_point_count_y)
-{
-        std::vector<vec2i> groups;
-
-        groups.push_back({group_count(top_point_count_x, GROUP_SIZE), group_count(top_point_count_y, GROUP_SIZE)});
-
-        for (size_t i = 1; i < sizes.size(); ++i)
-        {
-                int x = group_count(sizes[i][0], GROUP_SIZE);
-                int y = group_count(sizes[i][1], GROUP_SIZE);
-                groups.push_back({x, y});
-        }
-
-        return groups;
 }
 
 class Impl final : public OpticalFlowCompute
@@ -418,22 +311,23 @@ class Impl final : public OpticalFlowCompute
                   m_flow_buffers(create_flow_buffers(sizes)),
                   //
                   m_grayscale_memory(create_grayscale_memory(source, m_images)),
-                  m_grayscale_groups(create_grayscale_groups(sizes)),
-                  m_grayscale_compute(GROUP_SIZE, x, y, width, height),
+                  m_grayscale_groups(optical_flow_grayscale_groups(OPTICAL_FLOW_GROUP_SIZE, sizes)),
+                  m_grayscale_compute(OPTICAL_FLOW_GROUP_SIZE, x, y, width, height),
                   //
                   m_downsample_memory(create_downsample_memory(m_images)),
-                  m_downsample_groups(create_downsample_groups(sizes)),
-                  m_downsample_compute(GROUP_SIZE),
+                  m_downsample_groups(optical_flow_downsample_groups(OPTICAL_FLOW_GROUP_SIZE, sizes)),
+                  m_downsample_compute(OPTICAL_FLOW_GROUP_SIZE),
                   //
                   m_sobel_memory(create_sobel_memory(m_images, m_dx, m_dy)),
-                  m_sobel_groups(create_sobel_groups(sizes)),
-                  m_sobel_compute(GROUP_SIZE),
+                  m_sobel_groups(optical_flow_sobel_groups(OPTICAL_FLOW_GROUP_SIZE, sizes)),
+                  m_sobel_compute(OPTICAL_FLOW_GROUP_SIZE),
                   //
                   m_flow_data_memory(create_flow_data_memory(sizes, m_flow_buffers, top_point_count_x, top_point_count_y,
                                                              top_points, top_flow)),
                   m_flow_images_memory(create_flow_images_memory(m_images, m_dx, m_dy)),
-                  m_flow_groups(create_flow_groups(sizes, top_point_count_x, top_point_count_y)),
-                  m_flow_compute(GROUP_SIZE, RADIUS, ITERATION_COUNT, STOP_MOVE_SQUARE, MIN_DETERMINANT)
+                  m_flow_groups(optical_flow_flow_groups(OPTICAL_FLOW_GROUP_SIZE, sizes, top_point_count_x, top_point_count_y)),
+                  m_flow_compute(OPTICAL_FLOW_GROUP_SIZE, OPTICAL_FLOW_RADIUS, OPTICAL_FLOW_ITERATION_COUNT,
+                                 OPTICAL_FLOW_STOP_MOVE_SQUARE, OPTICAL_FLOW_MIN_DETERMINANT)
         {
                 ASSERT(width > 0 && height > 0);
                 ASSERT(x + width <= static_cast<unsigned>(source.width()));
@@ -443,8 +337,8 @@ class Impl final : public OpticalFlowCompute
 public:
         Impl(const opengl::Texture& source, unsigned x, unsigned y, unsigned width, unsigned height, unsigned top_point_count_x,
              unsigned top_point_count_y, const opengl::Buffer& top_points, const opengl::Buffer& top_flow)
-                : Impl(pyramid_sizes(source.width(), source.height(), BOTTOM_IMAGE_SIZE), source, x, y, width, height,
-                       top_point_count_x, top_point_count_y, top_points, top_flow)
+                : Impl(optical_flow_pyramid_sizes(source.width(), source.height(), OPTICAL_FLOW_BOTTOM_IMAGE_SIZE), source, x, y,
+                       width, height, top_point_count_x, top_point_count_y, top_points, top_flow)
         {
         }
 };

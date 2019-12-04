@@ -23,10 +23,12 @@ namespace gpu_opengl
 {
 namespace
 {
-std::string grayscale_source(unsigned group_size, unsigned x, unsigned y, unsigned width, unsigned height)
+std::string grayscale_source(const vec2i& group_size, unsigned x, unsigned y, unsigned width, unsigned height)
 {
+        ASSERT(group_size[0] == group_size[1]);
+
         std::string s;
-        s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
+        s += "const uint GROUP_SIZE = " + to_string(group_size[0]) + ";\n";
         s += "const int X = " + to_string(x) + ";\n";
         s += "const int Y = " + to_string(y) + ";\n";
         s += "const int WIDTH = " + to_string(width) + ";\n";
@@ -34,24 +36,30 @@ std::string grayscale_source(unsigned group_size, unsigned x, unsigned y, unsign
         return optical_flow_grayscale_comp(s);
 }
 
-std::string downsample_source(unsigned group_size)
+std::string downsample_source(const vec2i& group_size)
 {
+        ASSERT(group_size[0] == group_size[1]);
+
         std::string s;
-        s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
+        s += "const uint GROUP_SIZE = " + to_string(group_size[0]) + ";\n";
         return optical_flow_downsample_comp(s);
 }
 
-std::string sobel_source(unsigned group_size)
+std::string sobel_source(const vec2i& group_size)
 {
+        ASSERT(group_size[0] == group_size[1]);
+
         std::string s;
-        s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
+        s += "const uint GROUP_SIZE = " + to_string(group_size[0]) + ";\n";
         return optical_flow_sobel_comp(s);
 }
 
-std::string flow_source(unsigned group_size, int radius, int iteration_count, double stop_move_square, double min_determinant)
+std::string flow_source(const vec2i& group_size, int radius, int iteration_count, double stop_move_square, double min_determinant)
 {
+        ASSERT(group_size[0] == group_size[1]);
+
         std::string s;
-        s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
+        s += "const uint GROUP_SIZE = " + to_string(group_size[0]) + ";\n";
         s += "const int RADIUS = " + to_string(radius) + ";\n";
         s += "const int ITERATION_COUNT = " + to_string(iteration_count) + ";\n";
         s += "const float STOP_MOVE_SQUARE = " + to_string(stop_move_square) + ";\n";
@@ -62,7 +70,7 @@ std::string flow_source(unsigned group_size, int radius, int iteration_count, do
 
 //
 
-OpticalFlowGrayscaleProgram::OpticalFlowGrayscaleProgram(unsigned group_size, unsigned x, unsigned y, unsigned width,
+OpticalFlowGrayscaleProgram::OpticalFlowGrayscaleProgram(const vec2i& group_size, unsigned x, unsigned y, unsigned width,
                                                          unsigned height)
         : m_program(opengl::ComputeShader(grayscale_source(group_size, x, y, width, height)))
 {
@@ -77,7 +85,7 @@ void OpticalFlowGrayscaleProgram::exec(const vec2i& groups, const OpticalFlowGra
 
 //
 
-OpticalFlowDownsampleProgram::OpticalFlowDownsampleProgram(unsigned group_size)
+OpticalFlowDownsampleProgram::OpticalFlowDownsampleProgram(const vec2i& group_size)
         : m_program(opengl::ComputeShader(downsample_source(group_size)))
 {
 }
@@ -91,7 +99,8 @@ void OpticalFlowDownsampleProgram::exec(const vec2i& groups, const OpticalFlowDo
 
 //
 
-OpticalFlowSobelProgram::OpticalFlowSobelProgram(unsigned group_size) : m_program(opengl::ComputeShader(sobel_source(group_size)))
+OpticalFlowSobelProgram::OpticalFlowSobelProgram(const vec2i& group_size)
+        : m_program(opengl::ComputeShader(sobel_source(group_size)))
 {
 }
 
@@ -104,7 +113,7 @@ void OpticalFlowSobelProgram::exec(const vec2i& groups, const OpticalFlowSobelMe
 
 //
 
-OpticalFlowFlowProgram::OpticalFlowFlowProgram(unsigned group_size, int radius, int iteration_count, double stop_move_square,
+OpticalFlowFlowProgram::OpticalFlowFlowProgram(const vec2i& group_size, int radius, int iteration_count, double stop_move_square,
                                                double min_determinant)
         : m_program(opengl::ComputeShader(flow_source(group_size, radius, iteration_count, stop_move_square, min_determinant)))
 {
