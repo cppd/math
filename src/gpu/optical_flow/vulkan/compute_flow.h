@@ -43,7 +43,7 @@ class OpticalFlowFlowMemory final
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
 
-        struct Data
+        struct BufferData
         {
                 int32_t point_count_x;
                 int32_t point_count_y;
@@ -70,21 +70,31 @@ public:
 
         //
 
-        const VkDescriptorSet& descriptor_set() const;
+        const VkDescriptorSet& descriptor_set(int index) const;
 
         //
 
-        void set_data(int point_count_x, int point_count_y, bool use_all_points, bool use_guess, int guess_kx, int guess_ky,
-                      int guess_width) const;
+        struct Data
+        {
+                int point_count_x;
+                int point_count_y;
+                bool use_all_points;
+                bool use_guess;
+                int guess_kx;
+                int guess_ky;
+                int guess_width;
+        };
+
+        void set_data(const Data& data) const;
 
         void set_dx(const vulkan::ImageWithMemory& image) const;
         void set_dy(const vulkan::ImageWithMemory& image) const;
-        void set_i(const vulkan::ImageWithMemory& image) const;
-        void set_j(VkSampler sampler, const vulkan::ImageWithMemory& image) const;
+        void set_i(const vulkan::ImageWithMemory& image0, const vulkan::ImageWithMemory& image1) const;
+        void set_j(VkSampler sampler, const vulkan::ImageWithMemory& image0, const vulkan::ImageWithMemory& image1) const;
 
         void set_top_points(const vulkan::BufferWithMemory& buffer) const;
-        void set_points_flow(const vulkan::BufferWithMemory& buffer) const;
-        void set_points_flow_guess(const vulkan::BufferWithMemory& buffer) const;
+        void set_flow(const vulkan::BufferWithMemory& buffer) const;
+        void set_flow_guess(const vulkan::BufferWithMemory& buffer) const;
 };
 
 class OpticalFlowFlowConstant final : public vulkan::SpecializationConstant

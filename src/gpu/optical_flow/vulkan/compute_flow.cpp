@@ -114,14 +114,14 @@ std::vector<VkDescriptorSetLayoutBinding> OpticalFlowFlowMemory::descriptor_set_
 
 OpticalFlowFlowMemory::OpticalFlowFlowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
                                              const std::unordered_set<uint32_t>& family_indices)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : m_descriptors(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
                 m_uniform_buffers.emplace_back(vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
+                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(BufferData));
 
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = m_uniform_buffers.back();
@@ -133,7 +133,10 @@ OpticalFlowFlowMemory::OpticalFlowFlowMemory(const vulkan::Device& device, VkDes
                 bindings.push_back(DATA_BINDING);
         }
 
-        m_descriptors.update_descriptor_set(0, bindings, infos);
+        for (int s = 0; s < 2; ++s)
+        {
+                m_descriptors.update_descriptor_set(s, bindings, infos);
+        }
 }
 
 unsigned OpticalFlowFlowMemory::set_number()
@@ -141,23 +144,23 @@ unsigned OpticalFlowFlowMemory::set_number()
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& OpticalFlowFlowMemory::descriptor_set() const
+const VkDescriptorSet& OpticalFlowFlowMemory::descriptor_set(int index) const
 {
-        return m_descriptors.descriptor_set(0);
+        ASSERT(index == 0 || index == 1);
+        return m_descriptors.descriptor_set(index);
 }
 
-void OpticalFlowFlowMemory::set_data(int point_count_x, int point_count_y, bool use_all_points, bool use_guess, int guess_kx,
-                                     int guess_ky, int guess_width) const
+void OpticalFlowFlowMemory::set_data(const Data& data) const
 {
-        Data d;
-        d.point_count_x = point_count_x;
-        d.point_count_y = point_count_y;
-        d.use_all_points = use_all_points ? 1 : 0;
-        d.use_guess = use_guess ? 1 : 0;
-        d.guess_kx = guess_kx;
-        d.guess_ky = guess_ky;
-        d.guess_width = guess_width;
-        vulkan::map_and_write_to_buffer(m_uniform_buffers[0], d);
+        BufferData buffer_data;
+        buffer_data.point_count_x = data.point_count_x;
+        buffer_data.point_count_y = data.point_count_y;
+        buffer_data.use_all_points = data.use_all_points ? 1 : 0;
+        buffer_data.use_guess = data.use_guess ? 1 : 0;
+        buffer_data.guess_kx = data.guess_kx;
+        buffer_data.guess_ky = data.guess_ky;
+        buffer_data.guess_width = data.guess_width;
+        vulkan::map_and_write_to_buffer(m_uniform_buffers[0], buffer_data);
 }
 
 void OpticalFlowFlowMemory::set_dx(const vulkan::ImageWithMemory& image) const
@@ -169,7 +172,10 @@ void OpticalFlowFlowMemory::set_dx(const vulkan::ImageWithMemory& image) const
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
         image_info.imageView = image.image_view();
 
-        m_descriptors.update_descriptor_set(0, DX_BINDING, image_info);
+        for (int s = 0; s < 2; ++s)
+        {
+                m_descriptors.update_descriptor_set(s, DX_BINDING, image_info);
+        }
 }
 
 void OpticalFlowFlowMemory::set_dy(const vulkan::ImageWithMemory& image) const
@@ -181,30 +187,44 @@ void OpticalFlowFlowMemory::set_dy(const vulkan::ImageWithMemory& image) const
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
         image_info.imageView = image.image_view();
 
-        m_descriptors.update_descriptor_set(0, DY_BINDING, image_info);
+        for (int s = 0; s < 2; ++s)
+        {
+                m_descriptors.update_descriptor_set(s, DY_BINDING, image_info);
+        }
 }
 
-void OpticalFlowFlowMemory::set_i(const vulkan::ImageWithMemory& image) const
+void OpticalFlowFlowMemory::set_i(const vulkan::ImageWithMemory& image0, const vulkan::ImageWithMemory& image1) const
 {
-        ASSERT(image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
-        ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(&image0 != &image1);
+        ASSERT(image0.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+        ASSERT(image0.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image1.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+        ASSERT(image1.format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image.image_view();
 
+        image_info.imageView = image0.image_view();
         m_descriptors.update_descriptor_set(0, I_BINDING, image_info);
+        image_info.imageView = image1.image_view();
+        m_descriptors.update_descriptor_set(1, I_BINDING, image_info);
 }
 
-void OpticalFlowFlowMemory::set_j(VkSampler sampler, const vulkan::ImageWithMemory& image) const
+void OpticalFlowFlowMemory::set_j(VkSampler sampler, const vulkan::ImageWithMemory& image0,
+                                  const vulkan::ImageWithMemory& image1) const
 {
-        ASSERT(image.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+        ASSERT(&image0 != &image1);
+        ASSERT(image0.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+        ASSERT(image1.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = image.image_view();
         image_info.sampler = sampler;
 
-        m_descriptors.update_descriptor_set(0, I_BINDING, image_info);
+        image_info.imageView = image0.image_view();
+        m_descriptors.update_descriptor_set(0, J_BINDING, image_info);
+        image_info.imageView = image1.image_view();
+        m_descriptors.update_descriptor_set(1, J_BINDING, image_info);
 }
 
 void OpticalFlowFlowMemory::set_top_points(const vulkan::BufferWithMemory& buffer) const
@@ -215,10 +235,13 @@ void OpticalFlowFlowMemory::set_top_points(const vulkan::BufferWithMemory& buffe
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, TOP_POINTS_BINDING, buffer_info);
+        for (int s = 0; s < 2; ++s)
+        {
+                m_descriptors.update_descriptor_set(s, TOP_POINTS_BINDING, buffer_info);
+        }
 }
 
-void OpticalFlowFlowMemory::set_points_flow(const vulkan::BufferWithMemory& buffer) const
+void OpticalFlowFlowMemory::set_flow(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
         VkDescriptorBufferInfo buffer_info = {};
@@ -226,10 +249,13 @@ void OpticalFlowFlowMemory::set_points_flow(const vulkan::BufferWithMemory& buff
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, POINTS_FLOW_BINDING, buffer_info);
+        for (int s = 0; s < 2; ++s)
+        {
+                m_descriptors.update_descriptor_set(s, POINTS_FLOW_BINDING, buffer_info);
+        }
 }
 
-void OpticalFlowFlowMemory::set_points_flow_guess(const vulkan::BufferWithMemory& buffer) const
+void OpticalFlowFlowMemory::set_flow_guess(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
         VkDescriptorBufferInfo buffer_info = {};
@@ -237,7 +263,10 @@ void OpticalFlowFlowMemory::set_points_flow_guess(const vulkan::BufferWithMemory
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, POINTS_FLOW_GUESS_BINDING, buffer_info);
+        for (int s = 0; s < 2; ++s)
+        {
+                m_descriptors.update_descriptor_set(s, POINTS_FLOW_GUESS_BINDING, buffer_info);
+        }
 }
 
 //
