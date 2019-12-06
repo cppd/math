@@ -54,7 +54,7 @@ std::vector<VkDescriptorSetLayoutBinding> OpticalFlowDownsampleMemory::descripto
 
 OpticalFlowDownsampleMemory::OpticalFlowDownsampleMemory(const vulkan::Device& device,
                                                          VkDescriptorSetLayout descriptor_set_layout)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : m_descriptors(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
@@ -63,33 +63,44 @@ unsigned OpticalFlowDownsampleMemory::set_number()
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& OpticalFlowDownsampleMemory::descriptor_set() const
+const VkDescriptorSet& OpticalFlowDownsampleMemory::descriptor_set(int index) const
 {
-        return m_descriptors.descriptor_set(0);
+        ASSERT(index == 0 || index == 1);
+        return m_descriptors.descriptor_set(index);
 }
 
-void OpticalFlowDownsampleMemory::set(const vulkan::ImageWithMemory& big, const vulkan::ImageWithMemory& small) const
+void OpticalFlowDownsampleMemory::set_big(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const
 {
-        {
-                ASSERT(big.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
-                ASSERT(big.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(&image_0 != &image_1);
+        ASSERT(image_0.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+        ASSERT(image_0.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_1.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+        ASSERT(image_1.format() == VK_FORMAT_R32_SFLOAT);
 
-                VkDescriptorImageInfo image_info = {};
-                image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                image_info.imageView = big.image_view();
+        VkDescriptorImageInfo image_info = {};
+        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-                m_descriptors.update_descriptor_set(0, BIG_BINDING, image_info);
-        }
-        {
-                ASSERT(small.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
-                ASSERT(small.format() == VK_FORMAT_R32_SFLOAT);
+        image_info.imageView = image_0.image_view();
+        m_descriptors.update_descriptor_set(0, BIG_BINDING, image_info);
+        image_info.imageView = image_1.image_view();
+        m_descriptors.update_descriptor_set(1, BIG_BINDING, image_info);
+}
 
-                VkDescriptorImageInfo image_info = {};
-                image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                image_info.imageView = small.image_view();
+void OpticalFlowDownsampleMemory::set_small(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const
+{
+        ASSERT(&image_0 != &image_1);
+        ASSERT(image_0.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+        ASSERT(image_0.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_1.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+        ASSERT(image_1.format() == VK_FORMAT_R32_SFLOAT);
 
-                m_descriptors.update_descriptor_set(0, SMALL_BINDING, image_info);
-        }
+        VkDescriptorImageInfo image_info = {};
+        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+
+        image_info.imageView = image_0.image_view();
+        m_descriptors.update_descriptor_set(0, SMALL_BINDING, image_info);
+        image_info.imageView = image_1.image_view();
+        m_descriptors.update_descriptor_set(1, SMALL_BINDING, image_info);
 }
 
 //

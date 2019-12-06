@@ -51,11 +51,12 @@ public:
 
         //
 
-        const VkDescriptorSet& descriptor_set() const;
+        const VkDescriptorSet& descriptor_set(int index) const;
 
         //
 
-        void set(const vulkan::ImageWithMemory& big, const vulkan::ImageWithMemory& small) const;
+        void set_big(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const;
+        void set_small(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const;
 };
 
 class OpticalFlowDownsampleConstant final : public vulkan::SpecializationConstant

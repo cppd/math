@@ -76,7 +76,7 @@ class Impl final : public OpticalFlowCompute
         vec2i m_grayscale_groups;
 
         OpticalFlowDownsampleProgram m_downsample_program;
-        std::array<std::vector<OpticalFlowDownsampleMemory>, 2> m_downsample_memory;
+        std::vector<OpticalFlowDownsampleMemory> m_downsample_memory;
         std::vector<vec2i> m_downsample_groups;
 
         OpticalFlowSobelProgram m_sobel_program;
@@ -131,20 +131,19 @@ class Impl final : public OpticalFlowCompute
                         OpticalFlowGrayscaleMemory(device, descriptor_set_layout)};
         }
 
-        static std::array<std::vector<OpticalFlowDownsampleMemory>, 2> create_downsample_memory(
+        static std::vector<OpticalFlowDownsampleMemory> create_downsample_memory(
                 const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
                 const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images)
         {
                 ASSERT(images[0].size() == images[1].size());
 
-                std::array<std::vector<OpticalFlowDownsampleMemory>, 2> downsample_images;
+                std::vector<OpticalFlowDownsampleMemory> downsample_images;
 
                 for (unsigned i = 1; i < images[0].size(); ++i)
                 {
-                        downsample_images[0].emplace_back(device, descriptor_set_layout);
-                        downsample_images[1].emplace_back(device, descriptor_set_layout);
-                        downsample_images[0].back().set(images[0][i - 1], images[0][i]);
-                        downsample_images[1].back().set(images[1][i - 1], images[1][i]);
+                        downsample_images.emplace_back(device, descriptor_set_layout);
+                        downsample_images.back().set_big(images[0][i - 1], images[1][i - 1]);
+                        downsample_images.back().set_small(images[0][i], images[1][i]);
                 }
 
                 return downsample_images;
@@ -339,8 +338,8 @@ class Impl final : public OpticalFlowCompute
                 m_dx.clear();
                 m_dy.clear();
                 m_flow_buffers.clear();
-                m_downsample_memory[0].clear();
-                m_downsample_memory[1].clear();
+                m_downsample_memory.clear();
+                m_downsample_memory.clear();
                 m_sobel_memory[0].clear();
                 m_sobel_memory[1].clear();
                 m_flow_memory.clear();
