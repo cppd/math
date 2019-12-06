@@ -72,7 +72,7 @@ class Impl final : public OpticalFlowCompute
         std::vector<vulkan::BufferWithMemory> m_flow_buffers;
 
         OpticalFlowGrayscaleProgram m_grayscale_program;
-        std::array<OpticalFlowGrayscaleMemory, 2> m_grayscale_memory;
+        OpticalFlowGrayscaleMemory m_grayscale_memory;
         vec2i m_grayscale_groups;
 
         OpticalFlowDownsampleProgram m_downsample_program;
@@ -122,13 +122,6 @@ class Impl final : public OpticalFlowCompute
                 }
 
                 return buffers;
-        }
-
-        static std::array<OpticalFlowGrayscaleMemory, 2> create_grayscale_memory(const vulkan::Device& device,
-                                                                                 VkDescriptorSetLayout descriptor_set_layout)
-        {
-                return {OpticalFlowGrayscaleMemory(device, descriptor_set_layout),
-                        OpticalFlowGrayscaleMemory(device, descriptor_set_layout)};
         }
 
         static std::vector<OpticalFlowDownsampleMemory> create_downsample_memory(
@@ -300,10 +293,8 @@ class Impl final : public OpticalFlowCompute
 
                 m_grayscale_groups = optical_flow_grayscale_groups(GROUPS, sizes);
                 m_grayscale_program.create_pipeline(GROUPS_X, GROUPS_Y, x, y, width, height);
-                m_grayscale_memory[0].set_src(sampler, input);
-                m_grayscale_memory[0].set_dst(m_images[0][0]);
-                m_grayscale_memory[1].set_src(sampler, input);
-                m_grayscale_memory[1].set_dst(m_images[1][0]);
+                m_grayscale_memory.set_src(sampler, input);
+                m_grayscale_memory.set_dst(m_images[0][0], m_images[1][0]);
 
                 m_downsample_groups = optical_flow_downsample_groups(GROUPS, sizes);
                 m_downsample_program.create_pipeline(GROUPS_X, GROUPS_Y);
@@ -360,7 +351,7 @@ public:
                   // m_transfer_command_pool(transfer_command_pool),
                   // m_transfer_queue(transfer_queue),
                   m_grayscale_program(instance.device()),
-                  m_grayscale_memory(create_grayscale_memory(m_device, m_grayscale_program.descriptor_set_layout())),
+                  m_grayscale_memory(m_device, m_grayscale_program.descriptor_set_layout()),
                   m_downsample_program(instance.device()),
                   m_sobel_program(instance.device()),
                   m_flow_program(instance.device())

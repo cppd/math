@@ -51,12 +51,12 @@ public:
 
         //
 
-        const VkDescriptorSet& descriptor_set() const;
+        const VkDescriptorSet& descriptor_set(int index) const;
 
         //
 
         void set_src(VkSampler sampler, const vulkan::ImageWithMemory& image);
-        void set_dst(const vulkan::ImageWithMemory& image);
+        void set_dst(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1);
 };
 
 class OpticalFlowGrayscaleConstant final : public vulkan::SpecializationConstant

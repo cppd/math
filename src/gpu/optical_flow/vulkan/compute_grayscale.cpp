@@ -53,7 +53,7 @@ std::vector<VkDescriptorSetLayoutBinding> OpticalFlowGrayscaleMemory::descriptor
 }
 
 OpticalFlowGrayscaleMemory::OpticalFlowGrayscaleMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : m_descriptors(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
@@ -62,32 +62,42 @@ unsigned OpticalFlowGrayscaleMemory::set_number()
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& OpticalFlowGrayscaleMemory::descriptor_set() const
+const VkDescriptorSet& OpticalFlowGrayscaleMemory::descriptor_set(int index) const
 {
-        return m_descriptors.descriptor_set(0);
+        ASSERT(index == 0 || index == 1);
+        return m_descriptors.descriptor_set(index);
 }
 
 void OpticalFlowGrayscaleMemory::set_src(VkSampler sampler, const vulkan::ImageWithMemory& image)
 {
         ASSERT(image.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         image_info.imageView = image.image_view();
         image_info.sampler = sampler;
 
-        m_descriptors.update_descriptor_set(0, SRC_BINDING, image_info);
+        for (int s = 0; s < 2; ++s)
+        {
+                m_descriptors.update_descriptor_set(s, SRC_BINDING, image_info);
+        }
 }
 
-void OpticalFlowGrayscaleMemory::set_dst(const vulkan::ImageWithMemory& image)
+void OpticalFlowGrayscaleMemory::set_dst(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1)
 {
-        ASSERT(image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
-        ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(&image_0 != &image_1);
+        ASSERT(image_0.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+        ASSERT(image_0.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_1.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+        ASSERT(image_1.format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image.image_view();
 
+        image_info.imageView = image_0.image_view();
         m_descriptors.update_descriptor_set(0, DST_BINDING, image_info);
+        image_info.imageView = image_1.image_view();
+        m_descriptors.update_descriptor_set(1, DST_BINDING, image_info);
 }
 
 //
