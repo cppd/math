@@ -80,18 +80,20 @@ class Impl final : public OpticalFlowCompute
         std::vector<vec2i> m_downsample_groups;
 
         OpticalFlowSobelProgram m_sobel_program;
+        std::array<std::vector<OpticalFlowSobelMemory>, 2> m_sobel_memory;
         std::vector<vec2i> m_sobel_groups;
 
         OpticalFlowFlowProgram m_flow_program;
+        std::vector<OpticalFlowFlowMemory> m_flow_memory;
         std::vector<vec2i> m_flow_groups;
 
-        std::vector<vulkan::ImageWithMemory> create_images(const std::vector<vec2i>& sizes) const
+        std::vector<vulkan::ImageWithMemory> create_images(const std::vector<vec2i>& sizes, uint32_t family_index) const
         {
                 std::vector<vulkan::ImageWithMemory> images;
                 images.reserve(sizes.size());
 
                 const bool storage = true;
-                const std::unordered_set<uint32_t> family_indices({m_compute_command_pool.family_index()});
+                const std::unordered_set<uint32_t> family_indices({m_compute_command_pool.family_index(), family_index});
                 const std::vector<VkFormat> formats({IMAGE_FORMAT});
                 for (const vec2i& s : sizes)
                 {
@@ -102,7 +104,7 @@ class Impl final : public OpticalFlowCompute
                 return images;
         }
 
-        std::vector<vulkan::BufferWithMemory> create_flow_buffers(const std::vector<vec2i>& sizes) const
+        std::vector<vulkan::BufferWithMemory> create_flow_buffers(const std::vector<vec2i>& sizes, uint32_t family_index) const
         {
                 std::vector<vulkan::BufferWithMemory> buffers;
                 if (sizes.size() <= 1)
@@ -111,10 +113,10 @@ class Impl final : public OpticalFlowCompute
                 }
                 buffers.reserve(sizes.size() - 1);
 
-                const std::unordered_set<uint32_t> family_indices({m_compute_command_pool.family_index()});
-                for (const vec2i& s : sizes)
+                const std::unordered_set<uint32_t> family_indices({family_index});
+                for (size_t i = 1; i < sizes.size(); ++i)
                 {
-                        const int buffer_size = s[0] * s[1] * sizeof(vec2f);
+                        const int buffer_size = sizes[i][0] * sizes[i][1] * sizeof(vec2f);
                         buffers.emplace_back(vulkan::BufferMemoryType::DeviceLocal, m_device, family_indices,
                                              VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, buffer_size);
                 }
@@ -148,6 +150,123 @@ class Impl final : public OpticalFlowCompute
                 return downsample_images;
         }
 
+        static std::array<std::vector<OpticalFlowSobelMemory>, 2> create_sobel_memory(
+                const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
+                const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images, const std::vector<vulkan::ImageWithMemory>& dx,
+                const std::vector<vulkan::ImageWithMemory>& dy)
+        {
+                ASSERT(images[0].size() == images[1].size());
+                ASSERT(images[0].size() == dx.size());
+                ASSERT(images[0].size() == dy.size());
+
+                std::array<std::vector<OpticalFlowSobelMemory>, 2> sobel_images;
+
+                for (size_t i = 0; i < images[0].size(); ++i)
+                {
+                        sobel_images[0].emplace_back(device, descriptor_set_layout);
+                        sobel_images[1].emplace_back(device, descriptor_set_layout);
+                        sobel_images[0].back().set(images[0][i], dx[i], dy[i]);
+                        sobel_images[1].back().set(images[1][i], dx[i], dy[i]);
+                }
+
+                return sobel_images;
+        }
+
+        static std::vector<OpticalFlowFlowMemory> create_flow_memory(
+                const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout, uint32_t family_index,
+                VkSampler sampler, const std::vector<vec2i>& sizes, const std::vector<vulkan::BufferWithMemory>& flow_buffers,
+                int top_point_count_x, int top_point_count_y, const vulkan::BufferWithMemory& top_points,
+                const vulkan::BufferWithMemory& top_flow, const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,
+                const std::vector<vulkan::ImageWithMemory>& dx, const std::vector<vulkan::ImageWithMemory>& dy)
+        {
+                const size_t size = sizes.size();
+
+                if (size <= 1)
+                {
+                        return {};
+                }
+
+                ASSERT(images[0].size() == size);
+                ASSERT(images[1].size() == size);
+                ASSERT(dx.size() == size);
+                ASSERT(dy.size() == size);
+
+                ASSERT(flow_buffers.size() + 1 == size);
+                const auto flow_index = [&](size_t i) {
+                        ASSERT(i > 0 && i < size);
+                        return i - 1; // буферы начинаются с уровня 1
+                };
+
+                const std::unordered_set<uint32_t> family_indices{family_index};
+
+                std::vector<OpticalFlowFlowMemory> flow_memory;
+
+                for (size_t i = 0; i < size; ++i)
+                {
+                        const vulkan::BufferWithMemory* top_points_ptr;
+                        const vulkan::BufferWithMemory* flow_ptr;
+                        const vulkan::BufferWithMemory* flow_guess_ptr;
+
+                        OpticalFlowFlowMemory::Data data;
+
+                        const bool top = (i == 0);
+                        const bool bottom = (i + 1 == size);
+
+                        if (!top)
+                        {
+                                // Не самый верхний уровень, поэтому расчёт для всех точек
+                                top_points_ptr = &top_points; // не используется
+                                flow_ptr = &flow_buffers[flow_index(i)];
+                                data.use_all_points = true;
+                                data.point_count_x = sizes[i][0];
+                                data.point_count_y = sizes[i][1];
+                        }
+                        else
+                        {
+                                // Самый верхний уровень, поэтому расчёт только для заданных
+                                // точек для рисования на экране
+                                top_points_ptr = &top_points;
+                                flow_ptr = &top_flow;
+                                data.use_all_points = false;
+                                data.point_count_x = top_point_count_x;
+                                data.point_count_y = top_point_count_y;
+                        }
+
+                        if (!bottom)
+                        {
+                                // Не самый нижний уровень, поэтому в качестве приближения
+                                // использовать поток, полученный на меньших изображениях
+                                int i_prev = i + 1;
+                                data.use_guess = true;
+                                data.guess_kx = (sizes[i_prev][0] != sizes[i][0]) ? 2 : 1;
+                                data.guess_ky = (sizes[i_prev][1] != sizes[i][1]) ? 2 : 1;
+                                data.guess_width = sizes[i_prev][0];
+                                flow_guess_ptr = &flow_buffers[flow_index(i_prev)];
+                        }
+                        else
+                        {
+                                // Самый нижний уровень пирамиды, поэтому нет приближения
+                                flow_guess_ptr = &flow_buffers[0]; // не используется
+                                data.use_guess = false;
+                        }
+
+                        flow_memory.emplace_back(device, descriptor_set_layout, family_indices);
+
+                        flow_memory[i].set_data(data);
+
+                        flow_memory[i].set_top_points(*top_points_ptr);
+                        flow_memory[i].set_flow(*flow_ptr);
+                        flow_memory[i].set_flow_guess(*flow_guess_ptr);
+
+                        flow_memory[i].set_dx(dx[i]);
+                        flow_memory[i].set_dy(dy[i]);
+                        flow_memory[i].set_i(images[0][i], images[1][i]);
+                        flow_memory[i].set_j(sampler, images[1][i], images[0][i]);
+                }
+
+                return flow_memory;
+        }
+
         void compute_commands(VkCommandBuffer /*command_buffer*/) const override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -155,8 +274,8 @@ class Impl final : public OpticalFlowCompute
 
         void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, unsigned x, unsigned y, unsigned width,
                             unsigned height, unsigned top_point_count_x, unsigned top_point_count_y,
-                            const vulkan::BufferWithMemory& /*top_points*/, const vulkan::BufferWithMemory& /*top_flow*/,
-                            uint32_t /*family_index*/) override
+                            const vulkan::BufferWithMemory& top_points, const vulkan::BufferWithMemory& top_flow,
+                            uint32_t family_index) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -170,11 +289,11 @@ class Impl final : public OpticalFlowCompute
                 const std::vector<vec2i> sizes =
                         optical_flow_pyramid_sizes(input.width(), input.height(), OPTICAL_FLOW_BOTTOM_IMAGE_SIZE);
 
-                m_images[0] = create_images(sizes);
-                m_images[1] = create_images(sizes);
-                m_dx = create_images(sizes);
-                m_dy = create_images(sizes);
-                m_flow_buffers = create_flow_buffers(sizes);
+                m_images[0] = create_images(sizes, family_index);
+                m_images[1] = create_images(sizes, family_index);
+                m_dx = create_images(sizes, family_index);
+                m_dy = create_images(sizes, family_index);
+                m_flow_buffers = create_flow_buffers(sizes, family_index);
 
                 constexpr vec2i GROUPS = OPTICAL_FLOW_GROUP_SIZE;
                 constexpr int GROUPS_X = OPTICAL_FLOW_GROUP_SIZE[0];
@@ -193,10 +312,15 @@ class Impl final : public OpticalFlowCompute
 
                 m_sobel_groups = optical_flow_sobel_groups(GROUPS, sizes);
                 m_sobel_program.create_pipeline(GROUPS_X, GROUPS_Y);
+                m_sobel_memory =
+                        create_sobel_memory(m_device, m_downsample_program.descriptor_set_layout(), m_images, m_dx, m_dy);
 
                 m_flow_groups = optical_flow_flow_groups(GROUPS, sizes, top_point_count_x, top_point_count_y);
                 m_flow_program.create_pipeline(GROUPS_X, GROUPS_Y, OPTICAL_FLOW_RADIUS, OPTICAL_FLOW_ITERATION_COUNT,
                                                OPTICAL_FLOW_STOP_MOVE_SQUARE, OPTICAL_FLOW_MIN_DETERMINANT);
+                m_flow_memory = create_flow_memory(m_device, m_flow_program.descriptor_set_layout(), family_index, sampler, sizes,
+                                                   m_flow_buffers, top_point_count_x, top_point_count_y, top_points, top_flow,
+                                                   m_images, m_dx, m_dy);
         }
 
         void delete_buffers() override
@@ -217,6 +341,9 @@ class Impl final : public OpticalFlowCompute
                 m_flow_buffers.clear();
                 m_downsample_memory[0].clear();
                 m_downsample_memory[1].clear();
+                m_sobel_memory[0].clear();
+                m_sobel_memory[1].clear();
+                m_flow_memory.clear();
         }
 
         void reset() override
