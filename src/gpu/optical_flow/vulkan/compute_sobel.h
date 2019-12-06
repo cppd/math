@@ -52,12 +52,13 @@ public:
 
         //
 
-        const VkDescriptorSet& descriptor_set() const;
+        const VkDescriptorSet& descriptor_set(int index) const;
 
         //
 
-        void set(const vulkan::ImageWithMemory& image_i, const vulkan::ImageWithMemory& image_dx,
-                 const vulkan::ImageWithMemory& image_dy);
+        void set_i(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1);
+        void set_dx(const vulkan::ImageWithMemory& image_dx);
+        void set_dy(const vulkan::ImageWithMemory& image_dy);
 };
 
 class OpticalFlowSobelConstant final : public vulkan::SpecializationConstant

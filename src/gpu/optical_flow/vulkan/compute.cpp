@@ -80,7 +80,7 @@ class Impl final : public OpticalFlowCompute
         std::vector<vec2i> m_downsample_groups;
 
         OpticalFlowSobelProgram m_sobel_program;
-        std::array<std::vector<OpticalFlowSobelMemory>, 2> m_sobel_memory;
+        std::vector<OpticalFlowSobelMemory> m_sobel_memory;
         std::vector<vec2i> m_sobel_groups;
 
         OpticalFlowFlowProgram m_flow_program;
@@ -142,7 +142,7 @@ class Impl final : public OpticalFlowCompute
                 return downsample_images;
         }
 
-        static std::array<std::vector<OpticalFlowSobelMemory>, 2> create_sobel_memory(
+        static std::vector<OpticalFlowSobelMemory> create_sobel_memory(
                 const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
                 const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images, const std::vector<vulkan::ImageWithMemory>& dx,
                 const std::vector<vulkan::ImageWithMemory>& dy)
@@ -151,14 +151,14 @@ class Impl final : public OpticalFlowCompute
                 ASSERT(images[0].size() == dx.size());
                 ASSERT(images[0].size() == dy.size());
 
-                std::array<std::vector<OpticalFlowSobelMemory>, 2> sobel_images;
+                std::vector<OpticalFlowSobelMemory> sobel_images;
 
                 for (size_t i = 0; i < images[0].size(); ++i)
                 {
-                        sobel_images[0].emplace_back(device, descriptor_set_layout);
-                        sobel_images[1].emplace_back(device, descriptor_set_layout);
-                        sobel_images[0].back().set(images[0][i], dx[i], dy[i]);
-                        sobel_images[1].back().set(images[1][i], dx[i], dy[i]);
+                        sobel_images.emplace_back(device, descriptor_set_layout);
+                        sobel_images.back().set_i(images[0][i], images[1][i]);
+                        sobel_images.back().set_dx(dx[i]);
+                        sobel_images.back().set_dy(dy[i]);
                 }
 
                 return sobel_images;
@@ -331,8 +331,7 @@ class Impl final : public OpticalFlowCompute
                 m_flow_buffers.clear();
                 m_downsample_memory.clear();
                 m_downsample_memory.clear();
-                m_sobel_memory[0].clear();
-                m_sobel_memory[1].clear();
+                m_sobel_memory.clear();
                 m_flow_memory.clear();
         }
 
