@@ -193,37 +193,37 @@ void OpticalFlowFlowMemory::set_dy(const vulkan::ImageWithMemory& image) const
         }
 }
 
-void OpticalFlowFlowMemory::set_i(const vulkan::ImageWithMemory& image0, const vulkan::ImageWithMemory& image1) const
+void OpticalFlowFlowMemory::set_i(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const
 {
-        ASSERT(&image0 != &image1);
-        ASSERT(image0.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
-        ASSERT(image0.format() == VK_FORMAT_R32_SFLOAT);
-        ASSERT(image1.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
-        ASSERT(image1.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(&image_0 != &image_1);
+        ASSERT(image_0.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+        ASSERT(image_0.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_1.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+        ASSERT(image_1.format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-        image_info.imageView = image0.image_view();
+        image_info.imageView = image_0.image_view();
         m_descriptors.update_descriptor_set(0, I_BINDING, image_info);
-        image_info.imageView = image1.image_view();
+        image_info.imageView = image_1.image_view();
         m_descriptors.update_descriptor_set(1, I_BINDING, image_info);
 }
 
-void OpticalFlowFlowMemory::set_j(VkSampler sampler, const vulkan::ImageWithMemory& image0,
-                                  const vulkan::ImageWithMemory& image1) const
+void OpticalFlowFlowMemory::set_j(VkSampler sampler, const vulkan::ImageWithMemory& image_0,
+                                  const vulkan::ImageWithMemory& image_1) const
 {
-        ASSERT(&image0 != &image1);
-        ASSERT(image0.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
-        ASSERT(image1.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+        ASSERT(&image_0 != &image_1);
+        ASSERT(image_0.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+        ASSERT(image_1.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         image_info.sampler = sampler;
 
-        image_info.imageView = image0.image_view();
+        image_info.imageView = image_0.image_view();
         m_descriptors.update_descriptor_set(0, J_BINDING, image_info);
-        image_info.imageView = image1.image_view();
+        image_info.imageView = image_1.image_view();
         m_descriptors.update_descriptor_set(1, J_BINDING, image_info);
 }
 

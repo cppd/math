@@ -89,8 +89,8 @@ public:
 
         void set_dx(const vulkan::ImageWithMemory& image) const;
         void set_dy(const vulkan::ImageWithMemory& image) const;
-        void set_i(const vulkan::ImageWithMemory& image0, const vulkan::ImageWithMemory& image1) const;
-        void set_j(VkSampler sampler, const vulkan::ImageWithMemory& image0, const vulkan::ImageWithMemory& image1) const;
+        void set_i(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const;
+        void set_j(VkSampler sampler, const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const;
 
         void set_top_points(const vulkan::BufferWithMemory& buffer) const;
         void set_flow(const vulkan::BufferWithMemory& buffer) const;
