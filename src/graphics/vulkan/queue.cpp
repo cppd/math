@@ -81,6 +81,21 @@ void queue_submit(VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, 
         }
 }
 
+void queue_submit(VkCommandBuffer command_buffer, VkQueue queue)
+{
+        VkSubmitInfo info = {};
+
+        info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        info.commandBufferCount = 1;
+        info.pCommandBuffers = &command_buffer;
+
+        VkResult result = vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkQueueSubmit", result);
+        }
+}
+
 template void queue_submit(const std::array<VkSemaphore, 2>& wait_semaphores,
                            const std::array<VkPipelineStageFlags, 2>& wait_stages, VkCommandBuffer command_buffer,
                            VkSemaphore signal_semaphore, VkQueue queue);
