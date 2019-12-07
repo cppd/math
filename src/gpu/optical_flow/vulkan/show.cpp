@@ -147,9 +147,6 @@ class Impl final : public OpticalFlowShow
                 info.render_pass = render_buffers->render_pass();
                 info.framebuffers = &render_buffers->framebuffers();
                 info.command_pool = m_graphics_command_pool;
-                info.before_render_pass_commands = [this](VkCommandBuffer command_buffer) {
-                        m_compute->compute_commands(command_buffer);
-                };
                 info.render_pass_commands = [this](VkCommandBuffer command_buffer) { draw_commands(command_buffer); };
                 m_command_buffers = vulkan::create_command_buffers(info);
         }
@@ -179,12 +176,18 @@ class Impl final : public OpticalFlowShow
                         return wait_semaphore;
                 }
 
+                //
+
+                wait_semaphore = m_compute->compute(queue, wait_semaphore);
+
+                //
+
                 ASSERT(queue.family_index() == m_graphics_command_pool.family_index());
                 ASSERT(m_command_buffers->count() == 1 || image_index < m_command_buffers->count());
 
                 const unsigned buffer_index = m_command_buffers->count() == 1 ? 0 : image_index;
 
-                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[buffer_index],
+                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, (*m_command_buffers)[buffer_index],
                                      m_signal_semaphore, queue);
 
                 return m_signal_semaphore;

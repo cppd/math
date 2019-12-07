@@ -31,7 +31,7 @@ struct OpticalFlowCompute
 
         virtual ~OpticalFlowCompute() = default;
 
-        virtual void compute_commands(VkCommandBuffer command_buffer) const = 0;
+        virtual VkSemaphore compute(const vulkan::Queue& queue, VkSemaphore wait_semaphore) = 0;
         virtual void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, unsigned x, unsigned y,
                                     unsigned width, unsigned height, unsigned top_point_count_x, unsigned top_point_count_y,
                                     const vulkan::BufferWithMemory& top_points, const vulkan::BufferWithMemory& top_flow,

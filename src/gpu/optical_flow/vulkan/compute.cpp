@@ -39,6 +39,8 @@ Chapter 5. Tracking Objects in Videos.
 #include "compute_sobel.h"
 
 #include "gpu/optical_flow/com/compute.h"
+#include "graphics/vulkan/error.h"
+#include "graphics/vulkan/queue.h"
 
 #include <thread>
 
@@ -65,6 +67,10 @@ class Impl final : public OpticalFlowCompute
         const vulkan::Queue& m_compute_queue;
         // const vulkan::CommandPool& m_transfer_command_pool;
         // const vulkan::Queue& m_transfer_queue;
+
+        vulkan::Semaphore m_signal_semaphore;
+
+        std::optional<vulkan::CommandBuffer> m_command_buffer;
 
         std::array<std::vector<vulkan::ImageWithMemory>, 2> m_images;
         std::vector<vulkan::ImageWithMemory> m_dx;
@@ -259,9 +265,43 @@ class Impl final : public OpticalFlowCompute
                 return flow_memory;
         }
 
-        void compute_commands(VkCommandBuffer /*command_buffer*/) const override
+        void create_command_buffer()
+        {
+                VkResult result;
+
+                m_command_buffer = vulkan::CommandBuffer(m_device, m_compute_command_pool);
+
+                VkCommandBufferBeginInfo command_buffer_info = {};
+                command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+                command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+                result = vkBeginCommandBuffer(*m_command_buffer, &command_buffer_info);
+                if (result != VK_SUCCESS)
+                {
+                        vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
+                }
+
+                //
+
+                result = vkEndCommandBuffer(*m_command_buffer);
+                if (result != VK_SUCCESS)
+                {
+                        vulkan::vulkan_function_error("vkEndCommandBuffer", result);
+                }
+        }
+
+        VkSemaphore compute(const vulkan::Queue& queue, VkSemaphore wait_semaphore) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                //
+
+                ASSERT(queue.family_index() == m_compute_command_pool.family_index());
+                ASSERT(m_command_buffer);
+
+                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, *m_command_buffer, m_signal_semaphore,
+                                     queue);
+
+                return m_signal_semaphore;
         }
 
         void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, unsigned x, unsigned y, unsigned width,
@@ -311,6 +351,8 @@ class Impl final : public OpticalFlowCompute
                 m_flow_memory = create_flow_memory(m_device, m_flow_program.descriptor_set_layout(), family_index, sampler, sizes,
                                                    m_flow_buffers, top_point_count_x, top_point_count_y, top_points, top_flow,
                                                    m_images, m_dx, m_dy);
+
+                create_command_buffer();
         }
 
         void delete_buffers() override
@@ -318,6 +360,8 @@ class Impl final : public OpticalFlowCompute
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
+
+                m_command_buffer.reset();
 
                 m_grayscale_program.delete_pipeline();
                 m_downsample_program.delete_pipeline();
@@ -349,6 +393,7 @@ public:
                   m_compute_queue(compute_queue),
                   // m_transfer_command_pool(transfer_command_pool),
                   // m_transfer_queue(transfer_queue),
+                  m_signal_semaphore(instance.device()),
                   m_grayscale_program(instance.device()),
                   m_grayscale_memory(m_device, m_grayscale_program.descriptor_set_layout()),
                   m_downsample_program(instance.device()),
