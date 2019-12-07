@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/groups.h"
 #include "gpu/dft/com/com.h"
 #include "graphics/vulkan/error.h"
+#include "graphics/vulkan/queue.h"
+#include "graphics/vulkan/sync.h"
 
 #include <optional>
 #include <thread>
@@ -72,22 +74,8 @@ void end_commands(VkQueue queue, VkCommandBuffer command_buffer)
                 vulkan::vulkan_function_error("vkEndCommandBuffer", result);
         }
 
-        VkSubmitInfo submit_info = {};
-        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit_info.commandBufferCount = 1;
-        submit_info.pCommandBuffers = &command_buffer;
-
-        result = vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkQueueSubmit", result);
-        }
-
-        result = vkQueueWaitIdle(queue);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkQueueWaitIdle", result);
-        }
+        vulkan::queue_submit(command_buffer, queue);
+        vulkan::queue_wait_idle(queue);
 }
 
 int shared_size(int dft_size, const VkPhysicalDeviceLimits& limits)

@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "error.h"
 #include "print.h"
 #include "query.h"
+#include "queue.h"
+#include "sync.h"
 
 #include "com/color/conversion_span.h"
 #include "com/error.h"
@@ -218,22 +220,8 @@ void end_commands(VkQueue queue, VkCommandBuffer command_buffer)
                 vulkan_function_error("vkEndCommandBuffer", result);
         }
 
-        VkSubmitInfo submit_info = {};
-        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit_info.commandBufferCount = 1;
-        submit_info.pCommandBuffers = &command_buffer;
-
-        result = vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkQueueSubmit", result);
-        }
-
-        result = vkQueueWaitIdle(queue);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkQueueWaitIdle", result);
-        }
+        queue_submit(command_buffer, queue);
+        queue_wait_idle(queue);
 }
 
 void copy_buffer_to_buffer(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkBuffer dst_buffer, VkBuffer src_buffer,
