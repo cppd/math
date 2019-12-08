@@ -56,6 +56,36 @@ namespace gpu_vulkan
 {
 namespace
 {
+void image_barrier(VkCommandBuffer command_buffer, VkImage image, VkImageLayout old_layout, VkImageLayout new_layout,
+                   VkAccessFlags src_access_mask, VkAccessFlags dst_access_mask)
+{
+        ASSERT(command_buffer != VK_NULL_HANDLE && image != VK_NULL_HANDLE);
+
+        VkImageMemoryBarrier barrier = {};
+
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+
+        barrier.oldLayout = old_layout;
+        barrier.newLayout = new_layout;
+
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+        barrier.image = image;
+
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+
+        barrier.srcAccessMask = src_access_mask;
+        barrier.dstAccessMask = dst_access_mask;
+
+        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                             VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barrier);
+}
+
 class Impl final : public OpticalFlowCompute
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
@@ -68,9 +98,11 @@ class Impl final : public OpticalFlowCompute
         // const vulkan::CommandPool& m_transfer_command_pool;
         // const vulkan::Queue& m_transfer_queue;
 
-        vulkan::Semaphore m_signal_semaphore;
+        vulkan::Semaphore m_semaphore_first_pyramid;
+        vulkan::Semaphore m_semaphore;
 
-        std::optional<vulkan::CommandBuffer> m_command_buffer;
+        std::optional<vulkan::CommandBuffer> m_command_buffer_first_pyramid;
+        std::optional<vulkan::CommandBuffers> m_command_buffers;
 
         std::array<std::vector<vulkan::ImageWithMemory>, 2> m_images;
         std::vector<vulkan::ImageWithMemory> m_dx;
@@ -92,6 +124,8 @@ class Impl final : public OpticalFlowCompute
         OpticalFlowFlowProgram m_flow_program;
         std::vector<OpticalFlowFlowMemory> m_flow_memory;
         std::vector<vec2i> m_flow_groups;
+
+        int m_i_index = -1;
 
         std::vector<vulkan::ImageWithMemory> create_images(const std::vector<vec2i>& sizes, uint32_t family_index) const
         {
@@ -265,16 +299,66 @@ class Impl final : public OpticalFlowCompute
                 return flow_memory;
         }
 
-        void create_command_buffer()
+        void commands_compute_image_pyramid(int index, VkCommandBuffer command_buffer)
+        {
+                ASSERT(index == 0 || index == 1);
+                ASSERT(m_downsample_memory.size() == m_downsample_groups.size());
+                ASSERT(m_downsample_memory.size() + 1 == m_images[index].size());
+
+                // Уровень 0 заполняется по исходному изображению
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_grayscale_program.pipeline());
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_grayscale_program.pipeline_layout(),
+                                        OpticalFlowGrayscaleMemory::set_number(), 1, &m_grayscale_memory.descriptor_set(index), 0,
+                                        nullptr);
+                vkCmdDispatch(command_buffer, m_grayscale_groups[0], m_grayscale_groups[1], 1);
+
+                image_barrier(command_buffer, m_images[index][0].image(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
+                              VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
+
+                // Каждый следующий уровень меньше предыдущего
+                for (unsigned i = 0; i < m_downsample_groups.size(); ++i)
+                {
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_downsample_program.pipeline());
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE,
+                                                m_downsample_program.pipeline_layout(), OpticalFlowDownsampleMemory::set_number(),
+                                                1, &m_downsample_memory[i].descriptor_set(index), 0, nullptr);
+                        vkCmdDispatch(command_buffer, m_downsample_groups[i][0], m_downsample_groups[i][1], 1);
+
+                        image_barrier(command_buffer, m_images[index][i + 1].image(), VK_IMAGE_LAYOUT_GENERAL,
+                                      VK_IMAGE_LAYOUT_GENERAL, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
+                }
+        }
+
+        void commands_images_to_sampler_layout(int index, VkCommandBuffer command_buffer)
+        {
+                for (const vulkan::ImageWithMemory& image : m_images[index])
+                {
+                        image_barrier(command_buffer, image.image(), VK_IMAGE_LAYOUT_GENERAL,
+                                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, VK_ACCESS_SHADER_READ_BIT);
+                }
+        }
+
+        void commands_images_to_general_layout(int index, VkCommandBuffer command_buffer)
+        {
+                for (const vulkan::ImageWithMemory& image : m_images[index])
+                {
+                        image_barrier(command_buffer, image.image(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                      VK_IMAGE_LAYOUT_GENERAL, 0, VK_ACCESS_SHADER_READ_BIT);
+                }
+        }
+
+        void create_command_buffer_first_pyramid()
         {
                 VkResult result;
 
-                m_command_buffer = vulkan::CommandBuffer(m_device, m_compute_command_pool);
+                m_command_buffer_first_pyramid = vulkan::CommandBuffer(m_device, m_compute_command_pool);
+
+                VkCommandBuffer command_buffer = *m_command_buffer_first_pyramid;
 
                 VkCommandBufferBeginInfo command_buffer_info = {};
                 command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
                 command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-                result = vkBeginCommandBuffer(*m_command_buffer, &command_buffer_info);
+                result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
                 if (result != VK_SUCCESS)
                 {
                         vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
@@ -282,10 +366,53 @@ class Impl final : public OpticalFlowCompute
 
                 //
 
-                result = vkEndCommandBuffer(*m_command_buffer);
+                commands_compute_image_pyramid(0, command_buffer);
+
+                //
+
+                result = vkEndCommandBuffer(command_buffer);
                 if (result != VK_SUCCESS)
                 {
                         vulkan::vulkan_function_error("vkEndCommandBuffer", result);
+                }
+        }
+
+        void create_command_buffers()
+        {
+                VkResult result;
+
+                m_command_buffers = vulkan::CommandBuffers(m_device, m_compute_command_pool, 2);
+
+                for (int index = 0; index < 2; ++index)
+                {
+                        VkCommandBuffer command_buffer = (*m_command_buffers)[index];
+
+                        VkCommandBufferBeginInfo command_buffer_info = {};
+                        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+                        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+                        result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
+                        if (result != VK_SUCCESS)
+                        {
+                                vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
+                        }
+
+                        //
+
+                        // i — предыдущее изображение, 1-i — текущее изображение
+                        commands_compute_image_pyramid(1 - index, command_buffer);
+                        commands_images_to_sampler_layout(1 - index, command_buffer);
+
+                        //
+
+                        commands_images_to_general_layout(1 - index, command_buffer);
+
+                        //
+
+                        result = vkEndCommandBuffer(command_buffer);
+                        if (result != VK_SUCCESS)
+                        {
+                                vulkan::vulkan_function_error("vkEndCommandBuffer", result);
+                        }
                 }
         }
 
@@ -296,12 +423,27 @@ class Impl final : public OpticalFlowCompute
                 //
 
                 ASSERT(queue.family_index() == m_compute_command_pool.family_index());
-                ASSERT(m_command_buffer);
+                ASSERT(m_command_buffers && m_command_buffers->count() == 2);
+                ASSERT(m_i_index == -1 || m_i_index == 0 || m_i_index == 1);
 
-                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, *m_command_buffer, m_signal_semaphore,
-                                     queue);
+                if (m_i_index < 0)
+                {
+                        m_i_index = 0;
 
-                return m_signal_semaphore;
+                        ASSERT(m_command_buffer_first_pyramid);
+                        vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                                             *m_command_buffer_first_pyramid, m_semaphore_first_pyramid, queue);
+                        wait_semaphore = m_semaphore_first_pyramid;
+                }
+                else
+                {
+                        m_i_index = 1 - m_i_index;
+                }
+
+                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[m_i_index],
+                                     m_semaphore, queue);
+
+                return m_semaphore;
         }
 
         void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, unsigned x, unsigned y, unsigned width,
@@ -342,8 +484,7 @@ class Impl final : public OpticalFlowCompute
 
                 m_sobel_groups = optical_flow_sobel_groups(GROUPS, sizes);
                 m_sobel_program.create_pipeline(GROUPS_X, GROUPS_Y);
-                m_sobel_memory =
-                        create_sobel_memory(m_device, m_downsample_program.descriptor_set_layout(), m_images, m_dx, m_dy);
+                m_sobel_memory = create_sobel_memory(m_device, m_sobel_program.descriptor_set_layout(), m_images, m_dx, m_dy);
 
                 m_flow_groups = optical_flow_flow_groups(GROUPS, sizes, top_point_count_x, top_point_count_y);
                 m_flow_program.create_pipeline(GROUPS_X, GROUPS_Y, OPTICAL_FLOW_RADIUS, OPTICAL_FLOW_ITERATION_COUNT,
@@ -352,7 +493,8 @@ class Impl final : public OpticalFlowCompute
                                                    m_flow_buffers, top_point_count_x, top_point_count_y, top_points, top_flow,
                                                    m_images, m_dx, m_dy);
 
-                create_command_buffer();
+                create_command_buffer_first_pyramid();
+                create_command_buffers();
         }
 
         void delete_buffers() override
@@ -361,7 +503,8 @@ class Impl final : public OpticalFlowCompute
 
                 //
 
-                m_command_buffer.reset();
+                m_command_buffer_first_pyramid.reset();
+                m_command_buffers.reset();
 
                 m_grayscale_program.delete_pipeline();
                 m_downsample_program.delete_pipeline();
@@ -381,6 +524,7 @@ class Impl final : public OpticalFlowCompute
 
         void reset() override
         {
+                m_i_index = -1;
         }
 
 public:
@@ -393,7 +537,8 @@ public:
                   m_compute_queue(compute_queue),
                   // m_transfer_command_pool(transfer_command_pool),
                   // m_transfer_queue(transfer_queue),
-                  m_signal_semaphore(instance.device()),
+                  m_semaphore_first_pyramid(instance.device()),
+                  m_semaphore(instance.device()),
                   m_grayscale_program(instance.device()),
                   m_grayscale_memory(m_device, m_grayscale_program.descriptor_set_layout()),
                   m_downsample_program(instance.device()),
