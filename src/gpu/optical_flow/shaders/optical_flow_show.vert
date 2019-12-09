@@ -28,6 +28,12 @@ layout(std140, binding = 2) uniform Data
         mat4 matrix;
 };
 
+out gl_PerVertex
+{
+        vec4 gl_Position;
+        float gl_PointSize;
+};
+
 void main(void)
 {
 #if defined(VULKAN)
@@ -51,5 +57,6 @@ void main(void)
                 s = round(points[point_number] + points_flow[point_number]);
         }
 
-        gl_Position = matrix * vec4(s + 0.5, 0, 1);
+        gl_Position = matrix * vec4(s, 0, 1);
+        gl_PointSize = 1;
 }

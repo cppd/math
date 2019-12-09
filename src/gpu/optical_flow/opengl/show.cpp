@@ -96,7 +96,7 @@ class Impl final : public OpticalFlowShow
         std::optional<opengl::Buffer> m_top_points;
         std::optional<opengl::Buffer> m_top_points_flow;
 
-        std::optional<ShaderMemory> m_shader_memory;
+        ShaderMemory m_shader_memory;
 
         std::unique_ptr<gpu_opengl::OpticalFlowCompute> m_optical_flow;
 
@@ -109,7 +109,7 @@ class Impl final : public OpticalFlowShow
 
         void draw_flow_lines()
         {
-                m_shader_memory->bind();
+                m_shader_memory.bind();
 
                 m_draw_prog->draw_arrays(GL_POINTS, 0, m_top_point_count * 2);
                 m_draw_prog->draw_arrays(GL_LINES, 0, m_top_point_count * 2);
@@ -193,10 +193,11 @@ public:
                 double top = 0;
                 double near = 1;
                 double far = -1;
-                m_shader_memory.emplace();
-                m_shader_memory->set_matrix(ortho_opengl<double>(left, right, bottom, top, near, far));
-                m_shader_memory->set_points(*m_top_points);
-                m_shader_memory->set_points_flow(*m_top_points_flow);
+                mat4 p = ortho_opengl<double>(left, right, bottom, top, near, far);
+                mat4 t = translate(vec3(0.5, 0.5, 0));
+                m_shader_memory.set_matrix(p * t);
+                m_shader_memory.set_points(*m_top_points);
+                m_shader_memory.set_points_flow(*m_top_points_flow);
 
                 m_optical_flow = gpu_opengl::create_optical_flow_compute(source, x, y, width, height, point_count_x,
                                                                          point_count_y, *m_top_points, *m_top_points_flow);

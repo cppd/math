@@ -135,7 +135,8 @@ class Impl final : public OpticalFlowShow
                 double near = 1;
                 double far = -1;
                 mat4 p = ortho_vulkan<double>(left, right, bottom, top, near, far);
-                m_memory.set_matrix(p);
+                mat4 t = translate(vec3(0.5, 0.5, 0));
+                m_memory.set_matrix(p * t);
 
                 vulkan::CommandBufferCreateInfo info;
                 info.device = m_device;
