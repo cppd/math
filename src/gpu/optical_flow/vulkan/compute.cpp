@@ -56,34 +56,47 @@ namespace gpu_vulkan
 {
 namespace
 {
+void image_barrier(VkCommandBuffer command_buffer, const std::vector<VkImage>& images, VkImageLayout old_layout,
+                   VkImageLayout new_layout, VkAccessFlags src_access_mask, VkAccessFlags dst_access_mask)
+{
+        ASSERT(!images.empty());
+        ASSERT(command_buffer != VK_NULL_HANDLE);
+        ASSERT(std::all_of(images.cbegin(), images.cend(), [](VkImage image) { return image != VK_NULL_HANDLE; }));
+
+        std::vector<VkImageMemoryBarrier> barriers(images.size());
+
+        for (size_t i = 0; i < images.size(); ++i)
+        {
+                barriers[i] = {};
+
+                barriers[i].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+
+                barriers[i].oldLayout = old_layout;
+                barriers[i].newLayout = new_layout;
+
+                barriers[i].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                barriers[i].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+                barriers[i].image = images[i];
+
+                barriers[i].subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                barriers[i].subresourceRange.baseMipLevel = 0;
+                barriers[i].subresourceRange.levelCount = 1;
+                barriers[i].subresourceRange.baseArrayLayer = 0;
+                barriers[i].subresourceRange.layerCount = 1;
+
+                barriers[i].srcAccessMask = src_access_mask;
+                barriers[i].dstAccessMask = dst_access_mask;
+        }
+
+        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                             VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, barriers.size(), barriers.data());
+}
+
 void image_barrier(VkCommandBuffer command_buffer, VkImage image, VkImageLayout old_layout, VkImageLayout new_layout,
                    VkAccessFlags src_access_mask, VkAccessFlags dst_access_mask)
 {
-        ASSERT(command_buffer != VK_NULL_HANDLE && image != VK_NULL_HANDLE);
-
-        VkImageMemoryBarrier barrier = {};
-
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-
-        barrier.oldLayout = old_layout;
-        barrier.newLayout = new_layout;
-
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-
-        barrier.image = image;
-
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
-
-        barrier.srcAccessMask = src_access_mask;
-        barrier.dstAccessMask = dst_access_mask;
-
-        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-                             VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barrier);
+        image_barrier(command_buffer, std::vector{image}, old_layout, new_layout, src_access_mask, dst_access_mask);
 }
 
 class Impl final : public OpticalFlowCompute
@@ -329,6 +342,33 @@ class Impl final : public OpticalFlowCompute
                 }
         }
 
+        void commands_compute_dxdy(int index, VkCommandBuffer command_buffer) const
+        {
+                ASSERT(index == 0 || index == 1);
+                ASSERT(m_sobel_memory.size() == m_sobel_groups.size());
+                ASSERT(m_sobel_groups.size() == m_dx.size());
+                ASSERT(m_sobel_groups.size() == m_dy.size());
+
+                for (unsigned i = 0; i < m_sobel_groups.size(); ++i)
+                {
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_sobel_program.pipeline());
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_sobel_program.pipeline_layout(),
+                                                OpticalFlowSobelMemory::set_number(), 1, &m_sobel_memory[i].descriptor_set(index),
+                                                0, nullptr);
+                        vkCmdDispatch(command_buffer, m_sobel_groups[i][0], m_sobel_groups[i][1], 1);
+                }
+
+                std::vector<VkImage> images;
+                images.reserve(m_dx.size() + m_dy.size());
+                for (unsigned i = 0; i < m_sobel_groups.size(); ++i)
+                {
+                        images.push_back(m_dx[i].image());
+                        images.push_back(m_dy[i].image());
+                }
+                image_barrier(command_buffer, images, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
+                              VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
+        }
+
         void commands_images_to_sampler_layout(int index, VkCommandBuffer command_buffer)
         {
                 for (const vulkan::ImageWithMemory& image : m_images[index])
@@ -400,6 +440,9 @@ class Impl final : public OpticalFlowCompute
 
                         // i — предыдущее изображение, 1-i — текущее изображение
                         commands_compute_image_pyramid(1 - index, command_buffer);
+
+                        commands_compute_dxdy(index, command_buffer);
+
                         commands_images_to_sampler_layout(1 - index, command_buffer);
 
                         //
