@@ -66,14 +66,16 @@ layout(std140, binding = 3) uniform Data
         int guess_width;
 };
 
+#if !defined(VULKAN)
 ivec2 screen_to_texture(ivec2 p)
 {
         return ivec2(p.x, imageSize(image_dx).y - p.y - 1);
 }
-ivec2 texture_to_screen(ivec2 p)
-{
-        return ivec2(p.x, imageSize(image_dx).y - p.y - 1);
-}
+// ivec2 texture_to_screen(ivec2 p)
+//{
+//        return ivec2(p.x, imageSize(image_dx).y - p.y - 1);
+//}
+#endif
 
 vec2 pixel_to_texture(vec2 pixel)
 {
@@ -148,7 +150,12 @@ void main(void)
         int point_index = int(gl_GlobalInvocationID.y * point_count_x + gl_GlobalInvocationID.x);
 
         const ivec2 p_screen = use_all_points ? ivec2(gl_GlobalInvocationID.xy) : top_points[point_index];
+
+#if !defined(VULKAN)
         const ivec2 p = screen_to_texture(p_screen);
+#else
+        const ivec2 p = p_screen;
+#endif
 
         mat2 g_inv;
 
@@ -162,8 +169,10 @@ void main(void)
 
         vec2 guess = use_guess ? get_guess(p_screen) : vec2(0, 0);
 
+#if !defined(VULKAN)
         // Пишется с 0 вверху экрана, рассчитывается с 0 внизу экрана, поэтому поменять знак y
         guess.y = -guess.y;
+#endif
 
         for (int i = 0; i < ITERATION_COUNT; ++i)
         {
@@ -193,6 +202,10 @@ void main(void)
 
         vec2 res = v + guess;
 
+#if !defined(VULKAN)
         // Пишется с 0 вверху экрана, рассчитывается с 0 внизу экрана, поэтому поменять знак y
         points_flow[point_index] = vec2(res.x, -res.y);
+#else
+        points_flow[point_index] = res;
+#endif
 }
