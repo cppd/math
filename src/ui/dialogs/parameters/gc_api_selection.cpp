@@ -35,13 +35,8 @@ bool GraphicsAndComputeAPISelection::show(GraphicsAndComputeAPI* api)
 {
         ASSERT(api);
 
-        std::string vulkan_comment = graphics_and_compute_api_comment(GraphicsAndComputeAPI::Vulkan);
-        std::string opengl_comment = graphics_and_compute_api_comment(GraphicsAndComputeAPI::OpenGL);
-
-        std::string vulkan_text =
-                to_string(GraphicsAndComputeAPI::Vulkan) + (vulkan_comment.size() > 0 ? " (" + vulkan_comment + ")" : "");
-        std::string opengl_text =
-                to_string(GraphicsAndComputeAPI::OpenGL) + (opengl_comment.size() > 0 ? " (" + opengl_comment + ")" : "");
+        std::string vulkan_text = to_string(GraphicsAndComputeAPI::Vulkan);
+        std::string opengl_text = to_string(GraphicsAndComputeAPI::OpenGL);
 
         ui.radio_button_vulkan->setText(vulkan_text.c_str());
         ui.radio_button_opengl->setText(opengl_text.c_str());

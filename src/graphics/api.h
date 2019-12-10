@@ -26,5 +26,3 @@ enum class GraphicsAndComputeAPI
 };
 
 std::string to_string(GraphicsAndComputeAPI api);
-
-std::string graphics_and_compute_api_comment(GraphicsAndComputeAPI api);

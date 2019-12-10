@@ -30,15 +30,3 @@ std::string to_string(GraphicsAndComputeAPI api)
         }
         error_fatal("Unknown graphics and compute API");
 }
-
-std::string graphics_and_compute_api_comment(GraphicsAndComputeAPI api)
-{
-        switch (api)
-        {
-        case GraphicsAndComputeAPI::Vulkan:
-                return "in development";
-        case GraphicsAndComputeAPI::OpenGL:
-                return "";
-        }
-        error_fatal("Unknown graphics and compute API");
-}
