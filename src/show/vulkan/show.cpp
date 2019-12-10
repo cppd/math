@@ -698,9 +698,13 @@ class Impl final : public Show, public WindowEvent
                         wait_semaphore = m_pencil_sketch->draw(graphics_queue, wait_semaphore, image_index);
                 }
 
-                if (m_dft_active)
+                if (m_dft_active || m_optical_flow_active)
                 {
                         wait_semaphore = resolve_to_texture(graphics_queue, wait_semaphore, image_index);
+                }
+
+                if (m_dft_active)
+                {
                         wait_semaphore = m_dft->draw(graphics_queue, wait_semaphore, image_index);
                 }
 

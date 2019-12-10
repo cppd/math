@@ -99,6 +99,24 @@ void image_barrier(VkCommandBuffer command_buffer, VkImage image, VkImageLayout 
         image_barrier(command_buffer, std::vector{image}, old_layout, new_layout, src_access_mask, dst_access_mask);
 }
 
+void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkPipelineStageFlags dst_stage_mask)
+{
+        ASSERT(buffer != VK_NULL_HANDLE);
+
+        VkBufferMemoryBarrier barrier = {};
+        barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+        barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.buffer = buffer;
+        barrier.offset = 0;
+        barrier.size = VK_WHOLE_SIZE;
+
+        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, dst_stage_mask, VK_DEPENDENCY_BY_REGION_BIT, 0,
+                             nullptr, 1, &barrier, 0, nullptr);
+}
+
 class Impl final : public OpticalFlowCompute
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
@@ -369,6 +387,25 @@ class Impl final : public OpticalFlowCompute
                               VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
         }
 
+        void commands_compute_optical_flow(int index, VkCommandBuffer command_buffer, VkBuffer top_flow) const
+        {
+                ASSERT(index == 0 || index == 1);
+                ASSERT(m_flow_memory.size() == m_flow_groups.size());
+                ASSERT(m_flow_buffers.size() + 1 == m_flow_groups.size());
+
+                for (int i = static_cast<int>(m_flow_groups.size()) - 1; i >= 0; --i)
+                {
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_flow_program.pipeline());
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_flow_program.pipeline_layout(),
+                                                OpticalFlowFlowMemory::set_number(), 1, &m_flow_memory[i].descriptor_set(index),
+                                                0, nullptr);
+                        vkCmdDispatch(command_buffer, m_flow_groups[i][0], m_flow_groups[i][1], 1);
+
+                        buffer_barrier(command_buffer, (i != 0) ? m_flow_buffers[i - 1] : top_flow,
+                                       (i != 0) ? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT : VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
+                }
+        }
+
         void commands_images_to_sampler_layout(int index, VkCommandBuffer command_buffer)
         {
                 for (const vulkan::ImageWithMemory& image : m_images[index])
@@ -417,7 +454,7 @@ class Impl final : public OpticalFlowCompute
                 }
         }
 
-        void create_command_buffers()
+        void create_command_buffers(VkBuffer top_flow)
         {
                 VkResult result;
 
@@ -440,13 +477,10 @@ class Impl final : public OpticalFlowCompute
 
                         // i — предыдущее изображение, 1-i — текущее изображение
                         commands_compute_image_pyramid(1 - index, command_buffer);
-
                         commands_compute_dxdy(index, command_buffer);
 
                         commands_images_to_sampler_layout(1 - index, command_buffer);
-
-                        //
-
+                        commands_compute_optical_flow(index, command_buffer, top_flow);
                         commands_images_to_general_layout(1 - index, command_buffer);
 
                         //
@@ -537,7 +571,7 @@ class Impl final : public OpticalFlowCompute
                                                    m_images, m_dx, m_dy);
 
                 create_command_buffer_first_pyramid();
-                create_command_buffers();
+                create_command_buffers(top_flow);
         }
 
         void delete_buffers() override
