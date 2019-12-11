@@ -31,6 +31,7 @@ namespace vulkan
 class VulkanInstance final
 {
         static constexpr unsigned GRAPHICS_COMPUTE_QUEUE_COUNT = 2;
+        static constexpr unsigned COMPUTE_QUEUE_COUNT = 1;
         static constexpr unsigned TRANSFER_QUEUE_COUNT = 1;
         static constexpr unsigned PRESENTATION_QUEUE_COUNT = 1;
 
@@ -42,15 +43,18 @@ class VulkanInstance final
         const PhysicalDevice m_physical_device;
 
         const uint32_t m_graphics_compute_family_index;
+        const uint32_t m_compute_family_index;
         const uint32_t m_transfer_family_index;
         const uint32_t m_presentation_family_index;
 
         const Device m_device;
 
         const CommandPool m_graphics_compute_command_pool;
+        const CommandPool m_compute_command_pool;
         const CommandPool m_transfer_command_pool;
 
         std::array<Queue, GRAPHICS_COMPUTE_QUEUE_COUNT> m_graphics_compute_queues;
+        std::array<Queue, COMPUTE_QUEUE_COUNT> m_compute_queues;
         std::array<Queue, TRANSFER_QUEUE_COUNT> m_transfer_queues;
         std::array<Queue, PRESENTATION_QUEUE_COUNT> m_presentation_queues;
 
@@ -90,9 +94,14 @@ public:
                 return m_physical_device.properties().limits;
         }
 
-        const vulkan::CommandPool& graphics_command_pool() const
+        const vulkan::CommandPool& graphics_compute_command_pool() const
         {
                 return m_graphics_compute_command_pool;
+        }
+
+        const vulkan::CommandPool& compute_command_pool() const
+        {
+                return m_compute_command_pool;
         }
 
         const vulkan::CommandPool& transfer_command_pool() const
@@ -100,9 +109,14 @@ public:
                 return m_transfer_command_pool;
         }
 
-        const std::array<Queue, GRAPHICS_COMPUTE_QUEUE_COUNT>& graphics_queues() const
+        const std::array<Queue, GRAPHICS_COMPUTE_QUEUE_COUNT>& graphics_compute_queues() const
         {
                 return m_graphics_compute_queues;
+        }
+
+        const Queue& compute_queue() const
+        {
+                return m_compute_queues[0];
         }
 
         const Queue& transfer_queue() const

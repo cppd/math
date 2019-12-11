@@ -61,6 +61,8 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
                                                  required_features)),
           //
           m_graphics_compute_family_index(m_physical_device.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, 0)),
+          m_compute_family_index(m_physical_device.family_index(VK_QUEUE_COMPUTE_BIT, VK_QUEUE_GRAPHICS_BIT,
+                                                                VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)),
           m_transfer_family_index(m_physical_device.family_index(VK_QUEUE_TRANSFER_BIT,
                                                                  VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT,
                                                                  // Наличие VK_QUEUE_GRAPHICS_BIT или VK_QUEUE_COMPUTE_BIT
@@ -70,6 +72,7 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
           //
           m_device(m_physical_device.create_device(
                   compute_queue_count({{m_graphics_compute_family_index, GRAPHICS_COMPUTE_QUEUE_COUNT},
+                                       {m_compute_family_index, COMPUTE_QUEUE_COUNT},
                                        {m_transfer_family_index, TRANSFER_QUEUE_COUNT},
                                        {m_presentation_family_index, PRESENTATION_QUEUE_COUNT}},
                                       m_physical_device.queue_families()),
@@ -81,6 +84,7 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
                   optional_features)),
           //
           m_graphics_compute_command_pool(create_command_pool(m_device, m_graphics_compute_family_index)),
+          m_compute_command_pool(create_command_pool(m_device, m_compute_family_index)),
           m_transfer_command_pool(create_transient_command_pool(m_device, m_transfer_family_index))
 {
         std::string s;
@@ -92,6 +96,20 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
         for (size_t i = 0; i < m_graphics_compute_queues.size(); ++i)
         {
                 m_graphics_compute_queues[i] = m_device.queue(index, queue_count[index]);
+                s += "\n  queue = " + to_string(i) + ", device queue = " + to_string(queue_count[index]);
+                ++queue_count[index];
+                if (queue_count[index] >= m_physical_device.queue_families()[index].queueCount)
+                {
+                        queue_count[index] = 0;
+                }
+        }
+
+        s += '\n';
+        index = m_compute_family_index;
+        s += "Compute queues, family index = " + to_string(index);
+        for (size_t i = 0; i < m_compute_queues.size(); ++i)
+        {
+                m_compute_queues[i] = m_device.queue(index, queue_count[index]);
                 s += "\n  queue = " + to_string(i) + ", device queue = " + to_string(queue_count[index]);
                 ++queue_count[index];
                 if (queue_count[index] >= m_physical_device.queue_families()[index].queueCount)

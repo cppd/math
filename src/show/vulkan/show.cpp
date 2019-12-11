@@ -569,15 +569,15 @@ class Impl final : public Show, public WindowEvent
                 m_render_buffers.reset();
                 m_swapchain.reset();
 
-                const std::unordered_set<uint32_t> swapchain_family_indices = {m_instance->graphics_queues()[0].family_index(),
-                                                                               m_instance->presentation_queue().family_index()};
+                const std::unordered_set<uint32_t> swapchain_family_indices = {
+                        m_instance->graphics_compute_queues()[0].family_index(), m_instance->presentation_queue().family_index()};
 
                 m_swapchain =
                         std::make_unique<vulkan::Swapchain>(m_instance->surface(), m_instance->device(), swapchain_family_indices,
                                                             VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT, m_present_mode);
 
                 constexpr RenderBufferCount buffer_count = RenderBufferCount::One;
-                m_render_buffers = create_render_buffers(buffer_count, *m_swapchain, m_instance->graphics_command_pool(),
+                m_render_buffers = create_render_buffers(buffer_count, *m_swapchain, m_instance->graphics_compute_command_pool(),
                                                          m_instance->device(), VULKAN_MINIMUM_SAMPLE_COUNT);
 
                 //
@@ -585,8 +585,9 @@ class Impl final : public Show, public WindowEvent
                 constexpr VkImageLayout RESOLVE_TEXTURE_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
                 m_resolve_texture = std::make_unique<vulkan::ImageWithMemory>(
-                        m_instance->device(), m_instance->graphics_command_pool(), m_instance->graphics_queues()[0],
-                        std::unordered_set({m_instance->graphics_command_pool().family_index()}),
+                        m_instance->device(), m_instance->graphics_compute_command_pool(),
+                        m_instance->graphics_compute_queues()[0],
+                        std::unordered_set({m_instance->graphics_compute_command_pool().family_index()}),
                         std::vector<VkFormat>({m_swapchain->format()}), m_swapchain->width(), m_swapchain->height(),
                         RESOLVE_TEXTURE_IMAGE_LAYOUT, false /*storage*/);
 
@@ -597,8 +598,9 @@ class Impl final : public Show, public WindowEvent
                 //
 
                 m_object_image = std::make_unique<vulkan::ImageWithMemory>(
-                        m_instance->device(), m_instance->graphics_command_pool(), m_instance->graphics_queues()[0],
-                        std::unordered_set({m_instance->graphics_queues()[0].family_index()}),
+                        m_instance->device(), m_instance->graphics_compute_command_pool(),
+                        m_instance->graphics_compute_queues()[0],
+                        std::unordered_set({m_instance->graphics_compute_queues()[0].family_index()}),
                         std::vector<VkFormat>({VULKAN_OBJECT_IMAGE_FORMAT}), m_swapchain->width(), m_swapchain->height(),
                         VK_IMAGE_LAYOUT_GENERAL, true /*storage*/);
 
@@ -628,7 +630,7 @@ class Impl final : public Show, public WindowEvent
                 //
 
                 m_resolve_command_buffers = std::make_unique<vulkan::CommandBuffers>(create_command_buffers_resolve(
-                        m_instance->device(), m_instance->graphics_command_pool(), m_render_buffers->images(),
+                        m_instance->device(), m_instance->graphics_compute_command_pool(), m_render_buffers->images(),
                         m_render_buffers->image_layout(), std::vector<VkImage>({m_resolve_texture->image()}),
                         RESOLVE_TEXTURE_IMAGE_LAYOUT, w1_x, w1_y, w1_w, w1_h));
 
@@ -678,7 +680,7 @@ class Impl final : public Show, public WindowEvent
 
         bool render(const TextData& text_data)
         {
-                static_assert(std::remove_reference_t<decltype(m_instance->graphics_queues())>().size() > 0);
+                static_assert(std::remove_reference_t<decltype(m_instance->graphics_compute_queues())>().size() > 0);
 
                 uint32_t image_index;
                 if (!vulkan::acquire_next_image(m_instance->device(), m_swapchain->swapchain(), *m_image_semaphore, &image_index))
@@ -688,7 +690,8 @@ class Impl final : public Show, public WindowEvent
 
                 VkSemaphore wait_semaphore;
 
-                const vulkan::Queue& graphics_queue = m_instance->graphics_queues()[0];
+                const vulkan::Queue& graphics_queue = m_instance->graphics_compute_queues()[0];
+                const vulkan::Queue& compute_queue = m_instance->compute_queue();
 
                 wait_semaphore = m_renderer->draw(graphics_queue, image_index);
 
@@ -710,7 +713,7 @@ class Impl final : public Show, public WindowEvent
 
                 if (m_optical_flow_active)
                 {
-                        wait_semaphore = m_optical_flow->draw(graphics_queue, wait_semaphore, image_index);
+                        wait_semaphore = m_optical_flow->draw(graphics_queue, compute_queue, wait_semaphore, image_index);
                 }
 
                 if (m_convex_hull_active)
@@ -782,35 +785,42 @@ public:
                                                                          required_features, optional_features, create_surface);
                 }
 
-                ASSERT(m_instance->graphics_command_pool().family_index() == m_instance->graphics_queues()[0].family_index());
+                ASSERT(m_instance->graphics_compute_command_pool().family_index() ==
+                       m_instance->graphics_compute_queues()[0].family_index());
+                ASSERT(m_instance->compute_command_pool().family_index() == m_instance->compute_queue().family_index());
+                ASSERT(m_instance->transfer_command_pool().family_index() == m_instance->transfer_queue().family_index());
 
                 m_image_semaphore = std::make_unique<vulkan::Semaphore>(m_instance->device());
                 m_resolve_semaphore = std::make_unique<vulkan::Semaphore>(m_instance->device());
 
-                const vulkan::Queue& graphics_queue = m_instance->graphics_queues()[0];
+                const vulkan::Queue& graphics_compute_queue = m_instance->graphics_compute_queues()[0];
+                const vulkan::CommandPool& graphics_compute_command_pool = m_instance->graphics_compute_command_pool();
+                const vulkan::Queue& compute_queue = m_instance->compute_queue();
+                const vulkan::CommandPool& compute_command_pool = m_instance->compute_command_pool();
+                const vulkan::Queue& transfer_queue = m_instance->transfer_queue();
+                const vulkan::CommandPool& transfer_command_pool = m_instance->transfer_command_pool();
 
-                m_renderer = gpu_vulkan::create_renderer(*m_instance, m_instance->graphics_command_pool(), graphics_queue,
-                                                         m_instance->transfer_command_pool(), m_instance->transfer_queue(),
-                                                         VULKAN_SAMPLE_SHADING, VULKAN_SAMPLER_ANISOTROPY);
+                m_renderer = gpu_vulkan::create_renderer(*m_instance, graphics_compute_command_pool, graphics_compute_queue,
+                                                         transfer_command_pool, transfer_queue, VULKAN_SAMPLE_SHADING,
+                                                         VULKAN_SAMPLER_ANISOTROPY);
 
-                m_text = gpu_vulkan::create_text_show(*m_instance, m_instance->graphics_command_pool(), graphics_queue,
-                                                      m_instance->transfer_command_pool(), m_instance->transfer_queue(),
-                                                      VULKAN_SAMPLE_SHADING, m_frame_rate.text_size(), text_color);
+                m_text = gpu_vulkan::create_text_show(*m_instance, graphics_compute_command_pool, graphics_compute_queue,
+                                                      transfer_command_pool, transfer_queue, VULKAN_SAMPLE_SHADING,
+                                                      m_frame_rate.text_size(), text_color);
 
-                m_convex_hull = gpu_vulkan::create_convex_hull_show(*m_instance, m_instance->graphics_command_pool(),
-                                                                    graphics_queue.family_index(), VULKAN_SAMPLE_SHADING);
+                m_convex_hull = gpu_vulkan::create_convex_hull_show(*m_instance, graphics_compute_command_pool,
+                                                                    graphics_compute_queue.family_index(), VULKAN_SAMPLE_SHADING);
 
-                m_pencil_sketch = gpu_vulkan::create_convex_hull_show(*m_instance, m_instance->graphics_command_pool(),
-                                                                      graphics_queue, m_instance->transfer_command_pool(),
-                                                                      m_instance->transfer_queue(), VULKAN_SAMPLE_SHADING);
+                m_pencil_sketch =
+                        gpu_vulkan::create_convex_hull_show(*m_instance, graphics_compute_command_pool, graphics_compute_queue,
+                                                            transfer_command_pool, transfer_queue, VULKAN_SAMPLE_SHADING);
 
-                m_dft = gpu_vulkan::create_dft_show(*m_instance, m_instance->graphics_command_pool(), graphics_queue,
-                                                    m_instance->transfer_command_pool(), m_instance->transfer_queue(),
-                                                    VULKAN_SAMPLE_SHADING);
+                m_dft = gpu_vulkan::create_dft_show(*m_instance, graphics_compute_command_pool, graphics_compute_queue,
+                                                    transfer_command_pool, transfer_queue, VULKAN_SAMPLE_SHADING);
 
-                m_optical_flow = gpu_vulkan::create_optical_flow_show(*m_instance, m_instance->graphics_command_pool(),
-                                                                      graphics_queue, m_instance->transfer_command_pool(),
-                                                                      m_instance->transfer_queue(), VULKAN_SAMPLE_SHADING);
+                m_optical_flow = gpu_vulkan::create_optical_flow_show(
+                        *m_instance, graphics_compute_command_pool, graphics_compute_queue, compute_command_pool, compute_queue,
+                        transfer_command_pool, transfer_queue, VULKAN_SAMPLE_SHADING);
 
                 //
 

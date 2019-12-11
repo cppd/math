@@ -402,7 +402,7 @@ class Impl final : public OpticalFlowCompute
                         vkCmdDispatch(command_buffer, m_flow_groups[i][0], m_flow_groups[i][1], 1);
 
                         buffer_barrier(command_buffer, (i != 0) ? m_flow_buffers[i - 1] : top_flow,
-                                       (i != 0) ? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT : VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
+                                       VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
                 }
         }
 
@@ -525,8 +525,7 @@ class Impl final : public OpticalFlowCompute
 
         void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, unsigned x, unsigned y, unsigned width,
                             unsigned height, unsigned top_point_count_x, unsigned top_point_count_y,
-                            const vulkan::BufferWithMemory& top_points, const vulkan::BufferWithMemory& top_flow,
-                            uint32_t family_index) override
+                            const vulkan::BufferWithMemory& top_points, const vulkan::BufferWithMemory& top_flow) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -539,6 +538,8 @@ class Impl final : public OpticalFlowCompute
 
                 const std::vector<vec2i> sizes =
                         optical_flow_pyramid_sizes(input.width(), input.height(), OPTICAL_FLOW_BOTTOM_IMAGE_SIZE);
+
+                const uint32_t family_index = m_compute_command_pool.family_index();
 
                 m_images[0] = create_images(sizes, family_index);
                 m_images[1] = create_images(sizes, family_index);
@@ -606,8 +607,8 @@ class Impl final : public OpticalFlowCompute
 
 public:
         Impl(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& compute_command_pool,
-             const vulkan::Queue& compute_queue, const vulkan::CommandPool& transfer_command_pool,
-             const vulkan::Queue& transfer_queue)
+             const vulkan::Queue& compute_queue, const vulkan::CommandPool& /*transfer_command_pool*/,
+             const vulkan::Queue& /*transfer_queue*/)
                 : m_instance(instance),
                   m_device(instance.device()),
                   m_compute_command_pool(compute_command_pool),
@@ -623,7 +624,7 @@ public:
                   m_flow_program(instance.device())
         {
                 ASSERT(compute_command_pool.family_index() == compute_queue.family_index());
-                ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
+                // ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
         }
 
         ~Impl() override
