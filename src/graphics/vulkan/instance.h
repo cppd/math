@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "device.h"
 #include "objects.h"
 
+#include "com/error.h"
+
 #include <array>
 #include <functional>
 #include <optional>
@@ -38,7 +40,7 @@ class VulkanInstance final
         const Instance m_instance;
         const std::optional<DebugReportCallback> m_callback;
 
-        const SurfaceKHR m_surface;
+        const std::optional<SurfaceKHR> m_surface;
 
         const PhysicalDevice m_physical_device;
 
@@ -63,7 +65,7 @@ public:
                        const std::vector<std::string>& required_device_extensions,
                        const std::vector<PhysicalDeviceFeatures>& required_features,
                        const std::vector<PhysicalDeviceFeatures>& optional_features,
-                       const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
+                       const std::optional<std::function<VkSurfaceKHR(VkInstance)>>& create_surface = std::nullopt);
 
         ~VulkanInstance();
 
@@ -81,7 +83,8 @@ public:
 
         VkSurfaceKHR surface() const
         {
-                return m_surface;
+                ASSERT(m_surface);
+                return *m_surface;
         }
 
         const Device& device() const
@@ -126,6 +129,7 @@ public:
 
         const Queue& presentation_queue() const
         {
+                ASSERT(m_surface);
                 return m_presentation_queues[0];
         }
 };

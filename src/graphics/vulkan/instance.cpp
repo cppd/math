@@ -28,6 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/string/vector.h"
 
+namespace vulkan
+{
+constexpr uint32_t NO_FAMILY_INDEX = -1;
 namespace
 {
 std::unordered_map<uint32_t, uint32_t> compute_queue_count(
@@ -37,28 +40,43 @@ std::unordered_map<uint32_t, uint32_t> compute_queue_count(
         std::unordered_map<uint32_t, uint32_t> queues;
         for (const auto& [index, count] : family_index_and_count)
         {
-                queues[index] = std::min(queues[index] + count, queue_family_properties[index].queueCount);
+                if (index != NO_FAMILY_INDEX)
+                {
+                        queues[index] = std::min(queues[index] + count, queue_family_properties[index].queueCount);
+                }
         }
         return queues;
 }
+
+std::vector<std::string> merge_required_device_extensions(bool with_swapchain,
+                                                          const std::vector<std::string>& required_device_extensions)
+{
+        return with_swapchain ? merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME) :
+                                required_device_extensions;
+}
 }
 
-namespace vulkan
-{
 VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance_extensions,
                                const std::vector<std::string>& required_device_extensions,
                                const std::vector<PhysicalDeviceFeatures>& required_features,
                                const std::vector<PhysicalDeviceFeatures>& optional_features,
-                               const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
+                               const std::optional<std::function<VkSurfaceKHR(VkInstance)>>& create_surface)
         : m_instance(create_instance(API_VERSION_MAJOR, API_VERSION_MINOR, required_instance_extensions,
                                      string_vector(VALIDATION_LAYERS))),
           m_callback(m_instance.validation_layers_enabled() ? std::make_optional(create_debug_report_callback(m_instance)) :
                                                               std::nullopt),
-          m_surface(m_instance, create_surface),
+          m_surface(create_surface ? std::optional(SurfaceKHR(m_instance, *create_surface)) : std::nullopt),
           //
-          m_physical_device(find_physical_device(m_instance, m_surface, API_VERSION_MAJOR, API_VERSION_MINOR,
-                                                 merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME),
-                                                 required_features)),
+          m_physical_device(
+                  find_physical_device(m_instance,
+                                       //
+                                       (create_surface ? static_cast<VkSurfaceKHR>(*m_surface) : VK_NULL_HANDLE),
+                                       //
+                                       API_VERSION_MAJOR, API_VERSION_MINOR,
+                                       //
+                                       merge_required_device_extensions(create_surface.has_value(), required_device_extensions),
+                                       //
+                                       required_features)),
           //
           m_graphics_compute_family_index(m_physical_device.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, 0)),
           m_compute_family_index(m_physical_device.family_index(VK_QUEUE_COMPUTE_BIT, VK_QUEUE_GRAPHICS_BIT,
@@ -68,7 +86,7 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
                                                                  // Наличие VK_QUEUE_GRAPHICS_BIT или VK_QUEUE_COMPUTE_BIT
                                                                  // означает (возможно неявно) наличие VK_QUEUE_TRANSFER_BIT
                                                                  VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)),
-          m_presentation_family_index(m_physical_device.presentation_family_index()),
+          m_presentation_family_index(create_surface ? m_physical_device.presentation_family_index() : NO_FAMILY_INDEX),
           //
           m_device(m_physical_device.create_device(
                   compute_queue_count({{m_graphics_compute_family_index, GRAPHICS_COMPUTE_QUEUE_COUNT},
@@ -77,7 +95,7 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
                                        {m_presentation_family_index, PRESENTATION_QUEUE_COUNT}},
                                       m_physical_device.queue_families()),
                   //
-                  merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME),
+                  merge_required_device_extensions(create_surface.has_value(), required_device_extensions),
                   //
                   required_features,
                   //
@@ -132,17 +150,20 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
                 }
         }
 
-        s += '\n';
-        index = m_presentation_family_index;
-        s += "Presentation queues, family index = " + to_string(index);
-        for (size_t i = 0; i < m_presentation_queues.size(); ++i)
+        if (create_surface)
         {
-                m_presentation_queues[i] = m_device.queue(index, queue_count[index]);
-                s += "\n  queue = " + to_string(i) + ", device queue = " + to_string(queue_count[index]);
-                ++queue_count[index];
-                if (queue_count[index] >= m_physical_device.queue_families()[index].queueCount)
+                s += '\n';
+                index = m_presentation_family_index;
+                s += "Presentation queues, family index = " + to_string(index);
+                for (size_t i = 0; i < m_presentation_queues.size(); ++i)
                 {
-                        queue_count[index] = 0;
+                        m_presentation_queues[i] = m_device.queue(index, queue_count[index]);
+                        s += "\n  queue = " + to_string(i) + ", device queue = " + to_string(queue_count[index]);
+                        ++queue_count[index];
+                        if (queue_count[index] >= m_physical_device.queue_families()[index].queueCount)
+                        {
+                                queue_count[index] = 0;
+                        }
                 }
         }
 
