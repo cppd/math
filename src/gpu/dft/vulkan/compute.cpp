@@ -151,7 +151,65 @@ void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer)
                              VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 1, &barrier, 0, nullptr);
 }
 
-class Fft1d
+void image_barrier_before(VkCommandBuffer command_buffer, VkImage image)
+{
+        ASSERT(command_buffer != VK_NULL_HANDLE && image != VK_NULL_HANDLE);
+
+        VkImageMemoryBarrier barrier = {};
+
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+
+        barrier.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+        barrier.image = image;
+
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+
+        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                             VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barrier);
+}
+
+void image_barrier_after(VkCommandBuffer command_buffer, VkImage image)
+{
+        ASSERT(command_buffer != VK_NULL_HANDLE && image != VK_NULL_HANDLE);
+
+        VkImageMemoryBarrier barrier = {};
+
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+
+        barrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+        barrier.image = image;
+
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+
+        barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+                             VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barrier);
+}
+
+class Fft1d final
 {
         unsigned m_n;
         unsigned m_data_size;
@@ -319,65 +377,7 @@ public:
         }
 };
 
-void image_barrier_before(VkCommandBuffer command_buffer, VkImage image)
-{
-        ASSERT(command_buffer != VK_NULL_HANDLE && image != VK_NULL_HANDLE);
-
-        VkImageMemoryBarrier barrier = {};
-
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-
-        barrier.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
-
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-
-        barrier.image = image;
-
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
-
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-
-        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-                             VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barrier);
-}
-
-void image_barrier_after(VkCommandBuffer command_buffer, VkImage image)
-{
-        ASSERT(command_buffer != VK_NULL_HANDLE && image != VK_NULL_HANDLE);
-
-        VkImageMemoryBarrier barrier = {};
-
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-
-        barrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
-        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-
-        barrier.image = image;
-
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
-
-        barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
-                             VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barrier);
-}
-
-class Impl final : public DftCompute
+class Dft final
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -388,12 +388,6 @@ class Impl final : public DftCompute
         const vulkan::Queue& m_compute_queue;
         const vulkan::CommandPool& m_transfer_command_pool;
         const vulkan::Queue& m_transfer_queue;
-
-        DftCopyInputProgram m_copy_input_program;
-        DftCopyInputMemory m_copy_input_memory;
-        DftCopyOutputProgram m_copy_output_program;
-        DftCopyOutputMemory m_copy_output_memory;
-        vec2i m_copy_groups = vec2i(0, 0);
 
         DftMulProgram m_mul_program;
         DftMulMemory m_mul_memory;
@@ -424,8 +418,6 @@ class Impl final : public DftCompute
         std::optional<DeviceMemory> m_d2_inv;
         std::optional<DeviceMemory> m_x_d;
         std::optional<DeviceMemory> m_buffer;
-
-        VkImage m_output = VK_NULL_HANDLE;
 
         void rows_to_buffer(VkCommandBuffer command_buffer, bool inverse) const
         {
@@ -492,52 +484,6 @@ class Impl final : public DftCompute
                 buffer_barrier(command_buffer, *m_x_d);
         }
 
-        void compute_commands(VkCommandBuffer command_buffer) const override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                //
-
-                constexpr bool inverse = false;
-
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_input_program.pipeline());
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_input_program.pipeline_layout(),
-                                        DftCopyInputMemory::set_number(), 1, &m_copy_input_memory.descriptor_set(), 0, nullptr);
-                vkCmdDispatch(command_buffer, m_copy_groups[0], m_copy_groups[1], 1);
-
-                buffer_barrier(command_buffer, *m_x_d);
-
-                //
-
-                if (m_n1 > 1)
-                {
-                        rows_to_buffer(command_buffer, inverse);
-                        m_fft_n2_m1->commands(command_buffer, inverse);
-                        rows_mul_d(command_buffer, inverse);
-                        m_fft_n2_m1->commands(command_buffer, !inverse);
-                        rows_from_buffer(command_buffer, inverse);
-                }
-                if (m_n2 > 1)
-                {
-                        columns_to_buffer(command_buffer, inverse);
-                        m_fft_n1_m2->commands(command_buffer, inverse);
-                        columns_mul_d(command_buffer, inverse);
-                        m_fft_n1_m2->commands(command_buffer, !inverse);
-                        columns_from_buffer(command_buffer, inverse);
-                }
-
-                //
-
-                image_barrier_before(command_buffer, m_output);
-
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_output_program.pipeline());
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_output_program.pipeline_layout(),
-                                        DftCopyOutputMemory::set_number(), 1, &m_copy_output_memory.descriptor_set(), 0, nullptr);
-                vkCmdDispatch(command_buffer, m_copy_groups[0], m_copy_groups[1], 1);
-
-                image_barrier_after(command_buffer, m_output);
-        }
-
         void create_diagonals(uint32_t family_index)
         {
                 // Compute the diagonal D in Lemma 13.2: use the radix-2 FFT
@@ -575,14 +521,11 @@ class Impl final : public DftCompute
                 }
         }
 
+public:
         void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::ImageWithMemory& output,
-                            unsigned x, unsigned y, unsigned width, unsigned height, uint32_t family_index) override
+                            unsigned x, unsigned y, unsigned width, unsigned height, uint32_t family_index)
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
-
-                //
-
-                m_output = output.image();
 
                 //
 
@@ -608,12 +551,6 @@ class Impl final : public DftCompute
                 m_fft_n1_m2.emplace(m_instance, family_indices, m_n1, m_m2);
                 m_fft_n1_m2->set_data(*m_buffer);
 
-                m_copy_input_memory.set(sampler, input, *m_x_d);
-                m_copy_input_program.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], x, y, width, height);
-                m_copy_output_memory.set(*m_x_d, output);
-                m_copy_output_program.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], 1.0 / (m_n1 * m_n2));
-                m_copy_groups = group_count(m_n1, m_n2, GROUP_SIZE_2D);
-
                 m_mul_memory.set(*m_x_d, *m_buffer);
                 m_mul_program.create_pipelines(m_n1, m_n2, m_m1, m_m2, GROUP_SIZE_2D[0], GROUP_SIZE_2D[1]);
                 m_mul_rows_to_buffer_groups = group_count(m_m1, m_n2, GROUP_SIZE_2D);
@@ -630,14 +567,12 @@ class Impl final : public DftCompute
                 m_mul_d_column_groups = group_count(m_m2, m_n1, GROUP_SIZE_2D);
         }
 
-        void delete_buffers() override
+        void delete_buffers()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
-                m_copy_output_program.delete_pipeline();
-                m_copy_input_program.delete_pipeline();
                 m_mul_program.delete_pipelines();
                 m_mul_d_program.delete_pipelines();
 
@@ -652,24 +587,51 @@ class Impl final : public DftCompute
                 m_buffer.reset();
 
                 m_n1 = m_n2 = m_m1 = m_m2 = -1;
-
-                m_output = VK_NULL_HANDLE;
         }
 
-public:
-        Impl(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& compute_command_pool,
-             const vulkan::Queue& compute_queue, const vulkan::CommandPool& transfer_command_pool,
-             const vulkan::Queue& transfer_queue)
+        void compute_commands(VkCommandBuffer command_buffer, bool inverse) const
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                //
+
+                if (m_n1 > 1)
+                {
+                        rows_to_buffer(command_buffer, inverse);
+                        m_fft_n2_m1->commands(command_buffer, inverse);
+                        rows_mul_d(command_buffer, inverse);
+                        m_fft_n2_m1->commands(command_buffer, !inverse);
+                        rows_from_buffer(command_buffer, inverse);
+                }
+                if (m_n2 > 1)
+                {
+                        columns_to_buffer(command_buffer, inverse);
+                        m_fft_n1_m2->commands(command_buffer, inverse);
+                        columns_mul_d(command_buffer, inverse);
+                        m_fft_n1_m2->commands(command_buffer, !inverse);
+                        columns_from_buffer(command_buffer, inverse);
+                }
+        }
+
+        const vulkan::BufferWithMemory& buffer() const
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                //
+
+                ASSERT(m_x_d);
+                return *m_x_d;
+        }
+
+        Dft(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& compute_command_pool,
+            const vulkan::Queue& compute_queue, const vulkan::CommandPool& transfer_command_pool,
+            const vulkan::Queue& transfer_queue)
                 : m_instance(instance),
                   m_device(instance.device()),
                   m_compute_command_pool(compute_command_pool),
                   m_compute_queue(compute_queue),
                   m_transfer_command_pool(transfer_command_pool),
                   m_transfer_queue(transfer_queue),
-                  m_copy_input_program(instance.device()),
-                  m_copy_input_memory(instance.device(), m_copy_input_program.descriptor_set_layout()),
-                  m_copy_output_program(instance.device()),
-                  m_copy_output_memory(instance.device(), m_copy_output_program.descriptor_set_layout()),
                   m_mul_program(instance.device()),
                   m_mul_memory(instance.device(), m_mul_program.descriptor_set_layout()),
                   m_mul_d_program(instance.device()),
@@ -682,13 +644,94 @@ public:
                 ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
         }
 
-        ~Impl() override
+        ~Dft()
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 //
 
                 m_instance.device_wait_idle_noexcept("the Vulkan DFT compute destructor");
+        }
+};
+
+class DftImage final : public DftCompute
+{
+        Dft m_dft;
+
+        DftCopyInputProgram m_copy_input_program;
+        DftCopyInputMemory m_copy_input_memory;
+        DftCopyOutputProgram m_copy_output_program;
+        DftCopyOutputMemory m_copy_output_memory;
+        vec2i m_copy_groups = vec2i(0, 0);
+
+        VkImage m_output = VK_NULL_HANDLE;
+
+public:
+        DftImage(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& compute_command_pool,
+                 const vulkan::Queue& compute_queue, const vulkan::CommandPool& transfer_command_pool,
+                 const vulkan::Queue& transfer_queue)
+                : m_dft(instance, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue),
+                  m_copy_input_program(instance.device()),
+                  m_copy_input_memory(instance.device(), m_copy_input_program.descriptor_set_layout()),
+                  m_copy_output_program(instance.device()),
+                  m_copy_output_memory(instance.device(), m_copy_output_program.descriptor_set_layout())
+        {
+        }
+
+        void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::ImageWithMemory& output,
+                            unsigned x, unsigned y, unsigned width, unsigned height, uint32_t family_index) override
+        {
+                m_dft.create_buffers(sampler, input, output, x, y, width, height, family_index);
+
+                //
+
+                m_copy_input_memory.set(sampler, input, m_dft.buffer());
+                m_copy_input_program.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], x, y, width, height);
+
+                m_copy_output_memory.set(m_dft.buffer(), output);
+                m_copy_output_program.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], 1.0 / (width * height));
+
+                m_copy_groups = group_count(width, height, GROUP_SIZE_2D);
+
+                m_output = output.image();
+        }
+
+        void delete_buffers() override
+        {
+                m_output = VK_NULL_HANDLE;
+
+                m_copy_output_program.delete_pipeline();
+                m_copy_input_program.delete_pipeline();
+
+                //
+
+                m_dft.delete_buffers();
+        }
+
+        void compute_commands(VkCommandBuffer command_buffer) const override
+        {
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_input_program.pipeline());
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_input_program.pipeline_layout(),
+                                        DftCopyInputMemory::set_number(), 1, &m_copy_input_memory.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, m_copy_groups[0], m_copy_groups[1], 1);
+
+                buffer_barrier(command_buffer, m_dft.buffer());
+
+                //
+
+                constexpr bool inverse = false;
+                m_dft.compute_commands(command_buffer, inverse);
+
+                //
+
+                image_barrier_before(command_buffer, m_output);
+
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_output_program.pipeline());
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_output_program.pipeline_layout(),
+                                        DftCopyOutputMemory::set_number(), 1, &m_copy_output_memory.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, m_copy_groups[0], m_copy_groups[1], 1);
+
+                image_barrier_after(command_buffer, m_output);
         }
 };
 }
@@ -704,6 +747,6 @@ std::unique_ptr<DftCompute> create_dft_compute(const vulkan::VulkanInstance& ins
                                                const vulkan::CommandPool& transfer_command_pool,
                                                const vulkan::Queue& transfer_queue)
 {
-        return std::make_unique<Impl>(instance, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue);
+        return std::make_unique<DftImage>(instance, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue);
 }
 }
