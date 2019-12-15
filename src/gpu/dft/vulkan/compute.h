@@ -26,11 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_vulkan
 {
-struct DftCompute
+struct DftComputeImage
 {
         static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
 
-        virtual ~DftCompute() = default;
+        virtual ~DftComputeImage() = default;
 
         virtual void compute_commands(VkCommandBuffer command_buffer) const = 0;
         virtual void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input,
@@ -47,11 +47,11 @@ struct DftComputeVector
         virtual void exec(bool inverse, std::vector<std::complex<float>>* src) = 0;
 };
 
-std::unique_ptr<DftCompute> create_dft_compute(const vulkan::VulkanInstance& instance,
-                                               const vulkan::CommandPool& compute_command_pool,
-                                               const vulkan::Queue& compute_queue,
-                                               const vulkan::CommandPool& transfer_command_pool,
-                                               const vulkan::Queue& transfer_queue);
+std::unique_ptr<DftComputeImage> create_dft_compute_image(const vulkan::VulkanInstance& instance,
+                                                          const vulkan::CommandPool& compute_command_pool,
+                                                          const vulkan::Queue& compute_queue,
+                                                          const vulkan::CommandPool& transfer_command_pool,
+                                                          const vulkan::Queue& transfer_queue);
 
 std::unique_ptr<DftComputeVector> create_dft_compute_vector();
 }

@@ -37,7 +37,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 
 // clang-format off
-constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
+constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> DFT_IMAGE_REQUIRED_DEVICE_FEATURES =
+{
+};
+constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> DFT_VECTOR_REQUIRED_DEVICE_FEATURES =
 {
 };
 // clang-format on
@@ -653,7 +656,7 @@ public:
         }
 };
 
-class DftImage final : public DftCompute
+class DftImage final : public DftComputeImage
 {
         Dft m_dft;
 
@@ -664,19 +667,6 @@ class DftImage final : public DftCompute
         vec2i m_copy_groups = vec2i(0, 0);
 
         VkImage m_output = VK_NULL_HANDLE;
-
-public:
-        DftImage(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& compute_command_pool,
-                 const vulkan::Queue& compute_queue, const vulkan::CommandPool& transfer_command_pool,
-                 const vulkan::Queue& transfer_queue)
-                : m_dft(instance, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue,
-                        vulkan::BufferMemoryType::DeviceLocal),
-                  m_copy_input_program(instance.device()),
-                  m_copy_input_memory(instance.device(), m_copy_input_program.descriptor_set_layout()),
-                  m_copy_output_program(instance.device()),
-                  m_copy_output_memory(instance.device(), m_copy_output_program.descriptor_set_layout())
-        {
-        }
 
         void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::ImageWithMemory& output,
                             unsigned x, unsigned y, unsigned width, unsigned height, uint32_t family_index) override
@@ -736,6 +726,19 @@ public:
                 vkCmdDispatch(command_buffer, m_copy_groups[0], m_copy_groups[1], 1);
 
                 image_barrier_after(command_buffer, m_output);
+        }
+
+public:
+        DftImage(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& compute_command_pool,
+                 const vulkan::Queue& compute_queue, const vulkan::CommandPool& transfer_command_pool,
+                 const vulkan::Queue& transfer_queue)
+                : m_dft(instance, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue,
+                        vulkan::BufferMemoryType::DeviceLocal),
+                  m_copy_input_program(instance.device()),
+                  m_copy_input_memory(instance.device(), m_copy_input_program.descriptor_set_layout()),
+                  m_copy_output_program(instance.device()),
+                  m_copy_output_memory(instance.device(), m_copy_output_program.descriptor_set_layout())
+        {
         }
 };
 
@@ -834,7 +837,7 @@ class DftVector final : public DftComputeVector
 
 public:
         DftVector()
-                : m_instance({}, {}, REQUIRED_DEVICE_FEATURES, {}),
+                : m_instance({}, {}, DFT_VECTOR_REQUIRED_DEVICE_FEATURES, {}),
                   m_device(m_instance.device()),
                   m_compute_command_pool(m_instance.compute_command_pool()),
                   m_compute_queue(m_instance.compute_queue()),
@@ -845,16 +848,16 @@ public:
 };
 }
 
-std::vector<vulkan::PhysicalDeviceFeatures> DftCompute::required_device_features()
+std::vector<vulkan::PhysicalDeviceFeatures> DftComputeImage::required_device_features()
 {
-        return REQUIRED_DEVICE_FEATURES;
+        return DFT_IMAGE_REQUIRED_DEVICE_FEATURES;
 }
 
-std::unique_ptr<DftCompute> create_dft_compute(const vulkan::VulkanInstance& instance,
-                                               const vulkan::CommandPool& compute_command_pool,
-                                               const vulkan::Queue& compute_queue,
-                                               const vulkan::CommandPool& transfer_command_pool,
-                                               const vulkan::Queue& transfer_queue)
+std::unique_ptr<DftComputeImage> create_dft_compute_image(const vulkan::VulkanInstance& instance,
+                                                          const vulkan::CommandPool& compute_command_pool,
+                                                          const vulkan::Queue& compute_queue,
+                                                          const vulkan::CommandPool& transfer_command_pool,
+                                                          const vulkan::Queue& transfer_queue)
 {
         return std::make_unique<DftImage>(instance, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue);
 }

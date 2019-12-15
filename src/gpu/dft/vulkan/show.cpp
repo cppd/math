@@ -72,7 +72,7 @@ class Impl final : public DftShow
         std::optional<vulkan::Pipeline> m_pipeline;
         std::optional<vulkan::CommandBuffers> m_command_buffers;
 
-        std::unique_ptr<DftCompute> m_compute;
+        std::unique_ptr<DftComputeImage> m_compute;
 
         void draw_commands(VkCommandBuffer command_buffer) const
         {
@@ -212,8 +212,8 @@ public:
                   m_program(instance.device()),
                   m_memory(instance.device(), m_program.descriptor_set_layout(), {graphics_queue.family_index()}),
                   m_sampler(create_dft_sampler(instance.device())),
-                  m_compute(create_dft_compute(instance, graphics_command_pool, graphics_queue, transfer_command_pool,
-                                               transfer_queue))
+                  m_compute(create_dft_compute_image(instance, graphics_command_pool, graphics_queue, transfer_command_pool,
+                                                     transfer_queue))
         {
                 create_vertices();
         }
@@ -232,7 +232,7 @@ public:
 std::vector<vulkan::PhysicalDeviceFeatures> DftShow::required_device_features()
 {
         return merge<vulkan::PhysicalDeviceFeatures>(std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),
-                                                     DftCompute::required_device_features());
+                                                     DftComputeImage::required_device_features());
 }
 
 std::unique_ptr<DftShow> create_dft_show(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
