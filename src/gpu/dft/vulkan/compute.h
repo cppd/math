@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/instance.h"
 
+#include <complex>
 #include <memory>
 #include <vector>
 
@@ -38,9 +39,19 @@ struct DftCompute
         virtual void delete_buffers() = 0;
 };
 
+struct DftComputeVector
+{
+        virtual ~DftComputeVector() = default;
+
+        virtual void create_buffers(unsigned width, unsigned height) = 0;
+        virtual void exec(bool inverse, std::vector<std::complex<float>>* src) = 0;
+};
+
 std::unique_ptr<DftCompute> create_dft_compute(const vulkan::VulkanInstance& instance,
                                                const vulkan::CommandPool& compute_command_pool,
                                                const vulkan::Queue& compute_queue,
                                                const vulkan::CommandPool& transfer_command_pool,
                                                const vulkan::Queue& transfer_queue);
+
+std::unique_ptr<DftComputeVector> create_dft_compute_vector();
 }

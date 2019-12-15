@@ -97,10 +97,10 @@ class DeviceMemory final
         vulkan::BufferWithMemory m_buffer;
 
 public:
-        DeviceMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices, unsigned size)
+        DeviceMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices, unsigned size,
+                     vulkan::BufferMemoryType memory_type = vulkan::BufferMemoryType::DeviceLocal)
                 : m_size(size),
-                  m_buffer(vulkan::BufferMemoryType::DeviceLocal, device, family_indices, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                           size * COMPLEX_SIZE)
+                  m_buffer(memory_type, device, family_indices, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, size * COMPLEX_SIZE)
         {
         }
 
@@ -389,6 +389,8 @@ class Dft final
         const vulkan::CommandPool& m_transfer_command_pool;
         const vulkan::Queue& m_transfer_queue;
 
+        const vulkan::BufferMemoryType m_buffer_memory_type;
+
         DftMulProgram m_mul_program;
         DftMulMemory m_mul_memory;
         vec2i m_mul_rows_to_buffer_groups = vec2i(0, 0);
@@ -522,17 +524,13 @@ class Dft final
         }
 
 public:
-        void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::ImageWithMemory& output,
-                            unsigned x, unsigned y, unsigned width, unsigned height, uint32_t family_index)
+        void create_buffers(unsigned width, unsigned height, uint32_t family_index)
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
-                ASSERT(sampler != VK_NULL_HANDLE);
-                ASSERT(output.width() == width && output.height() == height);
                 ASSERT(width > 0 && height > 0);
-                ASSERT(x + width <= input.width() && y + height <= input.height());
 
                 m_n1 = width;
                 m_n2 = height;
@@ -543,7 +541,7 @@ public:
 
                 const std::unordered_set<uint32_t> family_indices = {family_index};
 
-                m_x_d.emplace(m_device, family_indices, m_n1 * m_n2);
+                m_x_d.emplace(m_device, family_indices, m_n1 * m_n2, m_buffer_memory_type);
                 m_buffer.emplace(m_device, family_indices, std::max(m_m1 * m_n2, m_m2 * m_n1));
 
                 m_fft_n2_m1.emplace(m_instance, family_indices, m_n2, m_m1);
@@ -625,13 +623,14 @@ public:
 
         Dft(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& compute_command_pool,
             const vulkan::Queue& compute_queue, const vulkan::CommandPool& transfer_command_pool,
-            const vulkan::Queue& transfer_queue)
+            const vulkan::Queue& transfer_queue, vulkan::BufferMemoryType buffer_memory_type)
                 : m_instance(instance),
                   m_device(instance.device()),
                   m_compute_command_pool(compute_command_pool),
                   m_compute_queue(compute_queue),
                   m_transfer_command_pool(transfer_command_pool),
                   m_transfer_queue(transfer_queue),
+                  m_buffer_memory_type(buffer_memory_type),
                   m_mul_program(instance.device()),
                   m_mul_memory(instance.device(), m_mul_program.descriptor_set_layout()),
                   m_mul_d_program(instance.device()),
@@ -670,7 +669,8 @@ public:
         DftImage(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& compute_command_pool,
                  const vulkan::Queue& compute_queue, const vulkan::CommandPool& transfer_command_pool,
                  const vulkan::Queue& transfer_queue)
-                : m_dft(instance, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue),
+                : m_dft(instance, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue,
+                        vulkan::BufferMemoryType::DeviceLocal),
                   m_copy_input_program(instance.device()),
                   m_copy_input_memory(instance.device(), m_copy_input_program.descriptor_set_layout()),
                   m_copy_output_program(instance.device()),
@@ -681,7 +681,11 @@ public:
         void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::ImageWithMemory& output,
                             unsigned x, unsigned y, unsigned width, unsigned height, uint32_t family_index) override
         {
-                m_dft.create_buffers(sampler, input, output, x, y, width, height, family_index);
+                ASSERT(sampler != VK_NULL_HANDLE);
+                ASSERT(output.width() == width && output.height() == height);
+                ASSERT(x + width <= input.width() && y + height <= input.height());
+
+                m_dft.create_buffers(width, height, family_index);
 
                 //
 
@@ -734,6 +738,111 @@ public:
                 image_barrier_after(command_buffer, m_output);
         }
 };
+
+class DftVector final : public DftComputeVector
+{
+        vulkan::VulkanInstance m_instance;
+        const vulkan::Device& m_device;
+
+        const vulkan::CommandPool& m_compute_command_pool;
+        const vulkan::Queue& m_compute_queue;
+
+        Dft m_dft;
+
+        std::optional<vulkan::CommandBuffers> m_command_buffers;
+        unsigned m_width = 0;
+        unsigned m_height = 0;
+
+        enum DftType
+        {
+                Forward,
+                Inverse
+        };
+
+        void delete_buffers()
+        {
+                m_width = -1;
+                m_height = -1;
+
+                m_command_buffers.reset();
+                m_dft.delete_buffers();
+        }
+
+        void create_buffers(unsigned width, unsigned height) override
+        {
+                delete_buffers();
+
+                //
+
+                m_dft.create_buffers(width, height, m_compute_queue.family_index());
+
+                m_command_buffers = vulkan::CommandBuffers(m_device, m_compute_command_pool, 2);
+                VkResult result;
+                for (int index : {DftType::Forward, DftType::Inverse})
+                {
+                        VkCommandBuffer command_buffer = (*m_command_buffers)[index];
+
+                        VkCommandBufferBeginInfo command_buffer_info = {};
+                        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+                        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+                        result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
+                        if (result != VK_SUCCESS)
+                        {
+                                vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
+                        }
+
+                        //
+
+                        const bool inverse = (index == DftType::Inverse);
+                        m_dft.compute_commands(command_buffer, inverse);
+
+                        //
+
+                        result = vkEndCommandBuffer(command_buffer);
+                        if (result != VK_SUCCESS)
+                        {
+                                vulkan::vulkan_function_error("vkEndCommandBuffer", result);
+                        }
+                }
+
+                m_width = width;
+                m_height = height;
+        }
+
+        void exec(bool inverse, std::vector<std::complex<float>>* src) override
+        {
+                if (!(m_width > 0 && m_height > 0 && m_command_buffers))
+                {
+                        error("No DFT buffers");
+                }
+                if (!(src && (src->size() == static_cast<size_t>(m_width) * m_height)))
+                {
+                        error("Wrong DFT buffer size");
+                }
+
+                {
+                        vulkan::BufferMapper mapper(m_dft.buffer());
+                        mapper.write(*src);
+                }
+                vulkan::queue_submit((*m_command_buffers)[inverse ? DftType::Inverse : DftType::Forward], m_compute_queue);
+                vulkan::queue_wait_idle(m_compute_queue);
+                {
+                        vulkan::BufferMapper mapper(m_dft.buffer());
+                        mapper.read(src);
+                }
+        }
+
+public:
+        DftVector()
+                : m_instance({}, {}, REQUIRED_DEVICE_FEATURES, {}),
+                  m_device(m_instance.device()),
+                  m_compute_command_pool(m_instance.compute_command_pool()),
+                  m_compute_queue(m_instance.compute_queue()),
+                  m_dft(m_instance, m_compute_command_pool, m_compute_queue, m_instance.transfer_command_pool(),
+                        m_instance.transfer_queue(), vulkan::BufferMemoryType::HostVisible)
+        {
+        }
+};
 }
 
 std::vector<vulkan::PhysicalDeviceFeatures> DftCompute::required_device_features()
@@ -748,5 +857,10 @@ std::unique_ptr<DftCompute> create_dft_compute(const vulkan::VulkanInstance& ins
                                                const vulkan::Queue& transfer_queue)
 {
         return std::make_unique<DftImage>(instance, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue);
+}
+
+std::unique_ptr<DftComputeVector> create_dft_compute_vector()
+{
+        return std::make_unique<DftVector>();
 }
 }
