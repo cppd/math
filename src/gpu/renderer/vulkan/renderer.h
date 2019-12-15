@@ -31,12 +31,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 namespace gpu_vulkan
 {
 struct Renderer
 {
+        static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
+
         virtual ~Renderer() = default;
 
         virtual void set_light_a(const Color& light) = 0;
@@ -62,10 +63,6 @@ struct Renderer
         virtual VkSemaphore draw(const vulkan::Queue& graphics_queue, unsigned image_index) const = 0;
 
         virtual bool empty() const = 0;
-
-        static std::vector<std::string> instance_extensions();
-        static std::vector<std::string> device_extensions();
-        static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
 
         virtual void create_buffers(const vulkan::Swapchain* swapchain, RenderBuffers3D* render_buffers,
                                     const vulkan::ImageWithMemory* objects, unsigned x, unsigned y, unsigned width,

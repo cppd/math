@@ -756,23 +756,21 @@ public:
                 move_window_to_parent(m_window->system_handle(), m_parent_window);
 
                 {
-                        const std::vector<std::string> required_instance_extensions = merge<std::string>(
-                                gpu_vulkan::Renderer::instance_extensions(), vulkan::Window::instance_extensions());
+                        const std::vector<std::string> instance_extensions =
+                                merge<std::string>(vulkan::Window::instance_extensions());
 
-                        const std::vector<std::string> required_device_extensions =
-                                merge<std::string>(gpu_vulkan::Renderer::device_extensions());
-
-                        const std::vector<vulkan::PhysicalDeviceFeatures> features_sample_shading =
-                                device_features_sample_shading(VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING);
-
-                        const std::vector<vulkan::PhysicalDeviceFeatures> features_sampler_anisotropy =
-                                device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY);
+                        const std::vector<std::string> device_extensions = {};
 
                         const std::vector<vulkan::PhysicalDeviceFeatures> required_features =
-                                merge<vulkan::PhysicalDeviceFeatures>(gpu_vulkan::Renderer::required_device_features(),
-                                                                      gpu_vulkan::TextShow::required_device_features(),
-                                                                      gpu_vulkan::ConvexHullShow::required_device_features(),
-                                                                      features_sample_shading, features_sampler_anisotropy);
+                                merge<vulkan::PhysicalDeviceFeatures>(
+                                        gpu_vulkan::ConvexHullShow::required_device_features(),
+                                        gpu_vulkan::DftShow::required_device_features(),
+                                        gpu_vulkan::OpticalFlowShow::required_device_features(),
+                                        gpu_vulkan::PencilSketchShow::required_device_features(),
+                                        gpu_vulkan::Renderer::required_device_features(),
+                                        gpu_vulkan::TextShow::required_device_features(),
+                                        device_features_sample_shading(VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING),
+                                        device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY));
 
                         const std::vector<vulkan::PhysicalDeviceFeatures> optional_features = {};
 
@@ -780,9 +778,8 @@ public:
                                 return m_window->create_surface(i);
                         };
 
-                        m_instance =
-                                std::make_unique<vulkan::VulkanInstance>(required_instance_extensions, required_device_extensions,
-                                                                         required_features, optional_features, create_surface);
+                        m_instance = std::make_unique<vulkan::VulkanInstance>(
+                                instance_extensions, device_extensions, required_features, optional_features, create_surface);
                 }
 
                 ASSERT(m_instance->graphics_compute_command_pool().family_index() ==

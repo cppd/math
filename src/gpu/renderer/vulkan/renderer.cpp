@@ -41,12 +41,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 
 // clang-format off
-constexpr std::initializer_list<const char*> INSTANCE_EXTENSIONS =
-{
-};
-constexpr std::initializer_list<const char*> DEVICE_EXTENSIONS =
-{
-};
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
         vulkan::PhysicalDeviceFeatures::GeometryShader,
@@ -631,14 +625,6 @@ public:
 };
 }
 
-std::vector<std::string> Renderer::instance_extensions()
-{
-        return string_vector(INSTANCE_EXTENSIONS);
-}
-std::vector<std::string> Renderer::device_extensions()
-{
-        return string_vector(DEVICE_EXTENSIONS);
-}
 std::vector<vulkan::PhysicalDeviceFeatures> Renderer::required_device_features()
 {
         return REQUIRED_DEVICE_FEATURES;
