@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/random/engine.h"
 #include "com/time.h"
 #include "gpu/dft/opengl/compute.h"
+#include "gpu/dft/vulkan/compute.h"
 #include "window/opengl/window.h"
 
 #include <array>
@@ -41,7 +42,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <sstream>
 #include <string>
-#include <string_view>
 #include <vector>
 
 using complex = std::complex<float>;
@@ -53,24 +53,25 @@ constexpr double DISCREPANCY_LIMIT = 1e-4;
 namespace
 {
 #if defined(CUDA_FOUND) || defined(FFTW_FOUND)
-void compare(const std::string_view& name, const std::vector<complex>& x1, const std::vector<complex>& x2)
+void compare(const std::string& name_compute, const std::string& name_library, const std::vector<complex>& x_compute,
+             const std::vector<complex>& x_library)
 {
-        if (x1.size() != x2.size())
+        if (x_compute.size() != x_library.size())
         {
-                error("DFT compare data size error: " + to_string(x1.size()) + ", " + to_string(x2.size()));
+                error("DFT compare data size error: " + to_string(x_compute.size()) + ", " + to_string(x_library.size()));
         }
 
         double sum = 0;
         double sum2 = 0;
-        for (size_t i = 0; i < x1.size(); ++i)
+        for (size_t i = 0; i < x_compute.size(); ++i)
         {
-                sum += std::abs(x1[i] - x2[i]);
-                sum2 += std::abs(x1[i]);
+                sum += std::abs(x_compute[i] - x_library[i]);
+                sum2 += std::abs(x_compute[i]);
         }
 
         double d = (sum == 0) ? 0 : (sum / sum2);
 
-        LOG("Discrepancy: " + to_string(d));
+        LOG("Discrepancy " + name_compute + ": " + to_string(d));
 
         // Для NaN не работает if (!(d <= DISCREPANCY_LIMIT))
         // Для NaN работает if (d <= DISCREPANCY_LIMIT); else
@@ -80,7 +81,7 @@ void compare(const std::string_view& name, const std::vector<complex>& x1, const
         }
 
         std::ostringstream oss;
-        oss << "DFT failed (comparison with " << name << ")";
+        oss << "DFT failed (comparison " << name_compute << " with " << name_library << ")";
         error(oss.str());
 }
 #endif
@@ -175,21 +176,54 @@ std::string time_string(double start_time)
         return to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms";
 }
 
+void compute_vulkan(bool inverse, int n1, int n2, std::vector<complex>* data)
+{
+        std::unique_ptr<gpu_vulkan::DftComputeVector> dft = gpu_vulkan::create_dft_compute_vector();
+
+        {
+                RandomEngineWithSeed<std::mt19937_64> engine;
+                std::uniform_int_distribution<int> uid(1, 3000);
+                dft->create_buffers(uid(engine), uid(engine));
+                dft->create_buffers(1, 1);
+                dft->create_buffers(uid(engine), uid(engine));
+                dft->create_buffers(1, uid(engine));
+                dft->create_buffers(uid(engine), uid(engine));
+                dft->create_buffers(uid(engine), 1);
+                dft->create_buffers(uid(engine), uid(engine));
+        }
+
+        double start_time = time_in_seconds();
+
+        dft->create_buffers(n1, n2);
+        dft->exec(inverse, data);
+
+        LOG((inverse ? "Vulkan inverse time: " : "Vulkan forward time: ") + time_string(start_time));
+}
+
 void compute_opengl(bool inverse, int n1, int n2, std::vector<complex>* data)
 {
-        LOG("----- OpenGL -----");
+        opengl::Context opengl_context;
+
         double start_time = time_in_seconds();
 
         std::unique_ptr<gpu_opengl::DFTCompute> dft = gpu_opengl::create_dft_compute(n1, n2);
         dft->exec(inverse, data);
 
-        LOG("OpenGL time: " + time_string(start_time));
+        LOG((inverse ? "OpenGL inverse time: " : "OpenGL forward time: ") + time_string(start_time));
 }
 
 #if defined(CUDA_FOUND)
 void compute_cuda(bool inverse, int n1, int n2, std::vector<complex>* data)
 {
-        LOG("----- cuFFT -----");
+        if (inverse)
+        {
+                LOG("----- cuFFT inverse -----");
+        }
+        else
+        {
+                LOG("----- cuFFT forward -----");
+        }
+
         double start_time = time_in_seconds();
 
         std::unique_ptr<DFT> cufft = create_cufft(n1, n2);
@@ -202,7 +236,15 @@ void compute_cuda(bool inverse, int n1, int n2, std::vector<complex>* data)
 #if defined(FFTW_FOUND)
 void compute_fftw(bool inverse, int n1, int n2, std::vector<complex>* data)
 {
-        LOG("----- FFTW -----");
+        if (inverse)
+        {
+                LOG("----- FFTW inverse -----");
+        }
+        else
+        {
+                LOG("----- FFTW forward -----");
+        }
+
         double start_time = time_in_seconds();
 
         std::unique_ptr<DFT> fftw = create_fftw(n1, n2);
@@ -213,13 +255,14 @@ void compute_fftw(bool inverse, int n1, int n2, std::vector<complex>* data)
 #endif
 
 void dft_test(const int n1, const int n2, const std::vector<complex>& source_data, ProgressRatio* progress,
+              const std::string& output_vulkan_file_name, const std::string& output_inverse_vulkan_file_name,
               const std::string& output_opengl_file_name, const std::string& output_inverse_opengl_file_name,
               [[maybe_unused]] const std::string& output_cuda_file_name,
               [[maybe_unused]] const std::string& output_inverse_cuda_file_name,
               [[maybe_unused]] const std::string& output_fftw_file_name,
               [[maybe_unused]] const std::string& output_inverse_fftw_file_name)
 {
-        int computation_count = 2;
+        int computation_count = 4;
 
 #if defined(CUDA_FOUND)
         computation_count += 2;
@@ -230,6 +273,22 @@ void dft_test(const int n1, const int n2, const std::vector<complex>& source_dat
 
         int computation = 0;
         progress->set(0, computation_count);
+
+        //
+
+        std::vector<complex> data_vulkan(source_data);
+        compute_vulkan(false, n1, n2, &data_vulkan);
+        save_data(output_vulkan_file_name, data_vulkan);
+
+        progress->set(++computation, computation_count);
+
+        std::vector<complex> data_vulkan_inverse(data_vulkan);
+        compute_vulkan(true, n1, n2, &data_vulkan_inverse);
+        save_data(output_inverse_vulkan_file_name, data_vulkan_inverse);
+
+        progress->set(++computation, computation_count);
+
+        //
 
         std::vector<complex> data_opengl(source_data);
         compute_opengl(false, n1, n2, &data_opengl);
@@ -243,19 +302,23 @@ void dft_test(const int n1, const int n2, const std::vector<complex>& source_dat
 
         progress->set(++computation, computation_count);
 
+        //
+
 #if defined(CUDA_FOUND)
         {
                 std::vector<complex> data(source_data);
 
                 compute_cuda(false, n1, n2, &data);
                 save_data(output_cuda_file_name, data);
-                compare("cuFFT", data_opengl, data);
+                compare("Vulkan", "cuFFT", data_vulkan, data);
+                compare("OpenGL", "cuFFT", data_opengl, data);
 
                 progress->set(++computation, computation_count);
 
                 compute_cuda(true, n1, n2, &data);
                 save_data(output_inverse_cuda_file_name, data);
-                compare("Inverse cuFFT", data_opengl_inverse, data);
+                compare("Vulkan", "cuFFT", data_vulkan_inverse, data);
+                compare("OpenGL", "cuFFT", data_opengl_inverse, data);
 
                 progress->set(++computation, computation_count);
         }
@@ -267,13 +330,15 @@ void dft_test(const int n1, const int n2, const std::vector<complex>& source_dat
 
                 compute_fftw(false, n1, n2, &data);
                 save_data(output_fftw_file_name, data);
-                compare("FFTW", data_opengl, data);
+                compare("Vulkan", "FFTW", data_vulkan, data);
+                compare("OpenGL", "FFTW", data_opengl, data);
 
                 progress->set(++computation, computation_count);
 
                 compute_fftw(true, n1, n2, &data);
                 save_data(output_inverse_fftw_file_name, data);
-                compare("Inverse FFTW", data_opengl_inverse, data);
+                compare("Vulkan", "FFTW", data_vulkan_inverse, data);
+                compare("OpenGL", "FFTW", data_opengl_inverse, data);
 
                 progress->set(++computation, computation_count);
         }
@@ -286,10 +351,6 @@ void constant_data_test(ProgressRatio* progress)
         // 1 2 30 -> 33. + 0. I, -15. + 24.2487 I, -15. - 24.2487 I
         // 1 2 -> 3 -1
 
-        LOG("\n----- Context For Constant Data DFT Tests -----");
-
-        opengl::Context opengl_context;
-
         LOG("\n----- Constant Data DFT Tests -----");
 
         // const std::vector<complex> source_data(
@@ -300,27 +361,25 @@ void constant_data_test(ProgressRatio* progress)
 
         LOG("--- Source Data ---\n" + to_string(source_data));
 
-        dft_test(N, K, source_data, progress, "", "", "", "", "", "");
+        dft_test(N, K, source_data, progress, "", "", "", "", "", "", "", "");
 
         LOG("---\nDFT check passed");
 }
 
 void random_data_test(const std::array<int, 2>& dimensions, ProgressRatio* progress)
 {
-        LOG("\n----- Context For Random Data DFT Tests -----");
-
-        opengl::Context opengl_context;
-
         LOG("\n----- Random Data DFT Tests -----");
 
         const std::string tmp_dir = temp_directory();
 
         const std::string input_file_name = tmp_dir + "/dft_input.txt";
 
+        const std::string vulkan_file_name = tmp_dir + "/dft_output_vulkan.txt";
         const std::string opengl_file_name = tmp_dir + "/dft_output_opengl.txt";
         const std::string cuda_file_name = tmp_dir + "/dft_output_cuda.txt";
         const std::string fftw_file_name = tmp_dir + "/dft_output_fftw.txt";
 
+        const std::string inverse_vulkan_file_name = tmp_dir + "/dft_output_inverse_vulkan.txt";
         const std::string inverse_opengl_file_name = tmp_dir + "/dft_output_inverse_opengl.txt";
         const std::string inverse_cuda_file_name = tmp_dir + "/dft_output_inverse_cuda.txt";
         const std::string inverse_fftw_file_name = tmp_dir + "/dft_output_inverse_fftw.txt";
@@ -337,8 +396,8 @@ void random_data_test(const std::array<int, 2>& dimensions, ProgressRatio* progr
                       "), loaded from file (" + to_string(n1) + ", " + to_string(n2) + ")");
         }
 
-        dft_test(n1, n2, source_data, progress, opengl_file_name, inverse_opengl_file_name, cuda_file_name,
-                 inverse_cuda_file_name, fftw_file_name, inverse_fftw_file_name);
+        dft_test(n1, n2, source_data, progress, vulkan_file_name, inverse_vulkan_file_name, opengl_file_name,
+                 inverse_opengl_file_name, cuda_file_name, inverse_cuda_file_name, fftw_file_name, inverse_fftw_file_name);
 
         LOG("---\nDFT check passed");
 }
