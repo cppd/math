@@ -270,13 +270,13 @@ class Fft1d final
 
 public:
         Fft1d(const vulkan::VulkanInstance& instance, const std::unordered_set<uint32_t>& family_indices, int count, int n)
+                : m_n(n)
         {
-                if (n == 1)
+                if (m_n == 1)
                 {
                         return;
                 }
 
-                m_n = n;
                 m_data_size = count * n;
                 m_n_shared = shared_size(n, instance.limits());
                 m_only_shared = m_n <= m_n_shared;
@@ -324,11 +324,12 @@ public:
 
         void set_data(const DeviceMemory& data)
         {
-                ASSERT(data.size() >= m_data_size);
                 if (m_n == 1)
                 {
                         return;
                 }
+
+                ASSERT(data.size() >= m_data_size);
                 m_buffer = data;
                 m_fft_memory->set_buffer(data);
                 if (m_only_shared)
@@ -367,6 +368,11 @@ public:
 
         void run_for_data(bool inverse, const DeviceMemory& data, VkDevice device, VkCommandPool pool, VkQueue queue)
         {
+                if (m_n == 1)
+                {
+                        return;
+                }
+
                 ASSERT(data.size() == m_data_size);
 
                 set_data(data);
