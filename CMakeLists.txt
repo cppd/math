@@ -378,30 +378,6 @@ AddSourceFiles(EXECUTABLE
                         DIRECTORIES "src"
                         EXTENSIONS ${extensions_all})
 
-AddIncludeFiles(VULKAN_SHADERS
-                        HEADER_FILE "src/gpu/com/header.glsl"
-                        OUTPUT_EXTENSION "spr"
-                        DIRECTORIES
-                                "src/gpu/convex_hull/shaders"
-                                "src/gpu/dft/shaders"
-                                "src/gpu/optical_flow/shaders"
-                                "src/gpu/pencil_sketch/shaders"
-                                "src/gpu/renderer/shaders"
-                                "src/gpu/text/shaders"
-                        EXTENSIONS ${extensions_shaders})
-
-AddIncludeFiles(OPENGL_SHADERS
-                        OUTPUT_EXTENSION "str"
-                        DIRECTORIES
-                                "src/gpu/com"
-                                "src/gpu/convex_hull/shaders"
-                                "src/gpu/dft/shaders"
-                                "src/gpu/optical_flow/shaders"
-                                "src/gpu/pencil_sketch/shaders"
-                                "src/gpu/renderer/shaders"
-                                "src/gpu/text/shaders"
-                        EXTENSIONS ${extensions_shaders})
-
 AddIncludeFiles(BINARY_FILES
                         OUTPUT_EXTENSION "bin"
                         DIRECTORIES "extern/resources"
@@ -425,20 +401,57 @@ endif()
 
 ##################################################
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/SFML")
-find_package(SFML REQUIRED COMPONENTS system window graphics)
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${SFML_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} ${SFML_LIBRARIES})
+find_package(Vulkan REQUIRED)
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
+
+AddIncludeFiles(VULKAN_SHADERS
+                        HEADER_FILE "src/gpu/com/header.glsl"
+                        OUTPUT_EXTENSION "spr"
+                        DIRECTORIES
+                                "src/gpu/convex_hull/shaders"
+                                "src/gpu/dft/shaders"
+                                "src/gpu/optical_flow/shaders"
+                                "src/gpu/pencil_sketch/shaders"
+                                "src/gpu/renderer/shaders"
+                                "src/gpu/text/shaders"
+                        EXTENSIONS ${extensions_shaders})
+
+##################################################
+
+set(OpenGL_GL_PREFERENCE "GLVND")
+find_package(OpenGL REQUIRED)
+if (OPENGL_FOUND)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE -DOPENGL_FOUND)
+        target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${OPENGL_INCLUDE_DIR})
+        target_link_libraries(${PROJECT_NAME} OpenGL::GL)
+
+        set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/SFML")
+        find_package(SFML REQUIRED COMPONENTS system window graphics)
+        target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${SFML_INCLUDE_DIR})
+        target_link_libraries(${PROJECT_NAME} ${SFML_LIBRARIES})
+
+        AddIncludeFiles(OPENGL_SHADERS
+                                OUTPUT_EXTENSION "str"
+                                DIRECTORIES
+                                        "src/gpu/com"
+                                        "src/gpu/convex_hull/shaders"
+                                        "src/gpu/dft/shaders"
+                                        "src/gpu/optical_flow/shaders"
+                                        "src/gpu/pencil_sketch/shaders"
+                                        "src/gpu/renderer/shaders"
+                                        "src/gpu/text/shaders"
+                                EXTENSIONS ${extensions_shaders})
+#else()
+#        message(FATAL_ERROR "OpenGL not found")
+endif()
+
+##################################################
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/GMP")
 find_package(GMP REQUIRED)
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GMP_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${GMP_C_LIBRARIES} ${GMP_CXX_LIBRARIES})
-
-set(OpenGL_GL_PREFERENCE "GLVND")
-find_package(OpenGL REQUIRED)
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${OPENGL_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} OpenGL::GL)
 
 find_package(Qt5Widgets REQUIRED)
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${Qt5Widgets_INCLUDE_DIRS})
@@ -451,10 +464,6 @@ target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
 find_package(X11 REQUIRED)
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${X11_X11_INCLUDE_PATH})
 target_link_libraries(${PROJECT_NAME} ${X11_X11_LIB})
-
-find_package(Vulkan REQUIRED)
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/GLFW")
 find_package(GLFW REQUIRED)
