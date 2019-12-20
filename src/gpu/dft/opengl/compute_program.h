@@ -23,13 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_opengl
 {
-template <typename T>
 class DftProgramBitReverse final
 {
         static constexpr int BUFFER_BINDING = 0;
 
-        int m_count;
-        int m_n;
         int m_group_count;
 
         opengl::ComputeProgram m_bit_reverse;
@@ -40,7 +37,6 @@ public:
         void exec(const opengl::Buffer& data) const;
 };
 
-template <typename T>
 class DftProgramFftGlobal final
 {
         const int m_count, m_n;
@@ -53,7 +49,6 @@ public:
         void exec(bool inverse) const;
 };
 
-template <typename T>
 class DftProgramCopyInput final
 {
         static constexpr int SRC_LOCATION = 0;
@@ -69,7 +64,6 @@ public:
         void copy(const opengl::Buffer& data);
 };
 
-template <typename T>
 class DftProgramCopyOutput final
 {
         static constexpr int SRC_BINDING = 0;
@@ -79,12 +73,11 @@ class DftProgramCopyOutput final
         opengl::ComputeProgram m_program;
 
 public:
-        DftProgramCopyOutput(vec2i group_size, const opengl::Texture& texture, int n1, int n2, T to_mul);
+        DftProgramCopyOutput(vec2i group_size, const opengl::Texture& texture, int n1, int n2, float to_mul);
 
         void copy(const opengl::Buffer& data);
 };
 
-template <typename T>
 class DftProgramMul final
 {
         static constexpr int DATA_BINDING = 0;
@@ -115,7 +108,6 @@ public:
         void columns_from_buffer(bool inverse, const opengl::Buffer& data, const opengl::Buffer& buffer) const;
 };
 
-template <typename T>
 class DftProgramMulD final
 {
         static constexpr int DIAGONAL_BINDING = 0;
@@ -133,12 +125,11 @@ public:
         void columns_mul_d(const opengl::Buffer& d, const opengl::Buffer& data) const;
 };
 
-template <typename T>
 class DftProgramFftShared final
 {
         static constexpr int BUFFER_BINDING = 0;
 
-        const int m_count, m_n, m_n_bits, m_shared_size, m_reverse_input;
+        const int m_count, m_n, m_n_bits, m_shared_size;
         const int m_group_count;
         opengl::ComputeProgram m_fft_forward;
         opengl::ComputeProgram m_fft_inverse;

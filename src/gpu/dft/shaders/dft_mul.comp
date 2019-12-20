@@ -39,19 +39,19 @@ layout(local_size_x_id = 6, local_size_y_id = 7) in;
 
 layout(std430, binding = 0) restrict buffer Data
 {
-        complex data[];
+        vec2 data[];
 };
 
 layout(std430, binding = 1) restrict buffer Buffer
 {
-        complex buf[];
+        vec2 buf[];
 };
 
 // Функция подстановки переменных, формулы 13.4, 13.27, 13.28, 13.32.
 // Используется в 4 функциях: по строкам в обе стороны и по столбцам в обе 2 стороны
-complex mul_data(complex x, int l, int n)
+vec2 mul_data(vec2 x, int l, int n)
 {
-        // float_point theta = ((INVERSE ? PI : -PI) * l * l) / n;
+        // float theta = ((INVERSE ? PI : -PI) * l * l) / n;
 
         // Вместо l * l / n нужно вычислить mod(l * l / n, 2), чтобы в тригонометрические функции
         // поступало не больше 2 * PI.
@@ -65,21 +65,21 @@ complex mul_data(complex x, int l, int n)
         int remainder = dividend - quotient * n;
 
         // factor = (quotient mod 2) + (remainder / n).
-        // float_point factor = (quotient & 1) + float_point(remainder) / n;
-        // precise float_point theta = (INVERSE ? PI : -PI) * factor;
-        // complex k = complex(cos(theta), sin(theta));
+        // float factor = (quotient & 1) + float(remainder) / n;
+        // precise float theta = (INVERSE ? PI : -PI) * factor;
+        // vec2 k = vec2(cos(theta), sin(theta));
         // return complex_mul(k, x);
 
-        float_point factor = float_point(remainder) / n;
-        precise float_point theta = (INVERSE ? PI : -PI) * factor;
+        float factor = float(remainder) / n;
+        precise float theta = (INVERSE ? PI : -PI) * factor;
         if ((quotient & 1) == 0)
         {
-                complex k = complex(cos(theta), sin(theta));
+                vec2 k = vec2(cos(theta), sin(theta));
                 return complex_mul(k, x);
         }
         else
         {
-                complex k = complex(-cos(theta), -sin(theta));
+                vec2 k = vec2(-cos(theta), -sin(theta));
                 return complex_mul(k, x);
         }
 }
@@ -96,11 +96,11 @@ void rows_mul_to_buffer()
 
         if (i >= N1)
         {
-                buf[j * M1 + i] = complex(0, 0);
+                buf[j * M1 + i] = vec2(0, 0);
         }
         else
         {
-                complex x = data[j * N1 + i];
+                vec2 x = data[j * N1 + i];
                 buf[j * M1 + i] = mul_data(x, i, N1);
         }
 }
@@ -115,7 +115,7 @@ void rows_mul_from_buffer()
                 return;
         }
 
-        complex x = buf[j * M1 + i];
+        vec2 x = buf[j * M1 + i];
         data[j * N1 + i] = mul_data(x, i, N1);
 }
 
@@ -132,11 +132,11 @@ void columns_mul_to_buffer()
         if (j >= N2)
         {
                 // С транспонированием
-                buf[i * M2 + j] = complex(0, 0);
+                buf[i * M2 + j] = vec2(0, 0);
         }
         else
         {
-                complex x = data[j * N1 + i];
+                vec2 x = data[j * N1 + i];
                 // С транспонированием
                 buf[i * M2 + j] = mul_data(x, j, N2);
         }
@@ -153,7 +153,7 @@ void columns_mul_from_buffer()
         }
 
         // С транспонированием
-        complex x = buf[i * M2 + j];
+        vec2 x = buf[i * M2 + j];
         data[j * N1 + i] = mul_data(x, j, N2);
 }
 

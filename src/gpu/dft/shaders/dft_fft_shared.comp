@@ -41,13 +41,13 @@ layout(local_size_x_id = 7) in;
 
 layout(std430, binding = 0) buffer Buffer
 {
-        complex global_data[];
+        vec2 global_data[];
 };
 
 // До какого размера рассчитывать
 const uint N_MAX = (N <= SHARED_SIZE) ? N : SHARED_SIZE;
 
-shared complex shared_data[SHARED_SIZE];
+shared vec2 shared_data[SHARED_SIZE];
 
 void copy_global_to_shared()
 {
@@ -105,7 +105,7 @@ void main()
         uint max_local = min(SHARED_SIZE, DATA_SIZE - gl_WorkGroupID.x * SHARED_SIZE) >> 1;
 
         // Первоначально M = 2, поэтому просто PI
-        float_point two_pi_div_m = INVERSE ? PI : -PI;
+        float two_pi_div_m = INVERSE ? PI : -PI;
 
         for (uint m_div_2 = 1; m_div_2 < N_MAX; m_div_2 <<= 1, two_pi_div_m *= 0.5)
         {
@@ -121,12 +121,12 @@ void main()
                         uint index_t = base + idx;
                         uint index_u = index_t + m_div_2;
 
-                        complex v_t = shared_data[index_t];
-                        complex v_u = shared_data[index_u];
+                        vec2 v_t = shared_data[index_t];
+                        vec2 v_u = shared_data[index_u];
 
-                        complex twiddle_factor = complex(cos(two_pi_div_m * idx), sin(two_pi_div_m * idx));
+                        vec2 twiddle_factor = vec2(cos(two_pi_div_m * idx), sin(two_pi_div_m * idx));
 
-                        complex k = complex_mul(twiddle_factor, v_u);
+                        vec2 k = complex_mul(twiddle_factor, v_u);
 
                         shared_data[index_t] = v_t + k;
                         shared_data[index_u] = v_t - k;

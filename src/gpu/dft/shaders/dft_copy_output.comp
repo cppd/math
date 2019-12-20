@@ -33,7 +33,7 @@ layout(binding = 1, r32f) uniform writeonly restrict image2D dst;
 
 layout(std430, binding = 0) readonly restrict buffer Buffer
 {
-        complex src[];
+        vec2 src[];
 };
 
 void main()
@@ -46,7 +46,7 @@ void main()
         }
 
         const int width = imageSize(dst).x;
-        const complex d = src[p.y * width + p.x];
+        const vec2 d = src[p.y * width + p.x];
         const float v = TO_MUL * length(d);
         const vec4 pixel = vec4(vec3(v), 1);
         imageStore(dst, p, pixel);

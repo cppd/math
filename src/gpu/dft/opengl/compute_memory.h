@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_opengl
 {
-template <typename T>
 class DftMemoryFftGlobalData final
 {
         static constexpr int DATA_BINDING = 0;
@@ -31,17 +30,16 @@ class DftMemoryFftGlobalData final
         struct Data
         {
                 GLuint m_div_2;
-                T two_pi_div_m;
+                float two_pi_div_m;
         };
 
         opengl::Buffer m_data;
 
 public:
-        DftMemoryFftGlobalData(T two_pi_div_m, int m_div_2);
+        DftMemoryFftGlobalData(float two_pi_div_m, int m_div_2);
         void bind() const;
 };
 
-template <typename T>
 class DftMemoryFftGlobalBuffer final
 {
         static constexpr int BUFFER_BINDING = 1;

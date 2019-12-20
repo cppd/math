@@ -21,8 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_opengl
 {
-template <typename T>
-DftMemoryFftGlobalData<T>::DftMemoryFftGlobalData(T two_pi_div_m, int m_div_2) : m_data(sizeof(Data), GL_MAP_WRITE_BIT)
+DftMemoryFftGlobalData::DftMemoryFftGlobalData(float two_pi_div_m, int m_div_2) : m_data(sizeof(Data), GL_MAP_WRITE_BIT)
 {
         Data d;
         d.m_div_2 = m_div_2;
@@ -30,29 +29,21 @@ DftMemoryFftGlobalData<T>::DftMemoryFftGlobalData(T two_pi_div_m, int m_div_2) :
         opengl::map_and_write_to_buffer(m_data, d);
 }
 
-template <typename T>
-void DftMemoryFftGlobalData<T>::bind() const
+void DftMemoryFftGlobalData::bind() const
 {
         glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_data);
 }
 
 //
 
-template <typename T>
-void DftMemoryFftGlobalBuffer<T>::set(const opengl::Buffer& buffer)
+void DftMemoryFftGlobalBuffer::set(const opengl::Buffer& buffer)
 {
         m_buffer = buffer;
 }
 
-template <typename T>
-void DftMemoryFftGlobalBuffer<T>::bind() const
+void DftMemoryFftGlobalBuffer::bind() const
 {
         ASSERT(m_buffer > 0);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, m_buffer);
 }
-
-//
-
-template class DftMemoryFftGlobalData<float>;
-template class DftMemoryFftGlobalBuffer<float>;
 }

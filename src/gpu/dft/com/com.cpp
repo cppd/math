@@ -138,6 +138,4 @@ int dft_group_size(unsigned dft_size, unsigned max_group_size_x, unsigned max_gr
 }
 
 template int dft_shared_size<std::complex<float>>(unsigned, unsigned);
-template int dft_shared_size<std::complex<double>>(unsigned, unsigned);
 template int dft_group_size<std::complex<float>>(unsigned, unsigned, unsigned, unsigned);
-template int dft_group_size<std::complex<double>>(unsigned, unsigned, unsigned, unsigned);

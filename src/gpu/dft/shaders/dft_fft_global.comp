@@ -37,12 +37,12 @@ const uint data_size = DATA_SIZE / 2;
 layout(std140, binding = 0) uniform Data
 {
         uint m_div_2;
-        float_point two_pi_div_m;
+        float two_pi_div_m;
 };
 
 layout(std430, binding = 1) buffer Buffer
 {
-        complex data[];
+        vec2 data[];
 };
 
 void main()
@@ -64,20 +64,20 @@ void main()
         uint index_t = n_base + base + idx;
         uint index_u = index_t + m_div_2;
 
-        complex v_t = data[index_t];
-        complex v_u = data[index_u];
+        vec2 v_t = data[index_t];
+        vec2 v_u = data[index_u];
 
         if (!INVERSE)
         {
-                complex twiddle_factor = complex(cos(two_pi_div_m * idx), -sin(two_pi_div_m * idx));
-                complex k = complex_mul(twiddle_factor, v_u);
+                vec2 twiddle_factor = vec2(cos(two_pi_div_m * idx), -sin(two_pi_div_m * idx));
+                vec2 k = complex_mul(twiddle_factor, v_u);
                 data[index_t] = v_t + k;
                 data[index_u] = v_t - k;
         }
         else
         {
-                complex twiddle_factor = complex(cos(two_pi_div_m * idx), sin(two_pi_div_m * idx));
-                complex k = complex_mul(twiddle_factor, v_u);
+                vec2 twiddle_factor = vec2(cos(two_pi_div_m * idx), sin(two_pi_div_m * idx));
+                vec2 k = complex_mul(twiddle_factor, v_u);
                 data[index_t] = (v_t + k) * 0.5;
                 data[index_u] = (v_t - k) * 0.5;
         }

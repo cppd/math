@@ -89,17 +89,10 @@ vec2 complex_mul(vec2 a, vec2 b)
 {
         return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
 }
-dvec2 complex_mul(dvec2 a, dvec2 b)
-{
-        return dvec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
-}
 
 uint bit_reverse(uint i, uint bits)
 {
         return bitfieldReverse(i) >> (32 - bits);
 }
 
-// Для DFT
-#define complex vec2
-#define float_point float
-const float_point PI = 3.1415926535897932384626433832795028841971693993751;
+const float PI = 3.1415926535897932384626433832795028841971693993751;

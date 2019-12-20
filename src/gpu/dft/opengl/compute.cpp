@@ -147,37 +147,34 @@ public:
         }
 };
 
-template <typename FP>
 int shared_size(int dft_size)
 {
-        return dft_shared_size<std::complex<FP>>(dft_size, opengl::max_compute_shared_memory());
+        return dft_shared_size<std::complex<float>>(dft_size, opengl::max_compute_shared_memory());
 }
 
-template <typename FP>
 int group_size(int dft_size)
 {
-        return dft_group_size<std::complex<FP>>(dft_size, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
-                                                opengl::max_compute_shared_memory());
+        return dft_group_size<std::complex<float>>(dft_size, opengl::max_fixed_group_size_x(),
+                                                   opengl::max_fixed_group_invocations(), opengl::max_compute_shared_memory());
 }
 
-template <typename FP>
 class Fft1d
 {
         int m_n;
         int m_n_shared;
         bool m_only_shared;
-        DftProgramFftShared<FP> m_fft;
-        std::optional<DftProgramBitReverse<FP>> m_bit_reverse;
-        std::optional<DftProgramFftGlobal<FP>> m_fft_g;
-        std::optional<DftMemoryFftGlobalBuffer<FP>> m_fft_g_memory_buffer;
-        std::vector<DftMemoryFftGlobalData<FP>> m_fft_g_memory_data;
+        DftProgramFftShared m_fft;
+        std::optional<DftProgramBitReverse> m_bit_reverse;
+        std::optional<DftProgramFftGlobal> m_fft_g;
+        std::optional<DftMemoryFftGlobalBuffer> m_fft_g_memory_buffer;
+        std::vector<DftMemoryFftGlobalData> m_fft_g_memory_data;
 
 public:
         Fft1d(int count, int n)
                 : m_n(n),
-                  m_n_shared(shared_size<FP>(n)),
+                  m_n_shared(shared_size(n)),
                   m_only_shared(n <= m_n_shared),
-                  m_fft(count, n, shared_size<FP>(n), group_size<FP>(n), m_only_shared)
+                  m_fft(count, n, shared_size(n), group_size(n), m_only_shared)
         {
                 if (m_only_shared)
                 {
@@ -190,7 +187,7 @@ public:
 
                 // Половина размера текущих отдельных ДПФ
                 int m_div_2 = m_n_shared;
-                FP two_pi_div_m = PI<FP> / m_div_2;
+                float two_pi_div_m = PI<float> / m_div_2;
                 for (; m_div_2 < m_n; m_div_2 <<= 1, two_pi_div_m /= 2)
                 {
                         m_fft_g_memory_data.emplace_back(two_pi_div_m, m_div_2);
@@ -199,7 +196,7 @@ public:
                 ASSERT(m_n == (m_n_shared << m_fft_g_memory_data.size()));
         }
 
-        void exec(bool inverse, const DeviceMemory<std::complex<FP>>* data)
+        void exec(bool inverse, const DeviceMemory<std::complex<float>>* data)
         {
                 if (m_n == 1)
                 {
@@ -222,7 +219,7 @@ public:
                 m_fft_g_memory_buffer->set(*data);
                 m_fft_g_memory_buffer->bind();
                 // Досчитать до нужного размера уже в глобальной памяти без разделяемой
-                for (const DftMemoryFftGlobalData<FP>& memory_data : m_fft_g_memory_data)
+                for (const DftMemoryFftGlobalData& memory_data : m_fft_g_memory_data)
                 {
                         memory_data.bind();
                         m_fft_g->exec(inverse);
@@ -230,18 +227,17 @@ public:
         }
 };
 
-template <typename FP>
 class Impl final : public DFTCompute, public DFTComputeTexture
 {
         const int m_n1, m_n2, m_m1, m_m2;
-        DeviceMemory<std::complex<FP>> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
-        DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
-        std::optional<DftProgramCopyInput<FP>> m_copy_input;
-        std::optional<DftProgramCopyOutput<FP>> m_copy_output;
-        DftProgramMul<FP> m_mul;
-        DftProgramMulD<FP> m_mul_d;
-        Fft1d<FP> m_fft_n2_m1;
-        Fft1d<FP> m_fft_n1_m2;
+        DeviceMemory<std::complex<float>> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
+        DeviceMemory<std::complex<float>> m_x_d, m_buffer;
+        std::optional<DftProgramCopyInput> m_copy_input;
+        std::optional<DftProgramCopyOutput> m_copy_output;
+        DftProgramMul m_mul;
+        DftProgramMulD m_mul_d;
+        Fft1d m_fft_n2_m1;
+        Fft1d m_fft_n1_m2;
 
         std::optional<opengl::TimeElapsed> m_time_elapsed;
 
@@ -271,9 +267,7 @@ class Impl final : public DFTCompute, public DFTComputeTexture
                         error("FFT input size error: input " + to_string(size) + ", must be " + to_string(m_n1 * m_n2));
                 }
 
-                std::vector<std::complex<FP>> data = conv<FP>(std::move(*src));
-
-                m_x_d.write(data);
+                m_x_d.write(*src);
 
                 glFinish();
 
@@ -285,9 +279,7 @@ class Impl final : public DFTCompute, public DFTComputeTexture
 
                 LOG("calc OpenGL: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
 
-                m_x_d.read(&data);
-
-                *src = conv<float>(std::move(data));
+                m_x_d.read(src);
         }
 
         void exec() override
@@ -304,22 +296,22 @@ class Impl final : public DFTCompute, public DFTComputeTexture
                 double m1_div_n1 = static_cast<double>(m_m1) / m_n1;
                 double m2_div_n2 = static_cast<double>(m_m2) / m_n2;
 
-                Fft1d<FP> fft_1_m1(1, m_m1);
-                Fft1d<FP> fft_1_m2(1, m_m2);
+                Fft1d fft_1_m1(1, m_m1);
+                Fft1d fft_1_m2(1, m_m2);
 
                 // Compute the diagonal D in Lemma 13.2: use the radix-2 FFT
                 // Формулы 13.13, 13.26.
 
-                m_d1_fwd.write(conv<FP>(dft_compute_h2(m_n1, m_m1, dft_compute_h(m_n1, false, 1.0))));
+                m_d1_fwd.write(conv<float>(dft_compute_h2(m_n1, m_m1, dft_compute_h(m_n1, false, 1.0))));
                 fft_1_m1.exec(false, &m_d1_fwd);
 
-                m_d1_inv.write(conv<FP>(dft_compute_h2(m_n1, m_m1, dft_compute_h(m_n1, true, m1_div_n1))));
+                m_d1_inv.write(conv<float>(dft_compute_h2(m_n1, m_m1, dft_compute_h(m_n1, true, m1_div_n1))));
                 fft_1_m1.exec(true, &m_d1_inv);
 
-                m_d2_fwd.write(conv<FP>(dft_compute_h2(m_n2, m_m2, dft_compute_h(m_n2, false, 1.0))));
+                m_d2_fwd.write(conv<float>(dft_compute_h2(m_n2, m_m2, dft_compute_h(m_n2, false, 1.0))));
                 fft_1_m2.exec(false, &m_d2_fwd);
 
-                m_d2_inv.write(conv<FP>(dft_compute_h2(m_n2, m_m2, dft_compute_h(m_n2, true, m2_div_n2))));
+                m_d2_inv.write(conv<float>(dft_compute_h2(m_n2, m_m2, dft_compute_h(m_n2, true, m2_div_n2))));
                 fft_1_m2.exec(true, &m_d2_inv);
         }
 
@@ -414,7 +406,7 @@ public:
                 if (source && result)
                 {
                         m_copy_input.emplace(GROUP_SIZE_2D, *source, x, y, m_n1, m_n2);
-                        m_copy_output.emplace(GROUP_SIZE_2D, *result, m_n1, m_n2, static_cast<FP>(1.0 / (1ull * m_n1 * m_n2)));
+                        m_copy_output.emplace(GROUP_SIZE_2D, *result, m_n1, m_n2, static_cast<float>(1.0 / (1ull * m_n1 * m_n2)));
 
                         ASSERT(result->format() == GL_R32F);
                         ASSERT(result->width() == m_n1 && result->height() == m_n2);
@@ -437,12 +429,12 @@ public:
 }
 std::unique_ptr<DFTCompute> create_dft_compute(unsigned width, unsigned height)
 {
-        return std::make_unique<Impl<float>>(0, 0, width, height, nullptr, nullptr);
+        return std::make_unique<Impl>(0, 0, width, height, nullptr, nullptr);
 }
 
 std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(const opengl::Texture& source, unsigned x, unsigned y,
                                                               unsigned width, unsigned height, const opengl::Texture& result)
 {
-        return std::make_unique<Impl<float>>(x, y, width, height, &source, &result);
+        return std::make_unique<Impl>(x, y, width, height, &source, &result);
 }
 }

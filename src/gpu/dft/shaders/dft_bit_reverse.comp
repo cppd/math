@@ -33,7 +33,7 @@ layout(constant_id = 3) const uint N_BITS = 1;
 
 layout(std430, binding = 0) buffer Buffer
 {
-        complex data[];
+        vec2 data[];
 };
 
 void main()
@@ -53,7 +53,7 @@ void main()
         {
                 uint i_index = n_base + i;
                 uint r_index = n_base + r;
-                complex t = data[i_index];
+                vec2 t = data[i_index];
                 data[i_index] = data[r_index];
                 data[r_index] = t;
         }
