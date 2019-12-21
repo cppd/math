@@ -31,6 +31,8 @@ Packt Publishing, 2015.
 Chapter 5. Tracking Objects in Videos.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "compute.h"
 
 #include "compute_memory.h"
@@ -352,3 +354,5 @@ std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(const opengl::Te
         return std::make_unique<Impl>(source, x, y, width, height, top_point_count_x, top_point_count_y, top_points, top_flow);
 }
 }
+
+#endif

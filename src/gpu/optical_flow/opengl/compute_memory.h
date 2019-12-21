@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include "graphics/opengl/buffers.h"
 
 namespace gpu_opengl
@@ -132,3 +134,5 @@ public:
         void bind() const;
 };
 }
+
+#endif

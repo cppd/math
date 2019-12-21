@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include "graphics/opengl/buffers.h"
 
 #include <memory>
@@ -34,3 +36,5 @@ struct OpticalFlowShow
 std::unique_ptr<OpticalFlowShow> create_optical_flow_show(const opengl::Texture& source, double window_ppi, int x, int y,
                                                           int width, int height);
 }
+
+#endif

@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include <string>
 
 namespace gpu_opengl
@@ -30,3 +32,5 @@ std::string optical_flow_show_frag();
 std::string optical_flow_show_debug_vert();
 std::string optical_flow_show_debug_frag();
 }
+
+#endif

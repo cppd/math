@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "compute_memory.h"
 
 #include "graphics/opengl/functions.h"
@@ -155,3 +157,5 @@ void OpticalFlowImagesMemory::bind() const
         glBindBufferBase(GL_UNIFORM_BUFFER, IMAGES_BINDING, m_buffer);
 }
 }
+
+#endif

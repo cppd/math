@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include "compute_memory.h"
 
 #include "com/vec.h"
@@ -66,3 +68,5 @@ public:
         void exec(const vec2i& groups, const OpticalFlowDataMemory& data, const OpticalFlowImagesMemory& images) const;
 };
 }
+
+#endif
