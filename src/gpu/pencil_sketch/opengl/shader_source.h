@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include <string>
 
 namespace gpu_opengl
@@ -25,3 +27,5 @@ std::string pencil_sketch_compute_comp(const std::string& insert);
 std::string pencil_sketch_show_vert();
 std::string pencil_sketch_show_frag();
 }
+
+#endif

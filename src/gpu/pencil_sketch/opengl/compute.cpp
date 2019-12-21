@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "compute.h"
 
 #include "compute_program.h"
@@ -49,3 +51,5 @@ std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(const opengl::
         return std::make_unique<Impl>(input, objects, x, y, width, height, output);
 }
 }
+
+#endif

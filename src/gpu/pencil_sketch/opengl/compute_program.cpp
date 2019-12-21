@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "compute_program.h"
 
 #include "shader_source.h"
@@ -67,3 +69,5 @@ void PencilSketchProgramCompute::exec() const
         m_program.dispatch_compute(m_groups_x, m_groups_y, 1);
 }
 }
+
+#endif

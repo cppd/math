@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "show.h"
 
 #include "compute.h"
@@ -102,3 +104,5 @@ std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::Textur
         return std::make_unique<Impl>(source, objects, x, y, width, height);
 }
 }
+
+#endif
