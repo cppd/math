@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "show.h"
 
 #include "compute.h"
@@ -174,3 +176,5 @@ std::unique_ptr<DFTShow> create_dft_show(const opengl::Texture& source, unsigned
                                       brightness, background_color, color);
 }
 }
+
+#endif

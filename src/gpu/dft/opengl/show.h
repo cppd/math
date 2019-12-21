@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include "com/color/color.h"
 #include "graphics/opengl/buffers.h"
 
@@ -39,3 +41,5 @@ std::unique_ptr<DFTShow> create_dft_show(const opengl::Texture& source, unsigned
                                          unsigned dst_height, double brightness, const Color& background_color,
                                          const Color& color);
 }
+
+#endif

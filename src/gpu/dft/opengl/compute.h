@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include "graphics/opengl/buffers.h"
 
 #include <complex>
@@ -41,3 +43,5 @@ std::unique_ptr<DFTCompute> create_dft_compute(unsigned width, unsigned height);
 std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(const opengl::Texture& source, unsigned x, unsigned y,
                                                               unsigned width, unsigned height, const opengl::Texture& result);
 }
+
+#endif

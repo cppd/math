@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "compute_program.h"
 
 #include "shader_source.h"
@@ -357,3 +359,5 @@ void DftProgramFftShared::exec(bool inverse, const opengl::Buffer& data) const
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 }
+
+#endif

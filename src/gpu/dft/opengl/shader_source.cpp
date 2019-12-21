@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "shader_source.h"
 
 constexpr const char fft_global_comp[]{
@@ -120,3 +122,5 @@ std::string dft_show_frag()
         return show_frag;
 }
 }
+
+#endif

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#pragma once
+#if defined(OPENGL_FOUND)
 
 #include "graphics/opengl/buffers.h"
 
@@ -51,3 +51,5 @@ public:
         void bind() const;
 };
 }
+
+#endif

@@ -23,6 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #if defined(FFTW_FOUND)
 #include "dft/fftw.h"
 #endif
+#if defined(OPENGL_FOUND)
+#include "gpu/dft/opengl/compute.h"
+#include "window/opengl/window.h"
+#endif
 
 #include "com/error.h"
 #include "com/file/file.h"
@@ -31,9 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/random/engine.h"
 #include "com/time.h"
-#include "gpu/dft/opengl/compute.h"
 #include "gpu/dft/vulkan/compute.h"
-#include "window/opengl/window.h"
 
 #include <array>
 #include <cmath>
@@ -200,6 +202,7 @@ void compute_vulkan(bool inverse, int n1, int n2, std::vector<complex>* data)
         LOG((inverse ? "Vulkan inverse time: " : "Vulkan forward time: ") + time_string(start_time));
 }
 
+#if defined(OPENGL_FOUND)
 void compute_opengl(bool inverse, int n1, int n2, std::vector<complex>* data)
 {
         opengl::Context opengl_context;
@@ -211,6 +214,7 @@ void compute_opengl(bool inverse, int n1, int n2, std::vector<complex>* data)
 
         LOG((inverse ? "OpenGL inverse time: " : "OpenGL forward time: ") + time_string(start_time));
 }
+#endif
 
 #if defined(CUDA_FOUND)
 void compute_cuda(bool inverse, int n1, int n2, std::vector<complex>* data)
@@ -262,8 +266,11 @@ void dft_test(const int n1, const int n2, const std::vector<complex>& source_dat
               [[maybe_unused]] const std::string& output_fftw_file_name,
               [[maybe_unused]] const std::string& output_inverse_fftw_file_name)
 {
-        int computation_count = 4;
+        int computation_count = 2;
 
+#if defined(OPENGL_FOUND)
+        computation_count += 2;
+#endif
 #if defined(CUDA_FOUND)
         computation_count += 2;
 #endif
@@ -290,6 +297,7 @@ void dft_test(const int n1, const int n2, const std::vector<complex>& source_dat
 
         //
 
+#if defined(OPENGL_FOUND)
         std::vector<complex> data_opengl(source_data);
         compute_opengl(false, n1, n2, &data_opengl);
         save_data(output_opengl_file_name, data_opengl);
@@ -301,6 +309,7 @@ void dft_test(const int n1, const int n2, const std::vector<complex>& source_dat
         save_data(output_inverse_opengl_file_name, data_opengl_inverse);
 
         progress->set(++computation, computation_count);
+#endif
 
         //
 
@@ -311,14 +320,18 @@ void dft_test(const int n1, const int n2, const std::vector<complex>& source_dat
                 compute_cuda(false, n1, n2, &data);
                 save_data(output_cuda_file_name, data);
                 compare("Vulkan", "cuFFT", data_vulkan, data);
+#if defined(OPENGL_FOUND)
                 compare("OpenGL", "cuFFT", data_opengl, data);
+#endif
 
                 progress->set(++computation, computation_count);
 
                 compute_cuda(true, n1, n2, &data);
                 save_data(output_inverse_cuda_file_name, data);
                 compare("Vulkan", "cuFFT", data_vulkan_inverse, data);
+#if defined(OPENGL_FOUND)
                 compare("OpenGL", "cuFFT", data_opengl_inverse, data);
+#endif
 
                 progress->set(++computation, computation_count);
         }
@@ -331,14 +344,18 @@ void dft_test(const int n1, const int n2, const std::vector<complex>& source_dat
                 compute_fftw(false, n1, n2, &data);
                 save_data(output_fftw_file_name, data);
                 compare("Vulkan", "FFTW", data_vulkan, data);
+#if defined(OPENGL_FOUND)
                 compare("OpenGL", "FFTW", data_opengl, data);
+#endif
 
                 progress->set(++computation, computation_count);
 
                 compute_fftw(true, n1, n2, &data);
                 save_data(output_inverse_fftw_file_name, data);
                 compare("Vulkan", "FFTW", data_vulkan_inverse, data);
+#if defined(OPENGL_FOUND)
                 compare("OpenGL", "FFTW", data_opengl_inverse, data);
+#endif
 
                 progress->set(++computation, computation_count);
         }

@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "compute.h"
 
 #include "compute_memory.h"
@@ -438,3 +440,5 @@ std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(const opengl::Text
         return std::make_unique<Impl>(x, y, width, height, &source, &result);
 }
 }
+
+#endif
