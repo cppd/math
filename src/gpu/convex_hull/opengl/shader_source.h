@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include <string>
 
 namespace gpu_opengl
@@ -27,3 +29,5 @@ std::string convex_hull_filter_comp(const std::string& insert);
 std::string convex_hull_show_frag();
 std::string convex_hull_show_vert();
 }
+
+#endif

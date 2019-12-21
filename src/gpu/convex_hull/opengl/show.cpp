@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "show.h"
 
 #include "compute.h"
@@ -96,3 +98,5 @@ std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::Texture& o
         return std::make_unique<Impl>(objects, x, y, width, height);
 }
 }
+
+#endif

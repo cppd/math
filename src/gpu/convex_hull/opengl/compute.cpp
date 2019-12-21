@@ -25,6 +25,8 @@ Princeton University Press, 2011.
 Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "compute.h"
 
 #include "compute_program.h"
@@ -90,3 +92,5 @@ std::unique_ptr<ConvexHullCompute> create_convex_hull_compute(const opengl::Text
         return std::make_unique<Impl>(objects, x, y, width, height, points);
 }
 }
+
+#endif

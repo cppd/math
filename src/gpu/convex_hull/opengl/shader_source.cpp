@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "shader_source.h"
 
 constexpr const char prepare_comp[]{
@@ -72,3 +74,5 @@ std::string convex_hull_show_vert()
         return show_vert;
 }
 }
+
+#endif

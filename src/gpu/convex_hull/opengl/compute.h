@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include "graphics/opengl/buffers.h"
 
 #include <memory>
@@ -32,3 +34,5 @@ struct ConvexHullCompute
 std::unique_ptr<ConvexHullCompute> create_convex_hull_compute(const opengl::Texture& objects, unsigned x, unsigned y,
                                                               unsigned width, unsigned height, const opengl::Buffer& points);
 }
+
+#endif
