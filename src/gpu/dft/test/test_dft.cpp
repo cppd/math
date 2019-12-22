@@ -260,7 +260,8 @@ void compute_fftw(bool inverse, int n1, int n2, std::vector<complex>* data)
 
 void dft_test(const int n1, const int n2, const std::vector<complex>& source_data, ProgressRatio* progress,
               const std::string& output_vulkan_file_name, const std::string& output_inverse_vulkan_file_name,
-              const std::string& output_opengl_file_name, const std::string& output_inverse_opengl_file_name,
+              [[maybe_unused]] const std::string& output_opengl_file_name,
+              [[maybe_unused]] const std::string& output_inverse_opengl_file_name,
               [[maybe_unused]] const std::string& output_cuda_file_name,
               [[maybe_unused]] const std::string& output_inverse_cuda_file_name,
               [[maybe_unused]] const std::string& output_fftw_file_name,
