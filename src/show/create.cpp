@@ -25,8 +25,10 @@ std::unique_ptr<ShowObject> create_show_object(GraphicsAndComputeAPI api, const 
 {
         switch (api)
         {
+#if defined(OPENGL_FOUND)
         case GraphicsAndComputeAPI::OpenGL:
                 return show_opengl::create_show_object(info);
+#endif
         case GraphicsAndComputeAPI::Vulkan:
                 return show_vulkan::create_show_object(info);
         }

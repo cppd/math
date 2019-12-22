@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "show.h"
 
 #include "com/conversion.h"
@@ -777,3 +779,5 @@ std::unique_ptr<ShowObject> create_show_object(const ShowCreateInfo& info)
         return std::make_unique<ShowThread<Impl>>(info);
 }
 }
+
+#endif
