@@ -25,8 +25,10 @@ std::string to_string(GraphicsAndComputeAPI api)
         {
         case GraphicsAndComputeAPI::Vulkan:
                 return "Vulkan";
+#if defined(OPENGL_FOUND)
         case GraphicsAndComputeAPI::OpenGL:
                 return "OpenGL";
+#endif
         }
         error_fatal("Unknown graphics and compute API");
 }

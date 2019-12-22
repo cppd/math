@@ -21,8 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 enum class GraphicsAndComputeAPI
 {
-        Vulkan,
+        Vulkan
+#if defined(OPENGL_FOUND)
+        ,
         OpenGL
+#endif
+
 };
 
 std::string to_string(GraphicsAndComputeAPI api);

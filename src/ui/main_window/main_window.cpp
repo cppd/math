@@ -1085,6 +1085,7 @@ void MainWindow::slot_window_first_shown()
                 }
                 else
                 {
+#if defined(OPENGL_FOUND)
                         QPointer ptr(this);
                         if (!dialog::graphics_and_compute_api_selection(this, &api))
                         {
@@ -1098,6 +1099,9 @@ void MainWindow::slot_window_first_shown()
                         {
                                 return;
                         }
+#else
+                        api = GraphicsAndComputeAPI::Vulkan;
+#endif
                 }
 
                 QLabel* api_label = new QLabel(to_string(api).c_str(), ui.statusBar);
