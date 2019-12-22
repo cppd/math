@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include "graphics/api.h"
 
 #include "ui_gc_api_selection.h"
@@ -46,3 +48,5 @@ namespace dialog
 {
 [[nodiscard]] bool graphics_and_compute_api_selection(QWidget* parent, GraphicsAndComputeAPI* api);
 }
+
+#endif

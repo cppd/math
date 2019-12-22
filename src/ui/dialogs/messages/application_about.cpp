@@ -51,8 +51,10 @@ std::string message()
 
         oss << "\n";
 
+#if defined(OPENGL_FOUND)
         oss << "\n";
         oss << "OpenGL " << opengl::API_VERSION_MAJOR << "." << opengl::API_VERSION_MINOR;
+#endif
 
         oss << "\n";
         oss << "Vulkan " << vulkan::API_VERSION_MAJOR << "." << vulkan::API_VERSION_MINOR;

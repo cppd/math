@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gc_api_selection.h"
 
+#if defined(OPENGL_FOUND)
+
 #include "com/error.h"
 #include "ui/dialogs/messages/message_box.h"
 #include "ui/support/support.h"
@@ -98,3 +100,5 @@ bool graphics_and_compute_api_selection(QWidget* parent, GraphicsAndComputeAPI* 
         return w->show(api);
 }
 }
+
+#endif
