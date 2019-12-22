@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "show.h"
 
 #include "memory.h"
@@ -142,3 +144,5 @@ std::unique_ptr<Text> create_text(int size, const Color& color)
         return std::make_unique<Impl>(size, color);
 }
 }
+
+#endif

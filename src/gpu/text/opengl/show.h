@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include "com/color/color.h"
 #include "com/font/text_data.h"
 
@@ -36,3 +38,5 @@ struct Text
 
 std::unique_ptr<Text> create_text(int size, const Color& color);
 }
+
+#endif
