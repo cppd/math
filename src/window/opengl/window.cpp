@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "window.h"
 
 #include "com/error.h"
@@ -265,3 +267,5 @@ std::unique_ptr<Window> create_window()
         return std::make_unique<Impl>();
 }
 }
+
+#endif
