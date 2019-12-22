@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include <string>
 
 namespace gpu_opengl
@@ -30,3 +32,5 @@ std::string renderer_points_0d_vert();
 std::string renderer_points_1d_vert();
 std::string renderer_points_frag();
 }
+
+#endif

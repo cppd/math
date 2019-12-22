@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "renderer.h"
 
 #include "draw_object.h"
@@ -319,3 +321,5 @@ std::unique_ptr<Renderer> create_renderer()
         return std::make_unique<Impl>();
 }
 }
+
+#endif

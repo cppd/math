@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include "com/color/color.h"
 #include "com/matrix.h"
 #include "com/vec.h"
@@ -60,3 +62,5 @@ struct Renderer
 
 std::unique_ptr<Renderer> create_renderer();
 }
+
+#endif
