@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include <memory>
 
 namespace opengl
@@ -32,3 +34,5 @@ public:
 
 std::unique_ptr<DebugMessage> create_debug_message();
 }
+
+#endif

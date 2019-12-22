@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "objects.h"
 
 #include "graphics/opengl/functions.h"
@@ -436,3 +438,5 @@ TimeElapsedQueryHandle::operator GLuint() const& noexcept
         return m_query;
 }
 }
+
+#endif

@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include <GL/glcorearb.h>
 
 namespace opengl
@@ -210,3 +212,5 @@ public:
         operator GLuint() const&& noexcept = delete;
 };
 }
+
+#endif

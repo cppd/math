@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "buffers.h"
 
 #include "com/color/conversion_span.h"
@@ -445,3 +447,5 @@ FramebufferBinder::~FramebufferBinder()
         glBindFramebuffer(GL_READ_FRAMEBUFFER, m_read_framebuffer);
 }
 }
+
+#endif

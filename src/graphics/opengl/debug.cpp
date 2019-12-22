@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(OPENGL_FOUND)
+
 #include "debug.h"
 
 #include "capabilities.h"
@@ -186,3 +188,5 @@ std::unique_ptr<DebugMessage> create_debug_message()
         return std::make_unique<Impl>();
 }
 }
+
+#endif

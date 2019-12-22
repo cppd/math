@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include <initializer_list>
 
 namespace opengl
@@ -31,3 +33,5 @@ constexpr std::initializer_list<const char*> REQUIRED_EXTENSIONS
 };
 // clang-format on
 }
+
+#endif

@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include "objects.h"
 
 namespace opengl
@@ -53,3 +55,5 @@ public:
         }
 };
 }
+
+#endif
