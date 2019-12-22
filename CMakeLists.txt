@@ -420,7 +420,7 @@ AddIncludeFiles(VULKAN_SHADERS
 ##################################################
 
 set(OpenGL_GL_PREFERENCE "GLVND")
-find_package(OpenGL REQUIRED)
+find_package(OpenGL)
 if (OPENGL_FOUND)
         target_compile_definitions(${PROJECT_NAME} PRIVATE -DOPENGL_FOUND)
         target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${OPENGL_INCLUDE_DIR})
@@ -442,8 +442,6 @@ if (OPENGL_FOUND)
                                         "src/gpu/renderer/shaders"
                                         "src/gpu/text/shaders"
                                 EXTENSIONS ${extensions_shaders})
-#else()
-#        message(FATAL_ERROR "OpenGL not found")
 endif()
 
 ##################################################
