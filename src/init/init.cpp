@@ -50,15 +50,19 @@ Initialization::Initialization()
 
         xlib_init();
 
+#if defined(OPENGL_FOUND)
         // Для Линукса адреса функций OpenGL не зависят от контекста,
         // поэтому их можно определять один раз при запуске программы.
         opengl_functions::init();
+#endif
 
 #endif
 
         vulkan::window_init();
 
+#if defined(OPENGL_FOUND)
         opengl::window_init();
+#endif
 }
 
 Initialization::~Initialization()
