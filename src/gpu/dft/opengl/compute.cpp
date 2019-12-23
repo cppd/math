@@ -15,6 +15,34 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+По книге
+
+Eleanor Chu, Alan George.
+INSIDE the FFT BLACK BOX. Serial and Parallel Fast Fourier Transform Algorithms.
+CRC Press LLC, 2000.
+
+Chapter 13: FFTs for Arbitrary N.
+
+В этой книге в главе 13 есть ошибки при вычислении H2
+
+  В примере 13.4.
+    Написано:
+      h0, h1, h2, h3, h4, h5, 0, 0, 0, 0, 0,  0, h4, h3, h2, h1.
+    Надо:
+      h0, h1, h2, h3, h4, h5, 0, 0, 0, 0, 0, h5, h4, h3, h2, h1.
+
+  В формулах 13.11, 13.23, 13.24, 13.25.
+    Написано:
+      h2(l) = h(l) для l = 0,...,N - 1,
+      h2(l) = 0 для l = N,..., M - N + 1,
+      h2(l) = h(M - l) для l = M - N + 2,..., M - 1.
+    Надо:
+      h2(l) = h(l) для l = 0,...,N - 1,
+      h2(l) = 0 для l = N,..., M - N,
+      h2(l) = h(M - l) для l = M - N + 1,..., M - 1.
+*/
+
 #if defined(OPENGL_FOUND)
 
 #include "compute.h"

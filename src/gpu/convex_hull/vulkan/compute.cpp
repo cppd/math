@@ -15,6 +15,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+По книге
+
+Satyan L. Devadoss, Joseph O’Rourke.
+Discrete and computational geometry.
+Princeton University Press, 2011.
+
+Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
+*/
+
 #include "compute.h"
 
 #include "compute_filter.h"
