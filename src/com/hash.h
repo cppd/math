@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "container.h"
+//#include "container.h"
 
 #include <array>
 #include <functional>
-#include <string_view>
-#include <type_traits>
+//#include <string_view>
+//#include <type_traits>
 
 #if 0
 constexpr uint32_t jenkins_one_at_a_time_hash(const char* key, int len)
@@ -41,6 +41,7 @@ constexpr uint32_t jenkins_one_at_a_time_hash(const char* key, int len)
 }
 #endif
 
+#if 0
 template <typename T, size_t N>
 size_t hash_as_string(const std::array<T, N>& v)
 {
@@ -52,6 +53,7 @@ size_t hash_as_string(const std::array<T, N>& v)
         // return jenkins_one_at_a_time_hash(s, size);
         return std::hash<std::string_view>()(std::string_view(s, size));
 }
+#endif
 
 template <typename T, size_t N>
 size_t array_hash(const std::array<T, N>& v)
@@ -62,5 +64,15 @@ size_t array_hash(const std::array<T, N>& v)
         {
                 seed ^= hasher(v[i]) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         }
+        return seed;
+}
+
+template <typename T, typename... Ts>
+size_t pack_hash(const T& v, const Ts&... vs)
+{
+        static_assert((std::is_same_v<T, Ts> && ...));
+        std::hash<T> hasher;
+        size_t seed = hasher(v);
+        ((seed ^= hasher(vs) + 0x9e3779b9 + (seed << 6) + (seed >> 2)), ...);
         return seed;
 }
