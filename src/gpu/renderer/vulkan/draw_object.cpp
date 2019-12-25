@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/container.h"
 #include "com/error.h"
+//#include "com/hash.h"
 #include "graphics/vulkan/buffers.h"
 #include "obj/alg/alg.h"
 
@@ -42,18 +43,43 @@ namespace gpu_vulkan
 // Число используется в шейдере для определения наличия текстурных координат
 constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
 
-// constexpr VkIndexType VULKAN_VERTEX_INDEX_TYPE = VK_INDEX_TYPE_UINT32;
-// using VERTEX_INDEX_TYPE =
-//        std::conditional_t<VULKAN_VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT32, uint32_t,
-//                           std::conditional_t<VULKAN_VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT16, uint16_t, void>>;
+constexpr VkIndexType VULKAN_INDEX_TYPE = VK_INDEX_TYPE_UINT32;
+using IndexType = std::conditional_t<VULKAN_INDEX_TYPE == VK_INDEX_TYPE_UINT32, uint32_t,
+                                     std::conditional_t<VULKAN_INDEX_TYPE == VK_INDEX_TYPE_UINT16, uint16_t, void>>;
 
 namespace
 {
-std::unique_ptr<vulkan::BufferWithMemory> load_vertices(const vulkan::Device& device,
-                                                        const vulkan::CommandPool& transfer_command_pool,
-                                                        const vulkan::Queue& transfer_queue,
-                                                        const std::unordered_set<uint32_t>& family_indices, const Obj<3>& obj,
-                                                        const std::vector<int>& sorted_face_indices)
+#if 0
+struct Vertex
+{
+        vec3 vertex;
+        vec3 normal;
+        vec2 texcoord;
+        Vertex(const vec3& v, const vec3& n, const vec2& t) : vertex(v), normal(n), texcoord(t)
+        {
+        }
+};
+struct VertexHash
+{
+        size_t operator()(const Vertex& v) const
+        {
+                return pack_hash(v.vertex[0], v.vertex[1], v.vertex[2], v.normal[0], v.normal[1], v.normal[2], v.texcoord[0],
+                                 v.texcoord[1]);
+        }
+};
+struct VertexEqual
+{
+        bool operator()(const Vertex& v1, const Vertex& v2) const
+        {
+                return v1.vertex == v2.vertex && v1.normal == v2.normal && v1.texcoord == v2.texcoord;
+        }
+};
+#endif
+
+void load_vertices(const vulkan::Device& device, const vulkan::CommandPool& transfer_command_pool,
+                   const vulkan::Queue& transfer_queue, const std::unordered_set<uint32_t>& family_indices, const Obj<3>& obj,
+                   const std::vector<int>& sorted_face_indices, std::unique_ptr<vulkan::BufferWithMemory>& vertex_buffer,
+                   std::unique_ptr<vulkan::BufferWithMemory>& index_buffer)
 {
         if (obj.facets().size() == 0)
         {
@@ -68,7 +94,9 @@ std::unique_ptr<vulkan::BufferWithMemory> load_vertices(const vulkan::Device& de
         const std::vector<vec2f>& obj_texcoords = obj.texcoords();
 
         std::vector<RendererTrianglesVertex> vertices;
+        std::vector<IndexType> indices;
         vertices.reserve(3 * obj_faces.size());
+        indices.reserve(3 * obj_faces.size());
 
         vec3f v0, v1, v2;
         vec3f n0, n1, n2;
@@ -114,12 +142,19 @@ std::unique_ptr<vulkan::BufferWithMemory> load_vertices(const vulkan::Device& de
                 vertices.emplace_back(v0, n0, t0);
                 vertices.emplace_back(v1, n1, t1);
                 vertices.emplace_back(v2, n2, t2);
+                indices.push_back(indices.size());
+                indices.push_back(indices.size());
+                indices.push_back(indices.size());
         }
 
         ASSERT((vertices.size() >= 3) && (vertices.size() % 3 == 0));
+        ASSERT((indices.size() >= 3) && (indices.size() % 3 == 0));
 
-        return std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,
-                                                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, data_size(vertices), vertices);
+        vertex_buffer =
+                std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,
+                                                           VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, data_size(vertices), vertices);
+        index_buffer = std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,
+                                                                  VK_BUFFER_USAGE_INDEX_BUFFER_BIT, data_size(indices), indices);
 }
 
 std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(const vulkan::Device& device,
@@ -274,6 +309,7 @@ std::unique_ptr<RendererTrianglesMaterialMemory> load_materials(const vulkan::De
 class DrawObject::Triangles final
 {
         std::unique_ptr<vulkan::BufferWithMemory> m_vertex_buffer;
+        std::unique_ptr<vulkan::BufferWithMemory> m_index_buffer;
         std::vector<vulkan::ImageWithMemory> m_textures;
         std::unique_ptr<RendererTrianglesMaterialMemory> m_shader_memory;
         unsigned m_vertex_count;
@@ -310,9 +346,9 @@ public:
 
                 sort_facets_by_material(obj, sorted_face_indices, material_face_offset, material_face_count);
 
-                m_vertex_buffer =
-                        load_vertices(device, transfer_command_pool, transfer_queue,
-                                      {graphics_queue.family_index(), transfer_queue.family_index()}, obj, sorted_face_indices);
+                load_vertices(device, transfer_command_pool, transfer_queue,
+                              {graphics_queue.family_index(), transfer_queue.family_index()}, obj, sorted_face_indices,
+                              m_vertex_buffer, m_index_buffer);
 
                 m_textures = load_textures(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
                                            {graphics_queue.family_index(), transfer_queue.family_index()}, obj);
@@ -347,6 +383,7 @@ public:
                                         nullptr);
 
                 vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
+                vkCmdBindIndexBuffer(command_buffer, *m_index_buffer, 0, VULKAN_INDEX_TYPE);
 
                 for (const Material& material : m_materials)
                 {
@@ -356,7 +393,7 @@ public:
                                                 RendererTrianglesMaterialMemory::set_number(), 1 /*set count*/,
                                                 &material.descriptor_set, 0, nullptr);
 
-                        vkCmdDraw(command_buffer, material.vertex_count, 1, material.vertex_offset, 0);
+                        vkCmdDrawIndexed(command_buffer, material.vertex_count, 1, material.vertex_offset, 0, 0);
                 }
         }
 
@@ -370,8 +407,9 @@ public:
                                         info.triangles_set_number, 1 /*set count*/, &info.triangles_set, 0, nullptr);
 
                 vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
+                vkCmdBindIndexBuffer(command_buffer, *m_index_buffer, 0, VULKAN_INDEX_TYPE);
 
-                vkCmdDraw(command_buffer, m_vertex_count, 1, 0, 0);
+                vkCmdDrawIndexed(command_buffer, m_vertex_count, 1, 0, 0, 0);
         }
 };
 
