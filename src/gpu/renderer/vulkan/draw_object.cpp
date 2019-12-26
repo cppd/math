@@ -22,11 +22,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/container.h"
 #include "com/error.h"
-//#include "com/hash.h"
+#include "com/hash.h"
+#include "com/log.h"
+#include "com/time.h"
 #include "graphics/vulkan/buffers.h"
 #include "obj/alg/alg.h"
 
 #include <array>
+#include <sstream>
+#include <unordered_map>
 #include <unordered_set>
 
 // clang-format off
@@ -49,32 +53,27 @@ using IndexType = std::conditional_t<VULKAN_INDEX_TYPE == VK_INDEX_TYPE_UINT32, 
 
 namespace
 {
-#if 0
-struct Vertex
+std::string time_string(double time)
 {
-        vec3 vertex;
-        vec3 normal;
-        vec2 texcoord;
-        Vertex(const vec3& v, const vec3& n, const vec2& t) : vertex(v), normal(n), texcoord(t)
+        return to_string_fixed(1000.0 * time, 5) + " ms";
+}
+
+struct Hash
+{
+        size_t operator()(const RendererTrianglesVertex& v) const
         {
+                static_assert(sizeof(uint64_t) * 4 == sizeof(RendererTrianglesVertex));
+                const uint64_t* s = reinterpret_cast<const uint64_t*>(&v);
+                return pack_hash(s[0], s[1], s[2], s[3]);
         }
 };
-struct VertexHash
+struct Equal
 {
-        size_t operator()(const Vertex& v) const
+        bool operator()(const RendererTrianglesVertex& v1, const RendererTrianglesVertex& v2) const
         {
-                return pack_hash(v.vertex[0], v.vertex[1], v.vertex[2], v.normal[0], v.normal[1], v.normal[2], v.texcoord[0],
-                                 v.texcoord[1]);
+                return v1.position == v2.position && v1.normal == v2.normal && v1.texture_coordinates == v2.texture_coordinates;
         }
 };
-struct VertexEqual
-{
-        bool operator()(const Vertex& v1, const Vertex& v2) const
-        {
-                return v1.vertex == v2.vertex && v1.normal == v2.normal && v1.texcoord == v2.texcoord;
-        }
-};
-#endif
 
 void load_vertices(const vulkan::Device& device, const vulkan::CommandPool& transfer_command_pool,
                    const vulkan::Queue& transfer_queue, const std::unordered_set<uint32_t>& family_indices, const Obj<3>& obj,
@@ -88,6 +87,10 @@ void load_vertices(const vulkan::Device& device, const vulkan::CommandPool& tran
 
         ASSERT(sorted_face_indices.size() == obj.facets().size());
 
+        //
+
+        double create_time = time_in_seconds();
+
         const std::vector<Obj<3>::Facet>& obj_faces = obj.facets();
         const std::vector<vec3f>& obj_vertices = obj.vertices();
         const std::vector<vec3f>& obj_normals = obj.normals();
@@ -95,66 +98,95 @@ void load_vertices(const vulkan::Device& device, const vulkan::CommandPool& tran
 
         std::vector<RendererTrianglesVertex> vertices;
         std::vector<IndexType> indices;
+        std::unordered_map<RendererTrianglesVertex, unsigned, Hash, Equal> map;
         vertices.reserve(3 * obj_faces.size());
         indices.reserve(3 * obj_faces.size());
+        map.reserve(3 * obj_faces.size());
 
-        vec3f v0, v1, v2;
-        vec3f n0, n1, n2;
-        vec2f t0, t1, t2;
+        std::array<vec3f, 3> v;
+        std::array<vec3f, 3> n;
+        std::array<vec2f, 3> t;
 
         for (int face_index : sorted_face_indices)
         {
                 const Obj<3>::Facet& f = obj_faces[face_index];
 
-                v0 = obj_vertices[f.vertices[0]];
-                v1 = obj_vertices[f.vertices[1]];
-                v2 = obj_vertices[f.vertices[2]];
+                for (int i = 0; i < 3; ++i)
+                {
+                        v[i] = obj_vertices[f.vertices[i]];
+                }
 
                 if (f.has_normal)
                 {
-                        n0 = obj_normals[f.normals[0]];
-                        n1 = obj_normals[f.normals[1]];
-                        n2 = obj_normals[f.normals[2]];
+                        for (int i = 0; i < 3; ++i)
+                        {
+                                n[i] = obj_normals[f.normals[i]];
+                        }
                 }
                 else
                 {
-                        vec3f geometric_normal = normalize(cross(v1 - v0, v2 - v0));
+                        vec3f geometric_normal = normalize(cross(v[1] - v[0], v[2] - v[0]));
                         if (!is_finite(geometric_normal))
                         {
-                                error("Face unit orthogonal vector is not finite for the face with vertices (" + to_string(v0) +
-                                      ", " + to_string(v1) + ", " + to_string(v2) + ")");
+                                error("Face unit orthogonal vector is not finite for the face with vertices (" + to_string(v[0]) +
+                                      ", " + to_string(v[1]) + ", " + to_string(v[2]) + ")");
                         }
-
-                        n0 = n1 = n2 = geometric_normal;
+                        for (int i = 0; i < 3; ++i)
+                        {
+                                n[i] = geometric_normal;
+                        }
                 }
 
                 if (f.has_texcoord)
                 {
-                        t0 = obj_texcoords[f.texcoords[0]];
-                        t1 = obj_texcoords[f.texcoords[1]];
-                        t2 = obj_texcoords[f.texcoords[2]];
+                        for (int i = 0; i < 3; ++i)
+                        {
+                                t[i] = obj_texcoords[f.texcoords[i]];
+                        }
                 }
                 else
                 {
-                        t0 = t1 = t2 = NO_TEXTURE_COORDINATES;
+                        for (int i = 0; i < 3; ++i)
+                        {
+                                t[i] = NO_TEXTURE_COORDINATES;
+                        }
                 }
 
-                vertices.emplace_back(v0, n0, t0);
-                vertices.emplace_back(v1, n1, t1);
-                vertices.emplace_back(v2, n2, t2);
-                indices.push_back(indices.size());
-                indices.push_back(indices.size());
-                indices.push_back(indices.size());
+                for (int i = 0; i < 3; ++i)
+                {
+                        RendererTrianglesVertex vertex(v[i], n[i], t[i]);
+                        const auto [iter, inserted] = map.emplace(vertex, map.size());
+                        if (inserted)
+                        {
+                                vertices.push_back(vertex);
+                        }
+                        indices.push_back(iter->second);
+                }
         }
 
-        ASSERT((vertices.size() >= 3) && (vertices.size() % 3 == 0));
         ASSERT((indices.size() >= 3) && (indices.size() % 3 == 0));
+
+        create_time = time_in_seconds() - create_time;
+
+        //
+
+        double load_time = time_in_seconds();
 
         vertex_buffer =
                 std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,
                                                            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, data_size(vertices), vertices);
         index_buffer = std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,
                                                                   VK_BUFFER_USAGE_INDEX_BUFFER_BIT, data_size(indices), indices);
+
+        load_time = time_in_seconds() - load_time;
+
+        //
+
+        std::ostringstream oss;
+        oss << "creating = " << time_string(create_time) << ", loading = " << time_string(load_time);
+        oss << ", vertices = " << vertices.size() << " (" << data_size(vertices) << " bytes)";
+        oss << ", faces = " << indices.size() / 3 << " (" << data_size(indices) << " bytes)";
+        LOG(oss.str());
 }
 
 std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(const vulkan::Device& device,
