@@ -102,11 +102,6 @@ public:
         {
         }
 
-        const Face::Vertex& vertex() const noexcept
-        {
-                return m_data->v;
-        }
-
         size_t hash() const noexcept
         {
                 return m_data->hash;
