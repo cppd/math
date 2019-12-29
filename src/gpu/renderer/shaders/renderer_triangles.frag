@@ -147,47 +147,27 @@ float edge_factor()
         return min(min(a.x, a.y), a.z);
 }
 
-void main()
+vec3 shade()
 {
-        // color = vec4(gs.texture_coordinates, 0, 1);
-
         vec3 color_a, color_d, color_s;
 
-        if (mtl.use_material && drawing.show_materials)
+        if (!mtl.use_material || !drawing.show_materials)
         {
-                if (has_texture_coordinates() && mtl.use_texture_Ka)
-                {
-                        vec4 tex_color = texture_Ka_color(gs.texture_coordinates);
-                        color_a = mix(mtl.Ka, tex_color.rgb, tex_color.a);
-                }
-                else
-                {
-                        color_a = mtl.Ka;
-                }
-
-                if (has_texture_coordinates() && mtl.use_texture_Kd)
-                {
-                        vec4 tex_color = texture_Kd_color(gs.texture_coordinates);
-                        color_d = mix(mtl.Kd, tex_color.rgb, tex_color.a);
-                }
-                else
-                {
-                        color_d = mtl.Kd;
-                }
-
-                if (has_texture_coordinates() && mtl.use_texture_Ks)
-                {
-                        vec4 tex_color = texture_Ks_color(gs.texture_coordinates);
-                        color_s = mix(mtl.Ks, tex_color.rgb, tex_color.a);
-                }
-                else
-                {
-                        color_s = mtl.Ks;
-                }
+                color_a = drawing.default_color;
+                color_d = drawing.default_color;
+                color_s = drawing.default_color;
+        }
+        else if (!has_texture_coordinates())
+        {
+                color_a = mtl.Ka;
+                color_d = mtl.Kd;
+                color_s = mtl.Ks;
         }
         else
         {
-                color_a = color_d = color_s = drawing.default_color;
+                color_a = mtl.use_texture_Ka ? texture_Ka_color(gs.texture_coordinates).rgb : mtl.Ka;
+                color_d = mtl.use_texture_Kd ? texture_Kd_color(gs.texture_coordinates).rgb : mtl.Kd;
+                color_s = mtl.use_texture_Ks ? texture_Ks_color(gs.texture_coordinates).rgb : mtl.Ks;
         }
 
         //
@@ -206,29 +186,35 @@ void main()
         }
         else
         {
-                color_d = color_s = vec3(0.0);
+                color_d = vec3(0.0);
+                color_s = vec3(0.0);
         }
 
         //
 
-        vec3 color3;
+        vec3 color;
 
         if (drawing.show_shadow)
         {
                 const float s = shadow(gs.shadow_position);
-                color3 = color_a * drawing.light_a + s * (color_d * drawing.light_d + color_s * drawing.light_s);
+                color = color_a * drawing.light_a + s * (color_d * drawing.light_d + color_s * drawing.light_s);
         }
         else
         {
-                color3 = color_a * drawing.light_a + color_d * drawing.light_d + color_s * drawing.light_s;
+                color = color_a * drawing.light_a + color_d * drawing.light_d + color_s * drawing.light_s;
         }
 
         if (drawing.show_wireframe)
         {
-                color3 = mix(drawing.wireframe_color, color3, edge_factor());
+                color = mix(drawing.wireframe_color, color, edge_factor());
         }
 
-        color = vec4(color3, 1);
+        return color;
+}
+
+void main()
+{
+        color = vec4(shade(), 1);
 
         imageStore(object_image, ivec2(gl_FragCoord.xy), uvec4(1));
 }
