@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if defined(OPENGL_FOUND)
+
 #include <GL/glcorearb.h>
 
 #if defined(_WIN32)
@@ -6364,5 +6366,7 @@ inline void glWindowRectanglesEXT(GLenum mode, GLsizei count, const GLint *box) 
 {
         opengl_functions::glWindowRectanglesEXT(mode, count, box);
 }
+
+#endif
 
 // clang-format on
