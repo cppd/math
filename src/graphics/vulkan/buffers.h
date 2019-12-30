@@ -186,7 +186,8 @@ class ImageWithMemory final
         VkImageUsageFlags m_usage;
 
         void init(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                  const std::vector<VkFormat>& format_candidates, uint32_t width, uint32_t height, bool storage);
+                  const std::vector<VkFormat>& format_candidates, uint32_t width, uint32_t height, bool storage,
+                  VkSampleCountFlagBits samples);
 
 public:
         ImageWithMemory(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
@@ -198,6 +199,10 @@ public:
         ImageWithMemory(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
                         const std::unordered_set<uint32_t>& family_indices, const std::vector<VkFormat>& format_candidates,
                         uint32_t width, uint32_t height, VkImageLayout image_layout, bool storage);
+
+        ImageWithMemory(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
+                        const std::unordered_set<uint32_t>& family_indices, const std::vector<VkFormat>& format_candidates,
+                        VkSampleCountFlagBits samples, uint32_t width, uint32_t height, VkImageLayout image_layout, bool storage);
 
         ImageWithMemory(const ImageWithMemory&) = delete;
         ImageWithMemory& operator=(const ImageWithMemory&) = delete;
