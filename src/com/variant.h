@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if !defined(__clang__) || !defined(STD_VARIANT_NOT_FOUND)
+#if 1
 
 #include <variant>
 

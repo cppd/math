@@ -319,22 +319,6 @@ function(Check_CXX_Has_Int128)
         endif()
 endfunction()
 
-# Clang 5 не работает с std::variant из libstdc++
-function(Check_CXX_Variant_Works)
-        unset(CXX_VARIANT_WORKS CACHE)
-        check_cxx_source_compiles(
-                "
-                #include <utility>
-                #include <variant>
-                int main()
-                {
-                        std::variant<int, double> a(1.0);
-                        std::get<double>(a);
-                }
-                "
-                CXX_VARIANT_WORKS)
-endfunction()
-
 # libc++ 7 не имеет std::beta
 function(Check_CXX_Beta_Function_Works)
         unset(CXX_BETA_FUNCTION_WORKS CACHE)
@@ -386,11 +370,6 @@ AddIncludeFiles(BINARY_FILES
 #target_compile_options(${PROJECT_NAME} PRIVATE -S -masm=intel)
 
 ##################################################
-
-Check_CXX_Variant_Works()
-if (NOT CXX_VARIANT_WORKS)
-        target_compile_definitions(${PROJECT_NAME} PRIVATE -DSTD_VARIANT_NOT_FOUND)
-endif()
 
 Check_CXX_Beta_Function_Works()
 if (NOT CXX_BETA_FUNCTION_WORKS)
