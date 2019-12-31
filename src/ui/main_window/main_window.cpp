@@ -1103,10 +1103,11 @@ void MainWindow::slot_window_first_shown()
                         api = GraphicsAndComputeAPI::Vulkan;
 #endif
                 }
-
+#if defined(OPENGL_FOUND)
                 QLabel* api_label = new QLabel(to_string(api).c_str(), ui.statusBar);
                 api_label->setFrameStyle(QFrame::StyledPanel);
                 ui.statusBar->addPermanentWidget(api_label);
+#endif
 
                 //
 
