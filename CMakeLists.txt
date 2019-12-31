@@ -80,9 +80,9 @@ include(CheckCXXSourceCompiles)
 
 set(CMAKE_C_FLAGS)
 set(CMAKE_CXX_FLAGS)
-#if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-#        set(CMAKE_CXX_FLAGS "-stdlib=libc++")
-#endif()
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+        set(CMAKE_CXX_FLAGS "-stdlib=libc++")
+endif()
 
 ##################################################
 
@@ -319,7 +319,7 @@ function(Check_CXX_Has_Int128)
         endif()
 endfunction()
 
-# libc++ 7 не имеет std::beta
+# libc++ 9 не имеет std::beta
 function(Check_CXX_Beta_Function_Works)
         unset(CXX_BETA_FUNCTION_WORKS CACHE)
         check_cxx_source_compiles(
