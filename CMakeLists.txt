@@ -383,8 +383,6 @@ AddIncludeFiles(BINARY_FILES
                         DIRECTORIES "extern/resources"
                         EXTENSIONS ${extensions_binary})
 
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC "${CMAKE_SOURCE_DIR}/extern/include")
-
 #target_compile_options(${PROJECT_NAME} PRIVATE -S -masm=intel)
 
 ##################################################
@@ -416,33 +414,6 @@ AddIncludeFiles(VULKAN_SHADERS
                                 "src/gpu/renderer/shaders"
                                 "src/gpu/text/shaders"
                         EXTENSIONS ${extensions_shaders})
-
-##################################################
-
-set(OpenGL_GL_PREFERENCE "GLVND")
-find_package(OpenGL)
-if (OPENGL_FOUND)
-        target_compile_definitions(${PROJECT_NAME} PRIVATE -DOPENGL_FOUND)
-        target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${OPENGL_INCLUDE_DIR})
-        target_link_libraries(${PROJECT_NAME} OpenGL::GL)
-
-        set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/SFML")
-        find_package(SFML REQUIRED COMPONENTS system window graphics)
-        target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${SFML_INCLUDE_DIR})
-        target_link_libraries(${PROJECT_NAME} ${SFML_LIBRARIES})
-
-        AddIncludeFiles(OPENGL_SHADERS
-                                OUTPUT_EXTENSION "str"
-                                DIRECTORIES
-                                        "src/gpu/com"
-                                        "src/gpu/convex_hull/shaders"
-                                        "src/gpu/dft/shaders"
-                                        "src/gpu/optical_flow/shaders"
-                                        "src/gpu/pencil_sketch/shaders"
-                                        "src/gpu/renderer/shaders"
-                                        "src/gpu/text/shaders"
-                                EXTENSIONS ${extensions_shaders})
-endif()
 
 ##################################################
 
@@ -482,6 +453,33 @@ if (CUDA_FOUND)
         target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS})
         target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} ${CUDA_CUFFT_LIBRARIES})
 endif()
+
+#set(OpenGL_GL_PREFERENCE "GLVND")
+#find_package(OpenGL)
+#if (OPENGL_FOUND)
+#        target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC "${CMAKE_SOURCE_DIR}/extern/include")
+#
+#        target_compile_definitions(${PROJECT_NAME} PRIVATE -DOPENGL_FOUND)
+#        target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${OPENGL_INCLUDE_DIR})
+#        target_link_libraries(${PROJECT_NAME} OpenGL::GL)
+#
+#        set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/SFML")
+#        find_package(SFML REQUIRED COMPONENTS system window graphics)
+#        target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${SFML_INCLUDE_DIR})
+#        target_link_libraries(${PROJECT_NAME} ${SFML_LIBRARIES})
+#
+#        AddIncludeFiles(OPENGL_SHADERS
+#                                OUTPUT_EXTENSION "str"
+#                                DIRECTORIES
+#                                        "src/gpu/com"
+#                                        "src/gpu/convex_hull/shaders"
+#                                        "src/gpu/dft/shaders"
+#                                        "src/gpu/optical_flow/shaders"
+#                                        "src/gpu/pencil_sketch/shaders"
+#                                        "src/gpu/renderer/shaders"
+#                                        "src/gpu/text/shaders"
+#                                EXTENSIONS ${extensions_shaders})
+#endif()
 
 #if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
 #target_link_libraries(${PROJECT_NAME} quadmath)
