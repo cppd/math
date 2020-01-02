@@ -31,6 +31,8 @@ set(extensions_shaders "comp;frag;geom;vert;tesc;tese;glsl")
 set(extensions_all "h;c;cpp;ui" ${extensions_shaders})
 set(extensions_binary "ttf")
 
+set(include_output_directory "include")
+
 ##################################################
 
 enable_language(C CXX)
@@ -161,7 +163,7 @@ endfunction()
 
 function(AddIncludeFiles FILE_TYPE)
 
-        cmake_parse_arguments(PARSE_ARGV 1 ARG "" "HEADER_FILE;PATH_CONTAINS_DIRECTORY;OUTPUT_EXTENSION" "EXTENSIONS;DIRECTORIES")
+        cmake_parse_arguments(PARSE_ARGV 1 ARG "" "HEADER_FILE;OUTPUT_EXTENSION" "EXTENSIONS;DIRECTORIES;MACROS")
         if (NOT ARG_OUTPUT_EXTENSION)
                 message(FATAL_ERROR "No output extension")
         endif()
@@ -185,32 +187,29 @@ function(AddIncludeFiles FILE_TYPE)
                 if (ARG_HEADER_FILE)
                         message(FATAL_ERROR "Binary file header is not supported")
                 endif()
+                if (ARG_MACROS)
+                        message(FATAL_ERROR "Binary file macros are not supported")
+                endif()
                 set(BINARY_FILES TRUE)
                 set(custom_target_prefix "custom_target_binary_files")
-                set(output_directory "${PROJECT_BINARY_DIR}/include_binary_files")
+                set(output_directory "${PROJECT_BINARY_DIR}/${include_output_directory}/binary_files")
         elseif ("${FILE_TYPE}" STREQUAL "OPENGL_SHADERS")
+                if (ARG_MACROS)
+                        message(FATAL_ERROR "OpenGL shader macros are not supported")
+                endif()
                 set(OPENGL_SHADERS TRUE)
                 set(custom_target_prefix "custom_target_opengl_shaders")
-                set(output_directory "${PROJECT_BINARY_DIR}/include_opengl_shaders")
+                set(output_directory "${PROJECT_BINARY_DIR}/${include_output_directory}/opengl_shaders")
         elseif ("${FILE_TYPE}" STREQUAL "VULKAN_SHADERS")
                 set(VULKAN_SHADERS TRUE)
                 set(custom_target_prefix "custom_target_vulkan_shaders")
-                set(output_directory "${PROJECT_BINARY_DIR}/include_vulkan_shaders")
+                set(output_directory "${PROJECT_BINARY_DIR}/${include_output_directory}/vulkan_shaders")
         else()
                 message(FATAL_ERROR "Unknown file type ${FILE_TYPE}")
         endif()
 
         #
 
-        file(GLOB files_to_delete LIST_DIRECTORIES false "${output_directory}/*")
-        foreach(file ${files_to_delete})
-                string(FIND "${file}" "${PROJECT_BINARY_DIR}/include_" position)
-                if (${position} EQUAL 0)
-                        file(REMOVE "${file}")
-                else()
-                        message(FATAL_ERROR "file name error ${file}")
-                endif()
-        endforeach()
         file(MAKE_DIRECTORY "${output_directory}")
         target_include_directories(${PROJECT_NAME} PRIVATE "${output_directory}")
 
@@ -228,16 +227,6 @@ function(AddIncludeFiles FILE_TYPE)
 
                 file(GLOB_RECURSE files LIST_DIRECTORIES false ${globbing_expressions})
                 foreach(long_file_name ${files})
-
-                        if (ARG_PATH_CONTAINS_DIRECTORY)
-                                get_filename_component(file_dir "${long_file_name}" DIRECTORY)
-                                string(SUBSTRING ${file_dir} ${search_directory_length} -1 substring_dir)
-                                file(TO_CMAKE_PATH "${substring_dir}" cmake_style_dir)
-                                string(FIND "${cmake_style_dir}/" "/${ARG_PATH_CONTAINS_DIRECTORY}/" position)
-                                if (${position} LESS 0)
-                                        continue()
-                                endif()
-                        endif()
 
                         get_filename_component(file_name "${long_file_name}" NAME)
                         get_filename_component(file_ext "${long_file_name}" EXT)
@@ -282,13 +271,17 @@ function(AddIncludeFiles FILE_TYPE)
                                                 VERBATIM
                                         )
                                 elseif(VULKAN_SHADERS)
+                                        unset(macro_list)
+                                        foreach(macro ${ARG_MACROS})
+                                                list(APPEND macro_list "-D${macro}")
+                                        endforeach()
                                         string(RANDOM LENGTH 10 random_string_sprv)
                                         set(output_sprv "${output_directory}/${file_name}_${random_string_sprv}.sprv")
                                         add_custom_command(
                                                 OUTPUT  "${output_file}"
                                                 COMMAND "${PROJECT_BINARY_DIR}/create_str" "cat"
                                                                 ${header} "${long_file_name}" "${output_glsl}"
-                                                COMMAND "glslangValidator" "-V" "${output_glsl}" "-o" "${output_sprv}"
+                                                COMMAND "glslangValidator" "-V" ${macro_list} "${output_glsl}" "-o" "${output_sprv}"
                                                 COMMAND "${PROJECT_BINARY_DIR}/create_str" "spr"
                                                                 "${output_sprv}" "${output_file}"
                                                 DEPENDS "${header}" "${long_file_name}" "${PROJECT_BINARY_DIR}/create_str"
@@ -348,6 +341,8 @@ AddSourceFiles(EXECUTABLE DIRECTORIES src_gl EXTENSIONS ${extensions_all})
 ##################################################
 
 project(math C CXX)
+
+file(REMOVE_RECURSE "${PROJECT_BINARY_DIR}/${include_output_directory}")
 
 # Qt
 set(CMAKE_AUTOMOC ON)
