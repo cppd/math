@@ -163,15 +163,12 @@ endfunction()
 
 function(AddIncludeFiles FILE_TYPE)
 
-        cmake_parse_arguments(PARSE_ARGV 1 ARG "" "HEADER_FILE;OUTPUT_EXTENSION" "EXTENSIONS;DIRECTORIES;MACROS")
+        cmake_parse_arguments(PARSE_ARGV 1 ARG "" "HEADER_FILE;OUTPUT_EXTENSION" "EXTENSIONS;SOURCE;MACROS")
         if (NOT ARG_OUTPUT_EXTENSION)
                 message(FATAL_ERROR "No output extension")
         endif()
-        if (NOT ARG_EXTENSIONS)
-                message(FATAL_ERROR "No extensions")
-        endif()
-        if (NOT ARG_DIRECTORIES)
-                message(FATAL_ERROR "No directories")
+        if (NOT ARG_SOURCE)
+                message(FATAL_ERROR "No source")
         endif()
         if (ARG_UNPARSED_ARGUMENTS)
                 message(FATAL_ERROR "Unparsed arguments ${ARG_UNPARSED_ARGUMENTS}")
@@ -215,21 +212,25 @@ function(AddIncludeFiles FILE_TYPE)
 
         #
 
-        foreach(dir ${ARG_DIRECTORIES})
+        foreach(source ${ARG_SOURCE})
 
-                set(search_directory "${PROJECT_SOURCE_DIR}/${dir}")
-                string(LENGTH "${search_directory}" search_directory_length)
+                set(source_path "${PROJECT_SOURCE_DIR}/${source}")
+                if (IS_DIRECTORY "${source_path}")
+                        if (NOT ARG_EXTENSIONS)
+                                message(FATAL_ERROR "No extensions")
+                        endif()
+                        unset(globbing_expressions)
+                        foreach(ext ${ARG_EXTENSIONS})
+                                list(APPEND globbing_expressions "${source_path}/*.${ext}")
+                        endforeach()
+                        file(GLOB_RECURSE files LIST_DIRECTORIES false ${globbing_expressions})
+                else()
+                        set(files "${source_path}")
+                endif()
 
-                unset(globbing_expressions)
-                foreach(ext ${ARG_EXTENSIONS})
-                        list(APPEND globbing_expressions "${search_directory}/*.${ext}")
-                endforeach()
-
-                file(GLOB_RECURSE files LIST_DIRECTORIES false ${globbing_expressions})
                 foreach(long_file_name ${files})
 
                         get_filename_component(file_name "${long_file_name}" NAME)
-                        get_filename_component(file_ext "${long_file_name}" EXT)
 
                         if (VULKAN_SHADERS)
                                 foreach(macro ${ARG_MACROS})
@@ -258,6 +259,7 @@ function(AddIncludeFiles FILE_TYPE)
 
                         elseif(OPENGL_SHADERS OR VULKAN_SHADERS)
 
+                                get_filename_component(file_ext "${long_file_name}" EXT)
                                 string(RANDOM LENGTH 10 random_string_glsl)
                                 set(output_glsl "${output_directory}/${file_name}_${random_string_glsl}${file_ext}")
 
@@ -367,7 +369,7 @@ AddSourceFiles(EXECUTABLE
 
 AddIncludeFiles(BINARY_FILES
                         OUTPUT_EXTENSION "bin"
-                        DIRECTORIES "extern/resources"
+                        SOURCE "extern/resources"
                         EXTENSIONS ${extensions_binary})
 
 #target_compile_options(${PROJECT_NAME} PRIVATE -S -masm=intel)
@@ -388,7 +390,7 @@ target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
 AddIncludeFiles(VULKAN_SHADERS
                         HEADER_FILE "src/gpu/com/header.glsl"
                         OUTPUT_EXTENSION "spr"
-                        DIRECTORIES
+                        SOURCE
                                 "src/gpu/convex_hull/shaders"
                                 "src/gpu/dft/shaders"
                                 "src/gpu/optical_flow/shaders"
