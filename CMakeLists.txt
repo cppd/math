@@ -230,6 +230,14 @@ function(AddIncludeFiles FILE_TYPE)
 
                         get_filename_component(file_name "${long_file_name}" NAME)
                         get_filename_component(file_ext "${long_file_name}" EXT)
+
+                        if (VULKAN_SHADERS)
+                                foreach(macro ${ARG_MACROS})
+                                        string(TOLOWER "_${macro}" macro_lower)
+                                        string(APPEND file_name "${macro_lower}")
+                                endforeach()
+                        endif()
+
                         set(target_name "${custom_target_prefix}_${file_name}")
                         set(output_file "${output_directory}/${file_name}.${ARG_OUTPUT_EXTENSION}")
 
