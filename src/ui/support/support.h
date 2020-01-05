@@ -159,3 +159,6 @@ void move_window_to_desktop_center(QMainWindow* window);
 
 void resize_window_frame(QMainWindow* window, const QSize& frame_size);
 void resize_window_widget(QMainWindow* window, QWidget* widget, const QSize& widget_size);
+
+double slider_position(const QSlider* slider);
+void set_slider_position(QSlider* slider, double v);

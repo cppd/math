@@ -235,3 +235,20 @@ void resize_window_widget(QMainWindow* window, QWidget* widget, const QSize& wid
         // Из документации на resize: the size excluding any window frame
         window->resize(widget_size + (window->geometry().size() - widget->size()));
 }
+
+double slider_position(const QSlider* slider)
+{
+        double v = slider->value();
+        double min = slider->minimum();
+        double max = slider->maximum();
+        ASSERT(max > min);
+        return (v - min) / (max - min);
+}
+
+void set_slider_position(QSlider* slider, double v)
+{
+        double min = slider->minimum();
+        double max = slider->maximum();
+        ASSERT(max > min);
+        slider->setValue(std::lround(std::lerp(min, max, std::clamp(v, 0.0, 1.0))));
+}
