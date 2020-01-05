@@ -69,6 +69,7 @@ private slots:
         void on_checkBox_smooth_clicked();
         void on_checkBox_vertical_sync_clicked();
         void on_checkBox_wireframe_clicked();
+        void on_checkBox_clip_plane_clicked();
         void on_pushButton_reset_lighting_clicked();
         void on_pushButton_reset_view_clicked();
         void on_radioButton_bound_cocone_clicked();
@@ -84,6 +85,7 @@ private slots:
         void on_slider_diffuse_valueChanged(int value);
         void on_slider_shadow_quality_valueChanged(int value);
         void on_slider_specular_valueChanged(int value);
+        void on_slider_clip_plane_valueChanged(int value);
         void on_toolButton_background_color_clicked();
         void on_toolButton_default_color_clicked();
         void on_toolButton_dft_background_color_clicked();

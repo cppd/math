@@ -43,6 +43,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QCloseEvent>
 #include <QDesktopWidget>
 #include <QPointer>
+#include <QSignalBlocker>
 
 // Размер окна по сравнению с экраном.
 constexpr double WINDOW_SIZE_COEF = 0.7;
@@ -144,6 +145,16 @@ void MainWindow::constructor_interface()
         set_window_title_file("");
 
         QMainWindow::addAction(ui.actionFullScreen);
+
+        {
+                QSignalBlocker blocker_check_box(ui.checkBox_clip_plane);
+                QSignalBlocker blocker_slider(ui.slider_clip_plane);
+                ui.checkBox_clip_plane->setChecked(false);
+                ui.slider_clip_plane->setEnabled(false);
+                set_slider_position(ui.slider_clip_plane, 0.5);
+                // Должно быть точное среднее положение
+                ASSERT(((ui.slider_clip_plane->maximum() - ui.slider_clip_plane->minimum()) & 1) == 0);
+        }
 
         set_widgets_enabled(QMainWindow::layout(), true);
         set_dependent_interface();
@@ -1327,6 +1338,11 @@ void MainWindow::on_slider_shadow_quality_valueChanged(int)
         }
 }
 
+void MainWindow::on_slider_clip_plane_valueChanged(int)
+{
+        m_show->clip_plane_position(slider_position(ui.slider_clip_plane));
+}
+
 void MainWindow::on_toolButton_background_color_clicked()
 {
         dialog::color_dialog(this, "Background Color", m_background_color, [this](const QColor& c) { set_background_color(c); });
@@ -1401,6 +1417,27 @@ void MainWindow::on_checkBox_dft_clicked()
         ui.slider_dft_brightness->setEnabled(checked);
 
         m_show->show_dft(checked);
+}
+
+void MainWindow::on_checkBox_clip_plane_clicked()
+{
+        constexpr double default_position = 0.5;
+
+        bool checked = ui.checkBox_clip_plane->isChecked();
+
+        ui.slider_clip_plane->setEnabled(checked);
+        {
+                QSignalBlocker blocker(ui.slider_clip_plane);
+                set_slider_position(ui.slider_clip_plane, default_position);
+        }
+        if (checked)
+        {
+                m_show->clip_plane_show(slider_position(ui.slider_clip_plane));
+        }
+        else
+        {
+                m_show->clip_plane_hide();
+        }
 }
 
 void MainWindow::on_checkBox_convex_hull_2d_clicked()
