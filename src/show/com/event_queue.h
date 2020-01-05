@@ -237,6 +237,26 @@ class EventQueue final : public Show
                         {
                         }
                 };
+                struct clip_plane_show final
+                {
+                        double position;
+                        clip_plane_show(double p) : position(p)
+                        {
+                        }
+                };
+                struct clip_plane_position final
+                {
+                        double position;
+                        clip_plane_position(double p) : position(p)
+                        {
+                        }
+                };
+                struct clip_plane_hide final
+                {
+                        clip_plane_hide()
+                        {
+                        }
+                };
 
                 using EventType =
                         Variant<add_object, delete_all_objects, delete_object, mouse_wheel, parent_resized, reset_view,
@@ -244,7 +264,7 @@ class EventQueue final : public Show
                                 set_dft_brightness, set_dft_color, set_diffuse, set_shadow_zoom, set_specular, set_vertical_sync,
                                 set_wireframe_color, show_convex_hull_2d, show_dft, show_fps, show_pencil_sketch, show_fog,
                                 show_materials, show_object, show_optical_flow, show_shadow, show_smooth, show_wireframe,
-                                toggle_fullscreen>;
+                                toggle_fullscreen, clip_plane_show, clip_plane_position, clip_plane_hide>;
 
                 template <typename... Args>
                 Event(Args&&... args) : m_event(std::forward<Args>(args)...)
@@ -389,6 +409,18 @@ class EventQueue final : public Show
                 {
                         m_show.set_shadow_zoom(d.zoom);
                 }
+                void operator()(const Event::clip_plane_show& d)
+                {
+                        m_show.clip_plane_show(d.position);
+                }
+                void operator()(const Event::clip_plane_position& d)
+                {
+                        m_show.clip_plane_position(d.position);
+                }
+                void operator()(const Event::clip_plane_hide&)
+                {
+                        m_show.clip_plane_hide();
+                }
         };
 
         ThreadQueue<Event> m_event_queue;
@@ -514,6 +546,18 @@ class EventQueue final : public Show
         void set_shadow_zoom(double v) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_shadow_zoom>, v);
+        }
+        void clip_plane_show(double v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::clip_plane_show>, v);
+        }
+        void clip_plane_position(double v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::clip_plane_position>, v);
+        }
+        void clip_plane_hide() override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::clip_plane_hide>);
         }
 
         ShowCameraInfo camera_information() const override

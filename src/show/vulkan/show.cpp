@@ -353,6 +353,21 @@ class Impl final : public Show, public WindowEvent
                 m_optical_flow_active = v;
         }
 
+        void clip_plane_show(double) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+        }
+
+        void clip_plane_position(double) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+        }
+
+        void clip_plane_hide() override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+        }
+
         void parent_resized() override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);

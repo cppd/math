@@ -84,6 +84,9 @@ public:
         virtual void show_optical_flow(bool) = 0;
         virtual void set_vertical_sync(bool v) = 0;
         virtual void set_shadow_zoom(double v) = 0;
+        virtual void clip_plane_show(double) = 0;
+        virtual void clip_plane_position(double) = 0;
+        virtual void clip_plane_hide() = 0;
 
         virtual ShowCameraInfo camera_information() const = 0;
         virtual double object_size() const = 0;
