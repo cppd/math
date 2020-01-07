@@ -156,6 +156,9 @@ class Impl final : public Show, public WindowEvent
 
         //
 
+        std::optional<mat4> m_clip_plane_view_matrix;
+        std::optional<mat4> m_clip_plane_shadow_matrix;
+
         void add_object(const std::shared_ptr<const Obj<3>>& obj_ptr, int id, int scale_id) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -353,19 +356,45 @@ class Impl final : public Show, public WindowEvent
                 m_optical_flow_active = v;
         }
 
-        void clip_plane_show(double) override
+        void clip_plane_show(double position) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                const RendererCameraInfo& info = m_camera.renderer_info();
+                m_clip_plane_view_matrix = info.view_matrix;
+                m_clip_plane_shadow_matrix = info.shadow_matrix;
+                clip_plane_position(position);
         }
 
-        void clip_plane_position(double) override
+        void clip_plane_position(double position) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                if (!m_clip_plane_view_matrix || !m_clip_plane_view_matrix)
+                {
+                        error("Clip plane is not set");
+                }
+
+                ASSERT(position >= 0.0 && position <= 1.0);
+
+                // Уравнение плоскости -z = 1 - 2 * position или (0, 0, -1, 2 * position - 1).
+                // plane * view matrix = уравнение плоскости для исходных координат.
+
+                double d = 2 * position - 1;
+                vec4 plane;
+                plane = -(*m_clip_plane_view_matrix)[2];
+                plane[3] += d;
+
+                m_renderer->clip_plane_show(plane);
         }
 
         void clip_plane_hide() override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                m_clip_plane_view_matrix.reset();
+                m_clip_plane_shadow_matrix.reset();
+                m_renderer->clip_plane_hide();
         }
 
         void parent_resized() override
@@ -843,6 +872,7 @@ public:
                 m_event_window.set_window(*m_window);
 
                 reset_view_handler();
+                clip_plane_hide();
         }
 
         ~Impl() override

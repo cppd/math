@@ -55,6 +55,9 @@ struct Renderer
         virtual void set_shadow_zoom(double zoom) = 0;
         virtual void set_camera(const RendererCameraInfo& c) = 0;
 
+        virtual void clip_plane_show(const vec4& plane) = 0;
+        virtual void clip_plane_hide() = 0;
+
         virtual void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) = 0;
         virtual void object_delete(int id) = 0;
         virtual void object_show(int id) = 0;

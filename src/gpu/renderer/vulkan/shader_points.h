@@ -43,7 +43,17 @@ class RendererPointsMemory final
 
         struct Matrices
         {
-                Matrix<4, 4, float> matrix;
+                struct M
+                {
+                        Matrix<4, 4, float> matrix;
+                };
+                struct C
+                {
+                        Vector<4, float> equation;
+                        uint32_t enabled;
+                };
+                M matrices;
+                C clip_plane;
         };
 
         struct Drawing
@@ -83,6 +93,7 @@ public:
         //
 
         void set_matrix(const mat4& matrix) const;
+        void set_clip_plane(const vec4& equation, bool enabled) const;
 
         void set_default_color(const Color& color) const;
         void set_background_color(const Color& color) const;

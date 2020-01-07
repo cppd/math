@@ -23,6 +23,8 @@ layout(std140, binding = 0) uniform Matrices
 {
         mat4 matrix;
         mat4 shadow_matrix;
+        vec4 clip_plane_equation;
+        bool clip_plane_enabled;
 }
 matrices;
 
@@ -40,11 +42,13 @@ vs;
 out gl_PerVertex
 {
         vec4 gl_Position;
+        float gl_ClipDistance[1];
 };
 
 void main()
 {
         gl_Position = matrices.matrix * vec4(position, 1.0);
+        gl_ClipDistance[0] = matrices.clip_plane_enabled ? dot(matrices.clip_plane_equation, vec4(position, 1.0)) : 1;
         vs.shadow_position = matrices.shadow_matrix * vec4(position, 1.0);
         vs.orig_position = position;
         vs.normal = normal;

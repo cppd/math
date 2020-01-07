@@ -221,6 +221,24 @@ class Impl final : public Renderer
                 set_matrices();
         }
 
+        void clip_plane_show(const vec4& plane) override
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_triangles_shared_memory.set_clip_plane(plane, true);
+                m_shadow_memory.set_clip_plane(plane, true);
+                m_points_memory.set_clip_plane(plane, true);
+        }
+
+        void clip_plane_hide() override
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_triangles_shared_memory.set_clip_plane(vec4(0), false);
+                m_shadow_memory.set_clip_plane(vec4(0), false);
+                m_points_memory.set_clip_plane(vec4(0), false);
+        }
+
         void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());

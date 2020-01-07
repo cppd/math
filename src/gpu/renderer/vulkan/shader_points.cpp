@@ -123,8 +123,17 @@ void RendererPointsMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& 
 
 void RendererPointsMemory::set_matrix(const mat4& matrix) const
 {
-        decltype(Matrices().matrix) m = transpose(to_matrix<float>(matrix));
-        copy_to_matrices_buffer(offsetof(Matrices, matrix), m);
+        Matrices::M matrices;
+        matrices.matrix = transpose(to_matrix<float>(matrix));
+        copy_to_matrices_buffer(offsetof(Matrices, matrices), matrices);
+}
+
+void RendererPointsMemory::set_clip_plane(const vec4& equation, bool enabled) const
+{
+        Matrices::C clip_plane;
+        clip_plane.equation = to_vector<float>(equation);
+        clip_plane.enabled = enabled ? 1 : 0;
+        copy_to_matrices_buffer(offsetof(Matrices, clip_plane), clip_plane);
 }
 
 void RendererPointsMemory::set_default_color(const Color& color) const

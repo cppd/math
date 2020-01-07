@@ -40,8 +40,15 @@ vs[3];
 in gl_PerVertex
 {
         vec4 gl_Position;
+        float gl_ClipDistance[1];
 }
 gl_in[3];
+
+out gl_PerVertex
+{
+        vec4 gl_Position;
+        float gl_ClipDistance[1];
+};
 
 layout(location = 0) out GS
 {
@@ -97,6 +104,7 @@ void main()
         for (int i = 0; i < 3; ++i)
         {
                 gl_Position = gl_in[i].gl_Position;
+                gl_ClipDistance[0] = gl_in[i].gl_ClipDistance[0];
 
                 gs.normal = normals[i];
                 gs.baricentric = baricentric[i];
