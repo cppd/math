@@ -85,7 +85,7 @@ std::vector<vulkan::PhysicalDeviceFeatures> device_features_sample_shading(int s
 {
         if (sample_count > 1 && sample_shading)
         {
-                return {vulkan::PhysicalDeviceFeatures::SampleRateShading};
+                return {vulkan::PhysicalDeviceFeatures::sampleRateShading};
         }
         else
         {
@@ -97,7 +97,7 @@ std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(b
 {
         if (sampler_anisotropy)
         {
-                return {vulkan::PhysicalDeviceFeatures::SamplerAnisotropy};
+                return {vulkan::PhysicalDeviceFeatures::samplerAnisotropy};
         }
         else
         {

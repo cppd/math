@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 
+namespace vulkan
+{
 namespace
 {
 bool find_family(const std::vector<VkQueueFamilyProperties>& families, VkQueueFlags flags, VkQueueFlags no_flags, uint32_t* index)
@@ -77,7 +79,7 @@ std::vector<bool> find_presentation_support(VkSurfaceKHR surface, VkPhysicalDevi
                 VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &supported);
                 if (result != VK_SUCCESS)
                 {
-                        vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfaceSupportKHR", result);
+                        vulkan_function_error("vkGetPhysicalDeviceSurfaceSupportKHR", result);
                 }
 
                 presentation_supported[i] = (supported == VK_TRUE);
@@ -86,53 +88,594 @@ std::vector<bool> find_presentation_support(VkSurfaceKHR surface, VkPhysicalDevi
         return presentation_supported;
 }
 
-bool features_are_supported(const std::vector<vulkan::PhysicalDeviceFeatures>& required_features,
-                            VkPhysicalDeviceFeatures device_features)
+class FeatureIsNotSupported final : public std::exception
 {
-        for (vulkan::PhysicalDeviceFeatures f : required_features)
+        const char* m_text;
+
+public:
+        FeatureIsNotSupported(const char* feature_name) noexcept : m_text(feature_name)
+        {
+        }
+        const char* what() const noexcept override
+        {
+                return m_text;
+        }
+};
+
+[[noreturn]] void feature_is_not_supported(const char* feature_name)
+{
+        throw FeatureIsNotSupported(feature_name);
+}
+
+void set_features(const std::vector<PhysicalDeviceFeatures>& features, bool required,
+                  const VkPhysicalDeviceFeatures& device_features, VkPhysicalDeviceFeatures* result_device_features = nullptr)
+{
+        for (PhysicalDeviceFeatures f : features)
         {
                 switch (f)
                 {
-                case vulkan::PhysicalDeviceFeatures::GeometryShader:
-                        if (!device_features.geometryShader)
+                case PhysicalDeviceFeatures::alphaToOne:
+                        if (!device_features.alphaToOne && required)
                         {
-                                return false;
+                                feature_is_not_supported("alphaToOne");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->alphaToOne = device_features.alphaToOne;
                         }
                         break;
-                case vulkan::PhysicalDeviceFeatures::SampleRateShading:
-                        if (!device_features.sampleRateShading)
+                case PhysicalDeviceFeatures::depthBiasClamp:
+                        if (!device_features.depthBiasClamp && required)
                         {
-                                return false;
+                                feature_is_not_supported("depthBiasClamp");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->depthBiasClamp = device_features.depthBiasClamp;
                         }
                         break;
-                case vulkan::PhysicalDeviceFeatures::SamplerAnisotropy:
-                        if (!device_features.samplerAnisotropy)
+                case PhysicalDeviceFeatures::depthBounds:
+                        if (!device_features.depthBounds && required)
                         {
-                                return false;
+                                feature_is_not_supported("depthBounds");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->depthBounds = device_features.depthBounds;
                         }
                         break;
-                case vulkan::PhysicalDeviceFeatures::TessellationShader:
-                        if (!device_features.tessellationShader)
+                case PhysicalDeviceFeatures::depthClamp:
+                        if (!device_features.depthClamp && required)
                         {
-                                return false;
+                                feature_is_not_supported("depthClamp");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->depthClamp = device_features.depthClamp;
                         }
                         break;
-                case vulkan::PhysicalDeviceFeatures::FragmentStoresAndAtomics:
-                        if (!device_features.fragmentStoresAndAtomics)
+                case PhysicalDeviceFeatures::drawIndirectFirstInstance:
+                        if (!device_features.drawIndirectFirstInstance && required)
                         {
-                                return false;
+                                feature_is_not_supported("drawIndirectFirstInstance");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->drawIndirectFirstInstance = device_features.drawIndirectFirstInstance;
                         }
                         break;
-                case vulkan::PhysicalDeviceFeatures::VertexPipelineStoresAndAtomics:
-                        if (!device_features.vertexPipelineStoresAndAtomics)
+                case PhysicalDeviceFeatures::dualSrcBlend:
+                        if (!device_features.dualSrcBlend && required)
                         {
-                                return false;
+                                feature_is_not_supported("dualSrcBlend");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->dualSrcBlend = device_features.dualSrcBlend;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::fillModeNonSolid:
+                        if (!device_features.fillModeNonSolid && required)
+                        {
+                                feature_is_not_supported("fillModeNonSolid");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->fillModeNonSolid = device_features.fillModeNonSolid;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::fragmentStoresAndAtomics:
+                        if (!device_features.fragmentStoresAndAtomics && required)
+                        {
+                                feature_is_not_supported("fragmentStoresAndAtomics");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->fragmentStoresAndAtomics = device_features.fragmentStoresAndAtomics;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::fullDrawIndexUint32:
+                        if (!device_features.fullDrawIndexUint32 && required)
+                        {
+                                feature_is_not_supported("fullDrawIndexUint32");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->fullDrawIndexUint32 = device_features.fullDrawIndexUint32;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::geometryShader:
+                        if (!device_features.geometryShader && required)
+                        {
+                                feature_is_not_supported("geometryShader");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->geometryShader = device_features.geometryShader;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::imageCubeArray:
+                        if (!device_features.imageCubeArray && required)
+                        {
+                                feature_is_not_supported("imageCubeArray");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->imageCubeArray = device_features.imageCubeArray;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::independentBlend:
+                        if (!device_features.independentBlend && required)
+                        {
+                                feature_is_not_supported("independentBlend");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->independentBlend = device_features.independentBlend;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::inheritedQueries:
+                        if (!device_features.inheritedQueries && required)
+                        {
+                                feature_is_not_supported("inheritedQueries");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->inheritedQueries = device_features.inheritedQueries;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::largePoints:
+                        if (!device_features.largePoints && required)
+                        {
+                                feature_is_not_supported("largePoints");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->largePoints = device_features.largePoints;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::logicOp:
+                        if (!device_features.logicOp && required)
+                        {
+                                feature_is_not_supported("logicOp");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->logicOp = device_features.logicOp;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::multiDrawIndirect:
+                        if (!device_features.multiDrawIndirect && required)
+                        {
+                                feature_is_not_supported("multiDrawIndirect");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->multiDrawIndirect = device_features.multiDrawIndirect;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::multiViewport:
+                        if (!device_features.multiViewport && required)
+                        {
+                                feature_is_not_supported("multiViewport");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->multiViewport = device_features.multiViewport;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::occlusionQueryPrecise:
+                        if (!device_features.occlusionQueryPrecise && required)
+                        {
+                                feature_is_not_supported("occlusionQueryPrecise");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->occlusionQueryPrecise = device_features.occlusionQueryPrecise;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::pipelineStatisticsQuery:
+                        if (!device_features.pipelineStatisticsQuery && required)
+                        {
+                                feature_is_not_supported("pipelineStatisticsQuery");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->pipelineStatisticsQuery = device_features.pipelineStatisticsQuery;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::robustBufferAccess:
+                        if (!device_features.robustBufferAccess && required)
+                        {
+                                feature_is_not_supported("robustBufferAccess");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->robustBufferAccess = device_features.robustBufferAccess;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::sampleRateShading:
+                        if (!device_features.sampleRateShading && required)
+                        {
+                                feature_is_not_supported("sampleRateShading");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->sampleRateShading = device_features.sampleRateShading;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::samplerAnisotropy:
+                        if (!device_features.samplerAnisotropy && required)
+                        {
+                                feature_is_not_supported("samplerAnisotropy");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->samplerAnisotropy = device_features.samplerAnisotropy;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderClipDistance:
+                        if (!device_features.shaderClipDistance && required)
+                        {
+                                feature_is_not_supported("shaderClipDistance");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderClipDistance = device_features.shaderClipDistance;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderCullDistance:
+                        if (!device_features.shaderCullDistance && required)
+                        {
+                                feature_is_not_supported("shaderCullDistance");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderCullDistance = device_features.shaderCullDistance;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderFloat64:
+                        if (!device_features.shaderFloat64 && required)
+                        {
+                                feature_is_not_supported("shaderFloat64");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderFloat64 = device_features.shaderFloat64;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderImageGatherExtended:
+                        if (!device_features.shaderImageGatherExtended && required)
+                        {
+                                feature_is_not_supported("shaderImageGatherExtended");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderImageGatherExtended = device_features.shaderImageGatherExtended;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderInt16:
+                        if (!device_features.shaderInt16 && required)
+                        {
+                                feature_is_not_supported("shaderInt16");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderInt16 = device_features.shaderInt16;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderInt64:
+                        if (!device_features.shaderInt64 && required)
+                        {
+                                feature_is_not_supported("shaderInt64");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderInt64 = device_features.shaderInt64;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderResourceMinLod:
+                        if (!device_features.shaderResourceMinLod && required)
+                        {
+                                feature_is_not_supported("shaderResourceMinLod");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderResourceMinLod = device_features.shaderResourceMinLod;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderResourceResidency:
+                        if (!device_features.shaderResourceResidency && required)
+                        {
+                                feature_is_not_supported("shaderResourceResidency");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderResourceResidency = device_features.shaderResourceResidency;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderSampledImageArrayDynamicIndexing:
+                        if (!device_features.shaderSampledImageArrayDynamicIndexing && required)
+                        {
+                                feature_is_not_supported("shaderSampledImageArrayDynamicIndexing");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderSampledImageArrayDynamicIndexing =
+                                        device_features.shaderSampledImageArrayDynamicIndexing;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderStorageBufferArrayDynamicIndexing:
+                        if (!device_features.shaderStorageBufferArrayDynamicIndexing && required)
+                        {
+                                feature_is_not_supported("shaderStorageBufferArrayDynamicIndexing");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderStorageBufferArrayDynamicIndexing =
+                                        device_features.shaderStorageBufferArrayDynamicIndexing;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderStorageImageArrayDynamicIndexing:
+                        if (!device_features.shaderStorageImageArrayDynamicIndexing && required)
+                        {
+                                feature_is_not_supported("shaderStorageImageArrayDynamicIndexing");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderStorageImageArrayDynamicIndexing =
+                                        device_features.shaderStorageImageArrayDynamicIndexing;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderStorageImageExtendedFormats:
+                        if (!device_features.shaderStorageImageExtendedFormats && required)
+                        {
+                                feature_is_not_supported("shaderStorageImageExtendedFormats");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderStorageImageExtendedFormats =
+                                        device_features.shaderStorageImageExtendedFormats;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderStorageImageMultisample:
+                        if (!device_features.shaderStorageImageMultisample && required)
+                        {
+                                feature_is_not_supported("shaderStorageImageMultisample");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderStorageImageMultisample =
+                                        device_features.shaderStorageImageMultisample;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderStorageImageReadWithoutFormat:
+                        if (!device_features.shaderStorageImageReadWithoutFormat && required)
+                        {
+                                feature_is_not_supported("shaderStorageImageReadWithoutFormat");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderStorageImageReadWithoutFormat =
+                                        device_features.shaderStorageImageReadWithoutFormat;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderStorageImageWriteWithoutFormat:
+                        if (!device_features.shaderStorageImageWriteWithoutFormat && required)
+                        {
+                                feature_is_not_supported("shaderStorageImageWriteWithoutFormat");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderStorageImageWriteWithoutFormat =
+                                        device_features.shaderStorageImageWriteWithoutFormat;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderTessellationAndGeometryPointSize:
+                        if (!device_features.shaderTessellationAndGeometryPointSize && required)
+                        {
+                                feature_is_not_supported("shaderTessellationAndGeometryPointSize");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderTessellationAndGeometryPointSize =
+                                        device_features.shaderTessellationAndGeometryPointSize;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::shaderUniformBufferArrayDynamicIndexing:
+                        if (!device_features.shaderUniformBufferArrayDynamicIndexing && required)
+                        {
+                                feature_is_not_supported("shaderUniformBufferArrayDynamicIndexing");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->shaderUniformBufferArrayDynamicIndexing =
+                                        device_features.shaderUniformBufferArrayDynamicIndexing;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::sparseBinding:
+                        if (!device_features.sparseBinding && required)
+                        {
+                                feature_is_not_supported("sparseBinding");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->sparseBinding = device_features.sparseBinding;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::sparseResidency16Samples:
+                        if (!device_features.sparseResidency16Samples && required)
+                        {
+                                feature_is_not_supported("sparseResidency16Samples");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->sparseResidency16Samples = device_features.sparseResidency16Samples;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::sparseResidency2Samples:
+                        if (!device_features.sparseResidency2Samples && required)
+                        {
+                                feature_is_not_supported("sparseResidency2Samples");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->sparseResidency2Samples = device_features.sparseResidency2Samples;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::sparseResidency4Samples:
+                        if (!device_features.sparseResidency4Samples && required)
+                        {
+                                feature_is_not_supported("sparseResidency4Samples");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->sparseResidency4Samples = device_features.sparseResidency4Samples;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::sparseResidency8Samples:
+                        if (!device_features.sparseResidency8Samples && required)
+                        {
+                                feature_is_not_supported("sparseResidency8Samples");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->sparseResidency8Samples = device_features.sparseResidency8Samples;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::sparseResidencyAliased:
+                        if (!device_features.sparseResidencyAliased && required)
+                        {
+                                feature_is_not_supported("sparseResidencyAliased");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->sparseResidencyAliased = device_features.sparseResidencyAliased;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::sparseResidencyBuffer:
+                        if (!device_features.sparseResidencyBuffer && required)
+                        {
+                                feature_is_not_supported("sparseResidencyBuffer");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->sparseResidencyBuffer = device_features.sparseResidencyBuffer;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::sparseResidencyImage2D:
+                        if (!device_features.sparseResidencyImage2D && required)
+                        {
+                                feature_is_not_supported("sparseResidencyImage2D");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->sparseResidencyImage2D = device_features.sparseResidencyImage2D;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::sparseResidencyImage3D:
+                        if (!device_features.sparseResidencyImage3D && required)
+                        {
+                                feature_is_not_supported("sparseResidencyImage3D");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->sparseResidencyImage3D = device_features.sparseResidencyImage3D;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::tessellationShader:
+                        if (!device_features.tessellationShader && required)
+                        {
+                                feature_is_not_supported("tessellationShader");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->tessellationShader = device_features.tessellationShader;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::textureCompressionASTC_LDR:
+                        if (!device_features.textureCompressionASTC_LDR && required)
+                        {
+                                feature_is_not_supported("textureCompressionASTC_LDR");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->textureCompressionASTC_LDR = device_features.textureCompressionASTC_LDR;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::textureCompressionBC:
+                        if (!device_features.textureCompressionBC && required)
+                        {
+                                feature_is_not_supported("textureCompressionBC");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->textureCompressionBC = device_features.textureCompressionBC;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::textureCompressionETC2:
+                        if (!device_features.textureCompressionETC2 && required)
+                        {
+                                feature_is_not_supported("textureCompressionETC2");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->textureCompressionETC2 = device_features.textureCompressionETC2;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::variableMultisampleRate:
+                        if (!device_features.variableMultisampleRate && required)
+                        {
+                                feature_is_not_supported("variableMultisampleRate");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->variableMultisampleRate = device_features.variableMultisampleRate;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::vertexPipelineStoresAndAtomics:
+                        if (!device_features.vertexPipelineStoresAndAtomics && required)
+                        {
+                                feature_is_not_supported("vertexPipelineStoresAndAtomics");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->vertexPipelineStoresAndAtomics =
+                                        device_features.vertexPipelineStoresAndAtomics;
+                        }
+                        break;
+                case PhysicalDeviceFeatures::wideLines:
+                        if (!device_features.wideLines && required)
+                        {
+                                feature_is_not_supported("wideLines");
+                        }
+                        if (result_device_features)
+                        {
+                                result_device_features->wideLines = device_features.wideLines;
                         }
                         break;
                 }
         }
-
-        return true;
 }
 
 std::vector<VkQueueFamilyProperties> find_queue_families(VkPhysicalDevice device)
@@ -161,7 +704,7 @@ std::unordered_set<std::string> find_extensions(VkPhysicalDevice device)
         result = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
+                vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
         }
 
         if (extension_count < 1)
@@ -174,7 +717,7 @@ std::unordered_set<std::string> find_extensions(VkPhysicalDevice device)
         result = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, extensions.data());
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
+                vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
         }
 
         std::unordered_set<std::string> extension_set;
@@ -187,8 +730,8 @@ std::unordered_set<std::string> find_extensions(VkPhysicalDevice device)
         return extension_set;
 }
 
-VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<vulkan::PhysicalDeviceFeatures>& required_features,
-                                                      const std::vector<vulkan::PhysicalDeviceFeatures>& optional_features,
+VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<PhysicalDeviceFeatures>& required_features,
+                                                      const std::vector<PhysicalDeviceFeatures>& optional_features,
                                                       const VkPhysicalDeviceFeatures& supported_device_features)
 {
         if (there_is_intersection(required_features, optional_features))
@@ -198,86 +741,28 @@ VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<vulkan::
 
         VkPhysicalDeviceFeatures device_features = {};
 
-        for (vulkan::PhysicalDeviceFeatures f : required_features)
+        try
         {
-                switch (f)
-                {
-                case vulkan::PhysicalDeviceFeatures::GeometryShader:
-                        if (!supported_device_features.geometryShader)
-                        {
-                                error("Required physical device feature Geometry Shader is not supported");
-                        }
-                        device_features.geometryShader = true;
-                        break;
-                case vulkan::PhysicalDeviceFeatures::SampleRateShading:
-                        if (!supported_device_features.sampleRateShading)
-                        {
-                                error("Required physical device feature Sample Rate Shading is not supported");
-                        }
-                        device_features.sampleRateShading = true;
-                        break;
-                case vulkan::PhysicalDeviceFeatures::SamplerAnisotropy:
-                        if (!supported_device_features.samplerAnisotropy)
-                        {
-                                error("Required physical device feature Sampler Anisotropy is not supported");
-                        }
-                        device_features.samplerAnisotropy = true;
-                        break;
-                case vulkan::PhysicalDeviceFeatures::TessellationShader:
-                        if (!supported_device_features.tessellationShader)
-                        {
-                                error("Required physical device feature Tessellation Shader is not supported");
-                        }
-                        device_features.tessellationShader = true;
-                        break;
-                case vulkan::PhysicalDeviceFeatures::FragmentStoresAndAtomics:
-                        if (!supported_device_features.fragmentStoresAndAtomics)
-                        {
-                                error("Required physical device feature Fragment Stores And Atomics is not supported");
-                        }
-                        device_features.fragmentStoresAndAtomics = true;
-                        break;
-                case vulkan::PhysicalDeviceFeatures::VertexPipelineStoresAndAtomics:
-                        if (!supported_device_features.vertexPipelineStoresAndAtomics)
-                        {
-                                error("Required physical device feature Vertex Pipeline Stores And Atomics is not supported");
-                        }
-                        device_features.vertexPipelineStoresAndAtomics = true;
-                        break;
-                }
+                set_features(required_features, true, supported_device_features, &device_features);
+        }
+        catch (const FeatureIsNotSupported& e)
+        {
+                error(std::string("Required physical device feature ") + e.what() + " is not supported");
         }
 
-        for (vulkan::PhysicalDeviceFeatures f : optional_features)
+        try
         {
-                switch (f)
-                {
-                case vulkan::PhysicalDeviceFeatures::GeometryShader:
-                        device_features.geometryShader = supported_device_features.geometryShader;
-                        break;
-                case vulkan::PhysicalDeviceFeatures::SampleRateShading:
-                        device_features.sampleRateShading = supported_device_features.sampleRateShading;
-                        break;
-                case vulkan::PhysicalDeviceFeatures::SamplerAnisotropy:
-                        device_features.samplerAnisotropy = supported_device_features.samplerAnisotropy;
-                        break;
-                case vulkan::PhysicalDeviceFeatures::TessellationShader:
-                        device_features.tessellationShader = supported_device_features.tessellationShader;
-                        break;
-                case vulkan::PhysicalDeviceFeatures::FragmentStoresAndAtomics:
-                        device_features.fragmentStoresAndAtomics = supported_device_features.fragmentStoresAndAtomics;
-                        break;
-                case vulkan::PhysicalDeviceFeatures::VertexPipelineStoresAndAtomics:
-                        device_features.vertexPipelineStoresAndAtomics = supported_device_features.vertexPipelineStoresAndAtomics;
-                        break;
-                }
+                set_features(optional_features, false, supported_device_features, &device_features);
+        }
+        catch (const FeatureIsNotSupported&)
+        {
+                error("Exception when setting optional device features");
         }
 
         return device_features;
 }
 }
 
-namespace vulkan
-{
 PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface) : m_physical_device(physical_device)
 {
         ASSERT(physical_device != VK_NULL_HANDLE);
@@ -463,7 +948,11 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                         continue;
                 }
 
-                if (!features_are_supported(required_features, physical_device.features()))
+                try
+                {
+                        set_features(required_features, true, physical_device.features());
+                }
+                catch (const FeatureIsNotSupported&)
                 {
                         continue;
                 }
