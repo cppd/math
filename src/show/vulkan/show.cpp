@@ -377,13 +377,20 @@ class Impl final : public Show, public WindowEvent
 
                 ASSERT(position >= 0.0 && position <= 1.0);
 
-                // Уравнение плоскости -z = 1 - 2 * position или (0, 0, -1, 2 * position - 1).
-                // plane * view matrix = уравнение плоскости для исходных координат.
+                // Уравнение плоскости
+                // -z = 0 или (0, 0, -1, 0).
+                // Уравнение плоскости для исходных координат
+                // (0, 0, -1, 0) * view matrix.
+                vec4 plane = -(*m_clip_plane_view_matrix)[2];
 
-                double d = 2 * position - 1;
-                vec4 plane;
-                plane = -(*m_clip_plane_view_matrix)[2];
-                plane[3] += d;
+                vec3 n(plane[0], plane[1], plane[2]);
+                double d = std::abs(n[0]) + std::abs(n[1]) + std::abs(n[2]);
+
+                // Уравнение плоскости со смещением
+                // -z = d * (1 - 2 * position) или (0, 0, -1, d * (2 * position - 1)).
+                plane[3] += d * (2 * position - 1);
+
+                plane /= length(n);
 
                 m_renderer->clip_plane_show(plane);
         }
