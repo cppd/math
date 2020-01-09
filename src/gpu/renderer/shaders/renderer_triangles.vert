@@ -47,8 +47,9 @@ out gl_PerVertex
 
 void main()
 {
-        gl_Position = matrices.matrix * vec4(position, 1.0);
-        gl_ClipDistance[0] = matrices.clip_plane_enabled ? dot(matrices.clip_plane_equation, vec4(position, 1.0)) : 1;
+        vec4 pos = matrices.matrix * vec4(position, 1.0);
+        gl_Position = pos;
+        gl_ClipDistance[0] = matrices.clip_plane_enabled ? dot(matrices.clip_plane_equation, pos) : 1;
         vs.shadow_position = matrices.shadow_matrix * vec4(position, 1.0);
         vs.orig_position = position;
         vs.normal = normal;

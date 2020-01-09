@@ -36,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/query.h"
 #include "graphics/vulkan/queue.h"
+#include "numerical/linear.h"
 
 #include <algorithm>
 #include <thread>
@@ -113,6 +114,8 @@ class Impl final : public Renderer
         RendererObjectStorage<DrawObject> m_storage;
 
         unsigned m_x, m_y, m_width, m_height;
+
+        std::optional<vec4> m_clip_plane;
 
         void set_light_a(const Color& light) override
         {
@@ -222,18 +225,32 @@ class Impl final : public Renderer
                 set_matrices();
         }
 
+        void set_clip_plane() const
+        {
+                if (m_clip_plane)
+                {
+                        vec4 main_plane = *m_clip_plane * numerical::inverse(m_main_matrix);
+                        vec4 shadow_plane = *m_clip_plane * numerical::inverse(m_shadow_matrix);
+                        m_triangles_shared_memory.set_clip_plane(main_plane, true);
+                        m_shadow_memory.set_clip_plane(shadow_plane, true);
+                        m_points_memory.set_clip_plane(main_plane, true);
+                }
+        }
+
         void clip_plane_show(const vec4& plane) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_memory.set_clip_plane(plane, true);
-                m_shadow_memory.set_clip_plane(plane, true);
-                m_points_memory.set_clip_plane(plane, true);
+                m_clip_plane = plane;
+
+                set_clip_plane();
         }
 
         void clip_plane_hide() override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_clip_plane.reset();
 
                 m_triangles_shared_memory.set_clip_plane(vec4(0), false);
                 m_shadow_memory.set_clip_plane(vec4(0), false);
@@ -465,6 +482,8 @@ class Impl final : public Renderer
                         m_triangles_shared_memory.set_matrices(matrix, scale_bias_shadow_matrix);
                         m_shadow_memory.set_matrix(shadow_matrix);
                         m_points_memory.set_matrix(matrix);
+
+                        set_clip_plane();
                 }
         }
 
