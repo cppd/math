@@ -143,6 +143,21 @@ Matrix<Rows, Columns, T> operator*(const Matrix<Rows, Inner, T>& m1, const Matri
         return res;
 }
 
+template <size_t Inner, size_t Columns, typename T>
+Vector<Columns, T> operator*(const Vector<Inner, T>& v, const Matrix<Inner, Columns, T>& m)
+{
+        Vector<Columns, T> res;
+        for (unsigned column = 0; column < Columns; ++column)
+        {
+                res[column] = v[0] * m[0][column];
+                for (unsigned i = 1; i < Inner; ++i)
+                {
+                        res[column] = any_fma(v[i], m[i][column], res[column]);
+                }
+        }
+        return res;
+}
+
 namespace matrix_implementation
 {
 template <size_t Rows, size_t Columns, typename T, size_t... I>
