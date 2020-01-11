@@ -189,6 +189,19 @@ public:
                 }
                 return res;
         }
+
+        bool is_zero() const
+        {
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        if (m_data[i] == 0)
+                        {
+                                continue;
+                        }
+                        return false;
+                }
+                return true;
+        }
 };
 
 namespace std
@@ -334,19 +347,6 @@ bool is_finite(const Vector<N, T>& data)
                         continue;
                 }
                 return false;
-        }
-        return true;
-}
-
-template <size_t N, typename T>
-bool zero_vector(const Vector<N, T>& v)
-{
-        for (unsigned i = 0; i < N; ++i)
-        {
-                if (v[i] != 0)
-                {
-                        return false;
-                }
         }
         return true;
 }

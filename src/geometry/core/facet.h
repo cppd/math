@@ -180,7 +180,7 @@ public:
         {
                 m_ortho = ortho_nn<N, DataType, ComputeType>(points, Base::vertices());
 
-                ASSERT(!zero_vector(m_ortho));
+                ASSERT(!m_ortho.is_zero());
 
                 ComputeType v = visible(points, convex_hull_point);
 
@@ -356,7 +356,7 @@ public:
         {
                 m_ortho = ortho_nn<N, DataType, mpz_class>(points, Base::vertices());
 
-                ASSERT(!zero_vector(m_ortho));
+                ASSERT(!m_ortho.is_zero());
 
 #if 0
                 // Сокращение перпендикуляра не даёт общего ускорения
