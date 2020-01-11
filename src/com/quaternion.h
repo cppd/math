@@ -118,7 +118,7 @@ std::string to_string(const Quaternion<T>& a)
 template <typename T>
 Quaternion<T> quaternion_for_rotation(const Vector<3, T>& axis, T angle)
 {
-        return Quaternion<T>(any_cos(angle / 2), any_sin(angle / 2) * normalize(axis));
+        return Quaternion<T>(cos(angle / 2), sin(angle / 2) * normalize(axis));
 }
 
 template <typename T>

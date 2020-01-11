@@ -135,7 +135,7 @@ Matrix<Rows, Columns, T> operator*(const Matrix<Rows, Inner, T>& m1, const Matri
                         res[row][column] = m1[row][0] * m2[0][column];
                         for (unsigned i = 1; i < Inner; ++i)
                         {
-                                res[row][column] = any_fma(m1[row][i], m2[i][column], res[row][column]);
+                                res[row][column] = fma(m1[row][i], m2[i][column], res[row][column]);
                         }
 #endif
                 }
@@ -152,7 +152,7 @@ Vector<Columns, T> operator*(const Vector<Inner, T>& v, const Matrix<Inner, Colu
                 res[column] = v[0] * m[0][column];
                 for (unsigned i = 1; i < Inner; ++i)
                 {
-                        res[column] = any_fma(v[i], m[i][column], res[column]);
+                        res[column] = fma(v[i], m[i][column], res[column]);
                 }
         }
         return res;

@@ -38,55 +38,29 @@ constexpr T square(const T& v)
         return v * v;
 }
 
-template <typename T>
-T any_abs(T a)
-{
-        static_assert(std::is_floating_point_v<T>);
-        return std::abs(a);
-}
-template <typename T>
-T any_fma(T a, T b, T c)
-{
-        static_assert(std::is_floating_point_v<T>);
-        return std::fma(a, b, c);
-}
-template <typename T>
-T any_sqrt(T a)
-{
-        static_assert(std::is_floating_point_v<T>);
-        return std::sqrt(a);
-}
-template <typename T>
-T any_sin(T a)
-{
-        static_assert(std::is_floating_point_v<T>);
-        return std::sin(a);
-}
-template <typename T>
-T any_cos(T a)
-{
-        static_assert(std::is_floating_point_v<T>);
-        return std::cos(a);
-}
-
 #if !defined(__clang__)
-inline __float128 any_abs(__float128 a)
+template <typename T>
+std::enable_if_t<std::is_same_v<std::remove_cvref_t<T>, __float128>, __float128> abs(T a)
 {
         return fabsq(a);
 }
-inline __float128 any_fma(__float128 a, __float128 b, __float128 c)
+template <typename T>
+std::enable_if_t<std::is_same_v<std::remove_cvref_t<T>, __float128>, __float128> fma(T a, T b, T c)
 {
         return fmaq(a, b, c);
 }
-inline __float128 any_sqrt(__float128 a)
+template <typename T>
+std::enable_if_t<std::is_same_v<std::remove_cvref_t<T>, __float128>, __float128> sqrt(T a)
 {
         return sqrtq(a);
 }
-inline __float128 any_sin(__float128 a)
+template <typename T>
+std::enable_if_t<std::is_same_v<std::remove_cvref_t<T>, __float128>, __float128> sin(T a)
 {
         return sinq(a);
 }
-inline __float128 any_cos(__float128 a)
+template <typename T>
+std::enable_if_t<std::is_same_v<std::remove_cvref_t<T>, __float128>, __float128> cos(T a)
 {
         return cosq(a);
 }
@@ -105,14 +79,6 @@ constexpr bool is_finite(__float128 v)
 {
         // вместо finiteq и по аналогии с другими типами
         return v >= limits<__float128>::lowest() && v <= limits<__float128>::max();
-}
-
-template <typename T, typename F>
-T interpolation(T v0, T v1, F x)
-{
-        static_assert(is_native_floating_point<T> && is_native_floating_point<F>);
-
-        return any_fma(static_cast<T>(x), v1, any_fma(-static_cast<T>(x), v0, v0));
 }
 
 template <unsigned Exp, typename T>

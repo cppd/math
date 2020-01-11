@@ -17,9 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "math.h"
+#include "com/type/trait.h"
 
 #include <array>
+#include <cmath>
+
+template <typename T, typename F>
+T interpolation(T v0, T v1, F x)
+{
+        static_assert(is_native_floating_point<T> && is_native_floating_point<F>);
+
+        return fma(static_cast<T>(x), v1, fma(-static_cast<T>(x), v0, v0));
+}
 
 template <typename T, typename F>
 T interpolation(const T& c00, const T& c10, const T& c01, const T& c11, const F& x, const F& y)

@@ -26,10 +26,11 @@ Cambridge University Press.
 
 #pragma once
 
-#include "com/math.h"
 #include "com/matrix.h"
 #include "com/type/trait.h"
 #include "com/vec.h"
+
+#include <cmath>
 
 namespace numerical
 {
@@ -38,11 +39,11 @@ namespace gauss_implementation
 template <size_t N, typename T>
 int find_pivot(const Matrix<N, N, T>& A, int column, int from_row)
 {
-        T max = any_abs(A[from_row][column]);
+        T max = abs(A[from_row][column]);
         int pivot = from_row;
         for (int r = from_row + 1; r < int(N); ++r)
         {
-                T v = any_abs(A[r][column]);
+                T v = abs(A[r][column]);
                 if (v > max)
                 {
                         max = v;
@@ -80,10 +81,10 @@ void solve_gauss(Matrix<Size, Size, T>* A_p, Vector<Size, T>* b_p)
                         for (int j = k; j < N; ++j)
                         {
                                 // A[i][j] = A[i][j] - l_ik * A[k][j];
-                                A[i][j] = any_fma(-l_ik, A[k][j], A[i][j]);
+                                A[i][j] = fma(-l_ik, A[k][j], A[i][j]);
                         }
                         // b[i] = b[i] - l_ik * b[k];
-                        b[i] = any_fma(-l_ik, b[k], b[i]);
+                        b[i] = fma(-l_ik, b[k], b[i]);
                 }
         }
 
@@ -93,7 +94,7 @@ void solve_gauss(Matrix<Size, Size, T>* A_p, Vector<Size, T>* b_p)
                 for (int j = k + 1; j < N; ++j)
                 {
                         // b[k] = b[k] - A[k][j] * b[j];
-                        b[k] = any_fma(-A[k][j], b[j], b[k]);
+                        b[k] = fma(-A[k][j], b[j], b[k]);
                 }
                 b[k] = b[k] / A[k][k];
         }
@@ -127,12 +128,12 @@ void solve_gauss(Matrix<SizeA, SizeA, T>* A_p, Matrix<SizeA, SizeB, T>* B_p)
                         for (int j = k; j < N; ++j)
                         {
                                 // A[i][j] = A[i][j] - l_ik * A[k][j];
-                                A[i][j] = any_fma(-l_ik, A[k][j], A[i][j]);
+                                A[i][j] = fma(-l_ik, A[k][j], A[i][j]);
                         }
                         for (int n = 0; n < NB; ++n)
                         {
                                 // B[i][n] = B[i][n] - l_ik * B[k][n];
-                                B[i][n] = any_fma(-l_ik, B[k][n], B[i][n]);
+                                B[i][n] = fma(-l_ik, B[k][n], B[i][n]);
                         }
                 }
         }
@@ -149,7 +150,7 @@ void solve_gauss(Matrix<SizeA, SizeA, T>* A_p, Matrix<SizeA, SizeB, T>* B_p)
                         for (int n = 0; n < NB; ++n)
                         {
                                 // B[k][n] = B[k][n] - A[k][j] * B[j][n];
-                                B[k][n] = any_fma(-A[k][j], B[j][n], B[k][n]);
+                                B[k][n] = fma(-A[k][j], B[j][n], B[k][n]);
                         }
                 }
                 for (int n = 0; n < NB; ++n)
@@ -185,7 +186,7 @@ T determinant_gauss(Matrix<Size, Size, T>* A_p)
                         for (int j = k; j < N; ++j)
                         {
                                 // A[i][j] = A[i][j] - l_ik * A[k][j];
-                                A[i][j] = any_fma(-l_ik, A[k][j], A[i][j]);
+                                A[i][j] = fma(-l_ik, A[k][j], A[i][j]);
                         }
                 }
         }

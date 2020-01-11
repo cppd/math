@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/hash.h"
+#include "com/interpolation.h"
 #include "com/math.h"
 #include "com/print.h"
 
@@ -261,7 +262,7 @@ T dot(const Vector<N, T>& a, const Vector<N, T>& b)
         T result = a[0] * b[0];
         for (unsigned i = 1; i < N; ++i)
         {
-                result = any_fma(a[i], b[i], result);
+                result = fma(a[i], b[i], result);
         }
         return result;
 }
@@ -280,7 +281,7 @@ Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, F x)
 template <size_t N, typename T>
 T length(const Vector<N, T>& a)
 {
-        return any_sqrt(dot(a, a));
+        return sqrt(dot(a, a));
 }
 
 template <size_t N, typename T>
@@ -296,19 +297,19 @@ Vector<N, T> normalize(const Vector<N, T>& a)
 // template <typename T>
 // Vector<2, T> normalize(const Vector<2, T>& a)
 //{
-//        T k = sqrt_any_type(a[0] * a[0] + a[1] * a[1]);
+//        T k = sqrt(a[0] * a[0] + a[1] * a[1]);
 //        return Vector<2, T>(a[0] / k, a[1] / k);
 //}
 // template <typename T>
 // Vector<3, T> normalize(const Vector<3, T>& a)
 //{
-//        T k = sqrt_any_type(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+//        T k = sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
 //        return Vector<3, T>(a[0] / k, a[1] / k, a[2] / k);
 //}
 // template <typename T>
 // Vector<4, T> normalize(const Vector<4, T>& a)
 //{
-//        T k = sqrt_any_type(a[0] * a[0] + a[1] * a[1] + a[2] * a[2] + a[3] * a[3]);
+//        T k = sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2] + a[3] * a[3]);
 //        return Vector<4, T>(a[0] / k, a[1] / k, a[2] / k, a[3] / k);
 //}
 
@@ -323,10 +324,11 @@ bool is_finite(const Vector<N, T>& data)
 {
         for (unsigned i = 0; i < N; ++i)
         {
-                if (!is_finite(data[i]))
+                if (is_finite(data[i]))
                 {
-                        return false;
+                        continue;
                 }
+                return false;
         }
         return true;
 }

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/math.h"
+#include <cmath>
 
 namespace numerical
 {
@@ -31,7 +31,7 @@ bool quadratic_equation(T a, T b, T c, T* r1, T* r2)
                 return false;
         }
 
-        T sqrt_d = any_sqrt(discriminant);
+        T sqrt_d = sqrt(discriminant);
 
         if (b >= 0)
         {

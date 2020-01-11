@@ -56,7 +56,7 @@ public:
                                 // При использовании GCC 8.1 функция fma работает неправильно
                                 res[row] += m_mtx[row][col] * v[col];
 #else
-                                res[row] = any_fma(m_mtx[row][col], v[col], res[row]);
+                                res[row] = fma(m_mtx[row][col], v[col], res[row]);
 #endif
                         }
                 }
