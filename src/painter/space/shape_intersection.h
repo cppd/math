@@ -203,7 +203,7 @@ bool shapes_intersect_by_spaces(const Shape1& shape_1, const Shape2& shape_2,
         const Vector<N, T> min = min_vector(shape_1.min(), shape_2.min());
 
         // Максимум после смещения минимума к нулю
-        const T max_value = max_element(max_vector(shape_1.max(), shape_2.max()) - min);
+        const T max_value = (max_vector(shape_1.max(), shape_2.max()) - min).norm_infinity();
 
         const T distance = max_value * (distance_from_shape_in_epsilons * limits<T>::epsilon());
 

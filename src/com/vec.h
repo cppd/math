@@ -63,6 +63,12 @@ public:
                 return m_data[i];
         }
 
+        const T* data() const
+        {
+                static_assert(sizeof(Vector) == N * sizeof(T));
+                return m_data.data();
+        }
+
         size_t hash() const
         {
                 return array_hash(m_data);
@@ -116,10 +122,27 @@ public:
                 return *this;
         }
 
-        const T* data() const
+        // Steven J. Leon.
+        // Linear Algebra with Applications. Ninth Edition.
+        // Pearson Education, 2015.
+        // 5.4 Inner Product Spaces.
+        T norm_1() const
         {
-                static_assert(sizeof(Vector) == N * sizeof(T));
-                return m_data.data();
+                T sum = std::abs(m_data[0]);
+                for (unsigned i = 1; i < N; ++i)
+                {
+                        sum += std::abs(m_data[i]);
+                }
+                return sum;
+        }
+        T norm_infinity() const
+        {
+                T max = std::abs(m_data[0]);
+                for (unsigned i = 1; i < N; ++i)
+                {
+                        max = std::max(std::abs(m_data[i]), max);
+                }
+                return max;
         }
 };
 
@@ -210,28 +233,6 @@ Vector<N, T> operator-(const Vector<N, T>& a)
                 res[i] = -a[i];
         }
         return res;
-}
-
-template <size_t N, typename T>
-T max_element(const Vector<N, T>& a)
-{
-        T max = a[0];
-        for (unsigned i = 1; i < N; ++i)
-        {
-                max = std::max(a[i], max);
-        }
-        return max;
-}
-
-template <size_t N, typename T>
-T min_element(const Vector<N, T>& a)
-{
-        T min = a[0];
-        for (unsigned i = 1; i < N; ++i)
-        {
-                min = std::min(a[i], min);
-        }
-        return min;
 }
 
 template <size_t N, typename T>

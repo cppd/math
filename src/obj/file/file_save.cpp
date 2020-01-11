@@ -159,7 +159,7 @@ void write_vertices(const CFile& file, const Obj<N>* obj)
 
         Vector<N, float> delta = max - min;
 
-        float max_delta = max_element(delta);
+        float max_delta = delta.norm_infinity();
 
         if (max_delta == 0)
         {

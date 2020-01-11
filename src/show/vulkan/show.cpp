@@ -384,7 +384,7 @@ class Impl final : public Show, public WindowEvent
                 vec4 plane = -(*m_clip_plane_view_matrix)[2];
 
                 vec3 n(plane[0], plane[1], plane[2]);
-                double d = std::abs(n[0]) + std::abs(n[1]) + std::abs(n[2]);
+                double d = n.norm_1();
 
                 // Уравнение плоскости со смещением
                 // -z = d * (1 - 2 * position) или (0, 0, -1, d * (2 * position - 1)).

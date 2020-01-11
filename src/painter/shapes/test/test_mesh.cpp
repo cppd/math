@@ -92,7 +92,7 @@ void offset_and_rays_for_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, T* o
         // Немного сместить центр, чтобы лучи не проходили через центр дерева
         center *= 0.99;
 
-        T radius = max_element((max - min) / T(2));
+        T radius = ((max - min) / T(2)).norm_infinity();
         // При работе со сферой, чтобы начала лучей точно находились вне сферы,
         // достаточно немного увеличить половину максимального расстояния
         radius *= 2;

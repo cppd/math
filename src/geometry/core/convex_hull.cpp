@@ -672,7 +672,7 @@ void shuffle_and_convert_to_unique_integer(const std::vector<Vector<N, float>>& 
         Vector<N, float> min, max;
         find_min_max(source_points, &min, &max);
 
-        double max_d = max_element(max - min);
+        double max_d = (max - min).norm_infinity();
         if (max_d == 0)
         {
                 error("all points are equal to each other");
