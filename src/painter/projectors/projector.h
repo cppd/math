@@ -72,11 +72,11 @@ std::tuple<Vector<N, T>, std::array<Vector<N, T>, N - 1>> unit_dir_and_axes(cons
 {
         std::tuple<Vector<N, T>, std::array<Vector<N, T>, N - 1>> res;
 
-        std::get<0>(res) = normalize(camera_dir);
+        std::get<0>(res) = camera_dir.normalized();
 
         for (unsigned i = 0; i < N - 1; ++i)
         {
-                std::get<1>(res)[i] = normalize(screen_axes[i]);
+                std::get<1>(res)[i] = screen_axes[i].normalized();
         }
 
         check_vectors_orthogonal(std::get<0>(res), std::get<1>(res));

@@ -62,8 +62,7 @@ void random_in_sphere_by_normal_distribution(RandomEngine& random_engine, Vector
         static_assert(N >= 2);
 
         std::normal_distribution<T> nd(0, 1);
-        v = random_vector<N, T>(random_engine, nd);
-        v = normalize(v);
+        v = random_vector<N, T>(random_engine, nd).normalized();
 
         std::uniform_real_distribution<T> urd(0, 1);
         T k = std::pow(urd(random_engine), 1.0 / N);

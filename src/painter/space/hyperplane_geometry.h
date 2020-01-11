@@ -143,7 +143,7 @@ public:
                 }
 
                 vectors[N - 2] = simplex_normal;
-                Vector<N, T> n = normalize(ortho_nn(vectors));
+                Vector<N, T> n = ortho_nn(vectors).normalized();
                 T d = dot(vertices[0], n);
 
                 // Нормаль нужна в направлении вершины N - 1

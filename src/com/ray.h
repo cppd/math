@@ -31,7 +31,7 @@ class Ray
 public:
         Ray() = default;
 
-        Ray(const Vector<N, T>& org, const Vector<N, T>& dir) : m_org(org), m_dir(normalize(dir))
+        Ray(const Vector<N, T>& org, const Vector<N, T>& dir) : m_org(org), m_dir(dir.normalized())
         {
         }
 
@@ -42,7 +42,7 @@ public:
 
         void set_dir(const Vector<N, T>& dir)
         {
-                m_dir = normalize(dir);
+                m_dir = dir.normalized();
         }
 
         const Vector<N, T>& org() const

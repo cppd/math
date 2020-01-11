@@ -84,7 +84,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_subspace
         {
                 Vector<3, T> non_collinear_vector =
                         std::abs(unit_vector[0]) > impl::LIMIT<T> ? Vector<3, T>(0, 1, 0) : Vector<3, T>(1, 0, 0);
-                Vector<3, T> e0 = normalize(cross(unit_vector, non_collinear_vector));
+                Vector<3, T> e0 = cross(unit_vector, non_collinear_vector).normalized();
                 Vector<3, T> e1 = cross(unit_vector, e0);
                 return {e0, e1};
         }
@@ -118,7 +118,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_subspace
         // к исходному вектору и к уже найденным векторам
         for (unsigned i = 0; i < N - 2; ++i)
         {
-                subspace_basis[i] = normalize(ortho_nn(subspace_basis));
+                subspace_basis[i] = ortho_nn(subspace_basis).normalized();
         }
         subspace_basis[N - 2] = ortho_nn(subspace_basis);
 
@@ -173,7 +173,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_gram_sch
                 {
                         sum += dot(basis[i], orthogonal_basis[n]) * orthogonal_basis[n];
                 }
-                orthogonal_basis[i] = normalize(basis[i] - sum);
+                orthogonal_basis[i] = (basis[i] - sum).normalized();
         }
 
         // Выбросить исходный вектор, который находится по индексу 0

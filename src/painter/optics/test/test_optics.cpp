@@ -53,7 +53,7 @@ std::vector<Vector<3, T>> random_data(int count)
 
                 do
                 {
-                        v = normalize(Vector<3, T>(urd(engine), urd(engine), urd(engine)));
+                        v = Vector<3, T>(urd(engine), urd(engine), urd(engine)).normalized();
                 } while (!is_finite(v));
 
                 data.push_back(v);
@@ -73,7 +73,7 @@ void test_optics_performance(int count, const Vector<3, T>& normal_vector, T eta
 {
         const std::vector<Vector<3, T>> data = random_data<T>(count);
 
-        const Vector<3, T> normal = normalize(normal_vector);
+        const Vector<3, T> normal = normal_vector.normalized();
 
         ASSERT(is_finite(normal));
 

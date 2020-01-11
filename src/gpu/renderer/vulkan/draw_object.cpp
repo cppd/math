@@ -171,7 +171,7 @@ void load_vertices(const vulkan::Device& device, const vulkan::CommandPool& tran
                         }
                         else
                         {
-                                vec3f geometric_normal = normalize(cross(p[1] - p[0], p[2] - p[0]));
+                                vec3f geometric_normal = cross(p[1] - p[0], p[2] - p[0]).normalized();
                                 if (!is_finite(geometric_normal))
                                 {
                                         error("Face unit orthogonal vector is not finite for the face with vertices (" +

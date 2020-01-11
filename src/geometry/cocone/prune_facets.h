@@ -72,7 +72,7 @@ bool sharp_ridge(const std::vector<vec<N>>& points, const std::vector<bool>& int
 
         // Координаты вектора первой грани при проецировании в пространство базиса e0, e1.
         vec<N> base_vec = points[ridge_data.cbegin()->point()] - points[ridge.vertices()[0]];
-        vec<2> base = normalize(vec<2>(dot(e0, base_vec), dot(e1, base_vec)));
+        vec<2> base = vec<2>(dot(e0, base_vec), dot(e1, base_vec)).normalized();
         ASSERT(is_finite(base));
 
         double cos_plus = 1, cos_minus = 1, sin_plus = 0, sin_minus = 0;
@@ -82,7 +82,7 @@ bool sharp_ridge(const std::vector<vec<N>>& points, const std::vector<bool>& int
         for (auto ridge_facet = std::next(ridge_data.cbegin()); ridge_facet != ridge_data.cend(); ++ridge_facet)
         {
                 vec<N> facet_vec = points[ridge_facet->point()] - points[ridge.vertices()[0]];
-                vec<2> v = normalize(vec<2>(dot(e0, facet_vec), dot(e1, facet_vec)));
+                vec<2> v = vec<2>(dot(e0, facet_vec), dot(e1, facet_vec)).normalized();
                 ASSERT(is_finite(v));
 
                 double sine = cross(base, v);

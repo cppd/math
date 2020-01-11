@@ -78,11 +78,11 @@ void test_distribution(int count, T discrepancy_limit)
         std::map<T, T, std::greater<T>> buckets;
 
         std::uniform_real_distribution<T> urd(-1, 1);
-        Vector<N, T> normal = normalize(random_vector<N, T>(random_engine, urd));
+        Vector<N, T> normal = random_vector<N, T>(random_engine, urd).normalized();
 
         for (int i = 0; i < count; ++i)
         {
-                Vector<N, T> random_vector = normalize(random_cosine_weighted_on_hemisphere(random_engine, normal));
+                Vector<N, T> random_vector = random_cosine_weighted_on_hemisphere(random_engine, normal).normalized();
 
                 T cosine;
 
@@ -134,7 +134,7 @@ void test_speed(int count)
         std::vector<Vector<N, T>> data;
         for (int i = 0; i < count; ++i)
         {
-                data.push_back(normalize(random_vector<N, T>(random_engine, urd)));
+                data.push_back(random_vector<N, T>(random_engine, urd).normalized());
         }
 
         double start_time = time_in_seconds();

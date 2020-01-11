@@ -170,6 +170,25 @@ public:
                 }
                 return max * std::sqrt(s);
         }
+
+        void normalize()
+        {
+                T n = norm();
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        m_data[i] /= n;
+                }
+        }
+        [[nodiscard]] Vector<N, T> normalized() const
+        {
+                T n = norm();
+                Vector<N, T> res;
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        res[i] = m_data[i] / n;
+                }
+                return res;
+        }
 };
 
 namespace std
@@ -303,41 +322,6 @@ Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, F x)
                 result[i] = interpolation(a[i], b[i], x);
         }
         return result;
-}
-
-template <size_t N, typename T>
-Vector<N, T> normalize(const Vector<N, T>& a)
-{
-        return a / a.norm();
-}
-// template <typename T>
-// Vector<1, T> normalize(const Vector<1, T>&)
-//{
-//        return Vector<1, T>(1);
-//}
-// template <typename T>
-// Vector<2, T> normalize(const Vector<2, T>& a)
-//{
-//        T k = sqrt(a[0] * a[0] + a[1] * a[1]);
-//        return Vector<2, T>(a[0] / k, a[1] / k);
-//}
-// template <typename T>
-// Vector<3, T> normalize(const Vector<3, T>& a)
-//{
-//        T k = sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
-//        return Vector<3, T>(a[0] / k, a[1] / k, a[2] / k);
-//}
-// template <typename T>
-// Vector<4, T> normalize(const Vector<4, T>& a)
-//{
-//        T k = sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2] + a[3] * a[3]);
-//        return Vector<4, T>(a[0] / k, a[1] / k, a[2] / k, a[3] / k);
-//}
-
-template <size_t N, typename T>
-Vector<N, T> normalize_mul(const Vector<N, T>& a)
-{
-        return a * (1 / length(a));
 }
 
 template <size_t N, typename T>

@@ -45,9 +45,9 @@ vec3 rotate_vector_degree(const vec3& axis, double angle_degree, const vec3& v)
 
 void Camera::set_vectors(const vec3& right, const vec3& up)
 {
-        m_camera_up = normalize(up);
+        m_camera_up = up.normalized();
 
-        m_camera_direction = cross(m_camera_up, normalize(right));
+        m_camera_direction = cross(up, right).normalized();
 
         m_camera_right = cross(m_camera_direction, m_camera_up);
 

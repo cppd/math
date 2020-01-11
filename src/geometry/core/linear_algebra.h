@@ -340,9 +340,9 @@ void ortho_e0_e1(const std::vector<Vector<N, T>>& points, const std::array<int, 
 
         minus(&vectors[N - 2], points[point], points[indices[0]]);
 
-        *e1 = normalize(ortho_nn(vectors));
+        *e1 = ortho_nn(vectors).normalized();
 
         vectors[N - 2] = *e1;
 
-        *e2 = normalize(ortho_nn(vectors));
+        *e2 = ortho_nn(vectors).normalized();
 }

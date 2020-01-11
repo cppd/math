@@ -62,7 +62,7 @@ public:
 
         void set_shading_normal(const Vector<N, T>& normal)
         {
-                m_shading_normal = normalize(normal);
+                m_shading_normal = normal.normalized();
         }
         const Vector<N, T>& get_shading_normal() const
         {
@@ -71,7 +71,7 @@ public:
 
         void set_geometric_normal(const Vector<N, T>& normal)
         {
-                m_geometric_normal = normalize(normal);
+                m_geometric_normal = normal.normalized();
         }
         const Vector<N, T>& get_geometric_normal() const
         {

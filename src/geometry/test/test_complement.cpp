@@ -74,7 +74,7 @@ std::vector<Vector<N, T>> random_vectors(int count)
         {
                 while (true)
                 {
-                        Vector<N, T> v = normalize(random_vector<N, T>(random_engine, urd));
+                        Vector<N, T> v = random_vector<N, T>(random_engine, urd).normalized();
                         if (is_finite(v))
                         {
                                 res.push_back(v);

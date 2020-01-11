@@ -63,7 +63,7 @@ void generate_random_data(bool zero, int count, std::vector<Vector<N, float>>* p
                 }
                 else
                 {
-                        (*points)[v_i] = to_vector<float>(normalize(v));
+                        (*points)[v_i] = to_vector<float>(v.normalized());
                 }
         }
         if (zero)
@@ -80,7 +80,7 @@ void check_visible_from_point(const std::vector<Vector<N, float>>& points, const
                 return;
         }
 
-        vec<N> v = normalize(to_vector<double>(points[point] - points[facet.vertices()[0]]));
+        vec<N> v = to_vector<double>(points[point] - points[facet.vertices()[0]]).normalized();
 
         if (!is_finite(v))
         {

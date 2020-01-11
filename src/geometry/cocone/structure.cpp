@@ -84,7 +84,7 @@ vec<N> voronoi_positive_norm(const vec<N>& vertex, const std::vector<DelaunayObj
                         }
                 }
 
-                positive_norm = normalize(sum);
+                positive_norm = sum.normalized();
         }
         else
         {
@@ -102,7 +102,7 @@ vec<N> voronoi_positive_norm(const vec<N>& vertex, const std::vector<DelaunayObj
                         }
                 }
 
-                positive_norm = normalize(max_vector);
+                positive_norm = max_vector.normalized();
         }
 
         if (!is_finite(positive_norm))

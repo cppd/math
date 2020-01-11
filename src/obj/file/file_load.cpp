@@ -978,7 +978,7 @@ void FileObj<N>::read_obj_stage_one(unsigned thread_num, unsigned thread_count, 
                                 lp.type = ObjLineType::vn;
                                 Vector<N, float> v;
                                 read_float(&data[lp.second_b], &v);
-                                lp.v = normalize(v);
+                                lp.v = v.normalized();
 
                                 ++((*counters)[thread_num].normal);
                         }

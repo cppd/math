@@ -114,7 +114,7 @@ std::array<Vector<N, T>, N> random_edges(RandomEngine& engine, Distribution& dis
         {
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        edges[i] = normalize(random_vector<N, T>(engine, distribution));
+                        edges[i] = random_vector<N, T>(engine, distribution).normalized();
                 }
 
         } while (!test_edge_angles(edges));

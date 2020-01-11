@@ -159,7 +159,7 @@ void Parallelotope<N, T>::create_planes()
 
         for (unsigned i = 0; i < N; ++i)
         {
-                m_planes[i].n = normalize(ortho_nn(del_elem(m_vectors, i)));
+                m_planes[i].n = ortho_nn(del_elem(m_vectors, i)).normalized();
                 m_planes[i].d1 = dot(m_org, m_planes[i].n);
                 m_planes[i].d2 = -dot(m_org + m_vectors[i], m_planes[i].n);
                 if (dot(m_planes[i].n, m_vectors[i]) > 0)

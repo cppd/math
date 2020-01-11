@@ -74,7 +74,7 @@ void HyperplaneParallelotope<N, T>::set_data(const Vector<N, T>& org, const std:
 {
         m_org = org;
         m_vectors = vectors;
-        m_normal = normalize(ortho_nn(vectors));
+        m_normal = ortho_nn(vectors).normalized();
         m_geometry.set_data(m_normal, m_org, m_vectors);
 }
 

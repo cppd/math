@@ -32,7 +32,7 @@ namespace
 template <size_t N>
 Vector<N, double> face_normal(const std::vector<Vector<N, float>>& points, const std::array<int, N>& face)
 {
-        return normalize(ortho_nn<N, float, double>(points, face));
+        return ortho_nn<N, float, double>(points, face).normalized();
 }
 
 template <size_t N, typename T>
@@ -43,7 +43,7 @@ Vector<N, T> average_normal(const Vector<N, T>& original_normal, const std::vect
         {
                 sum += (dot(n, original_normal) >= 0) ? n : -n;
         }
-        return normalize(sum);
+        return sum.normalized();
 }
 
 template <size_t N>

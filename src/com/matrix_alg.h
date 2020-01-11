@@ -68,9 +68,9 @@ public:
 template <typename T>
 Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, const Vector<3, T>& up)
 {
-        Vector<3, T> f = normalize(center - eye);
-        Vector<3, T> s = normalize(cross(f, up));
-        Vector<3, T> u = normalize(cross(s, f));
+        Vector<3, T> f = (center - eye).normalized();
+        Vector<3, T> s = cross(f, up).normalized();
+        Vector<3, T> u = cross(s, f).normalized();
 
         Matrix<4, 4, T> m;
 

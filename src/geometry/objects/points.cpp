@@ -145,7 +145,7 @@ Vector<N, T> random_sphere(RandomEngine& engine)
                 }
         } while (dot(v, v) > 1);
 
-        return normalize(v);
+        return v.normalized();
 }
 
 template <size_t N, typename T, typename V, typename RandomEngine>

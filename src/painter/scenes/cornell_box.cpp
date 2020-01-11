@@ -124,10 +124,10 @@ void CornellBoxScene::create_scene(int width, int height, double size, const Col
 
         size *= 1.5;
 
-        vec3 right = normalize(cross(camera_direction, camera_up));
-        vec3 up = normalize(camera_up);
-        vec3 view_point = (1.0 / 6) * size * up - size * normalize(camera_direction);
-        vec3 dir = normalize(camera_direction);
+        vec3 dir = camera_direction.normalized();
+        vec3 right = cross(camera_direction, camera_up).normalized();
+        vec3 up = cross(right, dir).normalized();
+        vec3 view_point = (1.0 / 6) * size * up - size * dir;
 
         vec3 lower_left = view_point + 0.5 * size * (dir - right - up);
         vec3 lower_right = view_point + 0.5 * size * (dir + right - up);

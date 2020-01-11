@@ -81,7 +81,7 @@ MeshHyperplaneSimplex<N, T>::MeshHyperplaneSimplex(const std::vector<Vector<N, T
 
         m_material = material;
 
-        m_normal = normalize(ortho_nn(m_vertices, m_v));
+        m_normal = ortho_nn(m_vertices, m_v).normalized();
 
         if (!is_finite(m_normal))
         {
@@ -170,7 +170,7 @@ Vector<N, T> MeshHyperplaneSimplex<N, T>::shading_normal(const Vector<N, T>& poi
                 {
                         normals[i] = m_normals[m_n[i]];
                 }
-                return normalize(m_geometry.interpolate(point, normals));
+                return m_geometry.interpolate(point, normals).normalized();
         }
         case NormalType::Reverse:
         {
@@ -179,7 +179,7 @@ Vector<N, T> MeshHyperplaneSimplex<N, T>::shading_normal(const Vector<N, T>& poi
                 {
                         normals[i] = m_reverse_normal[i] ? -m_normals[m_n[i]] : m_normals[m_n[i]];
                 }
-                return normalize(m_geometry.interpolate(point, normals));
+                return m_geometry.interpolate(point, normals).normalized();
         }
         }
         error_fatal("Unknown mesh simplex normal type");
