@@ -144,6 +144,32 @@ public:
                 }
                 return max;
         }
+        T norm_squared() const
+        {
+                T s = m_data[0] * m_data[0];
+                for (unsigned i = 1; i < N; ++i)
+                {
+                        s = std::fma(m_data[i], m_data[i], s);
+                }
+                return s;
+        }
+        T norm() const
+        {
+                return std::sqrt(norm_squared());
+        }
+        T norm_stable() const
+        {
+                const T max = norm_infinity();
+
+                T k = m_data[0] / max;
+                T s = k * k;
+                for (unsigned i = 1; i < N; ++i)
+                {
+                        k = m_data[i] / max;
+                        s = std::fma(k, k, s);
+                }
+                return max * std::sqrt(s);
+        }
 };
 
 namespace std
@@ -280,15 +306,9 @@ Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, F x)
 }
 
 template <size_t N, typename T>
-T length(const Vector<N, T>& a)
-{
-        return sqrt(dot(a, a));
-}
-
-template <size_t N, typename T>
 Vector<N, T> normalize(const Vector<N, T>& a)
 {
-        return a / length(a);
+        return a / a.norm();
 }
 // template <typename T>
 // Vector<1, T> normalize(const Vector<1, T>&)

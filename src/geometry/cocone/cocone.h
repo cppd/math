@@ -129,13 +129,13 @@ bool intersect_cocone(const Vector<N, T>& normalized_cone_axis, const Vector<N, 
         if (t1_ok && !t2_ok)
         {
                 from_apex_to_intersection_point = vec_a + t1 * vec_ab;
-                *distance = length(from_apex_to_intersection_point);
+                *distance = from_apex_to_intersection_point.norm();
                 return true;
         }
         if (!t1_ok && t2_ok)
         {
                 from_apex_to_intersection_point = vec_a + t2 * vec_ab;
-                *distance = length(from_apex_to_intersection_point);
+                *distance = from_apex_to_intersection_point.norm();
                 return true;
         }
 

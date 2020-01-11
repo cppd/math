@@ -183,7 +183,7 @@ void write_normals(const CFile& file, const Obj<N>* obj)
         for (const Vector<N, float>& vn : obj->normals())
         {
                 Vector<N, double> normal = to_vector<double>(vn);
-                double len = length(normal);
+                double len = normal.norm();
 
                 if (len == 0)
                 {

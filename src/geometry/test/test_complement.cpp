@@ -58,7 +58,7 @@ constexpr bool vectors_are_parallel(const Vector<N, T>& a, const Vector<N, T>& b
 template <size_t N, typename T>
 bool vector_is_unit(const Vector<N, T>& v)
 {
-        return std::abs(1 - length(v)) <= MAX_LENGTH_DISCREPANCY<T>;
+        return std::abs(1 - v.norm()) <= MAX_LENGTH_DISCREPANCY<T>;
 }
 
 template <size_t N, typename T>

@@ -390,7 +390,7 @@ class Impl final : public Show, public WindowEvent
                 // -z = d * (1 - 2 * position) или (0, 0, -1, d * (2 * position - 1)).
                 plane[3] += d * (2 * position - 1);
 
-                plane /= length(n);
+                plane /= n.norm();
 
                 m_renderer->clip_plane_show(plane);
         }

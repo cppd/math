@@ -55,7 +55,7 @@ void generate_random_data(bool zero, int count, std::vector<Vector<N, float>>* p
                         {
                                 v[i] = urd(gen);
                         }
-                } while (length(v) > 1);
+                } while (v.norm_squared() > 1);
 
                 if (!on_sphere)
                 {

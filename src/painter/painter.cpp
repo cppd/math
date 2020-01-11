@@ -233,7 +233,7 @@ Color direct_diffuse_lighting(Counter& ray_count, const std::vector<const Generi
                         // к источнику света, то напрямую рассчитать видимость источника света.
 
                         ray_to_light.move_along_dir(ray_offset);
-                        if (!light_source_is_visible(ray_count, objects, ray_to_light, length(vector_to_light)))
+                        if (!light_source_is_visible(ray_count, objects, ray_to_light, vector_to_light.norm()))
                         {
                                 continue;
                         }
@@ -258,7 +258,7 @@ Color direct_diffuse_lighting(Counter& ray_count, const std::vector<const Generi
                                 continue;
                         }
 
-                        T distance_to_light_source = length(vector_to_light);
+                        T distance_to_light_source = vector_to_light.norm();
 
                         if (t >= distance_to_light_source)
                         {

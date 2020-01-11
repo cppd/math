@@ -189,7 +189,7 @@ double voronoi_edge_radius(const std::vector<DelaunayObject<N>>& delaunay_object
                 // Если вектор PA направлен далеко от cocone и близко к положительному полюсу
                 if (std::abs(cos_n_a) > LIMIT_COSINE_FOR_INTERSECTION_PA_POLE)
                 {
-                        double a_to_b_length = facet.one_sided() ? 1.0 : length(a_to_b);
+                        double a_to_b_length = facet.one_sided() ? 1.0 : a_to_b.norm();
                         double cos_pa_ab = dot(pa, a_to_b) / (pa_length * a_to_b_length);
 
                         // Если PA и AB направлены почти в противоположных направлениях
@@ -242,7 +242,7 @@ void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<De
 
                 // Вектор от вершины к одной из 2 вершин Вороного грани
                 vec<N> pa = delaunay_objects[facet.delaunay(0)].voronoi_vertex() - vertex;
-                double pa_length = length(pa);
+                double pa_length = pa.norm();
                 double cos_n_a = dot(positive_pole, pa) / pa_length;
 
                 // Вектор от вершины к другой из 2 вершин Вороного.
@@ -257,7 +257,7 @@ void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<De
                 else
                 {
                         vec<N> pb = delaunay_objects[facet.delaunay(1)].voronoi_vertex() - vertex;
-                        pb_length = length(pb);
+                        pb_length = pb.norm();
                         cos_n_b = dot(positive_pole, pb) / pb_length;
                 }
 

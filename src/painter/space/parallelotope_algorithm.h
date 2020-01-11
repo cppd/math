@@ -148,7 +148,7 @@ public:
 
                 T max_length = limits<T>::lowest();
 
-                diagonals(p, [&max_length](const Vector<N, T>& d) { max_length = std::max(max_length, length(d)); });
+                diagonals(p, [&max_length](const Vector<N, T>& d) { max_length = std::max(max_length, d.norm()); });
 
                 return max_length;
         }

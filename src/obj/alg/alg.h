@@ -47,11 +47,10 @@ std::tuple<Vector<N, T>, T> center_and_length_for_min_max(const Vector<N, T>& mi
 
         Vector<N, T> center = min + (max - min) / static_cast<T>(2);
 
-        // Длину определять на самом большом типе с плавающей точкой,
-        // так как Т может быть float и координаты точек иметь большие
+        // Т может быть float и координаты точек могут иметь большие
         // для float величины, например, 10^30, что не позволяет считать
-        // квадраты в скалярном произведении на float.
-        T len = length(to_vector<long double>(max - min));
+        // квадраты на float, поэтому используется функция norm_stable.
+        T len = (max - min).norm_stable();
 
         if (!is_finite(center))
         {

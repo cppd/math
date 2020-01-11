@@ -144,7 +144,7 @@ std::unique_ptr<const PaintObjects<N, T>> single_object_scene(const Color& backg
         }
 
         Vector<N, T> camera_position(center);
-        camera_position[N - 1] = max[N - 1] + length(object_size);
+        camera_position[N - 1] = max[N - 1] + object_size.norm();
 
         Vector<N, T> camera_direction(0);
         camera_direction[N - 1] = -1;

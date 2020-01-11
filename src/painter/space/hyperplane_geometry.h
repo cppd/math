@@ -126,7 +126,7 @@ public:
                 // N - 1 плоскость уже есть, и все они проходят через вершину N - 1
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        T len = length(m_planes[i].n);
+                        T len = m_planes[i].n.norm();
                         (*c)[i].a = m_planes[i].n / len;
                         (*c)[i].b = -m_planes[i].d / len;
                 }

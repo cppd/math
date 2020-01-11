@@ -86,7 +86,7 @@ bool almost_equal(T a, T b)
 template <size_t N, typename T>
 bool almost_equal(const Vector<N, T>& a, const Vector<N, T>& b)
 {
-        return length(a - b) <= EQUALITY_EPSILON<T>;
+        return (a - b).norm() <= EQUALITY_EPSILON<T>;
 }
 
 template <size_t N, typename T>
@@ -142,7 +142,7 @@ std::vector<VectorP<Parallelotope>> external_points(RandomEngine& engine, int co
 
         static_assert(sizeof...(I) == N);
 
-        std::array<T, N> len = {length(p.e(I))...};
+        std::array<T, N> len = {p.e(I).norm()...};
 
         std::array<std::uniform_real_distribution<T>, N> low = {
                 std::uniform_real_distribution<T>{-len[I] * 10, -POSITION_DELTA<T> * len[I]}...};
@@ -174,7 +174,7 @@ std::vector<VectorP<Parallelotope>> internal_points(RandomEngine& engine, int co
 
         static_assert(sizeof...(I) == N);
 
-        std::array<T, N> len = {length(p.e(I))...};
+        std::array<T, N> len = {p.e(I).norm()...};
 
         std::array<std::uniform_real_distribution<T>, N> internal = {
                 std::uniform_real_distribution<T>{len[I] * POSITION_DELTA<T>, len[I] * (1 - POSITION_DELTA<T>)}...};
@@ -202,7 +202,7 @@ std::vector<VectorP<Parallelotope>> cover_points(RandomEngine& engine, int count
 
         static_assert(sizeof...(I) == N);
 
-        std::array<T, N> len = {length(p.e(I))...};
+        std::array<T, N> len = {p.e(I).norm()...};
 
         std::array<std::uniform_real_distribution<T>, N> cover = {
                 std::uniform_real_distribution<T>{static_cast<T>(-0.2) * len[I], len[I] * static_cast<T>(1.2)}...};
@@ -258,7 +258,7 @@ Vector<N, T> random_direction(RandomEngine& engine)
         {
                 Vector<N, T> direction = random_vector<N, T>(engine, urd_dir);
 
-                if (length(direction) > 0)
+                if (direction.norm_squared() > 0)
                 {
                         return direction;
                 }
@@ -282,7 +282,7 @@ Vector<N, T> random_direction_for_parallelotope_comparison(RandomEngine& engine)
                         direction[i] = uid_select(engine) != 0 ? urd_dir(engine) : uid_dir(engine);
                 }
 
-                if (length(direction) > 0)
+                if (direction.norm_squared() > 0)
                 {
                         return direction;
                 }
