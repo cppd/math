@@ -381,7 +381,7 @@ class Impl final : public Show, public WindowEvent
                 // -z = 0 или (0, 0, -1, 0).
                 // Уравнение плоскости для исходных координат
                 // (0, 0, -1, 0) * view matrix.
-                vec4 plane = -(*m_clip_plane_view_matrix)[2];
+                vec4 plane = -m_clip_plane_view_matrix->row(2);
 
                 vec3 n(plane[0], plane[1], plane[2]);
                 double d = n.norm_1();

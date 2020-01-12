@@ -39,11 +39,11 @@ namespace gauss_implementation
 template <size_t N, typename T>
 int find_pivot(const Matrix<N, N, T>& A, int column, int from_row)
 {
-        T max = abs(A[from_row][column]);
+        T max = abs(A(from_row, column));
         int pivot = from_row;
         for (int r = from_row + 1; r < int(N); ++r)
         {
-                T v = abs(A[r][column]);
+                T v = abs(A(r, column));
                 if (v > max)
                 {
                         max = v;
@@ -71,32 +71,32 @@ void solve_gauss(Matrix<Size, Size, T>* A_p, Vector<Size, T>* b_p)
                 int pivot = gauss_implementation::find_pivot(A, k, k);
                 if (pivot != k)
                 {
-                        std::swap(A[pivot], A[k]);
+                        std::swap(A.row(pivot), A.row(k));
                         std::swap(b[pivot], b[k]);
                 }
 
                 for (int i = k + 1; i < N; ++i)
                 {
-                        T l_ik = A[i][k] / A[k][k];
+                        T l_ik = A(i, k) / A(k, k);
                         for (int j = k; j < N; ++j)
                         {
-                                // A[i][j] = A[i][j] - l_ik * A[k][j];
-                                A[i][j] = fma(-l_ik, A[k][j], A[i][j]);
+                                // A(i, j) = A(i, j) - l_ik * A(k, j);
+                                A(i, j) = fma(-l_ik, A(k, j), A(i, j));
                         }
                         // b[i] = b[i] - l_ik * b[k];
                         b[i] = fma(-l_ik, b[k], b[i]);
                 }
         }
 
-        b[N - 1] = b[N - 1] / A[N - 1][N - 1];
+        b[N - 1] = b[N - 1] / A(N - 1, N - 1);
         for (int k = N - 2; k >= 0; --k)
         {
                 for (int j = k + 1; j < N; ++j)
                 {
-                        // b[k] = b[k] - A[k][j] * b[j];
-                        b[k] = fma(-A[k][j], b[j], b[k]);
+                        // b[k] = b[k] - A(k, j) * b[j];
+                        b[k] = fma(-A(k, j), b[j], b[k]);
                 }
-                b[k] = b[k] / A[k][k];
+                b[k] = b[k] / A(k, k);
         }
 }
 
@@ -118,29 +118,29 @@ void solve_gauss(Matrix<SizeA, SizeA, T>* A_p, Matrix<SizeA, SizeB, T>* B_p)
                 int pivot = gauss_implementation::find_pivot(A, k, k);
                 if (pivot != k)
                 {
-                        std::swap(A[pivot], A[k]);
-                        std::swap(B[pivot], B[k]);
+                        std::swap(A.row(pivot), A.row(k));
+                        std::swap(B.row(pivot), B.row(k));
                 }
 
                 for (int i = k + 1; i < N; ++i)
                 {
-                        T l_ik = A[i][k] / A[k][k];
+                        T l_ik = A(i, k) / A(k, k);
                         for (int j = k; j < N; ++j)
                         {
-                                // A[i][j] = A[i][j] - l_ik * A[k][j];
-                                A[i][j] = fma(-l_ik, A[k][j], A[i][j]);
+                                // A(i, j) = A(i, j) - l_ik * A(k, j);
+                                A(i, j) = fma(-l_ik, A(k, j), A(i, j));
                         }
                         for (int n = 0; n < NB; ++n)
                         {
-                                // B[i][n] = B[i][n] - l_ik * B[k][n];
-                                B[i][n] = fma(-l_ik, B[k][n], B[i][n]);
+                                // B(i, n) = B(i, n) - l_ik * B(k, n);
+                                B(i, n) = fma(-l_ik, B(k, n), B(i, n));
                         }
                 }
         }
 
         for (int n = 0; n < NB; ++n)
         {
-                B[N - 1][n] = B[N - 1][n] / A[N - 1][N - 1];
+                B(N - 1, n) = B(N - 1, n) / A(N - 1, N - 1);
         }
 
         for (int k = N - 2; k >= 0; --k)
@@ -149,13 +149,13 @@ void solve_gauss(Matrix<SizeA, SizeA, T>* A_p, Matrix<SizeA, SizeB, T>* B_p)
                 {
                         for (int n = 0; n < NB; ++n)
                         {
-                                // B[k][n] = B[k][n] - A[k][j] * B[j][n];
-                                B[k][n] = fma(-A[k][j], B[j][n], B[k][n]);
+                                // B(k, n) = B(k, n) - A(k, j) * B(j, n);
+                                B(k, n) = fma(-A(k, j), B(j, n), B(k, n));
                         }
                 }
                 for (int n = 0; n < NB; ++n)
                 {
-                        B[k][n] = B[k][n] / A[k][k];
+                        B(k, n) = B(k, n) / A(k, k);
                 }
         }
 }
@@ -176,17 +176,17 @@ T determinant_gauss(Matrix<Size, Size, T>* A_p)
                 int pivot = gauss_implementation::find_pivot(A, k, k);
                 if (pivot != k)
                 {
-                        std::swap(A[pivot], A[k]);
+                        std::swap(A.row(pivot), A.row(k));
                         sign = !sign;
                 }
 
                 for (int i = k + 1; i < N; ++i)
                 {
-                        T l_ik = A[i][k] / A[k][k];
+                        T l_ik = A(i, k) / A(k, k);
                         for (int j = k; j < N; ++j)
                         {
-                                // A[i][j] = A[i][j] - l_ik * A[k][j];
-                                A[i][j] = fma(-l_ik, A[k][j], A[i][j]);
+                                // A(i, j) = A(i, j) - l_ik * A(k, j);
+                                A(i, j) = fma(-l_ik, A(k, j), A(i, j));
                         }
                 }
         }
@@ -194,7 +194,7 @@ T determinant_gauss(Matrix<Size, Size, T>* A_p)
         T d = 1;
         for (int i = 0; i < N; ++i)
         {
-                d *= A[i][i];
+                d *= A(i, i);
         }
 
         return sign ? -d : d;

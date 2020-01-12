@@ -84,7 +84,7 @@ Vector<N, T> compute_voronoi_vertex(const std::vector<Vector<N, T>>& points, con
                 Vector<N, T> pn_minus_p0 = pn - p0;
                 for (unsigned col = 0; col < N; ++col)
                 {
-                        a[row][col] = 2 * pn_minus_p0[col];
+                        a(row, col) = 2 * pn_minus_p0[col];
                 }
                 b[row] = dot(pn, pn) - dot0;
         }

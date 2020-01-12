@@ -29,14 +29,13 @@ class MatrixMulVector
 public:
         MatrixMulVector(const Matrix<N, N, T>& m) : m_mtx(m)
         {
-                if (m_mtx[N - 1][N - 1] != 1)
+                if (m_mtx(N - 1, N - 1) != 1)
                 {
                         error("Wrong matrix for matrix-vector multiplier");
                 }
-
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        if (m_mtx[N - 1][i] != 0)
+                        if (m_mtx(N - 1, i) != 0)
                         {
                                 error("Wrong matrix for matrix-vector multiplier");
                         }
@@ -46,21 +45,15 @@ public:
         Vector<N - 1, T> operator()(const Vector<N - 1, T>& v) const
         {
                 Vector<N - 1, T> res;
-
-                for (unsigned row = 0; row < N - 1; ++row)
+                for (unsigned r = 0; r < N - 1; ++r)
                 {
-                        res[row] = m_mtx[row][N - 1];
-                        for (unsigned col = 0; col < N - 1; ++col)
+                        res[r] = m_mtx(r, 0) * v[0];
+                        for (unsigned c = 1; c < N - 1; ++c)
                         {
-#if !defined(__clang__) && defined(__GNUC__) && __GNUC__ == 8
-                                // При использовании GCC 8.1 функция fma работает неправильно
-                                res[row] += m_mtx[row][col] * v[col];
-#else
-                                res[row] = fma(m_mtx[row][col], v[col], res[row]);
-#endif
+                                res[r] = fma(m_mtx(r, c), v[c], res[r]);
                         }
+                        res[r] += m_mtx(r, N - 1);
                 }
-
                 return res;
         }
 };
@@ -74,10 +67,10 @@ Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, con
 
         Matrix<4, 4, T> m;
 
-        m[0] = Vector<4, T>(s[0], s[1], s[2], -dot(s, eye));
-        m[1] = Vector<4, T>(u[0], u[1], u[2], -dot(u, eye));
-        m[2] = Vector<4, T>(-f[0], -f[1], -f[2], dot(f, eye));
-        m[3] = Vector<4, T>(0, 0, 0, 1);
+        m.row(0) = Vector<4, T>(s[0], s[1], s[2], -dot(s, eye));
+        m.row(1) = Vector<4, T>(u[0], u[1], u[2], -dot(u, eye));
+        m.row(2) = Vector<4, T>(-f[0], -f[1], -f[2], dot(f, eye));
+        m.row(3) = Vector<4, T>(0, 0, 0, 1);
 
         return m;
 }
@@ -97,13 +90,13 @@ constexpr Matrix<4, 4, T> ortho_opengl(T1 left, T2 right, T3 bottom, T4 top, T5 
 
         Matrix<4, 4, T> m(1);
 
-        m[0][0] = 2 / (right_t - left_t);
-        m[1][1] = 2 / (top_t - bottom_t);
-        m[2][2] = 2 / (far_t - near_t);
+        m(0, 0) = 2 / (right_t - left_t);
+        m(1, 1) = 2 / (top_t - bottom_t);
+        m(2, 2) = 2 / (far_t - near_t);
 
-        m[0][3] = -(right_t + left_t) / (right_t - left_t);
-        m[1][3] = -(top_t + bottom_t) / (top_t - bottom_t);
-        m[2][3] = -(far_t + near_t) / (far_t - near_t);
+        m(0, 3) = -(right_t + left_t) / (right_t - left_t);
+        m(1, 3) = -(top_t + bottom_t) / (top_t - bottom_t);
+        m(2, 3) = -(far_t + near_t) / (far_t - near_t);
 
         return m;
 }
@@ -123,13 +116,13 @@ constexpr Matrix<4, 4, T> ortho_vulkan(T1 left, T2 right, T3 bottom, T4 top, T5 
 
         Matrix<4, 4, T> m(1);
 
-        m[0][0] = 2 / (right_t - left_t);
-        m[1][1] = 2 / (bottom_t - top_t);
-        m[2][2] = 1 / (far_t - near_t);
+        m(0, 0) = 2 / (right_t - left_t);
+        m(1, 1) = 2 / (bottom_t - top_t);
+        m(2, 2) = 1 / (far_t - near_t);
 
-        m[0][3] = -(right_t + left_t) / (right_t - left_t);
-        m[1][3] = -(bottom_t + top_t) / (bottom_t - top_t);
-        m[2][3] = -near_t / (far_t - near_t);
+        m(0, 3) = -(right_t + left_t) / (right_t - left_t);
+        m(1, 3) = -(bottom_t + top_t) / (bottom_t - top_t);
+        m(2, 3) = -near_t / (far_t - near_t);
 
         return m;
 }
@@ -140,7 +133,7 @@ constexpr Matrix<N + 1, N + 1, T> scale(const Vector<N, T>& v)
         Matrix<N + 1, N + 1, T> m(1);
         for (unsigned i = 0; i < N; ++i)
         {
-                m[i][i] = v[i];
+                m(i, i) = v[i];
         }
         return m;
 }
@@ -157,7 +150,7 @@ constexpr Matrix<N + 1, N + 1, T> translate(const Vector<N, T>& v)
         Matrix<N + 1, N + 1, T> m(1);
         for (unsigned i = 0; i < N; ++i)
         {
-                m[i][N] = v[i];
+                m(i, N) = v[i];
         }
         return m;
 }
