@@ -56,7 +56,7 @@ class ShaderMemory final
 
         struct Data
         {
-                Matrix<4, 4, float> matrix;
+                mat4f matrix;
         };
 
 public:

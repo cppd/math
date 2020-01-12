@@ -224,6 +224,6 @@ std::string to_string(const Matrix<Rows, Columns, T>& m)
         return s;
 }
 
-// mat4 - это только Matrix<4, 4, double>.
-// Не менять.
+// Не менять эти типы.
 using mat4 = Matrix<4, 4, double>;
+using mat4f = Matrix<4, 4, float>;

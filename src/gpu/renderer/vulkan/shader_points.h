@@ -45,11 +45,11 @@ class RendererPointsMemory final
         {
                 struct M
                 {
-                        Matrix<4, 4, float> matrix;
+                        mat4f matrix;
                 };
                 struct C
                 {
-                        Vector<4, float> equation;
+                        vec4f equation;
                         uint32_t enabled;
                 };
                 M matrices;

@@ -39,8 +39,8 @@ class RendererTrianglesMemory final
 
         struct Matrices
         {
-                Matrix<4, 4, float> matrix;
-                Matrix<4, 4, float> shadow_matrix;
+                mat4f matrix;
+                mat4f shadow_matrix;
         };
 
         struct Lighting
@@ -212,7 +212,7 @@ class RendererPointsMemory final
 
         struct Matrices
         {
-                Matrix<4, 4, float> matrix;
+                mat4f matrix;
         };
 
         struct Drawing
@@ -273,7 +273,7 @@ class RendererShadowMemory final
 
         struct Matrices
         {
-                Matrix<4, 4, float> matrix;
+                mat4f matrix;
         };
 
 public:

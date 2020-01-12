@@ -43,7 +43,7 @@ class TextShowMemory final
 
         struct Matrices
         {
-                Matrix<4, 4, float> matrix;
+                mat4f matrix;
         };
 
         struct Drawing

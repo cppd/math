@@ -52,12 +52,12 @@ class RendererTrianglesSharedMemory final
         {
                 struct M
                 {
-                        Matrix<4, 4, float> matrix;
-                        Matrix<4, 4, float> shadow_matrix;
+                        mat4f matrix;
+                        mat4f shadow_matrix;
                 };
                 struct C
                 {
-                        Vector<4, float> equation;
+                        vec4f equation;
                         uint32_t enabled;
                 };
                 M matrices;
@@ -203,11 +203,11 @@ class RendererShadowMemory final
         {
                 struct M
                 {
-                        Matrix<4, 4, float> matrix;
+                        mat4f matrix;
                 };
                 struct C
                 {
-                        Vector<4, float> equation;
+                        vec4f equation;
                         uint32_t enabled;
                 };
                 M matrices;
