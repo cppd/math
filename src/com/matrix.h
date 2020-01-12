@@ -96,6 +96,11 @@ public:
                 return m_data[r];
         }
 
+        constexpr Vector<Columns, T>& row(int r)
+        {
+                return m_data[r];
+        }
+
         constexpr Vector<Rows, T> column(int c) const
         {
                 return column_impl(c);
@@ -135,22 +140,19 @@ template <size_t Rows, size_t Inner, size_t Columns, typename T>
 Matrix<Rows, Columns, T> operator*(const Matrix<Rows, Inner, T>& m1, const Matrix<Inner, Columns, T>& m2)
 {
         Matrix<Rows, Columns, T> res;
-        for (unsigned row = 0; row < Rows; ++row)
+        for (unsigned r = 0; r < Rows; ++r)
         {
-                for (unsigned column = 0; column < Columns; ++column)
+                Vector<Columns, T>& row = res.row(r);
+                for (unsigned c = 0; c < Columns; ++c)
                 {
-#if 0
-                        // GCC 7.2 имеет проблемы с этим.
-                        // Clang 5 не имеет проблем с этим.
-                        res[row][column] = dot(m1.row(row), m2.column(column));
-#else
-                        // GCC 7.2 и Clang 5 с этим проблем не имеют.
-                        res[row][column] = m1[row][0] * m2[0][column];
-                        for (unsigned i = 1; i < Inner; ++i)
+                        row[c] = m1[r][0] * m2[0][c];
+                }
+                for (unsigned i = 1; i < Inner; ++i)
+                {
+                        for (unsigned c = 0; c < Columns; ++c)
                         {
-                                res[row][column] = fma(m1[row][i], m2[i][column], res[row][column]);
+                                row[c] = fma(m1[r][i], m2[i][c], row[c]);
                         }
-#endif
                 }
         }
         return res;
