@@ -87,7 +87,7 @@ const VkDescriptorSet& ConvexHullShowMemory::descriptor_set() const
 
 void ConvexHullShowMemory::set_matrix(const mat4& matrix) const
 {
-        decltype(Data().matrix) m = transpose(to_matrix<float>(matrix));
+        decltype(Data().matrix) m = to_matrix<float>(matrix).transpose();
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_data_buffer_index], offsetof(Data, matrix), m);
 }
 

@@ -163,8 +163,8 @@ void RendererTrianglesSharedMemory::copy_to_drawing_buffer(VkDeviceSize offset, 
 void RendererTrianglesSharedMemory::set_matrices(const mat4& matrix, const mat4& shadow_matrix) const
 {
         Matrices::M matrices;
-        matrices.matrix = transpose(to_matrix<float>(matrix));
-        matrices.shadow_matrix = transpose(to_matrix<float>(shadow_matrix));
+        matrices.matrix = to_matrix<float>(matrix).transpose();
+        matrices.shadow_matrix = to_matrix<float>(shadow_matrix).transpose();
         copy_to_matrices_buffer(offsetof(Matrices, matrices), matrices);
 }
 
@@ -447,7 +447,7 @@ const VkDescriptorSet& RendererShadowMemory::descriptor_set() const
 void RendererShadowMemory::set_matrix(const mat4& matrix) const
 {
         Matrices::M matrices;
-        matrices.matrix = transpose(to_matrix<float>(matrix));
+        matrices.matrix = to_matrix<float>(matrix).transpose();
         vulkan::map_and_write_to_buffer(m_uniform_buffers[0], offsetof(Matrices, matrices), matrices);
 }
 

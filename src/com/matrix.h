@@ -116,6 +116,19 @@ public:
                 static_assert(sizeof(Matrix) == Rows * Columns * sizeof(T));
                 return m_data[0].data();
         }
+
+        Matrix<Columns, Rows, T> transpose() const
+        {
+                Matrix<Columns, Rows, T> res;
+                for (unsigned r = 0; r < Rows; ++r)
+                {
+                        for (unsigned c = 0; c < Columns; ++c)
+                        {
+                                res[c][r] = m_data[r][c];
+                        }
+                }
+                return res;
+        }
 };
 
 template <size_t Rows, size_t Inner, size_t Columns, typename T>
@@ -143,74 +156,57 @@ Matrix<Rows, Columns, T> operator*(const Matrix<Rows, Inner, T>& m1, const Matri
         return res;
 }
 
-template <size_t Inner, size_t Columns, typename T>
-Vector<Columns, T> operator*(const Vector<Inner, T>& v, const Matrix<Inner, Columns, T>& m)
+template <size_t Rows, size_t Columns, typename T>
+Vector<Columns, T> operator*(const Vector<Rows, T>& v, const Matrix<Rows, Columns, T>& m)
 {
         Vector<Columns, T> res;
-        for (unsigned column = 0; column < Columns; ++column)
+        for (unsigned c = 0; c < Columns; ++c)
         {
-                res[column] = v[0] * m[0][column];
-                for (unsigned i = 1; i < Inner; ++i)
+                res[c] = v[0] * m[0][c];
+        }
+        for (unsigned r = 1; r < Rows; ++r)
+        {
+                for (unsigned c = 0; c < Columns; ++c)
                 {
-                        res[column] = fma(v[i], m[i][column], res[column]);
+                        res[c] = fma(v[r], m[r][c], res[c]);
                 }
         }
         return res;
 }
 
-namespace matrix_implementation
-{
-template <size_t Rows, size_t Columns, typename T, size_t... I>
-Vector<Rows, T> mul_impl(const Matrix<Rows, Columns, T>& m, const Vector<Columns, T>& v, std::integer_sequence<size_t, I...>)
-{
-        static_assert(sizeof...(I) == Rows);
-        static_assert(((I < Rows) && ...));
-
-        return {dot(m.row(I), v)...};
-}
-}
-
 template <size_t Rows, size_t Columns, typename T>
 Vector<Rows, T> operator*(const Matrix<Rows, Columns, T>& m, const Vector<Columns, T>& v)
 {
-        return matrix_implementation::mul_impl(m, v, std::make_integer_sequence<size_t, Rows>());
+        Vector<Rows, T> res;
+        for (unsigned r = 0; r < Rows; ++r)
+        {
+                res[r] = m[r][0] * v[0];
+                for (unsigned c = 1; c < Columns; ++c)
+                {
+                        res[r] = fma(m[r][c], v[c], res[r]);
+                }
+        }
+        return res;
 }
 
-namespace matrix_implementation
+template <typename Dst, size_t Rows, size_t Columns, typename Src>
+std::enable_if_t<!std::is_same_v<Dst, Src>, Matrix<Rows, Columns, Dst>> to_matrix(const Matrix<Rows, Columns, Src>& m)
 {
-template <size_t Rows, size_t Columns, typename T, size_t... I>
-constexpr Matrix<Columns, Rows, T> transpose_impl(const Matrix<Rows, Columns, T>& m, std::integer_sequence<size_t, I...>)
-{
-        static_assert(sizeof...(I) == Columns);
-        static_assert(((I < Columns) && ...));
-
-        return {m.column(I)...};
-}
-}
-
-template <size_t Rows, size_t Columns, typename T>
-constexpr Matrix<Columns, Rows, T> transpose(const Matrix<Rows, Columns, T>& m)
-{
-        return matrix_implementation::transpose_impl(m, std::make_integer_sequence<size_t, Columns>());
+        Matrix<Rows, Columns, Dst> res;
+        for (unsigned r = 0; r < Rows; ++r)
+        {
+                for (unsigned c = 0; c < Columns; ++c)
+                {
+                        res[r][c] = m[r][c];
+                }
+        }
+        return res;
 }
 
-namespace matrix_implementation
+template <typename Dst, size_t Rows, size_t Columns, typename Src>
+std::enable_if_t<std::is_same_v<Dst, Src>, const Matrix<Rows, Columns, Src>&> to_matrix(const Matrix<Rows, Columns, Src>& m)
 {
-template <size_t Rows, size_t Columns, typename Dst, typename Src, size_t... I>
-Matrix<Rows, Columns, Dst> to_matrix(const Matrix<Rows, Columns, Src>& m, std::integer_sequence<size_t, I...>)
-{
-        static_assert(sizeof...(I) == Rows);
-        static_assert(((I < Rows) && ...));
-        static_assert(!std::is_same_v<std::remove_cv_t<Dst>, std::remove_cv_t<Src>>);
-
-        return {to_vector<Dst>(m[I])...};
-}
-}
-
-template <typename Dst, size_t Rows, size_t Columns, typename Src, size_t... I>
-Matrix<Rows, Columns, Dst> to_matrix(const Matrix<Rows, Columns, Src>& m)
-{
-        return matrix_implementation::to_matrix<Rows, Columns, Dst, Src>(m, std::make_integer_sequence<size_t, Rows>());
+        return m;
 }
 
 template <size_t Rows, size_t Columns, typename T>

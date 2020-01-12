@@ -124,7 +124,7 @@ void RendererPointsMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& 
 void RendererPointsMemory::set_matrix(const mat4& matrix) const
 {
         Matrices::M matrices;
-        matrices.matrix = transpose(to_matrix<float>(matrix));
+        matrices.matrix = to_matrix<float>(matrix).transpose();
         copy_to_matrices_buffer(offsetof(Matrices, matrices), matrices);
 }
 

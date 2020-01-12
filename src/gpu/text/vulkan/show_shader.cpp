@@ -133,7 +133,7 @@ void TextShowMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) 
 
 void TextShowMemory::set_matrix(const mat4& matrix) const
 {
-        decltype(Matrices().matrix) m = transpose(to_matrix<float>(matrix));
+        decltype(Matrices().matrix) m = to_matrix<float>(matrix).transpose();
         copy_to_matrices_buffer(offsetof(Matrices, matrix), m);
 }
 

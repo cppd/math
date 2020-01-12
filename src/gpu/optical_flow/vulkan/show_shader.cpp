@@ -118,7 +118,7 @@ void OpticalFlowShowMemory::set_flow(const vulkan::BufferWithMemory& buffer) con
 void OpticalFlowShowMemory::set_matrix(const mat4& matrix) const
 {
         Data data;
-        data.matrix = transpose(to_matrix<float>(matrix));
+        data.matrix = to_matrix<float>(matrix).transpose();
         vulkan::map_and_write_to_buffer(m_uniform_buffers[0], 0, data);
 }
 
