@@ -37,6 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/query.h"
 #include "graphics/vulkan/queue.h"
 #include "numerical/linear.h"
+#include "numerical/matrix_alg.h"
 
 #include <algorithm>
 #include <thread>

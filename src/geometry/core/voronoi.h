@@ -53,9 +53,9 @@ Princeton University Press, 2011.
 
 #pragma once
 
-#include "com/matrix.h"
 #include "com/vec.h"
 #include "numerical/linear.h"
+#include "numerical/matrix.h"
 
 #include <array>
 #include <vector>

@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "camera.h"
 
 #include "com/math.h"
-#include "com/matrix_alg.h"
 #include "com/quaternion.h"
 #include "numerical/linear.h"
+#include "numerical/matrix_alg.h"
 
 #include <mutex>
 

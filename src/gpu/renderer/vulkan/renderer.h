@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/color.h"
-#include "com/matrix.h"
 #include "com/vec.h"
 #include "gpu/renderer/camera_info.h"
 #include "gpu/vulkan_interfaces.h"

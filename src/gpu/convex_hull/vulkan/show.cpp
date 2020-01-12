@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/container.h"
 #include "com/error.h"
 #include "com/log.h"
-#include "com/matrix_alg.h"
 #include "com/merge.h"
 #include "com/time.h"
 #include "gpu/convex_hull/com/com.h"
@@ -31,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/queue.h"
+#include "numerical/matrix_alg.h"
 
 #include <optional>
 #include <thread>

@@ -19,10 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/alg.h"
 #include "com/error.h"
-#include "com/matrix.h"
-#include "com/matrix_alg.h"
 #include "com/type/limit.h"
 #include "com/type/trait.h"
+#include "numerical/matrix_alg.h"
 #include "obj/obj.h"
 
 #include <algorithm>

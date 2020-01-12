@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/matrix.h"
 #include "com/thread.h"
 #include "com/vec.h"
 #include "gpu/renderer/camera_info.h"
+#include "numerical/matrix.h"
 #include "show/interface.h"
 
 class Camera final

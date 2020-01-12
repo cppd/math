@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh.h"
 
 #include "com/log.h"
-#include "com/matrix_alg.h"
 #include "com/time.h"
 #include "com/type/limit.h"
 #include "com/vec.h"
+#include "numerical/matrix_alg.h"
 #include "painter/space/hyperplane_simplex_wrapper.h"
 #include "painter/space/ray_intersection.h"
 
@@ -74,7 +74,7 @@ void Mesh<N, T>::create_mesh_object(const Obj<N>* obj, const Matrix<N + 1, N + 1
 
         m_vertices = to_vector<T>(obj->vertices());
         m_vertices.shrink_to_fit();
-        std::transform(m_vertices.begin(), m_vertices.end(), m_vertices.begin(), MatrixMulVector(vertex_matrix));
+        std::transform(m_vertices.begin(), m_vertices.end(), m_vertices.begin(), MatrixVectorMultiplier(vertex_matrix));
 
         m_normals = to_vector<T>(obj->normals());
         m_normals.shrink_to_fit();

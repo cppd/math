@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/matrix.h"
 #include "com/vec.h"
+#include "numerical/matrix.h"
 
 struct RendererCameraInfo final
 {

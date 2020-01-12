@@ -17,17 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "error.h"
 #include "matrix.h"
+
+#include "com/error.h"
 
 // Для случаев, когда последняя строка матрицы состоит из нулей с последней единицей.
 template <size_t N, typename T>
-class MatrixMulVector
+class MatrixVectorMultiplier
 {
         Matrix<N, N, T> m_mtx;
 
 public:
-        MatrixMulVector(const Matrix<N, N, T>& m) : m_mtx(m)
+        MatrixVectorMultiplier(const Matrix<N, N, T>& m) : m_mtx(m)
         {
                 if (m_mtx(N - 1, N - 1) != 1)
                 {
@@ -75,6 +76,7 @@ Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, con
         return m;
 }
 
+#if defined(OPENGL_FOUND)
 template <typename T, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
 constexpr Matrix<4, 4, T> ortho_opengl(T1 left, T2 right, T3 bottom, T4 top, T5 near, T6 far)
 {
@@ -100,6 +102,7 @@ constexpr Matrix<4, 4, T> ortho_opengl(T1 left, T2 right, T3 bottom, T4 top, T5 
 
         return m;
 }
+#endif
 
 template <typename T, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
 constexpr Matrix<4, 4, T> ortho_vulkan(T1 left, T2 right, T3 bottom, T4 top, T5 near, T6 far)

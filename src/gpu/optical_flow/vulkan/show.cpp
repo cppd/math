@@ -23,12 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/container.h"
 #include "com/error.h"
-#include "com/matrix_alg.h"
 #include "com/merge.h"
 #include "gpu/optical_flow/com/show.h"
 #include "graphics/vulkan/commands.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/queue.h"
+#include "numerical/matrix_alg.h"
 
 #include <thread>
 
