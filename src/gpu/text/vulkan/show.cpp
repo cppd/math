@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/queue.h"
 #include "graphics/vulkan/sync.h"
-#include "numerical/matrix_alg.h"
+#include "numerical/matrix_transform.h"
 
 #include <array>
 #include <optional>

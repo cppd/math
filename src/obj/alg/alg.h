@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/type/limit.h"
 #include "com/type/trait.h"
-#include "numerical/matrix_alg.h"
+#include "numerical/matrix_transform.h"
 #include "obj/obj.h"
 
 #include <algorithm>

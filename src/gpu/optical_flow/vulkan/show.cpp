@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/commands.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/queue.h"
-#include "numerical/matrix_alg.h"
+#include "numerical/matrix_transform.h"
 
 #include <thread>
 
