@@ -351,23 +351,15 @@ bool is_finite(const Vector<N, T>& data)
         return true;
 }
 
-namespace vector_implementation
-{
-template <typename Dst, size_t N, typename Src, size_t... I>
-Vector<N, Dst> convert_vector(const Vector<N, Src>& v, std::integer_sequence<size_t, I...>)
-{
-        static_assert(sizeof...(I) == N);
-        static_assert(((I < N) && ...));
-        static_assert(!std::is_same_v<Dst, Src>);
-
-        return {v[I]...};
-}
-}
-
 template <typename Dst, size_t N, typename Src>
 std::enable_if_t<!std::is_same_v<Dst, Src>, Vector<N, Dst>> to_vector(const Vector<N, Src>& v)
 {
-        return vector_implementation::convert_vector<Dst>(v, std::make_integer_sequence<size_t, N>());
+        Vector<N, Dst> res;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                res[i] = v[i];
+        }
+        return res;
 }
 
 template <typename Dst, size_t N, typename Src>
@@ -396,18 +388,16 @@ std::enable_if_t<std::is_same_v<Dst, Src>, const std::vector<Vector<N, Dst>>&> t
 template <size_t N, typename T>
 std::string to_string(const Vector<N, T>& data)
 {
-        std::string o;
-        o += "(";
-        for (size_t i = 0; i < N; ++i)
+        std::string s;
+        s += "(";
+        s += to_string(data[0]);
+        for (size_t i = 1; i < N; ++i)
         {
-                o += to_string(data[i]);
-                if (i != N - 1)
-                {
-                        o += ", ";
-                }
+                s += ", ";
+                s += to_string(data[i]);
         }
-        o += ")";
-        return o;
+        s += ")";
+        return s;
 }
 
 // Если векторы единичные, то это синус угла между векторами
