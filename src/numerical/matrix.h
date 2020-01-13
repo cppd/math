@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "gauss.h"
+
 #include "com/type/trait.h"
 #include "com/vec.h"
 
@@ -128,6 +130,42 @@ public:
                         }
                 }
                 return res;
+        }
+
+        template <size_t R = Rows, size_t C = Columns>
+        std::enable_if_t<R == C, T> determinant() const
+        {
+                static_assert(R == Rows && C == Columns && Rows == Columns);
+
+                Matrix<Rows, Rows, T> m(*this);
+
+                return numerical::determinant_gauss(&m);
+        }
+
+        template <size_t R = Rows, size_t C = Columns>
+        std::enable_if_t<R == C, Matrix<Rows, Rows, T>> inverse() const
+        {
+                static_assert(R == Rows && C == Columns && Rows == Columns);
+
+                Matrix<Rows, Rows, T> m(*this);
+                Matrix<Rows, Rows, T> b(1);
+
+                numerical::solve_gauss<Rows, Rows, T>(&m, &b);
+
+                return b;
+        }
+
+        template <size_t R = Rows, size_t C = Columns>
+        std::enable_if_t<R == C, Vector<Rows, T>> solve(const Vector<Rows, T>& b) const
+        {
+                static_assert(R == Rows && C == Columns && Rows == Columns);
+
+                Matrix<Rows, Rows, T> a(*this);
+                Vector<Rows, T> x(b);
+
+                numerical::solve_gauss<Rows, T>(&a, &x);
+
+                return x;
         }
 };
 

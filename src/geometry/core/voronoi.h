@@ -54,7 +54,6 @@ Princeton University Press, 2011.
 #pragma once
 
 #include "com/vec.h"
-#include "numerical/linear.h"
 #include "numerical/matrix.h"
 
 #include <array>
@@ -89,7 +88,7 @@ Vector<N, T> compute_voronoi_vertex(const std::vector<Vector<N, T>>& points, con
                 b[row] = dot(pn, pn) - dot0;
         }
 
-        Vector<N, T> voronoi_vertex = numerical::solve(std::move(a), b);
+        Vector<N, T> voronoi_vertex = a.solve(b);
 
         ASSERT(is_finite(voronoi_vertex));
 

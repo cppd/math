@@ -36,7 +36,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/query.h"
 #include "graphics/vulkan/queue.h"
-#include "numerical/linear.h"
 #include "numerical/matrix_transform.h"
 
 #include <algorithm>
@@ -230,8 +229,8 @@ class Impl final : public Renderer
         {
                 if (m_clip_plane)
                 {
-                        vec4 main_plane = *m_clip_plane * numerical::inverse(m_main_matrix);
-                        vec4 shadow_plane = *m_clip_plane * numerical::inverse(m_shadow_matrix);
+                        vec4 main_plane = *m_clip_plane * m_main_matrix.inverse();
+                        vec4 shadow_plane = *m_clip_plane * m_shadow_matrix.inverse();
                         m_triangles_shared_memory.set_clip_plane(main_plane, true);
                         m_shadow_memory.set_clip_plane(shadow_plane, true);
                         m_points_memory.set_clip_plane(main_plane, true);

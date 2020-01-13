@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/math.h"
 #include "com/quaternion.h"
-#include "numerical/linear.h"
 #include "numerical/matrix_transform.h"
 
 #include <mutex>
@@ -176,7 +175,7 @@ ShowCameraInfo Camera::show_info() const
         double left, right, bottom, top, near, far;
         view_volume(&left, &right, &bottom, &top, &near, &far);
         vec4 volume_center_4((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
-        vec4 view_center_4 = numerical::inverse(view_matrix()) * volume_center_4;
+        vec4 view_center_4 = view_matrix().inverse() * volume_center_4;
 
         v.view_center = vec3(view_center_4[0], view_center_4[1], view_center_4[2]);
         v.view_width = right - left;
