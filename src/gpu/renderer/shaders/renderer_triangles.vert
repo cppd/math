@@ -21,8 +21,8 @@ layout(location = 2) in vec2 texture_coordinates;
 
 layout(std140, binding = 0) uniform Matrices
 {
-        mat4 matrix;
-        mat4 shadow_matrix;
+        mat4 main_mvp_matrix;
+        mat4 shadow_mvp_texture_matrix;
         vec4 clip_plane_equation;
         bool clip_plane_enabled;
 }
@@ -47,10 +47,10 @@ out gl_PerVertex
 
 void main()
 {
-        vec4 pos = matrices.matrix * vec4(position, 1.0);
+        vec4 pos = matrices.main_mvp_matrix * vec4(position, 1.0);
         gl_Position = pos;
         gl_ClipDistance[0] = matrices.clip_plane_enabled ? dot(matrices.clip_plane_equation, pos) : 1;
-        vs.shadow_position = matrices.shadow_matrix * vec4(position, 1.0);
+        vs.shadow_position = matrices.shadow_mvp_texture_matrix * vec4(position, 1.0);
         vs.orig_position = position;
         vs.normal = normal;
         vs.texture_coordinates = texture_coordinates;

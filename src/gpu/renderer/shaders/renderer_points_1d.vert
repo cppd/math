@@ -23,7 +23,7 @@ layout(std140, binding = 0) uniform Matrices
 layout(std140, set = 0, binding = 0) uniform Matrices
 #endif
 {
-        mat4 matrix;
+        mat4 mvp_matrix;
         vec4 clip_plane_equation;
         bool clip_plane_enabled;
 }
@@ -37,7 +37,7 @@ out gl_PerVertex
 
 void main(void)
 {
-        vec4 pos = matrices.matrix * vec4(position, 1.0);
+        vec4 pos = matrices.mvp_matrix * vec4(position, 1.0);
         gl_Position = pos;
         gl_ClipDistance[0] = matrices.clip_plane_enabled ? dot(matrices.clip_plane_equation, pos) : 1;
 }

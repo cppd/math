@@ -45,7 +45,7 @@ class RendererPointsMemory final
         {
                 struct M
                 {
-                        mat4f matrix;
+                        mat4f mvp_matrix;
                 };
                 struct C
                 {
@@ -92,7 +92,7 @@ public:
 
         //
 
-        void set_matrix(const mat4& matrix) const;
+        void set_matrix(const mat4& mvp_matrix) const;
         void set_clip_plane(const vec4& equation, bool enabled) const;
 
         void set_default_color(const Color& color) const;

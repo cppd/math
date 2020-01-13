@@ -58,9 +58,7 @@ class Impl final : public Renderer
 {
         // Для получения текстуры для тени результат рисования находится в интервалах x(-1, 1) y(-1, 1) z(0, 1).
         // Для работы с этой текстурой надо преобразовать в интервалы x(0, 1) y(0, 1) z(0, 1).
-        static constexpr mat4 SCALE = scale<double>(0.5, 0.5, 1);
-        static constexpr mat4 TRANSLATE = translate<double>(1, 1, 0);
-        const mat4 SCALE_BIAS_MATRIX = SCALE * TRANSLATE;
+        const mat4 SHADOW_TEXTURE_MATRIX = scale<double>(0.5, 0.5, 1) * translate<double>(1, 1, 0);
 
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -68,9 +66,9 @@ class Impl final : public Renderer
 
         Color m_clear_color = Color(0);
 
-        mat4 m_main_matrix = mat4(1);
-        mat4 m_shadow_matrix = mat4(1);
-        mat4 m_scale_bias_shadow_matrix = mat4(1);
+        mat4 m_main_vp_matrix = mat4(1);
+        mat4 m_shadow_vp_matrix = mat4(1);
+        mat4 m_shadow_vp_texture_matrix = mat4(1);
 
         double m_shadow_zoom = 1;
         bool m_show_shadow = false;
@@ -211,13 +209,13 @@ class Impl final : public Renderer
                 const mat4& shadow_projection_matrix =
                         ortho_vulkan<double>(c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom,
                                              c.shadow_volume.top, c.shadow_volume.near, c.shadow_volume.far);
-                const mat4& view_projection_matrix =
+                const mat4& main_projection_matrix =
                         ortho_vulkan<double>(c.view_volume.left, c.view_volume.right, c.view_volume.bottom, c.view_volume.top,
                                              c.view_volume.near, c.view_volume.far);
 
-                m_shadow_matrix = shadow_projection_matrix * c.shadow_matrix;
-                m_scale_bias_shadow_matrix = SCALE_BIAS_MATRIX * m_shadow_matrix;
-                m_main_matrix = view_projection_matrix * c.view_matrix;
+                m_shadow_vp_matrix = shadow_projection_matrix * c.shadow_matrix;
+                m_shadow_vp_texture_matrix = SHADOW_TEXTURE_MATRIX * m_shadow_vp_matrix;
+                m_main_vp_matrix = main_projection_matrix * c.view_matrix;
 
                 m_triangles_shared_memory.set_direction_to_light(-to_vector<float>(c.light_direction));
                 m_triangles_shared_memory.set_direction_to_camera(-to_vector<float>(c.camera_direction));
@@ -229,8 +227,8 @@ class Impl final : public Renderer
         {
                 if (m_clip_plane)
                 {
-                        vec4 main_plane = *m_clip_plane * m_main_matrix.inverse();
-                        vec4 shadow_plane = *m_clip_plane * m_shadow_matrix.inverse();
+                        vec4 main_plane = *m_clip_plane * m_main_vp_matrix.inverse();
+                        vec4 shadow_plane = *m_clip_plane * m_shadow_vp_matrix.inverse();
                         m_triangles_shared_memory.set_clip_plane(main_plane, true);
                         m_shadow_memory.set_clip_plane(shadow_plane, true);
                         m_points_memory.set_clip_plane(main_plane, true);
@@ -475,13 +473,14 @@ class Impl final : public Renderer
 
                 if (m_storage.scale_object())
                 {
-                        mat4 matrix = m_main_matrix * m_storage.scale_object()->model_matrix();
-                        mat4 scale_bias_shadow_matrix = m_scale_bias_shadow_matrix * m_storage.scale_object()->model_matrix();
-                        mat4 shadow_matrix = m_shadow_matrix * m_storage.scale_object()->model_matrix();
+                        const mat4& model = m_storage.scale_object()->model_matrix();
+                        const mat4& main_mvp_matrix = m_main_vp_matrix * model;
+                        const mat4& shadow_mvp_texture_matrix = m_shadow_vp_texture_matrix * model;
+                        const mat4& shadow_mvp_matrix = m_shadow_vp_matrix * model;
 
-                        m_triangles_shared_memory.set_matrices(matrix, scale_bias_shadow_matrix);
-                        m_shadow_memory.set_matrix(shadow_matrix);
-                        m_points_memory.set_matrix(matrix);
+                        m_triangles_shared_memory.set_matrices(main_mvp_matrix, shadow_mvp_texture_matrix);
+                        m_shadow_memory.set_matrix(shadow_mvp_matrix);
+                        m_points_memory.set_matrix(main_mvp_matrix);
 
                         set_clip_plane();
                 }

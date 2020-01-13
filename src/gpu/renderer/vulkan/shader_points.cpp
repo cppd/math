@@ -121,10 +121,10 @@ void RendererPointsMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& 
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
 }
 
-void RendererPointsMemory::set_matrix(const mat4& matrix) const
+void RendererPointsMemory::set_matrix(const mat4& mvp_matrix) const
 {
         Matrices::M matrices;
-        matrices.matrix = to_matrix<float>(matrix).transpose();
+        matrices.mvp_matrix = to_matrix<float>(mvp_matrix).transpose();
         copy_to_matrices_buffer(offsetof(Matrices, matrices), matrices);
 }
 
