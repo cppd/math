@@ -210,12 +210,12 @@ class Impl final : public Renderer
                         ortho_vulkan<double>(c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom,
                                              c.shadow_volume.top, c.shadow_volume.near, c.shadow_volume.far);
                 const mat4& main_projection_matrix =
-                        ortho_vulkan<double>(c.view_volume.left, c.view_volume.right, c.view_volume.bottom, c.view_volume.top,
-                                             c.view_volume.near, c.view_volume.far);
+                        ortho_vulkan<double>(c.main_volume.left, c.main_volume.right, c.main_volume.bottom, c.main_volume.top,
+                                             c.main_volume.near, c.main_volume.far);
 
-                m_shadow_vp_matrix = shadow_projection_matrix * c.shadow_matrix;
+                m_shadow_vp_matrix = shadow_projection_matrix * c.shadow_view_matrix;
                 m_shadow_vp_texture_matrix = SHADOW_TEXTURE_MATRIX * m_shadow_vp_matrix;
-                m_main_vp_matrix = main_projection_matrix * c.view_matrix;
+                m_main_vp_matrix = main_projection_matrix * c.main_view_matrix;
 
                 m_triangles_shared_memory.set_direction_to_light(-to_vector<float>(c.light_direction));
                 m_triangles_shared_memory.set_direction_to_camera(-to_vector<float>(c.camera_direction));

@@ -44,10 +44,10 @@ class Camera final
 
         void set_vectors(const vec3& right, const vec3& up);
 
-        void view_volume(double* left, double* right, double* bottom, double* top, double* near, double* far) const;
+        void main_volume(double* left, double* right, double* bottom, double* top, double* near, double* far) const;
         void shadow_volume(double* left, double* right, double* bottom, double* top, double* near, double* far) const;
-        mat4 view_matrix() const;
-        mat4 shadow_matrix() const;
+        mat4 main_view_matrix() const;
+        mat4 shadow_view_matrix() const;
 
 public:
         void reset(const vec3& right, const vec3& up, double scale, const vec2& window_center);

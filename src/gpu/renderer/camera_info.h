@@ -27,10 +27,10 @@ struct RendererCameraInfo final
                 double left, right, bottom, top, near, far;
         };
 
-        Volume view_volume;
+        Volume main_volume;
         Volume shadow_volume;
-        mat4 view_matrix;
-        mat4 shadow_matrix;
+        mat4 main_view_matrix;
+        mat4 shadow_view_matrix;
         vec3 light_direction;
         vec3 camera_direction;
 };

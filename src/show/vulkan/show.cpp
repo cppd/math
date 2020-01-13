@@ -157,7 +157,6 @@ class Impl final : public Show, public WindowEvent
         //
 
         std::optional<mat4> m_clip_plane_view_matrix;
-        std::optional<mat4> m_clip_plane_shadow_matrix;
 
         void add_object(const std::shared_ptr<const Obj<3>>& obj_ptr, int id, int scale_id) override
         {
@@ -360,9 +359,7 @@ class Impl final : public Show, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                const RendererCameraInfo& info = m_camera.renderer_info();
-                m_clip_plane_view_matrix = info.view_matrix;
-                m_clip_plane_shadow_matrix = info.shadow_matrix;
+                m_clip_plane_view_matrix = m_camera.renderer_info().main_view_matrix;
                 clip_plane_position(position);
         }
 
@@ -370,7 +367,7 @@ class Impl final : public Show, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                if (!m_clip_plane_view_matrix || !m_clip_plane_view_matrix)
+                if (!m_clip_plane_view_matrix)
                 {
                         error("Clip plane is not set");
                 }
@@ -400,7 +397,6 @@ class Impl final : public Show, public WindowEvent
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_clip_plane_view_matrix.reset();
-                m_clip_plane_shadow_matrix.reset();
                 m_renderer->clip_plane_hide();
         }
 

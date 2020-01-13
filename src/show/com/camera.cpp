@@ -56,7 +56,7 @@ void Camera::set_vectors(const vec3& right, const vec3& up)
         m_light_direction = cross(m_light_up, light_right);
 }
 
-void Camera::view_volume(double* left, double* right, double* bottom, double* top, double* near, double* far) const
+void Camera::main_volume(double* left, double* right, double* bottom, double* top, double* near, double* far) const
 {
         double scale = m_default_scale / std::pow(SCALE_BASE, m_scale_exponent);
 
@@ -78,12 +78,12 @@ void Camera::shadow_volume(double* left, double* right, double* bottom, double* 
         *far = -1;
 }
 
-mat4 Camera::view_matrix() const
+mat4 Camera::main_view_matrix() const
 {
         return look_at<double>(vec3(0, 0, 0), m_camera_direction, m_camera_up);
 }
 
-mat4 Camera::shadow_matrix() const
+mat4 Camera::shadow_view_matrix() const
 {
         return look_at(vec3(0, 0, 0), m_light_direction, m_light_up);
 }
@@ -173,11 +173,11 @@ ShowCameraInfo Camera::show_info() const
         v.height = m_height;
 
         double left, right, bottom, top, near, far;
-        view_volume(&left, &right, &bottom, &top, &near, &far);
-        vec4 volume_center_4((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
-        vec4 view_center_4 = view_matrix().inverse() * volume_center_4;
+        main_volume(&left, &right, &bottom, &top, &near, &far);
+        vec4 volume_center((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
+        vec4 view_center = main_view_matrix().inverse() * volume_center;
 
-        v.view_center = vec3(view_center_4[0], view_center_4[1], view_center_4[2]);
+        v.view_center = vec3(view_center[0], view_center[1], view_center[2]);
         v.view_width = right - left;
 
         return v;
@@ -189,12 +189,12 @@ RendererCameraInfo Camera::renderer_info() const
 
         RendererCameraInfo v;
 
-        view_volume(&v.view_volume.left, &v.view_volume.right, &v.view_volume.bottom, &v.view_volume.top, &v.view_volume.near,
-                    &v.view_volume.far);
+        main_volume(&v.main_volume.left, &v.main_volume.right, &v.main_volume.bottom, &v.main_volume.top, &v.main_volume.near,
+                    &v.main_volume.far);
         shadow_volume(&v.shadow_volume.left, &v.shadow_volume.right, &v.shadow_volume.bottom, &v.shadow_volume.top,
                       &v.shadow_volume.near, &v.shadow_volume.far);
-        v.view_matrix = view_matrix();
-        v.shadow_matrix = shadow_matrix();
+        v.main_view_matrix = main_view_matrix();
+        v.shadow_view_matrix = shadow_view_matrix();
         v.light_direction = m_light_direction;
         v.camera_direction = m_camera_direction;
 
