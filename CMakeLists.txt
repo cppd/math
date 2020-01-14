@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.15)
 
 ##################################################
 
@@ -344,9 +344,9 @@ AddSourceFiles(EXECUTABLE DIRECTORIES src_str EXTENSIONS ${extensions_all})
 
 ##################################################
 
-project(create_gl C CXX)
-
-AddSourceFiles(EXECUTABLE DIRECTORIES src_gl EXTENSIONS ${extensions_all})
+#project(create_gl C CXX)
+#
+#AddSourceFiles(EXECUTABLE DIRECTORIES src_gl EXTENSIONS ${extensions_all})
 
 ##################################################
 
@@ -418,11 +418,6 @@ find_package(X11 REQUIRED)
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${X11_X11_INCLUDE_PATH})
 target_link_libraries(${PROJECT_NAME} ${X11_X11_LIB})
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/GLFW")
-find_package(GLFW REQUIRED)
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GLFW_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${GLFW_LIBRARIES})
-
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/FFTW")
 find_package(FFTW)
 if (FFTW_FOUND)
@@ -437,6 +432,11 @@ if (CUDA_FOUND)
         target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS})
         target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} ${CUDA_CUFFT_LIBRARIES})
 endif()
+
+#set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/GLFW")
+#find_package(GLFW REQUIRED)
+#target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GLFW_INCLUDE_DIRS})
+#target_link_libraries(${PROJECT_NAME} ${GLFW_LIBRARIES})
 
 #set(OpenGL_GL_PREFERENCE "GLVND")
 #find_package(OpenGL)
