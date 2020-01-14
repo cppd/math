@@ -58,7 +58,9 @@ Initialization::Initialization()
 
 #endif
 
+#if 0
         vulkan::window_init();
+#endif
 
 #if defined(OPENGL_FOUND)
         opengl::window_init();
@@ -67,7 +69,13 @@ Initialization::Initialization()
 
 Initialization::~Initialization()
 {
+#if 0
         vulkan::window_terminate();
+#endif
+
+#if defined(__linux__)
+        xlib_exit();
+#endif
 
         log_exit();
 }

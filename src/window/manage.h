@@ -19,15 +19,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "handle.h"
 
-void move_window_to_parent(WindowID window, WindowID parent);
-void make_window_fullscreen(WindowID window);
-void set_focus(WindowID window);
-void set_size_to_parent(WindowID window, WindowID parent);
+#include <string>
+#include <vector>
+#include <vulkan/vulkan.h>
+
+// void move_window_to_parent(WindowID window, WindowID parent);
+// void make_window_fullscreen(WindowID window);
+// void set_focus(WindowID window);
+// void set_size_to_parent(WindowID window, WindowID parent);
+
+std::vector<std::string> vulkan_create_surface_extensions();
+VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance);
 
 #if defined(_WIN32)
-void change_window_style_not_child(WindowID window);
+// void change_window_style_not_child(WindowID window);
 #endif
 
 #if defined(__linux__)
 void xlib_init();
+void xlib_exit();
 #endif

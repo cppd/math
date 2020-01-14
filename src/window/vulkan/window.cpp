@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if 0
+
 #include "window.h"
 
 #include "com/error.h"
@@ -160,18 +162,18 @@ class Impl final : public Window
                 return height;
         }
 
-        VkSurfaceKHR create_surface(VkInstance instance) override
-        {
-                VkSurfaceKHR surface = VK_NULL_HANDLE;
-
-                VkResult result = glfwCreateWindowSurface(instance, m_window, nullptr, &surface);
-                if (result != VK_SUCCESS || surface == VK_NULL_HANDLE)
-                {
-                        error("Failed to create Vulkan GLFW window surface");
-                }
-
-                return surface;
-        }
+        // VkSurfaceKHR create_surface(VkInstance instance) override
+        //{
+        //        VkSurfaceKHR surface = VK_NULL_HANDLE;
+        //
+        //        VkResult result = glfwCreateWindowSurface(instance, m_window, nullptr, &surface);
+        //        if (result != VK_SUCCESS || surface == VK_NULL_HANDLE)
+        //        {
+        //                error("Failed to create Vulkan GLFW window surface");
+        //        }
+        //
+        //        return surface;
+        //}
 
         void pull_and_dispath_events(WindowEvent& window_event) override
         {
@@ -236,27 +238,29 @@ void window_terminate()
 
 //
 
-std::vector<std::string> Window::instance_extensions()
-{
-        uint32_t count;
-        const char** extensions;
+// std::vector<std::string> Window::instance_extensions()
+//{
+//        uint32_t count;
+//        const char** extensions;
 
-        extensions = glfwGetRequiredInstanceExtensions(&count);
+//        extensions = glfwGetRequiredInstanceExtensions(&count);
 
-        if (!extensions)
-        {
-                error("Failed to get GLFW required Vulkan instance extensions");
-        }
-        if (count < 1)
-        {
-                error("No GLFW required Vulkan instance extensions");
-        }
+//        if (!extensions)
+//        {
+//                error("Failed to get GLFW required Vulkan instance extensions");
+//        }
+//        if (count < 1)
+//        {
+//                error("No GLFW required Vulkan instance extensions");
+//        }
 
-        return std::vector<std::string>(extensions, extensions + count);
-}
+//        return std::vector<std::string>(extensions, extensions + count);
+//}
 
 std::unique_ptr<Window> create_window()
 {
         return std::make_unique<Impl>();
 }
 }
+
+#endif

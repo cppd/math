@@ -58,25 +58,6 @@ class EventQueue final : public Show
                         {
                         }
                 };
-                struct parent_resized final
-                {
-                        parent_resized()
-                        {
-                        }
-                };
-                struct mouse_wheel final
-                {
-                        double delta;
-                        mouse_wheel(double d) : delta(d)
-                        {
-                        }
-                };
-                struct toggle_fullscreen final
-                {
-                        toggle_fullscreen()
-                        {
-                        }
-                };
                 struct reset_view final
                 {
                         reset_view()
@@ -257,14 +238,52 @@ class EventQueue final : public Show
                         {
                         }
                 };
+                struct mouse_press final
+                {
+                        int x, y;
+                        ShowMouseButton button;
+                        mouse_press(int x_coord, int y_coord, ShowMouseButton b) : x(x_coord), y(y_coord), button(b)
+                        {
+                        }
+                };
+                struct mouse_release final
+                {
+                        int x, y;
+                        ShowMouseButton button;
+                        mouse_release(int x_coord, int y_coord, ShowMouseButton b) : x(x_coord), y(y_coord), button(b)
+                        {
+                        }
+                };
+                struct mouse_move final
+                {
+                        int x, y;
+                        mouse_move(int x_coord, int y_coord) : x(x_coord), y(y_coord)
+                        {
+                        }
+                };
+                struct mouse_wheel final
+                {
+                        int x, y;
+                        double delta;
+                        mouse_wheel(int x_coord, int y_coord, double d) : x(x_coord), y(y_coord), delta(d)
+                        {
+                        }
+                };
+                struct window_resize final
+                {
+                        int x, y;
+                        window_resize(int x_coord, int y_coord) : x(x_coord), y(y_coord)
+                        {
+                        }
+                };
 
-                using EventType =
-                        Variant<add_object, delete_all_objects, delete_object, mouse_wheel, parent_resized, reset_view,
-                                set_ambient, set_background_color, set_default_color, set_default_ns, set_dft_background_color,
-                                set_dft_brightness, set_dft_color, set_diffuse, set_shadow_zoom, set_specular, set_vertical_sync,
-                                set_wireframe_color, show_convex_hull_2d, show_dft, show_fps, show_pencil_sketch, show_fog,
-                                show_materials, show_object, show_optical_flow, show_shadow, show_smooth, show_wireframe,
-                                toggle_fullscreen, clip_plane_show, clip_plane_position, clip_plane_hide>;
+                using EventType = Variant<add_object, delete_all_objects, delete_object, reset_view, set_ambient,
+                                          set_background_color, set_default_color, set_default_ns, set_dft_background_color,
+                                          set_dft_brightness, set_dft_color, set_diffuse, set_shadow_zoom, set_specular,
+                                          set_vertical_sync, set_wireframe_color, show_convex_hull_2d, show_dft, show_fps,
+                                          show_pencil_sketch, show_fog, show_materials, show_object, show_optical_flow,
+                                          show_shadow, show_smooth, show_wireframe, clip_plane_show, clip_plane_position,
+                                          clip_plane_hide, mouse_press, mouse_release, mouse_move, mouse_wheel, window_resize>;
 
                 template <typename... Args>
                 Event(Args&&... args) : m_event(std::forward<Args>(args)...)
@@ -305,21 +324,9 @@ class EventQueue final : public Show
                 {
                         m_show.delete_all_objects();
                 }
-                void operator()(const Event::parent_resized&)
-                {
-                        m_show.parent_resized();
-                }
-                void operator()(const Event::toggle_fullscreen&)
-                {
-                        m_show.toggle_fullscreen();
-                }
                 void operator()(const Event::reset_view)
                 {
                         m_show.reset_view();
-                }
-                void operator()(const Event::mouse_wheel& d)
-                {
-                        m_show.mouse_wheel(d.delta);
                 }
                 void operator()(const Event::set_ambient& d)
                 {
@@ -420,6 +427,26 @@ class EventQueue final : public Show
                 void operator()(const Event::clip_plane_hide&)
                 {
                         m_show.clip_plane_hide();
+                }
+                void operator()(const Event::mouse_press& d)
+                {
+                        m_show.mouse_press(d.x, d.y, d.button);
+                }
+                void operator()(const Event::mouse_release& d)
+                {
+                        m_show.mouse_release(d.x, d.y, d.button);
+                }
+                void operator()(const Event::mouse_move& d)
+                {
+                        m_show.mouse_move(d.x, d.y);
+                }
+                void operator()(const Event::mouse_wheel& d)
+                {
+                        m_show.mouse_wheel(d.x, d.y, d.delta);
+                }
+                void operator()(const Event::window_resize& d)
+                {
+                        m_show.window_resize(d.x, d.y);
                 }
         };
 
@@ -527,18 +554,6 @@ class EventQueue final : public Show
         {
                 m_event_queue.emplace(std::in_place_type<Event::show_optical_flow>, v);
         }
-        void parent_resized() override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::parent_resized>);
-        }
-        void mouse_wheel(double delta) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::mouse_wheel>, delta);
-        }
-        void toggle_fullscreen() override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::toggle_fullscreen>);
-        }
         void set_vertical_sync(bool v) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_vertical_sync>, v);
@@ -558,6 +573,26 @@ class EventQueue final : public Show
         void clip_plane_hide() override
         {
                 m_event_queue.emplace(std::in_place_type<Event::clip_plane_hide>);
+        }
+        void mouse_press(int x, int y, ShowMouseButton button) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::mouse_press>, x, y, button);
+        }
+        void mouse_release(int x, int y, ShowMouseButton button) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::mouse_release>, x, y, button);
+        }
+        void mouse_move(int x, int y) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::mouse_move>, x, y);
+        }
+        void mouse_wheel(int x, int y, double delta) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::mouse_wheel>, x, y, delta);
+        }
+        void window_resize(int x, int y) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::window_resize>, x, y);
         }
 
         ShowCameraInfo camera_information() const override

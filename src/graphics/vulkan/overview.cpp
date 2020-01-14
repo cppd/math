@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "query.h"
 
 #include "com/print.h"
-#include "window/vulkan/window.h"
+#include "window/manage.h"
 
 #include <algorithm>
 #include <stack>
@@ -101,10 +101,10 @@ std::string overview()
         }
 
         s += "\n";
-        s += "Required Window Extensions";
+        s += "Required Surface Extensions";
         try
         {
-                for (const std::string& extension : sorted(Window::instance_extensions()))
+                for (const std::string& extension : sorted(vulkan_create_surface_extensions()))
                 {
                         s += "\n";
                         s += INDENT;

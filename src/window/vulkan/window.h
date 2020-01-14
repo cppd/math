@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if 0
+
 #include "window/event.h"
 #include "window/handle.h"
 
@@ -34,7 +36,7 @@ void window_terminate();
 class Window
 {
 public:
-        static std::vector<std::string> instance_extensions();
+        // static std::vector<std::string> instance_extensions();
 
         //
 
@@ -45,8 +47,10 @@ public:
         virtual int height() const = 0;
         virtual void pull_and_dispath_events(WindowEvent& window_event) = 0;
 
-        virtual VkSurfaceKHR create_surface(VkInstance instance) = 0;
+        // virtual VkSurfaceKHR create_surface(VkInstance instance) = 0;
 };
 
 std::unique_ptr<Window> create_window();
 }
+
+#endif

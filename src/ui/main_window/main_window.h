@@ -92,8 +92,12 @@ private slots:
         void on_toolButton_dft_color_clicked();
         void on_toolButton_wireframe_color_clicked();
 
-        void slot_graphics_widget_mouse_wheel(double delta);
-        void slot_graphics_widget_resize();
+        void graphics_widget_resize(QResizeEvent*);
+        void graphics_widget_mouse_wheel(QWheelEvent*);
+        void graphics_widget_mouse_move(QMouseEvent*);
+        void graphics_widget_mouse_press(QMouseEvent*);
+        void graphics_widget_mouse_release(QMouseEvent*);
+
         void slot_object_repository();
         void slot_timer_progress_bar();
         void slot_window_first_shown();

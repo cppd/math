@@ -152,13 +152,13 @@ public:
                         {
                                 add_to_event_queue(m_event_queue, info);
 
-                                if (!info.callback.value() || !(info.parent_window_ppi.value() > 0))
+                                if (!info.callback.value() || !(info.window_ppi.value() > 0))
                                 {
                                         error("Show create information is not complete");
                                 }
 
                                 m_thread = std::thread(&ShowThread::thread_function, this, info.callback.value(),
-                                                       info.parent_window.value(), info.parent_window_ppi.value());
+                                                       info.window.value(), info.window_ppi.value());
                         }
                         catch (std::bad_optional_access&)
                         {

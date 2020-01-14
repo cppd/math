@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if 0
+
 #include "com/error.h"
 #include "com/print.h"
 #include "window/event.h"
@@ -151,3 +153,5 @@ public:
                 return m_window_height;
         }
 };
+
+#endif

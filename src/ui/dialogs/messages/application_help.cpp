@@ -29,8 +29,7 @@ std::string message()
 {
         return "Move: left mouse button.\n\n"
                "Rotate: right mouse button.\n\n"
-               "Zoom: mouse wheel.\n\n"
-               "Toggle fullscreen: F11.";
+               "Zoom: mouse wheel.";
 }
 
 std::string title()

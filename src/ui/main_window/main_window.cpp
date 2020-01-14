@@ -133,9 +133,11 @@ void MainWindow::constructor_threads()
 
 void MainWindow::constructor_connect()
 {
-        ui.graphics_widget->setText("");
-        connect(ui.graphics_widget, SIGNAL(wheel(double)), this, SLOT(slot_graphics_widget_mouse_wheel(double)));
-        connect(ui.graphics_widget, SIGNAL(resize()), this, SLOT(slot_graphics_widget_resize()));
+        connect(ui.graphics_widget, SIGNAL(mouse_wheel(QWheelEvent*)), this, SLOT(graphics_widget_mouse_wheel(QWheelEvent*)));
+        connect(ui.graphics_widget, SIGNAL(mouse_move(QMouseEvent*)), this, SLOT(graphics_widget_mouse_move(QMouseEvent*)));
+        connect(ui.graphics_widget, SIGNAL(mouse_press(QMouseEvent*)), this, SLOT(graphics_widget_mouse_press(QMouseEvent*)));
+        connect(ui.graphics_widget, SIGNAL(mouse_release(QMouseEvent*)), this, SLOT(graphics_widget_mouse_release(QMouseEvent*)));
+        connect(ui.graphics_widget, SIGNAL(resize(QResizeEvent*)), this, SLOT(graphics_widget_resize(QResizeEvent*)));
 
         connect(&m_timer_progress_bar, SIGNAL(timeout()), this, SLOT(slot_timer_progress_bar()));
 }
@@ -1124,8 +1126,8 @@ void MainWindow::slot_window_first_shown()
 
                 ShowCreateInfo info;
                 info.callback = &m_event_emitter;
-                info.parent_window = widget_window_id(ui.graphics_widget);
-                info.parent_window_ppi = widget_pixels_per_inch(ui.graphics_widget);
+                info.window = widget_window_id(ui.graphics_widget);
+                info.window_ppi = widget_pixels_per_inch(ui.graphics_widget);
                 info.background_color = qcolor_to_rgb(m_background_color);
                 info.default_color = qcolor_to_rgb(m_default_color);
                 info.wireframe_color = qcolor_to_rgb(m_wireframe_color);
@@ -1231,19 +1233,61 @@ void MainWindow::on_pushButton_reset_view_clicked()
         m_show->reset_view();
 }
 
-void MainWindow::slot_graphics_widget_mouse_wheel(double delta)
+void MainWindow::graphics_widget_mouse_wheel(QWheelEvent* e)
 {
         if (m_show)
         {
-                m_show->mouse_wheel(delta);
+                m_show->mouse_wheel(e->x(), e->y(), e->angleDelta().ry() / 120.0);
         }
 }
 
-void MainWindow::slot_graphics_widget_resize()
+void MainWindow::graphics_widget_mouse_move(QMouseEvent* e)
 {
         if (m_show)
         {
-                m_show->parent_resized();
+                m_show->mouse_move(e->x(), e->y());
+        }
+}
+
+void MainWindow::graphics_widget_mouse_press(QMouseEvent* e)
+{
+        if (m_show)
+        {
+                if (e->button() == Qt::MouseButton::LeftButton)
+                {
+                        m_show->mouse_press(e->x(), e->y(), ShowMouseButton::Left);
+                        return;
+                }
+                if (e->button() == Qt::MouseButton::RightButton)
+                {
+                        m_show->mouse_press(e->x(), e->y(), ShowMouseButton::Right);
+                        return;
+                }
+        }
+}
+
+void MainWindow::graphics_widget_mouse_release(QMouseEvent* e)
+{
+        if (m_show)
+        {
+                if (e->button() == Qt::MouseButton::LeftButton)
+                {
+                        m_show->mouse_release(e->x(), e->y(), ShowMouseButton::Left);
+                        return;
+                }
+                if (e->button() == Qt::MouseButton::RightButton)
+                {
+                        m_show->mouse_release(e->x(), e->y(), ShowMouseButton::Right);
+                        return;
+                }
+        }
+}
+
+void MainWindow::graphics_widget_resize(QResizeEvent* e)
+{
+        if (m_show)
+        {
+                m_show->window_resize(e->size().width(), e->size().height());
         }
 }
 
@@ -1457,7 +1501,6 @@ void MainWindow::on_checkBox_vertical_sync_clicked()
 
 void MainWindow::on_actionFullScreen_triggered()
 {
-        m_show->toggle_fullscreen();
 }
 
 void MainWindow::on_radioButton_model_clicked()

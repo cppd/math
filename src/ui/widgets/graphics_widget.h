@@ -17,43 +17,51 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <QLabel>
+#include <QMouseEvent>
 #include <QResizeEvent>
 #include <QWheelEvent>
+#include <QWidget>
 
-class GraphicsWidget : public QLabel
+class GraphicsWidget : public QWidget
 {
         Q_OBJECT
 
 public:
-        explicit GraphicsWidget(QWidget* parent = nullptr, Qt::WindowFlags = Qt::WindowFlags()) : QLabel(parent)
+        explicit GraphicsWidget(QWidget* parent = nullptr, Qt::WindowFlags = Qt::WindowFlags()) : QWidget(parent)
         {
-        }
-
-        ~GraphicsWidget() override
-        {
+                // setMouseTracking(true);
         }
 
 signals:
-        void wheel(double delta);
-        void resize();
+        void mouse_move(QMouseEvent* e);
+        void mouse_press(QMouseEvent* e);
+        void mouse_release(QMouseEvent* e);
+        void mouse_wheel(QWheelEvent* e);
+        void resize(QResizeEvent* e);
 
 protected:
-        // Это нужно для Винды для перехвата сообщений о вращении
-        // колеса мыши над окном с графикой, встроенным дочерним
-        // окном. В Линуксе может работать и без этого.
-        void wheelEvent(QWheelEvent* event) override
+        void wheelEvent(QWheelEvent* e) override
         {
-                QPoint local_mouse_pos = this->mapFromGlobal(event->globalPos());
-
-                if (this->rect().contains(local_mouse_pos))
-                {
-                        emit wheel(event->angleDelta().ry() / 120.0);
-                }
+                emit mouse_wheel(e);
         }
 
-        void resizeEvent(QResizeEvent*) override
+        void mouseMoveEvent(QMouseEvent* e) override
         {
-                emit resize();
+                emit mouse_move(e);
+        }
+
+        void mousePressEvent(QMouseEvent* e) override
+        {
+                emit mouse_press(e);
+        }
+
+        void mouseReleaseEvent(QMouseEvent* e) override
+        {
+                emit mouse_release(e);
+        }
+
+        void resizeEvent(QResizeEvent* e) override
+        {
+                emit resize(e);
         }
 };

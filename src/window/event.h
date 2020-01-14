@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if 0
+
 class WindowEvent
 {
 protected:
@@ -42,3 +44,5 @@ public:
         virtual void window_mouse_wheel(int delta) = 0;
         virtual void window_resized(int width, int height) = 0;
 };
+
+#endif

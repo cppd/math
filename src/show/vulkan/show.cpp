@@ -44,7 +44,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show/com/rectangle.h"
 #include "show/com/show_thread.h"
 #include "window/manage.h"
-#include "window/vulkan/window.h"
 
 constexpr double IDLE_MODE_FRAME_DURATION_IN_SECONDS = 0.1;
 
@@ -105,26 +104,22 @@ std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(b
         }
 }
 
-class Impl final : public Show, public WindowEvent
+class Impl final : public Show
 {
         EventQueue& m_event_queue;
-        EventWindow<vulkan::Window> m_event_window;
         ShowCallback* const m_callback;
-        const WindowID m_parent_window;
-        const double m_parent_window_ppi;
+        const double m_window_ppi;
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
-        const int m_frame_size_in_pixels = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, m_parent_window_ppi));
+        const int m_frame_size_in_pixels = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, m_window_ppi));
 
-        FrameRate m_frame_rate{m_parent_window_ppi};
+        FrameRate m_frame_rate{m_window_ppi};
         Camera m_camera;
 
         int m_draw_x0 = limits<int>::lowest();
         int m_draw_y0 = limits<int>::lowest();
         int m_draw_x1 = limits<int>::lowest();
         int m_draw_y1 = limits<int>::lowest();
-
-        bool m_fullscreen_active = false;
 
         //
 
@@ -138,7 +133,6 @@ class Impl final : public Show, public WindowEvent
 
         // В последовательности swapchain, а затем renderer,
         // так как буферы renderer могут зависеть от swapchain
-        std::unique_ptr<vulkan::Window> m_window;
         std::unique_ptr<vulkan::VulkanInstance> m_instance;
         std::unique_ptr<vulkan::Semaphore> m_image_semaphore;
         std::unique_ptr<vulkan::Swapchain> m_swapchain;
@@ -157,6 +151,20 @@ class Impl final : public Show, public WindowEvent
         //
 
         std::optional<mat4> m_clip_plane_view_matrix;
+
+        //
+
+        struct PressedMouseButton
+        {
+                bool pressed = false;
+                int pressed_x;
+                int pressed_y;
+                int delta_x;
+                int delta_y;
+        };
+        std::unordered_map<ShowMouseButton, PressedMouseButton> m_mouse;
+        int m_mouse_x = std::numeric_limits<int>::lowest();
+        int m_mouse_y = std::numeric_limits<int>::lowest();
 
         void add_object(const std::shared_ptr<const Obj<3>>& obj_ptr, int id, int scale_id) override
         {
@@ -400,44 +408,6 @@ class Impl final : public Show, public WindowEvent
                 m_renderer->clip_plane_hide();
         }
 
-        void parent_resized() override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                if (!m_fullscreen_active)
-                {
-                        set_size_to_parent(m_window->system_handle(), m_parent_window);
-                }
-        }
-
-        void mouse_wheel(double delta) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                // Для полноэкранного режима обрабатывается в функции window_mouse_wheel
-                if (!m_fullscreen_active)
-                {
-                        mouse_wheel_handler(delta);
-                }
-        }
-
-        void toggle_fullscreen() override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                if (!m_fullscreen_active)
-                {
-                        make_window_fullscreen(m_window->system_handle());
-                        m_fullscreen_active = true;
-                }
-                else
-                {
-                        move_window_to_parent(m_window->system_handle(), m_parent_window);
-                        m_fullscreen_active = false;
-                        set_focus(m_window->system_handle());
-                }
-        }
-
         void set_vertical_sync(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -475,41 +445,65 @@ class Impl final : public Show, public WindowEvent
 
         //
 
-        void window_keyboard_pressed(KeyboardButton button) override
+        const PressedMouseButton& pressed_mouse_button(ShowMouseButton button) const
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                switch (button)
+                auto iter = m_mouse.find(button);
+                if (iter != m_mouse.cend())
                 {
-                case KeyboardButton::F11:
-                        toggle_fullscreen();
-                        break;
-                case KeyboardButton::Escape:
-                        if (m_fullscreen_active)
-                        {
-                                toggle_fullscreen();
-                        }
-                        break;
+                        return iter->second;
+                }
+                else
+                {
+                        thread_local const PressedMouseButton m{};
+                        return m;
                 }
         }
 
-        void window_mouse_pressed(MouseButton /*button*/) override
+        void mouse_press(int x, int y, ShowMouseButton button) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                m_mouse_x = x;
+                m_mouse_y = y;
+
+                PressedMouseButton& m = m_mouse[button];
+                m.pressed = true;
+                m.pressed_x = m_mouse_x;
+                m.pressed_y = m_mouse_y;
+                m.delta_x = 0;
+                m.delta_y = 0;
         }
 
-        void window_mouse_released(MouseButton /*button*/) override
+        void mouse_release(int x, int y, ShowMouseButton button) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                m_mouse[button].pressed = false;
+
+                m_mouse_x = x;
+                m_mouse_y = y;
         }
 
-        void window_mouse_moved(int /*x*/, int /*y*/) override
+        void mouse_move(int x, int y) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                for (auto& [button, m] : m_mouse)
+                {
+                        if (m.pressed)
+                        {
+                                m.delta_x = x - m_mouse_x;
+                                m.delta_y = y - m_mouse_y;
+                        }
+                }
+                m_mouse_x = x;
+                m_mouse_y = y;
+
+                //
 
                 bool changed = false;
 
-                const PressedMouseButton& right = m_event_window.pressed_mouse_button(MouseButton::Right);
+                const PressedMouseButton& right = pressed_mouse_button(ShowMouseButton::Right);
                 if (right.pressed &&
                     pointIsInsideRectangle(right.pressed_x, right.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
                     (right.delta_x != 0 || right.delta_y != 0))
@@ -518,7 +512,7 @@ class Impl final : public Show, public WindowEvent
                         changed = true;
                 }
 
-                const PressedMouseButton& left = m_event_window.pressed_mouse_button(MouseButton::Left);
+                const PressedMouseButton& left = pressed_mouse_button(ShowMouseButton::Left);
                 if (left.pressed &&
                     pointIsInsideRectangle(left.pressed_x, left.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
                     (left.delta_x != 0 || left.delta_y != 0))
@@ -533,34 +527,21 @@ class Impl final : public Show, public WindowEvent
                 }
         }
 
-        void window_mouse_wheel(int delta) override
+        void mouse_wheel(int x, int y, double delta) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                // Для режима встроенного окна обработка колеса мыши происходит
-                // в функции mouse_wheel, так как на Винде не приходит
-                // это сообщение для дочернего окна.
-                if (m_fullscreen_active)
-                {
-                        mouse_wheel_handler(delta);
-                }
+                m_camera.scale(x - m_draw_x0, y - m_draw_y0, delta);
+
+                m_renderer->set_camera(m_camera.renderer_info());
         }
 
-        void window_resized(int /*width*/, int /*height*/) override
+        void window_resize(int /*x*/, int /*y*/) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
         }
 
         //
-
-        void mouse_wheel_handler(int delta)
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_camera.scale(m_event_window.mouse_x() - m_draw_x0, m_event_window.mouse_y() - m_draw_y0, delta);
-
-                m_renderer->set_camera(m_camera.renderer_info());
-        }
 
         void reset_view_handler()
         {
@@ -569,18 +550,6 @@ class Impl final : public Show, public WindowEvent
                 m_camera.reset(vec3(1, 0, 0), vec3(0, 1, 0), 1, vec2(0, 0));
 
                 m_renderer->set_camera(m_camera.renderer_info());
-        }
-
-        //
-
-        void pull_and_dispatch_all_events()
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                // Вначале команды, потом сообщения окна, потому что в командах
-                // могут быть действия с окном, а в событиях окна нет комманд
-                m_event_queue.pull_and_dispatch_events(*this);
-                m_event_window.pull_and_dispath_events(*this);
         }
 
         void set_vertical_sync_swapchain(bool v)
@@ -693,8 +662,8 @@ class Impl final : public Show, public WindowEvent
                 m_pencil_sketch->create_buffers(&m_render_buffers->buffers_2d(), *m_resolve_texture, *m_object_image, w1_x, w1_y,
                                                 w1_w, w1_h);
 
-                m_optical_flow->create_buffers(&m_render_buffers->buffers_2d(), *m_resolve_texture, m_parent_window_ppi, w1_x,
-                                               w1_y, w1_w, w1_h);
+                m_optical_flow->create_buffers(&m_render_buffers->buffers_2d(), *m_resolve_texture, m_window_ppi, w1_x, w1_y,
+                                               w1_w, w1_h);
 
                 if (two_windows)
                 {
@@ -788,23 +757,17 @@ class Impl final : public Show, public WindowEvent
         }
 
 public:
-        Impl(EventQueue& event_queue, ShowCallback* callback, const WindowID& parent_window, double parent_window_ppi)
-                : m_event_queue(event_queue),
-                  m_callback(callback),
-                  m_parent_window(parent_window),
-                  m_parent_window_ppi(parent_window_ppi)
+        Impl(EventQueue& event_queue, ShowCallback* callback, const WindowID& window, double window_ppi)
+                : m_event_queue(event_queue), m_callback(callback), m_window_ppi(window_ppi)
         {
                 // Этот цвет меняется в set_background_color
                 constexpr Srgb8 text_color(255, 255, 255);
 
                 m_present_mode = VULKAN_DEFAULT_PRESENT_MODE;
 
-                m_window = vulkan::create_window();
-                move_window_to_parent(m_window->system_handle(), m_parent_window);
-
                 {
                         const std::vector<std::string> instance_extensions =
-                                merge<std::string>(vulkan::Window::instance_extensions());
+                                merge<std::string>(vulkan_create_surface_extensions());
 
                         const std::vector<std::string> device_extensions = {};
 
@@ -821,12 +784,12 @@ public:
 
                         const std::vector<vulkan::PhysicalDeviceFeatures> optional_features = {};
 
-                        const std::function<VkSurfaceKHR(VkInstance)> create_surface = [&](VkInstance i) {
-                                return m_window->create_surface(i);
+                        const std::function<VkSurfaceKHR(VkInstance)> surface_function = [&](VkInstance instance) {
+                                return vulkan_create_surface(window, instance);
                         };
 
                         m_instance = std::make_unique<vulkan::VulkanInstance>(
-                                instance_extensions, device_extensions, required_features, optional_features, create_surface);
+                                instance_extensions, device_extensions, required_features, optional_features, surface_function);
                 }
 
                 ASSERT(m_instance->graphics_compute_command_pool().family_index() ==
@@ -872,8 +835,6 @@ public:
 
                 //
 
-                m_event_window.set_window(*m_window);
-
                 reset_view_handler();
                 clip_plane_hide();
         }
@@ -890,7 +851,7 @@ public:
                 double last_frame_time = time_in_seconds();
                 while (!stop)
                 {
-                        pull_and_dispatch_all_events();
+                        m_event_queue.pull_and_dispatch_events(*this);
 
                         m_frame_rate.calculate();
 

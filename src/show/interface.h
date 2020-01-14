@@ -48,6 +48,12 @@ struct ShowCameraInfo final
         int height;
 };
 
+enum class ShowMouseButton
+{
+        Left,
+        Right
+};
+
 class Show
 {
 protected:
@@ -58,9 +64,6 @@ public:
         virtual void delete_object(int id) = 0;
         virtual void delete_all_objects() = 0;
         virtual void show_object(int id) = 0;
-        virtual void parent_resized() = 0;
-        virtual void mouse_wheel(double) = 0;
-        virtual void toggle_fullscreen() = 0;
         virtual void reset_view() = 0;
         virtual void set_ambient(double) = 0;
         virtual void set_diffuse(double) = 0;
@@ -88,6 +91,12 @@ public:
         virtual void clip_plane_position(double) = 0;
         virtual void clip_plane_hide() = 0;
 
+        virtual void mouse_press(int x, int y, ShowMouseButton button) = 0;
+        virtual void mouse_release(int x, int y, ShowMouseButton button) = 0;
+        virtual void mouse_move(int x, int y) = 0;
+        virtual void mouse_wheel(int x, int y, double delta) = 0;
+        virtual void window_resize(int x, int y) = 0;
+
         virtual ShowCameraInfo camera_information() const = 0;
         virtual double object_size() const = 0;
         virtual vec3 object_position() const = 0;
@@ -97,8 +106,8 @@ struct ShowCreateInfo
 {
         // std::optional используется для проверки того, что все значения заданы
         std::optional<ShowCallback*> callback;
-        std::optional<WindowID> parent_window;
-        std::optional<double> parent_window_ppi;
+        std::optional<WindowID> window;
+        std::optional<double> window_ppi;
         std::optional<Color> background_color;
         std::optional<Color> default_color;
         std::optional<Color> wireframe_color;
