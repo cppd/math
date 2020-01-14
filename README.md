@@ -80,7 +80,7 @@ C++ compilers             | GCC 9, Clang 9
 Platforms                 | Linux, Windows
 Graphics and compute APIs | Vulkan 1.1
 Frameworks                | Qt 5
-Libraries                 | FreeType, GLFW, GMP, Xlib
+Libraries                 | FreeType, GMP, Xlib
 Optional libraries        | cuFFT (for DFT tests), FFTW (for DFT tests)
 Build systems             | CMake
 
