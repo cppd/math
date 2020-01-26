@@ -246,7 +246,7 @@ class ThreadsWithCatch
         }
 
 public:
-        ThreadsWithCatch(unsigned thread_count)
+        explicit ThreadsWithCatch(unsigned thread_count)
         {
                 m_threads.reserve(thread_count);
         }
@@ -356,7 +356,7 @@ public:
         AtomicCounter() : m_counter(0)
         {
         }
-        AtomicCounter(T v) : m_counter(v)
+        explicit AtomicCounter(std::type_identity_t<T> v) : m_counter(v)
         {
         }
         AtomicCounter& operator=(T v)

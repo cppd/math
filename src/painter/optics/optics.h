@@ -48,11 +48,9 @@ bool cos1_cos2(const Vector<3, T>& v, const Vector<3, T>& normal, T eta, T* cos1
                 *cos2 = std::sqrt(cos2_square);
                 return true;
         }
-        else
-        {
-                // полное внутреннее отражение
-                return false;
-        }
+
+        // полное внутреннее отражение
+        return false;
 }
 }
 
@@ -72,7 +70,8 @@ bool refract(const Vector<3, T>& v, const Vector<3, T>& normal, T eta, Vector<3,
 
         namespace impl = optics_implementation;
 
-        T cos1, cos2;
+        T cos1;
+        T cos2;
         if (impl::cos1_cos2(v, normal, eta, &cos1, &cos2))
         {
                 *t = v * eta - normal * (eta * dot(v, normal) + cos2);
@@ -107,7 +106,8 @@ bool fresnel_dielectric(const Vector<3, T>& v, const Vector<3, T>& normal, T n1,
 {
         static_assert(std::is_floating_point_v<T>);
 
-        T cos1, cos2;
+        T cos1;
+        T cos2;
 
         if (!cos1_cos2(v, normal, n1 / n2, &cos1, &cos2))
         {

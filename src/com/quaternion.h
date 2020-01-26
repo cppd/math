@@ -39,7 +39,7 @@ public:
         {
         }
 
-        Quaternion(const Vector<4, T>& v) : m_data(v)
+        explicit Quaternion(const Vector<4, T>& v) : m_data(v)
         {
         }
 

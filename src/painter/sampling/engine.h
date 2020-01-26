@@ -41,7 +41,7 @@ template <size_t N, typename T, typename RandomEngine>
 void shuffle_one_dimension(RandomEngine& random_engine, unsigned dimension, std::vector<Vector<N, T>>* v)
 {
         ASSERT(dimension < N);
-        ASSERT(v->size() > 0);
+        ASSERT(!v->empty());
 
         using Distribution = std::uniform_int_distribution<size_t>;
 

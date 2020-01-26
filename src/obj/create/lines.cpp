@@ -91,7 +91,7 @@ class Lines final : public Obj<N>
 
         void create_obj(const std::vector<Vector<N, float>>& points, const std::vector<std::array<int, 2>>& lines)
         {
-                if (lines.size() == 0)
+                if (lines.empty())
                 {
                         error("No lines for line object");
                 }

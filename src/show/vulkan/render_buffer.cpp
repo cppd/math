@@ -129,7 +129,7 @@ unsigned compute_buffer_count(show_vulkan::RenderBufferCount buffer_count, const
         case show_vulkan::RenderBufferCount::One:
                 return 1;
         case show_vulkan::RenderBufferCount::Swapchain:
-                ASSERT(swapchain.image_views().size() > 0);
+                ASSERT(!swapchain.image_views().empty());
                 return swapchain.image_views().size();
         }
         error_fatal("Error render buffer count");
@@ -515,13 +515,13 @@ std::vector<VkClearValue> Impl::clear_values_3d(const Color& clear_color) const
 
 unsigned Impl::width_2d() const
 {
-        ASSERT(m_depth_attachments.size() > 0);
+        ASSERT(!m_depth_attachments.empty());
         return m_depth_attachments[0].width();
 }
 
 unsigned Impl::height_2d() const
 {
-        ASSERT(m_depth_attachments.size() > 0);
+        ASSERT(!m_depth_attachments.empty());
         return m_depth_attachments[0].height();
 }
 

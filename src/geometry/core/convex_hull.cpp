@@ -331,7 +331,7 @@ void create_init_convex_hull(const std::vector<Vector<N, S>>& points, std::array
         {
                 connect_facets(&facet, -1, &search_map, &ridges);
         }
-        ASSERT(search_map.size() == 0);
+        ASSERT(search_map.empty());
         ASSERT(ridges == ridge_count);
 }
 
@@ -564,7 +564,7 @@ void add_point_to_convex_hull(const std::vector<Vector<N, S>>& points, int point
                         connect_facets(&facet, point, &search_map, &ridges);
                 }
         }
-        ASSERT(search_map.size() == 0);
+        ASSERT(search_map.empty());
         ASSERT(ridges == ridge_count);
 
         // Добавить новые грани в общий список граней
@@ -607,9 +607,9 @@ void create_convex_hull(const std::vector<Vector<N, S>>& points, FacetList<Facet
         // Создаётся здесь, чтобы каждый раз не создавать при расчёте и не выделять каждый раз память,
         // а также не использовать thread_local
         std::vector<std::vector<signed char>> unique_points_work(thread_pool.thread_count());
-        for (unsigned i = 0; i < unique_points_work.size(); ++i)
+        for (std::vector<signed char>& v : unique_points_work)
         {
-                unique_points_work[i].resize(points.size(), 0);
+                v.resize(points.size(), 0);
         }
 
         // N-симплекс построен, значит уже обработано N + 1 точек
@@ -629,13 +629,13 @@ void create_convex_hull(const std::vector<Vector<N, S>>& points, FacetList<Facet
         }
 
         ASSERT(std::all_of(facets->cbegin(), facets->cend(),
-                           [](const Facet<N, S, C>& facet) -> bool { return facet.conflict_points().size() == 0; }));
+                           [](const Facet<N, S, C>& facet) -> bool { return facet.conflict_points().empty(); }));
 }
 
 template <size_t N>
 void find_min_max(const std::vector<Vector<N, float>>& points, Vector<N, float>* min, Vector<N, float>* max)
 {
-        ASSERT(points.size() > 0);
+        ASSERT(!points.empty());
 
         *min = *max = points[0];
         for (unsigned i = 1; i < points.size(); ++i)
@@ -667,7 +667,8 @@ void shuffle_and_convert_to_unique_integer(const std::vector<Vector<N, float>>& 
         std::iota(random_map.begin(), random_map.end(), 0);
         std::shuffle(random_map.begin(), random_map.end(), std::mt19937_64(source_points.size()));
 
-        Vector<N, float> min, max;
+        Vector<N, float> min;
+        Vector<N, float> max;
         find_min_max(source_points, &min, &max);
 
         double max_d = (max - min).norm_infinity();
@@ -875,7 +876,7 @@ template <size_t N>
 void compute_delaunay(const std::vector<Vector<N, float>>& source_points, std::vector<vec<N>>* points,
                       std::vector<DelaunaySimplex<N>>* simplices, ProgressRatio* progress)
 {
-        if (source_points.size() == 0)
+        if (source_points.empty())
         {
                 error("no points for convex hull");
         }
@@ -887,7 +888,7 @@ template <size_t N>
 void compute_convex_hull(const std::vector<Vector<N, float>>& source_points, std::vector<ConvexHullFacet<N>>* ch_facets,
                          ProgressRatio* progress)
 {
-        if (source_points.size() == 0)
+        if (source_points.empty())
         {
                 error("no points for convex hull");
         }

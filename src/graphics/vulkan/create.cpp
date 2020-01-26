@@ -69,7 +69,7 @@ PipelineLayout create_pipeline_layout(VkDevice device, const std::vector<VkDescr
 PipelineLayout create_pipeline_layout(VkDevice device, const std::vector<unsigned>& set_numbers,
                                       const std::vector<VkDescriptorSetLayout>& set_layouts)
 {
-        ASSERT(set_numbers.size() == set_layouts.size() && set_numbers.size() > 0);
+        ASSERT(set_numbers.size() == set_layouts.size() && !set_numbers.empty());
         ASSERT(set_numbers.size() == std::unordered_set<unsigned>(set_numbers.begin(), set_numbers.end()).size());
         ASSERT(0 == *std::min_element(set_numbers.begin(), set_numbers.end()));
         ASSERT(set_numbers.size() - 1 == *std::max_element(set_numbers.begin(), set_numbers.end()));
@@ -117,9 +117,9 @@ Instance create_instance(int api_version_major, int api_version_minor, std::vect
 
         const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
 
-        if (required_validation_layers.size() > 0)
+        if (!required_validation_layers.empty())
         {
-                required_extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+                required_extensions.emplace_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
         }
 
         check_api_version(required_api_version);
@@ -139,14 +139,14 @@ Instance create_instance(int api_version_major, int api_version_minor, std::vect
         create_info.pApplicationInfo = &app_info;
 
         const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
-        if (extensions.size() > 0)
+        if (!extensions.empty())
         {
                 create_info.enabledExtensionCount = extensions.size();
                 create_info.ppEnabledExtensionNames = extensions.data();
         }
 
         const std::vector<const char*> validation_layers = const_char_pointer_vector(required_validation_layers);
-        if (validation_layers.size() > 0)
+        if (!validation_layers.empty())
         {
                 create_info.enabledLayerCount = validation_layers.size();
                 create_info.ppEnabledLayerNames = validation_layers.data();

@@ -125,11 +125,11 @@ class RidgeDataC
 {
         static_assert(MaxSize > 1);
 
-        RidgeDataElement<Facet> m_data[MaxSize];
+        std::array<RidgeDataElement<Facet>, MaxSize> m_data;
         int m_size;
 
 public:
-        RidgeDataC(const Facet* facet, int external_point_index) : m_data{{facet, external_point_index}, {}}, m_size(1)
+        RidgeDataC(const Facet* facet, int external_point_index) : m_data{{{facet, external_point_index}, {}}}, m_size(1)
         {
         }
 

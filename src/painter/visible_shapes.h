@@ -139,10 +139,7 @@ public:
                         *surface = this;
                         return true;
                 }
-                else
-                {
-                        return false;
-                }
+                return false;
         }
 
         SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const override

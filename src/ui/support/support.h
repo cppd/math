@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QSlider>
 #include <QTextEdit>
 #include <iterator>
+#include <memory>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -37,18 +38,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 template <typename Window, typename... Args>
 void create_and_show_delete_on_close_window(Args&&... args)
 {
-        Window* window = new Window(std::forward<Args>(args)...);
-
-        try
-        {
-                window->show();
-                window->setAttribute(Qt::WA_DeleteOnClose);
-        }
-        catch (...)
-        {
-                delete window;
-                throw;
-        }
+        std::unique_ptr<Window> window = std::make_unique<Window>(std::forward<Args>(args)...);
+        window->show();
+        window->setAttribute(Qt::WA_DeleteOnClose);
+        window.release();
 }
 
 // Чтобы объект Qt, имеющий родителя, не удалялся два и более раз, нужно использовать

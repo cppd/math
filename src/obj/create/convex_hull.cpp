@@ -103,7 +103,7 @@ class ConvexHullObj final : public Obj<N>
 
         void create_obj(const std::vector<Vector<N, float>>& points, const std::vector<ConvexHullFacet<N>>& facets)
         {
-                if (facets.size() == 0)
+                if (facets.empty())
                 {
                         error("No facets for convex hull object");
                 }
@@ -162,11 +162,11 @@ public:
         {
                 std::vector<Vector<N, float>> points;
 
-                if (obj->facets().size() > 0)
+                if (!obj->facets().empty())
                 {
                         points = unique_facet_vertices(obj);
                 }
-                else if (obj->points().size() > 0)
+                else if (!obj->points().empty())
                 {
                         points = unique_point_vertices(obj);
                 }

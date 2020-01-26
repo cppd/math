@@ -141,7 +141,7 @@ void Image<N>::resize(const std::array<int, N>& size)
 template <size_t N>
 bool Image<N>::empty() const
 {
-        return m_data.size() == 0;
+        return m_data.empty();
 }
 
 template <size_t N>

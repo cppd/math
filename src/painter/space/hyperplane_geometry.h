@@ -62,12 +62,12 @@ class HyperplaneSimplexGeometry
         // за исключением одной грани.
         // Хранятся только данные плоскостей. Перпендикуляр и точки симплекса передаются
         // в параметрах функций, так как они имеются в структурах данных самого симплекса.
-        struct
+        struct Plane
         {
                 Vector<N, T> n;
                 T d;
-
-        } m_planes[N - 1];
+        };
+        std::array<Plane, N - 1> m_planes;
 
         static T last_coordinate(const Vector<N - 1, T>& coordinates)
         {

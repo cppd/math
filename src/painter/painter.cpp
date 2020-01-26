@@ -104,9 +104,10 @@ public:
                 return m_counter;
         }
 
-        void operator=(int v)
+        Counter& operator=(int v)
         {
                 m_counter = v;
+                return *this;
         }
 
         Counter& operator=(Counter&&) = delete;
@@ -126,7 +127,7 @@ struct PaintData
 
         PaintData(const std::vector<const GenericObject<N, T>*>& objects_,
                   const std::vector<const LightSource<N, T>*>& light_sources_,
-                  const SurfaceProperties<N, T>& default_surface_properties_, const T& ray_offset_, const bool smooth_normal_)
+                  const SurfaceProperties<N, T>& default_surface_properties_, const T& ray_offset_, bool smooth_normal_)
                 : objects(objects_),
                   light_sources(light_sources_),
                   default_surface_properties(default_surface_properties_),
@@ -418,7 +419,8 @@ void paint_pixels(unsigned thread_number, PainterRandomEngine<T>& random_engine,
 {
         std::array<int_least16_t, N - 1> pixel;
 
-        Counter ray_count = 0, sample_count = 0;
+        Counter ray_count = 0;
+        Counter sample_count = 0;
 
         while (!stop && paintbrush->next_pixel(ray_count, sample_count, &pixel))
         {
@@ -547,7 +549,8 @@ T compute_ray_offset(const std::vector<const GenericObject<N, T>*>& objects)
 
         for (const GenericObject<N, T>* object : objects)
         {
-                Vector<N, T> min, max;
+                Vector<N, T> min;
+                Vector<N, T> max;
                 object->min_max(&min, &max);
 
                 for (unsigned i = 0; i < N; ++i)

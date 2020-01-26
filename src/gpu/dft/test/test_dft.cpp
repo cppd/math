@@ -94,7 +94,8 @@ void load_data(const std::string& file_name, int* n1, int* n2, std::vector<compl
 
         CFile f(file_name, "r");
 
-        int v1, v2;
+        int v1;
+        int v2;
 
         if (2 != fscanf(f, "%d%d", &v1, &v2))
         {
@@ -118,7 +119,8 @@ void load_data(const std::string& file_name, int* n1, int* n2, std::vector<compl
 
         for (long long i = 0; i < count; ++i)
         {
-                double real, imag;
+                double real;
+                double imag;
                 if (2 != fscanf(f, "%lf%lf", &real, &imag))
                 {
                         error("Error read number № " + to_string(i));
@@ -404,7 +406,8 @@ void random_data_test(const std::array<int, 2>& dimensions, ProgressRatio* progr
 
         generate_random_data(input_file_name, dimensions[0], dimensions[1]);
 
-        int n1, n2;
+        int n1;
+        int n2;
         std::vector<complex> source_data;
         load_data(input_file_name, &n1, &n2, &source_data);
 

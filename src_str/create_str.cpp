@@ -28,10 +28,10 @@ constexpr int LINE_LENGTH_STR = 24;
 constexpr int LINE_LENGTH_BIN = 16;
 constexpr int LINE_LENGTH_SPR = 8;
 
-constexpr const char COMMAND_STR[] = "str";
-constexpr const char COMMAND_BIN[] = "bin";
-constexpr const char COMMAND_SPR[] = "spr";
-constexpr const char COMMAND_CAT[] = "cat";
+constexpr const char* COMMAND_STR = "str";
+constexpr const char* COMMAND_BIN = "bin";
+constexpr const char* COMMAND_SPR = "spr";
+constexpr const char* COMMAND_CAT = "cat";
 
 // SPIR-V Specification
 // 3.1 Magic Number

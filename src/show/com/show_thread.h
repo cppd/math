@@ -144,7 +144,7 @@ class ShowThread final : public ShowObject
         }
 
 public:
-        ShowThread(const ShowCreateInfo& info)
+        explicit ShowThread(const ShowCreateInfo& info)
         {
                 try
                 {

@@ -159,10 +159,7 @@ public:
                 {
                         return m_permanent_text + ". " + m_text;
                 }
-                else
-                {
-                        return m_permanent_text;
-                }
+                return m_permanent_text;
         }
 
         Impl(const Impl&) = delete;

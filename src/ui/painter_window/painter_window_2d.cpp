@@ -302,7 +302,10 @@ void PainterWindow2d::first_shown()
 
 void PainterWindow2d::update_statistics()
 {
-        long long pass_count, pixel_count, ray_count, sample_count;
+        long long pass_count;
+        long long pixel_count;
+        long long ray_count;
+        long long sample_count;
         double previous_pass_duration;
 
         painter_statistics(&pass_count, &pixel_count, &ray_count, &sample_count, &previous_pass_duration);

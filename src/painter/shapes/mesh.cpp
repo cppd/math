@@ -188,10 +188,7 @@ std::optional<Color> Mesh<N, T>::color(const Vector<N, T>& p, const void* inters
                 {
                         return m_images[m.map_Kd].texture(facet->texcoord(p));
                 }
-                else
-                {
-                        return m.Kd;
-                }
+                return m.Kd;
         }
 
         return std::nullopt;

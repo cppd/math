@@ -28,11 +28,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/type/limit.h"
 #include "obj/alg/alg.h"
 
-constexpr const char OBJ_comment_and_space[] = "# ";
-constexpr const char OBJ_v[] = "v";
-constexpr const char OBJ_vn[] = "vn";
-constexpr const char OBJ_f[] = "f";
-constexpr const char OBJ_l[] = "l";
+constexpr const char* OBJ_comment_and_space = "# ";
+constexpr const char* OBJ_v = "v";
+constexpr const char* OBJ_vn = "vn";
+constexpr const char* OBJ_f = "f";
+constexpr const char* OBJ_l = "l";
 
 namespace
 {
@@ -144,16 +144,17 @@ void write_vertices(const CFile& file, const Obj<N>* obj)
         {
                 error("Facet and line unique indices are not found");
         }
-        if (facet_indices.size() > 0 && facet_indices.size() < N)
+        if (!facet_indices.empty() && facet_indices.size() < N)
         {
                 error("Facet unique indices count " + to_string(facet_indices.size()) + " is less than " + to_string(N));
         }
-        if (line_indices.size() > 0 && line_indices.size() < 2)
+        if (!line_indices.empty() && line_indices.size() < 2)
         {
                 error("Line unique indices count " + to_string(line_indices.size()) + " is less than " + to_string(2));
         }
 
-        Vector<N, float> min, max;
+        Vector<N, float> min;
+        Vector<N, float> max;
 
         std::tie(min, max) = min_max_coordinates(obj->vertices(), facet_indices, line_indices);
 
@@ -263,7 +264,7 @@ std::string file_name_with_extension(const std::string& file_name)
 {
         std::string e = file_extension(file_name);
 
-        if (e.size() > 0)
+        if (!e.empty())
         {
                 if (!obj_file_extension_is_correct(N, e))
                 {

@@ -36,7 +36,7 @@ class DelaunayFacet
         // Если грань имеет только 1 объект Делоне, то вектор направлен наружу
         const vec<N> m_ortho;
         // второй элемент равен -1, если грань имеет только 1 объект Делоне
-        const int m_delaunay[2];
+        const std::array<int, 2> m_delaunay;
 
 public:
         DelaunayFacet(const std::array<int, N>& indices, const vec<N>& ortho, int delaunay_0, int delaunay_1)
@@ -117,7 +117,7 @@ void create_delaunay_objects_and_facets(const std::vector<vec<N>>& points, const
                 const Ridge<N + 1>& facet = r_i->first;
                 const RidgeData2<DelaunaySimplex<N>>& facet_data = r_i->second;
 
-                ASSERT(facet_data.size() >= 1 && facet_data.size() <= 2);
+                ASSERT(facet_data.size() == 1 || facet_data.size() == 2);
 
                 if (facet_data.size() == 1)
                 {

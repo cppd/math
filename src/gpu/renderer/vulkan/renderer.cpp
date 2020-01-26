@@ -359,7 +359,7 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                return !m_storage.object();
+                return m_storage.object() == nullptr;
         }
 
         void create_buffers(const vulkan::Swapchain* swapchain, RenderBuffers3D* render_buffers,

@@ -365,11 +365,6 @@ bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2,
                         return false;
                 }
 
-                if (impl::shapes_intersect_by_spaces(shape_1, shape_2, distance_from_flat_shapes_in_epsilons))
-                {
-                        return true;
-                }
-
-                return false;
+                return (impl::shapes_intersect_by_spaces(shape_1, shape_2, distance_from_flat_shapes_in_epsilons));
         }
 }

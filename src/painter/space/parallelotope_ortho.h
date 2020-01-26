@@ -122,8 +122,8 @@ class ParallelotopeOrtho final
         struct Planes
         {
                 T d1, d2;
-
-        } m_planes[N];
+        };
+        std::array<Planes, N> m_planes;
 
         Vector<N, T> m_org;
         std::array<T, N> m_sizes;
@@ -268,11 +268,8 @@ bool ParallelotopeOrtho<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* s
                                 // параллельно плоскостям и снаружи
                                 return false;
                         }
-                        else
-                        {
-                                // внутри плоскостей
-                                continue;
-                        }
+                        // внутри плоскостей
+                        continue;
                 }
 
                 T d = r.org()[i]; // dot(r.org(), m_planes[i].n);
@@ -310,7 +307,8 @@ bool ParallelotopeOrtho<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* s
 template <size_t N, typename T>
 bool ParallelotopeOrtho<N, T>::intersect(const Ray<N, T>& r, T* t) const
 {
-        T first, second;
+        T first;
+        T second;
         if (intersect_impl(r, &first, &second))
         {
                 *t = (first > 0) ? first : second;
@@ -322,7 +320,8 @@ bool ParallelotopeOrtho<N, T>::intersect(const Ray<N, T>& r, T* t) const
 template <size_t N, typename T>
 bool ParallelotopeOrtho<N, T>::intersect_farthest(const Ray<N, T>& r, T* t) const
 {
-        T first, second;
+        T first;
+        T second;
         if (intersect_impl(r, &first, &second))
         {
                 *t = second;

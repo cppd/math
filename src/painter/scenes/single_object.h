@@ -119,7 +119,8 @@ std::unique_ptr<const PaintObjects<N, T>> single_object_scene(const Color& backg
                       ", max = " + to_string(max_screen_size));
         }
 
-        Vector<N, T> min, max;
+        Vector<N, T> min;
+        Vector<N, T> max;
         mesh->min_max(&min, &max);
         Vector<N, T> object_size = max - min;
         Vector<N, T> center = min + object_size / T(2);

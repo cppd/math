@@ -135,7 +135,7 @@ class MainObjectsImpl
 
 public:
         MainObjectsImpl(int mesh_threads, const ObjectsCallback& event_emitter,
-                        std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler);
+                        const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler);
 
         void clear_all_data();
 
@@ -165,11 +165,12 @@ public:
 };
 
 template <size_t N>
-MainObjectsImpl<N>::MainObjectsImpl(int mesh_threads, const ObjectsCallback& event_emitter,
-                                    std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler)
+MainObjectsImpl<N>::MainObjectsImpl(
+        int mesh_threads, const ObjectsCallback& event_emitter,
+        const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
         : m_mesh_threads(mesh_threads),
           m_event_emitter(event_emitter),
-          m_exception_handler(std::move(exception_handler)),
+          m_exception_handler(exception_handler),
           m_object_repository(create_object_repository<N>()),
           m_show(nullptr)
 {
@@ -966,14 +967,14 @@ class MainObjectStorage final : public MainObjects
 
         template <size_t... I>
         void init_map(int mesh_threads, const ObjectsCallback& event_emitter,
-                      std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler,
+                      const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler,
                       std::integer_sequence<size_t, I...>&&)
         {
                 static_assert(((I >= 0 && I < sizeof...(I)) && ...));
                 static_assert(Min + sizeof...(I) == Max + 1);
 
                 (m_objects.try_emplace(Min + I, std::in_place_type_t<MainObjectsImpl<Min + I>>(), mesh_threads, event_emitter,
-                                       std::move(exception_handler)),
+                                       exception_handler),
                  ...);
 
                 ASSERT((m_objects.count(Min + I) == 1) && ...);
@@ -982,7 +983,7 @@ class MainObjectStorage final : public MainObjects
 
 public:
         MainObjectStorage(int mesh_threads, const ObjectsCallback& event_emitter,
-                          std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler)
+                          const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
         {
                 init_map(mesh_threads, event_emitter, exception_handler, std::make_integer_sequence<size_t, Count>());
         }
@@ -990,7 +991,7 @@ public:
 
 std::unique_ptr<MainObjects> create_main_objects(
         int mesh_threads, const ObjectsCallback& event_emitter,
-        std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler)
+        const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
 {
         return std::make_unique<MainObjectStorage<MinDimension, MaxDimension>>(mesh_threads, event_emitter, exception_handler);
 }

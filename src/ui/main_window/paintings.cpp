@@ -60,8 +60,12 @@ void painting(const std::shared_ptr<const Mesh<3, double>>& mesh, const Painting
         const int default_sample_count = square(info_all.default_samples_per_dimension);
         const int max_sample_count = square(info_all.max_samples_per_dimension);
 
-        int width, height, thread_count, samples_per_pixel;
-        bool flat_facets, cornell_box;
+        int width;
+        int height;
+        int thread_count;
+        int samples_per_pixel;
+        bool flat_facets;
+        bool cornell_box;
 
         if (!dialog::painter_parameters_for_3d(info_all.parent_window, hardware_concurrency(), info_3d.paint_width,
                                                info_3d.paint_height, info_3d.max_screen_size, default_sample_count,
@@ -106,7 +110,10 @@ void painting(const std::shared_ptr<const Mesh<N, T>>& mesh, const PaintingInfor
         const int default_sample_count = power<screen_dimension>(static_cast<unsigned>(info_all.default_samples_per_dimension));
         const int max_sample_count = power<screen_dimension>(static_cast<unsigned>(info_all.max_samples_per_dimension));
 
-        int min_size, max_size, thread_count, samples_per_pixel;
+        int min_size;
+        int max_size;
+        int thread_count;
+        int samples_per_pixel;
         bool flat_facets;
 
         if (!dialog::painter_parameters_for_nd(info_all.parent_window, N, hardware_concurrency(), info_nd.default_screen_size,

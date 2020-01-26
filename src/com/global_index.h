@@ -83,10 +83,12 @@ class GlobalIndex
                 std::array<IndexType, N> strides{(I == 0 ? 1 : previous = sizes[I - 1] * previous)...};
 
                 using CheckType = std::conditional_t<is_signed<typename T::value_type>, __int128, unsigned __int128>;
-                if (!(static_cast<CheckType>(strides[N - 1] * sizes[N - 1]) == multiply_all<CheckType>(sizes)))
+                if (static_cast<CheckType>(strides[N - 1]) * static_cast<CheckType>(sizes[N - 1]) !=
+                    multiply_all<CheckType>(sizes))
                 {
                         error("Error computing global index strides");
                 }
+
                 if (!((I == 0 ? true :
                                 ((strides[I] > strides[I - 1] && sizes[I - 1] > 1) ||
                                  (strides[I] == strides[I - 1] && sizes[I - 1] == 1))) &&
@@ -111,7 +113,8 @@ public:
         GlobalIndex() = default;
 
         template <typename T>
-        constexpr GlobalIndex(const T& sizes) : m_strides(compute_strides(sizes)), m_count(m_strides[N - 1] * sizes[N - 1])
+        explicit constexpr GlobalIndex(const T& sizes)
+                : m_strides(compute_strides(sizes)), m_count(m_strides[N - 1] * sizes[N - 1])
         {
         }
 

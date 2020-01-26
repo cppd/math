@@ -277,7 +277,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(const vulkan::Devi
 
         for (const Obj<3>::Point& p : obj_points)
         {
-                vertices.push_back(obj_vertices[p.vertex]);
+                vertices.emplace_back(obj_vertices[p.vertex]);
         }
 
         return std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,

@@ -34,9 +34,9 @@ constexpr const char* DEFAULT_WRITE_FORMAT = "png";
 std::set<std::string> supported_formats()
 {
         std::set<std::string> formats;
-        for (QString s : QImageWriter::supportedImageFormats())
+        for (const QByteArray& a : QImageWriter::supportedImageFormats())
         {
-                formats.insert(s.toLower().toStdString());
+                formats.insert(QString(a).toLower().toStdString());
         }
         return formats;
 }
@@ -64,7 +64,7 @@ std::string file_name_with_extension(const std::string& file_name)
 {
         std::string ext = file_extension(file_name);
 
-        if (ext.size() > 0)
+        if (!ext.empty())
         {
                 checkWriteFormatSupport(ext);
                 return file_name;

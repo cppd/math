@@ -456,11 +456,8 @@ bool read_one_float_from_string(const char** str, T* p)
         {
                 return false;
         }
-        else
-        {
-                *str = end;
-                return true;
-        }
+        *str = end;
+        return true;
 };
 
 template <typename... T>
@@ -656,7 +653,8 @@ void split_line(T* data, const std::vector<long long>& line_begin, long long lin
         // В конце строки находится символ '\n', сместиться на него
         --last;
 
-        long long first_b, first_e;
+        long long first_b;
+        long long first_e;
 
         split(*data, line_begin[line_num], last, ascii::is_space, is_number_sign, &first_b, &first_e, second_b, second_e);
 
@@ -1210,7 +1208,6 @@ void FileObj<N>::read_lib(const std::string& dir_name, const std::string& file_n
                 {
                         if (!*first)
                         {
-                                continue;
                         }
                         else if (str_equal(first, MTL_newmtl))
                         {
@@ -1340,12 +1337,12 @@ void FileObj<N>::read_libs(const std::string& dir_name, ProgressRatio* progress,
 {
         std::map<std::string, int> image_index;
 
-        for (size_t i = 0; (i < library_names.size()) && (material_index->size() > 0); ++i)
+        for (size_t i = 0; (i < library_names.size()) && !material_index->empty(); ++i)
         {
                 read_lib(dir_name, library_names[i], progress, material_index, &image_index);
         }
 
-        if (material_index->size() != 0)
+        if (!material_index->empty())
         {
                 error("Materials not found in libraries: " + map_keys_to_string(*material_index));
         }
@@ -1391,7 +1388,7 @@ void FileObj<N>::read_obj_and_mtl(const std::string& file_name, ProgressRatio* p
 
         read_obj(file_name, progress, &material_index, &library_names);
 
-        if (m_facets.size() == 0)
+        if (m_facets.empty())
         {
                 error("No facets found in OBJ file");
         }
@@ -1402,7 +1399,7 @@ void FileObj<N>::read_obj_and_mtl(const std::string& file_name, ProgressRatio* p
 
         if (remove_facets_with_incorrect_dimension())
         {
-                if (m_facets.size() == 0)
+                if (m_facets.empty())
                 {
                         error("No " + to_string(N - 1) + "-facets found in " + obj_type_name(N) + " file");
                 }
@@ -1562,7 +1559,7 @@ void FileTxt<N>::read_text(const std::string& file_name, ProgressRatio* progress
 
         read_points(file_name, progress);
 
-        if (m_vertices.size() == 0)
+        if (m_vertices.empty())
         {
                 error("No vertices found in TXT file");
         }

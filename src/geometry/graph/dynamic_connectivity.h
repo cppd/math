@@ -43,7 +43,7 @@ class WeightedQuickUnion
 
 public:
         // std::type_identity_t для запрета template argument deduction
-        WeightedQuickUnion(std::type_identity_t<T> N) : m_parent(N), m_component_size(N), m_component_count(N)
+        explicit WeightedQuickUnion(std::type_identity_t<T> N) : m_parent(N), m_component_size(N), m_component_count(N)
         {
                 std::iota(m_parent.begin(), m_parent.end(), 0);
                 std::fill(m_component_size.begin(), m_component_size.end(), 1);

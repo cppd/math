@@ -52,7 +52,7 @@ protected:
         ~FacetBase() = default;
 
 public:
-        FacetBase(std::array<int, N>&& vertices) : m_indices(sort(std::move(vertices)))
+        explicit FacetBase(std::array<int, N>&& vertices) : m_indices(sort(std::move(vertices)))
         {
         }
 

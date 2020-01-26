@@ -47,7 +47,8 @@ __attribute__((noinline)) double computation(std::vector<mpz_class>& v)
 {
         const mpz_class add = 20;
         const mpz_class sub = 30;
-        mpz_class tmp1, tmp2;
+        mpz_class tmp1;
+        mpz_class tmp2;
 
         double t = time_in_seconds();
         for (int i = 0; i < N; ++i)
@@ -63,7 +64,8 @@ __attribute__((noinline)) double computation(std::vector<mpf_class>& v)
 {
         const mpf_class add = 20;
         const mpf_class sub = 30;
-        mpf_class tmp1, tmp2;
+        mpf_class tmp1;
+        mpf_class tmp2;
 
         double t = time_in_seconds();
         for (int i = 0; i < N; ++i)

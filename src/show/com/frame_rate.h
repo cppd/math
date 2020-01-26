@@ -27,7 +27,7 @@ class FrameRate
         TextData m_text_data;
 
 public:
-        FrameRate(double ppi);
+        explicit FrameRate(double ppi);
 
         void calculate();
 

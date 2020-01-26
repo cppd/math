@@ -435,12 +435,12 @@ bool MainWindow::dialog_object_selection(QWidget* parent, std::unordered_set<Obj
 {
         ASSERT(objects_to_load);
 
-        bool model_convex_hull = objects_to_load->count(ObjectId::ModelConvexHull);
-        bool model_minumum_spanning_tree = objects_to_load->count(ObjectId::ModelMst);
-        bool cocone = objects_to_load->count(ObjectId::Cocone);
-        bool cocone_convex_hull = objects_to_load->count(ObjectId::CoconeConvexHull);
-        bool bound_cocone = objects_to_load->count(ObjectId::BoundCocone);
-        bool bound_cocone_convex_hull = objects_to_load->count(ObjectId::BoundCoconeConvexHull);
+        bool model_convex_hull = objects_to_load->count(ObjectId::ModelConvexHull) != 0u;
+        bool model_minumum_spanning_tree = objects_to_load->count(ObjectId::ModelMst) != 0u;
+        bool cocone = objects_to_load->count(ObjectId::Cocone) != 0u;
+        bool cocone_convex_hull = objects_to_load->count(ObjectId::CoconeConvexHull) != 0u;
+        bool bound_cocone = objects_to_load->count(ObjectId::BoundCocone) != 0u;
+        bool bound_cocone_convex_hull = objects_to_load->count(ObjectId::BoundCoconeConvexHull) != 0;
 
         if (!dialog::object_selection(parent, &model_convex_hull, &model_minumum_spanning_tree, &cocone, &cocone_convex_hull,
                                       &bound_cocone, &bound_cocone_convex_hull))
@@ -752,7 +752,7 @@ void MainWindow::progress_bars(MainThreads::Action thread_action, bool permanent
                         });
         }
 
-        std::list<QProgressBar>::iterator bar = progress_bars->begin();
+        auto bar = progress_bars->begin();
 
         for (unsigned i = 0; i < ratios.size(); ++i, ++bar)
         {

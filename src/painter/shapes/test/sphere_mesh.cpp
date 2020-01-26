@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/create/facets.h"
 #include "painter/sampling/sphere.h"
 
+#include <array>
 #include <random>
 #include <type_traits>
 #include <vector>
@@ -116,22 +117,22 @@ std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_random_sphere(int point_count,
         static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
 
         // От 3 измерений последовательно
-        constexpr int exponents_for_float[4][2] = {{-7, 10}, {-4, 6}, {-3, 5}, {-2, 3}};
-        constexpr int exponents_for_double[4][2] = {{-22, 37}, {-22, 37}, {-22, 37}, {-22, 30}};
+        constexpr std::array<std::array<int, 2>, 4> exponents_for_float = {{{-7, 10}, {-4, 6}, {-3, 5}, {-2, 3}}};
+        constexpr std::array<std::array<int, 2>, 4> exponents_for_double = {{{-22, 37}, {-22, 37}, {-22, 37}, {-22, 30}}};
 
-        const int* exponents = nullptr;
+        const std::array<int, 2>* exponents = nullptr;
         if (std::is_same_v<T, float>)
         {
-                exponents = exponents_for_float[N - 3];
+                exponents = &exponents_for_float[N - 3];
         }
         if (std::is_same_v<T, double>)
         {
-                exponents = exponents_for_double[N - 3];
+                exponents = &exponents_for_double[N - 3];
         }
         ASSERT(exponents);
 
         RandomEngineWithSeed<std::mt19937_64> random_engine;
-        float radius = random_exponent<float>(random_engine, exponents[0], exponents[1]);
+        float radius = random_exponent<float>(random_engine, (*exponents)[0], (*exponents)[1]);
 
         Vector<N, float> center(-radius / 2);
 

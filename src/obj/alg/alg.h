@@ -267,7 +267,8 @@ void center_and_length(const std::vector<Vector<N, T>>& vertices, const std::vec
 
         int vertex_count = vertices.size();
 
-        Vector<N, T> min, max;
+        Vector<N, T> min;
+        Vector<N, T> max;
 
         obj_alg_implementation::initial_min_max(&min, &max);
 
@@ -335,7 +336,8 @@ std::tuple<Vector<N, T>, Vector<N, T>> min_max_coordinates(const std::vector<Vec
 
         int vertex_count = vertices.size();
 
-        Vector<N, T> min, max;
+        Vector<N, T> min;
+        Vector<N, T> max;
 
         obj_alg_implementation::initial_min_max(&min, &max);
 

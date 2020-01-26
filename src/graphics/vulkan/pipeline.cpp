@@ -238,7 +238,7 @@ Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
         ASSERT(!info.constants.has_value() || info.constants.value() != nullptr);
         ASSERT(!info.constants.has_value() || info.constants.value()->size() > 0);
         ASSERT(!info.constants.has_value() || info.constants.value()->data() != nullptr);
-        ASSERT(!info.constants.has_value() || info.constants.value()->entries().size() > 0);
+        ASSERT(!info.constants.has_value() || !info.constants.value()->entries().empty());
 
         ASSERT(!info.constants.has_value() ||
                std::all_of(info.constants.value()->entries().cbegin(), info.constants.value()->entries().cend(),

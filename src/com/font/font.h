@@ -27,7 +27,7 @@ class Font final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        Font(int size_in_pixels);
+        explicit Font(int size_in_pixels);
         ~Font();
 
         void set_size(int size_in_pixels);

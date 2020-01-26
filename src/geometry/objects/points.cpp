@@ -93,7 +93,7 @@ class DiscretePoints
         }
 
 public:
-        DiscretePoints(unsigned point_count)
+        explicit DiscretePoints(unsigned point_count)
         {
                 m_points.reserve(point_count);
                 m_integer_points.reserve(point_count);

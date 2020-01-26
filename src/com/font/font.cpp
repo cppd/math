@@ -164,7 +164,8 @@ class Font::Impl final
         int m_size;
 
 public:
-        Impl(int size_in_pixels) : m_thread_id(std::this_thread::get_id()), m_face(m_library, font_bytes, sizeof(font_bytes))
+        explicit Impl(int size_in_pixels)
+                : m_thread_id(std::this_thread::get_id()), m_face(m_library, font_bytes, sizeof(font_bytes))
         {
                 set_size(size_in_pixels);
         }

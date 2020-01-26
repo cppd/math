@@ -114,11 +114,12 @@ std::vector<std::tuple<unsigned, unsigned, std::string>> ProgressRatioList::rati
         std::vector<std::tuple<unsigned, unsigned, std::string>> result;
         result.reserve(m_ratios.size());
 
-        for (auto i = m_ratios.cbegin(); i != m_ratios.cend(); ++i)
+        for (const ProgressRatioControl* ratio : m_ratios)
         {
-                unsigned v, m;
-                (*i)->get(&v, &m);
-                result.emplace_back(v, m, (*i)->text());
+                unsigned v;
+                unsigned m;
+                ratio->get(&v, &m);
+                result.emplace_back(v, m, ratio->text());
         }
         return result;
 }

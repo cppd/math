@@ -98,4 +98,4 @@ struct MainObjects
 
 std::unique_ptr<MainObjects> create_main_objects(
         int mesh_threads, const ObjectsCallback& event_emitter,
-        std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler);
+        const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler);

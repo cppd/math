@@ -110,7 +110,7 @@ class FacetObj final : public Obj<N>
         void create_obj(const std::vector<Vector<N, float>>& points, const std::vector<Vector<N, double>>& point_normals,
                         const std::vector<std::array<int, N>>& facets)
         {
-                if (facets.size() == 0)
+                if (facets.empty())
                 {
                         error("No facets for facet object");
                 }
@@ -131,12 +131,12 @@ class FacetObj final : public Obj<N>
                 m_normals.resize(vertices.size());
 
                 int idx = 0;
-                for (auto v : vertices)
+                for (const auto& [vertex, normals] : vertices)
                 {
-                        index_map[v.first] = idx;
+                        index_map[vertex] = idx;
 
-                        m_vertices[idx] = points[v.first];
-                        m_normals[idx] = to_vector<float>(average_normal(point_normals[v.first], v.second));
+                        m_vertices[idx] = points[vertex];
+                        m_normals[idx] = to_vector<float>(average_normal(point_normals[vertex], normals));
 
                         ++idx;
                 }
@@ -166,7 +166,7 @@ class FacetObj final : public Obj<N>
 
         void create_obj(const std::vector<Vector<N, float>>& points, const std::vector<std::array<int, N>>& facets)
         {
-                if (facets.size() == 0)
+                if (facets.empty())
                 {
                         error("No facets for facet object");
                 }
