@@ -133,7 +133,7 @@ class OpticalFlowFlowProgram final
         vulkan::Pipeline m_pipeline;
 
 public:
-        OpticalFlowFlowProgram(const vulkan::Device& device);
+        explicit OpticalFlowFlowProgram(const vulkan::Device& device);
 
         OpticalFlowFlowProgram(const OpticalFlowFlowProgram&) = delete;
         OpticalFlowFlowProgram& operator=(const OpticalFlowFlowProgram&) = delete;

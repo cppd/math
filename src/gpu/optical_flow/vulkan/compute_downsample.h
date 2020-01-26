@@ -90,7 +90,7 @@ class OpticalFlowDownsampleProgram final
         vulkan::Pipeline m_pipeline;
 
 public:
-        OpticalFlowDownsampleProgram(const vulkan::Device& device);
+        explicit OpticalFlowDownsampleProgram(const vulkan::Device& device);
 
         OpticalFlowDownsampleProgram(const OpticalFlowDownsampleProgram&) = delete;
         OpticalFlowDownsampleProgram& operator=(const OpticalFlowDownsampleProgram&) = delete;

@@ -80,7 +80,7 @@ class OpticalFlowShowProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        OpticalFlowShowProgram(const vulkan::Device& device);
+        explicit OpticalFlowShowProgram(const vulkan::Device& device);
 
         OpticalFlowShowProgram(const OpticalFlowShowProgram&) = delete;
         OpticalFlowShowProgram& operator=(const OpticalFlowShowProgram&) = delete;

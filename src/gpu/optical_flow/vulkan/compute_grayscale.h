@@ -94,7 +94,7 @@ class OpticalFlowGrayscaleProgram final
         vulkan::Pipeline m_pipeline;
 
 public:
-        OpticalFlowGrayscaleProgram(const vulkan::Device& device);
+        explicit OpticalFlowGrayscaleProgram(const vulkan::Device& device);
 
         OpticalFlowGrayscaleProgram(const OpticalFlowGrayscaleProgram&) = delete;
         OpticalFlowGrayscaleProgram& operator=(const OpticalFlowGrayscaleProgram&) = delete;
