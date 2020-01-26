@@ -103,7 +103,7 @@ class DftMulProgram final
         vulkan::Pipeline m_pipeline_columns_from_buffer_inverse;
 
 public:
-        DftMulProgram(const vulkan::Device& device);
+        explicit DftMulProgram(const vulkan::Device& device);
 
         DftMulProgram(const DftMulProgram&) = delete;
         DftMulProgram& operator=(const DftMulProgram&) = delete;

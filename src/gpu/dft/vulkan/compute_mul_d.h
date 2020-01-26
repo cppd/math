@@ -92,7 +92,7 @@ class DftMulDProgram final
         vulkan::Pipeline m_pipeline_columns;
 
 public:
-        DftMulDProgram(const vulkan::Device& device);
+        explicit DftMulDProgram(const vulkan::Device& device);
 
         DftMulDProgram(const DftMulDProgram&) = delete;
         DftMulDProgram& operator=(const DftMulDProgram&) = delete;

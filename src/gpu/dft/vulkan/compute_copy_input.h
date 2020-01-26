@@ -93,7 +93,7 @@ class DftCopyInputProgram final
         vulkan::Pipeline m_pipeline;
 
 public:
-        DftCopyInputProgram(const vulkan::Device& device);
+        explicit DftCopyInputProgram(const vulkan::Device& device);
 
         DftCopyInputProgram(const DftCopyInputProgram&) = delete;
         DftCopyInputProgram& operator=(const DftCopyInputProgram&) = delete;

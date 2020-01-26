@@ -96,7 +96,7 @@ class DftFftSharedProgram final
         vulkan::Pipeline m_pipeline_inverse;
 
 public:
-        DftFftSharedProgram(const vulkan::Device& device);
+        explicit DftFftSharedProgram(const vulkan::Device& device);
 
         DftFftSharedProgram(const DftFftSharedProgram&) = delete;
         DftFftSharedProgram& operator=(const DftFftSharedProgram&) = delete;

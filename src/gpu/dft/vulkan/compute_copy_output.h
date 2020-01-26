@@ -90,7 +90,7 @@ class DftCopyOutputProgram final
         vulkan::Pipeline m_pipeline;
 
 public:
-        DftCopyOutputProgram(const vulkan::Device& device);
+        explicit DftCopyOutputProgram(const vulkan::Device& device);
 
         DftCopyOutputProgram(const DftCopyOutputProgram&) = delete;
         DftCopyOutputProgram& operator=(const DftCopyOutputProgram&) = delete;

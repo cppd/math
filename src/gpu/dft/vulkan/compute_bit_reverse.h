@@ -90,7 +90,7 @@ class DftBitReverseProgram final
         vulkan::Pipeline m_pipeline;
 
 public:
-        DftBitReverseProgram(const vulkan::Device& device);
+        explicit DftBitReverseProgram(const vulkan::Device& device);
 
         DftBitReverseProgram(const DftBitReverseProgram&) = delete;
         DftBitReverseProgram& operator=(const DftBitReverseProgram&) = delete;

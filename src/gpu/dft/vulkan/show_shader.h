@@ -91,7 +91,7 @@ class DftShowProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        DftShowProgram(const vulkan::Device& device);
+        explicit DftShowProgram(const vulkan::Device& device);
 
         DftShowProgram(const DftShowProgram&) = delete;
         DftShowProgram& operator=(const DftShowProgram&) = delete;

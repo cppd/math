@@ -101,7 +101,7 @@ class DftFftGlobalProgram final
         vulkan::Pipeline m_pipeline_inverse;
 
 public:
-        DftFftGlobalProgram(const vulkan::Device& device);
+        explicit DftFftGlobalProgram(const vulkan::Device& device);
 
         DftFftGlobalProgram(const DftFftGlobalProgram&) = delete;
         DftFftGlobalProgram& operator=(const DftFftGlobalProgram&) = delete;
