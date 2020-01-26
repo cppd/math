@@ -91,7 +91,7 @@ class ConvexHullFilterProgram final
         vulkan::Pipeline m_pipeline;
 
 public:
-        ConvexHullFilterProgram(const vulkan::Device& device);
+        explicit ConvexHullFilterProgram(const vulkan::Device& device);
 
         ConvexHullFilterProgram(const ConvexHullFilterProgram&) = delete;
         ConvexHullFilterProgram& operator=(const ConvexHullFilterProgram&) = delete;

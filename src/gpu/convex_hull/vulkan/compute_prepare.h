@@ -94,7 +94,7 @@ class ConvexHullPrepareProgram final
         vulkan::Pipeline m_pipeline;
 
 public:
-        ConvexHullPrepareProgram(const vulkan::Device& device);
+        explicit ConvexHullPrepareProgram(const vulkan::Device& device);
 
         ConvexHullPrepareProgram(const ConvexHullPrepareProgram&) = delete;
         ConvexHullPrepareProgram& operator=(const ConvexHullPrepareProgram&) = delete;

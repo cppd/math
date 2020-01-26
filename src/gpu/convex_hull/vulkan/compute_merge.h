@@ -91,7 +91,7 @@ class ConvexHullMergeProgram final
         vulkan::Pipeline m_pipeline;
 
 public:
-        ConvexHullMergeProgram(const vulkan::Device& device);
+        explicit ConvexHullMergeProgram(const vulkan::Device& device);
 
         ConvexHullMergeProgram(const ConvexHullMergeProgram&) = delete;
         ConvexHullMergeProgram& operator=(const ConvexHullMergeProgram&) = delete;

@@ -190,7 +190,7 @@ class Impl final : public ConvexHullCompute
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance)
+        explicit Impl(const vulkan::VulkanInstance& instance)
                 : m_instance(instance),
                   m_prepare_program(instance.device()),
                   m_prepare_memory(instance.device(), m_prepare_program.descriptor_set_layout()),

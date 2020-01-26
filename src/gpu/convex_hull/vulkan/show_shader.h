@@ -81,7 +81,7 @@ class ConvexHullShowProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        ConvexHullShowProgram(const vulkan::Device& device);
+        explicit ConvexHullShowProgram(const vulkan::Device& device);
 
         ConvexHullShowProgram(const ConvexHullShowProgram&) = delete;
         ConvexHullShowProgram& operator=(const ConvexHullShowProgram&) = delete;
