@@ -271,7 +271,7 @@ class RendererTrianglesProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        RendererTrianglesProgram(const vulkan::Device& device);
+        explicit RendererTrianglesProgram(const vulkan::Device& device);
 
         RendererTrianglesProgram(const RendererTrianglesProgram&) = delete;
         RendererTrianglesProgram& operator=(const RendererTrianglesProgram&) = delete;
@@ -298,7 +298,7 @@ class RendererShadowProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        RendererShadowProgram(const vulkan::Device& device);
+        explicit RendererShadowProgram(const vulkan::Device& device);
 
         RendererShadowProgram(const RendererShadowProgram&) = delete;
         RendererShadowProgram& operator=(const RendererShadowProgram&) = delete;

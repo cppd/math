@@ -98,7 +98,7 @@ class MapVertex
         const Face::VertexWithHash* m_data;
 
 public:
-        MapVertex(const Face::VertexWithHash* v) noexcept : m_data(v)
+        explicit MapVertex(const Face::VertexWithHash* v) noexcept : m_data(v)
         {
         }
 

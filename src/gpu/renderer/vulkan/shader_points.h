@@ -107,7 +107,7 @@ struct RendererPointsVertex
 {
         vec3f position;
 
-        constexpr RendererPointsVertex(const vec3f& position_) : position(position_)
+        explicit constexpr RendererPointsVertex(const vec3f& position_) : position(position_)
         {
         }
 
@@ -127,7 +127,7 @@ class RendererPointsProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        RendererPointsProgram(const vulkan::Device& device);
+        explicit RendererPointsProgram(const vulkan::Device& device);
 
         RendererPointsProgram(const RendererPointsProgram&) = delete;
         RendererPointsProgram& operator=(const RendererPointsProgram&) = delete;
