@@ -134,14 +134,12 @@ void f(T v, int i, std::string& r, [[maybe_unused]] char s)
                         }
                 }
 
+                int remainder = v % 10;
                 if constexpr (is_signed<T>)
                 {
-                        r += std::abs(static_cast<signed char>(v % 10)) + '0';
+                        remainder = std::abs(remainder);
                 }
-                else
-                {
-                        r += static_cast<unsigned char>(v % 10) + '0';
-                }
+                r += static_cast<char>(remainder + '0');
 
         } while ((v /= 10) != 0);
 }
