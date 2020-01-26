@@ -35,7 +35,7 @@ class InstanceHandle final
         void move(InstanceHandle* from) noexcept;
 
 public:
-        InstanceHandle(const VkInstanceCreateInfo& create_info);
+        explicit InstanceHandle(const VkInstanceCreateInfo& create_info);
         ~InstanceHandle();
 
         InstanceHandle(const InstanceHandle&) = delete;
@@ -54,7 +54,7 @@ class Instance final
         bool m_validation_layers_enabled;
 
 public:
-        Instance(const VkInstanceCreateInfo& create_info)
+        explicit Instance(const VkInstanceCreateInfo& create_info)
                 : m_instance(create_info), m_validation_layers_enabled(create_info.enabledLayerCount > 0)
         {
         }
@@ -392,7 +392,7 @@ class Semaphore final
 
 public:
         Semaphore();
-        Semaphore(VkDevice device);
+        explicit Semaphore(VkDevice device);
         ~Semaphore();
 
         Semaphore(const Semaphore&) = delete;

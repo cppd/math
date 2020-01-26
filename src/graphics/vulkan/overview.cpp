@@ -127,7 +127,7 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
         {
                 std::string name;
                 std::vector<size_t> children;
-                Node(const std::string_view& s) : name(s)
+                explicit Node(const std::string_view& s) : name(s)
                 {
                 }
         };

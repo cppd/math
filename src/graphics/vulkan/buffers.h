@@ -105,7 +105,7 @@ class BufferMapper final
 
 public:
         BufferMapper(const BufferWithMemory& buffer, unsigned long long offset, unsigned long long length);
-        BufferMapper(const BufferWithMemory& buffer);
+        explicit BufferMapper(const BufferWithMemory& buffer);
         ~BufferMapper();
 
         BufferMapper(const BufferMapper&) = delete;

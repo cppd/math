@@ -93,7 +93,7 @@ class FeatureIsNotSupported final : public std::exception
         const char* m_text;
 
 public:
-        FeatureIsNotSupported(const char* feature_name) noexcept : m_text(feature_name)
+        explicit FeatureIsNotSupported(const char* feature_name) noexcept : m_text(feature_name)
         {
         }
         const char* what() const noexcept override
