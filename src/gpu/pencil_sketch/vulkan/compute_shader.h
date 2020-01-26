@@ -98,7 +98,7 @@ class PencilSketchComputeProgram final
         vulkan::Pipeline m_pipeline;
 
 public:
-        PencilSketchComputeProgram(const vulkan::Device& device);
+        explicit PencilSketchComputeProgram(const vulkan::Device& device);
 
         PencilSketchComputeProgram(const PencilSketchComputeProgram&) = delete;
         PencilSketchComputeProgram& operator=(const PencilSketchComputeProgram&) = delete;

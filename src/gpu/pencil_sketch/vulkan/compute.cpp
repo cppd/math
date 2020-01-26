@@ -173,7 +173,7 @@ class Impl final : public PencilSketchCompute
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance)
+        explicit Impl(const vulkan::VulkanInstance& instance)
                 : m_instance(instance),
                   m_program(instance.device()),
                   m_memory(instance.device(), m_program.descriptor_set_layout())

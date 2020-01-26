@@ -77,7 +77,7 @@ class PencilSketchShowProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        PencilSketchShowProgram(const vulkan::Device& device);
+        explicit PencilSketchShowProgram(const vulkan::Device& device);
 
         PencilSketchShowProgram(const PencilSketchShowProgram&) = delete;
         PencilSketchShowProgram& operator=(const PencilSketchShowProgram&) = delete;
