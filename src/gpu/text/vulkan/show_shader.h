@@ -101,7 +101,7 @@ class TextShowProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        TextShowProgram(const vulkan::Device& device);
+        explicit TextShowProgram(const vulkan::Device& device);
 
         TextShowProgram(const TextShowProgram&) = delete;
         TextShowProgram& operator=(const TextShowProgram&) = delete;
