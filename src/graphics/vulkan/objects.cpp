@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 
 #include "error.h"
+#include "extensions.h"
 
 #include "com/error.h"
 #include "com/print.h"

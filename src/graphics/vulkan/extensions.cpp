@@ -15,42 +15,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "extensions.h"
+
 #include "com/error.h"
 
-#include <vulkan/vulkan.h>
-
-#if defined(VK_NO_PROTOTYPES)
-#error VK_NO_PROTOTYPES defined
-#endif
-
-#define GET_PROC_ADDR(name, instance)                                                                         \
-        [](VkInstance instance_local_parameter) -> PFN_##name                                                 \
-        {                                                                                                     \
-                ASSERT(instance_local_parameter != VK_NULL_HANDLE);                                           \
-                PFN_##name function_address_local_parameter =                                                 \
-                        reinterpret_cast<PFN_##name>(vkGetInstanceProcAddr(instance_local_parameter, #name)); \
-                if (!function_address_local_parameter)                                                        \
-                {                                                                                             \
-                        error("Failed to find address of " #name);                                            \
-                }                                                                                             \
-                return function_address_local_parameter;                                                      \
-        }                                                                                                     \
-        (instance)
-
-VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugReportCallbackEXT(VkInstance instance,
-                                                              const VkDebugReportCallbackCreateInfoEXT* pCreateInfo,
-                                                              const VkAllocationCallbacks* pAllocator,
-                                                              VkDebugReportCallbackEXT* pCallback)
+namespace vulkan
 {
-        auto f = GET_PROC_ADDR(vkCreateDebugReportCallbackEXT, instance);
-
-        return f(instance, pCreateInfo, pAllocator, pCallback);
+PFN_vkVoidFunction proc_addr(VkInstance instance, const char* name)
+{
+        ASSERT(instance != VK_NULL_HANDLE);
+        PFN_vkVoidFunction addr = vkGetInstanceProcAddr(instance, name);
+        if (addr == nullptr)
+        {
+                error(std::string("Failed to find address of ").append(name));
+        }
+        return addr;
 }
-
-VKAPI_ATTR void VKAPI_CALL vkDestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback,
-                                                           const VkAllocationCallbacks* pAllocator)
-{
-        auto f = GET_PROC_ADDR(vkDestroyDebugReportCallbackEXT, instance);
-
-        f(instance, callback, pAllocator);
 }
