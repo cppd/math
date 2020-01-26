@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
+#include <array>
 #include <cstdlib>
 //
 #include <vulkan/vulkan_xlib.h>
@@ -34,9 +35,9 @@ namespace
 int error_handler(Display*, XErrorEvent* e)
 {
         constexpr int BUF_SIZE = 1000;
-        char buf[BUF_SIZE];
-        XGetErrorText(e->display, e->error_code, buf, BUF_SIZE);
-        error_fatal("X error handler: " + std::string(buf));
+        std::array<char, BUF_SIZE> buf;
+        XGetErrorText(e->display, e->error_code, buf.data(), BUF_SIZE);
+        error_fatal("X error handler: " + std::string(buf.data()));
 }
 
 Display* global_display = nullptr;

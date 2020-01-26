@@ -71,7 +71,7 @@ void read_text_file(const std::string& file_name, T* s)
                 error("Failed to open file " + file_name);
         }
 
-        f.seekg(0, f.end);
+        f.seekg(0, std::ios_base::end);
         long long length = f.tellg();
         if (length == 0)
         {
@@ -79,7 +79,7 @@ void read_text_file(const std::string& file_name, T* s)
                 return;
         }
 
-        f.seekg(-1, f.end);
+        f.seekg(-1, std::ios_base::end);
         if (f.get() == '\n')
         {
                 s->resize(length);
@@ -90,7 +90,7 @@ void read_text_file(const std::string& file_name, T* s)
                 (*s)[s->size() - 1] = '\n';
         }
 
-        f.seekg(0, f.beg);
+        f.seekg(0, std::ios_base::beg);
         f.read(s->data(), length);
 }
 #endif

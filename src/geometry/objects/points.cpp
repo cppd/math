@@ -337,7 +337,7 @@ std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
         std::vector<std::string> names;
         names.reserve(map.size());
 
-        for (auto e : map)
+        for (const auto& e : map)
         {
                 names.push_back(e.first);
         }

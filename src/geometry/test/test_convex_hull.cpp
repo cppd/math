@@ -111,7 +111,7 @@ void check_visible_from_point(const std::vector<Vector<N, float>>& points, const
 template <size_t N>
 void check_convex_hull(const std::vector<Vector<N, float>>& points, std::vector<ConvexHullFacet<N>>* facets)
 {
-        if (points.size() < N + 1 || facets->size() == 0)
+        if (points.size() < N + 1 || facets->empty())
         {
                 error("Error point count or facet count");
         }
@@ -122,7 +122,7 @@ void check_convex_hull(const std::vector<Vector<N, float>>& points, std::vector<
         {
                 add_to_ridges(facet, &ridges);
         }
-        for (typename RidgeMap<N>::const_iterator i = ridges.cbegin(); i != ridges.cend(); ++i)
+        for (auto i = ridges.cbegin(); i != ridges.cend(); ++i)
         {
                 if (i->second.size() != 2)
                 {

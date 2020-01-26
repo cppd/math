@@ -43,7 +43,7 @@ bool is_alpha(char c)
 
 std::string trim(const std::string_view& s)
 {
-        if (s.size() == 0)
+        if (s.empty())
         {
                 return std::string();
         }

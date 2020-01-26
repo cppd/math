@@ -28,7 +28,8 @@ constexpr T log_2(T n)
                 error("Arg for log2 must be positive. Arg = " + to_string(n));
         }
 
-        T b = 0, rem = n;
+        T b = 0;
+        T rem = n;
         while (rem >>= 1)
         {
                 ++b;
@@ -44,7 +45,8 @@ constexpr T log_4(T n)
                 error("Arg for log4 must be positive. Arg = " + to_string(n));
         }
 
-        T b = 0, rem = n;
+        T b = 0;
+        T rem = n;
         while (rem >>= 2)
         {
                 ++b;

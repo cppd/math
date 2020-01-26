@@ -35,6 +35,6 @@ public:
 void set_log_callback(LogCallback* callback);
 
 std::vector<std::string> format_log_message(const std::string& msg) noexcept;
-void write_formatted_log_messages_to_stderr(const std::vector<std::string>& message) noexcept;
+void write_formatted_log_messages_to_stderr(const std::vector<std::string>& lines) noexcept;
 
 void LOG(const std::string& msg) noexcept;

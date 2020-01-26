@@ -58,7 +58,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugReportFlagsEXT flags, VkDeb
                 add_to_debug_message(&s, "debug");
         }
 
-        if (s.size() > 0)
+        if (!s.empty())
         {
                 LOG("Validation layer message (" + s + "): " + std::string(pMessage));
         }

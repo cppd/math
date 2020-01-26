@@ -224,7 +224,7 @@ void MainWindow::constructor_objects_and_repository()
                 QMenu* sub_menu = ui.menuCreate->addMenu(space_name(dimension_objects.dimension).c_str());
                 for (const std::string& object_name : dimension_objects.object_names)
                 {
-                        ASSERT(object_name.size() > 0);
+                        ASSERT(!object_name.empty());
 
                         std::string text = object_name + "...";
                         QAction* action = sub_menu->addAction(text.c_str());
@@ -253,7 +253,7 @@ void MainWindow::set_window_title_file(const std::string& file_name)
 {
         std::string title = APPLICATION_NAME;
 
-        if (file_name.size() > 0)
+        if (!file_name.empty())
         {
                 title += " - " + file_name;
         }
@@ -471,7 +471,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
         catch_all([&](std::string* msg) {
                 *msg = "Open file";
 
-                if (file_name.size() == 0)
+                if (file_name.empty())
                 {
                         ASSERT(use_object_selection_dialog);
 
@@ -526,7 +526,7 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
                 return;
         }
 
-        if (object_name.size() == 0)
+        if (object_name.empty())
         {
                 m_event_emitter.message_error("Empty repository object name");
                 return;
@@ -954,7 +954,7 @@ void MainWindow::direct_message_error_fatal(const std::string& msg)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        std::string message = (msg.size() != 0) ? msg : "Unknown Error. Exit failure.";
+        std::string message = !msg.empty() ? msg : "Unknown Error. Exit failure.";
 
         add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Error);
 
@@ -972,13 +972,12 @@ void MainWindow::direct_message_error_source(const std::string& msg, const std::
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        std::string message = msg;
         std::string source = source_with_line_numbers(src);
 
-        add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message + "\n" + source), TextEditMessageType::Error);
+        add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(msg + "\n" + source), TextEditMessageType::Error);
 
         QPointer ptr(this);
-        dialog::message_source_error(this, message, source);
+        dialog::message_source_error(this, msg, source);
         if (ptr.isNull())
         {
                 return;
@@ -1158,7 +1157,7 @@ void MainWindow::slot_window_first_shown()
 
                 //
 
-                if (options.file_name.size() > 0)
+                if (!options.file_name.empty())
                 {
                         thread_load_from_file(options.file_name, !options.no_object_selection_dialog);
                 }

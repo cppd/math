@@ -147,7 +147,7 @@ unsigned compute_buffer_count(RendererDepthBufferCount buffer_count, const vulka
         case RendererDepthBufferCount::One:
                 return 1;
         case RendererDepthBufferCount::Swapchain:
-                ASSERT(swapchain.image_views().size() > 0);
+                ASSERT(!swapchain.image_views().empty());
                 return swapchain.image_views().size();
         }
         error_fatal("Error depth buffer count");
@@ -190,7 +190,7 @@ Impl::Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapc
            VkQueue graphics_queue, const vulkan::Device& device, unsigned width, unsigned height, double zoom)
         : m_device(device)
 {
-        ASSERT(attachment_family_indices.size() > 0);
+        ASSERT(!attachment_family_indices.empty());
 
         zoom = std::max(zoom, 1.0);
         width = std::lround(width * zoom);
@@ -248,13 +248,13 @@ const vulkan::DepthAttachment* Impl::texture(unsigned index) const
 
 unsigned Impl::width() const
 {
-        ASSERT(m_depth_attachments.size() > 0 && m_depth_attachments.size() == m_framebuffers.size());
+        ASSERT(!m_depth_attachments.empty() && m_depth_attachments.size() == m_framebuffers.size());
         return m_depth_attachments[0].width();
 }
 
 unsigned Impl::height() const
 {
-        ASSERT(m_depth_attachments.size() > 0 && m_depth_attachments.size() == m_framebuffers.size());
+        ASSERT(!m_depth_attachments.empty() && m_depth_attachments.size() == m_framebuffers.size());
         return m_depth_attachments[0].height();
 }
 
@@ -270,7 +270,7 @@ VkSampleCountFlagBits Impl::sample_count() const
 
 const std::vector<VkFramebuffer>& Impl::framebuffers() const
 {
-        ASSERT(m_depth_attachments.size() > 0 && m_depth_attachments.size() == m_framebuffers.size());
+        ASSERT(!m_depth_attachments.empty() && m_depth_attachments.size() == m_framebuffers.size());
         ASSERT(m_framebuffers.size() == m_framebuffers_handles.size());
         return m_framebuffers_handles;
 }

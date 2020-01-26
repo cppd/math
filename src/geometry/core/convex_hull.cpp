@@ -146,11 +146,9 @@ int thread_count()
         {
                 return 1;
         }
-        else
-        {
-                int hc = hardware_concurrency();
-                return std::max(hc - 1, 1);
-        }
+
+        int hc = hardware_concurrency();
+        return std::max(hc - 1, 1);
 }
 
 template <typename T>
@@ -261,7 +259,7 @@ void find_simplex_points(const std::vector<Vector<N, SourceType>>& points, std::
 {
         static_assert(N > 1);
 
-        if (points.size() == 0)
+        if (points.empty())
         {
                 error("0-simplex not found");
         }

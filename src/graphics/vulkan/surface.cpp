@@ -99,12 +99,8 @@ bool find_surface_details(VkSurfaceKHR surface, VkPhysicalDevice device, VkSurfa
         }
 
         *present_modes = find_present_modes(device, surface);
-        if (present_modes->empty())
-        {
-                return false;
-        }
 
-        return true;
+        return !present_modes->empty();
 }
 
 bool surface_suitable(VkSurfaceKHR surface, VkPhysicalDevice physical_device)

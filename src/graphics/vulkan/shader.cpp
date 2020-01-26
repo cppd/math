@@ -21,13 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-Shader::Shader(VkDevice device, const Span<const uint32_t>& code, VkShaderStageFlagBits type,
+Shader::Shader(VkDevice device, const Span<const uint32_t>& code, VkShaderStageFlagBits stage,
                const std::string_view& entry_point_name)
-        : m_module(device, code), m_stage(type), m_entry_point_name(entry_point_name)
+        : m_module(device, code), m_stage(stage), m_entry_point_name(entry_point_name)
 {
-        ASSERT(type == VK_SHADER_STAGE_VERTEX_BIT || type == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT ||
-               type == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT || type == VK_SHADER_STAGE_GEOMETRY_BIT ||
-               type == VK_SHADER_STAGE_FRAGMENT_BIT || type == VK_SHADER_STAGE_COMPUTE_BIT);
+        ASSERT(stage == VK_SHADER_STAGE_VERTEX_BIT || stage == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT ||
+               stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT || stage == VK_SHADER_STAGE_GEOMETRY_BIT ||
+               stage == VK_SHADER_STAGE_FRAGMENT_BIT || stage == VK_SHADER_STAGE_COMPUTE_BIT);
         ASSERT(entry_point_name.size() > 0);
 }
 

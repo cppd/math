@@ -28,7 +28,7 @@ vulkan::CommandBuffers create_command_buffers_resolve(VkDevice device, VkCommand
 {
         ASSERT(width > 0 && height > 0);
         ASSERT(src_images.size() == dst_images.size());
-        ASSERT(src_images.size() > 0);
+        ASSERT(!src_images.empty());
 
         const unsigned buffer_count = src_images.size();
 

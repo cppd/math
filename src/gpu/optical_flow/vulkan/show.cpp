@@ -101,7 +101,8 @@ class Impl final : public OpticalFlowShow
                 //
 
                 std::vector<vec2i> points;
-                int point_count_x, point_count_y;
+                int point_count_x;
+                int point_count_y;
                 create_top_level_optical_flow_points(width, height, window_ppi, &point_count_x, &point_count_y, &points);
 
                 m_top_point_count = points.size();

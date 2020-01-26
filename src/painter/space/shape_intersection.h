@@ -269,12 +269,7 @@ bool shapes_intersect_by_spaces(const Shape1& shape_1, const Shape2& shape_2,
 
         ASSERT(i == CONSTRAINT_COUNT);
 
-        if (numerical::solve_constraints(a, b) == numerical::ConstraintSolution::Feasible)
-        {
-                return true;
-        }
-
-        return false;
+        return (numerical::solve_constraints(a, b) == numerical::ConstraintSolution::Feasible);
 }
 
 template <typename Shape1, typename Shape2>
@@ -360,12 +355,7 @@ bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2,
 
         if constexpr (N <= 3)
         {
-                if (impl::shapes_intersect_by_vertex_ridges(shape_1, shape_2))
-                {
-                        return true;
-                }
-
-                return false;
+                return (impl::shapes_intersect_by_vertex_ridges(shape_1, shape_2));
         }
 
         if constexpr (N >= 4)

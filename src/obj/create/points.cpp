@@ -97,7 +97,7 @@ void Points<N>::read_points(std::vector<Vector<N, float>>&& points)
 {
         m_vertices = std::move(points);
 
-        if (m_vertices.size() == 0)
+        if (m_vertices.empty())
         {
                 error("No vertices found");
         }

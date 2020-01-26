@@ -86,10 +86,8 @@ std::vector<vulkan::PhysicalDeviceFeatures> device_features_sample_shading(int s
         {
                 return {vulkan::PhysicalDeviceFeatures::sampleRateShading};
         }
-        else
-        {
-                return {};
-        }
+
+        return {};
 }
 
 std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(bool sampler_anisotropy)
@@ -98,10 +96,8 @@ std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(b
         {
                 return {vulkan::PhysicalDeviceFeatures::samplerAnisotropy};
         }
-        else
-        {
-                return {};
-        }
+
+        return {};
 }
 
 class Impl final : public Show
@@ -452,11 +448,9 @@ class Impl final : public Show
                 {
                         return iter->second;
                 }
-                else
-                {
-                        thread_local const PressedMouseButton m{};
-                        return m;
-                }
+
+                thread_local const PressedMouseButton m{};
+                return m;
         }
 
         void mouse_press(int x, int y, ShowMouseButton button) override
@@ -696,7 +690,7 @@ class Impl final : public Show
 
         bool render(const TextData& text_data)
         {
-                static_assert(std::remove_reference_t<decltype(m_instance->graphics_compute_queues())>().size() > 0);
+                static_assert(!std::remove_reference_t<decltype(m_instance->graphics_compute_queues())>().empty());
 
                 uint32_t image_index;
                 if (!vulkan::acquire_next_image(m_instance->device(), m_swapchain->swapchain(), *m_image_semaphore, &image_index))

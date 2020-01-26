@@ -81,10 +81,11 @@ std::vector<vec2i> optical_flow_downsample_groups(const vec2i& group_size, const
 std::vector<vec2i> optical_flow_sobel_groups(const vec2i& group_size, const std::vector<vec2i>& sizes)
 {
         std::vector<vec2i> groups;
+        groups.reserve(sizes.size());
 
-        for (size_t i = 0; i < sizes.size(); ++i)
+        for (const vec2i& size : sizes)
         {
-                groups.push_back(group_count(sizes[i][0], sizes[i][1], group_size));
+                groups.push_back(group_count(size[0], size[1], group_size));
         }
 
         return groups;

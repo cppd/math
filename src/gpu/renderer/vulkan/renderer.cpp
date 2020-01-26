@@ -511,17 +511,17 @@ class Impl final : public Renderer
                 info.triangles_pipeline_layout = m_triangles_program.pipeline_layout();
                 info.triangles_pipeline = *m_render_triangles_pipeline;
                 info.triangles_shared_set = m_triangles_shared_memory.descriptor_set();
-                info.triangles_shared_set_number = m_triangles_shared_memory.set_number();
+                info.triangles_shared_set_number = RendererTrianglesSharedMemory::set_number();
 
                 info.points_pipeline_layout = m_points_program.pipeline_layout();
                 info.points_pipeline = *m_render_points_pipeline;
                 info.points_set = m_points_memory.descriptor_set();
-                info.points_set_number = m_points_memory.set_number();
+                info.points_set_number = RendererPointsMemory::set_number();
 
                 info.lines_pipeline_layout = m_points_program.pipeline_layout();
                 info.lines_pipeline = *m_render_lines_pipeline;
                 info.lines_set = m_points_memory.descriptor_set();
-                info.lines_set_number = m_points_memory.set_number();
+                info.lines_set_number = RendererPointsMemory::set_number();
 
                 m_storage.object()->draw_commands(command_buffer, info);
         }
@@ -542,7 +542,7 @@ class Impl final : public Renderer
                 info.triangles_pipeline_layout = m_shadow_program.pipeline_layout();
                 info.triangles_pipeline = *m_shadow_pipeline;
                 info.triangles_set = m_shadow_memory.descriptor_set();
-                info.triangles_set_number = m_shadow_memory.set_number();
+                info.triangles_set_number = RendererShadowMemory::set_number();
 
                 m_storage.object()->shadow_commands(command_buffer, info);
         }

@@ -183,9 +183,4 @@ public:
 
                 join_thread();
         }
-
-        ShowThread(const ShowThread&);
-        ShowThread(ShowThread&&);
-        ShowThread& operator=(const ShowThread&);
-        ShowThread& operator=(ShowThread&&);
 };

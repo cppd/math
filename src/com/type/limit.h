@@ -25,7 +25,9 @@ namespace types_implementation
 template <typename T>
 constexpr T binary_epsilon()
 {
-        T prev_e = 1, e = 1, s = 1;
+        T prev_e = 1;
+        T e = 1;
+        T s = 1;
         do
         {
                 prev_e = e;
@@ -39,7 +41,9 @@ template <typename T>
 constexpr T max_binary_fraction()
 {
         // max_binary_fraction = 2 - binary_epsilon
-        T prev_r = 1, r = 1, a = 1;
+        T prev_r = 1;
+        T r = 1;
+        T a = 1;
         do
         {
                 prev_r = r;

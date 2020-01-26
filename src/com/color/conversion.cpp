@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/type/limit.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <type_traits>
 
@@ -70,7 +71,7 @@ namespace
 
 // clang-format off
 template <typename T>
-constexpr T SRGB_UINT8_TO_RGB_FLOAT_LOOKUP_TABLE[256] =
+constexpr std::array<T, 256> SRGB_UINT8_TO_RGB_FLOAT_LOOKUP_TABLE =
 {
         0.000000000000000000000e+00L, 3.035269835488374933221e-04L, 6.070539670976749866442e-04L, 9.105809506465124800192e-04L,
         1.214107934195349973288e-03L, 1.517634917744187466610e-03L, 1.821161901293024960038e-03L, 2.124688884841862453466e-03L,
@@ -140,7 +141,7 @@ constexpr T SRGB_UINT8_TO_RGB_FLOAT_LOOKUP_TABLE[256] =
 // clang-format on
 
 // clang-format off
-constexpr unsigned char SRGB_UINT8_TO_RGB_UINT8_LOOKUP_TABLE[256] =
+constexpr std::array<unsigned char, 256> SRGB_UINT8_TO_RGB_UINT8_LOOKUP_TABLE =
 {
           0,   0,   0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   1,   1,   1,   1,
           1,   1,   2,   2,   2,   2,   2,   2,   2,   2,   3,   3,   3,   3,   3,   3,
@@ -162,7 +163,7 @@ constexpr unsigned char SRGB_UINT8_TO_RGB_UINT8_LOOKUP_TABLE[256] =
 // clang-format on
 
 // clang-format off
-constexpr std::uint_least16_t SRGB_UINT8_TO_RGB_UINT16_LOOKUP_TABLE[256] =
+constexpr std::array<std::uint_least16_t, 256> SRGB_UINT8_TO_RGB_UINT16_LOOKUP_TABLE =
 {
             0,    20,    40,    60,    80,    99,   119,   139,   159,   179,   199,   219,   241,   264,   288,   313,
           340,   367,   396,   427,   458,   491,   526,   562,   599,   637,   677,   718,   761,   805,   851,   898,

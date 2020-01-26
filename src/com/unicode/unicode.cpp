@@ -50,7 +50,7 @@ std::string utf32_to_number_string(T code_point)
 
 std::string utf8_to_number_string(const std::string& s)
 {
-        if (s.size() == 0)
+        if (s.empty())
         {
                 error("Empty UTF-8 string");
         }
@@ -59,7 +59,7 @@ std::string utf8_to_number_string(const std::string& s)
         oss << std::uppercase << std::hex << std::setfill('0');
         for (char c : s)
         {
-                if (oss.str().size() > 0)
+                if (!oss.str().empty())
                 {
                         oss << " ";
                 }
@@ -179,10 +179,7 @@ char32_t utf8_to_utf32(const std::string& s)
         {
                 return c;
         }
-        else
-        {
-                error("One UTF-8 character string is too long: " + utf8_to_number_string(s));
-        }
+        error("One UTF-8 character string is too long: " + utf8_to_number_string(s));
 }
 
 template std::string utf32_to_number_string(char32_t code_point);

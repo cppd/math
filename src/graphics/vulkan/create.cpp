@@ -33,6 +33,7 @@ namespace vulkan
 std::vector<Semaphore> create_semaphores(VkDevice device, int count)
 {
         std::vector<Semaphore> res;
+        res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
                 res.emplace_back(device);
@@ -43,6 +44,7 @@ std::vector<Semaphore> create_semaphores(VkDevice device, int count)
 std::vector<Fence> create_fences(VkDevice device, int count, bool signaled_state)
 {
         std::vector<Fence> res;
+        res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
                 res.emplace_back(device, signaled_state);

@@ -150,12 +150,12 @@ public:
         {
                 std::lock_guard lg(m_text_mutex);
 
-                if (m_permanent_text.size() == 0)
+                if (m_permanent_text.empty())
                 {
                         return m_text;
                 }
 
-                if (m_text.size() != 0)
+                if (!m_text.empty())
                 {
                         return m_permanent_text + ". " + m_text;
                 }
@@ -175,9 +175,7 @@ ProgressRatio::ProgressRatio(ProgressRatios* ratios, const std::string& permanen
         : m_progress(std::make_unique<Impl>(ratios, permanent_text))
 {
 }
-ProgressRatio::~ProgressRatio()
-{
-}
+ProgressRatio::~ProgressRatio() = default;
 void ProgressRatio::set(unsigned v, unsigned m)
 {
         m_progress->set(v, m);

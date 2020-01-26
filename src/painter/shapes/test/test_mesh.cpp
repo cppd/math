@@ -80,7 +80,8 @@ T max_coordinate_modulus(const Vector<N, T>& a, const Vector<N, T>& b)
 template <size_t N, typename T>
 void offset_and_rays_for_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, T* offset, std::vector<Ray<N, T>>* rays)
 {
-        Vector<N, T> min, max;
+        Vector<N, T> min;
+        Vector<N, T> max;
 
         mesh.min_max(&min, &max);
 
@@ -133,7 +134,8 @@ void test_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, bool with_ray_log, 
                         LOG("ray #" + to_string(i) + " in " + space_name(N));
                 }
 
-                T approximate, precise;
+                T approximate;
+                T precise;
                 const void* intersection_data;
 
                 if (!mesh.intersect_approximate(ray, &approximate))

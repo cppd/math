@@ -40,7 +40,7 @@ namespace
 {
 class Images : public PainterNotifier<3>
 {
-        static constexpr const char beginning_of_file_name[] = "painter_";
+        static constexpr const char* BEGINNING_OF_FILE_NAME = "painter_";
 
         std::vector<Image<2>> m_images;
         std::array<int, 3> m_size;
@@ -91,7 +91,7 @@ public:
                 for (unsigned i = 0; i < m_images.size(); ++i)
                 {
                         oss.str("");
-                        oss << beginning_of_file_name << std::setw(w) << i + 1;
+                        oss << BEGINNING_OF_FILE_NAME << std::setw(w) << i + 1;
                         m_images[i].write_to_file(dir + "/" + oss.str());
                 }
         }

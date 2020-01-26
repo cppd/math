@@ -227,14 +227,15 @@ template <size_t N, typename T>
 void center_and_length(const std::vector<Vector<N, T>>& vertices, const std::vector<typename Obj<N>::Facet>& facets,
                        Vector<N, T>* center, T* length)
 {
-        if (facets.size() < 1)
+        if (facets.empty())
         {
                 error("No facets");
         }
 
         int vertex_count = vertices.size();
 
-        Vector<N, T> min, max;
+        Vector<N, T> min;
+        Vector<N, T> max;
 
         obj_alg_implementation::initial_min_max(&min, &max);
 
@@ -259,7 +260,7 @@ template <size_t N, typename T>
 void center_and_length(const std::vector<Vector<N, T>>& vertices, const std::vector<typename Obj<N>::Line>& lines,
                        Vector<N, T>* center, T* length)
 {
-        if (lines.size() < 1)
+        if (lines.empty())
         {
                 error("No lines");
         }
@@ -291,14 +292,15 @@ template <size_t N, typename T>
 void center_and_length(const std::vector<Vector<N, T>>& vertices, const std::vector<typename Obj<N>::Point>& points,
                        Vector<N, T>* center, T* length)
 {
-        if (points.size() < 1)
+        if (points.empty())
         {
                 error("No points");
         }
 
         int vertex_count = vertices.size();
 
-        Vector<N, T> min, max;
+        Vector<N, T> min;
+        Vector<N, T> max;
 
         obj_alg_implementation::initial_min_max(&min, &max);
 

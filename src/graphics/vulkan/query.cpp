@@ -30,7 +30,7 @@ namespace
 {
 std::string vulkan_formats_to_string(const std::vector<VkFormat>& formats)
 {
-        if (formats.size() == 0)
+        if (formats.empty())
         {
                 return std::string();
         }

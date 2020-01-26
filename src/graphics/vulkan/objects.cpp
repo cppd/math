@@ -1132,7 +1132,7 @@ CommandBuffer::operator VkCommandBuffer() const& noexcept
 
 void CommandBuffers::destroy() noexcept
 {
-        if (m_command_buffers.size() > 0)
+        if (!m_command_buffers.empty())
         {
                 ASSERT(m_device != VK_NULL_HANDLE);
                 ASSERT(m_command_pool != VK_NULL_HANDLE);
@@ -1415,7 +1415,7 @@ DescriptorSet::operator VkDescriptorSet() const& noexcept
 
 void DescriptorSets::destroy() noexcept
 {
-        if (m_descriptor_sets.size() > 0)
+        if (!m_descriptor_sets.empty())
         {
                 ASSERT(m_device != VK_NULL_HANDLE);
                 ASSERT(m_descriptor_pool != VK_NULL_HANDLE);
@@ -1447,7 +1447,7 @@ DescriptorSets::DescriptorSets(VkDevice device, VkDescriptorPool descriptor_pool
 {
         ASSERT(device != VK_NULL_HANDLE);
         ASSERT(descriptor_pool != VK_NULL_HANDLE);
-        ASSERT(descriptor_set_layouts.size() > 0);
+        ASSERT(!descriptor_set_layouts.empty());
         ASSERT(std::all_of(
                 descriptor_set_layouts.cbegin(), descriptor_set_layouts.cend(),
                 [](const VkDescriptorSetLayout& descriptor_set_layout) { return descriptor_set_layout != VK_NULL_HANDLE; }));

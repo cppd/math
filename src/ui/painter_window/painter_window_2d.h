@@ -34,12 +34,12 @@ class PainterWindow2d : public QWidget
         Q_OBJECT
 
 signals:
-        void error_message_signal(QString) const;
+        void error_message_signal(const QString&) const;
 
 private slots:
         void timer_slot();
         void first_shown();
-        void error_message_slot(QString);
+        void error_message_slot(const QString&);
         void slider_changed_slot(int);
 
         void on_pushButton_save_to_file_clicked();

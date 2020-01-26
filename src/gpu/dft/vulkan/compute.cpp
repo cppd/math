@@ -346,7 +346,7 @@ public:
                         m_fft_g_memory.emplace_back(instance.device(), m_fft_g_program->descriptor_set_layout(), family_indices);
                         m_fft_g_memory.back().set_data(two_pi_div_m, m_div_2);
                 }
-                ASSERT(m_fft_g_memory.size() > 0);
+                ASSERT(!m_fft_g_memory.empty());
                 ASSERT(m_n == (m_n_shared << m_fft_g_memory.size()));
         }
 

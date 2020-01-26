@@ -41,7 +41,9 @@ void cuda_check_errors()
 
 void cuda_select_device()
 {
-        int dev_count, max_proc_count = -1, dev_num = -1;
+        int dev_count;
+        int max_proc_count = -1;
+        int dev_num = -1;
 
         cuda_check_errors();
         cudaGetDeviceCount(&dev_count);

@@ -53,7 +53,7 @@ template <size_t N>
 bool sharp_ridge(const std::vector<vec<N>>& points, const std::vector<bool>& interior_vertices, const Ridge<N>& ridge,
                  const RidgeData<N>& ridge_data)
 {
-        ASSERT(ridge_data.size() >= 1);
+        ASSERT(!ridge_data.empty());
 
         if (boundary_ridge(interior_vertices, ridge))
         {
@@ -67,7 +67,8 @@ bool sharp_ridge(const std::vector<vec<N>>& points, const std::vector<bool>& int
         }
 
         // Ортонормированный базис размерности 2 в ортогональном дополнении ребра ridge
-        vec<N> e0, e1;
+        vec<N> e0;
+        vec<N> e1;
         ortho_e0_e1(points, ridge.vertices(), ridge_data.cbegin()->point(), &e0, &e1);
 
         // Координаты вектора первой грани при проецировании в пространство базиса e0, e1.
@@ -75,7 +76,10 @@ bool sharp_ridge(const std::vector<vec<N>>& points, const std::vector<bool>& int
         vec<2> base = vec<2>(dot(e0, base_vec), dot(e1, base_vec)).normalized();
         ASSERT(is_finite(base));
 
-        double cos_plus = 1, cos_minus = 1, sin_plus = 0, sin_minus = 0;
+        double cos_plus = 1;
+        double cos_minus = 1;
+        double sin_plus = 0;
+        double sin_minus = 0;
 
         // Проецирование граней в пространство базиса e0, e1 и вычисление максимальных углов отклонений
         // граней от первой грани по обе стороны.
@@ -137,7 +141,7 @@ void prune_facets_incident_to_sharp_ridges(const std::vector<vec<N>>& points,
 {
         namespace impl = prune_facets_implementation;
 
-        ASSERT(delaunay_facets.size() > 0 && delaunay_facets.size() == cocone_facets->size());
+        ASSERT(!delaunay_facets.empty() && delaunay_facets.size() == cocone_facets->size());
         ASSERT(points.size() == interior_vertices.size());
 
         impl::RidgeMap<N> ridge_map;

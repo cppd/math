@@ -21,23 +21,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QCommandLineParser>
 
-constexpr const char NO_OBJECT_SELECTION_OPTION[] = "n";
-constexpr const char VULKAN_OPTION[] = "vulkan";
+constexpr const char* NO_OBJECT_SELECTION_OPTION = "n";
 
 #if defined(OPENGL_FOUND)
-constexpr const char OPENGL_OPTION[] = "opengl";
+constexpr const char* VULKAN_OPTION = "vulkan";
+constexpr const char* OPENGL_OPTION = "opengl";
 #endif
 
 namespace
 {
 std::string command_line_description_string()
 {
-        static_assert(sizeof(NO_OBJECT_SELECTION_OPTION) == 2);
-        static_assert(sizeof(VULKAN_OPTION) > 2);
-#if defined(OPENGL_FOUND)
-        static_assert(sizeof(OPENGL_OPTION) > 2);
-#endif
-
         std::string s;
 
         s += "Usage:\n";

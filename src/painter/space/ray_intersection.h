@@ -62,7 +62,7 @@ bool ray_intersection(const std::vector<const Object*>& objects, const Ray<N, T>
                 }
         }
 
-        if (approximate_intersections.size() == 0)
+        if (approximate_intersections.empty())
         {
                 return false;
         }

@@ -132,6 +132,7 @@ void test_speed(int count)
         std::uniform_real_distribution<T> urd(-1, 1);
 
         std::vector<Vector<N, T>> data;
+        data.reserve(count);
         for (int i = 0; i < count; ++i)
         {
                 data.push_back(random_vector<N, T>(random_engine, urd).normalized());

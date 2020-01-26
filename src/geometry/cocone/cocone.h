@@ -28,7 +28,7 @@ namespace cocone_implementation
 {
 // Константа алгоритмов Cocone, равна cos(3 * PI / 8)
 template <typename T>
-constexpr T COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS =
+inline constexpr T COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS =
         0.3826834323650897717284599840303988667613445624856270414338006356275460339600896922370137853422835471L;
 }
 
@@ -110,7 +110,8 @@ bool intersect_cocone(const Vector<N, T>& normalized_cone_axis, const Vector<N, 
         T b = 2 * (a_n * n_ab - a_ab * square_cos);
         T c = square(a_n) - square_a * square_cos;
 
-        T t1, t2;
+        T t1;
+        T t2;
         if (!numerical::quadratic_equation(a, b, c, &t1, &t2))
         {
                 return false;

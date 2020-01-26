@@ -267,7 +267,7 @@ void PainterWindow2d::error_message(const std::string& msg) const noexcept
         }
 }
 
-void PainterWindow2d::error_message_slot(QString msg)
+void PainterWindow2d::error_message_slot(const QString& msg)
 {
         LOG("Painter error\n" + msg.toStdString());
 

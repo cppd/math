@@ -218,10 +218,8 @@ double voronoi_edge_radius(const std::vector<DelaunayObject<N>>& delaunay_object
         {
                 return std::max(pa_length, max_distance);
         }
-        else
-        {
-                return max_distance;
-        }
+
+        return max_distance;
 }
 
 // Радиус ячейки Вороного равен максимальному расстоянию от вершины то границ ячейки Вороного в границах cocone.
@@ -363,7 +361,7 @@ void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<N>>&
 
         for (unsigned v = 0; v < points.size(); ++v)
         {
-                if (connections[v].facets.size() == 0 && connections[v].objects.size() == 0)
+                if (connections[v].facets.empty() && connections[v].objects.empty())
                 {
                         // Не все исходные точки становятся вершинами в Делоне.
                         // Выпуклая оболочка может пропустить некоторые точки (одинаковые, близкие и т.д.).
@@ -371,7 +369,7 @@ void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<N>>&
                         continue;
                 }
 
-                ASSERT((connections[v].facets.size() > 0) && (connections[v].objects.size() > 0));
+                ASSERT(!connections[v].facets.empty() && !connections[v].objects.empty());
 
                 vec<N> positive_norm = voronoi_positive_norm(points[v], objects, facets, connections[v]);
 

@@ -169,7 +169,7 @@ MainObjectsImpl<N>::MainObjectsImpl(int mesh_threads, const ObjectsCallback& eve
                                     std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler)
         : m_mesh_threads(mesh_threads),
           m_event_emitter(event_emitter),
-          m_exception_handler(exception_handler),
+          m_exception_handler(std::move(exception_handler)),
           m_object_repository(create_object_repository<N>()),
           m_show(nullptr)
 {
@@ -270,7 +270,7 @@ void MainObjectsImpl<N>::build_mesh(ProgressRatioList* progress_list, ObjectId i
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        if (obj.facets().size() == 0)
+        if (obj.facets().empty())
         {
                 return;
         }
@@ -340,7 +340,7 @@ void MainObjectsImpl<N>::add_object_convex_hull_and_build_mesh(const std::unorde
                 obj_ch = create_convex_hull_for_obj(obj.get(), &progress);
         }
 
-        if (obj_ch->facets().size() == 0)
+        if (obj_ch->facets().empty())
         {
                 return;
         }
@@ -493,7 +493,7 @@ void MainObjectsImpl<N>::build_mst(const std::unordered_set<ObjectId>& objects, 
 
         std::shared_ptr<const Obj<N>> mst_obj = create_obj_for_lines(m_manifold_points, mst_lines);
 
-        if (mst_obj->lines().size() == 0)
+        if (mst_obj->lines().empty())
         {
                 return;
         }
@@ -582,12 +582,12 @@ void MainObjectsImpl<N>::load_object(const std::unordered_set<ObjectId>& objects
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        if (obj->facets().size() == 0 && obj->points().size() == 0)
+        if (obj->facets().empty() && obj->points().empty())
         {
                 error("Facets or points not found");
         }
 
-        if (obj->facets().size() != 0 && obj->points().size() != 0)
+        if (!obj->facets().empty() && !obj->points().empty())
         {
                 error("Facets and points together in one object are not supported");
         }
@@ -598,7 +598,7 @@ void MainObjectsImpl<N>::load_object(const std::unordered_set<ObjectId>& objects
 
         m_event_emitter.file_loaded(object_name, N, objects);
 
-        m_manifold_points = (obj->facets().size() > 0) ? unique_facet_vertices(obj.get()) : unique_point_vertices(obj.get());
+        m_manifold_points = !obj->facets().empty() ? unique_facet_vertices(obj.get()) : unique_point_vertices(obj.get());
 
         if constexpr (N == 3)
         {
@@ -973,7 +973,7 @@ class MainObjectStorage final : public MainObjects
                 static_assert(Min + sizeof...(I) == Max + 1);
 
                 (m_objects.try_emplace(Min + I, std::in_place_type_t<MainObjectsImpl<Min + I>>(), mesh_threads, event_emitter,
-                                       exception_handler),
+                                       std::move(exception_handler)),
                  ...);
 
                 ASSERT((m_objects.count(Min + I) == 1) && ...);

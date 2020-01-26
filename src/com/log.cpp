@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "time.h"
 
 #include <algorithm>
+#include <array>
 #include <cstdio>
 
 namespace
@@ -67,14 +68,14 @@ std::vector<std::string> format_log_message(const std::string& msg) noexcept
                 try
                 {
                         constexpr int BUF_SIZE = 100;
-                        char buffer[BUF_SIZE];
-                        int char_count = std::snprintf(buffer, BUF_SIZE, "[%011.6f]: ", time_in_seconds());
+                        std::array<char, BUF_SIZE> buffer;
+                        int char_count = std::snprintf(buffer.data(), BUF_SIZE, "[%011.6f]: ", time_in_seconds());
                         if (char_count < 0 || char_count >= BUF_SIZE)
                         {
                                 error("message begin length out of range");
                         }
 
-                        std::string msg_begin = buffer;
+                        std::string msg_begin = buffer.data();
                         std::vector<std::string> res;
 
                         if (std::count(msg.begin(), msg.end(), '\n') == 0)

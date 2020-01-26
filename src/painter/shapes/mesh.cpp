@@ -62,12 +62,12 @@ template <size_t N, typename T>
 void Mesh<N, T>::create_mesh_object(const Obj<N>* obj, const Matrix<N + 1, N + 1, T>& vertex_matrix, unsigned thread_count,
                                     ProgressRatio* progress)
 {
-        if (obj->vertices().size() == 0)
+        if (obj->vertices().empty())
         {
                 error("No vertices found in obj");
         }
 
-        if (obj->facets().size() == 0)
+        if (obj->facets().empty())
         {
                 error("No facets found in obj");
         }
@@ -159,10 +159,8 @@ bool Mesh<N, T>::intersect_precise(const Ray<N, T>& ray, T approximate_t, T* t, 
                 *intersection_data = facet;
                 return true;
         }
-        else
-        {
-                return false;
-        }
+
+        return false;
 }
 
 template <size_t N, typename T>
@@ -195,10 +193,8 @@ std::optional<Color> Mesh<N, T>::color(const Vector<N, T>& p, const void* inters
                         return m.Kd;
                 }
         }
-        else
-        {
-                return std::nullopt;
-        }
+
+        return std::nullopt;
 }
 
 template <size_t N, typename T>

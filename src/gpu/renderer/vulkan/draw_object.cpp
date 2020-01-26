@@ -61,7 +61,7 @@ std::string time_string(double time)
 
 class Face
 {
-        size_t hash(const vec3f& p, const vec3f& n, const vec2f& t)
+        static size_t hash(const vec3f& p, const vec3f& n, const vec2f& t)
         {
                 return pack_hash(p[0], p[1], p[2], n[0], n[1], n[2], t[0], t[1]);
         }
@@ -126,7 +126,7 @@ void load_vertices(const vulkan::Device& device, const vulkan::CommandPool& tran
                    const std::vector<int>& sorted_face_indices, std::unique_ptr<vulkan::BufferWithMemory>& vertex_buffer,
                    std::unique_ptr<vulkan::BufferWithMemory>& index_buffer)
 {
-        if (obj.facets().size() == 0)
+        if (obj.facets().empty())
         {
                 error("No OBJ facets found");
         }
@@ -264,7 +264,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(const vulkan::Devi
                                                               const std::unordered_set<uint32_t>& family_indices,
                                                               const Obj<3>& obj)
 {
-        if (obj.points().size() == 0)
+        if (obj.points().empty())
         {
                 error("No OBJ points found");
         }
@@ -290,7 +290,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(const vulkan::Devic
                                                              const std::unordered_set<uint32_t>& family_indices,
                                                              const Obj<3>& obj)
 {
-        if (obj.lines().size() == 0)
+        if (obj.lines().empty())
         {
                 error("No OBJ lines found");
         }
@@ -305,7 +305,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(const vulkan::Devic
         {
                 for (int index : line.vertices)
                 {
-                        vertices.push_back(obj_vertices[index]);
+                        vertices.emplace_back(obj_vertices[index]);
                 }
         }
 
@@ -439,7 +439,7 @@ public:
                   const vulkan::Queue& transfer_queue, VkSampler sampler,
                   VkDescriptorSetLayout triangles_material_descriptor_set_layout, const Obj<3>& obj)
         {
-                ASSERT(obj.facets().size() > 0);
+                ASSERT(!obj.facets().empty());
 
                 std::vector<int> sorted_face_indices;
                 std::vector<int> material_face_offset;
@@ -529,7 +529,7 @@ public:
               const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
               const vulkan::Queue& transfer_queue, const Obj<3>& obj)
         {
-                ASSERT(obj.lines().size() > 0);
+                ASSERT(!obj.lines().empty());
 
                 m_vertex_buffer = load_line_vertices(device, transfer_command_pool, transfer_queue,
                                                      {graphics_queue.family_index(), transfer_queue.family_index()}, obj);
@@ -567,7 +567,7 @@ public:
                const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
                const vulkan::Queue& transfer_queue, const Obj<3>& obj)
         {
-                ASSERT(obj.points().size() > 0);
+                ASSERT(!obj.points().empty());
 
                 m_vertex_buffer = load_point_vertices(device, transfer_command_pool, transfer_queue,
                                                       {graphics_queue.family_index(), transfer_queue.family_index()}, obj);
@@ -596,20 +596,20 @@ DrawObject::DrawObject(const vulkan::Device& device, const vulkan::CommandPool& 
                        const Obj<3>& obj, double size, const vec3& position)
         : m_model_matrix(model_vertex_matrix(obj, size, position))
 {
-        if (obj.facets().size() > 0)
+        if (!obj.facets().empty())
         {
                 m_triangles = std::make_unique<DrawObject::Triangles>(device, graphics_command_pool, graphics_queue,
                                                                       transfer_command_pool, transfer_queue, sampler,
                                                                       descriptor_set_layout, obj);
         }
 
-        if (obj.lines().size() > 0)
+        if (!obj.lines().empty())
         {
                 m_lines = std::make_unique<DrawObject::Lines>(device, graphics_command_pool, graphics_queue,
                                                               transfer_command_pool, transfer_queue, obj);
         }
 
-        if (obj.points().size() > 0)
+        if (!obj.points().empty())
         {
                 m_points = std::make_unique<DrawObject::Points>(device, graphics_command_pool, graphics_queue,
                                                                 transfer_command_pool, transfer_queue, obj);

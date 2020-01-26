@@ -70,12 +70,9 @@ public:
                 {
                         return std::optional<T>();
                 }
-                else
-                {
-                        std::optional value(std::move(m_queue.front()));
-                        m_queue.pop();
-                        return value;
-                }
+                std::optional value(std::move(m_queue.front()));
+                m_queue.pop();
+                return value;
         }
         // template <typename A>
         // void push(A&& e)
@@ -147,12 +144,9 @@ public:
 
 class TerminateRequestException final : public std::exception
 {
-        static constexpr const char m_msg[] = "Thread termination requested";
+        static constexpr const char* m_msg = "Thread termination requested";
 
 public:
-        TerminateRequestException()
-        {
-        }
         const char* what() const noexcept override
         {
                 return m_msg;
@@ -161,12 +155,9 @@ public:
 
 class TerminateWithMessageRequestException final : public std::exception
 {
-        static constexpr const char m_msg[] = "Terminated by user";
+        static constexpr const char* m_msg = "Terminated by user";
 
 public:
-        TerminateWithMessageRequestException()
-        {
-        }
         const char* what() const noexcept override
         {
                 return m_msg;
@@ -233,7 +224,7 @@ class ThreadsWithCatch
                                         if (thread_data.has_error())
                                         {
                                                 there_is_error = true;
-                                                if (error_message.size() > 0)
+                                                if (!error_message.empty())
                                                 {
                                                         error_message += '\n';
                                                 }
@@ -264,7 +255,7 @@ public:
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                if (m_threads.size() != 0)
+                if (!m_threads.empty())
                 {
                         error_fatal("Thread vector is not empty");
                 }
@@ -368,9 +359,10 @@ public:
         AtomicCounter(T v) : m_counter(v)
         {
         }
-        void operator=(T v)
+        AtomicCounter& operator=(T v)
         {
                 m_counter.store(v, std::memory_order_relaxed);
+                return *this;
         }
         operator T() const
         {

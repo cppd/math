@@ -63,7 +63,7 @@ static_assert(orthonormal_set<4, double>[2] == Vector<4, double>(0, 0, 1, 0));
 static_assert(orthonormal_set<4, double>[3] == Vector<4, double>(0, 0, 0, 1));
 
 template <typename T>
-constexpr T LIMIT = static_cast<T>(0.1);
+inline constexpr T LIMIT = static_cast<T>(0.1);
 }
 
 // N - 1 ортогональных единичных вектора, ортогональных заданному единичному вектору

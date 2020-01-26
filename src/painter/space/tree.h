@@ -498,7 +498,8 @@ public:
                 // Максимальное разделение по одной координате
                 const int max_divisions = 1u << (max_depth - 1);
 
-                Vector<N, T> min, max;
+                Vector<N, T> min;
+                Vector<N, T> max;
                 T distance_from_facet;
 
                 impl::min_max_and_distance(max_divisions, DISTANCE_FROM_FACET_IN_EPSILONS, object_index_count,
@@ -574,16 +575,14 @@ public:
                                         // Не первый проход — процесс вышел за пределы дерева.
                                         return false;
                                 }
-                                else
-                                {
-                                        // Первый проход — начало луча находится снаружи и надо искать
-                                        // пересечение с самим деревом. Это пересечение уже должно
-                                        // быть найдено ранее при вызове intersect_root.
-                                        Vector<N, T> intersection_point = ray.point(root_t);
-                                        ray.set_org(intersection_point);
-                                        Vector<N, T> normal = m_boxes[ROOT_BOX].parallelotope().normal(intersection_point);
-                                        interior_point = intersection_point - m_distance_from_facet * normal;
-                                }
+
+                                // Первый проход — начало луча находится снаружи и надо искать
+                                // пересечение с самим деревом. Это пересечение уже должно
+                                // быть найдено ранее при вызове intersect_root.
+                                Vector<N, T> intersection_point = ray.point(root_t);
+                                ray.set_org(intersection_point);
+                                Vector<N, T> normal = m_boxes[ROOT_BOX].parallelotope().normal(intersection_point);
+                                interior_point = intersection_point - m_distance_from_facet * normal;
                         }
 
                         first = false;

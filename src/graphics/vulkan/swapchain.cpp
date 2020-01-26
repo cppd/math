@@ -33,7 +33,7 @@ namespace
 VkSurfaceFormatKHR choose_surface_format(const VkSurfaceFormatKHR& required_surface_format,
                                          const std::vector<VkSurfaceFormatKHR>& surface_formats)
 {
-        ASSERT(surface_formats.size() > 0);
+        ASSERT(!surface_formats.empty());
 
         if (surface_formats.size() == 1 && surface_formats[0].format == VK_FORMAT_UNDEFINED)
         {
@@ -51,7 +51,7 @@ VkSurfaceFormatKHR choose_surface_format(const VkSurfaceFormatKHR& required_surf
         std::string s;
         for (const VkSurfaceFormatKHR& format : surface_formats)
         {
-                if (s.size() > 0)
+                if (!s.empty())
                 {
                         s += '\n';
                 }

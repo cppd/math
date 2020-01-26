@@ -54,15 +54,9 @@ class EventQueue final : public Show
                 };
                 struct delete_all_objects final
                 {
-                        delete_all_objects()
-                        {
-                        }
                 };
                 struct reset_view final
                 {
-                        reset_view()
-                        {
-                        }
                 };
                 struct set_ambient final
                 {
@@ -234,9 +228,6 @@ class EventQueue final : public Show
                 };
                 struct clip_plane_hide final
                 {
-                        clip_plane_hide()
-                        {
-                        }
                 };
                 struct mouse_press final
                 {

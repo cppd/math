@@ -66,7 +66,7 @@ DftShowMemory::DftShowMemory(const vulkan::Device& device, VkDescriptorSetLayout
                 buffer_info.offset = 0;
                 buffer_info.range = m_uniform_buffers.back().size();
 
-                infos.push_back(buffer_info);
+                infos.emplace_back(buffer_info);
 
                 bindings.push_back(DATA_BINDING);
         }

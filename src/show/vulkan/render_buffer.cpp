@@ -80,7 +80,7 @@ void check_buffers(const std::vector<vulkan::ColorAttachment>& color, const std:
                 error("Color attachment sample count is not equal to depth attachment sample count");
         }
 
-        if (color.size() == 0)
+        if (color.empty())
         {
                 if (!std::all_of(depth.cbegin(), depth.cend(),
                                  [&](const vulkan::DepthAttachment& d) { return d.sample_count() == VK_SAMPLE_COUNT_1_BIT; }))
@@ -97,7 +97,7 @@ std::string buffer_info(const std::vector<vulkan::ColorAttachment>& color, const
         std::ostringstream oss;
 
         oss << "Render buffers sample count = "
-            << vulkan::integer_sample_count_flag(color.size() > 0 ? color[0].sample_count() : VK_SAMPLE_COUNT_1_BIT);
+            << vulkan::integer_sample_count_flag(!color.empty() ? color[0].sample_count() : VK_SAMPLE_COUNT_1_BIT);
 
         oss << '\n';
         if (!depth.empty())
@@ -110,7 +110,7 @@ std::string buffer_info(const std::vector<vulkan::ColorAttachment>& color, const
         }
 
         oss << '\n';
-        if (color.size() > 0)
+        if (!color.empty())
         {
                 oss << "Render buffers color attachment format = " << vulkan::format_to_string(color[0].format());
         }
@@ -146,27 +146,27 @@ class Impl3D : public gpu_vulkan::RenderBuffers3D
 
         //
 
-        unsigned width() const override final
+        unsigned width() const final
         {
                 return width_3d();
         }
-        unsigned height() const override final
+        unsigned height() const final
         {
                 return height_3d();
         }
-        VkRenderPass render_pass() const override final
+        VkRenderPass render_pass() const final
         {
                 return render_pass_3d();
         }
-        VkSampleCountFlagBits sample_count() const override final
+        VkSampleCountFlagBits sample_count() const final
         {
                 return sample_count_3d();
         }
-        const std::vector<VkFramebuffer>& framebuffers() const override final
+        const std::vector<VkFramebuffer>& framebuffers() const final
         {
                 return framebuffers_3d();
         }
-        std::vector<VkClearValue> clear_values(const Color& clear_color) const override final
+        std::vector<VkClearValue> clear_values(const Color& clear_color) const final
         {
                 return clear_values_3d(clear_color);
         }
@@ -185,23 +185,23 @@ class Impl2D : public gpu_vulkan::RenderBuffers2D
 
         //
 
-        unsigned width() const override final
+        unsigned width() const final
         {
                 return width_2d();
         }
-        unsigned height() const override final
+        unsigned height() const final
         {
                 return height_2d();
         }
-        VkRenderPass render_pass() const override final
+        VkRenderPass render_pass() const final
         {
                 return render_pass_2d();
         }
-        VkSampleCountFlagBits sample_count() const override final
+        VkSampleCountFlagBits sample_count() const final
         {
                 return sample_count_2d();
         }
-        const std::vector<VkFramebuffer>& framebuffers() const override final
+        const std::vector<VkFramebuffer>& framebuffers() const final
         {
                 return framebuffers_2d();
         }
@@ -479,13 +479,13 @@ void Impl::create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapc
 
 unsigned Impl::width_3d() const
 {
-        ASSERT(m_depth_attachments.size() > 0);
+        ASSERT(!m_depth_attachments.empty());
         return m_depth_attachments[0].width();
 }
 
 unsigned Impl::height_3d() const
 {
-        ASSERT(m_depth_attachments.size() > 0);
+        ASSERT(!m_depth_attachments.empty());
         return m_depth_attachments[0].height();
 }
 
@@ -496,7 +496,7 @@ VkRenderPass Impl::render_pass_3d() const
 
 VkSampleCountFlagBits Impl::sample_count_3d() const
 {
-        return m_color_attachments.size() > 0 ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
+        return !m_color_attachments.empty() ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
 }
 
 const std::vector<VkFramebuffer>& Impl::framebuffers_3d() const
@@ -532,7 +532,7 @@ VkRenderPass Impl::render_pass_2d() const
 
 VkSampleCountFlagBits Impl::sample_count_2d() const
 {
-        return m_color_attachments.size() > 0 ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
+        return !m_color_attachments.empty() ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
 }
 
 const std::vector<VkFramebuffer>& Impl::framebuffers_2d() const
@@ -543,7 +543,7 @@ const std::vector<VkFramebuffer>& Impl::framebuffers_2d() const
 
 void Impl::create_resolve_command_buffers()
 {
-        ASSERT(m_depth_attachments.size() > 0);
+        ASSERT(!m_depth_attachments.empty());
 
         m_resolve_command_buffers = vulkan::CommandBuffers();
 

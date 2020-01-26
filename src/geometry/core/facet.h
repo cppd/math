@@ -315,7 +315,8 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
         int visible(const std::vector<Vector<N, DataType>>& points, int p) const
         {
                 // thread_local - нужно избежать создания переменных mpz_class при каждом вызове функции
-                thread_local mpz_class d, to_point;
+                thread_local mpz_class d;
+                thread_local mpz_class to_point;
 
                 const Vector<N, DataType>& facet_point = points[Base::vertices()[0]];
                 const Vector<N, DataType>& point = points[p];
@@ -333,7 +334,8 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
         int visible(const std::vector<Vector<N, mpz_class>>& points, int p) const
         {
                 // thread_local - нужно избежать создания переменных mpz_class при каждом вызове функции
-                thread_local mpz_class d, to_point;
+                thread_local mpz_class d;
+                thread_local mpz_class to_point;
 
                 const Vector<N, mpz_class>& facet_point = points[Base::get_vertices()[0]];
                 const Vector<N, mpz_class>& point = points[p];

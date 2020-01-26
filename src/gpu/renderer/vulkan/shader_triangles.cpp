@@ -98,7 +98,7 @@ RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(const vulkan::Devic
                 buffer_info.offset = 0;
                 buffer_info.range = m_uniform_buffers.back().size();
 
-                infos.push_back(buffer_info);
+                infos.emplace_back(buffer_info);
 
                 bindings.push_back(MATRICES_BINDING);
         }
@@ -112,7 +112,7 @@ RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(const vulkan::Devic
                 buffer_info.offset = 0;
                 buffer_info.range = m_uniform_buffers.back().size();
 
-                infos.push_back(buffer_info);
+                infos.emplace_back(buffer_info);
 
                 bindings.push_back(LIGHTING_BINDING);
         }
@@ -126,7 +126,7 @@ RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(const vulkan::Devic
                 buffer_info.offset = 0;
                 buffer_info.range = m_uniform_buffers.back().size();
 
-                infos.push_back(buffer_info);
+                infos.emplace_back(buffer_info);
 
                 bindings.push_back(DRAWING_BINDING);
         }
@@ -316,7 +316,7 @@ RendererTrianglesMaterialMemory::RendererTrianglesMaterialMemory(const vulkan::D
                                                                  const std::vector<MaterialAndTexture>& materials)
         : m_descriptors(vulkan::Descriptors(device, materials.size(), descriptor_set_layout, descriptor_set_layout_bindings()))
 {
-        ASSERT(materials.size() > 0);
+        ASSERT(!materials.empty());
         ASSERT(std::all_of(materials.cbegin(), materials.cend(),
                            [](const MaterialAndTexture& m) { return m.texture_Ka && m.texture_Kd && m.texture_Ks; }));
 
@@ -338,7 +338,7 @@ RendererTrianglesMaterialMemory::RendererTrianglesMaterialMemory(const vulkan::D
                         buffer_info.offset = 0;
                         buffer_info.range = m_uniform_buffers.back().size();
 
-                        infos.push_back(buffer_info);
+                        infos.emplace_back(buffer_info);
 
                         bindings.push_back(MATERIAL_BINDING);
                 }
@@ -348,7 +348,7 @@ RendererTrianglesMaterialMemory::RendererTrianglesMaterialMemory(const vulkan::D
                         image_info.imageView = material.texture_Ka->image_view();
                         image_info.sampler = sampler;
 
-                        infos.push_back(image_info);
+                        infos.emplace_back(image_info);
 
                         bindings.push_back(TEXTURE_KA_BINDING);
                 }
@@ -358,7 +358,7 @@ RendererTrianglesMaterialMemory::RendererTrianglesMaterialMemory(const vulkan::D
                         image_info.imageView = material.texture_Kd->image_view();
                         image_info.sampler = sampler;
 
-                        infos.push_back(image_info);
+                        infos.emplace_back(image_info);
 
                         bindings.push_back(TEXTURE_KD_BINDING);
                 }
@@ -368,7 +368,7 @@ RendererTrianglesMaterialMemory::RendererTrianglesMaterialMemory(const vulkan::D
                         image_info.imageView = material.texture_Ks->image_view();
                         image_info.sampler = sampler;
 
-                        infos.push_back(image_info);
+                        infos.emplace_back(image_info);
 
                         bindings.push_back(TEXTURE_KS_BINDING);
                 }
@@ -426,7 +426,7 @@ RendererShadowMemory::RendererShadowMemory(const vulkan::Device& device, VkDescr
                 buffer_info.offset = 0;
                 buffer_info.range = m_uniform_buffers.back().size();
 
-                infos.push_back(buffer_info);
+                infos.emplace_back(buffer_info);
 
                 bindings.push_back(MATRICES_BINDING);
         }

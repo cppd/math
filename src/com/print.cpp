@@ -33,7 +33,7 @@ std::string to_string(__float128 t)
 }
 #endif
 
-std::string source_with_line_numbers(const std::string s)
+std::string source_with_line_numbers(const std::string& s)
 {
         size_t cnt = std::count(s.begin(), s.end(), '\n');
         if (cnt == 0)
@@ -50,11 +50,11 @@ std::string source_with_line_numbers(const std::string s)
         int line = 1;
         os << std::setw(width) << line << ": ";
 
-        for (size_t i = 0; i < s.size(); ++i)
+        for (char c : s)
         {
-                if (s[i] != '\n')
+                if (c != '\n')
                 {
-                        os << s[i];
+                        os << c;
                 }
                 else
                 {

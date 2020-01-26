@@ -78,7 +78,7 @@ TextShowMemory::TextShowMemory(const vulkan::Device& device, VkDescriptorSetLayo
                 buffer_info.offset = 0;
                 buffer_info.range = m_uniform_buffers.back().size();
 
-                infos.push_back(buffer_info);
+                infos.emplace_back(buffer_info);
 
                 bindings.push_back(MATRICES_BINDING);
         }
@@ -88,7 +88,7 @@ TextShowMemory::TextShowMemory(const vulkan::Device& device, VkDescriptorSetLayo
                 image_info.imageView = texture->image_view();
                 image_info.sampler = sampler;
 
-                infos.push_back(image_info);
+                infos.emplace_back(image_info);
 
                 bindings.push_back(TEXTURE_BINDING);
         }
@@ -102,7 +102,7 @@ TextShowMemory::TextShowMemory(const vulkan::Device& device, VkDescriptorSetLayo
                 buffer_info.offset = 0;
                 buffer_info.range = m_uniform_buffers.back().size();
 
-                infos.push_back(buffer_info);
+                infos.emplace_back(buffer_info);
 
                 bindings.push_back(DRAWING_BINDING);
         }

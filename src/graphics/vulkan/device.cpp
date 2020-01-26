@@ -885,7 +885,7 @@ Device PhysicalDevice::create_device(const std::unordered_map<uint32_t, uint32_t
         create_info.pEnabledFeatures = &enabled_features;
 
         const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
-        if (extensions.size() > 0)
+        if (!extensions.empty())
         {
                 create_info.enabledExtensionCount = extensions.size();
                 create_info.ppEnabledExtensionNames = extensions.data();

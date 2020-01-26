@@ -29,20 +29,20 @@ std::string return_code_string(const std::string& function_name, const VkResult&
 
         std::string result;
 
-        if (function_name.size() > 0)
+        if (!function_name.empty())
         {
                 result += function_name + ".";
         }
 
         for (const std::string& s : strings)
         {
-                if (s.size() > 0)
+                if (!s.empty())
                 {
                         result += " " + s + ".";
                 }
         }
 
-        if (result.size() > 0)
+        if (!result.empty())
         {
                 return result;
         }

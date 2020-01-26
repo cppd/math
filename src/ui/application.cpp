@@ -68,5 +68,5 @@ int application(int argc, char* argv[])
 
         create_and_show_delete_on_close_window<MainWindow>();
 
-        return a.exec();
+        return Application::exec();
 }

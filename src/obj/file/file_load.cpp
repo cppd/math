@@ -50,21 +50,21 @@ constexpr int MAX_FACETS_PER_LINE = 1;
 template <>
 constexpr int MAX_FACETS_PER_LINE<3> = 5;
 
-constexpr const char OBJ_v[] = "v";
-constexpr const char OBJ_vt[] = "vt";
-constexpr const char OBJ_vn[] = "vn";
-constexpr const char OBJ_f[] = "f";
-constexpr const char OBJ_usemtl[] = "usemtl";
-constexpr const char OBJ_mtllib[] = "mtllib";
+constexpr const char* OBJ_v = "v";
+constexpr const char* OBJ_vt = "vt";
+constexpr const char* OBJ_vn = "vn";
+constexpr const char* OBJ_f = "f";
+constexpr const char* OBJ_usemtl = "usemtl";
+constexpr const char* OBJ_mtllib = "mtllib";
 
-constexpr const char MTL_newmtl[] = "newmtl";
-constexpr const char MTL_Ka[] = "Ka";
-constexpr const char MTL_Kd[] = "Kd";
-constexpr const char MTL_Ks[] = "Ks";
-constexpr const char MTL_Ns[] = "Ns";
-constexpr const char MTL_map_Ka[] = "map_Ka";
-constexpr const char MTL_map_Kd[] = "map_Kd";
-constexpr const char MTL_map_Ks[] = "map_Ks";
+constexpr const char* MTL_newmtl = "newmtl";
+constexpr const char* MTL_Ka = "Ka";
+constexpr const char* MTL_Kd = "Kd";
+constexpr const char* MTL_Ks = "Ks";
+constexpr const char* MTL_Ns = "Ns";
+constexpr const char* MTL_map_Ka = "map_Ka";
+constexpr const char* MTL_map_Kd = "map_Kd";
+constexpr const char* MTL_map_Ks = "map_Ks";
 
 constexpr bool is_number_sign(char c)
 {
@@ -112,7 +112,7 @@ std::string map_keys_to_string(const std::map<std::string, T>& m)
         std::string names;
         for (const auto& s : m)
         {
-                if (names.size() > 0)
+                if (!names.empty())
                 {
                         names += ", " + s.first;
                 }
@@ -203,7 +203,7 @@ void load_image(const std::string& dir_name, const std::string& image_name, std:
 {
         std::string file_name = trim(image_name);
 
-        if (file_name.size() == 0)
+        if (file_name.empty())
         {
                 error("No image file name");
         }
@@ -1214,7 +1214,7 @@ void FileObj<N>::read_lib(const std::string& dir_name, const std::string& file_n
                         }
                         else if (str_equal(first, MTL_newmtl))
                         {
-                                if (material_index->size() == 0)
+                                if (material_index->empty())
                                 {
                                         // все материалы найдены
                                         break;

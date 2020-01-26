@@ -233,7 +233,7 @@ class ThreadPool
                         if (thread_error.has_error())
                         {
                                 there_is_error = true;
-                                if (error_message.size() > 0)
+                                if (!error_message.empty())
                                 {
                                         error_message += '\n';
                                 }

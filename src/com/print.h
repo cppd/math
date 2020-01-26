@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //
 
-std::string source_with_line_numbers(const std::string s);
+std::string source_with_line_numbers(const std::string& s);
 
 //
 
@@ -76,17 +76,17 @@ std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string_fixed(T t, 
 
         std::string r = o.str();
 
-        while (r.size() > 0 && r[r.size() - 1] == '0')
+        while (!r.empty() && r[r.size() - 1] == '0')
         {
                 r.resize(r.size() - 1);
         }
 
-        if (r.size() > 0 && r[r.size() - 1] == '.')
+        if (!r.empty() && r[r.size() - 1] == '.')
         {
                 r.resize(r.size() - 1);
         }
 
-        if (r.size() == 0)
+        if (r.empty())
         {
                 return o.str();
         }

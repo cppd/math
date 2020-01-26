@@ -36,10 +36,7 @@ int dft_compute_m(int n)
         {
                 return t;
         }
-        else
-        {
-                return (1 << log2_t) << 1;
-        }
+        return (1 << log2_t) << 1;
 }
 
 // Compute the symmetric Toeplitz H: for given N, compute the scalar constants

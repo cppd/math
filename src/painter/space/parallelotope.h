@@ -252,10 +252,7 @@ bool Parallelotope<N, T>::intersect(const Ray<N, T>& r, T* t) const
                 *t = (first > 0) ? first : second;
                 return true;
         }
-        else
-        {
-                return false;
-        }
+        return false;
 }
 
 template <size_t N, typename T>
@@ -267,10 +264,7 @@ bool Parallelotope<N, T>::intersect_farthest(const Ray<N, T>& r, T* t) const
                 *t = second;
                 return true;
         }
-        else
-        {
-                return false;
-        }
+        return false;
 }
 
 template <size_t N, typename T>

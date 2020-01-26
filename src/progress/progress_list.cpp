@@ -71,9 +71,9 @@ void ProgressRatioList::terminate_all_quietly()
         std::lock_guard lg(m_mutex);
 
         m_terminate_quietly = true;
-        for (auto i = m_ratios.begin(); i != m_ratios.end(); ++i)
+        for (ProgressRatioControl* ratio : m_ratios)
         {
-                (*i)->terminate_quietly();
+                ratio->terminate_quietly();
         }
 }
 
@@ -85,9 +85,9 @@ void ProgressRatioList::terminate_all_with_message()
         std::lock_guard lg(m_mutex);
 
         m_terminate_with_message = true;
-        for (auto i = m_ratios.begin(); i != m_ratios.end(); ++i)
+        for (ProgressRatioControl* ratio : m_ratios)
         {
-                (*i)->terminate_with_message();
+                ratio->terminate_with_message();
         }
 }
 
@@ -98,7 +98,7 @@ void ProgressRatioList::enable()
 
         std::lock_guard lg(m_mutex);
 
-        ASSERT(m_ratios.size() == 0);
+        ASSERT(m_ratios.empty());
 
         m_terminate_quietly = false;
         m_terminate_with_message = false;
