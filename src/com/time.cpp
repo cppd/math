@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
+#include <atomic>
 #include <chrono>
 #include <thread>
 
@@ -27,20 +28,34 @@ using CLOCK = std::chrono::steady_clock;
 
 namespace
 {
-CLOCK::time_point global_start_time;
+std::atomic_int global_call_counter = 0;
+CLOCK::time_point* global_start_time = nullptr;
 }
 
-void reset_time()
+void time_init()
 {
-        global_start_time = CLOCK::now();
+        if (++global_call_counter != 1)
+        {
+                error_fatal("Error time init");
+        }
+        global_start_time = new CLOCK::time_point(CLOCK::now());
 }
+
+void time_exit()
+{
+        delete global_start_time;
+        global_start_time = nullptr;
+        --global_call_counter;
+}
+
+//
 
 double time_in_seconds() noexcept
 {
         try
         {
                 CLOCK::time_point now = CLOCK::now();
-                std::chrono::duration<double> time = now - global_start_time;
+                std::chrono::duration<double> time = now - *global_start_time;
                 return time.count();
         }
         catch (...)
@@ -53,7 +68,7 @@ void sleep_this_thread_until(double time) noexcept
 {
         try
         {
-                std::this_thread::sleep_until(global_start_time + std::chrono::duration<double>(time));
+                std::this_thread::sleep_until(*global_start_time + std::chrono::duration<double>(time));
         }
         catch (...)
         {

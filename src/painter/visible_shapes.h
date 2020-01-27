@@ -35,7 +35,7 @@ class VisibleHyperplaneParallelotope final : public GenericObject<N, T>, public 
 
 public:
         template <typename... V>
-        VisibleHyperplaneParallelotope(const Vector<N, T>& org, const V&... e) : m_hyperplane_parallelotope(org, e...)
+        explicit VisibleHyperplaneParallelotope(const Vector<N, T>& org, const V&... e) : m_hyperplane_parallelotope(org, e...)
         {
                 static_assert((std::is_same_v<V, Vector<N, T>> && ...));
         }
@@ -79,7 +79,7 @@ class VisibleParallelotope final : public GenericObject<N, T>, public Surface<N,
 
 public:
         template <typename... V>
-        VisibleParallelotope(const Vector<N, T>& org, const V&... e) : m_parallelotope(org, e...)
+        explicit VisibleParallelotope(const Vector<N, T>& org, const V&... e) : m_parallelotope(org, e...)
         {
                 static_assert((std::is_same_v<V, Vector<N, T>> && ...));
         }
@@ -122,7 +122,7 @@ class VisibleSharedMesh final : public GenericObject<N, T>, public Surface<N, T>
         std::shared_ptr<const Mesh<N, T>> m_mesh;
 
 public:
-        VisibleSharedMesh(const std::shared_ptr<const Mesh<N, T>>& mesh) : m_mesh(mesh)
+        explicit VisibleSharedMesh(const std::shared_ptr<const Mesh<N, T>>& mesh) : m_mesh(mesh)
         {
         }
 

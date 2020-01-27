@@ -115,7 +115,7 @@ class CudaMemory final
         T* d_mem;
 
 public:
-        CudaMemory(size_t s) : m_size(s)
+        explicit CudaMemory(size_t s) : m_size(s)
         {
                 if (m_size < 1)
                 {

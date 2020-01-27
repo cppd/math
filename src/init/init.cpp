@@ -43,8 +43,7 @@ Initialization::Initialization()
         }
 
         log_init();
-
-        reset_time();
+        time_init();
 
 #if defined(__linux__)
 
@@ -77,5 +76,6 @@ Initialization::~Initialization()
         xlib_exit();
 #endif
 
+        time_exit();
         log_exit();
 }

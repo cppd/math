@@ -102,7 +102,7 @@ class ThreadBarrier
         long long m_generation = 0;
 
 public:
-        ThreadBarrier(int thread_count) : m_count(thread_count), m_thread_count(thread_count)
+        explicit ThreadBarrier(int thread_count) : m_count(thread_count), m_thread_count(thread_count)
         {
         }
         void wait() noexcept
@@ -183,7 +183,7 @@ class ThreadsWithCatch
                 std::string m_error_message;
 
         public:
-                ThreadData(std::thread&& t) : m_thread(std::move(t))
+                explicit ThreadData(std::thread&& t) : m_thread(std::move(t))
                 {
                 }
                 void join()

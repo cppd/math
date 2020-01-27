@@ -54,14 +54,14 @@ private:
                 struct message_error final
                 {
                         const std::string msg;
-                        message_error(const std::string& msg_) : msg(msg_)
+                        explicit message_error(const std::string& msg_) : msg(msg_)
                         {
                         }
                 };
                 struct message_error_fatal final
                 {
                         const std::string msg;
-                        message_error_fatal(const std::string& msg_) : msg(msg_)
+                        explicit message_error_fatal(const std::string& msg_) : msg(msg_)
                         {
                         }
                 };
@@ -76,28 +76,28 @@ private:
                 struct message_information final
                 {
                         const std::string msg;
-                        message_information(const std::string& msg_) : msg(msg_)
+                        explicit message_information(const std::string& msg_) : msg(msg_)
                         {
                         }
                 };
                 struct message_warning final
                 {
                         const std::string msg;
-                        message_warning(const std::string& msg_) : msg(msg_)
+                        explicit message_warning(const std::string& msg_) : msg(msg_)
                         {
                         }
                 };
                 struct object_loaded final
                 {
                         const int id;
-                        object_loaded(int id_) : id(id_)
+                        explicit object_loaded(int id_) : id(id_)
                         {
                         }
                 };
                 struct mesh_loaded final
                 {
                         const ObjectId id;
-                        mesh_loaded(ObjectId id_) : id(id_)
+                        explicit mesh_loaded(ObjectId id_) : id(id_)
                         {
                         }
                 };
@@ -123,7 +123,7 @@ private:
                 struct log final
                 {
                         const std::string msg;
-                        log(const std::string& msg_) : msg(msg_)
+                        explicit log(const std::string& msg_) : msg(msg_)
                         {
                         }
                 };
@@ -133,7 +133,7 @@ private:
                         event;
 
                 template <typename... Args>
-                WindowEvent(Args&&... args) : event(std::forward<Args>(args)...)
+                explicit WindowEvent(Args&&... args) : event(std::forward<Args>(args)...)
                 {
                 }
         };
@@ -173,7 +173,7 @@ private:
                 DirectEvents& m_f;
 
         public:
-                Visitor(DirectEvents& f) : m_f(f)
+                explicit Visitor(DirectEvents& f) : m_f(f)
                 {
                 }
 
@@ -230,7 +230,7 @@ private slots:
         }
 
 public:
-        WindowEventEmitter(DirectEvents* direct_events) : m_direct_events(direct_events)
+        explicit WindowEventEmitter(DirectEvents* direct_events) : m_direct_events(direct_events)
         {
                 ASSERT(m_direct_events);
 

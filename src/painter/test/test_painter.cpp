@@ -46,7 +46,7 @@ class Images : public PainterNotifier<3>
         std::array<int, 3> m_size;
 
 public:
-        Images(const std::array<int, 3>& size) : m_size(size)
+        explicit Images(const std::array<int, 3>& size) : m_size(size)
         {
                 if (std::any_of(size.cbegin(), size.cend(), [](int v) { return v < 1; }))
                 {

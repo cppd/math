@@ -50,7 +50,7 @@ public:
         static constexpr size_t SHAPE_DIMENSION = N;
         using DataType = T;
 
-        ParallelotopeWrapperForShapeIntersection(const Parallelotope& p)
+        explicit ParallelotopeWrapperForShapeIntersection(const Parallelotope& p)
                 : m_parallelotope(p), m_vertices(parallelotope_vertices(p))
         {
                 m_parallelotope.constraints(&m_constraints);
@@ -114,7 +114,7 @@ public:
         static constexpr size_t SHAPE_DIMENSION = N;
         using DataType = T;
 
-        ParallelotopeWrapperForShapeIntersection(const Parallelotope& p)
+        explicit ParallelotopeWrapperForShapeIntersection(const Parallelotope& p)
                 : m_parallelotope(p), m_vertices(parallelotope_vertices(p)), m_vertex_ridges(parallelotope_vertex_ridges(p))
         {
         }

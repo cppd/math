@@ -195,11 +195,9 @@ VkPipeline DftFftGlobalProgram::pipeline(bool inverse) const
                 ASSERT(m_pipeline_inverse != VK_NULL_HANDLE);
                 return m_pipeline_inverse;
         }
-        else
-        {
-                ASSERT(m_pipeline_forward != VK_NULL_HANDLE);
-                return m_pipeline_forward;
-        }
+
+        ASSERT(m_pipeline_forward != VK_NULL_HANDLE);
+        return m_pipeline_forward;
 }
 
 void DftFftGlobalProgram::create_pipelines(uint32_t group_size, uint32_t data_size, uint32_t n)

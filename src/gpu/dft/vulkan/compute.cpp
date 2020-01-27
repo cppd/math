@@ -341,7 +341,7 @@ public:
 
                 unsigned m_div_2 = m_n_shared; // Половина размера текущих отдельных ДПФ
                 float two_pi_div_m = PI<float> / m_div_2;
-                for (; m_div_2 < m_n; m_div_2 <<= 1, two_pi_div_m /= 2)
+                for (; m_div_2 < m_n; two_pi_div_m /= 2, m_div_2 <<= 1)
                 {
                         m_fft_g_memory.emplace_back(instance.device(), m_fft_g_program->descriptor_set_layout(), family_indices);
                         m_fft_g_memory.back().set_data(two_pi_div_m, m_div_2);

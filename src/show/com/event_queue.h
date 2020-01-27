@@ -41,14 +41,14 @@ class EventQueue final : public Show
                 struct delete_object final
                 {
                         int id;
-                        delete_object(int id_) : id(id_)
+                        explicit delete_object(int id_) : id(id_)
                         {
                         }
                 };
                 struct show_object final
                 {
                         int id;
-                        show_object(int id_) : id(id_)
+                        explicit show_object(int id_) : id(id_)
                         {
                         }
                 };
@@ -61,168 +61,168 @@ class EventQueue final : public Show
                 struct set_ambient final
                 {
                         double ambient;
-                        set_ambient(double v) : ambient(v)
+                        explicit set_ambient(double v) : ambient(v)
                         {
                         }
                 };
                 struct set_diffuse final
                 {
                         double diffuse;
-                        set_diffuse(double v) : diffuse(v)
+                        explicit set_diffuse(double v) : diffuse(v)
                         {
                         }
                 };
                 struct set_specular final
                 {
                         double specular;
-                        set_specular(double v) : specular(v)
+                        explicit set_specular(double v) : specular(v)
                         {
                         }
                 };
                 struct set_background_color final
                 {
                         Color background_color;
-                        set_background_color(const Color& v) : background_color(v)
+                        explicit set_background_color(const Color& v) : background_color(v)
                         {
                         }
                 };
                 struct set_default_color final
                 {
                         Color default_color;
-                        set_default_color(const Color& v) : default_color(v)
+                        explicit set_default_color(const Color& v) : default_color(v)
                         {
                         }
                 };
                 struct set_wireframe_color final
                 {
                         Color wireframe_color;
-                        set_wireframe_color(const Color& v) : wireframe_color(v)
+                        explicit set_wireframe_color(const Color& v) : wireframe_color(v)
                         {
                         }
                 };
                 struct set_default_ns final
                 {
                         double default_ns;
-                        set_default_ns(double v) : default_ns(v)
+                        explicit set_default_ns(double v) : default_ns(v)
                         {
                         }
                 };
                 struct show_smooth final
                 {
                         bool show;
-                        show_smooth(bool v) : show(v)
+                        explicit show_smooth(bool v) : show(v)
                         {
                         }
                 };
                 struct show_wireframe final
                 {
                         bool show;
-                        show_wireframe(bool v) : show(v)
+                        explicit show_wireframe(bool v) : show(v)
                         {
                         }
                 };
                 struct show_shadow final
                 {
                         bool show;
-                        show_shadow(bool v) : show(v)
+                        explicit show_shadow(bool v) : show(v)
                         {
                         }
                 };
                 struct show_fog final
                 {
                         bool show;
-                        show_fog(bool v) : show(v)
+                        explicit show_fog(bool v) : show(v)
                         {
                         }
                 };
                 struct show_materials final
                 {
                         bool show;
-                        show_materials(bool v) : show(v)
+                        explicit show_materials(bool v) : show(v)
                         {
                         }
                 };
                 struct show_fps final
                 {
                         bool show;
-                        show_fps(bool v) : show(v)
+                        explicit show_fps(bool v) : show(v)
                         {
                         }
                 };
                 struct show_pencil_sketch final
                 {
                         bool show;
-                        show_pencil_sketch(bool v) : show(v)
+                        explicit show_pencil_sketch(bool v) : show(v)
                         {
                         }
                 };
                 struct show_dft final
                 {
                         bool show;
-                        show_dft(bool v) : show(v)
+                        explicit show_dft(bool v) : show(v)
                         {
                         }
                 };
                 struct set_dft_brightness final
                 {
                         double dft_brightness;
-                        set_dft_brightness(double v) : dft_brightness(v)
+                        explicit set_dft_brightness(double v) : dft_brightness(v)
                         {
                         }
                 };
                 struct set_dft_background_color final
                 {
                         Color color;
-                        set_dft_background_color(const Color& c) : color(c)
+                        explicit set_dft_background_color(const Color& c) : color(c)
                         {
                         }
                 };
                 struct set_dft_color final
                 {
                         Color color;
-                        set_dft_color(const Color& c) : color(c)
+                        explicit set_dft_color(const Color& c) : color(c)
                         {
                         }
                 };
                 struct show_convex_hull_2d final
                 {
                         bool show;
-                        show_convex_hull_2d(bool v) : show(v)
+                        explicit show_convex_hull_2d(bool v) : show(v)
                         {
                         }
                 };
                 struct show_optical_flow final
                 {
                         bool show;
-                        show_optical_flow(bool v) : show(v)
+                        explicit show_optical_flow(bool v) : show(v)
                         {
                         }
                 };
                 struct set_vertical_sync final
                 {
                         bool enable;
-                        set_vertical_sync(bool v) : enable(v)
+                        explicit set_vertical_sync(bool v) : enable(v)
                         {
                         }
                 };
                 struct set_shadow_zoom final
                 {
                         double zoom;
-                        set_shadow_zoom(double v) : zoom(v)
+                        explicit set_shadow_zoom(double v) : zoom(v)
                         {
                         }
                 };
                 struct clip_plane_show final
                 {
                         double position;
-                        clip_plane_show(double p) : position(p)
+                        explicit clip_plane_show(double p) : position(p)
                         {
                         }
                 };
                 struct clip_plane_position final
                 {
                         double position;
-                        clip_plane_position(double p) : position(p)
+                        explicit clip_plane_position(double p) : position(p)
                         {
                         }
                 };
@@ -277,7 +277,7 @@ class EventQueue final : public Show
                                           clip_plane_hide, mouse_press, mouse_release, mouse_move, mouse_wheel, window_resize>;
 
                 template <typename... Args>
-                Event(Args&&... args) : m_event(std::forward<Args>(args)...)
+                explicit Event(Args&&... args) : m_event(std::forward<Args>(args)...)
                 {
                 }
 
@@ -295,7 +295,7 @@ class EventQueue final : public Show
                 Show& m_show;
 
         public:
-                Visitor(Show& show) : m_show(show)
+                explicit Visitor(Show& show) : m_show(show)
                 {
                 }
 

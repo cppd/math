@@ -53,14 +53,13 @@ constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
 {
         static_assert(2 <= N && N <= 4);
 
-        switch (N)
-        {
-        case 2:
+        if constexpr (N == 2)
         {
                 ASSERT(point_count >= 3);
                 return {point_count, point_count};
         }
-        case 3:
+
+        if constexpr (N == 3)
         {
                 ASSERT(point_count >= 4);
                 // Mark de Berg, Otfried Cheong, Marc van Kreveld, Mark Overmars
@@ -69,7 +68,8 @@ constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
                 unsigned count = 2 * point_count - 4;
                 return {count, count};
         }
-        case 4:
+
+        if constexpr (N == 4)
         {
                 ASSERT(point_count >= 5);
                 // Handbook of Discrete and Computational Geometry edited by Jacob E. Goodman and Joseph O’Rourke.
@@ -81,7 +81,6 @@ constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
                 unsigned min = std::lround(6.55 * point_count);
                 unsigned max = std::lround(6.85 * point_count);
                 return {min, max};
-        }
         }
 }
 

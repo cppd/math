@@ -41,7 +41,7 @@ public:
         HyperplaneParallelotope() = default;
 
         template <typename... P>
-        HyperplaneParallelotope(const Vector<N, T>& org, const P&... vectors);
+        explicit HyperplaneParallelotope(const Vector<N, T>& org, const P&... vectors);
 
         HyperplaneParallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N - 1>& vectors);
 

@@ -97,13 +97,11 @@ constexpr int sample_count()
         switch (N)
         {
         case 2:
-                return power<N>(5u);
         case 3:
                 return power<N>(5u);
         case 4:
                 return power<N>(4u);
         case 5:
-                return power<N>(3u);
         case 6:
                 return power<N>(3u);
         default:

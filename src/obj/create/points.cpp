@@ -89,7 +89,7 @@ class Points final : public Obj<N>
         }
 
 public:
-        Points(std::vector<Vector<N, float>>&& points);
+        explicit Points(std::vector<Vector<N, float>>&& points);
 };
 
 template <size_t N>

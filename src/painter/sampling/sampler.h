@@ -52,7 +52,7 @@ class StratifiedJitteredSampler
         }
 
 public:
-        StratifiedJitteredSampler(int sample_count) : m_engine(one_dimension_size(sample_count))
+        explicit StratifiedJitteredSampler(int sample_count) : m_engine(one_dimension_size(sample_count))
         {
         }
 
@@ -69,7 +69,7 @@ class LatinHypercubeSampler
         LatinHypercubeSampleEngine<N, T> m_engine;
 
 public:
-        LatinHypercubeSampler(int sample_count) : m_engine(sample_count)
+        explicit LatinHypercubeSampler(int sample_count) : m_engine(sample_count)
         {
         }
 

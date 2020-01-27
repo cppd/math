@@ -41,7 +41,7 @@ void create_and_show_delete_on_close_window(Args&&... args)
         std::unique_ptr<Window> window = std::make_unique<Window>(std::forward<Args>(args)...);
         window->show();
         window->setAttribute(Qt::WA_DeleteOnClose);
-        window.release();
+        static_cast<void>(window.release());
 }
 
 // Чтобы объект Qt, имеющий родителя, не удалялся два и более раз, нужно использовать
@@ -54,7 +54,7 @@ class QtObjectInDynamicMemory final : public QPointer<T>
 {
 public:
         template <typename... Args>
-        QtObjectInDynamicMemory(Args&&... args) : QPointer<T>(new T(std::forward<Args>(args)...))
+        explicit QtObjectInDynamicMemory(Args&&... args) : QPointer<T>(new T(std::forward<Args>(args)...))
         {
         }
 

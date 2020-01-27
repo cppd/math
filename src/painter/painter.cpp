@@ -79,7 +79,7 @@ class Pixels
         std::vector<Pixel> m_pixels;
 
 public:
-        Pixels(const std::array<int, N>& screen_size) : m_global_index(screen_size)
+        explicit Pixels(const std::array<int, N>& screen_size) : m_global_index(screen_size)
         {
                 m_pixels.resize(m_global_index.count());
         }

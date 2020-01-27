@@ -45,12 +45,12 @@ class Image
         bool empty() const;
 
 public:
-        Image(const std::array<int, N>& size);
+        explicit Image(const std::array<int, N>& size);
 
         Image(const std::array<int, N>& size, const std::vector<unsigned char>& srgba_pixels);
 
         template <size_t X = N>
-        Image(std::enable_if_t<X == 2, const std::string&> file_name);
+        explicit Image(std::enable_if_t<X == 2, const std::string&> file_name);
 
         template <typename T>
         Color texture(const Vector<N, T>& p) const;

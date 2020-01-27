@@ -248,7 +248,8 @@ class ThreadPool
         }
 
 public:
-        ThreadPool(unsigned thread_count) : THREAD_COUNT(thread_count), m_threads(THREAD_COUNT), m_thread_errors(THREAD_COUNT)
+        explicit ThreadPool(unsigned thread_count)
+                : THREAD_COUNT(thread_count), m_threads(THREAD_COUNT), m_thread_errors(THREAD_COUNT)
         {
                 m_enable = false;
                 m_exit = false;

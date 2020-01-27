@@ -67,7 +67,8 @@ class StratifiedJitteredSampleEngine
         std::vector<T> m_offset;
 
 public:
-        StratifiedJitteredSampleEngine(int one_dimension_sample_count) : m_one_dimension_sample_count(one_dimension_sample_count)
+        explicit StratifiedJitteredSampleEngine(int one_dimension_sample_count)
+                : m_one_dimension_sample_count(one_dimension_sample_count)
         {
                 if (m_one_dimension_sample_count < 1)
                 {
@@ -166,7 +167,7 @@ class LatinHypercubeSampleEngine
         const T m_reciprocal_sample_count = static_cast<T>(1) / m_sample_count;
 
 public:
-        LatinHypercubeSampleEngine(int sample_count) : m_sample_count(sample_count)
+        explicit LatinHypercubeSampleEngine(int sample_count) : m_sample_count(sample_count)
         {
                 if (m_sample_count < 1)
                 {

@@ -55,7 +55,7 @@ public:
         static constexpr size_t SHAPE_DIMENSION = N - 1;
         using DataType = T;
 
-        HyperplaneSimplexWrapperForShapeIntersection(const Simplex& s) : m_simplex(s), m_vertices(s.vertices())
+        explicit HyperplaneSimplexWrapperForShapeIntersection(const Simplex& s) : m_simplex(s), m_vertices(s.vertices())
         {
                 static_assert(std::remove_reference_t<decltype(s.vertices())>().size() == N);
 
@@ -125,7 +125,7 @@ public:
         static constexpr size_t SHAPE_DIMENSION = N - 1;
         using DataType = T;
 
-        HyperplaneSimplexWrapperForShapeIntersection(const Simplex& s) : m_simplex(s), m_vertices(s.vertices())
+        explicit HyperplaneSimplexWrapperForShapeIntersection(const Simplex& s) : m_simplex(s), m_vertices(s.vertices())
         {
                 static_assert(std::remove_reference_t<decltype(s.vertices())>().size() == N);
 

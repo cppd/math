@@ -71,7 +71,7 @@ class ThreadData
         }
 
 public:
-        ThreadData(const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
+        explicit ThreadData(const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
                 : m_exception_handler(exception_handler)
         {
         }
@@ -163,7 +163,7 @@ class Impl final : public MainThreads
         }
 
 public:
-        Impl(const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
+        explicit Impl(const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
                 : m_thread_id(std::this_thread::get_id()), m_exception_handler(exception_handler)
         {
                 m_threads.try_emplace(Action::Load, m_exception_handler);

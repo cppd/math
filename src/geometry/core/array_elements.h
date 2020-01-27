@@ -65,8 +65,9 @@ constexpr std::array<T, 1> del_elem(const std::array<T, 2>& a, unsigned pos)
                 return {a[1]};
         case 1:
                 return {a[0]};
+        default:
+                error("pos > 1");
         }
-        error("pos > 1");
 }
 
 template <typename T>
@@ -80,8 +81,9 @@ constexpr std::array<T, 2> del_elem(const std::array<T, 3>& a, unsigned pos)
                 return {a[0], a[2]};
         case 2:
                 return {a[0], a[1]};
+        default:
+                error("pos > 2");
         }
-        error("pos > 2");
 }
 
 template <typename T>
@@ -97,8 +99,9 @@ constexpr std::array<T, 3> del_elem(const std::array<T, 4>& a, unsigned pos)
                 return {a[0], a[1], a[3]};
         case 3:
                 return {a[0], a[1], a[2]};
+        default:
+                error("pos > 3");
         }
-        error("pos > 3");
 }
 
 template <typename T>
@@ -116,6 +119,7 @@ constexpr std::array<T, 4> del_elem(const std::array<T, 5>& a, unsigned pos)
                 return {a[0], a[1], a[2], a[4]};
         case 4:
                 return {a[0], a[1], a[2], a[3]};
+        default:
+                error("pos > 4");
         }
-        error("pos > 4");
 }

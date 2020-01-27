@@ -46,7 +46,7 @@ long double betal(long double x, long double y)
 
 void test_compare_with_beta(unsigned n)
 {
-        long double beta = betal(0.5l, (n - 1) / 2.0l) / betal(1.0l, (n - 1) / 2.0l);
+        long double beta = betal(0.5L, (n - 1) / 2.0L) / betal(1.0L, (n - 1) / 2.0L);
         long double function = cosine_sphere_coefficient(n);
         long double discrepancy_percent = std::abs(beta - function) / function * 100;
 

@@ -91,7 +91,7 @@ public:
         Parallelotope() = default;
 
         template <typename... P>
-        Parallelotope(const Vector<N, T>& org, const P&... vectors);
+        explicit Parallelotope(const Vector<N, T>& org, const P&... vectors);
 
         Parallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
 

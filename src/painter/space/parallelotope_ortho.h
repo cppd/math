@@ -141,7 +141,7 @@ public:
         ParallelotopeOrtho() = default;
 
         template <typename... P>
-        ParallelotopeOrtho(const Vector<N, T>& org, const P&... vectors);
+        explicit ParallelotopeOrtho(const Vector<N, T>& org, const P&... vectors);
 
         ParallelotopeOrtho(const Vector<N, T>& org, const std::array<T, N>& vectors);
 

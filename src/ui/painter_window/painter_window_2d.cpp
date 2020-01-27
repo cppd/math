@@ -69,7 +69,7 @@ class PainterWindow2d::Difference
         std::deque<Point> m_deque;
 
 public:
-        Difference(int interval_milliseconds) : m_interval_seconds(interval_milliseconds / 1000.0)
+        explicit Difference(int interval_milliseconds) : m_interval_seconds(interval_milliseconds / 1000.0)
         {
         }
 

@@ -28,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace
 {
 std::atomic_int global_call_counter = 0;
-
 SpinLock* global_lock = nullptr;
 
 // В момент закрытия главного окна разные потоки могут что-нибудь записывать
@@ -44,7 +43,6 @@ void log_init()
         {
                 error_fatal("Error log init");
         }
-
         global_lock = new SpinLock;
 }
 
@@ -52,7 +50,10 @@ void log_exit()
 {
         delete global_lock;
         global_lock = nullptr;
+        --global_call_counter;
 }
+
+//
 
 void set_log_callback(LogCallback* callback)
 {

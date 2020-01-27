@@ -298,7 +298,7 @@ void MainObjectsImpl<N>::add_object_and_build_mesh(const std::unordered_set<Obje
                 return;
         }
 
-        if (!(obj->facets().size() > 0 || (object_type == ObjectType::Model && obj->points().size() > 0)))
+        if (obj->facets().empty() && !(object_type == ObjectType::Model && !obj->points().empty()))
         {
                 return;
         }
@@ -327,7 +327,7 @@ void MainObjectsImpl<N>::add_object_convex_hull_and_build_mesh(const std::unorde
                 return;
         }
 
-        if (!(obj->facets().size() > 0 || (object_type == ObjectType::Model && obj->points().size() > 0)))
+        if (obj->facets().empty() && !(object_type == ObjectType::Model && !obj->points().empty()))
         {
                 return;
         }

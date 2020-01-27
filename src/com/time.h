@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-void reset_time();
+void time_init();
+void time_exit();
 
 double time_in_seconds() noexcept;
 

@@ -63,7 +63,7 @@ class Box
         std::array<int, CHILD_COUNT> m_childs = make_array_value<int, CHILD_COUNT>(EMPTY);
 
 public:
-        Box(Parallelotope&& parallelotope) : m_parallelotope(std::move(parallelotope))
+        explicit Box(Parallelotope&& parallelotope) : m_parallelotope(std::move(parallelotope))
         {
         }
 
@@ -471,7 +471,7 @@ public:
         {
                 static_assert(std::is_pointer_v<decltype(functor_object_pointer(0))>);
                 static_assert(std::is_const_v<std::remove_pointer_t<decltype(functor_object_pointer(0))>>);
-                static_assert(MAX_BOX_COUNT_LIMIT <= (1ll << 31) - 1);
+                static_assert(MAX_BOX_COUNT_LIMIT <= (1LL << 31) - 1);
 
                 namespace impl = spatial_subdivision_tree_implementation;
 

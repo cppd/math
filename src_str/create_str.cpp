@@ -70,7 +70,7 @@ int to_int(char c)
 class ifstream final : public std::ifstream
 {
 public:
-        ifstream(const char* name, std::ios_base::openmode mode = ios_base::in) : std::ifstream(name, mode)
+        explicit ifstream(const char* name, std::ios_base::openmode mode = ios_base::in) : std::ifstream(name, mode)
         {
                 if (fail())
                 {
@@ -84,7 +84,7 @@ class ofstream final : public std::ofstream
         std::string m_name;
 
 public:
-        ofstream(const char* name, std::ios_base::openmode mode = ios_base::out) : std::ofstream(name, mode)
+        explicit ofstream(const char* name, std::ios_base::openmode mode = ios_base::out) : std::ofstream(name, mode)
         {
                 if (fail())
                 {

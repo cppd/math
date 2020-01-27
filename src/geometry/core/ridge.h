@@ -35,7 +35,7 @@ class Ridge
         std::array<int, N - 1> m_vertices;
 
 public:
-        Ridge(std::array<int, N - 1>&& vertices) : m_vertices(vertices)
+        explicit Ridge(std::array<int, N - 1>&& vertices) : m_vertices(vertices)
         {
                 ASSERT(std::is_sorted(vertices.cbegin(), vertices.cend()));
         }
@@ -253,7 +253,7 @@ void remove_from_ridges(const Facet& facet, Map<Ridge<N>, MapData>* m)
 {
         for (unsigned r = 0; r < N; ++r)
         {
-                auto f = m->find(sort(del_elem(facet.vertices(), r)));
+                auto f = m->find(Ridge<N>(sort(del_elem(facet.vertices(), r))));
 
                 ASSERT(f != m->end());
 

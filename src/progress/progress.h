@@ -29,7 +29,7 @@ class ProgressRatio
         std::unique_ptr<Impl> m_progress;
 
 public:
-        ProgressRatio(ProgressRatios* ratios, const std::string& permanent_text = "");
+        explicit ProgressRatio(ProgressRatios* ratios, const std::string& permanent_text = "");
         ~ProgressRatio();
 
         void set(unsigned v, unsigned m);

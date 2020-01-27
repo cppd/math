@@ -28,12 +28,6 @@ constexpr auto storage_size(const T& c) -> decltype(std::size(c))
         return std::size(c) * sizeof(typename T::value_type); // sizeof(c[0])
 }
 
-template <class T, size_t N>
-constexpr size_t storage_size(const T (&)[N])
-{
-        return N * sizeof(T);
-}
-
 template <typename T>
 std::enable_if_t<has_data_and_size<T>, size_t> data_size(const T& data)
 {

@@ -81,7 +81,7 @@ public:
         Matrix() = default;
 
         template <typename... Args>
-        constexpr Matrix(Args... args) : m_data{args...}
+        explicit constexpr Matrix(Args... args) : m_data{args...}
         {
                 static_assert((std::is_same_v<Args, Vector<Columns, T>> && ...));
                 static_assert(sizeof...(args) == Rows);

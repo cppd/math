@@ -1056,7 +1056,6 @@ void FileObj<N>::read_obj_stage_two(const Counters& counters, std::vector<char>*
         const double line_count_reciprocal = 1.0 / line_prop->size();
 
         int mtl_index = -1;
-        std::string mtl_name;
         std::set<std::string> unique_library_names;
 
         for (long long line_num = 0; line_num < line_count; ++line_num)
@@ -1096,6 +1095,7 @@ void FileObj<N>::read_obj_stage_two(const Counters& counters, std::vector<char>*
                         break;
                 case ObjLineType::usemtl:
                 {
+                        std::string mtl_name;
                         read_name("material", data, lp.second_b, lp.second_e, &mtl_name);
                         auto iter = material_index->find(mtl_name);
                         if (iter != material_index->end())
@@ -1116,7 +1116,6 @@ void FileObj<N>::read_obj_stage_two(const Counters& counters, std::vector<char>*
                         read_library_names(data, lp.second_b, lp.second_e, library_names, &unique_library_names);
                         break;
                 case ObjLineType::None:
-                        break;
                 case ObjLineType::NotSupported:
                         break;
                 }
