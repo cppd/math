@@ -70,7 +70,7 @@ void test_utf8_replacement_character_and_self_synchronizing()
 
                 size_t i = 0;
 
-                if (0xFFFD != unicode::utf8_to_utf32(s, i))
+                if (0xFFFD != unicode::utf8_to_utf32(s, &i))
                 {
                         error("Error UTF-32 replacement character");
                 }
@@ -79,7 +79,7 @@ void test_utf8_replacement_character_and_self_synchronizing()
                         error("Error UTF-8 string index " + to_string(i));
                 }
 
-                if (0xFFFD != unicode::utf8_to_utf32(s, i))
+                if (0xFFFD != unicode::utf8_to_utf32(s, &i))
                 {
                         error("Error UTF-32 replacement character");
                 }
@@ -88,7 +88,7 @@ void test_utf8_replacement_character_and_self_synchronizing()
                         error("Error UTF-8 string index " + to_string(i));
                 }
 
-                if (0x2211 != unicode::utf8_to_utf32(s, i))
+                if (0x2211 != unicode::utf8_to_utf32(s, &i))
                 {
                         error("Error reading UTF-32");
                 }
@@ -106,7 +106,7 @@ void test_utf8_replacement_character_and_self_synchronizing()
 
                 size_t i = 0;
 
-                if (0xFFFD != unicode::utf8_to_utf32(s, i))
+                if (0xFFFD != unicode::utf8_to_utf32(s, &i))
                 {
                         error("Error UTF-32 replacement character");
                 }
@@ -115,7 +115,7 @@ void test_utf8_replacement_character_and_self_synchronizing()
                         error("Error UTF-8 string index " + to_string(i));
                 }
 
-                if (0xFFFD != unicode::utf8_to_utf32(s, i))
+                if (0xFFFD != unicode::utf8_to_utf32(s, &i))
                 {
                         error("Error UTF-32 replacement character");
                 }
@@ -124,7 +124,7 @@ void test_utf8_replacement_character_and_self_synchronizing()
                         error("Error UTF-8 string index " + to_string(i));
                 }
 
-                if (0x2211 != unicode::utf8_to_utf32(s, i))
+                if (0x2211 != unicode::utf8_to_utf32(s, &i))
                 {
                         error("Error reading UTF-32");
                 }

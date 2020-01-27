@@ -209,13 +209,13 @@ class ThreadsWithCatch
 
         std::vector<ThreadData> m_threads;
 
-        void join(bool& there_is_error, std::string& error_message) noexcept
+        void join(bool* there_is_error, std::string* error_message) noexcept
         {
                 try
                 {
                         try
                         {
-                                there_is_error = false;
+                                *there_is_error = false;
 
                                 for (ThreadData& thread_data : m_threads)
                                 {
@@ -223,12 +223,12 @@ class ThreadsWithCatch
 
                                         if (thread_data.has_error())
                                         {
-                                                there_is_error = true;
-                                                if (!error_message.empty())
+                                                *there_is_error = true;
+                                                if (!error_message->empty())
                                                 {
-                                                        error_message += '\n';
+                                                        *error_message += '\n';
                                                 }
-                                                error_message += thread_data.error_message();
+                                                *error_message += thread_data.error_message();
                                         }
                                 }
 
@@ -314,7 +314,7 @@ public:
                 bool there_is_error;
                 std::string error_message;
 
-                join(there_is_error, error_message);
+                join(&there_is_error, &error_message);
 
                 if (there_is_error)
                 {

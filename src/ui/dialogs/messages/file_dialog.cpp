@@ -24,22 +24,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-bool exec_dialog_for_single_file(QtObjectInDynamicMemory<QFileDialog>& w, std::string* name)
+bool exec_dialog_for_single_file(QtObjectInDynamicMemory<QFileDialog>* w, std::string* name)
 {
-        ASSERT(!w.isNull());
+        ASSERT(!w->isNull());
         ASSERT(name);
 
-        if (!w->exec())
+        if (!(*w)->exec())
         {
                 return false;
         }
 
-        if (w.isNull())
+        if (w->isNull())
         {
                 return false;
         }
 
-        QStringList list = w->selectedFiles();
+        QStringList list = (*w)->selectedFiles();
         if (list.size() != 1)
         {
                 error("QFileDialog selected file count (" + to_string(list.size()) + ") is not equal to 1.");
@@ -73,7 +73,7 @@ bool save_file(QWidget* parent, const std::string& caption, const std::string& f
         w->setAcceptMode(QFileDialog::AcceptSave);
         w->setFileMode(QFileDialog::AnyFile);
 
-        return exec_dialog_for_single_file(w, name);
+        return exec_dialog_for_single_file(&w, name);
 }
 
 bool open_file(QWidget* parent, const std::string& caption, const std::string& filter, bool read_only, std::string* name)
@@ -84,6 +84,6 @@ bool open_file(QWidget* parent, const std::string& caption, const std::string& f
         w->setAcceptMode(QFileDialog::AcceptOpen);
         w->setFileMode(QFileDialog::ExistingFile);
 
-        return exec_dialog_for_single_file(w, name);
+        return exec_dialog_for_single_file(&w, name);
 }
 }

@@ -174,12 +174,12 @@ bool object_is_obstacle_to_light(const GenericObject<N, T>* object, const Ray<N,
 }
 
 template <size_t N, typename T>
-bool light_source_is_visible(Counter& ray_count, const std::vector<const GenericObject<N, T>*>& objects, const Ray<N, T>& ray,
+bool light_source_is_visible(Counter* ray_count, const std::vector<const GenericObject<N, T>*>& objects, const Ray<N, T>& ray,
                              T distance_to_light_source)
 {
         for (const GenericObject<N, T>* object : objects)
         {
-                ++ray_count;
+                ++(*ray_count);
 
                 if (object_is_obstacle_to_light(object, ray, distance_to_light_source))
                 {
@@ -199,7 +199,7 @@ bool ray_intersection_distance(const std::vector<const Object*>& objects, const 
 }
 
 template <size_t N, typename T>
-Color direct_diffuse_lighting(Counter& ray_count, const std::vector<const GenericObject<N, T>*>& objects,
+Color direct_diffuse_lighting(Counter* ray_count, const std::vector<const GenericObject<N, T>*>& objects,
                               const std::vector<const LightSource<N, T>*> light_sources, const Vector<N, T>& p,
                               const Vector<N, T>& geometric_normal, const Vector<N, T>& shading_normal, bool mesh,
                               const T& ray_offset, bool smooth_normal)
@@ -249,7 +249,7 @@ Color direct_diffuse_lighting(Counter& ray_count, const std::vector<const Generi
                         // самого первого пересечения в предположении, что оно произошло с этой самой
                         // окрестностью точки.
 
-                        ++ray_count;
+                        ++(*ray_count);
                         ray_to_light.move_along_dir(ray_offset);
                         T t;
                         if (!ray_intersection_distance(objects, ray_to_light, &t))
@@ -267,7 +267,7 @@ Color direct_diffuse_lighting(Counter& ray_count, const std::vector<const Generi
                                 continue;
                         }
 
-                        ++ray_count;
+                        ++(*ray_count);
                         Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
                         ray_from_light.move_along_dir(2 * ray_offset);
                         T t_reverse;
@@ -296,11 +296,11 @@ Color direct_diffuse_lighting(Counter& ray_count, const std::vector<const Generi
 }
 
 template <size_t N, typename T>
-Color trace_path(const PaintData<N, T>& paint_data, Counter& ray_count, PainterRandomEngine<T>& random_engine,
+Color trace_path(const PaintData<N, T>& paint_data, Counter* ray_count, PainterRandomEngine<T>& random_engine,
                  int recursion_level, Color::DataType color_level, const Ray<N, T>& ray, bool diffuse_reflection);
 
 template <size_t N, typename T>
-Color diffuse_lighting(const PaintData<N, T>& paint_data, Counter& ray_count, PainterRandomEngine<T>& random_engine,
+Color diffuse_lighting(const PaintData<N, T>& paint_data, Counter* ray_count, PainterRandomEngine<T>& random_engine,
                        int recursion_level, Color::DataType color_level, const Vector<N, T>& point,
                        const Vector<N, T>& shading_normal, const Vector<N, T>& geometric_normal, bool mesh)
 {
@@ -327,10 +327,10 @@ Color diffuse_lighting(const PaintData<N, T>& paint_data, Counter& ray_count, Pa
 }
 
 template <size_t N, typename T>
-Color trace_path(const PaintData<N, T>& paint_data, Counter& ray_count, PainterRandomEngine<T>& random_engine,
+Color trace_path(const PaintData<N, T>& paint_data, Counter* ray_count, PainterRandomEngine<T>& random_engine,
                  int recursion_level, Color::DataType color_level, const Ray<N, T>& ray, bool diffuse_reflection)
 {
-        ++ray_count;
+        ++(*ray_count);
 
         const Surface<N, T>* surface;
         T t;
@@ -413,7 +413,7 @@ Vector<N, VectorType> array_to_vector(const std::array<ArrayType, N>& array)
 
 template <size_t N, typename T>
 void paint_pixels(unsigned thread_number, PainterRandomEngine<T>& random_engine, std::vector<Vector<N - 1, T>>* samples,
-                  std::atomic_bool& stop, const Projector<N, T>& projector, const PaintData<N, T>& paint_data,
+                  std::atomic_bool* stop, const Projector<N, T>& projector, const PaintData<N, T>& paint_data,
                   PainterNotifier<N - 1>* painter_notifier, Paintbrush<N - 1>* paintbrush,
                   const PainterSampler<N - 1, T>& sampler, Pixels<N - 1>* pixels)
 {
@@ -422,7 +422,7 @@ void paint_pixels(unsigned thread_number, PainterRandomEngine<T>& random_engine,
         Counter ray_count = 0;
         Counter sample_count = 0;
 
-        while (!stop && paintbrush->next_pixel(ray_count, sample_count, &pixel))
+        while (!(*stop) && paintbrush->next_pixel(ray_count, sample_count, &pixel))
         {
                 painter_notifier->painter_pixel_before(thread_number, pixel);
 
@@ -443,7 +443,7 @@ void paint_pixels(unsigned thread_number, PainterRandomEngine<T>& random_engine,
 
                         Ray<N, T> ray = projector.ray(screen_point + sample_point);
 
-                        color += trace_path(paint_data, ray_count, random_engine, recursion_level, color_level, ray,
+                        color += trace_path(paint_data, &ray_count, random_engine, recursion_level, color_level, ray,
                                             diffuse_reflection);
                 }
 
@@ -454,8 +454,8 @@ void paint_pixels(unsigned thread_number, PainterRandomEngine<T>& random_engine,
 }
 
 template <size_t N, typename T>
-void work_thread(unsigned thread_number, ThreadBarrier& barrier, std::atomic_bool& stop, std::atomic_bool& error_caught,
-                 std::atomic_bool& stop_painting, const Projector<N, T>& projector, const PaintData<N, T>& paint_data,
+void work_thread(unsigned thread_number, ThreadBarrier* barrier, std::atomic_bool* stop, std::atomic_bool* error_caught,
+                 std::atomic_bool* stop_painting, const Projector<N, T>& projector, const PaintData<N, T>& paint_data,
                  PainterNotifier<N - 1>* painter_notifier, Paintbrush<N - 1>* paintbrush, const PainterSampler<N - 1, T>& sampler,
                  Pixels<N - 1>* pixels) noexcept
 {
@@ -472,12 +472,12 @@ void work_thread(unsigned thread_number, ThreadBarrier& barrier, std::atomic_boo
                                 paint_pixels(thread_number, random_engine, &samples, stop, projector, paint_data,
                                              painter_notifier, paintbrush, sampler, pixels);
 
-                                barrier.wait();
+                                barrier->wait();
 
                                 // Здесь может пройти только часть потоков из-за исключений в других
-                                // потоках. Переменная error_caught поменяться не может в других потоках,
+                                // потоках. Переменная *error_caught поменяться не может в других потоках,
                                 // так как она в них может меняться только до барьера.
-                                if (error_caught)
+                                if (*error_caught)
                                 {
                                         return;
                                 }
@@ -486,18 +486,18 @@ void work_thread(unsigned thread_number, ThreadBarrier& barrier, std::atomic_boo
 
                                 if (thread_number == 0)
                                 {
-                                        if (stop || !paintbrush->next_pass())
+                                        if (*stop || !paintbrush->next_pass())
                                         {
-                                                stop_painting = true;
+                                                *stop_painting = true;
                                         }
                                 }
 
-                                barrier.wait();
+                                barrier->wait();
 
-                                // Здесь проходят все потоки, а переменная stop_painting поменяться не может
+                                // Здесь проходят все потоки, а переменная *stop_painting поменяться не может
                                 // в других потоках, так как она в них может меняться только до барьера.
 
-                                if (stop_painting)
+                                if (*stop_painting)
                                 {
                                         return;
                                 }
@@ -505,17 +505,17 @@ void work_thread(unsigned thread_number, ThreadBarrier& barrier, std::atomic_boo
                 }
                 catch (std::exception& e)
                 {
-                        stop = true;
-                        error_caught = true;
+                        *stop = true;
+                        *error_caught = true;
                         painter_notifier->painter_error_message(std::string("Painter error:\n") + e.what());
-                        barrier.wait();
+                        barrier->wait();
                 }
                 catch (...)
                 {
-                        stop = true;
-                        error_caught = true;
+                        *stop = true;
+                        *error_caught = true;
                         painter_notifier->painter_error_message("Unknown painter error");
-                        barrier.wait();
+                        barrier->wait();
                 }
         }
         catch (...)
@@ -590,7 +590,7 @@ void paint_threads(PainterNotifier<N - 1>* painter_notifier, int samples_per_pix
         for (unsigned i = 0; i < threads.size(); ++i)
         {
                 threads[i] = std::thread([&, i]() {
-                        work_thread(i, barrier, *stop, error_caught, stop_painting, paint_objects.projector(), paint_data,
+                        work_thread(i, &barrier, stop, &error_caught, &stop_painting, paint_objects.projector(), paint_data,
                                     painter_notifier, paintbrush, sampler, &pixels);
                 });
         }

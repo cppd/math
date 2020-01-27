@@ -445,7 +445,7 @@ public:
                 std::vector<int> material_face_offset;
                 std::vector<int> material_face_count;
 
-                sort_facets_by_material(obj, sorted_face_indices, material_face_offset, material_face_count);
+                sort_facets_by_material(obj, &sorted_face_indices, &material_face_offset, &material_face_count);
 
                 load_vertices(device, transfer_command_pool, transfer_queue,
                               {graphics_queue.family_index(), transfer_queue.family_index()}, obj, sorted_face_indices,

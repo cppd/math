@@ -43,26 +43,26 @@ const FontGlyph& code_point_glyph(const std::unordered_map<T, FontGlyph>& glyphs
         return iter->second;
 }
 
-void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, int step_y, int start_x, int& x, int& y,
-                   const std::string& text, std::vector<TextVertex>* vertices)
+void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, int step_y, int start_x, const std::string& text,
+                   int* x, int* y, std::vector<TextVertex>* vertices)
 {
         size_t i = 0;
         while (i < text.size())
         {
                 if (text[i] == '\n')
                 {
-                        y += step_y;
-                        x = start_x;
+                        *y += step_y;
+                        *x = start_x;
                         ++i;
                         continue;
                 }
 
-                char32_t code_point = unicode::utf8_to_utf32(text, i);
+                char32_t code_point = unicode::utf8_to_utf32(text, &i);
 
                 const FontGlyph& g = code_point_glyph(glyphs, code_point);
 
-                int x0 = x + g.left;
-                int y0 = y - g.top;
+                int x0 = *x + g.left;
+                int y0 = *y - g.top;
                 int x1 = x0 + g.width;
                 int y1 = y0 + g.height;
 
@@ -74,7 +74,7 @@ void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, int st
                 vertices->emplace_back(x0, y1, g.s0, g.t1);
                 vertices->emplace_back(x1, y1, g.s1, g.t1);
 
-                x += g.advance_x;
+                *x += g.advance_x;
         }
 }
 }
@@ -89,6 +89,6 @@ void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, const 
 
         for (const std::string& s : text_data.text)
         {
-                text_vertices(glyphs, text_data.step_y, text_data.start_x, x, y, s, vertices);
+                text_vertices(glyphs, text_data.step_y, text_data.start_x, s, &x, &y, vertices);
         }
 }

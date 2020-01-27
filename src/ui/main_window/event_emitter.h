@@ -170,10 +170,10 @@ private:
 
         class Visitor
         {
-                DirectEvents& m_f;
+                DirectEvents* m_f;
 
         public:
-                explicit Visitor(DirectEvents& f) : m_f(f)
+                explicit Visitor(DirectEvents* f) : m_f(f)
                 {
                 }
 
@@ -182,43 +182,43 @@ private:
                 }
                 void operator()(const WindowEvent::message_error& d)
                 {
-                        m_f.direct_message_error(d.msg);
+                        m_f->direct_message_error(d.msg);
                 }
                 void operator()(const WindowEvent::message_error_fatal& d)
                 {
-                        m_f.direct_message_error_fatal(d.msg);
+                        m_f->direct_message_error_fatal(d.msg);
                 }
                 void operator()(const WindowEvent::message_error_source& d)
                 {
-                        m_f.direct_message_error_source(d.msg, d.src);
+                        m_f->direct_message_error_source(d.msg, d.src);
                 }
                 void operator()(const WindowEvent::message_information& d)
                 {
-                        m_f.direct_message_information(d.msg);
+                        m_f->direct_message_information(d.msg);
                 }
                 void operator()(const WindowEvent::message_warning& d)
                 {
-                        m_f.direct_message_warning(d.msg);
+                        m_f->direct_message_warning(d.msg);
                 }
                 void operator()(const WindowEvent::object_loaded& d)
                 {
-                        m_f.direct_object_loaded(d.id);
+                        m_f->direct_object_loaded(d.id);
                 }
                 void operator()(const WindowEvent::mesh_loaded& d)
                 {
-                        m_f.direct_mesh_loaded(d.id);
+                        m_f->direct_mesh_loaded(d.id);
                 }
                 void operator()(const WindowEvent::file_loaded& d)
                 {
-                        m_f.direct_file_loaded(d.file_name, d.dimension, d.objects);
+                        m_f->direct_file_loaded(d.file_name, d.dimension, d.objects);
                 }
                 void operator()(const WindowEvent::bound_cocone_loaded& d)
                 {
-                        m_f.direct_bound_cocone_loaded(d.rho, d.alpha);
+                        m_f->direct_bound_cocone_loaded(d.rho, d.alpha);
                 }
                 void operator()(const WindowEvent::log& d)
                 {
-                        m_f.direct_log(d.msg);
+                        m_f->direct_log(d.msg);
                 }
         };
 
@@ -226,7 +226,7 @@ private slots:
 
         void slot_window_event(const WindowEvent& event)
         {
-                visit(Visitor(*m_direct_events), event.event);
+                visit(Visitor(m_direct_events), event.event);
         }
 
 public:

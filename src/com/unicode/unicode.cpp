@@ -106,53 +106,55 @@ std::string utf32_to_utf8(T code_point)
         return utf32_to_utf8(unicode::REPLACEMENT_CHARACTER);
 }
 
-char32_t utf8_to_utf32(const std::string& s, size_t& i)
+char32_t utf8_to_utf32(const std::string& s, size_t* i)
 {
-        if (i >= s.size())
+        size_t& p = *i;
+
+        if (p >= s.size())
         {
                 error("UTF-8 string index out of range");
         }
 
-        unsigned char s0 = s[i];
+        unsigned char s0 = s[p];
 
         if (s0 <= 0x7F)
         {
-                i += 1;
+                p += 1;
                 return s0;
         }
 
         if ((s0 & 0b111'00000) == 0b110'00000)
         {
-                if (i + 2 <= s.size())
+                if (p + 2 <= s.size())
                 {
-                        unsigned char s1 = s[i + 1];
+                        unsigned char s1 = s[p + 1];
                         if ((s1 & 0b11'000000) == 0b10'000000)
                         {
-                                i += 2;
+                                p += 2;
                                 return (s0 & 0b1'1111) << 6 | (s1 & 0b11'1111);
                         }
                 }
         }
         else if ((s0 & 0b1111'0000) == 0b1110'0000)
         {
-                if (i + 3 <= s.size())
+                if (p + 3 <= s.size())
                 {
-                        unsigned char s1 = s[i + 1];
-                        unsigned char s2 = s[i + 2];
+                        unsigned char s1 = s[p + 1];
+                        unsigned char s2 = s[p + 2];
                         if ((s1 & 0b11'000000) == 0b10'000000 && (s2 & 0b11'000000) == 0b10'000000)
                         {
-                                i += 3;
+                                p += 3;
                                 return (s0 & 0b1111) << 12 | (s1 & 0b11'1111) << 6 | (s2 & 0b11'1111);
                         }
                 }
         }
         else if ((s0 & 0b11111'000) == 0b11110'000)
         {
-                if (i + 4 <= s.size())
+                if (p + 4 <= s.size())
                 {
-                        unsigned char s1 = s[i + 1];
-                        unsigned char s2 = s[i + 2];
-                        unsigned char s3 = s[i + 3];
+                        unsigned char s1 = s[p + 1];
+                        unsigned char s2 = s[p + 2];
+                        unsigned char s3 = s[p + 3];
                         if ((s1 & 0b11'000000) == 0b10'000000 && (s2 & 0b11'000000) == 0b10'000000 &&
                             (s3 & 0b11'000000) == 0b10'000000)
                         {
@@ -160,21 +162,21 @@ char32_t utf8_to_utf32(const std::string& s, size_t& i)
                                         (s0 & 0b111) << 18 | (s1 & 0b11'1111) << 12 | (s2 & 0b11'1111) << 6 | (s3 & 0b11'1111);
                                 if (r <= 0x10FFFF)
                                 {
-                                        i += 4;
+                                        p += 4;
                                         return r;
                                 }
                         }
                 }
         }
 
-        i += 1;
+        p += 1;
         return unicode::REPLACEMENT_CHARACTER;
 }
 
 char32_t utf8_to_utf32(const std::string& s)
 {
         size_t i = 0;
-        char32_t c = unicode::utf8_to_utf32(s, i);
+        char32_t c = unicode::utf8_to_utf32(s, &i);
         if (i == s.size())
         {
                 return c;

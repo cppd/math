@@ -36,16 +36,16 @@ class ShowThread final : public ShowObject
 
         class EventQueueSetShow final
         {
-                EventQueue& m_event_queue;
+                EventQueue* m_event_queue;
 
         public:
-                EventQueueSetShow(EventQueue& event_queue, Show& show) : m_event_queue(event_queue)
+                EventQueueSetShow(EventQueue* event_queue, Show* show) : m_event_queue(event_queue)
                 {
-                        m_event_queue.set_show(&show);
+                        m_event_queue->set_show(show);
                 }
                 ~EventQueueSetShow()
                 {
-                        m_event_queue.set_show(nullptr);
+                        m_event_queue->set_show(nullptr);
                 }
                 EventQueueSetShow(const EventQueueSetShow&) = delete;
                 EventQueueSetShow(EventQueueSetShow&&) = delete;
@@ -53,9 +53,9 @@ class ShowThread final : public ShowObject
                 EventQueueSetShow& operator=(EventQueueSetShow&&) = delete;
         };
 
-        static void add_to_event_queue(EventQueue& queue, const ShowCreateInfo& info)
+        static void add_to_event_queue(EventQueue* queue, const ShowCreateInfo& info)
         {
-                Show& q = queue;
+                Show& q = *queue;
 
                 q.set_ambient(info.ambient.value());
                 q.set_diffuse(info.diffuse.value());
@@ -89,13 +89,13 @@ class ShowThread final : public ShowObject
                         {
                                 try
                                 {
-                                        T show(m_event_queue, callback, parent_window, parent_window_ppi);
+                                        T show(&m_event_queue, callback, parent_window, parent_window_ppi);
 
-                                        EventQueueSetShow e(m_event_queue, show);
+                                        EventQueueSetShow e(&m_event_queue, &show);
 
                                         m_started = true;
 
-                                        show.loop(m_stop);
+                                        show.loop(&m_stop);
 
                                         if (!m_stop)
                                         {
@@ -150,7 +150,7 @@ public:
                 {
                         try
                         {
-                                add_to_event_queue(m_event_queue, info);
+                                add_to_event_queue(&m_event_queue, info);
 
                                 if (!info.callback.value() || !(info.window_ppi.value() > 0))
                                 {

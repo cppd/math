@@ -74,7 +74,8 @@ void copy_image(std::vector<T>* dst, const std::array<int, 2>& dst_size, const s
         copy_image(dst, dst_size, dst_offset, src, src_size, {0, 0}, src_size);
 }
 
-void render_glyphs(const std::vector<char32_t>& code_points, Font& font, std::unordered_map<char32_t, FontGlyph>* font_glyphs,
+void render_glyphs(const std::vector<char32_t>& code_points, const Font& font,
+                   std::unordered_map<char32_t, FontGlyph>* font_glyphs,
                    std::unordered_map<char32_t, std::vector<std::uint_least8_t>>* glyph_pixels)
 {
         font_glyphs->clear();
@@ -197,7 +198,7 @@ void fill_texture_pixels_and_texture_coordinates(
 }
 }
 
-void create_font_glyphs(Font& font, int max_width, int max_height, std::unordered_map<char32_t, FontGlyph>* font_glyphs,
+void create_font_glyphs(const Font& font, int max_width, int max_height, std::unordered_map<char32_t, FontGlyph>* font_glyphs,
                         int* texture_width, int* texture_height, std::vector<std::uint_least8_t>* texture_pixels)
 {
         std::unordered_map<char32_t, std::vector<std::uint_least8_t>> glyph_pixels;

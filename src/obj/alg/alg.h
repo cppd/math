@@ -368,8 +368,8 @@ Matrix<N + 1, N + 1, double> model_vertex_matrix(const Obj<N>& obj, double size,
 }
 
 template <size_t N>
-void sort_facets_by_material(const Obj<N>& obj, std::vector<int>& sorted_facet_indices, std::vector<int>& facet_offset,
-                             std::vector<int>& facet_count)
+void sort_facets_by_material(const Obj<N>& obj, std::vector<int>* sorted_facet_indices, std::vector<int>* facet_offset,
+                             std::vector<int>* facet_count)
 {
         ASSERT(std::all_of(std::cbegin(obj.facets()), std::cend(obj.facets()), [&](const typename Obj<N>::Facet& facet) {
                 return facet.material < static_cast<int>(obj.materials().size());
@@ -389,39 +389,39 @@ void sort_facets_by_material(const Obj<N>& obj, std::vector<int>& sorted_facet_i
         auto material_index = [&](int i) { return i >= 0 ? i : max_material_index; };
 
         // Количество граней с заданным материалом
-        facet_count = std::vector<int>(new_material_size, 0);
+        *facet_count = std::vector<int>(new_material_size, 0);
 
         for (const typename Obj<N>::Facet& facet : obj.facets())
         {
                 int m = material_index(facet.material);
-                ++facet_count[m];
+                ++(*facet_count)[m];
         }
 
         // Начала расположения граней с заданным материалом
-        facet_offset = std::vector<int>(new_material_size);
+        *facet_offset = std::vector<int>(new_material_size);
 
         for (int i = 0, sum = 0; i < new_material_size; ++i)
         {
-                facet_offset[i] = sum;
-                sum += facet_count[i];
+                (*facet_offset)[i] = sum;
+                sum += (*facet_count)[i];
         }
 
         // Индексы граней по возрастанию их материала
-        sorted_facet_indices.resize(obj.facets().size());
+        sorted_facet_indices->resize(obj.facets().size());
 
         // Текущие начала расположения граней с заданным материалом
-        std::vector<int> starting_indices = facet_offset;
+        std::vector<int> starting_indices = *facet_offset;
         for (size_t i = 0; i < obj.facets().size(); ++i)
         {
                 int m = material_index(obj.facets()[i].material);
-                sorted_facet_indices[starting_indices[m]++] = i;
+                (*sorted_facet_indices)[starting_indices[m]++] = i;
         }
 
-        ASSERT(facet_offset.size() == facet_count.size());
-        ASSERT(facet_count.size() == obj.materials().size() + 1);
-        ASSERT(sorted_facet_indices.size() == obj.facets().size());
-        ASSERT(sorted_facet_indices.size() == unique_elements(sorted_facet_indices).size());
-        ASSERT(std::is_sorted(std::cbegin(sorted_facet_indices), std::cend(sorted_facet_indices), [&](int a, int b) {
+        ASSERT(facet_offset->size() == facet_count->size());
+        ASSERT(facet_count->size() == obj.materials().size() + 1);
+        ASSERT(sorted_facet_indices->size() == obj.facets().size());
+        ASSERT(sorted_facet_indices->size() == unique_elements(*sorted_facet_indices).size());
+        ASSERT(std::is_sorted(std::cbegin(*sorted_facet_indices), std::cend(*sorted_facet_indices), [&](int a, int b) {
                 int m_a = material_index(obj.facets()[a].material);
                 int m_b = material_index(obj.facets()[b].material);
                 return m_a < m_b;

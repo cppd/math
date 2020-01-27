@@ -187,7 +187,7 @@ public:
                 FT_Set_Pixel_Sizes(m_face, 0, size_in_pixels);
         }
 
-        std::optional<Char> render(char32_t code_point)
+        std::optional<Char> render(char32_t code_point) const
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -231,9 +231,9 @@ void Font::set_size(int size_in_pixels)
 }
 
 template <typename T>
-std::enable_if_t<std::is_same_v<T, char32_t>, std::optional<Font::Char>> Font::render(T code_point)
+std::enable_if_t<std::is_same_v<T, char32_t>, std::optional<Font::Char>> Font::render(T code_point) const
 {
         return m_impl->render(code_point);
 }
 
-template std::optional<Font::Char> Font::render(char32_t code_point);
+template std::optional<Font::Char> Font::render(char32_t code_point) const;

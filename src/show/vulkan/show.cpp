@@ -102,7 +102,7 @@ std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(b
 
 class Impl final : public Show
 {
-        EventQueue& m_event_queue;
+        EventQueue* m_event_queue;
         ShowCallback* const m_callback;
         const double m_window_ppi;
         const std::thread::id m_thread_id = std::this_thread::get_id();
@@ -751,7 +751,7 @@ class Impl final : public Show
         }
 
 public:
-        Impl(EventQueue& event_queue, ShowCallback* callback, const WindowID& window, double window_ppi)
+        Impl(EventQueue* event_queue, ShowCallback* callback, const WindowID& window, double window_ppi)
                 : m_event_queue(event_queue), m_callback(callback), m_window_ppi(window_ppi)
         {
                 // Этот цвет меняется в set_background_color
@@ -838,14 +838,14 @@ public:
                 ASSERT(std::this_thread::get_id() == m_thread_id);
         }
 
-        void loop(std::atomic_bool& stop)
+        void loop(std::atomic_bool* stop)
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 double last_frame_time = time_in_seconds();
-                while (!stop)
+                while (!(*stop))
                 {
-                        m_event_queue.pull_and_dispatch_events(*this);
+                        m_event_queue->pull_and_dispatch_events(this);
 
                         m_frame_rate.calculate();
 
