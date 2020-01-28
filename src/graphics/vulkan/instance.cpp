@@ -48,52 +48,65 @@ std::unordered_map<uint32_t, uint32_t> compute_queue_count(
         return queues;
 }
 
-std::vector<std::string> merge_required_device_extensions(bool with_swapchain,
-                                                          const std::vector<std::string>& required_device_extensions)
+std::vector<std::string> merge_required_device_extensions(
+        bool with_swapchain,
+        const std::vector<std::string>& required_device_extensions)
 {
         return with_swapchain ? merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME) :
                                 required_device_extensions;
 }
 }
 
-VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance_extensions,
-                               const std::vector<std::string>& required_device_extensions,
-                               const std::vector<PhysicalDeviceFeatures>& required_features,
-                               const std::vector<PhysicalDeviceFeatures>& optional_features,
-                               const std::optional<std::function<VkSurfaceKHR(VkInstance)>>& create_surface)
-        : m_instance(create_instance(API_VERSION_MAJOR, API_VERSION_MINOR, required_instance_extensions,
-                                     string_vector(VALIDATION_LAYERS))),
-          m_callback(m_instance.validation_layers_enabled() ? std::make_optional(create_debug_report_callback(m_instance)) :
-                                                              std::nullopt),
+VulkanInstance::VulkanInstance(
+        const std::vector<std::string>& required_instance_extensions,
+        const std::vector<std::string>& required_device_extensions,
+        const std::vector<PhysicalDeviceFeatures>& required_features,
+        const std::vector<PhysicalDeviceFeatures>& optional_features,
+        const std::optional<std::function<VkSurfaceKHR(VkInstance)>>& create_surface)
+        : m_instance(create_instance(
+                  API_VERSION_MAJOR,
+                  API_VERSION_MINOR,
+                  required_instance_extensions,
+                  string_vector(VALIDATION_LAYERS))),
+          m_callback(
+                  m_instance.validation_layers_enabled() ?
+                          std::make_optional(create_debug_report_callback(m_instance)) :
+                          std::nullopt),
           m_surface(create_surface ? std::optional(SurfaceKHR(m_instance, *create_surface)) : std::nullopt),
           //
-          m_physical_device(
-                  find_physical_device(m_instance,
-                                       //
-                                       (create_surface ? static_cast<VkSurfaceKHR>(*m_surface) : VK_NULL_HANDLE),
-                                       //
-                                       API_VERSION_MAJOR, API_VERSION_MINOR,
-                                       //
-                                       merge_required_device_extensions(create_surface.has_value(), required_device_extensions),
-                                       //
-                                       required_features)),
+          m_physical_device(find_physical_device(
+                  m_instance,
+                  //
+                  (create_surface ? static_cast<VkSurfaceKHR>(*m_surface) : VK_NULL_HANDLE),
+                  //
+                  API_VERSION_MAJOR,
+                  API_VERSION_MINOR,
+                  //
+                  merge_required_device_extensions(create_surface.has_value(), required_device_extensions),
+                  //
+                  required_features)),
           //
-          m_graphics_compute_family_index(m_physical_device.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, 0)),
-          m_compute_family_index(m_physical_device.family_index(VK_QUEUE_COMPUTE_BIT, VK_QUEUE_GRAPHICS_BIT,
-                                                                VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)),
-          m_transfer_family_index(m_physical_device.family_index(VK_QUEUE_TRANSFER_BIT,
-                                                                 VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT,
-                                                                 // Наличие VK_QUEUE_GRAPHICS_BIT или VK_QUEUE_COMPUTE_BIT
-                                                                 // означает (возможно неявно) наличие VK_QUEUE_TRANSFER_BIT
-                                                                 VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)),
+          m_graphics_compute_family_index(
+                  m_physical_device.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, 0)),
+          m_compute_family_index(m_physical_device.family_index(
+                  VK_QUEUE_COMPUTE_BIT,
+                  VK_QUEUE_GRAPHICS_BIT,
+                  VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)),
+          m_transfer_family_index(m_physical_device.family_index(
+                  VK_QUEUE_TRANSFER_BIT,
+                  VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT,
+                  // Наличие VK_QUEUE_GRAPHICS_BIT или VK_QUEUE_COMPUTE_BIT
+                  // означает (возможно неявно) наличие VK_QUEUE_TRANSFER_BIT
+                  VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)),
           m_presentation_family_index(create_surface ? m_physical_device.presentation_family_index() : NO_FAMILY_INDEX),
           //
           m_device(m_physical_device.create_device(
-                  compute_queue_count({{m_graphics_compute_family_index, GRAPHICS_COMPUTE_QUEUE_COUNT},
-                                       {m_compute_family_index, COMPUTE_QUEUE_COUNT},
-                                       {m_transfer_family_index, TRANSFER_QUEUE_COUNT},
-                                       {m_presentation_family_index, PRESENTATION_QUEUE_COUNT}},
-                                      m_physical_device.queue_families()),
+                  compute_queue_count(
+                          {{m_graphics_compute_family_index, GRAPHICS_COMPUTE_QUEUE_COUNT},
+                           {m_compute_family_index, COMPUTE_QUEUE_COUNT},
+                           {m_transfer_family_index, TRANSFER_QUEUE_COUNT},
+                           {m_presentation_family_index, PRESENTATION_QUEUE_COUNT}},
+                          m_physical_device.queue_families()),
                   //
                   merge_required_device_extensions(create_surface.has_value(), required_device_extensions),
                   //

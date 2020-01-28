@@ -33,8 +33,13 @@ PointObjectParameters::PointObjectParameters(QWidget* parent) : QDialog(parent)
         setWindowTitle("Create Object");
 }
 
-bool PointObjectParameters::show(int dimension, const std::string& point_object_name, int default_point_count,
-                                 int min_point_count, int max_point_count, int* point_count)
+bool PointObjectParameters::show(
+        int dimension,
+        const std::string& point_object_name,
+        int default_point_count,
+        int min_point_count,
+        int max_point_count,
+        int* point_count)
 {
         if (!(dimension >= 2))
         {
@@ -82,7 +87,8 @@ void PointObjectParameters::done(int r)
         m_point_count = ui.spinBox_point_count->value();
         if (!(m_point_count >= 1 && m_point_count <= m_max_point_count))
         {
-                std::string msg = "Error point count. It must be in the range [1, " + to_string(m_max_point_count) + "].";
+                std::string msg =
+                        "Error point count. It must be in the range [1, " + to_string(m_max_point_count) + "].";
                 dialog::message_critical(this, msg);
                 return;
         }
@@ -93,10 +99,17 @@ void PointObjectParameters::done(int r)
 
 namespace dialog
 {
-bool point_object_parameters(QWidget* parent, int dimension, const std::string& point_object_name, int default_point_count,
-                             int min_point_count, int max_point_count, int* point_count)
+bool point_object_parameters(
+        QWidget* parent,
+        int dimension,
+        const std::string& point_object_name,
+        int default_point_count,
+        int min_point_count,
+        int max_point_count,
+        int* point_count)
 {
         QtObjectInDynamicMemory<point_object_parameters_implementation::PointObjectParameters> w(parent);
-        return w->show(dimension, point_object_name, default_point_count, min_point_count, max_point_count, point_count);
+        return w->show(
+                dimension, point_object_name, default_point_count, min_point_count, max_point_count, point_count);
 }
 }

@@ -125,8 +125,10 @@ void set_slider_to_middle(QSlider* slider)
         slider->setValue(slider->minimum() + (slider->maximum() - slider->minimum()) / 2);
 }
 
-void add_to_text_edit_and_to_stderr(QTextEdit* text_edit, const std::vector<std::string>& lines,
-                                    TextEditMessageType type) noexcept
+void add_to_text_edit_and_to_stderr(
+        QTextEdit* text_edit,
+        const std::vector<std::string>& lines,
+        TextEditMessageType type) noexcept
 {
         try
         {
@@ -136,8 +138,9 @@ void add_to_text_edit_and_to_stderr(QTextEdit* text_edit, const std::vector<std:
                 {
                         write_formatted_log_messages_to_stderr(lines);
 
-                        bool bottom = text_edit->verticalScrollBar()->value() == text_edit->verticalScrollBar()->maximum() ||
-                                      text_edit->verticalScrollBar()->maximum() == 0;
+                        bool bottom =
+                                text_edit->verticalScrollBar()->value() == text_edit->verticalScrollBar()->maximum() ||
+                                text_edit->verticalScrollBar()->maximum() == 0;
 
                         if (bottom)
                         {
@@ -214,8 +217,9 @@ void move_window_to_desktop_center(QMainWindow* window)
         ASSERT(window);
 
         // Из документации на move: the position on the desktop, including frame
-        window->move((QDesktopWidget().availableGeometry(window).width() - window->frameGeometry().width()) / 2,
-                     (QDesktopWidget().availableGeometry(window).height() - window->frameGeometry().height()) / 2);
+        window->move(
+                (QDesktopWidget().availableGeometry(window).width() - window->frameGeometry().width()) / 2,
+                (QDesktopWidget().availableGeometry(window).height() - window->frameGeometry().height()) / 2);
 }
 
 // Изменение размеров окна

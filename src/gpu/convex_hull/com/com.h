@@ -24,8 +24,14 @@ constexpr double CONVEX_HULL_ANGULAR_FREQUENCY = TWO_PI<double> * 5;
 
 int convex_hull_points_buffer_size(int height);
 
-int convex_hull_group_size_prepare(int width, unsigned max_group_size_x, unsigned max_group_invocations,
-                                   unsigned max_shared_memory_size);
-int convex_hull_group_size_merge(int height, unsigned max_group_size_x, unsigned max_group_invocations,
-                                 unsigned max_shared_memory_size);
+int convex_hull_group_size_prepare(
+        int width,
+        unsigned max_group_size_x,
+        unsigned max_group_invocations,
+        unsigned max_shared_memory_size);
+int convex_hull_group_size_merge(
+        int height,
+        unsigned max_group_size_x,
+        unsigned max_group_invocations,
+        unsigned max_shared_memory_size);
 int convex_hull_iteration_count_merge(int size);

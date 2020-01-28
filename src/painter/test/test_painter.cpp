@@ -116,7 +116,8 @@ template <size_t N, typename T>
 std::shared_ptr<const Mesh<N, T>> sphere_mesh(int point_count, int thread_count, ProgressRatio* progress)
 {
         LOG("Creating mesh...");
-        std::shared_ptr<const Mesh<N, T>> mesh = simplex_mesh_of_random_sphere<N, T>(point_count, thread_count, progress);
+        std::shared_ptr<const Mesh<N, T>> mesh =
+                simplex_mesh_of_random_sphere<N, T>(point_count, thread_count, progress);
 
         return mesh;
 }
@@ -130,13 +131,17 @@ std::shared_ptr<const Mesh<N, T>> file_mesh(const std::string& file_name, int th
         std::unique_ptr<const Obj<N>> obj = load_obj_from_file<N>(file_name, progress);
 
         LOG("Creating mesh...");
-        std::shared_ptr<const Mesh<N, T>> mesh = std::make_shared<const Mesh<N, T>>(obj.get(), matrix, thread_count, progress);
+        std::shared_ptr<const Mesh<N, T>> mesh =
+                std::make_shared<const Mesh<N, T>>(obj.get(), matrix, thread_count, progress);
 
         return mesh;
 }
 
 template <size_t N, typename T>
-void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
+void test_painter_file(
+        int samples_per_pixel,
+        int thread_count,
+        std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
 {
         constexpr int paint_height = 2;
         constexpr int max_pass_count = 1;
@@ -160,7 +165,10 @@ void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<
 }
 
 template <size_t N, typename T>
-void test_painter_window(int samples_per_pixel, int thread_count, std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
+void test_painter_window(
+        int samples_per_pixel,
+        int thread_count,
+        std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
 {
         constexpr bool smooth_normal = true;
 
@@ -170,8 +178,8 @@ void test_painter_window(int samples_per_pixel, int thread_count, std::unique_pt
 
         std::string window_title = "Path Tracing In " + to_upper_first_letters(space_name(N));
 
-        create_and_show_delete_on_close_window<PainterWindow<N, T>>(window_title, thread_count, samples_per_pixel, smooth_normal,
-                                                                    std::move(paint_objects));
+        create_and_show_delete_on_close_window<PainterWindow<N, T>>(
+                window_title, thread_count, samples_per_pixel, smooth_normal, std::move(paint_objects));
 }
 
 enum class PainterTestOutputType
@@ -181,8 +189,12 @@ enum class PainterTestOutputType
 };
 
 template <PainterTestOutputType type, size_t N, typename T>
-void test_painter(const std::shared_ptr<const Mesh<N, T>>& mesh, int min_screen_size, int max_screen_size, int samples_per_pixel,
-                  int thread_count)
+void test_painter(
+        const std::shared_ptr<const Mesh<N, T>>& mesh,
+        int min_screen_size,
+        int max_screen_size,
+        int samples_per_pixel,
+        int thread_count)
 {
         Color::DataType diffuse = 1;
 

@@ -30,8 +30,11 @@ int convex_hull_points_buffer_size(int height)
         return (2 * height + 1) * (2 * sizeof(int32_t));
 }
 
-int convex_hull_group_size_prepare(int width, unsigned max_group_size_x, unsigned max_group_invocations,
-                                   unsigned max_shared_memory_size)
+int convex_hull_group_size_prepare(
+        int width,
+        unsigned max_group_size_x,
+        unsigned max_group_invocations,
+        unsigned max_shared_memory_size)
 {
         unsigned shared_size_per_thread = 2 * sizeof(int32_t); // GLSL ivec2
 
@@ -47,8 +50,11 @@ int convex_hull_group_size_prepare(int width, unsigned max_group_size_x, unsigne
         return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
 }
 
-int convex_hull_group_size_merge(int height, unsigned max_group_size_x, unsigned max_group_invocations,
-                                 unsigned max_shared_memory_size)
+int convex_hull_group_size_merge(
+        int height,
+        unsigned max_group_size_x,
+        unsigned max_group_invocations,
+        unsigned max_shared_memory_size)
 {
         static_assert(sizeof(float) == 4);
 

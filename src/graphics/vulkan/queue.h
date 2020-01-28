@@ -23,11 +23,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace vulkan
 {
 template <size_t N>
-void queue_submit(const std::array<VkSemaphore, N>& wait_semaphores, const std::array<VkPipelineStageFlags, N>& wait_stages,
-                  VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, VkQueue queue);
+void queue_submit(
+        const std::array<VkSemaphore, N>& wait_semaphores,
+        const std::array<VkPipelineStageFlags, N>& wait_stages,
+        VkCommandBuffer command_buffer,
+        VkSemaphore signal_semaphore,
+        VkQueue queue);
 
-void queue_submit(VkSemaphore wait_semaphore, VkPipelineStageFlags wait_stage, VkCommandBuffer command_buffer,
-                  VkSemaphore signal_semaphore, VkQueue queue);
+void queue_submit(
+        VkSemaphore wait_semaphore,
+        VkPipelineStageFlags wait_stage,
+        VkCommandBuffer command_buffer,
+        VkSemaphore signal_semaphore,
+        VkQueue queue);
 
 void queue_submit(VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, VkQueue queue);
 

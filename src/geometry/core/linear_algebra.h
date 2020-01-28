@@ -35,9 +35,10 @@ template <size_t N>
 inline constexpr std::array<unsigned char, N> sequence_array = make_array_sequence<unsigned char, N>();
 
 template <size_t N_V, size_t N_H, typename T, size_t DET_SIZE>
-constexpr T determinant_by_cofactor_expansion(const std::array<Vector<N_H, T>, N_V>& vectors,
-                                              const std::array<unsigned char, DET_SIZE>& v_map,
-                                              const std::array<unsigned char, DET_SIZE>& h_map)
+constexpr T determinant_by_cofactor_expansion(
+        const std::array<Vector<N_H, T>, N_V>& vectors,
+        const std::array<unsigned char, DET_SIZE>& v_map,
+        const std::array<unsigned char, DET_SIZE>& h_map)
 {
         static_assert(N_V >= DET_SIZE);
         static_assert(N_H >= DET_SIZE);
@@ -105,8 +106,10 @@ constexpr T determinant_by_cofactor_expansion(const std::array<Vector<N_H, T>, N
 }
 
 template <size_t N_V, size_t N_H, typename T, size_t DET_SIZE>
-constexpr T determinant(const std::array<Vector<N_H, T>, N_V>& vectors, const std::array<unsigned char, DET_SIZE>& v_map,
-                        const std::array<unsigned char, DET_SIZE>& h_map)
+constexpr T determinant(
+        const std::array<Vector<N_H, T>, N_V>& vectors,
+        const std::array<unsigned char, DET_SIZE>& v_map,
+        const std::array<unsigned char, DET_SIZE>& h_map)
 {
         return determinant_by_cofactor_expansion(vectors, v_map, h_map);
 }
@@ -326,8 +329,12 @@ Vector<N, CalculationType> ortho_nn(const std::vector<Vector<N, T>>& points, con
 // Единичный вектор e1 из ортогонального дополнения (n-1)-мерного пространства, определяемого n-1 точками и ещё одной точкой.
 // Единичный вектор e2 из ортогонального дополнения (n-1)-мерного пространства, определяемого n-1 точками и вектором e1.
 template <size_t N, typename T, typename CalculationType>
-void ortho_e0_e1(const std::vector<Vector<N, T>>& points, const std::array<int, N - 1>& indices, int point,
-                 Vector<N, CalculationType>* e1, Vector<N, CalculationType>* e2)
+void ortho_e0_e1(
+        const std::vector<Vector<N, T>>& points,
+        const std::array<int, N - 1>& indices,
+        int point,
+        Vector<N, CalculationType>* e1,
+        Vector<N, CalculationType>* e2)
 {
         static_assert(N > 1);
 

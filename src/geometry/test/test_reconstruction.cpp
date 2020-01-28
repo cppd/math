@@ -85,9 +85,12 @@ constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
 }
 
 template <size_t N>
-void test_obj_files(const std::string& name, const std::vector<Vector<N, float>>& points,
-                    const std::vector<Vector<N, double>>& normals, const std::vector<std::array<int, N>>& facets,
-                    ProgressRatio* progress)
+void test_obj_files(
+        const std::string& name,
+        const std::vector<Vector<N, float>>& points,
+        const std::vector<Vector<N, double>>& normals,
+        const std::vector<std::array<int, N>>& facets,
+        ProgressRatio* progress)
 {
         static_assert(N >= 3);
 
@@ -121,13 +124,20 @@ void test_obj_files(const std::string& name, const std::vector<Vector<N, float>>
 }
 
 // Файлы OBJ не поддерживают двухмерные объекты
-void test_obj_files(const std::string&, const std::vector<Vector<2, float>>&, const std::vector<Vector<2, double>>&,
-                    const std::vector<std::array<int, 2>>&, ProgressRatio*)
+void test_obj_files(
+        const std::string&,
+        const std::vector<Vector<2, float>>&,
+        const std::vector<Vector<2, double>>&,
+        const std::vector<std::array<int, 2>>&,
+        ProgressRatio*)
 {
 }
 
 template <size_t N>
-std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& points, unsigned new_object_count, float shift)
+std::vector<Vector<N, float>> clone_object(
+        const std::vector<Vector<N, float>>& points,
+        unsigned new_object_count,
+        float shift)
 {
         ASSERT(new_object_count > 1 && new_object_count <= (1 << N));
 
@@ -156,9 +166,17 @@ std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& 
 }
 
 template <size_t N>
-void test_algorithms(const std::string& name, const std::unordered_set<Algorithms>& algorithms, double rho, double alpha,
-                     const std::vector<Vector<N, float>>& points, unsigned expected_facets_min, unsigned expected_facets_max,
-                     unsigned expected_bound_facets_min, unsigned expected_bound_facets_max, ProgressRatio* progress)
+void test_algorithms(
+        const std::string& name,
+        const std::unordered_set<Algorithms>& algorithms,
+        double rho,
+        double alpha,
+        const std::vector<Vector<N, float>>& points,
+        unsigned expected_facets_min,
+        unsigned expected_facets_max,
+        unsigned expected_bound_facets_min,
+        unsigned expected_bound_facets_max,
+        ProgressRatio* progress)
 {
         ASSERT(points.size() > N);
         ASSERT(expected_facets_min > 0 && expected_facets_max > 0 && expected_bound_facets_min > 0 &&
@@ -188,7 +206,8 @@ void test_algorithms(const std::string& name, const std::unordered_set<Algorithm
                 LOG("Cocone facet count: " + to_string(facets.size()));
                 if (!(expected_facets_min <= facets.size() && facets.size() <= expected_facets_max))
                 {
-                        error("Error facet count: expected " + facet_count_str + ", Cocone computed " + to_string(facets.size()));
+                        error("Error facet count: expected " + facet_count_str + ", Cocone computed " +
+                              to_string(facets.size()));
                 }
 
                 test_obj_files(name + ", Cocone", points, normals, facets, progress);
@@ -200,10 +219,10 @@ void test_algorithms(const std::string& name, const std::unordered_set<Algorithm
                 std::vector<Vector<N, double>> normals(10000);
                 std::vector<std::array<int, N>> facets(10000);
 
-                std::string bound_facet_count_str =
-                        (expected_bound_facets_min == expected_bound_facets_max) ?
-                                to_string(expected_bound_facets_min) :
-                                "[" + to_string(expected_bound_facets_min) + ", " + to_string(expected_bound_facets_max) + "]";
+                std::string bound_facet_count_str = (expected_bound_facets_min == expected_bound_facets_max) ?
+                                                            to_string(expected_bound_facets_min) :
+                                                            "[" + to_string(expected_bound_facets_min) + ", " +
+                                                                    to_string(expected_bound_facets_max) + "]";
 
                 LOG("Expected bound facet count: " + bound_facet_count_str);
 
@@ -224,8 +243,11 @@ void test_algorithms(const std::string& name, const std::unordered_set<Algorithm
 }
 
 template <size_t N>
-void all_tests(const std::string& name, const std::unordered_set<Algorithms>& algorithms, std::vector<Vector<N, float>>&& points,
-               ProgressRatio* progress)
+void all_tests(
+        const std::string& name,
+        const std::unordered_set<Algorithms>& algorithms,
+        std::vector<Vector<N, float>>&& points,
+        ProgressRatio* progress)
 {
         static_assert(2 <= N && N <= 4);
 
@@ -244,8 +266,9 @@ void all_tests(const std::string& name, const std::unordered_set<Algorithms>& al
 
         LOG("------- " + space_name(N) + ", 1 object -------");
 
-        test_algorithms(name + ", 1 object", algorithms, RHO, ALPHA, points, facets_min, facets_max, bound_facets_min,
-                        bound_facets_max, progress);
+        test_algorithms(
+                name + ", 1 object", algorithms, RHO, ALPHA, points, facets_min, facets_max, bound_facets_min,
+                bound_facets_max, progress);
 
         LOG("");
 
@@ -263,8 +286,9 @@ void all_tests(const std::string& name, const std::unordered_set<Algorithms>& al
         bound_facets_min *= all_object_count;
         bound_facets_max *= all_object_count;
 
-        test_algorithms(name + ", " + to_string(all_object_count) + " objects", algorithms, RHO, ALPHA, points, facets_min,
-                        facets_max, bound_facets_min, bound_facets_max, progress);
+        test_algorithms(
+                name + ", " + to_string(all_object_count) + " objects", algorithms, RHO, ALPHA, points, facets_min,
+                facets_max, bound_facets_min, bound_facets_max, progress);
 }
 
 template <size_t N>
@@ -275,14 +299,16 @@ void test(int low, int high, ProgressRatio* progress)
         int point_count = std::uniform_int_distribution<int>(low, high)(engine);
 
         LOG("\n--- Unbound " + to_string(N - 1) + "-manifold reconstructions in " + space_name(N) + " ---\n");
-        all_tests<N>(space_name(N) + ", unbounded " + to_string(N - 1) + "-manifold",
-                     std::unordered_set<Algorithms>{Algorithms::Cocone, Algorithms::BoundCocone},
-                     create_object_repository<N>()->sphere_with_notch(point_count), progress);
+        all_tests<N>(
+                space_name(N) + ", unbounded " + to_string(N - 1) + "-manifold",
+                std::unordered_set<Algorithms>{Algorithms::Cocone, Algorithms::BoundCocone},
+                create_object_repository<N>()->sphere_with_notch(point_count), progress);
 
         LOG("\n--- Bound " + to_string(N - 1) + "-manifold reconstructions in " + space_name(N) + " ---\n");
-        all_tests<N>(space_name(N) + ", bounded " + to_string(N - 1) + "-manifold",
-                     std::unordered_set<Algorithms>{Algorithms::BoundCocone},
-                     create_object_repository<N>()->sphere_with_notch_bound(point_count), progress);
+        all_tests<N>(
+                space_name(N) + ", bounded " + to_string(N - 1) + "-manifold",
+                std::unordered_set<Algorithms>{Algorithms::BoundCocone},
+                create_object_repository<N>()->sphere_with_notch_bound(point_count), progress);
 }
 }
 

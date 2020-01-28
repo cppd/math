@@ -26,10 +26,11 @@ namespace vulkan
 {
 namespace
 {
-void pipeline_shader_stage_create_info(const std::vector<const Shader*>& shaders,
-                                       const std::vector<const SpecializationConstant*>& constants,
-                                       std::vector<VkPipelineShaderStageCreateInfo>* create_info,
-                                       std::vector<std::unique_ptr<VkSpecializationInfo>>* specialization_info)
+void pipeline_shader_stage_create_info(
+        const std::vector<const Shader*>& shaders,
+        const std::vector<const SpecializationConstant*>& constants,
+        std::vector<VkPipelineShaderStageCreateInfo>* create_info,
+        std::vector<std::unique_ptr<VkSpecializationInfo>>* specialization_info)
 {
         ASSERT(shaders.size() == constants.size());
 
@@ -68,8 +69,8 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
 {
         std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_info;
         std::vector<std::unique_ptr<VkSpecializationInfo>> specialization_info;
-        pipeline_shader_stage_create_info(*info.shaders.value(), *info.constants.value(), &pipeline_shader_stage_info,
-                                          &specialization_info);
+        pipeline_shader_stage_create_info(
+                *info.shaders.value(), *info.constants.value(), &pipeline_shader_stage_info, &specialization_info);
 
         VkPipelineVertexInputStateCreateInfo vertex_input_state_info = {};
         vertex_input_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -151,8 +152,8 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
         // multisampling_state_info.alphaToOneEnable = VK_FALSE;
 
         VkPipelineColorBlendAttachmentState color_blend_attachment_state = {};
-        color_blend_attachment_state.colorWriteMask =
-                VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        color_blend_attachment_state.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+                                                      VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         if (!info.color_blend.value())
         {
                 color_blend_attachment_state.blendEnable = VK_FALSE;
@@ -241,10 +242,11 @@ Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
         ASSERT(!info.constants.has_value() || !info.constants.value()->entries().empty());
 
         ASSERT(!info.constants.has_value() ||
-               std::all_of(info.constants.value()->entries().cbegin(), info.constants.value()->entries().cend(),
-                           [&](const VkSpecializationMapEntry& entry) {
-                                   return entry.offset + entry.size <= info.constants.value()->size();
-                           }));
+               std::all_of(
+                       info.constants.value()->entries().cbegin(), info.constants.value()->entries().cend(),
+                       [&](const VkSpecializationMapEntry& entry) {
+                               return entry.offset + entry.size <= info.constants.value()->size();
+                       }));
 
         VkSpecializationInfo specialization_info;
         VkPipelineShaderStageCreateInfo stage_info = {};

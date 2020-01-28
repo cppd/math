@@ -116,26 +116,48 @@ class MainObjectsImpl
 
         void build_mst(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list);
         void build_mesh(ProgressRatioList* progress_list, ObjectId id, const Obj<N>& obj);
-        void add_object_and_build_mesh(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                                       ObjectType object_type, const std::shared_ptr<const Obj<N>>& obj);
-        void add_object_convex_hull_and_build_mesh(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                                                   ObjectType object_type, const std::shared_ptr<const Obj<N>>& obj);
-        void object_and_mesh(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                             ObjectType object_type, const std::shared_ptr<const Obj<N>>& obj);
-        void manifold_constructor(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list, double rho,
-                                  double alpha);
+        void add_object_and_build_mesh(
+                const std::unordered_set<ObjectId>& objects,
+                ProgressRatioList* progress_list,
+                ObjectType object_type,
+                const std::shared_ptr<const Obj<N>>& obj);
+        void add_object_convex_hull_and_build_mesh(
+                const std::unordered_set<ObjectId>& objects,
+                ProgressRatioList* progress_list,
+                ObjectType object_type,
+                const std::shared_ptr<const Obj<N>>& obj);
+        void object_and_mesh(
+                const std::unordered_set<ObjectId>& objects,
+                ProgressRatioList* progress_list,
+                ObjectType object_type,
+                const std::shared_ptr<const Obj<N>>& obj);
+        void manifold_constructor(
+                const std::unordered_set<ObjectId>& objects,
+                ProgressRatioList* progress_list,
+                double rho,
+                double alpha);
         void cocone(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list);
-        void bound_cocone(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list, double rho,
-                          double alpha);
+        void bound_cocone(
+                const std::unordered_set<ObjectId>& objects,
+                ProgressRatioList* progress_list,
+                double rho,
+                double alpha);
 
         template <typename ObjectLoaded>
-        void load_object(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                         const std::string& object_name, const std::shared_ptr<const Obj<N>>& obj, double rho, double alpha,
-                         const ObjectLoaded& object_loaded);
+        void load_object(
+                const std::unordered_set<ObjectId>& objects,
+                ProgressRatioList* progress_list,
+                const std::string& object_name,
+                const std::shared_ptr<const Obj<N>>& obj,
+                double rho,
+                double alpha,
+                const ObjectLoaded& object_loaded);
 
 public:
-        MainObjectsImpl(int mesh_threads, const ObjectsCallback& event_emitter,
-                        const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler);
+        MainObjectsImpl(
+                int mesh_threads,
+                const ObjectsCallback& event_emitter,
+                const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler);
 
         void clear_all_data();
 
@@ -147,26 +169,43 @@ public:
         bool object_exists(ObjectId id) const;
         bool mesh_exists(ObjectId id) const;
 
-        void compute_bound_cocone(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list, double rho,
-                                  double alpha);
+        void compute_bound_cocone(
+                const std::unordered_set<ObjectId>& objects,
+                ProgressRatioList* progress_list,
+                double rho,
+                double alpha);
 
         template <typename ObjectLoaded>
-        void load_from_file(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                            const std::string& file_name, double rho, double alpha, const ObjectLoaded& object_loaded);
+        void load_from_file(
+                const std::unordered_set<ObjectId>& objects,
+                ProgressRatioList* progress_list,
+                const std::string& file_name,
+                double rho,
+                double alpha,
+                const ObjectLoaded& object_loaded);
 
         template <typename ObjectLoaded>
-        void load_from_repository(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                                  const std::string& object_name, double rho, double alpha, int point_count,
-                                  const ObjectLoaded& object_loaded);
+        void load_from_repository(
+                const std::unordered_set<ObjectId>& objects,
+                ProgressRatioList* progress_list,
+                const std::string& object_name,
+                double rho,
+                double alpha,
+                int point_count,
+                const ObjectLoaded& object_loaded);
 
         void save_to_file(ObjectId id, const std::string& file_name, const std::string& name) const;
-        void paint(ObjectId id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
-                   const PaintingInformationAll& info_all) const;
+        void paint(
+                ObjectId id,
+                const PaintingInformation3d& info_3d,
+                const PaintingInformationNd& info_nd,
+                const PaintingInformationAll& info_all) const;
 };
 
 template <size_t N>
 MainObjectsImpl<N>::MainObjectsImpl(
-        int mesh_threads, const ObjectsCallback& event_emitter,
+        int mesh_threads,
+        const ObjectsCallback& event_emitter,
         const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
         : m_mesh_threads(mesh_threads),
           m_event_emitter(event_emitter),
@@ -280,14 +319,18 @@ void MainObjectsImpl<N>::build_mesh(ProgressRatioList* progress_list, ObjectId i
 
         ProgressRatio progress(progress_list);
 
-        m_meshes.set(id, std::make_shared<const Mesh<N, double>>(&obj, m_model_vertex_matrix, m_mesh_threads, &progress));
+        m_meshes.set(
+                id, std::make_shared<const Mesh<N, double>>(&obj, m_model_vertex_matrix, m_mesh_threads, &progress));
 
         m_event_emitter.mesh_loaded(id);
 }
 
 template <size_t N>
-void MainObjectsImpl<N>::add_object_and_build_mesh(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                                                   ObjectType object_type, const std::shared_ptr<const Obj<N>>& obj)
+void MainObjectsImpl<N>::add_object_and_build_mesh(
+        const std::unordered_set<ObjectId>& objects,
+        ProgressRatioList* progress_list,
+        ObjectType object_type,
+        const std::shared_ptr<const Obj<N>>& obj)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -314,9 +357,11 @@ void MainObjectsImpl<N>::add_object_and_build_mesh(const std::unordered_set<Obje
 }
 
 template <size_t N>
-void MainObjectsImpl<N>::add_object_convex_hull_and_build_mesh(const std::unordered_set<ObjectId>& objects,
-                                                               ProgressRatioList* progress_list, ObjectType object_type,
-                                                               const std::shared_ptr<const Obj<N>>& obj)
+void MainObjectsImpl<N>::add_object_convex_hull_and_build_mesh(
+        const std::unordered_set<ObjectId>& objects,
+        ProgressRatioList* progress_list,
+        ObjectType object_type,
+        const std::shared_ptr<const Obj<N>>& obj)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -357,8 +402,11 @@ void MainObjectsImpl<N>::add_object_convex_hull_and_build_mesh(const std::unorde
 }
 
 template <size_t N>
-void MainObjectsImpl<N>::object_and_mesh(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                                         ObjectType object_type, const std::shared_ptr<const Obj<N>>& obj)
+void MainObjectsImpl<N>::object_and_mesh(
+        const std::unordered_set<ObjectId>& objects,
+        ProgressRatioList* progress_list,
+        ObjectType object_type,
+        const std::shared_ptr<const Obj<N>>& obj)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -411,15 +459,19 @@ void MainObjectsImpl<N>::cocone(const std::unordered_set<ObjectId>& objects, Pro
 
                 obj_cocone = create_obj_for_facets(m_manifold_points, normals, facets);
 
-                LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+                LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) +
+                    " s");
         }
 
         object_and_mesh(objects, progress_list, ObjectType::Cocone, obj_cocone);
 }
 
 template <size_t N>
-void MainObjectsImpl<N>::bound_cocone(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list, double rho,
-                                      double alpha)
+void MainObjectsImpl<N>::bound_cocone(
+        const std::unordered_set<ObjectId>& objects,
+        ProgressRatioList* progress_list,
+        double rho,
+        double alpha)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -450,7 +502,8 @@ void MainObjectsImpl<N>::bound_cocone(const std::unordered_set<ObjectId>& object
                 m_bound_cocone_rho = rho;
                 m_bound_cocone_alpha = alpha;
 
-                LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+                LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) +
+                    " s");
         }
 
         if constexpr (N == 3)
@@ -489,7 +542,8 @@ void MainObjectsImpl<N>::build_mst(const std::unordered_set<ObjectId>& objects, 
         {
                 ProgressRatio progress(progress_list);
 
-                mst_lines = minimum_spanning_tree(m_manifold_points, m_manifold_constructor->delaunay_objects(), &progress);
+                mst_lines =
+                        minimum_spanning_tree(m_manifold_points, m_manifold_constructor->delaunay_objects(), &progress);
         }
 
         std::shared_ptr<const Obj<N>> mst_obj = create_obj_for_lines(m_manifold_points, mst_lines);
@@ -508,8 +562,11 @@ void MainObjectsImpl<N>::build_mst(const std::unordered_set<ObjectId>& objects, 
 }
 
 template <size_t N>
-void MainObjectsImpl<N>::manifold_constructor(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                                              double rho, double alpha)
+void MainObjectsImpl<N>::manifold_constructor(
+        const std::unordered_set<ObjectId>& objects,
+        ProgressRatioList* progress_list,
+        double rho,
+        double alpha)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -527,7 +584,8 @@ void MainObjectsImpl<N>::manifold_constructor(const std::unordered_set<ObjectId>
 
                 m_manifold_constructor = create_manifold_constructor(m_manifold_points, &progress);
 
-                LOG("Manifold reconstruction first phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+                LOG("Manifold reconstruction first phase, " + to_string_fixed(time_in_seconds() - start_time, 5) +
+                    " s");
         }
 
         std::thread thread_cocone([&]() {
@@ -577,9 +635,14 @@ void MainObjectsImpl<N>::clear_all_data()
 
 template <size_t N>
 template <typename ObjectLoaded>
-void MainObjectsImpl<N>::load_object(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                                     const std::string& object_name, const std::shared_ptr<const Obj<N>>& obj, double rho,
-                                     double alpha, const ObjectLoaded& object_loaded)
+void MainObjectsImpl<N>::load_object(
+        const std::unordered_set<ObjectId>& objects,
+        ProgressRatioList* progress_list,
+        const std::string& object_name,
+        const std::shared_ptr<const Obj<N>>& obj,
+        double rho,
+        double alpha,
+        const ObjectLoaded& object_loaded)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -599,7 +662,8 @@ void MainObjectsImpl<N>::load_object(const std::unordered_set<ObjectId>& objects
 
         m_event_emitter.file_loaded(object_name, N, objects);
 
-        m_manifold_points = !obj->facets().empty() ? unique_facet_vertices(obj.get()) : unique_point_vertices(obj.get());
+        m_manifold_points =
+                !obj->facets().empty() ? unique_facet_vertices(obj.get()) : unique_point_vertices(obj.get());
 
         if constexpr (N == 3)
         {
@@ -631,16 +695,24 @@ void MainObjectsImpl<N>::load_object(const std::unordered_set<ObjectId>& objects
 }
 
 template <size_t N>
-void MainObjectsImpl<N>::compute_bound_cocone(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                                              double rho, double alpha)
+void MainObjectsImpl<N>::compute_bound_cocone(
+        const std::unordered_set<ObjectId>& objects,
+        ProgressRatioList* progress_list,
+        double rho,
+        double alpha)
 {
         bound_cocone(objects, progress_list, rho, alpha);
 }
 
 template <size_t N>
 template <typename ObjectLoaded>
-void MainObjectsImpl<N>::load_from_file(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                                        const std::string& file_name, double rho, double alpha, const ObjectLoaded& object_loaded)
+void MainObjectsImpl<N>::load_from_file(
+        const std::unordered_set<ObjectId>& objects,
+        ProgressRatioList* progress_list,
+        const std::string& file_name,
+        double rho,
+        double alpha,
+        const ObjectLoaded& object_loaded)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -658,9 +730,14 @@ void MainObjectsImpl<N>::load_from_file(const std::unordered_set<ObjectId>& obje
 
 template <size_t N>
 template <typename ObjectLoaded>
-void MainObjectsImpl<N>::load_from_repository(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                                              const std::string& object_name, double rho, double alpha, int point_count,
-                                              const ObjectLoaded& object_loaded)
+void MainObjectsImpl<N>::load_from_repository(
+        const std::unordered_set<ObjectId>& objects,
+        ProgressRatioList* progress_list,
+        const std::string& object_name,
+        double rho,
+        double alpha,
+        int point_count,
+        const ObjectLoaded& object_loaded)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -693,8 +770,11 @@ void MainObjectsImpl<N>::save_to_file(ObjectId id, const std::string& file_name,
 }
 
 template <size_t N>
-void MainObjectsImpl<N>::paint(ObjectId id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
-                               const PaintingInformationAll& info_all) const
+void MainObjectsImpl<N>::paint(
+        ObjectId id,
+        const PaintingInformation3d& info_3d,
+        const PaintingInformationNd& info_nd,
+        const PaintingInformationAll& info_all) const
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -757,8 +837,8 @@ class MainObjectStorage final : public MainObjects
         {
                 if (dimension < Min || dimension > Max)
                 {
-                        error("Error repository object dimension " + to_string(dimension) + ", min = " + to_string(Min) +
-                              ", max = " + to_string(Max));
+                        error("Error repository object dimension " + to_string(dimension) +
+                              ", min = " + to_string(Min) + ", max = " + to_string(Max));
                 }
         }
 
@@ -768,7 +848,8 @@ class MainObjectStorage final : public MainObjects
 
                 for (const auto& p : m_objects)
                 {
-                        visit([&](const auto& v) { names.emplace_back(p.first, v.repository_point_object_names()); }, p.second);
+                        visit([&](const auto& v) { names.emplace_back(p.first, v.repository_point_object_names()); },
+                              p.second);
                 }
 
                 return names;
@@ -824,8 +905,11 @@ class MainObjectStorage final : public MainObjects
                 return count > 0;
         }
 
-        void compute_bound_cocone(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list, double rho,
-                                  double alpha) override
+        void compute_bound_cocone(
+                const std::unordered_set<ObjectId>& objects,
+                ProgressRatioList* progress_list,
+                double rho,
+                double alpha) override
         {
                 if (!manifold_constructor_exists())
                 {
@@ -853,8 +937,12 @@ class MainObjectStorage final : public MainObjects
                 }
         }
 
-        void load_from_file(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                            const std::string& file_name, double rho, double alpha) override
+        void load_from_file(
+                const std::unordered_set<ObjectId>& objects,
+                ProgressRatioList* progress_list,
+                const std::string& file_name,
+                double rho,
+                double alpha) override
         {
                 int dimension = std::get<0>(obj_file_dimension_and_type(file_name));
 
@@ -867,8 +955,14 @@ class MainObjectStorage final : public MainObjects
                       repository);
         }
 
-        void load_from_repository(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list, int dimension,
-                                  const std::string& object_name, double rho, double alpha, int point_count) override
+        void load_from_repository(
+                const std::unordered_set<ObjectId>& objects,
+                ProgressRatioList* progress_list,
+                int dimension,
+                const std::string& object_name,
+                double rho,
+                double alpha,
+                int point_count) override
         {
                 check_dimension(dimension);
 
@@ -877,8 +971,8 @@ class MainObjectStorage final : public MainObjects
                 auto clear_function = [&]() { clear_all_data(); };
                 visit(
                         [&](auto& v) {
-                                v.load_from_repository(objects, progress_list, object_name, rho, alpha, point_count,
-                                                       clear_function);
+                                v.load_from_repository(
+                                        objects, progress_list, object_name, rho, alpha, point_count, clear_function);
                         },
                         repository);
         }
@@ -911,8 +1005,11 @@ class MainObjectStorage final : public MainObjects
                 }
         }
 
-        void paint(ObjectId id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
-                   const PaintingInformationAll& info_all) const override
+        void paint(
+                ObjectId id,
+                const PaintingInformation3d& info_3d,
+                const PaintingInformationNd& info_nd,
+                const PaintingInformationAll& info_all) const override
         {
                 if (!mesh_exists(id))
                 {
@@ -966,15 +1063,18 @@ class MainObjectStorage final : public MainObjects
         }
 
         template <size_t... I>
-        void init_map(int mesh_threads, const ObjectsCallback& event_emitter,
-                      const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler,
-                      std::integer_sequence<size_t, I...>&&)
+        void init_map(
+                int mesh_threads,
+                const ObjectsCallback& event_emitter,
+                const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler,
+                std::integer_sequence<size_t, I...>&&)
         {
                 static_assert(((I >= 0 && I < sizeof...(I)) && ...));
                 static_assert(Min + sizeof...(I) == Max + 1);
 
-                (m_objects.try_emplace(Min + I, std::in_place_type_t<MainObjectsImpl<Min + I>>(), mesh_threads, event_emitter,
-                                       exception_handler),
+                (m_objects.try_emplace(
+                         Min + I, std::in_place_type_t<MainObjectsImpl<Min + I>>(), mesh_threads, event_emitter,
+                         exception_handler),
                  ...);
 
                 ASSERT((m_objects.count(Min + I) == 1) && ...);
@@ -982,16 +1082,20 @@ class MainObjectStorage final : public MainObjects
         }
 
 public:
-        MainObjectStorage(int mesh_threads, const ObjectsCallback& event_emitter,
-                          const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
+        MainObjectStorage(
+                int mesh_threads,
+                const ObjectsCallback& event_emitter,
+                const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
         {
                 init_map(mesh_threads, event_emitter, exception_handler, std::make_integer_sequence<size_t, Count>());
         }
 };
 
 std::unique_ptr<MainObjects> create_main_objects(
-        int mesh_threads, const ObjectsCallback& event_emitter,
+        int mesh_threads,
+        const ObjectsCallback& event_emitter,
         const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
 {
-        return std::make_unique<MainObjectStorage<MinDimension, MaxDimension>>(mesh_threads, event_emitter, exception_handler);
+        return std::make_unique<MainObjectStorage<MinDimension, MaxDimension>>(
+                mesh_threads, event_emitter, exception_handler);
 }

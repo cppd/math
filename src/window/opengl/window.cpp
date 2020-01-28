@@ -59,9 +59,18 @@ void init_opengl_functions()
 }
 #endif
 
-void create_window_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions, int depth_bits,
-                       int antialiasing_level, int stencil_bits, int red_bits, int green_bits, int blue_bits, int alpha_bits,
-                       sf::Window* window)
+void create_window_1x1(
+        int major_gl_version,
+        int minor_gl_version,
+        const std::vector<std::string>& extensions,
+        int depth_bits,
+        int antialiasing_level,
+        int stencil_bits,
+        int red_bits,
+        int green_bits,
+        int blue_bits,
+        int alpha_bits,
+        sf::Window* window)
 {
         sf::ContextSettings cs;
         cs.majorVersion = major_gl_version;
@@ -87,8 +96,10 @@ void create_window_1x1(int major_gl_version, int minor_gl_version, const std::ve
         LOG("\n-----OpenGL Window-----\n" + opengl::overview());
 }
 
-std::unique_ptr<sf::Context> create_context_1x1(int major_gl_version, int minor_gl_version,
-                                                const std::vector<std::string>& extensions)
+std::unique_ptr<sf::Context> create_context_1x1(
+        int major_gl_version,
+        int minor_gl_version,
+        const std::vector<std::string>& extensions)
 {
         sf::ContextSettings cs;
         cs.majorVersion = major_gl_version;
@@ -211,9 +222,10 @@ public:
                 }
 #endif
 
-                create_window_1x1(opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR,
-                                  string_vector(opengl::REQUIRED_EXTENSIONS), ANTIALIASING_LEVEL, DEPTH_BITS, STENCIL_BITS,
-                                  RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS, &m_window);
+                create_window_1x1(
+                        opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR,
+                        string_vector(opengl::REQUIRED_EXTENSIONS), ANTIALIASING_LEVEL, DEPTH_BITS, STENCIL_BITS,
+                        RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS, &m_window);
         }
 
         ~Impl() override
@@ -247,8 +259,10 @@ class Context::Impl
 
 public:
         Impl()
-                : m_context(create_context_1x1(opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR,
-                                               string_vector(opengl::REQUIRED_EXTENSIONS)))
+                : m_context(create_context_1x1(
+                          opengl::API_VERSION_MAJOR,
+                          opengl::API_VERSION_MINOR,
+                          string_vector(opengl::REQUIRED_EXTENSIONS)))
         {
         }
 };

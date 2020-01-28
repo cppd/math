@@ -60,8 +60,13 @@ class DftProgramCopyInput final
         opengl::ComputeProgram m_program;
 
 public:
-        DftProgramCopyInput(vec2i group_size, const opengl::Texture& texture, unsigned x, unsigned y, unsigned width,
-                            unsigned height);
+        DftProgramCopyInput(
+                vec2i group_size,
+                const opengl::Texture& texture,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height);
 
         void copy(const opengl::Buffer& data);
 };

@@ -49,8 +49,13 @@ class SurfaceProperties
 public:
         SurfaceProperties() = default;
 
-        SurfaceProperties(const Color& color, const Color& light_source_color, T diffuse, bool use_fresnel, T refraction,
-                          bool light_source)
+        SurfaceProperties(
+                const Color& color,
+                const Color& light_source_color,
+                T diffuse,
+                bool use_fresnel,
+                T refraction,
+                bool light_source)
                 : m_color(color),
                   m_light_source_color(light_source_color),
                   m_diffuse(diffuse),
@@ -164,8 +169,12 @@ struct GenericObject
         // Для случая структуры из объектов это пересечение луча с объектом.
         // Для случая одного объекта это пересечение луча с самим объектом,
         // уже полученное функцией intersect_approximate.
-        virtual bool intersect_precise(const Ray<N, T>&, T approximate_t, T* t, const Surface<N, T>** surface,
-                                       const void** intersection_data) const = 0;
+        virtual bool intersect_precise(
+                const Ray<N, T>&,
+                T approximate_t,
+                T* t,
+                const Surface<N, T>** surface,
+                const void** intersection_data) const = 0;
 
         virtual void min_max(Vector<N, T>* min, Vector<N, T>* max) const = 0;
 };
@@ -176,7 +185,8 @@ struct LightSource
 {
         virtual ~LightSource() = default;
 
-        virtual void properties(const Vector<N, T>& point, Color* color, Vector<N, T>* vector_from_point_to_light) const = 0;
+        virtual void properties(const Vector<N, T>& point, Color* color, Vector<N, T>* vector_from_point_to_light)
+                const = 0;
 };
 
 // Преобразование точки на экране в луч в пространстве.
@@ -198,14 +208,20 @@ struct Paintbrush
         virtual ~Paintbrush() = default;
 
         virtual void first_pass() = 0;
-        virtual bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count,
-                                std::array<int_least16_t, N>* pixel) = 0;
+        virtual bool next_pixel(
+                int previous_pixel_ray_count,
+                int previous_pixel_sample_count,
+                std::array<int_least16_t, N>* pixel) = 0;
         virtual bool next_pass() = 0;
 
         virtual const std::array<int, N>& screen_size() const = 0;
 
-        virtual void statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
-                                double* previous_pass_duration) const = 0;
+        virtual void statistics(
+                long long* pass_count,
+                long long* pixel_count,
+                long long* ray_count,
+                long long* sample_count,
+                double* previous_pass_duration) const = 0;
 };
 
 // Объекты для рисования.

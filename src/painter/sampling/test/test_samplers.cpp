@@ -110,7 +110,11 @@ constexpr int sample_count()
 }
 
 template <size_t N, typename T, typename Sampler, typename RandomEngine>
-void write_samples_to_file(RandomEngine& random_engine, const Sampler& sampler, const std::string& directory, int pass_count)
+void write_samples_to_file(
+        RandomEngine& random_engine,
+        const Sampler& sampler,
+        const std::string& directory,
+        int pass_count)
 {
         std::ofstream file(directory + "/" + sampler_file_name(sampler));
 
@@ -156,7 +160,8 @@ void write_samples_to_files()
         const std::string tmp_dir = temp_directory();
 
         LOG("Writing samples " + to_string(N) + "D");
-        write_samples_to_file<N, T>(random_engine, StratifiedJitteredSampler<N, T>(sample_count<N>()), tmp_dir, pass_count);
+        write_samples_to_file<N, T>(
+                random_engine, StratifiedJitteredSampler<N, T>(sample_count<N>()), tmp_dir, pass_count);
         write_samples_to_file<N, T>(random_engine, LatinHypercubeSampler<N, T>(sample_count<N>()), tmp_dir, pass_count);
 }
 

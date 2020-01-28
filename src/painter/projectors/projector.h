@@ -67,8 +67,9 @@ Vector<N, T> screen_org(const std::array<int, N>& sizes)
 }
 
 template <size_t N, typename T>
-std::tuple<Vector<N, T>, std::array<Vector<N, T>, N - 1>> unit_dir_and_axes(const Vector<N, T>& camera_dir,
-                                                                            const std::array<Vector<N, T>, N - 1>& screen_axes)
+std::tuple<Vector<N, T>, std::array<Vector<N, T>, N - 1>> unit_dir_and_axes(
+        const Vector<N, T>& camera_dir,
+        const std::array<Vector<N, T>, N - 1>& screen_axes)
 {
         std::tuple<Vector<N, T>, std::array<Vector<N, T>, N - 1>> res;
 
@@ -85,7 +86,9 @@ std::tuple<Vector<N, T>, std::array<Vector<N, T>, N - 1>> unit_dir_and_axes(cons
 }
 
 template <size_t N, typename T>
-Vector<N, T> compute_screen_dir(const std::array<Vector<N, T>, N - 1>& screen_axes, const Vector<N - 1, T>& screen_point)
+Vector<N, T> compute_screen_dir(
+        const std::array<Vector<N, T>, N - 1>& screen_axes,
+        const Vector<N - 1, T>& screen_point)
 {
         Vector<N, T> screen_dir;
 
@@ -111,9 +114,12 @@ class PerspectiveProjector
         Vector<N, T> m_camera_org, m_camera_dir;
 
 public:
-        PerspectiveProjector(const Vector<N, T>& camera_org, const Vector<N, T>& camera_dir,
-                             const std::array<Vector<N, T>, N - 1>& screen_axes, T width_view_angle_degrees,
-                             const std::array<int, N - 1>& screen_size)
+        PerspectiveProjector(
+                const Vector<N, T>& camera_org,
+                const Vector<N, T>& camera_dir,
+                const std::array<Vector<N, T>, N - 1>& screen_axes,
+                T width_view_angle_degrees,
+                const std::array<int, N - 1>& screen_size)
         {
                 namespace impl = projector_implementation;
 
@@ -162,9 +168,12 @@ class ParallelProjector
         Vector<N, T> m_camera_org, m_camera_dir;
 
 public:
-        ParallelProjector(const Vector<N, T>& camera_org, const Vector<N, T>& camera_dir,
-                          const std::array<Vector<N, T>, N - 1>& screen_axes, T units_per_pixel,
-                          const std::array<int, N - 1>& screen_size)
+        ParallelProjector(
+                const Vector<N, T>& camera_org,
+                const Vector<N, T>& camera_dir,
+                const std::array<Vector<N, T>, N - 1>& screen_axes,
+                T units_per_pixel,
+                const std::array<int, N - 1>& screen_size)
         {
                 namespace impl = projector_implementation;
 
@@ -217,9 +226,12 @@ class SphericalProjector
         T m_square_radius;
 
 public:
-        SphericalProjector(const Vector<N, T>& camera_org, const Vector<N, T>& camera_dir,
-                           const std::array<Vector<N, T>, N - 1>& screen_axes, T width_view_angle_degrees,
-                           const std::array<int, N - 1>& screen_size)
+        SphericalProjector(
+                const Vector<N, T>& camera_org,
+                const Vector<N, T>& camera_dir,
+                const std::array<Vector<N, T>, N - 1>& screen_axes,
+                T width_view_angle_degrees,
+                const std::array<int, N - 1>& screen_size)
         {
                 namespace impl = projector_implementation;
 
@@ -235,7 +247,8 @@ public:
 
                 if (!(width_view_angle_degrees > 0))
                 {
-                        error("Spherical projection view angle " + to_string(width_view_angle_degrees) + " is not positive");
+                        error("Spherical projection view angle " + to_string(width_view_angle_degrees) +
+                              " is not positive");
                 }
                 T k = sin_alpha / screen_size[0];
                 T r = square(sin_alpha);

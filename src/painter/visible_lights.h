@@ -32,7 +32,8 @@ public:
         {
         }
 
-        void properties(const Vector<N, T>& point, Color* color, Vector<N, T>* vector_from_point_to_light) const override
+        void properties(const Vector<N, T>& point, Color* color, Vector<N, T>* vector_from_point_to_light)
+                const override
         {
                 m_light.properties(point, color, vector_from_point_to_light);
         }
@@ -48,7 +49,8 @@ public:
         {
         }
 
-        void properties(const Vector<N, T>& point, Color* color, Vector<N, T>* vector_from_point_to_light) const override
+        void properties(const Vector<N, T>& point, Color* color, Vector<N, T>* vector_from_point_to_light)
+                const override
         {
                 m_light.properties(point, color, vector_from_point_to_light);
         }

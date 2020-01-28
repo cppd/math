@@ -189,8 +189,10 @@ bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2
 }
 
 template <typename Shape1, typename Shape2>
-bool shapes_intersect_by_spaces(const Shape1& shape_1, const Shape2& shape_2,
-                                const typename Shape1::DataType& distance_from_shape_in_epsilons)
+bool shapes_intersect_by_spaces(
+        const Shape1& shape_1,
+        const Shape2& shape_2,
+        const typename Shape1::DataType& distance_from_shape_in_epsilons)
 {
         constexpr size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
@@ -311,8 +313,10 @@ void static_checks(const Shape1& shape_1, const Shape2& shape_2)
                 static_assert(shape_1_c_size >= Shape1::SHAPE_DIMENSION + 1);
                 static_assert(shape_2_c_size >= Shape2::SHAPE_DIMENSION + 1);
 
-                constexpr size_t shape_1_c_eq_size = std::remove_reference_t<decltype(shape_1.constraints_eq())>().size();
-                constexpr size_t shape_2_c_eq_size = std::remove_reference_t<decltype(shape_2.constraints_eq())>().size();
+                constexpr size_t shape_1_c_eq_size =
+                        std::remove_reference_t<decltype(shape_1.constraints_eq())>().size();
+                constexpr size_t shape_2_c_eq_size =
+                        std::remove_reference_t<decltype(shape_2.constraints_eq())>().size();
                 static_assert(shape_1_c_eq_size + Shape1::SHAPE_DIMENSION == N);
                 static_assert(shape_2_c_eq_size + Shape2::SHAPE_DIMENSION == N);
         }
@@ -336,8 +340,10 @@ void static_checks(const Shape1& shape_1, const Shape2& shape_2)
 // пересекает другой объект. За исключением частных случаев, когда, например,
 // объекты совпадают, но здесь эти случаи не учитываются.
 template <typename Shape1, typename Shape2>
-bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2,
-                        const typename Shape1::DataType& distance_from_flat_shapes_in_epsilons)
+bool shape_intersection(
+        const Shape1& shape_1,
+        const Shape2& shape_2,
+        const typename Shape1::DataType& distance_from_flat_shapes_in_epsilons)
 {
         namespace impl = shape_intersection_implementation;
 
@@ -345,7 +351,8 @@ bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2,
 
         constexpr size_t N = Shape1::SPACE_DIMENSION;
 
-        ASSERT(((N > Shape1::SHAPE_DIMENSION || N > Shape2::SHAPE_DIMENSION) && distance_from_flat_shapes_in_epsilons > 0) ||
+        ASSERT(((N > Shape1::SHAPE_DIMENSION || N > Shape2::SHAPE_DIMENSION) &&
+                distance_from_flat_shapes_in_epsilons > 0) ||
                (N == Shape1::SHAPE_DIMENSION && N == Shape2::SHAPE_DIMENSION));
 
         if (impl::shapes_intersect_by_vertices(shape_1, shape_2))

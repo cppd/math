@@ -122,7 +122,12 @@ void BoundCoconeParameters::done(int r)
 
 namespace dialog
 {
-bool bound_cocone_parameters(QWidget* parent, int minimum_rho_exponent, int minimum_alpha_exponent, double* rho, double* alpha)
+bool bound_cocone_parameters(
+        QWidget* parent,
+        int minimum_rho_exponent,
+        int minimum_alpha_exponent,
+        double* rho,
+        double* alpha)
 {
         QtObjectInDynamicMemory<bound_cocone_parameters_implementation::BoundCoconeParameters> w(parent);
         return w->show(minimum_rho_exponent, minimum_alpha_exponent, rho, alpha);

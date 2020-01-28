@@ -126,17 +126,23 @@ MainWindow::MainWindow(QWidget* parent)
 
 void MainWindow::constructor_threads()
 {
-        auto handler = [this](const std::exception_ptr& ptr, const std::string& msg) { exception_handler(ptr, msg, true); };
+        auto handler = [this](const std::exception_ptr& ptr, const std::string& msg) {
+                exception_handler(ptr, msg, true);
+        };
 
         m_threads = create_main_threads(handler);
 }
 
 void MainWindow::constructor_connect()
 {
-        connect(ui.graphics_widget, SIGNAL(mouse_wheel(QWheelEvent*)), this, SLOT(graphics_widget_mouse_wheel(QWheelEvent*)));
-        connect(ui.graphics_widget, SIGNAL(mouse_move(QMouseEvent*)), this, SLOT(graphics_widget_mouse_move(QMouseEvent*)));
-        connect(ui.graphics_widget, SIGNAL(mouse_press(QMouseEvent*)), this, SLOT(graphics_widget_mouse_press(QMouseEvent*)));
-        connect(ui.graphics_widget, SIGNAL(mouse_release(QMouseEvent*)), this, SLOT(graphics_widget_mouse_release(QMouseEvent*)));
+        connect(ui.graphics_widget, SIGNAL(mouse_wheel(QWheelEvent*)), this,
+                SLOT(graphics_widget_mouse_wheel(QWheelEvent*)));
+        connect(ui.graphics_widget, SIGNAL(mouse_move(QMouseEvent*)), this,
+                SLOT(graphics_widget_mouse_move(QMouseEvent*)));
+        connect(ui.graphics_widget, SIGNAL(mouse_press(QMouseEvent*)), this,
+                SLOT(graphics_widget_mouse_press(QMouseEvent*)));
+        connect(ui.graphics_widget, SIGNAL(mouse_release(QMouseEvent*)), this,
+                SLOT(graphics_widget_mouse_release(QMouseEvent*)));
         connect(ui.graphics_widget, SIGNAL(resize(QResizeEvent*)), this, SLOT(graphics_widget_resize(QResizeEvent*)));
 
         connect(&m_timer_progress_bar, SIGNAL(timeout()), this, SLOT(slot_timer_progress_bar()));
@@ -214,8 +220,9 @@ void MainWindow::constructor_objects_and_repository()
 
         std::vector<MainObjects::RepositoryObjects> repository_objects = m_objects->repository_point_object_names();
 
-        std::sort(repository_objects.begin(), repository_objects.end(),
-                  [](const auto& a, const auto& b) { return a.dimension < b.dimension; });
+        std::sort(repository_objects.begin(), repository_objects.end(), [](const auto& a, const auto& b) {
+                return a.dimension < b.dimension;
+        });
 
         for (const auto& dimension_objects : repository_objects)
         {
@@ -228,7 +235,8 @@ void MainWindow::constructor_objects_and_repository()
 
                         std::string text = object_name + "...";
                         QAction* action = sub_menu->addAction(text.c_str());
-                        m_action_to_dimension_and_object_name.try_emplace(action, dimension_objects.dimension, object_name);
+                        m_action_to_dimension_and_object_name.try_emplace(
+                                action, dimension_objects.dimension, object_name);
                         connect(action, SIGNAL(triggered()), this, SLOT(slot_object_repository()));
                 }
         }
@@ -317,7 +325,8 @@ void MainWindow::terminate_all_threads()
         set_log_callback(nullptr);
 }
 
-void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists) const noexcept
+void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists) const
+        noexcept
 {
         try
         {
@@ -442,8 +451,9 @@ bool MainWindow::dialog_object_selection(QWidget* parent, std::unordered_set<Obj
         bool bound_cocone = objects_to_load->count(ObjectId::BoundCocone) != 0u;
         bool bound_cocone_convex_hull = objects_to_load->count(ObjectId::BoundCoconeConvexHull) != 0;
 
-        if (!dialog::object_selection(parent, &model_convex_hull, &model_minumum_spanning_tree, &cocone, &cocone_convex_hull,
-                                      &bound_cocone, &bound_cocone_convex_hull))
+        if (!dialog::object_selection(
+                    parent, &model_convex_hull, &model_minumum_spanning_tree, &cocone, &cocone_convex_hull,
+                    &bound_cocone, &bound_cocone_convex_hull))
         {
                 return false;
         }
@@ -476,8 +486,8 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         ASSERT(use_object_selection_dialog);
 
                         std::string caption = "Open";
-                        std::string filter =
-                                file_filter("OBJ and Point files", m_objects->obj_extensions(), m_objects->txt_extensions());
+                        std::string filter = file_filter(
+                                "OBJ and Point files", m_objects->obj_extensions(), m_objects->txt_extensions());
                         bool read_only = true;
 
                         QPointer ptr(this);
@@ -506,13 +516,13 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         }
                 }
 
-                m_threads->start_thread(MainThreads::Action::Load,
-                                        [=, this, rho = m_bound_cocone_rho,
-                                         alpha = m_bound_cocone_alpha](ProgressRatioList* progress_list, std::string* message) {
-                                                *message = "Load " + file_name;
+                m_threads->start_thread(
+                        MainThreads::Action::Load, [=, this, rho = m_bound_cocone_rho, alpha = m_bound_cocone_alpha](
+                                                           ProgressRatioList* progress_list, std::string* message) {
+                                *message = "Load " + file_name;
 
-                                                m_objects->load_from_file(objects_to_load, progress_list, file_name, rho, alpha);
-                                        });
+                                m_objects->load_from_file(objects_to_load, progress_list, file_name, rho, alpha);
+                        });
         });
 }
 
@@ -539,8 +549,9 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
 
                 {
                         QPointer ptr(this);
-                        if (!dialog::point_object_parameters(this, dimension, object_name, POINT_COUNT_DEFAULT,
-                                                             POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM, &point_count))
+                        if (!dialog::point_object_parameters(
+                                    this, dimension, object_name, POINT_COUNT_DEFAULT, POINT_COUNT_MINIMUM,
+                                    POINT_COUNT_MAXIMUM, &point_count))
                         {
                                 return;
                         }
@@ -564,14 +575,15 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
                         }
                 }
 
-                m_threads->start_thread(MainThreads::Action::Load,
-                                        [=, this, rho = m_bound_cocone_rho,
-                                         alpha = m_bound_cocone_alpha](ProgressRatioList* progress_list, std::string* message) {
-                                                *message = "Load " + space_name(dimension) + " " + object_name;
+                m_threads->start_thread(
+                        MainThreads::Action::Load, [=, this, rho = m_bound_cocone_rho, alpha = m_bound_cocone_alpha](
+                                                           ProgressRatioList* progress_list, std::string* message) {
+                                *message = "Load " + space_name(dimension) + " " + object_name;
 
-                                                m_objects->load_from_repository(objects_to_load, progress_list, dimension,
-                                                                                object_name, rho, alpha, point_count);
-                                        });
+                                m_objects->load_from_repository(
+                                        objects_to_load, progress_list, dimension, object_name, rho, alpha,
+                                        point_count);
+                        });
         });
 }
 
@@ -598,12 +610,14 @@ void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation
                 }
         }
 
-        m_threads->start_thread(MainThreads::Action::SelfTest, [=, this](ProgressRatioList* progress_list, std::string* message) {
-                *message = "Self-Test";
+        m_threads->start_thread(
+                MainThreads::Action::SelfTest, [=, this](ProgressRatioList* progress_list, std::string* message) {
+                        *message = "Self-Test";
 
-                self_test(test_type, progress_list,
-                          [&](const std::exception_ptr& ptr, const std::string& msg) { exception_handler(ptr, msg, true); });
-        });
+                        self_test(test_type, progress_list, [&](const std::exception_ptr& ptr, const std::string& msg) {
+                                exception_handler(ptr, msg, true);
+                        });
+                });
 }
 
 void MainWindow::thread_export(const std::string& name, ObjectId id)
@@ -612,7 +626,8 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
 
         if (!m_threads->action_allowed(MainThreads::Action::Export))
         {
-                m_event_emitter.message_warning("Export " + name + " to file is not available at this time (thread working)");
+                m_event_emitter.message_warning(
+                        "Export " + name + " to file is not available at this time (thread working)");
                 return;
         }
 
@@ -625,7 +640,8 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
         if (id == ObjectId::Model)
         {
                 QPointer ptr(this);
-                if (!dialog::message_question_default_no(this, "Only export of geometry is supported.\nDo you want to continue?"))
+                if (!dialog::message_question_default_no(
+                            this, "Only export of geometry is supported.\nDo you want to continue?"))
                 {
                         return;
                 }
@@ -660,12 +676,13 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
                         return;
                 }
 
-                m_threads->start_thread(MainThreads::Action::Export, [=, this](ProgressRatioList*, std::string* message) {
-                        *message = "Export " + name + " to " + file_name;
+                m_threads->start_thread(
+                        MainThreads::Action::Export, [=, this](ProgressRatioList*, std::string* message) {
+                                *message = "Export " + name + " to " + file_name;
 
-                        m_objects->save_to_file(id, file_name, name);
-                        m_event_emitter.message_information(name + " exported to file " + file_name);
-                });
+                                m_objects->save_to_file(id, file_name, name);
+                                m_event_emitter.message_information(name + " exported to file " + file_name);
+                        });
         });
 }
 
@@ -673,9 +690,11 @@ void MainWindow::thread_reload_bound_cocone()
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (m_objects_to_load.count(ObjectId::BoundCocone) == 0 && m_objects_to_load.count(ObjectId::BoundCoconeConvexHull) == 0)
+        if (m_objects_to_load.count(ObjectId::BoundCocone) == 0 &&
+            m_objects_to_load.count(ObjectId::BoundCoconeConvexHull) == 0)
         {
-                m_event_emitter.message_warning("Neither BoundCocone nor BoundCocone Convex Hull was selected for loading");
+                m_event_emitter.message_warning(
+                        "Neither BoundCocone nor BoundCocone Convex Hull was selected for loading");
                 return;
         }
 
@@ -698,8 +717,8 @@ void MainWindow::thread_reload_bound_cocone()
                 double alpha = m_bound_cocone_alpha;
 
                 QPointer ptr(this);
-                if (!dialog::bound_cocone_parameters(this, BOUND_COCONE_MINIMUM_RHO_EXPONENT, BOUND_COCONE_MINIMUM_ALPHA_EXPONENT,
-                                                     &rho, &alpha))
+                if (!dialog::bound_cocone_parameters(
+                            this, BOUND_COCONE_MINIMUM_RHO_EXPONENT, BOUND_COCONE_MINIMUM_ALPHA_EXPONENT, &rho, &alpha))
                 {
                         return;
                 }
@@ -710,7 +729,8 @@ void MainWindow::thread_reload_bound_cocone()
 
                 m_threads->start_thread(
                         MainThreads::Action::ReloadBoundCocone,
-                        [=, this, objects_to_load = m_objects_to_load](ProgressRatioList* progress_list, std::string* message) {
+                        [=, this,
+                         objects_to_load = m_objects_to_load](ProgressRatioList* progress_list, std::string* message) {
                                 *message = "BoundCocone reconstruction";
 
                                 m_objects->compute_bound_cocone(objects_to_load, progress_list, rho, alpha);
@@ -718,8 +738,11 @@ void MainWindow::thread_reload_bound_cocone()
         });
 }
 
-void MainWindow::progress_bars(MainThreads::Action thread_action, bool permanent, const ProgressRatioList* progress_list,
-                               std::list<QProgressBar>* progress_bars)
+void MainWindow::progress_bars(
+        MainThreads::Action thread_action,
+        bool permanent,
+        const ProgressRatioList* progress_list,
+        std::list<QProgressBar>* progress_bars)
 {
         static_assert(limits<unsigned>::max() >= limits<int>::max());
 
@@ -933,13 +956,15 @@ void MainWindow::reset_all_object_buttons(const std::unordered_set<ObjectId>& ob
         reset_object_button(ui.radioButton_cocone, objects_to_load.count(ObjectId::Cocone) > 0);
         reset_object_button(ui.radioButton_cocone_convex_hull, objects_to_load.count(ObjectId::CoconeConvexHull) > 0);
         reset_object_button(ui.radioButton_bound_cocone, objects_to_load.count(ObjectId::BoundCocone) > 0);
-        reset_object_button(ui.radioButton_bound_cocone_convex_hull, objects_to_load.count(ObjectId::BoundCoconeConvexHull) > 0);
+        reset_object_button(
+                ui.radioButton_bound_cocone_convex_hull, objects_to_load.count(ObjectId::BoundCoconeConvexHull) > 0);
 }
 
 void MainWindow::reset_bound_cocone_buttons(const std::unordered_set<ObjectId>& objects_to_load)
 {
         reset_object_button(ui.radioButton_bound_cocone, objects_to_load.count(ObjectId::BoundCocone) > 0);
-        reset_object_button(ui.radioButton_bound_cocone_convex_hull, objects_to_load.count(ObjectId::BoundCoconeConvexHull) > 0);
+        reset_object_button(
+                ui.radioButton_bound_cocone_convex_hull, objects_to_load.count(ObjectId::BoundCoconeConvexHull) > 0);
 }
 
 void MainWindow::direct_message_error(const std::string& msg)
@@ -974,7 +999,8 @@ void MainWindow::direct_message_error_source(const std::string& msg, const std::
 
         std::string source = source_with_line_numbers(src);
 
-        add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(msg + "\n" + source), TextEditMessageType::Error);
+        add_to_text_edit_and_to_stderr(
+                ui.text_log, format_log_message(msg + "\n" + source), TextEditMessageType::Error);
 
         QPointer ptr(this);
         dialog::message_source_error(this, msg, source);
@@ -1022,7 +1048,10 @@ void MainWindow::direct_mesh_loaded(ObjectId id)
         }
 }
 
-void MainWindow::direct_file_loaded(const std::string& file_name, unsigned dimension, const std::unordered_set<ObjectId>& objects)
+void MainWindow::direct_file_loaded(
+        const std::string& file_name,
+        unsigned dimension,
+        const std::unordered_set<ObjectId>& objects)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -1388,7 +1417,8 @@ void MainWindow::on_slider_clip_plane_valueChanged(int)
 
 void MainWindow::on_toolButton_background_color_clicked()
 {
-        dialog::color_dialog(this, "Background Color", m_background_color, [this](const QColor& c) { set_background_color(c); });
+        dialog::color_dialog(
+                this, "Background Color", m_background_color, [this](const QColor& c) { set_background_color(c); });
 }
 
 void MainWindow::on_toolButton_default_color_clicked()
@@ -1398,13 +1428,15 @@ void MainWindow::on_toolButton_default_color_clicked()
 
 void MainWindow::on_toolButton_wireframe_color_clicked()
 {
-        dialog::color_dialog(this, "Wireframe Color", m_wireframe_color, [this](const QColor& c) { set_wireframe_color(c); });
+        dialog::color_dialog(
+                this, "Wireframe Color", m_wireframe_color, [this](const QColor& c) { set_wireframe_color(c); });
 }
 
 void MainWindow::on_toolButton_dft_background_color_clicked()
 {
-        dialog::color_dialog(this, "DFT Background Color", m_dft_background_color,
-                             [this](const QColor& c) { set_dft_background_color(c); });
+        dialog::color_dialog(this, "DFT Background Color", m_dft_background_color, [this](const QColor& c) {
+                set_dft_background_color(c);
+        });
 }
 
 void MainWindow::on_toolButton_dft_color_clicked()

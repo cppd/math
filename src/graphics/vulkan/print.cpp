@@ -37,7 +37,8 @@ namespace vulkan
 std::string api_version_to_string(uint32_t api_version)
 {
         std::ostringstream oss;
-        oss << VK_VERSION_MAJOR(api_version) << "." << VK_VERSION_MINOR(api_version) << "." << VK_VERSION_PATCH(api_version);
+        oss << VK_VERSION_MAJOR(api_version) << "." << VK_VERSION_MINOR(api_version) << "."
+            << VK_VERSION_PATCH(api_version);
         return oss.str();
 }
 
@@ -85,11 +86,13 @@ std::array<std::string, 2> result_to_strings(const VkResult& code)
         case VK_ERROR_FORMAT_NOT_SUPPORTED:
                 return {"VK_ERROR_FORMAT_NOT_SUPPORTED", "A requested format is not supported on this device"};
         case VK_ERROR_FRAGMENTED_POOL:
-                return {"VK_ERROR_FRAGMENTED_POOL", "A pool allocation has failed due to fragmentation of the pool’s memory"};
+                return {"VK_ERROR_FRAGMENTED_POOL",
+                        "A pool allocation has failed due to fragmentation of the pool’s memory"};
         case VK_ERROR_OUT_OF_POOL_MEMORY:
                 return {"VK_ERROR_OUT_OF_POOL_MEMORY", "A pool memory allocation has failed"};
         case VK_ERROR_INVALID_EXTERNAL_HANDLE:
-                return {"VK_ERROR_INVALID_EXTERNAL_HANDLE", "An external handle is not a valid handle of the specified type"};
+                return {"VK_ERROR_INVALID_EXTERNAL_HANDLE",
+                        "An external handle is not a valid handle of the specified type"};
         case VK_ERROR_SURFACE_LOST_KHR:
                 return {"VK_ERROR_SURFACE_LOST_KHR", "A surface is no longer available"};
         case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:

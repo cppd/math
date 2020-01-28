@@ -76,8 +76,10 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        RendererPointsMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                             const std::unordered_set<uint32_t>& family_indices);
+        RendererPointsMemory(
+                const vulkan::Device& device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::unordered_set<uint32_t>& family_indices);
 
         RendererPointsMemory(const RendererPointsMemory&) = delete;
         RendererPointsMemory& operator=(const RendererPointsMemory&) = delete;
@@ -136,9 +138,14 @@ public:
         RendererPointsProgram(RendererPointsProgram&&) = default;
         ~RendererPointsProgram() = default;
 
-        vulkan::Pipeline create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
-                                         VkPrimitiveTopology primitive_topology, unsigned x, unsigned y, unsigned width,
-                                         unsigned height) const;
+        vulkan::Pipeline create_pipeline(
+                VkRenderPass render_pass,
+                VkSampleCountFlagBits sample_count,
+                VkPrimitiveTopology primitive_topology,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height) const;
 
         VkDescriptorSetLayout descriptor_set_layout() const;
         VkPipelineLayout pipeline_layout() const;

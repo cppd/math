@@ -105,7 +105,12 @@ void offset_and_rays_for_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, T* o
 }
 
 template <size_t N, typename T>
-void test_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, bool with_ray_log, bool with_error_log, ProgressRatio* progress)
+void test_sphere_mesh(
+        const Mesh<N, T>& mesh,
+        int ray_count,
+        bool with_ray_log,
+        bool with_error_log,
+        ProgressRatio* progress)
 {
         T ray_offset;
         std::vector<Ray<N, T>> rays;
@@ -142,7 +147,8 @@ void test_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, bool with_ray_log, 
                 {
                         if (with_error_log)
                         {
-                                LOG("No the first approximate intersection with ray #" + to_string(i) + "\n" + to_string(ray));
+                                LOG("No the first approximate intersection with ray #" + to_string(i) + "\n" +
+                                    to_string(ray));
                         }
                         ++error_count;
                         continue;
@@ -155,8 +161,8 @@ void test_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, bool with_ray_log, 
                 {
                         if (with_error_log)
                         {
-                                LOG("No the first precise intersection with ray #" + to_string(i) + "\n" + "approximate " +
-                                    to_string(approximate) + "\n" + to_string(ray));
+                                LOG("No the first precise intersection with ray #" + to_string(i) + "\n" +
+                                    "approximate " + to_string(approximate) + "\n" + to_string(ray));
                         }
                         ++error_count;
                         continue;
@@ -172,7 +178,8 @@ void test_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, bool with_ray_log, 
                 {
                         if (with_error_log)
                         {
-                                LOG("No the second approximate intersection with ray #" + to_string(i) + "\n" + to_string(ray));
+                                LOG("No the second approximate intersection with ray #" + to_string(i) + "\n" +
+                                    to_string(ray));
                         }
                         ++error_count;
                         continue;
@@ -185,8 +192,8 @@ void test_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, bool with_ray_log, 
                 {
                         if (with_error_log)
                         {
-                                LOG("No the second precise intersection with ray #" + to_string(i) + "\n" + "approximate " +
-                                    to_string(approximate) + "\n" + to_string(ray));
+                                LOG("No the second precise intersection with ray #" + to_string(i) + "\n" +
+                                    "approximate " + to_string(approximate) + "\n" + to_string(ray));
                         }
                         ++error_count;
                         continue;
@@ -215,7 +222,8 @@ void test_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, bool with_ray_log, 
 
         LOG("intersections " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         LOG("");
-        LOG(to_string(error_count) + " errors, " + to_string(rays.size()) + " rays, " + to_string_fixed(error_percent, 5) + "%");
+        LOG(to_string(error_count) + " errors, " + to_string(rays.size()) + " rays, " +
+            to_string_fixed(error_percent, 5) + "%");
         LOG("");
 
         if (error_percent > 0.05)
@@ -228,8 +236,15 @@ void test_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, bool with_ray_log, 
 namespace
 {
 template <size_t N, typename T>
-void test_mesh(int point_low, int point_high, int ray_low, int ray_high, int thread_count, bool with_ray_log, bool with_error_log,
-               ProgressRatio* progress)
+void test_mesh(
+        int point_low,
+        int point_high,
+        int ray_low,
+        int ray_high,
+        int thread_count,
+        bool with_ray_log,
+        bool with_error_log,
+        ProgressRatio* progress)
 {
         LOG("----------- " + space_name(N) + ", " + type_name<T>() + " -----------");
 

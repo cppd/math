@@ -157,8 +157,9 @@ public:
                                         error("Show create information is not complete");
                                 }
 
-                                m_thread = std::thread(&ShowThread::thread_function, this, info.callback.value(),
-                                                       info.window.value(), info.window_ppi.value());
+                                m_thread = std::thread(
+                                        &ShowThread::thread_function, this, info.callback.value(), info.window.value(),
+                                        info.window_ppi.value());
                         }
                         catch (std::bad_optional_access&)
                         {

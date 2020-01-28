@@ -380,7 +380,8 @@ std::enable_if_t<!std::is_same_v<Dst, Src>, std::vector<Vector<N, Dst>>> to_vect
 }
 
 template <typename Dst, size_t N, typename Src>
-std::enable_if_t<std::is_same_v<Dst, Src>, const std::vector<Vector<N, Dst>>&> to_vector(const std::vector<Vector<N, Src>>& v)
+std::enable_if_t<std::is_same_v<Dst, Src>, const std::vector<Vector<N, Dst>>&> to_vector(
+        const std::vector<Vector<N, Src>>& v)
 {
         return v;
 }

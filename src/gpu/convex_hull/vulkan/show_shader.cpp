@@ -50,16 +50,19 @@ std::vector<VkDescriptorSetLayoutBinding> ConvexHullShowMemory::descriptor_set_l
         return bindings;
 }
 
-ConvexHullShowMemory::ConvexHullShowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                                           const std::unordered_set<uint32_t>& family_indices)
+ConvexHullShowMemory::ConvexHullShowMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout,
+        const std::unordered_set<uint32_t>& family_indices)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
+                m_uniform_buffers.emplace_back(
+                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
                 m_data_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -115,8 +118,10 @@ ConvexHullShowProgram::ConvexHullShowProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
                   vulkan::create_descriptor_set_layout(device, ConvexHullShowMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {ConvexHullShowMemory::set_number()}, {m_descriptor_set_layout})),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {ConvexHullShowMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_vertex_shader(m_device, convex_hull_show_vert(), "main"),
           m_fragment_shader(m_device, convex_hull_show_frag(), "main")
 {
@@ -132,9 +137,14 @@ VkPipelineLayout ConvexHullShowProgram::pipeline_layout() const
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline ConvexHullShowProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
-                                                        bool sample_shading, unsigned x, unsigned y, unsigned width,
-                                                        unsigned height) const
+vulkan::Pipeline ConvexHullShowProgram::create_pipeline(
+        VkRenderPass render_pass,
+        VkSampleCountFlagBits sample_count,
+        bool sample_shading,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 

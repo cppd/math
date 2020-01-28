@@ -45,8 +45,10 @@ private slots:
         void on_pushButton_save_to_file_clicked();
 
 public:
-        PainterWindow2d(const std::string& title, std::vector<int>&& m_screen_size,
-                        const std::vector<int>& initial_slider_positions);
+        PainterWindow2d(
+                const std::string& title,
+                std::vector<int>&& m_screen_size,
+                const std::vector<int>& initial_slider_positions);
         ~PainterWindow2d() override;
 
 protected:
@@ -70,8 +72,12 @@ private:
         void update_points();
         void update_statistics();
 
-        virtual void painter_statistics(long long* pass_count, long long* pixel_count, long long* ray_count,
-                                        long long* sample_count, double* previous_pass_duration) const = 0;
+        virtual void painter_statistics(
+                long long* pass_count,
+                long long* pixel_count,
+                long long* ray_count,
+                long long* sample_count,
+                double* previous_pass_duration) const = 0;
         virtual void slider_positions_change_event(const std::vector<int>& slider_positions) = 0;
         virtual const std::vector<std::uint_least32_t>& pixels_bgr() const = 0;
         virtual long long pixels_offset() const = 0;

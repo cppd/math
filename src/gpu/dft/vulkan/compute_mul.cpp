@@ -154,7 +154,13 @@ DftMulConstant::DftMulConstant()
         }
 }
 
-void DftMulConstant::set_data(int32_t n1, int32_t n2, int32_t m1, int32_t m2, uint32_t group_size_x, uint32_t group_size_y)
+void DftMulConstant::set_data(
+        int32_t n1,
+        int32_t n2,
+        int32_t m1,
+        int32_t m2,
+        uint32_t group_size_x,
+        uint32_t group_size_y)
 {
         static_assert(std::is_same_v<decltype(m_data.n1), decltype(n1)>);
         m_data.n1 = n1;
@@ -197,8 +203,10 @@ size_t DftMulConstant::size() const
 
 DftMulProgram::DftMulProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, DftMulMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(device, {DftMulMemory::set_number()}, {m_descriptor_set_layout})),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, DftMulMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {DftMulMemory::set_number()}, {m_descriptor_set_layout})),
           m_shader(device, dft_mul_comp(), "main")
 {
 }
@@ -261,7 +269,13 @@ VkPipeline DftMulProgram::pipeline_columns_from_buffer(bool inverse) const
         return m_pipeline_columns_from_buffer_inverse;
 }
 
-void DftMulProgram::create_pipelines(int32_t n1, int32_t n2, int32_t m1, int32_t m2, uint32_t group_size_x, uint32_t group_size_y)
+void DftMulProgram::create_pipelines(
+        int32_t n1,
+        int32_t n2,
+        int32_t m1,
+        int32_t m2,
+        uint32_t group_size_x,
+        uint32_t group_size_y)
 {
         m_constant.set_data(n1, n2, m1, m2, group_size_x, group_size_y);
 

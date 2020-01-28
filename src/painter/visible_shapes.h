@@ -29,13 +29,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 
 template <size_t N, typename T>
-class VisibleHyperplaneParallelotope final : public GenericObject<N, T>, public Surface<N, T>, public SurfaceProperties<N, T>
+class VisibleHyperplaneParallelotope final : public GenericObject<N, T>,
+                                             public Surface<N, T>,
+                                             public SurfaceProperties<N, T>
 {
         HyperplaneParallelotope<N, T> m_hyperplane_parallelotope;
 
 public:
         template <typename... V>
-        explicit VisibleHyperplaneParallelotope(const Vector<N, T>& org, const V&... e) : m_hyperplane_parallelotope(org, e...)
+        explicit VisibleHyperplaneParallelotope(const Vector<N, T>& org, const V&... e)
+                : m_hyperplane_parallelotope(org, e...)
         {
                 static_assert((std::is_same_v<V, Vector<N, T>> && ...));
         }
@@ -45,8 +48,12 @@ public:
                 return m_hyperplane_parallelotope.intersect(r, t);
         }
 
-        bool intersect_precise(const Ray<N, T>&, T approximate_t, T* t, const Surface<N, T>** surface,
-                               const void** /*intersection_data*/) const override
+        bool intersect_precise(
+                const Ray<N, T>&,
+                T approximate_t,
+                T* t,
+                const Surface<N, T>** surface,
+                const void** /*intersection_data*/) const override
         {
                 *t = approximate_t;
                 *surface = this;
@@ -89,8 +96,12 @@ public:
                 return m_parallelotope.intersect(r, t);
         }
 
-        bool intersect_precise(const Ray<N, T>&, T approximate_t, T* t, const Surface<N, T>** surface,
-                               const void** /*intersection_data*/) const override
+        bool intersect_precise(
+                const Ray<N, T>&,
+                T approximate_t,
+                T* t,
+                const Surface<N, T>** surface,
+                const void** /*intersection_data*/) const override
         {
                 *t = approximate_t;
                 *surface = this;
@@ -131,8 +142,12 @@ public:
                 return m_mesh->intersect_approximate(r, t);
         }
 
-        bool intersect_precise(const Ray<N, T>& ray, T approximate_t, T* t, const Surface<N, T>** surface,
-                               const void** intersection_data) const override
+        bool intersect_precise(
+                const Ray<N, T>& ray,
+                T approximate_t,
+                T* t,
+                const Surface<N, T>** surface,
+                const void** intersection_data) const override
         {
                 if (m_mesh->intersect_precise(ray, approximate_t, t, intersection_data))
                 {

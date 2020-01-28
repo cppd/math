@@ -50,8 +50,11 @@ bool boundary_ridge(const std::vector<bool>& interior_vertices, const Ridge<N>& 
 }
 
 template <size_t N>
-bool sharp_ridge(const std::vector<vec<N>>& points, const std::vector<bool>& interior_vertices, const Ridge<N>& ridge,
-                 const RidgeData<N>& ridge_data)
+bool sharp_ridge(
+        const std::vector<vec<N>>& points,
+        const std::vector<bool>& interior_vertices,
+        const Ridge<N>& ridge,
+        const RidgeData<N>& ridge_data)
 {
         ASSERT(!ridge_data.empty());
 
@@ -135,9 +138,11 @@ bool sharp_ridge(const std::vector<vec<N>>& points, const std::vector<bool>& int
 // или, что тоже самое, все грани находятся внутри угла PI / 2. Ребро с одной гранью считается
 // острым. Образующиеся после удаления грани новые острые рёбра тоже должны обрабатываться.
 template <size_t N>
-void prune_facets_incident_to_sharp_ridges(const std::vector<vec<N>>& points,
-                                           const std::vector<DelaunayFacet<N>>& delaunay_facets,
-                                           const std::vector<bool>& interior_vertices, std::vector<bool>* cocone_facets)
+void prune_facets_incident_to_sharp_ridges(
+        const std::vector<vec<N>>& points,
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<bool>& interior_vertices,
+        std::vector<bool>* cocone_facets)
 {
         namespace impl = prune_facets_implementation;
 

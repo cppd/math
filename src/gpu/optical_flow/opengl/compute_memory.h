@@ -73,7 +73,10 @@ class OpticalFlowSobelMemory final
         };
 
 public:
-        OpticalFlowSobelMemory(const opengl::Texture& image_i, const opengl::Texture& image_dx, const opengl::Texture& image_dy);
+        OpticalFlowSobelMemory(
+                const opengl::Texture& image_i,
+                const opengl::Texture& image_dx,
+                const opengl::Texture& image_dy);
 
         void bind() const;
 };
@@ -128,8 +131,11 @@ class OpticalFlowImagesMemory final
         };
 
 public:
-        OpticalFlowImagesMemory(const opengl::Texture& image_dx, const opengl::Texture& image_dy, const opengl::Texture& image_i,
-                                const opengl::Texture& texture_j);
+        OpticalFlowImagesMemory(
+                const opengl::Texture& image_dx,
+                const opengl::Texture& image_dy,
+                const opengl::Texture& image_i,
+                const opengl::Texture& texture_j);
 
         void bind() const;
 };

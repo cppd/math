@@ -131,8 +131,15 @@ DftFftSharedConstant::DftFftSharedConstant()
         }
 }
 
-void DftFftSharedConstant::set(bool inverse, uint32_t data_size, uint32_t n, uint32_t n_mask, uint32_t n_bits,
-                               uint32_t shared_size, bool reverse_input, uint32_t group_size)
+void DftFftSharedConstant::set(
+        bool inverse,
+        uint32_t data_size,
+        uint32_t n,
+        uint32_t n_mask,
+        uint32_t n_bits,
+        uint32_t shared_size,
+        bool reverse_input,
+        uint32_t group_size)
 {
         static_assert(std::is_same_v<decltype(m_data.inverse), uint32_t>);
         m_data.inverse = inverse ? 1 : 0;
@@ -173,8 +180,10 @@ DftFftSharedProgram::DftFftSharedProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
                   vulkan::create_descriptor_set_layout(device, DftFftSharedMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {DftFftSharedMemory::set_number()}, {m_descriptor_set_layout})),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {DftFftSharedMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_shader(device, dft_fft_shared_comp(), "main")
 {
 }
@@ -201,8 +210,14 @@ VkPipeline DftFftSharedProgram::pipeline(bool inverse) const
         return m_pipeline_forward;
 }
 
-void DftFftSharedProgram::create_pipelines(uint32_t data_size, uint32_t n, uint32_t n_mask, uint32_t n_bits, uint32_t shared_size,
-                                           bool reverse_input, uint32_t group_size)
+void DftFftSharedProgram::create_pipelines(
+        uint32_t data_size,
+        uint32_t n,
+        uint32_t n_mask,
+        uint32_t n_bits,
+        uint32_t shared_size,
+        bool reverse_input,
+        uint32_t group_size)
 {
         {
                 m_constant.set(false, data_size, n, n_mask, n_bits, shared_size, reverse_input, group_size);

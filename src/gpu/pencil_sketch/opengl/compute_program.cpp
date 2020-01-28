@@ -44,8 +44,14 @@ std::string compute_source(unsigned group_size, unsigned x, unsigned y, unsigned
 }
 }
 
-PencilSketchProgramCompute::PencilSketchProgramCompute(const opengl::Texture& input, const opengl::Texture& objects, unsigned x,
-                                                       unsigned y, unsigned width, unsigned height, const opengl::Texture& output)
+PencilSketchProgramCompute::PencilSketchProgramCompute(
+        const opengl::Texture& input,
+        const opengl::Texture& objects,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height,
+        const opengl::Texture& output)
         : m_groups_x(group_count(input.width(), GROUP_SIZE)),
           m_groups_y(group_count(input.height(), GROUP_SIZE)),
           m_program(opengl::ComputeShader(compute_source(GROUP_SIZE, x, y, width, height)))

@@ -47,8 +47,10 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        DftFftGlobalMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                           const std::unordered_set<uint32_t>& family_indices);
+        DftFftGlobalMemory(
+                const vulkan::Device& device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::unordered_set<uint32_t>& family_indices);
 
         DftFftGlobalMemory(const DftFftGlobalMemory&) = delete;
         DftFftGlobalMemory& operator=(const DftFftGlobalMemory&) = delete;

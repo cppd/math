@@ -33,8 +33,13 @@ class ConvexHullProgramPrepare final
         unsigned m_height;
 
 public:
-        ConvexHullProgramPrepare(const opengl::Texture& objects, unsigned x, unsigned y, unsigned width, unsigned height,
-                                 const opengl::Buffer& lines);
+        ConvexHullProgramPrepare(
+                const opengl::Texture& objects,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height,
+                const opengl::Buffer& lines);
 
         void exec() const;
 };
@@ -68,8 +73,11 @@ class ConvexHullProgramFilter final
         const opengl::Buffer* m_point_count = nullptr;
 
 public:
-        ConvexHullProgramFilter(unsigned height, const opengl::Buffer& lines, const opengl::Buffer& points,
-                                const opengl::Buffer& point_count);
+        ConvexHullProgramFilter(
+                unsigned height,
+                const opengl::Buffer& lines,
+                const opengl::Buffer& points,
+                const opengl::Buffer& point_count);
 
         void exec() const;
 };

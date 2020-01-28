@@ -25,8 +25,19 @@ bool pointIsInsideRectangle(T x, T y, T x0, T y0, T x1, T y1)
         return x >= x0 && x < x1 && y >= y0 && y < y1;
 }
 
-inline bool windowPositionAndSize(bool two_windows, int width, int height, int frame, int* w1_x, int* w1_y, int* w1_w, int* w1_h,
-                                  int* w2_x, int* w2_y, int* w2_w, int* w2_h)
+inline bool windowPositionAndSize(
+        bool two_windows,
+        int width,
+        int height,
+        int frame,
+        int* w1_x,
+        int* w1_y,
+        int* w1_w,
+        int* w1_h,
+        int* w2_x,
+        int* w2_y,
+        int* w2_w,
+        int* w2_h)
 {
         ASSERT(w1_x && w1_y && w1_w && w1_h && w2_x && w2_y && w2_w && w2_h);
 

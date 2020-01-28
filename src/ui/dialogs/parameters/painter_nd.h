@@ -30,9 +30,19 @@ class PainterParametersForNd final : public QDialog
 public:
         explicit PainterParametersForNd(QWidget* parent = nullptr);
 
-        [[nodiscard]] bool show(int dimension, int max_thread_count, int default_screen_size, int min_screen_size,
-                                int max_screen_size, int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count,
-                                int* min_size, int* max_size, int* samples_per_pixel, bool* flat_facets);
+        [[nodiscard]] bool show(
+                int dimension,
+                int max_thread_count,
+                int default_screen_size,
+                int min_screen_size,
+                int max_screen_size,
+                int default_samples_per_pixel,
+                int max_samples_per_pixel,
+                int* thread_count,
+                int* min_size,
+                int* max_size,
+                int* samples_per_pixel,
+                bool* flat_facets);
 
 private slots:
         void on_spinBox_min_size_valueChanged(int);
@@ -58,8 +68,18 @@ private:
 
 namespace dialog
 {
-[[nodiscard]] bool painter_parameters_for_nd(QWidget* parent, int dimension, int max_thread_count, int default_screen_size,
-                                             int min_screen_size, int max_screen_size, int default_samples_per_pixel,
-                                             int max_samples_per_pixel, int* thread_count, int* min_size, int* max_size,
-                                             int* samples_per_pixel, bool* flat_facets);
+[[nodiscard]] bool painter_parameters_for_nd(
+        QWidget* parent,
+        int dimension,
+        int max_thread_count,
+        int default_screen_size,
+        int min_screen_size,
+        int max_screen_size,
+        int default_samples_per_pixel,
+        int max_samples_per_pixel,
+        int* thread_count,
+        int* min_size,
+        int* max_size,
+        int* samples_per_pixel,
+        bool* flat_facets);
 }

@@ -125,8 +125,9 @@ class FFTW final : public DFT
                 {
                         m_backward.execute();
 
-                        std::transform(m_out.cbegin(), m_out.cend(), data->begin(),
-                                       [k = m_inv_k](const std::complex<float>& v) { return v * k; });
+                        std::transform(
+                                m_out.cbegin(), m_out.cend(), data->begin(),
+                                [k = m_inv_k](const std::complex<float>& v) { return v * k; });
                 }
                 else
                 {

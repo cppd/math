@@ -36,8 +36,13 @@ ObjectSelection::ObjectSelection(QWidget* parent) : QDialog(parent)
         m_boxes.push_back(ui.checkBox_bound_cocone_convex_hull);
 }
 
-bool ObjectSelection::show(bool* model_convex_hull, bool* model_minumum_spanning_tree, bool* cocone, bool* cocone_convex_hull,
-                           bool* bound_cocone, bool* bound_cocone_convex_hull)
+bool ObjectSelection::show(
+        bool* model_convex_hull,
+        bool* model_minumum_spanning_tree,
+        bool* cocone,
+        bool* cocone_convex_hull,
+        bool* bound_cocone,
+        bool* bound_cocone_convex_hull)
 {
         ui.checkBox_model_convex_hull->setChecked(*model_convex_hull);
         ui.checkBox_model_minumum_spanning_tree->setChecked(*model_minumum_spanning_tree);
@@ -80,11 +85,18 @@ void ObjectSelection::on_pushButton_clear_all_clicked()
 
 namespace dialog
 {
-bool object_selection(QWidget* parent, bool* model_convex_hull, bool* model_minumum_spanning_tree, bool* cocone,
-                      bool* cocone_convex_hull, bool* bound_cocone, bool* bound_cocone_convex_hull)
+bool object_selection(
+        QWidget* parent,
+        bool* model_convex_hull,
+        bool* model_minumum_spanning_tree,
+        bool* cocone,
+        bool* cocone_convex_hull,
+        bool* bound_cocone,
+        bool* bound_cocone_convex_hull)
 {
         QtObjectInDynamicMemory<object_selection_implementation::ObjectSelection> w(parent);
-        return w->show(model_convex_hull, model_minumum_spanning_tree, cocone, cocone_convex_hull, bound_cocone,
-                       bound_cocone_convex_hull);
+        return w->show(
+                model_convex_hull, model_minumum_spanning_tree, cocone, cocone_convex_hull, bound_cocone,
+                bound_cocone_convex_hull);
 }
 }

@@ -32,8 +32,13 @@ struct ConvexHullShow
 
         virtual ~ConvexHullShow() = default;
 
-        virtual void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& objects, unsigned x,
-                                    unsigned y, unsigned width, unsigned height) = 0;
+        virtual void create_buffers(
+                RenderBuffers2D* render_buffers,
+                const vulkan::ImageWithMemory& objects,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height) = 0;
         virtual void delete_buffers() = 0;
 
         virtual VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index) = 0;
@@ -41,7 +46,9 @@ struct ConvexHullShow
         virtual void reset_timer() = 0;
 };
 
-std::unique_ptr<ConvexHullShow> create_convex_hull_show(const vulkan::VulkanInstance& instance,
-                                                        VkCommandPool graphics_command_pool, uint32_t family_index,
-                                                        bool sample_shading);
+std::unique_ptr<ConvexHullShow> create_convex_hull_show(
+        const vulkan::VulkanInstance& instance,
+        VkCommandPool graphics_command_pool,
+        uint32_t family_index,
+        bool sample_shading);
 }

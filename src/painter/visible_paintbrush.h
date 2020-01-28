@@ -42,8 +42,10 @@ public:
                 m_paintbrush.first_pass();
         }
 
-        bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count,
-                        std::array<int_least16_t, N>* pixel) override
+        bool next_pixel(
+                int previous_pixel_ray_count,
+                int previous_pixel_sample_count,
+                std::array<int_least16_t, N>* pixel) override
         {
                 return m_paintbrush.next_pixel(previous_pixel_ray_count, previous_pixel_sample_count, pixel);
         }
@@ -53,8 +55,12 @@ public:
                 return m_paintbrush.next_pass();
         }
 
-        void statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
-                        double* previous_pass_duration) const override
+        void statistics(
+                long long* pass_count,
+                long long* pixel_count,
+                long long* ray_count,
+                long long* sample_count,
+                double* previous_pass_duration) const override
         {
                 m_paintbrush.statistics(pass_count, pixel_count, ray_count, sample_count, previous_pass_duration);
         }

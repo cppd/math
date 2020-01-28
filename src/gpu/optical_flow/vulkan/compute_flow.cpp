@@ -112,16 +112,19 @@ std::vector<VkDescriptorSetLayoutBinding> OpticalFlowFlowMemory::descriptor_set_
         return bindings;
 }
 
-OpticalFlowFlowMemory::OpticalFlowFlowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                                             const std::unordered_set<uint32_t>& family_indices)
+OpticalFlowFlowMemory::OpticalFlowFlowMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout,
+        const std::unordered_set<uint32_t>& family_indices)
         : m_descriptors(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(BufferData));
+                m_uniform_buffers.emplace_back(
+                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(BufferData));
 
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = m_uniform_buffers.back();
@@ -210,8 +213,10 @@ void OpticalFlowFlowMemory::set_i(const vulkan::ImageWithMemory& image_0, const 
         m_descriptors.update_descriptor_set(1, I_BINDING, image_info);
 }
 
-void OpticalFlowFlowMemory::set_j(VkSampler sampler, const vulkan::ImageWithMemory& image_0,
-                                  const vulkan::ImageWithMemory& image_1) const
+void OpticalFlowFlowMemory::set_j(
+        VkSampler sampler,
+        const vulkan::ImageWithMemory& image_0,
+        const vulkan::ImageWithMemory& image_1) const
 {
         ASSERT(&image_0 != &image_1);
         ASSERT(image_0.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
@@ -317,8 +322,13 @@ OpticalFlowFlowConstant::OpticalFlowFlowConstant()
         }
 }
 
-void OpticalFlowFlowConstant::set(uint32_t local_size_x, uint32_t local_size_y, int32_t radius, int32_t iteration_count,
-                                  float stop_move_square, float min_determinant)
+void OpticalFlowFlowConstant::set(
+        uint32_t local_size_x,
+        uint32_t local_size_y,
+        int32_t radius,
+        int32_t iteration_count,
+        float stop_move_square,
+        float min_determinant)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
         m_data.local_size_x = local_size_x;
@@ -353,10 +363,13 @@ size_t OpticalFlowFlowConstant::size() const
 
 OpticalFlowFlowProgram::OpticalFlowFlowProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, OpticalFlowFlowMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {OpticalFlowFlowMemory::set_number()}, {m_descriptor_set_layout})),
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                  device,
+                  OpticalFlowFlowMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {OpticalFlowFlowMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_shader(device, optical_flow_flow_comp(), "main")
 {
 }
@@ -377,8 +390,13 @@ VkPipeline OpticalFlowFlowProgram::pipeline() const
         return m_pipeline;
 }
 
-void OpticalFlowFlowProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y, int32_t radius,
-                                             int32_t iteration_count, float stop_move_square, float min_determinant)
+void OpticalFlowFlowProgram::create_pipeline(
+        uint32_t local_size_x,
+        uint32_t local_size_y,
+        int32_t radius,
+        int32_t iteration_count,
+        float stop_move_square,
+        float min_determinant)
 {
         m_constant.set(local_size_x, local_size_y, radius, iteration_count, stop_move_square, min_determinant);
 

@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 template <size_t N>
-std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<N, float>>& points,
-                                                      const std::vector<std::array<int, N + 1>>& delaunay_objects,
-                                                      ProgressRatio* progress);
+std::vector<std::array<int, 2>> minimum_spanning_tree(
+        const std::vector<Vector<N, float>>& points,
+        const std::vector<std::array<int, N + 1>>& delaunay_objects,
+        ProgressRatio* progress);

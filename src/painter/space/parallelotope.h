@@ -44,9 +44,10 @@ namespace parallelotope_implementation
 {
 // Вспомогательная функция для следующей после неё функции
 template <typename ObjectType, typename T, size_t... I>
-constexpr ObjectType create_object_from_array_impl(const Vector<sizeof...(I), T>& org,
-                                                   const std::array<Vector<sizeof...(I), T>, sizeof...(I)>& parameters,
-                                                   std::integer_sequence<size_t, I...>)
+constexpr ObjectType create_object_from_array_impl(
+        const Vector<sizeof...(I), T>& org,
+        const std::array<Vector<sizeof...(I), T>, sizeof...(I)>& parameters,
+        std::integer_sequence<size_t, I...>)
 {
         return ObjectType(org, parameters[I]...);
 }
@@ -347,7 +348,8 @@ std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N,
                         }
                 }
 
-                res[division] = parallelotope_implementation::create_object_from_array<Parallelotope>(org, half_vectors);
+                res[division] =
+                        parallelotope_implementation::create_object_from_array<Parallelotope>(org, half_vectors);
         }
 
         return res;

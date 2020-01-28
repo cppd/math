@@ -80,8 +80,15 @@ class DftFftSharedConstant final : public vulkan::SpecializationConstant
 public:
         DftFftSharedConstant();
 
-        void set(bool inverse, uint32_t data_size, uint32_t n, uint32_t n_mask, uint32_t n_bits, uint32_t shared_size,
-                 bool reverse_input, uint32_t group_size);
+        void set(
+                bool inverse,
+                uint32_t data_size,
+                uint32_t n,
+                uint32_t n_mask,
+                uint32_t n_bits,
+                uint32_t shared_size,
+                bool reverse_input,
+                uint32_t group_size);
 };
 
 class DftFftSharedProgram final
@@ -105,8 +112,14 @@ public:
         DftFftSharedProgram(DftFftSharedProgram&&) = default;
         ~DftFftSharedProgram() = default;
 
-        void create_pipelines(uint32_t data_size, uint32_t n, uint32_t n_mask, uint32_t n_bits, uint32_t shared_size,
-                              bool reverse_input, uint32_t group_size);
+        void create_pipelines(
+                uint32_t data_size,
+                uint32_t n,
+                uint32_t n_mask,
+                uint32_t n_bits,
+                uint32_t shared_size,
+                bool reverse_input,
+                uint32_t group_size);
         void delete_pipelines();
 
         VkDescriptorSetLayout descriptor_set_layout() const;

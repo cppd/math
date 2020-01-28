@@ -268,13 +268,42 @@ class EventQueue final : public Show
                         }
                 };
 
-                using EventType = Variant<add_object, delete_all_objects, delete_object, reset_view, set_ambient,
-                                          set_background_color, set_default_color, set_default_ns, set_dft_background_color,
-                                          set_dft_brightness, set_dft_color, set_diffuse, set_shadow_zoom, set_specular,
-                                          set_vertical_sync, set_wireframe_color, show_convex_hull_2d, show_dft, show_fps,
-                                          show_pencil_sketch, show_fog, show_materials, show_object, show_optical_flow,
-                                          show_shadow, show_smooth, show_wireframe, clip_plane_show, clip_plane_position,
-                                          clip_plane_hide, mouse_press, mouse_release, mouse_move, mouse_wheel, window_resize>;
+                using EventType =
+                        Variant<add_object,
+                                delete_all_objects,
+                                delete_object,
+                                reset_view,
+                                set_ambient,
+                                set_background_color,
+                                set_default_color,
+                                set_default_ns,
+                                set_dft_background_color,
+                                set_dft_brightness,
+                                set_dft_color,
+                                set_diffuse,
+                                set_shadow_zoom,
+                                set_specular,
+                                set_vertical_sync,
+                                set_wireframe_color,
+                                show_convex_hull_2d,
+                                show_dft,
+                                show_fps,
+                                show_pencil_sketch,
+                                show_fog,
+                                show_materials,
+                                show_object,
+                                show_optical_flow,
+                                show_shadow,
+                                show_smooth,
+                                show_wireframe,
+                                clip_plane_show,
+                                clip_plane_position,
+                                clip_plane_hide,
+                                mouse_press,
+                                mouse_release,
+                                mouse_move,
+                                mouse_wheel,
+                                window_resize>;
 
                 template <typename... Args>
                 explicit Event(Args&&... args) : m_event(std::forward<Args>(args)...)

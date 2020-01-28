@@ -65,11 +65,18 @@ class Impl final : public PencilSketchShow
         }
 
 public:
-        Impl(const opengl::Texture& source, const opengl::Texture& objects, unsigned x, unsigned y, unsigned width,
+        Impl(const opengl::Texture& source,
+             const opengl::Texture& objects,
+             unsigned x,
+             unsigned y,
+             unsigned width,
              unsigned height)
-                : m_draw_prog(opengl::VertexShader(pencil_sketch_show_vert()), opengl::FragmentShader(pencil_sketch_show_frag())),
+                : m_draw_prog(
+                          opengl::VertexShader(pencil_sketch_show_vert()),
+                          opengl::FragmentShader(pencil_sketch_show_frag())),
                   m_texture(IMAGE_FORMAT, width, height),
-                  m_pencil_sketch(gpu_opengl::create_pencil_sketch_compute(source, objects, x, y, width, height, m_texture)),
+                  m_pencil_sketch(
+                          gpu_opengl::create_pencil_sketch_compute(source, objects, x, y, width, height, m_texture)),
                   m_x(x),
                   m_y(y),
                   m_width(width),
@@ -98,8 +105,13 @@ public:
 };
 }
 
-std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::Texture& source, const opengl::Texture& objects,
-                                                            unsigned x, unsigned y, unsigned width, unsigned height)
+std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(
+        const opengl::Texture& source,
+        const opengl::Texture& objects,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height)
 {
         return std::make_unique<Impl>(source, objects, x, y, width, height);
 }

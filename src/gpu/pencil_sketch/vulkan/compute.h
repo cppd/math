@@ -32,9 +32,15 @@ struct PencilSketchCompute
         virtual ~PencilSketchCompute() = default;
 
         virtual void compute_commands(VkCommandBuffer command_buffer) const = 0;
-        virtual void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input,
-                                    const vulkan::ImageWithMemory& objects, unsigned x, unsigned y, unsigned width,
-                                    unsigned height, const vulkan::ImageWithMemory& output) = 0;
+        virtual void create_buffers(
+                VkSampler sampler,
+                const vulkan::ImageWithMemory& input,
+                const vulkan::ImageWithMemory& objects,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height,
+                const vulkan::ImageWithMemory& output) = 0;
         virtual void delete_buffers() = 0;
 };
 

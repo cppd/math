@@ -73,7 +73,8 @@ std::vector<float> grayscale_pixels_from_srgb_uint8_to_rgb_float(const Span<cons
         return buffer;
 }
 
-std::vector<std::uint_least16_t> grayscale_pixels_from_srgb_uint8_to_rgb_uint16(const Span<const std::uint_least8_t>& pixels)
+std::vector<std::uint_least16_t> grayscale_pixels_from_srgb_uint8_to_rgb_uint16(
+        const Span<const std::uint_least8_t>& pixels)
 {
         std::vector<std::uint_least16_t> buffer(pixels.size());
         for (size_t i = 0; i < buffer.size(); ++i)

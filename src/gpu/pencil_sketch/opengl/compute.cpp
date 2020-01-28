@@ -36,17 +36,27 @@ class Impl final : public PencilSketchCompute
         }
 
 public:
-        Impl(const opengl::Texture& input, const opengl::Texture& objects, unsigned x, unsigned y, unsigned width,
-             unsigned height, const opengl::Texture& output)
+        Impl(const opengl::Texture& input,
+             const opengl::Texture& objects,
+             unsigned x,
+             unsigned y,
+             unsigned width,
+             unsigned height,
+             const opengl::Texture& output)
                 : m_program_compute(input, objects, x, y, width, height, output)
         {
         }
 };
 }
 
-std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(const opengl::Texture& input, const opengl::Texture& objects,
-                                                                  unsigned x, unsigned y, unsigned width, unsigned height,
-                                                                  const opengl::Texture& output)
+std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(
+        const opengl::Texture& input,
+        const opengl::Texture& objects,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height,
+        const opengl::Texture& output)
 {
         return std::make_unique<Impl>(input, objects, x, y, width, height, output);
 }

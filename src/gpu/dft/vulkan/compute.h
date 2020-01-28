@@ -33,9 +33,15 @@ struct DftComputeImage
         virtual ~DftComputeImage() = default;
 
         virtual void compute_commands(VkCommandBuffer command_buffer) const = 0;
-        virtual void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input,
-                                    const vulkan::ImageWithMemory& output, unsigned x, unsigned y, unsigned width,
-                                    unsigned height, uint32_t family_index) = 0;
+        virtual void create_buffers(
+                VkSampler sampler,
+                const vulkan::ImageWithMemory& input,
+                const vulkan::ImageWithMemory& output,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height,
+                uint32_t family_index) = 0;
         virtual void delete_buffers() = 0;
 };
 
@@ -47,11 +53,12 @@ struct DftComputeVector
         virtual void exec(bool inverse, std::vector<std::complex<float>>* src) = 0;
 };
 
-std::unique_ptr<DftComputeImage> create_dft_compute_image(const vulkan::VulkanInstance& instance,
-                                                          const vulkan::CommandPool& compute_command_pool,
-                                                          const vulkan::Queue& compute_queue,
-                                                          const vulkan::CommandPool& transfer_command_pool,
-                                                          const vulkan::Queue& transfer_queue);
+std::unique_ptr<DftComputeImage> create_dft_compute_image(
+        const vulkan::VulkanInstance& instance,
+        const vulkan::CommandPool& compute_command_pool,
+        const vulkan::Queue& compute_queue,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue);
 
 std::unique_ptr<DftComputeVector> create_dft_compute_vector();
 }

@@ -95,9 +95,10 @@ public:
         template <typename... S>
         GraphicsProgram(const S&... s) : Program({&s...})
         {
-                static_assert(((std::is_same_v<VertexShader, S> || std::is_same_v<TessControlShader, S> ||
-                                std::is_same_v<TessEvaluationShader, S> || std::is_same_v<GeometryShader, S> ||
-                                std::is_same_v<FragmentShader, S>)&&...));
+                static_assert(
+                        ((std::is_same_v<VertexShader, S> || std::is_same_v<TessControlShader, S> ||
+                          std::is_same_v<TessEvaluationShader, S> || std::is_same_v<GeometryShader, S> ||
+                          std::is_same_v<FragmentShader, S>)&&...));
         }
 
         GraphicsProgram(GraphicsProgram&& program) : Program(std::move(program))
@@ -130,11 +131,17 @@ public:
                 glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
         }
 
-        void dispatch_compute(unsigned num_groups_x, unsigned num_groups_y, unsigned num_groups_z, unsigned group_size_x,
-                              unsigned group_size_y, unsigned group_size_z) const
+        void dispatch_compute(
+                unsigned num_groups_x,
+                unsigned num_groups_y,
+                unsigned num_groups_z,
+                unsigned group_size_x,
+                unsigned group_size_y,
+                unsigned group_size_z) const
         {
                 Program::use();
-                glDispatchComputeGroupSizeARB(num_groups_x, num_groups_y, num_groups_z, group_size_x, group_size_y, group_size_z);
+                glDispatchComputeGroupSizeARB(
+                        num_groups_x, num_groups_y, num_groups_z, group_size_x, group_size_y, group_size_z);
         }
 };
 }

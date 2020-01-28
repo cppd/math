@@ -182,7 +182,8 @@ vec3 shade()
                 color_d *= dot_NL;
 
                 float light_reflection = max(0.0, dot(V, reflect(-L, N)));
-                color_s *= pow(light_reflection, (mtl.use_material && drawing.show_materials) ? mtl.Ns : drawing.default_ns);
+                color_s *= pow(
+                        light_reflection, (mtl.use_material && drawing.show_materials) ? mtl.Ns : drawing.default_ns);
         }
         else
         {

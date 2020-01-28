@@ -57,7 +57,8 @@ class Provider
 public:
         Provider()
         {
-                if (!::CryptAcquireContext(&m_hProvider, nullptr, nullptr, PROV_RSA_AES, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
+                if (!::CryptAcquireContext(
+                            &m_hProvider, nullptr, nullptr, PROV_RSA_AES, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
                 {
                         error("error CryptAcquireContext");
                 }

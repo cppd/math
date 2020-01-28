@@ -149,8 +149,9 @@ void save_to_file(char32_t code_point, const std::optional<Font::Char>& data)
 
         oss << ".png";
 
-        save_grayscale_image_to_file(oss.str(), data->width, data->height,
-                                     Span<const std::uint_least8_t>(data->image, 1ull * data->width * data->height));
+        save_grayscale_image_to_file(
+                oss.str(), data->width, data->height,
+                Span<const std::uint_least8_t>(data->image, 1ull * data->width * data->height));
 }
 }
 

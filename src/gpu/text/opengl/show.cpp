@@ -99,8 +99,10 @@ class Impl final : public Text
                 if (!m_vertex_buffer || m_vertex_buffer->size() < data_size)
                 {
                         m_vertex_buffer.emplace(data_size, GL_MAP_WRITE_BIT);
-                        m_vertex_array.attrib_i(0, 2, GL_INT, *m_vertex_buffer, offsetof(TextVertex, v), sizeof(TextVertex));
-                        m_vertex_array.attrib(1, 2, GL_FLOAT, *m_vertex_buffer, offsetof(TextVertex, t), sizeof(TextVertex));
+                        m_vertex_array.attrib_i(
+                                0, 2, GL_INT, *m_vertex_buffer, offsetof(TextVertex, v), sizeof(TextVertex));
+                        m_vertex_array.attrib(
+                                1, 2, GL_FLOAT, *m_vertex_buffer, offsetof(TextVertex, t), sizeof(TextVertex));
                 }
 
                 opengl::BufferMapper(*m_vertex_buffer, 0, data_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT)
@@ -115,7 +117,8 @@ class Impl final : public Text
         }
 
 public:
-        Impl(int size, const Color& color) : m_program(opengl::VertexShader(text_vert()), opengl::FragmentShader(text_frag()))
+        Impl(int size, const Color& color)
+                : m_program(opengl::VertexShader(text_vert()), opengl::FragmentShader(text_frag()))
         {
                 set_color(color);
 

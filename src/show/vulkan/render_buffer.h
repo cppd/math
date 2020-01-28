@@ -33,8 +33,11 @@ struct RenderBuffers
         virtual gpu_vulkan::RenderBuffers3D& buffers_3d() = 0;
         virtual gpu_vulkan::RenderBuffers2D& buffers_2d() = 0;
 
-        virtual VkSemaphore resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSemaphore swapchain_image_semaphore,
-                                                 VkSemaphore wait_semaphore, unsigned image_index) const = 0;
+        virtual VkSemaphore resolve_to_swapchain(
+                const vulkan::Queue& graphics_queue,
+                VkSemaphore swapchain_image_semaphore,
+                VkSemaphore wait_semaphore,
+                unsigned image_index) const = 0;
 
         virtual std::vector<VkImage> images() const = 0;
         virtual VkImageLayout image_layout() const = 0;
@@ -46,7 +49,10 @@ enum class RenderBufferCount
         Swapchain
 };
 
-std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-                                                     const vulkan::CommandPool& command_pool, const vulkan::Device& device,
-                                                     int required_minimum_sample_count);
+std::unique_ptr<RenderBuffers> create_render_buffers(
+        RenderBufferCount buffer_count,
+        const vulkan::Swapchain& swapchain,
+        const vulkan::CommandPool& command_pool,
+        const vulkan::Device& device,
+        int required_minimum_sample_count);
 }

@@ -184,8 +184,9 @@ int shared_size(int dft_size)
 
 int group_size(int dft_size)
 {
-        return dft_group_size<std::complex<float>>(dft_size, opengl::max_fixed_group_size_x(),
-                                                   opengl::max_fixed_group_invocations(), opengl::max_compute_shared_memory());
+        return dft_group_size<std::complex<float>>(
+                dft_size, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
+                opengl::max_compute_shared_memory());
 }
 
 class Fft1d
@@ -411,7 +412,12 @@ class Impl final : public DFTCompute, public DFTComputeTexture
         }
 
 public:
-        Impl(unsigned x, unsigned y, unsigned n1, unsigned n2, const opengl::Texture* source, const opengl::Texture* result)
+        Impl(unsigned x,
+             unsigned y,
+             unsigned n1,
+             unsigned n2,
+             const opengl::Texture* source,
+             const opengl::Texture* result)
                 : m_n1(n1),
                   m_n2(n2),
                   m_m1(dft_compute_m(m_n1)),
@@ -436,7 +442,8 @@ public:
                 if (source && result)
                 {
                         m_copy_input.emplace(GROUP_SIZE_2D, *source, x, y, m_n1, m_n2);
-                        m_copy_output.emplace(GROUP_SIZE_2D, *result, m_n1, m_n2, static_cast<float>(1.0 / (1ull * m_n1 * m_n2)));
+                        m_copy_output.emplace(
+                                GROUP_SIZE_2D, *result, m_n1, m_n2, static_cast<float>(1.0 / (1ull * m_n1 * m_n2)));
 
                         ASSERT(result->format() == GL_R32F);
                         ASSERT(result->width() == m_n1 && result->height() == m_n2);
@@ -462,8 +469,13 @@ std::unique_ptr<DFTCompute> create_dft_compute(unsigned width, unsigned height)
         return std::make_unique<Impl>(0, 0, width, height, nullptr, nullptr);
 }
 
-std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(const opengl::Texture& source, unsigned x, unsigned y,
-                                                              unsigned width, unsigned height, const opengl::Texture& result)
+std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(
+        const opengl::Texture& source,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height,
+        const opengl::Texture& result)
 {
         return std::make_unique<Impl>(x, y, width, height, &source, &result);
 }

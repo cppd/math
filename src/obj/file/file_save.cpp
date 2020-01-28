@@ -146,7 +146,8 @@ void write_vertices(const CFile& file, const Obj<N>* obj)
         }
         if (!facet_indices.empty() && facet_indices.size() < N)
         {
-                error("Facet unique indices count " + to_string(facet_indices.size()) + " is less than " + to_string(N));
+                error("Facet unique indices count " + to_string(facet_indices.size()) + " is less than " +
+                      to_string(N));
         }
         if (!line_indices.empty() && line_indices.size() < 2)
         {
@@ -306,7 +307,19 @@ std::string save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file
         return full_name;
 }
 
-template std::string save_obj_geometry_to_file(const Obj<3>* obj, const std::string& file_name, const std::string_view& comment);
-template std::string save_obj_geometry_to_file(const Obj<4>* obj, const std::string& file_name, const std::string_view& comment);
-template std::string save_obj_geometry_to_file(const Obj<5>* obj, const std::string& file_name, const std::string_view& comment);
-template std::string save_obj_geometry_to_file(const Obj<6>* obj, const std::string& file_name, const std::string_view& comment);
+template std::string save_obj_geometry_to_file(
+        const Obj<3>* obj,
+        const std::string& file_name,
+        const std::string_view& comment);
+template std::string save_obj_geometry_to_file(
+        const Obj<4>* obj,
+        const std::string& file_name,
+        const std::string_view& comment);
+template std::string save_obj_geometry_to_file(
+        const Obj<5>* obj,
+        const std::string& file_name,
+        const std::string_view& comment);
+template std::string save_obj_geometry_to_file(
+        const Obj<6>* obj,
+        const std::string& file_name,
+        const std::string_view& comment);

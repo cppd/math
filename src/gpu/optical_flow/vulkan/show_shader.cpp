@@ -59,16 +59,19 @@ std::vector<VkDescriptorSetLayoutBinding> OpticalFlowShowMemory::descriptor_set_
         return bindings;
 }
 
-OpticalFlowShowMemory::OpticalFlowShowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                                             const std::unordered_set<uint32_t>& family_indices)
+OpticalFlowShowMemory::OpticalFlowShowMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout,
+        const std::unordered_set<uint32_t>& family_indices)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
+                m_uniform_buffers.emplace_back(
+                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
 
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = m_uniform_buffers.back();
@@ -126,10 +129,13 @@ void OpticalFlowShowMemory::set_matrix(const mat4& matrix) const
 
 OpticalFlowShowProgram::OpticalFlowShowProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, OpticalFlowShowMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {OpticalFlowShowMemory::set_number()}, {m_descriptor_set_layout})),
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                  device,
+                  OpticalFlowShowMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {OpticalFlowShowMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_vertex_shader(m_device, optical_flow_show_vert(), "main"),
           m_fragment_shader(m_device, optical_flow_show_frag(), "main")
 {
@@ -145,9 +151,14 @@ VkPipelineLayout OpticalFlowShowProgram::pipeline_layout() const
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline OpticalFlowShowProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
-                                                         VkPrimitiveTopology primitive_topology, unsigned x, unsigned y,
-                                                         unsigned width, unsigned height) const
+vulkan::Pipeline OpticalFlowShowProgram::create_pipeline(
+        VkRenderPass render_pass,
+        VkSampleCountFlagBits sample_count,
+        VkPrimitiveTopology primitive_topology,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 

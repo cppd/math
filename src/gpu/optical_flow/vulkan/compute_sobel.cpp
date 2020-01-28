@@ -62,7 +62,9 @@ std::vector<VkDescriptorSetLayoutBinding> OpticalFlowSobelMemory::descriptor_set
         return bindings;
 }
 
-OpticalFlowSobelMemory::OpticalFlowSobelMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+OpticalFlowSobelMemory::OpticalFlowSobelMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -172,10 +174,13 @@ size_t OpticalFlowSobelConstant::size() const
 
 OpticalFlowSobelProgram::OpticalFlowSobelProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, OpticalFlowSobelMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {OpticalFlowSobelMemory::set_number()}, {m_descriptor_set_layout})),
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                  device,
+                  OpticalFlowSobelMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {OpticalFlowSobelMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_shader(device, optical_flow_sobel_comp(), "main")
 {
 }

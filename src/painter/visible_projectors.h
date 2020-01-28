@@ -27,9 +27,12 @@ class VisiblePerspectiveProjector final : public Projector<N, T>
         PerspectiveProjector<N, T> m_projector;
 
 public:
-        VisiblePerspectiveProjector(const Vector<N, T>& camera_org, const Vector<N, T>& camera_dir,
-                                    const std::array<Vector<N, T>, N - 1>& screen_axes, T width_view_angle_degrees,
-                                    const std::array<int, N - 1>& screen_size)
+        VisiblePerspectiveProjector(
+                const Vector<N, T>& camera_org,
+                const Vector<N, T>& camera_dir,
+                const std::array<Vector<N, T>, N - 1>& screen_axes,
+                T width_view_angle_degrees,
+                const std::array<int, N - 1>& screen_size)
                 : m_projector(camera_org, camera_dir, screen_axes, width_view_angle_degrees, screen_size)
         {
         }
@@ -51,9 +54,12 @@ class VisibleParallelProjector final : public Projector<N, T>
         ParallelProjector<N, T> m_projector;
 
 public:
-        VisibleParallelProjector(const Vector<N, T>& camera_org, const Vector<N, T>& camera_dir,
-                                 const std::array<Vector<N, T>, N - 1>& screen_axes, T units_per_pixel,
-                                 const std::array<int, N - 1>& screen_size)
+        VisibleParallelProjector(
+                const Vector<N, T>& camera_org,
+                const Vector<N, T>& camera_dir,
+                const std::array<Vector<N, T>, N - 1>& screen_axes,
+                T units_per_pixel,
+                const std::array<int, N - 1>& screen_size)
                 : m_projector(camera_org, camera_dir, screen_axes, units_per_pixel, screen_size)
         {
         }
@@ -75,9 +81,12 @@ class VisibleSphericalProjector final : public Projector<N, T>
         SphericalProjector<N, T> m_projector;
 
 public:
-        VisibleSphericalProjector(const Vector<N, T>& camera_org, const Vector<N, T>& camera_dir,
-                                  const std::array<Vector<N, T>, N - 1>& screen_axes, T width_view_angle_degrees,
-                                  const std::array<int, N - 1>& screen_size)
+        VisibleSphericalProjector(
+                const Vector<N, T>& camera_org,
+                const Vector<N, T>& camera_dir,
+                const std::array<Vector<N, T>, N - 1>& screen_axes,
+                T width_view_angle_degrees,
+                const std::array<int, N - 1>& screen_size)
                 : m_projector(camera_org, camera_dir, screen_axes, width_view_angle_degrees, screen_size)
         {
         }

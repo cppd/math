@@ -22,8 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace vulkan
 {
 template <size_t N>
-void queue_submit(const std::array<VkSemaphore, N>& wait_semaphores, const std::array<VkPipelineStageFlags, N>& wait_stages,
-                  VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, VkQueue queue)
+void queue_submit(
+        const std::array<VkSemaphore, N>& wait_semaphores,
+        const std::array<VkPipelineStageFlags, N>& wait_stages,
+        VkCommandBuffer command_buffer,
+        VkSemaphore signal_semaphore,
+        VkQueue queue)
 {
         VkSubmitInfo info = {};
 
@@ -43,8 +47,12 @@ void queue_submit(const std::array<VkSemaphore, N>& wait_semaphores, const std::
         }
 }
 
-void queue_submit(VkSemaphore wait_semaphore, VkPipelineStageFlags wait_stage, VkCommandBuffer command_buffer,
-                  VkSemaphore signal_semaphore, VkQueue queue)
+void queue_submit(
+        VkSemaphore wait_semaphore,
+        VkPipelineStageFlags wait_stage,
+        VkCommandBuffer command_buffer,
+        VkSemaphore signal_semaphore,
+        VkQueue queue)
 {
         VkSubmitInfo info = {};
 
@@ -96,7 +104,10 @@ void queue_submit(VkCommandBuffer command_buffer, VkQueue queue)
         }
 }
 
-template void queue_submit(const std::array<VkSemaphore, 2>& wait_semaphores,
-                           const std::array<VkPipelineStageFlags, 2>& wait_stages, VkCommandBuffer command_buffer,
-                           VkSemaphore signal_semaphore, VkQueue queue);
+template void queue_submit(
+        const std::array<VkSemaphore, 2>& wait_semaphores,
+        const std::array<VkPipelineStageFlags, 2>& wait_stages,
+        VkCommandBuffer command_buffer,
+        VkSemaphore signal_semaphore,
+        VkQueue queue);
 }

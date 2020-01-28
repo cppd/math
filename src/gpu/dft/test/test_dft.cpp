@@ -55,12 +55,16 @@ constexpr double DISCREPANCY_LIMIT = 1e-4;
 namespace
 {
 #if defined(CUDA_FOUND) || defined(FFTW_FOUND)
-void compare(const std::string& name_compute, const std::string& name_library, const std::vector<complex>& x_compute,
-             const std::vector<complex>& x_library)
+void compare(
+        const std::string& name_compute,
+        const std::string& name_library,
+        const std::vector<complex>& x_compute,
+        const std::vector<complex>& x_library)
 {
         if (x_compute.size() != x_library.size())
         {
-                error("DFT compare data size error: " + to_string(x_compute.size()) + ", " + to_string(x_library.size()));
+                error("DFT compare data size error: " + to_string(x_compute.size()) + ", " +
+                      to_string(x_library.size()));
         }
 
         double sum = 0;
@@ -260,14 +264,19 @@ void compute_fftw(bool inverse, int n1, int n2, std::vector<complex>* data)
 }
 #endif
 
-void dft_test(const int n1, const int n2, const std::vector<complex>& source_data, ProgressRatio* progress,
-              const std::string& output_vulkan_file_name, const std::string& output_inverse_vulkan_file_name,
-              [[maybe_unused]] const std::string& output_opengl_file_name,
-              [[maybe_unused]] const std::string& output_inverse_opengl_file_name,
-              [[maybe_unused]] const std::string& output_cuda_file_name,
-              [[maybe_unused]] const std::string& output_inverse_cuda_file_name,
-              [[maybe_unused]] const std::string& output_fftw_file_name,
-              [[maybe_unused]] const std::string& output_inverse_fftw_file_name)
+void dft_test(
+        const int n1,
+        const int n2,
+        const std::vector<complex>& source_data,
+        ProgressRatio* progress,
+        const std::string& output_vulkan_file_name,
+        const std::string& output_inverse_vulkan_file_name,
+        [[maybe_unused]] const std::string& output_opengl_file_name,
+        [[maybe_unused]] const std::string& output_inverse_opengl_file_name,
+        [[maybe_unused]] const std::string& output_cuda_file_name,
+        [[maybe_unused]] const std::string& output_inverse_cuda_file_name,
+        [[maybe_unused]] const std::string& output_fftw_file_name,
+        [[maybe_unused]] const std::string& output_inverse_fftw_file_name)
 {
         int computation_count = 2;
 
@@ -413,12 +422,14 @@ void random_data_test(const std::array<int, 2>& dimensions, ProgressRatio* progr
 
         if (dimensions[0] != n1 || dimensions[1] != n2)
         {
-                error("Error test data dimensions: saved to file (" + to_string(dimensions[0]) + ", " + to_string(dimensions[1]) +
-                      "), loaded from file (" + to_string(n1) + ", " + to_string(n2) + ")");
+                error("Error test data dimensions: saved to file (" + to_string(dimensions[0]) + ", " +
+                      to_string(dimensions[1]) + "), loaded from file (" + to_string(n1) + ", " + to_string(n2) + ")");
         }
 
-        dft_test(n1, n2, source_data, progress, vulkan_file_name, inverse_vulkan_file_name, opengl_file_name,
-                 inverse_opengl_file_name, cuda_file_name, inverse_cuda_file_name, fftw_file_name, inverse_fftw_file_name);
+        dft_test(
+                n1, n2, source_data, progress, vulkan_file_name, inverse_vulkan_file_name, opengl_file_name,
+                inverse_opengl_file_name, cuda_file_name, inverse_cuda_file_name, fftw_file_name,
+                inverse_fftw_file_name);
 
         LOG("---\nDFT check passed");
 }

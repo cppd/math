@@ -47,8 +47,9 @@ constexpr Vector<N, T> make_vector_one_value(const T& v)
         return make_vector_one_value<ValueIndex>(std::make_integer_sequence<int, N>(), v);
 }
 template <typename T, int... I>
-constexpr std::array<Vector<sizeof...(I), T>, sizeof...(I)> make_array_of_vectors_one_value(std::integer_sequence<int, I...>,
-                                                                                            const T& v)
+constexpr std::array<Vector<sizeof...(I), T>, sizeof...(I)> make_array_of_vectors_one_value(
+        std::integer_sequence<int, I...>,
+        const T& v)
 {
         return {make_vector_one_value<sizeof...(I), T, I>(v)...};
 }

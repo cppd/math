@@ -67,7 +67,9 @@ unsigned PencilSketchComputeMemory::set_number()
         return SET_NUMBER;
 }
 
-PencilSketchComputeMemory::PencilSketchComputeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+PencilSketchComputeMemory::PencilSketchComputeMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -187,10 +189,13 @@ size_t PencilSketchComputeConstant::size() const
 
 PencilSketchComputeProgram::PencilSketchComputeProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, PencilSketchComputeMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {PencilSketchComputeMemory::set_number()}, {m_descriptor_set_layout})),
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                  device,
+                  PencilSketchComputeMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {PencilSketchComputeMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_shader(device, pencil_sketch_compute_comp(), "main")
 {
 }
@@ -211,7 +216,12 @@ VkPipeline PencilSketchComputeProgram::pipeline() const
         return m_pipeline;
 }
 
-void PencilSketchComputeProgram::create_pipeline(unsigned group_size, unsigned x, unsigned y, unsigned width, unsigned height)
+void PencilSketchComputeProgram::create_pipeline(
+        unsigned group_size,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height)
 {
         m_constant.set(group_size, x, y, width, height);
 

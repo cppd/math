@@ -52,8 +52,12 @@ class BarPaintbrush
         //         }
         // }
         template <int level>
-        static void generate_pixels(Pixel& pixel, std::array<int, N + N - 1>& min, std::array<int, N + N - 1>& max,
-                                    const std::array<int, N - 1>& inc, std::vector<Pixel>* pixels)
+        static void generate_pixels(
+                Pixel& pixel,
+                std::array<int, N + N - 1>& min,
+                std::array<int, N + N - 1>& max,
+                const std::array<int, N - 1>& inc,
+                std::vector<Pixel>* pixels)
         {
                 static_assert(level < N + N - 1);
 
@@ -132,7 +136,8 @@ public:
                 {
                         if (screen_size[i] < 1)
                         {
-                                error("Paintbrush size " + to_string(i) + " is not positive (" + to_string(screen_size[i]) + ")");
+                                error("Paintbrush size " + to_string(i) + " is not positive (" +
+                                      to_string(screen_size[i]) + ")");
                         }
                 }
                 if (paint_height < 1)
@@ -219,8 +224,12 @@ public:
                 return true;
         }
 
-        void statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
-                        double* previous_pass_duration) const
+        void statistics(
+                long long* pass_count,
+                long long* pixel_count,
+                long long* ray_count,
+                long long* sample_count,
+                double* previous_pass_duration) const
         {
                 std::lock_guard lg(m_lock);
 

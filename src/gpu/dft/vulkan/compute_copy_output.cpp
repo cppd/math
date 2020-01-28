@@ -149,8 +149,10 @@ DftCopyOutputProgram::DftCopyOutputProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
                   vulkan::create_descriptor_set_layout(device, DftCopyOutputMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {DftCopyOutputMemory::set_number()}, {m_descriptor_set_layout})),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {DftCopyOutputMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_shader(device, dft_copy_output_comp(), "main")
 {
 }

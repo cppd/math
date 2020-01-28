@@ -26,7 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-DescriptorSetLayout create_descriptor_set_layout(VkDevice device, const std::vector<VkDescriptorSetLayoutBinding>& bindings);
+DescriptorSetLayout create_descriptor_set_layout(
+        VkDevice device,
+        const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
 class Descriptors final
 {
@@ -43,8 +45,11 @@ class Descriptors final
         const VkDescriptorSetLayoutBinding& layout_binding(uint32_t binding) const;
 
 public:
-        Descriptors(VkDevice device, uint32_t max_sets, VkDescriptorSetLayout descriptor_set_layout,
-                    const std::vector<VkDescriptorSetLayoutBinding>& bindings);
+        Descriptors(
+                VkDevice device,
+                uint32_t max_sets,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
         Descriptors(const Descriptors&) = delete;
         Descriptors& operator=(const Descriptors&) = delete;
@@ -59,10 +64,13 @@ public:
         const VkDescriptorSet& descriptor_set(uint32_t index) const;
 
         void update_descriptor_set(
-                uint32_t index, const std::vector<uint32_t>& bindings,
+                uint32_t index,
+                const std::vector<uint32_t>& bindings,
                 const std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const;
 
-        void update_descriptor_set(uint32_t index, uint32_t binding,
-                                   const Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& info) const;
+        void update_descriptor_set(
+                uint32_t index,
+                uint32_t binding,
+                const Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& info) const;
 };
 }

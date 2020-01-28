@@ -128,7 +128,10 @@ public:
 };
 
 template <typename T>
-class limits<T, std::enable_if_t<std::is_same_v<T, unsigned __int128> && !std::numeric_limits<unsigned __int128>::is_specialized>>
+class limits<
+        T,
+        std::enable_if_t<
+                std::is_same_v<T, unsigned __int128> && !std::numeric_limits<unsigned __int128>::is_specialized>>
 {
         static_assert(!std::numeric_limits<T>::is_specialized);
         static_assert(std::is_same_v<T, unsigned __int128>);
@@ -148,7 +151,9 @@ public:
 };
 
 template <typename T>
-class limits<T, std::enable_if_t<std::is_same_v<T, signed __int128> && !std::numeric_limits<signed __int128>::is_specialized>>
+class limits<
+        T,
+        std::enable_if_t<std::is_same_v<T, signed __int128> && !std::numeric_limits<signed __int128>::is_specialized>>
 {
         static_assert(!std::numeric_limits<T>::is_specialized);
         static_assert(std::is_same_v<T, signed __int128>);

@@ -499,7 +499,8 @@ class Impl final : public Show
 
                 const PressedMouseButton& right = pressed_mouse_button(ShowMouseButton::Right);
                 if (right.pressed &&
-                    pointIsInsideRectangle(right.pressed_x, right.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
+                    pointIsInsideRectangle(
+                            right.pressed_x, right.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
                     (right.delta_x != 0 || right.delta_y != 0))
                 {
                         m_camera.rotate(-right.delta_x, -right.delta_y);
@@ -508,7 +509,8 @@ class Impl final : public Show
 
                 const PressedMouseButton& left = pressed_mouse_button(ShowMouseButton::Left);
                 if (left.pressed &&
-                    pointIsInsideRectangle(left.pressed_x, left.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
+                    pointIsInsideRectangle(
+                            left.pressed_x, left.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
                     (left.delta_x != 0 || left.delta_y != 0))
                 {
                         m_camera.move(vec2(-left.delta_x, left.delta_y));
@@ -580,15 +582,17 @@ class Impl final : public Show
                 m_swapchain.reset();
 
                 const std::unordered_set<uint32_t> swapchain_family_indices = {
-                        m_instance->graphics_compute_queues()[0].family_index(), m_instance->presentation_queue().family_index()};
+                        m_instance->graphics_compute_queues()[0].family_index(),
+                        m_instance->presentation_queue().family_index()};
 
-                m_swapchain =
-                        std::make_unique<vulkan::Swapchain>(m_instance->surface(), m_instance->device(), swapchain_family_indices,
-                                                            VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT, m_present_mode);
+                m_swapchain = std::make_unique<vulkan::Swapchain>(
+                        m_instance->surface(), m_instance->device(), swapchain_family_indices, VULKAN_SURFACE_FORMAT,
+                        VULKAN_PREFERRED_IMAGE_COUNT, m_present_mode);
 
                 constexpr RenderBufferCount buffer_count = RenderBufferCount::One;
-                m_render_buffers = create_render_buffers(buffer_count, *m_swapchain, m_instance->graphics_compute_command_pool(),
-                                                         m_instance->device(), VULKAN_MINIMUM_SAMPLE_COUNT);
+                m_render_buffers = create_render_buffers(
+                        buffer_count, *m_swapchain, m_instance->graphics_compute_command_pool(), m_instance->device(),
+                        VULKAN_MINIMUM_SAMPLE_COUNT);
 
                 //
 
@@ -611,22 +615,23 @@ class Impl final : public Show
                         m_instance->device(), m_instance->graphics_compute_command_pool(),
                         m_instance->graphics_compute_queues()[0],
                         std::unordered_set({m_instance->graphics_compute_queues()[0].family_index()}),
-                        std::vector<VkFormat>({VULKAN_OBJECT_IMAGE_FORMAT}), m_swapchain->width(), m_swapchain->height(),
-                        VK_IMAGE_LAYOUT_GENERAL, true /*storage*/);
+                        std::vector<VkFormat>({VULKAN_OBJECT_IMAGE_FORMAT}), m_swapchain->width(),
+                        m_swapchain->height(), VK_IMAGE_LAYOUT_GENERAL, true /*storage*/);
 
                 ASSERT(m_object_image->usage() & VK_IMAGE_USAGE_STORAGE_BIT);
 
                 //
 
-                m_text->create_buffers(&m_render_buffers->buffers_2d(), 0, 0, m_swapchain->width(), m_swapchain->height());
+                m_text->create_buffers(
+                        &m_render_buffers->buffers_2d(), 0, 0, m_swapchain->width(), m_swapchain->height());
 
                 //
 
                 int w1_x, w1_y, w1_w, w1_h;
                 int w2_x, w2_y, w2_w, w2_h;
-                const bool two_windows =
-                        windowPositionAndSize(m_dft_active, m_swapchain->width(), m_swapchain->height(), m_frame_size_in_pixels,
-                                              &w1_x, &w1_y, &w1_w, &w1_h, &w2_x, &w2_y, &w2_w, &w2_h);
+                const bool two_windows = windowPositionAndSize(
+                        m_dft_active, m_swapchain->width(), m_swapchain->height(), m_frame_size_in_pixels, &w1_x, &w1_y,
+                        &w1_w, &w1_h, &w2_x, &w2_y, &w2_w, &w2_h);
 
                 m_draw_x0 = w1_x;
                 m_draw_y0 = w1_y;
@@ -646,18 +651,19 @@ class Impl final : public Show
 
                 //
 
-                m_renderer->create_buffers(m_swapchain.get(), &m_render_buffers->buffers_3d(), m_object_image.get(), w1_x, w1_y,
-                                           w1_w, w1_h);
+                m_renderer->create_buffers(
+                        m_swapchain.get(), &m_render_buffers->buffers_3d(), m_object_image.get(), w1_x, w1_y, w1_w,
+                        w1_h);
 
                 //
 
                 m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), *m_object_image, w1_x, w1_y, w1_w, w1_h);
 
-                m_pencil_sketch->create_buffers(&m_render_buffers->buffers_2d(), *m_resolve_texture, *m_object_image, w1_x, w1_y,
-                                                w1_w, w1_h);
+                m_pencil_sketch->create_buffers(
+                        &m_render_buffers->buffers_2d(), *m_resolve_texture, *m_object_image, w1_x, w1_y, w1_w, w1_h);
 
-                m_optical_flow->create_buffers(&m_render_buffers->buffers_2d(), *m_resolve_texture, m_window_ppi, w1_x, w1_y,
-                                               w1_w, w1_h);
+                m_optical_flow->create_buffers(
+                        &m_render_buffers->buffers_2d(), *m_resolve_texture, m_window_ppi, w1_x, w1_y, w1_w, w1_h);
 
                 if (two_windows)
                 {
@@ -665,8 +671,9 @@ class Impl final : public Show
                         ASSERT(w2_x + w2_w <= static_cast<int>(m_swapchain->width()));
                         ASSERT(w2_y + w2_h <= static_cast<int>(m_swapchain->height()));
 
-                        m_dft->create_buffers(&m_render_buffers->buffers_2d(), *m_resolve_texture, w1_x, w1_y, w1_w, w1_h, w2_x,
-                                              w2_y, w2_w, w2_h);
+                        m_dft->create_buffers(
+                                &m_render_buffers->buffers_2d(), *m_resolve_texture, w1_x, w1_y, w1_w, w1_h, w2_x, w2_y,
+                                w2_w, w2_h);
                 }
 
                 //
@@ -675,15 +682,18 @@ class Impl final : public Show
                 m_renderer->set_camera(m_camera.renderer_info());
         }
 
-        VkSemaphore resolve_to_texture(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore,
-                                       unsigned image_index) const
+        VkSemaphore resolve_to_texture(
+                const vulkan::Queue& graphics_queue,
+                VkSemaphore wait_semaphore,
+                unsigned image_index) const
         {
                 ASSERT(m_resolve_command_buffers->count() == 1 || image_index < m_resolve_command_buffers->count());
 
                 const unsigned index = m_resolve_command_buffers->count() == 1 ? 0 : image_index;
 
-                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, (*m_resolve_command_buffers)[index],
-                                     *m_resolve_semaphore, graphics_queue);
+                vulkan::queue_submit(
+                        wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, (*m_resolve_command_buffers)[index],
+                        *m_resolve_semaphore, graphics_queue);
 
                 return *m_resolve_semaphore;
         }
@@ -693,7 +703,8 @@ class Impl final : public Show
                 static_assert(!std::remove_reference_t<decltype(m_instance->graphics_compute_queues())>().empty());
 
                 uint32_t image_index;
-                if (!vulkan::acquire_next_image(m_instance->device(), m_swapchain->swapchain(), *m_image_semaphore, &image_index))
+                if (!vulkan::acquire_next_image(
+                            m_instance->device(), m_swapchain->swapchain(), *m_image_semaphore, &image_index))
                 {
                         return false;
                 }
@@ -723,7 +734,8 @@ class Impl final : public Show
 
                 if (m_optical_flow_active)
                 {
-                        wait_semaphore = m_optical_flow->draw(graphics_queue, compute_queue, wait_semaphore, image_index);
+                        wait_semaphore =
+                                m_optical_flow->draw(graphics_queue, compute_queue, wait_semaphore, image_index);
                 }
 
                 if (m_convex_hull_active)
@@ -736,11 +748,11 @@ class Impl final : public Show
                         wait_semaphore = m_text->draw(graphics_queue, wait_semaphore, image_index, text_data);
                 }
 
-                wait_semaphore =
-                        m_render_buffers->resolve_to_swapchain(graphics_queue, *m_image_semaphore, wait_semaphore, image_index);
+                wait_semaphore = m_render_buffers->resolve_to_swapchain(
+                        graphics_queue, *m_image_semaphore, wait_semaphore, image_index);
 
-                if (!vulkan::queue_present(wait_semaphore, m_swapchain->swapchain(), image_index,
-                                           m_instance->presentation_queue()))
+                if (!vulkan::queue_present(
+                            wait_semaphore, m_swapchain->swapchain(), image_index, m_instance->presentation_queue()))
                 {
                         return false;
                 }
@@ -773,7 +785,8 @@ public:
                                         gpu_vulkan::PencilSketchShow::required_device_features(),
                                         gpu_vulkan::Renderer::required_device_features(),
                                         gpu_vulkan::TextShow::required_device_features(),
-                                        device_features_sample_shading(VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING),
+                                        device_features_sample_shading(
+                                                VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING),
                                         device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY));
 
                         const std::vector<vulkan::PhysicalDeviceFeatures> optional_features = {};
@@ -783,13 +796,15 @@ public:
                         };
 
                         m_instance = std::make_unique<vulkan::VulkanInstance>(
-                                instance_extensions, device_extensions, required_features, optional_features, surface_function);
+                                instance_extensions, device_extensions, required_features, optional_features,
+                                surface_function);
                 }
 
                 ASSERT(m_instance->graphics_compute_command_pool().family_index() ==
                        m_instance->graphics_compute_queues()[0].family_index());
                 ASSERT(m_instance->compute_command_pool().family_index() == m_instance->compute_queue().family_index());
-                ASSERT(m_instance->transfer_command_pool().family_index() == m_instance->transfer_queue().family_index());
+                ASSERT(m_instance->transfer_command_pool().family_index() ==
+                       m_instance->transfer_queue().family_index());
 
                 m_image_semaphore = std::make_unique<vulkan::Semaphore>(m_instance->device());
                 m_resolve_semaphore = std::make_unique<vulkan::Semaphore>(m_instance->device());
@@ -801,27 +816,29 @@ public:
                 const vulkan::Queue& transfer_queue = m_instance->transfer_queue();
                 const vulkan::CommandPool& transfer_command_pool = m_instance->transfer_command_pool();
 
-                m_renderer = gpu_vulkan::create_renderer(*m_instance, graphics_compute_command_pool, graphics_compute_queue,
-                                                         transfer_command_pool, transfer_queue, VULKAN_SAMPLE_SHADING,
-                                                         VULKAN_SAMPLER_ANISOTROPY);
+                m_renderer = gpu_vulkan::create_renderer(
+                        *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
+                        transfer_queue, VULKAN_SAMPLE_SHADING, VULKAN_SAMPLER_ANISOTROPY);
 
-                m_text = gpu_vulkan::create_text_show(*m_instance, graphics_compute_command_pool, graphics_compute_queue,
-                                                      transfer_command_pool, transfer_queue, VULKAN_SAMPLE_SHADING,
-                                                      m_frame_rate.text_size(), text_color);
+                m_text = gpu_vulkan::create_text_show(
+                        *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
+                        transfer_queue, VULKAN_SAMPLE_SHADING, m_frame_rate.text_size(), text_color);
 
-                m_convex_hull = gpu_vulkan::create_convex_hull_show(*m_instance, graphics_compute_command_pool,
-                                                                    graphics_compute_queue.family_index(), VULKAN_SAMPLE_SHADING);
+                m_convex_hull = gpu_vulkan::create_convex_hull_show(
+                        *m_instance, graphics_compute_command_pool, graphics_compute_queue.family_index(),
+                        VULKAN_SAMPLE_SHADING);
 
-                m_pencil_sketch =
-                        gpu_vulkan::create_convex_hull_show(*m_instance, graphics_compute_command_pool, graphics_compute_queue,
-                                                            transfer_command_pool, transfer_queue, VULKAN_SAMPLE_SHADING);
+                m_pencil_sketch = gpu_vulkan::create_convex_hull_show(
+                        *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
+                        transfer_queue, VULKAN_SAMPLE_SHADING);
 
-                m_dft = gpu_vulkan::create_dft_show(*m_instance, graphics_compute_command_pool, graphics_compute_queue,
-                                                    transfer_command_pool, transfer_queue, VULKAN_SAMPLE_SHADING);
+                m_dft = gpu_vulkan::create_dft_show(
+                        *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
+                        transfer_queue, VULKAN_SAMPLE_SHADING);
 
                 m_optical_flow = gpu_vulkan::create_optical_flow_show(
-                        *m_instance, graphics_compute_command_pool, graphics_compute_queue, compute_command_pool, compute_queue,
-                        transfer_command_pool, transfer_queue, VULKAN_SAMPLE_SHADING);
+                        *m_instance, graphics_compute_command_pool, graphics_compute_queue, compute_command_pool,
+                        compute_queue, transfer_command_pool, transfer_queue, VULKAN_SAMPLE_SHADING);
 
                 //
 

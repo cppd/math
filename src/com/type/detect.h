@@ -57,9 +57,13 @@ template <typename Container>
 class HasBeginEnd
 {
         template <typename T>
-        static decltype(std::begin(std::declval<T>()), std::end(std::declval<T>()), std::cbegin(std::declval<T>()),
-                        std::cend(std::declval<T>()), std::true_type())
-        f(int);
+        static decltype(
+                std::begin(std::declval<T>()),
+                std::end(std::declval<T>()),
+                std::cbegin(std::declval<T>()),
+                std::cend(std::declval<T>()),
+                std::true_type())
+                f(int);
         template <typename>
         static std::false_type f(...);
 

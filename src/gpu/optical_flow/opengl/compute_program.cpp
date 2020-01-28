@@ -56,7 +56,12 @@ std::string sobel_source(const vec2i& group_size)
         return optical_flow_sobel_comp(s);
 }
 
-std::string flow_source(const vec2i& group_size, int radius, int iteration_count, double stop_move_square, double min_determinant)
+std::string flow_source(
+        const vec2i& group_size,
+        int radius,
+        int iteration_count,
+        double stop_move_square,
+        double min_determinant)
 {
         ASSERT(group_size[0] == group_size[1]);
 
@@ -72,8 +77,12 @@ std::string flow_source(const vec2i& group_size, int radius, int iteration_count
 
 //
 
-OpticalFlowGrayscaleProgram::OpticalFlowGrayscaleProgram(const vec2i& group_size, unsigned x, unsigned y, unsigned width,
-                                                         unsigned height)
+OpticalFlowGrayscaleProgram::OpticalFlowGrayscaleProgram(
+        const vec2i& group_size,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height)
         : m_program(opengl::ComputeShader(grayscale_source(group_size, x, y, width, height)))
 {
 }
@@ -115,14 +124,21 @@ void OpticalFlowSobelProgram::exec(const vec2i& groups, const OpticalFlowSobelMe
 
 //
 
-OpticalFlowFlowProgram::OpticalFlowFlowProgram(const vec2i& group_size, int radius, int iteration_count, double stop_move_square,
-                                               double min_determinant)
-        : m_program(opengl::ComputeShader(flow_source(group_size, radius, iteration_count, stop_move_square, min_determinant)))
+OpticalFlowFlowProgram::OpticalFlowFlowProgram(
+        const vec2i& group_size,
+        int radius,
+        int iteration_count,
+        double stop_move_square,
+        double min_determinant)
+        : m_program(opengl::ComputeShader(
+                  flow_source(group_size, radius, iteration_count, stop_move_square, min_determinant)))
 {
 }
 
-void OpticalFlowFlowProgram::exec(const vec2i& groups, const OpticalFlowDataMemory& data,
-                                  const OpticalFlowImagesMemory& images) const
+void OpticalFlowFlowProgram::exec(
+        const vec2i& groups,
+        const OpticalFlowDataMemory& data,
+        const OpticalFlowImagesMemory& images) const
 {
         data.bind();
         images.bind();

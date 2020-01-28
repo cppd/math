@@ -224,8 +224,11 @@ std::vector<Vector<N, float>> unique_point_vertices(const Obj<N>* obj)
 }
 
 template <size_t N, typename T>
-void center_and_length(const std::vector<Vector<N, T>>& vertices, const std::vector<typename Obj<N>::Facet>& facets,
-                       Vector<N, T>* center, T* length)
+void center_and_length(
+        const std::vector<Vector<N, T>>& vertices,
+        const std::vector<typename Obj<N>::Facet>& facets,
+        Vector<N, T>* center,
+        T* length)
 {
         if (facets.empty())
         {
@@ -257,8 +260,11 @@ void center_and_length(const std::vector<Vector<N, T>>& vertices, const std::vec
 }
 
 template <size_t N, typename T>
-void center_and_length(const std::vector<Vector<N, T>>& vertices, const std::vector<typename Obj<N>::Line>& lines,
-                       Vector<N, T>* center, T* length)
+void center_and_length(
+        const std::vector<Vector<N, T>>& vertices,
+        const std::vector<typename Obj<N>::Line>& lines,
+        Vector<N, T>* center,
+        T* length)
 {
         if (lines.empty())
         {
@@ -290,8 +296,11 @@ void center_and_length(const std::vector<Vector<N, T>>& vertices, const std::vec
 }
 
 template <size_t N, typename T>
-void center_and_length(const std::vector<Vector<N, T>>& vertices, const std::vector<typename Obj<N>::Point>& points,
-                       Vector<N, T>* center, T* length)
+void center_and_length(
+        const std::vector<Vector<N, T>>& vertices,
+        const std::vector<typename Obj<N>::Point>& points,
+        Vector<N, T>* center,
+        T* length)
 {
         if (points.empty())
         {
@@ -322,7 +331,9 @@ void center_and_length(const std::vector<Vector<N, T>>& vertices, const std::vec
 }
 
 template <size_t N, typename T, typename... Indices>
-std::tuple<Vector<N, T>, Vector<N, T>> min_max_coordinates(const std::vector<Vector<N, T>>& vertices, const Indices&... indices)
+std::tuple<Vector<N, T>, Vector<N, T>> min_max_coordinates(
+        const std::vector<Vector<N, T>>& vertices,
+        const Indices&... indices)
 {
         static_assert((std::is_same_v<Indices, std::vector<int>> && ...));
         static_assert(sizeof...(Indices) > 0);
@@ -368,12 +379,16 @@ Matrix<N + 1, N + 1, double> model_vertex_matrix(const Obj<N>& obj, double size,
 }
 
 template <size_t N>
-void sort_facets_by_material(const Obj<N>& obj, std::vector<int>* sorted_facet_indices, std::vector<int>* facet_offset,
-                             std::vector<int>* facet_count)
+void sort_facets_by_material(
+        const Obj<N>& obj,
+        std::vector<int>* sorted_facet_indices,
+        std::vector<int>* facet_offset,
+        std::vector<int>* facet_count)
 {
-        ASSERT(std::all_of(std::cbegin(obj.facets()), std::cend(obj.facets()), [&](const typename Obj<N>::Facet& facet) {
-                return facet.material < static_cast<int>(obj.materials().size());
-        }));
+        ASSERT(std::all_of(
+                std::cbegin(obj.facets()), std::cend(obj.facets()), [&](const typename Obj<N>::Facet& facet) {
+                        return facet.material < static_cast<int>(obj.materials().size());
+                }));
 
         // Robert Sedgewick, Kevin Wayne.
         // Algorithms. Fourth edition.

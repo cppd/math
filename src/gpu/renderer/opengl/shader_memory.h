@@ -224,7 +224,8 @@ class RendererPointsMemory final
         };
 
 public:
-        RendererPointsMemory() : m_matrices(sizeof(Matrices), GL_MAP_WRITE_BIT), m_drawing(sizeof(Drawing), GL_MAP_WRITE_BIT)
+        RendererPointsMemory()
+                : m_matrices(sizeof(Matrices), GL_MAP_WRITE_BIT), m_drawing(sizeof(Drawing), GL_MAP_WRITE_BIT)
         {
         }
 

@@ -31,8 +31,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-void APIENTRY debug_proc(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei /*length*/, const GLchar* message,
-                         const void* /*userParam*/)
+void APIENTRY debug_proc(
+        GLenum source,
+        GLenum type,
+        GLuint id,
+        GLenum severity,
+        GLsizei /*length*/,
+        const GLchar* message,
+        const void* /*userParam*/)
 {
         if (severity == GL_DEBUG_SEVERITY_NOTIFICATION)
         {

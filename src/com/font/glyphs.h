@@ -33,5 +33,11 @@ struct FontGlyph
 
 // Информация о символах шрифта с картинкой всех символов вместе.
 // Grayscale, sRGB, uint8.
-void create_font_glyphs(const Font& font, int max_width, int max_height, std::unordered_map<char32_t, FontGlyph>* font_glyphs,
-                        int* texture_width, int* texture_height, std::vector<std::uint_least8_t>* texture_pixels);
+void create_font_glyphs(
+        const Font& font,
+        int max_width,
+        int max_height,
+        std::unordered_map<char32_t, FontGlyph>* font_glyphs,
+        int* texture_width,
+        int* texture_height,
+        std::vector<std::uint_least8_t>* texture_pixels);

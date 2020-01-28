@@ -84,9 +84,11 @@ public:
 };
 
 template <size_t N>
-void create_delaunay_objects_and_facets(const std::vector<vec<N>>& points, const std::vector<DelaunaySimplex<N>>& simplices,
-                                        std::vector<DelaunayObject<N>>* delaunay_objects,
-                                        std::vector<DelaunayFacet<N>>* delaunay_facets)
+void create_delaunay_objects_and_facets(
+        const std::vector<vec<N>>& points,
+        const std::vector<DelaunaySimplex<N>>& simplices,
+        std::vector<DelaunayObject<N>>* delaunay_objects,
+        std::vector<DelaunayFacet<N>>* delaunay_facets)
 {
         constexpr int NULL_INDEX = -1;
 
@@ -149,7 +151,8 @@ void create_delaunay_objects_and_facets(const std::vector<vec<N>>& points, const
 
                         ASSERT(delaunay_i_0 != simplex_map.cend() && delaunay_i_1 != simplex_map.cend());
 
-                        delaunay_facets->emplace_back(facet.vertices(), facet_ortho, delaunay_i_0->second, delaunay_i_1->second);
+                        delaunay_facets->emplace_back(
+                                facet.vertices(), facet_ortho, delaunay_i_0->second, delaunay_i_1->second);
                 }
         }
 }

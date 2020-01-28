@@ -39,9 +39,13 @@ class Swapchain
         std::vector<ImageView> m_image_views;
 
 public:
-        Swapchain(VkSurfaceKHR surface, const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                  const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count,
-                  PresentMode preferred_present_mode);
+        Swapchain(
+                VkSurfaceKHR surface,
+                const Device& device,
+                const std::unordered_set<uint32_t>& family_indices,
+                const VkSurfaceFormatKHR& required_surface_format,
+                int preferred_image_count,
+                PresentMode preferred_present_mode);
 
         Swapchain(const Swapchain&) = delete;
         Swapchain& operator=(const Swapchain&) = delete;

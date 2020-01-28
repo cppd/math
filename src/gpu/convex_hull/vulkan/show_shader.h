@@ -50,8 +50,10 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        ConvexHullShowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                             const std::unordered_set<uint32_t>& family_indices);
+        ConvexHullShowMemory(
+                const vulkan::Device& device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::unordered_set<uint32_t>& family_indices);
 
         ConvexHullShowMemory(const ConvexHullShowMemory&) = delete;
         ConvexHullShowMemory& operator=(const ConvexHullShowMemory&) = delete;
@@ -90,8 +92,14 @@ public:
         ConvexHullShowProgram(ConvexHullShowProgram&&) = default;
         ~ConvexHullShowProgram() = default;
 
-        vulkan::Pipeline create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, bool sample_shading,
-                                         unsigned x, unsigned y, unsigned width, unsigned height) const;
+        vulkan::Pipeline create_pipeline(
+                VkRenderPass render_pass,
+                VkSampleCountFlagBits sample_count,
+                bool sample_shading,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height) const;
 
         VkDescriptorSetLayout descriptor_set_layout() const;
         VkPipelineLayout pipeline_layout() const;

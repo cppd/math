@@ -63,9 +63,13 @@ std::vector<Vector<N, T>> generate_random_points_on_sphere(const Vector<N, T>& c
 }
 
 template <size_t N>
-void create_spherical_convex_hull(const Vector<N, float>& center, float radius, int point_count,
-                                  std::vector<Vector<N, float>>* points, std::vector<std::array<int, N>>* facets,
-                                  ProgressRatio* progress)
+void create_spherical_convex_hull(
+        const Vector<N, float>& center,
+        float radius,
+        int point_count,
+        std::vector<Vector<N, float>>* points,
+        std::vector<std::array<int, N>>* facets,
+        ProgressRatio* progress)
 {
         *points = generate_random_points_on_sphere<N, float>(center, radius, point_count);
 
@@ -86,8 +90,12 @@ void create_spherical_convex_hull(const Vector<N, float>& center, float radius, 
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_sphere(const Vector<N, float>& center, float radius, int point_count,
-                                                         int thread_count, ProgressRatio* progress)
+std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_sphere(
+        const Vector<N, float>& center,
+        float radius,
+        int point_count,
+        int thread_count,
+        ProgressRatio* progress)
 {
         std::vector<Vector<N, float>> points;
         std::vector<std::array<int, N>> facets;
@@ -111,14 +119,18 @@ std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_sphere(const Vector<N, float>&
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_random_sphere(int point_count, int thread_count, ProgressRatio* progress)
+std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_random_sphere(
+        int point_count,
+        int thread_count,
+        ProgressRatio* progress)
 {
         static_assert(N >= 3 && N <= 6);
         static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
 
         // От 3 измерений последовательно
         constexpr std::array<std::array<int, 2>, 4> exponents_for_float = {{{-7, 10}, {-4, 6}, {-3, 5}, {-2, 3}}};
-        constexpr std::array<std::array<int, 2>, 4> exponents_for_double = {{{-22, 37}, {-22, 37}, {-22, 37}, {-22, 30}}};
+        constexpr std::array<std::array<int, 2>, 4> exponents_for_double = {
+                {{-22, 37}, {-22, 37}, {-22, 37}, {-22, 30}}};
 
         const std::array<int, 2>* exponents = nullptr;
         if (std::is_same_v<T, float>)
@@ -142,20 +154,36 @@ std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_random_sphere(int point_count,
         return simplex_mesh_of_sphere<N, T>(center, radius, point_count, thread_count, progress);
 }
 
-template std::unique_ptr<const Mesh<3, float>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
-                                                                             ProgressRatio* progress);
-template std::unique_ptr<const Mesh<4, float>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
-                                                                             ProgressRatio* progress);
-template std::unique_ptr<const Mesh<5, float>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
-                                                                             ProgressRatio* progress);
-template std::unique_ptr<const Mesh<6, float>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
-                                                                             ProgressRatio* progress);
+template std::unique_ptr<const Mesh<3, float>> simplex_mesh_of_random_sphere(
+        int point_count,
+        int thread_count,
+        ProgressRatio* progress);
+template std::unique_ptr<const Mesh<4, float>> simplex_mesh_of_random_sphere(
+        int point_count,
+        int thread_count,
+        ProgressRatio* progress);
+template std::unique_ptr<const Mesh<5, float>> simplex_mesh_of_random_sphere(
+        int point_count,
+        int thread_count,
+        ProgressRatio* progress);
+template std::unique_ptr<const Mesh<6, float>> simplex_mesh_of_random_sphere(
+        int point_count,
+        int thread_count,
+        ProgressRatio* progress);
 
-template std::unique_ptr<const Mesh<3, double>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
-                                                                              ProgressRatio* progress);
-template std::unique_ptr<const Mesh<4, double>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
-                                                                              ProgressRatio* progress);
-template std::unique_ptr<const Mesh<5, double>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
-                                                                              ProgressRatio* progress);
-template std::unique_ptr<const Mesh<6, double>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
-                                                                              ProgressRatio* progress);
+template std::unique_ptr<const Mesh<3, double>> simplex_mesh_of_random_sphere(
+        int point_count,
+        int thread_count,
+        ProgressRatio* progress);
+template std::unique_ptr<const Mesh<4, double>> simplex_mesh_of_random_sphere(
+        int point_count,
+        int thread_count,
+        ProgressRatio* progress);
+template std::unique_ptr<const Mesh<5, double>> simplex_mesh_of_random_sphere(
+        int point_count,
+        int thread_count,
+        ProgressRatio* progress);
+template std::unique_ptr<const Mesh<6, double>> simplex_mesh_of_random_sphere(
+        int point_count,
+        int thread_count,
+        ProgressRatio* progress);

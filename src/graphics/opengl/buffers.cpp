@@ -62,7 +62,11 @@ Buffer::operator GLuint() const&
 
 //
 
-BufferMapper::BufferMapper(const Buffer& buffer, unsigned long long offset, unsigned long long length, GLbitfield access)
+BufferMapper::BufferMapper(
+        const Buffer& buffer,
+        unsigned long long offset,
+        unsigned long long length,
+        GLbitfield access)
         : m_buffer(buffer), m_access(access), m_length(length)
 {
         ASSERT((access & GL_MAP_WRITE_BIT) || (access & GL_MAP_READ_BIT));
@@ -79,7 +83,8 @@ BufferMapper::BufferMapper(const Buffer& buffer, unsigned long long offset, unsi
         }
 }
 
-BufferMapper::BufferMapper(const Buffer& buffer, GLbitfield access) : m_buffer(buffer), m_access(access), m_length(buffer.size())
+BufferMapper::BufferMapper(const Buffer& buffer, GLbitfield access)
+        : m_buffer(buffer), m_access(access), m_length(buffer.size())
 {
         ASSERT((access & GL_MAP_WRITE_BIT) || (access & GL_MAP_READ_BIT));
         ASSERT(!(access & GL_MAP_WRITE_BIT) || (buffer.flags() & GL_MAP_WRITE_BIT));
@@ -105,8 +110,13 @@ void VertexArray::bind() const
         glBindVertexArray(m_vertex_array);
 }
 
-void VertexArray::attrib(GLuint attrib_index, GLint size, GLenum type, const Buffer& buffer, GLintptr offset,
-                         GLsizei stride) const
+void VertexArray::attrib(
+        GLuint attrib_index,
+        GLint size,
+        GLenum type,
+        const Buffer& buffer,
+        GLintptr offset,
+        GLsizei stride) const
 {
         GLuint binding_index = attrib_index;
         glVertexArrayAttribFormat(m_vertex_array, attrib_index, size, type, GL_FALSE, 0);
@@ -116,8 +126,13 @@ void VertexArray::attrib(GLuint attrib_index, GLint size, GLenum type, const Buf
         glEnableVertexArrayAttrib(m_vertex_array, attrib_index);
 }
 
-void VertexArray::attrib_i(GLuint attrib_index, GLint size, GLenum type, const Buffer& buffer, GLintptr offset,
-                           GLsizei stride) const
+void VertexArray::attrib_i(
+        GLuint attrib_index,
+        GLint size,
+        GLenum type,
+        const Buffer& buffer,
+        GLintptr offset,
+        GLsizei stride) const
 {
         GLuint binding_index = attrib_index;
         glVertexArrayAttribIFormat(m_vertex_array, attrib_index, size, type, 0);
@@ -181,7 +196,8 @@ Texture::Texture(GLenum format, GLsizei width, GLsizei height, const Span<const 
         {
                 ASSERT(4ull * width * height == srgb_pixels.size());
 
-                const std::vector<float> buffer = color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
+                const std::vector<float> buffer =
+                        color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
 
                 glTextureSubImage2D(m_texture, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, buffer.data());
 
@@ -191,7 +207,8 @@ Texture::Texture(GLenum format, GLsizei width, GLsizei height, const Span<const 
         {
                 ASSERT(1ull * width * height == srgb_pixels.size());
 
-                std::vector<float> buffer = color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
+                std::vector<float> buffer =
+                        color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
 
                 glTextureSubImage2D(m_texture, 0, 0, 0, width, height, GL_RED, GL_FLOAT, buffer.data());
 
@@ -356,7 +373,8 @@ Texture::operator GLuint() const&
 
 //
 
-DepthFramebuffer::DepthFramebuffer(GLenum depth_format, GLsizei width, GLsizei height) : m_depth(depth_format, width, height)
+DepthFramebuffer::DepthFramebuffer(GLenum depth_format, GLsizei width, GLsizei height)
+        : m_depth(depth_format, width, height)
 {
         glNamedFramebufferTexture(m_framebuffer, GL_DEPTH_ATTACHMENT, m_depth, 0);
 
@@ -379,7 +397,8 @@ const Texture& DepthFramebuffer::texture() const
 
 //
 
-ColorFramebuffer::ColorFramebuffer(GLenum color_format, GLsizei width, GLsizei height) : m_color(color_format, width, height)
+ColorFramebuffer::ColorFramebuffer(GLenum color_format, GLsizei width, GLsizei height)
+        : m_color(color_format, width, height)
 {
         constexpr GLenum COLOR_ATTACHMENT = GL_COLOR_ATTACHMENT0;
 
@@ -406,8 +425,12 @@ const Texture& ColorFramebuffer::texture() const
 
 //
 
-ColorDepthFramebufferMultisample::ColorDepthFramebufferMultisample(GLenum color_format, GLenum depth_format, GLsizei samples,
-                                                                   GLsizei width, GLsizei height)
+ColorDepthFramebufferMultisample::ColorDepthFramebufferMultisample(
+        GLenum color_format,
+        GLenum depth_format,
+        GLsizei samples,
+        GLsizei width,
+        GLsizei height)
 {
         constexpr GLenum COLOR_ATTACHMENT = GL_COLOR_ATTACHMENT0;
         constexpr GLenum DEPTH_ATTACHMENT = GL_DEPTH_ATTACHMENT;

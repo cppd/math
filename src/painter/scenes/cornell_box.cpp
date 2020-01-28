@@ -76,19 +76,46 @@ class CornellBoxScene : public PaintObjects<3, double>
 
         //
 
-        void create_scene(int width, int height, double size, const Color& default_color, double diffuse,
-                          const vec3& camera_direction, const vec3& camera_up);
+        void create_scene(
+                int width,
+                int height,
+                double size,
+                const Color& default_color,
+                double diffuse,
+                const vec3& camera_direction,
+                const vec3& camera_up);
 
 public:
-        CornellBoxScene(int width, int height, const std::string& obj_file_name, double size, const Color& default_color,
-                        double diffuse, const vec3& camera_direction, const vec3& camera_up);
+        CornellBoxScene(
+                int width,
+                int height,
+                const std::string& obj_file_name,
+                double size,
+                const Color& default_color,
+                double diffuse,
+                const vec3& camera_direction,
+                const vec3& camera_up);
 
-        CornellBoxScene(int width, int height, const std::shared_ptr<const Mesh<3, double>>& mesh, double size,
-                        const Color& default_color, double diffuse, const vec3& camera_direction, const vec3& camera_up);
+        CornellBoxScene(
+                int width,
+                int height,
+                const std::shared_ptr<const Mesh<3, double>>& mesh,
+                double size,
+                const Color& default_color,
+                double diffuse,
+                const vec3& camera_direction,
+                const vec3& camera_up);
 };
 
-CornellBoxScene::CornellBoxScene(int width, int height, const std::string& obj_file_name, double size, const Color& default_color,
-                                 double diffuse, const vec3& camera_direction, const vec3& camera_up)
+CornellBoxScene::CornellBoxScene(
+        int width,
+        int height,
+        const std::string& obj_file_name,
+        double size,
+        const Color& default_color,
+        double diffuse,
+        const vec3& camera_direction,
+        const vec3& camera_up)
 {
         ProgressRatio progress(nullptr);
 
@@ -96,23 +123,37 @@ CornellBoxScene::CornellBoxScene(int width, int height, const std::string& obj_f
 
         mat4 vertex_matrix = model_vertex_matrix(*obj, size, vec3(0));
 
-        std::shared_ptr mesh = std::make_shared<Mesh<3, double>>(obj.get(), vertex_matrix, hardware_concurrency(), &progress);
+        std::shared_ptr mesh =
+                std::make_shared<Mesh<3, double>>(obj.get(), vertex_matrix, hardware_concurrency(), &progress);
 
         m_mesh = std::make_unique<VisibleSharedMesh<3, double>>(mesh);
 
         create_scene(width, height, size, default_color, diffuse, camera_direction, camera_up);
 }
 
-CornellBoxScene::CornellBoxScene(int width, int height, const std::shared_ptr<const Mesh<3, double>>& mesh, double size,
-                                 const Color& default_color, double diffuse, const vec3& camera_direction, const vec3& camera_up)
+CornellBoxScene::CornellBoxScene(
+        int width,
+        int height,
+        const std::shared_ptr<const Mesh<3, double>>& mesh,
+        double size,
+        const Color& default_color,
+        double diffuse,
+        const vec3& camera_direction,
+        const vec3& camera_up)
 {
         m_mesh = std::make_unique<VisibleSharedMesh<3, double>>(mesh);
 
         create_scene(width, height, size, default_color, diffuse, camera_direction, camera_up);
 }
 
-void CornellBoxScene::create_scene(int width, int height, double size, const Color& default_color, double diffuse,
-                                   const vec3& camera_direction, const vec3& camera_up)
+void CornellBoxScene::create_scene(
+        int width,
+        int height,
+        double size,
+        const Color& default_color,
+        double diffuse,
+        const vec3& camera_direction,
+        const vec3& camera_up)
 {
         m_mesh->set_color(default_color);
         m_mesh->set_diffuse_and_fresnel(diffuse, 0);
@@ -135,28 +176,32 @@ void CornellBoxScene::create_scene(int width, int height, double size, const Col
 
         //
 
-        m_rectangle_back =
-                std::make_unique<VisibleHyperplaneParallelotope<3, double>>(lower_left + size * dir, size * right, size * up);
+        m_rectangle_back = std::make_unique<VisibleHyperplaneParallelotope<3, double>>(
+                lower_left + size * dir, size * right, size * up);
         m_rectangle_back->set_color(colors::WHITE);
         m_rectangle_back->set_diffuse_and_fresnel(1, 0);
         m_rectangle_back->set_light_source(false);
 
-        m_rectangle_top = std::make_unique<VisibleHyperplaneParallelotope<3, double>>(upper_left, size * dir, size * right);
+        m_rectangle_top =
+                std::make_unique<VisibleHyperplaneParallelotope<3, double>>(upper_left, size * dir, size * right);
         m_rectangle_top->set_color(colors::WHITE);
         m_rectangle_top->set_diffuse_and_fresnel(1, 0);
         m_rectangle_top->set_light_source(false);
 
-        m_rectangle_bottom = std::make_unique<VisibleHyperplaneParallelotope<3, double>>(lower_left, size * dir, size * right);
+        m_rectangle_bottom =
+                std::make_unique<VisibleHyperplaneParallelotope<3, double>>(lower_left, size * dir, size * right);
         m_rectangle_bottom->set_color(colors::WHITE);
         m_rectangle_bottom->set_diffuse_and_fresnel(1, 0);
         m_rectangle_bottom->set_light_source(false);
 
-        m_rectangle_left = std::make_unique<VisibleHyperplaneParallelotope<3, double>>(lower_left, size * dir, size * up);
+        m_rectangle_left =
+                std::make_unique<VisibleHyperplaneParallelotope<3, double>>(lower_left, size * dir, size * up);
         m_rectangle_left->set_color(colors::RED);
         m_rectangle_left->set_diffuse_and_fresnel(1, 0);
         m_rectangle_left->set_light_source(false);
 
-        m_rectangle_right = std::make_unique<VisibleHyperplaneParallelotope<3, double>>(lower_right, size * dir, size * up);
+        m_rectangle_right =
+                std::make_unique<VisibleHyperplaneParallelotope<3, double>>(lower_right, size * dir, size * up);
         m_rectangle_right->set_color(colors::GREEN);
         m_rectangle_right->set_diffuse_and_fresnel(1, 0);
         m_rectangle_right->set_light_source(false);
@@ -165,10 +210,10 @@ void CornellBoxScene::create_scene(int width, int height, double size, const Col
 
         const std::array<int, 2> screen_sizes{width, height};
         const std::array<vec3, 2> screen_axes{right, up};
-        m_perspective_projector =
-                std::make_unique<VisiblePerspectiveProjector<3, double>>(view_point, dir, screen_axes, 70, screen_sizes);
-        m_parallel_projector =
-                std::make_unique<VisibleParallelProjector<3, double>>(view_point, dir, screen_axes, size / width, screen_sizes);
+        m_perspective_projector = std::make_unique<VisiblePerspectiveProjector<3, double>>(
+                view_point, dir, screen_axes, 70, screen_sizes);
+        m_parallel_projector = std::make_unique<VisibleParallelProjector<3, double>>(
+                view_point, dir, screen_axes, size / width, screen_sizes);
         m_spherical_projector =
                 std::make_unique<VisibleSphericalProjector<3, double>>(view_point, dir, screen_axes, 80, screen_sizes);
 
@@ -177,8 +222,9 @@ void CornellBoxScene::create_scene(int width, int height, double size, const Col
         m_default_surface_properties.set_light_source(false);
         m_default_surface_properties.set_light_source_color(colors::BLACK);
 
-        m_box = std::make_unique<VisibleParallelotope<3, double>>(lower_left + size * (0.7 * dir + 0.8 * right + 0.1 * up),
-                                                                  0.1 * size * right, 0.8 * size * up, 0.1 * size * dir);
+        m_box = std::make_unique<VisibleParallelotope<3, double>>(
+                lower_left + size * (0.7 * dir + 0.8 * right + 0.1 * up), 0.1 * size * right, 0.8 * size * up,
+                0.1 * size * dir);
 
         m_box->set_color(colors::MAGENTA);
         m_box->set_diffuse_and_fresnel(1, 0);
@@ -186,8 +232,8 @@ void CornellBoxScene::create_scene(int width, int height, double size, const Col
 
         vec3 upper_center = upper_left - 0.001 * size * up + 0.5 * size * right + 0.5 * size * dir;
 
-        m_lamp = std::make_unique<VisibleHyperplaneParallelotope<3, double>>(upper_center - 0.1 * size * dir - 0.1 * size * right,
-                                                                             0.2 * size * right, 0.2 * size * dir);
+        m_lamp = std::make_unique<VisibleHyperplaneParallelotope<3, double>>(
+                upper_center - 0.1 * size * dir - 0.1 * size * right, 0.2 * size * right, 0.2 * size * dir);
         m_lamp->set_color(colors::WHITE);
         m_lamp->set_diffuse_and_fresnel(1, 0);
         m_lamp->set_light_source(true);
@@ -211,18 +257,30 @@ void CornellBoxScene::create_scene(int width, int height, double size, const Col
 
 }
 
-std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(int width, int height, const std::string& obj_file_name,
-                                                                 double size, const Color& default_color, double diffuse,
-                                                                 const vec3& camera_direction, const vec3& camera_up)
+std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(
+        int width,
+        int height,
+        const std::string& obj_file_name,
+        double size,
+        const Color& default_color,
+        double diffuse,
+        const vec3& camera_direction,
+        const vec3& camera_up)
 {
-        return std::make_unique<CornellBoxScene>(width, height, obj_file_name, size, default_color, diffuse, camera_direction,
-                                                 camera_up);
+        return std::make_unique<CornellBoxScene>(
+                width, height, obj_file_name, size, default_color, diffuse, camera_direction, camera_up);
 }
 
-std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(int width, int height,
-                                                                 const std::shared_ptr<const Mesh<3, double>>& mesh, double size,
-                                                                 const Color& default_color, double diffuse,
-                                                                 const vec3& camera_direction, const vec3& camera_up)
+std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(
+        int width,
+        int height,
+        const std::shared_ptr<const Mesh<3, double>>& mesh,
+        double size,
+        const Color& default_color,
+        double diffuse,
+        const vec3& camera_direction,
+        const vec3& camera_up)
 {
-        return std::make_unique<CornellBoxScene>(width, height, mesh, size, default_color, diffuse, camera_direction, camera_up);
+        return std::make_unique<CornellBoxScene>(
+                width, height, mesh, size, default_color, diffuse, camera_direction, camera_up);
 }

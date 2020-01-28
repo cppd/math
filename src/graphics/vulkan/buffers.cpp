@@ -34,8 +34,11 @@ namespace vulkan
 {
 namespace
 {
-Buffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage,
-                     const std::unordered_set<uint32_t>& family_indices)
+Buffer create_buffer(
+        VkDevice device,
+        VkDeviceSize size,
+        VkBufferUsageFlags usage,
+        const std::unordered_set<uint32_t>& family_indices)
 {
         if (!(size > 0))
         {
@@ -68,9 +71,15 @@ Buffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usag
         return Buffer(device, create_info);
 }
 
-Image create_2d_image(VkDevice device, uint32_t width, uint32_t height, VkFormat format,
-                      const std::unordered_set<uint32_t>& family_indices, VkSampleCountFlagBits samples, VkImageTiling tiling,
-                      VkImageUsageFlags usage)
+Image create_2d_image(
+        VkDevice device,
+        uint32_t width,
+        uint32_t height,
+        VkFormat format,
+        const std::unordered_set<uint32_t>& family_indices,
+        VkSampleCountFlagBits samples,
+        VkImageTiling tiling,
+        VkImageUsageFlags usage)
 {
         if (!(width > 0))
         {
@@ -125,8 +134,8 @@ DeviceMemory create_device_memory(const Device& device, VkBuffer buffer, VkMemor
         VkMemoryAllocateInfo allocate_info = {};
         allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocate_info.allocationSize = memory_requirements.size;
-        allocate_info.memoryTypeIndex =
-                physical_device_memory_type_index(device.physical_device(), memory_requirements.memoryTypeBits, properties);
+        allocate_info.memoryTypeIndex = physical_device_memory_type_index(
+                device.physical_device(), memory_requirements.memoryTypeBits, properties);
 
         DeviceMemory device_memory(device, allocate_info);
 
@@ -147,8 +156,8 @@ DeviceMemory create_device_memory(const Device& device, VkImage image, VkMemoryP
         VkMemoryAllocateInfo allocate_info = {};
         allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocate_info.allocationSize = memory_requirements.size;
-        allocate_info.memoryTypeIndex =
-                physical_device_memory_type_index(device.physical_device(), memory_requirements.memoryTypeBits, properties);
+        allocate_info.memoryTypeIndex = physical_device_memory_type_index(
+                device.physical_device(), memory_requirements.memoryTypeBits, properties);
 
         DeviceMemory device_memory(device, allocate_info);
 
@@ -161,7 +170,11 @@ DeviceMemory create_device_memory(const Device& device, VkImage image, VkMemoryP
         return device_memory;
 }
 
-void copy_host_to_device(const DeviceMemory& device_memory, VkDeviceSize offset, const void* data, VkDeviceSize data_size)
+void copy_host_to_device(
+        const DeviceMemory& device_memory,
+        VkDeviceSize offset,
+        const void* data,
+        VkDeviceSize data_size)
 {
         void* map_memory_data;
 
@@ -224,8 +237,13 @@ void end_commands(VkQueue queue, VkCommandBuffer command_buffer)
         queue_wait_idle(queue);
 }
 
-void copy_buffer_to_buffer(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkBuffer dst_buffer, VkBuffer src_buffer,
-                           VkDeviceSize size)
+void copy_buffer_to_buffer(
+        VkDevice device,
+        VkCommandPool command_pool,
+        VkQueue queue,
+        VkBuffer dst_buffer,
+        VkBuffer src_buffer,
+        VkDeviceSize size)
 {
         CommandBuffer command_buffer(device, command_pool);
 
@@ -244,8 +262,14 @@ void copy_buffer_to_buffer(VkDevice device, VkCommandPool command_pool, VkQueue 
         end_commands(queue, command_buffer);
 }
 
-void copy_buffer_to_image(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkImage image, VkBuffer buffer,
-                          uint32_t width, uint32_t height)
+void copy_buffer_to_image(
+        VkDevice device,
+        VkCommandPool command_pool,
+        VkQueue queue,
+        VkImage image,
+        VkBuffer buffer,
+        uint32_t width,
+        uint32_t height)
 {
         CommandBuffer command_buffer(device, command_pool);
 
@@ -274,8 +298,12 @@ void copy_buffer_to_image(VkDevice device, VkCommandPool command_pool, VkQueue q
         end_commands(queue, command_buffer);
 }
 
-void cmd_transition_texture_layout(VkImageAspectFlags aspect_mask, VkCommandBuffer command_buffer, VkImage image,
-                                   VkImageLayout old_layout, VkImageLayout new_layout)
+void cmd_transition_texture_layout(
+        VkImageAspectFlags aspect_mask,
+        VkCommandBuffer command_buffer,
+        VkImage image,
+        VkImageLayout old_layout,
+        VkImageLayout new_layout)
 {
         VkImageMemoryBarrier barrier = {};
 
@@ -306,7 +334,9 @@ void cmd_transition_texture_layout(VkImageAspectFlags aspect_mask, VkCommandBuff
                 source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
                 destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
         }
-        else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+        else if (
+                old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
+                new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
         {
                 barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
                 barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
@@ -314,8 +344,9 @@ void cmd_transition_texture_layout(VkImageAspectFlags aspect_mask, VkCommandBuff
                 source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
                 destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
         }
-        else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED &&
-                 (new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL || new_layout == VK_IMAGE_LAYOUT_GENERAL))
+        else if (
+                old_layout == VK_IMAGE_LAYOUT_UNDEFINED &&
+                (new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL || new_layout == VK_IMAGE_LAYOUT_GENERAL))
         {
                 barrier.srcAccessMask = 0;
                 barrier.dstAccessMask = 0;
@@ -331,8 +362,13 @@ void cmd_transition_texture_layout(VkImageAspectFlags aspect_mask, VkCommandBuff
         vkCmdPipelineBarrier(command_buffer, source_stage, destination_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
-void transition_texture_layout_color(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkImage image,
-                                     VkImageLayout old_layout, VkImageLayout new_layout)
+void transition_texture_layout_color(
+        VkDevice device,
+        VkCommandPool command_pool,
+        VkQueue queue,
+        VkImage image,
+        VkImageLayout old_layout,
+        VkImageLayout new_layout)
 {
         CommandBuffer command_buffer(device, command_pool);
 
@@ -343,8 +379,13 @@ void transition_texture_layout_color(VkDevice device, VkCommandPool command_pool
         end_commands(queue, command_buffer);
 }
 
-void transition_texture_layout_depth(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkImage image,
-                                     VkImageLayout old_layout, VkImageLayout new_layout)
+void transition_texture_layout_depth(
+        VkDevice device,
+        VkCommandPool command_pool,
+        VkQueue queue,
+        VkImage image,
+        VkImageLayout old_layout,
+        VkImageLayout new_layout)
 {
         CommandBuffer command_buffer(device, command_pool);
 
@@ -355,12 +396,18 @@ void transition_texture_layout_depth(VkDevice device, VkCommandPool command_pool
         end_commands(queue, command_buffer);
 }
 
-void staging_buffer_copy(const Device& device, const CommandPool& command_pool, const Queue& queue, VkBuffer dst_buffer,
-                         VkDeviceSize src_data_size, const void* src_data)
+void staging_buffer_copy(
+        const Device& device,
+        const CommandPool& command_pool,
+        const Queue& queue,
+        VkBuffer dst_buffer,
+        VkDeviceSize src_data_size,
+        const void* src_data)
 {
         ASSERT(command_pool.family_index() == queue.family_index());
 
-        Buffer staging_buffer(create_buffer(device, src_data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {queue.family_index()}));
+        Buffer staging_buffer(
+                create_buffer(device, src_data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {queue.family_index()}));
 
         DeviceMemory staging_device_memory(create_device_memory(
                 device, staging_buffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
@@ -373,13 +420,22 @@ void staging_buffer_copy(const Device& device, const CommandPool& command_pool, 
 }
 
 template <typename T>
-void staging_image_copy(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                        const CommandPool& transfer_command_pool, const Queue& transfer_queue, VkImage image,
-                        VkImageLayout old_image_layout, VkImageLayout new_image_layout, uint32_t width, uint32_t height,
-                        const T& pixels)
+void staging_image_copy(
+        const Device& device,
+        const CommandPool& graphics_command_pool,
+        const Queue& graphics_queue,
+        const CommandPool& transfer_command_pool,
+        const Queue& transfer_queue,
+        VkImage image,
+        VkImageLayout old_image_layout,
+        VkImageLayout new_image_layout,
+        uint32_t width,
+        uint32_t height,
+        const T& pixels)
 {
-        static_assert(std::is_same_v<typename T::value_type, uint8_t> || std::is_same_v<typename T::value_type, uint16_t> ||
-                      std::is_same_v<typename T::value_type, float>);
+        static_assert(
+                std::is_same_v<typename T::value_type, uint8_t> || std::is_same_v<typename T::value_type, uint16_t> ||
+                std::is_same_v<typename T::value_type, float>);
         static_assert(std::is_same_v<typename T::value_type, std::remove_cvref_t<decltype(pixels[0])>>);
 
         ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
@@ -397,13 +453,15 @@ void staging_image_copy(const Device& device, const CommandPool& graphics_comman
 
         copy_host_to_device(staging_device_memory, 0, pixels.data(), data_size);
 
-        transition_texture_layout_color(device, graphics_command_pool, graphics_queue, image, old_image_layout,
-                                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        transition_texture_layout_color(
+                device, graphics_command_pool, graphics_queue, image, old_image_layout,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
         copy_buffer_to_image(device, transfer_command_pool, transfer_queue, image, staging_buffer, width, height);
 
-        transition_texture_layout_color(device, graphics_command_pool, graphics_queue, image,
-                                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, new_image_layout);
+        transition_texture_layout_color(
+                device, graphics_command_pool, graphics_queue, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                new_image_layout);
 }
 
 ImageView create_image_view(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect_flags)
@@ -443,15 +501,21 @@ void check_grayscale_buffer_size(const T& pixels, unsigned width, unsigned heigh
 {
         if (pixels.size() != 1ull * width * height)
         {
-                error("Wrong grayscale pixel component count " + to_string(pixels.size()) + " for image dimensions width " +
-                      to_string(width) + " and height " + to_string(height));
+                error("Wrong grayscale pixel component count " + to_string(pixels.size()) +
+                      " for image dimensions width " + to_string(width) + " and height " + to_string(height));
         }
 }
 
-void load_pixels_to_image(const ImageWithMemory& image_with_memory, VkImageLayout old_image_layout,
-                          VkImageLayout new_image_layout, const Device& device, const CommandPool& graphics_command_pool,
-                          const Queue& graphics_queue, const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                          const Span<const std::uint_least8_t>& srgb_pixels)
+void load_pixels_to_image(
+        const ImageWithMemory& image_with_memory,
+        VkImageLayout old_image_layout,
+        VkImageLayout new_image_layout,
+        const Device& device,
+        const CommandPool& graphics_command_pool,
+        const Queue& graphics_queue,
+        const CommandPool& transfer_command_pool,
+        const Queue& transfer_queue,
+        const Span<const std::uint_least8_t>& srgb_pixels)
 {
         const VkImage image = image_with_memory.image();
         const VkFormat format = image_with_memory.format();
@@ -465,24 +529,29 @@ void load_pixels_to_image(const ImageWithMemory& image_with_memory, VkImageLayou
         case VK_FORMAT_R16G16B16A16_UNORM:
         {
                 check_color_buffer_size(srgb_pixels, width, height);
-                const std::vector<uint16_t> buffer = color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(srgb_pixels);
-                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                                   old_image_layout, new_image_layout, width, height, buffer);
+                const std::vector<uint16_t> buffer =
+                        color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(srgb_pixels);
+                staging_image_copy(
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
+                        old_image_layout, new_image_layout, width, height, buffer);
                 break;
         }
         case VK_FORMAT_R32G32B32A32_SFLOAT:
         {
                 check_color_buffer_size(srgb_pixels, width, height);
-                const std::vector<float> buffer = color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
-                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                                   old_image_layout, new_image_layout, width, height, buffer);
+                const std::vector<float> buffer =
+                        color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
+                staging_image_copy(
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
+                        old_image_layout, new_image_layout, width, height, buffer);
                 break;
         }
         case VK_FORMAT_R8G8B8A8_SRGB:
         {
                 check_color_buffer_size(srgb_pixels, width, height);
-                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                                   old_image_layout, new_image_layout, width, height, srgb_pixels);
+                staging_image_copy(
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
+                        old_image_layout, new_image_layout, width, height, srgb_pixels);
                 break;
         }
         case VK_FORMAT_R16_UNORM:
@@ -490,23 +559,27 @@ void load_pixels_to_image(const ImageWithMemory& image_with_memory, VkImageLayou
                 check_grayscale_buffer_size(srgb_pixels, width, height);
                 const std::vector<uint16_t> buffer =
                         color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_uint16(srgb_pixels);
-                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                                   old_image_layout, new_image_layout, width, height, buffer);
+                staging_image_copy(
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
+                        old_image_layout, new_image_layout, width, height, buffer);
                 break;
         }
         case VK_FORMAT_R32_SFLOAT:
         {
                 check_grayscale_buffer_size(srgb_pixels, width, height);
-                const std::vector<float> buffer = color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
-                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                                   old_image_layout, new_image_layout, width, height, buffer);
+                const std::vector<float> buffer =
+                        color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
+                staging_image_copy(
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
+                        old_image_layout, new_image_layout, width, height, buffer);
                 break;
         }
         case VK_FORMAT_R8_SRGB:
         {
                 check_grayscale_buffer_size(srgb_pixels, width, height);
-                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                                   old_image_layout, new_image_layout, width, height, srgb_pixels);
+                staging_image_copy(
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
+                        old_image_layout, new_image_layout, width, height, srgb_pixels);
                 break;
         }
         default:
@@ -524,8 +597,13 @@ void BufferWithMemory::write(VkDeviceSize size, const void* data) const
         map.write(0, data, size);
 }
 
-void BufferWithMemory::write(const Device& device, const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                             const std::unordered_set<uint32_t>& family_indices, VkDeviceSize size, const void* data) const
+void BufferWithMemory::write(
+        const Device& device,
+        const CommandPool& transfer_command_pool,
+        const Queue& transfer_queue,
+        const std::unordered_set<uint32_t>& family_indices,
+        VkDeviceSize size,
+        const void* data) const
 {
         ASSERT(data && !host_visible() && usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
@@ -541,13 +619,17 @@ void BufferWithMemory::write(const Device& device, const CommandPool& transfer_c
         staging_buffer_copy(device, transfer_command_pool, transfer_queue, m_buffer, size, data);
 }
 
-BufferWithMemory::BufferWithMemory(BufferMemoryType memory_type, const Device& device,
-                                   const std::unordered_set<uint32_t>& family_indices, VkBufferUsageFlags usage,
-                                   VkDeviceSize size)
+BufferWithMemory::BufferWithMemory(
+        BufferMemoryType memory_type,
+        const Device& device,
+        const std::unordered_set<uint32_t>& family_indices,
+        VkBufferUsageFlags usage,
+        VkDeviceSize size)
         : m_buffer(create_buffer(device, size, usage, family_indices)),
-          m_memory_properties(memory_type == BufferMemoryType::HostVisible ?
-                                      (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) :
-                                      (VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
+          m_memory_properties(
+                  memory_type == BufferMemoryType::HostVisible ?
+                          (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) :
+                          (VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
           m_device_memory(create_device_memory(device, m_buffer, m_memory_properties))
 {
         ASSERT(size > 0);
@@ -613,17 +695,23 @@ BufferMapper::~BufferMapper()
 
 //
 
-void ImageWithMemory::init(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                           const std::vector<VkFormat>& format_candidates, uint32_t width, uint32_t height, bool storage,
-                           VkSampleCountFlagBits samples)
+void ImageWithMemory::init(
+        const Device& device,
+        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<VkFormat>& format_candidates,
+        uint32_t width,
+        uint32_t height,
+        bool storage,
+        VkSampleCountFlagBits samples)
 {
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
         VkFormatFeatureFlags features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
                                         (storage ? VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT : 0);
-        m_usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | (storage ? VK_IMAGE_USAGE_STORAGE_BIT : 0);
+        m_usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
+                  (storage ? VK_IMAGE_USAGE_STORAGE_BIT : 0);
 
-        m_format =
-                find_supported_2d_image_format(device.physical_device(), format_candidates, tiling, features, m_usage, samples);
+        m_format = find_supported_2d_image_format(
+                device.physical_device(), format_candidates, tiling, features, m_usage, samples);
         m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, m_usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
@@ -635,11 +723,19 @@ void ImageWithMemory::init(const Device& device, const std::unordered_set<uint32
 // VkFormat
 // {VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R32G32B32A32_SFLOAT}
 // {VK_FORMAT_R8_SRGB, VK_FORMAT_R16_UNORM, VK_FORMAT_R32_SFLOAT}
-ImageWithMemory::ImageWithMemory(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                                 const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                                 const std::unordered_set<uint32_t>& family_indices,
-                                 const std::vector<VkFormat>& format_candidates, uint32_t width, uint32_t height,
-                                 VkImageLayout image_layout, const Span<const std::uint_least8_t>& srgb_pixels, bool storage)
+ImageWithMemory::ImageWithMemory(
+        const Device& device,
+        const CommandPool& graphics_command_pool,
+        const Queue& graphics_queue,
+        const CommandPool& transfer_command_pool,
+        const Queue& transfer_queue,
+        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<VkFormat>& format_candidates,
+        uint32_t width,
+        uint32_t height,
+        VkImageLayout image_layout,
+        const Span<const std::uint_least8_t>& srgb_pixels,
+        bool storage)
 {
         ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
         ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
@@ -656,14 +752,22 @@ ImageWithMemory::ImageWithMemory(const Device& device, const CommandPool& graphi
         constexpr VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
         init(device, family_indices, format_candidates, width, height, storage, samples);
 
-        load_pixels_to_image(*this, VK_IMAGE_LAYOUT_UNDEFINED, image_layout, device, graphics_command_pool, graphics_queue,
-                             transfer_command_pool, transfer_queue, srgb_pixels);
+        load_pixels_to_image(
+                *this, VK_IMAGE_LAYOUT_UNDEFINED, image_layout, device, graphics_command_pool, graphics_queue,
+                transfer_command_pool, transfer_queue, srgb_pixels);
 }
 
-ImageWithMemory::ImageWithMemory(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                                 const std::unordered_set<uint32_t>& family_indices,
-                                 const std::vector<VkFormat>& format_candidates, VkSampleCountFlagBits samples, uint32_t width,
-                                 uint32_t height, VkImageLayout image_layout, bool storage)
+ImageWithMemory::ImageWithMemory(
+        const Device& device,
+        const CommandPool& graphics_command_pool,
+        const Queue& graphics_queue,
+        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<VkFormat>& format_candidates,
+        VkSampleCountFlagBits samples,
+        uint32_t width,
+        uint32_t height,
+        VkImageLayout image_layout,
+        bool storage)
 {
         ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
 
@@ -674,16 +778,31 @@ ImageWithMemory::ImageWithMemory(const Device& device, const CommandPool& graphi
 
         init(device, family_indices, format_candidates, width, height, storage, samples);
 
-        transition_texture_layout_color(device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
-                                        image_layout);
+        transition_texture_layout_color(
+                device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED, image_layout);
 }
 
-ImageWithMemory::ImageWithMemory(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                                 const std::unordered_set<uint32_t>& family_indices,
-                                 const std::vector<VkFormat>& format_candidates, uint32_t width, uint32_t height,
-                                 VkImageLayout image_layout, bool storage)
-        : ImageWithMemory(device, graphics_command_pool, graphics_queue, family_indices, format_candidates, VK_SAMPLE_COUNT_1_BIT,
-                          width, height, image_layout, storage)
+ImageWithMemory::ImageWithMemory(
+        const Device& device,
+        const CommandPool& graphics_command_pool,
+        const Queue& graphics_queue,
+        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<VkFormat>& format_candidates,
+        uint32_t width,
+        uint32_t height,
+        VkImageLayout image_layout,
+        bool storage)
+        : ImageWithMemory(
+                  device,
+                  graphics_command_pool,
+                  graphics_queue,
+                  family_indices,
+                  format_candidates,
+                  VK_SAMPLE_COUNT_1_BIT,
+                  width,
+                  height,
+                  image_layout,
+                  storage)
 {
 }
 
@@ -742,8 +861,9 @@ void ImageWithMemory::clear_commands(VkCommandBuffer command_buffer, VkImageLayo
         barrier.srcAccessMask = 0;
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
-        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
-                             nullptr, 1, &barrier);
+        vkCmdPipelineBarrier(
+                command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
+                nullptr, 1, &barrier);
 
         //
 
@@ -759,15 +879,21 @@ void ImageWithMemory::clear_commands(VkCommandBuffer command_buffer, VkImageLayo
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
 
-        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr,
-                             0, nullptr, 1, &barrier);
+        vkCmdPipelineBarrier(
+                command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0,
+                nullptr, 1, &barrier);
 }
 
 //
 
-DepthAttachment::DepthAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                                 const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width,
-                                 uint32_t height, bool sampled)
+DepthAttachment::DepthAttachment(
+        const Device& device,
+        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<VkFormat>& formats,
+        VkSampleCountFlagBits samples,
+        uint32_t width,
+        uint32_t height,
+        bool sampled)
 {
         if (width <= 0 || height <= 0)
         {
@@ -779,7 +905,8 @@ DepthAttachment::DepthAttachment(const Device& device, const std::unordered_set<
                 VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT | (sampled ? VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT : 0);
         m_usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | (sampled ? VK_IMAGE_USAGE_SAMPLED_BIT : 0);
 
-        m_format = find_supported_2d_image_format(device.physical_device(), formats, tiling, features, m_usage, samples);
+        m_format =
+                find_supported_2d_image_format(device.physical_device(), formats, tiling, features, m_usage, samples);
 
         VkExtent2D max_extent = max_2d_image_extent(device.physical_device(), m_format, tiling, m_usage);
         m_width = std::min(width, max_extent.width);
@@ -791,16 +918,24 @@ DepthAttachment::DepthAttachment(const Device& device, const std::unordered_set<
         m_sample_count = samples;
 }
 
-DepthAttachment::DepthAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                                 const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width,
-                                 uint32_t height, bool sampled, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                                 VkImageLayout image_layout)
+DepthAttachment::DepthAttachment(
+        const Device& device,
+        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<VkFormat>& formats,
+        VkSampleCountFlagBits samples,
+        uint32_t width,
+        uint32_t height,
+        bool sampled,
+        VkCommandPool graphics_command_pool,
+        VkQueue graphics_queue,
+        VkImageLayout image_layout)
         : DepthAttachment(device, family_indices, formats, samples, width, height, sampled)
 {
         if (image_layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {
-                transition_texture_layout_depth(device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
-                                                image_layout);
+                transition_texture_layout_depth(
+                        device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
+                        image_layout);
         }
 }
 
@@ -841,15 +976,21 @@ unsigned DepthAttachment::height() const
 
 //
 
-ColorAttachment::ColorAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices, VkFormat format,
-                                 VkSampleCountFlagBits samples, uint32_t width, uint32_t height)
+ColorAttachment::ColorAttachment(
+        const Device& device,
+        const std::unordered_set<uint32_t>& family_indices,
+        VkFormat format,
+        VkSampleCountFlagBits samples,
+        uint32_t width,
+        uint32_t height)
 {
         std::vector<VkFormat> candidates = {format}; // должен быть только этот формат
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
         VkFormatFeatureFlags features = VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_TRANSFER_SRC_BIT;
         VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
-        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
+        m_format =
+                find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
         m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);

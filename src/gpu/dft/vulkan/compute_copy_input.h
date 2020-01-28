@@ -102,7 +102,13 @@ public:
         DftCopyInputProgram(DftCopyInputProgram&&) = default;
         ~DftCopyInputProgram() = default;
 
-        void create_pipeline(int32_t local_size_x, int32_t local_size_y, int32_t x, int32_t y, int32_t width, int32_t height);
+        void create_pipeline(
+                int32_t local_size_x,
+                int32_t local_size_y,
+                int32_t x,
+                int32_t y,
+                int32_t width,
+                int32_t height);
         void delete_pipeline();
 
         VkDescriptorSetLayout descriptor_set_layout() const;

@@ -34,7 +34,8 @@ struct ObjectRepository
         virtual std::vector<Vector<N, float>> sphere_with_notch_bound(unsigned point_count) const = 0;
 
         virtual std::vector<std::string> point_object_names() const = 0;
-        virtual std::vector<Vector<N, float>> point_object(const std::string& object_name, unsigned point_count) const = 0;
+        virtual std::vector<Vector<N, float>> point_object(const std::string& object_name, unsigned point_count)
+                const = 0;
 };
 
 template <size_t N>

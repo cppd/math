@@ -96,8 +96,11 @@ class ParallelotopeAlgorithm final
         //
 
         template <int n, typename F>
-        static void vertex_ridges_impl(const Parallelotope& p, const Vector<N, T>& org, std::array<bool, N>& dimensions,
-                                       const F& f)
+        static void vertex_ridges_impl(
+                const Parallelotope& p,
+                const Vector<N, T>& org,
+                std::array<bool, N>& dimensions,
+                const F& f)
         {
                 if constexpr (n >= 0)
                 {

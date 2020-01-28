@@ -43,8 +43,14 @@ const FontGlyph& code_point_glyph(const std::unordered_map<T, FontGlyph>& glyphs
         return iter->second;
 }
 
-void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, int step_y, int start_x, const std::string& text,
-                   int* x, int* y, std::vector<TextVertex>* vertices)
+void text_vertices(
+        const std::unordered_map<char32_t, FontGlyph>& glyphs,
+        int step_y,
+        int start_x,
+        const std::string& text,
+        int* x,
+        int* y,
+        std::vector<TextVertex>* vertices)
 {
         size_t i = 0;
         while (i < text.size())
@@ -79,8 +85,10 @@ void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, int st
 }
 }
 
-void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, const TextData& text_data,
-                   std::vector<TextVertex>* vertices)
+void text_vertices(
+        const std::unordered_map<char32_t, FontGlyph>& glyphs,
+        const TextData& text_data,
+        std::vector<TextVertex>* vertices)
 {
         vertices->clear();
 

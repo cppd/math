@@ -96,7 +96,8 @@ namespace dialog
 {
 bool graphics_and_compute_api_selection(QWidget* parent, GraphicsAndComputeAPI* api)
 {
-        QtObjectInDynamicMemory<graphics_and_compute_api_selection_implementation::GraphicsAndComputeAPISelection> w(parent);
+        QtObjectInDynamicMemory<graphics_and_compute_api_selection_implementation::GraphicsAndComputeAPISelection> w(
+                parent);
         return w->show(api);
 }
 }

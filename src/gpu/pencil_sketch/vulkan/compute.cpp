@@ -62,8 +62,9 @@ void image_barrier_before(VkCommandBuffer command_buffer, VkImage image)
         barrier.srcAccessMask = 0;
         barrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
 
-        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-                             VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barrier);
+        vkCmdPipelineBarrier(
+                command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
 void image_barrier_after(VkCommandBuffer command_buffer, VkImage image)
@@ -91,8 +92,9 @@ void image_barrier_after(VkCommandBuffer command_buffer, VkImage image)
         barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
-                             VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barrier);
+        vkCmdPipelineBarrier(
+                command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+                VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
 class Impl final : public PencilSketchCompute
@@ -120,16 +122,23 @@ class Impl final : public PencilSketchCompute
                 image_barrier_before(command_buffer, m_image);
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_program.pipeline());
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_program.pipeline_layout(),
-                                        PencilSketchComputeMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_program.pipeline_layout(),
+                        PencilSketchComputeMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, m_groups_x, m_groups_y, 1);
 
                 image_barrier_after(command_buffer, m_image);
         }
 
-        void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::ImageWithMemory& objects,
-                            unsigned x, unsigned y, unsigned width, unsigned height,
-                            const vulkan::ImageWithMemory& output) override
+        void create_buffers(
+                VkSampler sampler,
+                const vulkan::ImageWithMemory& input,
+                const vulkan::ImageWithMemory& objects,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height,
+                const vulkan::ImageWithMemory& output) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 

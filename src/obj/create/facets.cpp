@@ -107,8 +107,10 @@ class FacetObj final : public Obj<N>
                 return m_length;
         }
 
-        void create_obj(const std::vector<Vector<N, float>>& points, const std::vector<Vector<N, double>>& point_normals,
-                        const std::vector<std::array<int, N>>& facets)
+        void create_obj(
+                const std::vector<Vector<N, float>>& points,
+                const std::vector<Vector<N, double>>& point_normals,
+                const std::vector<std::array<int, N>>& facets)
         {
                 if (facets.empty())
                 {
@@ -216,8 +218,10 @@ class FacetObj final : public Obj<N>
         }
 
 public:
-        FacetObj(const std::vector<Vector<N, float>>& points, const std::vector<Vector<N, double>>& point_normals,
-                 const std::vector<std::array<int, N>>& facets)
+        FacetObj(
+                const std::vector<Vector<N, float>>& points,
+                const std::vector<Vector<N, double>>& point_normals,
+                const std::vector<std::array<int, N>>& facets)
         {
                 ASSERT(points.size() == point_normals.size());
 
@@ -232,39 +236,49 @@ public:
 }
 
 template <size_t N>
-std::unique_ptr<Obj<N>> create_obj_for_facets(const std::vector<Vector<N, float>>& points,
-                                              const std::vector<Vector<N, double>>& point_normals,
-                                              const std::vector<std::array<int, N>>& facets)
+std::unique_ptr<Obj<N>> create_obj_for_facets(
+        const std::vector<Vector<N, float>>& points,
+        const std::vector<Vector<N, double>>& point_normals,
+        const std::vector<std::array<int, N>>& facets)
 
 {
         return std::make_unique<FacetObj<N>>(points, point_normals, facets);
 }
 
 template <size_t N>
-std::unique_ptr<Obj<N>> create_obj_for_facets(const std::vector<Vector<N, float>>& points,
-                                              const std::vector<std::array<int, N>>& facets)
+std::unique_ptr<Obj<N>> create_obj_for_facets(
+        const std::vector<Vector<N, float>>& points,
+        const std::vector<std::array<int, N>>& facets)
 {
         return std::make_unique<FacetObj<N>>(points, facets);
 }
 
-template std::unique_ptr<Obj<3>> create_obj_for_facets(const std::vector<Vector<3, float>>& points,
-                                                       const std::vector<Vector<3, double>>& point_normals,
-                                                       const std::vector<std::array<int, 3>>& facets);
-template std::unique_ptr<Obj<4>> create_obj_for_facets(const std::vector<Vector<4, float>>& points,
-                                                       const std::vector<Vector<4, double>>& point_normals,
-                                                       const std::vector<std::array<int, 4>>& facets);
-template std::unique_ptr<Obj<5>> create_obj_for_facets(const std::vector<Vector<5, float>>& points,
-                                                       const std::vector<Vector<5, double>>& point_normals,
-                                                       const std::vector<std::array<int, 5>>& facets);
-template std::unique_ptr<Obj<6>> create_obj_for_facets(const std::vector<Vector<6, float>>& points,
-                                                       const std::vector<Vector<6, double>>& point_normals,
-                                                       const std::vector<std::array<int, 6>>& facets);
+template std::unique_ptr<Obj<3>> create_obj_for_facets(
+        const std::vector<Vector<3, float>>& points,
+        const std::vector<Vector<3, double>>& point_normals,
+        const std::vector<std::array<int, 3>>& facets);
+template std::unique_ptr<Obj<4>> create_obj_for_facets(
+        const std::vector<Vector<4, float>>& points,
+        const std::vector<Vector<4, double>>& point_normals,
+        const std::vector<std::array<int, 4>>& facets);
+template std::unique_ptr<Obj<5>> create_obj_for_facets(
+        const std::vector<Vector<5, float>>& points,
+        const std::vector<Vector<5, double>>& point_normals,
+        const std::vector<std::array<int, 5>>& facets);
+template std::unique_ptr<Obj<6>> create_obj_for_facets(
+        const std::vector<Vector<6, float>>& points,
+        const std::vector<Vector<6, double>>& point_normals,
+        const std::vector<std::array<int, 6>>& facets);
 
-template std::unique_ptr<Obj<3>> create_obj_for_facets(const std::vector<Vector<3, float>>& points,
-                                                       const std::vector<std::array<int, 3>>& facets);
-template std::unique_ptr<Obj<4>> create_obj_for_facets(const std::vector<Vector<4, float>>& points,
-                                                       const std::vector<std::array<int, 4>>& facets);
-template std::unique_ptr<Obj<5>> create_obj_for_facets(const std::vector<Vector<5, float>>& points,
-                                                       const std::vector<std::array<int, 5>>& facets);
-template std::unique_ptr<Obj<6>> create_obj_for_facets(const std::vector<Vector<6, float>>& points,
-                                                       const std::vector<std::array<int, 6>>& facets);
+template std::unique_ptr<Obj<3>> create_obj_for_facets(
+        const std::vector<Vector<3, float>>& points,
+        const std::vector<std::array<int, 3>>& facets);
+template std::unique_ptr<Obj<4>> create_obj_for_facets(
+        const std::vector<Vector<4, float>>& points,
+        const std::vector<std::array<int, 4>>& facets);
+template std::unique_ptr<Obj<5>> create_obj_for_facets(
+        const std::vector<Vector<5, float>>& points,
+        const std::vector<std::array<int, 5>>& facets);
+template std::unique_ptr<Obj<6>> create_obj_for_facets(
+        const std::vector<Vector<6, float>>& points,
+        const std::vector<std::array<int, 6>>& facets);

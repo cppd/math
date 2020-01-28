@@ -22,8 +22,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace show_vulkan
 {
-vulkan::CommandBuffers create_command_buffers_resolve(VkDevice device, VkCommandPool command_pool,
-                                                      const std::vector<VkImage>& src_images, VkImageLayout src_image_layout,
-                                                      const std::vector<VkImage>& dst_images, VkImageLayout dst_image_layout,
-                                                      unsigned x, unsigned y, unsigned width, unsigned height);
+vulkan::CommandBuffers create_command_buffers_resolve(
+        VkDevice device,
+        VkCommandPool command_pool,
+        const std::vector<VkImage>& src_images,
+        VkImageLayout src_image_layout,
+        const std::vector<VkImage>& dst_images,
+        VkImageLayout dst_image_layout,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height);
 }

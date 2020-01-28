@@ -50,47 +50,55 @@ void check_buffers(const std::vector<vulkan::ColorAttachment>& color, const std:
                 error("No depth attachment");
         }
 
-        if (!std::all_of(color.cbegin(), color.cend(),
-                         [&](const vulkan::ColorAttachment& c) { return c.sample_count() == color[0].sample_count(); }))
+        if (!std::all_of(color.cbegin(), color.cend(), [&](const vulkan::ColorAttachment& c) {
+                    return c.sample_count() == color[0].sample_count();
+            }))
         {
                 error("Color attachments must have the same sample count");
         }
 
-        if (!std::all_of(color.cbegin(), color.cend(),
-                         [&](const vulkan::ColorAttachment& c) { return c.format() == color[0].format(); }))
+        if (!std::all_of(color.cbegin(), color.cend(), [&](const vulkan::ColorAttachment& c) {
+                    return c.format() == color[0].format();
+            }))
         {
                 error("Color attachments must have the same format");
         }
 
-        if (!std::all_of(depth.cbegin(), depth.cend(),
-                         [&](const vulkan::DepthAttachment& d) { return d.sample_count() == depth[0].sample_count(); }))
+        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthAttachment& d) {
+                    return d.sample_count() == depth[0].sample_count();
+            }))
         {
                 error("Depth attachments must have the same sample count");
         }
 
-        if (!std::all_of(depth.cbegin(), depth.cend(),
-                         [&](const vulkan::DepthAttachment& d) { return d.format() == depth[0].format(); }))
+        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthAttachment& d) {
+                    return d.format() == depth[0].format();
+            }))
         {
                 error("Depth attachments must have the same format");
         }
 
-        if (!std::all_of(color.cbegin(), color.cend(),
-                         [&](const vulkan::ColorAttachment& c) { return c.sample_count() == depth[0].sample_count(); }))
+        if (!std::all_of(color.cbegin(), color.cend(), [&](const vulkan::ColorAttachment& c) {
+                    return c.sample_count() == depth[0].sample_count();
+            }))
         {
                 error("Color attachment sample count is not equal to depth attachment sample count");
         }
 
         if (color.empty())
         {
-                if (!std::all_of(depth.cbegin(), depth.cend(),
-                                 [&](const vulkan::DepthAttachment& d) { return d.sample_count() == VK_SAMPLE_COUNT_1_BIT; }))
+                if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthAttachment& d) {
+                            return d.sample_count() == VK_SAMPLE_COUNT_1_BIT;
+                    }))
                 {
                         error("There are no color attachments, but depth attachment sample count is not equal to 1");
                 }
         }
 }
 
-std::string buffer_info(const std::vector<vulkan::ColorAttachment>& color, const std::vector<vulkan::DepthAttachment>& depth)
+std::string buffer_info(
+        const std::vector<vulkan::ColorAttachment>& color,
+        const std::vector<vulkan::DepthAttachment>& depth)
 {
         check_buffers(color, depth);
 
@@ -240,9 +248,11 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
         vulkan::CommandBuffers m_resolve_command_buffers;
         std::vector<vulkan::Semaphore> m_resolve_signal_semaphores;
 
-        void create_color_buffer_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
-                                           VkSampleCountFlagBits sample_count,
-                                           const std::unordered_set<uint32_t>& attachment_family_indices);
+        void create_color_buffer_rendering(
+                unsigned buffer_count,
+                const vulkan::Swapchain& swapchain,
+                VkSampleCountFlagBits sample_count,
+                const std::unordered_set<uint32_t>& attachment_family_indices);
 #if 0
         void create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
                                         const std::unordered_set<uint32_t>& attachment_family_indices,
@@ -256,8 +266,11 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
         RenderBuffers3D& buffers_3d() override;
         RenderBuffers2D& buffers_2d() override;
 
-        VkSemaphore resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSemaphore swapchain_image_semaphore,
-                                         VkSemaphore wait_semaphore, unsigned image_index) const override;
+        VkSemaphore resolve_to_swapchain(
+                const vulkan::Queue& graphics_queue,
+                VkSemaphore swapchain_image_semaphore,
+                VkSemaphore wait_semaphore,
+                unsigned image_index) const override;
 
         std::vector<VkImage> images() const override;
         VkImageLayout image_layout() const override;
@@ -278,16 +291,23 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
         const std::vector<VkFramebuffer>& framebuffers_2d() const override;
 
 public:
-        Impl(show_vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-             const vulkan::CommandPool& command_pool, const vulkan::Device& device, int required_minimum_sample_count);
+        Impl(show_vulkan::RenderBufferCount buffer_count,
+             const vulkan::Swapchain& swapchain,
+             const vulkan::CommandPool& command_pool,
+             const vulkan::Device& device,
+             int required_minimum_sample_count);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
         Impl& operator=(Impl&&) = delete;
 };
 
-Impl::Impl(show_vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-           const vulkan::CommandPool& command_pool, const vulkan::Device& device, int required_minimum_sample_count)
+Impl::Impl(
+        show_vulkan::RenderBufferCount buffer_count,
+        const vulkan::Swapchain& swapchain,
+        const vulkan::CommandPool& command_pool,
+        const vulkan::Device& device,
+        int required_minimum_sample_count)
         : m_device(device),
           m_swapchain_format(swapchain.format()),
           m_swapchain_color_space(swapchain.color_space()),
@@ -295,8 +315,8 @@ Impl::Impl(show_vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain&
           m_width(swapchain.width()),
           m_height(swapchain.height())
 {
-        VkSampleCountFlagBits sample_count =
-                vulkan::supported_framebuffer_sample_count_flag(m_device.physical_device(), required_minimum_sample_count);
+        VkSampleCountFlagBits sample_count = vulkan::supported_framebuffer_sample_count_flag(
+                m_device.physical_device(), required_minimum_sample_count);
 
         unsigned count = compute_buffer_count(buffer_count, swapchain);
 
@@ -330,14 +350,17 @@ gpu_vulkan::RenderBuffers2D& Impl::buffers_2d()
         return *this;
 }
 
-void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
-                                         VkSampleCountFlagBits sample_count,
-                                         const std::unordered_set<uint32_t>& attachment_family_indices)
+void Impl::create_color_buffer_rendering(
+        unsigned buffer_count,
+        const vulkan::Swapchain& swapchain,
+        VkSampleCountFlagBits sample_count,
+        const std::unordered_set<uint32_t>& attachment_family_indices)
 {
         for (unsigned i = 0; i < buffer_count; ++i)
         {
-                m_color_attachments.emplace_back(m_device, attachment_family_indices, swapchain.format(), sample_count,
-                                                 swapchain.width(), swapchain.height());
+                m_color_attachments.emplace_back(
+                        m_device, attachment_family_indices, swapchain.format(), sample_count, swapchain.width(),
+                        swapchain.height());
 
                 std::vector<VkFormat> depth_formats;
                 if (!m_depth_attachments.empty())
@@ -349,16 +372,18 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
                         depth_formats = DEPTH_IMAGE_FORMATS;
                 }
                 constexpr bool sampled = false;
-                m_depth_attachments.emplace_back(m_device, attachment_family_indices, depth_formats, sample_count,
-                                                 swapchain.width(), swapchain.height(), sampled);
+                m_depth_attachments.emplace_back(
+                        m_device, attachment_family_indices, depth_formats, sample_count, swapchain.width(),
+                        swapchain.height(), sampled);
                 ASSERT(!(m_depth_attachments.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT));
         }
 
         const VkFormat depth_format = m_depth_attachments[0].format();
 
         ASSERT(m_depth_attachments.size() == 1 ||
-               std::all_of(m_depth_attachments.cbegin(), m_depth_attachments.cend(),
-                           [&](const vulkan::DepthAttachment& d) { return d.format() == depth_format; }));
+               std::all_of(
+                       m_depth_attachments.cbegin(), m_depth_attachments.cend(),
+                       [&](const vulkan::DepthAttachment& d) { return d.format() == depth_format; }));
 
         //
 
@@ -366,7 +391,8 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
 
         //
 
-        m_3d_render_pass = show_vulkan::render_pass_color_depth(m_device, swapchain.format(), depth_format, sample_count);
+        m_3d_render_pass =
+                show_vulkan::render_pass_color_depth(m_device, swapchain.format(), depth_format, sample_count);
 
         attachments.resize(2);
         for (unsigned i = 0; i < buffer_count; ++i)
@@ -374,8 +400,8 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
                 attachments[0] = m_color_attachments[i].image_view();
                 attachments[1] = m_depth_attachments[i].image_view();
 
-                m_3d_framebuffers.push_back(vulkan::create_framebuffer(m_device, m_3d_render_pass, swapchain.width(),
-                                                                       swapchain.height(), attachments));
+                m_3d_framebuffers.push_back(vulkan::create_framebuffer(
+                        m_device, m_3d_render_pass, swapchain.width(), swapchain.height(), attachments));
                 m_3d_framebuffers_handles.push_back(m_3d_framebuffers.back());
         }
 
@@ -388,8 +414,8 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
         {
                 attachments[0] = m_color_attachments[i].image_view();
 
-                m_2d_framebuffers.push_back(vulkan::create_framebuffer(m_device, m_2d_render_pass, swapchain.width(),
-                                                                       swapchain.height(), attachments));
+                m_2d_framebuffers.push_back(vulkan::create_framebuffer(
+                        m_device, m_2d_render_pass, swapchain.width(), swapchain.height(), attachments));
                 m_2d_framebuffers_handles.push_back(m_2d_framebuffers.back());
         }
 
@@ -401,10 +427,11 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
         for (unsigned i = 0; i < swapchain.image_views().size(); ++i)
         {
                 attachments[0] = swapchain.image_views()[i];
-                attachments[1] = (buffer_count == 1) ? m_color_attachments[0].image_view() : m_color_attachments[i].image_view();
+                attachments[1] =
+                        (buffer_count == 1) ? m_color_attachments[0].image_view() : m_color_attachments[i].image_view();
 
-                m_resolve_framebuffers.push_back(vulkan::create_framebuffer(m_device, m_resolve_render_pass, swapchain.width(),
-                                                                            swapchain.height(), attachments));
+                m_resolve_framebuffers.push_back(vulkan::create_framebuffer(
+                        m_device, m_resolve_render_pass, swapchain.width(), swapchain.height(), attachments));
                 m_resolve_framebuffers_handles.push_back(m_resolve_framebuffers.back());
         }
 
@@ -566,8 +593,11 @@ void Impl::create_resolve_command_buffers()
         m_resolve_command_buffers = vulkan::create_command_buffers(info);
 }
 
-VkSemaphore Impl::resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSemaphore swapchain_image_semaphore,
-                                       VkSemaphore wait_semaphore, unsigned image_index) const
+VkSemaphore Impl::resolve_to_swapchain(
+        const vulkan::Queue& graphics_queue,
+        VkSemaphore swapchain_image_semaphore,
+        VkSemaphore wait_semaphore,
+        unsigned image_index) const
 {
         ASSERT(graphics_queue.family_index() == m_command_pool.family_index());
         ASSERT(image_index < m_resolve_command_buffers.count());
@@ -584,8 +614,9 @@ VkSemaphore Impl::resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSe
         wait_semaphores[1] = wait_semaphore;
         wait_stages[1] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-        vulkan::queue_submit(wait_semaphores, wait_stages, m_resolve_command_buffers[image_index],
-                             m_resolve_signal_semaphores[semaphore_index], graphics_queue);
+        vulkan::queue_submit(
+                wait_semaphores, wait_stages, m_resolve_command_buffers[image_index],
+                m_resolve_signal_semaphores[semaphore_index], graphics_queue);
 
         return m_resolve_signal_semaphores[semaphore_index];
 }
@@ -593,9 +624,12 @@ VkSemaphore Impl::resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSe
 
 namespace show_vulkan
 {
-std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-                                                     const vulkan::CommandPool& command_pool, const vulkan::Device& device,
-                                                     int required_minimum_sample_count)
+std::unique_ptr<RenderBuffers> create_render_buffers(
+        RenderBufferCount buffer_count,
+        const vulkan::Swapchain& swapchain,
+        const vulkan::CommandPool& command_pool,
+        const vulkan::Device& device,
+        int required_minimum_sample_count)
 {
         return std::make_unique<Impl>(buffer_count, swapchain, command_pool, device, required_minimum_sample_count);
 }

@@ -32,9 +32,17 @@ struct DftShow
 
         virtual ~DftShow() = default;
 
-        virtual void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& input, unsigned src_x,
-                                    unsigned src_y, unsigned src_width, unsigned src_height, unsigned dst_x, unsigned dst_y,
-                                    unsigned dst_width, unsigned dst_height) = 0;
+        virtual void create_buffers(
+                RenderBuffers2D* render_buffers,
+                const vulkan::ImageWithMemory& input,
+                unsigned src_x,
+                unsigned src_y,
+                unsigned src_width,
+                unsigned src_height,
+                unsigned dst_x,
+                unsigned dst_y,
+                unsigned dst_width,
+                unsigned dst_height) = 0;
         virtual void delete_buffers() = 0;
 
         virtual VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index) = 0;
@@ -44,7 +52,11 @@ struct DftShow
         virtual void set_color(const Color& color) = 0;
 };
 
-std::unique_ptr<DftShow> create_dft_show(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
-                                         const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-                                         const vulkan::Queue& transfer_queue, bool sample_shading);
+std::unique_ptr<DftShow> create_dft_show(
+        const vulkan::VulkanInstance& instance,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue,
+        bool sample_shading);
 }

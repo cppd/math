@@ -62,7 +62,9 @@ std::vector<VkDescriptorSetLayoutBinding> ConvexHullFilterMemory::descriptor_set
         return bindings;
 }
 
-ConvexHullFilterMemory::ConvexHullFilterMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+ConvexHullFilterMemory::ConvexHullFilterMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -151,10 +153,13 @@ size_t ConvexHullFilterConstant::size() const
 
 ConvexHullFilterProgram::ConvexHullFilterProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, ConvexHullFilterMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {ConvexHullFilterMemory::set_number()}, {m_descriptor_set_layout})),
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                  device,
+                  ConvexHullFilterMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {ConvexHullFilterMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_shader(device, convex_hull_filter_comp(), "main")
 {
 }

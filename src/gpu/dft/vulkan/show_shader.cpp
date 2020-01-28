@@ -50,16 +50,19 @@ std::vector<VkDescriptorSetLayoutBinding> DftShowMemory::descriptor_set_layout_b
         return bindings;
 }
 
-DftShowMemory::DftShowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                             const std::unordered_set<uint32_t>& family_indices)
+DftShowMemory::DftShowMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout,
+        const std::unordered_set<uint32_t>& family_indices)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
+                m_uniform_buffers.emplace_back(
+                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
 
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = m_uniform_buffers.back();
@@ -162,8 +165,10 @@ std::vector<VkVertexInputAttributeDescription> DftShowVertex::attribute_descript
 
 DftShowProgram::DftShowProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, DftShowMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(device, {DftShowMemory::set_number()}, {m_descriptor_set_layout})),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, DftShowMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {DftShowMemory::set_number()}, {m_descriptor_set_layout})),
           m_vertex_shader(m_device, dft_show_vert(), "main"),
           m_fragment_shader(m_device, dft_show_frag(), "main")
 {
@@ -179,8 +184,13 @@ VkPipelineLayout DftShowProgram::pipeline_layout() const
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline DftShowProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, unsigned x,
-                                                 unsigned y, unsigned width, unsigned height) const
+vulkan::Pipeline DftShowProgram::create_pipeline(
+        VkRenderPass render_pass,
+        VkSampleCountFlagBits sample_count,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -207,7 +217,8 @@ vulkan::Pipeline DftShowProgram::create_pipeline(VkRenderPass render_pass, VkSam
         const std::vector<VkVertexInputBindingDescription> binding_descriptions = DftShowVertex::binding_descriptions();
         info.binding_descriptions = &binding_descriptions;
 
-        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions = DftShowVertex::attribute_descriptions();
+        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
+                DftShowVertex::attribute_descriptions();
         info.attribute_descriptions = &attribute_descriptions;
 
         return vulkan::create_graphics_pipeline(info);

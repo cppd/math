@@ -58,8 +58,12 @@ class PainterWindow final : public PainterWindow2d, public PainterNotifier<N - 1
         long long offset_for_slider_positions(const std::vector<int>& slider_positions) const;
 
         // PainterWindow2d
-        void painter_statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
-                                double* previous_pass_duration) const override;
+        void painter_statistics(
+                long long* pass_count,
+                long long* pixel_count,
+                long long* ray_count,
+                long long* sample_count,
+                double* previous_pass_duration) const override;
         void slider_positions_change_event(const std::vector<int>& slider_positions) override;
         const std::vector<std::uint_least32_t>& pixels_bgr() const override;
         long long pixels_offset() const override;
@@ -67,13 +71,19 @@ class PainterWindow final : public PainterWindow2d, public PainterNotifier<N - 1
 
         // IPainterNotifier
         void painter_pixel_before(unsigned thread_number, const std::array<int_least16_t, N_IMAGE>& pixel) override;
-        void painter_pixel_after(unsigned thread_number, const std::array<int_least16_t, N_IMAGE>& pixel,
-                                 const Color& color) override;
+        void painter_pixel_after(
+                unsigned thread_number,
+                const std::array<int_least16_t, N_IMAGE>& pixel,
+                const Color& color) override;
         void painter_error_message(const std::string& msg) override;
 
 public:
-        PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel, bool smooth_normal,
-                      std::unique_ptr<const PaintObjects<N, T>>&& paint_objects);
+        PainterWindow(
+                const std::string& title,
+                unsigned thread_count,
+                int samples_per_pixel,
+                bool smooth_normal,
+                std::unique_ptr<const PaintObjects<N, T>>&& paint_objects);
 
         ~PainterWindow() override;
 

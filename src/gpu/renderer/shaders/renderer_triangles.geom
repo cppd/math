@@ -65,7 +65,8 @@ const vec3 baricentric[3] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
 
 vec3[3] compute_normals()
 {
-        vec3 geometric_normal = cross(vs[1].orig_position - vs[0].orig_position, vs[2].orig_position - vs[0].orig_position);
+        vec3 geometric_normal =
+                cross(vs[1].orig_position - vs[0].orig_position, vs[2].orig_position - vs[0].orig_position);
 
         vec3 normals[3];
 

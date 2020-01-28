@@ -30,8 +30,13 @@ class ObjectSelection final : public QDialog
 public:
         explicit ObjectSelection(QWidget* parent = nullptr);
 
-        [[nodiscard]] bool show(bool* model_convex_hull, bool* model_minumum_spanning_tree, bool* cocone,
-                                bool* cocone_convex_hull, bool* bound_cocone, bool* bound_cocone_convex_hull);
+        [[nodiscard]] bool show(
+                bool* model_convex_hull,
+                bool* model_minumum_spanning_tree,
+                bool* cocone,
+                bool* cocone_convex_hull,
+                bool* bound_cocone,
+                bool* bound_cocone_convex_hull);
 
 private slots:
 
@@ -47,6 +52,12 @@ private:
 
 namespace dialog
 {
-[[nodiscard]] bool object_selection(QWidget* parent, bool* model_convex_hull, bool* model_minumum_spanning_tree, bool* cocone,
-                                    bool* cocone_convex_hull, bool* bound_cocone, bool* bound_cocone_convex_hull);
+[[nodiscard]] bool object_selection(
+        QWidget* parent,
+        bool* model_convex_hull,
+        bool* model_minumum_spanning_tree,
+        bool* cocone,
+        bool* cocone_convex_hull,
+        bool* bound_cocone,
+        bool* bound_cocone_convex_hull);
 }

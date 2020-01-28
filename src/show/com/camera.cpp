@@ -189,10 +189,12 @@ RendererCameraInfo Camera::renderer_info() const
 
         RendererCameraInfo v;
 
-        main_volume(&v.main_volume.left, &v.main_volume.right, &v.main_volume.bottom, &v.main_volume.top, &v.main_volume.near,
-                    &v.main_volume.far);
-        shadow_volume(&v.shadow_volume.left, &v.shadow_volume.right, &v.shadow_volume.bottom, &v.shadow_volume.top,
-                      &v.shadow_volume.near, &v.shadow_volume.far);
+        main_volume(
+                &v.main_volume.left, &v.main_volume.right, &v.main_volume.bottom, &v.main_volume.top,
+                &v.main_volume.near, &v.main_volume.far);
+        shadow_volume(
+                &v.shadow_volume.left, &v.shadow_volume.right, &v.shadow_volume.bottom, &v.shadow_volume.top,
+                &v.shadow_volume.near, &v.shadow_volume.far);
         v.main_view_matrix = main_view_matrix();
         v.shadow_view_matrix = shadow_view_matrix();
         v.light_direction = m_light_direction;

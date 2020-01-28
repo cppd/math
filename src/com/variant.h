@@ -79,7 +79,8 @@ struct SequenceVariant
 
 // Тип variant<Type<from>, Type<From + 1>, Type<From + 2>, ...>
 template <int from, int to, template <size_t, typename...> typename Type, typename... T>
-using SequenceVariant = typename sequence_variant_implementation::SequenceVariant<Type, T...>::template S<from, to - from + 1>::V;
+using SequenceVariant =
+        typename sequence_variant_implementation::SequenceVariant<Type, T...>::template S<from, to - from + 1>::V;
 
 //
 

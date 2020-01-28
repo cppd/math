@@ -24,8 +24,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 
 template <size_t N, typename T, typename Object, typename Surface, typename Data>
-bool ray_intersection(const std::vector<const Object*>& objects, const Ray<N, T>& ray, T* intersection_distance,
-                      const Surface** intersection_surface, const Data** intersection_data)
+bool ray_intersection(
+        const std::vector<const Object*>& objects,
+        const Ray<N, T>& ray,
+        T* intersection_distance,
+        const Surface** intersection_surface,
+        const Data** intersection_data)
 {
         if (objects.size() == 1)
         {
@@ -67,10 +71,11 @@ bool ray_intersection(const std::vector<const Object*>& objects, const Ray<N, T>
                 return false;
         }
 
-        std::sort(approximate_intersections.begin(), approximate_intersections.end(),
-                  [](const std::tuple<T, const Object*>& a, const std::tuple<T, const Object*>& b) {
-                          return std::get<0>(a) < std::get<0>(b);
-                  });
+        std::sort(
+                approximate_intersections.begin(), approximate_intersections.end(),
+                [](const std::tuple<T, const Object*>& a, const std::tuple<T, const Object*>& b) {
+                        return std::get<0>(a) < std::get<0>(b);
+                });
 
         T min_distance = limits<T>::max();
         bool found = false;
@@ -86,7 +91,8 @@ bool ray_intersection(const std::vector<const Object*>& objects, const Ray<N, T>
                 const Surface* surface;
                 const Data* data;
 
-                if (object->intersect_precise(ray, approximate_distance, &distance, &surface, &data) && distance < min_distance)
+                if (object->intersect_precise(ray, approximate_distance, &distance, &surface, &data) &&
+                    distance < min_distance)
                 {
                         min_distance = distance;
                         *intersection_surface = surface;
@@ -105,8 +111,11 @@ bool ray_intersection(const std::vector<const Object*>& objects, const Ray<N, T>
 }
 
 template <size_t N, typename T, typename Object>
-bool ray_intersection(const std::vector<const Object*>& objects, const Ray<N, T>& ray, T* intersection_distance,
-                      const Object** intersection_object)
+bool ray_intersection(
+        const std::vector<const Object*>& objects,
+        const Ray<N, T>& ray,
+        T* intersection_distance,
+        const Object** intersection_object)
 {
         T min_distance = limits<T>::max();
         bool found = false;
@@ -132,8 +141,12 @@ bool ray_intersection(const std::vector<const Object*>& objects, const Ray<N, T>
 }
 
 template <size_t N, typename T, typename Object>
-bool ray_intersection(const std::vector<Object>& objects, const std::vector<int>& object_indices, const Ray<N, T>& ray,
-                      T* intersection_distance, const Object** intersection_object)
+bool ray_intersection(
+        const std::vector<Object>& objects,
+        const std::vector<int>& object_indices,
+        const Ray<N, T>& ray,
+        T* intersection_distance,
+        const Object** intersection_object)
 {
         T min_distance = limits<T>::max();
         bool found = false;

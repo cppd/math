@@ -39,8 +39,18 @@ T interpolation(const T& c00, const T& c10, const T& c01, const T& c11, const F&
 }
 
 template <typename T, typename F>
-T interpolation(const T& c000, const T& c100, const T& c010, const T& c110, const T& c001, const T& c101, const T& c011,
-                const T& c111, const F& x, const F& y, const F& z)
+T interpolation(
+        const T& c000,
+        const T& c100,
+        const T& c010,
+        const T& c110,
+        const T& c001,
+        const T& c101,
+        const T& c011,
+        const T& c111,
+        const F& x,
+        const F& y,
+        const F& z)
 {
         T t0 = interpolation(c000, c100, x);
         T t1 = interpolation(c010, c110, x);
@@ -50,9 +60,27 @@ T interpolation(const T& c000, const T& c100, const T& c010, const T& c110, cons
 }
 
 template <typename T, typename F>
-T interpolation(const T& c0000, const T& c1000, const T& c0100, const T& c1100, const T& c0010, const T& c1010, const T& c0110,
-                const T& c1110, const T& c0001, const T& c1001, const T& c0101, const T& c1101, const T& c0011, const T& c1011,
-                const T& c0111, const T& c1111, const F& x, const F& y, const F& z, const F& w)
+T interpolation(
+        const T& c0000,
+        const T& c1000,
+        const T& c0100,
+        const T& c1100,
+        const T& c0010,
+        const T& c1010,
+        const T& c0110,
+        const T& c1110,
+        const T& c0001,
+        const T& c1001,
+        const T& c0101,
+        const T& c1101,
+        const T& c0011,
+        const T& c1011,
+        const T& c0111,
+        const T& c1111,
+        const F& x,
+        const F& y,
+        const F& z,
+        const F& w)
 {
         T t0 = interpolation(c0000, c1000, x);
         T t1 = interpolation(c0100, c1100, x);

@@ -62,8 +62,12 @@ class OpticalFlowFlowProgram final
         opengl::ComputeProgram m_program;
 
 public:
-        OpticalFlowFlowProgram(const vec2i& group_size, int radius, int iteration_count, double stop_move_square,
-                               double min_determinant);
+        OpticalFlowFlowProgram(
+                const vec2i& group_size,
+                int radius,
+                int iteration_count,
+                double stop_move_square,
+                double min_determinant);
 
         void exec(const vec2i& groups, const OpticalFlowDataMemory& data, const OpticalFlowImagesMemory& images) const;
 };

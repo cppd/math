@@ -195,7 +195,9 @@ DeviceHandle::operator VkDevice() const& noexcept
 //
 
 Device::Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info)
-        : m_device(physical_device, create_info), m_physical_device(physical_device), m_features(*create_info.pEnabledFeatures)
+        : m_device(physical_device, create_info),
+          m_physical_device(physical_device),
+          m_features(*create_info.pEnabledFeatures)
 {
         for (unsigned i = 0; i < create_info.queueCreateInfoCount; ++i)
         {
@@ -1170,8 +1172,9 @@ CommandBuffers::CommandBuffers(VkDevice device, VkCommandPool command_pool, uint
                 vulkan_function_error("vkAllocateCommandBuffers", result);
         }
 
-        ASSERT(std::all_of(m_command_buffers.cbegin(), m_command_buffers.cend(),
-                           [](const VkCommandBuffer& command_buffer) { return command_buffer != VK_NULL_HANDLE; }));
+        ASSERT(std::all_of(
+                m_command_buffers.cbegin(), m_command_buffers.cend(),
+                [](const VkCommandBuffer& command_buffer) { return command_buffer != VK_NULL_HANDLE; }));
 
         m_device = device;
         m_command_pool = command_pool;
@@ -1363,7 +1366,10 @@ void DescriptorSet::move(DescriptorSet* from) noexcept
 
 DescriptorSet::DescriptorSet() = default;
 
-DescriptorSet::DescriptorSet(VkDevice device, VkDescriptorPool descriptor_pool, VkDescriptorSetLayout descriptor_set_layout)
+DescriptorSet::DescriptorSet(
+        VkDevice device,
+        VkDescriptorPool descriptor_pool,
+        VkDescriptorSetLayout descriptor_set_layout)
 {
         ASSERT(device != VK_NULL_HANDLE);
         ASSERT(descriptor_pool != VK_NULL_HANDLE);
@@ -1421,8 +1427,8 @@ void DescriptorSets::destroy() noexcept
                 ASSERT(m_device != VK_NULL_HANDLE);
                 ASSERT(m_descriptor_pool != VK_NULL_HANDLE);
 
-                VkResult result =
-                        vkFreeDescriptorSets(m_device, m_descriptor_pool, m_descriptor_sets.size(), m_descriptor_sets.data());
+                VkResult result = vkFreeDescriptorSets(
+                        m_device, m_descriptor_pool, m_descriptor_sets.size(), m_descriptor_sets.data());
                 if (result != VK_SUCCESS)
                 {
                         vulkan_function_error("vkFreeDescriptorSets", result);
@@ -1442,8 +1448,10 @@ void DescriptorSets::move(DescriptorSets* from) noexcept
 
 DescriptorSets::DescriptorSets() = default;
 
-DescriptorSets::DescriptorSets(VkDevice device, VkDescriptorPool descriptor_pool,
-                               const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
+DescriptorSets::DescriptorSets(
+        VkDevice device,
+        VkDescriptorPool descriptor_pool,
+        const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
         : m_descriptor_sets(descriptor_set_layouts.size())
 {
         ASSERT(device != VK_NULL_HANDLE);
@@ -1451,7 +1459,9 @@ DescriptorSets::DescriptorSets(VkDevice device, VkDescriptorPool descriptor_pool
         ASSERT(!descriptor_set_layouts.empty());
         ASSERT(std::all_of(
                 descriptor_set_layouts.cbegin(), descriptor_set_layouts.cend(),
-                [](const VkDescriptorSetLayout& descriptor_set_layout) { return descriptor_set_layout != VK_NULL_HANDLE; }));
+                [](const VkDescriptorSetLayout& descriptor_set_layout) {
+                        return descriptor_set_layout != VK_NULL_HANDLE;
+                }));
 
         VkDescriptorSetAllocateInfo allocate_info = {};
         allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -1465,8 +1475,9 @@ DescriptorSets::DescriptorSets(VkDevice device, VkDescriptorPool descriptor_pool
                 vulkan_function_error("vkAllocateDescriptorSets", result);
         }
 
-        ASSERT(std::all_of(m_descriptor_sets.cbegin(), m_descriptor_sets.cend(),
-                           [](const VkDescriptorSet& descriptor_set) { return descriptor_set != VK_NULL_HANDLE; }));
+        ASSERT(std::all_of(
+                m_descriptor_sets.cbegin(), m_descriptor_sets.cend(),
+                [](const VkDescriptorSet& descriptor_set) { return descriptor_set != VK_NULL_HANDLE; }));
 
         m_device = device;
         m_descriptor_pool = descriptor_pool;

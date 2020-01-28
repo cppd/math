@@ -49,7 +49,10 @@ struct ManifoldFacet
 };
 
 template <size_t N>
-void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<N>>& points,
-                           const std::vector<DelaunayObject<N>>& delaunay_objects,
-                           const std::vector<DelaunayFacet<N>>& delaunay_facets, std::vector<ManifoldVertex<N>>* vertex_data,
-                           std::vector<ManifoldFacet<N>>* facet_data);
+void vertex_and_facet_data(
+        bool find_all_vertex_data,
+        const std::vector<vec<N>>& points,
+        const std::vector<DelaunayObject<N>>& delaunay_objects,
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        std::vector<ManifoldVertex<N>>* vertex_data,
+        std::vector<ManifoldFacet<N>>* facet_data);

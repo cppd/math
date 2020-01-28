@@ -144,8 +144,15 @@ class VertexArray final
 public:
         void bind() const;
 
-        void attrib(GLuint attrib_index, GLint size, GLenum type, const Buffer& buffer, GLintptr offset, GLsizei stride) const;
-        void attrib_i(GLuint attrib_index, GLint size, GLenum type, const Buffer& buffer, GLintptr offset, GLsizei stride) const;
+        void attrib(GLuint attrib_index, GLint size, GLenum type, const Buffer& buffer, GLintptr offset, GLsizei stride)
+                const;
+        void attrib_i(
+                GLuint attrib_index,
+                GLint size,
+                GLenum type,
+                const Buffer& buffer,
+                GLintptr offset,
+                GLsizei stride) const;
 };
 
 class Texture final
@@ -231,8 +238,12 @@ class ColorDepthFramebufferMultisample final
         FramebufferHandle m_framebuffer;
 
 public:
-        ColorDepthFramebufferMultisample(GLenum color_format, GLenum depth_format, GLsizei samples, GLsizei width,
-                                         GLsizei height);
+        ColorDepthFramebufferMultisample(
+                GLenum color_format,
+                GLenum depth_format,
+                GLsizei samples,
+                GLsizei width,
+                GLsizei height);
 
         operator GLuint() const&;
         operator GLuint() const&& = delete;

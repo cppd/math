@@ -52,8 +52,9 @@ std::vector<VkDescriptorSetLayoutBinding> OpticalFlowDownsampleMemory::descripto
         return bindings;
 }
 
-OpticalFlowDownsampleMemory::OpticalFlowDownsampleMemory(const vulkan::Device& device,
-                                                         VkDescriptorSetLayout descriptor_set_layout)
+OpticalFlowDownsampleMemory::OpticalFlowDownsampleMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -69,7 +70,9 @@ const VkDescriptorSet& OpticalFlowDownsampleMemory::descriptor_set(int index) co
         return m_descriptors.descriptor_set(index);
 }
 
-void OpticalFlowDownsampleMemory::set_big(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const
+void OpticalFlowDownsampleMemory::set_big(
+        const vulkan::ImageWithMemory& image_0,
+        const vulkan::ImageWithMemory& image_1) const
 {
         ASSERT(&image_0 != &image_1);
         ASSERT(image_0.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
@@ -86,7 +89,9 @@ void OpticalFlowDownsampleMemory::set_big(const vulkan::ImageWithMemory& image_0
         m_descriptors.update_descriptor_set(1, BIG_BINDING, image_info);
 }
 
-void OpticalFlowDownsampleMemory::set_small(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const
+void OpticalFlowDownsampleMemory::set_small(
+        const vulkan::ImageWithMemory& image_0,
+        const vulkan::ImageWithMemory& image_1) const
 {
         ASSERT(&image_0 != &image_1);
         ASSERT(image_0.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
@@ -150,10 +155,13 @@ size_t OpticalFlowDownsampleConstant::size() const
 
 OpticalFlowDownsampleProgram::OpticalFlowDownsampleProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, OpticalFlowDownsampleMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {OpticalFlowDownsampleMemory::set_number()}, {m_descriptor_set_layout})),
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                  device,
+                  OpticalFlowDownsampleMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {OpticalFlowDownsampleMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_shader(device, optical_flow_downsample_comp(), "main")
 {
 }

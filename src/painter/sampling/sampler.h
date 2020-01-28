@@ -32,7 +32,8 @@ class StratifiedJitteredSampler
         {
                 if (sample_count < 1)
                 {
-                        error("Stratified jittered sample count (" + to_string(sample_count) + ") is not a positive integer");
+                        error("Stratified jittered sample count (" + to_string(sample_count) +
+                              ") is not a positive integer");
                 }
 
                 double v = std::pow(sample_count, 1.0 / N);

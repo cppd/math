@@ -49,8 +49,10 @@ namespace gpu_vulkan
 constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
 
 constexpr VkIndexType VULKAN_INDEX_TYPE = VK_INDEX_TYPE_UINT32;
-using IndexType = std::conditional_t<VULKAN_INDEX_TYPE == VK_INDEX_TYPE_UINT32, uint32_t,
-                                     std::conditional_t<VULKAN_INDEX_TYPE == VK_INDEX_TYPE_UINT16, uint16_t, void>>;
+using IndexType = std::conditional_t<
+        VULKAN_INDEX_TYPE == VK_INDEX_TYPE_UINT32,
+        uint32_t,
+        std::conditional_t<VULKAN_INDEX_TYPE == VK_INDEX_TYPE_UINT16, uint16_t, void>>;
 
 namespace
 {
@@ -121,10 +123,15 @@ public:
         };
 };
 
-void load_vertices(const vulkan::Device& device, const vulkan::CommandPool& transfer_command_pool,
-                   const vulkan::Queue& transfer_queue, const std::unordered_set<uint32_t>& family_indices, const Obj<3>& obj,
-                   const std::vector<int>& sorted_face_indices, std::unique_ptr<vulkan::BufferWithMemory>& vertex_buffer,
-                   std::unique_ptr<vulkan::BufferWithMemory>& index_buffer)
+void load_vertices(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue,
+        const std::unordered_set<uint32_t>& family_indices,
+        const Obj<3>& obj,
+        const std::vector<int>& sorted_face_indices,
+        std::unique_ptr<vulkan::BufferWithMemory>& vertex_buffer,
+        std::unique_ptr<vulkan::BufferWithMemory>& index_buffer)
 {
         if (obj.facets().empty())
         {
@@ -239,11 +246,12 @@ void load_vertices(const vulkan::Device& device, const vulkan::CommandPool& tran
 
         double load_time = time_in_seconds();
 
-        vertex_buffer =
-                std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,
-                                                           VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, data_size(vertices), vertices);
-        index_buffer = std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,
-                                                                  VK_BUFFER_USAGE_INDEX_BUFFER_BIT, data_size(indices), indices);
+        vertex_buffer = std::make_unique<vulkan::BufferWithMemory>(
+                device, transfer_command_pool, transfer_queue, family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                data_size(vertices), vertices);
+        index_buffer = std::make_unique<vulkan::BufferWithMemory>(
+                device, transfer_command_pool, transfer_queue, family_indices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                data_size(indices), indices);
 
         load_time = time_in_seconds() - load_time;
 
@@ -258,11 +266,12 @@ void load_vertices(const vulkan::Device& device, const vulkan::CommandPool& tran
         LOG(oss.str());
 }
 
-std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(const vulkan::Device& device,
-                                                              const vulkan::CommandPool& transfer_command_pool,
-                                                              const vulkan::Queue& transfer_queue,
-                                                              const std::unordered_set<uint32_t>& family_indices,
-                                                              const Obj<3>& obj)
+std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue,
+        const std::unordered_set<uint32_t>& family_indices,
+        const Obj<3>& obj)
 {
         if (obj.points().empty())
         {
@@ -280,15 +289,17 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(const vulkan::Devi
                 vertices.emplace_back(obj_vertices[p.vertex]);
         }
 
-        return std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,
-                                                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, data_size(vertices), vertices);
+        return std::make_unique<vulkan::BufferWithMemory>(
+                device, transfer_command_pool, transfer_queue, family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                data_size(vertices), vertices);
 }
 
-std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(const vulkan::Device& device,
-                                                             const vulkan::CommandPool& transfer_command_pool,
-                                                             const vulkan::Queue& transfer_queue,
-                                                             const std::unordered_set<uint32_t>& family_indices,
-                                                             const Obj<3>& obj)
+std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue,
+        const std::unordered_set<uint32_t>& family_indices,
+        const Obj<3>& obj)
 {
         if (obj.lines().empty())
         {
@@ -309,15 +320,19 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(const vulkan::Devic
                 }
         }
 
-        return std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,
-                                                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, data_size(vertices), vertices);
+        return std::make_unique<vulkan::BufferWithMemory>(
+                device, transfer_command_pool, transfer_queue, family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                data_size(vertices), vertices);
 }
 
-std::vector<vulkan::ImageWithMemory> load_textures(const vulkan::Device& device, const vulkan::CommandPool& graphics_command_pool,
-                                                   const vulkan::Queue& graphics_queue,
-                                                   const vulkan::CommandPool& transfer_command_pool,
-                                                   const vulkan::Queue& transfer_queue,
-                                                   const std::unordered_set<uint32_t>& family_indices, const Obj<3>& obj)
+std::vector<vulkan::ImageWithMemory> load_textures(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue,
+        const std::unordered_set<uint32_t>& family_indices,
+        const Obj<3>& obj)
 {
         constexpr bool storage = false;
 
@@ -325,9 +340,10 @@ std::vector<vulkan::ImageWithMemory> load_textures(const vulkan::Device& device,
 
         for (const typename Obj<3>::Image& image : obj.images())
         {
-                textures.emplace_back(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                                      family_indices, COLOR_IMAGE_FORMATS, image.size[0], image.size[1],
-                                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image.srgba_pixels, storage);
+                textures.emplace_back(
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                        family_indices, COLOR_IMAGE_FORMATS, image.size[0], image.size[1],
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image.srgba_pixels, storage);
                 ASSERT(textures.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
                 ASSERT(!(textures.back().usage() & VK_IMAGE_USAGE_STORAGE_BIT));
         }
@@ -335,20 +351,22 @@ std::vector<vulkan::ImageWithMemory> load_textures(const vulkan::Device& device,
         // На одну текстуру больше для её указания, но не использования в тех материалах, где нет текстуры
         std::vector<std::uint_least8_t> pixels = {/*0*/ 0, 0, 0, 0, /*1*/ 0, 0, 0, 0,
                                                   /*2*/ 0, 0, 0, 0, /*3*/ 0, 0, 0, 0};
-        textures.emplace_back(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                              family_indices, COLOR_IMAGE_FORMATS, 2, 2, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, pixels,
-                              storage);
+        textures.emplace_back(
+                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, family_indices,
+                COLOR_IMAGE_FORMATS, 2, 2, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, pixels, storage);
         ASSERT(textures.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
         ASSERT(!(textures.back().usage() & VK_IMAGE_USAGE_STORAGE_BIT));
 
         return textures;
 }
 
-std::unique_ptr<RendererTrianglesMaterialMemory> load_materials(const vulkan::Device& device,
-                                                                const std::unordered_set<uint32_t>& family_indices,
-                                                                VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
-                                                                const Obj<3>& obj,
-                                                                const std::vector<vulkan::ImageWithMemory>& textures)
+std::unique_ptr<RendererTrianglesMaterialMemory> load_materials(
+        const vulkan::Device& device,
+        const std::unordered_set<uint32_t>& family_indices,
+        VkSampler sampler,
+        VkDescriptorSetLayout descriptor_set_layout,
+        const Obj<3>& obj,
+        const std::vector<vulkan::ImageWithMemory>& textures)
 {
         // Текстур имеется больше на одну для её использования в тех материалах, где нет текстуры
 
@@ -402,8 +420,8 @@ std::unique_ptr<RendererTrianglesMaterialMemory> load_materials(const vulkan::De
         m.material.use_material = 0;
         materials.push_back(m);
 
-        return std::make_unique<RendererTrianglesMaterialMemory>(device, family_indices, sampler, descriptor_set_layout,
-                                                                 materials);
+        return std::make_unique<RendererTrianglesMaterialMemory>(
+                device, family_indices, sampler, descriptor_set_layout, materials);
 }
 }
 
@@ -434,10 +452,15 @@ class DrawObject::Triangles final
         std::vector<Material> m_materials;
 
 public:
-        Triangles(const vulkan::Device& device, const vulkan::CommandPool& graphics_command_pool,
-                  const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-                  const vulkan::Queue& transfer_queue, VkSampler sampler,
-                  VkDescriptorSetLayout triangles_material_descriptor_set_layout, const Obj<3>& obj)
+        Triangles(
+                const vulkan::Device& device,
+                const vulkan::CommandPool& graphics_command_pool,
+                const vulkan::Queue& graphics_queue,
+                const vulkan::CommandPool& transfer_command_pool,
+                const vulkan::Queue& transfer_queue,
+                VkSampler sampler,
+                VkDescriptorSetLayout triangles_material_descriptor_set_layout,
+                const Obj<3>& obj)
         {
                 ASSERT(!obj.facets().empty());
 
@@ -447,15 +470,18 @@ public:
 
                 sort_facets_by_material(obj, &sorted_face_indices, &material_face_offset, &material_face_count);
 
-                load_vertices(device, transfer_command_pool, transfer_queue,
-                              {graphics_queue.family_index(), transfer_queue.family_index()}, obj, sorted_face_indices,
-                              m_vertex_buffer, m_index_buffer);
+                load_vertices(
+                        device, transfer_command_pool, transfer_queue,
+                        {graphics_queue.family_index(), transfer_queue.family_index()}, obj, sorted_face_indices,
+                        m_vertex_buffer, m_index_buffer);
 
-                m_textures = load_textures(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                                           {graphics_queue.family_index(), transfer_queue.family_index()}, obj);
+                m_textures = load_textures(
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                        {graphics_queue.family_index(), transfer_queue.family_index()}, obj);
 
-                m_shader_memory = load_materials(device, {graphics_queue.family_index()}, sampler,
-                                                 triangles_material_descriptor_set_layout, obj, m_textures);
+                m_shader_memory = load_materials(
+                        device, {graphics_queue.family_index()}, sampler, triangles_material_descriptor_set_layout, obj,
+                        m_textures);
 
                 m_vertex_count = 3 * obj.facets().size();
 
@@ -466,8 +492,9 @@ public:
                 {
                         if (material_face_count[i] > 0)
                         {
-                                m_materials.emplace_back(m_shader_memory->descriptor_set(i), 3 * material_face_offset[i],
-                                                         3 * material_face_count[i]);
+                                m_materials.emplace_back(
+                                        m_shader_memory->descriptor_set(i), 3 * material_face_offset[i],
+                                        3 * material_face_count[i]);
                         }
                 }
 
@@ -479,9 +506,9 @@ public:
         {
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline);
 
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline_layout,
-                                        info.triangles_shared_set_number, 1 /*set count*/, &info.triangles_shared_set, 0,
-                                        nullptr);
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline_layout,
+                        info.triangles_shared_set_number, 1 /*set count*/, &info.triangles_shared_set, 0, nullptr);
 
                 vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
                 vkCmdBindIndexBuffer(command_buffer, *m_index_buffer, 0, VULKAN_INDEX_TYPE);
@@ -490,9 +517,10 @@ public:
                 {
                         ASSERT(material.vertex_count > 0);
 
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline_layout,
-                                                RendererTrianglesMaterialMemory::set_number(), 1 /*set count*/,
-                                                &material.descriptor_set, 0, nullptr);
+                        vkCmdBindDescriptorSets(
+                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline_layout,
+                                RendererTrianglesMaterialMemory::set_number(), 1 /*set count*/,
+                                &material.descriptor_set, 0, nullptr);
 
                         vkCmdDrawIndexed(command_buffer, material.vertex_count, 1, material.vertex_offset, 0, 0);
                 }
@@ -504,8 +532,9 @@ public:
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline);
 
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline_layout,
-                                        info.triangles_set_number, 1 /*set count*/, &info.triangles_set, 0, nullptr);
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline_layout,
+                        info.triangles_set_number, 1 /*set count*/, &info.triangles_set, 0, nullptr);
 
                 vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
                 vkCmdBindIndexBuffer(command_buffer, *m_index_buffer, 0, VULKAN_INDEX_TYPE);
@@ -525,14 +554,18 @@ class DrawObject::Lines final
         std::array<VkDeviceSize, 1> m_offsets;
 
 public:
-        Lines(const vulkan::Device& device, const vulkan::CommandPool& /*graphics_command_pool*/,
-              const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-              const vulkan::Queue& transfer_queue, const Obj<3>& obj)
+        Lines(const vulkan::Device& device,
+              const vulkan::CommandPool& /*graphics_command_pool*/,
+              const vulkan::Queue& graphics_queue,
+              const vulkan::CommandPool& transfer_command_pool,
+              const vulkan::Queue& transfer_queue,
+              const Obj<3>& obj)
         {
                 ASSERT(!obj.lines().empty());
 
-                m_vertex_buffer = load_line_vertices(device, transfer_command_pool, transfer_queue,
-                                                     {graphics_queue.family_index(), transfer_queue.family_index()}, obj);
+                m_vertex_buffer = load_line_vertices(
+                        device, transfer_command_pool, transfer_queue,
+                        {graphics_queue.family_index(), transfer_queue.family_index()}, obj);
                 m_vertex_count = 2 * obj.lines().size();
 
                 m_buffers = {*m_vertex_buffer};
@@ -543,8 +576,9 @@ public:
         {
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.lines_pipeline);
 
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.lines_pipeline_layout,
-                                        info.lines_set_number, 1 /*set count*/, &info.lines_set, 0, nullptr);
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.lines_pipeline_layout,
+                        info.lines_set_number, 1 /*set count*/, &info.lines_set, 0, nullptr);
 
                 vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
 
@@ -563,14 +597,18 @@ class DrawObject::Points final
         std::array<VkDeviceSize, 1> m_offsets;
 
 public:
-        Points(const vulkan::Device& device, const vulkan::CommandPool& /*graphics_command_pool*/,
-               const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-               const vulkan::Queue& transfer_queue, const Obj<3>& obj)
+        Points(const vulkan::Device& device,
+               const vulkan::CommandPool& /*graphics_command_pool*/,
+               const vulkan::Queue& graphics_queue,
+               const vulkan::CommandPool& transfer_command_pool,
+               const vulkan::Queue& transfer_queue,
+               const Obj<3>& obj)
         {
                 ASSERT(!obj.points().empty());
 
-                m_vertex_buffer = load_point_vertices(device, transfer_command_pool, transfer_queue,
-                                                      {graphics_queue.family_index(), transfer_queue.family_index()}, obj);
+                m_vertex_buffer = load_point_vertices(
+                        device, transfer_command_pool, transfer_queue,
+                        {graphics_queue.family_index(), transfer_queue.family_index()}, obj);
                 m_vertex_count = obj.points().size();
 
                 m_buffers = {*m_vertex_buffer};
@@ -581,8 +619,9 @@ public:
         {
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.points_pipeline);
 
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.points_pipeline_layout,
-                                        info.points_set_number, 1 /*set count*/, &info.points_set, 0, nullptr);
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.points_pipeline_layout,
+                        info.points_set_number, 1 /*set count*/, &info.points_set, 0, nullptr);
 
                 vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
 
@@ -590,29 +629,36 @@ public:
         }
 };
 
-DrawObject::DrawObject(const vulkan::Device& device, const vulkan::CommandPool& graphics_command_pool,
-                       const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-                       const vulkan::Queue& transfer_queue, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
-                       const Obj<3>& obj, double size, const vec3& position)
+DrawObject::DrawObject(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue,
+        VkSampler sampler,
+        VkDescriptorSetLayout descriptor_set_layout,
+        const Obj<3>& obj,
+        double size,
+        const vec3& position)
         : m_model_matrix(model_vertex_matrix(obj, size, position))
 {
         if (!obj.facets().empty())
         {
-                m_triangles = std::make_unique<DrawObject::Triangles>(device, graphics_command_pool, graphics_queue,
-                                                                      transfer_command_pool, transfer_queue, sampler,
-                                                                      descriptor_set_layout, obj);
+                m_triangles = std::make_unique<DrawObject::Triangles>(
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sampler,
+                        descriptor_set_layout, obj);
         }
 
         if (!obj.lines().empty())
         {
-                m_lines = std::make_unique<DrawObject::Lines>(device, graphics_command_pool, graphics_queue,
-                                                              transfer_command_pool, transfer_queue, obj);
+                m_lines = std::make_unique<DrawObject::Lines>(
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, obj);
         }
 
         if (!obj.points().empty())
         {
-                m_points = std::make_unique<DrawObject::Points>(device, graphics_command_pool, graphics_queue,
-                                                                transfer_command_pool, transfer_queue, obj);
+                m_points = std::make_unique<DrawObject::Points>(
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, obj);
         }
 }
 

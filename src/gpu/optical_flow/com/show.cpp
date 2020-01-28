@@ -23,8 +23,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Расстояние между точками потока на экране в миллиметрах
 constexpr double DISTANCE_BETWEEN_POINTS = 2;
 
-void create_top_level_optical_flow_points(int width, int height, int ppi, int* point_count_x, int* point_count_y,
-                                          std::vector<vec2i>* points)
+void create_top_level_optical_flow_points(
+        int width,
+        int height,
+        int ppi,
+        int* point_count_x,
+        int* point_count_y,
+        std::vector<vec2i>* points)
 {
         ASSERT(width >= 0 && height >= 0 && ppi >= 0);
 

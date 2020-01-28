@@ -43,7 +43,9 @@ void OpticalFlowGrayscaleMemory::bind() const
 
 //
 
-OpticalFlowDownsampleMemory::OpticalFlowDownsampleMemory(const opengl::Texture& image_big, const opengl::Texture& image_small)
+OpticalFlowDownsampleMemory::OpticalFlowDownsampleMemory(
+        const opengl::Texture& image_big,
+        const opengl::Texture& image_small)
         : m_buffer(sizeof(Images), GL_MAP_WRITE_BIT)
 {
         ASSERT(image_big.format() == GL_R32F);
@@ -64,8 +66,10 @@ void OpticalFlowDownsampleMemory::bind() const
 
 //
 
-OpticalFlowSobelMemory::OpticalFlowSobelMemory(const opengl::Texture& image_i, const opengl::Texture& image_dx,
-                                               const opengl::Texture& image_dy)
+OpticalFlowSobelMemory::OpticalFlowSobelMemory(
+        const opengl::Texture& image_i,
+        const opengl::Texture& image_dx,
+        const opengl::Texture& image_dy)
         : m_buffer(sizeof(Images), GL_MAP_WRITE_BIT)
 {
         ASSERT(image_i.format() == GL_R32F);
@@ -133,8 +137,11 @@ void OpticalFlowDataMemory::bind() const
 
 //
 
-OpticalFlowImagesMemory::OpticalFlowImagesMemory(const opengl::Texture& image_dx, const opengl::Texture& image_dy,
-                                                 const opengl::Texture& image_i, const opengl::Texture& texture_j)
+OpticalFlowImagesMemory::OpticalFlowImagesMemory(
+        const opengl::Texture& image_dx,
+        const opengl::Texture& image_dy,
+        const opengl::Texture& image_i,
+        const opengl::Texture& texture_j)
         : m_buffer(sizeof(Images), GL_MAP_WRITE_BIT)
 {
         ASSERT(image_dx.format() == GL_R32F);

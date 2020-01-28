@@ -46,16 +46,29 @@ class BufferWithMemory final
         DeviceMemory m_device_memory;
 
         void write(VkDeviceSize size, const void* data) const;
-        void write(const Device& device, const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                   const std::unordered_set<uint32_t>& family_indices, VkDeviceSize size, const void* data) const;
+        void write(
+                const Device& device,
+                const CommandPool& transfer_command_pool,
+                const Queue& transfer_queue,
+                const std::unordered_set<uint32_t>& family_indices,
+                VkDeviceSize size,
+                const void* data) const;
 
 public:
-        BufferWithMemory(BufferMemoryType memory_type, const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                         VkBufferUsageFlags usage, VkDeviceSize size);
+        BufferWithMemory(
+                BufferMemoryType memory_type,
+                const Device& device,
+                const std::unordered_set<uint32_t>& family_indices,
+                VkBufferUsageFlags usage,
+                VkDeviceSize size);
 
         template <typename T>
-        BufferWithMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices, VkBufferUsageFlags usage,
-                         VkDeviceSize size, const T& data)
+        BufferWithMemory(
+                const Device& device,
+                const std::unordered_set<uint32_t>& family_indices,
+                VkBufferUsageFlags usage,
+                VkDeviceSize size,
+                const T& data)
                 : BufferWithMemory(BufferMemoryType::HostVisible, device, family_indices, usage, size)
         {
                 if (size != data_size(data))
@@ -66,11 +79,20 @@ public:
         }
 
         template <typename T>
-        BufferWithMemory(const Device& device, const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                         const std::unordered_set<uint32_t>& family_indices, VkBufferUsageFlags usage, VkDeviceSize size,
-                         const T& data)
-                : BufferWithMemory(BufferMemoryType::DeviceLocal, device, family_indices,
-                                   usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, size)
+        BufferWithMemory(
+                const Device& device,
+                const CommandPool& transfer_command_pool,
+                const Queue& transfer_queue,
+                const std::unordered_set<uint32_t>& family_indices,
+                VkBufferUsageFlags usage,
+                VkDeviceSize size,
+                const T& data)
+                : BufferWithMemory(
+                          BufferMemoryType::DeviceLocal,
+                          device,
+                          family_indices,
+                          usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                          size)
         {
                 if (size != data_size(data))
                 {
@@ -185,24 +207,52 @@ class ImageWithMemory final
         unsigned m_width, m_height;
         VkImageUsageFlags m_usage;
 
-        void init(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                  const std::vector<VkFormat>& format_candidates, uint32_t width, uint32_t height, bool storage,
-                  VkSampleCountFlagBits samples);
+        void init(
+                const Device& device,
+                const std::unordered_set<uint32_t>& family_indices,
+                const std::vector<VkFormat>& format_candidates,
+                uint32_t width,
+                uint32_t height,
+                bool storage,
+                VkSampleCountFlagBits samples);
 
 public:
-        ImageWithMemory(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                        const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                        const std::unordered_set<uint32_t>& family_indices, const std::vector<VkFormat>& format_candidates,
-                        uint32_t width, uint32_t height, VkImageLayout image_layout,
-                        const Span<const std::uint_least8_t>& srgb_pixels, bool storage);
+        ImageWithMemory(
+                const Device& device,
+                const CommandPool& graphics_command_pool,
+                const Queue& graphics_queue,
+                const CommandPool& transfer_command_pool,
+                const Queue& transfer_queue,
+                const std::unordered_set<uint32_t>& family_indices,
+                const std::vector<VkFormat>& format_candidates,
+                uint32_t width,
+                uint32_t height,
+                VkImageLayout image_layout,
+                const Span<const std::uint_least8_t>& srgb_pixels,
+                bool storage);
 
-        ImageWithMemory(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                        const std::unordered_set<uint32_t>& family_indices, const std::vector<VkFormat>& format_candidates,
-                        uint32_t width, uint32_t height, VkImageLayout image_layout, bool storage);
+        ImageWithMemory(
+                const Device& device,
+                const CommandPool& graphics_command_pool,
+                const Queue& graphics_queue,
+                const std::unordered_set<uint32_t>& family_indices,
+                const std::vector<VkFormat>& format_candidates,
+                uint32_t width,
+                uint32_t height,
+                VkImageLayout image_layout,
+                bool storage);
 
-        ImageWithMemory(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                        const std::unordered_set<uint32_t>& family_indices, const std::vector<VkFormat>& format_candidates,
-                        VkSampleCountFlagBits samples, uint32_t width, uint32_t height, VkImageLayout image_layout, bool storage);
+        ImageWithMemory(
+                const Device& device,
+                const CommandPool& graphics_command_pool,
+                const Queue& graphics_queue,
+                const std::unordered_set<uint32_t>& family_indices,
+                const std::vector<VkFormat>& format_candidates,
+                VkSampleCountFlagBits samples,
+                uint32_t width,
+                uint32_t height,
+                VkImageLayout image_layout,
+                bool storage);
 
         ImageWithMemory(const ImageWithMemory&) = delete;
         ImageWithMemory& operator=(const ImageWithMemory&) = delete;
@@ -235,12 +285,25 @@ class DepthAttachment final
         VkImageUsageFlags m_usage;
 
 public:
-        DepthAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                        const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width, uint32_t height,
-                        bool sampled);
-        DepthAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                        const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width, uint32_t height,
-                        bool sampled, VkCommandPool graphics_command_pool, VkQueue graphics_queue, VkImageLayout image_layout);
+        DepthAttachment(
+                const Device& device,
+                const std::unordered_set<uint32_t>& family_indices,
+                const std::vector<VkFormat>& formats,
+                VkSampleCountFlagBits samples,
+                uint32_t width,
+                uint32_t height,
+                bool sampled);
+        DepthAttachment(
+                const Device& device,
+                const std::unordered_set<uint32_t>& family_indices,
+                const std::vector<VkFormat>& formats,
+                VkSampleCountFlagBits samples,
+                uint32_t width,
+                uint32_t height,
+                bool sampled,
+                VkCommandPool graphics_command_pool,
+                VkQueue graphics_queue,
+                VkImageLayout image_layout);
 
         DepthAttachment(const DepthAttachment&) = delete;
         DepthAttachment& operator=(const DepthAttachment&) = delete;
@@ -270,8 +333,13 @@ class ColorAttachment final
         VkSampleCountFlagBits m_sample_count;
 
 public:
-        ColorAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices, VkFormat format,
-                        VkSampleCountFlagBits samples, uint32_t width, uint32_t height);
+        ColorAttachment(
+                const Device& device,
+                const std::unordered_set<uint32_t>& family_indices,
+                VkFormat format,
+                VkSampleCountFlagBits samples,
+                uint32_t width,
+                uint32_t height);
 
         ColorAttachment(const ColorAttachment&) = delete;
         ColorAttachment& operator=(const ColorAttachment&) = delete;

@@ -67,8 +67,10 @@ const VkDescriptorSet& DftCopyInputMemory::descriptor_set() const
         return m_descriptors.descriptor_set(0);
 }
 
-void DftCopyInputMemory::set(VkSampler sampler, const vulkan::ImageWithMemory& input,
-                             const vulkan::BufferWithMemory& output) const
+void DftCopyInputMemory::set(
+        VkSampler sampler,
+        const vulkan::ImageWithMemory& input,
+        const vulkan::BufferWithMemory& output) const
 {
         {
                 ASSERT(input.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
@@ -138,7 +140,13 @@ DftCopyInputConstant::DftCopyInputConstant()
         }
 }
 
-void DftCopyInputConstant::set(int32_t local_size_x, int32_t local_size_y, int32_t x, int32_t y, int32_t width, int32_t height)
+void DftCopyInputConstant::set(
+        int32_t local_size_x,
+        int32_t local_size_y,
+        int32_t x,
+        int32_t y,
+        int32_t width,
+        int32_t height)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
         m_data.local_size_x = local_size_x;
@@ -175,8 +183,10 @@ DftCopyInputProgram::DftCopyInputProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
                   vulkan::create_descriptor_set_layout(device, DftCopyInputMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {DftCopyInputMemory::set_number()}, {m_descriptor_set_layout})),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {DftCopyInputMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_shader(device, dft_copy_input_comp(), "main")
 {
 }
@@ -197,8 +207,13 @@ VkPipeline DftCopyInputProgram::pipeline() const
         return m_pipeline;
 }
 
-void DftCopyInputProgram::create_pipeline(int32_t local_size_x, int32_t local_size_y, int32_t x, int32_t y, int32_t width,
-                                          int32_t height)
+void DftCopyInputProgram::create_pipeline(
+        int32_t local_size_x,
+        int32_t local_size_y,
+        int32_t x,
+        int32_t y,
+        int32_t width,
+        int32_t height)
 {
         m_constant.set(local_size_x, local_size_y, x, y, width, height);
 

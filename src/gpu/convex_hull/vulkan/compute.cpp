@@ -49,18 +49,23 @@ namespace
 {
 int group_size_merge(int height, const VkPhysicalDeviceLimits& limits)
 {
-        return convex_hull_group_size_merge(height, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
-                                            limits.maxComputeSharedMemorySize);
+        return convex_hull_group_size_merge(
+                height, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
+                limits.maxComputeSharedMemorySize);
 }
 
 int group_size_prepare(int width, const VkPhysicalDeviceLimits& limits)
 {
-        return convex_hull_group_size_prepare(width, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
-                                              limits.maxComputeSharedMemorySize);
+        return convex_hull_group_size_prepare(
+                width, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
+                limits.maxComputeSharedMemorySize);
 }
 
-void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkAccessFlags dst_access_mask,
-                    VkPipelineStageFlags dst_stage_mask)
+void buffer_barrier(
+        VkCommandBuffer command_buffer,
+        VkBuffer buffer,
+        VkAccessFlags dst_access_mask,
+        VkPipelineStageFlags dst_stage_mask)
 {
         ASSERT(buffer != VK_NULL_HANDLE);
 
@@ -74,8 +79,9 @@ void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkAccessFla
         barrier.offset = 0;
         barrier.size = VK_WHOLE_SIZE;
 
-        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, dst_stage_mask, VK_DEPENDENCY_BY_REGION_BIT, 0,
-                             nullptr, 1, &barrier, 0, nullptr);
+        vkCmdPipelineBarrier(
+                command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, dst_stage_mask, VK_DEPENDENCY_BY_REGION_BIT, 0,
+                nullptr, 1, &barrier, 0, nullptr);
 }
 
 class Impl final : public ConvexHullCompute
@@ -105,42 +111,58 @@ class Impl final : public ConvexHullCompute
                 //
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_program.pipeline());
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_program.pipeline_layout(),
-                                        ConvexHullPrepareMemory::set_number(), 1, &m_prepare_memory.descriptor_set(), 0, nullptr);
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_program.pipeline_layout(),
+                        ConvexHullPrepareMemory::set_number(), 1, &m_prepare_memory.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, m_prepare_group_count, 1, 1);
 
                 //
 
-                buffer_barrier(command_buffer, *m_lines_buffer, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+                buffer_barrier(
+                        command_buffer, *m_lines_buffer, VK_ACCESS_SHADER_READ_BIT,
+                        VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
                 //
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_merge_program.pipeline());
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_merge_program.pipeline_layout(),
-                                        ConvexHullMergeMemory::set_number(), 1, &m_merge_memory.descriptor_set(), 0, nullptr);
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_merge_program.pipeline_layout(),
+                        ConvexHullMergeMemory::set_number(), 1, &m_merge_memory.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, 2, 1, 1);
 
                 //
 
-                buffer_barrier(command_buffer, *m_lines_buffer, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+                buffer_barrier(
+                        command_buffer, *m_lines_buffer, VK_ACCESS_SHADER_READ_BIT,
+                        VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
                 //
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_filter_program.pipeline());
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_filter_program.pipeline_layout(),
-                                        ConvexHullFilterMemory::set_number(), 1, &m_filter_memory.descriptor_set(), 0, nullptr);
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_filter_program.pipeline_layout(),
+                        ConvexHullFilterMemory::set_number(), 1, &m_filter_memory.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, 1, 1, 1);
 
                 //
 
-                buffer_barrier(command_buffer, m_points_buffer, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
-                buffer_barrier(command_buffer, m_point_count_buffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
-                               VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
+                buffer_barrier(
+                        command_buffer, m_points_buffer, VK_ACCESS_SHADER_READ_BIT,
+                        VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
+                buffer_barrier(
+                        command_buffer, m_point_count_buffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+                        VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
         }
 
-        void create_buffers(const vulkan::ImageWithMemory& objects, unsigned x, unsigned y, unsigned width, unsigned height,
-                            const vulkan::BufferWithMemory& points_buffer, const vulkan::BufferWithMemory& point_count_buffer,
-                            uint32_t family_index) override
+        void create_buffers(
+                const vulkan::ImageWithMemory& objects,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height,
+                const vulkan::BufferWithMemory& points_buffer,
+                const vulkan::BufferWithMemory& point_count_buffer,
+                uint32_t family_index) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -149,9 +171,9 @@ class Impl final : public ConvexHullCompute
                 ASSERT(points_buffer.size() == (2 * height + 1) * (2 * sizeof(int32_t)));
                 ASSERT(point_count_buffer.size() >= sizeof(int32_t));
 
-                m_lines_buffer.emplace(vulkan::BufferMemoryType::DeviceLocal, m_instance.device(),
-                                       std::unordered_set({family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                                       2 * height * sizeof(int32_t));
+                m_lines_buffer.emplace(
+                        vulkan::BufferMemoryType::DeviceLocal, m_instance.device(), std::unordered_set({family_index}),
+                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 2 * height * sizeof(int32_t));
                 m_points_buffer = points_buffer;
                 m_point_count_buffer = point_count_buffer;
 
@@ -164,8 +186,9 @@ class Impl final : public ConvexHullCompute
                 m_prepare_program.create_pipeline(group_size_prepare(width, m_instance.limits()), x, y, width, height);
 
                 m_merge_memory.set_lines(*m_lines_buffer);
-                m_merge_program.create_pipeline(height, group_size_merge(height, m_instance.limits()),
-                                                convex_hull_iteration_count_merge(height));
+                m_merge_program.create_pipeline(
+                        height, group_size_merge(height, m_instance.limits()),
+                        convex_hull_iteration_count_merge(height));
 
                 m_filter_memory.set_lines(*m_lines_buffer);
                 m_filter_memory.set_points(points_buffer);

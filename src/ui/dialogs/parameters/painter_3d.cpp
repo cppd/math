@@ -36,9 +36,19 @@ PainterParametersFor3d::PainterParametersFor3d(QWidget* parent) : QDialog(parent
         setWindowTitle("Painter");
 }
 
-bool PainterParametersFor3d::show(int max_thread_count, int width, int height, int max_screen_size, int default_samples_per_pixel,
-                                  int max_samples_per_pixel, int* thread_count, int* paint_width, int* paint_height,
-                                  int* samples_per_pixel, bool* flat_facets, bool* cornell_box)
+bool PainterParametersFor3d::show(
+        int max_thread_count,
+        int width,
+        int height,
+        int max_screen_size,
+        int default_samples_per_pixel,
+        int max_samples_per_pixel,
+        int* thread_count,
+        int* paint_width,
+        int* paint_height,
+        int* samples_per_pixel,
+        bool* flat_facets,
+        bool* cornell_box)
 {
         if (!(max_thread_count >= 1))
         {
@@ -46,7 +56,8 @@ bool PainterParametersFor3d::show(int max_thread_count, int width, int height, i
         }
         if (!(width >= 1 && height >= 1))
         {
-                error("Error width and height parameters: width = " + to_string(width) + ", height = " + to_string(height));
+                error("Error width and height parameters: width = " + to_string(width) +
+                      ", height = " + to_string(height));
         }
         if (!(max_screen_size >= 1))
         {
@@ -119,7 +130,8 @@ void PainterParametersFor3d::done(int r)
         m_thread_count = ui.spinBox_thread_count->value();
         if (!(m_thread_count >= 1 && m_thread_count <= m_max_thread_count))
         {
-                std::string msg = "Error thread count. Must be in the range [1, " + to_string(m_max_thread_count) + "].";
+                std::string msg =
+                        "Error thread count. Must be in the range [1, " + to_string(m_max_thread_count) + "].";
                 dialog::message_critical(this, msg);
                 return;
         }
@@ -127,8 +139,8 @@ void PainterParametersFor3d::done(int r)
         m_samples_per_pixel = ui.spinBox_samples_per_pixel->value();
         if (!(m_samples_per_pixel >= 1 && m_samples_per_pixel <= m_max_samples_per_pixel))
         {
-                std::string msg =
-                        "Error samples per pixel. Must be in the range [1, " + to_string(m_max_samples_per_pixel) + "].";
+                std::string msg = "Error samples per pixel. Must be in the range [1, " +
+                                  to_string(m_max_samples_per_pixel) + "].";
                 dialog::message_critical(this, msg);
                 return;
         }
@@ -180,12 +192,24 @@ void PainterParametersFor3d::height_value_changed(int)
 
 namespace dialog
 {
-bool painter_parameters_for_3d(QWidget* parent, int max_thread_count, int width, int height, int max_screen_size,
-                               int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count, int* paint_width,
-                               int* paint_height, int* samples_per_pixel, bool* flat_facets, bool* cornell_box)
+bool painter_parameters_for_3d(
+        QWidget* parent,
+        int max_thread_count,
+        int width,
+        int height,
+        int max_screen_size,
+        int default_samples_per_pixel,
+        int max_samples_per_pixel,
+        int* thread_count,
+        int* paint_width,
+        int* paint_height,
+        int* samples_per_pixel,
+        bool* flat_facets,
+        bool* cornell_box)
 {
         QtObjectInDynamicMemory<painter_parameters_for_3d_implementation::PainterParametersFor3d> w(parent);
-        return w->show(max_thread_count, width, height, max_screen_size, default_samples_per_pixel, max_samples_per_pixel,
-                       thread_count, paint_width, paint_height, samples_per_pixel, flat_facets, cornell_box);
+        return w->show(
+                max_thread_count, width, height, max_screen_size, default_samples_per_pixel, max_samples_per_pixel,
+                thread_count, paint_width, paint_height, samples_per_pixel, flat_facets, cornell_box);
 }
 }

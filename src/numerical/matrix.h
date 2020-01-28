@@ -63,8 +63,9 @@ class Matrix
         }
 
         template <size_t... I>
-        constexpr std::array<Vector<Columns, T>, Rows> make_one_value_rows_impl(const T& v,
-                                                                                std::integer_sequence<size_t, I...>) const
+        constexpr std::array<Vector<Columns, T>, Rows> make_one_value_rows_impl(
+                const T& v,
+                std::integer_sequence<size_t, I...>) const
         {
                 static_assert(sizeof...(I) == Rows);
                 static_assert(((I >= 0 && I < Rows) && ...));
@@ -239,7 +240,8 @@ std::enable_if_t<!std::is_same_v<Dst, Src>, Matrix<Rows, Columns, Dst>> to_matri
 }
 
 template <typename Dst, size_t Rows, size_t Columns, typename Src>
-std::enable_if_t<std::is_same_v<Dst, Src>, const Matrix<Rows, Columns, Src>&> to_matrix(const Matrix<Rows, Columns, Src>& m)
+std::enable_if_t<std::is_same_v<Dst, Src>, const Matrix<Rows, Columns, Src>&> to_matrix(
+        const Matrix<Rows, Columns, Src>& m)
 {
         return m;
 }

@@ -651,8 +651,10 @@ class DescriptorSets final
 
 public:
         DescriptorSets();
-        DescriptorSets(VkDevice device, VkDescriptorPool descriptor_pool,
-                       const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
+        DescriptorSets(
+                VkDevice device,
+                VkDescriptorPool descriptor_pool,
+                const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
         ~DescriptorSets();
 
         DescriptorSets(const DescriptorSets&) = delete;

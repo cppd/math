@@ -24,7 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace random_vector_implementation
 {
 template <typename T, typename RandomEngine, typename Distribution, size_t... I>
-Vector<sizeof...(I), T> random_vector(RandomEngine& engine, Distribution& distribution, std::integer_sequence<size_t, I...>)
+Vector<sizeof...(I), T> random_vector(
+        RandomEngine& engine,
+        Distribution& distribution,
+        std::integer_sequence<size_t, I...>)
 {
         return Vector<sizeof...(I), T>((static_cast<void>(I), distribution(engine))...);
 }
@@ -33,5 +36,6 @@ Vector<sizeof...(I), T> random_vector(RandomEngine& engine, Distribution& distri
 template <size_t N, typename T, typename RandomEngine, typename Distribution>
 Vector<N, T> random_vector(RandomEngine& engine, Distribution& distribution)
 {
-        return random_vector_implementation::random_vector<T>(engine, distribution, std::make_integer_sequence<size_t, N>());
+        return random_vector_implementation::random_vector<T>(
+                engine, distribution, std::make_integer_sequence<size_t, N>());
 }

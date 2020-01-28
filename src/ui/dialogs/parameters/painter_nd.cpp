@@ -33,9 +33,19 @@ PainterParametersForNd::PainterParametersForNd(QWidget* parent) : QDialog(parent
         setWindowTitle("Painter");
 }
 
-bool PainterParametersForNd::show(int dimension, int max_thread_count, int default_screen_size, int min_screen_size,
-                                  int max_screen_size, int default_samples_per_pixel, int max_samples_per_pixel,
-                                  int* thread_count, int* min_size, int* max_size, int* samples_per_pixel, bool* flat_facets)
+bool PainterParametersForNd::show(
+        int dimension,
+        int max_thread_count,
+        int default_screen_size,
+        int min_screen_size,
+        int max_screen_size,
+        int default_samples_per_pixel,
+        int max_samples_per_pixel,
+        int* thread_count,
+        int* min_size,
+        int* max_size,
+        int* samples_per_pixel,
+        bool* flat_facets)
 {
         if (!(dimension >= 4))
         {
@@ -124,7 +134,8 @@ void PainterParametersForNd::done(int r)
         m_thread_count = ui.spinBox_threads->value();
         if (!(m_thread_count >= 1 && m_thread_count <= m_max_thread_count))
         {
-                std::string msg = "Error thread count. Must be in the range [1, " + to_string(m_max_thread_count) + "].";
+                std::string msg =
+                        "Error thread count. Must be in the range [1, " + to_string(m_max_thread_count) + "].";
                 dialog::message_critical(this, msg);
                 return;
         }
@@ -132,8 +143,8 @@ void PainterParametersForNd::done(int r)
         m_samples_per_pixel = ui.spinBox_samples_per_pixel->value();
         if (!(m_samples_per_pixel >= 1 && m_samples_per_pixel <= m_max_samples_per_pixel))
         {
-                std::string msg =
-                        "Error samples per pixel. Must be in the range [1, " + to_string(m_max_samples_per_pixel) + "].";
+                std::string msg = "Error samples per pixel. Must be in the range [1, " +
+                                  to_string(m_max_samples_per_pixel) + "].";
                 dialog::message_critical(this, msg);
                 return;
         }
@@ -158,7 +169,8 @@ void PainterParametersForNd::done(int r)
 
         if (!(m_min_size <= m_max_size))
         {
-                std::string msg = "Error min and max sizes. The min size must be less than the max size or equal to the max size";
+                std::string msg =
+                        "Error min and max sizes. The min size must be less than the max size or equal to the max size";
                 dialog::message_critical(this, msg);
                 return;
         }
@@ -171,13 +183,25 @@ void PainterParametersForNd::done(int r)
 
 namespace dialog
 {
-bool painter_parameters_for_nd(QWidget* parent, int dimension, int max_thread_count, int default_screen_size, int min_screen_size,
-                               int max_screen_size, int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count,
-                               int* min_size, int* max_size, int* samples_per_pixel, bool* flat_facets)
+bool painter_parameters_for_nd(
+        QWidget* parent,
+        int dimension,
+        int max_thread_count,
+        int default_screen_size,
+        int min_screen_size,
+        int max_screen_size,
+        int default_samples_per_pixel,
+        int max_samples_per_pixel,
+        int* thread_count,
+        int* min_size,
+        int* max_size,
+        int* samples_per_pixel,
+        bool* flat_facets)
 {
         QtObjectInDynamicMemory<painter_parameters_for_nd_implementation::PainterParametersForNd> w(parent);
-        return w->show(dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
-                       default_samples_per_pixel, max_samples_per_pixel, thread_count, min_size, max_size, samples_per_pixel,
-                       flat_facets);
+        return w->show(
+                dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
+                default_samples_per_pixel, max_samples_per_pixel, thread_count, min_size, max_size, samples_per_pixel,
+                flat_facets);
 }
 }

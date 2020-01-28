@@ -28,5 +28,7 @@ enum class SelfTestType
         Extended
 };
 
-void self_test(SelfTestType test_type, ProgressRatios* progress_ratios,
-               std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler);
+void self_test(
+        SelfTestType test_type,
+        ProgressRatios* progress_ratios,
+        std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler);

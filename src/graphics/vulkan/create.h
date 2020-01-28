@@ -29,18 +29,29 @@ namespace vulkan
 std::vector<Semaphore> create_semaphores(VkDevice device, int count);
 std::vector<Fence> create_fences(VkDevice device, int count, bool signaled_state);
 
-PipelineLayout create_pipeline_layout(VkDevice device, const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
-PipelineLayout create_pipeline_layout(VkDevice device, const std::vector<unsigned>& set_numbers,
-                                      const std::vector<VkDescriptorSetLayout>& set_layouts);
+PipelineLayout create_pipeline_layout(
+        VkDevice device,
+        const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
+PipelineLayout create_pipeline_layout(
+        VkDevice device,
+        const std::vector<unsigned>& set_numbers,
+        const std::vector<VkDescriptorSetLayout>& set_layouts);
 
 CommandPool create_command_pool(VkDevice device, uint32_t queue_family_index);
 CommandPool create_transient_command_pool(VkDevice device, uint32_t queue_family_index);
 
-Instance create_instance(int api_version_major, int api_version_minor, std::vector<std::string> required_extensions,
-                         const std::vector<std::string>& required_validation_layers);
+Instance create_instance(
+        int api_version_major,
+        int api_version_minor,
+        std::vector<std::string> required_extensions,
+        const std::vector<std::string>& required_validation_layers);
 
-Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass, uint32_t width, uint32_t height,
-                               const std::vector<VkImageView>& attachments);
+Framebuffer create_framebuffer(
+        VkDevice device,
+        VkRenderPass render_pass,
+        uint32_t width,
+        uint32_t height,
+        const std::vector<VkImageView>& attachments);
 
 VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, const Color& color);
 VkClearValue depth_stencil_clear_value();

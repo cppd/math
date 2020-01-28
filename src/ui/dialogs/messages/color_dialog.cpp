@@ -23,8 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace dialog
 {
-void color_dialog(QWidget* parent, const std::string& title, const QColor& current_color,
-                  const std::function<void(const QColor& c)>& f)
+void color_dialog(
+        QWidget* parent,
+        const std::string& title,
+        const QColor& current_color,
+        const std::function<void(const QColor& c)>& f)
 {
         QtObjectInDynamicMemory<QColorDialog> dialog(parent);
 

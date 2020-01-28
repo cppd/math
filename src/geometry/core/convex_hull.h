@@ -67,8 +67,13 @@ public:
 };
 
 template <size_t N>
-void compute_delaunay(const std::vector<Vector<N, float>>& source_points, std::vector<vec<N>>* points,
-                      std::vector<DelaunaySimplex<N>>* simplices, ProgressRatio* progress);
+void compute_delaunay(
+        const std::vector<Vector<N, float>>& source_points,
+        std::vector<vec<N>>* points,
+        std::vector<DelaunaySimplex<N>>* simplices,
+        ProgressRatio* progress);
 template <size_t N>
-void compute_convex_hull(const std::vector<Vector<N, float>>& source_points, std::vector<ConvexHullFacet<N>>* ch_facets,
-                         ProgressRatio* progress);
+void compute_convex_hull(
+        const std::vector<Vector<N, float>>& source_points,
+        std::vector<ConvexHullFacet<N>>* ch_facets,
+        ProgressRatio* progress);

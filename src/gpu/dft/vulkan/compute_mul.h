@@ -112,7 +112,13 @@ public:
         DftMulProgram(DftMulProgram&&) = default;
         ~DftMulProgram() = default;
 
-        void create_pipelines(int32_t n1, int32_t n2, int32_t m1, int32_t m2, uint32_t group_size_x, uint32_t group_size_y);
+        void create_pipelines(
+                int32_t n1,
+                int32_t n2,
+                int32_t m1,
+                int32_t m2,
+                uint32_t group_size_x,
+                uint32_t group_size_y);
         void delete_pipelines();
 
         VkDescriptorSetLayout descriptor_set_layout() const;

@@ -63,9 +63,13 @@ class SingleObjectScene final : public PaintObjects<N, T>
         }
 
 public:
-        SingleObjectScene(const Color& background_color, const Color& default_color, Color::DataType diffuse,
-                          std::unique_ptr<const Projector<N, T>>&& projector,
-                          std::unique_ptr<const LightSource<N, T>>&& light_source, std::shared_ptr<const Mesh<N, T>>&& mesh)
+        SingleObjectScene(
+                const Color& background_color,
+                const Color& default_color,
+                Color::DataType diffuse,
+                std::unique_ptr<const Projector<N, T>>&& projector,
+                std::unique_ptr<const LightSource<N, T>>&& light_source,
+                std::shared_ptr<const Mesh<N, T>>&& mesh)
                 : m_object(std::move(mesh)), m_projector(std::move(projector)), m_light_source(std::move(light_source))
         {
                 m_default_surface_properties.set_color(background_color);
@@ -85,24 +89,31 @@ public:
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const PaintObjects<N, T>> single_object_scene(const Color& background_color, const Color& default_color,
-                                                              Color::DataType diffuse,
-                                                              std::unique_ptr<const Projector<N, T>>&& projector,
-                                                              std::unique_ptr<const LightSource<N, T>>&& light_source,
-                                                              std::shared_ptr<const Mesh<N, T>> mesh)
+std::unique_ptr<const PaintObjects<N, T>> single_object_scene(
+        const Color& background_color,
+        const Color& default_color,
+        Color::DataType diffuse,
+        std::unique_ptr<const Projector<N, T>>&& projector,
+        std::unique_ptr<const LightSource<N, T>>&& light_source,
+        std::shared_ptr<const Mesh<N, T>> mesh)
 {
         ASSERT(projector && light_source && mesh);
 
         namespace impl = single_object_scene_implementation;
 
-        return std::make_unique<impl::SingleObjectScene<N, T>>(background_color, default_color, diffuse, std::move(projector),
-                                                               std::move(light_source), std::move(mesh));
+        return std::make_unique<impl::SingleObjectScene<N, T>>(
+                background_color, default_color, diffuse, std::move(projector), std::move(light_source),
+                std::move(mesh));
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const PaintObjects<N, T>> single_object_scene(const Color& background_color, const Color& default_color,
-                                                              Color::DataType diffuse, int min_screen_size, int max_screen_size,
-                                                              std::shared_ptr<const Mesh<N, T>> mesh)
+std::unique_ptr<const PaintObjects<N, T>> single_object_scene(
+        const Color& background_color,
+        const Color& default_color,
+        Color::DataType diffuse,
+        int min_screen_size,
+        int max_screen_size,
+        std::shared_ptr<const Mesh<N, T>> mesh)
 {
         LOG("Creating single object scene...");
 
@@ -175,6 +186,7 @@ std::unique_ptr<const PaintObjects<N, T>> single_object_scene(const Color& backg
 
         namespace impl = single_object_scene_implementation;
 
-        return std::make_unique<impl::SingleObjectScene<N, T>>(background_color, default_color, diffuse, std::move(projector),
-                                                               std::move(light_source), std::move(mesh));
+        return std::make_unique<impl::SingleObjectScene<N, T>>(
+                background_color, default_color, diffuse, std::move(projector), std::move(light_source),
+                std::move(mesh));
 }

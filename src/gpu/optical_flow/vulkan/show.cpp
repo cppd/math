@@ -83,8 +83,9 @@ class Impl final : public OpticalFlowShow
                         return;
                 }
 
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
-                                        OpticalFlowShowMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
+                        OpticalFlowShowMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline_points);
                 vkCmdDraw(command_buffer, m_top_point_count * 2, 1, 0, 0);
@@ -93,8 +94,14 @@ class Impl final : public OpticalFlowShow
                 vkCmdDraw(command_buffer, m_top_point_count * 2, 1, 0, 0);
         }
 
-        void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& input, double window_ppi, unsigned x,
-                            unsigned y, unsigned width, unsigned height) override
+        void create_buffers(
+                RenderBuffers2D* render_buffers,
+                const vulkan::ImageWithMemory& input,
+                double window_ppi,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -103,7 +110,8 @@ class Impl final : public OpticalFlowShow
                 std::vector<vec2i> points;
                 int point_count_x;
                 int point_count_y;
-                create_top_level_optical_flow_points(width, height, window_ppi, &point_count_x, &point_count_y, &points);
+                create_top_level_optical_flow_points(
+                        width, height, window_ppi, &point_count_x, &point_count_y, &points);
 
                 m_top_point_count = points.size();
 
@@ -112,25 +120,30 @@ class Impl final : public OpticalFlowShow
                         return;
                 }
 
-                m_top_points.emplace(m_device, m_transfer_command_pool, m_transfer_queue,
-                                     std::unordered_set<uint32_t>({m_graphics_command_pool.family_index(),
-                                                                   m_compute_command_pool.family_index(),
-                                                                   m_transfer_command_pool.family_index()}),
-                                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, data_size(points), points);
-                m_top_flow.emplace(vulkan::BufferMemoryType::DeviceLocal, m_device,
-                                   std::unordered_set<uint32_t>(
-                                           {m_graphics_command_pool.family_index(), m_compute_command_pool.family_index()}),
-                                   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, points.size() * sizeof(vec2f));
+                m_top_points.emplace(
+                        m_device, m_transfer_command_pool, m_transfer_queue,
+                        std::unordered_set<uint32_t>({m_graphics_command_pool.family_index(),
+                                                      m_compute_command_pool.family_index(),
+                                                      m_transfer_command_pool.family_index()}),
+                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, data_size(points), points);
+                m_top_flow.emplace(
+                        vulkan::BufferMemoryType::DeviceLocal, m_device,
+                        std::unordered_set<uint32_t>(
+                                {m_graphics_command_pool.family_index(), m_compute_command_pool.family_index()}),
+                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, points.size() * sizeof(vec2f));
 
-                m_pipeline_points = m_program.create_pipeline(render_buffers->render_pass(), render_buffers->sample_count(),
-                                                              VK_PRIMITIVE_TOPOLOGY_POINT_LIST, x, y, width, height);
-                m_pipeline_lines = m_program.create_pipeline(render_buffers->render_pass(), render_buffers->sample_count(),
-                                                             VK_PRIMITIVE_TOPOLOGY_LINE_LIST, x, y, width, height);
+                m_pipeline_points = m_program.create_pipeline(
+                        render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
+                        x, y, width, height);
+                m_pipeline_lines = m_program.create_pipeline(
+                        render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
+                        x, y, width, height);
                 m_memory.set_points(*m_top_points);
                 m_memory.set_flow(*m_top_flow);
 
-                m_compute->create_buffers(m_sampler, input, x, y, width, height, point_count_x, point_count_y, *m_top_points,
-                                          *m_top_flow);
+                m_compute->create_buffers(
+                        m_sampler, input, x, y, width, height, point_count_x, point_count_y, *m_top_points,
+                        *m_top_flow);
 
                 // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
                 double left = 0;
@@ -171,8 +184,11 @@ class Impl final : public OpticalFlowShow
                 m_top_flow.reset();
         }
 
-        VkSemaphore draw(const vulkan::Queue& graphics_queue, const vulkan::Queue& compute_queue, VkSemaphore wait_semaphore,
-                         unsigned image_index) override
+        VkSemaphore draw(
+                const vulkan::Queue& graphics_queue,
+                const vulkan::Queue& compute_queue,
+                VkSemaphore wait_semaphore,
+                unsigned image_index) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -195,8 +211,9 @@ class Impl final : public OpticalFlowShow
 
                 const unsigned buffer_index = m_command_buffers->count() == 1 ? 0 : image_index;
 
-                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, (*m_command_buffers)[buffer_index],
-                                     m_signal_semaphore, graphics_queue);
+                vulkan::queue_submit(
+                        wait_semaphore, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, (*m_command_buffers)[buffer_index],
+                        m_signal_semaphore, graphics_queue);
 
                 return m_signal_semaphore;
         }
@@ -212,10 +229,14 @@ class Impl final : public OpticalFlowShow
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
-             const vulkan::Queue& graphics_queue, const vulkan::CommandPool& compute_command_pool,
-             const vulkan::Queue& compute_queue, const vulkan::CommandPool& transfer_command_pool,
-             const vulkan::Queue& transfer_queue, bool /*sample_shading*/)
+        Impl(const vulkan::VulkanInstance& instance,
+             const vulkan::CommandPool& graphics_command_pool,
+             const vulkan::Queue& graphics_queue,
+             const vulkan::CommandPool& compute_command_pool,
+             const vulkan::Queue& compute_queue,
+             const vulkan::CommandPool& transfer_command_pool,
+             const vulkan::Queue& transfer_queue,
+             bool /*sample_shading*/)
                 : // m_sample_shading(sample_shading),
                   m_instance(instance),
                   m_device(instance.device()),
@@ -229,8 +250,12 @@ public:
                   m_program(instance.device()),
                   m_memory(instance.device(), m_program.descriptor_set_layout(), {graphics_queue.family_index()}),
                   m_sampler(create_optical_flow_sampler(instance.device())),
-                  m_compute(create_optical_flow_compute(instance, compute_command_pool, compute_queue, transfer_command_pool,
-                                                        transfer_queue))
+                  m_compute(create_optical_flow_compute(
+                          instance,
+                          compute_command_pool,
+                          compute_queue,
+                          transfer_command_pool,
+                          transfer_queue))
         {
         }
 
@@ -247,16 +272,23 @@ public:
 
 std::vector<vulkan::PhysicalDeviceFeatures> OpticalFlowShow::required_device_features()
 {
-        return merge<vulkan::PhysicalDeviceFeatures>(std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),
-                                                     OpticalFlowCompute::required_device_features());
+        return merge<vulkan::PhysicalDeviceFeatures>(
+                std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),
+                OpticalFlowCompute::required_device_features());
 }
 
 std::unique_ptr<OpticalFlowShow> create_optical_flow_show(
-        const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
-        const vulkan::Queue& graphics_queue, const vulkan::CommandPool& compute_command_pool, const vulkan::Queue& compute_queue,
-        const vulkan::CommandPool& transfer_command_pool, const vulkan::Queue& transfer_queue, bool sample_shading)
+        const vulkan::VulkanInstance& instance,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue,
+        const vulkan::CommandPool& compute_command_pool,
+        const vulkan::Queue& compute_queue,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue,
+        bool sample_shading)
 {
-        return std::make_unique<Impl>(instance, graphics_command_pool, graphics_queue, compute_command_pool, compute_queue,
-                                      transfer_command_pool, transfer_queue, sample_shading);
+        return std::make_unique<Impl>(
+                instance, graphics_command_pool, graphics_queue, compute_command_pool, compute_queue,
+                transfer_command_pool, transfer_queue, sample_shading);
 }
 }

@@ -66,8 +66,10 @@ PipelineLayout create_pipeline_layout(VkDevice device, const std::vector<VkDescr
         return PipelineLayout(device, create_info);
 }
 
-PipelineLayout create_pipeline_layout(VkDevice device, const std::vector<unsigned>& set_numbers,
-                                      const std::vector<VkDescriptorSetLayout>& set_layouts)
+PipelineLayout create_pipeline_layout(
+        VkDevice device,
+        const std::vector<unsigned>& set_numbers,
+        const std::vector<VkDescriptorSetLayout>& set_layouts)
 {
         ASSERT(set_numbers.size() == set_layouts.size() && !set_numbers.empty());
         ASSERT(set_numbers.size() == std::unordered_set<unsigned>(set_numbers.begin(), set_numbers.end()).size());
@@ -110,8 +112,11 @@ CommandPool create_transient_command_pool(VkDevice device, uint32_t queue_family
 
 //
 
-Instance create_instance(int api_version_major, int api_version_minor, std::vector<std::string> required_extensions,
-                         const std::vector<std::string>& required_validation_layers)
+Instance create_instance(
+        int api_version_major,
+        int api_version_minor,
+        std::vector<std::string> required_extensions,
+        const std::vector<std::string>& required_validation_layers)
 {
         LOG(overview());
 
@@ -159,8 +164,12 @@ Instance create_instance(int api_version_major, int api_version_minor, std::vect
 
 //
 
-Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass, uint32_t width, uint32_t height,
-                               const std::vector<VkImageView>& attachments)
+Framebuffer create_framebuffer(
+        VkDevice device,
+        VkRenderPass render_pass,
+        uint32_t width,
+        uint32_t height,
+        const std::vector<VkImageView>& attachments)
 {
         VkFramebufferCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

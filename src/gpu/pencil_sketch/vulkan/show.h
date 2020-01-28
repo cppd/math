@@ -32,17 +32,24 @@ struct PencilSketchShow
 
         virtual ~PencilSketchShow() = default;
 
-        virtual void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& input,
-                                    const vulkan::ImageWithMemory& objects, unsigned x, unsigned y, unsigned width,
-                                    unsigned height) = 0;
+        virtual void create_buffers(
+                RenderBuffers2D* render_buffers,
+                const vulkan::ImageWithMemory& input,
+                const vulkan::ImageWithMemory& objects,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height) = 0;
         virtual void delete_buffers() = 0;
 
         virtual VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index) = 0;
 };
 
-std::unique_ptr<PencilSketchShow> create_convex_hull_show(const vulkan::VulkanInstance& instance,
-                                                          const vulkan::CommandPool& graphics_command_pool,
-                                                          const vulkan::Queue& graphics_queue,
-                                                          const vulkan::CommandPool& transfer_command_pool,
-                                                          const vulkan::Queue& transfer_queue, bool sample_shading);
+std::unique_ptr<PencilSketchShow> create_convex_hull_show(
+        const vulkan::VulkanInstance& instance,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue,
+        bool sample_shading);
 }

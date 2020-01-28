@@ -71,7 +71,8 @@ class ThreadData
         }
 
 public:
-        explicit ThreadData(const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
+        explicit ThreadData(
+                const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
                 : m_exception_handler(exception_handler)
         {
         }
@@ -163,7 +164,8 @@ class Impl final : public MainThreads
         }
 
 public:
-        explicit Impl(const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
+        explicit Impl(
+                const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
                 : m_thread_id(std::this_thread::get_id()), m_exception_handler(exception_handler)
         {
                 m_threads.try_emplace(Action::Load, m_exception_handler);
@@ -188,8 +190,9 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                ASSERT(std::all_of(m_threads.cbegin(), m_threads.cend(),
-                                   [](const auto& t) { return !t.second.working() && !t.second.joinable(); }));
+                ASSERT(std::all_of(m_threads.cbegin(), m_threads.cend(), [](const auto& t) {
+                        return !t.second.working() && !t.second.joinable();
+                }));
         }
 
         void terminate_thread_with_message(Action action) override

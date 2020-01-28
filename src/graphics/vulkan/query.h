@@ -33,17 +33,31 @@ void check_instance_extension_support(const std::vector<std::string>& required_e
 void check_validation_layer_support(const std::vector<std::string>& required_layers);
 void check_api_version(uint32_t required_api_version);
 
-VkFormat find_supported_format(VkPhysicalDevice physical_device, const std::vector<VkFormat>& candidates, VkImageTiling tiling,
-                               VkFormatFeatureFlags features);
-VkFormat find_supported_2d_image_format(VkPhysicalDevice physical_device, const std::vector<VkFormat>& candidates,
-                                        VkImageTiling tiling, VkFormatFeatureFlags features, VkImageUsageFlags usage,
-                                        VkSampleCountFlags sample_count);
-VkExtent2D max_2d_image_extent(VkPhysicalDevice physical_device, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage);
+VkFormat find_supported_format(
+        VkPhysicalDevice physical_device,
+        const std::vector<VkFormat>& candidates,
+        VkImageTiling tiling,
+        VkFormatFeatureFlags features);
+VkFormat find_supported_2d_image_format(
+        VkPhysicalDevice physical_device,
+        const std::vector<VkFormat>& candidates,
+        VkImageTiling tiling,
+        VkFormatFeatureFlags features,
+        VkImageUsageFlags usage,
+        VkSampleCountFlags sample_count);
+VkExtent2D max_2d_image_extent(
+        VkPhysicalDevice physical_device,
+        VkFormat format,
+        VkImageTiling tiling,
+        VkImageUsageFlags usage);
 
-VkSampleCountFlagBits supported_framebuffer_sample_count_flag(VkPhysicalDevice physical_device,
-                                                              int required_minimum_sample_count);
+VkSampleCountFlagBits supported_framebuffer_sample_count_flag(
+        VkPhysicalDevice physical_device,
+        int required_minimum_sample_count);
 int integer_sample_count_flag(VkSampleCountFlagBits sample_count);
 
-uint32_t physical_device_memory_type_index(VkPhysicalDevice physical_device, uint32_t memory_type_bits,
-                                           VkMemoryPropertyFlags memory_property_flags);
+uint32_t physical_device_memory_type_index(
+        VkPhysicalDevice physical_device,
+        uint32_t memory_type_bits,
+        VkMemoryPropertyFlags memory_property_flags);
 }

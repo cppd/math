@@ -118,7 +118,10 @@ std::vector<WeightedEdge> weight_edges(const std::vector<Vector<N, float>>& poin
         return weighted_edges;
 }
 
-std::vector<std::array<int, 2>> kruskal(int point_count, int vertex_count, const std::vector<WeightedEdge>& sorted_edges)
+std::vector<std::array<int, 2>> kruskal(
+        int point_count,
+        int vertex_count,
+        const std::vector<WeightedEdge>& sorted_edges)
 {
         ASSERT(point_count > 1 && vertex_count > 1);
 
@@ -171,9 +174,10 @@ unsigned unique_vertex_count(const std::vector<std::array<int, N>>& delaunay_obj
 }
 
 template <size_t N>
-std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<N, float>>& points,
-                                                      const std::vector<std::array<int, N + 1>>& delaunay_objects,
-                                                      ProgressRatio* progress)
+std::vector<std::array<int, 2>> minimum_spanning_tree(
+        const std::vector<Vector<N, float>>& points,
+        const std::vector<std::array<int, N + 1>>& delaunay_objects,
+        ProgressRatio* progress)
 {
         // Помещение всех (возможно повторяющихся) соединений вершин
         // в массив с последующей сортировкой и уникальностью работает
@@ -203,28 +207,34 @@ std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<N
         progress->set(3, 5);
 
         // Сортировка рёбер графа по возрастанию веса.
-        std::sort(weighted_edges.begin(), weighted_edges.end(),
-                  [](const WeightedEdge& a, const WeightedEdge& b) -> bool { return a.weight() < b.weight(); });
+        std::sort(
+                weighted_edges.begin(), weighted_edges.end(),
+                [](const WeightedEdge& a, const WeightedEdge& b) -> bool { return a.weight() < b.weight(); });
 
         progress->set(4, 5);
 
         // Само построение минимального остовного дерева.
-        std::vector<std::array<int, 2>> mst = kruskal(points.size(), unique_vertex_count(delaunay_objects), weighted_edges);
+        std::vector<std::array<int, 2>> mst =
+                kruskal(points.size(), unique_vertex_count(delaunay_objects), weighted_edges);
 
         LOG("Minimum spanning tree created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 
         return mst;
 }
 
-template std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<2, float>>& points,
-                                                               const std::vector<std::array<int, 3>>& delaunay_objects,
-                                                               ProgressRatio* progress);
-template std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<3, float>>& points,
-                                                               const std::vector<std::array<int, 4>>& delaunay_objects,
-                                                               ProgressRatio* progress);
-template std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<4, float>>& points,
-                                                               const std::vector<std::array<int, 5>>& delaunay_objects,
-                                                               ProgressRatio* progress);
-template std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<5, float>>& points,
-                                                               const std::vector<std::array<int, 6>>& delaunay_objects,
-                                                               ProgressRatio* progress);
+template std::vector<std::array<int, 2>> minimum_spanning_tree(
+        const std::vector<Vector<2, float>>& points,
+        const std::vector<std::array<int, 3>>& delaunay_objects,
+        ProgressRatio* progress);
+template std::vector<std::array<int, 2>> minimum_spanning_tree(
+        const std::vector<Vector<3, float>>& points,
+        const std::vector<std::array<int, 4>>& delaunay_objects,
+        ProgressRatio* progress);
+template std::vector<std::array<int, 2>> minimum_spanning_tree(
+        const std::vector<Vector<4, float>>& points,
+        const std::vector<std::array<int, 5>>& delaunay_objects,
+        ProgressRatio* progress);
+template std::vector<std::array<int, 2>> minimum_spanning_tree(
+        const std::vector<Vector<5, float>>& points,
+        const std::vector<std::array<int, 6>>& delaunay_objects,
+        ProgressRatio* progress);

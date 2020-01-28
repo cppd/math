@@ -56,13 +56,16 @@ class GlobalIndex
 
                 static_assert((is_array<T> && T().size() == N) || is_vector<T>);
                 static_assert(is_native_integral<typename T::value_type>);
-                static_assert(limits<IndexType>::digits >= limits<typename T::value_type>::digits ||
-                              (limits<IndexType>::digits >= limits<std::ptrdiff_t>::digits &&
-                               limits<typename T::value_type>::digits >= limits<std::ptrdiff_t>::digits));
+                static_assert(
+                        limits<IndexType>::digits >= limits<typename T::value_type>::digits ||
+                        (limits<IndexType>::digits >= limits<std::ptrdiff_t>::digits &&
+                         limits<typename T::value_type>::digits >= limits<std::ptrdiff_t>::digits));
         }
 
         template <typename T, unsigned... I>
-        static constexpr std::array<IndexType, N> compute_strides(const T& sizes, std::integer_sequence<unsigned, I...>&&)
+        static constexpr std::array<IndexType, N> compute_strides(
+                const T& sizes,
+                std::integer_sequence<unsigned, I...>&&)
         {
                 static_assert(sizeof...(I) == N);
 

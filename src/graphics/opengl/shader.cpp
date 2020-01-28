@@ -130,9 +130,11 @@ namespace opengl
 {
 Shader::Shader(GLenum type, const std::string_view& shader_text) : m_shader(type)
 {
-        const std::array<const GLchar*, 3> source_pointers = {GLSL_HEADER.data(), EMPTY_LINE.data(), shader_text.data()};
+        const std::array<const GLchar*, 3> source_pointers = {GLSL_HEADER.data(), EMPTY_LINE.data(),
+                                                              shader_text.data()};
 
-        const std::array<GLint, 3> source_sizes = {to_type<GLint, GLSL_HEADER.size()>(), to_type<GLint, EMPTY_LINE.size()>(),
+        const std::array<GLint, 3> source_sizes = {to_type<GLint, GLSL_HEADER.size()>(),
+                                                   to_type<GLint, EMPTY_LINE.size()>(),
                                                    to_type<GLint>(shader_text.size())};
 
         glShaderSource(m_shader, source_pointers.size(), source_pointers.data(), source_sizes.data());

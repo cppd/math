@@ -25,7 +25,8 @@ CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
 {
         VkResult result;
 
-        CommandBuffers command_buffers(info.device.value(), info.command_pool.value(), info.framebuffers.value()->size());
+        CommandBuffers command_buffers(
+                info.device.value(), info.command_pool.value(), info.framebuffers.value()->size());
 
         for (uint32_t i = 0; i < command_buffers.count(); ++i)
         {

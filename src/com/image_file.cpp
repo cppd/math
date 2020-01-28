@@ -76,7 +76,11 @@ std::string file_name_with_extension(const std::string& file_name)
 }
 }
 
-void save_grayscale_image_to_file(const std::string& file_name, int width, int height, Span<const std::uint_least8_t> pixels)
+void save_grayscale_image_to_file(
+        const std::string& file_name,
+        int width,
+        int height,
+        Span<const std::uint_least8_t> pixels)
 {
         if (1ull * width * height != pixels.size())
         {
@@ -102,7 +106,11 @@ void save_grayscale_image_to_file(const std::string& file_name, int width, int h
         }
 }
 
-void save_srgb_image_to_file(const std::string& file_name, int width, int height, const std::vector<std::uint_least8_t>& pixels)
+void save_srgb_image_to_file(
+        const std::string& file_name,
+        int width,
+        int height,
+        const std::vector<std::uint_least8_t>& pixels)
 {
         if (3ull * width * height != pixels.size())
         {
@@ -130,8 +138,11 @@ void save_srgb_image_to_file(const std::string& file_name, int width, int height
         }
 }
 
-void save_srgb_image_to_file_bgr(const std::string& file_name, int width, int height,
-                                 const std::vector<std::uint_least32_t>& pixels)
+void save_srgb_image_to_file_bgr(
+        const std::string& file_name,
+        int width,
+        int height,
+        const std::vector<std::uint_least32_t>& pixels)
 {
         if (1ull * width * height != pixels.size())
         {
@@ -155,7 +166,11 @@ void save_srgb_image_to_file_bgr(const std::string& file_name, int width, int he
         }
 }
 
-void load_srgba_image_from_file(const std::string& file_name, int* width, int* height, std::vector<std::uint_least8_t>* pixels)
+void load_srgba_image_from_file(
+        const std::string& file_name,
+        int* width,
+        int* height,
+        std::vector<std::uint_least8_t>* pixels)
 {
         QImage image;
         if (!image.load(file_name.c_str()) || image.width() < 1 || image.height() < 1)

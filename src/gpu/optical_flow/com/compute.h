@@ -41,5 +41,8 @@ std::vector<vec2i> optical_flow_pyramid_sizes(int width, int height, int min_siz
 vec2i optical_flow_grayscale_groups(const vec2i& group_size, const std::vector<vec2i>& sizes);
 std::vector<vec2i> optical_flow_downsample_groups(const vec2i& group_size, const std::vector<vec2i>& sizes);
 std::vector<vec2i> optical_flow_sobel_groups(const vec2i& group_size, const std::vector<vec2i>& sizes);
-std::vector<vec2i> optical_flow_flow_groups(const vec2i& group_size, const std::vector<vec2i>& sizes, int top_point_count_x,
-                                            int top_point_count_y);
+std::vector<vec2i> optical_flow_flow_groups(
+        const vec2i& group_size,
+        const std::vector<vec2i>& sizes,
+        int top_point_count_x,
+        int top_point_count_y);

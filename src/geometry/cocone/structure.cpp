@@ -58,8 +58,11 @@ struct VertexConnections
 // считается вектор от вершины к наиболее удалённой вершине ячейки Вороного.
 //   В книге это Definition 4.1 (Poles).
 template <size_t N>
-vec<N> voronoi_positive_norm(const vec<N>& vertex, const std::vector<DelaunayObject<N>>& delaunay_objects,
-                             const std::vector<DelaunayFacet<N>>& delaunay_facets, const VertexConnections& vertex_connections)
+vec<N> voronoi_positive_norm(
+        const vec<N>& vertex,
+        const std::vector<DelaunayObject<N>>& delaunay_objects,
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const VertexConnections& vertex_connections)
 {
         bool unbounded = false;
         for (const VertexConnections::Facet& vertex_facet : vertex_connections.facets)
@@ -119,8 +122,11 @@ vec<N> voronoi_positive_norm(const vec<N>& vertex, const std::vector<DelaunayObj
 //   Высотой ячейки Вороного является длина отрицательного полюса.
 //   В книге это Definition 4.1 (Poles) и Definition 5.3.
 template <size_t N>
-double voronoi_height(const vec<N>& vertex, const std::vector<DelaunayObject<N>>& delaunay_objects,
-                      const vec<N>& positive_pole_norm, const std::vector<int>& vertex_objects)
+double voronoi_height(
+        const vec<N>& vertex,
+        const std::vector<DelaunayObject<N>>& delaunay_objects,
+        const vec<N>& positive_pole_norm,
+        const std::vector<int>& vertex_objects)
 {
         double max_distance = MIN_DOUBLE;
         // vec<N> negative_pole(0);
@@ -161,9 +167,15 @@ double voronoi_height(const vec<N>& vertex, const std::vector<DelaunayObject<N>>
 }
 
 template <size_t N>
-double voronoi_edge_radius(const std::vector<DelaunayObject<N>>& delaunay_objects, const DelaunayFacet<N>& facet,
-                           const vec<N>& positive_pole, const vec<N>& pa, double pa_length, double pb_length, double cos_n_a,
-                           double cos_n_b)
+double voronoi_edge_radius(
+        const std::vector<DelaunayObject<N>>& delaunay_objects,
+        const DelaunayFacet<N>& facet,
+        const vec<N>& positive_pole,
+        const vec<N>& pa,
+        double pa_length,
+        double pb_length,
+        double cos_n_a,
+        double cos_n_b)
 {
         if (facet.one_sided() && cocone_inside_or_equal(cos_n_b))
         {
@@ -225,10 +237,15 @@ double voronoi_edge_radius(const std::vector<DelaunayObject<N>>& delaunay_object
 // Радиус ячейки Вороного равен максимальному расстоянию от вершины то границ ячейки Вороного в границах cocone.
 // В книге это Definition 5.3.
 template <size_t N>
-void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<DelaunayObject<N>>& delaunay_objects,
-                                      const std::vector<DelaunayFacet<N>>& delaunay_facets, const vec<N>& positive_pole,
-                                      const VertexConnections& vertex_connections, bool find_radius,
-                                      std::vector<ManifoldFacet<N>>* facet_data, double* radius)
+void cocone_facets_and_voronoi_radius(
+        const vec<N>& vertex,
+        const std::vector<DelaunayObject<N>>& delaunay_objects,
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const vec<N>& positive_pole,
+        const VertexConnections& vertex_connections,
+        bool find_radius,
+        std::vector<ManifoldFacet<N>>* facet_data,
+        double* radius)
 {
         ASSERT(delaunay_facets.size() == facet_data->size());
 
@@ -270,8 +287,8 @@ void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<De
 
                 if (find_radius && *radius != limits<double>::max())
                 {
-                        double edge_radius = voronoi_edge_radius(delaunay_objects, facet, positive_pole, pa, pa_length, pb_length,
-                                                                 cos_n_a, cos_n_b);
+                        double edge_radius = voronoi_edge_radius(
+                                delaunay_objects, facet, positive_pole, pa, pa_length, pb_length, cos_n_a, cos_n_b);
 
                         *radius = std::max(*radius, edge_radius);
                 }
@@ -281,8 +298,11 @@ void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<De
 }
 
 template <size_t N>
-void cocone_neighbors(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<ManifoldFacet<N>>& facet_data,
-                      const std::vector<VertexConnections>& vertex_connections, std::vector<ManifoldVertex<N>>* vertex_data)
+void cocone_neighbors(
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<ManifoldFacet<N>>& facet_data,
+        const std::vector<VertexConnections>& vertex_connections,
+        std::vector<ManifoldVertex<N>>* vertex_data)
 {
         ASSERT(delaunay_facets.size() == facet_data.size());
         ASSERT(vertex_connections.size() == vertex_data->size());
@@ -319,8 +339,11 @@ void cocone_neighbors(const std::vector<DelaunayFacet<N>>& delaunay_facets, cons
 }
 
 template <size_t N>
-void vertex_connections(int vertex_count, const std::vector<DelaunayObject<N>>& objects,
-                        const std::vector<DelaunayFacet<N>>& facets, std::vector<VertexConnections>* conn)
+void vertex_connections(
+        int vertex_count,
+        const std::vector<DelaunayObject<N>>& objects,
+        const std::vector<DelaunayFacet<N>>& facets,
+        std::vector<VertexConnections>* conn)
 {
         conn->clear();
         conn->resize(vertex_count);
@@ -345,9 +368,13 @@ void vertex_connections(int vertex_count, const std::vector<DelaunayObject<N>>& 
 }
 
 template <size_t N>
-void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<N>>& points,
-                           const std::vector<DelaunayObject<N>>& objects, const std::vector<DelaunayFacet<N>>& facets,
-                           std::vector<ManifoldVertex<N>>* vertex_data, std::vector<ManifoldFacet<N>>* facet_data)
+void vertex_and_facet_data(
+        bool find_all_vertex_data,
+        const std::vector<vec<N>>& points,
+        const std::vector<DelaunayObject<N>>& objects,
+        const std::vector<DelaunayFacet<N>>& facets,
+        std::vector<ManifoldVertex<N>>* vertex_data,
+        std::vector<ManifoldFacet<N>>* facet_data)
 {
         std::vector<VertexConnections> connections;
 
@@ -377,8 +404,9 @@ void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<N>>&
 
                 if (!find_all_vertex_data)
                 {
-                        cocone_facets_and_voronoi_radius(points[v], objects, facets, positive_norm, connections[v],
-                                                         false /*find_radius*/, facet_data, &radius);
+                        cocone_facets_and_voronoi_radius(
+                                points[v], objects, facets, positive_norm, connections[v], false /*find_radius*/,
+                                facet_data, &radius);
 
                         vertex_data->emplace_back(positive_norm, 0, 0);
                 }
@@ -386,8 +414,9 @@ void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<N>>&
                 {
                         double height = voronoi_height(points[v], objects, positive_norm, connections[v].objects);
 
-                        cocone_facets_and_voronoi_radius(points[v], objects, facets, positive_norm, connections[v],
-                                                         true /*find_radius*/, facet_data, &radius);
+                        cocone_facets_and_voronoi_radius(
+                                points[v], objects, facets, positive_norm, connections[v], true /*find_radius*/,
+                                facet_data, &radius);
 
                         vertex_data->emplace_back(positive_norm, height, radius);
                 }
@@ -401,19 +430,31 @@ void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<N>>&
         ASSERT(vertex_data->size() == points.size());
 }
 
-template void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<2>>& points,
-                                    const std::vector<DelaunayObject<2>>& delaunay_objects,
-                                    const std::vector<DelaunayFacet<2>>& delaunay_facets,
-                                    std::vector<ManifoldVertex<2>>* vertex_data, std::vector<ManifoldFacet<2>>* facet_data);
-template void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<3>>& points,
-                                    const std::vector<DelaunayObject<3>>& delaunay_objects,
-                                    const std::vector<DelaunayFacet<3>>& delaunay_facets,
-                                    std::vector<ManifoldVertex<3>>* vertex_data, std::vector<ManifoldFacet<3>>* facet_data);
-template void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<4>>& points,
-                                    const std::vector<DelaunayObject<4>>& delaunay_objects,
-                                    const std::vector<DelaunayFacet<4>>& delaunay_facets,
-                                    std::vector<ManifoldVertex<4>>* vertex_data, std::vector<ManifoldFacet<4>>* facet_data);
-template void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<5>>& points,
-                                    const std::vector<DelaunayObject<5>>& delaunay_objects,
-                                    const std::vector<DelaunayFacet<5>>& delaunay_facets,
-                                    std::vector<ManifoldVertex<5>>* vertex_data, std::vector<ManifoldFacet<5>>* facet_data);
+template void vertex_and_facet_data(
+        bool find_all_vertex_data,
+        const std::vector<vec<2>>& points,
+        const std::vector<DelaunayObject<2>>& delaunay_objects,
+        const std::vector<DelaunayFacet<2>>& delaunay_facets,
+        std::vector<ManifoldVertex<2>>* vertex_data,
+        std::vector<ManifoldFacet<2>>* facet_data);
+template void vertex_and_facet_data(
+        bool find_all_vertex_data,
+        const std::vector<vec<3>>& points,
+        const std::vector<DelaunayObject<3>>& delaunay_objects,
+        const std::vector<DelaunayFacet<3>>& delaunay_facets,
+        std::vector<ManifoldVertex<3>>* vertex_data,
+        std::vector<ManifoldFacet<3>>* facet_data);
+template void vertex_and_facet_data(
+        bool find_all_vertex_data,
+        const std::vector<vec<4>>& points,
+        const std::vector<DelaunayObject<4>>& delaunay_objects,
+        const std::vector<DelaunayFacet<4>>& delaunay_facets,
+        std::vector<ManifoldVertex<4>>* vertex_data,
+        std::vector<ManifoldFacet<4>>* facet_data);
+template void vertex_and_facet_data(
+        bool find_all_vertex_data,
+        const std::vector<vec<5>>& points,
+        const std::vector<DelaunayObject<5>>& delaunay_objects,
+        const std::vector<DelaunayFacet<5>>& delaunay_facets,
+        std::vector<ManifoldVertex<5>>* vertex_data,
+        std::vector<ManifoldFacet<5>>* facet_data);

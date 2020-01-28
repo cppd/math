@@ -31,8 +31,10 @@ struct ManifoldConstructorCocone
 
         virtual std::vector<std::array<int, N + 1>> delaunay_objects() const = 0;
 
-        virtual void cocone(std::vector<vec<N>>* vertex_normals, std::vector<std::array<int, N>>* cocone_triangles,
-                            ProgressRatio* progress) const = 0;
+        virtual void cocone(
+                std::vector<vec<N>>* vertex_normals,
+                std::vector<std::array<int, N>>* cocone_triangles,
+                ProgressRatio* progress) const = 0;
 };
 
 template <size_t N>
@@ -42,16 +44,24 @@ struct ManifoldConstructor
 
         virtual std::vector<std::array<int, N + 1>> delaunay_objects() const = 0;
 
-        virtual void cocone(std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets,
-                            ProgressRatio* progress) const = 0;
-        virtual void bound_cocone(double RHO, double ALPHA, std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets,
-                                  ProgressRatio* progress) const = 0;
+        virtual void cocone(
+                std::vector<vec<N>>* normals,
+                std::vector<std::array<int, N>>* facets,
+                ProgressRatio* progress) const = 0;
+        virtual void bound_cocone(
+                double RHO,
+                double ALPHA,
+                std::vector<vec<N>>* normals,
+                std::vector<std::array<int, N>>* facets,
+                ProgressRatio* progress) const = 0;
 };
 
 template <size_t N>
-std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(const std::vector<Vector<N, float>>& source_points,
-                                                                    ProgressRatio* progress);
+std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(
+        const std::vector<Vector<N, float>>& source_points,
+        ProgressRatio* progress);
 
 template <size_t N>
 std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone(
-        const std::vector<Vector<N, float>>& source_points, ProgressRatio* progress);
+        const std::vector<Vector<N, float>>& source_points,
+        ProgressRatio* progress);

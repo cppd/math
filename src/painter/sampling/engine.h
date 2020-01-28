@@ -72,8 +72,8 @@ public:
         {
                 if (m_one_dimension_sample_count < 1)
                 {
-                        error("Stratified jittered one dimension sample count (" + to_string(m_one_dimension_sample_count) +
-                              ") is not a positive integer");
+                        error("Stratified jittered one dimension sample count (" +
+                              to_string(m_one_dimension_sample_count) + ") is not a positive integer");
                 }
 
                 m_offset.resize(m_one_dimension_sample_count);
@@ -129,7 +129,8 @@ public:
                                         {
                                                 sample[0] = m_offset[j];
 
-                                                (*samples)[sample_num++] = sample + random_vector<N, T>(random_engine, urd);
+                                                (*samples)[sample_num++] =
+                                                        sample + random_vector<N, T>(random_engine, urd);
                                         }
                                 }
 
@@ -171,7 +172,8 @@ public:
         {
                 if (m_sample_count < 1)
                 {
-                        error("Latin hypercube sample count (" + to_string(m_sample_count) + ") is not a positive integer");
+                        error("Latin hypercube sample count (" + to_string(m_sample_count) +
+                              ") is not a positive integer");
                 }
         }
 
@@ -185,7 +187,8 @@ public:
                 // Случайные числа по диагонали
                 for (int i = 0; i < m_sample_count; ++i)
                 {
-                        (*samples)[i] = Vector<N, T>(i * m_reciprocal_sample_count) + random_vector<N, T>(random_engine, urd);
+                        (*samples)[i] =
+                                Vector<N, T>(i * m_reciprocal_sample_count) + random_vector<N, T>(random_engine, urd);
                 }
 
                 // Достаточно со второго измерения

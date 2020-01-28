@@ -132,12 +132,12 @@ class Impl final : public Renderer
         }
         void set_camera(const RendererCameraInfo& c) override
         {
-                const mat4& shadow_projection_matrix =
-                        ortho_opengl<double>(c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom,
-                                             c.shadow_volume.top, c.shadow_volume.near, c.shadow_volume.far);
-                const mat4& view_projection_matrix =
-                        ortho_opengl<double>(c.view_volume.left, c.view_volume.right, c.view_volume.bottom, c.view_volume.top,
-                                             c.view_volume.near, c.view_volume.far);
+                const mat4& shadow_projection_matrix = ortho_opengl<double>(
+                        c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom, c.shadow_volume.top,
+                        c.shadow_volume.near, c.shadow_volume.far);
+                const mat4& view_projection_matrix = ortho_opengl<double>(
+                        c.view_volume.left, c.view_volume.right, c.view_volume.bottom, c.view_volume.top,
+                        c.view_volume.near, c.view_volume.far);
 
                 m_shadow_matrix = shadow_projection_matrix * c.shadow_matrix;
                 m_scale_bias_shadow_matrix = SCALE_BIAS_MATRIX * m_shadow_matrix;
@@ -235,7 +235,8 @@ class Impl final : public Renderer
                         m_shadow_height = 1;
                 }
 
-                m_shadow_buffer = std::make_unique<opengl::DepthFramebuffer>(DEPTH_FORMAT, m_shadow_width, m_shadow_height);
+                m_shadow_buffer =
+                        std::make_unique<opengl::DepthFramebuffer>(DEPTH_FORMAT, m_shadow_width, m_shadow_height);
                 m_triangles_program.set_uniform_handle("shadow_texture", m_shadow_buffer->texture().texture_handle());
         }
 
@@ -246,7 +247,8 @@ class Impl final : public Renderer
                 if (m_storage.scale_object())
                 {
                         mat4 matrix = m_main_matrix * m_storage.scale_object()->model_matrix();
-                        mat4 scale_bias_shadow_matrix = m_scale_bias_shadow_matrix * m_storage.scale_object()->model_matrix();
+                        mat4 scale_bias_shadow_matrix =
+                                m_scale_bias_shadow_matrix * m_storage.scale_object()->model_matrix();
                         mat4 shadow_matrix = m_shadow_matrix * m_storage.scale_object()->model_matrix();
 
                         m_triangles_memory.set_matrices(matrix, scale_bias_shadow_matrix);
@@ -303,14 +305,19 @@ class Impl final : public Renderer
 
 public:
         Impl()
-                : m_triangles_program(opengl::VertexShader(renderer_triangles_vert()),
-                                      opengl::GeometryShader(renderer_triangles_geom()),
-                                      opengl::FragmentShader(renderer_triangles_frag())),
-                  m_shadow_program(opengl::VertexShader(renderer_shadow_vert()), opengl::FragmentShader(renderer_shadow_frag())),
-                  m_points_0d_program(opengl::VertexShader(renderer_points_0d_vert()),
-                                      opengl::FragmentShader(renderer_points_frag())),
-                  m_points_1d_program(opengl::VertexShader(renderer_points_1d_vert()),
-                                      opengl::FragmentShader(renderer_points_frag()))
+                : m_triangles_program(
+                          opengl::VertexShader(renderer_triangles_vert()),
+                          opengl::GeometryShader(renderer_triangles_geom()),
+                          opengl::FragmentShader(renderer_triangles_frag())),
+                  m_shadow_program(
+                          opengl::VertexShader(renderer_shadow_vert()),
+                          opengl::FragmentShader(renderer_shadow_frag())),
+                  m_points_0d_program(
+                          opengl::VertexShader(renderer_points_0d_vert()),
+                          opengl::FragmentShader(renderer_points_frag())),
+                  m_points_1d_program(
+                          opengl::VertexShader(renderer_points_1d_vert()),
+                          opengl::FragmentShader(renderer_points_frag()))
         {
         }
 };

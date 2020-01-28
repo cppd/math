@@ -65,7 +65,12 @@ QFileDialog::Options make_options(bool read_only)
 
 namespace dialog
 {
-bool save_file(QWidget* parent, const std::string& caption, const std::string& filter, bool read_only, std::string* name)
+bool save_file(
+        QWidget* parent,
+        const std::string& caption,
+        const std::string& filter,
+        bool read_only,
+        std::string* name)
 {
         QtObjectInDynamicMemory<QFileDialog> w(parent, caption.c_str(), "", filter.c_str());
 
@@ -76,7 +81,12 @@ bool save_file(QWidget* parent, const std::string& caption, const std::string& f
         return exec_dialog_for_single_file(&w, name);
 }
 
-bool open_file(QWidget* parent, const std::string& caption, const std::string& filter, bool read_only, std::string* name)
+bool open_file(
+        QWidget* parent,
+        const std::string& caption,
+        const std::string& filter,
+        bool read_only,
+        std::string* name)
 {
         QtObjectInDynamicMemory<QFileDialog> w(parent, caption.c_str(), "", filter.c_str());
 

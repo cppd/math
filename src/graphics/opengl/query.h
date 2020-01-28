@@ -43,7 +43,14 @@ long long max_compute_shared_memory();
 long long max_shader_storage_block_size();
 
 void check_context(int major, int minor, const std::vector<std::string>& extensions);
-void check_sizes(int sample_count, int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits, int alpha_bits);
+void check_sizes(
+        int sample_count,
+        int depth_bits,
+        int stencil_bits,
+        int red_bits,
+        int green_bits,
+        int blue_bits,
+        int alpha_bits);
 
 const char* version();
 const char* vendor();

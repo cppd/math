@@ -58,9 +58,13 @@ struct PaintingInformationAll
         Color::DataType diffuse;
 };
 
-void painting(const std::shared_ptr<const Mesh<3, double>>& mesh, const PaintingInformation3d& info_3d,
-              const PaintingInformationAll& info_all);
+void painting(
+        const std::shared_ptr<const Mesh<3, double>>& mesh,
+        const PaintingInformation3d& info_3d,
+        const PaintingInformationAll& info_all);
 
 template <size_t N, typename T>
-void painting(const std::shared_ptr<const Mesh<N, T>>& mesh, const PaintingInformationNd& info_nd,
-              const PaintingInformationAll& info_all);
+void painting(
+        const std::shared_ptr<const Mesh<N, T>>& mesh,
+        const PaintingInformationNd& info_nd,
+        const PaintingInformationAll& info_all);

@@ -38,8 +38,10 @@ public:
         virtual void direct_message_warning(const std::string& msg) = 0;
         virtual void direct_object_loaded(int id) = 0;
         virtual void direct_mesh_loaded(ObjectId id) = 0;
-        virtual void direct_file_loaded(const std::string& file_name, unsigned dimension,
-                                        const std::unordered_set<ObjectId>& objects) = 0;
+        virtual void direct_file_loaded(
+                const std::string& file_name,
+                unsigned dimension,
+                const std::unordered_set<ObjectId>& objects) = 0;
         virtual void direct_bound_cocone_loaded(double rho, double alpha) = 0;
         virtual void direct_log(const std::string& msg) = 0;
 };
@@ -106,8 +108,10 @@ private:
                         const std::string file_name;
                         const unsigned dimension;
                         const std::unordered_set<ObjectId> objects;
-                        file_loaded(const std::string& file_name_, unsigned dimension_,
-                                    const std::unordered_set<ObjectId>& objects_)
+                        file_loaded(
+                                const std::string& file_name_,
+                                unsigned dimension_,
+                                const std::unordered_set<ObjectId>& objects_)
                                 : file_name(file_name_), dimension(dimension_), objects(objects_)
                         {
                         }
@@ -128,8 +132,17 @@ private:
                         }
                 };
 
-                Variant<std::monostate, object_loaded, mesh_loaded, bound_cocone_loaded, file_loaded, message_error,
-                        message_error_fatal, message_error_source, message_information, message_warning, log>
+                Variant<std::monostate,
+                        object_loaded,
+                        mesh_loaded,
+                        bound_cocone_loaded,
+                        file_loaded,
+                        message_error,
+                        message_error_fatal,
+                        message_error_source,
+                        message_information,
+                        message_warning,
+                        log>
                         event;
 
                 template <typename... Args>
@@ -274,8 +287,8 @@ public:
                 emit_message<WindowEvent::mesh_loaded>("Exception in emit mesh loaded", id);
         }
 
-        void file_loaded(const std::string& file_name, unsigned dimension,
-                         const std::unordered_set<ObjectId>& objects) const override
+        void file_loaded(const std::string& file_name, unsigned dimension, const std::unordered_set<ObjectId>& objects)
+                const override
         {
                 emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", file_name, dimension, objects);
         }

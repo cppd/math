@@ -56,8 +56,13 @@ namespace gpu_vulkan
 {
 namespace
 {
-void image_barrier(VkCommandBuffer command_buffer, const std::vector<VkImage>& images, VkImageLayout old_layout,
-                   VkImageLayout new_layout, VkAccessFlags src_access_mask, VkAccessFlags dst_access_mask)
+void image_barrier(
+        VkCommandBuffer command_buffer,
+        const std::vector<VkImage>& images,
+        VkImageLayout old_layout,
+        VkImageLayout new_layout,
+        VkAccessFlags src_access_mask,
+        VkAccessFlags dst_access_mask)
 {
         ASSERT(!images.empty());
         ASSERT(command_buffer != VK_NULL_HANDLE);
@@ -89,12 +94,18 @@ void image_barrier(VkCommandBuffer command_buffer, const std::vector<VkImage>& i
                 barriers[i].dstAccessMask = dst_access_mask;
         }
 
-        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-                             VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, barriers.size(), barriers.data());
+        vkCmdPipelineBarrier(
+                command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, barriers.size(), barriers.data());
 }
 
-void image_barrier(VkCommandBuffer command_buffer, VkImage image, VkImageLayout old_layout, VkImageLayout new_layout,
-                   VkAccessFlags src_access_mask, VkAccessFlags dst_access_mask)
+void image_barrier(
+        VkCommandBuffer command_buffer,
+        VkImage image,
+        VkImageLayout old_layout,
+        VkImageLayout new_layout,
+        VkAccessFlags src_access_mask,
+        VkAccessFlags dst_access_mask)
 {
         image_barrier(command_buffer, std::vector{image}, old_layout, new_layout, src_access_mask, dst_access_mask);
 }
@@ -113,8 +124,9 @@ void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkPipelineS
         barrier.offset = 0;
         barrier.size = VK_WHOLE_SIZE;
 
-        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, dst_stage_mask, VK_DEPENDENCY_BY_REGION_BIT, 0,
-                             nullptr, 1, &barrier, 0, nullptr);
+        vkCmdPipelineBarrier(
+                command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, dst_stage_mask, VK_DEPENDENCY_BY_REGION_BIT, 0,
+                nullptr, 1, &barrier, 0, nullptr);
 }
 
 class Impl final : public OpticalFlowCompute
@@ -164,18 +176,22 @@ class Impl final : public OpticalFlowCompute
                 images.reserve(sizes.size());
 
                 const bool storage = true;
-                const std::unordered_set<uint32_t> family_indices({m_compute_command_pool.family_index(), family_index});
+                const std::unordered_set<uint32_t> family_indices(
+                        {m_compute_command_pool.family_index(), family_index});
                 const std::vector<VkFormat> formats({IMAGE_FORMAT});
                 for (const vec2i& s : sizes)
                 {
-                        images.emplace_back(m_device, m_compute_command_pool, m_compute_queue, family_indices, formats, s[0],
-                                            s[1], VK_IMAGE_LAYOUT_GENERAL, storage);
+                        images.emplace_back(
+                                m_device, m_compute_command_pool, m_compute_queue, family_indices, formats, s[0], s[1],
+                                VK_IMAGE_LAYOUT_GENERAL, storage);
                 }
 
                 return images;
         }
 
-        std::vector<vulkan::BufferWithMemory> create_flow_buffers(const std::vector<vec2i>& sizes, uint32_t family_index) const
+        std::vector<vulkan::BufferWithMemory> create_flow_buffers(
+                const std::vector<vec2i>& sizes,
+                uint32_t family_index) const
         {
                 std::vector<vulkan::BufferWithMemory> buffers;
                 if (sizes.size() <= 1)
@@ -188,15 +204,17 @@ class Impl final : public OpticalFlowCompute
                 for (size_t i = 1; i < sizes.size(); ++i)
                 {
                         const int buffer_size = sizes[i][0] * sizes[i][1] * sizeof(vec2f);
-                        buffers.emplace_back(vulkan::BufferMemoryType::DeviceLocal, m_device, family_indices,
-                                             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, buffer_size);
+                        buffers.emplace_back(
+                                vulkan::BufferMemoryType::DeviceLocal, m_device, family_indices,
+                                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, buffer_size);
                 }
 
                 return buffers;
         }
 
         static std::vector<OpticalFlowDownsampleMemory> create_downsample_memory(
-                const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
+                const vulkan::Device& device,
+                VkDescriptorSetLayout descriptor_set_layout,
                 const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images)
         {
                 ASSERT(images[0].size() == images[1].size());
@@ -214,8 +232,10 @@ class Impl final : public OpticalFlowCompute
         }
 
         static std::vector<OpticalFlowSobelMemory> create_sobel_memory(
-                const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images, const std::vector<vulkan::ImageWithMemory>& dx,
+                const vulkan::Device& device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,
+                const std::vector<vulkan::ImageWithMemory>& dx,
                 const std::vector<vulkan::ImageWithMemory>& dy)
         {
                 ASSERT(images[0].size() == images[1].size());
@@ -236,11 +256,19 @@ class Impl final : public OpticalFlowCompute
         }
 
         static std::vector<OpticalFlowFlowMemory> create_flow_memory(
-                const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout, uint32_t family_index,
-                VkSampler sampler, const std::vector<vec2i>& sizes, const std::vector<vulkan::BufferWithMemory>& flow_buffers,
-                int top_point_count_x, int top_point_count_y, const vulkan::BufferWithMemory& top_points,
-                const vulkan::BufferWithMemory& top_flow, const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,
-                const std::vector<vulkan::ImageWithMemory>& dx, const std::vector<vulkan::ImageWithMemory>& dy)
+                const vulkan::Device& device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                uint32_t family_index,
+                VkSampler sampler,
+                const std::vector<vec2i>& sizes,
+                const std::vector<vulkan::BufferWithMemory>& flow_buffers,
+                int top_point_count_x,
+                int top_point_count_y,
+                const vulkan::BufferWithMemory& top_points,
+                const vulkan::BufferWithMemory& top_flow,
+                const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,
+                const std::vector<vulkan::ImageWithMemory>& dx,
+                const std::vector<vulkan::ImageWithMemory>& dy)
         {
                 const size_t size = sizes.size();
 
@@ -338,25 +366,30 @@ class Impl final : public OpticalFlowCompute
 
                 // Уровень 0 заполняется по исходному изображению
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_grayscale_program.pipeline());
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_grayscale_program.pipeline_layout(),
-                                        OpticalFlowGrayscaleMemory::set_number(), 1, &m_grayscale_memory.descriptor_set(index), 0,
-                                        nullptr);
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_grayscale_program.pipeline_layout(),
+                        OpticalFlowGrayscaleMemory::set_number(), 1, &m_grayscale_memory.descriptor_set(index), 0,
+                        nullptr);
                 vkCmdDispatch(command_buffer, m_grayscale_groups[0], m_grayscale_groups[1], 1);
 
-                image_barrier(command_buffer, m_images[index][0].image(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
-                              VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
+                image_barrier(
+                        command_buffer, m_images[index][0].image(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
+                        VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
 
                 // Каждый следующий уровень меньше предыдущего
                 for (unsigned i = 0; i < m_downsample_groups.size(); ++i)
                 {
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_downsample_program.pipeline());
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE,
-                                                m_downsample_program.pipeline_layout(), OpticalFlowDownsampleMemory::set_number(),
-                                                1, &m_downsample_memory[i].descriptor_set(index), 0, nullptr);
+                        vkCmdBindPipeline(
+                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_downsample_program.pipeline());
+                        vkCmdBindDescriptorSets(
+                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_downsample_program.pipeline_layout(),
+                                OpticalFlowDownsampleMemory::set_number(), 1,
+                                &m_downsample_memory[i].descriptor_set(index), 0, nullptr);
                         vkCmdDispatch(command_buffer, m_downsample_groups[i][0], m_downsample_groups[i][1], 1);
 
-                        image_barrier(command_buffer, m_images[index][i + 1].image(), VK_IMAGE_LAYOUT_GENERAL,
-                                      VK_IMAGE_LAYOUT_GENERAL, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
+                        image_barrier(
+                                command_buffer, m_images[index][i + 1].image(), VK_IMAGE_LAYOUT_GENERAL,
+                                VK_IMAGE_LAYOUT_GENERAL, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
                 }
         }
 
@@ -370,9 +403,10 @@ class Impl final : public OpticalFlowCompute
                 for (unsigned i = 0; i < m_sobel_groups.size(); ++i)
                 {
                         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_sobel_program.pipeline());
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_sobel_program.pipeline_layout(),
-                                                OpticalFlowSobelMemory::set_number(), 1, &m_sobel_memory[i].descriptor_set(index),
-                                                0, nullptr);
+                        vkCmdBindDescriptorSets(
+                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_sobel_program.pipeline_layout(),
+                                OpticalFlowSobelMemory::set_number(), 1, &m_sobel_memory[i].descriptor_set(index), 0,
+                                nullptr);
                         vkCmdDispatch(command_buffer, m_sobel_groups[i][0], m_sobel_groups[i][1], 1);
                 }
 
@@ -383,8 +417,9 @@ class Impl final : public OpticalFlowCompute
                         images.push_back(m_dx[i].image());
                         images.push_back(m_dy[i].image());
                 }
-                image_barrier(command_buffer, images, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
-                              VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
+                image_barrier(
+                        command_buffer, images, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
+                        VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
         }
 
         void commands_compute_optical_flow(int index, VkCommandBuffer command_buffer, VkBuffer top_flow) const
@@ -396,13 +431,15 @@ class Impl final : public OpticalFlowCompute
                 for (int i = static_cast<int>(m_flow_groups.size()) - 1; i >= 0; --i)
                 {
                         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_flow_program.pipeline());
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_flow_program.pipeline_layout(),
-                                                OpticalFlowFlowMemory::set_number(), 1, &m_flow_memory[i].descriptor_set(index),
-                                                0, nullptr);
+                        vkCmdBindDescriptorSets(
+                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_flow_program.pipeline_layout(),
+                                OpticalFlowFlowMemory::set_number(), 1, &m_flow_memory[i].descriptor_set(index), 0,
+                                nullptr);
                         vkCmdDispatch(command_buffer, m_flow_groups[i][0], m_flow_groups[i][1], 1);
 
-                        buffer_barrier(command_buffer, (i != 0) ? m_flow_buffers[i - 1] : top_flow,
-                                       VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+                        buffer_barrier(
+                                command_buffer, (i != 0) ? m_flow_buffers[i - 1] : top_flow,
+                                VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
                 }
         }
 
@@ -410,8 +447,9 @@ class Impl final : public OpticalFlowCompute
         {
                 for (const vulkan::ImageWithMemory& image : m_images[index])
                 {
-                        image_barrier(command_buffer, image.image(), VK_IMAGE_LAYOUT_GENERAL,
-                                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, VK_ACCESS_SHADER_READ_BIT);
+                        image_barrier(
+                                command_buffer, image.image(), VK_IMAGE_LAYOUT_GENERAL,
+                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, VK_ACCESS_SHADER_READ_BIT);
                 }
         }
 
@@ -419,8 +457,9 @@ class Impl final : public OpticalFlowCompute
         {
                 for (const vulkan::ImageWithMemory& image : m_images[index])
                 {
-                        image_barrier(command_buffer, image.image(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                      VK_IMAGE_LAYOUT_GENERAL, 0, VK_ACCESS_SHADER_READ_BIT);
+                        image_barrier(
+                                command_buffer, image.image(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                VK_IMAGE_LAYOUT_GENERAL, 0, VK_ACCESS_SHADER_READ_BIT);
                 }
         }
 
@@ -508,8 +547,9 @@ class Impl final : public OpticalFlowCompute
                         m_i_index = 0;
 
                         ASSERT(m_command_buffer_first_pyramid);
-                        vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-                                             *m_command_buffer_first_pyramid, m_semaphore_first_pyramid, queue);
+                        vulkan::queue_submit(
+                                wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, *m_command_buffer_first_pyramid,
+                                m_semaphore_first_pyramid, queue);
                         wait_semaphore = m_semaphore_first_pyramid;
                 }
                 else
@@ -517,15 +557,24 @@ class Impl final : public OpticalFlowCompute
                         m_i_index = 1 - m_i_index;
                 }
 
-                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[m_i_index],
-                                     m_semaphore, queue);
+                vulkan::queue_submit(
+                        wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[m_i_index],
+                        m_semaphore, queue);
 
                 return m_semaphore;
         }
 
-        void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, unsigned x, unsigned y, unsigned width,
-                            unsigned height, unsigned top_point_count_x, unsigned top_point_count_y,
-                            const vulkan::BufferWithMemory& top_points, const vulkan::BufferWithMemory& top_flow) override
+        void create_buffers(
+                VkSampler sampler,
+                const vulkan::ImageWithMemory& input,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height,
+                unsigned top_point_count_x,
+                unsigned top_point_count_y,
+                const vulkan::BufferWithMemory& top_points,
+                const vulkan::BufferWithMemory& top_flow) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -558,18 +607,21 @@ class Impl final : public OpticalFlowCompute
 
                 m_downsample_groups = optical_flow_downsample_groups(GROUPS, sizes);
                 m_downsample_program.create_pipeline(GROUPS_X, GROUPS_Y);
-                m_downsample_memory = create_downsample_memory(m_device, m_downsample_program.descriptor_set_layout(), m_images);
+                m_downsample_memory =
+                        create_downsample_memory(m_device, m_downsample_program.descriptor_set_layout(), m_images);
 
                 m_sobel_groups = optical_flow_sobel_groups(GROUPS, sizes);
                 m_sobel_program.create_pipeline(GROUPS_X, GROUPS_Y);
-                m_sobel_memory = create_sobel_memory(m_device, m_sobel_program.descriptor_set_layout(), m_images, m_dx, m_dy);
+                m_sobel_memory =
+                        create_sobel_memory(m_device, m_sobel_program.descriptor_set_layout(), m_images, m_dx, m_dy);
 
                 m_flow_groups = optical_flow_flow_groups(GROUPS, sizes, top_point_count_x, top_point_count_y);
-                m_flow_program.create_pipeline(GROUPS_X, GROUPS_Y, OPTICAL_FLOW_RADIUS, OPTICAL_FLOW_ITERATION_COUNT,
-                                               OPTICAL_FLOW_STOP_MOVE_SQUARE, OPTICAL_FLOW_MIN_DETERMINANT);
-                m_flow_memory = create_flow_memory(m_device, m_flow_program.descriptor_set_layout(), family_index, sampler, sizes,
-                                                   m_flow_buffers, top_point_count_x, top_point_count_y, top_points, top_flow,
-                                                   m_images, m_dx, m_dy);
+                m_flow_program.create_pipeline(
+                        GROUPS_X, GROUPS_Y, OPTICAL_FLOW_RADIUS, OPTICAL_FLOW_ITERATION_COUNT,
+                        OPTICAL_FLOW_STOP_MOVE_SQUARE, OPTICAL_FLOW_MIN_DETERMINANT);
+                m_flow_memory = create_flow_memory(
+                        m_device, m_flow_program.descriptor_set_layout(), family_index, sampler, sizes, m_flow_buffers,
+                        top_point_count_x, top_point_count_y, top_points, top_flow, m_images, m_dx, m_dy);
 
                 create_command_buffer_first_pyramid();
                 create_command_buffers(top_flow);
@@ -606,8 +658,10 @@ class Impl final : public OpticalFlowCompute
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& compute_command_pool,
-             const vulkan::Queue& compute_queue, const vulkan::CommandPool& /*transfer_command_pool*/,
+        Impl(const vulkan::VulkanInstance& instance,
+             const vulkan::CommandPool& compute_command_pool,
+             const vulkan::Queue& compute_queue,
+             const vulkan::CommandPool& /*transfer_command_pool*/,
              const vulkan::Queue& /*transfer_queue*/)
                 : m_instance(instance),
                   m_device(instance.device()),
@@ -643,12 +697,14 @@ std::vector<vulkan::PhysicalDeviceFeatures> OpticalFlowCompute::required_device_
         return REQUIRED_DEVICE_FEATURES;
 }
 
-std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(const vulkan::VulkanInstance& instance,
-                                                                const vulkan::CommandPool& compute_command_pool,
-                                                                const vulkan::Queue& compute_queue,
-                                                                const vulkan::CommandPool& transfer_command_pool,
-                                                                const vulkan::Queue& transfer_queue)
+std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(
+        const vulkan::VulkanInstance& instance,
+        const vulkan::CommandPool& compute_command_pool,
+        const vulkan::Queue& compute_queue,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue)
 {
-        return std::make_unique<Impl>(instance, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue);
+        return std::make_unique<Impl>(
+                instance, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue);
 }
 }

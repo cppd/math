@@ -158,8 +158,10 @@ size_t DftMulDConstant::size() const
 
 DftMulDProgram::DftMulDProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, DftMulDMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(device, {DftMulDMemory::set_number()}, {m_descriptor_set_layout})),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, DftMulDMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {DftMulDMemory::set_number()}, {m_descriptor_set_layout})),
           m_shader(device, dft_mul_d_comp(), "main")
 {
 }
@@ -186,8 +188,13 @@ VkPipeline DftMulDProgram::pipeline_columns() const
         return m_pipeline_columns;
 }
 
-void DftMulDProgram::create_pipelines(uint32_t n1, uint32_t n2, uint32_t m1, uint32_t m2, uint32_t group_size_x,
-                                      uint32_t group_size_y)
+void DftMulDProgram::create_pipelines(
+        uint32_t n1,
+        uint32_t n2,
+        uint32_t m1,
+        uint32_t m2,
+        uint32_t group_size_x,
+        uint32_t group_size_y)
 {
         {
                 m_constant.set(group_size_x, group_size_y, n2, m1);

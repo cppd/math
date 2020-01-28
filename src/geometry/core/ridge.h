@@ -129,7 +129,8 @@ class RidgeDataC
         int m_size;
 
 public:
-        RidgeDataC(const Facet* facet, int external_point_index) : m_data{{{facet, external_point_index}, {}}}, m_size(1)
+        RidgeDataC(const Facet* facet, int external_point_index)
+                : m_data{{{facet, external_point_index}, {}}}, m_size(1)
         {
         }
 
@@ -145,8 +146,8 @@ public:
                         }
                 }
 
-                error("Add to ridge: too many facets exist in the link: facet " + to_string(facet->vertices()) + ", index " +
-                      to_string(external_point_index) + ", not ridge point " +
+                error("Add to ridge: too many facets exist in the link: facet " + to_string(facet->vertices()) +
+                      ", index " + to_string(external_point_index) + ", not ridge point " +
                       to_string(facet->vertices()[external_point_index]));
         }
 

@@ -147,7 +147,14 @@ std::string copy_output_source(vec2i group_size, float to_mul)
         return dft_copy_output_comp(s);
 }
 
-std::string fft_shared_source(bool inverse, int data_size, int n, int n_bits, int shared_size, int group_size, bool reverse_input)
+std::string fft_shared_source(
+        bool inverse,
+        int data_size,
+        int n,
+        int n_bits,
+        int shared_size,
+        int group_size,
+        bool reverse_input)
 {
         std::string s;
         s += "const bool INVERSE = " + bool_string(inverse) + ";\n";
@@ -205,8 +212,13 @@ void DftProgramFftGlobal::exec(bool inverse) const
 
 //
 
-DftProgramCopyInput::DftProgramCopyInput(vec2i group_size, const opengl::Texture& texture, unsigned x, unsigned y, unsigned width,
-                                         unsigned height)
+DftProgramCopyInput::DftProgramCopyInput(
+        vec2i group_size,
+        const opengl::Texture& texture,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height)
         : m_group_count(group_count(width, height, group_size)),
           m_program(opengl::ComputeShader(copy_input_source(group_size, x, y, width, height)))
 {
@@ -227,8 +239,14 @@ void DftProgramCopyInput::copy(const opengl::Buffer& data)
 
 //
 
-DftProgramCopyOutput::DftProgramCopyOutput(vec2i group_size, const opengl::Texture& texture, int n1, int n2, float to_mul)
-        : m_group_count(group_count(n1, n2, group_size)), m_program(opengl::ComputeShader(copy_output_source(group_size, to_mul)))
+DftProgramCopyOutput::DftProgramCopyOutput(
+        vec2i group_size,
+        const opengl::Texture& texture,
+        int n1,
+        int n2,
+        float to_mul)
+        : m_group_count(group_count(n1, n2, group_size)),
+          m_program(opengl::ComputeShader(copy_output_source(group_size, to_mul)))
 {
         m_program.set_uniform_handle(DST_LOCATION, texture.image_handle_write_only());
 }
@@ -250,12 +268,18 @@ DftProgramMul::DftProgramMul(vec2i group_size, int n1, int n2, int m1, int m2)
           m_columns_from_buffer_groups(group_count(n1, n2, group_size)),
           m_rows_to_buffer_forward(opengl::ComputeShader(rows_mul_to_buffer_source(group_size, n1, n2, m1, m2, false))),
           m_rows_to_buffer_inverse(opengl::ComputeShader(rows_mul_to_buffer_source(group_size, n1, n2, m1, m2, true))),
-          m_rows_from_buffer_forward(opengl::ComputeShader(rows_mul_fr_buffer_source(group_size, n1, n2, m1, m2, false))),
-          m_rows_from_buffer_inverse(opengl::ComputeShader(rows_mul_fr_buffer_source(group_size, n1, n2, m1, m2, true))),
-          m_columns_to_buffer_forward(opengl::ComputeShader(cols_mul_to_buffer_source(group_size, n1, n2, m1, m2, false))),
-          m_columns_to_buffer_inverse(opengl::ComputeShader(cols_mul_to_buffer_source(group_size, n1, n2, m1, m2, true))),
-          m_columns_from_buffer_forward(opengl::ComputeShader(cols_mul_fr_buffer_source(group_size, n1, n2, m1, m2, false))),
-          m_columns_from_buffer_inverse(opengl::ComputeShader(cols_mul_fr_buffer_source(group_size, n1, n2, m1, m2, true)))
+          m_rows_from_buffer_forward(
+                  opengl::ComputeShader(rows_mul_fr_buffer_source(group_size, n1, n2, m1, m2, false))),
+          m_rows_from_buffer_inverse(
+                  opengl::ComputeShader(rows_mul_fr_buffer_source(group_size, n1, n2, m1, m2, true))),
+          m_columns_to_buffer_forward(
+                  opengl::ComputeShader(cols_mul_to_buffer_source(group_size, n1, n2, m1, m2, false))),
+          m_columns_to_buffer_inverse(
+                  opengl::ComputeShader(cols_mul_to_buffer_source(group_size, n1, n2, m1, m2, true))),
+          m_columns_from_buffer_forward(
+                  opengl::ComputeShader(cols_mul_fr_buffer_source(group_size, n1, n2, m1, m2, false))),
+          m_columns_from_buffer_inverse(
+                  opengl::ComputeShader(cols_mul_fr_buffer_source(group_size, n1, n2, m1, m2, true)))
 {
 }
 

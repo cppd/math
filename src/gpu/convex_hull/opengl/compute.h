@@ -31,8 +31,13 @@ struct ConvexHullCompute
         virtual int exec() = 0;
 };
 
-std::unique_ptr<ConvexHullCompute> create_convex_hull_compute(const opengl::Texture& objects, unsigned x, unsigned y,
-                                                              unsigned width, unsigned height, const opengl::Buffer& points);
+std::unique_ptr<ConvexHullCompute> create_convex_hull_compute(
+        const opengl::Texture& objects,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height,
+        const opengl::Buffer& points);
 }
 
 #endif

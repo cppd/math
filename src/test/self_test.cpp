@@ -149,8 +149,10 @@ void self_test_extended(ProgressRatios* progress_ratios, const T& catch_all)
 }
 }
 
-void self_test(SelfTestType test_type, ProgressRatios* progress_ratios,
-               std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler)
+void self_test(
+        SelfTestType test_type,
+        ProgressRatios* progress_ratios,
+        std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler)
 {
         auto catch_all = [&](const auto& function) {
                 std::string message = "Self-Test";

@@ -86,13 +86,16 @@ public:
                 m_deque.emplace_back(data, time);
 
                 return std::make_tuple(
-                        m_deque.back().data[0] - m_deque.front().data[0], m_deque.back().data[1] - m_deque.front().data[1],
+                        m_deque.back().data[0] - m_deque.front().data[0],
+                        m_deque.back().data[1] - m_deque.front().data[1],
                         m_deque.back().data[2] - m_deque.front().data[2], m_deque.back().time - m_deque.front().time);
         }
 };
 
-PainterWindow2d::PainterWindow2d(const std::string& title, std::vector<int>&& screen_size,
-                                 const std::vector<int>& initial_slider_positions)
+PainterWindow2d::PainterWindow2d(
+        const std::string& title,
+        std::vector<int>&& screen_size,
+        const std::vector<int>& initial_slider_positions)
         : m_window_thread_id(std::this_thread::get_id()),
           m_screen_size(std::move(screen_size)),
           m_width(m_screen_size[0]),
@@ -228,7 +231,8 @@ void PainterWindow2d::init_interface(const std::vector<int>& initial_slider_posi
                 ASSERT(initial_slider_positions[i] >= 0 && initial_slider_positions[i] <= dimension_max_value);
                 m_dimension_sliders[i].slider.setValue(initial_slider_positions[i]);
 
-                set_label_minimum_width_for_text(&m_dimension_sliders[i].label, to_string_digit_groups(dimension_max_value));
+                set_label_minimum_width_for_text(
+                        &m_dimension_sliders[i].label, to_string_digit_groups(dimension_max_value));
                 m_dimension_sliders[i].label.setText(to_string_digit_groups(initial_slider_positions[i]).c_str());
 
                 QLabel* label_d = new QLabel(QString("d[") + to_string(dimension + 1).c_str() + "]", layout_widget);
@@ -239,7 +243,8 @@ void PainterWindow2d::init_interface(const std::vector<int>& initial_slider_posi
                 layout->addWidget(&m_dimension_sliders[i].label, i, 2);
                 layout->addWidget(&m_dimension_sliders[i].slider, i, 3);
 
-                connect(&m_dimension_sliders[i].slider, SIGNAL(valueChanged(int)), this, SLOT(slider_changed_slot(int)));
+                connect(&m_dimension_sliders[i].slider, SIGNAL(valueChanged(int)), this,
+                        SLOT(slider_changed_slot(int)));
         }
 }
 
@@ -310,7 +315,8 @@ void PainterWindow2d::update_statistics()
 
         painter_statistics(&pass_count, &pixel_count, &ray_count, &sample_count, &previous_pass_duration);
 
-        auto [ray_diff, sample_diff, pixel_diff, time_diff] = m_difference->compute({ray_count, sample_count, pixel_count});
+        auto [ray_diff, sample_diff, pixel_diff, time_diff] =
+                m_difference->compute({ray_count, sample_count, pixel_count});
 
         long long rays_per_second = time_diff != 0 ? std::llround(ray_diff / time_diff) : 0;
         long long samples_per_pixel = pixel_diff != 0 ? std::llround(static_cast<double>(sample_diff) / pixel_diff) : 0;

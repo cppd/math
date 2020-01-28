@@ -68,7 +68,8 @@ public:
         Glyphs(int size, unsigned max_image_dimension)
         {
                 Font font(size);
-                create_font_glyphs(font, max_image_dimension, max_image_dimension, &m_glyphs, &m_width, &m_height, &m_pixels);
+                create_font_glyphs(
+                        font, max_image_dimension, max_image_dimension, &m_glyphs, &m_width, &m_height, &m_pixels);
         }
         int width() const
         {
@@ -126,8 +127,9 @@ class Impl final : public TextShow
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
 
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
-                                        TextShowMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
+                        TextShowMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
 
                 std::array<VkBuffer, 1> buffers = {*m_vertex_buffer};
                 std::array<VkDeviceSize, 1> offsets = {0};
@@ -154,7 +156,8 @@ class Impl final : public TextShow
                 return vulkan::create_command_buffers(info);
         }
 
-        void create_buffers(RenderBuffers2D* render_buffers, unsigned x, unsigned y, unsigned width, unsigned height) override
+        void create_buffers(RenderBuffers2D* render_buffers, unsigned x, unsigned y, unsigned width, unsigned height)
+                override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -162,8 +165,9 @@ class Impl final : public TextShow
 
                 m_render_buffers = render_buffers;
 
-                m_pipeline = m_program.create_pipeline(m_render_buffers->render_pass(), m_render_buffers->sample_count(),
-                                                       m_sample_shading, x, y, width, height);
+                m_pipeline = m_program.create_pipeline(
+                        m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading, x, y,
+                        width, height);
 
                 m_command_buffers = create_commands();
 
@@ -187,8 +191,11 @@ class Impl final : public TextShow
                 m_pipeline.reset();
         }
 
-        VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index,
-                         const TextData& text_data) override
+        VkSemaphore draw(
+                const vulkan::Queue& queue,
+                VkSemaphore wait_semaphore,
+                unsigned image_index,
+                const TextData& text_data) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -209,9 +216,10 @@ class Impl final : public TextShow
 
                         m_command_buffers.reset();
 
-                        m_vertex_buffer.emplace(vulkan::BufferMemoryType::HostVisible, m_device,
-                                                std::unordered_set({m_graphics_family_index}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                                std::max(m_vertex_buffer->size() * 2, data_size));
+                        m_vertex_buffer.emplace(
+                                vulkan::BufferMemoryType::HostVisible, m_device,
+                                std::unordered_set({m_graphics_family_index}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                std::max(m_vertex_buffer->size() * 2, data_size));
 
                         m_command_buffers = create_commands();
                 }
@@ -231,35 +239,61 @@ class Impl final : public TextShow
 
                 const unsigned buffer_index = m_command_buffers->count() == 1 ? 0 : image_index;
 
-                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                                     (*m_command_buffers)[buffer_index], m_semaphore, queue);
+                vulkan::queue_submit(
+                        wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                        (*m_command_buffers)[buffer_index], m_semaphore, queue);
 
                 return m_semaphore;
         }
 
-        Impl(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
-             const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-             const vulkan::Queue& transfer_queue, bool sample_shading, const Color& color, Glyphs&& glyphs)
+        Impl(const vulkan::VulkanInstance& instance,
+             const vulkan::CommandPool& graphics_command_pool,
+             const vulkan::Queue& graphics_queue,
+             const vulkan::CommandPool& transfer_command_pool,
+             const vulkan::Queue& transfer_queue,
+             bool sample_shading,
+             const Color& color,
+             Glyphs&& glyphs)
                 : m_sample_shading(sample_shading),
                   m_instance(instance),
                   m_device(m_instance.device()),
                   m_graphics_command_pool(graphics_command_pool),
-                  m_glyph_texture(m_device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                                  std::unordered_set({graphics_queue.family_index(), transfer_queue.family_index()}),
-                                  GRAYSCALE_IMAGE_FORMATS, glyphs.width(), glyphs.height(),
-                                  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, std::move(glyphs.pixels()), false /*storage*/),
+                  m_glyph_texture(
+                          m_device,
+                          graphics_command_pool,
+                          graphics_queue,
+                          transfer_command_pool,
+                          transfer_queue,
+                          std::unordered_set({graphics_queue.family_index(), transfer_queue.family_index()}),
+                          GRAYSCALE_IMAGE_FORMATS,
+                          glyphs.width(),
+                          glyphs.height(),
+                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                          std::move(glyphs.pixels()),
+                          false /*storage*/),
                   m_glyphs(std::move(glyphs.glyphs())),
                   m_semaphore(m_device),
                   m_sampler(create_text_sampler(m_device)),
                   m_program(m_device),
-                  m_memory(m_device, m_program.descriptor_set_layout(), std::unordered_set({graphics_queue.family_index()}),
-                           m_sampler, &m_glyph_texture),
-                  m_vertex_buffer(std::in_place, vulkan::BufferMemoryType::HostVisible, m_device,
-                                  std::unordered_set({graphics_queue.family_index()}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                  VERTEX_BUFFER_FIRST_SIZE),
-                  m_indirect_buffer(vulkan::BufferMemoryType::HostVisible, m_device,
-                                    std::unordered_set({graphics_queue.family_index()}), VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
-                                    sizeof(VkDrawIndirectCommand)),
+                  m_memory(
+                          m_device,
+                          m_program.descriptor_set_layout(),
+                          std::unordered_set({graphics_queue.family_index()}),
+                          m_sampler,
+                          &m_glyph_texture),
+                  m_vertex_buffer(
+                          std::in_place,
+                          vulkan::BufferMemoryType::HostVisible,
+                          m_device,
+                          std::unordered_set({graphics_queue.family_index()}),
+                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                          VERTEX_BUFFER_FIRST_SIZE),
+                  m_indirect_buffer(
+                          vulkan::BufferMemoryType::HostVisible,
+                          m_device,
+                          std::unordered_set({graphics_queue.family_index()}),
+                          VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+                          sizeof(VkDrawIndirectCommand)),
                   m_graphics_family_index(graphics_queue.family_index())
         {
                 ASSERT(m_glyph_texture.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
@@ -269,11 +303,22 @@ class Impl final : public TextShow
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
-             const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-             const vulkan::Queue& transfer_queue, bool sample_shading, int size, const Color& color)
-                : Impl(instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading,
-                       color, Glyphs(size, instance.limits().maxImageDimension2D))
+        Impl(const vulkan::VulkanInstance& instance,
+             const vulkan::CommandPool& graphics_command_pool,
+             const vulkan::Queue& graphics_queue,
+             const vulkan::CommandPool& transfer_command_pool,
+             const vulkan::Queue& transfer_queue,
+             bool sample_shading,
+             int size,
+             const Color& color)
+                : Impl(instance,
+                       graphics_command_pool,
+                       graphics_queue,
+                       transfer_command_pool,
+                       transfer_queue,
+                       sample_shading,
+                       color,
+                       Glyphs(size, instance.limits().maxImageDimension2D))
         {
         }
 
@@ -290,15 +335,22 @@ public:
 
 std::vector<vulkan::PhysicalDeviceFeatures> TextShow::required_device_features()
 {
-        return merge<vulkan::PhysicalDeviceFeatures>(std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES));
+        return merge<vulkan::PhysicalDeviceFeatures>(
+                std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES));
 }
 
-std::unique_ptr<TextShow> create_text_show(const vulkan::VulkanInstance& instance,
-                                           const vulkan::CommandPool& graphics_command_pool, const vulkan::Queue& graphics_queue,
-                                           const vulkan::CommandPool& transfer_command_pool, const vulkan::Queue& transfer_queue,
-                                           bool sample_shading, int size, const Color& color)
+std::unique_ptr<TextShow> create_text_show(
+        const vulkan::VulkanInstance& instance,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue,
+        bool sample_shading,
+        int size,
+        const Color& color)
 {
-        return std::make_unique<Impl>(instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                                      sample_shading, size, color);
+        return std::make_unique<Impl>(
+                instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading,
+                size, color);
 }
 }

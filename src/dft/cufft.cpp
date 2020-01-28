@@ -127,7 +127,8 @@ public:
                 cudaError_t r = cudaMalloc(&d_mem, m_size * sizeof(T));
                 if (r != cudaSuccess)
                 {
-                        error("Error CUDA malloc " + to_string(m_size * sizeof(T)) + " bytes: " + cudaGetErrorString(r));
+                        error("Error CUDA malloc " + to_string(m_size * sizeof(T)) +
+                              " bytes: " + cudaGetErrorString(r));
                 }
         }
 
@@ -179,7 +180,8 @@ void cuda_memory_copy(std::vector<T>* dst, const CudaMemory<M>& memory)
 {
         if (memory.bytes() != dst->size() * sizeof(T))
         {
-                error("CUDA copy size error " + to_string(dst->size() * sizeof(T)) + " <- " + to_string(memory.bytes()));
+                error("CUDA copy size error " + to_string(dst->size() * sizeof(T)) + " <- " +
+                      to_string(memory.bytes()));
         }
 
         cuda_check_errors();
@@ -240,8 +242,9 @@ class CudaFFT final : public DFT
 
                 if (inverse)
                 {
-                        std::transform(data->cbegin(), data->cend(), data->begin(),
-                                       [k = m_inv_k](const std::complex<float>& v) { return v * k; });
+                        std::transform(
+                                data->cbegin(), data->cend(), data->begin(),
+                                [k = m_inv_k](const std::complex<float>& v) { return v * k; });
                 }
         }
 

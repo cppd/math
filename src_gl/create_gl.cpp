@@ -95,8 +95,12 @@ std::string to_upper(const std::string& str)
         return r;
 }
 
-void create_data(const std::string& function_name, const std::string& return_type, const std::string& parameter_decl,
-                 const std::string& parameter_names, std::vector<FuncData>* data)
+void create_data(
+        const std::string& function_name,
+        const std::string& return_type,
+        const std::string& parameter_decl,
+        const std::string& parameter_names,
+        std::vector<FuncData>* data)
 {
         FuncData s;
         s.pointer_type = "PFN" + to_upper(function_name) + "PROC";
@@ -175,7 +179,8 @@ void write_data(const std::vector<FuncData>& data)
         f_proc_impl << INDENT << "if (!ptr)\n";
         f_proc_impl << INDENT << "{\n";
         f_proc_impl << INDENT << INDENT << "HMODULE module = LoadLibraryA(\"opengl32.dll\");\n";
-        f_proc_impl << INDENT << INDENT << "ptr = reinterpret_cast<" << NAMESPACE << "::PTR>(GetProcAddress(module, str));\n";
+        f_proc_impl << INDENT << INDENT << "ptr = reinterpret_cast<" << NAMESPACE
+                    << "::PTR>(GetProcAddress(module, str));\n";
         f_proc_impl << INDENT << INDENT << "FreeLibrary(module);\n";
         f_proc_impl << INDENT << "}\n";
         f_proc_impl << INDENT << "return ptr;\n";
@@ -219,10 +224,11 @@ void write_data(const std::vector<FuncData>& data)
         f_header << "\n";
         for (const FuncData& s : data)
         {
-                f_header << "inline " << s.return_type << " " << s.function_name << "(" << s.parameter_decl << ") noexcept\n";
+                f_header << "inline " << s.return_type << " " << s.function_name << "(" << s.parameter_decl
+                         << ") noexcept\n";
                 f_header << "{\n";
-                f_header << INDENT << s.return_statement << NAMESPACE << "::" << s.pointer_name << "(" << s.parameter_names
-                         << ");\n";
+                f_header << INDENT << s.return_statement << NAMESPACE << "::" << s.pointer_name << "("
+                         << s.parameter_names << ");\n";
                 f_header << ("}\n");
         }
         f_header << "\n";
@@ -263,8 +269,8 @@ void write_data(const std::vector<FuncData>& data)
         {
                 std::string padding = std::string(pointer_name_length - s.pointer_name.size(), ' ');
 
-                f_impl << INDENT << "set(&" << NAMESPACE << "::" << s.pointer_name << ", " << padding << "\"" << s.function_name
-                       << "\");\n";
+                f_impl << INDENT << "set(&" << NAMESPACE << "::" << s.pointer_name << ", " << padding << "\""
+                       << s.function_name << "\");\n";
         }
         f_impl << "}\n";
         f_impl << "\n";
@@ -338,8 +344,9 @@ int main(int argc, char* argv[])
                 error("Data not found in the file " + file_name);
         }
 
-        std::sort(data.begin(), data.end(),
-                  [](const FuncData& a, const FuncData& b) -> bool { return a.function_name < b.function_name; });
+        std::sort(data.begin(), data.end(), [](const FuncData& a, const FuncData& b) -> bool {
+                return a.function_name < b.function_name;
+        });
 
         write_data(data);
 

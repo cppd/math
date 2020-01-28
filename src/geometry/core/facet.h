@@ -174,8 +174,11 @@ class FacetInteger final : public FacetBase<N, FacetInteger<N, DataType, Compute
         }
 
 public:
-        FacetInteger(const std::vector<Vector<N, DataType>>& points, std::array<int, N>&& vertices, int convex_hull_point,
-                     const FacetInteger* convex_hull_facet)
+        FacetInteger(
+                const std::vector<Vector<N, DataType>>& points,
+                std::array<int, N>&& vertices,
+                int convex_hull_point,
+                const FacetInteger* convex_hull_facet)
                 : Base(std::move(vertices))
         {
                 m_ortho = ortho_nn<N, DataType, ComputeType>(points, Base::vertices());
@@ -352,8 +355,11 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
         }
 
 public:
-        FacetInteger(const std::vector<Vector<N, DataType>>& points, std::array<int, N>&& vertices, int convex_hull_point,
-                     const FacetInteger* convex_hull_facet)
+        FacetInteger(
+                const std::vector<Vector<N, DataType>>& points,
+                std::array<int, N>&& vertices,
+                int convex_hull_point,
+                const FacetInteger* convex_hull_facet)
                 : Base(std::move(vertices))
         {
                 m_ortho = ortho_nn<N, DataType, mpz_class>(points, Base::vertices());

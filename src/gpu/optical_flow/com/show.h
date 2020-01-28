@@ -21,5 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-void create_top_level_optical_flow_points(int width, int height, int ppi, int* point_count_x, int* point_count_y,
-                                          std::vector<vec2i>* points);
+void create_top_level_optical_flow_points(
+        int width,
+        int height,
+        int ppi,
+        int* point_count_x,
+        int* point_count_y,
+        std::vector<vec2i>* points);

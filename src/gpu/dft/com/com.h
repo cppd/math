@@ -27,7 +27,11 @@ std::vector<std::complex<double>> dft_compute_h2(int n, int m, const std::vector
 template <typename T>
 int dft_shared_size(unsigned dft_size, unsigned max_shared_memory_size);
 template <typename T>
-int dft_group_size(unsigned dft_size, unsigned max_group_size_x, unsigned max_group_invocations, unsigned max_shared_memory_size);
+int dft_group_size(
+        unsigned dft_size,
+        unsigned max_group_size_x,
+        unsigned max_group_invocations,
+        unsigned max_shared_memory_size);
 
 template <typename Dst, typename Src>
 std::vector<std::complex<Dst>> conv(const std::vector<std::complex<Src>>& data)

@@ -89,8 +89,8 @@ std::unique_ptr<opengl::Buffer> load_face_vertices(const Obj<3>& obj, const std:
                         vec3f geometric_normal = normalize(cross(v1 - v0, v2 - v0));
                         if (!is_finite(geometric_normal))
                         {
-                                error("Face unit orthogonal vector is not finite for the face with vertices (" + to_string(v0) +
-                                      ", " + to_string(v1) + ", " + to_string(v2) + ")");
+                                error("Face unit orthogonal vector is not finite for the face with vertices (" +
+                                      to_string(v0) + ", " + to_string(v1) + ", " + to_string(v2) + ")");
                         }
 
                         n0 = n1 = n2 = geometric_normal;
@@ -242,7 +242,8 @@ public:
 
                 m_vertex_array.attrib(0, 3, GL_FLOAT, *m_vertex_buffer, offsetof(Vertex, position), sizeof(Vertex));
                 m_vertex_array.attrib(1, 3, GL_FLOAT, *m_vertex_buffer, offsetof(Vertex, normal), sizeof(Vertex));
-                m_vertex_array.attrib(2, 2, GL_FLOAT, *m_vertex_buffer, offsetof(Vertex, texture_coordinates), sizeof(Vertex));
+                m_vertex_array.attrib(
+                        2, 2, GL_FLOAT, *m_vertex_buffer, offsetof(Vertex, texture_coordinates), sizeof(Vertex));
 
                 m_textures = load_textures(obj);
 
@@ -273,7 +274,8 @@ public:
                 {
                         ASSERT(material.vertex_count > 0);
                         m_shader_memory->bind(material.material_index);
-                        info.triangles_program->draw_arrays(GL_TRIANGLES, material.vertex_offset, material.vertex_count);
+                        info.triangles_program->draw_arrays(
+                                GL_TRIANGLES, material.vertex_offset, material.vertex_count);
                 }
         }
 
@@ -302,7 +304,8 @@ public:
 
                 m_vertex_buffer = load_line_vertices(obj);
                 m_vertex_count = 2 * obj.lines().size();
-                m_vertex_array.attrib(0, 3, GL_FLOAT, *m_vertex_buffer, offsetof(PointVertex, position), sizeof(PointVertex));
+                m_vertex_array.attrib(
+                        0, 3, GL_FLOAT, *m_vertex_buffer, offsetof(PointVertex, position), sizeof(PointVertex));
         }
 
         void draw(const DrawInfo& info) const
@@ -329,7 +332,8 @@ public:
 
                 m_vertex_buffer = load_point_vertices(obj);
                 m_vertex_count = obj.points().size();
-                m_vertex_array.attrib(0, 3, GL_FLOAT, *m_vertex_buffer, offsetof(PointVertex, position), sizeof(PointVertex));
+                m_vertex_array.attrib(
+                        0, 3, GL_FLOAT, *m_vertex_buffer, offsetof(PointVertex, position), sizeof(PointVertex));
         }
 
         void draw(const DrawInfo& info) const

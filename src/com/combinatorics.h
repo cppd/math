@@ -78,7 +78,8 @@ std::array<std::array<unsigned char, R>, binomial(N, R)> combinations()
 }
 
 template <int N, int R>
-std::array<std::tuple<std::array<unsigned char, R>, std::array<unsigned char, N - R>>, binomial(N, R)> combinations_tuple()
+std::array<std::tuple<std::array<unsigned char, R>, std::array<unsigned char, N - R>>, binomial(N, R)>
+        combinations_tuple()
 {
         std::array<signed char, N> v;
 

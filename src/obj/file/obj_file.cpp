@@ -180,8 +180,8 @@ std::tuple<int, ObjFileType> obj_file_dimension_and_type(const std::string& file
                 int dimension_numbers = count_numbers_in_file(file_name);
                 if (dimension != dimension_numbers)
                 {
-                        error("Conflicting dimensions in file extension " + to_string(dimension) + " and in file data " +
-                              to_string(dimension_numbers));
+                        error("Conflicting dimensions in file extension " + to_string(dimension) +
+                              " and in file data " + to_string(dimension_numbers));
                 }
                 obj_file_type = ObjFileType::Txt;
         }

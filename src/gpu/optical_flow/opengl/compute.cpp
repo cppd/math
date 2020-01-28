@@ -79,8 +79,9 @@ std::vector<opengl::Buffer> create_flow_buffers(const std::vector<vec2i>& sizes)
         return buffers;
 }
 
-std::array<OpticalFlowGrayscaleMemory, 2> create_grayscale_memory(const opengl::Texture& source,
-                                                                  const std::array<std::vector<opengl::Texture>, 2>& images)
+std::array<OpticalFlowGrayscaleMemory, 2> create_grayscale_memory(
+        const opengl::Texture& source,
+        const std::array<std::vector<opengl::Texture>, 2>& images)
 {
         return {OpticalFlowGrayscaleMemory(source, images[0][0]), OpticalFlowGrayscaleMemory(source, images[1][0])};
 }
@@ -101,9 +102,10 @@ std::array<std::vector<OpticalFlowDownsampleMemory>, 2> create_downsample_memory
         return downsample_images;
 }
 
-std::array<std::vector<OpticalFlowSobelMemory>, 2> create_sobel_memory(const std::array<std::vector<opengl::Texture>, 2>& images,
-                                                                       const std::vector<opengl::Texture>& dx,
-                                                                       const std::vector<opengl::Texture>& dy)
+std::array<std::vector<OpticalFlowSobelMemory>, 2> create_sobel_memory(
+        const std::array<std::vector<opengl::Texture>, 2>& images,
+        const std::vector<opengl::Texture>& dx,
+        const std::vector<opengl::Texture>& dy)
 {
         ASSERT(images[0].size() == images[1].size());
         ASSERT(images[0].size() == dx.size());
@@ -120,10 +122,13 @@ std::array<std::vector<OpticalFlowSobelMemory>, 2> create_sobel_memory(const std
         return sobel_images;
 }
 
-std::vector<OpticalFlowDataMemory> create_flow_data_memory(const std::vector<vec2i>& sizes,
-                                                           const std::vector<opengl::Buffer>& flow_buffers, int top_point_count_x,
-                                                           int top_point_count_y, const opengl::Buffer& top_points,
-                                                           const opengl::Buffer& top_flow)
+std::vector<OpticalFlowDataMemory> create_flow_data_memory(
+        const std::vector<vec2i>& sizes,
+        const std::vector<opengl::Buffer>& flow_buffers,
+        int top_point_count_x,
+        int top_point_count_y,
+        const opengl::Buffer& top_points,
+        const opengl::Buffer& top_flow)
 {
         ASSERT(flow_buffers.size() + 1 == sizes.size());
         auto flow_index = [&](size_t i) {
@@ -185,7 +190,8 @@ std::vector<OpticalFlowDataMemory> create_flow_data_memory(const std::vector<vec
 }
 
 std::array<std::vector<OpticalFlowImagesMemory>, 2> create_flow_images_memory(
-        const std::array<std::vector<opengl::Texture>, 2>& images, const std::vector<opengl::Texture>& dx,
+        const std::array<std::vector<opengl::Texture>, 2>& images,
+        const std::vector<opengl::Texture>& dx,
         const std::vector<opengl::Texture>& dy)
 {
         ASSERT(images[0].size() == images[1].size());
@@ -304,8 +310,15 @@ class Impl final : public OpticalFlowCompute
                 return m_images[m_i_index][0].texture_handle();
         }
 
-        Impl(const std::vector<vec2i>& sizes, const opengl::Texture& source, unsigned x, unsigned y, unsigned width,
-             unsigned height, unsigned top_point_count_x, unsigned top_point_count_y, const opengl::Buffer& top_points,
+        Impl(const std::vector<vec2i>& sizes,
+             const opengl::Texture& source,
+             unsigned x,
+             unsigned y,
+             unsigned width,
+             unsigned height,
+             unsigned top_point_count_x,
+             unsigned top_point_count_y,
+             const opengl::Buffer& top_points,
              const opengl::Buffer& top_flow)
                 : m_images({create_images(sizes), create_images(sizes)}),
                   m_dx(create_images(sizes)),
@@ -324,12 +337,25 @@ class Impl final : public OpticalFlowCompute
                   m_sobel_groups(optical_flow_sobel_groups(OPTICAL_FLOW_GROUP_SIZE, sizes)),
                   m_sobel_compute(OPTICAL_FLOW_GROUP_SIZE),
                   //
-                  m_flow_data_memory(create_flow_data_memory(sizes, m_flow_buffers, top_point_count_x, top_point_count_y,
-                                                             top_points, top_flow)),
+                  m_flow_data_memory(create_flow_data_memory(
+                          sizes,
+                          m_flow_buffers,
+                          top_point_count_x,
+                          top_point_count_y,
+                          top_points,
+                          top_flow)),
                   m_flow_images_memory(create_flow_images_memory(m_images, m_dx, m_dy)),
-                  m_flow_groups(optical_flow_flow_groups(OPTICAL_FLOW_GROUP_SIZE, sizes, top_point_count_x, top_point_count_y)),
-                  m_flow_compute(OPTICAL_FLOW_GROUP_SIZE, OPTICAL_FLOW_RADIUS, OPTICAL_FLOW_ITERATION_COUNT,
-                                 OPTICAL_FLOW_STOP_MOVE_SQUARE, OPTICAL_FLOW_MIN_DETERMINANT)
+                  m_flow_groups(optical_flow_flow_groups(
+                          OPTICAL_FLOW_GROUP_SIZE,
+                          sizes,
+                          top_point_count_x,
+                          top_point_count_y)),
+                  m_flow_compute(
+                          OPTICAL_FLOW_GROUP_SIZE,
+                          OPTICAL_FLOW_RADIUS,
+                          OPTICAL_FLOW_ITERATION_COUNT,
+                          OPTICAL_FLOW_STOP_MOVE_SQUARE,
+                          OPTICAL_FLOW_MIN_DETERMINANT)
         {
                 ASSERT(width > 0 && height > 0);
                 ASSERT(x + width <= static_cast<unsigned>(source.width()));
@@ -337,21 +363,43 @@ class Impl final : public OpticalFlowCompute
         }
 
 public:
-        Impl(const opengl::Texture& source, unsigned x, unsigned y, unsigned width, unsigned height, unsigned top_point_count_x,
-             unsigned top_point_count_y, const opengl::Buffer& top_points, const opengl::Buffer& top_flow)
-                : Impl(optical_flow_pyramid_sizes(source.width(), source.height(), OPTICAL_FLOW_BOTTOM_IMAGE_SIZE), source, x, y,
-                       width, height, top_point_count_x, top_point_count_y, top_points, top_flow)
+        Impl(const opengl::Texture& source,
+             unsigned x,
+             unsigned y,
+             unsigned width,
+             unsigned height,
+             unsigned top_point_count_x,
+             unsigned top_point_count_y,
+             const opengl::Buffer& top_points,
+             const opengl::Buffer& top_flow)
+                : Impl(optical_flow_pyramid_sizes(source.width(), source.height(), OPTICAL_FLOW_BOTTOM_IMAGE_SIZE),
+                       source,
+                       x,
+                       y,
+                       width,
+                       height,
+                       top_point_count_x,
+                       top_point_count_y,
+                       top_points,
+                       top_flow)
         {
         }
 };
 }
 
-std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(const opengl::Texture& source, unsigned x, unsigned y,
-                                                                unsigned width, unsigned height, unsigned top_point_count_x,
-                                                                unsigned top_point_count_y, const opengl::Buffer& top_points,
-                                                                const opengl::Buffer& top_flow)
+std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(
+        const opengl::Texture& source,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height,
+        unsigned top_point_count_x,
+        unsigned top_point_count_y,
+        const opengl::Buffer& top_points,
+        const opengl::Buffer& top_flow)
 {
-        return std::make_unique<Impl>(source, x, y, width, height, top_point_count_x, top_point_count_y, top_points, top_flow);
+        return std::make_unique<Impl>(
+                source, x, y, width, height, top_point_count_x, top_point_count_y, top_points, top_flow);
 }
 }
 

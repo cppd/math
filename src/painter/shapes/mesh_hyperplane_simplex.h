@@ -58,10 +58,16 @@ public:
         static constexpr size_t SHAPE_DIMENSION = N - 1;
         using DataType = T;
 
-        MeshHyperplaneSimplex(const std::vector<Vector<N, T>>& vertices, const std::vector<Vector<N, T>>& normals,
-                              const std::vector<Vector<N - 1, T>>& texcoords, const std::array<int, N>& vertex_indices,
-                              bool has_normals, const std::array<int, N>& normal_indices, bool has_texcoords,
-                              const std::array<int, N>& texcoord_indices, int material);
+        MeshHyperplaneSimplex(
+                const std::vector<Vector<N, T>>& vertices,
+                const std::vector<Vector<N, T>>& normals,
+                const std::vector<Vector<N - 1, T>>& texcoords,
+                const std::array<int, N>& vertex_indices,
+                bool has_normals,
+                const std::array<int, N>& normal_indices,
+                bool has_texcoords,
+                const std::array<int, N>& texcoord_indices,
+                int material);
 
         int material() const;
 

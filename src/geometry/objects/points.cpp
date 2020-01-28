@@ -41,8 +41,10 @@ constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_seq
 }
 
 template <typename T, size_t... I, typename V>
-constexpr Vector<sizeof...(I) + 1, T> add_axis(const Vector<sizeof...(I), T>& vector, V&& value,
-                                               std::integer_sequence<size_t, I...>&&)
+constexpr Vector<sizeof...(I) + 1, T> add_axis(
+        const Vector<sizeof...(I), T>& vector,
+        V&& value,
+        std::integer_sequence<size_t, I...>&&)
 {
         return {vector[I]..., std::forward<V>(value)};
 }
@@ -196,8 +198,8 @@ std::vector<Vector<N, float>> generate_points_ellipsoid(unsigned point_count, bo
 
         while (points.size() < point_count)
         {
-                Vector<N, double> v =
-                        (!bound) ? random_sphere<N, double>(engine) : random_sphere_bound<N, double>(engine, COS_FOR_BOUND);
+                Vector<N, double> v = (!bound) ? random_sphere<N, double>(engine) :
+                                                 random_sphere_bound<N, double>(engine, COS_FOR_BOUND);
 
                 v[0] *= 2;
 
@@ -219,8 +221,8 @@ std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_c
                 // Точки на сфере с углублением со стороны последней оси
                 // в положительном направлении этой оси
 
-                Vector<N, double> v =
-                        (!bound) ? random_sphere<N, double>(engine) : random_sphere_bound<N, double>(engine, COS_FOR_BOUND);
+                Vector<N, double> v = (!bound) ? random_sphere<N, double>(engine) :
+                                                 random_sphere_bound<N, double>(engine, COS_FOR_BOUND);
 
                 double dot_z = dot(LAST_AXIS<N, double>, v);
                 if (dot_z > 0)
@@ -408,7 +410,9 @@ public:
 
                 if constexpr (N == 3)
                 {
-                        m_map.emplace(reinterpret_cast<const char*>(u8"Möbius strip"), &ObjectRepositoryImpl<N>::mobius_strip);
+                        m_map.emplace(
+                                reinterpret_cast<const char*>(u8"Möbius strip"),
+                                &ObjectRepositoryImpl<N>::mobius_strip);
                 }
 
                 if constexpr (N >= 3)

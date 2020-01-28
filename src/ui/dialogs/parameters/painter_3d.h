@@ -28,9 +28,19 @@ class PainterParametersFor3d final : public QDialog
 public:
         explicit PainterParametersFor3d(QWidget* parent = nullptr);
 
-        [[nodiscard]] bool show(int max_thread_count, int width, int height, int max_screen_size, int default_samples_per_pixel,
-                                int max_samples_per_pixel, int* thread_count, int* paint_width, int* paint_height,
-                                int* samples_per_pixel, bool* flat_facets, bool* cornell_box);
+        [[nodiscard]] bool show(
+                int max_thread_count,
+                int width,
+                int height,
+                int max_screen_size,
+                int default_samples_per_pixel,
+                int max_samples_per_pixel,
+                int* thread_count,
+                int* paint_width,
+                int* paint_height,
+                int* samples_per_pixel,
+                bool* flat_facets,
+                bool* cornell_box);
 
 private slots:
 
@@ -62,8 +72,18 @@ private:
 
 namespace dialog
 {
-[[nodiscard]] bool painter_parameters_for_3d(QWidget* parent, int max_thread_count, int width, int height, int max_screen_size,
-                                             int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count,
-                                             int* paint_width, int* paint_height, int* samples_per_pixel, bool* flat_facets,
-                                             bool* cornell_box);
+[[nodiscard]] bool painter_parameters_for_3d(
+        QWidget* parent,
+        int max_thread_count,
+        int width,
+        int height,
+        int max_screen_size,
+        int default_samples_per_pixel,
+        int max_samples_per_pixel,
+        int* thread_count,
+        int* paint_width,
+        int* paint_height,
+        int* samples_per_pixel,
+        bool* flat_facets,
+        bool* cornell_box);
 }

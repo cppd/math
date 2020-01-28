@@ -238,7 +238,10 @@ vulkan::RenderPass render_pass_swapchain_color_depth(VkDevice device, VkFormat c
 }
 #endif
 
-vulkan::RenderPass render_pass_swapchain_color(VkDevice device, VkFormat color_format, VkSampleCountFlagBits sample_count)
+vulkan::RenderPass render_pass_swapchain_color(
+        VkDevice device,
+        VkFormat color_format,
+        VkSampleCountFlagBits sample_count)
 {
         std::array<VkAttachmentDescription, 2> attachments = {};
 
@@ -282,7 +285,8 @@ vulkan::RenderPass render_pass_swapchain_color(VkDevice device, VkFormat color_f
         subpass_dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         subpass_dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         subpass_dependencies[0].srcAccessMask = 0;
-        subpass_dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[0].dstAccessMask =
+                VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
         VkRenderPassCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -296,8 +300,11 @@ vulkan::RenderPass render_pass_swapchain_color(VkDevice device, VkFormat color_f
         return vulkan::RenderPass(device, create_info);
 }
 
-vulkan::RenderPass render_pass_color_depth(VkDevice device, VkFormat color_format, VkFormat depth_format,
-                                           VkSampleCountFlagBits sample_count)
+vulkan::RenderPass render_pass_color_depth(
+        VkDevice device,
+        VkFormat color_format,
+        VkFormat depth_format,
+        VkSampleCountFlagBits sample_count)
 {
         std::array<VkAttachmentDescription, 2> attachments = {};
 
@@ -342,7 +349,8 @@ vulkan::RenderPass render_pass_color_depth(VkDevice device, VkFormat color_forma
         subpass_dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         subpass_dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         subpass_dependencies[0].srcAccessMask = 0;
-        subpass_dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[0].dstAccessMask =
+                VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 #else
         std::array<VkSubpassDependency, 2> subpass_dependencies = {};
 
@@ -351,14 +359,16 @@ vulkan::RenderPass render_pass_color_depth(VkDevice device, VkFormat color_forma
         subpass_dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
         subpass_dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         subpass_dependencies[0].srcAccessMask = 0; // VK_ACCESS_MEMORY_READ_BIT;
-        subpass_dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[0].dstAccessMask =
+                VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         subpass_dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
         subpass_dependencies[1].srcSubpass = 0;
         subpass_dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
         subpass_dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         subpass_dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-        subpass_dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[1].srcAccessMask =
+                VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         subpass_dependencies[1].dstAccessMask = 0; // VK_ACCESS_MEMORY_READ_BIT;
         subpass_dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 #endif
@@ -404,7 +414,8 @@ vulkan::RenderPass render_pass_color(VkDevice device, VkFormat color_format, VkS
         subpass_dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         subpass_dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         subpass_dependencies[0].srcAccessMask = 0;
-        subpass_dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[0].dstAccessMask =
+                VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
         VkRenderPassCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;

@@ -99,18 +99,21 @@ vulkan::RenderPass create_render_pass_depth(VkDevice device, VkFormat depth_form
 
 void check_buffers(const std::vector<vulkan::DepthAttachment>& depth)
 {
-        ASSERT(std::all_of(depth.cbegin(), depth.cend(),
-                           [](const vulkan::DepthAttachment& d) { return d.usage() & VK_IMAGE_USAGE_SAMPLED_BIT; }));
-        ASSERT(std::all_of(depth.cbegin(), depth.cend(),
-                           [](const vulkan::DepthAttachment& d) { return d.sample_count() == SAMPLE_COUNT; }));
+        ASSERT(std::all_of(depth.cbegin(), depth.cend(), [](const vulkan::DepthAttachment& d) {
+                return d.usage() & VK_IMAGE_USAGE_SAMPLED_BIT;
+        }));
+        ASSERT(std::all_of(depth.cbegin(), depth.cend(), [](const vulkan::DepthAttachment& d) {
+                return d.sample_count() == SAMPLE_COUNT;
+        }));
 
         if (depth.empty())
         {
                 error("No depth attachment");
         }
 
-        if (!std::all_of(depth.cbegin(), depth.cend(),
-                         [&](const vulkan::DepthAttachment& d) { return d.format() == depth[0].format(); }))
+        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthAttachment& d) {
+                    return d.format() == depth[0].format();
+            }))
         {
                 error("Depth attachments must have the same format");
         }
@@ -176,18 +179,31 @@ class Impl final : public RendererDepthBuffers
         const std::vector<VkClearValue>& clear_values() const override;
 
 public:
-        Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-             const std::unordered_set<uint32_t>& attachment_family_indices, VkCommandPool graphics_command_pool,
-             VkQueue graphics_queue, const vulkan::Device& device, unsigned width, unsigned height, double zoom);
+        Impl(RendererDepthBufferCount buffer_count,
+             const vulkan::Swapchain& swapchain,
+             const std::unordered_set<uint32_t>& attachment_family_indices,
+             VkCommandPool graphics_command_pool,
+             VkQueue graphics_queue,
+             const vulkan::Device& device,
+             unsigned width,
+             unsigned height,
+             double zoom);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
         Impl& operator=(Impl&&) = delete;
 };
 
-Impl::Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-           const std::unordered_set<uint32_t>& attachment_family_indices, VkCommandPool graphics_command_pool,
-           VkQueue graphics_queue, const vulkan::Device& device, unsigned width, unsigned height, double zoom)
+Impl::Impl(
+        RendererDepthBufferCount buffer_count,
+        const vulkan::Swapchain& swapchain,
+        const std::unordered_set<uint32_t>& attachment_family_indices,
+        VkCommandPool graphics_command_pool,
+        VkQueue graphics_queue,
+        const vulkan::Device& device,
+        unsigned width,
+        unsigned height,
+        double zoom)
         : m_device(device)
 {
         ASSERT(!attachment_family_indices.empty());
@@ -210,8 +226,9 @@ Impl::Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapc
                         depth_formats = DEPTH_IMAGE_FORMATS;
                 }
                 constexpr bool sampled = true;
-                m_depth_attachments.emplace_back(m_device, attachment_family_indices, depth_formats, SAMPLE_COUNT, width, height,
-                                                 sampled, graphics_command_pool, graphics_queue, IMAGE_LAYOUT);
+                m_depth_attachments.emplace_back(
+                        m_device, attachment_family_indices, depth_formats, SAMPLE_COUNT, width, height, sampled,
+                        graphics_command_pool, graphics_queue, IMAGE_LAYOUT);
         }
 
         VkFormat depth_format = m_depth_attachments[0].format();
@@ -225,7 +242,8 @@ Impl::Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapc
         {
                 attachments[0] = depth_attachment.image_view();
 
-                m_framebuffers.push_back(create_framebuffer(m_device, m_render_pass, depth_width, depth_height, attachments));
+                m_framebuffers.push_back(
+                        create_framebuffer(m_device, m_render_pass, depth_width, depth_height, attachments));
                 m_framebuffers_handles.push_back(m_framebuffers.back());
         }
 
@@ -282,14 +300,19 @@ const std::vector<VkClearValue>& Impl::clear_values() const
 }
 }
 
-std::unique_ptr<RendererDepthBuffers> create_renderer_depth_buffers(RendererDepthBufferCount buffer_count,
-                                                                    const vulkan::Swapchain& swapchain,
-                                                                    const std::unordered_set<uint32_t>& attachment_family_indices,
-                                                                    VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                                                                    const vulkan::Device& device, unsigned width, unsigned height,
-                                                                    double zoom)
+std::unique_ptr<RendererDepthBuffers> create_renderer_depth_buffers(
+        RendererDepthBufferCount buffer_count,
+        const vulkan::Swapchain& swapchain,
+        const std::unordered_set<uint32_t>& attachment_family_indices,
+        VkCommandPool graphics_command_pool,
+        VkQueue graphics_queue,
+        const vulkan::Device& device,
+        unsigned width,
+        unsigned height,
+        double zoom)
 {
-        return std::make_unique<Impl>(buffer_count, swapchain, attachment_family_indices, graphics_command_pool, graphics_queue,
-                                      device, width, height, zoom);
+        return std::make_unique<Impl>(
+                buffer_count, swapchain, attachment_family_indices, graphics_command_pool, graphics_queue, device,
+                width, height, zoom);
 }
 }

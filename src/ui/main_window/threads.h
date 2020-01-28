@@ -50,7 +50,9 @@ struct MainThreads
 
         virtual bool action_allowed(Action action) const = 0;
 
-        virtual void start_thread(Action action, const std::function<void(ProgressRatioList*, std::string*)>& function) = 0;
+        virtual void start_thread(
+                Action action,
+                const std::function<void(ProgressRatioList*, std::string*)>& function) = 0;
 
         virtual const std::vector<Progress>& thread_progress() const = 0;
 };

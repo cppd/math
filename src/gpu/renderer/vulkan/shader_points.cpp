@@ -61,16 +61,19 @@ std::vector<VkDescriptorSetLayoutBinding> RendererPointsMemory::descriptor_set_l
         return bindings;
 }
 
-RendererPointsMemory::RendererPointsMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                                           const std::unordered_set<uint32_t>& family_indices)
+RendererPointsMemory::RendererPointsMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout,
+        const std::unordered_set<uint32_t>& family_indices)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
+                m_uniform_buffers.emplace_back(
+                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
                 m_matrices_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -83,8 +86,9 @@ RendererPointsMemory::RendererPointsMemory(const vulkan::Device& device, VkDescr
                 bindings.push_back(MATRICES_BINDING);
         }
         {
-                m_uniform_buffers.emplace_back(vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
+                m_uniform_buffers.emplace_back(
+                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
                 m_drawing_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -209,8 +213,10 @@ RendererPointsProgram::RendererPointsProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
                   vulkan::create_descriptor_set_layout(device, RendererPointsMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {RendererPointsMemory::set_number()}, {m_descriptor_set_layout})),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {RendererPointsMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_vertex_shader_0d(m_device, renderer_points_0d_vert(), "main"),
           m_vertex_shader_1d(m_device, renderer_points_1d_vert(), "main"),
           m_fragment_shader(m_device, renderer_points_frag(), "main")
@@ -227,9 +233,14 @@ VkPipelineLayout RendererPointsProgram::pipeline_layout() const
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline RendererPointsProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
-                                                        VkPrimitiveTopology primitive_topology, unsigned x, unsigned y,
-                                                        unsigned width, unsigned height) const
+vulkan::Pipeline RendererPointsProgram::create_pipeline(
+        VkRenderPass render_pass,
+        VkSampleCountFlagBits sample_count,
+        VkPrimitiveTopology primitive_topology,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -261,7 +272,8 @@ vulkan::Pipeline RendererPointsProgram::create_pipeline(VkRenderPass render_pass
                 error_fatal("Unsupported primitive topology for renderer points program");
         }
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions = RendererPointsVertex::binding_descriptions();
+        const std::vector<VkVertexInputBindingDescription> binding_descriptions =
+                RendererPointsVertex::binding_descriptions();
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
                 RendererPointsVertex::attribute_descriptions();
 

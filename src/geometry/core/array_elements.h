@@ -24,8 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace array_elements_implementation
 {
 template <typename T, size_t... I>
-constexpr std::array<T, sizeof...(I)> del_elem_impl(const std::array<T, sizeof...(I) + 1>& a, unsigned pos,
-                                                    std::integer_sequence<size_t, I...>)
+constexpr std::array<T, sizeof...(I)> del_elem_impl(
+        const std::array<T, sizeof...(I) + 1>& a,
+        unsigned pos,
+        std::integer_sequence<size_t, I...>)
 {
         static_assert(((I < sizeof...(I)) && ...));
 

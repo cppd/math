@@ -103,7 +103,13 @@ public:
         OpticalFlowGrayscaleProgram(OpticalFlowGrayscaleProgram&&) = default;
         ~OpticalFlowGrayscaleProgram() = default;
 
-        void create_pipeline(uint32_t local_size_x, uint32_t local_size_y, int32_t x, int32_t y, int32_t width, int32_t height);
+        void create_pipeline(
+                uint32_t local_size_x,
+                uint32_t local_size_y,
+                int32_t x,
+                int32_t y,
+                int32_t width,
+                int32_t height);
         void delete_pipeline();
 
         VkDescriptorSetLayout descriptor_set_layout() const;

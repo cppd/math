@@ -40,5 +40,7 @@ struct TextVertex
         }
 };
 
-void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, const TextData& text_data,
-                   std::vector<TextVertex>* vertices);
+void text_vertices(
+        const std::unordered_map<char32_t, FontGlyph>& glyphs,
+        const TextData& text_data,
+        std::vector<TextVertex>* vertices);

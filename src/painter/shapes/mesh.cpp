@@ -59,8 +59,11 @@ int tree_max_depth()
 }
 
 template <size_t N, typename T>
-void Mesh<N, T>::create_mesh_object(const Obj<N>* obj, const Matrix<N + 1, N + 1, T>& vertex_matrix, unsigned thread_count,
-                                    ProgressRatio* progress)
+void Mesh<N, T>::create_mesh_object(
+        const Obj<N>* obj,
+        const Matrix<N + 1, N + 1, T>& vertex_matrix,
+        unsigned thread_count,
+        ProgressRatio* progress)
 {
         if (obj->vertices().empty())
         {
@@ -87,8 +90,9 @@ void Mesh<N, T>::create_mesh_object(const Obj<N>* obj, const Matrix<N + 1, N + 1
         m_facets.reserve(obj->facets().size());
         for (const typename Obj<N>::Facet& facet : obj->facets())
         {
-                m_facets.emplace_back(m_vertices, m_normals, m_texcoords, facet.vertices, facet.has_normal, facet.normals,
-                                      facet.has_texcoord, facet.texcoords, facet.material);
+                m_facets.emplace_back(
+                        m_vertices, m_normals, m_texcoords, facet.vertices, facet.has_normal, facet.normals,
+                        facet.has_texcoord, facet.texcoords, facet.material);
 
                 for (int index : facet.vertices)
                 {
@@ -121,11 +125,16 @@ void Mesh<N, T>::create_mesh_object(const Obj<N>* obj, const Matrix<N + 1, N + 1
         // Указатель на объект дерева
         auto lambda_simplex = [w = std::as_const(simplex_wrappers)](int simplex_index) { return &(w[simplex_index]); };
 
-        m_tree.decompose(tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, m_facets.size(), lambda_simplex, thread_count, progress);
+        m_tree.decompose(
+                tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, m_facets.size(), lambda_simplex, thread_count, progress);
 }
 
 template <size_t N, typename T>
-Mesh<N, T>::Mesh(const Obj<N>* obj, const Matrix<N + 1, N + 1, T>& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
+Mesh<N, T>::Mesh(
+        const Obj<N>* obj,
+        const Matrix<N + 1, N + 1, T>& vertex_matrix,
+        unsigned thread_count,
+        ProgressRatio* progress)
 {
         double start_time = time_in_seconds();
 
@@ -145,16 +154,17 @@ bool Mesh<N, T>::intersect_precise(const Ray<N, T>& ray, T approximate_t, T* t, 
 {
         const Facet* facet = nullptr;
 
-        if (m_tree.trace_ray(ray, approximate_t,
-                             // Пересечение луча с набором граней ячейки дерева
-                             [&](const std::vector<int>& facet_indices, Vector<N, T>* point) -> bool {
-                                     if (ray_intersection(m_facets, facet_indices, ray, t, &facet))
-                                     {
-                                             *point = ray.point(*t);
-                                             return true;
-                                     }
-                                     return false;
-                             }))
+        if (m_tree.trace_ray(
+                    ray, approximate_t,
+                    // Пересечение луча с набором граней ячейки дерева
+                    [&](const std::vector<int>& facet_indices, Vector<N, T>* point) -> bool {
+                            if (ray_intersection(m_facets, facet_indices, ray, t, &facet))
+                            {
+                                    *point = ray.point(*t);
+                                    return true;
+                            }
+                            return false;
+                    }))
         {
                 *intersection_data = facet;
                 return true;

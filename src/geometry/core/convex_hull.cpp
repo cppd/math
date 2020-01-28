@@ -224,8 +224,11 @@ public:
 };
 
 template <unsigned simplex_i, size_t N, typename SourceType, typename ComputeType>
-void find_simplex_points(const std::vector<Vector<N, SourceType>>& points, std::array<int, N + 1>* simplex_points,
-                         std::array<Vector<N, ComputeType>, N>* simplex_vectors, unsigned point_i)
+void find_simplex_points(
+        const std::vector<Vector<N, SourceType>>& points,
+        std::array<int, N + 1>* simplex_points,
+        std::array<Vector<N, ComputeType>, N>* simplex_vectors,
+        unsigned point_i)
 {
         static_assert(N > 1);
         static_assert(simplex_i <= N);
@@ -272,7 +275,11 @@ void find_simplex_points(const std::vector<Vector<N, SourceType>>& points, std::
 }
 
 template <size_t N, typename Facet, template <typename...> typename Map>
-void connect_facets(Facet* facet, int exclude_point, Map<Ridge<N>, std::tuple<Facet*, unsigned>>* search_map, int* ridge_count)
+void connect_facets(
+        Facet* facet,
+        int exclude_point,
+        Map<Ridge<N>, std::tuple<Facet*, unsigned>>* search_map,
+        int* ridge_count)
 {
         const std::array<int, N>& vertices = facet->vertices();
         for (unsigned r = 0; r < N; ++r)
@@ -307,8 +314,10 @@ void connect_facets(Facet* facet, int exclude_point, Map<Ridge<N>, std::tuple<Fa
 
 // Найти N + 1 вершин N-симплекса — начальной выпуклой оболочки N-мерного пространства.
 template <size_t N, typename S, typename C>
-void create_init_convex_hull(const std::vector<Vector<N, S>>& points, std::array<int, N + 1>* vertices,
-                             FacetList<Facet<N, S, C>>* facets)
+void create_init_convex_hull(
+        const std::vector<Vector<N, S>>& points,
+        std::array<int, N + 1>* vertices,
+        FacetList<Facet<N, S, C>>* facets)
 {
         find_simplex_points<N, S, C>(points, vertices);
 
@@ -337,8 +346,11 @@ void create_init_convex_hull(const std::vector<Vector<N, S>>& points, std::array
 
 // Начальное заполнение списков конфликтов граней и точек
 template <typename Point, typename Facet>
-void create_init_conflict_lists(const std::vector<Point>& points, const std::vector<unsigned char>& enabled,
-                                FacetList<Facet>* facets, std::vector<FacetStore<Facet>>* point_conflicts)
+void create_init_conflict_lists(
+        const std::vector<Point>& points,
+        const std::vector<unsigned char>& enabled,
+        FacetList<Facet>* facets,
+        std::vector<FacetStore<Facet>>* point_conflicts)
 {
         for (Facet& facet : *facets)
         {
@@ -354,8 +366,13 @@ void create_init_conflict_lists(const std::vector<Point>& points, const std::vec
 }
 
 template <typename Point, typename Facet>
-void add_conflict_points_to_new_facet(const std::vector<Point>* points, int point, std::vector<signed char>* unique_points,
-                                      const Facet* facet_0, const Facet* facet_1, Facet* new_facet)
+void add_conflict_points_to_new_facet(
+        const std::vector<Point>* points,
+        int point,
+        std::vector<signed char>* unique_points,
+        const Facet* facet_0,
+        const Facet* facet_1,
+        Facet* new_facet)
 {
         for (int p : facet_0->conflict_points())
         {
@@ -385,8 +402,11 @@ void add_conflict_points_to_new_facet(const std::vector<Point>* points, int poin
 }
 
 template <typename Facet>
-void erase_visible_facets_from_conflict_points(unsigned thread_id, unsigned thread_count,
-                                               std::vector<FacetStore<Facet>>* point_conflicts, int point)
+void erase_visible_facets_from_conflict_points(
+        unsigned thread_id,
+        unsigned thread_count,
+        std::vector<FacetStore<Facet>>* point_conflicts,
+        int point)
 {
         for (const Facet* facet : (*point_conflicts)[point])
         {
@@ -401,9 +421,11 @@ void erase_visible_facets_from_conflict_points(unsigned thread_id, unsigned thre
 }
 
 template <typename Facet>
-void add_new_facets_to_conflict_points(unsigned thread_id, unsigned thread_count,
-                                       std::vector<FacetList<Facet>>* new_facets_vector,
-                                       std::vector<FacetStore<Facet>>* point_conflicts)
+void add_new_facets_to_conflict_points(
+        unsigned thread_id,
+        unsigned thread_count,
+        std::vector<FacetList<Facet>>* new_facets_vector,
+        std::vector<FacetStore<Facet>>* point_conflicts)
 {
         for (unsigned i = 0; i < new_facets_vector->size(); ++i)
         {
@@ -421,9 +443,14 @@ void add_new_facets_to_conflict_points(unsigned thread_id, unsigned thread_count
 }
 
 template <typename Point, typename Facet>
-void create_facets(unsigned thread_id, unsigned thread_count, const std::vector<Point>* points, int point,
-                   std::vector<FacetStore<Facet>>* point_conflicts, std::vector<std::vector<signed char>>* unique_points_work,
-                   std::vector<FacetList<Facet>>* new_facets_vector)
+void create_facets(
+        unsigned thread_id,
+        unsigned thread_count,
+        const std::vector<Point>* points,
+        int point,
+        std::vector<FacetStore<Facet>>* point_conflicts,
+        std::vector<std::vector<signed char>>* unique_points_work,
+        std::vector<FacetList<Facet>>* new_facets_vector)
 {
         ASSERT(new_facets_vector->size() == thread_count);
         ASSERT(unique_points_work->size() == thread_count);
@@ -458,8 +485,9 @@ void create_facets(unsigned thread_id, unsigned thread_count, const std::vector<
 
                         int link_index = link_facet->find_link_index(facet);
 
-                        new_facets->emplace_back(*points, set_elem(facet->vertices(), r, point),
-                                                 link_facet->vertices()[link_index], link_facet);
+                        new_facets->emplace_back(
+                                *points, set_elem(facet->vertices(), r, point), link_facet->vertices()[link_index],
+                                link_facet);
 
                         Facet* new_facet = &(*std::prev(new_facets->end()));
                         new_facet->set_iter(std::prev(new_facets->cend()));
@@ -475,14 +503,20 @@ void create_facets(unsigned thread_id, unsigned thread_count, const std::vector<
 // Используются указатели "const type*", так как при ссылках "const type&" происходит копирование данных
 // при работе с std::function и std::thread
 template <size_t N, typename S, typename C>
-void create_horizon_facets(unsigned thread_id, unsigned thread_count, const std::vector<Vector<N, S>>* points, int point,
-                           std::vector<FacetStore<Facet<N, S, C>>>* point_conflicts,
-                           std::vector<std::vector<signed char>>* unique_points_work,
-                           std::vector<FacetList<Facet<N, S, C>>>* new_facets_vector, ThreadBarrier* thread_barrier)
+void create_horizon_facets(
+        unsigned thread_id,
+        unsigned thread_count,
+        const std::vector<Vector<N, S>>* points,
+        int point,
+        std::vector<FacetStore<Facet<N, S, C>>>* point_conflicts,
+        std::vector<std::vector<signed char>>* unique_points_work,
+        std::vector<FacetList<Facet<N, S, C>>>* new_facets_vector,
+        ThreadBarrier* thread_barrier)
 {
         try
         {
-                create_facets(thread_id, thread_count, points, point, point_conflicts, unique_points_work, new_facets_vector);
+                create_facets(
+                        thread_id, thread_count, points, point, point_conflicts, unique_points_work, new_facets_vector);
         }
         catch (...)
         {
@@ -506,9 +540,14 @@ unsigned calculate_facet_count(const std::vector<T>& facets)
 }
 
 template <size_t N, typename S, typename C>
-void add_point_to_convex_hull(const std::vector<Vector<N, S>>& points, int point, FacetList<Facet<N, S, C>>* facets,
-                              std::vector<FacetStore<Facet<N, S, C>>>* point_conflicts, ThreadPool* thread_pool,
-                              ThreadBarrier* thread_barrier, std::vector<std::vector<signed char>>* unique_points_work)
+void add_point_to_convex_hull(
+        const std::vector<Vector<N, S>>& points,
+        int point,
+        FacetList<Facet<N, S, C>>* facets,
+        std::vector<FacetStore<Facet<N, S, C>>>* point_conflicts,
+        ThreadPool* thread_pool,
+        ThreadBarrier* thread_barrier,
+        std::vector<std::vector<signed char>>* unique_points_work)
 {
         if ((*point_conflicts)[point].size() == 0)
         {
@@ -532,14 +571,16 @@ void add_point_to_convex_hull(const std::vector<Vector<N, S>>& points, int point
         if (thread_pool->thread_count() > 1)
         {
                 thread_pool->run([&](unsigned thread_id, unsigned thread_count) {
-                        create_horizon_facets(thread_id, thread_count, &points, point, point_conflicts, unique_points_work,
-                                              &new_facets, thread_barrier);
+                        create_horizon_facets(
+                                thread_id, thread_count, &points, point, point_conflicts, unique_points_work,
+                                &new_facets, thread_barrier);
                 });
         }
         else
         {
                 // 0 = thread_id, 1 = thread_count
-                create_horizon_facets(0, 1, &points, point, point_conflicts, unique_points_work, &new_facets, thread_barrier);
+                create_horizon_facets(
+                        0, 1, &points, point, point_conflicts, unique_points_work, &new_facets, thread_barrier);
         }
 
         // Удаление видимых граней
@@ -575,7 +616,10 @@ void add_point_to_convex_hull(const std::vector<Vector<N, S>>& points, int point
 }
 
 template <size_t N, typename S, typename C>
-void create_convex_hull(const std::vector<Vector<N, S>>& points, FacetList<Facet<N, S, C>>* facets, ProgressRatio* progress)
+void create_convex_hull(
+        const std::vector<Vector<N, S>>& points,
+        FacetList<Facet<N, S, C>>* facets,
+        ProgressRatio* progress)
 {
         static_assert(N > 1);
 
@@ -625,11 +669,13 @@ void create_convex_hull(const std::vector<Vector<N, S>>& points, FacetList<Facet
                         progress->set(points_done, points.size());
                 }
 
-                add_point_to_convex_hull(points, i, facets, &point_conflicts, &thread_pool, &thread_barrier, &unique_points_work);
+                add_point_to_convex_hull(
+                        points, i, facets, &point_conflicts, &thread_pool, &thread_barrier, &unique_points_work);
         }
 
-        ASSERT(std::all_of(facets->cbegin(), facets->cend(),
-                           [](const Facet<N, S, C>& facet) -> bool { return facet.conflict_points().empty(); }));
+        ASSERT(std::all_of(facets->cbegin(), facets->cend(), [](const Facet<N, S, C>& facet) -> bool {
+                return facet.conflict_points().empty();
+        }));
 }
 
 template <size_t N>
@@ -652,8 +698,11 @@ void find_min_max(const std::vector<Vector<N, float>>& points, Vector<N, float>*
 // Для алгоритма со списками конфликтов принципиально нужен случайный порядок обработки точек.
 // Масштабирование и перевод в целые числа с сохранением пропорций.
 template <size_t N>
-void shuffle_and_convert_to_unique_integer(const std::vector<Vector<N, float>>& source_points, long long max_value,
-                                           std::vector<Vector<N, long long>>* points, std::vector<int>* points_map)
+void shuffle_and_convert_to_unique_integer(
+        const std::vector<Vector<N, float>>& source_points,
+        long long max_value,
+        std::vector<Vector<N, long long>>* points,
+        std::vector<int>* points_map)
 {
         ASSERT(0 < max_value);
 
@@ -719,14 +768,17 @@ std::array<int, N> restore_indices(const std::array<int, N>& vertices, const std
 }
 
 template <size_t N>
-void paraboloid_convex_hull(const std::vector<Vector<N, long long>>& points, const std::vector<int>& points_map,
-                            std::vector<DelaunaySimplex<N>>* simplices, ProgressRatio* progress)
+void paraboloid_convex_hull(
+        const std::vector<Vector<N, long long>>& points,
+        const std::vector<int>& points_map,
+        std::vector<DelaunaySimplex<N>>* simplices,
+        ProgressRatio* progress)
 {
         using FacetCH = Facet<N + 1, DataTypeParaboloid<N + 1>, ComputeTypeParaboloid<N + 1>>;
         using PointCH = Vector<N + 1, DataTypeParaboloid<N + 1>>;
 
-        LOG("Paraboloid " + space_name(N + 1) + ". Max: " + to_string(PARABOLOID_BITS) +
-            ". Data: " + type_str<DataTypeParaboloid<N + 1>>() + ". Compute: " + type_str<ComputeTypeParaboloid<N + 1>>() + ". " +
+        LOG("Paraboloid " + space_name(N + 1) + ". Max: " + to_string(PARABOLOID_BITS) + ". Data: " +
+            type_str<DataTypeParaboloid<N + 1>>() + ". Compute: " + type_str<ComputeTypeParaboloid<N + 1>>() + ". " +
             space_name(N) + ". Data: " + type_str<DataTypeAfterParaboloid<N>>() +
             "; Compute: " + type_str<ComputeTypeAfterParaboloid<N>>());
 
@@ -793,8 +845,11 @@ void paraboloid_convex_hull(const std::vector<Vector<N, long long>>& points, con
 }
 
 template <size_t N>
-void ordinary_convex_hull(const std::vector<Vector<N, long long>>& points, const std::vector<int>& points_map,
-                          std::vector<ConvexHullFacet<N>>* ch_facets, ProgressRatio* progress)
+void ordinary_convex_hull(
+        const std::vector<Vector<N, long long>>& points,
+        const std::vector<int>& points_map,
+        std::vector<ConvexHullFacet<N>>* ch_facets,
+        ProgressRatio* progress)
 {
         using Facet = Facet<N, DataTypeOrdinary<N>, ComputeTypeOrdinary<N>>;
         using Point = Vector<N, DataTypeOrdinary<N>>;
@@ -829,8 +884,11 @@ void ordinary_convex_hull(const std::vector<Vector<N, long long>>& points, const
 //
 
 template <size_t N>
-void delaunay_integer(const std::vector<Vector<N, float>>& source_points, std::vector<vec<N>>* points,
-                      std::vector<DelaunaySimplex<N>>* simplices, ProgressRatio* progress)
+void delaunay_integer(
+        const std::vector<Vector<N, float>>& source_points,
+        std::vector<vec<N>>* points,
+        std::vector<DelaunaySimplex<N>>* simplices,
+        ProgressRatio* progress)
 {
         LOG("convex hull paraboloid in " + space_name(N + 1) + " integer");
 
@@ -854,8 +912,10 @@ void delaunay_integer(const std::vector<Vector<N, float>>& source_points, std::v
 }
 
 template <size_t N>
-void convex_hull_integer(const std::vector<Vector<N, float>>& source_points, std::vector<ConvexHullFacet<N>>* facets,
-                         ProgressRatio* progress)
+void convex_hull_integer(
+        const std::vector<Vector<N, float>>& source_points,
+        std::vector<ConvexHullFacet<N>>* facets,
+        ProgressRatio* progress)
 {
         LOG("convex hull in " + space_name(N) + " integer");
 
@@ -873,8 +933,11 @@ void convex_hull_integer(const std::vector<Vector<N, float>>& source_points, std
 }
 
 template <size_t N>
-void compute_delaunay(const std::vector<Vector<N, float>>& source_points, std::vector<vec<N>>* points,
-                      std::vector<DelaunaySimplex<N>>* simplices, ProgressRatio* progress)
+void compute_delaunay(
+        const std::vector<Vector<N, float>>& source_points,
+        std::vector<vec<N>>* points,
+        std::vector<DelaunaySimplex<N>>* simplices,
+        ProgressRatio* progress)
 {
         if (source_points.empty())
         {
@@ -885,8 +948,10 @@ void compute_delaunay(const std::vector<Vector<N, float>>& source_points, std::v
 }
 
 template <size_t N>
-void compute_convex_hull(const std::vector<Vector<N, float>>& source_points, std::vector<ConvexHullFacet<N>>* ch_facets,
-                         ProgressRatio* progress)
+void compute_convex_hull(
+        const std::vector<Vector<N, float>>& source_points,
+        std::vector<ConvexHullFacet<N>>* ch_facets,
+        ProgressRatio* progress)
 {
         if (source_points.empty())
         {
@@ -898,22 +963,44 @@ void compute_convex_hull(const std::vector<Vector<N, float>>& source_points, std
 
 //
 
-template void compute_delaunay(const std::vector<Vector<2, float>>& source_points, std::vector<vec<2>>* points,
-                               std::vector<DelaunaySimplex<2>>* simplices, ProgressRatio* progress);
-template void compute_delaunay(const std::vector<Vector<3, float>>& source_points, std::vector<vec<3>>* points,
-                               std::vector<DelaunaySimplex<3>>* simplices, ProgressRatio* progress);
-template void compute_delaunay(const std::vector<Vector<4, float>>& source_points, std::vector<vec<4>>* points,
-                               std::vector<DelaunaySimplex<4>>* simplices, ProgressRatio* progress);
-template void compute_delaunay(const std::vector<Vector<5, float>>& source_points, std::vector<vec<5>>* points,
-                               std::vector<DelaunaySimplex<5>>* simplices, ProgressRatio* progress);
+template void compute_delaunay(
+        const std::vector<Vector<2, float>>& source_points,
+        std::vector<vec<2>>* points,
+        std::vector<DelaunaySimplex<2>>* simplices,
+        ProgressRatio* progress);
+template void compute_delaunay(
+        const std::vector<Vector<3, float>>& source_points,
+        std::vector<vec<3>>* points,
+        std::vector<DelaunaySimplex<3>>* simplices,
+        ProgressRatio* progress);
+template void compute_delaunay(
+        const std::vector<Vector<4, float>>& source_points,
+        std::vector<vec<4>>* points,
+        std::vector<DelaunaySimplex<4>>* simplices,
+        ProgressRatio* progress);
+template void compute_delaunay(
+        const std::vector<Vector<5, float>>& source_points,
+        std::vector<vec<5>>* points,
+        std::vector<DelaunaySimplex<5>>* simplices,
+        ProgressRatio* progress);
 
-template void compute_convex_hull(const std::vector<Vector<2, float>>& source_points, std::vector<ConvexHullFacet<2>>* ch_facets,
-                                  ProgressRatio* progress);
-template void compute_convex_hull(const std::vector<Vector<3, float>>& source_points, std::vector<ConvexHullFacet<3>>* ch_facets,
-                                  ProgressRatio* progress);
-template void compute_convex_hull(const std::vector<Vector<4, float>>& source_points, std::vector<ConvexHullFacet<4>>* ch_facets,
-                                  ProgressRatio* progress);
-template void compute_convex_hull(const std::vector<Vector<5, float>>& source_points, std::vector<ConvexHullFacet<5>>* ch_facets,
-                                  ProgressRatio* progress);
-template void compute_convex_hull(const std::vector<Vector<6, float>>& source_points, std::vector<ConvexHullFacet<6>>* ch_facets,
-                                  ProgressRatio* progress);
+template void compute_convex_hull(
+        const std::vector<Vector<2, float>>& source_points,
+        std::vector<ConvexHullFacet<2>>* ch_facets,
+        ProgressRatio* progress);
+template void compute_convex_hull(
+        const std::vector<Vector<3, float>>& source_points,
+        std::vector<ConvexHullFacet<3>>* ch_facets,
+        ProgressRatio* progress);
+template void compute_convex_hull(
+        const std::vector<Vector<4, float>>& source_points,
+        std::vector<ConvexHullFacet<4>>* ch_facets,
+        ProgressRatio* progress);
+template void compute_convex_hull(
+        const std::vector<Vector<5, float>>& source_points,
+        std::vector<ConvexHullFacet<5>>* ch_facets,
+        ProgressRatio* progress);
+template void compute_convex_hull(
+        const std::vector<Vector<6, float>>& source_points,
+        std::vector<ConvexHullFacet<6>>* ch_facets,
+        ProgressRatio* progress);

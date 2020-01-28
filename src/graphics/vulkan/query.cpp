@@ -116,8 +116,8 @@ std::unordered_set<std::string> supported_validation_layers()
 
 uint32_t supported_instance_api_version()
 {
-        PFN_vkEnumerateInstanceVersion f =
-                reinterpret_cast<PFN_vkEnumerateInstanceVersion>(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
+        PFN_vkEnumerateInstanceVersion f = reinterpret_cast<PFN_vkEnumerateInstanceVersion>(
+                vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
 
         if (!f)
         {
@@ -176,13 +176,16 @@ void check_api_version(uint32_t required_api_version)
 
         if (required_api_version > api_version)
         {
-                error("Vulkan API version " + api_version_to_string(required_api_version) + " is not supported. Supported " +
-                      api_version_to_string(api_version) + ".");
+                error("Vulkan API version " + api_version_to_string(required_api_version) +
+                      " is not supported. Supported " + api_version_to_string(api_version) + ".");
         }
 }
 
-VkFormat find_supported_format(VkPhysicalDevice physical_device, const std::vector<VkFormat>& candidates, VkImageTiling tiling,
-                               VkFormatFeatureFlags features)
+VkFormat find_supported_format(
+        VkPhysicalDevice physical_device,
+        const std::vector<VkFormat>& candidates,
+        VkImageTiling tiling,
+        VkFormatFeatureFlags features)
 {
         if (tiling == VK_IMAGE_TILING_OPTIMAL)
         {
@@ -224,9 +227,13 @@ VkFormat find_supported_format(VkPhysicalDevice physical_device, const std::vect
         error(oss.str());
 }
 
-VkFormat find_supported_2d_image_format(VkPhysicalDevice physical_device, const std::vector<VkFormat>& candidates,
-                                        VkImageTiling tiling, VkFormatFeatureFlags features, VkImageUsageFlags usage,
-                                        VkSampleCountFlags sample_count)
+VkFormat find_supported_2d_image_format(
+        VkPhysicalDevice physical_device,
+        const std::vector<VkFormat>& candidates,
+        VkImageTiling tiling,
+        VkFormatFeatureFlags features,
+        VkImageUsageFlags usage,
+        VkSampleCountFlags sample_count)
 {
         for (VkFormat format : candidates)
         {
@@ -253,8 +260,9 @@ VkFormat find_supported_2d_image_format(VkPhysicalDevice physical_device, const 
                 }
 
                 VkImageFormatProperties image_properties;
-                VkResult result = vkGetPhysicalDeviceImageFormatProperties(physical_device, format, VK_IMAGE_TYPE_2D, tiling,
-                                                                           usage, 0 /*VkImageCreateFlags*/, &image_properties);
+                VkResult result = vkGetPhysicalDeviceImageFormatProperties(
+                        physical_device, format, VK_IMAGE_TYPE_2D, tiling, usage, 0 /*VkImageCreateFlags*/,
+                        &image_properties);
                 if (result != VK_SUCCESS)
                 {
                         vulkan_function_error("vkGetPhysicalDeviceImageFormatProperties", result);
@@ -281,12 +289,16 @@ VkFormat find_supported_2d_image_format(VkPhysicalDevice physical_device, const 
         error(oss.str());
 }
 
-VkExtent2D max_2d_image_extent(VkPhysicalDevice physical_device, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage)
+VkExtent2D max_2d_image_extent(
+        VkPhysicalDevice physical_device,
+        VkFormat format,
+        VkImageTiling tiling,
+        VkImageUsageFlags usage)
 {
         VkImageFormatProperties image_properties;
 
-        VkResult result = vkGetPhysicalDeviceImageFormatProperties(physical_device, format, VK_IMAGE_TYPE_2D, tiling, usage,
-                                                                   0 /*VkImageCreateFlags*/, &image_properties);
+        VkResult result = vkGetPhysicalDeviceImageFormatProperties(
+                physical_device, format, VK_IMAGE_TYPE_2D, tiling, usage, 0 /*VkImageCreateFlags*/, &image_properties);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkGetPhysicalDeviceImageFormatProperties", result);
@@ -299,27 +311,29 @@ VkExtent2D max_2d_image_extent(VkPhysicalDevice physical_device, VkFormat format
         return extent;
 }
 
-VkSampleCountFlagBits supported_framebuffer_sample_count_flag(VkPhysicalDevice physical_device, int required_minimum_sample_count)
+VkSampleCountFlagBits supported_framebuffer_sample_count_flag(
+        VkPhysicalDevice physical_device,
+        int required_minimum_sample_count)
 {
         constexpr int MIN_SAMPLE_COUNT = 1;
         constexpr int MAX_SAMPLE_COUNT = 64;
 
         if (required_minimum_sample_count < MIN_SAMPLE_COUNT)
         {
-                error("The required minimum sample count " + to_string(required_minimum_sample_count) + " is less than " +
-                      to_string(MIN_SAMPLE_COUNT));
+                error("The required minimum sample count " + to_string(required_minimum_sample_count) +
+                      " is less than " + to_string(MIN_SAMPLE_COUNT));
         }
         if (required_minimum_sample_count > MAX_SAMPLE_COUNT)
         {
-                error("The required minimum sample count " + to_string(required_minimum_sample_count) + " is greater than " +
-                      to_string(MAX_SAMPLE_COUNT));
+                error("The required minimum sample count " + to_string(required_minimum_sample_count) +
+                      " is greater than " + to_string(MAX_SAMPLE_COUNT));
         }
 
         VkPhysicalDeviceProperties properties;
         vkGetPhysicalDeviceProperties(physical_device, &properties);
 
-        VkSampleCountFlags sample_counts =
-                std::min(properties.limits.framebufferColorSampleCounts, properties.limits.framebufferDepthSampleCounts);
+        VkSampleCountFlags sample_counts = std::min(
+                properties.limits.framebufferColorSampleCounts, properties.limits.framebufferDepthSampleCounts);
 
         if ((required_minimum_sample_count <= 1) && (sample_counts & VK_SAMPLE_COUNT_1_BIT))
         {
@@ -380,8 +394,10 @@ int integer_sample_count_flag(VkSampleCountFlagBits sample_count)
         error("Unknown sample count flag " + to_string(static_cast<long long>(sample_count)));
 }
 
-uint32_t physical_device_memory_type_index(VkPhysicalDevice physical_device, uint32_t memory_type_bits,
-                                           VkMemoryPropertyFlags memory_property_flags)
+uint32_t physical_device_memory_type_index(
+        VkPhysicalDevice physical_device,
+        uint32_t memory_type_bits,
+        VkMemoryPropertyFlags memory_property_flags)
 {
         ASSERT(physical_device != VK_NULL_HANDLE);
 

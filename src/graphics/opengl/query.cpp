@@ -181,8 +181,8 @@ void check_context(int major, int minor, const std::vector<std::string>& extensi
         GLint mn = get_integer(GL_MINOR_VERSION);
         if (mj < major || (mj == major && mn < minor))
         {
-                error("OpenGL " + std::to_string(major) + "." + std::to_string(minor) + " is not supported. " + "Supported " +
-                      std::to_string(mj) + "." + std::to_string(mn) + ".");
+                error("OpenGL " + std::to_string(major) + "." + std::to_string(minor) + " is not supported. " +
+                      "Supported " + std::to_string(mj) + "." + std::to_string(mn) + ".");
         }
 
         GLint m = get_integer(GL_CONTEXT_PROFILE_MASK);
@@ -208,14 +208,22 @@ void check_context(int major, int minor, const std::vector<std::string>& extensi
         }
 }
 
-void check_sizes(int sample_count, int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits, int alpha_bits)
+void check_sizes(
+        int sample_count,
+        int depth_bits,
+        int stencil_bits,
+        int red_bits,
+        int green_bits,
+        int blue_bits,
+        int alpha_bits)
 {
         GLint p;
 
         p = framebuffer_samples();
         if (p < sample_count)
         {
-                error("Context framebuffer samples " + std::to_string(p) + ". Required " + std::to_string(sample_count) + ".");
+                error("Context framebuffer samples " + std::to_string(p) + ". Required " +
+                      std::to_string(sample_count) + ".");
         }
 
         p = get_named_framebuffer_attachment_parameter(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE);

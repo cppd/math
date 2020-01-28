@@ -53,8 +53,13 @@ int find_pivot(const Matrix<N, N, T>& A, int column, int from_row)
 
 // input: A * x = b.
 // output: b = x; A = upper triangular.
-template <size_t Size, typename T, template <size_t, size_t, typename> typename Matrix,
-          template <size_t, typename> typename Vector>
+template <
+        size_t Size,
+        typename T,
+        template <size_t, size_t, typename>
+        typename Matrix,
+        template <size_t, typename>
+        typename Vector>
 void solve_gauss(Matrix<Size, Size, T>* A_p, Vector<Size, T>* b_p)
 {
         static_assert(is_floating_point<T>);

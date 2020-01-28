@@ -66,14 +66,23 @@ struct Renderer
 
         virtual bool empty() const = 0;
 
-        virtual void create_buffers(const vulkan::Swapchain* swapchain, RenderBuffers3D* render_buffers,
-                                    const vulkan::ImageWithMemory* objects, unsigned x, unsigned y, unsigned width,
-                                    unsigned height) = 0;
+        virtual void create_buffers(
+                const vulkan::Swapchain* swapchain,
+                RenderBuffers3D* render_buffers,
+                const vulkan::ImageWithMemory* objects,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height) = 0;
         virtual void delete_buffers() = 0;
 };
 
-std::unique_ptr<Renderer> create_renderer(const vulkan::VulkanInstance& instance,
-                                          const vulkan::CommandPool& graphics_command_pool, const vulkan::Queue& graphics_queue,
-                                          const vulkan::CommandPool& transfer_command_pool, const vulkan::Queue& transfer_queue,
-                                          bool sample_shading, bool sampler_anisotropy);
+std::unique_ptr<Renderer> create_renderer(
+        const vulkan::VulkanInstance& instance,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue,
+        bool sample_shading,
+        bool sampler_anisotropy);
 }

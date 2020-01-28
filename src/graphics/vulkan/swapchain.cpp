@@ -30,8 +30,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-VkSurfaceFormatKHR choose_surface_format(const VkSurfaceFormatKHR& required_surface_format,
-                                         const std::vector<VkSurfaceFormatKHR>& surface_formats)
+VkSurfaceFormatKHR choose_surface_format(
+        const VkSurfaceFormatKHR& required_surface_format,
+        const std::vector<VkSurfaceFormatKHR>& surface_formats)
 {
         ASSERT(!surface_formats.empty());
 
@@ -42,7 +43,8 @@ VkSurfaceFormatKHR choose_surface_format(const VkSurfaceFormatKHR& required_surf
 
         for (const VkSurfaceFormatKHR& format : surface_formats)
         {
-                if (format.format == required_surface_format.format && format.colorSpace == required_surface_format.colorSpace)
+                if (format.format == required_surface_format.format &&
+                    format.colorSpace == required_surface_format.colorSpace)
                 {
                         return required_surface_format;
                 }
@@ -58,11 +60,13 @@ VkSurfaceFormatKHR choose_surface_format(const VkSurfaceFormatKHR& required_surf
                 s += vulkan::format_to_string(format.format) + ", " + vulkan::color_space_to_string(format.colorSpace);
         }
         error("Failed to find surface format " + vulkan::format_to_string(required_surface_format.format) + ", " +
-              vulkan::color_space_to_string(required_surface_format.colorSpace) + ".\nSupported surface formats:\n" + s);
+              vulkan::color_space_to_string(required_surface_format.colorSpace) + ".\nSupported surface formats:\n" +
+              s);
 }
 
-VkPresentModeKHR choose_present_mode(const std::vector<VkPresentModeKHR>& present_modes,
-                                     vulkan::PresentMode preferred_present_mode)
+VkPresentModeKHR choose_present_mode(
+        const std::vector<VkPresentModeKHR>& present_modes,
+        vulkan::PresentMode preferred_present_mode)
 {
         // VK_PRESENT_MODE_FIFO_KHR всегда поддерживается
 
@@ -151,10 +155,15 @@ std::vector<VkImage> swapchain_images(VkDevice device, VkSwapchainKHR swapchain)
         return images;
 }
 
-vulkan::SwapchainKHR create_swapchain_khr(VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatKHR surface_format,
-                                          VkPresentModeKHR present_mode, VkExtent2D extent, uint32_t image_count,
-                                          VkSurfaceTransformFlagBitsKHR transform,
-                                          const std::unordered_set<uint32_t>& family_indices)
+vulkan::SwapchainKHR create_swapchain_khr(
+        VkDevice device,
+        VkSurfaceKHR surface,
+        VkSurfaceFormatKHR surface_format,
+        VkPresentModeKHR present_mode,
+        VkExtent2D extent,
+        uint32_t image_count,
+        VkSurfaceTransformFlagBitsKHR transform,
+        const std::unordered_set<uint32_t>& family_indices)
 {
         if (family_indices.empty())
         {
@@ -241,7 +250,8 @@ bool acquire_next_image(VkDevice device, VkSwapchainKHR swapchain, VkSemaphore s
 {
         constexpr uint64_t timeout = limits<uint64_t>::max();
 
-        VkResult result = vkAcquireNextImageKHR(device, swapchain, timeout, semaphore, VK_NULL_HANDLE /*fence*/, image_index);
+        VkResult result =
+                vkAcquireNextImageKHR(device, swapchain, timeout, semaphore, VK_NULL_HANDLE /*fence*/, image_index);
 
         if (result == VK_SUCCESS)
         {
@@ -288,15 +298,20 @@ bool queue_present(VkSemaphore wait_semaphore, VkSwapchainKHR swapchain, uint32_
         vulkan::vulkan_function_error("vkQueuePresentKHR", result);
 }
 
-Swapchain::Swapchain(VkSurfaceKHR surface, const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                     const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count,
-                     PresentMode preferred_present_mode)
+Swapchain::Swapchain(
+        VkSurfaceKHR surface,
+        const Device& device,
+        const std::unordered_set<uint32_t>& family_indices,
+        const VkSurfaceFormatKHR& required_surface_format,
+        int preferred_image_count,
+        PresentMode preferred_present_mode)
 {
         VkSurfaceCapabilitiesKHR surface_capabilities;
         std::vector<VkSurfaceFormatKHR> surface_formats;
         std::vector<VkPresentModeKHR> present_modes;
 
-        if (!find_surface_details(surface, device.physical_device(), &surface_capabilities, &surface_formats, &present_modes))
+        if (!find_surface_details(
+                    surface, device.physical_device(), &surface_capabilities, &surface_formats, &present_modes))
         {
                 error("Failed to find surface details");
         }
@@ -308,8 +323,9 @@ Swapchain::Swapchain(VkSurfaceKHR surface, const Device& device, const std::unor
 
         LOG(swapchain_info_string(m_surface_format, preferred_image_count, image_count));
 
-        m_swapchain = create_swapchain_khr(device, surface, m_surface_format, present_mode, m_extent, image_count,
-                                           surface_capabilities.currentTransform, family_indices);
+        m_swapchain = create_swapchain_khr(
+                device, surface, m_surface_format, present_mode, m_extent, image_count,
+                surface_capabilities.currentTransform, family_indices);
 
         m_images = swapchain_images(device, m_swapchain);
         if (m_images.empty())
@@ -319,7 +335,8 @@ Swapchain::Swapchain(VkSurfaceKHR surface, const Device& device, const std::unor
 
         for (const VkImage& image : m_images)
         {
-                m_image_views.push_back(create_image_view(device, image, m_surface_format.format, VK_IMAGE_ASPECT_COLOR_BIT));
+                m_image_views.push_back(
+                        create_image_view(device, image, m_surface_format.format, VK_IMAGE_ASPECT_COLOR_BIT));
         }
 }
 

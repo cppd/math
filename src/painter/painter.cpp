@@ -125,9 +125,12 @@ struct PaintData
         const T ray_offset;
         const bool smooth_normal;
 
-        PaintData(const std::vector<const GenericObject<N, T>*>& objects_,
-                  const std::vector<const LightSource<N, T>*>& light_sources_,
-                  const SurfaceProperties<N, T>& default_surface_properties_, const T& ray_offset_, bool smooth_normal_)
+        PaintData(
+                const std::vector<const GenericObject<N, T>*>& objects_,
+                const std::vector<const LightSource<N, T>*>& light_sources_,
+                const SurfaceProperties<N, T>& default_surface_properties_,
+                const T& ray_offset_,
+                bool smooth_normal_)
                 : objects(objects_),
                   light_sources(light_sources_),
                   default_surface_properties(default_surface_properties_),
@@ -174,8 +177,11 @@ bool object_is_obstacle_to_light(const GenericObject<N, T>* object, const Ray<N,
 }
 
 template <size_t N, typename T>
-bool light_source_is_visible(Counter* ray_count, const std::vector<const GenericObject<N, T>*>& objects, const Ray<N, T>& ray,
-                             T distance_to_light_source)
+bool light_source_is_visible(
+        Counter* ray_count,
+        const std::vector<const GenericObject<N, T>*>& objects,
+        const Ray<N, T>& ray,
+        T distance_to_light_source)
 {
         for (const GenericObject<N, T>* object : objects)
         {
@@ -190,7 +196,10 @@ bool light_source_is_visible(Counter* ray_count, const std::vector<const Generic
 }
 
 template <size_t N, typename T, typename Object>
-bool ray_intersection_distance(const std::vector<const Object*>& objects, const Ray<N, T>& ray, T* intersection_distance)
+bool ray_intersection_distance(
+        const std::vector<const Object*>& objects,
+        const Ray<N, T>& ray,
+        T* intersection_distance)
 {
         const Surface<N, T>* intersection_surface;
         const void* intersection_data;
@@ -199,10 +208,16 @@ bool ray_intersection_distance(const std::vector<const Object*>& objects, const 
 }
 
 template <size_t N, typename T>
-Color direct_diffuse_lighting(Counter* ray_count, const std::vector<const GenericObject<N, T>*>& objects,
-                              const std::vector<const LightSource<N, T>*> light_sources, const Vector<N, T>& p,
-                              const Vector<N, T>& geometric_normal, const Vector<N, T>& shading_normal, bool mesh,
-                              const T& ray_offset, bool smooth_normal)
+Color direct_diffuse_lighting(
+        Counter* ray_count,
+        const std::vector<const GenericObject<N, T>*>& objects,
+        const std::vector<const LightSource<N, T>*> light_sources,
+        const Vector<N, T>& p,
+        const Vector<N, T>& geometric_normal,
+        const Vector<N, T>& shading_normal,
+        bool mesh,
+        const T& ray_offset,
+        bool smooth_normal)
 {
         Color color(0);
 
@@ -296,20 +311,34 @@ Color direct_diffuse_lighting(Counter* ray_count, const std::vector<const Generi
 }
 
 template <size_t N, typename T>
-Color trace_path(const PaintData<N, T>& paint_data, Counter* ray_count, PainterRandomEngine<T>& random_engine,
-                 int recursion_level, Color::DataType color_level, const Ray<N, T>& ray, bool diffuse_reflection);
+Color trace_path(
+        const PaintData<N, T>& paint_data,
+        Counter* ray_count,
+        PainterRandomEngine<T>& random_engine,
+        int recursion_level,
+        Color::DataType color_level,
+        const Ray<N, T>& ray,
+        bool diffuse_reflection);
 
 template <size_t N, typename T>
-Color diffuse_lighting(const PaintData<N, T>& paint_data, Counter* ray_count, PainterRandomEngine<T>& random_engine,
-                       int recursion_level, Color::DataType color_level, const Vector<N, T>& point,
-                       const Vector<N, T>& shading_normal, const Vector<N, T>& geometric_normal, bool mesh)
+Color diffuse_lighting(
+        const PaintData<N, T>& paint_data,
+        Counter* ray_count,
+        PainterRandomEngine<T>& random_engine,
+        int recursion_level,
+        Color::DataType color_level,
+        const Vector<N, T>& point,
+        const Vector<N, T>& shading_normal,
+        const Vector<N, T>& geometric_normal,
+        bool mesh)
 {
         if (recursion_level < MAX_RECURSION_LEVEL)
         {
                 // Распределение случайного луча с вероятностью по косинусу угла между нормалью и случайным вектором.
 
                 // Случайный вектор диффузного освещения надо определять от видимой нормали.
-                Ray<N, T> diffuse_ray = Ray<N, T>(point, random_cosine_weighted_on_hemisphere(random_engine, shading_normal));
+                Ray<N, T> diffuse_ray =
+                        Ray<N, T>(point, random_cosine_weighted_on_hemisphere(random_engine, shading_normal));
 
                 if (mesh && dot(diffuse_ray.dir(), geometric_normal) <= DOT_PRODUCT_EPSILON<T>)
                 {
@@ -320,15 +349,22 @@ Color diffuse_lighting(const PaintData<N, T>& paint_data, Counter* ray_count, Pa
 
                 diffuse_ray.move_along_dir(paint_data.ray_offset);
 
-                return trace_path(paint_data, ray_count, random_engine, recursion_level + 1, color_level, diffuse_ray, true);
+                return trace_path(
+                        paint_data, ray_count, random_engine, recursion_level + 1, color_level, diffuse_ray, true);
         }
 
         return Color(0);
 }
 
 template <size_t N, typename T>
-Color trace_path(const PaintData<N, T>& paint_data, Counter* ray_count, PainterRandomEngine<T>& random_engine,
-                 int recursion_level, Color::DataType color_level, const Ray<N, T>& ray, bool diffuse_reflection)
+Color trace_path(
+        const PaintData<N, T>& paint_data,
+        Counter* ray_count,
+        PainterRandomEngine<T>& random_engine,
+        int recursion_level,
+        Color::DataType color_level,
+        const Ray<N, T>& ray,
+        bool diffuse_reflection)
 {
         ++(*ray_count);
 
@@ -360,7 +396,8 @@ Color trace_path(const PaintData<N, T>& paint_data, Counter* ray_count, PainterR
 
         if (surface_properties.is_light_source())
         {
-                return (diffuse_reflection) ? surface_properties.get_light_source_color() : surface_properties.get_color();
+                return (diffuse_reflection) ? surface_properties.get_light_source_color() :
+                                              surface_properties.get_color();
         }
 
         Vector<N, T> shading_normal =
@@ -386,12 +423,13 @@ Color trace_path(const PaintData<N, T>& paint_data, Counter* ray_count, PainterR
 
                 if (new_color_level >= MIN_COLOR_LEVEL)
                 {
-                        Color direct = direct_diffuse_lighting(ray_count, paint_data.objects, paint_data.light_sources, point,
-                                                               geometric_normal, shading_normal, mesh, paint_data.ray_offset,
-                                                               paint_data.smooth_normal);
+                        Color direct = direct_diffuse_lighting(
+                                ray_count, paint_data.objects, paint_data.light_sources, point, geometric_normal,
+                                shading_normal, mesh, paint_data.ray_offset, paint_data.smooth_normal);
 
-                        Color diffuse = diffuse_lighting(paint_data, ray_count, random_engine, recursion_level, new_color_level,
-                                                         point, shading_normal, geometric_normal, mesh);
+                        Color diffuse = diffuse_lighting(
+                                paint_data, ray_count, random_engine, recursion_level, new_color_level, point,
+                                shading_normal, geometric_normal, mesh);
 
                         color += surface_color * (direct + diffuse);
                 }
@@ -412,10 +450,17 @@ Vector<N, VectorType> array_to_vector(const std::array<ArrayType, N>& array)
 }
 
 template <size_t N, typename T>
-void paint_pixels(unsigned thread_number, PainterRandomEngine<T>& random_engine, std::vector<Vector<N - 1, T>>* samples,
-                  std::atomic_bool* stop, const Projector<N, T>& projector, const PaintData<N, T>& paint_data,
-                  PainterNotifier<N - 1>* painter_notifier, Paintbrush<N - 1>* paintbrush,
-                  const PainterSampler<N - 1, T>& sampler, Pixels<N - 1>* pixels)
+void paint_pixels(
+        unsigned thread_number,
+        PainterRandomEngine<T>& random_engine,
+        std::vector<Vector<N - 1, T>>* samples,
+        std::atomic_bool* stop,
+        const Projector<N, T>& projector,
+        const PaintData<N, T>& paint_data,
+        PainterNotifier<N - 1>* painter_notifier,
+        Paintbrush<N - 1>* paintbrush,
+        const PainterSampler<N - 1, T>& sampler,
+        Pixels<N - 1>* pixels)
 {
         std::array<int_least16_t, N - 1> pixel;
 
@@ -443,8 +488,9 @@ void paint_pixels(unsigned thread_number, PainterRandomEngine<T>& random_engine,
 
                         Ray<N, T> ray = projector.ray(screen_point + sample_point);
 
-                        color += trace_path(paint_data, &ray_count, random_engine, recursion_level, color_level, ray,
-                                            diffuse_reflection);
+                        color += trace_path(
+                                paint_data, &ray_count, random_engine, recursion_level, color_level, ray,
+                                diffuse_reflection);
                 }
 
                 Color pixel_color = pixels->add_color_and_samples(pixel, color, samples->size());
@@ -454,10 +500,18 @@ void paint_pixels(unsigned thread_number, PainterRandomEngine<T>& random_engine,
 }
 
 template <size_t N, typename T>
-void work_thread(unsigned thread_number, ThreadBarrier* barrier, std::atomic_bool* stop, std::atomic_bool* error_caught,
-                 std::atomic_bool* stop_painting, const Projector<N, T>& projector, const PaintData<N, T>& paint_data,
-                 PainterNotifier<N - 1>* painter_notifier, Paintbrush<N - 1>* paintbrush, const PainterSampler<N - 1, T>& sampler,
-                 Pixels<N - 1>* pixels) noexcept
+void work_thread(
+        unsigned thread_number,
+        ThreadBarrier* barrier,
+        std::atomic_bool* stop,
+        std::atomic_bool* error_caught,
+        std::atomic_bool* stop_painting,
+        const Projector<N, T>& projector,
+        const PaintData<N, T>& paint_data,
+        PainterNotifier<N - 1>* painter_notifier,
+        Paintbrush<N - 1>* paintbrush,
+        const PainterSampler<N - 1, T>& sampler,
+        Pixels<N - 1>* pixels) noexcept
 {
         try
         {
@@ -469,8 +523,9 @@ void work_thread(unsigned thread_number, ThreadBarrier* barrier, std::atomic_boo
 
                         while (true)
                         {
-                                paint_pixels(thread_number, random_engine, &samples, stop, projector, paint_data,
-                                             painter_notifier, paintbrush, sampler, pixels);
+                                paint_pixels(
+                                        thread_number, random_engine, &samples, stop, projector, paint_data,
+                                        painter_notifier, paintbrush, sampler, pixels);
 
                                 barrier->wait();
 
@@ -565,8 +620,14 @@ T compute_ray_offset(const std::vector<const GenericObject<N, T>*>& objects)
 }
 
 template <size_t N, typename T>
-void paint_threads(PainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, const PaintObjects<N, T>& paint_objects,
-                   Paintbrush<N - 1>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal)
+void paint_threads(
+        PainterNotifier<N - 1>* painter_notifier,
+        int samples_per_pixel,
+        const PaintObjects<N, T>& paint_objects,
+        Paintbrush<N - 1>* paintbrush,
+        int thread_count,
+        std::atomic_bool* stop,
+        bool smooth_normal)
 
 {
         check_thread_count(thread_count);
@@ -574,9 +635,9 @@ void paint_threads(PainterNotifier<N - 1>* painter_notifier, int samples_per_pix
 
         const PainterSampler<N - 1, T> sampler(samples_per_pixel);
 
-        const PaintData paint_data(paint_objects.objects(), paint_objects.light_sources(),
-                                   paint_objects.default_surface_properties(), compute_ray_offset(paint_objects.objects()),
-                                   smooth_normal);
+        const PaintData paint_data(
+                paint_objects.objects(), paint_objects.light_sources(), paint_objects.default_surface_properties(),
+                compute_ray_offset(paint_objects.objects()), smooth_normal);
 
         Pixels pixels(paint_objects.projector().screen_size());
 
@@ -590,8 +651,9 @@ void paint_threads(PainterNotifier<N - 1>* painter_notifier, int samples_per_pix
         for (unsigned i = 0; i < threads.size(); ++i)
         {
                 threads[i] = std::thread([&, i]() {
-                        work_thread(i, &barrier, stop, &error_caught, &stop_painting, paint_objects.projector(), paint_data,
-                                    painter_notifier, paintbrush, sampler, &pixels);
+                        work_thread(
+                                i, &barrier, stop, &error_caught, &stop_painting, paint_objects.projector(), paint_data,
+                                painter_notifier, paintbrush, sampler, &pixels);
                 });
         }
 
@@ -604,8 +666,14 @@ void paint_threads(PainterNotifier<N - 1>* painter_notifier, int samples_per_pix
 
 // Без выдачи исключений. Про проблемы сообщать через painter_notifier.
 template <size_t N, typename T>
-void paint(PainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, const PaintObjects<N, T>& paint_objects,
-           Paintbrush<N - 1>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept
+void paint(
+        PainterNotifier<N - 1>* painter_notifier,
+        int samples_per_pixel,
+        const PaintObjects<N, T>& paint_objects,
+        Paintbrush<N - 1>* paintbrush,
+        int thread_count,
+        std::atomic_bool* stop,
+        bool smooth_normal) noexcept
 {
         try
         {
@@ -613,8 +681,9 @@ void paint(PainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, cons
                 {
                         ASSERT(painter_notifier && paintbrush && stop);
 
-                        paint_threads(painter_notifier, samples_per_pixel, paint_objects, paintbrush, thread_count, stop,
-                                      smooth_normal);
+                        paint_threads(
+                                painter_notifier, samples_per_pixel, paint_objects, paintbrush, thread_count, stop,
+                                smooth_normal);
                 }
                 catch (std::exception& e)
                 {
@@ -631,20 +700,68 @@ void paint(PainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, cons
         }
 }
 
-template void paint(PainterNotifier<2>* painter_notifier, int samples_per_pixel, const PaintObjects<3, float>& paint_objects,
-                    Paintbrush<2>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
-template void paint(PainterNotifier<3>* painter_notifier, int samples_per_pixel, const PaintObjects<4, float>& paint_objects,
-                    Paintbrush<3>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
-template void paint(PainterNotifier<4>* painter_notifier, int samples_per_pixel, const PaintObjects<5, float>& paint_objects,
-                    Paintbrush<4>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
-template void paint(PainterNotifier<5>* painter_notifier, int samples_per_pixel, const PaintObjects<6, float>& paint_objects,
-                    Paintbrush<5>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
+template void paint(
+        PainterNotifier<2>* painter_notifier,
+        int samples_per_pixel,
+        const PaintObjects<3, float>& paint_objects,
+        Paintbrush<2>* paintbrush,
+        int thread_count,
+        std::atomic_bool* stop,
+        bool smooth_normal) noexcept;
+template void paint(
+        PainterNotifier<3>* painter_notifier,
+        int samples_per_pixel,
+        const PaintObjects<4, float>& paint_objects,
+        Paintbrush<3>* paintbrush,
+        int thread_count,
+        std::atomic_bool* stop,
+        bool smooth_normal) noexcept;
+template void paint(
+        PainterNotifier<4>* painter_notifier,
+        int samples_per_pixel,
+        const PaintObjects<5, float>& paint_objects,
+        Paintbrush<4>* paintbrush,
+        int thread_count,
+        std::atomic_bool* stop,
+        bool smooth_normal) noexcept;
+template void paint(
+        PainterNotifier<5>* painter_notifier,
+        int samples_per_pixel,
+        const PaintObjects<6, float>& paint_objects,
+        Paintbrush<5>* paintbrush,
+        int thread_count,
+        std::atomic_bool* stop,
+        bool smooth_normal) noexcept;
 
-template void paint(PainterNotifier<2>* painter_notifier, int samples_per_pixel, const PaintObjects<3, double>& paint_objects,
-                    Paintbrush<2>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
-template void paint(PainterNotifier<3>* painter_notifier, int samples_per_pixel, const PaintObjects<4, double>& paint_objects,
-                    Paintbrush<3>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
-template void paint(PainterNotifier<4>* painter_notifier, int samples_per_pixel, const PaintObjects<5, double>& paint_objects,
-                    Paintbrush<4>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
-template void paint(PainterNotifier<5>* painter_notifier, int samples_per_pixel, const PaintObjects<6, double>& paint_objects,
-                    Paintbrush<5>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
+template void paint(
+        PainterNotifier<2>* painter_notifier,
+        int samples_per_pixel,
+        const PaintObjects<3, double>& paint_objects,
+        Paintbrush<2>* paintbrush,
+        int thread_count,
+        std::atomic_bool* stop,
+        bool smooth_normal) noexcept;
+template void paint(
+        PainterNotifier<3>* painter_notifier,
+        int samples_per_pixel,
+        const PaintObjects<4, double>& paint_objects,
+        Paintbrush<3>* paintbrush,
+        int thread_count,
+        std::atomic_bool* stop,
+        bool smooth_normal) noexcept;
+template void paint(
+        PainterNotifier<4>* painter_notifier,
+        int samples_per_pixel,
+        const PaintObjects<5, double>& paint_objects,
+        Paintbrush<4>* paintbrush,
+        int thread_count,
+        std::atomic_bool* stop,
+        bool smooth_normal) noexcept;
+template void paint(
+        PainterNotifier<5>* painter_notifier,
+        int samples_per_pixel,
+        const PaintObjects<6, double>& paint_objects,
+        Paintbrush<5>* paintbrush,
+        int thread_count,
+        std::atomic_bool* stop,
+        bool smooth_normal) noexcept;

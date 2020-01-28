@@ -136,8 +136,10 @@ DftBitReverseProgram::DftBitReverseProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
                   vulkan::create_descriptor_set_layout(device, DftBitReverseMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {DftBitReverseMemory::set_number()}, {m_descriptor_set_layout})),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {DftBitReverseMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_shader(device, dft_bit_reverse_comp(), "main")
 {
 }

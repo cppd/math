@@ -57,12 +57,16 @@ std::array<Vector<N, T>, N> vertices_to_array(const std::vector<Vector<N, T>>& v
 }
 
 template <size_t N, typename T>
-MeshHyperplaneSimplex<N, T>::MeshHyperplaneSimplex(const std::vector<Vector<N, T>>& vertices,
-                                                   const std::vector<Vector<N, T>>& normals,
-                                                   const std::vector<Vector<N - 1, T>>& texcoords,
-                                                   const std::array<int, N>& vertex_indices, bool has_normals,
-                                                   const std::array<int, N>& normal_indices, bool has_texcoords,
-                                                   const std::array<int, N>& texcoord_indices, int material)
+MeshHyperplaneSimplex<N, T>::MeshHyperplaneSimplex(
+        const std::vector<Vector<N, T>>& vertices,
+        const std::vector<Vector<N, T>>& normals,
+        const std::vector<Vector<N - 1, T>>& texcoords,
+        const std::array<int, N>& vertex_indices,
+        bool has_normals,
+        const std::array<int, N>& normal_indices,
+        bool has_texcoords,
+        const std::array<int, N>& texcoord_indices,
+        int material)
         : m_vertices(vertices), m_normals(normals), m_texcoords(texcoords)
 {
         ASSERT((has_normals && all_non_negative(normal_indices)) || !has_normals);

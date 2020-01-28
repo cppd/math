@@ -40,7 +40,8 @@ namespace
 template <typename T>
 std::vector<Vector<3, T>> random_data(int count)
 {
-        using RandomEngine = std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
+        using RandomEngine =
+                std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
 
         RandomEngineWithSeed<RandomEngine> engine;
         std::uniform_real_distribution<T> urd(-1, 1);

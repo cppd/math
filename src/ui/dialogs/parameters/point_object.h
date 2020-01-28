@@ -30,8 +30,13 @@ class PointObjectParameters final : public QDialog
 public:
         explicit PointObjectParameters(QWidget* parent = nullptr);
 
-        [[nodiscard]] bool show(int dimension, const std::string& point_object_name, int default_point_count, int min_point_count,
-                                int max_point_count, int* point_count);
+        [[nodiscard]] bool show(
+                int dimension,
+                const std::string& point_object_name,
+                int default_point_count,
+                int min_point_count,
+                int max_point_count,
+                int* point_count);
 
 private:
         int m_min_point_count;
@@ -46,6 +51,12 @@ private:
 
 namespace dialog
 {
-[[nodiscard]] bool point_object_parameters(QWidget* parent, int dimension, const std::string& point_object_name,
-                                           int default_point_count, int min_point_count, int max_point_count, int* point_count);
+[[nodiscard]] bool point_object_parameters(
+        QWidget* parent,
+        int dimension,
+        const std::string& point_object_name,
+        int default_point_count,
+        int min_point_count,
+        int max_point_count,
+        int* point_count);
 }

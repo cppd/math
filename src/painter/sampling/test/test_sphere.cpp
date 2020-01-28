@@ -147,7 +147,8 @@ void test_speed(int count)
                 sum += random_cosine_weighted_on_hemisphere(random_engine, n);
         }
 
-        LOG("Time = " + to_string_fixed(time_in_seconds() - start_time, 5) + " seconds, sum = " + to_string(component_sum(sum)));
+        LOG("Time = " + to_string_fixed(time_in_seconds() - start_time, 5) +
+            " seconds, sum = " + to_string(component_sum(sum)));
 }
 
 template <size_t N, typename T, typename RandomEngine>

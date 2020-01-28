@@ -80,17 +80,19 @@ std::vector<VkDescriptorSetLayoutBinding> RendererTrianglesSharedMemory::descrip
         return bindings;
 }
 
-RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(const vulkan::Device& device,
-                                                             VkDescriptorSetLayout descriptor_set_layout,
-                                                             const std::unordered_set<uint32_t>& family_indices)
+RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout,
+        const std::unordered_set<uint32_t>& family_indices)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
+                m_uniform_buffers.emplace_back(
+                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
                 m_matrices_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -103,8 +105,9 @@ RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(const vulkan::Devic
                 bindings.push_back(MATRICES_BINDING);
         }
         {
-                m_uniform_buffers.emplace_back(vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Lighting));
+                m_uniform_buffers.emplace_back(
+                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Lighting));
                 m_lighting_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -117,8 +120,9 @@ RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(const vulkan::Devic
                 bindings.push_back(LIGHTING_BINDING);
         }
         {
-                m_uniform_buffers.emplace_back(vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
+                m_uniform_buffers.emplace_back(
+                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
                 m_drawing_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -160,7 +164,8 @@ void RendererTrianglesSharedMemory::copy_to_drawing_buffer(VkDeviceSize offset, 
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
 }
 
-void RendererTrianglesSharedMemory::set_matrices(const mat4& main_mvp_matrix, const mat4& shadow_mvp_texture_matrix) const
+void RendererTrianglesSharedMemory::set_matrices(const mat4& main_mvp_matrix, const mat4& shadow_mvp_texture_matrix)
+        const
 {
         Matrices::M matrices;
         matrices.main_mvp_matrix = to_matrix<float>(main_mvp_matrix).transpose();
@@ -237,7 +242,8 @@ void RendererTrianglesSharedMemory::set_show_smooth(bool show) const
         decltype(Lighting().show_smooth) s = show ? 1 : 0;
         copy_to_lighting_buffer(offsetof(Lighting, show_smooth), s);
 }
-void RendererTrianglesSharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachment* shadow_texture) const
+void RendererTrianglesSharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachment* shadow_texture)
+        const
 {
         ASSERT(shadow_texture && (shadow_texture->usage() & VK_IMAGE_USAGE_SAMPLED_BIT));
         ASSERT(shadow_texture && (shadow_texture->sample_count() == VK_SAMPLE_COUNT_1_BIT));
@@ -310,15 +316,22 @@ std::vector<VkDescriptorSetLayoutBinding> RendererTrianglesMaterialMemory::descr
         return bindings;
 }
 
-RendererTrianglesMaterialMemory::RendererTrianglesMaterialMemory(const vulkan::Device& device,
-                                                                 const std::unordered_set<uint32_t>& family_indices,
-                                                                 VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
-                                                                 const std::vector<MaterialAndTexture>& materials)
-        : m_descriptors(vulkan::Descriptors(device, materials.size(), descriptor_set_layout, descriptor_set_layout_bindings()))
+RendererTrianglesMaterialMemory::RendererTrianglesMaterialMemory(
+        const vulkan::Device& device,
+        const std::unordered_set<uint32_t>& family_indices,
+        VkSampler sampler,
+        VkDescriptorSetLayout descriptor_set_layout,
+        const std::vector<MaterialAndTexture>& materials)
+        : m_descriptors(vulkan::Descriptors(
+                  device,
+                  materials.size(),
+                  descriptor_set_layout,
+                  descriptor_set_layout_bindings()))
 {
         ASSERT(!materials.empty());
-        ASSERT(std::all_of(materials.cbegin(), materials.cend(),
-                           [](const MaterialAndTexture& m) { return m.texture_Ka && m.texture_Kd && m.texture_Ks; }));
+        ASSERT(std::all_of(materials.cbegin(), materials.cend(), [](const MaterialAndTexture& m) {
+                return m.texture_Ka && m.texture_Kd && m.texture_Ks;
+        }));
 
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -330,8 +343,9 @@ RendererTrianglesMaterialMemory::RendererTrianglesMaterialMemory(const vulkan::D
                 infos.clear();
                 bindings.clear();
                 {
-                        m_uniform_buffers.emplace_back(device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                                                       sizeof(Material), materials[i].material);
+                        m_uniform_buffers.emplace_back(
+                                device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Material),
+                                materials[i].material);
 
                         VkDescriptorBufferInfo buffer_info = {};
                         buffer_info.buffer = m_uniform_buffers.back();
@@ -410,16 +424,19 @@ std::vector<VkDescriptorSetLayoutBinding> RendererShadowMemory::descriptor_set_l
         return bindings;
 }
 
-RendererShadowMemory::RendererShadowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                                           const std::unordered_set<uint32_t>& family_indices)
+RendererShadowMemory::RendererShadowMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout,
+        const std::unordered_set<uint32_t>& family_indices)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
+                m_uniform_buffers.emplace_back(
+                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
 
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = m_uniform_buffers.back();
@@ -533,12 +550,15 @@ std::vector<VkVertexInputAttributeDescription> RendererTrianglesVertex::shadow_a
 
 RendererTrianglesProgram::RendererTrianglesProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout_shared(
-                  vulkan::create_descriptor_set_layout(device, RendererTrianglesSharedMemory::descriptor_set_layout_bindings())),
+          m_descriptor_set_layout_shared(vulkan::create_descriptor_set_layout(
+                  device,
+                  RendererTrianglesSharedMemory::descriptor_set_layout_bindings())),
           m_descriptor_set_layout_material(vulkan::create_descriptor_set_layout(
-                  device, RendererTrianglesMaterialMemory::descriptor_set_layout_bindings())),
+                  device,
+                  RendererTrianglesMaterialMemory::descriptor_set_layout_bindings())),
           m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device, {RendererTrianglesSharedMemory::set_number(), RendererTrianglesMaterialMemory::set_number()},
+                  device,
+                  {RendererTrianglesSharedMemory::set_number(), RendererTrianglesMaterialMemory::set_number()},
                   {m_descriptor_set_layout_shared, m_descriptor_set_layout_material})),
           m_vertex_shader(m_device, renderer_triangles_vert(), "main"),
           m_geometry_shader(m_device, renderer_triangles_geom(), "main"),
@@ -561,9 +581,14 @@ VkPipelineLayout RendererTrianglesProgram::pipeline_layout() const
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline RendererTrianglesProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
-                                                           bool sample_shading, unsigned x, unsigned y, unsigned width,
-                                                           unsigned height) const
+vulkan::Pipeline RendererTrianglesProgram::create_pipeline(
+        VkRenderPass render_pass,
+        VkSampleCountFlagBits sample_count,
+        bool sample_shading,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -583,7 +608,8 @@ vulkan::Pipeline RendererTrianglesProgram::create_pipeline(VkRenderPass render_p
 
         const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader, &m_geometry_shader, &m_fragment_shader};
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr, nullptr};
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions = RendererTrianglesVertex::binding_descriptions();
+        const std::vector<VkVertexInputBindingDescription> binding_descriptions =
+                RendererTrianglesVertex::binding_descriptions();
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
                 RendererTrianglesVertex::triangles_attribute_descriptions();
 
@@ -601,8 +627,10 @@ RendererShadowProgram::RendererShadowProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
                   vulkan::create_descriptor_set_layout(device, RendererShadowMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {RendererShadowMemory::set_number()}, {m_descriptor_set_layout})),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {RendererShadowMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_vertex_shader(m_device, renderer_shadow_vert(), "main"),
           m_fragment_shader(m_device, renderer_shadow_frag(), "main")
 {
@@ -618,8 +646,13 @@ VkPipelineLayout RendererShadowProgram::pipeline_layout() const
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline RendererShadowProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, unsigned x,
-                                                        unsigned y, unsigned width, unsigned height) const
+vulkan::Pipeline RendererShadowProgram::create_pipeline(
+        VkRenderPass render_pass,
+        VkSampleCountFlagBits sample_count,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height) const
 {
         ASSERT(sample_count = VK_SAMPLE_COUNT_1_BIT);
         ASSERT(x < width && y < height);
@@ -646,7 +679,8 @@ vulkan::Pipeline RendererShadowProgram::create_pipeline(VkRenderPass render_pass
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
         info.constants = &constants;
 
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions = RendererTrianglesVertex::binding_descriptions();
+        const std::vector<VkVertexInputBindingDescription> binding_descriptions =
+                RendererTrianglesVertex::binding_descriptions();
         info.binding_descriptions = &binding_descriptions;
 
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =

@@ -60,17 +60,21 @@ std::vector<VkDescriptorSetLayoutBinding> TextShowMemory::descriptor_set_layout_
         return bindings;
 }
 
-TextShowMemory::TextShowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                               const std::unordered_set<uint32_t>& family_indices, VkSampler sampler,
-                               const vulkan::ImageWithMemory* texture)
+TextShowMemory::TextShowMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout,
+        const std::unordered_set<uint32_t>& family_indices,
+        VkSampler sampler,
+        const vulkan::ImageWithMemory* texture)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
+                m_uniform_buffers.emplace_back(
+                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
                 m_matrices_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -93,8 +97,9 @@ TextShowMemory::TextShowMemory(const vulkan::Device& device, VkDescriptorSetLayo
                 bindings.push_back(TEXTURE_BINDING);
         }
         {
-                m_uniform_buffers.emplace_back(vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
+                m_uniform_buffers.emplace_back(
+                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
                 m_drawing_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -195,8 +200,10 @@ std::vector<VkVertexInputAttributeDescription> TextShowVertex::attribute_descrip
 
 TextShowProgram::TextShowProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, TextShowMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(device, {TextShowMemory::set_number()}, {m_descriptor_set_layout})),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, TextShowMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {TextShowMemory::set_number()}, {m_descriptor_set_layout})),
           m_vertex_shader(m_device, text_vert(), "main"),
           m_fragment_shader(m_device, text_frag(), "main")
 {
@@ -212,9 +219,14 @@ VkPipelineLayout TextShowProgram::pipeline_layout() const
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline TextShowProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
-                                                  bool sample_shading, unsigned x, unsigned y, unsigned width,
-                                                  unsigned height) const
+vulkan::Pipeline TextShowProgram::create_pipeline(
+        VkRenderPass render_pass,
+        VkSampleCountFlagBits sample_count,
+        bool sample_shading,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -238,10 +250,12 @@ vulkan::Pipeline TextShowProgram::create_pipeline(VkRenderPass render_pass, VkSa
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
         info.constants = &constants;
 
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions = TextShowVertex::binding_descriptions();
+        const std::vector<VkVertexInputBindingDescription> binding_descriptions =
+                TextShowVertex::binding_descriptions();
         info.binding_descriptions = &binding_descriptions;
 
-        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions = TextShowVertex::attribute_descriptions();
+        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
+                TextShowVertex::attribute_descriptions();
         info.attribute_descriptions = &attribute_descriptions;
 
         return vulkan::create_graphics_pipeline(info);

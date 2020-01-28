@@ -64,7 +64,9 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(const Vector<N, T>& org, 
 }
 
 template <size_t N, typename T>
-HyperplaneParallelotope<N, T>::HyperplaneParallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N - 1>& vectors)
+HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
+        const Vector<N, T>& org,
+        const std::array<Vector<N, T>, N - 1>& vectors)
 {
         set_data(org, vectors);
 }

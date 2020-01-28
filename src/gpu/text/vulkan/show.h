@@ -35,15 +35,28 @@ struct TextShow
 
         virtual void set_color(const Color& color) const = 0;
 
-        virtual void create_buffers(RenderBuffers2D* render_buffers, unsigned x, unsigned y, unsigned width, unsigned height) = 0;
+        virtual void create_buffers(
+                RenderBuffers2D* render_buffers,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height) = 0;
         virtual void delete_buffers() = 0;
 
-        virtual VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index,
-                                 const TextData& text_data) = 0;
+        virtual VkSemaphore draw(
+                const vulkan::Queue& queue,
+                VkSemaphore wait_semaphore,
+                unsigned image_index,
+                const TextData& text_data) = 0;
 };
 
-std::unique_ptr<TextShow> create_text_show(const vulkan::VulkanInstance& instance,
-                                           const vulkan::CommandPool& graphics_command_pool, const vulkan::Queue& graphics_queue,
-                                           const vulkan::CommandPool& transfer_command_pool, const vulkan::Queue& transfer_queue,
-                                           bool sample_shading, int size, const Color& color);
+std::unique_ptr<TextShow> create_text_show(
+        const vulkan::VulkanInstance& instance,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue,
+        bool sample_shading,
+        int size,
+        const Color& color);
 }

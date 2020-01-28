@@ -146,17 +146,22 @@ public:
 }
 
 template <size_t N>
-std::unique_ptr<Obj<N>> create_obj_for_lines(const std::vector<Vector<N, float>>& points,
-                                             const std::vector<std::array<int, 2>>& lines)
+std::unique_ptr<Obj<N>> create_obj_for_lines(
+        const std::vector<Vector<N, float>>& points,
+        const std::vector<std::array<int, 2>>& lines)
 {
         return std::make_unique<Lines<N>>(points, lines);
 }
 
-template std::unique_ptr<Obj<3>> create_obj_for_lines(const std::vector<Vector<3, float>>& points,
-                                                      const std::vector<std::array<int, 2>>& lines);
-template std::unique_ptr<Obj<4>> create_obj_for_lines(const std::vector<Vector<4, float>>& points,
-                                                      const std::vector<std::array<int, 2>>& lines);
-template std::unique_ptr<Obj<5>> create_obj_for_lines(const std::vector<Vector<5, float>>& points,
-                                                      const std::vector<std::array<int, 2>>& lines);
-template std::unique_ptr<Obj<6>> create_obj_for_lines(const std::vector<Vector<6, float>>& points,
-                                                      const std::vector<std::array<int, 2>>& lines);
+template std::unique_ptr<Obj<3>> create_obj_for_lines(
+        const std::vector<Vector<3, float>>& points,
+        const std::vector<std::array<int, 2>>& lines);
+template std::unique_ptr<Obj<4>> create_obj_for_lines(
+        const std::vector<Vector<4, float>>& points,
+        const std::vector<std::array<int, 2>>& lines);
+template std::unique_ptr<Obj<5>> create_obj_for_lines(
+        const std::vector<Vector<5, float>>& points,
+        const std::vector<std::array<int, 2>>& lines);
+template std::unique_ptr<Obj<6>> create_obj_for_lines(
+        const std::vector<Vector<6, float>>& points,
+        const std::vector<std::array<int, 2>>& lines);

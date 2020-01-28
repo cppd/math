@@ -22,25 +22,36 @@ namespace vulkan
 PFN_vkVoidFunction proc_addr(VkInstance instance, const char* name);
 }
 
-inline VkResult vkCreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo,
-                                               const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback)
+inline VkResult vkCreateDebugReportCallbackEXT(
+        VkInstance instance,
+        const VkDebugReportCallbackCreateInfoEXT* pCreateInfo,
+        const VkAllocationCallbacks* pAllocator,
+        VkDebugReportCallbackEXT* pCallback)
 {
         auto a = vulkan::proc_addr(instance, "vkCreateDebugReportCallbackEXT");
         auto f = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(a);
         return f(instance, pCreateInfo, pAllocator, pCallback);
 }
 
-inline void vkDestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback,
-                                            const VkAllocationCallbacks* pAllocator)
+inline void vkDestroyDebugReportCallbackEXT(
+        VkInstance instance,
+        VkDebugReportCallbackEXT callback,
+        const VkAllocationCallbacks* pAllocator)
 {
         auto a = vulkan::proc_addr(instance, "vkDestroyDebugReportCallbackEXT");
         auto f = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(a);
         f(instance, callback, pAllocator);
 }
 
-inline void vkDebugReportMessageEXT(VkInstance instance, VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
-                                    uint64_t object, size_t location, int32_t messageCode, const char* pLayerPrefix,
-                                    const char* pMessage)
+inline void vkDebugReportMessageEXT(
+        VkInstance instance,
+        VkDebugReportFlagsEXT flags,
+        VkDebugReportObjectTypeEXT objectType,
+        uint64_t object,
+        size_t location,
+        int32_t messageCode,
+        const char* pLayerPrefix,
+        const char* pMessage)
 {
         auto a = vulkan::proc_addr(instance, "vkDebugReportMessageEXT");
         auto f = reinterpret_cast<PFN_vkDebugReportMessageEXT>(a);

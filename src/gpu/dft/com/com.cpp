@@ -98,7 +98,11 @@ int dft_shared_size(unsigned dft_size, unsigned max_shared_memory_size)
 }
 
 template <typename T>
-int dft_group_size(unsigned dft_size, unsigned max_group_size_x, unsigned max_group_invocations, unsigned max_shared_memory_size)
+int dft_group_size(
+        unsigned dft_size,
+        unsigned max_group_size_x,
+        unsigned max_group_invocations,
+        unsigned max_shared_memory_size)
 {
         // не больше 1 потока на 2 элемента
         int max_threads_required = dft_shared_size<T>(dft_size, max_shared_memory_size) / 2;

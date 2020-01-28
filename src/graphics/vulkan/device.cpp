@@ -34,7 +34,11 @@ namespace vulkan
 {
 namespace
 {
-bool find_family(const std::vector<VkQueueFamilyProperties>& families, VkQueueFlags flags, VkQueueFlags no_flags, uint32_t* index)
+bool find_family(
+        const std::vector<VkQueueFamilyProperties>& families,
+        VkQueueFlags flags,
+        VkQueueFlags no_flags,
+        uint32_t* index)
 {
         ASSERT(flags != 0);
         ASSERT((flags & no_flags) == 0);
@@ -57,8 +61,10 @@ bool find_family(const std::vector<VkQueueFamilyProperties>& families, VkQueueFl
         return false;
 }
 
-std::vector<bool> find_presentation_support(VkSurfaceKHR surface, VkPhysicalDevice device,
-                                            const std::vector<VkQueueFamilyProperties>& queue_families)
+std::vector<bool> find_presentation_support(
+        VkSurfaceKHR surface,
+        VkPhysicalDevice device,
+        const std::vector<VkQueueFamilyProperties>& queue_families)
 {
         if (surface == VK_NULL_HANDLE)
         {
@@ -107,8 +113,11 @@ public:
         throw FeatureIsNotSupported(feature_name);
 }
 
-void set_features(const std::vector<PhysicalDeviceFeatures>& features, bool required,
-                  const VkPhysicalDeviceFeatures& device_features, VkPhysicalDeviceFeatures* result_device_features = nullptr)
+void set_features(
+        const std::vector<PhysicalDeviceFeatures>& features,
+        bool required,
+        const VkPhysicalDeviceFeatures& device_features,
+        VkPhysicalDeviceFeatures* result_device_features = nullptr)
 {
         for (PhysicalDeviceFeatures f : features)
         {
@@ -161,7 +170,8 @@ void set_features(const std::vector<PhysicalDeviceFeatures>& features, bool requ
                         }
                         if (result_device_features)
                         {
-                                result_device_features->drawIndirectFirstInstance = device_features.drawIndirectFirstInstance;
+                                result_device_features->drawIndirectFirstInstance =
+                                        device_features.drawIndirectFirstInstance;
                         }
                         break;
                 case PhysicalDeviceFeatures::dualSrcBlend:
@@ -191,7 +201,8 @@ void set_features(const std::vector<PhysicalDeviceFeatures>& features, bool requ
                         }
                         if (result_device_features)
                         {
-                                result_device_features->fragmentStoresAndAtomics = device_features.fragmentStoresAndAtomics;
+                                result_device_features->fragmentStoresAndAtomics =
+                                        device_features.fragmentStoresAndAtomics;
                         }
                         break;
                 case PhysicalDeviceFeatures::fullDrawIndexUint32:
@@ -301,7 +312,8 @@ void set_features(const std::vector<PhysicalDeviceFeatures>& features, bool requ
                         }
                         if (result_device_features)
                         {
-                                result_device_features->pipelineStatisticsQuery = device_features.pipelineStatisticsQuery;
+                                result_device_features->pipelineStatisticsQuery =
+                                        device_features.pipelineStatisticsQuery;
                         }
                         break;
                 case PhysicalDeviceFeatures::robustBufferAccess:
@@ -371,7 +383,8 @@ void set_features(const std::vector<PhysicalDeviceFeatures>& features, bool requ
                         }
                         if (result_device_features)
                         {
-                                result_device_features->shaderImageGatherExtended = device_features.shaderImageGatherExtended;
+                                result_device_features->shaderImageGatherExtended =
+                                        device_features.shaderImageGatherExtended;
                         }
                         break;
                 case PhysicalDeviceFeatures::shaderInt16:
@@ -411,7 +424,8 @@ void set_features(const std::vector<PhysicalDeviceFeatures>& features, bool requ
                         }
                         if (result_device_features)
                         {
-                                result_device_features->shaderResourceResidency = device_features.shaderResourceResidency;
+                                result_device_features->shaderResourceResidency =
+                                        device_features.shaderResourceResidency;
                         }
                         break;
                 case PhysicalDeviceFeatures::shaderSampledImageArrayDynamicIndexing:
@@ -530,7 +544,8 @@ void set_features(const std::vector<PhysicalDeviceFeatures>& features, bool requ
                         }
                         if (result_device_features)
                         {
-                                result_device_features->sparseResidency16Samples = device_features.sparseResidency16Samples;
+                                result_device_features->sparseResidency16Samples =
+                                        device_features.sparseResidency16Samples;
                         }
                         break;
                 case PhysicalDeviceFeatures::sparseResidency2Samples:
@@ -540,7 +555,8 @@ void set_features(const std::vector<PhysicalDeviceFeatures>& features, bool requ
                         }
                         if (result_device_features)
                         {
-                                result_device_features->sparseResidency2Samples = device_features.sparseResidency2Samples;
+                                result_device_features->sparseResidency2Samples =
+                                        device_features.sparseResidency2Samples;
                         }
                         break;
                 case PhysicalDeviceFeatures::sparseResidency4Samples:
@@ -550,7 +566,8 @@ void set_features(const std::vector<PhysicalDeviceFeatures>& features, bool requ
                         }
                         if (result_device_features)
                         {
-                                result_device_features->sparseResidency4Samples = device_features.sparseResidency4Samples;
+                                result_device_features->sparseResidency4Samples =
+                                        device_features.sparseResidency4Samples;
                         }
                         break;
                 case PhysicalDeviceFeatures::sparseResidency8Samples:
@@ -560,7 +577,8 @@ void set_features(const std::vector<PhysicalDeviceFeatures>& features, bool requ
                         }
                         if (result_device_features)
                         {
-                                result_device_features->sparseResidency8Samples = device_features.sparseResidency8Samples;
+                                result_device_features->sparseResidency8Samples =
+                                        device_features.sparseResidency8Samples;
                         }
                         break;
                 case PhysicalDeviceFeatures::sparseResidencyAliased:
@@ -620,7 +638,8 @@ void set_features(const std::vector<PhysicalDeviceFeatures>& features, bool requ
                         }
                         if (result_device_features)
                         {
-                                result_device_features->textureCompressionASTC_LDR = device_features.textureCompressionASTC_LDR;
+                                result_device_features->textureCompressionASTC_LDR =
+                                        device_features.textureCompressionASTC_LDR;
                         }
                         break;
                 case PhysicalDeviceFeatures::textureCompressionBC:
@@ -650,7 +669,8 @@ void set_features(const std::vector<PhysicalDeviceFeatures>& features, bool requ
                         }
                         if (result_device_features)
                         {
-                                result_device_features->variableMultisampleRate = device_features.variableMultisampleRate;
+                                result_device_features->variableMultisampleRate =
+                                        device_features.variableMultisampleRate;
                         }
                         break;
                 case PhysicalDeviceFeatures::vertexPipelineStoresAndAtomics:
@@ -730,9 +750,10 @@ std::unordered_set<std::string> find_extensions(VkPhysicalDevice device)
         return extension_set;
 }
 
-VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<PhysicalDeviceFeatures>& required_features,
-                                                      const std::vector<PhysicalDeviceFeatures>& optional_features,
-                                                      const VkPhysicalDeviceFeatures& supported_device_features)
+VkPhysicalDeviceFeatures make_enabled_device_features(
+        const std::vector<PhysicalDeviceFeatures>& required_features,
+        const std::vector<PhysicalDeviceFeatures>& optional_features,
+        const VkPhysicalDeviceFeatures& supported_device_features)
 {
         if (there_is_intersection(required_features, optional_features))
         {
@@ -763,7 +784,8 @@ VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<Physical
 }
 }
 
-PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface) : m_physical_device(physical_device)
+PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
+        : m_physical_device(physical_device)
 {
         ASSERT(physical_device != VK_NULL_HANDLE);
 
@@ -802,7 +824,8 @@ const std::unordered_set<std::string>& PhysicalDevice::supported_extensions() co
         return m_supported_extensions;
 }
 
-uint32_t PhysicalDevice::family_index(VkQueueFlags set_flags, VkQueueFlags not_set_flags, VkQueueFlags default_flags) const
+uint32_t PhysicalDevice::family_index(VkQueueFlags set_flags, VkQueueFlags not_set_flags, VkQueueFlags default_flags)
+        const
 {
         uint32_t index;
         if (set_flags && find_family(m_queue_families, set_flags, not_set_flags, &index))
@@ -831,8 +854,9 @@ uint32_t PhysicalDevice::presentation_family_index() const
 
 bool PhysicalDevice::supports_extensions(const std::vector<std::string>& extensions) const
 {
-        return std::all_of(extensions.cbegin(), extensions.cend(),
-                           [&](const std::string& e) { return m_supported_extensions.count(e) >= 1; });
+        return std::all_of(extensions.cbegin(), extensions.cend(), [&](const std::string& e) {
+                return m_supported_extensions.count(e) >= 1;
+        });
 }
 
 bool PhysicalDevice::queue_family_supports_presentation(uint32_t index) const
@@ -842,16 +866,19 @@ bool PhysicalDevice::queue_family_supports_presentation(uint32_t index) const
         return m_presentation_supported[index];
 }
 
-Device PhysicalDevice::create_device(const std::unordered_map<uint32_t, uint32_t>& queue_families,
-                                     const std::vector<std::string>& required_extensions,
-                                     const std::vector<PhysicalDeviceFeatures>& required_features,
-                                     const std::vector<PhysicalDeviceFeatures>& optional_features) const
+Device PhysicalDevice::create_device(
+        const std::unordered_map<uint32_t, uint32_t>& queue_families,
+        const std::vector<std::string>& required_extensions,
+        const std::vector<PhysicalDeviceFeatures>& required_features,
+        const std::vector<PhysicalDeviceFeatures>& optional_features) const
 {
-        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(),
-                           [&](const auto& v) { return v.first < m_queue_families.size(); }));
+        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(), [&](const auto& v) {
+                return v.first < m_queue_families.size();
+        }));
         ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(), [](const auto& v) { return v.second > 0; }));
-        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(),
-                           [&](const auto& v) { return v.second <= m_queue_families[v.first].queueCount; }));
+        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(), [&](const auto& v) {
+                return v.second <= m_queue_families[v.first].queueCount;
+        }));
 
         if (queue_families.empty())
         {
@@ -923,9 +950,13 @@ std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
         return devices;
 }
 
-PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor,
-                                    const std::vector<std::string>& required_extensions,
-                                    const std::vector<PhysicalDeviceFeatures>& required_features)
+PhysicalDevice find_physical_device(
+        VkInstance instance,
+        VkSurfaceKHR surface,
+        int api_version_major,
+        int api_version_minor,
+        const std::vector<std::string>& required_extensions,
+        const std::vector<PhysicalDeviceFeatures>& required_features)
 {
         LOG(overview_physical_devices(instance, surface));
 

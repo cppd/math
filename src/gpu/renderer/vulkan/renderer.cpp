@@ -206,12 +206,12 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                const mat4& shadow_projection_matrix =
-                        ortho_vulkan<double>(c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom,
-                                             c.shadow_volume.top, c.shadow_volume.near, c.shadow_volume.far);
-                const mat4& main_projection_matrix =
-                        ortho_vulkan<double>(c.main_volume.left, c.main_volume.right, c.main_volume.bottom, c.main_volume.top,
-                                             c.main_volume.near, c.main_volume.far);
+                const mat4& shadow_projection_matrix = ortho_vulkan<double>(
+                        c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom, c.shadow_volume.top,
+                        c.shadow_volume.near, c.shadow_volume.far);
+                const mat4& main_projection_matrix = ortho_vulkan<double>(
+                        c.main_volume.left, c.main_volume.right, c.main_volume.bottom, c.main_volume.top,
+                        c.main_volume.near, c.main_volume.far);
 
                 m_shadow_vp_matrix = shadow_projection_matrix * c.shadow_view_matrix;
                 m_shadow_vp_texture_matrix = SHADOW_TEXTURE_MATRIX * m_shadow_vp_matrix;
@@ -332,8 +332,8 @@ class Impl final : public Renderer
 
                 if (!m_show_shadow || !m_storage.object() || !m_storage.object()->has_shadow())
                 {
-                        vulkan::queue_submit((*m_render_command_buffers)[render_index], m_render_signal_semaphore,
-                                             graphics_queue);
+                        vulkan::queue_submit(
+                                (*m_render_command_buffers)[render_index], m_render_signal_semaphore, graphics_queue);
                 }
                 else
                 {
@@ -342,14 +342,14 @@ class Impl final : public Renderer
 
                         const unsigned shadow_index = m_shadow_command_buffers->count() == 1 ? 0 : image_index;
 
-                        vulkan::queue_submit((*m_shadow_command_buffers)[shadow_index], m_shadow_signal_semaphore,
-                                             graphics_queue);
+                        vulkan::queue_submit(
+                                (*m_shadow_command_buffers)[shadow_index], m_shadow_signal_semaphore, graphics_queue);
 
                         //
 
-                        vulkan::queue_submit(m_shadow_signal_semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                             (*m_render_command_buffers)[render_index], m_render_signal_semaphore,
-                                             graphics_queue);
+                        vulkan::queue_submit(
+                                m_shadow_signal_semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                (*m_render_command_buffers)[render_index], m_render_signal_semaphore, graphics_queue);
                 }
 
                 return m_render_signal_semaphore;
@@ -362,9 +362,14 @@ class Impl final : public Renderer
                 return m_storage.object() == nullptr;
         }
 
-        void create_buffers(const vulkan::Swapchain* swapchain, RenderBuffers3D* render_buffers,
-                            const vulkan::ImageWithMemory* objects, unsigned x, unsigned y, unsigned width,
-                            unsigned height) override
+        void create_buffers(
+                const vulkan::Swapchain* swapchain,
+                RenderBuffers3D* render_buffers,
+                const vulkan::ImageWithMemory* objects,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -421,15 +426,15 @@ class Impl final : public Renderer
                 m_triangles_shared_memory.set_object_image(m_object_image);
                 m_points_memory.set_object_image(m_object_image);
 
-                m_render_triangles_pipeline =
-                        m_triangles_program.create_pipeline(m_render_buffers->render_pass(), m_render_buffers->sample_count(),
-                                                            m_sample_shading, m_x, m_y, m_width, m_height);
-                m_render_points_pipeline =
-                        m_points_program.create_pipeline(m_render_buffers->render_pass(), m_render_buffers->sample_count(),
-                                                         VK_PRIMITIVE_TOPOLOGY_POINT_LIST, m_x, m_y, m_width, m_height);
-                m_render_lines_pipeline =
-                        m_points_program.create_pipeline(m_render_buffers->render_pass(), m_render_buffers->sample_count(),
-                                                         VK_PRIMITIVE_TOPOLOGY_LINE_LIST, m_x, m_y, m_width, m_height);
+                m_render_triangles_pipeline = m_triangles_program.create_pipeline(
+                        m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading, m_x, m_y,
+                        m_width, m_height);
+                m_render_points_pipeline = m_points_program.create_pipeline(
+                        m_render_buffers->render_pass(), m_render_buffers->sample_count(),
+                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, m_x, m_y, m_width, m_height);
+                m_render_lines_pipeline = m_points_program.create_pipeline(
+                        m_render_buffers->render_pass(), m_render_buffers->sample_count(),
+                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, m_x, m_y, m_width, m_height);
         }
 
         void delete_shadow_buffers()
@@ -452,15 +457,15 @@ class Impl final : public Renderer
                 //
 
                 constexpr RendererDepthBufferCount buffer_count = RendererDepthBufferCount::One;
-                m_shadow_buffers = create_renderer_depth_buffers(buffer_count, *m_swapchain, {m_graphics_queue.family_index()},
-                                                                 m_graphics_command_pool, m_graphics_queue, m_device, m_width,
-                                                                 m_height, m_shadow_zoom);
+                m_shadow_buffers = create_renderer_depth_buffers(
+                        buffer_count, *m_swapchain, {m_graphics_queue.family_index()}, m_graphics_command_pool,
+                        m_graphics_queue, m_device, m_width, m_height, m_shadow_zoom);
 
                 m_triangles_shared_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
 
-                m_shadow_pipeline =
-                        m_shadow_program.create_pipeline(m_shadow_buffers->render_pass(), m_shadow_buffers->sample_count(), 0, 0,
-                                                         m_shadow_buffers->width(), m_shadow_buffers->height());
+                m_shadow_pipeline = m_shadow_program.create_pipeline(
+                        m_shadow_buffers->render_pass(), m_shadow_buffers->sample_count(), 0, 0,
+                        m_shadow_buffers->width(), m_shadow_buffers->height());
         }
 
         void set_matrices()
@@ -597,7 +602,9 @@ class Impl final : public Renderer
                 info.framebuffers = &m_shadow_buffers->framebuffers();
                 info.command_pool = m_graphics_command_pool;
                 info.clear_values = &m_shadow_buffers->clear_values();
-                info.render_pass_commands = [this](VkCommandBuffer command_buffer) { draw_shadow_commands(command_buffer); };
+                info.render_pass_commands = [this](VkCommandBuffer command_buffer) {
+                        draw_shadow_commands(command_buffer);
+                };
                 m_shadow_command_buffers = vulkan::create_command_buffers(info);
         }
 
@@ -624,9 +631,13 @@ class Impl final : public Renderer
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
-             const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-             const vulkan::Queue& transfer_queue, bool sample_shading, bool sampler_anisotropy)
+        Impl(const vulkan::VulkanInstance& instance,
+             const vulkan::CommandPool& graphics_command_pool,
+             const vulkan::Queue& graphics_queue,
+             const vulkan::CommandPool& transfer_command_pool,
+             const vulkan::Queue& transfer_queue,
+             bool sample_shading,
+             bool sampler_anisotropy)
                 : m_sample_shading(sample_shading),
                   m_instance(instance),
                   m_device(instance.device()),
@@ -640,11 +651,16 @@ public:
                   m_shadow_sampler(create_renderer_shadow_sampler(m_device)),
                   //
                   m_triangles_program(m_device),
-                  m_triangles_shared_memory(m_device, m_triangles_program.descriptor_set_layout_shared(),
-                                            {m_graphics_queue.family_index()}),
+                  m_triangles_shared_memory(
+                          m_device,
+                          m_triangles_program.descriptor_set_layout_shared(),
+                          {m_graphics_queue.family_index()}),
                   //
                   m_shadow_program(m_device),
-                  m_shadow_memory(m_device, m_shadow_program.descriptor_set_layout(), {m_graphics_queue.family_index()}),
+                  m_shadow_memory(
+                          m_device,
+                          m_shadow_program.descriptor_set_layout(),
+                          {m_graphics_queue.family_index()}),
                   //
                   m_points_program(m_device),
                   m_points_memory(m_device, m_points_program.descriptor_set_layout(), {m_graphics_queue.family_index()})
@@ -667,12 +683,17 @@ std::vector<vulkan::PhysicalDeviceFeatures> Renderer::required_device_features()
         return REQUIRED_DEVICE_FEATURES;
 }
 
-std::unique_ptr<Renderer> create_renderer(const vulkan::VulkanInstance& instance,
-                                          const vulkan::CommandPool& graphics_command_pool, const vulkan::Queue& graphics_queue,
-                                          const vulkan::CommandPool& transfer_command_pool, const vulkan::Queue& transfer_queue,
-                                          bool sample_shading, bool sampler_anisotropy)
+std::unique_ptr<Renderer> create_renderer(
+        const vulkan::VulkanInstance& instance,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue,
+        bool sample_shading,
+        bool sampler_anisotropy)
 {
-        return std::make_unique<Impl>(instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                                      sample_shading, sampler_anisotropy);
+        return std::make_unique<Impl>(
+                instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading,
+                sampler_anisotropy);
 }
 }

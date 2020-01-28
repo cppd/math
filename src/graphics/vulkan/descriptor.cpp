@@ -22,9 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-vulkan::DescriptorPool create_descriptor_pool(VkDevice device,
-                                              const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                                              uint32_t max_sets, VkDescriptorPoolCreateFlags flags)
+vulkan::DescriptorPool create_descriptor_pool(
+        VkDevice device,
+        const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+        uint32_t max_sets,
+        VkDescriptorPoolCreateFlags flags)
 {
         std::vector<VkDescriptorPoolSize> pool_sizes;
         pool_sizes.reserve(descriptor_set_layout_bindings.size());
@@ -47,9 +49,10 @@ vulkan::DescriptorPool create_descriptor_pool(VkDevice device,
         return vulkan::DescriptorPool(device, create_info);
 }
 
-VkWriteDescriptorSet create_write_descriptor_set(VkDescriptorSet descriptor_set,
-                                                 const VkDescriptorSetLayoutBinding& descriptor_set_layout_binding,
-                                                 const Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& descriptor_info)
+VkWriteDescriptorSet create_write_descriptor_set(
+        VkDescriptorSet descriptor_set,
+        const VkDescriptorSetLayoutBinding& descriptor_set_layout_binding,
+        const Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& descriptor_info)
 {
         VkWriteDescriptorSet write = {};
         write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -85,7 +88,8 @@ std::unordered_map<uint32_t, uint32_t> create_binding_map(const std::vector<VkDe
         {
                 if (!map.emplace(bindings[index].binding, index).second)
                 {
-                        error("Multiple binding " + to_string(bindings[index].binding) + " in descriptor set layout bindings");
+                        error("Multiple binding " + to_string(bindings[index].binding) +
+                              " in descriptor set layout bindings");
                 }
         }
         return map;
@@ -94,7 +98,9 @@ std::unordered_map<uint32_t, uint32_t> create_binding_map(const std::vector<VkDe
 
 namespace vulkan
 {
-DescriptorSetLayout create_descriptor_set_layout(VkDevice device, const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+DescriptorSetLayout create_descriptor_set_layout(
+        VkDevice device,
+        const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
         VkDescriptorSetLayoutCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -104,14 +110,23 @@ DescriptorSetLayout create_descriptor_set_layout(VkDevice device, const std::vec
         return DescriptorSetLayout(device, create_info);
 }
 
-Descriptors::Descriptors(VkDevice device, uint32_t max_sets, VkDescriptorSetLayout descriptor_set_layout,
-                         const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+Descriptors::Descriptors(
+        VkDevice device,
+        uint32_t max_sets,
+        VkDescriptorSetLayout descriptor_set_layout,
+        const std::vector<VkDescriptorSetLayoutBinding>& bindings)
         : m_device(device),
           m_descriptor_set_layout(descriptor_set_layout),
-          m_descriptor_pool(
-                  create_descriptor_pool(device, bindings, max_sets, VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)),
+          m_descriptor_pool(create_descriptor_pool(
+                  device,
+                  bindings,
+                  max_sets,
+                  VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)),
           m_descriptor_set_layout_bindings(bindings),
-          m_descriptor_sets(m_device, m_descriptor_pool, std::vector<VkDescriptorSetLayout>(max_sets, m_descriptor_set_layout)),
+          m_descriptor_sets(
+                  m_device,
+                  m_descriptor_pool,
+                  std::vector<VkDescriptorSetLayout>(max_sets, m_descriptor_set_layout)),
           m_binding_map(create_binding_map(m_descriptor_set_layout_bindings))
 {
 }
@@ -141,18 +156,22 @@ const VkDescriptorSet& Descriptors::descriptor_set(uint32_t index) const
         return m_descriptor_sets[index];
 }
 
-void Descriptors::update_descriptor_set(uint32_t index, uint32_t binding,
-                                        const Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& info) const
+void Descriptors::update_descriptor_set(
+        uint32_t index,
+        uint32_t binding,
+        const Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& info) const
 {
         ASSERT(index < m_descriptor_sets.count());
 
-        VkWriteDescriptorSet write = create_write_descriptor_set(m_descriptor_sets[index], layout_binding(binding), info);
+        VkWriteDescriptorSet write =
+                create_write_descriptor_set(m_descriptor_sets[index], layout_binding(binding), info);
 
         vkUpdateDescriptorSets(m_device, 1, &write, 0, nullptr);
 }
 
 void Descriptors::update_descriptor_set(
-        uint32_t index, const std::vector<uint32_t>& bindings,
+        uint32_t index,
+        const std::vector<uint32_t>& bindings,
         const std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const
 {
         ASSERT(bindings.size() == descriptor_infos.size());
@@ -163,7 +182,8 @@ void Descriptors::update_descriptor_set(
         std::vector<VkWriteDescriptorSet> write(bindings.size());
         for (size_t i = 0; i < bindings.size(); ++i)
         {
-                write[i] = create_write_descriptor_set(descriptor_set, layout_binding(bindings[i]), descriptor_infos[i]);
+                write[i] =
+                        create_write_descriptor_set(descriptor_set, layout_binding(bindings[i]), descriptor_infos[i]);
         }
 
         vkUpdateDescriptorSets(m_device, write.size(), write.data(), 0, nullptr);

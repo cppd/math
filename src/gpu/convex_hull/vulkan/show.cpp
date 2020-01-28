@@ -79,22 +79,30 @@ class Impl final : public ConvexHullShow
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
 
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
-                                        ConvexHullShowMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
+                        ConvexHullShowMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
 
                 ASSERT(m_indirect_buffer.usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
                 vkCmdDrawIndirect(command_buffer, m_indirect_buffer, 0, 1, sizeof(VkDrawIndirectCommand));
         }
 
-        void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& objects, unsigned x, unsigned y,
-                            unsigned width, unsigned height) override
+        void create_buffers(
+                RenderBuffers2D* render_buffers,
+                const vulkan::ImageWithMemory& objects,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
-                m_points.emplace(vulkan::BufferMemoryType::DeviceLocal, m_instance.device(), std::unordered_set({m_family_index}),
-                                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, convex_hull_points_buffer_size(height));
+                m_points.emplace(
+                        vulkan::BufferMemoryType::DeviceLocal, m_instance.device(),
+                        std::unordered_set({m_family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                        convex_hull_points_buffer_size(height));
 
                 m_memory.set_points(*m_points);
 
@@ -109,8 +117,9 @@ class Impl final : public ConvexHullShow
                 mat4 t = translate(vec3(0.5, 0.5, 0));
                 m_memory.set_matrix(p * t);
 
-                m_pipeline = m_program.create_pipeline(render_buffers->render_pass(), render_buffers->sample_count(),
-                                                       m_sample_shading, x, y, width, height);
+                m_pipeline = m_program.create_pipeline(
+                        render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, x, y, width,
+                        height);
 
                 m_compute->create_buffers(objects, x, y, width, height, *m_points, m_indirect_buffer, m_family_index);
 
@@ -151,7 +160,8 @@ class Impl final : public ConvexHullShow
 
                 ASSERT(queue.family_index() == m_family_index);
 
-                float brightness = 0.5 + 0.5 * std::sin(CONVEX_HULL_ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
+                float brightness =
+                        0.5 + 0.5 * std::sin(CONVEX_HULL_ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_memory.set_brightness(brightness);
 
                 //
@@ -160,8 +170,9 @@ class Impl final : public ConvexHullShow
 
                 const unsigned buffer_index = m_command_buffers->count() == 1 ? 0 : image_index;
 
-                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[buffer_index],
-                                     m_semaphore, queue);
+                vulkan::queue_submit(
+                        wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[buffer_index],
+                        m_semaphore, queue);
 
                 return m_semaphore;
         }
@@ -177,7 +188,9 @@ class Impl final : public ConvexHullShow
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance, VkCommandPool graphics_command_pool, uint32_t family_index,
+        Impl(const vulkan::VulkanInstance& instance,
+             VkCommandPool graphics_command_pool,
+             uint32_t family_index,
              bool sample_shading)
                 : m_sample_shading(sample_shading),
                   m_family_index(family_index),
@@ -186,9 +199,12 @@ public:
                   m_semaphore(instance.device()),
                   m_program(instance.device()),
                   m_memory(instance.device(), m_program.descriptor_set_layout(), {m_family_index}),
-                  m_indirect_buffer(m_instance.device(), {m_family_index},
-                                    VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
-                                    sizeof(VkDrawIndirectCommand), draw_indirect_command_data()),
+                  m_indirect_buffer(
+                          m_instance.device(),
+                          {m_family_index},
+                          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+                          sizeof(VkDrawIndirectCommand),
+                          draw_indirect_command_data()),
                   m_compute(create_convex_hull_compute(instance))
         {
         }
@@ -206,13 +222,16 @@ public:
 
 std::vector<vulkan::PhysicalDeviceFeatures> ConvexHullShow::required_device_features()
 {
-        return merge<vulkan::PhysicalDeviceFeatures>(std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),
-                                                     ConvexHullCompute::required_device_features());
+        return merge<vulkan::PhysicalDeviceFeatures>(
+                std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),
+                ConvexHullCompute::required_device_features());
 }
 
-std::unique_ptr<ConvexHullShow> create_convex_hull_show(const vulkan::VulkanInstance& instance,
-                                                        VkCommandPool graphics_command_pool, uint32_t family_index,
-                                                        bool sample_shading)
+std::unique_ptr<ConvexHullShow> create_convex_hull_show(
+        const vulkan::VulkanInstance& instance,
+        VkCommandPool graphics_command_pool,
+        uint32_t family_index,
+        bool sample_shading)
 {
         return std::make_unique<Impl>(instance, graphics_command_pool, family_index, sample_shading);
 }

@@ -139,8 +139,11 @@ private:
         void reset_all_object_buttons(const std::unordered_set<ObjectId>& objects_to_load);
         void reset_bound_cocone_buttons(const std::unordered_set<ObjectId>& objects_to_load);
 
-        void progress_bars(MainThreads::Action thread_action, bool permanent, const ProgressRatioList* progress_list,
-                           std::list<QProgressBar>* progress_bars);
+        void progress_bars(
+                MainThreads::Action thread_action,
+                bool permanent,
+                const ProgressRatioList* progress_list,
+                std::list<QProgressBar>* progress_bars);
 
         double ambient_light() const;
         double diffuse_light() const;
@@ -160,7 +163,8 @@ private:
         void set_dft_background_color(const QColor& c);
         void set_dft_color(const QColor& c);
 
-        void exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists) const noexcept;
+        void exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists) const
+                noexcept;
 
         static bool dialog_object_selection(QWidget* parent, std::unordered_set<ObjectId>* objects_to_load);
 
@@ -171,8 +175,10 @@ private:
         void direct_message_warning(const std::string& msg) override;
         void direct_object_loaded(int id) override;
         void direct_mesh_loaded(ObjectId id) override;
-        void direct_file_loaded(const std::string& file_name, unsigned dimension,
-                                const std::unordered_set<ObjectId>& objects) override;
+        void direct_file_loaded(
+                const std::string& file_name,
+                unsigned dimension,
+                const std::unordered_set<ObjectId>& objects) override;
         void direct_bound_cocone_loaded(double rho, double alpha) override;
         void direct_log(const std::string& msg) override;
 

@@ -34,14 +34,16 @@ namespace
 {
 int group_size_prepare(int width)
 {
-        return convex_hull_group_size_prepare(width, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
-                                              opengl::max_compute_shared_memory());
+        return convex_hull_group_size_prepare(
+                width, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
+                opengl::max_compute_shared_memory());
 }
 
 int group_size_merge(int height)
 {
-        return convex_hull_group_size_merge(height, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
-                                            opengl::max_compute_shared_memory());
+        return convex_hull_group_size_merge(
+                height, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
+                opengl::max_compute_shared_memory());
 }
 
 std::string prepare_source(unsigned x, unsigned y, unsigned width, unsigned height)
@@ -84,8 +86,13 @@ std::string filter_source(int height)
 }
 }
 
-ConvexHullProgramPrepare::ConvexHullProgramPrepare(const opengl::Texture& objects, unsigned x, unsigned y, unsigned width,
-                                                   unsigned height, const opengl::Buffer& lines)
+ConvexHullProgramPrepare::ConvexHullProgramPrepare(
+        const opengl::Texture& objects,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height,
+        const opengl::Buffer& lines)
         : m_program(opengl::ComputeShader(prepare_source(x, y, width, height))), m_lines(&lines), m_height(height)
 {
         ASSERT(objects.format() == GL_R32UI);
@@ -118,9 +125,15 @@ void ConvexHullProgramMerge::exec() const
 
 //
 
-ConvexHullProgramFilter::ConvexHullProgramFilter(unsigned height, const opengl::Buffer& lines, const opengl::Buffer& points,
-                                                 const opengl::Buffer& point_count)
-        : m_program(opengl::ComputeShader(filter_source(height))), m_lines(&lines), m_points(&points), m_point_count(&point_count)
+ConvexHullProgramFilter::ConvexHullProgramFilter(
+        unsigned height,
+        const opengl::Buffer& lines,
+        const opengl::Buffer& points,
+        const opengl::Buffer& point_count)
+        : m_program(opengl::ComputeShader(filter_source(height))),
+          m_lines(&lines),
+          m_points(&points),
+          m_point_count(&point_count)
 {
 }
 

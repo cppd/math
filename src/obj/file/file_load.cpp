@@ -89,8 +89,9 @@ constexpr bool str_equal(const char* s1, const char* s2)
         return *s1 == *s2;
 }
 
-static_assert(str_equal("ab", "ab") && str_equal("", "") && !str_equal("", "ab") && !str_equal("ab", "") &&
-              !str_equal("ab", "ac") && !str_equal("ba", "ca") && !str_equal("a", "xyz"));
+static_assert(
+        str_equal("ab", "ab") && str_equal("", "") && !str_equal("", "ab") && !str_equal("ab", "") &&
+        !str_equal("ab", "ac") && !str_equal("ba", "ca") && !str_equal("a", "xyz"));
 
 std::string obj_type_name(size_t N)
 {
@@ -186,7 +187,8 @@ typename Obj<N>::Image read_image_from_file(const std::string& file_name)
 {
         if constexpr (N != 3)
         {
-                error("Reading " + to_string(N - 1) + "-dimensional images for " + obj_type_name(N) + " is not supported");
+                error("Reading " + to_string(N - 1) + "-dimensional images for " + obj_type_name(N) +
+                      " is not supported");
         }
         else
         {
@@ -198,8 +200,12 @@ typename Obj<N>::Image read_image_from_file(const std::string& file_name)
 }
 
 template <size_t N>
-void load_image(const std::string& dir_name, const std::string& image_name, std::map<std::string, int>* image_index,
-                std::vector<typename Obj<N>::Image>* images, int* index)
+void load_image(
+        const std::string& dir_name,
+        const std::string& image_name,
+        std::map<std::string, int>* image_index,
+        std::vector<typename Obj<N>::Image>* images,
+        int* index)
 {
         std::string file_name = trim(image_name);
 
@@ -281,8 +287,12 @@ bool read_integer(const T& data, long long size, long long* pos, Integer* value)
 
 // Варианты данных: "x/x/x ...", "x//x ...", "x// ...", "x/x/ ...", "x/x ...", "x ...".
 template <typename T, size_t MaxGroupCount, size_t GroupSize, typename IndexType>
-void read_digit_groups(const T& line, long long begin, long long end,
-                       std::array<std::array<IndexType, GroupSize>, MaxGroupCount>* group_ptr, int* group_count)
+void read_digit_groups(
+        const T& line,
+        long long begin,
+        long long end,
+        std::array<std::array<IndexType, GroupSize>, MaxGroupCount>* group_ptr,
+        int* group_count)
 {
         int group_index = -1;
 
@@ -386,8 +396,12 @@ void check_index_consistent(const std::array<std::array<T, 3>, MaxGroupCount>& g
 }
 
 template <size_t N, typename T>
-void read_facets(const T& data, long long begin, long long end,
-                 std::array<typename Obj<N>::Facet, MAX_FACETS_PER_LINE<N>>* facets, int* facet_count)
+void read_facets(
+        const T& data,
+        long long begin,
+        long long end,
+        std::array<typename Obj<N>::Facet, MAX_FACETS_PER_LINE<N>>* facets,
+        int* facet_count)
 {
         static_assert(N >= 3);
 
@@ -466,8 +480,9 @@ int string_to_floats(const char* str, T*... floats)
         constexpr int N = sizeof...(T);
 
         static_assert(N > 0);
-        static_assert(((std::is_same_v<std::remove_volatile_t<T>, float> || std::is_same_v<std::remove_volatile_t<T>, double> ||
-                        std::is_same_v<std::remove_volatile_t<T>, long double>)&&...));
+        static_assert(((
+                std::is_same_v<std::remove_volatile_t<T>, float> || std::is_same_v<std::remove_volatile_t<T>, double> ||
+                std::is_same_v<std::remove_volatile_t<T>, long double>)&&...));
 
         errno = 0;
         int cnt = 0;
@@ -559,8 +574,12 @@ void read_name(const char* object_name, const T& data, long long begin, long lon
 }
 
 template <typename T>
-void read_library_names(const T& data, long long begin, long long end, std::vector<std::string>* v,
-                        std::set<std::string>* lib_unique_names)
+void read_library_names(
+        const T& data,
+        long long begin,
+        long long end,
+        std::vector<std::string>* v,
+        std::set<std::string>* lib_unique_names)
 {
         const long long size = end;
         bool found = false;
@@ -594,8 +613,16 @@ void read_library_names(const T& data, long long begin, long long end, std::vect
 
 // Разделение строки на 2 части " не_пробелы | остальной текст до символа комментария или конца строки"
 template <typename T, typename Space, typename Comment>
-void split(const T& data, long long first, long long last, const Space& space, const Comment& comment, long long* first_b,
-           long long* first_e, long long* second_b, long long* second_e)
+void split(
+        const T& data,
+        long long first,
+        long long last,
+        const Space& space,
+        const Comment& comment,
+        long long* first_b,
+        long long* first_e,
+        long long* second_b,
+        long long* second_e)
 {
         long long i = first;
 
@@ -643,8 +670,14 @@ void split(const T& data, long long first, long long last, const Space& space, c
 }
 
 template <typename T>
-void split_line(T* data, const std::vector<long long>& line_begin, long long line_num, const char** first, const char** second,
-                long long* second_b, long long* second_e)
+void split_line(
+        T* data,
+        const std::vector<long long>& line_begin,
+        long long line_num,
+        const char** first,
+        const char** second,
+        long long* second_b,
+        long long* second_e)
 {
         long long line_count = line_begin.size();
 
@@ -656,7 +689,8 @@ void split_line(T* data, const std::vector<long long>& line_begin, long long lin
         long long first_b;
         long long first_e;
 
-        split(*data, line_begin[line_num], last, ascii::is_space, is_number_sign, &first_b, &first_e, second_b, second_e);
+        split(*data, line_begin[line_num], last, ascii::is_space, is_number_sign, &first_b, &first_e, second_b,
+              second_e);
 
         *first = &(*data)[first_b];
         (*data)[first_e] = 0; // пробел, символ комментария '#' или символ '\n'
@@ -756,29 +790,56 @@ class FileObj final : public Obj<N>
 
         bool remove_facets_with_incorrect_dimension();
 
-        static void read_obj_stage_one(unsigned thread_num, unsigned thread_count, std::vector<Counters>* counters,
-                                       std::vector<char>* data_ptr, std::vector<long long>* line_begin,
-                                       std::vector<ObjLine>* line_prop, ProgressRatio* progress);
+        static void read_obj_stage_one(
+                unsigned thread_num,
+                unsigned thread_count,
+                std::vector<Counters>* counters,
+                std::vector<char>* data_ptr,
+                std::vector<long long>* line_begin,
+                std::vector<ObjLine>* line_prop,
+                ProgressRatio* progress);
 
-        void read_obj_stage_two(const Counters& counters, std::vector<char>* data_ptr, std::vector<ObjLine>* line_prop,
-                                ProgressRatio* progress, std::map<std::string, int>* material_index,
-                                std::vector<std::string>* library_names);
+        void read_obj_stage_two(
+                const Counters& counters,
+                std::vector<char>* data_ptr,
+                std::vector<ObjLine>* line_prop,
+                ProgressRatio* progress,
+                std::map<std::string, int>* material_index,
+                std::vector<std::string>* library_names);
 
         Counters sum_counters(const std::vector<Counters>& counters);
 
-        void read_obj_thread(unsigned thread_num, unsigned thread_count, std::vector<Counters>* counters, ThreadBarrier* barrier,
-                             std::atomic_bool* error_found, std::vector<char>* data_ptr, std::vector<long long>* line_begin,
-                             std::vector<ObjLine>* line_prop, ProgressRatio* progress, std::map<std::string, int>* material_index,
-                             std::vector<std::string>* library_names);
+        void read_obj_thread(
+                unsigned thread_num,
+                unsigned thread_count,
+                std::vector<Counters>* counters,
+                ThreadBarrier* barrier,
+                std::atomic_bool* error_found,
+                std::vector<char>* data_ptr,
+                std::vector<long long>* line_begin,
+                std::vector<ObjLine>* line_prop,
+                ProgressRatio* progress,
+                std::map<std::string, int>* material_index,
+                std::vector<std::string>* library_names);
 
-        void read_obj(const std::string& file_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
-                      std::vector<std::string>* library_names);
+        void read_obj(
+                const std::string& file_name,
+                ProgressRatio* progress,
+                std::map<std::string, int>* material_index,
+                std::vector<std::string>* library_names);
 
-        void read_lib(const std::string& dir_name, const std::string& file_name, ProgressRatio* progress,
-                      std::map<std::string, int>* material_index, std::map<std::string, int>* image_index);
+        void read_lib(
+                const std::string& dir_name,
+                const std::string& file_name,
+                ProgressRatio* progress,
+                std::map<std::string, int>* material_index,
+                std::map<std::string, int>* image_index);
 
-        void read_libs(const std::string& dir_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
-                       const std::vector<std::string>& library_names);
+        void read_libs(
+                const std::string& dir_name,
+                ProgressRatio* progress,
+                std::map<std::string, int>* material_index,
+                const std::vector<std::string>& library_names);
 
         void read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress);
 
@@ -924,9 +985,14 @@ bool FileObj<N>::remove_facets_with_incorrect_dimension()
 }
 
 template <size_t N>
-void FileObj<N>::read_obj_stage_one(unsigned thread_num, unsigned thread_count, std::vector<Counters>* counters,
-                                    std::vector<char>* data_ptr, std::vector<long long>* line_begin,
-                                    std::vector<ObjLine>* line_prop, ProgressRatio* progress)
+void FileObj<N>::read_obj_stage_one(
+        unsigned thread_num,
+        unsigned thread_count,
+        std::vector<Counters>* counters,
+        std::vector<char>* data_ptr,
+        std::vector<long long>* line_begin,
+        std::vector<ObjLine>* line_prop,
+        ProgressRatio* progress)
 {
         ASSERT(counters->size() == thread_count);
 
@@ -1042,9 +1108,13 @@ void correct_indices(typename Obj<N>::Facet* facet, int vertices_size, int texco
 }
 
 template <size_t N>
-void FileObj<N>::read_obj_stage_two(const Counters& counters, std::vector<char>* data_ptr, std::vector<ObjLine>* line_prop,
-                                    ProgressRatio* progress, std::map<std::string, int>* material_index,
-                                    std::vector<std::string>* library_names)
+void FileObj<N>::read_obj_stage_two(
+        const Counters& counters,
+        std::vector<char>* data_ptr,
+        std::vector<ObjLine>* line_prop,
+        ProgressRatio* progress,
+        std::map<std::string, int>* material_index,
+        std::vector<std::string>* library_names)
 {
         m_vertices.reserve(counters.vertex);
         m_texcoords.reserve(counters.texcoord);
@@ -1089,7 +1159,8 @@ void FileObj<N>::read_obj_stage_two(const Counters& counters, std::vector<char>*
                         for (int i = 0; i < lp.facet_count; ++i)
                         {
                                 lp.facets[i].material = mtl_index;
-                                correct_indices<N>(&lp.facets[i], m_vertices.size(), m_texcoords.size(), m_normals.size());
+                                correct_indices<N>(
+                                        &lp.facets[i], m_vertices.size(), m_texcoords.size(), m_normals.size());
                                 m_facets.push_back(std::move(lp.facets[i]));
                         }
                         break;
@@ -1134,10 +1205,18 @@ typename FileObj<N>::Counters FileObj<N>::sum_counters(const std::vector<Counter
 }
 
 template <size_t N>
-void FileObj<N>::read_obj_thread(unsigned thread_num, unsigned thread_count, std::vector<Counters>* counters,
-                                 ThreadBarrier* barrier, std::atomic_bool* error_found, std::vector<char>* data_ptr,
-                                 std::vector<long long>* line_begin, std::vector<ObjLine>* line_prop, ProgressRatio* progress,
-                                 std::map<std::string, int>* material_index, std::vector<std::string>* library_names)
+void FileObj<N>::read_obj_thread(
+        unsigned thread_num,
+        unsigned thread_count,
+        std::vector<Counters>* counters,
+        ThreadBarrier* barrier,
+        std::atomic_bool* error_found,
+        std::vector<char>* data_ptr,
+        std::vector<long long>* line_begin,
+        std::vector<ObjLine>* line_prop,
+        ProgressRatio* progress,
+        std::map<std::string, int>* material_index,
+        std::vector<std::string>* library_names)
 {
         // параллельно
 
@@ -1171,8 +1250,12 @@ void FileObj<N>::read_obj_thread(unsigned thread_num, unsigned thread_count, std
 }
 
 template <size_t N>
-void FileObj<N>::read_lib(const std::string& dir_name, const std::string& file_name, ProgressRatio* progress,
-                          std::map<std::string, int>* material_index, std::map<std::string, int>* image_index)
+void FileObj<N>::read_lib(
+        const std::string& dir_name,
+        const std::string& file_name,
+        ProgressRatio* progress,
+        std::map<std::string, int>* material_index,
+        std::map<std::string, int>* image_index)
 {
         std::vector<char> data;
         std::vector<long long> line_begin;
@@ -1319,20 +1402,23 @@ void FileObj<N>::read_lib(const std::string& dir_name, const std::string& file_n
                 }
                 catch (std::exception& e)
                 {
-                        error("Library: " + lib_name + "\n" + "Line " + to_string(line_num) + ": " + first + " " + second + "\n" +
-                              e.what());
+                        error("Library: " + lib_name + "\n" + "Line " + to_string(line_num) + ": " + first + " " +
+                              second + "\n" + e.what());
                 }
                 catch (...)
                 {
-                        error("Library: " + lib_name + "\n" + "Line " + to_string(line_num) + ": " + first + " " + second + "\n" +
-                              "Unknown error");
+                        error("Library: " + lib_name + "\n" + "Line " + to_string(line_num) + ": " + first + " " +
+                              second + "\n" + "Unknown error");
                 }
         }
 }
 
 template <size_t N>
-void FileObj<N>::read_libs(const std::string& dir_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
-                           const std::vector<std::string>& library_names)
+void FileObj<N>::read_libs(
+        const std::string& dir_name,
+        ProgressRatio* progress,
+        std::map<std::string, int>* material_index,
+        const std::vector<std::string>& library_names)
 {
         std::map<std::string, int> image_index;
 
@@ -1351,8 +1437,11 @@ void FileObj<N>::read_libs(const std::string& dir_name, ProgressRatio* progress,
 }
 
 template <size_t N>
-void FileObj<N>::read_obj(const std::string& file_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
-                          std::vector<std::string>* library_names)
+void FileObj<N>::read_obj(
+        const std::string& file_name,
+        ProgressRatio* progress,
+        std::map<std::string, int>* material_index,
+        std::vector<std::string>* library_names)
 {
         const int thread_count = hardware_concurrency();
 
@@ -1370,8 +1459,9 @@ void FileObj<N>::read_obj(const std::string& file_name, ProgressRatio* progress,
         for (int i = 0; i < thread_count; ++i)
         {
                 threads.add([&, i]() {
-                        read_obj_thread(i, thread_count, &counters, &barrier, &error_found, &data, &line_begin, &line_prop,
-                                        progress, material_index, library_names);
+                        read_obj_thread(
+                                i, thread_count, &counters, &barrier, &error_found, &data, &line_begin, &line_prop,
+                                progress, material_index, library_names);
                 });
         }
         threads.join();
@@ -1441,9 +1531,13 @@ class FileTxt final : public Obj<N>
         Vector<N, float> m_center;
         float m_length;
 
-        void read_points_thread(unsigned thread_num, unsigned thread_count, std::vector<char>* data_ptr,
-                                const std::vector<long long>& line_begin, std::vector<Vector<N, float>>* lines,
-                                ProgressRatio* progress) const;
+        void read_points_thread(
+                unsigned thread_num,
+                unsigned thread_count,
+                std::vector<char>* data_ptr,
+                const std::vector<long long>& line_begin,
+                std::vector<Vector<N, float>>* lines,
+                ProgressRatio* progress) const;
         void read_points(const std::string& file_name, ProgressRatio* progress);
         void read_text(const std::string& file_name, ProgressRatio* progress);
 
@@ -1493,9 +1587,13 @@ public:
 };
 
 template <size_t N>
-void FileTxt<N>::read_points_thread(unsigned thread_num, unsigned thread_count, std::vector<char>* data_ptr,
-                                    const std::vector<long long>& line_begin, std::vector<Vector<N, float>>* lines,
-                                    ProgressRatio* progress) const
+void FileTxt<N>::read_points_thread(
+        unsigned thread_num,
+        unsigned thread_count,
+        std::vector<char>* data_ptr,
+        const std::vector<long long>& line_begin,
+        std::vector<Vector<N, float>>* lines,
+        ProgressRatio* progress) const
 {
         const long long line_count = line_begin.size();
         const double line_count_reciprocal = 1.0 / line_begin.size();
@@ -1546,7 +1644,9 @@ void FileTxt<N>::read_points(const std::string& file_name, ProgressRatio* progre
         ThreadsWithCatch threads(thread_count);
         for (int i = 0; i < thread_count; ++i)
         {
-                threads.add([&, i]() { read_points_thread(i, thread_count, &file_data, line_begin, &m_vertices, progress); });
+                threads.add([&, i]() {
+                        read_points_thread(i, thread_count, &file_data, line_begin, &m_vertices, progress);
+                });
         }
         threads.join();
 }

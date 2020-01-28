@@ -117,8 +117,11 @@ public:
         // N неравенств в виде b + a * x >= 0 и одно равенство в виде b + a * x = 0,
         // задающие множество точек симплекса.
         // Параметры simplex_normal и vertices точно такие же, как при вызове set_data.
-        void constraints(Vector<N, T> simplex_normal, const std::array<Vector<N, T>, N>& vertices,
-                         std::array<Constraint<N, T>, N>* c, Constraint<N, T>* c_eq) const
+        void constraints(
+                Vector<N, T> simplex_normal,
+                const std::array<Vector<N, T>, N>& vertices,
+                std::array<Constraint<N, T>, N>* c,
+                Constraint<N, T>* c_eq) const
         {
                 // На основе уравнений плоскостей n * x - d = 0, перпендикуляры которых направлены
                 // внутрь симплекса, а значит получается условие n * x - d >= 0 или условие -d + n * x >= 0.

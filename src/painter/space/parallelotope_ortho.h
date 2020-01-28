@@ -72,7 +72,9 @@ constexpr Vector<N, T> index_vector(unsigned index, T value)
 
 // Вспомогательная функция для следующей после неё функции
 template <typename T, size_t... I>
-constexpr std::array<Vector<sizeof...(I), T>, sizeof...(I)> index_vectors_impl(T value, std::integer_sequence<size_t, I...>)
+constexpr std::array<Vector<sizeof...(I), T>, sizeof...(I)> index_vectors_impl(
+        T value,
+        std::integer_sequence<size_t, I...>)
 {
         return {index_vector<sizeof...(I), T, I>(value)...};
 }
@@ -88,9 +90,10 @@ constexpr std::array<Vector<N, T>, N> index_vectors(T value)
 
 // Вспомогательная функция для следующей после неё функции
 template <typename ObjectType, typename T, size_t... I>
-constexpr ObjectType create_object_from_array_impl(const Vector<sizeof...(I), T>& org,
-                                                   const std::array<T, sizeof...(I)>& parameters,
-                                                   std::integer_sequence<size_t, I...>)
+constexpr ObjectType create_object_from_array_impl(
+        const Vector<sizeof...(I), T>& org,
+        const std::array<T, sizeof...(I)>& parameters,
+        std::integer_sequence<size_t, I...>)
 {
         return ObjectType(org, parameters[I]...);
 }
@@ -373,7 +376,8 @@ bool ParallelotopeOrtho<N, T>::inside(const Vector<N, T>& p) const
 }
 
 template <size_t N, typename T>
-std::array<ParallelotopeOrtho<N, T>, ParallelotopeOrtho<N, T>::DIVISIONS> ParallelotopeOrtho<N, T>::binary_division() const
+std::array<ParallelotopeOrtho<N, T>, ParallelotopeOrtho<N, T>::DIVISIONS> ParallelotopeOrtho<N, T>::binary_division()
+        const
 {
         std::array<T, N> half_sizes;
         for (unsigned i = 0; i < N; ++i)
@@ -400,7 +404,8 @@ std::array<ParallelotopeOrtho<N, T>, ParallelotopeOrtho<N, T>::DIVISIONS> Parall
                         org[i] = (division & (1u << i)) ? org_plus_half[i] : m_org[i];
                 }
 
-                res[division] = parallelotope_ortho_implementation::create_object_from_array<ParallelotopeOrtho>(org, half_sizes);
+                res[division] = parallelotope_ortho_implementation::create_object_from_array<ParallelotopeOrtho>(
+                        org, half_sizes);
         }
 
         return res;

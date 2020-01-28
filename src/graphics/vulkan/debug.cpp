@@ -31,9 +31,15 @@ void add_to_debug_message(std::string* str, const char* text)
         *str += text;
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT /*objectType*/,
-                                              uint64_t /*object*/, size_t /*location*/, int32_t /*messageCode*/,
-                                              const char* /*pLayerPrefix*/, const char* pMessage, void* /*pUserData*/)
+VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
+        VkDebugReportFlagsEXT flags,
+        VkDebugReportObjectTypeEXT /*objectType*/,
+        uint64_t /*object*/,
+        size_t /*location*/,
+        int32_t /*messageCode*/,
+        const char* /*pLayerPrefix*/,
+        const char* pMessage,
+        void* /*pUserData*/)
 {
         std::string s;
 

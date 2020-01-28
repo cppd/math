@@ -52,7 +52,9 @@ std::vector<VkDescriptorSetLayoutBinding> OpticalFlowGrayscaleMemory::descriptor
         return bindings;
 }
 
-OpticalFlowGrayscaleMemory::OpticalFlowGrayscaleMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+OpticalFlowGrayscaleMemory::OpticalFlowGrayscaleMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -148,8 +150,13 @@ OpticalFlowGrayscaleConstant::OpticalFlowGrayscaleConstant()
         }
 }
 
-void OpticalFlowGrayscaleConstant::set(uint32_t local_size_x, uint32_t local_size_y, int32_t x, int32_t y, int32_t width,
-                                       int32_t height)
+void OpticalFlowGrayscaleConstant::set(
+        uint32_t local_size_x,
+        uint32_t local_size_y,
+        int32_t x,
+        int32_t y,
+        int32_t width,
+        int32_t height)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
         m_data.local_size_x = local_size_x;
@@ -185,10 +192,13 @@ size_t OpticalFlowGrayscaleConstant::size() const
 
 OpticalFlowGrayscaleProgram::OpticalFlowGrayscaleProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, OpticalFlowGrayscaleMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {OpticalFlowGrayscaleMemory::set_number()}, {m_descriptor_set_layout})),
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                  device,
+                  OpticalFlowGrayscaleMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {OpticalFlowGrayscaleMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_shader(device, optical_flow_grayscale_comp(), "main")
 {
 }
@@ -209,8 +219,13 @@ VkPipeline OpticalFlowGrayscaleProgram::pipeline() const
         return m_pipeline;
 }
 
-void OpticalFlowGrayscaleProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y, int32_t x, int32_t y,
-                                                  int32_t width, int32_t height)
+void OpticalFlowGrayscaleProgram::create_pipeline(
+        uint32_t local_size_x,
+        uint32_t local_size_y,
+        int32_t x,
+        int32_t y,
+        int32_t width,
+        int32_t height)
 {
         m_constant.set(local_size_x, local_size_y, x, y, width, height);
 

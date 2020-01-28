@@ -49,8 +49,10 @@ protected:
         virtual ~ObjectsCallback() = default;
 
 public:
-        virtual void file_loaded(const std::string& msg, unsigned dimension,
-                                 const std::unordered_set<ObjectId>& objects) const = 0;
+        virtual void file_loaded(
+                const std::string& msg,
+                unsigned dimension,
+                const std::unordered_set<ObjectId>& objects) const = 0;
         virtual void bound_cocone_loaded(double rho, double alpha) const = 0;
         virtual void mesh_loaded(ObjectId id) const = 0;
         virtual void message_warning(const std::string& msg) const = 0;
@@ -81,21 +83,37 @@ struct MainObjects
         virtual std::vector<std::string> obj_extensions() const = 0;
         virtual std::vector<std::string> txt_extensions() const = 0;
 
-        virtual void compute_bound_cocone(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                                          double rho, double alpha) = 0;
+        virtual void compute_bound_cocone(
+                const std::unordered_set<ObjectId>& objects,
+                ProgressRatioList* progress_list,
+                double rho,
+                double alpha) = 0;
 
-        virtual void load_from_file(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                                    const std::string& file_name, double rho, double alpha) = 0;
-        virtual void load_from_repository(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                                          int dimension, const std::string& object_name, double rho, double alpha,
-                                          int point_count) = 0;
+        virtual void load_from_file(
+                const std::unordered_set<ObjectId>& objects,
+                ProgressRatioList* progress_list,
+                const std::string& file_name,
+                double rho,
+                double alpha) = 0;
+        virtual void load_from_repository(
+                const std::unordered_set<ObjectId>& objects,
+                ProgressRatioList* progress_list,
+                int dimension,
+                const std::string& object_name,
+                double rho,
+                double alpha,
+                int point_count) = 0;
 
         virtual void save_to_file(ObjectId id, const std::string& file_name, const std::string& name) const = 0;
 
-        virtual void paint(ObjectId id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
-                           const PaintingInformationAll& info_all) const = 0;
+        virtual void paint(
+                ObjectId id,
+                const PaintingInformation3d& info_3d,
+                const PaintingInformationNd& info_nd,
+                const PaintingInformationAll& info_all) const = 0;
 };
 
 std::unique_ptr<MainObjects> create_main_objects(
-        int mesh_threads, const ObjectsCallback& event_emitter,
+        int mesh_threads,
+        const ObjectsCallback& event_emitter,
         const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler);

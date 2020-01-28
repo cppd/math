@@ -98,8 +98,10 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        RendererTrianglesSharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                                      const std::unordered_set<uint32_t>& family_indices);
+        RendererTrianglesSharedMemory(
+                const vulkan::Device& device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::unordered_set<uint32_t>& family_indices);
 
         RendererTrianglesSharedMemory(const RendererTrianglesSharedMemory&) = delete;
         RendererTrianglesSharedMemory& operator=(const RendererTrianglesSharedMemory&) = delete;
@@ -171,9 +173,12 @@ public:
 
         //
 
-        RendererTrianglesMaterialMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices,
-                                        VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
-                                        const std::vector<MaterialAndTexture>& materials);
+        RendererTrianglesMaterialMemory(
+                const vulkan::Device& device,
+                const std::unordered_set<uint32_t>& family_indices,
+                VkSampler sampler,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::vector<MaterialAndTexture>& materials);
 
         RendererTrianglesMaterialMemory(const RendererTrianglesMaterialMemory&) = delete;
         RendererTrianglesMaterialMemory& operator=(const RendererTrianglesMaterialMemory&) = delete;
@@ -217,8 +222,10 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        RendererShadowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                             const std::unordered_set<uint32_t>& family_indices);
+        RendererShadowMemory(
+                const vulkan::Device& device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::unordered_set<uint32_t>& family_indices);
 
         RendererShadowMemory(const RendererShadowMemory&) = delete;
         RendererShadowMemory& operator=(const RendererShadowMemory&) = delete;
@@ -245,7 +252,10 @@ struct RendererTrianglesVertex
         vec3f normal;
         vec2f texture_coordinates;
 
-        constexpr RendererTrianglesVertex(const vec3f& position_, const vec3f& normal_, const vec2f& texture_coordinates_)
+        constexpr RendererTrianglesVertex(
+                const vec3f& position_,
+                const vec3f& normal_,
+                const vec2f& texture_coordinates_)
                 : position(position_), normal(normal_), texture_coordinates(texture_coordinates_)
         {
         }
@@ -280,8 +290,14 @@ public:
         RendererTrianglesProgram(RendererTrianglesProgram&&) = default;
         ~RendererTrianglesProgram() = default;
 
-        vulkan::Pipeline create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, bool sample_shading,
-                                         unsigned x, unsigned y, unsigned width, unsigned height) const;
+        vulkan::Pipeline create_pipeline(
+                VkRenderPass render_pass,
+                VkSampleCountFlagBits sample_count,
+                bool sample_shading,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height) const;
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
         VkDescriptorSetLayout descriptor_set_layout_material() const;
@@ -307,8 +323,13 @@ public:
         RendererShadowProgram(RendererShadowProgram&&) = default;
         ~RendererShadowProgram() = default;
 
-        vulkan::Pipeline create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, unsigned x, unsigned y,
-                                         unsigned width, unsigned height) const;
+        vulkan::Pipeline create_pipeline(
+                VkRenderPass render_pass,
+                VkSampleCountFlagBits sample_count,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height) const;
 
         VkDescriptorSetLayout descriptor_set_layout() const;
         VkPipelineLayout pipeline_layout() const;

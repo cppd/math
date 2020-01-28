@@ -24,5 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 
 template <size_t N>
-std::unique_ptr<Obj<N>> create_obj_for_lines(const std::vector<Vector<N, float>>& points,
-                                             const std::vector<std::array<int, 2>>& lines);
+std::unique_ptr<Obj<N>> create_obj_for_lines(
+        const std::vector<Vector<N, float>>& points,
+        const std::vector<std::array<int, 2>>& lines);

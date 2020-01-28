@@ -89,8 +89,11 @@ bool cocone_inside_or_equal(T... cos_n_p)
           = 0
 */
 template <size_t N, typename T>
-bool intersect_cocone(const Vector<N, T>& normalized_cone_axis, const Vector<N, T>& from_apex_to_point_a,
-                      const Vector<N, T>& from_point_a_to_point_b, T* distance)
+bool intersect_cocone(
+        const Vector<N, T>& normalized_cone_axis,
+        const Vector<N, T>& from_apex_to_point_a,
+        const Vector<N, T>& from_point_a_to_point_b,
+        T* distance)
 {
         static_assert(is_native_floating_point<T>);
 

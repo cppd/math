@@ -47,6 +47,10 @@ private:
 
 namespace dialog
 {
-[[nodiscard]] bool bound_cocone_parameters(QWidget* parent, int minimum_rho_exponent, int minimum_alpha_exponent, double* rho,
-                                           double* alpha);
+[[nodiscard]] bool bound_cocone_parameters(
+        QWidget* parent,
+        int minimum_rho_exponent,
+        int minimum_alpha_exponent,
+        double* rho,
+        double* alpha);
 }

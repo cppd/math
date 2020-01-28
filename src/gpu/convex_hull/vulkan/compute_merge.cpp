@@ -134,10 +134,13 @@ size_t ConvexHullMergeConstant::size() const
 
 ConvexHullMergeProgram::ConvexHullMergeProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, ConvexHullMergeMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {ConvexHullMergeMemory::set_number()}, {m_descriptor_set_layout})),
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                  device,
+                  ConvexHullMergeMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {ConvexHullMergeMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_shader(device, convex_hull_merge_comp(), "main")
 {
 }

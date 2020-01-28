@@ -49,8 +49,10 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        OpticalFlowShowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                              const std::unordered_set<uint32_t>& family_indices);
+        OpticalFlowShowMemory(
+                const vulkan::Device& device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::unordered_set<uint32_t>& family_indices);
 
         OpticalFlowShowMemory(const OpticalFlowShowMemory&) = delete;
         OpticalFlowShowMemory& operator=(const OpticalFlowShowMemory&) = delete;
@@ -89,9 +91,14 @@ public:
         OpticalFlowShowProgram(OpticalFlowShowProgram&&) = default;
         ~OpticalFlowShowProgram() = default;
 
-        vulkan::Pipeline create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
-                                         VkPrimitiveTopology primitive_topology, unsigned x, unsigned y, unsigned width,
-                                         unsigned height) const;
+        vulkan::Pipeline create_pipeline(
+                VkRenderPass render_pass,
+                VkSampleCountFlagBits sample_count,
+                VkPrimitiveTopology primitive_topology,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height) const;
 
         VkDescriptorSetLayout descriptor_set_layout() const;
         VkPipelineLayout pipeline_layout() const;

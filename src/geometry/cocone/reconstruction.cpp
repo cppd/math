@@ -91,8 +91,11 @@ bool normal_condition(const ManifoldVertex<N>& v1, const ManifoldVertex<N>& v2, 
 }
 
 template <size_t N>
-void find_interior_vertices(double rho, double cosine_of_alpha, const std::vector<ManifoldVertex<N>>& vertex_data,
-                            std::vector<bool>* interior_vertices)
+void find_interior_vertices(
+        double rho,
+        double cosine_of_alpha,
+        const std::vector<ManifoldVertex<N>>& vertex_data,
+        std::vector<bool>* interior_vertices)
 {
         interior_vertices->clear();
         interior_vertices->resize(vertex_data.size(), false);
@@ -126,7 +129,8 @@ void find_interior_vertices(double rho, double cosine_of_alpha, const std::vecto
                 }
         }
 
-        LOG("interior points after initial phase: " + to_string(interior_count) + " (" + to_string(vertex_data.size()) + ")");
+        LOG("interior points after initial phase: " + to_string(interior_count) + " (" + to_string(vertex_data.size()) +
+            ")");
 
         if (interior_count == 0)
         {
@@ -173,12 +177,16 @@ void find_interior_vertices(double rho, double cosine_of_alpha, const std::vecto
 
         } while (found);
 
-        LOG("interior points after expansion phase: " + to_string(interior_count) + " (" + to_string(vertex_data.size()) + ")");
+        LOG("interior points after expansion phase: " + to_string(interior_count) + " (" +
+            to_string(vertex_data.size()) + ")");
 }
 
 template <size_t N>
-bool cocone_interior_facet(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<ManifoldFacet<N>>& facet_data,
-                           const std::vector<bool>& interior_vertices, int facet)
+bool cocone_interior_facet(
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<ManifoldFacet<N>>& facet_data,
+        const std::vector<bool>& interior_vertices,
+        int facet)
 {
         // Все вершины грани должны быть interior_cocone или boundary,
         // при этом требуется хотя бы одна interior_cocone.
@@ -201,9 +209,11 @@ bool cocone_interior_facet(const std::vector<DelaunayFacet<N>>& delaunay_facets,
 }
 
 template <size_t N>
-void find_cocone_interior_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets,
-                                 const std::vector<ManifoldFacet<N>>& facet_data, const std::vector<bool>& interior_vertices,
-                                 std::vector<bool>* cocone_facets)
+void find_cocone_interior_facets(
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<ManifoldFacet<N>>& facet_data,
+        const std::vector<bool>& interior_vertices,
+        std::vector<bool>* cocone_facets)
 {
         ASSERT(delaunay_facets.size() == facet_data.size());
 
@@ -217,9 +227,12 @@ void find_cocone_interior_facets(const std::vector<DelaunayFacet<N>>& delaunay_f
 }
 
 template <size_t N>
-void create_normals_and_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<bool>& cocone_facets,
-                               const std::vector<ManifoldVertex<N>>& vertex_data, std::vector<vec<N>>* normals,
-                               std::vector<std::array<int, N>>* facets)
+void create_normals_and_facets(
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<bool>& cocone_facets,
+        const std::vector<ManifoldVertex<N>>& vertex_data,
+        std::vector<vec<N>>* normals,
+        std::vector<std::array<int, N>>* facets)
 {
         std::unordered_set<int> used_points;
 
@@ -250,9 +263,12 @@ void create_normals_and_facets(const std::vector<DelaunayFacet<N>>& delaunay_fac
 }
 
 template <size_t N>
-void create_voronoi_delaunay(const std::vector<Vector<N, float>>& source_points, std::vector<vec<N>>* points,
-                             std::vector<DelaunayObject<N>>* delaunay_objects, std::vector<DelaunayFacet<N>>* delaunay_facets,
-                             ProgressRatio* progress)
+void create_voronoi_delaunay(
+        const std::vector<Vector<N, float>>& source_points,
+        std::vector<vec<N>>* points,
+        std::vector<DelaunayObject<N>>* delaunay_objects,
+        std::vector<DelaunayFacet<N>>* delaunay_facets,
+        ProgressRatio* progress)
 {
         std::vector<DelaunaySimplex<N>> delaunay_simplices;
         LOG("compute delaunay...");
@@ -287,9 +303,12 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
         std::vector<ManifoldVertex<N>> m_vertex_data;
         std::vector<ManifoldFacet<N>> m_facet_data;
 
-        void common_computation(const std::vector<bool>& interior_vertices, std::vector<bool>&& cocone_facets,
-                                std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets,
-                                ProgressRatio* progress) const
+        void common_computation(
+                const std::vector<bool>& interior_vertices,
+                std::vector<bool>&& cocone_facets,
+                std::vector<vec<N>>* normals,
+                std::vector<std::array<int, N>>* facets,
+                ProgressRatio* progress) const
         {
                 progress->set(1, 4);
                 LOG("prune facets...");
@@ -297,7 +316,8 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 prune_facets_incident_to_sharp_ridges(m_points, m_delaunay_facets, interior_vertices, &cocone_facets);
                 if (all_false(cocone_facets))
                 {
-                        error("Cocone facets not found after prune. " + to_string(N - 1) + "-manifold is not reconstructable.");
+                        error("Cocone facets not found after prune. " + to_string(N - 1) +
+                              "-manifold is not reconstructable.");
                 }
 
                 progress->set(2, 4);
@@ -318,7 +338,8 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 ASSERT(normals->size() == m_points.size());
         }
 
-        void cocone(std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets, ProgressRatio* progress) const override
+        void cocone(std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets, ProgressRatio* progress)
+                const override
         {
                 progress->set_text("Cocone reconstruction: %v of %m");
 
@@ -340,8 +361,12 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
         // ε-sample EPSILON = 0.1.
         // ρ для отношения ширины и высоты ячейки Вороного, rho = 1.3 * EPSILON.
         // α для углов между векторами к положительным полюсам ячеек Вороного, alpha = 0.14.
-        void bound_cocone(double rho, double alpha, std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets,
-                          ProgressRatio* progress) const override
+        void bound_cocone(
+                double rho,
+                double alpha,
+                std::vector<vec<N>>* normals,
+                std::vector<std::array<int, N>>* facets,
+                ProgressRatio* progress) const override
         {
                 if (m_cocone_only)
                 {
@@ -366,7 +391,8 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 find_cocone_interior_facets(m_delaunay_facets, m_facet_data, interior_vertices, &cocone_facets);
                 if (all_false(cocone_facets))
                 {
-                        error("Cocone interior facets not found. " + to_string(N - 1) + "-manifold is not reconstructable.");
+                        error("Cocone interior facets not found. " + to_string(N - 1) +
+                              "-manifold is not reconstructable.");
                 }
 
                 common_computation(interior_vertices, std::move(cocone_facets), normals, facets, progress);
@@ -384,22 +410,25 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
         }
 
 public:
-        ManifoldConstructorImpl(const std::vector<Vector<N, float>>& source_points, bool cocone_only, ProgressRatio* progress)
+        ManifoldConstructorImpl(
+                const std::vector<Vector<N, float>>& source_points,
+                bool cocone_only,
+                ProgressRatio* progress)
                 : m_cocone_only(cocone_only)
         {
                 // Проверить на самый минимум по количеству точек
                 if (source_points.size() < N + 2)
                 {
-                        error("Error point count " + to_string(source_points.size()) + " for cocone manifold reconstruction in " +
-                              space_name(N));
+                        error("Error point count " + to_string(source_points.size()) +
+                              " for cocone manifold reconstruction in " + space_name(N));
                 }
 
                 progress->set_text("Voronoi-Delaunay: %v of %m");
 
                 create_voronoi_delaunay(source_points, &m_points, &m_delaunay_objects, &m_delaunay_facets, progress);
 
-                vertex_and_facet_data(!cocone_only, m_points, m_delaunay_objects, m_delaunay_facets, &m_vertex_data,
-                                      &m_facet_data);
+                vertex_and_facet_data(
+                        !cocone_only, m_points, m_delaunay_objects, m_delaunay_facets, &m_vertex_data, &m_facet_data);
 
                 ASSERT(source_points.size() == m_points.size());
         }
@@ -407,32 +436,42 @@ public:
 }
 
 template <size_t N>
-std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(const std::vector<Vector<N, float>>& source_points,
-                                                                    ProgressRatio* progress)
+std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(
+        const std::vector<Vector<N, float>>& source_points,
+        ProgressRatio* progress)
 {
         return std::make_unique<ManifoldConstructorImpl<N>>(source_points, false, progress);
 }
 
 template <size_t N>
 std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone(
-        const std::vector<Vector<N, float>>& source_points, ProgressRatio* progress)
+        const std::vector<Vector<N, float>>& source_points,
+        ProgressRatio* progress)
 {
         return std::make_unique<ManifoldConstructorImpl<N>>(source_points, true, progress);
 }
 
-template std::unique_ptr<ManifoldConstructor<2>> create_manifold_constructor(const std::vector<Vector<2, float>>& source_points,
-                                                                             ProgressRatio* progress);
-template std::unique_ptr<ManifoldConstructor<3>> create_manifold_constructor(const std::vector<Vector<3, float>>& source_points,
-                                                                             ProgressRatio* progress);
-template std::unique_ptr<ManifoldConstructor<4>> create_manifold_constructor(const std::vector<Vector<4, float>>& source_points,
-                                                                             ProgressRatio* progress);
-template std::unique_ptr<ManifoldConstructor<5>> create_manifold_constructor(const std::vector<Vector<5, float>>& source_points,
-                                                                             ProgressRatio* progress);
+template std::unique_ptr<ManifoldConstructor<2>> create_manifold_constructor(
+        const std::vector<Vector<2, float>>& source_points,
+        ProgressRatio* progress);
+template std::unique_ptr<ManifoldConstructor<3>> create_manifold_constructor(
+        const std::vector<Vector<3, float>>& source_points,
+        ProgressRatio* progress);
+template std::unique_ptr<ManifoldConstructor<4>> create_manifold_constructor(
+        const std::vector<Vector<4, float>>& source_points,
+        ProgressRatio* progress);
+template std::unique_ptr<ManifoldConstructor<5>> create_manifold_constructor(
+        const std::vector<Vector<5, float>>& source_points,
+        ProgressRatio* progress);
 template std::unique_ptr<ManifoldConstructorCocone<2>> create_manifold_constructor_cocone(
-        const std::vector<Vector<2, float>>& source_points, ProgressRatio* progress);
+        const std::vector<Vector<2, float>>& source_points,
+        ProgressRatio* progress);
 template std::unique_ptr<ManifoldConstructorCocone<3>> create_manifold_constructor_cocone(
-        const std::vector<Vector<3, float>>& source_points, ProgressRatio* progress);
+        const std::vector<Vector<3, float>>& source_points,
+        ProgressRatio* progress);
 template std::unique_ptr<ManifoldConstructorCocone<4>> create_manifold_constructor_cocone(
-        const std::vector<Vector<4, float>>& source_points, ProgressRatio* progress);
+        const std::vector<Vector<4, float>>& source_points,
+        ProgressRatio* progress);
 template std::unique_ptr<ManifoldConstructorCocone<5>> create_manifold_constructor_cocone(
-        const std::vector<Vector<5, float>>& source_points, ProgressRatio* progress);
+        const std::vector<Vector<5, float>>& source_points,
+        ProgressRatio* progress);

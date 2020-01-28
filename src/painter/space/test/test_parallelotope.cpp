@@ -134,8 +134,11 @@ std::array<T, N> random_ortho_edges(RandomEngine& engine, Distribution& distribu
 }
 
 template <typename Parallelotope, typename RandomEngine, size_t... I>
-std::vector<VectorP<Parallelotope>> external_points(RandomEngine& engine, int count, const Parallelotope& p,
-                                                    std::integer_sequence<size_t, I...>)
+std::vector<VectorP<Parallelotope>> external_points(
+        RandomEngine& engine,
+        int count,
+        const Parallelotope& p,
+        std::integer_sequence<size_t, I...>)
 {
         constexpr size_t N = Parallelotope::DIMENSION;
         using T = typename Parallelotope::DataType;
@@ -166,8 +169,11 @@ std::vector<VectorP<Parallelotope>> external_points(RandomEngine& engine, int co
 }
 
 template <typename Parallelotope, typename RandomEngine, size_t... I>
-std::vector<VectorP<Parallelotope>> internal_points(RandomEngine& engine, int count, const Parallelotope& p,
-                                                    std::integer_sequence<size_t, I...>)
+std::vector<VectorP<Parallelotope>> internal_points(
+        RandomEngine& engine,
+        int count,
+        const Parallelotope& p,
+        std::integer_sequence<size_t, I...>)
 {
         constexpr size_t N = Parallelotope::DIMENSION;
         using T = typename Parallelotope::DataType;
@@ -194,8 +200,11 @@ std::vector<VectorP<Parallelotope>> internal_points(RandomEngine& engine, int co
 }
 
 template <typename Parallelotope, typename RandomEngine, size_t... I>
-std::vector<VectorP<Parallelotope>> cover_points(RandomEngine& engine, int count, const Parallelotope& p,
-                                                 std::integer_sequence<size_t, I...>)
+std::vector<VectorP<Parallelotope>> cover_points(
+        RandomEngine& engine,
+        int count,
+        const Parallelotope& p,
+        std::integer_sequence<size_t, I...>)
 {
         constexpr size_t N = Parallelotope::DIMENSION;
         using T = typename Parallelotope::DataType;
@@ -323,7 +332,8 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
 
         p.constraints(&c);
 
-        for (const Vector<N, T>& point : external_points(engine, point_count, p, std::make_integer_sequence<size_t, N>()))
+        for (const Vector<N, T>& point :
+             external_points(engine, point_count, p, std::make_integer_sequence<size_t, N>()))
         {
                 if (p.inside(point))
                 {
@@ -336,7 +346,8 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
                 }
         }
 
-        for (const Vector<N, T>& origin : internal_points(engine, point_count, p, std::make_integer_sequence<size_t, N>()))
+        for (const Vector<N, T>& origin :
+             internal_points(engine, point_count, p, std::make_integer_sequence<size_t, N>()))
         {
                 if (!p.inside(origin))
                 {
@@ -424,7 +435,8 @@ void verify_vectors(const std::array<Vector<N, T>, Count>& vectors, const std::s
         {
                 if (!almost_equal(vectors[i], vectors[0]))
                 {
-                        error("Error comparison of " + name + ".\n" + to_string(vectors[i]) + " and " + to_string(vectors[0]));
+                        error("Error comparison of " + name + ".\n" + to_string(vectors[i]) + " and " +
+                              to_string(vectors[0]));
                 }
         }
 }
@@ -446,7 +458,8 @@ void compare_parallelotopes(RandomEngine& engine, int point_count, const Paralle
         {
                 if (!almost_equal(max_length[i], max_length[0]))
                 {
-                        error("Error diagonal max length.\n" + to_string(max_length[i]) + " and " + to_string(max_length[0]));
+                        error("Error diagonal max length.\n" + to_string(max_length[i]) + " and " +
+                              to_string(max_length[0]));
                 }
         }
 
@@ -459,8 +472,8 @@ void compare_parallelotopes(RandomEngine& engine, int point_count, const Paralle
                 verify_vectors(e, "e" + to_string(i));
         }
 
-        for (Vector<N, T> origin :
-             cover_points(engine, point_count, std::get<0>(std::make_tuple(p...)), std::make_integer_sequence<size_t, N>()))
+        for (Vector<N, T> origin : cover_points(
+                     engine, point_count, std::get<0>(std::make_tuple(p...)), std::make_integer_sequence<size_t, N>()))
         {
                 std::array<bool, sizeof...(Parallelotope)> inside{p.inside(origin)...};
                 for (unsigned i = 1; i < sizeof...(Parallelotope); ++i)
@@ -626,7 +639,11 @@ void test_algorithms()
 }
 
 template <typename Parallelotope1, typename Parallelotope2>
-void test_intersection(const Parallelotope1& p1, const Parallelotope2& p2, bool with_intersection, const std::string& text)
+void test_intersection(
+        const Parallelotope1& p1,
+        const Parallelotope2& p2,
+        bool with_intersection,
+        const std::string& text)
 {
         // Параллелотопы имеют объём, поэтому им не нужно задавать это число
         constexpr int distance_from_flat_shapes_in_epsilons = 0;

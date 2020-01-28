@@ -31,10 +31,19 @@ protected:
 
 public:
         virtual void painter_pixel_before(unsigned thread_number, const std::array<int_least16_t, N>& pixel) = 0;
-        virtual void painter_pixel_after(unsigned thread_number, const std::array<int_least16_t, N>& pixel, const Color& c) = 0;
+        virtual void painter_pixel_after(
+                unsigned thread_number,
+                const std::array<int_least16_t, N>& pixel,
+                const Color& c) = 0;
         virtual void painter_error_message(const std::string& msg) = 0;
 };
 
 template <size_t N, typename T>
-void paint(PainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, const PaintObjects<N, T>& paint_objects,
-           Paintbrush<N - 1>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
+void paint(
+        PainterNotifier<N - 1>* painter_notifier,
+        int samples_per_pixel,
+        const PaintObjects<N, T>& paint_objects,
+        Paintbrush<N - 1>* paintbrush,
+        int thread_count,
+        std::atomic_bool* stop,
+        bool smooth_normal) noexcept;

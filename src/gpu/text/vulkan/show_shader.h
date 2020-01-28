@@ -63,9 +63,12 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        TextShowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                       const std::unordered_set<uint32_t>& family_indices, VkSampler sampler,
-                       const vulkan::ImageWithMemory* texture);
+        TextShowMemory(
+                const vulkan::Device& device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::unordered_set<uint32_t>& family_indices,
+                VkSampler sampler,
+                const vulkan::ImageWithMemory* texture);
 
         TextShowMemory(const TextShowMemory&) = delete;
         TextShowMemory& operator=(const TextShowMemory&) = delete;
@@ -110,8 +113,14 @@ public:
         TextShowProgram(TextShowProgram&&) = default;
         ~TextShowProgram() = default;
 
-        vulkan::Pipeline create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count, bool sample_shading,
-                                         unsigned x, unsigned y, unsigned width, unsigned height) const;
+        vulkan::Pipeline create_pipeline(
+                VkRenderPass render_pass,
+                VkSampleCountFlagBits sample_count,
+                bool sample_shading,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height) const;
 
         VkDescriptorSetLayout descriptor_set_layout() const;
         VkPipelineLayout pipeline_layout() const;

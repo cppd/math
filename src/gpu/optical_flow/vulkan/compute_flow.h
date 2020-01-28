@@ -58,8 +58,10 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        OpticalFlowFlowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
-                              const std::unordered_set<uint32_t>& family_indices);
+        OpticalFlowFlowMemory(
+                const vulkan::Device& device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::unordered_set<uint32_t>& family_indices);
 
         OpticalFlowFlowMemory(const OpticalFlowFlowMemory&) = delete;
         OpticalFlowFlowMemory& operator=(const OpticalFlowFlowMemory&) = delete;
@@ -90,7 +92,8 @@ public:
         void set_dx(const vulkan::ImageWithMemory& image) const;
         void set_dy(const vulkan::ImageWithMemory& image) const;
         void set_i(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const;
-        void set_j(VkSampler sampler, const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const;
+        void set_j(VkSampler sampler, const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1)
+                const;
 
         void set_top_points(const vulkan::BufferWithMemory& buffer) const;
         void set_flow(const vulkan::BufferWithMemory& buffer) const;
@@ -118,8 +121,13 @@ class OpticalFlowFlowConstant final : public vulkan::SpecializationConstant
 public:
         OpticalFlowFlowConstant();
 
-        void set(uint32_t local_size_x, uint32_t local_size_y, int32_t radius, int32_t iteration_count, float stop_move_square,
-                 float min_determinant);
+        void set(
+                uint32_t local_size_x,
+                uint32_t local_size_y,
+                int32_t radius,
+                int32_t iteration_count,
+                float stop_move_square,
+                float min_determinant);
 };
 
 class OpticalFlowFlowProgram final
@@ -142,8 +150,13 @@ public:
         OpticalFlowFlowProgram(OpticalFlowFlowProgram&&) = default;
         ~OpticalFlowFlowProgram() = default;
 
-        void create_pipeline(uint32_t local_size_x, uint32_t local_size_y, int32_t radius, int32_t iteration_count,
-                             float stop_move_square, float min_determinant);
+        void create_pipeline(
+                uint32_t local_size_x,
+                uint32_t local_size_y,
+                int32_t radius,
+                int32_t iteration_count,
+                float stop_move_square,
+                float min_determinant);
         void delete_pipeline();
 
         VkDescriptorSetLayout descriptor_set_layout() const;

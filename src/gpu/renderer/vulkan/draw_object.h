@@ -66,10 +66,17 @@ class DrawObject final
         std::unique_ptr<Points> m_points;
 
 public:
-        DrawObject(const vulkan::Device& device, const vulkan::CommandPool& graphics_command_pool,
-                   const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-                   const vulkan::Queue& transfer_queue, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
-                   const Obj<3>& obj, double size, const vec3& position);
+        DrawObject(
+                const vulkan::Device& device,
+                const vulkan::CommandPool& graphics_command_pool,
+                const vulkan::Queue& graphics_queue,
+                const vulkan::CommandPool& transfer_command_pool,
+                const vulkan::Queue& transfer_queue,
+                VkSampler sampler,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const Obj<3>& obj,
+                double size,
+                const vec3& position);
         ~DrawObject();
 
         bool has_shadow() const;

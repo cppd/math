@@ -76,7 +76,8 @@ class Impl final : public Show, public WindowEvent
         const double m_parent_window_ppi;
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
-        const int m_frame_size_in_pixels = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, m_parent_window_ppi));
+        const int m_frame_size_in_pixels =
+                std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, m_parent_window_ppi));
 
         FrameRate m_frame_rate{m_parent_window_ppi};
         Camera m_camera;
@@ -448,7 +449,8 @@ class Impl final : public Show, public WindowEvent
 
                 const PressedMouseButton& right = m_event_window.pressed_mouse_button(MouseButton::Right);
                 if (right.pressed &&
-                    pointIsInsideRectangle(right.pressed_x, right.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
+                    pointIsInsideRectangle(
+                            right.pressed_x, right.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
                     (right.delta_x != 0 || right.delta_y != 0))
                 {
                         m_camera.rotate(-right.delta_x, -right.delta_y);
@@ -457,7 +459,8 @@ class Impl final : public Show, public WindowEvent
 
                 const PressedMouseButton& left = m_event_window.pressed_mouse_button(MouseButton::Left);
                 if (left.pressed &&
-                    pointIsInsideRectangle(left.pressed_x, left.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
+                    pointIsInsideRectangle(
+                            left.pressed_x, left.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
                     (left.delta_x != 0 || left.delta_y != 0))
                 {
                         m_camera.move(vec2(-left.delta_x, left.delta_y));
@@ -514,7 +517,8 @@ class Impl final : public Show, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                if (m_event_window.window_width() != m_window->width() || m_event_window.window_height() != m_window->height())
+                if (m_event_window.window_width() != m_window->width() ||
+                    m_event_window.window_height() != m_window->height())
                 {
                         // Вызов не из обработчика измерения окна (там есть проверка),
                         // а вызов из обработчика включения-выключения ДПФ в то время,
@@ -546,8 +550,8 @@ class Impl final : public Show, public WindowEvent
 
                 move_window_to_parent(m_window->system_handle(), m_parent_window);
 
-                for (int i = 1;
-                     m_event_window.window_width() != m_window->width() && m_event_window.window_height() != m_window->height();
+                for (int i = 1; m_event_window.window_width() != m_window->width() &&
+                                m_event_window.window_height() != m_window->height();
                      ++i)
                 {
                         if (i > 10)
@@ -583,11 +587,11 @@ class Impl final : public Show, public WindowEvent
                         OPENGL_FRAMEBUFFER_COLOR_FORMAT, OPENGL_FRAMEBUFFER_DEPTH_FORMAT, OPENGL_MINIMUM_SAMPLE_COUNT,
                         m_window->width(), m_window->height());
 
-                m_resolve_framebuffer = std::make_unique<opengl::ColorFramebuffer>(OPENGL_FRAMEBUFFER_RESOLVE_FORMAT,
-                                                                                   m_window->width(), m_window->height());
+                m_resolve_framebuffer = std::make_unique<opengl::ColorFramebuffer>(
+                        OPENGL_FRAMEBUFFER_RESOLVE_FORMAT, m_window->width(), m_window->height());
 
-                m_object_image =
-                        std::make_unique<opengl::Texture>(OPENGL_OBJECT_IMAGE_FORMAT, m_window->width(), m_window->height());
+                m_object_image = std::make_unique<opengl::Texture>(
+                        OPENGL_OBJECT_IMAGE_FORMAT, m_window->width(), m_window->height());
 
                 if (!m_text)
                 {
@@ -599,9 +603,9 @@ class Impl final : public Show, public WindowEvent
 
                 int w1_x, w1_y, w1_w, w1_h;
                 int w2_x, w2_y, w2_w, w2_h;
-                const bool two_windows =
-                        windowPositionAndSize(m_dft_active, m_window->width(), m_window->height(), m_frame_size_in_pixels, &w1_x,
-                                              &w1_y, &w1_w, &w1_h, &w2_x, &w2_y, &w2_w, &w2_h);
+                const bool two_windows = windowPositionAndSize(
+                        m_dft_active, m_window->width(), m_window->height(), m_frame_size_in_pixels, &w1_x, &w1_y,
+                        &w1_w, &w1_h, &w2_x, &w2_y, &w2_w, &w2_h);
 
                 m_draw_x0 = w1_x;
                 m_draw_y0 = w1_y;
@@ -616,7 +620,8 @@ class Impl final : public Show, public WindowEvent
                 m_draw_gl_x1 = m_draw_x1;
                 m_draw_gl_y1 = m_window->height() - m_draw_y0;
 
-                ASSERT(m_draw_gl_x0 >= 0 && m_draw_gl_y0 >= 0 && m_draw_gl_x0 < m_draw_gl_x1 && m_draw_gl_y0 < m_draw_gl_y1);
+                ASSERT(m_draw_gl_x0 >= 0 && m_draw_gl_y0 >= 0 && m_draw_gl_x0 < m_draw_gl_x1 &&
+                       m_draw_gl_y0 < m_draw_gl_y1);
                 ASSERT(m_draw_gl_x1 <= m_window->width() && m_draw_gl_y1 <= m_window->height());
 
                 //
@@ -632,11 +637,11 @@ class Impl final : public Show, public WindowEvent
 
                 //
 
-                m_pencil_sketch =
-                        gpu_opengl::create_pencil_sketch_show(m_resolve_framebuffer->texture(), *m_object_image, x, y, w, h);
+                m_pencil_sketch = gpu_opengl::create_pencil_sketch_show(
+                        m_resolve_framebuffer->texture(), *m_object_image, x, y, w, h);
 
-                m_optical_flow =
-                        gpu_opengl::create_optical_flow_show(m_resolve_framebuffer->texture(), m_parent_window_ppi, x, y, w, h);
+                m_optical_flow = gpu_opengl::create_optical_flow_show(
+                        m_resolve_framebuffer->texture(), m_parent_window_ppi, x, y, w, h);
 
                 m_convex_hull = gpu_opengl::create_convex_hull_show(*m_object_image, x, y, w, h);
 
@@ -650,8 +655,9 @@ class Impl final : public Show, public WindowEvent
                         ASSERT(x2 >= 0 && y2 >= 0 && w2 > 0 && h2 > 0);
                         ASSERT(x2 + w2 <= m_window->width() && y2 + h2 <= m_window->height());
 
-                        m_dft = gpu_opengl::create_dft_show(m_resolve_framebuffer->texture(), x, y, w, h, x2, y2, w2, h2,
-                                                            m_dft_brightness, m_dft_background_color, m_dft_color);
+                        m_dft = gpu_opengl::create_dft_show(
+                                m_resolve_framebuffer->texture(), x, y, w, h, x2, y2, w2, h2, m_dft_brightness,
+                                m_dft_background_color, m_dft_color);
                 }
         }
 
@@ -661,16 +667,18 @@ class Impl final : public Show, public WindowEvent
                 int y0 = m_draw_gl_y0;
                 int x1 = m_draw_gl_x1;
                 int y1 = m_draw_gl_y1;
-                glBlitNamedFramebuffer(*m_render_framebuffer, *m_resolve_framebuffer, x0, y0, x1, y1, x0, y0, x1, y1,
-                                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
+                glBlitNamedFramebuffer(
+                        *m_render_framebuffer, *m_resolve_framebuffer, x0, y0, x1, y1, x0, y0, x1, y1,
+                        GL_COLOR_BUFFER_BIT, GL_NEAREST);
         }
 
         void resolve_to_default()
         {
                 int width = m_event_window.window_width();
                 int height = m_event_window.window_height();
-                glBlitNamedFramebuffer(*m_render_framebuffer, DEFAULT_FRAMEBUFFER, 0, 0, width, height, 0, 0, width, height,
-                                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
+                glBlitNamedFramebuffer(
+                        *m_render_framebuffer, DEFAULT_FRAMEBUFFER, 0, 0, width, height, 0, 0, width, height,
+                        GL_COLOR_BUFFER_BIT, GL_NEAREST);
         }
 
         void render(const TextData& text_data)

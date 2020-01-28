@@ -65,8 +65,11 @@ inline const char* constraint_solution_to_string(const ConstraintSolution& cs)
 namespace simplex_algorithm_implementation
 {
 template <size_t N, size_t M, typename T>
-void print_simplex_algorithm_data(const std::array<T, M>& b, const std::array<Vector<N, T>, M>& a, const T& v,
-                                  const Vector<N, T>& c) noexcept
+void print_simplex_algorithm_data(
+        const std::array<T, M>& b,
+        const std::array<Vector<N, T>, M>& a,
+        const T& v,
+        const Vector<N, T>& c) noexcept
 {
         try
         {
@@ -85,9 +88,13 @@ void print_simplex_algorithm_data(const std::array<T, M>& b, const std::array<Ve
 }
 
 template <size_t N, size_t M, typename T>
-void print_simplex_algorithm_data(const std::array<T, M>& b, const std::array<Vector<N, T>, M>& a, const T& v,
-                                  const Vector<N, T>& c, const std::array<unsigned, N>& map_n,
-                                  const std::array<unsigned, M>& map_m) noexcept
+void print_simplex_algorithm_data(
+        const std::array<T, M>& b,
+        const std::array<Vector<N, T>, M>& a,
+        const T& v,
+        const Vector<N, T>& c,
+        const std::array<unsigned, N>& map_n,
+        const std::array<unsigned, M>& map_m) noexcept
 {
         static_assert(std::is_floating_point_v<T>);
         try
@@ -196,9 +203,14 @@ void pivot(std::array<T, M>& b, std::array<Vector<N, T>, M>& a, T& v, Vector<N, 
 }
 
 template <size_t N_Source, size_t M, typename T>
-void make_aux_and_maps(const std::array<Vector<N_Source, T>, M>& a_input, std::array<T, M>* b,
-                       std::array<Vector<N_Source + 1, T>, M>* a, T* v, Vector<N_Source + 1, T>* c,
-                       std::array<unsigned, N_Source + 1>* map_n, std::array<unsigned, M>* map_m)
+void make_aux_and_maps(
+        const std::array<Vector<N_Source, T>, M>& a_input,
+        std::array<T, M>* b,
+        std::array<Vector<N_Source + 1, T>, M>* a,
+        T* v,
+        Vector<N_Source + 1, T>* c,
+        std::array<unsigned, N_Source + 1>* map_n,
+        std::array<unsigned, M>* map_m)
 {
         for (unsigned m = 0; m < M; ++m)
         {
@@ -247,7 +259,10 @@ void make_aux_and_maps(const std::array<Vector<N_Source, T>, M>& a_input, std::a
 }
 
 template <size_t N, size_t M, typename T>
-bool variable_x0_is_zero(const std::array<T, M>& b, const std::array<unsigned, N>& map_n, const std::array<unsigned, M>& map_m)
+bool variable_x0_is_zero(
+        const std::array<T, M>& b,
+        const std::array<unsigned, N>& map_n,
+        const std::array<unsigned, M>& map_m)
 {
         for (unsigned n = 0; n < N; ++n)
         {

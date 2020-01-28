@@ -171,7 +171,8 @@ public:
         {
                 std::vector<vec2i> points;
                 int point_count_x, point_count_y;
-                create_top_level_optical_flow_points(m_width, m_height, window_ppi, &point_count_x, &point_count_y, &points);
+                create_top_level_optical_flow_points(
+                        m_width, m_height, window_ppi, &point_count_x, &point_count_y, &points);
 
                 m_top_point_count = points.size();
 
@@ -180,8 +181,9 @@ public:
                         return;
                 }
 
-                m_draw_prog.emplace(opengl::VertexShader(optical_flow_show_vert()),
-                                    opengl::FragmentShader(optical_flow_show_frag()));
+                m_draw_prog.emplace(
+                        opengl::VertexShader(optical_flow_show_vert()),
+                        opengl::FragmentShader(optical_flow_show_frag()));
                 // m_draw_prog_debug.emplace(opengl::VertexShader(optical_flow_show_debug_vert()),
                 //                          opengl::FragmentShader(optical_flow_show_debug_frag()));
 
@@ -201,14 +203,19 @@ public:
                 m_shader_memory.set_points(*m_top_points);
                 m_shader_memory.set_points_flow(*m_top_points_flow);
 
-                m_optical_flow = gpu_opengl::create_optical_flow_compute(source, x, y, width, height, point_count_x,
-                                                                         point_count_y, *m_top_points, *m_top_points_flow);
+                m_optical_flow = gpu_opengl::create_optical_flow_compute(
+                        source, x, y, width, height, point_count_x, point_count_y, *m_top_points, *m_top_points_flow);
         }
 };
 }
 
-std::unique_ptr<OpticalFlowShow> create_optical_flow_show(const opengl::Texture& source, double window_ppi, int x, int y,
-                                                          int width, int height)
+std::unique_ptr<OpticalFlowShow> create_optical_flow_show(
+        const opengl::Texture& source,
+        double window_ppi,
+        int x,
+        int y,
+        int width,
+        int height)
 {
         return std::make_unique<Impl>(source, window_ppi, x, y, width, height);
 }

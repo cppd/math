@@ -26,9 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace extract_manifold_implementation
 {
 template <size_t N>
-void find_delaunay_object_facets(const std::vector<DelaunayObject<N>>& delaunay_objects,
-                                 const std::vector<DelaunayFacet<N>>& delaunay_facets,
-                                 std::vector<std::vector<int>>* delaunay_object_facets)
+void find_delaunay_object_facets(
+        const std::vector<DelaunayObject<N>>& delaunay_objects,
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        std::vector<std::vector<int>>* delaunay_object_facets)
 {
         delaunay_object_facets->clear();
         delaunay_object_facets->resize(delaunay_objects.size());
@@ -48,9 +49,12 @@ void find_delaunay_object_facets(const std::vector<DelaunayObject<N>>& delaunay_
 // Проход по граням Делоне через объекты Делоне, начиная от самых внешних граней.
 // При встречи грани cocone она помечается как нужная, и за неё идти не надо.
 template <size_t N>
-void traverse_delaunay(const std::vector<DelaunayFacet<N>>& delaunay_facets,
-                       const std::vector<std::vector<int>>& delaunay_object_facets, const std::vector<bool>& cocone_facets,
-                       std::vector<bool>* visited_delaunay, std::vector<bool>* visited_cocone_facets)
+void traverse_delaunay(
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<std::vector<int>>& delaunay_object_facets,
+        const std::vector<bool>& cocone_facets,
+        std::vector<bool>* visited_delaunay,
+        std::vector<bool>* visited_cocone_facets)
 {
         std::stack<int> next;
 
@@ -113,8 +117,10 @@ void traverse_delaunay(const std::vector<DelaunayFacet<N>>& delaunay_facets,
 }
 
 template <size_t N>
-void extract_manifold(const std::vector<DelaunayObject<N>>& delaunay_objects,
-                      const std::vector<DelaunayFacet<N>>& delaunay_facets, std::vector<bool>* cocone_facets)
+void extract_manifold(
+        const std::vector<DelaunayObject<N>>& delaunay_objects,
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        std::vector<bool>* cocone_facets)
 {
         namespace impl = extract_manifold_implementation;
 
@@ -124,8 +130,8 @@ void extract_manifold(const std::vector<DelaunayObject<N>>& delaunay_objects,
 
         impl::find_delaunay_object_facets(delaunay_objects, delaunay_facets, &delaunay_object_facets);
 
-        impl::traverse_delaunay(delaunay_facets, delaunay_object_facets, *cocone_facets, &visited_delaunay,
-                                &visited_cocone_facets);
+        impl::traverse_delaunay(
+                delaunay_facets, delaunay_object_facets, *cocone_facets, &visited_delaunay, &visited_cocone_facets);
 
         *cocone_facets = std::move(visited_cocone_facets);
 }

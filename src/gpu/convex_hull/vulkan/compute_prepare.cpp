@@ -53,7 +53,9 @@ std::vector<VkDescriptorSetLayoutBinding> ConvexHullPrepareMemory::descriptor_se
         return bindings;
 }
 
-ConvexHullPrepareMemory::ConvexHullPrepareMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+ConvexHullPrepareMemory::ConvexHullPrepareMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -140,8 +142,13 @@ ConvexHullPrepareConstant::ConvexHullPrepareConstant()
         }
 }
 
-void ConvexHullPrepareConstant::set(int32_t local_size_x, int32_t buffer_size, int32_t x, int32_t y, int32_t width,
-                                    int32_t height)
+void ConvexHullPrepareConstant::set(
+        int32_t local_size_x,
+        int32_t buffer_size,
+        int32_t x,
+        int32_t y,
+        int32_t width,
+        int32_t height)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
         m_data.local_size_x = local_size_x;
@@ -176,16 +183,23 @@ size_t ConvexHullPrepareConstant::size() const
 
 ConvexHullPrepareProgram::ConvexHullPrepareProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, ConvexHullPrepareMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {ConvexHullPrepareMemory::set_number()}, {m_descriptor_set_layout})),
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                  device,
+                  ConvexHullPrepareMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {ConvexHullPrepareMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_shader(device, convex_hull_prepare_comp(), "main")
 {
 }
 
-void ConvexHullPrepareProgram::create_pipeline(unsigned buffer_and_group_size, unsigned x, unsigned y, unsigned width,
-                                               unsigned height)
+void ConvexHullPrepareProgram::create_pipeline(
+        unsigned buffer_and_group_size,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height)
 {
         m_constant.set(buffer_and_group_size, buffer_and_group_size, x, y, width, height);
 

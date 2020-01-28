@@ -41,7 +41,9 @@ std::vector<VkDescriptorSetLayoutBinding> PencilSketchShowMemory::descriptor_set
         return bindings;
 }
 
-PencilSketchShowMemory::PencilSketchShowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+PencilSketchShowMemory::PencilSketchShowMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -116,10 +118,13 @@ std::vector<VkVertexInputAttributeDescription> PencilSketchShowVertex::attribute
 
 PencilSketchShowProgram::PencilSketchShowProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, PencilSketchShowMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {PencilSketchShowMemory::set_number()}, {m_descriptor_set_layout})),
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                  device,
+                  PencilSketchShowMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {PencilSketchShowMemory::set_number()},
+                  {m_descriptor_set_layout})),
           m_vertex_shader(m_device, pencil_sketch_show_vert(), "main"),
           m_fragment_shader(m_device, pencil_sketch_show_frag(), "main")
 {
@@ -135,8 +140,13 @@ VkPipelineLayout PencilSketchShowProgram::pipeline_layout() const
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline PencilSketchShowProgram::create_pipeline(VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
-                                                          unsigned x, unsigned y, unsigned width, unsigned height) const
+vulkan::Pipeline PencilSketchShowProgram::create_pipeline(
+        VkRenderPass render_pass,
+        VkSampleCountFlagBits sample_count,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -160,7 +170,8 @@ vulkan::Pipeline PencilSketchShowProgram::create_pipeline(VkRenderPass render_pa
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
         info.constants = &constants;
 
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions = PencilSketchShowVertex::binding_descriptions();
+        const std::vector<VkVertexInputBindingDescription> binding_descriptions =
+                PencilSketchShowVertex::binding_descriptions();
         info.binding_descriptions = &binding_descriptions;
 
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =

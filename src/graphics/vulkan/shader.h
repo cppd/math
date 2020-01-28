@@ -31,7 +31,9 @@ class Shader
         std::string m_entry_point_name;
 
 protected:
-        Shader(VkDevice device, const Span<const uint32_t>& code, VkShaderStageFlagBits stage,
+        Shader(VkDevice device,
+               const Span<const uint32_t>& code,
+               VkShaderStageFlagBits stage,
                const std::string_view& entry_point_name);
 
 public:
@@ -49,13 +51,19 @@ public:
 class TesselationControlShader final : public Shader
 {
 public:
-        TesselationControlShader(VkDevice device, const Span<const uint32_t>& code, const std::string_view& entry_point_name);
+        TesselationControlShader(
+                VkDevice device,
+                const Span<const uint32_t>& code,
+                const std::string_view& entry_point_name);
 };
 
 class TesselationEvaluationShader final : public Shader
 {
 public:
-        TesselationEvaluationShader(VkDevice device, const Span<const uint32_t>& code, const std::string_view& entry_point_name);
+        TesselationEvaluationShader(
+                VkDevice device,
+                const Span<const uint32_t>& code,
+                const std::string_view& entry_point_name);
 };
 
 class GeometryShader final : public Shader

@@ -80,8 +80,12 @@ std::vector<VkPresentModeKHR> find_present_modes(VkPhysicalDevice physical_devic
 
 namespace vulkan
 {
-bool find_surface_details(VkSurfaceKHR surface, VkPhysicalDevice device, VkSurfaceCapabilitiesKHR* surface_capabilities,
-                          std::vector<VkSurfaceFormatKHR>* surface_formats, std::vector<VkPresentModeKHR>* present_modes)
+bool find_surface_details(
+        VkSurfaceKHR surface,
+        VkPhysicalDevice device,
+        VkSurfaceCapabilitiesKHR* surface_capabilities,
+        std::vector<VkSurfaceFormatKHR>* surface_formats,
+        std::vector<VkPresentModeKHR>* present_modes)
 {
         ASSERT(surface_capabilities && surface_formats && present_modes);
 

@@ -148,9 +148,10 @@ std::vector<Box<Parallelotope>> move_boxes_to_vector(Container<Box<Parallelotope
 }
 
 template <typename Parallelotope, size_t... I>
-constexpr Parallelotope create_parallelotope_from_vector(const Vector<sizeof...(I), typename Parallelotope::DataType>& org,
-                                                         const Vector<sizeof...(I), typename Parallelotope::DataType>& d,
-                                                         std::integer_sequence<size_t, I...>)
+constexpr Parallelotope create_parallelotope_from_vector(
+        const Vector<sizeof...(I), typename Parallelotope::DataType>& org,
+        const Vector<sizeof...(I), typename Parallelotope::DataType>& d,
+        std::integer_sequence<size_t, I...>)
 {
         static_assert(Parallelotope::DIMENSION == sizeof...(I));
 
@@ -165,9 +166,14 @@ constexpr Parallelotope create_parallelotope_from_vector(const Vector<sizeof...(
 }
 
 template <size_t N, typename T, typename FunctorObjectPointer>
-void min_max_and_distance(int max_divisions, int distance_from_facet_in_epsilons, int object_index_count,
-                          const FunctorObjectPointer& functor_object_pointer, Vector<N, T>* minimum, Vector<N, T>* maximum,
-                          T* distance)
+void min_max_and_distance(
+        int max_divisions,
+        int distance_from_facet_in_epsilons,
+        int object_index_count,
+        const FunctorObjectPointer& functor_object_pointer,
+        Vector<N, T>* minimum,
+        Vector<N, T>* maximum,
+        T* distance)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -215,8 +221,8 @@ void min_max_and_distance(int max_divisions, int distance_from_facet_in_epsilons
                 if (dist >= one_half_of_min_box_size)
                 {
                         error("The minimal distance from facets " + to_string(dist) +
-                              " is greater than one half of the minimum box size " + to_string(one_half_of_min_box_size) +
-                              " (dimension #" + to_string(i) + ")");
+                              " is greater than one half of the minimum box size " +
+                              to_string(one_half_of_min_box_size) + " (dimension #" + to_string(i) + ")");
                 }
         }
 
@@ -226,15 +232,16 @@ void min_max_and_distance(int max_divisions, int distance_from_facet_in_epsilons
 }
 
 template <typename Parallelotope>
-Parallelotope root_parallelotope(const Vector<Parallelotope::DIMENSION, typename Parallelotope::DataType>& min,
-                                 const Vector<Parallelotope::DIMENSION, typename Parallelotope::DataType>& max)
+Parallelotope root_parallelotope(
+        const Vector<Parallelotope::DIMENSION, typename Parallelotope::DataType>& min,
+        const Vector<Parallelotope::DIMENSION, typename Parallelotope::DataType>& max)
 {
         static_assert(std::is_floating_point_v<typename Parallelotope::DataType>);
 
         const Vector<Parallelotope::DIMENSION, typename Parallelotope::DataType>& diagonal = max - min;
 
-        return create_parallelotope_from_vector<Parallelotope>(min, diagonal,
-                                                               std::make_integer_sequence<size_t, Parallelotope::DIMENSION>());
+        return create_parallelotope_from_vector<Parallelotope>(
+                min, diagonal, std::make_integer_sequence<size_t, Parallelotope::DIMENSION>());
 }
 
 template <typename Box>
@@ -309,7 +316,9 @@ public:
 
 template <template <typename...> typename Container, typename Parallelotope, int... I>
 std::array<std::tuple<int, Box<Parallelotope>*, int>, BOX_COUNT<Parallelotope::DIMENSION>> create_child_boxes(
-        SpinLock* boxes_lock, Container<Box<Parallelotope>>* boxes, const Parallelotope& parallelotope,
+        SpinLock* boxes_lock,
+        Container<Box<Parallelotope>>* boxes,
+        const Parallelotope& parallelotope,
         std::integer_sequence<int, I...>)
 {
         static_assert(BOX_COUNT<Parallelotope::DIMENSION> == sizeof...(I));
@@ -325,16 +334,23 @@ std::array<std::tuple<int, Box<Parallelotope>*, int>, BOX_COUNT<Parallelotope::D
 }
 
 template <template <typename...> typename Container, typename Parallelotope, typename FunctorObjectPointer>
-void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES,
-            const typename Parallelotope::DataType& DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS, SpinLock* boxes_lock,
-            Container<Box<Parallelotope>>* boxes, BoxJobs<Box<Parallelotope>>* box_jobs,
-            const FunctorObjectPointer& functor_object_pointer, ProgressRatio* progress)
+void extend(
+        const int MAX_DEPTH,
+        const int MIN_OBJECTS,
+        const int MAX_BOXES,
+        const typename Parallelotope::DataType& DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS,
+        SpinLock* boxes_lock,
+        Container<Box<Parallelotope>>* boxes,
+        BoxJobs<Box<Parallelotope>>* box_jobs,
+        const FunctorObjectPointer& functor_object_pointer,
+        ProgressRatio* progress)
 try
 {
         // Адреса имеющихся элементов не должны меняться при вставке
         // новых элементов, поэтому требуется std::deque или std::list.
-        static_assert(std::is_same_v<Container<Box<Parallelotope>>, std::deque<Box<Parallelotope>>> ||
-                      std::is_same_v<Container<Box<Parallelotope>>, std::list<Box<Parallelotope>>>);
+        static_assert(
+                std::is_same_v<Container<Box<Parallelotope>>, std::deque<Box<Parallelotope>>> ||
+                std::is_same_v<Container<Box<Parallelotope>>, std::list<Box<Parallelotope>>>);
 
         constexpr auto integer_sequence_n = std::make_integer_sequence<int, BOX_COUNT<Parallelotope::DIMENSION>>();
 
@@ -368,8 +384,9 @@ try
 
                         for (int object_index : box->object_indices())
                         {
-                                if (shape_intersection(p, *functor_object_pointer(object_index),
-                                                       DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS))
+                                if (shape_intersection(
+                                            p, *functor_object_pointer(object_index),
+                                            DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS))
                                 {
                                         child_box->add_object_index(object_index);
                                 }
@@ -465,8 +482,13 @@ class SpatialSubdivisionTree
 
 public:
         template <typename FunctorObjectPointer>
-        void decompose(int max_depth, int min_objects_per_box, int object_index_count,
-                       const FunctorObjectPointer& functor_object_pointer, unsigned thread_count, ProgressRatio* progress)
+        void decompose(
+                int max_depth,
+                int min_objects_per_box,
+                int object_index_count,
+                const FunctorObjectPointer& functor_object_pointer,
+                unsigned thread_count,
+                ProgressRatio* progress)
 
         {
                 static_assert(std::is_pointer_v<decltype(functor_object_pointer(0))>);
@@ -478,19 +500,21 @@ public:
                 if (!(max_depth >= MAX_DEPTH_LEFT_BOUND && max_depth <= MAX_DEPTH_RIGHT_BOUND) ||
                     !(min_objects_per_box >= MIN_OBJECTS_LEFT_BOUND && min_objects_per_box <= MIN_OBJECTS_RIGHT_BOUND))
                 {
-                        error("Error limits for spatial subdivision " + to_string(BOX_COUNT) + "-tree. Maximum depth (" +
-                              to_string(max_depth) + ") must be in the interval [" + to_string(MAX_DEPTH_LEFT_BOUND) + ", " +
-                              to_string(MAX_DEPTH_RIGHT_BOUND) + "] and minimum objects per box (" +
-                              to_string(min_objects_per_box) + ") must be in the interval [" + to_string(MIN_OBJECTS_LEFT_BOUND) +
-                              ", " + to_string(MIN_OBJECTS_RIGHT_BOUND) + "].");
+                        error("Error limits for spatial subdivision " + to_string(BOX_COUNT) +
+                              "-tree. Maximum depth (" + to_string(max_depth) + ") must be in the interval [" +
+                              to_string(MAX_DEPTH_LEFT_BOUND) + ", " + to_string(MAX_DEPTH_RIGHT_BOUND) +
+                              "] and minimum objects per box (" + to_string(min_objects_per_box) +
+                              ") must be in the interval [" + to_string(MIN_OBJECTS_LEFT_BOUND) + ", " +
+                              to_string(MIN_OBJECTS_RIGHT_BOUND) + "].");
                 }
 
                 // Немного прибавить к максимуму для учёта ошибок плавающей точки
                 if (maximum_box_count(BOX_COUNT, max_depth) > MAX_BOX_COUNT_LIMIT + 0.1)
                 {
-                        error("Spatial subdivision " + to_string(BOX_COUNT) + "-tree is too deep. Depth " + to_string(max_depth) +
-                              ", maximum box count " + to_string(maximum_box_count(BOX_COUNT, max_depth)) +
-                              ", maximum box count limit " + to_string(MAX_BOX_COUNT_LIMIT));
+                        error("Spatial subdivision " + to_string(BOX_COUNT) + "-tree is too deep. Depth " +
+                              to_string(max_depth) + ", maximum box count " +
+                              to_string(maximum_box_count(BOX_COUNT, max_depth)) + ", maximum box count limit " +
+                              to_string(MAX_BOX_COUNT_LIMIT));
                 }
 
                 const int max_box_count = std::lround(maximum_box_count(BOX_COUNT, max_depth));
@@ -502,11 +526,13 @@ public:
                 Vector<N, T> max;
                 T distance_from_facet;
 
-                impl::min_max_and_distance(max_divisions, DISTANCE_FROM_FACET_IN_EPSILONS, object_index_count,
-                                           functor_object_pointer, &min, &max, &distance_from_facet);
+                impl::min_max_and_distance(
+                        max_divisions, DISTANCE_FROM_FACET_IN_EPSILONS, object_index_count, functor_object_pointer,
+                        &min, &max, &distance_from_facet);
 
-                BoxContainer boxes({Box(impl::root_parallelotope<Parallelotope>(min, max),
-                                        impl::iota_zero_based_indices(object_index_count))});
+                BoxContainer boxes(
+                        {Box(impl::root_parallelotope<Parallelotope>(min, max),
+                             impl::iota_zero_based_indices(object_index_count))});
 
                 BoxJobs jobs(&boxes.front(), MAX_DEPTH_LEFT_BOUND);
 
@@ -516,8 +542,9 @@ public:
                 for (unsigned i = 0; i < thread_count; ++i)
                 {
                         threads.add([&]() {
-                                extend(max_depth, min_objects_per_box, max_box_count, DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS,
-                                       &boxes_lock, &boxes, &jobs, functor_object_pointer, progress);
+                                extend(max_depth, min_objects_per_box, max_box_count,
+                                       DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS, &boxes_lock, &boxes, &jobs,
+                                       functor_object_pointer, progress);
                         });
                 }
                 threads.join();
@@ -548,7 +575,8 @@ public:
                         if (find_box_for_point(m_boxes[ROOT_BOX], interior_point, &box))
                         {
                                 Vector<N, T> point;
-                                if (box->object_index_count() > 0 && functor_find_intersection(box->object_indices(), &point) &&
+                                if (box->object_index_count() > 0 &&
+                                    functor_find_intersection(box->object_indices(), &point) &&
                                     box->parallelotope().inside(point))
                                 {
                                         return true;

@@ -29,15 +29,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace
 {
 template <size_t... I>
-[[maybe_unused]] bool check(const std::array<int, sizeof...(I)>& offset, const std::array<int, sizeof...(I)>& copy_size,
-                            const std::array<int, sizeof...(I)>& size, std::integer_sequence<size_t, I...>&&)
+[[maybe_unused]] bool check(
+        const std::array<int, sizeof...(I)>& offset,
+        const std::array<int, sizeof...(I)>& copy_size,
+        const std::array<int, sizeof...(I)>& size,
+        std::integer_sequence<size_t, I...>&&)
 {
         return ((offset[I] >= 0) && ...) && ((copy_size[I] >= 0) && ...) && ((size[I] >= 0) && ...) &&
                ((offset[I] + copy_size[I] <= size[I]) && ...);
 }
 
 template <size_t N>
-[[maybe_unused]] bool check(const std::array<int, N>& offset, const std::array<int, N>& copy_size, const std::array<int, N>& size)
+[[maybe_unused]] bool check(
+        const std::array<int, N>& offset,
+        const std::array<int, N>& copy_size,
+        const std::array<int, N>& size)
 {
         return check(offset, copy_size, size, std::make_integer_sequence<size_t, N>());
 }
@@ -45,13 +51,20 @@ template <size_t N>
 //
 
 template <typename T>
-void copy_image(std::vector<T>* dst, const std::array<int, 2>& dst_size, const std::array<int, 2>& dst_offset,
-                const std::vector<T>& src, const std::array<int, 2>& src_size, const std::array<int, 2>& src_offset,
-                const std::array<int, 2>& copy_size)
+void copy_image(
+        std::vector<T>* dst,
+        const std::array<int, 2>& dst_size,
+        const std::array<int, 2>& dst_offset,
+        const std::vector<T>& src,
+        const std::array<int, 2>& src_size,
+        const std::array<int, 2>& src_offset,
+        const std::array<int, 2>& copy_size)
 {
         ASSERT(dst);
-        ASSERT(src.size() == std::accumulate(src_size.begin(), src_size.end(), 1ull, std::multiplies<unsigned long long>()));
-        ASSERT(dst->size() == std::accumulate(dst_size.begin(), dst_size.end(), 1ull, std::multiplies<unsigned long long>()));
+        ASSERT(src.size() ==
+               std::accumulate(src_size.begin(), src_size.end(), 1ull, std::multiplies<unsigned long long>()));
+        ASSERT(dst->size() ==
+               std::accumulate(dst_size.begin(), dst_size.end(), 1ull, std::multiplies<unsigned long long>()));
         ASSERT(check(src_offset, copy_size, src_size));
         ASSERT(check(dst_offset, copy_size, dst_size));
 
@@ -68,15 +81,21 @@ void copy_image(std::vector<T>* dst, const std::array<int, 2>& dst_size, const s
 }
 
 template <typename T>
-void copy_image(std::vector<T>* dst, const std::array<int, 2>& dst_size, const std::array<int, 2>& dst_offset,
-                const std::vector<T>& src, const std::array<int, 2>& src_size)
+void copy_image(
+        std::vector<T>* dst,
+        const std::array<int, 2>& dst_size,
+        const std::array<int, 2>& dst_offset,
+        const std::vector<T>& src,
+        const std::array<int, 2>& src_size)
 {
         copy_image(dst, dst_size, dst_offset, src, src_size, {0, 0}, src_size);
 }
 
-void render_glyphs(const std::vector<char32_t>& code_points, const Font& font,
-                   std::unordered_map<char32_t, FontGlyph>* font_glyphs,
-                   std::unordered_map<char32_t, std::vector<std::uint_least8_t>>* glyph_pixels)
+void render_glyphs(
+        const std::vector<char32_t>& code_points,
+        const Font& font,
+        std::unordered_map<char32_t, FontGlyph>* font_glyphs,
+        std::unordered_map<char32_t, std::vector<std::uint_least8_t>>* glyph_pixels)
 {
         font_glyphs->clear();
         glyph_pixels->clear();
@@ -121,9 +140,13 @@ void render_glyphs(const std::vector<char32_t>& code_points, const Font& font,
 }
 
 template <typename Key, typename Value>
-void place_rectangles_on_rectangle(const std::unordered_map<Key, Value>& rectangles, int max_rectangle_width,
-                                   int max_rectangle_height, int* rectangle_width, int* rectangle_height,
-                                   std::unordered_map<Key, std::array<int, 2>>* rectangle_coordinates)
+void place_rectangles_on_rectangle(
+        const std::unordered_map<Key, Value>& rectangles,
+        int max_rectangle_width,
+        int max_rectangle_height,
+        int* rectangle_width,
+        int* rectangle_height,
+        std::unordered_map<Key, std::array<int, 2>>* rectangle_coordinates)
 {
         rectangle_coordinates->clear();
         rectangle_coordinates->reserve(rectangles.size());
@@ -168,9 +191,12 @@ void place_rectangles_on_rectangle(const std::unordered_map<Key, Value>& rectang
 }
 
 void fill_texture_pixels_and_texture_coordinates(
-        int texture_width, int texture_height, const std::unordered_map<char32_t, std::vector<std::uint_least8_t>>& glyph_pixels,
+        int texture_width,
+        int texture_height,
+        const std::unordered_map<char32_t, std::vector<std::uint_least8_t>>& glyph_pixels,
         const std::unordered_map<char32_t, std::array<int, 2>>& glyph_coordinates,
-        std::unordered_map<char32_t, FontGlyph>* font_glyphs, std::vector<std::uint_least8_t>* texture_pixels)
+        std::unordered_map<char32_t, FontGlyph>* font_glyphs,
+        std::vector<std::uint_least8_t>* texture_pixels)
 {
         texture_pixels->clear();
         texture_pixels->resize(1ull * texture_width * texture_height, 0);
@@ -186,8 +212,9 @@ void fill_texture_pixels_and_texture_coordinates(
                 const std::vector<std::uint_least8_t>& pixels = glyph_pixels.find(cp)->second;
                 const std::array<int, 2>& coordinates = glyph_coordinates.find(cp)->second;
 
-                copy_image(texture_pixels, {texture_width, texture_height}, coordinates, pixels,
-                           {font_glyph.width, font_glyph.height});
+                copy_image(
+                        texture_pixels, {texture_width, texture_height}, coordinates, pixels,
+                        {font_glyph.width, font_glyph.height});
 
                 font_glyph.s0 = r_width * coordinates[0];
                 font_glyph.s1 = r_width * (coordinates[0] + font_glyph.width);
@@ -198,8 +225,14 @@ void fill_texture_pixels_and_texture_coordinates(
 }
 }
 
-void create_font_glyphs(const Font& font, int max_width, int max_height, std::unordered_map<char32_t, FontGlyph>* font_glyphs,
-                        int* texture_width, int* texture_height, std::vector<std::uint_least8_t>* texture_pixels)
+void create_font_glyphs(
+        const Font& font,
+        int max_width,
+        int max_height,
+        std::unordered_map<char32_t, FontGlyph>* font_glyphs,
+        int* texture_width,
+        int* texture_height,
+        std::vector<std::uint_least8_t>* texture_pixels)
 {
         std::unordered_map<char32_t, std::vector<std::uint_least8_t>> glyph_pixels;
 
@@ -207,10 +240,11 @@ void create_font_glyphs(const Font& font, int max_width, int max_height, std::un
 
         std::unordered_map<char32_t, std::array<int, 2>> glyph_coordinates;
 
-        place_rectangles_on_rectangle(*font_glyphs, max_width, max_height, texture_width, texture_height, &glyph_coordinates);
+        place_rectangles_on_rectangle(
+                *font_glyphs, max_width, max_height, texture_width, texture_height, &glyph_coordinates);
 
-        fill_texture_pixels_and_texture_coordinates(*texture_width, *texture_height, glyph_pixels, glyph_coordinates, font_glyphs,
-                                                    texture_pixels);
+        fill_texture_pixels_and_texture_coordinates(
+                *texture_width, *texture_height, glyph_pixels, glyph_coordinates, font_glyphs, texture_pixels);
 
         if ((false))
         {

@@ -45,7 +45,8 @@ class TextShaderMemory final
         opengl::Buffer m_drawing;
 
 public:
-        TextShaderMemory() : m_matrices(sizeof(Matrices), GL_MAP_WRITE_BIT), m_drawing(sizeof(Drawing), GL_MAP_WRITE_BIT)
+        TextShaderMemory()
+                : m_matrices(sizeof(Matrices), GL_MAP_WRITE_BIT), m_drawing(sizeof(Drawing), GL_MAP_WRITE_BIT)
         {
         }
 

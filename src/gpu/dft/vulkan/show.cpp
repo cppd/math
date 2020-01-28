@@ -82,8 +82,9 @@ class Impl final : public DftShow
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
 
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
-                                        DftShowMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
+                        DftShowMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
 
                 const std::array<VkBuffer, 1> buffers{*m_vertices};
                 const std::array<VkDeviceSize, 1> offsets{0};
@@ -92,9 +93,17 @@ class Impl final : public DftShow
                 vkCmdDraw(command_buffer, VERTEX_COUNT, 1, 0, 0);
         }
 
-        void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& input, unsigned src_x, unsigned src_y,
-                            unsigned src_width, unsigned src_height, unsigned dst_x, unsigned dst_y, unsigned dst_width,
-                            unsigned dst_height) override
+        void create_buffers(
+                RenderBuffers2D* render_buffers,
+                const vulkan::ImageWithMemory& input,
+                unsigned src_x,
+                unsigned src_y,
+                unsigned src_width,
+                unsigned src_height,
+                unsigned dst_x,
+                unsigned dst_y,
+                unsigned dst_width,
+                unsigned dst_height) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -103,18 +112,19 @@ class Impl final : public DftShow
                 ASSERT(src_width == dst_width && src_height == dst_height);
 
                 const bool storage = true;
-                m_image = std::make_unique<vulkan::ImageWithMemory>(m_device, m_graphics_command_pool, m_graphics_queue,
-                                                                    std::unordered_set<uint32_t>({m_graphics_family_index}),
-                                                                    std::vector<VkFormat>({IMAGE_FORMAT}), src_width, src_height,
-                                                                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, storage);
+                m_image = std::make_unique<vulkan::ImageWithMemory>(
+                        m_device, m_graphics_command_pool, m_graphics_queue,
+                        std::unordered_set<uint32_t>({m_graphics_family_index}), std::vector<VkFormat>({IMAGE_FORMAT}),
+                        src_width, src_height, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, storage);
 
                 m_memory.set_image(m_sampler, *m_image);
 
-                m_pipeline = m_program.create_pipeline(render_buffers->render_pass(), render_buffers->sample_count(), dst_x,
-                                                       dst_y, dst_width, dst_height);
+                m_pipeline = m_program.create_pipeline(
+                        render_buffers->render_pass(), render_buffers->sample_count(), dst_x, dst_y, dst_width,
+                        dst_height);
 
-                m_compute->create_buffers(m_sampler, input, *m_image, src_x, src_y, src_width, src_height,
-                                          m_graphics_family_index);
+                m_compute->create_buffers(
+                        m_sampler, input, *m_image, src_x, src_y, src_width, src_height, m_graphics_family_index);
 
                 vulkan::CommandBufferCreateInfo info;
                 info.device = m_device;
@@ -156,8 +166,9 @@ class Impl final : public DftShow
 
                 const unsigned buffer_index = m_command_buffers->count() == 1 ? 0 : image_index;
 
-                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[buffer_index],
-                                     m_signal_semaphore, queue);
+                vulkan::queue_submit(
+                        wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[buffer_index],
+                        m_signal_semaphore, queue);
 
                 return m_signal_semaphore;
         }
@@ -190,16 +201,20 @@ class Impl final : public DftShow
                 m_vertices.reset();
                 m_vertices = std::make_unique<vulkan::BufferWithMemory>(
                         m_device, m_transfer_command_pool, m_transfer_queue,
-                        std::unordered_set<uint32_t>({m_graphics_queue.family_index(), m_transfer_queue.family_index()}),
+                        std::unordered_set<uint32_t>(
+                                {m_graphics_queue.family_index(), m_transfer_queue.family_index()}),
                         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, data_size(vertices), vertices);
 
                 ASSERT(m_vertices->usage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT));
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
-             const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-             const vulkan::Queue& transfer_queue, bool /*sample_shading*/)
+        Impl(const vulkan::VulkanInstance& instance,
+             const vulkan::CommandPool& graphics_command_pool,
+             const vulkan::Queue& graphics_queue,
+             const vulkan::CommandPool& transfer_command_pool,
+             const vulkan::Queue& transfer_queue,
+             bool /*sample_shading*/)
                 : // m_sample_shading(sample_shading),
                   m_instance(instance),
                   m_device(instance.device()),
@@ -212,8 +227,12 @@ public:
                   m_program(instance.device()),
                   m_memory(instance.device(), m_program.descriptor_set_layout(), {graphics_queue.family_index()}),
                   m_sampler(create_dft_sampler(instance.device())),
-                  m_compute(create_dft_compute_image(instance, graphics_command_pool, graphics_queue, transfer_command_pool,
-                                                     transfer_queue))
+                  m_compute(create_dft_compute_image(
+                          instance,
+                          graphics_command_pool,
+                          graphics_queue,
+                          transfer_command_pool,
+                          transfer_queue))
         {
                 create_vertices();
         }
@@ -231,15 +250,20 @@ public:
 
 std::vector<vulkan::PhysicalDeviceFeatures> DftShow::required_device_features()
 {
-        return merge<vulkan::PhysicalDeviceFeatures>(std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),
-                                                     DftComputeImage::required_device_features());
+        return merge<vulkan::PhysicalDeviceFeatures>(
+                std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),
+                DftComputeImage::required_device_features());
 }
 
-std::unique_ptr<DftShow> create_dft_show(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
-                                         const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-                                         const vulkan::Queue& transfer_queue, bool sample_shading)
+std::unique_ptr<DftShow> create_dft_show(
+        const vulkan::VulkanInstance& instance,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue,
+        bool sample_shading)
 {
-        return std::make_unique<Impl>(instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                                      sample_shading);
+        return std::make_unique<Impl>(
+                instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading);
 }
 }

@@ -59,11 +59,17 @@ class Mesh
 
         Vector<N, T> m_min, m_max;
 
-        void create_mesh_object(const Obj<N>* obj, const Matrix<N + 1, N + 1, T>& vertex_matrix, unsigned thread_count,
-                                ProgressRatio* progress);
+        void create_mesh_object(
+                const Obj<N>* obj,
+                const Matrix<N + 1, N + 1, T>& vertex_matrix,
+                unsigned thread_count,
+                ProgressRatio* progress);
 
 public:
-        Mesh(const Obj<N>* obj, const Matrix<N + 1, N + 1, T>& vertex_matrix, unsigned thread_count, ProgressRatio* progress);
+        Mesh(const Obj<N>* obj,
+             const Matrix<N + 1, N + 1, T>& vertex_matrix,
+             unsigned thread_count,
+             ProgressRatio* progress);
 
         ~Mesh() = default;
 

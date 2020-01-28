@@ -50,10 +50,14 @@ enum class RendererDepthBufferCount
         Swapchain
 };
 
-std::unique_ptr<RendererDepthBuffers> create_renderer_depth_buffers(RendererDepthBufferCount buffer_count,
-                                                                    const vulkan::Swapchain& swapchain,
-                                                                    const std::unordered_set<uint32_t>& attachment_family_indices,
-                                                                    VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                                                                    const vulkan::Device& device, unsigned width, unsigned height,
-                                                                    double zoom);
+std::unique_ptr<RendererDepthBuffers> create_renderer_depth_buffers(
+        RendererDepthBufferCount buffer_count,
+        const vulkan::Swapchain& swapchain,
+        const std::unordered_set<uint32_t>& attachment_family_indices,
+        VkCommandPool graphics_command_pool,
+        VkQueue graphics_queue,
+        const vulkan::Device& device,
+        unsigned width,
+        unsigned height,
+        double zoom);
 }

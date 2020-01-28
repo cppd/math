@@ -132,9 +132,18 @@ class Impl final : public DFTShow
         }
 
 public:
-        Impl(const opengl::Texture& source, unsigned src_x, unsigned src_y, unsigned src_width, unsigned src_height,
-             unsigned dst_x, unsigned dst_y, unsigned dst_width, unsigned dst_height, double brightness,
-             const Color& background_color, const Color& color)
+        Impl(const opengl::Texture& source,
+             unsigned src_x,
+             unsigned src_y,
+             unsigned src_width,
+             unsigned src_height,
+             unsigned dst_x,
+             unsigned dst_y,
+             unsigned dst_width,
+             unsigned dst_height,
+             double brightness,
+             const Color& background_color,
+             const Color& color)
                 : m_result(IMAGE_FORMAT, src_width, src_height),
                   m_dft(gpu_opengl::create_dft_compute_texture(source, src_x, src_y, src_width, src_height, m_result)),
                   m_draw_prog(opengl::VertexShader(dft_show_vert()), opengl::FragmentShader(dft_show_frag())),
@@ -167,13 +176,23 @@ public:
 };
 }
 
-std::unique_ptr<DFTShow> create_dft_show(const opengl::Texture& source, unsigned src_x, unsigned src_y, unsigned src_width,
-                                         unsigned src_height, unsigned dst_x, unsigned dst_y, unsigned dst_width,
-                                         unsigned dst_height, double brightness, const Color& background_color,
-                                         const Color& color)
+std::unique_ptr<DFTShow> create_dft_show(
+        const opengl::Texture& source,
+        unsigned src_x,
+        unsigned src_y,
+        unsigned src_width,
+        unsigned src_height,
+        unsigned dst_x,
+        unsigned dst_y,
+        unsigned dst_width,
+        unsigned dst_height,
+        double brightness,
+        const Color& background_color,
+        const Color& color)
 {
-        return std::make_unique<Impl>(source, src_x, src_y, src_width, src_height, dst_x, dst_y, dst_width, dst_height,
-                                      brightness, background_color, color);
+        return std::make_unique<Impl>(
+                source, src_x, src_y, src_width, src_height, dst_x, dst_y, dst_width, dst_height, brightness,
+                background_color, color);
 }
 }
 

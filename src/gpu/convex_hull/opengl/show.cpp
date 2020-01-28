@@ -52,7 +52,8 @@ class Impl final : public ConvexHullShow
         {
                 int point_count = m_convex_hull->exec();
 
-                float brightness = 0.5 + 0.5 * std::sin(CONVEX_HULL_ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
+                float brightness =
+                        0.5 + 0.5 * std::sin(CONVEX_HULL_ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_shader_memory.set_brightness(brightness);
 
                 glViewport(m_x, m_y, m_width, m_height);
@@ -62,7 +63,9 @@ class Impl final : public ConvexHullShow
 
 public:
         Impl(const opengl::Texture& objects, unsigned x, unsigned y, unsigned width, unsigned height)
-                : m_draw_prog(opengl::VertexShader(convex_hull_show_vert()), opengl::FragmentShader(convex_hull_show_frag())),
+                : m_draw_prog(
+                          opengl::VertexShader(convex_hull_show_vert()),
+                          opengl::FragmentShader(convex_hull_show_frag())),
                   m_points(convex_hull_points_buffer_size(height), 0),
                   m_start_time(time_in_seconds()),
                   m_x(x),
@@ -92,8 +95,12 @@ public:
 };
 }
 
-std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::Texture& objects, unsigned x, unsigned y, unsigned width,
-                                                        unsigned height)
+std::unique_ptr<ConvexHullShow> create_convex_hull_show(
+        const opengl::Texture& objects,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height)
 {
         return std::make_unique<Impl>(objects, x, y, width, height);
 }
