@@ -1,5 +1,5 @@
 AccessModifierOffset: -8
-AlignAfterOpenBracket: Align
+AlignAfterOpenBracket: AlwaysBreak
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
 AlignConsecutiveMacros: false
@@ -19,7 +19,7 @@ AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: true
 AlwaysBreakTemplateDeclarations: true
 BinPackArguments: true
-BinPackParameters: true
+BinPackParameters: false
 BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Custom
 BraceWrapping:
@@ -38,12 +38,11 @@ BraceWrapping:
         SplitEmptyFunction: true
         SplitEmptyRecord: true
         SplitEmptyNamespace: true
-BreakBeforeInheritanceComma: false
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: BeforeColon
 BreakStringLiterals: false
-ColumnLimit: 130
+ColumnLimit: 120
 CompactNamespaces: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 8
@@ -65,7 +64,7 @@ IncludeCategories:
 IndentCaseLabels: false
 IndentPPDirectives: None
 IndentWidth: 8
-IndentWrappedFunctionNames: false
+IndentWrappedFunctionNames: true
 KeepEmptyLinesAtTheStartOfBlocks: false
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
@@ -76,9 +75,9 @@ PenaltyBreakFirstLessLess: 120
 PenaltyBreakString: 1000
 PenaltyBreakTemplateDeclaration: 0
 PenaltyExcessCharacter: 900
-PenaltyReturnTypeOnItsOwnLine: 200
+PenaltyReturnTypeOnItsOwnLine: 1000
 PointerAlignment: Left
-ReflowComments: true
+ReflowComments: false
 SortIncludes: true
 SortUsingDeclarations: true
 SpaceAfterCStyleCast: false
