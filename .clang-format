@@ -59,8 +59,10 @@ IncludeCategories:
     Priority:        10
   - Regex:           '^".*"$'
     Priority:        20
-  - Regex:           '^<.*>$'
+  - Regex:           '^<src\/.*>$'
     Priority:        40
+  - Regex:           '^<.*>$'
+    Priority:        50
 IndentCaseLabels: false
 IndentPPDirectives: None
 IndentWidth: 8
