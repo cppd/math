@@ -124,19 +124,6 @@ function(AddSourceFiles TARGET_TYPE)
                 message(FATAL_ERROR "Unknown target type ${TARGET_TYPE}")
         endif()
 
-        #   CMake при использовании target_include_directories вставляет -I,
-        # а значит оба #include<> и #include"" будут тут искать, хотя надо -iquote,
-        # чтобы поиск был только для #include"", не задевая поиск для #include<>.
-        #   Если добавить -iquote к флагам компилятора, то перестают работать
-        # зависимости и изменения в заголовочных файлах не замечаются.
-        # string(CONCAT CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" " -iquote " "${PROJECT_SOURCE_DIR}/${dir}")
-        # string(CONCAT CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" " -iquote " "${PROJECT_SOURCE_DIR}/${dir}")
-        #   Добавление самого верхнего уровня может привести к совпадениям с системными
-        # файлами из-за использования -I в target_include_directories
-        foreach(dir ${ARG_DIRECTORIES})
-                target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/${dir}")
-        endforeach()
-
         #target_link_libraries(${PROJECT_NAME} -static-libgcc -static-libstdc++)
         #target_link_libraries(${PROJECT_NAME} -s)
 
@@ -147,12 +134,12 @@ function(AddSourceFiles TARGET_TYPE)
         target_compile_definitions(${PROJECT_NAME} PRIVATE -DNDEBUG)
 
         #-pedantic -pedantic-errors
-        #-fopt-info-missed -fopt-info-vec-missed -O3 -ffast-math -march=native -pg
+        #-fopt-info-missed -fopt-info-vec-missed -O3 -ffast-math -mavx -mfma -pg
 
         target_link_libraries(${PROJECT_NAME} -pthread)
         target_compile_options(${PROJECT_NAME} PRIVATE -pthread)
 
-        target_compile_options(${PROJECT_NAME} PRIVATE -Ofast -mavx -mfma)
+        target_compile_options(${PROJECT_NAME} PRIVATE -Ofast -march=native)
         target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>: -fno-rtti -fstrict-enums >)
 
         target_compile_options(${PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:Clang>: -mllvm -inline-threshold=10000 >)
@@ -371,6 +358,10 @@ AddIncludeFiles(BINARY_FILES
                         OUTPUT_EXTENSION "bin"
                         SOURCE "extern/resources"
                         EXTENSIONS ${extensions_binary})
+
+# CMake при использовании target_include_directories вставляет -I
+target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}")
+target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/src")
 
 #target_compile_options(${PROJECT_NAME} PRIVATE -S -masm=intel)
 
