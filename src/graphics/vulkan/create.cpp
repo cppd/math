@@ -21,10 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print.h"
 #include "query.h"
 
-#include "application/name.h"
-#include "com/error.h"
-#include "com/log.h"
-#include "com/string/vector.h"
+#include <src/application/name.h>
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/util/string/vector.h>
 
 #include <unordered_set>
 

@@ -25,16 +25,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "constraint.h"
 #include "shape_intersection.h"
 
-#include "com/error.h"
-#include "com/print.h"
-#include "com/ray.h"
-#include "com/type/limit.h"
-#include "com/vec.h"
-#include "geometry/core/array_elements.h"
-#include "geometry/core/linear_algebra.h"
-#include "painter/space/constraint.h"
+#include <src/com/error.h>
+#include <src/com/print.h>
+#include <src/com/type/limit.h>
+#include <src/geometry/core/array_elements.h>
+#include <src/geometry/core/linear_algebra.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vec.h>
 
 #include <algorithm>
 #include <array>

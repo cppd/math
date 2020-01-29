@@ -19,21 +19,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obj_file.h"
 
-#include "com/error.h"
-#include "com/file/file_read.h"
-#include "com/file/file_sys.h"
-#include "com/image_file.h"
-#include "com/log.h"
-#include "com/math.h"
-#include "com/print.h"
-#include "com/string/ascii.h"
-#include "com/string/str.h"
-#include "com/thread.h"
-#include "com/time.h"
-#include "com/type/limit.h"
-#include "com/type/name.h"
-#include "com/type/trait.h"
-#include "obj/alg/alg.h"
+#include "../alg/alg.h"
+
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/math.h>
+#include <src/com/print.h>
+#include <src/com/thread.h>
+#include <src/com/time.h>
+#include <src/com/type/limit.h>
+#include <src/com/type/name.h>
+#include <src/com/type/trait.h>
+#include <src/image/file.h>
+#include <src/util/file/read.h>
+#include <src/util/file/sys.h>
+#include <src/util/string/ascii.h>
+#include <src/util/string/str.h>
 
 #include <cstdio>
 #include <cstdlib>

@@ -53,8 +53,8 @@ Princeton University Press, 2011.
 
 #pragma once
 
-#include "com/vec.h"
-#include "numerical/matrix.h"
+#include <src/numerical/matrix.h>
+#include <src/numerical/vec.h>
 
 #include <array>
 #include <vector>

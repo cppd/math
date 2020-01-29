@@ -19,13 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_hyperplane_simplex.h"
 
-#include "com/color/color.h"
-#include "numerical/matrix.h"
-#include "obj/obj.h"
-#include "painter/image/image.h"
-#include "painter/space/parallelotope_ortho.h"
-#include "painter/space/tree.h"
-#include "progress/progress.h"
+#include "../space/parallelotope_ortho.h"
+#include "../space/tree.h"
+
+#include <src/color/color.h>
+#include <src/image/image.h>
+#include <src/numerical/matrix.h>
+#include <src/obj/obj.h>
+#include <src/progress/progress.h>
 
 #include <optional>
 

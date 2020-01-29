@@ -17,13 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/color/color.h"
-#include "com/type/limit.h"
-#include "painter/objects.h"
-#include "painter/shapes/mesh.h"
-#include "painter/visible_lights.h"
-#include "painter/visible_projectors.h"
-#include "painter/visible_shapes.h"
+#include "../objects.h"
+#include "../shapes/mesh.h"
+#include "../visible_lights.h"
+#include "../visible_projectors.h"
+#include "../visible_shapes.h"
+
+#include <src/color/color.h>
+#include <src/com/type/limit.h>
 
 #include <memory>
 

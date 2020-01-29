@@ -17,10 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/ray.h"
-#include "com/vec.h"
-#include "geometry/core/linear_algebra.h"
-#include "painter/space/hyperplane_geometry.h"
+#include "hyperplane_geometry.h"
+
+#include <src/geometry/core/linear_algebra.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vec.h>
 
 template <size_t N, typename T>
 class HyperplaneParallelotope

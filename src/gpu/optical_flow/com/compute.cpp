@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute.h"
 
-//#include "com/log.h"
-//#include "com/print.h"
+//#include <src/com/log.h>
+//#include <src/com/print.h>
 
-#include "com/groups.h"
+#include "../../com/groups.h"
 
 std::vector<vec2i> optical_flow_pyramid_sizes(int width, int height, int min_size)
 {

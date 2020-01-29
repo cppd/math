@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/type/limit.h"
-#include "com/type/trait.h"
-#include "com/vec.h"
-#include "numerical/quadratic.h"
+#include <src/com/type/limit.h>
+#include <src/com/type/trait.h>
+#include <src/numerical/quadratic.h>
+#include <src/numerical/vec.h>
 
 #include <cmath>
 

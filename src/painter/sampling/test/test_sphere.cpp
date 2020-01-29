@@ -17,15 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_sphere.h"
 
-#include "com/error.h"
-#include "com/log.h"
-#include "com/names.h"
-#include "com/random/engine.h"
-#include "com/random/vector.h"
-#include "com/time.h"
-#include "com/type/limit.h"
-#include "com/type/name.h"
-#include "painter/sampling/sphere.h"
+#include "../sphere.h"
+
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/names.h>
+#include <src/com/time.h>
+#include <src/com/type/limit.h>
+#include <src/com/type/name.h>
+#include <src/numerical/random.h>
+#include <src/util/random/engine.h>
 
 #include <map>
 

@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "gauss.h"
+#include "vec.h"
 
-#include "com/type/trait.h"
-#include "com/vec.h"
+#include <src/com/type/trait.h>
 
 #include <string>
 #include <type_traits>

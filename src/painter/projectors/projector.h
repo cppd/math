@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/error.h"
-#include "com/math.h"
-#include "com/print.h"
-#include "com/ray.h"
-#include "com/type/limit.h"
-#include "com/vec.h"
+#include <src/com/error.h>
+#include <src/com/math.h>
+#include <src/com/print.h>
+#include <src/com/type/limit.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vec.h>
 
 namespace projector_implementation
 {

@@ -17,17 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter.h"
 
-#include "com/alg.h"
-#include "com/color/color.h"
-#include "com/error.h"
-#include "com/global_index.h"
-#include "com/random/engine.h"
-#include "com/thread.h"
-#include "com/type/limit.h"
-#include "painter/coefficient/cosine_sphere.h"
-#include "painter/sampling/sampler.h"
-#include "painter/sampling/sphere.h"
-#include "painter/space/ray_intersection.h"
+#include "coefficient/cosine_sphere.h"
+#include "sampling/sampler.h"
+#include "sampling/sphere.h"
+#include "space/ray_intersection.h"
+
+#include <src/color/color.h>
+#include <src/com/alg.h>
+#include <src/com/error.h>
+#include <src/com/global_index.h>
+#include <src/com/thread.h>
+#include <src/com/type/limit.h>
+#include <src/util/random/engine.h>
 
 #include <random>
 #include <thread>

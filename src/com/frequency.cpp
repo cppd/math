@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "frequency.h"
 
-#include "com/error.h"
-#include "com/math.h"
-#include "com/time.h"
+#include "error.h"
+#include "math.h"
+#include "time.h"
 
 namespace
 {

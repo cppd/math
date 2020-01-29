@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/color/color.h"
-#include "com/ray.h"
-#include "com/vec.h"
+#include <src/color/color.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vec.h>
 
 #include <vector>
 

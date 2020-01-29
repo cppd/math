@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "points.h"
 
-#include "com/error.h"
-#include "com/math.h"
-#include "com/quaternion.h"
+#include <src/com/error.h>
+#include <src/com/math.h>
+#include <src/numerical/quaternion.h>
 
 #include <map>
 #include <random>

@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/vec.h"
-#include "progress/progress.h"
+#include <src/numerical/vec.h>
+#include <src/progress/progress.h>
 
 #include <array>
 #include <list>

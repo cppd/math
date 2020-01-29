@@ -22,11 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obj_file.h"
 
-#include "com/error.h"
-#include "com/file/file_sys.h"
-#include "com/print.h"
-#include "com/string/ascii.h"
-#include "com/string/str.h"
+#include <src/com/error.h>
+#include <src/com/print.h>
+#include <src/util/file/sys.h>
+#include <src/util/string/ascii.h>
+#include <src/util/string/str.h>
 
 #include <algorithm>
 #include <fstream>

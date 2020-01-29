@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "self_test.h"
 
-#include "com/names.h"
-#include "com/string/str.h"
-#include "geometry/test/test_convex_hull.h"
-#include "geometry/test/test_reconstruction.h"
-#include "gpu/dft/test/test_dft.h"
-#include "painter/shapes/test/test_mesh.h"
-#include "painter/space/test/test_parallelotope.h"
+#include <src/com/names.h>
+#include <src/geometry/test/test_convex_hull.h>
+#include <src/geometry/test/test_reconstruction.h>
+#include <src/gpu/dft/test/test_dft.h>
+#include <src/painter/shapes/test/test_mesh.h>
+#include <src/painter/space/test/test_parallelotope.h>
+#include <src/util/string/str.h>
 
 namespace
 {

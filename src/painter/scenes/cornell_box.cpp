@@ -17,12 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "cornell_box.h"
 
-#include "com/color/colors.h"
-#include "obj/alg/alg.h"
-#include "obj/file/file_load.h"
-#include "painter/visible_lights.h"
-#include "painter/visible_projectors.h"
-#include "painter/visible_shapes.h"
+#include "../visible_lights.h"
+#include "../visible_projectors.h"
+#include "../visible_shapes.h"
+
+#include <src/color/colors.h>
+#include <src/obj/alg/alg.h>
+#include <src/obj/file/file_load.h>
 
 namespace
 {

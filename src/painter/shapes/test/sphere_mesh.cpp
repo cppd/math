@@ -17,12 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sphere_mesh.h"
 
-#include "com/names.h"
-#include "com/random/engine.h"
-#include "com/time.h"
-#include "geometry/core/convex_hull.h"
-#include "obj/create/facets.h"
-#include "painter/sampling/sphere.h"
+#include "../../sampling/sphere.h"
+
+#include <src/com/names.h>
+#include <src/com/time.h>
+#include <src/geometry/core/convex_hull.h>
+#include <src/obj/create/facets.h>
+#include <src/util/random/engine.h>
 
 #include <array>
 #include <random>

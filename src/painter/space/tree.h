@@ -28,13 +28,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "parallelotope_wrapper.h"
 #include "shape_intersection.h"
 
-#include "com/arrays.h"
-#include "com/error.h"
-#include "com/ray.h"
-#include "com/thread.h"
-#include "com/type/limit.h"
-#include "com/vec.h"
-#include "progress/progress.h"
+#include <src/com/arrays.h>
+#include <src/com/error.h>
+#include <src/com/thread.h>
+#include <src/com/type/limit.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vec.h>
+#include <src/progress/progress.h>
 
 #include <algorithm>
 #include <array>

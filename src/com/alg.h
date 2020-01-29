@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
-#include "com/type/limit.h"
-#include "com/type/trait.h"
+#include "type/limit.h"
+#include "type/trait.h"
 
 #include <algorithm>
 #include <type_traits>

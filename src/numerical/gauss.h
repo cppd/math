@@ -26,8 +26,8 @@ Cambridge University Press.
 
 #pragma once
 
-#include "com/math.h"
-#include "com/type/trait.h"
+#include <src/com/math.h>
+#include <src/com/type/trait.h>
 
 namespace numerical
 {

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "glsl.h"
 
-#include "com/vec.h"
+#include <src/numerical/vec.h>
 
 static_assert(sizeof(vec2f) == 2 * sizeof(float));
 static_assert(sizeof(vec3f) == 3 * sizeof(float));

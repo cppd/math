@@ -17,16 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_complement.h"
 
-#include "com/log.h"
-#include "com/math.h"
-#include "com/names.h"
-#include "com/random/engine.h"
-#include "com/random/vector.h"
-#include "com/time.h"
-#include "com/type/limit.h"
-#include "com/type/name.h"
-#include "geometry/core/complement.h"
-#include "geometry/core/linear_algebra.h"
+#include "../core/complement.h"
+#include "../core/linear_algebra.h"
+
+#include <src/com/log.h>
+#include <src/com/math.h>
+#include <src/com/names.h>
+#include <src/com/time.h>
+#include <src/com/type/limit.h>
+#include <src/com/type/name.h>
+#include <src/numerical/random.h>
+#include <src/util/random/engine.h>
 
 #include <random>
 

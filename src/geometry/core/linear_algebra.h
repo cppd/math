@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "array_elements.h"
 
-#include "com/arrays.h"
-#include "com/combinatorics.h"
-#include "com/math.h"
-#include "com/type/trait.h"
-#include "com/vec.h"
+#include <src/com/arrays.h>
+#include <src/com/combinatorics.h>
+#include <src/com/math.h>
+#include <src/com/type/trait.h>
+#include <src/numerical/vec.h>
 
 #include <array>
 #include <gmpxx.h>

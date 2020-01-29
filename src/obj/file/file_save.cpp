@@ -19,14 +19,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obj_file.h"
 
-#include "com/file/file.h"
-#include "com/file/file_sys.h"
-#include "com/log.h"
-#include "com/print.h"
-#include "com/string/str.h"
-#include "com/time.h"
-#include "com/type/limit.h"
-#include "obj/alg/alg.h"
+#include "../alg/alg.h"
+
+#include <src/com/log.h>
+#include <src/com/print.h>
+#include <src/com/time.h>
+#include <src/com/type/limit.h>
+#include <src/util/file/file.h>
+#include <src/util/file/sys.h>
+#include <src/util/string/str.h>
 
 constexpr const char* OBJ_comment_and_space = "# ";
 constexpr const char* OBJ_v = "v";

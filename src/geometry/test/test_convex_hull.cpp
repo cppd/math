@@ -17,12 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_convex_hull.h"
 
-#include "com/log.h"
-#include "com/names.h"
-#include "com/random/engine.h"
-#include "com/time.h"
-#include "geometry/core/convex_hull.h"
-#include "geometry/core/ridge.h"
+#include "../core/convex_hull.h"
+#include "../core/ridge.h"
+
+#include <src/com/log.h>
+#include <src/com/names.h>
+#include <src/com/time.h>
+#include <src/util/random/engine.h>
 
 #include <random>
 #include <unordered_map>

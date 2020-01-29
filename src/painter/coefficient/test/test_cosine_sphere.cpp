@@ -17,13 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_cosine_sphere.h"
 
-#include "com/log.h"
-#include "com/random/engine.h"
-#include "com/type/limit.h"
-#include "com/type/name.h"
-#include "com/vec.h"
-#include "painter/coefficient/cosine_sphere.h"
-#include "painter/sampling/sphere.h"
+#include "../../sampling/sphere.h"
+#include "../cosine_sphere.h"
+
+#include <src/com/log.h>
+#include <src/com/type/limit.h>
+#include <src/com/type/name.h>
+#include <src/numerical/vec.h>
+#include <src/util/random/engine.h>
 
 #include <cmath>
 #include <random>

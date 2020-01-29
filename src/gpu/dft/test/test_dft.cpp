@@ -18,24 +18,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "test_dft.h"
 
 #if defined(CUDA_FOUND)
-#include "dft/cufft.h"
-#endif
-#if defined(FFTW_FOUND)
-#include "dft/fftw.h"
-#endif
-#if defined(OPENGL_FOUND)
-#include "gpu/dft/opengl/compute.h"
-#include "window/opengl/window.h"
+#include <src/dft/cufft.h>
 #endif
 
-#include "com/error.h"
-#include "com/file/file.h"
-#include "com/file/file_sys.h"
-#include "com/log.h"
-#include "com/print.h"
-#include "com/random/engine.h"
-#include "com/time.h"
-#include "gpu/dft/vulkan/compute.h"
+#if defined(FFTW_FOUND)
+#include <src/dft/fftw.h>
+#endif
+
+#if defined(OPENGL_FOUND)
+#include "../opengl/compute.h"
+
+#include <src/window/opengl/window.h>
+#endif
+
+#include "../vulkan/compute.h"
+
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/print.h>
+#include <src/com/time.h>
+#include <src/util/file/file.h>
+#include <src/util/file/sys.h>
+#include <src/util/random/engine.h>
 
 #include <array>
 #include <cmath>

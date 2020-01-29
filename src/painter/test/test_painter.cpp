@@ -17,21 +17,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_painter.h"
 
-#include "com/file/file_sys.h"
-#include "com/names.h"
-#include "com/string/str.h"
-#include "com/time.h"
-#include "obj/file/file_load.h"
-#include "painter/image/image.h"
-#include "painter/painter.h"
-#include "painter/scenes/single_object.h"
-#include "painter/shapes/mesh.h"
-#include "painter/shapes/test/sphere_mesh.h"
-#include "painter/visible_lights.h"
-#include "painter/visible_paintbrush.h"
-#include "painter/visible_projectors.h"
-#include "ui/painter_window/painter_window.h"
-#include "ui/support/support.h"
+#include "../painter.h"
+#include "../scenes/single_object.h"
+#include "../shapes/mesh.h"
+#include "../shapes/test/sphere_mesh.h"
+#include "../visible_lights.h"
+#include "../visible_paintbrush.h"
+#include "../visible_projectors.h"
+
+#include <src/com/names.h>
+#include <src/com/time.h>
+#include <src/gui/painter_window/painter_window.h>
+#include <src/gui/support/support.h>
+#include <src/image/image.h>
+#include <src/obj/file/file_load.h>
+#include <src/util/file/sys.h>
+#include <src/util/string/str.h>
 
 constexpr Srgb8 BACKGROUND_COLOR(50, 100, 150);
 constexpr Srgb8 DEFAULT_COLOR(150, 170, 150);

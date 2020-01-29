@@ -17,9 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/arrays.h"
-#include "com/vec.h"
-#include "geometry/core/delaunay.h"
+#include "../core/delaunay.h"
+
+#include <src/com/arrays.h>
+#include <src/numerical/vec.h>
 
 #include <vector>
 

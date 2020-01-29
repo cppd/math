@@ -17,20 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_parallelotope.h"
 
-#include "com/arrays.h"
-#include "com/error.h"
-#include "com/log.h"
-#include "com/names.h"
-#include "com/print.h"
-#include "com/random/engine.h"
-#include "com/random/vector.h"
-#include "com/ray.h"
-#include "com/vec.h"
-#include "painter/space/parallelotope.h"
-#include "painter/space/parallelotope_algorithm.h"
-#include "painter/space/parallelotope_ortho.h"
-#include "painter/space/parallelotope_wrapper.h"
-#include "painter/space/shape_intersection.h"
+#include "../parallelotope.h"
+#include "../parallelotope_algorithm.h"
+#include "../parallelotope_ortho.h"
+#include "../parallelotope_wrapper.h"
+#include "../shape_intersection.h"
+
+#include <src/com/arrays.h>
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/names.h>
+#include <src/com/print.h>
+#include <src/numerical/random.h>
+#include <src/numerical/ray.h>
+#include <src/numerical/vec.h>
+#include <src/util/random/engine.h>
 
 #include <algorithm>
 #include <memory>

@@ -17,19 +17,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_reconstruction.h"
 
-#include "com/error.h"
-#include "com/file/file_sys.h"
-#include "com/log.h"
-#include "com/math.h"
-#include "com/names.h"
-#include "com/print.h"
-#include "com/random/engine.h"
-#include "com/time.h"
-#include "geometry/cocone/reconstruction.h"
-#include "geometry/objects/points.h"
-#include "obj/create/facets.h"
-#include "obj/file/file_load.h"
-#include "obj/file/file_save.h"
+#include "../cocone/reconstruction.h"
+#include "../objects/points.h"
+
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/math.h>
+#include <src/com/names.h>
+#include <src/com/print.h>
+#include <src/com/time.h>
+#include <src/obj/create/facets.h>
+#include <src/obj/file/file_load.h>
+#include <src/obj/file/file_save.h>
+#include <src/util/file/sys.h>
+#include <src/util/random/engine.h>
 
 #include <cmath>
 #include <random>

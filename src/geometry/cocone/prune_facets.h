@@ -17,11 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/error.h"
-#include "com/vec.h"
-#include "geometry/core/delaunay.h"
-#include "geometry/core/linear_algebra.h"
-#include "geometry/core/ridge.h"
+#include "../core/delaunay.h"
+#include "../core/linear_algebra.h"
+#include "../core/ridge.h"
+
+#include <src/com/error.h>
+#include <src/numerical/vec.h>
 
 #include <unordered_map>
 #include <unordered_set>

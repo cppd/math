@@ -24,19 +24,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shader_source.h"
 #include "shader_triangles.h"
 
-#include "com/log.h"
-#include "com/math.h"
-#include "com/string/vector.h"
-#include "com/time.h"
-#include "com/vec.h"
-#include "gpu/renderer/com/storage.h"
-#include "graphics/vulkan/commands.h"
-#include "graphics/vulkan/create.h"
-#include "graphics/vulkan/device.h"
-#include "graphics/vulkan/error.h"
-#include "graphics/vulkan/query.h"
-#include "graphics/vulkan/queue.h"
-#include "numerical/matrix_transform.h"
+#include "../com/storage.h"
+
+#include <src/com/log.h>
+#include <src/com/math.h>
+#include <src/com/time.h>
+#include <src/graphics/vulkan/commands.h>
+#include <src/graphics/vulkan/create.h>
+#include <src/graphics/vulkan/device.h>
+#include <src/graphics/vulkan/error.h>
+#include <src/graphics/vulkan/query.h>
+#include <src/graphics/vulkan/queue.h>
+#include <src/numerical/matrix_transform.h>
+#include <src/numerical/vec.h>
+#include <src/util/string/vector.h>
 
 #include <algorithm>
 #include <thread>

@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/log.h"
-#include "com/print.h"
-#include "com/thread.h"
+#include "log.h"
+#include "print.h"
+#include "thread.h"
 
 #include <atomic>
 #include <condition_variable>

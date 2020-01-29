@@ -17,13 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh.h"
 
-#include "com/log.h"
-#include "com/time.h"
-#include "com/type/limit.h"
-#include "com/vec.h"
-#include "numerical/matrix_alg.h"
-#include "painter/space/hyperplane_simplex_wrapper.h"
-#include "painter/space/ray_intersection.h"
+#include "../space/hyperplane_simplex_wrapper.h"
+#include "../space/ray_intersection.h"
+
+#include <src/com/log.h>
+#include <src/com/time.h>
+#include <src/com/type/limit.h>
+#include <src/numerical/matrix_alg.h>
+#include <src/numerical/vec.h>
 
 #include <algorithm>
 #include <utility>

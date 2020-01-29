@@ -17,14 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/color/color.h"
-#include "com/vec.h"
-#include "gpu/renderer/camera_info.h"
-#include "gpu/vulkan_interfaces.h"
-#include "graphics/vulkan/buffers.h"
-#include "graphics/vulkan/instance.h"
-#include "graphics/vulkan/swapchain.h"
-#include "obj/obj.h"
+#include "../../vulkan_interfaces.h"
+#include "../camera_info.h"
+
+#include <src/color/color.h>
+#include <src/graphics/vulkan/buffers.h>
+#include <src/graphics/vulkan/instance.h>
+#include <src/graphics/vulkan/swapchain.h>
+#include <src/numerical/vec.h>
+#include <src/obj/obj.h>
 
 #include <functional>
 #include <memory>

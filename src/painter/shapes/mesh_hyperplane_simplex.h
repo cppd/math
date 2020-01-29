@@ -17,10 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/ray.h"
-#include "com/vec.h"
-#include "painter/space/constraint.h"
-#include "painter/space/hyperplane_geometry.h"
+#include "../space/constraint.h"
+#include "../space/hyperplane_geometry.h"
+
+#include <src/numerical/ray.h>
+#include <src/numerical/vec.h>
 
 #include <array>
 #include <vector>

@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "queue.h"
 #include "sync.h"
 
-#include "com/color/conversion_span.h"
-#include "com/error.h"
-#include "com/print.h"
+#include <src/color/conversion_span.h>
+#include <src/com/error.h>
+#include <src/com/print.h>
 
 #include <cstring>
 

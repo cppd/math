@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ridge.h"
 #include "voronoi.h"
 
-#include "com/error.h"
-#include "com/vec.h"
+#include <src/com/error.h>
+#include <src/numerical/vec.h>
 
 #include <array>
 #include <unordered_map>

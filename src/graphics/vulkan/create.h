@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-#include "com/color/color.h"
+#include <src/color/color.h>
 
 #include <string>
 #include <vector>

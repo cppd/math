@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/color/color.h"
+#include <src/color/color.h>
 
 #include <vector>
 #include <vulkan/vulkan.h>

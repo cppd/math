@@ -17,10 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/color/color.h"
-#include "com/font/text_data.h"
-#include "gpu/vulkan_interfaces.h"
-#include "graphics/vulkan/instance.h"
+#include "../../vulkan_interfaces.h"
+
+#include <src/color/color.h>
+#include <src/graphics/vulkan/instance.h>
+#include <src/text/text_data.h>
 
 #include <memory>
 #include <vulkan/vulkan.h>

@@ -22,11 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "error.h"
 #include "settings.h"
 
-#include "com/alg.h"
-#include "com/log.h"
-#include "com/merge.h"
-#include "com/print.h"
-#include "com/string/vector.h"
+#include <src/com/alg.h>
+#include <src/com/log.h>
+#include <src/com/merge.h>
+#include <src/com/print.h>
+#include <src/util/string/vector.h>
 
 namespace vulkan
 {

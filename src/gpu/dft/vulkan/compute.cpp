@@ -53,13 +53,14 @@ Chapter 13: FFTs for Arbitrary N.
 #include "compute_mul.h"
 #include "compute_mul_d.h"
 
-#include "com/bits.h"
-#include "com/error.h"
-#include "com/groups.h"
-#include "gpu/dft/com/com.h"
-#include "graphics/vulkan/error.h"
-#include "graphics/vulkan/queue.h"
-#include "graphics/vulkan/sync.h"
+#include "../../com/groups.h"
+#include "../com/com.h"
+
+#include <src/com/bits.h>
+#include <src/com/error.h>
+#include <src/graphics/vulkan/error.h>
+#include <src/graphics/vulkan/queue.h>
+#include <src/graphics/vulkan/sync.h>
 
 #include <optional>
 #include <thread>

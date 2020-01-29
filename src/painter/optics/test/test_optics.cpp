@@ -17,12 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_optics.h"
 
-#include "com/error.h"
-#include "com/log.h"
-#include "com/random/engine.h"
-#include "com/time.h"
-#include "com/type/name.h"
-#include "painter/optics/optics.h"
+#include "../optics.h"
+
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/time.h>
+#include <src/com/type/name.h>
+#include <src/util/random/engine.h>
 
 #include <random>
 #include <vector>

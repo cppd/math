@@ -17,13 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_samplers.h"
 
-#include "com/file/file_sys.h"
-#include "com/log.h"
-#include "com/print.h"
-#include "com/random/engine.h"
-#include "com/time.h"
-#include "com/type/name.h"
-#include "painter/sampling/sampler.h"
+#include "../sampler.h"
+
+#include <src/com/log.h>
+#include <src/com/print.h>
+#include <src/com/time.h>
+#include <src/com/type/name.h>
+#include <src/util/file/sys.h>
+#include <src/util/random/engine.h>
 
 #include <cctype>
 #include <fstream>

@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #if 1
 
 #include "com/error.h"
+#include "gui/application.h"
 #include "init/init.h"
-#include "ui/application.h"
 
 #include <exception>
 

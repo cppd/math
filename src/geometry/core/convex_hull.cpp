@@ -60,17 +60,17 @@ Chapman & Hall/CRC, 2004.
 #include "max_determinant.h"
 #include "ridge.h"
 
-#include "com/combinatorics.h"
-#include "com/error.h"
-#include "com/log.h"
-#include "com/math.h"
-#include "com/names.h"
-#include "com/print.h"
-#include "com/thread_pool.h"
-#include "com/type/integer.h"
-#include "com/type/limit.h"
-#include "com/type/trait.h"
-#include "com/vec.h"
+#include <src/com/combinatorics.h>
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/math.h>
+#include <src/com/names.h>
+#include <src/com/print.h>
+#include <src/com/thread_pool.h>
+#include <src/com/type/find.h>
+#include <src/com/type/limit.h>
+#include <src/com/type/trait.h>
+#include <src/numerical/vec.h>
 
 #include <algorithm>
 #include <cstdint>

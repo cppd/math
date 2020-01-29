@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/type/limit.h"
-#include "com/type/trait.h"
+#include "type/limit.h"
+#include "type/trait.h"
 
 #include <cmath>
 #include <type_traits>

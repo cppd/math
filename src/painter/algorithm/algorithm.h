@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/error.h"
-#include "com/vec.h"
+#include <src/com/error.h>
+#include <src/numerical/vec.h>
 
 #include <iterator>
 

@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "camera.h"
 
-#include "com/math.h"
-#include "com/quaternion.h"
-#include "numerical/matrix_transform.h"
+#include <src/com/math.h>
+#include <src/numerical/matrix_transform.h>
+#include <src/numerical/quaternion.h>
 
 #include <mutex>
 

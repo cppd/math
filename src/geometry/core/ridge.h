@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "array_elements.h"
 
-#include "com/error.h"
-#include "com/hash.h"
-#include "com/print.h"
-#include "com/sort.h"
-#include "com/vec.h"
+#include <src/com/error.h>
+#include <src/com/hash.h>
+#include <src/com/print.h>
+#include <src/com/sort.h>
+#include <src/numerical/vec.h>
 
 #include <array>
 #include <list>

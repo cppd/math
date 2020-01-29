@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/font/text_data.h"
-#include "com/frequency.h"
+#include <src/com/frequency.h>
+#include <src/text/text_data.h>
 
 class FrameRate
 {
