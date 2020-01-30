@@ -17,13 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "linear_algebra.h"
-
 #include <src/com/error.h>
 #include <src/com/mpz.h>
 #include <src/com/print.h>
 #include <src/com/sort.h>
 #include <src/com/type/trait.h>
+#include <src/numerical/orthogonal.h>
 #include <src/numerical/vec.h>
 
 #include <array>

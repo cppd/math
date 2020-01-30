@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/graphics/vulkan/error.h>
 #include <src/graphics/vulkan/query.h>
 #include <src/graphics/vulkan/queue.h>
-#include <src/numerical/matrix_transform.h>
+#include <src/numerical/transform.h>
 #include <src/numerical/vec.h>
 #include <src/util/string/vector.h>
 

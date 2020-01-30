@@ -17,12 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/alg.h"
-#include "com/error.h"
-#include "com/type/limit.h"
-#include "com/type/trait.h"
-#include "numerical/matrix_transform.h"
-#include "obj/obj.h"
+#include "../obj.h"
+
+#include <src/com/alg.h>
+#include <src/com/error.h>
+#include <src/com/type/limit.h>
+#include <src/com/type/trait.h>
+#include <src/numerical/transform.h>
 
 #include <algorithm>
 #include <tuple>

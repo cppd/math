@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "../core/delaunay.h"
-#include "../core/linear_algebra.h"
 #include "../core/ridge.h"
 
 #include <src/com/error.h>
+#include <src/numerical/orthogonal.h>
 #include <src/numerical/vec.h>
 
 #include <unordered_map>

@@ -54,12 +54,11 @@ Chapman & Hall/CRC, 2004.
 
 #include "convex_hull.h"
 
-#include "array_elements.h"
 #include "facet.h"
-#include "linear_algebra.h"
-#include "max_determinant.h"
 #include "ridge.h"
 
+#include <src/com/array_elements.h>
+#include <src/com/bits.h>
 #include <src/com/combinatorics.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -70,6 +69,8 @@ Chapman & Hall/CRC, 2004.
 #include <src/com/type/find.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/trait.h>
+#include <src/numerical/determinant.h>
+#include <src/numerical/subtraction.h>
 #include <src/numerical/vec.h>
 
 #include <algorithm>
@@ -79,6 +80,8 @@ Chapman & Hall/CRC, 2004.
 #include <unordered_map>
 #include <unordered_set>
 
+namespace
+{
 //   Входные данные переводятся в целые числа с диапазоном от 0 до максимума с заданной дискретизацией,
 // чтобы иметь абсолютную точность при вычислении выпуклой оболочки, но не иметь всех проблем с плавающей
 // точкой, точность которой надо было бы менять в процессе расчёта.
@@ -89,6 +92,71 @@ Chapman & Hall/CRC, 2004.
 
 constexpr int ORDINARY_BITS = 30;
 constexpr int PARABOLOID_BITS = 24;
+
+// Максимальное значение определителя с размещением последней координаты на параболоиде по значениям других координат
+template <size_t N, size_t BITS>
+constexpr int max_paraboloid_determinant()
+{
+        // Например, при N = 4
+        // |x x x x*x+x*x+x*x|
+        // |x x x x*x+x*x+x*x|
+        // |x x x x*x+x*x+x*x|
+        // |x x x x*x+x*x+x*x|
+        // max = x * x * x * (x*x + x*x + x*x) * 4!
+        // max = (x ^ (N + 1)) * (N - 1) * N!
+
+        static_assert(N >= 2 && N <= 33);
+        static_assert(BITS > 0);
+
+        unsigned __int128 f = 1;
+        for (unsigned i = 2; i <= N; ++i)
+        {
+                f *= i;
+        }
+
+        f *= (N - 1);
+
+        return BITS * (N + 1) + log_2(f) + 1;
+}
+
+// Максимальное значение исходных данных, размещаемых на параболоиде
+template <size_t N, size_t BITS>
+constexpr int max_paraboloid_source()
+{
+        // Например, при N = 4
+        // |x x x x*x+x*x+x*x|
+        // |x x x x*x+x*x+x*x|
+        // |x x x x*x+x*x+x*x|
+        // |x x x x*x+x*x+x*x|
+        // max = x*x + x*x + x*x
+        // max = (x ^ 2) * (N - 1)
+
+        return BITS * 2 + log_2(N - 1) + 1;
+}
+
+// Максимальное значение определителя
+template <size_t N, size_t BITS>
+constexpr int max_determinant()
+{
+        // Например, при N = 4
+        // |x x x x|
+        // |x x x x|
+        // |x x x x|
+        // |x x x x|
+        // max = x * x * x * x * 4!
+        // max = (x ^ N) * N!
+
+        static_assert(N >= 2 && N <= 34);
+        static_assert(BITS > 0);
+
+        unsigned __int128 f = 1;
+        for (unsigned i = 2; i <= N; ++i)
+        {
+                f *= i;
+        }
+
+        return BITS * N + log_2(f) + 1;
+}
 
 template <size_t N>
 using ComputeTypeOrdinary = LeastSignedInteger<max_determinant<N, ORDINARY_BITS>()>;
@@ -121,8 +189,6 @@ using FacetListConstIterator = typename FacetList<F>::const_iterator;
 template <size_t N, typename DataType, typename ComputeType>
 using Facet = FacetInteger<N, DataType, ComputeType, FacetListConstIterator>;
 
-namespace
-{
 template <typename T>
 std::enable_if_t<is_native_integral<T>, std::string> type_str()
 {

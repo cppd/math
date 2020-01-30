@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
-#include <src/numerical/matrix_alg.h>
+#include <src/numerical/transform.h>
 #include <src/numerical/vec.h>
 
 #include <algorithm>

@@ -20,17 +20,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "compute.h"
 #include "show_shader.h"
 
-#include "com/container.h"
-#include "com/error.h"
-#include "com/log.h"
-#include "com/merge.h"
-#include "com/time.h"
-#include "gpu/convex_hull/com/com.h"
-#include "graphics/vulkan/commands.h"
-#include "graphics/vulkan/create.h"
-#include "graphics/vulkan/error.h"
-#include "graphics/vulkan/queue.h"
-#include "numerical/matrix_transform.h"
+#include "../com/com.h"
+
+#include <src/com/container.h>
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/merge.h>
+#include <src/com/time.h>
+#include <src/graphics/vulkan/commands.h>
+#include <src/graphics/vulkan/create.h>
+#include <src/graphics/vulkan/error.h>
+#include <src/graphics/vulkan/queue.h>
+#include <src/numerical/transform.h>
 
 #include <optional>
 #include <thread>

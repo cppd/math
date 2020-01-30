@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "cocone.h"
 
-#include "com/alg.h"
-#include "com/error.h"
-#include "com/type/limit.h"
+#include <src/com/alg.h>
+#include <src/com/error.h>
+#include <src/com/type/limit.h>
 
 constexpr double MIN_DOUBLE = limits<double>::lowest();
 

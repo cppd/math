@@ -17,12 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "facets.h"
 
-#include "com/error.h"
-#include "com/log.h"
-#include "com/print.h"
-#include "com/time.h"
-#include "geometry/core/linear_algebra.h"
-#include "obj/alg/alg.h"
+#include "../alg/alg.h"
+
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/print.h>
+#include <src/com/time.h>
+#include <src/numerical/orthogonal.h>
 
 #include <unordered_map>
 #include <unordered_set>

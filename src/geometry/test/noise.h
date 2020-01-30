@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if 0
 
-#include "com/error.h"
-#include "com/random/engine.h"
-#include "com/vec.h"
+#include <src/com/error.h>
+#include <src/numerical/vec.h>
+#include <src/util/random/engine.h>
 
 #include <random>
 #include <vector>

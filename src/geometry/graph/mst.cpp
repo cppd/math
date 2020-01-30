@@ -31,11 +31,12 @@ Pearson Education, 2011.
 
 #include "dynamic_connectivity.h"
 
-#include "com/alg.h"
-#include "com/log.h"
-#include "com/print.h"
-#include "com/time.h"
-#include "geometry/core/ridge.h"
+#include "../core/ridge.h"
+
+#include <src/com/alg.h>
+#include <src/com/log.h>
+#include <src/com/print.h>
+#include <src/com/time.h>
 
 // Для данной задачи ребро состоит из 2 вершин.
 // Можно использовать готовый класс как бы для трёхмерного случая с двумя вершинами.

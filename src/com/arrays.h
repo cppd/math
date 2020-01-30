@@ -60,3 +60,6 @@ constexpr std::array<T, N> make_array_one_value(const T& v)
 {
         return arrays_implementation::make_array_one_value_impl<ValueIndex>(std::make_integer_sequence<size_t, N>(), v);
 }
+
+template <size_t N>
+inline constexpr std::array<unsigned char, N> sequence_uchar_array = make_array_sequence<unsigned char, N>();

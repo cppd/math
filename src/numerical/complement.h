@@ -25,9 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "linear_algebra.h"
-
-#include <src/numerical/vec.h>
+#include "orthogonal.h"
+#include "vec.h"
 
 #include <array>
 #include <utility>

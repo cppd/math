@@ -28,8 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/type/trait.h>
-#include <src/geometry/core/linear_algebra.h>
+#include <src/numerical/orthogonal.h>
 #include <src/numerical/ray.h>
+#include <src/numerical/subtraction.h>
 #include <src/numerical/vec.h>
 
 #include <algorithm>

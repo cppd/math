@@ -21,10 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "structure.h"
 
-#include "com/log.h"
-#include "com/print.h"
-#include "geometry/core/delaunay.h"
+#include "../core/delaunay.h"
 
+#include <src/com/log.h>
+
+#include <com/print.h>
 #include <vector>
 
 template <size_t N>
@@ -53,7 +54,9 @@ void print_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, c
 }
 
 template <size_t N>
-void print_not_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<bool>& cocone_facets)
+void print_not_cocone_facets(
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<bool>& cocone_facets)
 {
         LOG("--not cocone facets--");
         for (unsigned i = 0; i < delaunay_facets.size(); ++i)

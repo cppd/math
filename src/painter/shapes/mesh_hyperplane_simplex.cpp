@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_hyperplane_simplex.h"
 
-#include "com/alg.h"
-#include "com/error.h"
-#include "geometry/core/linear_algebra.h"
+#include <src/com/alg.h>
+#include <src/com/error.h>
+#include <src/numerical/orthogonal.h>
 
 // Минимум абсолютного значения косинуса угла между нормалью симплекса и нормалями
 // его вершин, при котором используются эти нормали вершин. При меньших значениях

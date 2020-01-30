@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "matrix.h"
 
+#include <src/com/error.h>
+
 template <typename T>
 Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, const Vector<3, T>& up)
 {
@@ -123,3 +125,41 @@ constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> translate(V... v)
 {
         return translate(Vector<sizeof...(V), T>(v...));
 }
+
+// Для случаев, когда последняя строка матрицы состоит из нулей с последней единицей.
+template <size_t N, typename T>
+class MatrixVectorMultiplier
+{
+        Matrix<N, N, T> m_matrix;
+
+public:
+        explicit MatrixVectorMultiplier(const Matrix<N, N, T>& m) : m_matrix(m)
+        {
+                if (m_matrix(N - 1, N - 1) != 1)
+                {
+                        error("Wrong matrix for matrix-vector multiplier");
+                }
+                for (unsigned i = 0; i < N - 1; ++i)
+                {
+                        if (m_matrix(N - 1, i) != 0)
+                        {
+                                error("Wrong matrix for matrix-vector multiplier");
+                        }
+                }
+        }
+
+        Vector<N - 1, T> operator()(const Vector<N - 1, T>& v) const
+        {
+                Vector<N - 1, T> res;
+                for (unsigned r = 0; r < N - 1; ++r)
+                {
+                        res[r] = m_matrix(r, 0) * v[0];
+                        for (unsigned c = 1; c < N - 1; ++c)
+                        {
+                                res[r] = fma(m_matrix(r, c), v[c], res[r]);
+                        }
+                        res[r] += m_matrix(r, N - 1);
+                }
+                return res;
+        }
+};

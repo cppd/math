@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/graphics/vulkan/error.h>
 #include <src/graphics/vulkan/queue.h>
 #include <src/graphics/vulkan/sync.h>
-#include <src/numerical/matrix_transform.h>
+#include <src/numerical/transform.h>
 #include <src/text/font.h>
 #include <src/text/glyphs.h>
 #include <src/text/vertices.h>

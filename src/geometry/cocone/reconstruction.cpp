@@ -32,11 +32,11 @@ Cambridge University Press, 2007.
 #include "prune_facets.h"
 #include "structure.h"
 
-#include "com/alg.h"
-#include "com/error.h"
-#include "com/log.h"
-#include "com/names.h"
-#include "com/print.h"
+#include <src/com/alg.h>
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/names.h>
+#include <src/com/print.h>
 
 #include <unordered_set>
 
