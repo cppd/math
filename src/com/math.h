@@ -20,65 +20,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "type/limit.h"
 #include "type/trait.h"
 
-#include <cmath>
-#include <type_traits>
-#if !defined(__clang__)
-#include <quadmath.h>
-#endif
-
-template <typename T>
-inline constexpr T PI = 3.1415926535897932384626433832795028841971693993751L;
-inline constexpr const char* PI_STR = "3.1415926535897932384626433832795028841971693993751";
-template <typename T>
-inline constexpr T TWO_PI = 6.2831853071795864769252867665590057683943387987502L;
-
 template <typename T>
 constexpr T square(const T& v)
 {
         return v * v;
 }
 
-#if !defined(__clang__)
-template <typename T>
-std::enable_if_t<std::is_same_v<std::remove_cvref_t<T>, __float128>, __float128> abs(T a)
-{
-        return fabsq(a);
-}
-template <typename T>
-std::enable_if_t<std::is_same_v<std::remove_cvref_t<T>, __float128>, __float128> fma(T a, T b, T c)
-{
-        return fmaq(a, b, c);
-}
-template <typename T>
-std::enable_if_t<std::is_same_v<std::remove_cvref_t<T>, __float128>, __float128> sqrt(T a)
-{
-        return sqrtq(a);
-}
-template <typename T>
-std::enable_if_t<std::is_same_v<std::remove_cvref_t<T>, __float128>, __float128> sin(T a)
-{
-        return sinq(a);
-}
-template <typename T>
-std::enable_if_t<std::is_same_v<std::remove_cvref_t<T>, __float128>, __float128> cos(T a)
-{
-        return cosq(a);
-}
-#endif
-
 template <typename T>
 constexpr bool is_finite(T v)
 {
-        static_assert(std::is_floating_point_v<T>);
-        // std::isfinite не работает с -Ofast (-ffast-math),
-        // поэтому сравнение с limits<T> lowest и max
+        static_assert(is_native_floating_point<T>);
         return v >= limits<T>::lowest() && v <= limits<T>::max();
-}
-
-constexpr bool is_finite(__float128 v)
-{
-        // вместо finiteq и по аналогии с другими типами
-        return v >= limits<__float128>::lowest() && v <= limits<__float128>::max();
 }
 
 template <unsigned Exp, typename T>

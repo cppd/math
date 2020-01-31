@@ -57,7 +57,7 @@ Chapman & Hall/CRC, 2004.
 #include "facet.h"
 #include "ridge.h"
 
-#include <src/com/array_elements.h>
+#include <src/com/arrays.h>
 #include <src/com/bits.h>
 #include <src/com/combinatorics.h>
 #include <src/com/error.h>

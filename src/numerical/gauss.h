@@ -26,8 +26,9 @@ Cambridge University Press.
 
 #pragma once
 
-#include <src/com/math.h>
 #include <src/com/type/trait.h>
+
+#include <cmath>
 
 namespace numerical
 {
@@ -36,11 +37,11 @@ namespace gauss_implementation
 template <size_t N, typename T, template <size_t, size_t, typename> typename Matrix>
 int find_pivot(const Matrix<N, N, T>& A, int column, int from_row)
 {
-        T max = abs(A(from_row, column));
+        T max = std::abs(A(from_row, column));
         int pivot = from_row;
         for (int r = from_row + 1; r < int(N); ++r)
         {
-                T v = abs(A(r, column));
+                T v = std::abs(A(r, column));
                 if (v > max)
                 {
                         max = v;

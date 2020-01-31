@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/array_elements.h>
+#include <src/com/arrays.h>
 #include <src/com/error.h>
 #include <src/com/hash.h>
 #include <src/com/print.h>

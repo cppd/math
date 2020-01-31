@@ -57,6 +57,7 @@ Chapter 13: FFTs for Arbitrary N.
 #include "../com/com.h"
 
 #include <src/com/bits.h>
+#include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/graphics/vulkan/error.h>
 #include <src/graphics/vulkan/queue.h>

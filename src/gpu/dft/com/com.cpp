@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com.h"
 
-#include "com/bits.h"
-#include "com/math.h"
+#include <src/com/bits.h>
+#include <src/com/constant.h>
 
 // Или само число степень двух,
 // или минимальная степень двух, равная или больше 2N-2

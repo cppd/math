@@ -17,21 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/constant.h>
+template <typename T>
+inline constexpr T PI = 3.1415926535897932384626433832795028841971693993751L;
 
-// rad / ms
-constexpr double CONVEX_HULL_ANGULAR_FREQUENCY = TWO_PI<double> * 5;
+inline constexpr const char* PI_STR = "3.1415926535897932384626433832795028841971693993751";
 
-int convex_hull_points_buffer_size(int height);
-
-int convex_hull_group_size_prepare(
-        int width,
-        unsigned max_group_size_x,
-        unsigned max_group_invocations,
-        unsigned max_shared_memory_size);
-int convex_hull_group_size_merge(
-        int height,
-        unsigned max_group_size_x,
-        unsigned max_group_invocations,
-        unsigned max_shared_memory_size);
-int convex_hull_iteration_count_merge(int size);
+template <typename T>
+inline constexpr T TWO_PI = 6.2831853071795864769252867665590057683943387987502L;

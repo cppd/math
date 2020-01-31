@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "camera.h"
 
-#include <src/com/math.h>
+#include <src/com/constant.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/transform.h>
 

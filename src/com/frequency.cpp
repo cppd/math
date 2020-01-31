@@ -17,9 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "frequency.h"
 
+#include "constant.h"
 #include "error.h"
-#include "math.h"
 #include "time.h"
+
+#include <cmath>
 
 namespace
 {

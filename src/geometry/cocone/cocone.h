@@ -41,7 +41,7 @@ bool voronoi_edge_intersects_cocone(T cos_n_a, T cos_n_b)
 
         constexpr T cos_cocone = cocone_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>;
 
-        if (abs(cos_n_a) < cos_cocone || abs(cos_n_b) < cos_cocone)
+        if (std::abs(cos_n_a) < cos_cocone || std::abs(cos_n_b) < cos_cocone)
         {
                 return true;
         }
@@ -61,7 +61,7 @@ bool cocone_inside_or_equal(T... cos_n_p)
 {
         static_assert((is_native_floating_point<T> && ...));
 
-        return ((abs(cos_n_p) <= cocone_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)&&...);
+        return ((std::abs(cos_n_p) <= cocone_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)&&...);
 }
 
 /*
