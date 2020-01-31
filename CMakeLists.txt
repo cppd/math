@@ -139,7 +139,7 @@ function(AddSourceFiles TARGET_TYPE)
         target_link_libraries(${PROJECT_NAME} -pthread)
         target_compile_options(${PROJECT_NAME} PRIVATE -pthread)
 
-        target_compile_options(${PROJECT_NAME} PRIVATE -Ofast -march=native)
+        target_compile_options(${PROJECT_NAME} PRIVATE -O3 -march=native)
         target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>: -fno-rtti -fstrict-enums >)
 
         target_compile_options(${PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:Clang>: -mllvm -inline-threshold=10000 >)
