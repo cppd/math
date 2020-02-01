@@ -361,7 +361,6 @@ AddIncludeFiles(BINARY_FILES
 
 # CMake при использовании target_include_directories вставляет -I
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}")
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/src")
 
 #target_compile_options(${PROJECT_NAME} PRIVATE -S -masm=intel)
 
