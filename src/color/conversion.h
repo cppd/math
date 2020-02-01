@@ -25,9 +25,6 @@ template <typename T, typename UInt8>
 T srgb_uint8_to_rgb_float(UInt8 c);
 
 template <typename UInt8>
-unsigned char srgb_uint8_to_rgb_uint8(UInt8 c);
-
-template <typename UInt8>
 std::uint_least16_t srgb_uint8_to_rgb_uint16(UInt8 c);
 
 //

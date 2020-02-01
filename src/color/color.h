@@ -27,8 +27,7 @@ struct Srgb8
 {
         unsigned char red, green, blue;
 
-        constexpr Srgb8(unsigned char red_, unsigned char green_, unsigned char blue_)
-                : red(red_), green(green_), blue(blue_)
+        constexpr Srgb8(unsigned char r, unsigned char g, unsigned char b) : red(r), green(g), blue(b)
         {
         }
 };
