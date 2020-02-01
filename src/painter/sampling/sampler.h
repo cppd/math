@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "engine.h"
 
-#include "com/error.h"
-#include "com/math.h"
-#include "com/names.h"
+#include <src/com/error.h>
+#include <src/com/math.h>
+#include <src/com/names.h>
 
 template <size_t N, typename T>
 class StratifiedJitteredSampler

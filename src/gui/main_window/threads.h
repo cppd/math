@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "progress/progress_list.h"
+#include <src/progress/progress_list.h>
 
 #include <QProgressBar>
 #include <exception>

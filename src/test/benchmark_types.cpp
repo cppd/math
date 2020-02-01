@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "benchmark_types.h"
 
-#include "com/log.h"
-#include "com/math.h"
-#include "com/print.h"
-#include "com/time.h"
-#include "com/type/limit.h"
+#include <src/com/log.h>
+#include <src/com/math.h>
+#include <src/com/print.h>
+#include <src/com/time.h>
+#include <src/com/type/limit.h>
 
 #include <gmpxx.h>
 #include <vector>

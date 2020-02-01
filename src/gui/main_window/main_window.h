@@ -21,11 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 #include "threads.h"
 
-#include "progress/progress_list.h"
-#include "show/interface.h"
-#include "test/self_test.h"
-
 #include "ui_main_window.h"
+
+#include <src/progress/progress_list.h>
+#include <src/show/interface.h>
+#include <src/test/self_test.h>
 
 #include <QColor>
 #include <QTimer>

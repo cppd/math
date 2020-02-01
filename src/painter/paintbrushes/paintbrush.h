@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/alg.h"
-#include "com/error.h"
-#include "com/print.h"
-#include "com/thread.h"
-#include "com/time.h"
+#include <src/com/alg.h>
+#include <src/com/error.h>
+#include <src/com/print.h>
+#include <src/com/thread.h>
+#include <src/com/time.h>
 
 template <size_t N>
 class BarPaintbrush

@@ -19,9 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_source.h"
 
-#include "gpu/convex_hull/com/com.h"
-#include "graphics/vulkan/create.h"
-#include "graphics/vulkan/pipeline.h"
+#include "../com/com.h"
+
+#include <src/graphics/vulkan/create.h>
+#include <src/graphics/vulkan/pipeline.h>
 
 #include <type_traits>
 

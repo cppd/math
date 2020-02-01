@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sampler.h"
 
-#include "com/error.h"
-#include "com/log.h"
+#include <src/com/error.h>
+#include <src/com/log.h>
 
 namespace gpu_vulkan
 {

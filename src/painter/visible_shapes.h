@@ -19,12 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-#include "painter/algorithm/algorithm.h"
-#include "painter/shapes/mesh.h"
-#include "painter/space/hyperplane_parallelotope.h"
-#include "painter/space/hyperplane_parallelotope_algorithm.h"
-#include "painter/space/parallelotope.h"
-#include "painter/space/parallelotope_algorithm.h"
+#include "algorithm/algorithm.h"
+#include "shapes/mesh.h"
+#include "space/hyperplane_parallelotope.h"
+#include "space/hyperplane_parallelotope_algorithm.h"
+#include "space/parallelotope.h"
+#include "space/parallelotope_algorithm.h"
 
 #include <memory>
 

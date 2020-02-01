@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-#include "painter/projectors/projector.h"
+#include "projectors/projector.h"
 
 template <size_t N, typename T>
 class VisiblePerspectiveProjector final : public Projector<N, T>

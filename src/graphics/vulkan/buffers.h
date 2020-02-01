@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "instance.h"
 #include "objects.h"
 
-#include "com/container.h"
-#include "com/error.h"
-#include "com/type/detect.h"
+#include <src/com/container.h>
+#include <src/com/error.h>
+#include <src/com/type/detect.h>
 
 #include <cstring>
 #include <unordered_set>

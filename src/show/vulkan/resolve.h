@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "graphics/vulkan/buffers.h"
-#include "graphics/vulkan/objects.h"
+#include <src/graphics/vulkan/buffers.h>
+#include <src/graphics/vulkan/objects.h>
 
 namespace show_vulkan
 {

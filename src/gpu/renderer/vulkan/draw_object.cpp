@@ -20,14 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shader_points.h"
 #include "shader_triangles.h"
 
-#include "com/container.h"
-#include "com/error.h"
-#include "com/hash.h"
-#include "com/log.h"
-#include "com/thread.h"
-#include "com/time.h"
-#include "graphics/vulkan/buffers.h"
-#include "obj/alg/alg.h"
+#include <src/com/container.h>
+#include <src/com/error.h>
+#include <src/com/hash.h>
+#include <src/com/log.h>
+#include <src/com/thread.h>
+#include <src/com/time.h>
+#include <src/graphics/vulkan/buffers.h>
+#include <src/obj/alg/alg.h>
 
 #include <array>
 #include <sstream>

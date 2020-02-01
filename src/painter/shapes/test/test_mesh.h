@@ -17,6 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "progress/progress.h"
+#include <src/progress/progress.h>
 
 void test_mesh(int number_of_dimensions, ProgressRatio* progress);

@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "graphics/vulkan/buffers.h"
-#include "graphics/vulkan/constant.h"
-#include "graphics/vulkan/instance.h"
-#include "graphics/vulkan/objects.h"
-#include "graphics/vulkan/shader.h"
-#include "graphics/vulkan/swapchain.h"
+#include <src/graphics/vulkan/buffers.h>
+#include <src/graphics/vulkan/constant.h>
+#include <src/graphics/vulkan/instance.h>
+#include <src/graphics/vulkan/objects.h>
+#include <src/graphics/vulkan/shader.h>
+#include <src/graphics/vulkan/swapchain.h>
 
 #include <functional>
 #include <memory>

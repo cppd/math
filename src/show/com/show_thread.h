@@ -19,8 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "event_queue.h"
 
-#include "com/error.h"
-#include "show/interface.h"
+#include "../interface.h"
+
+#include <src/com/error.h>
 
 #include <atomic>
 #include <thread>

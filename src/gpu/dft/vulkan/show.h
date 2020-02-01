@@ -17,9 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "gpu/vulkan_interfaces.h"
-#include "graphics/vulkan/buffers.h"
-#include "graphics/vulkan/instance.h"
+#include "../../vulkan_interfaces.h"
+
+#include <src/graphics/vulkan/buffers.h>
+#include <src/graphics/vulkan/instance.h>
 
 #include <memory>
 #include <vector>

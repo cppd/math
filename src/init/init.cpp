@@ -17,17 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "init.h"
 
-#include "com/error.h"
-#include "com/log.h"
-#include "com/time.h"
-#include "window/opengl/window.h"
-#include "window/vulkan/window.h"
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/time.h>
+#include <src/window/opengl/window.h>
+#include <src/window/vulkan/window.h>
 
 #include <atomic>
 
 #if defined(__linux__)
-#include "graphics/opengl/functions.h"
-#include "window/manage.h"
+#include <src/graphics/opengl/functions.h>
+#include <src/window/manage.h>
 #endif
 
 namespace

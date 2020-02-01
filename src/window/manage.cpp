@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "manage.h"
 
-#include "graphics/vulkan/error.h"
+#include <src/graphics/vulkan/error.h>
 
 #if defined(__linux__)
 
-#include "com/error.h"
+#include <src/com/error.h>
 
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "command_line.h"
 
-#include "com/error.h"
+#include <src/com/error.h>
 
 #include <QCommandLineParser>
 

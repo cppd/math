@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show.h"
 
-#include "com/conversion.h"
-#include "com/error.h"
+#include <src/com/conversion.h>
+#include <src/com/error.h>
 
 // Расстояние между точками потока на экране в миллиметрах
 constexpr double DISTANCE_BETWEEN_POINTS = 2;

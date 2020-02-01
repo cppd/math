@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print.h"
 #include "query.h"
 
-#include "com/print.h"
-#include "window/manage.h"
+#include <src/com/print.h>
+#include <src/window/manage.h>
 
 #include <algorithm>
 #include <stack>

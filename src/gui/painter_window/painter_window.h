@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter_window_2d.h"
 
-#include "com/global_index.h"
-#include "painter/painter.h"
-#include "painter/visible_paintbrush.h"
+#include <src/com/global_index.h>
+#include <src/painter/painter.h>
+#include <src/painter/visible_paintbrush.h>
 
 #include <array>
 #include <atomic>

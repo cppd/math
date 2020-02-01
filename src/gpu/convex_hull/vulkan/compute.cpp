@@ -31,8 +31,9 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 #include "compute_merge.h"
 #include "compute_prepare.h"
 
-#include "com/error.h"
-#include "gpu/convex_hull/com/com.h"
+#include "../com/com.h"
+
+#include <src/com/error.h>
 
 #include <optional>
 #include <thread>

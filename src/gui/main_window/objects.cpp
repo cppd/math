@@ -19,26 +19,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "meshes.h"
 
-#include "com/error.h"
-#include "com/log.h"
-#include "com/names.h"
-#include "com/time.h"
-#include "com/variant.h"
-#include "geometry/cocone/reconstruction.h"
-#include "geometry/graph/mst.h"
-#include "geometry/objects/points.h"
-#include "numerical/matrix.h"
-#include "obj/alg/alg.h"
-#include "obj/create/convex_hull.h"
-#include "obj/create/facets.h"
-#include "obj/create/lines.h"
-#include "obj/create/points.h"
-#include "obj/file/file_load.h"
-#include "obj/file/file_save.h"
-#include "obj/file/obj_file.h"
-#include "obj/obj.h"
-#include "painter/shapes/mesh.h"
-#include "progress/progress.h"
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/names.h>
+#include <src/com/time.h>
+#include <src/com/variant.h>
+#include <src/geometry/cocone/reconstruction.h>
+#include <src/geometry/graph/mst.h>
+#include <src/geometry/objects/points.h>
+#include <src/numerical/matrix.h>
+#include <src/obj/alg/alg.h>
+#include <src/obj/create/convex_hull.h>
+#include <src/obj/create/facets.h>
+#include <src/obj/create/lines.h>
+#include <src/obj/create/points.h>
+#include <src/obj/file/file_load.h>
+#include <src/obj/file/file_save.h>
+#include <src/obj/file/obj_file.h>
+#include <src/obj/obj.h>
+#include <src/painter/shapes/mesh.h>
+#include <src/progress/progress.h>
 
 #include <mutex>
 #include <thread>

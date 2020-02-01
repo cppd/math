@@ -38,9 +38,10 @@ Chapter 5. Tracking Objects in Videos.
 #include "compute_grayscale.h"
 #include "compute_sobel.h"
 
-#include "gpu/optical_flow/com/compute.h"
-#include "graphics/vulkan/error.h"
-#include "graphics/vulkan/queue.h"
+#include "../com/compute.h"
+
+#include <src/graphics/vulkan/error.h>
+#include <src/graphics/vulkan/queue.h>
 
 #include <thread>
 

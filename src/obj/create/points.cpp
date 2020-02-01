@@ -17,11 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "points.h"
 
-#include "com/error.h"
-#include "com/log.h"
-#include "com/print.h"
-#include "com/time.h"
-#include "obj/alg/alg.h"
+#include "../alg/alg.h"
+
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/print.h>
+#include <src/com/time.h>
 
 namespace
 {

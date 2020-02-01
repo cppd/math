@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "progress_list.h"
 
-#include "com/error.h"
+#include <src/com/error.h>
 
 // Для работы в потоках расчётов
 void ProgressRatioList::add_progress_ratio(ProgressRatioControl* ratio)

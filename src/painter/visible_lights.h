@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-#include "painter/lights/light_source.h"
+#include "lights/light_source.h"
 
 template <size_t N, typename T>
 class VisiblePointLight final : public LightSource<N, T>

@@ -17,10 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_simplex_algorithm.h"
 
-#include "com/log.h"
-#include "com/print.h"
-#include "com/type/name.h"
-#include "numerical/simplex.h"
+#include "../simplex.h"
+
+#include <src/com/log.h>
+#include <src/com/print.h>
+#include <src/com/type/name.h>
 
 namespace
 {

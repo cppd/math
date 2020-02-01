@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/span.h"
-#include "com/type/limit.h"
+#include <src/com/span.h>
+#include <src/com/type/limit.h>
 
 #include <functional>
 #include <unordered_map>

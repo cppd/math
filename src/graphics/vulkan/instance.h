@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "device.h"
 #include "objects.h"
 
-#include "com/error.h"
+#include <src/com/error.h>
 
 #include <array>
 #include <functional>

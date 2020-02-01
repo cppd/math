@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/error.h"
+#include <src/com/error.h>
 
 template <typename T>
 bool pointIsInsideRectangle(T x, T y, T x0, T y0, T x1, T y1)

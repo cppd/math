@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/span.h"
+#include <src/com/span.h>
 
 namespace gpu_vulkan
 {

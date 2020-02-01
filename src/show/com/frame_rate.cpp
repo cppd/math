@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "frame_rate.h"
 
-#include "com/conversion.h"
-#include "com/print.h"
+#include <src/com/conversion.h>
+#include <src/com/print.h>
 
 #include <cmath>
 

@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "descriptor.h"
 
-#include "com/error.h"
-#include "com/print.h"
+#include <src/com/error.h>
+#include <src/com/print.h>
 
 namespace
 {

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-#include "painter/paintbrushes/paintbrush.h"
+#include "paintbrushes/paintbrush.h"
 
 template <size_t N>
 class VisibleBarPaintbrush final : public Paintbrush<N>

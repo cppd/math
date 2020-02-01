@@ -20,30 +20,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "render_buffer.h"
 #include "resolve.h"
 
-#include "com/conversion.h"
-#include "com/error.h"
-#include "com/log.h"
-#include "com/merge.h"
-#include "com/print.h"
-#include "com/time.h"
-#include "com/type/limit.h"
-#include "gpu/convex_hull/vulkan/show.h"
-#include "gpu/dft/vulkan/show.h"
-#include "gpu/optical_flow/vulkan/show.h"
-#include "gpu/pencil_sketch/vulkan/show.h"
-#include "gpu/renderer/vulkan/renderer.h"
-#include "gpu/text/vulkan/show.h"
-#include "graphics/vulkan/instance.h"
-#include "graphics/vulkan/objects.h"
-#include "graphics/vulkan/queue.h"
-#include "graphics/vulkan/sync.h"
-#include "show/com/camera.h"
-#include "show/com/event_queue.h"
-#include "show/com/event_window.h"
-#include "show/com/frame_rate.h"
-#include "show/com/rectangle.h"
-#include "show/com/show_thread.h"
-#include "window/manage.h"
+#include "../com/camera.h"
+#include "../com/event_queue.h"
+#include "../com/event_window.h"
+#include "../com/frame_rate.h"
+#include "../com/rectangle.h"
+#include "../com/show_thread.h"
+
+#include <src/com/conversion.h>
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/merge.h>
+#include <src/com/print.h>
+#include <src/com/time.h>
+#include <src/com/type/limit.h>
+#include <src/gpu/convex_hull/vulkan/show.h>
+#include <src/gpu/dft/vulkan/show.h>
+#include <src/gpu/optical_flow/vulkan/show.h>
+#include <src/gpu/pencil_sketch/vulkan/show.h>
+#include <src/gpu/renderer/vulkan/renderer.h>
+#include <src/gpu/text/vulkan/show.h>
+#include <src/graphics/vulkan/instance.h>
+#include <src/graphics/vulkan/objects.h>
+#include <src/graphics/vulkan/queue.h>
+#include <src/graphics/vulkan/sync.h>
+#include <src/window/manage.h>
 
 constexpr double IDLE_MODE_FRAME_DURATION_IN_SECONDS = 0.1;
 
