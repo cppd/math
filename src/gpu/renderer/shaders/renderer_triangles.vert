@@ -32,9 +32,9 @@ matrices;
 
 layout(location = 0) out VS
 {
-        vec3 normal;
+        vec3 world_normal;
+        vec3 world_position;
         vec4 shadow_position;
-        vec3 orig_position;
         vec2 texture_coordinates;
 }
 vs;
@@ -50,8 +50,10 @@ void main()
         vec4 pos = matrices.main_mvp_matrix * vec4(position, 1.0);
         gl_Position = pos;
         gl_ClipDistance[0] = matrices.clip_plane_enabled ? dot(matrices.clip_plane_equation, pos) : 1;
+
+        vs.world_normal = normal;
+        vs.world_position = position;
+
         vs.shadow_position = matrices.shadow_mvp_texture_matrix * vec4(position, 1.0);
-        vs.orig_position = position;
-        vs.normal = normal;
         vs.texture_coordinates = texture_coordinates;
 }

@@ -30,9 +30,9 @@ lighting;
 
 layout(location = 0) in VS
 {
-        vec3 normal;
+        vec3 world_normal;
+        vec3 world_position;
         vec4 shadow_position;
-        vec3 orig_position;
         vec2 texture_coordinates;
 }
 vs[3];
@@ -52,7 +52,7 @@ out gl_PerVertex
 
 layout(location = 0) out GS
 {
-        vec3 normal;
+        vec3 world_normal;
         vec4 shadow_position;
         vec2 texture_coordinates;
         vec3 baricentric;
@@ -65,34 +65,35 @@ const vec3 baricentric[3] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
 
 vec3[3] compute_normals()
 {
-        vec3 geometric_normal =
-                cross(vs[1].orig_position - vs[0].orig_position, vs[2].orig_position - vs[0].orig_position);
+        vec3 geometric_world_normal =
+                cross(vs[1].world_position - vs[0].world_position, vs[2].world_position - vs[0].world_position);
 
         vec3 normals[3];
 
         // Нужно направить векторы вершин грани по направлению перпендикуляра
         // к той стороне грани, которая обращена к камере.
+        // direction_to_camera - это направление на камеру.
 
         if (lighting.show_smooth)
         {
-                // direction_to_camera - это направление на камеру.
-                // normal - это вектор от камеры.
-                vec3 normal = faceforward(geometric_normal, lighting.direction_to_camera, geometric_normal);
+                // в направлении от камеры
+                geometric_world_normal =
+                        faceforward(geometric_world_normal, lighting.direction_to_camera, geometric_world_normal);
 
-                // Повернуть векторы вершин в противоположном вектору normal направлении
-                normals[0] = faceforward(vs[0].normal, normal, vs[0].normal);
-                normals[1] = faceforward(vs[1].normal, normal, vs[1].normal);
-                normals[2] = faceforward(vs[2].normal, normal, vs[2].normal);
+                // Повернуть векторы вершин в противоположном вектору geometric_normal направлении
+                normals[0] = faceforward(vs[0].world_normal, geometric_world_normal, vs[0].world_normal);
+                normals[1] = faceforward(vs[1].world_normal, geometric_world_normal, vs[1].world_normal);
+                normals[2] = faceforward(vs[2].world_normal, geometric_world_normal, vs[2].world_normal);
         }
         else
         {
-                // direction_to_camera - это направление на камеру.
-                // normal - это вектор на камеру.
-                vec3 normal = faceforward(geometric_normal, -lighting.direction_to_camera, geometric_normal);
+                // в направлении на камеру
+                geometric_world_normal =
+                        faceforward(geometric_world_normal, -lighting.direction_to_camera, geometric_world_normal);
 
-                normals[0] = normal;
-                normals[1] = normal;
-                normals[2] = normal;
+                normals[0] = geometric_world_normal;
+                normals[1] = geometric_world_normal;
+                normals[2] = geometric_world_normal;
         }
 
         return normals;
@@ -107,7 +108,7 @@ void main()
                 gl_Position = gl_in[i].gl_Position;
                 gl_ClipDistance[0] = gl_in[i].gl_ClipDistance[0];
 
-                gs.normal = normals[i];
+                gs.world_normal = normals[i];
                 gs.baricentric = baricentric[i];
 
                 gs.shadow_position = vs[i].shadow_position;

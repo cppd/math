@@ -86,7 +86,7 @@ mtl;
 
 layout(location = 0) in GS
 {
-        vec3 normal;
+        vec3 world_normal;
         vec4 shadow_position;
         vec2 texture_coordinates;
         vec3 baricentric;
@@ -172,7 +172,7 @@ vec3 shade()
 
         //
 
-        vec3 N = normalize(gs.normal);
+        vec3 N = normalize(gs.world_normal);
         vec3 L = lighting.direction_to_light;
         vec3 V = lighting.direction_to_camera;
 
