@@ -25,6 +25,43 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_vulkan
 {
+RendererMatricesBuffer::RendererMatricesBuffer(
+        const vulkan::Device& device,
+        const std::unordered_set<uint32_t>& family_indices)
+{
+        m_uniform_buffers.emplace_back(
+                vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                sizeof(Matrices));
+}
+
+VkBuffer RendererMatricesBuffer::buffer() const
+{
+        return m_uniform_buffers[0];
+}
+
+VkDeviceSize RendererMatricesBuffer::size() const
+{
+        return m_uniform_buffers[0].size();
+}
+
+void RendererMatricesBuffer::set_matrices(const mat4& main_mvp_matrix, const mat4& shadow_mvp_texture_matrix) const
+{
+        Matrices::M matrices;
+        matrices.main_mvp_matrix = to_matrix<float>(main_mvp_matrix).transpose();
+        matrices.shadow_mvp_texture_matrix = to_matrix<float>(shadow_mvp_texture_matrix).transpose();
+        vulkan::map_and_write_to_buffer(m_uniform_buffers[0], offsetof(Matrices, matrices), matrices);
+}
+
+void RendererMatricesBuffer::set_clip_plane(const vec4& equation, bool enabled) const
+{
+        Matrices::C clip_plane;
+        clip_plane.equation = to_vector<float>(equation);
+        clip_plane.enabled = enabled ? 1 : 0;
+        vulkan::map_and_write_to_buffer(m_uniform_buffers[0], offsetof(Matrices, clip_plane), clip_plane);
+}
+
+//
+
 std::vector<VkDescriptorSetLayoutBinding> RendererTrianglesSharedMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -83,22 +120,18 @@ std::vector<VkDescriptorSetLayoutBinding> RendererTrianglesSharedMemory::descrip
 RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
-        const std::unordered_set<uint32_t>& family_indices)
+        const std::unordered_set<uint32_t>& family_indices,
+        const RendererMatricesBuffer& matrices_buffer)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(
-                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
-                m_matrices_buffer_index = m_uniform_buffers.size() - 1;
-
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = m_uniform_buffers.back();
+                buffer_info.buffer = matrices_buffer.buffer();
                 buffer_info.offset = 0;
-                buffer_info.range = m_uniform_buffers.back().size();
+                buffer_info.range = matrices_buffer.size();
 
                 infos.emplace_back(buffer_info);
 
@@ -149,11 +182,6 @@ const VkDescriptorSet& RendererTrianglesSharedMemory::descriptor_set() const
 }
 
 template <typename T>
-void RendererTrianglesSharedMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
-{
-        vulkan::map_and_write_to_buffer(m_uniform_buffers[m_matrices_buffer_index], offset, data);
-}
-template <typename T>
 void RendererTrianglesSharedMemory::copy_to_lighting_buffer(VkDeviceSize offset, const T& data) const
 {
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_lighting_buffer_index], offset, data);
@@ -162,23 +190,6 @@ template <typename T>
 void RendererTrianglesSharedMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
 {
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
-}
-
-void RendererTrianglesSharedMemory::set_matrices(const mat4& main_mvp_matrix, const mat4& shadow_mvp_texture_matrix)
-        const
-{
-        Matrices::M matrices;
-        matrices.main_mvp_matrix = to_matrix<float>(main_mvp_matrix).transpose();
-        matrices.shadow_mvp_texture_matrix = to_matrix<float>(shadow_mvp_texture_matrix).transpose();
-        copy_to_matrices_buffer(offsetof(Matrices, matrices), matrices);
-}
-
-void RendererTrianglesSharedMemory::set_clip_plane(const vec4& equation, bool enabled) const
-{
-        Matrices::C clip_plane;
-        clip_plane.equation = to_vector<float>(equation);
-        clip_plane.enabled = enabled ? 1 : 0;
-        copy_to_matrices_buffer(offsetof(Matrices, clip_plane), clip_plane);
 }
 
 void RendererTrianglesSharedMemory::set_default_color(const Color& color) const
@@ -407,6 +418,58 @@ const VkDescriptorSet& RendererTrianglesMaterialMemory::descriptor_set(uint32_t 
 
 //
 
+std::vector<VkDescriptorSetLayoutBinding> RendererTriangleLinesMemory::descriptor_set_layout_bindings()
+{
+        std::vector<VkDescriptorSetLayoutBinding> bindings;
+
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = MATRICES_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
+
+                bindings.push_back(b);
+        }
+
+        return bindings;
+}
+
+RendererTriangleLinesMemory::RendererTriangleLinesMemory(
+        const vulkan::Device& device,
+        VkDescriptorSetLayout descriptor_set_layout,
+        const RendererMatricesBuffer& matrices_buffer)
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+{
+        std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<uint32_t> bindings;
+
+        {
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = matrices_buffer.buffer();
+                buffer_info.offset = 0;
+                buffer_info.range = matrices_buffer.size();
+
+                infos.emplace_back(buffer_info);
+
+                bindings.push_back(MATRICES_BINDING);
+        }
+
+        m_descriptors.update_descriptor_set(0, bindings, infos);
+}
+
+unsigned RendererTriangleLinesMemory::set_number()
+{
+        return SET_NUMBER;
+}
+
+const VkDescriptorSet& RendererTriangleLinesMemory::descriptor_set() const
+{
+        return m_descriptors.descriptor_set(0);
+}
+
+//
+
 std::vector<VkDescriptorSetLayoutBinding> RendererShadowMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -529,6 +592,23 @@ std::vector<VkVertexInputAttributeDescription> RendererTrianglesVertex::triangle
         return descriptions;
 }
 
+std::vector<VkVertexInputAttributeDescription> RendererTrianglesVertex::triangle_lines_attribute_descriptions()
+{
+        std::vector<VkVertexInputAttributeDescription> descriptions;
+
+        {
+                VkVertexInputAttributeDescription d = {};
+                d.binding = 0;
+                d.location = 0;
+                d.format = VK_FORMAT_R32G32B32_SFLOAT;
+                d.offset = offsetof(RendererTrianglesVertex, position);
+
+                descriptions.push_back(d);
+        }
+
+        return descriptions;
+}
+
 std::vector<VkVertexInputAttributeDescription> RendererTrianglesVertex::shadow_attribute_descriptions()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
@@ -612,6 +692,73 @@ vulkan::Pipeline RendererTrianglesProgram::create_pipeline(
                 RendererTrianglesVertex::binding_descriptions();
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
                 RendererTrianglesVertex::triangles_attribute_descriptions();
+
+        info.shaders = &shaders;
+        info.constants = &constants;
+        info.binding_descriptions = &binding_descriptions;
+        info.attribute_descriptions = &attribute_descriptions;
+
+        return vulkan::create_graphics_pipeline(info);
+}
+
+//
+
+RendererTriangleLinesProgram::RendererTriangleLinesProgram(const vulkan::Device& device)
+        : m_device(device),
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                  device,
+                  RendererTriangleLinesMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {RendererTriangleLinesMemory::set_number()},
+                  {m_descriptor_set_layout})),
+          m_vertex_shader(m_device, renderer_triangle_lines_vert(), "main"),
+          m_geometry_shader(m_device, renderer_triangle_lines_geom(), "main"),
+          m_fragment_shader(m_device, renderer_triangle_lines_frag(), "main")
+{
+}
+
+VkDescriptorSetLayout RendererTriangleLinesProgram::descriptor_set_layout() const
+{
+        return m_descriptor_set_layout;
+}
+
+VkPipelineLayout RendererTriangleLinesProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+vulkan::Pipeline RendererTriangleLinesProgram::create_pipeline(
+        VkRenderPass render_pass,
+        VkSampleCountFlagBits sample_count,
+        bool sample_shading,
+        unsigned x,
+        unsigned y,
+        unsigned width,
+        unsigned height) const
+{
+        vulkan::GraphicsPipelineCreateInfo info;
+
+        info.device = &m_device;
+        info.render_pass = render_pass;
+        info.sub_pass = 0;
+        info.sample_count = sample_count;
+        info.sample_shading = sample_shading;
+        info.pipeline_layout = m_pipeline_layout;
+        info.viewport_x = x;
+        info.viewport_y = y;
+        info.viewport_width = width;
+        info.viewport_height = height;
+        info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        info.depth_bias = false;
+        info.color_blend = false;
+
+        const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader, &m_geometry_shader, &m_fragment_shader};
+        const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr, nullptr};
+        const std::vector<VkVertexInputBindingDescription> binding_descriptions =
+                RendererTrianglesVertex::binding_descriptions();
+        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
+                RendererTrianglesVertex::triangle_lines_attribute_descriptions();
 
         info.shaders = &shaders;
         info.constants = &constants;

@@ -90,6 +90,7 @@ class Impl final : public Renderer
         vulkan::Sampler m_shadow_sampler;
 
         RendererTrianglesProgram m_triangles_program;
+        RendererMatricesBuffer m_matrices_buffer;
         RendererTrianglesSharedMemory m_triangles_shared_memory;
 
         RendererShadowProgram m_shadow_program;
@@ -230,7 +231,7 @@ class Impl final : public Renderer
                 {
                         vec4 main_plane = *m_clip_plane * m_main_vp_matrix.inverse();
                         vec4 shadow_plane = *m_clip_plane * m_shadow_vp_matrix.inverse();
-                        m_triangles_shared_memory.set_clip_plane(main_plane, true);
+                        m_matrices_buffer.set_clip_plane(main_plane, true);
                         m_shadow_memory.set_clip_plane(shadow_plane, true);
                         m_points_memory.set_clip_plane(main_plane, true);
                 }
@@ -251,7 +252,7 @@ class Impl final : public Renderer
 
                 m_clip_plane.reset();
 
-                m_triangles_shared_memory.set_clip_plane(vec4(0), false);
+                m_matrices_buffer.set_clip_plane(vec4(0), false);
                 m_shadow_memory.set_clip_plane(vec4(0), false);
                 m_points_memory.set_clip_plane(vec4(0), false);
         }
@@ -484,7 +485,7 @@ class Impl final : public Renderer
                         const mat4& shadow_mvp_texture_matrix = m_shadow_vp_texture_matrix * model;
                         const mat4& shadow_mvp_matrix = m_shadow_vp_matrix * model;
 
-                        m_triangles_shared_memory.set_matrices(main_mvp_matrix, shadow_mvp_texture_matrix);
+                        m_matrices_buffer.set_matrices(main_mvp_matrix, shadow_mvp_texture_matrix);
                         m_shadow_memory.set_matrix(shadow_mvp_matrix);
                         m_points_memory.set_matrix(main_mvp_matrix);
 
@@ -652,10 +653,12 @@ public:
                   m_shadow_sampler(create_renderer_shadow_sampler(m_device)),
                   //
                   m_triangles_program(m_device),
+                  m_matrices_buffer(m_device, {m_graphics_queue.family_index()}),
                   m_triangles_shared_memory(
                           m_device,
                           m_triangles_program.descriptor_set_layout_shared(),
-                          {m_graphics_queue.family_index()}),
+                          {m_graphics_queue.family_index()},
+                          m_matrices_buffer),
                   //
                   m_shadow_program(m_device),
                   m_shadow_memory(

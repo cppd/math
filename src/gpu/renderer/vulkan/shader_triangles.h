@@ -32,22 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_vulkan
 {
-class RendererTrianglesSharedMemory final
+class RendererMatricesBuffer
 {
-        static constexpr int SET_NUMBER = 0;
-
-        static constexpr int MATRICES_BINDING = 0;
-        static constexpr int LIGHTING_BINDING = 1;
-        static constexpr int DRAWING_BINDING = 2;
-        static constexpr int SHADOW_BINDING = 3;
-        static constexpr int OBJECTS_BINDING = 4;
-
-        vulkan::Descriptors m_descriptors;
-        std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
-
-        // Если размещать структуры в одном буфере, то требуется выравнивание каждой структуры
-        // на VkPhysicalDeviceLimits::minUniformBufferOffsetAlignment для VkDescriptorBufferInfo::offset
-
         struct Matrices
         {
                 struct M
@@ -63,6 +49,34 @@ class RendererTrianglesSharedMemory final
                 M matrices;
                 C clip_plane;
         };
+
+        std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
+
+public:
+        RendererMatricesBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+
+        VkBuffer buffer() const;
+        VkDeviceSize size() const;
+
+        void set_matrices(const mat4& main_mvp_matrix, const mat4& shadow_mvp_texture_matrix) const;
+        void set_clip_plane(const vec4& equation, bool enabled) const;
+};
+
+class RendererTrianglesSharedMemory final
+{
+        static constexpr int SET_NUMBER = 0;
+
+        static constexpr int MATRICES_BINDING = 0;
+        static constexpr int LIGHTING_BINDING = 1;
+        static constexpr int DRAWING_BINDING = 2;
+        static constexpr int SHADOW_BINDING = 3;
+        static constexpr int OBJECTS_BINDING = 4;
+
+        vulkan::Descriptors m_descriptors;
+        std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
+
+        // Если размещать структуры в одном буфере, то требуется выравнивание каждой структуры
+        // на VkPhysicalDeviceLimits::minUniformBufferOffsetAlignment для VkDescriptorBufferInfo::offset
 
         struct Lighting
         {
@@ -84,12 +98,9 @@ class RendererTrianglesSharedMemory final
                 uint32_t show_shadow;
         };
 
-        size_t m_matrices_buffer_index;
         size_t m_lighting_buffer_index;
         size_t m_drawing_buffer_index;
 
-        template <typename T>
-        void copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const;
         template <typename T>
         void copy_to_lighting_buffer(VkDeviceSize offset, const T& data) const;
         template <typename T>
@@ -102,7 +113,8 @@ public:
         RendererTrianglesSharedMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const std::unordered_set<uint32_t>& family_indices);
+                const std::unordered_set<uint32_t>& family_indices,
+                const RendererMatricesBuffer& matrices_buffer);
 
         RendererTrianglesSharedMemory(const RendererTrianglesSharedMemory&) = delete;
         RendererTrianglesSharedMemory& operator=(const RendererTrianglesSharedMemory&) = delete;
@@ -116,9 +128,6 @@ public:
         const VkDescriptorSet& descriptor_set() const;
 
         //
-
-        void set_matrices(const mat4& main_mvp_matrix, const mat4& shadow_mvp_texture_matrix) const;
-        void set_clip_plane(const vec4& equation, bool enabled) const;
 
         void set_default_color(const Color& color) const;
         void set_wireframe_color(const Color& color) const;
@@ -194,6 +203,34 @@ public:
         const VkDescriptorSet& descriptor_set(uint32_t index) const;
 };
 
+class RendererTriangleLinesMemory final
+{
+        static constexpr int SET_NUMBER = 0;
+        static constexpr int MATRICES_BINDING = 0;
+
+        vulkan::Descriptors m_descriptors;
+
+public:
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        RendererTriangleLinesMemory(
+                const vulkan::Device& device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const RendererMatricesBuffer& matrices_buffer);
+
+        RendererTriangleLinesMemory(const RendererTriangleLinesMemory&) = delete;
+        RendererTriangleLinesMemory& operator=(const RendererTriangleLinesMemory&) = delete;
+        RendererTriangleLinesMemory& operator=(RendererTriangleLinesMemory&&) = delete;
+
+        RendererTriangleLinesMemory(RendererTriangleLinesMemory&&) = default;
+        ~RendererTriangleLinesMemory() = default;
+
+        //
+
+        const VkDescriptorSet& descriptor_set() const;
+};
+
 class RendererShadowMemory final
 {
         static constexpr int SET_NUMBER = 0;
@@ -264,7 +301,7 @@ struct RendererTrianglesVertex
         static std::vector<VkVertexInputBindingDescription> binding_descriptions();
 
         static std::vector<VkVertexInputAttributeDescription> triangles_attribute_descriptions();
-
+        static std::vector<VkVertexInputAttributeDescription> triangle_lines_attribute_descriptions();
         static std::vector<VkVertexInputAttributeDescription> shadow_attribute_descriptions();
 };
 
@@ -302,6 +339,39 @@ public:
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
         VkDescriptorSetLayout descriptor_set_layout_material() const;
+        VkPipelineLayout pipeline_layout() const;
+};
+
+class RendererTriangleLinesProgram final
+{
+        const vulkan::Device& m_device;
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::PipelineLayout m_pipeline_layout;
+        vulkan::VertexShader m_vertex_shader;
+        vulkan::GeometryShader m_geometry_shader;
+        vulkan::FragmentShader m_fragment_shader;
+
+public:
+        explicit RendererTriangleLinesProgram(const vulkan::Device& device);
+
+        RendererTriangleLinesProgram(const RendererTriangleLinesProgram&) = delete;
+        RendererTriangleLinesProgram& operator=(const RendererTriangleLinesProgram&) = delete;
+        RendererTriangleLinesProgram& operator=(RendererTriangleLinesProgram&&) = delete;
+
+        RendererTriangleLinesProgram(RendererTriangleLinesProgram&&) = default;
+        ~RendererTriangleLinesProgram() = default;
+
+        vulkan::Pipeline create_pipeline(
+                VkRenderPass render_pass,
+                VkSampleCountFlagBits sample_count,
+                bool sample_shading,
+                unsigned x,
+                unsigned y,
+                unsigned width,
+                unsigned height) const;
+
+        VkDescriptorSetLayout descriptor_set_layout() const;
         VkPipelineLayout pipeline_layout() const;
 };
 
