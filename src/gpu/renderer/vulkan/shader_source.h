@@ -26,6 +26,9 @@ namespace gpu_vulkan
 Span<const uint32_t> renderer_triangles_vert();
 Span<const uint32_t> renderer_triangles_geom();
 Span<const uint32_t> renderer_triangles_frag();
+Span<const uint32_t> renderer_triangle_lines_vert();
+Span<const uint32_t> renderer_triangle_lines_geom();
+Span<const uint32_t> renderer_triangle_lines_frag();
 Span<const uint32_t> renderer_shadow_vert();
 Span<const uint32_t> renderer_shadow_frag();
 Span<const uint32_t> renderer_points_0d_vert();
