@@ -93,6 +93,9 @@ class Impl final : public Renderer
         RendererMatricesBuffer m_matrices_buffer;
         RendererTrianglesSharedMemory m_triangles_shared_memory;
 
+        RendererTriangleLinesProgram m_triangle_lines_program;
+        RendererTriangleLinesMemory m_triangle_lines_memory;
+
         RendererShadowProgram m_shadow_program;
         RendererShadowMemory m_shadow_memory;
 
@@ -101,6 +104,7 @@ class Impl final : public Renderer
 
         RenderBuffers3D* m_render_buffers = nullptr;
         std::optional<vulkan::Pipeline> m_render_triangles_pipeline;
+        std::optional<vulkan::Pipeline> m_render_triangle_lines_pipeline;
         std::optional<vulkan::Pipeline> m_render_points_pipeline;
         std::optional<vulkan::Pipeline> m_render_lines_pipeline;
         std::optional<vulkan::CommandBuffers> m_render_command_buffers;
@@ -244,6 +248,8 @@ class Impl final : public Renderer
                 m_clip_plane = plane;
 
                 set_clip_plane();
+
+                create_render_command_buffers();
         }
 
         void clip_plane_hide() override
@@ -255,6 +261,8 @@ class Impl final : public Renderer
                 m_matrices_buffer.set_clip_plane(vec4(0), false);
                 m_shadow_memory.set_clip_plane(vec4(0), false);
                 m_points_memory.set_clip_plane(vec4(0), false);
+
+                create_render_command_buffers();
         }
 
         void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) override
@@ -407,6 +415,7 @@ class Impl final : public Renderer
         {
                 m_render_command_buffers.reset();
                 m_render_triangles_pipeline.reset();
+                m_render_triangle_lines_pipeline.reset();
                 m_render_points_pipeline.reset();
                 m_render_lines_pipeline.reset();
         }
@@ -429,6 +438,9 @@ class Impl final : public Renderer
                 m_points_memory.set_object_image(m_object_image);
 
                 m_render_triangles_pipeline = m_triangles_program.create_pipeline(
+                        m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading, m_x, m_y,
+                        m_width, m_height);
+                m_render_triangle_lines_pipeline = m_triangle_lines_program.create_pipeline(
                         m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading, m_x, m_y,
                         m_width, m_height);
                 m_render_points_pipeline = m_points_program.create_pipeline(
@@ -513,24 +525,38 @@ class Impl final : public Renderer
                         return;
                 }
 
-                DrawInfo info;
+                {
+                        DrawInfo info;
 
-                info.triangles_pipeline_layout = m_triangles_program.pipeline_layout();
-                info.triangles_pipeline = *m_render_triangles_pipeline;
-                info.triangles_shared_set = m_triangles_shared_memory.descriptor_set();
-                info.triangles_shared_set_number = RendererTrianglesSharedMemory::set_number();
+                        info.triangles_pipeline_layout = m_triangles_program.pipeline_layout();
+                        info.triangles_pipeline = *m_render_triangles_pipeline;
+                        info.triangles_shared_set = m_triangles_shared_memory.descriptor_set();
+                        info.triangles_shared_set_number = RendererTrianglesSharedMemory::set_number();
 
-                info.points_pipeline_layout = m_points_program.pipeline_layout();
-                info.points_pipeline = *m_render_points_pipeline;
-                info.points_set = m_points_memory.descriptor_set();
-                info.points_set_number = RendererPointsMemory::set_number();
+                        info.points_pipeline_layout = m_points_program.pipeline_layout();
+                        info.points_pipeline = *m_render_points_pipeline;
+                        info.points_set = m_points_memory.descriptor_set();
+                        info.points_set_number = RendererPointsMemory::set_number();
 
-                info.lines_pipeline_layout = m_points_program.pipeline_layout();
-                info.lines_pipeline = *m_render_lines_pipeline;
-                info.lines_set = m_points_memory.descriptor_set();
-                info.lines_set_number = RendererPointsMemory::set_number();
+                        info.lines_pipeline_layout = m_points_program.pipeline_layout();
+                        info.lines_pipeline = *m_render_lines_pipeline;
+                        info.lines_set = m_points_memory.descriptor_set();
+                        info.lines_set_number = RendererPointsMemory::set_number();
 
-                m_storage.object()->draw_commands(command_buffer, info);
+                        m_storage.object()->draw_commands(command_buffer, info);
+                }
+
+                if (m_clip_plane)
+                {
+                        DrawInfoTriangles info;
+
+                        info.triangles_pipeline_layout = m_triangle_lines_program.pipeline_layout();
+                        info.triangles_pipeline = *m_render_triangle_lines_pipeline;
+                        info.triangles_set = m_triangle_lines_memory.descriptor_set();
+                        info.triangles_set_number = RendererTriangleLinesMemory::set_number();
+
+                        m_storage.object()->draw_commands_triangles(command_buffer, info);
+                }
         }
 
         void draw_shadow_commands(VkCommandBuffer command_buffer) const
@@ -544,14 +570,16 @@ class Impl final : public Renderer
                         return;
                 }
 
-                ShadowInfo info;
+                DrawInfoTriangles info;
 
                 info.triangles_pipeline_layout = m_shadow_program.pipeline_layout();
                 info.triangles_pipeline = *m_shadow_pipeline;
                 info.triangles_set = m_shadow_memory.descriptor_set();
                 info.triangles_set_number = RendererShadowMemory::set_number();
 
-                m_storage.object()->shadow_commands(command_buffer, info);
+                vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
+
+                m_storage.object()->draw_commands_triangles(command_buffer, info);
         }
 
         void create_render_command_buffers()
@@ -658,6 +686,12 @@ public:
                           m_device,
                           m_triangles_program.descriptor_set_layout_shared(),
                           {m_graphics_queue.family_index()},
+                          m_matrices_buffer),
+                  //
+                  m_triangle_lines_program(m_device),
+                  m_triangle_lines_memory(
+                          m_device,
+                          m_triangle_lines_program.descriptor_set_layout(),
                           m_matrices_buffer),
                   //
                   m_shadow_program(m_device),

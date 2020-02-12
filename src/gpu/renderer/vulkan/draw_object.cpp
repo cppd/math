@@ -526,10 +526,8 @@ public:
                 }
         }
 
-        void shadow_commands(VkCommandBuffer command_buffer, const ShadowInfo& info) const
+        void draw_commands_triangles(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const
         {
-                vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
-
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline);
 
                 vkCmdBindDescriptorSets(
@@ -690,11 +688,11 @@ void DrawObject::draw_commands(VkCommandBuffer command_buffer, const DrawInfo& i
         }
 }
 
-void DrawObject::shadow_commands(VkCommandBuffer command_buffer, const ShadowInfo& info) const
+void DrawObject::draw_commands_triangles(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const
 {
         if (m_triangles)
         {
-                m_triangles->shadow_commands(command_buffer, info);
+                m_triangles->draw_commands_triangles(command_buffer, info);
         }
 }
 }

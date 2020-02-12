@@ -45,7 +45,7 @@ struct DrawInfo
         unsigned lines_set_number;
 };
 
-struct ShadowInfo
+struct DrawInfoTriangles
 {
         VkPipelineLayout triangles_pipeline_layout;
         VkPipeline triangles_pipeline;
@@ -82,6 +82,6 @@ public:
         bool has_shadow() const;
         const mat4& model_matrix() const;
         void draw_commands(VkCommandBuffer command_buffer, const DrawInfo& info) const;
-        void shadow_commands(VkCommandBuffer command_buffer, const ShadowInfo& info) const;
+        void draw_commands_triangles(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const;
 };
 }
