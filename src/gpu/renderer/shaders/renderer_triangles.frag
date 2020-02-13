@@ -29,6 +29,7 @@ layout(std140, binding = 2) uniform Drawing
 {
         vec3 default_color;
         vec3 wireframe_color;
+        vec3 background_color;
         float default_ns;
         vec3 light_a;
         vec3 light_d;
@@ -36,6 +37,7 @@ layout(std140, binding = 2) uniform Drawing
         bool show_materials;
         bool show_wireframe;
         bool show_shadow;
+        bool show_fog;
 }
 drawing;
 

@@ -24,7 +24,10 @@ layout(std140, set = 0, binding = 0) uniform Matrices
 #endif
 {
         mat4 mvp_matrix;
+        mat4 shadow_mvp_matrix;
+        mat4 shadow_mvp_texture_matrix;
         vec4 clip_plane_equation;
+        vec4 clip_plane_equation_shadow;
         bool clip_plane_enabled;
 }
 matrices;

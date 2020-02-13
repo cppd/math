@@ -21,7 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "draw_object.h"
 #include "sampler.h"
 #include "shader_points.h"
-#include "shader_source.h"
+#include "shader_shadow.h"
+#include "shader_triangle_lines.h"
 #include "shader_triangles.h"
 
 #include "../com/storage.h"
@@ -89,8 +90,9 @@ class Impl final : public Renderer
         vulkan::Sampler m_texture_sampler;
         vulkan::Sampler m_shadow_sampler;
 
+        RendererBuffers m_buffers;
+
         RendererTrianglesProgram m_triangles_program;
-        RendererMatricesBuffer m_matrices_buffer;
         RendererTrianglesSharedMemory m_triangles_shared_memory;
 
         RendererTriangleLinesProgram m_triangle_lines_program;
@@ -125,27 +127,26 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_memory.set_light_a(light);
-                m_points_memory.set_light_a(light);
+                m_buffers.set_light_a(light);
         }
         void set_light_d(const Color& light) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_memory.set_light_d(light);
+                m_buffers.set_light_d(light);
         }
         void set_light_s(const Color& light) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_memory.set_light_s(light);
+                m_buffers.set_light_s(light);
         }
         void set_background_color(const Color& color) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 m_clear_color = color;
-                m_points_memory.set_background_color(color);
+                m_buffers.set_background_color(color);
 
                 create_render_command_buffers();
         }
@@ -153,51 +154,50 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_memory.set_default_color(color);
-                m_points_memory.set_default_color(color);
+                m_buffers.set_default_color(color);
         }
         void set_wireframe_color(const Color& color) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_memory.set_wireframe_color(color);
+                m_buffers.set_wireframe_color(color);
         }
         void set_default_ns(double default_ns) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_memory.set_default_ns(default_ns);
+                m_buffers.set_default_ns(default_ns);
         }
         void set_show_smooth(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_memory.set_show_smooth(show);
+                m_buffers.set_show_smooth(show);
         }
         void set_show_wireframe(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_memory.set_show_wireframe(show);
+                m_buffers.set_show_wireframe(show);
         }
         void set_show_shadow(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_memory.set_show_shadow(show);
+                m_buffers.set_show_shadow(show);
                 m_show_shadow = show;
         }
         void set_show_fog(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_points_memory.set_show_fog(show);
+                m_buffers.set_show_fog(show);
         }
         void set_show_materials(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_memory.set_show_materials(show);
+                m_buffers.set_show_materials(show);
         }
         void set_shadow_zoom(double zoom) override
         {
@@ -223,8 +223,8 @@ class Impl final : public Renderer
                 m_shadow_vp_texture_matrix = SHADOW_TEXTURE_MATRIX * m_shadow_vp_matrix;
                 m_main_vp_matrix = main_projection_matrix * c.main_view_matrix;
 
-                m_triangles_shared_memory.set_direction_to_light(-to_vector<float>(c.light_direction));
-                m_triangles_shared_memory.set_direction_to_camera(-to_vector<float>(c.camera_direction));
+                m_buffers.set_direction_to_light(-to_vector<float>(c.light_direction));
+                m_buffers.set_direction_to_camera(-to_vector<float>(c.camera_direction));
 
                 set_matrices();
         }
@@ -235,9 +235,7 @@ class Impl final : public Renderer
                 {
                         vec4 main_plane = *m_clip_plane * m_main_vp_matrix.inverse();
                         vec4 shadow_plane = *m_clip_plane * m_shadow_vp_matrix.inverse();
-                        m_matrices_buffer.set_clip_plane(main_plane, true);
-                        m_shadow_memory.set_clip_plane(shadow_plane, true);
-                        m_points_memory.set_clip_plane(main_plane, true);
+                        m_buffers.set_clip_plane(main_plane, shadow_plane, true);
                 }
         }
 
@@ -258,9 +256,7 @@ class Impl final : public Renderer
 
                 m_clip_plane.reset();
 
-                m_matrices_buffer.set_clip_plane(vec4(0), false);
-                m_shadow_memory.set_clip_plane(vec4(0), false);
-                m_points_memory.set_clip_plane(vec4(0), false);
+                m_buffers.set_clip_plane(vec4(0), vec4(0), false);
 
                 create_render_command_buffers();
         }
@@ -497,9 +493,7 @@ class Impl final : public Renderer
                         const mat4& shadow_mvp_texture_matrix = m_shadow_vp_texture_matrix * model;
                         const mat4& shadow_mvp_matrix = m_shadow_vp_matrix * model;
 
-                        m_matrices_buffer.set_matrices(main_mvp_matrix, shadow_mvp_texture_matrix);
-                        m_shadow_memory.set_matrix(shadow_mvp_matrix);
-                        m_points_memory.set_matrix(main_mvp_matrix);
+                        m_buffers.set_matrices(main_mvp_matrix, shadow_mvp_matrix, shadow_mvp_texture_matrix);
 
                         set_clip_plane();
                 }
@@ -680,28 +674,19 @@ public:
                   m_texture_sampler(create_renderer_texture_sampler(m_device, sampler_anisotropy)),
                   m_shadow_sampler(create_renderer_shadow_sampler(m_device)),
                   //
+                  m_buffers(m_device, {m_graphics_queue.family_index()}),
+                  //
                   m_triangles_program(m_device),
-                  m_matrices_buffer(m_device, {m_graphics_queue.family_index()}),
-                  m_triangles_shared_memory(
-                          m_device,
-                          m_triangles_program.descriptor_set_layout_shared(),
-                          {m_graphics_queue.family_index()},
-                          m_matrices_buffer),
+                  m_triangles_shared_memory(m_device, m_triangles_program.descriptor_set_layout_shared(), m_buffers),
                   //
                   m_triangle_lines_program(m_device),
-                  m_triangle_lines_memory(
-                          m_device,
-                          m_triangle_lines_program.descriptor_set_layout(),
-                          m_matrices_buffer),
+                  m_triangle_lines_memory(m_device, m_triangle_lines_program.descriptor_set_layout(), m_buffers),
                   //
                   m_shadow_program(m_device),
-                  m_shadow_memory(
-                          m_device,
-                          m_shadow_program.descriptor_set_layout(),
-                          {m_graphics_queue.family_index()}),
+                  m_shadow_memory(m_device, m_shadow_program.descriptor_set_layout(), m_buffers),
                   //
                   m_points_program(m_device),
-                  m_points_memory(m_device, m_points_program.descriptor_set_layout(), {m_graphics_queue.family_index()})
+                  m_points_memory(m_device, m_points_program.descriptor_set_layout(), m_buffers)
         {
         }
 

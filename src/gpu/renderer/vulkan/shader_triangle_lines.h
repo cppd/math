@@ -19,23 +19,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_buffers.h"
 
-#include <src/color/color.h>
 #include <src/graphics/vulkan/descriptor.h>
 #include <src/graphics/vulkan/objects.h>
 #include <src/graphics/vulkan/shader.h>
-#include <src/numerical/vec.h>
 
 #include <vector>
 
 namespace gpu_vulkan
 {
-class RendererPointsMemory final
+class RendererTriangleLinesMemory final
 {
         static constexpr int SET_NUMBER = 0;
-
         static constexpr int MATRICES_BINDING = 0;
-        static constexpr int DRAWING_BINDING = 1;
-        static constexpr int OBJECTS_BINDING = 2;
 
         vulkan::Descriptors m_descriptors;
 
@@ -43,64 +38,47 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        RendererPointsMemory(
+        RendererTriangleLinesMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const RendererBuffers& buffers);
 
-        RendererPointsMemory(const RendererPointsMemory&) = delete;
-        RendererPointsMemory& operator=(const RendererPointsMemory&) = delete;
-        RendererPointsMemory& operator=(RendererPointsMemory&&) = delete;
+        RendererTriangleLinesMemory(const RendererTriangleLinesMemory&) = delete;
+        RendererTriangleLinesMemory& operator=(const RendererTriangleLinesMemory&) = delete;
+        RendererTriangleLinesMemory& operator=(RendererTriangleLinesMemory&&) = delete;
 
-        RendererPointsMemory(RendererPointsMemory&&) = default;
-        ~RendererPointsMemory() = default;
+        RendererTriangleLinesMemory(RendererTriangleLinesMemory&&) = default;
+        ~RendererTriangleLinesMemory() = default;
 
         //
 
         const VkDescriptorSet& descriptor_set() const;
-
-        //
-
-        void set_object_image(const vulkan::ImageWithMemory* storage_image) const;
 };
 
-struct RendererPointsVertex
-{
-        vec3f position;
-
-        explicit constexpr RendererPointsVertex(const vec3f& position_) : position(position_)
-        {
-        }
-
-        static std::vector<VkVertexInputBindingDescription> binding_descriptions();
-
-        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
-};
-
-class RendererPointsProgram final
+class RendererTriangleLinesProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        vulkan::VertexShader m_vertex_shader_0d;
-        vulkan::VertexShader m_vertex_shader_1d;
+        vulkan::VertexShader m_vertex_shader;
+        vulkan::GeometryShader m_geometry_shader;
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        explicit RendererPointsProgram(const vulkan::Device& device);
+        explicit RendererTriangleLinesProgram(const vulkan::Device& device);
 
-        RendererPointsProgram(const RendererPointsProgram&) = delete;
-        RendererPointsProgram& operator=(const RendererPointsProgram&) = delete;
-        RendererPointsProgram& operator=(RendererPointsProgram&&) = delete;
+        RendererTriangleLinesProgram(const RendererTriangleLinesProgram&) = delete;
+        RendererTriangleLinesProgram& operator=(const RendererTriangleLinesProgram&) = delete;
+        RendererTriangleLinesProgram& operator=(RendererTriangleLinesProgram&&) = delete;
 
-        RendererPointsProgram(RendererPointsProgram&&) = default;
-        ~RendererPointsProgram() = default;
+        RendererTriangleLinesProgram(RendererTriangleLinesProgram&&) = default;
+        ~RendererTriangleLinesProgram() = default;
 
         vulkan::Pipeline create_pipeline(
                 VkRenderPass render_pass,
                 VkSampleCountFlagBits sample_count,
-                VkPrimitiveTopology primitive_topology,
+                bool sample_shading,
                 unsigned x,
                 unsigned y,
                 unsigned width,

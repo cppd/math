@@ -64,37 +64,27 @@ std::vector<VkDescriptorSetLayoutBinding> RendererPointsMemory::descriptor_set_l
 RendererPointsMemory::RendererPointsMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
-        const std::unordered_set<uint32_t>& family_indices)
+        const RendererBuffers& buffers)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(
-                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
-                m_matrices_buffer_index = m_uniform_buffers.size() - 1;
-
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = m_uniform_buffers.back();
+                buffer_info.buffer = buffers.matrices_buffer();
                 buffer_info.offset = 0;
-                buffer_info.range = m_uniform_buffers.back().size();
+                buffer_info.range = buffers.matrices_size();
 
                 infos.emplace_back(buffer_info);
 
                 bindings.push_back(MATRICES_BINDING);
         }
         {
-                m_uniform_buffers.emplace_back(
-                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
-                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
-                m_drawing_buffer_index = m_uniform_buffers.size() - 1;
-
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = m_uniform_buffers.back();
+                buffer_info.buffer = buffers.drawing_buffer();
                 buffer_info.offset = 0;
-                buffer_info.range = m_uniform_buffers.back().size();
+                buffer_info.range = buffers.drawing_size();
 
                 infos.emplace_back(buffer_info);
 
@@ -114,52 +104,6 @@ const VkDescriptorSet& RendererPointsMemory::descriptor_set() const
         return m_descriptors.descriptor_set(0);
 }
 
-template <typename T>
-void RendererPointsMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
-{
-        vulkan::map_and_write_to_buffer(m_uniform_buffers[m_matrices_buffer_index], offset, data);
-}
-template <typename T>
-void RendererPointsMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
-{
-        vulkan::map_and_write_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
-}
-
-void RendererPointsMemory::set_matrix(const mat4& mvp_matrix) const
-{
-        Matrices::M matrices;
-        matrices.mvp_matrix = to_matrix<float>(mvp_matrix).transpose();
-        copy_to_matrices_buffer(offsetof(Matrices, matrices), matrices);
-}
-
-void RendererPointsMemory::set_clip_plane(const vec4& equation, bool enabled) const
-{
-        Matrices::C clip_plane;
-        clip_plane.equation = to_vector<float>(equation);
-        clip_plane.enabled = enabled ? 1 : 0;
-        copy_to_matrices_buffer(offsetof(Matrices, clip_plane), clip_plane);
-}
-
-void RendererPointsMemory::set_default_color(const Color& color) const
-{
-        decltype(Drawing().default_color) c = color.to_rgb_vector<float>();
-        copy_to_drawing_buffer(offsetof(Drawing, default_color), c);
-}
-void RendererPointsMemory::set_background_color(const Color& color) const
-{
-        decltype(Drawing().background_color) c = color.to_rgb_vector<float>();
-        copy_to_drawing_buffer(offsetof(Drawing, background_color), c);
-}
-void RendererPointsMemory::set_light_a(const Color& color) const
-{
-        decltype(Drawing().light_a) c = color.to_rgb_vector<float>();
-        copy_to_drawing_buffer(offsetof(Drawing, light_a), c);
-}
-void RendererPointsMemory::set_show_fog(bool show) const
-{
-        decltype(Drawing().show_fog) s = show ? 1 : 0;
-        copy_to_drawing_buffer(offsetof(Drawing, show_fog), s);
-}
 void RendererPointsMemory::set_object_image(const vulkan::ImageWithMemory* storage_image) const
 {
         ASSERT(storage_image && storage_image->format() == VK_FORMAT_R32_UINT);

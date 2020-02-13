@@ -24,8 +24,15 @@ layout(std140, set = 0, binding = 1) uniform Drawing
 #endif
 {
         vec3 default_color;
+        vec3 wireframe_color;
         vec3 background_color;
+        float default_ns;
         vec3 light_a;
+        vec3 light_d;
+        vec3 light_s;
+        bool show_materials;
+        bool show_wireframe;
+        bool show_shadow;
         bool show_fog;
 }
 drawing;
