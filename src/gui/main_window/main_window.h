@@ -91,6 +91,7 @@ private slots:
         void on_toolButton_dft_background_color_clicked();
         void on_toolButton_dft_color_clicked();
         void on_toolButton_wireframe_color_clicked();
+        void on_toolButton_clip_plane_color_clicked();
 
         void graphics_widget_resize(QResizeEvent*);
         void graphics_widget_mouse_wheel(QWheelEvent*);
@@ -159,6 +160,7 @@ private:
         void set_background_color(const QColor& c);
         void set_default_color(const QColor& c);
         void set_wireframe_color(const QColor& c);
+        void set_clip_plane_color(const QColor& c);
 
         void set_dft_background_color(const QColor& c);
         void set_dft_color(const QColor& c);
@@ -202,6 +204,7 @@ private:
         QColor m_background_color;
         QColor m_default_color;
         QColor m_wireframe_color;
+        QColor m_clip_plane_color;
 
         QColor m_dft_background_color;
         QColor m_dft_color;

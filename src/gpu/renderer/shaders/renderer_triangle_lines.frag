@@ -15,9 +15,26 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+layout(std140, binding = 1) uniform Drawing
+{
+        vec3 default_color;
+        vec3 wireframe_color;
+        vec3 background_color;
+        vec3 clip_plane_color;
+        float default_ns;
+        vec3 light_a;
+        vec3 light_d;
+        vec3 light_s;
+        bool show_materials;
+        bool show_wireframe;
+        bool show_shadow;
+        bool show_fog;
+}
+drawing;
+
 layout(location = 0) out vec4 color;
 
 void main(void)
 {
-        color = vec4(1, 1, 1, 1);
+        color = vec4(drawing.clip_plane_color, 1);
 }

@@ -124,6 +124,12 @@ void RendererBuffers::set_background_color(const Color& color) const
         copy_to_drawing_buffer(offsetof(Drawing, background_color), c);
 }
 
+void RendererBuffers::set_clip_plane_color(const Color& color) const
+{
+        decltype(Drawing().clip_plane_color) c = color.to_rgb_vector<float>();
+        copy_to_drawing_buffer(offsetof(Drawing, clip_plane_color), c);
+}
+
 void RendererBuffers::set_default_ns(float default_ns) const
 {
         decltype(Drawing().default_ns) ns = default_ns;

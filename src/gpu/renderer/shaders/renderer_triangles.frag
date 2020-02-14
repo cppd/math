@@ -30,6 +30,7 @@ layout(std140, binding = 2) uniform Drawing
         vec3 default_color;
         vec3 wireframe_color;
         vec3 background_color;
+        vec3 clip_plane_color;
         float default_ns;
         vec3 light_a;
         vec3 light_d;

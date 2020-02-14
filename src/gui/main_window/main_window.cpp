@@ -71,6 +71,7 @@ constexpr int POINT_COUNT_MAXIMUM = 1000000;
 constexpr QRgb BACKGROUND_COLOR = qRgb(50, 100, 150);
 constexpr QRgb DEFAULT_COLOR = qRgb(150, 170, 150);
 constexpr QRgb WIREFRAME_COLOR = qRgb(255, 255, 255);
+constexpr QRgb CLIP_PLANE_COLOR = qRgb(250, 230, 150);
 constexpr QRgb DFT_BACKGROUND_COLOR = qRgb(0, 0, 50);
 constexpr QRgb DFT_COLOR = qRgb(150, 200, 250);
 
@@ -174,6 +175,7 @@ void MainWindow::constructor_interface()
         set_background_color(BACKGROUND_COLOR);
         set_default_color(DEFAULT_COLOR);
         set_wireframe_color(WIREFRAME_COLOR);
+        set_clip_plane_color(CLIP_PLANE_COLOR);
 
         set_dft_background_color(DFT_BACKGROUND_COLOR);
         set_dft_color(DFT_COLOR);
@@ -879,6 +881,18 @@ void MainWindow::set_wireframe_color(const QColor& c)
         ui.widget_wireframe_color->setPalette(palette);
 }
 
+void MainWindow::set_clip_plane_color(const QColor& c)
+{
+        m_clip_plane_color = c;
+        if (m_show)
+        {
+                m_show->set_clip_plane_color(qcolor_to_rgb(c));
+        }
+        QPalette palette;
+        palette.setColor(QPalette::Window, m_clip_plane_color);
+        ui.widget_clip_plane_color->setPalette(palette);
+}
+
 void MainWindow::set_dft_background_color(const QColor& c)
 {
         m_dft_background_color = c;
@@ -1160,6 +1174,7 @@ void MainWindow::slot_window_first_shown()
                 info.background_color = qcolor_to_rgb(m_background_color);
                 info.default_color = qcolor_to_rgb(m_default_color);
                 info.wireframe_color = qcolor_to_rgb(m_wireframe_color);
+                info.clip_plane_color = qcolor_to_rgb(m_clip_plane_color);
                 info.with_smooth = ui.checkBox_smooth->isChecked();
                 info.with_wireframe = ui.checkBox_wireframe->isChecked();
                 info.with_shadow = ui.checkBox_shadow->isChecked();
@@ -1431,6 +1446,12 @@ void MainWindow::on_toolButton_wireframe_color_clicked()
 {
         dialog::color_dialog(
                 this, "Wireframe Color", m_wireframe_color, [this](const QColor& c) { set_wireframe_color(c); });
+}
+
+void MainWindow::on_toolButton_clip_plane_color_clicked()
+{
+        dialog::color_dialog(
+                this, "Clip Plane Color", m_clip_plane_color, [this](const QColor& c) { set_clip_plane_color(c); });
 }
 
 void MainWindow::on_toolButton_dft_background_color_clicked()

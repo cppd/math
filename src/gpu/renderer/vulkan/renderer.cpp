@@ -162,6 +162,12 @@ class Impl final : public Renderer
 
                 m_buffers.set_wireframe_color(color);
         }
+        void set_clip_plane_color(const Color& color) override
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_buffers.set_clip_plane_color(color);
+        }
         void set_default_ns(double default_ns) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());

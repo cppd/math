@@ -101,6 +101,13 @@ class EventQueue final : public Show
                         {
                         }
                 };
+                struct set_clip_plane_color final
+                {
+                        Color clip_plane_color;
+                        explicit set_clip_plane_color(const Color& v) : clip_plane_color(v)
+                        {
+                        }
+                };
                 struct set_default_ns final
                 {
                         double default_ns;
@@ -286,6 +293,7 @@ class EventQueue final : public Show
                                 set_specular,
                                 set_vertical_sync,
                                 set_wireframe_color,
+                                set_clip_plane_color,
                                 show_convex_hull_2d,
                                 show_dft,
                                 show_fps,
@@ -372,6 +380,10 @@ class EventQueue final : public Show
                 void operator()(const Event::set_wireframe_color& d)
                 {
                         m_show->set_wireframe_color(d.wireframe_color);
+                }
+                void operator()(const Event::set_clip_plane_color& d)
+                {
+                        m_show->set_clip_plane_color(d.clip_plane_color);
                 }
                 void operator()(const Event::set_default_ns& d)
                 {
@@ -518,6 +530,10 @@ class EventQueue final : public Show
         void set_wireframe_color(const Color& c) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_wireframe_color>, c);
+        }
+        void set_clip_plane_color(const Color& c) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_clip_plane_color>, c);
         }
         void set_default_ns(double ns) override
         {

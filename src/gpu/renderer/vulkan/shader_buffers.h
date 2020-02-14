@@ -65,6 +65,7 @@ class RendererBuffers
                 alignas(GLSL_VEC3_ALIGN) vec3f default_color;
                 alignas(GLSL_VEC3_ALIGN) vec3f wireframe_color;
                 alignas(GLSL_VEC3_ALIGN) vec3f background_color;
+                alignas(GLSL_VEC3_ALIGN) vec3f clip_plane_color;
                 float default_ns;
                 alignas(GLSL_VEC3_ALIGN) vec3f light_a;
                 alignas(GLSL_VEC3_ALIGN) vec3f light_d;
@@ -106,6 +107,7 @@ public:
         void set_default_color(const Color& color) const;
         void set_wireframe_color(const Color& color) const;
         void set_background_color(const Color& color) const;
+        void set_clip_plane_color(const Color& color) const;
         void set_default_ns(float default_ns) const;
         void set_light_a(const Color& color) const;
         void set_light_d(const Color& color) const;
