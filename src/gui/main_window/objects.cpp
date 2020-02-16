@@ -25,11 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/com/variant.h>
 #include <src/geometry/cocone/reconstruction.h>
+#include <src/geometry/core/convex_hull.h>
 #include <src/geometry/graph/mst.h>
 #include <src/geometry/objects/points.h>
 #include <src/numerical/matrix.h>
 #include <src/obj/alg/alg.h>
-#include <src/obj/create/convex_hull.h>
 #include <src/obj/create/facets.h>
 #include <src/obj/create/lines.h>
 #include <src/obj/create/points.h>
@@ -69,6 +69,45 @@ ObjectId int_to_object_id(int int_id)
         }
 
         error_fatal("Wrong ObjectId value " + to_string(int_id));
+}
+
+namespace
+{
+template <size_t N>
+std::unique_ptr<const Obj<N>> obj_convex_hull(const Obj<N>& obj, ProgressRatio* progress)
+{
+        std::vector<Vector<N, float>> points;
+        if (!obj.facets().empty())
+        {
+                points = unique_facet_vertices(&obj);
+        }
+        else if (!obj.points().empty())
+        {
+                points = unique_point_vertices(&obj);
+        }
+        else
+        {
+                error("Faces or points not found for computing convex hull object");
+        }
+
+        std::vector<ConvexHullFacet<N>> convex_hull_facets;
+
+        double start_time = time_in_seconds();
+
+        compute_convex_hull(points, &convex_hull_facets, progress);
+
+        LOG("Convex hull created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+
+        std::vector<std::array<int, N>> facets;
+        facets.clear();
+        facets.reserve(convex_hull_facets.size());
+        for (const ConvexHullFacet<N>& f : convex_hull_facets)
+        {
+                facets.push_back(f.vertices());
+        }
+
+        return create_obj_for_facets(points, facets);
+}
 }
 
 template <size_t N>
@@ -383,7 +422,7 @@ void MainObjectsImpl<N>::add_object_convex_hull_and_build_mesh(
                 ProgressRatio progress(progress_list);
                 progress.set_text(object_name(object_type) + " convex hull in " + space_name(N) + ": %v of %m");
 
-                obj_ch = create_convex_hull_for_obj(obj.get(), &progress);
+                obj_ch = obj_convex_hull(*obj, &progress);
         }
 
         if (obj_ch->facets().empty())
