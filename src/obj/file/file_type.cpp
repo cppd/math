@@ -15,22 +15,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Для 3 измерений расширения obj, obj3, txt, txt3.
-// Для 4 и более измерений objN, txt, txtN.
-// Если число указано, то используется оно. Если только txt,
-// то подсчитывается количество чисел в первой строке файла.
-
-#include "obj_file.h"
+#include "file_type.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/util/file/sys.h>
 #include <src/util/string/ascii.h>
-#include <src/util/string/str.h>
 
 #include <algorithm>
 #include <fstream>
 #include <sstream>
+
+// Для 3 измерений расширения obj, obj3, txt, txt3.
+// Для 4 и более измерений objN, txt, txtN.
+// Если число указано, то используется оно. Если только txt,
+// то подсчитывается количество чисел в первой строке файла.
 
 namespace
 {
@@ -196,45 +195,4 @@ std::tuple<int, ObjFileType> obj_file_dimension_and_type(const std::string& file
         }
 
         return {dimension, obj_file_type};
-}
-
-std::string obj_file_extension(size_t N)
-{
-        return (N == 3) ? "obj" : "obj" + to_string(N);
-}
-
-std::vector<std::string> obj_file_supported_extensions(const std::set<unsigned>& dimensions)
-{
-        std::vector<std::string> result;
-        for (unsigned d : dimensions)
-        {
-                ASSERT(d >= 3);
-                if (d == 3)
-                {
-                        result.emplace_back("obj");
-                        result.emplace_back("obj3");
-                }
-                else
-                {
-                        result.push_back("obj" + to_string(d));
-                }
-        }
-        return result;
-}
-
-std::vector<std::string> txt_file_supported_extensions(const std::set<unsigned>& dimensions)
-{
-        std::vector<std::string> result;
-        result.emplace_back("txt");
-        for (unsigned d : dimensions)
-        {
-                ASSERT(d >= 3);
-                result.push_back("txt" + to_string(d));
-        }
-        return result;
-}
-
-bool obj_file_extension_is_correct(size_t N, const std::string& extension)
-{
-        return (extension == obj_file_extension(N)) || (extension == "obj" + to_string(N));
 }

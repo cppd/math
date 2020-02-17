@@ -19,10 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../obj.h"
 
-#include <src/progress/progress.h>
-
-#include <memory>
 #include <string>
+#include <string_view>
 
 template <size_t N>
-std::unique_ptr<Obj<N>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
+std::string save_obj(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment);

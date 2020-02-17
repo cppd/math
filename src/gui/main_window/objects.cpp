@@ -33,9 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/obj/create/facets.h>
 #include <src/obj/create/lines.h>
 #include <src/obj/create/points.h>
-#include <src/obj/file/file_load.h>
-#include <src/obj/file/file_save.h>
-#include <src/obj/file/obj_file.h>
+#include <src/obj/file.h>
 #include <src/obj/obj.h>
 #include <src/painter/shapes/mesh.h>
 #include <src/progress/progress.h>
@@ -983,7 +981,7 @@ class MainObjectStorage final : public MainObjects
                 double rho,
                 double alpha) override
         {
-                int dimension = std::get<0>(obj_file_dimension_and_type(file_name));
+                int dimension = obj_file_dimension(file_name);
 
                 check_dimension(dimension);
 

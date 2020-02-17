@@ -27,8 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/time.h>
 #include <src/obj/create/facets.h>
-#include <src/obj/file/file_load.h>
-#include <src/obj/file/file_save.h>
+#include <src/obj/file.h>
 #include <src/util/file/sys.h>
 #include <src/util/random/engine.h>
 

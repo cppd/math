@@ -17,10 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../obj.h"
-
 #include <string>
-#include <string_view>
+#include <tuple>
 
-template <size_t N>
-std::string save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment);
+enum class ObjFileType
+{
+        Obj,
+        Txt
+};
+
+std::tuple<int, ObjFileType> obj_file_dimension_and_type(const std::string& file_name);

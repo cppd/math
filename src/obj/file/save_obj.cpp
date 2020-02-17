@@ -15,11 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "file_save.h"
-
-#include "obj_file.h"
+#include "save_obj.h"
 
 #include "../alg/alg.h"
+#include "../file.h"
 
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -282,7 +281,7 @@ std::string file_name_with_extension(const std::string& file_name)
 }
 
 template <size_t N>
-std::string save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment)
+std::string save_obj(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment)
 {
         static_assert(N >= 3);
 
@@ -308,19 +307,7 @@ std::string save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file
         return full_name;
 }
 
-template std::string save_obj_geometry_to_file(
-        const Obj<3>* obj,
-        const std::string& file_name,
-        const std::string_view& comment);
-template std::string save_obj_geometry_to_file(
-        const Obj<4>* obj,
-        const std::string& file_name,
-        const std::string_view& comment);
-template std::string save_obj_geometry_to_file(
-        const Obj<5>* obj,
-        const std::string& file_name,
-        const std::string_view& comment);
-template std::string save_obj_geometry_to_file(
-        const Obj<6>* obj,
-        const std::string& file_name,
-        const std::string_view& comment);
+template std::string save_obj(const Obj<3>* obj, const std::string& file_name, const std::string_view& comment);
+template std::string save_obj(const Obj<4>* obj, const std::string& file_name, const std::string_view& comment);
+template std::string save_obj(const Obj<5>* obj, const std::string& file_name, const std::string_view& comment);
+template std::string save_obj(const Obj<6>* obj, const std::string& file_name, const std::string_view& comment);

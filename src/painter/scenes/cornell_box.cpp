@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/colors.h>
 #include <src/obj/alg/alg.h>
-#include <src/obj/file/file_load.h>
+#include <src/obj/file.h>
 
 namespace
 {

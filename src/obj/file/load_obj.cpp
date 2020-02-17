@@ -15,11 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "file_load.h"
-
-#include "obj_file.h"
+#include "load_obj.h"
 
 #include "../alg/alg.h"
+#include "read/data.h"
+#include "read/lines.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -31,7 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/com/type/trait.h>
 #include <src/image/file.h>
-#include <src/util/file/read.h>
 #include <src/util/file/sys.h>
 #include <src/util/string/ascii.h>
 #include <src/util/string/str.h>
@@ -71,10 +70,7 @@ constexpr bool is_number_sign(char c)
 {
         return c == '#';
 }
-constexpr bool is_hyphen_minus(char c)
-{
-        return c == '-';
-}
+
 constexpr bool is_solidus(char c)
 {
         return c == '/';
@@ -97,15 +93,6 @@ static_assert(
 std::string obj_type_name(size_t N)
 {
         return "OBJ-" + to_string(N);
-}
-
-template <typename Data, typename Op>
-void read(const Data& data, long long size, const Op& op, long long* i)
-{
-        while (*i < size && op(data[*i]))
-        {
-                ++(*i);
-        }
 }
 
 template <typename T>
@@ -135,52 +122,6 @@ bool check_range(const T1& v, const T2& min, const T3& max)
 bool check_color(const Color& v)
 {
         return v.red() >= 0 && v.red() <= 1 && v.green() >= 0 && v.green() <= 1 && v.blue() >= 0 && v.blue() <= 1;
-}
-
-template <typename T>
-void find_line_begin(const T& s, std::vector<long long>* line_begin)
-{
-        static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::vector<char>>);
-
-        long long size = s.size();
-
-        long long new_line_count = 0;
-        for (long long i = 0; i < size; ++i)
-        {
-                if (s[i] == '\n')
-                {
-                        ++new_line_count;
-                }
-        }
-
-        line_begin->clear();
-        line_begin->reserve(new_line_count);
-        line_begin->shrink_to_fit();
-
-        long long begin = 0;
-        for (long long i = 0; i < size; ++i)
-        {
-                if (s[i] == '\n')
-                {
-                        line_begin->push_back(begin);
-                        begin = i + 1;
-                }
-        }
-
-        if (begin != size)
-        {
-                error("No new line at the end of file");
-        }
-}
-
-template <typename T>
-void read_file_lines(const std::string& file_name, T* file_data, std::vector<long long>* line_begin)
-{
-        static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::vector<char>>);
-
-        read_text_file(file_name, file_data);
-
-        find_line_begin(*file_data, line_begin);
 }
 
 template <size_t N>
@@ -231,59 +172,6 @@ void load_image(
         images->push_back(read_image_from_file<N>(file_name));
         *index = images->size() - 1;
         image_index->emplace(file_name, *index);
-}
-
-// Между begin и end находится уже проверенное целое число в формате DDDDD без знака
-template <typename Integer, typename T>
-Integer digits_to_integer(const T& data, long long begin, long long end)
-{
-        static_assert(is_native_integral<Integer>);
-
-        long long length = end - begin;
-
-        if (length > limits<Integer>::digits10 || length < 1)
-        {
-                error("Error convert " + std::string(&data[begin], length) + " to integral");
-        }
-
-        --end;
-        Integer sum = ascii::char_to_int(data[end]);
-        Integer mul = 1;
-        while (--end >= begin)
-        {
-                mul *= 10;
-                sum += ascii::char_to_int(data[end]) * mul;
-        }
-
-        return sum;
-}
-
-template <typename T, typename Integer>
-bool read_integer(const T& data, long long size, long long* pos, Integer* value)
-{
-        static_assert(is_signed<Integer>);
-
-        long long begin = *pos;
-
-        if (begin < size && is_hyphen_minus(data[begin]))
-        {
-                ++begin;
-        }
-
-        long long end = begin;
-
-        read(data, size, ascii::is_digit, &end);
-
-        if (end > begin)
-        {
-                *value = (begin == *pos) ? digits_to_integer<Integer>(data, begin, end) :
-                                           -digits_to_integer<Integer>(data, begin, end);
-                *pos = end;
-
-                return true;
-        }
-
-        return false;
 }
 
 // Варианты данных: "x/x/x ...", "x//x ...", "x// ...", "x/x/ ...", "x/x ...", "x ...".
@@ -442,82 +330,6 @@ void read_facets(
         }
 }
 
-template <typename T>
-bool read_one_float_from_string(const char** str, T* p)
-{
-        using FP = std::remove_volatile_t<T>;
-
-        static_assert(std::is_same_v<FP, float> || std::is_same_v<FP, double> || std::is_same_v<FP, long double>);
-
-        char* end;
-
-        if constexpr (std::is_same_v<FP, float>)
-        {
-                *p = std::strtof(*str, &end);
-        }
-        if constexpr (std::is_same_v<FP, double>)
-        {
-                *p = std::strtod(*str, &end);
-        }
-        if constexpr (std::is_same_v<FP, long double>)
-        {
-                *p = std::strtold(*str, &end);
-        }
-
-        // В соответствии со спецификацией файла OBJ, между числами должны быть пробелы,
-        // а после чисел пробелы, конец строки или комментарий.
-        // Здесь без проверок этого.
-        if (*str == end || errno == ERANGE || !is_finite(*p))
-        {
-                return false;
-        }
-        *str = end;
-        return true;
-};
-
-template <typename... T>
-int string_to_floats(const char* str, T*... floats)
-{
-        constexpr int N = sizeof...(T);
-
-        static_assert(N > 0);
-        static_assert(((
-                std::is_same_v<std::remove_volatile_t<T>, float> || std::is_same_v<std::remove_volatile_t<T>, double> ||
-                std::is_same_v<std::remove_volatile_t<T>, long double>)&&...));
-
-        errno = 0;
-        int cnt = 0;
-
-        ((read_one_float_from_string(&str, floats) ? ++cnt : false) && ...);
-
-        return cnt;
-}
-
-template <size_t N, typename T, unsigned... I>
-int read_vector(const char* str, Vector<N, T>* v, std::integer_sequence<unsigned, I...>&&)
-{
-        static_assert(N == sizeof...(I));
-
-        return string_to_floats(str, &(*v)[I]...);
-}
-
-template <size_t N, typename T, unsigned... I>
-int read_vector(const char* str, Vector<N, T>* v, T* n, std::integer_sequence<unsigned, I...>&&)
-{
-        static_assert(N == sizeof...(I));
-
-        return string_to_floats(str, &(*v)[I]..., n);
-}
-
-template <size_t N, typename T>
-void read_float(const char* str, Vector<N, T>* v)
-{
-        if (N != read_vector(str, v, std::make_integer_sequence<unsigned, N>()))
-        {
-                error(std::string("Error read " + to_string(N) + " floating points of ") + type_name<T>() + " type");
-        }
-}
-
 template <size_t N, typename T>
 void read_float_texture(const char* str, Vector<N, T>* v)
 {
@@ -534,17 +346,6 @@ void read_float_texture(const char* str, Vector<N, T>* v)
         if (n == N + 1 && tmp != 0)
         {
                 error(to_string(N + 1) + "-dimensional textures are not supported");
-        }
-}
-
-template <typename T>
-void read_float(const char* str, T* v)
-{
-        static_assert(std::is_floating_point_v<T>);
-
-        if (1 != string_to_floats(str, v))
-        {
-                error(std::string("Error read 1 floating point of ") + type_name<T>() + " type");
         }
 }
 
@@ -1508,205 +1309,15 @@ FileObj<N>::FileObj(const std::string& file_name, ProgressRatio* progress)
 
         LOG(obj_type_name(N) + " loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 }
-
-// Чтение вершин из текстового файла. Одна вершина на строку. Координаты через пробел.
-// x0 x1 x2 x3 ...
-// x0 x1 x2 x3 ...
-template <size_t N>
-class FileTxt final : public Obj<N>
-{
-        using typename Obj<N>::Facet;
-        using typename Obj<N>::Point;
-        using typename Obj<N>::Line;
-        using typename Obj<N>::Material;
-        using typename Obj<N>::Image;
-
-        std::vector<Vector<N, float>> m_vertices;
-        std::vector<Vector<N, float>> m_normals;
-        std::vector<Vector<N - 1, float>> m_texcoords;
-        std::vector<Facet> m_facets;
-        std::vector<Point> m_points;
-        std::vector<Line> m_lines;
-        std::vector<Material> m_materials;
-        std::vector<Image> m_images;
-        Vector<N, float> m_center;
-        float m_length;
-
-        void read_points_thread(
-                unsigned thread_num,
-                unsigned thread_count,
-                std::vector<char>* data_ptr,
-                const std::vector<long long>& line_begin,
-                std::vector<Vector<N, float>>* lines,
-                ProgressRatio* progress) const;
-        void read_points(const std::string& file_name, ProgressRatio* progress);
-        void read_text(const std::string& file_name, ProgressRatio* progress);
-
-        const std::vector<Vector<N, float>>& vertices() const override
-        {
-                return m_vertices;
-        }
-        const std::vector<Vector<N, float>>& normals() const override
-        {
-                return m_normals;
-        }
-        const std::vector<Vector<N - 1, float>>& texcoords() const override
-        {
-                return m_texcoords;
-        }
-        const std::vector<Facet>& facets() const override
-        {
-                return m_facets;
-        }
-        const std::vector<Point>& points() const override
-        {
-                return m_points;
-        }
-        const std::vector<Line>& lines() const override
-        {
-                return m_lines;
-        }
-        const std::vector<Material>& materials() const override
-        {
-                return m_materials;
-        }
-        const std::vector<Image>& images() const override
-        {
-                return m_images;
-        }
-        Vector<N, float> center() const override
-        {
-                return m_center;
-        }
-        float length() const override
-        {
-                return m_length;
-        }
-
-public:
-        FileTxt(const std::string& file_name, ProgressRatio* progress);
-};
-
-template <size_t N>
-void FileTxt<N>::read_points_thread(
-        unsigned thread_num,
-        unsigned thread_count,
-        std::vector<char>* data_ptr,
-        const std::vector<long long>& line_begin,
-        std::vector<Vector<N, float>>* lines,
-        ProgressRatio* progress) const
-{
-        const long long line_count = line_begin.size();
-        const double line_count_reciprocal = 1.0 / line_begin.size();
-
-        for (long long line_num = thread_num; line_num < line_count; line_num += thread_count)
-        {
-                if ((line_num & 0xfff) == 0xfff)
-                {
-                        progress->set(line_num * line_count_reciprocal);
-                }
-
-                const char* str = &(*data_ptr)[line_begin[line_num]];
-
-                long long last = (line_num < line_count - 1) ? line_begin[line_num + 1] : data_ptr->size();
-
-                // В конце строки находится символ '\n', сместиться на него и записать вместо него 0
-                --last;
-
-                (*data_ptr)[last] = 0;
-
-                try
-                {
-                        read_float(str, &(*lines)[line_num]);
-                }
-                catch (std::exception& e)
-                {
-                        error("Line " + to_string(line_num) + ": " + str + "\n" + e.what());
-                }
-                catch (...)
-                {
-                        error("Line " + to_string(line_num) + ": " + str + "\n" + "Unknown error");
-                }
-        }
 }
 
 template <size_t N>
-void FileTxt<N>::read_points(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<Obj<N>> load_obj(const std::string& file_name, ProgressRatio* progress)
 {
-        const int thread_count = hardware_concurrency();
-
-        std::vector<char> file_data;
-        std::vector<long long> line_begin;
-
-        read_file_lines(file_name, &file_data, &line_begin);
-
-        m_vertices.resize(line_begin.size());
-
-        ThreadsWithCatch threads(thread_count);
-        for (int i = 0; i < thread_count; ++i)
-        {
-                threads.add([&, i]() {
-                        read_points_thread(i, thread_count, &file_data, line_begin, &m_vertices, progress);
-                });
-        }
-        threads.join();
+        return std::make_unique<FileObj<N>>(file_name, progress);
 }
 
-template <size_t N>
-void FileTxt<N>::read_text(const std::string& file_name, ProgressRatio* progress)
-{
-        progress->set_undefined();
-
-        read_points(file_name, progress);
-
-        if (m_vertices.empty())
-        {
-                error("No vertices found in TXT file");
-        }
-
-        m_points.resize(m_vertices.size());
-        for (unsigned i = 0; i < m_points.size(); ++i)
-        {
-                m_points[i].vertex = i;
-        }
-
-        center_and_length(m_vertices, m_points, &m_center, &m_length);
-}
-
-template <size_t N>
-FileTxt<N>::FileTxt(const std::string& file_name, ProgressRatio* progress)
-{
-        double start_time = time_in_seconds();
-
-        read_text(file_name, progress);
-
-        LOG("TEXT loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
-}
-}
-
-template <size_t N>
-std::unique_ptr<Obj<N>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress)
-{
-        auto [obj_dimension, obj_file_type] = obj_file_dimension_and_type(file_name);
-
-        if (obj_dimension != static_cast<int>(N))
-        {
-                error("Requested OBJ file dimension " + to_string(N) + ", detected OBJ file dimension " +
-                      to_string(obj_dimension) + ", file " + file_name);
-        }
-
-        switch (obj_file_type)
-        {
-        case ObjFileType::Obj:
-                return std::make_unique<FileObj<N>>(file_name, progress);
-        case ObjFileType::Txt:
-                return std::make_unique<FileTxt<N>>(file_name, progress);
-        }
-
-        error_fatal("Unknown obj file type");
-}
-
-template std::unique_ptr<Obj<3>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Obj<4>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Obj<5>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Obj<6>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Obj<3>> load_obj(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Obj<4>> load_obj(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Obj<5>> load_obj(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Obj<6>> load_obj(const std::string& file_name, ProgressRatio* progress);
