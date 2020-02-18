@@ -128,8 +128,8 @@ std::shared_ptr<const Mesh<N, T>> file_mesh(const std::string& file_name, int th
 {
         constexpr Matrix<N + 1, N + 1, T> matrix(1);
 
-        LOG("Loading obj from file...");
-        std::unique_ptr<const Obj<N>> obj = load_obj_from_file<N>(file_name, progress);
+        LOG("Loading geometry from file...");
+        std::unique_ptr<const Obj<N>> obj = load_geometry<N>(file_name, progress);
 
         LOG("Creating mesh...");
         std::shared_ptr<const Mesh<N, T>> mesh =

@@ -62,6 +62,20 @@ QFileDialog::Options make_options(bool read_only)
 
         return options;
 }
+
+std::string join_filters(const std::vector<std::string>& filters)
+{
+        std::string filter_string;
+        for (const std::string& filter : filters)
+        {
+                if (!filter_string.empty())
+                {
+                        filter_string += ";;";
+                }
+                filter_string += filter;
+        }
+        return filter_string;
+}
 }
 
 namespace dialog
@@ -69,11 +83,12 @@ namespace dialog
 bool save_file(
         QWidget* parent,
         const std::string& caption,
-        const std::string& filter,
+        const std::vector<std::string>& filters,
         bool read_only,
         std::string* name)
 {
-        QtObjectInDynamicMemory<QFileDialog> w(parent, caption.c_str(), "", filter.c_str());
+        QtObjectInDynamicMemory<QFileDialog> w(
+                parent, QString::fromStdString(caption), QString(), QString::fromStdString(join_filters(filters)));
 
         w->setOptions(make_options(read_only));
         w->setAcceptMode(QFileDialog::AcceptSave);
@@ -85,11 +100,12 @@ bool save_file(
 bool open_file(
         QWidget* parent,
         const std::string& caption,
-        const std::string& filter,
+        const std::vector<std::string>& filters,
         bool read_only,
         std::string* name)
 {
-        QtObjectInDynamicMemory<QFileDialog> w(parent, caption.c_str(), "", filter.c_str());
+        QtObjectInDynamicMemory<QFileDialog> w(
+                parent, QString::fromStdString(caption), QString(), QString::fromStdString(join_filters(filters)));
 
         w->setOptions(make_options(read_only));
         w->setAcceptMode(QFileDialog::AcceptOpen);

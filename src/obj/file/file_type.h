@@ -26,4 +26,4 @@ enum class ObjFileType
         Txt
 };
 
-std::tuple<int, ObjFileType> obj_file_dimension_and_type(const std::string& file_name);
+std::tuple<int, ObjFileType> file_dimension_and_type(const std::string& file_name);

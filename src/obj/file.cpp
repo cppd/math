@@ -24,10 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/util/file/sys.h>
 
-int obj_file_dimension(const std::string& file_name)
+int file_dimension(const std::string& file_name)
 {
-        return std::get<0>(obj_file_dimension_and_type(file_name));
+        return std::get<0>(file_dimension_and_type(file_name));
 }
 
 std::string obj_file_extension(size_t N)
@@ -66,7 +67,7 @@ std::vector<std::string> txt_file_supported_extensions(const std::set<unsigned>&
         return result;
 }
 
-bool obj_file_extension_is_correct(size_t N, const std::string& extension)
+bool is_obj_file_extension(size_t N, const std::string& extension)
 {
         return (extension == obj_file_extension(N)) || (extension == "obj" + to_string(N));
 }
@@ -74,23 +75,17 @@ bool obj_file_extension_is_correct(size_t N, const std::string& extension)
 //
 
 template <size_t N>
-std::string save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment)
+std::unique_ptr<Obj<N>> load_geometry(const std::string& file_name, ProgressRatio* progress)
 {
-        return save_obj(obj, file_name, comment);
-}
+        auto [dimension, file_type] = file_dimension_and_type(file_name);
 
-template <size_t N>
-std::unique_ptr<Obj<N>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress)
-{
-        auto [obj_dimension, obj_file_type] = obj_file_dimension_and_type(file_name);
-
-        if (obj_dimension != static_cast<int>(N))
+        if (dimension != static_cast<int>(N))
         {
-                error("Requested OBJ file dimension " + to_string(N) + ", detected OBJ file dimension " +
-                      to_string(obj_dimension) + ", file " + file_name);
+                error("Requested file dimension " + to_string(N) + ", detected file dimension " + to_string(dimension) +
+                      ", file " + file_name);
         }
 
-        switch (obj_file_type)
+        switch (file_type)
         {
         case ObjFileType::Obj:
                 return load_obj<N>(file_name, progress);
@@ -98,30 +93,30 @@ std::unique_ptr<Obj<N>> load_obj_from_file(const std::string& file_name, Progres
                 return load_txt<N>(file_name, progress);
         }
 
-        error_fatal("Unknown obj file type");
+        error_fatal("Unknown file type");
 }
 
-template std::unique_ptr<Obj<3>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Obj<4>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Obj<5>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Obj<6>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
+template <size_t N>
+std::string save_geometry(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment)
+{
+        std::string ext = file_extension(file_name);
+        if (is_obj_file_extension(N, ext))
+        {
+                return save_obj(obj, file_name, comment);
+        }
+        if (!ext.empty())
+        {
+                error("Unsupported format " + file_name);
+        }
+        error("Empty extension " + file_name);
+}
 
-template std::string save_obj_geometry_to_file(
-        const Obj<3>* obj,
-        const std::string& file_name,
-        const std::string_view& comment);
+template std::string save_geometry(const Obj<3>* obj, const std::string& file_name, const std::string_view& comment);
+template std::string save_geometry(const Obj<4>* obj, const std::string& file_name, const std::string_view& comment);
+template std::string save_geometry(const Obj<5>* obj, const std::string& file_name, const std::string_view& comment);
+template std::string save_geometry(const Obj<6>* obj, const std::string& file_name, const std::string_view& comment);
 
-template std::string save_obj_geometry_to_file(
-        const Obj<4>* obj,
-        const std::string& file_name,
-        const std::string_view& comment);
-
-template std::string save_obj_geometry_to_file(
-        const Obj<5>* obj,
-        const std::string& file_name,
-        const std::string_view& comment);
-
-template std::string save_obj_geometry_to_file(
-        const Obj<6>* obj,
-        const std::string& file_name,
-        const std::string_view& comment);
+template std::unique_ptr<Obj<3>> load_geometry(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Obj<4>> load_geometry(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Obj<5>> load_geometry(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Obj<6>> load_geometry(const std::string& file_name, ProgressRatio* progress);

@@ -85,7 +85,7 @@ constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
 }
 
 template <size_t N>
-void test_obj_files(
+void test_geometry_files(
         const std::string& name,
         const std::vector<Vector<N, float>>& points,
         const std::vector<Vector<N, double>>& normals,
@@ -94,24 +94,24 @@ void test_obj_files(
 {
         static_assert(N >= 3);
 
-        LOG("Test OBJ");
+        LOG("Test saving and loading");
 
-        std::string file_name = temp_directory() + "/" + name;
+        std::string file_name = temp_directory() + "/" + name + "." + obj_file_extension(N);
 
         LOG("obj for facets...");
         std::unique_ptr<Obj<N>> obj1 = create_obj_for_facets(points, normals, facets);
 
-        LOG("save to obj...");
+        LOG("save geometry...");
         std::string comment;
         comment += "Manifold Reconstruction\n";
         comment += name + "\n";
         comment += "vertices = " + to_string(obj1->vertices().size()) + "\n";
         comment += "normals = " + to_string(obj1->normals().size()) + "\n";
         comment += "facets = " + to_string(obj1->facets().size());
-        file_name = save_obj_geometry_to_file(obj1.get(), file_name, comment);
+        file_name = save_geometry(obj1.get(), file_name, comment);
 
-        LOG("load from obj...");
-        std::unique_ptr<Obj<N>> obj2 = load_obj_from_file<N>(file_name, progress);
+        LOG("load geometry...");
+        std::unique_ptr<Obj<N>> obj2 = load_geometry<N>(file_name, progress);
 
         LOG("compare obj...");
         if (obj1->vertices().size() != obj2->vertices().size() || obj1->normals().size() != obj2->normals().size() ||
@@ -119,12 +119,12 @@ void test_obj_files(
             obj1->points().size() != obj2->points().size() || obj1->lines().size() != obj2->lines().size() ||
             obj1->materials().size() != obj2->materials().size() || obj1->images().size() != obj2->images().size())
         {
-                error("Error writing and reading obj files");
+                error("Error writing and reading geometry files");
         }
 }
 
-// Файлы OBJ не поддерживают двухмерные объекты
-void test_obj_files(
+// Файлы не поддерживают двухмерные объекты
+void test_geometry_files(
         const std::string&,
         const std::vector<Vector<2, float>>&,
         const std::vector<Vector<2, double>>&,
@@ -210,7 +210,7 @@ void test_algorithms(
                               to_string(facets.size()));
                 }
 
-                test_obj_files(name + ", Cocone", points, normals, facets, progress);
+                test_geometry_files(name + ", Cocone", points, normals, facets, progress);
         }
 
         if (algorithms.count(Algorithms::BoundCocone))
@@ -235,7 +235,7 @@ void test_algorithms(
                               to_string(facets.size()));
                 }
 
-                test_obj_files(name + ", BoundCocone", points, normals, facets, progress);
+                test_geometry_files(name + ", BoundCocone", points, normals, facets, progress);
         }
 
         LOG("Time: " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");

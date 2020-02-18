@@ -140,7 +140,7 @@ int read_dimension_number(const std::string& s)
 }
 }
 
-std::tuple<int, ObjFileType> obj_file_dimension_and_type(const std::string& file_name)
+std::tuple<int, ObjFileType> file_dimension_and_type(const std::string& file_name)
 {
         // Если не только obj или txt, то после obj или txt должно быть целое
         // число и только целое число, например, строка "obj4" или "txt4"

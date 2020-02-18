@@ -267,7 +267,7 @@ std::string file_name_with_extension(const std::string& file_name)
 
         if (!e.empty())
         {
-                if (!obj_file_extension_is_correct(N, e))
+                if (!is_obj_file_extension(N, e))
                 {
                         error("Wrong " + obj_type_name(N) + " file name extension: " + e);
                 }

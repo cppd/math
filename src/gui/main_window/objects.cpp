@@ -758,8 +758,8 @@ void MainObjectsImpl<N>::load_from_file(
         {
                 ProgressRatio progress(progress_list);
 
-                progress.set_text("Load file: %p%");
-                obj = load_obj_from_file<N>(file_name, &progress);
+                progress.set_text("Loading file: %p%");
+                obj = load_geometry<N>(file_name, &progress);
         }
 
         load_object(objects, progress_list, file_name, obj, rho, alpha, object_loaded);
@@ -783,7 +783,7 @@ void MainObjectsImpl<N>::load_from_repository(
         {
                 ProgressRatio progress(progress_list);
 
-                progress.set_text("Load object: %p%");
+                progress.set_text("Loading object: %p%");
                 obj = create_obj_for_points(m_object_repository->point_object(object_name, point_count));
         }
 
@@ -803,7 +803,7 @@ void MainObjectsImpl<N>::save_to_file(ObjectId id, const std::string& file_name,
                 return;
         }
 
-        save_obj_geometry_to_file(obj.get(), file_name, name);
+        save_geometry(obj.get(), file_name, name);
 }
 
 template <size_t N>
@@ -981,7 +981,7 @@ class MainObjectStorage final : public MainObjects
                 double rho,
                 double alpha) override
         {
-                int dimension = obj_file_dimension(file_name);
+                int dimension = file_dimension(file_name);
 
                 check_dimension(dimension);
 
@@ -1074,29 +1074,37 @@ class MainObjectStorage final : public MainObjects
                 }
         }
 
-        std::string obj_extension(unsigned dimension) const override
+        std::vector<FileFormat> formats_for_save(unsigned dimension) const override
         {
-                return obj_file_extension(dimension);
+                std::vector<FileFormat> v(1);
+
+                v[0].name = "OBJ Files";
+                v[0].extensions = {obj_file_extension(dimension)};
+
+                return v;
         }
 
-        std::vector<std::string> obj_extensions() const override
+        std::vector<FileFormat> formats_for_load() const override
         {
                 std::set<unsigned> dimensions;
                 for (unsigned n = Min; n <= Max; ++n)
                 {
                         dimensions.insert(n);
                 }
-                return obj_file_supported_extensions(dimensions);
-        }
 
-        std::vector<std::string> txt_extensions() const override
-        {
-                std::set<unsigned> dimensions;
-                for (unsigned n = Min; n <= Max; ++n)
+                std::vector<FileFormat> v(1);
+
+                v[0].name = "All Supported Formats";
+                for (std::string& s : obj_file_supported_extensions(dimensions))
                 {
-                        dimensions.insert(n);
+                        v[0].extensions.push_back(std::move(s));
                 }
-                return txt_file_supported_extensions(dimensions);
+                for (std::string& s : txt_file_supported_extensions(dimensions))
+                {
+                        v[0].extensions.push_back(std::move(s));
+                }
+
+                return v;
         }
 
         template <size_t... I>

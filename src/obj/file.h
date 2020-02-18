@@ -27,10 +27,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string_view>
 #include <vector>
 
-int obj_file_dimension(const std::string& file_name);
+int file_dimension(const std::string& file_name);
 
 std::string obj_file_extension(size_t N);
-bool obj_file_extension_is_correct(size_t N, const std::string& e);
+bool is_obj_file_extension(size_t N, const std::string& e);
 
 std::vector<std::string> obj_file_supported_extensions(const std::set<unsigned>& dimensions);
 std::vector<std::string> txt_file_supported_extensions(const std::set<unsigned>& dimensions);
@@ -38,7 +38,7 @@ std::vector<std::string> txt_file_supported_extensions(const std::set<unsigned>&
 //
 
 template <size_t N>
-std::unique_ptr<Obj<N>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
+std::unique_ptr<Obj<N>> load_geometry(const std::string& file_name, ProgressRatio* progress);
 
 template <size_t N>
-std::string save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment);
+std::string save_geometry(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment);

@@ -371,7 +371,7 @@ void PainterWindow2d::on_pushButton_save_to_file_clicked()
                 const bool read_only = true;
                 std::string file_name;
                 QPointer ptr(this);
-                if (!dialog::save_file(this, caption, filter, read_only, &file_name))
+                if (!dialog::save_file(this, caption, {filter}, read_only, &file_name))
                 {
                         return;
                 }

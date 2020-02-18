@@ -79,9 +79,13 @@ struct MainObjects
         virtual bool object_exists(ObjectId id) const = 0;
         virtual bool mesh_exists(ObjectId id) const = 0;
 
-        virtual std::string obj_extension(unsigned dimension) const = 0;
-        virtual std::vector<std::string> obj_extensions() const = 0;
-        virtual std::vector<std::string> txt_extensions() const = 0;
+        struct FileFormat
+        {
+                std::string name;
+                std::vector<std::string> extensions;
+        };
+        virtual std::vector<FileFormat> formats_for_save(unsigned dimension) const = 0;
+        virtual std::vector<FileFormat> formats_for_load() const = 0;
 
         virtual void compute_bound_cocone(
                 const std::unordered_set<ObjectId>& objects,
@@ -95,6 +99,7 @@ struct MainObjects
                 const std::string& file_name,
                 double rho,
                 double alpha) = 0;
+
         virtual void load_from_repository(
                 const std::unordered_set<ObjectId>& objects,
                 ProgressRatioList* progress_list,

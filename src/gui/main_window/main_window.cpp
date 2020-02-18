@@ -489,12 +489,16 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         ASSERT(use_object_selection_dialog);
 
                         std::string caption = "Open";
-                        std::string filter = file_filter(
-                                "OBJ and Point files", m_objects->obj_extensions(), m_objects->txt_extensions());
                         bool read_only = true;
 
+                        std::vector<std::string> filters;
+                        for (const MainObjects::FileFormat& v : m_objects->formats_for_load())
+                        {
+                                filters.push_back(file_filter(v.name, v.extensions));
+                        }
+
                         QPointer ptr(this);
-                        if (!dialog::open_file(this, caption, filter, read_only, &file_name))
+                        if (!dialog::open_file(this, caption, filters, read_only, &file_name))
                         {
                                 return;
                         }
@@ -666,11 +670,16 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
                 std::string file_name;
 
                 std::string caption = "Export " + name + " to OBJ";
-                std::string filter = file_filter("OBJ files", m_objects->obj_extension(m_dimension));
                 bool read_only = true;
 
+                std::vector<std::string> filters;
+                for (const MainObjects::FileFormat& v : m_objects->formats_for_save(m_dimension))
+                {
+                        filters.push_back(file_filter(v.name, v.extensions));
+                }
+
                 QPointer ptr(this);
-                if (!dialog::save_file(this, caption, filter, read_only, &file_name))
+                if (!dialog::save_file(this, caption, filters, read_only, &file_name))
                 {
                         return;
                 }
