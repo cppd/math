@@ -129,9 +129,9 @@ private:
 
         void thread_load_from_file(std::string file_name, bool use_object_selection_dialog);
         void thread_load_from_repository(int dimension, const std::string& object_name);
-        void thread_self_test(SelfTestType test_type, bool with_confirmation);
         void thread_export(const std::string& name, ObjectId id);
         void thread_reload_bound_cocone();
+        void thread_self_test(SelfTestType test_type, bool with_confirmation);
 
         void set_dependent_interface();
 
@@ -141,7 +141,7 @@ private:
         void reset_bound_cocone_buttons(const std::unordered_set<ObjectId>& objects_to_load);
 
         void progress_bars(
-                MainThreads::Action thread_action,
+                WorkerThreads::Action action,
                 bool permanent,
                 const ProgressRatioList* progress_list,
                 std::list<QProgressBar>* progress_bars);
@@ -170,6 +170,8 @@ private:
 
         static bool dialog_object_selection(QWidget* parent, std::unordered_set<ObjectId>* objects_to_load);
 
+        bool stop_action(WorkerThreads::Action action);
+
         void direct_message_error(const std::string& msg) override;
         void direct_message_error_fatal(const std::string& msg) override;
         void direct_message_error_source(const std::string& msg, const std::string& src) override;
@@ -190,7 +192,7 @@ private:
 
         WindowEventEmitter m_event_emitter;
 
-        std::unique_ptr<MainThreads> m_threads;
+        std::unique_ptr<WorkerThreads> m_worker_threads;
 
         std::unordered_map<ObjectId, QRadioButton*> m_object_id_to_button;
 

@@ -132,7 +132,7 @@ void MainWindow::constructor_threads()
                 exception_handler(ptr, msg, true);
         };
 
-        m_threads = create_main_threads(handler);
+        m_worker_threads = create_worker_threads(handler);
 }
 
 void MainWindow::constructor_connect()
@@ -320,7 +320,7 @@ void MainWindow::terminate_all_threads()
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        m_threads->terminate_all_threads();
+        m_worker_threads->terminate_all();
 
         m_show = nullptr;
         m_show_object.reset();
@@ -471,18 +471,39 @@ bool MainWindow::dialog_object_selection(QWidget* parent, std::unordered_set<Obj
         return true;
 }
 
+bool MainWindow::stop_action(WorkerThreads::Action action)
+{
+        if (m_worker_threads->is_working(action))
+        {
+                QPointer ptr(this);
+                if (!dialog::message_question_default_no(this, "There is work in progress.\nDo you want to continue?"))
+                {
+                        return false;
+                }
+                if (ptr.isNull())
+                {
+                        return false;
+                }
+        }
+
+        m_worker_threads->terminate_quietly(action);
+
+        return true;
+}
+
 void MainWindow::thread_load_from_file(std::string file_name, bool use_object_selection_dialog)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (!m_threads->action_allowed(MainThreads::Action::Load))
-        {
-                m_event_emitter.message_warning("File loading is not available at this time (thread working)");
-                return;
-        }
+        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
 
         catch_all([&](std::string* msg) {
-                *msg = "Open file";
+                *msg = "Load from file";
+
+                if (!stop_action(ACTION))
+                {
+                        return;
+                }
 
                 if (file_name.empty())
                 {
@@ -523,13 +544,13 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         }
                 }
 
-                m_threads->start_thread(
-                        MainThreads::Action::Load, [=, this, rho = m_bound_cocone_rho, alpha = m_bound_cocone_alpha](
-                                                           ProgressRatioList* progress_list, std::string* message) {
-                                *message = "Load " + file_name;
+                auto f = [=, this, rho = m_bound_cocone_rho,
+                          alpha = m_bound_cocone_alpha](ProgressRatioList* progress_list, std::string* message) {
+                        *message = "Load " + file_name;
+                        m_objects->load_from_file(objects_to_load, progress_list, file_name, rho, alpha);
+                };
 
-                                m_objects->load_from_file(objects_to_load, progress_list, file_name, rho, alpha);
-                        });
+                m_worker_threads->start(ACTION, std::move(f));
         });
 }
 
@@ -537,20 +558,21 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (!m_threads->action_allowed(MainThreads::Action::Load))
-        {
-                m_event_emitter.message_warning("Creation of object is not available at this time (thread working)");
-                return;
-        }
-
-        if (object_name.empty())
-        {
-                m_event_emitter.message_error("Empty repository object name");
-                return;
-        }
+        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
 
         catch_all([&](std::string* msg) {
                 *msg = "Load from repository";
+
+                if (object_name.empty())
+                {
+                        m_event_emitter.message_error("Empty repository object name");
+                        return;
+                }
+
+                if (!stop_action(ACTION))
+                {
+                        return;
+                }
 
                 int point_count;
 
@@ -582,90 +604,56 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
                         }
                 }
 
-                m_threads->start_thread(
-                        MainThreads::Action::Load, [=, this, rho = m_bound_cocone_rho, alpha = m_bound_cocone_alpha](
-                                                           ProgressRatioList* progress_list, std::string* message) {
-                                *message = "Load " + space_name(dimension) + " " + object_name;
+                auto f = [=, this, rho = m_bound_cocone_rho,
+                          alpha = m_bound_cocone_alpha](ProgressRatioList* progress_list, std::string* message) {
+                        *message = "Load " + space_name(dimension) + " " + object_name;
+                        m_objects->load_from_repository(
+                                objects_to_load, progress_list, dimension, object_name, rho, alpha, point_count);
+                };
 
-                                m_objects->load_from_repository(
-                                        objects_to_load, progress_list, dimension, object_name, rho, alpha,
-                                        point_count);
-                        });
+                m_worker_threads->start(ACTION, std::move(f));
         });
-}
-
-void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation)
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        if (!m_threads->action_allowed(MainThreads::Action::SelfTest))
-        {
-                m_event_emitter.message_warning("Self-Test is not available at this time (thread working)");
-                return;
-        }
-
-        if (with_confirmation)
-        {
-                QPointer ptr(this);
-                if (!dialog::message_question_default_yes(this, "Run the Self-Test?"))
-                {
-                        return;
-                }
-                if (ptr.isNull())
-                {
-                        return;
-                }
-        }
-
-        m_threads->start_thread(
-                MainThreads::Action::SelfTest, [=, this](ProgressRatioList* progress_list, std::string* message) {
-                        *message = "Self-Test";
-
-                        self_test(test_type, progress_list, [&](const std::exception_ptr& ptr, const std::string& msg) {
-                                exception_handler(ptr, msg, true);
-                        });
-                });
 }
 
 void MainWindow::thread_export(const std::string& name, ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (!m_threads->action_allowed(MainThreads::Action::Export))
-        {
-                m_event_emitter.message_warning(
-                        "Export " + name + " to file is not available at this time (thread working)");
-                return;
-        }
-
-        if (!m_objects->object_exists(id))
-        {
-                m_event_emitter.message_warning("No object to export");
-                return;
-        }
-
-        if (id == ObjectId::Model)
-        {
-                QPointer ptr(this);
-                if (!dialog::message_question_default_no(
-                            this, "Only export of geometry is supported.\nDo you want to continue?"))
-                {
-                        return;
-                }
-                if (ptr.isNull())
-                {
-                        return;
-                }
-        }
-
-        if (m_dimension < 3)
-        {
-                m_event_emitter.message_error("No dimension information");
-                return;
-        }
+        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
 
         catch_all([&](std::string* msg) {
-                *msg = "Export to file";
+                *msg = "Export";
+
+                if (!stop_action(ACTION))
+                {
+                        return;
+                }
+
+                if (!m_objects->object_exists(id))
+                {
+                        m_event_emitter.message_warning("No object to export");
+                        return;
+                }
+
+                if (id == ObjectId::Model)
+                {
+                        QPointer ptr(this);
+                        if (!dialog::message_question_default_no(
+                                    this, "Only export of geometry is supported.\nDo you want to continue?"))
+                        {
+                                return;
+                        }
+                        if (ptr.isNull())
+                        {
+                                return;
+                        }
+                }
+
+                if (m_dimension < 3)
+                {
+                        m_event_emitter.message_error("No dimension information");
+                        return;
+                }
 
                 std::string file_name;
 
@@ -688,13 +676,13 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
                         return;
                 }
 
-                m_threads->start_thread(
-                        MainThreads::Action::Export, [=, this](ProgressRatioList*, std::string* message) {
-                                *message = "Export " + name + " to " + file_name;
+                auto f = [=, this](ProgressRatioList*, std::string* message) {
+                        *message = "Export " + name + " to " + file_name;
+                        m_objects->save_to_file(id, file_name, name);
+                        m_event_emitter.message_information(name + " exported to file " + file_name);
+                };
 
-                                m_objects->save_to_file(id, file_name, name);
-                                m_event_emitter.message_information(name + " exported to file " + file_name);
-                        });
+                m_worker_threads->start(ACTION, std::move(f));
         });
 }
 
@@ -702,28 +690,29 @@ void MainWindow::thread_reload_bound_cocone()
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (m_objects_to_load.count(ObjectId::BoundCocone) == 0 &&
-            m_objects_to_load.count(ObjectId::BoundCoconeConvexHull) == 0)
-        {
-                m_event_emitter.message_warning(
-                        "Neither BoundCocone nor BoundCocone Convex Hull was selected for loading");
-                return;
-        }
-
-        if (!m_threads->action_allowed(MainThreads::Action::ReloadBoundCocone))
-        {
-                m_event_emitter.message_warning("BoundCocone is not available at this time (thread working)");
-                return;
-        }
-
-        if (!m_objects->manifold_constructor_exists())
-        {
-                m_event_emitter.message_warning("No manifold constructor");
-                return;
-        }
+        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
 
         catch_all([&](std::string* msg) {
                 *msg = "Reload BoundCocone";
+
+                if (!stop_action(ACTION))
+                {
+                        return;
+                }
+
+                if (m_objects_to_load.count(ObjectId::BoundCocone) == 0 &&
+                    m_objects_to_load.count(ObjectId::BoundCoconeConvexHull) == 0)
+                {
+                        m_event_emitter.message_warning(
+                                "Neither BoundCocone nor BoundCocone Convex Hull was selected for loading");
+                        return;
+                }
+
+                if (!m_objects->manifold_constructor_exists())
+                {
+                        m_event_emitter.message_warning("No manifold constructor");
+                        return;
+                }
 
                 double rho = m_bound_cocone_rho;
                 double alpha = m_bound_cocone_alpha;
@@ -739,19 +728,56 @@ void MainWindow::thread_reload_bound_cocone()
                         return;
                 }
 
-                m_threads->start_thread(
-                        MainThreads::Action::ReloadBoundCocone,
-                        [=, this,
-                         objects_to_load = m_objects_to_load](ProgressRatioList* progress_list, std::string* message) {
-                                *message = "BoundCocone reconstruction";
+                auto f = [=, this,
+                          objects_to_load = m_objects_to_load](ProgressRatioList* progress_list, std::string* message) {
+                        *message = "BoundCocone Reconstruction";
+                        m_objects->compute_bound_cocone(objects_to_load, progress_list, rho, alpha);
+                };
 
-                                m_objects->compute_bound_cocone(objects_to_load, progress_list, rho, alpha);
+                m_worker_threads->start(ACTION, std::move(f));
+        });
+}
+
+void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::SelfTest;
+
+        catch_all([&](std::string* msg) {
+                *msg = "Self-Test";
+
+                if (!stop_action(ACTION))
+                {
+                        return;
+                }
+
+                if (with_confirmation)
+                {
+                        QPointer ptr(this);
+                        if (!dialog::message_question_default_yes(this, "Run the Self-Test?"))
+                        {
+                                return;
+                        }
+                        if (ptr.isNull())
+                        {
+                                return;
+                        }
+                }
+
+                auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
+                        *message = "Self-Test";
+                        self_test(test_type, progress_list, [&](const std::exception_ptr& ptr, const std::string& m) {
+                                exception_handler(ptr, m, true);
                         });
+                };
+
+                m_worker_threads->start(ACTION, std::move(f));
         });
 }
 
 void MainWindow::progress_bars(
-        MainThreads::Action thread_action,
+        WorkerThreads::Action action,
         bool permanent,
         const ProgressRatioList* progress_list,
         std::list<QProgressBar>* progress_bars)
@@ -769,7 +795,7 @@ void MainWindow::progress_bars(
                 bar.setContextMenuPolicy(Qt::CustomContextMenu);
 
                 connect(&bar, &QProgressBar::customContextMenuRequested,
-                        [thread_action, &bar, ptr_this = QPointer(this)](const QPoint&) {
+                        [action, &bar, ptr_this = QPointer(this)](const QPoint&) {
                                 QtObjectInDynamicMemory<QMenu> menu(&bar);
                                 menu->addAction("Terminate");
 
@@ -783,7 +809,7 @@ void MainWindow::progress_bars(
                                         return;
                                 }
 
-                                ptr_this->m_threads->terminate_thread_with_message(thread_action);
+                                ptr_this->m_worker_threads->terminate_with_message(action);
                         });
         }
 
@@ -833,7 +859,7 @@ void MainWindow::progress_bars(
 
 void MainWindow::slot_timer_progress_bar()
 {
-        for (const MainThreads::Progress& t : m_threads->thread_progress())
+        for (const WorkerThreads::Progress& t : m_worker_threads->progresses())
         {
                 progress_bars(t.action, t.permanent, t.progress_list, t.progress_bars);
         }

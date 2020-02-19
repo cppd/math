@@ -25,13 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <list>
 #include <memory>
 
-struct MainThreads
+struct WorkerThreads
 {
         enum class Action
         {
-                Load,
-                Export,
-                ReloadBoundCocone,
+                Work,
                 SelfTest
         };
 
@@ -43,19 +41,15 @@ struct MainThreads
                 std::list<QProgressBar>* progress_bars;
         };
 
-        virtual ~MainThreads() = default;
+        virtual ~WorkerThreads() = default;
 
-        virtual void terminate_thread_with_message(Action action) = 0;
-        virtual void terminate_all_threads() = 0;
-
-        virtual bool action_allowed(Action action) const = 0;
-
-        virtual void start_thread(
-                Action action,
-                const std::function<void(ProgressRatioList*, std::string*)>& function) = 0;
-
-        virtual const std::vector<Progress>& thread_progress() const = 0;
+        virtual bool is_working(Action action) const = 0;
+        virtual void terminate_quietly(Action action) = 0;
+        virtual void terminate_with_message(Action action) = 0;
+        virtual void terminate_all() = 0;
+        virtual void start(Action action, std::function<void(ProgressRatioList*, std::string*)>&& function) = 0;
+        virtual const std::vector<Progress>& progresses() const = 0;
 };
 
-std::unique_ptr<MainThreads> create_main_threads(
+std::unique_ptr<WorkerThreads> create_worker_threads(
         const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler);

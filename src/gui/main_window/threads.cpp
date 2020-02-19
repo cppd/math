@@ -141,7 +141,7 @@ public:
 
 //
 
-class Impl final : public MainThreads
+class Impl final : public WorkerThreads
 {
         const std::thread::id m_thread_id;
         const std::function<void(const std::exception_ptr& ptr, const std::string& msg)> m_exception_handler;
@@ -149,14 +149,14 @@ class Impl final : public MainThreads
         std::unordered_map<Action, ThreadData> m_threads;
         std::vector<Progress> m_progress;
 
-        ThreadData& thread(Action action)
+        ThreadData& thread_data(Action action)
         {
                 auto t = m_threads.find(action);
                 ASSERT(t != m_threads.end());
                 return t->second;
         }
 
-        const ThreadData& thread(Action action) const
+        const ThreadData& thread_data(Action action) const
         {
                 auto t = m_threads.find(action);
                 ASSERT(t != m_threads.end());
@@ -168,9 +168,7 @@ public:
                 const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
                 : m_thread_id(std::this_thread::get_id()), m_exception_handler(exception_handler)
         {
-                m_threads.try_emplace(Action::Load, m_exception_handler);
-                m_threads.try_emplace(Action::Export, m_exception_handler);
-                m_threads.try_emplace(Action::ReloadBoundCocone, m_exception_handler);
+                m_threads.try_emplace(Action::Work, m_exception_handler);
                 m_threads.try_emplace(Action::SelfTest, m_exception_handler);
 
                 for (auto& t : m_threads)
@@ -190,19 +188,36 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                ASSERT(std::all_of(m_threads.cbegin(), m_threads.cend(), [](const auto& t) {
-                        return !t.second.working() && !t.second.joinable();
-                }));
+                if (std::any_of(m_threads.cbegin(), m_threads.cend(), [](const auto& t) {
+                            return t.second.working() || t.second.joinable();
+                    }))
+                {
+                        error_fatal("Working threads in the work thread class destructor");
+                }
         }
 
-        void terminate_thread_with_message(Action action) override
+        bool is_working(Action action) const override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                thread(action).terminate_with_message();
+                return thread_data(action).working();
         }
 
-        void terminate_all_threads() override
+        void terminate_quietly(Action action) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                thread_data(action).terminate_quietly();
+        }
+
+        void terminate_with_message(Action action) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                thread_data(action).terminate_with_message();
+        }
+
+        void terminate_all() override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -212,58 +227,21 @@ public:
                 }
         }
 
-        bool action_allowed(Action action) const override
+        void start(Action action, std::function<void(ProgressRatioList*, std::string*)>&& function) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                switch (action)
-                {
-                case Action::Load:
-                        return true;
-                case Action::Export:
-                        return !thread(Action::Export).working();
-                case Action::ReloadBoundCocone:
-                        return !thread(Action::Load).working();
-                case Action::SelfTest:
-                        return true;
-                }
-
-                error_fatal("Unknown thread action");
+                thread_data(action).start(std::move(function));
         }
 
-        void start_thread(Action action, const std::function<void(ProgressRatioList*, std::string*)>& function) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                if (!action_allowed(action))
-                {
-                        error_fatal("Thread action not allowed");
-                }
-
-                switch (action)
-                {
-                case Action::Load:
-                        thread(Action::ReloadBoundCocone).terminate_quietly();
-                        break;
-                case Action::Export:
-                        break;
-                case Action::ReloadBoundCocone:
-                        break;
-                case Action::SelfTest:
-                        break;
-                }
-
-                thread(action).start(function);
-        }
-
-        const std::vector<Progress>& thread_progress() const override
+        const std::vector<Progress>& progresses() const override
         {
                 return m_progress;
         }
 };
 }
 
-std::unique_ptr<MainThreads> create_main_threads(
+std::unique_ptr<WorkerThreads> create_worker_threads(
         const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
 {
         return std::make_unique<Impl>(exception_handler);
