@@ -17,50 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if 1
-
 #include <variant>
-
-template <typename... T>
-using Variant = std::variant<T...>;
-
-template <typename Visitor, typename Variant>
-void visit(const Visitor& visitor, Variant&& variant)
-{
-        std::visit(visitor, std::forward<Variant>(variant));
-}
-
-template <typename T, typename... Types>
-const T& get(const std::variant<Types...>& variant)
-{
-        return std::get<T>(variant);
-}
-
-#else
-
-#include "com/simple_variant.h"
-
-template <typename... T>
-using Variant = SimpleVariant<T...>;
-
-template <typename Visitor, typename SimpleVariant>
-void visit(const Visitor& visitor, SimpleVariant&& simple_variant)
-{
-        simple_visit(visitor, std::forward<SimpleVariant>(simple_variant));
-}
-
-template <typename T, typename... Types>
-const T& get(const SimpleVariant<Types...>& variant)
-{
-        return simple_get<T>(variant);
-}
-
-#endif
 
 namespace sequence_variant_implementation
 {
 template <template <size_t, typename...> typename Type, typename... Ts>
-struct SequenceVariant
+struct SequenceVariant1
 {
         template <int first, int N, size_t... I>
         struct S
@@ -72,7 +34,7 @@ struct SequenceVariant
         struct S<first, 0, I...>
         {
                 static_assert(sizeof...(I) > 0);
-                using V = Variant<Type<first + I, Ts...>...>;
+                using V = std::variant<Type<first + I, Ts...>...>;
         };
 };
 
@@ -89,15 +51,15 @@ struct SequenceVariant2
         struct S<first, 0, I...>
         {
                 static_assert(sizeof...(I) > 0);
-                using V = Variant<Type1<Type2<first + I, Ts...>>...>;
+                using V = std::variant<Type1<Type2<first + I, Ts...>>...>;
         };
 };
 }
 
 // Тип variant<T<from, ...>, T<From + 1, ...>, T<From + 2, ...>, ...>
 template <int From, int To, template <size_t, typename...> typename T, typename... Ts>
-using SequenceVariant =
-        typename sequence_variant_implementation::SequenceVariant<T, Ts...>::template S<From, To - From + 1>::V;
+using SequenceVariant1 =
+        typename sequence_variant_implementation::SequenceVariant1<T, Ts...>::template S<From, To - From + 1>::V;
 
 // Тип variant<T1<T2<From, ...>>, T1<T2<From + 1, ...>>, T1<T2<From + 2, ...>>, ...>
 template <int From, int To, template <typename> typename T1, template <size_t, typename...> typename T2, typename... Ts>

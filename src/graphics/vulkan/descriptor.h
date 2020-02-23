@@ -19,9 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-#include <src/com/variant.h>
-
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 namespace vulkan
@@ -66,11 +65,11 @@ public:
         void update_descriptor_set(
                 uint32_t index,
                 const std::vector<uint32_t>& bindings,
-                const std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const;
+                const std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const;
 
         void update_descriptor_set(
                 uint32_t index,
                 uint32_t binding,
-                const Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& info) const;
+                const std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& info) const;
 };
 }

@@ -118,7 +118,7 @@ OpticalFlowFlowMemory::OpticalFlowFlowMemory(
         const std::unordered_set<uint32_t>& family_indices)
         : m_descriptors(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
-        std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {

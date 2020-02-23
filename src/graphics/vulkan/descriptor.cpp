@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/com/variant.h>
 
 namespace
 {
@@ -52,7 +53,7 @@ vulkan::DescriptorPool create_descriptor_pool(
 VkWriteDescriptorSet create_write_descriptor_set(
         VkDescriptorSet descriptor_set,
         const VkDescriptorSetLayoutBinding& descriptor_set_layout_binding,
-        const Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& descriptor_info)
+        const std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& descriptor_info)
 {
         VkWriteDescriptorSet write = {};
         write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -74,7 +75,7 @@ VkWriteDescriptorSet create_write_descriptor_set(
                        descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
                 write.pImageInfo = &info;
         };
-        visit(Visitors{buffer, image}, descriptor_info);
+        std::visit(Visitors{buffer, image}, descriptor_info);
 
         return write;
 
@@ -159,7 +160,7 @@ const VkDescriptorSet& Descriptors::descriptor_set(uint32_t index) const
 void Descriptors::update_descriptor_set(
         uint32_t index,
         uint32_t binding,
-        const Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& info) const
+        const std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& info) const
 {
         ASSERT(index < m_descriptor_sets.count());
 
@@ -172,7 +173,7 @@ void Descriptors::update_descriptor_set(
 void Descriptors::update_descriptor_set(
         uint32_t index,
         const std::vector<uint32_t>& bindings,
-        const std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const
+        const std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const
 {
         ASSERT(bindings.size() == descriptor_infos.size());
         ASSERT(index < m_descriptor_sets.count());

@@ -133,7 +133,8 @@ private:
                         }
                 };
 
-                Variant<std::monostate,
+                std::variant<
+                        std::monostate,
                         object_loaded,
                         mesh_loaded,
                         bound_cocone_loaded,
@@ -240,7 +241,7 @@ private slots:
 
         void slot_window_event(const WindowEvent& event)
         {
-                visit(Visitor(m_direct_events), event.event);
+                std::visit(Visitor(m_direct_events), event.event);
         }
 
 public:

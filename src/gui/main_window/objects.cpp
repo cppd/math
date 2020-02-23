@@ -858,7 +858,7 @@ class MainObjectStorage final : public MainObjects
         // объекта одного измерения все объекты других измерений удаляются.
 
         template <template <size_t, typename...> typename T, typename... T2>
-        using Map = std::unordered_map<int, SequenceVariant<Min, Max, T, T2...>>;
+        using Map = std::unordered_map<int, SequenceVariant1<Min, Max, T, T2...>>;
 
         Map<MainObjectsImpl> m_objects;
 
@@ -866,7 +866,7 @@ class MainObjectStorage final : public MainObjects
         {
                 for (auto& p : m_objects)
                 {
-                        visit([&](auto& v) { v.clear_all_data(); }, p.second);
+                        std::visit([&](auto& v) { v.clear_all_data(); }, p.second);
                 }
         }
 
@@ -885,8 +885,9 @@ class MainObjectStorage final : public MainObjects
 
                 for (const auto& p : m_objects)
                 {
-                        visit([&](const auto& v) { names.emplace_back(p.first, v.repository_point_object_names()); },
-                              p.second);
+                        std::visit(
+                                [&](const auto& v) { names.emplace_back(p.first, v.repository_point_object_names()); },
+                                p.second);
                 }
 
                 return names;
@@ -896,7 +897,7 @@ class MainObjectStorage final : public MainObjects
         {
                 for (auto& p : m_objects)
                 {
-                        visit([&](auto& v) { v.set_show(show); }, p.second);
+                        std::visit([&](auto& v) { v.set_show(show); }, p.second);
                 }
         }
 
@@ -905,7 +906,7 @@ class MainObjectStorage final : public MainObjects
                 int count = 0;
                 for (const auto& p : m_objects)
                 {
-                        visit([&](const auto& v) { count += v.manifold_constructor_exists() ? 1 : 0; }, p.second);
+                        std::visit([&](const auto& v) { count += v.manifold_constructor_exists() ? 1 : 0; }, p.second);
                 }
                 if (count > 1)
                 {
@@ -919,7 +920,7 @@ class MainObjectStorage final : public MainObjects
                 int count = 0;
                 for (const auto& p : m_objects)
                 {
-                        visit([&](const auto& v) { count += v.object_exists(id) ? 1 : 0; }, p.second);
+                        std::visit([&](const auto& v) { count += v.object_exists(id) ? 1 : 0; }, p.second);
                 }
                 if (count > 1)
                 {
@@ -933,7 +934,7 @@ class MainObjectStorage final : public MainObjects
                 int count = 0;
                 for (const auto& p : m_objects)
                 {
-                        visit([&](const auto& v) { count += v.mesh_exists(id) ? 1 : 0; }, p.second);
+                        std::visit([&](const auto& v) { count += v.mesh_exists(id) ? 1 : 0; }, p.second);
                 }
                 if (count > 1)
                 {
@@ -955,7 +956,7 @@ class MainObjectStorage final : public MainObjects
                 int count = 0;
                 for (auto& p : m_objects)
                 {
-                        visit(
+                        std::visit(
                                 [&](auto& v) {
                                         if (v.manifold_constructor_exists())
                                         {
@@ -988,8 +989,11 @@ class MainObjectStorage final : public MainObjects
                 auto& repository = m_objects.at(dimension);
 
                 auto clear_function = [&]() { clear_all_data(); };
-                visit([&](auto& v) { v.load_from_file(objects, progress_list, file_name, rho, alpha, clear_function); },
-                      repository);
+                std::visit(
+                        [&](auto& v) {
+                                v.load_from_file(objects, progress_list, file_name, rho, alpha, clear_function);
+                        },
+                        repository);
         }
 
         void load_from_repository(
@@ -1006,7 +1010,7 @@ class MainObjectStorage final : public MainObjects
                 auto& repository = m_objects.at(dimension);
 
                 auto clear_function = [&]() { clear_all_data(); };
-                visit(
+                std::visit(
                         [&](auto& v) {
                                 v.load_from_repository(
                                         objects, progress_list, object_name, rho, alpha, point_count, clear_function);
@@ -1023,7 +1027,7 @@ class MainObjectStorage final : public MainObjects
                 int count = 0;
                 for (const auto& p : m_objects)
                 {
-                        visit(
+                        std::visit(
                                 [&](const auto& v) {
                                         if (v.object_exists(id))
                                         {
@@ -1055,7 +1059,7 @@ class MainObjectStorage final : public MainObjects
                 int count = 0;
                 for (const auto& p : m_objects)
                 {
-                        visit(
+                        std::visit(
                                 [&](const auto& v) {
                                         if (v.mesh_exists(id))
                                         {

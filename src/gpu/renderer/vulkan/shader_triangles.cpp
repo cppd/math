@@ -87,7 +87,7 @@ RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(
         const RendererBuffers& buffers)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
-        std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
@@ -225,7 +225,7 @@ RendererTrianglesMaterialMemory::RendererTrianglesMaterialMemory(
                 return m.texture_Ka && m.texture_Kd && m.texture_Ks;
         }));
 
-        std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         for (size_t i = 0; i < materials.size(); ++i)
