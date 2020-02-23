@@ -59,7 +59,7 @@ const T& get(const SimpleVariant<Types...>& variant)
 
 namespace sequence_variant_implementation
 {
-template <template <size_t, typename...> typename Type, typename... T>
+template <template <size_t, typename...> typename Type, typename... Ts>
 struct SequenceVariant
 {
         template <int first, int N, size_t... I>
@@ -72,15 +72,37 @@ struct SequenceVariant
         struct S<first, 0, I...>
         {
                 static_assert(sizeof...(I) > 0);
-                using V = Variant<Type<first + I, T...>...>;
+                using V = Variant<Type<first + I, Ts...>...>;
+        };
+};
+
+template <template <typename> typename Type1, template <size_t, typename...> typename Type2, typename... Ts>
+struct SequenceVariant2
+{
+        template <int first, int N, size_t... I>
+        struct S
+        {
+                static_assert(N > 0);
+                using V = typename S<first, N - 1, N - 1, I...>::V;
+        };
+        template <int first, size_t... I>
+        struct S<first, 0, I...>
+        {
+                static_assert(sizeof...(I) > 0);
+                using V = Variant<Type1<Type2<first + I, Ts...>>...>;
         };
 };
 }
 
-// Тип variant<Type<from>, Type<From + 1>, Type<From + 2>, ...>
-template <int from, int to, template <size_t, typename...> typename Type, typename... T>
+// Тип variant<T<from, ...>, T<From + 1, ...>, T<From + 2, ...>, ...>
+template <int From, int To, template <size_t, typename...> typename T, typename... Ts>
 using SequenceVariant =
-        typename sequence_variant_implementation::SequenceVariant<Type, T...>::template S<from, to - from + 1>::V;
+        typename sequence_variant_implementation::SequenceVariant<T, Ts...>::template S<From, To - From + 1>::V;
+
+// Тип variant<T1<T2<From, ...>>, T1<T2<From + 1, ...>>, T1<T2<From + 2, ...>>, ...>
+template <int From, int To, template <typename> typename T1, template <size_t, typename...> typename T2, typename... Ts>
+using SequenceVariant2 =
+        typename sequence_variant_implementation::SequenceVariant2<T1, T2, Ts...>::template S<From, To - From + 1>::V;
 
 //
 
