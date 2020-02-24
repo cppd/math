@@ -1648,16 +1648,16 @@ void MainWindow::paint(const std::shared_ptr<const Mesh<N, T>>& mesh, const std:
         {
                 ShowCameraInfo c = m_show->camera_information();
 
-                PaintingInformation3d info;
+                PaintingInformation3d<T> info;
 
-                info.camera_up = c.camera_up;
-                info.camera_direction = c.camera_direction;
-                info.light_direction = c.light_direction;
-                info.view_center = c.view_center;
+                info.camera_up = to_vector<T>(c.camera_up);
+                info.camera_direction = to_vector<T>(c.camera_direction);
+                info.light_direction = to_vector<T>(c.light_direction);
+                info.view_center = to_vector<T>(c.view_center);
                 info.view_width = c.view_width;
                 info.paint_width = c.width;
                 info.paint_height = c.height;
-                info.object_position = m_show->object_position();
+                info.object_position = to_vector<T>(m_show->object_position());
                 info.object_size = m_show->object_size();
                 info.max_screen_size = PAINTER_3D_MAX_SCREEN_SIZE;
 

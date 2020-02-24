@@ -30,34 +30,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-std::unique_ptr<const Projector<3, double>> create_projector(
-        const PaintingInformation3d& info,
+template <typename T>
+std::unique_ptr<const Projector<3, T>> create_projector(
+        const PaintingInformation3d<T>& info,
         int paint_width,
         int paint_height)
 {
-        vec3 camera_position = info.view_center - info.camera_direction * 2.0 * info.object_size;
-        vec3 camera_right = cross(info.camera_direction, info.camera_up);
+        Vector<3, T> camera_position = info.view_center - info.camera_direction * T(2) * info.object_size;
+        Vector<3, T> camera_right = cross(info.camera_direction, info.camera_up);
 
-        std::array<Vector<3, double>, 2> screen_axes{camera_right, info.camera_up};
+        std::array<Vector<3, T>, 2> screen_axes{camera_right, info.camera_up};
         std::array<int, 2> screen_size{paint_width, paint_height};
 
-        double units_per_pixel = info.view_width / paint_width;
+        T units_per_pixel = info.view_width / paint_width;
 
-        return std::make_unique<const VisibleParallelProjector<3, double>>(
+        return std::make_unique<const VisibleParallelProjector<3, T>>(
                 camera_position, info.camera_direction, screen_axes, units_per_pixel, screen_size);
 }
 
-std::unique_ptr<const LightSource<3, double>> create_light_source(const PaintingInformation3d& info)
+template <typename T>
+std::unique_ptr<const LightSource<3, T>> create_light_source(const PaintingInformation3d<T>& info)
 {
-        vec3 light_position = info.object_position - info.light_direction * info.object_size * 1000.0;
+        Vector<3, T> light_position = info.object_position - info.light_direction * info.object_size * T(1000);
 
-        return std::make_unique<const VisibleConstantLight<3, double>>(light_position, Color(1));
+        return std::make_unique<const VisibleConstantLight<3, T>>(light_position, Color(1));
 }
 }
 
+template <typename T>
 void painting(
-        const std::shared_ptr<const Mesh<3, double>>& mesh,
-        const PaintingInformation3d& info_3d,
+        const std::shared_ptr<const Mesh<3, T>>& mesh,
+        const PaintingInformation3d<T>& info_3d,
         const PaintingInformationAll& info_all)
 {
         ASSERT(info_all.default_samples_per_dimension > 0);
@@ -82,7 +85,7 @@ void painting(
         }
 
         std::string title;
-        std::unique_ptr<const PaintObjects<3, double>> scene;
+        std::unique_ptr<const PaintObjects<3, T>> scene;
 
         if (!cornell_box)
         {
@@ -101,7 +104,7 @@ void painting(
                         info_3d.camera_direction, info_3d.camera_up);
         }
 
-        create_and_show_delete_on_close_window<PainterWindow<3, double>>(
+        create_and_show_delete_on_close_window<PainterWindow<3, T>>(
                 title, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
 }
 
@@ -143,6 +146,15 @@ void painting(
         create_and_show_delete_on_close_window<PainterWindow<N, T>>(
                 title, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
 }
+
+template void painting(
+        const std::shared_ptr<const Mesh<3, float>>& mesh,
+        const PaintingInformation3d<float>& info_3d,
+        const PaintingInformationAll& info_all);
+template void painting(
+        const std::shared_ptr<const Mesh<3, double>>& mesh,
+        const PaintingInformation3d<double>& info_3d,
+        const PaintingInformationAll& info_all);
 
 template void painting(
         const std::shared_ptr<const Mesh<4, float>>& mesh,

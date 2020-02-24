@@ -25,15 +25,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 
+template <typename T>
 struct PaintingInformation3d
 {
-        vec3 camera_up;
-        vec3 camera_direction;
-        vec3 light_direction;
-        vec3 object_position;
-        double object_size;
-        vec3 view_center;
-        double view_width;
+        Vector<3, T> camera_up;
+        Vector<3, T> camera_direction;
+        Vector<3, T> light_direction;
+        Vector<3, T> object_position;
+        T object_size;
+        Vector<3, T> view_center;
+        T view_width;
         int paint_width;
         int paint_height;
         int max_screen_size;
@@ -58,9 +59,10 @@ struct PaintingInformationAll
         Color::DataType diffuse;
 };
 
+template <typename T>
 void painting(
-        const std::shared_ptr<const Mesh<3, double>>& mesh,
-        const PaintingInformation3d& info_3d,
+        const std::shared_ptr<const Mesh<3, T>>& mesh,
+        const PaintingInformation3d<T>& info_3d,
         const PaintingInformationAll& info_all);
 
 template <size_t N, typename T>
