@@ -24,22 +24,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(
+template <typename T>
+std::unique_ptr<const PaintObjects<3, T>> cornell_box_scene(
         int width,
         int height,
         const std::string& obj_file_name,
-        double size,
+        T size,
         const Color& default_color,
-        double diffuse,
-        const vec3& camera_direction,
-        const vec3& camera_up);
+        Color::DataType diffuse,
+        const Vector<3, T>& camera_direction,
+        const Vector<3, T>& camera_up);
 
-std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(
+template <typename T>
+std::unique_ptr<const PaintObjects<3, T>> cornell_box_scene(
         int width,
         int height,
-        const std::shared_ptr<const Mesh<3, double>>& mesh,
-        double size,
+        const std::shared_ptr<const Mesh<3, T>>& mesh,
+        T size,
         const Color& default_color,
-        double diffuse,
-        const vec3& camera_direction,
-        const vec3& camera_up);
+        Color::DataType diffuse,
+        const Vector<3, T>& camera_direction,
+        const Vector<3, T>& camera_up);
