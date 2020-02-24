@@ -133,6 +133,9 @@ private:
         void thread_reload_bound_cocone();
         void thread_self_test(SelfTestType test_type, bool with_confirmation);
 
+        template <template <size_t, typename> typename Mesh, size_t N, typename T>
+        void paint(const std::shared_ptr<const Mesh<N, T>>& mesh, const std::string& object_name);
+
         void set_dependent_interface();
 
         static void reset_object_button(QRadioButton* button, bool object_to_load);

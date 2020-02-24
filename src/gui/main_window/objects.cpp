@@ -42,9 +42,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <unordered_map>
 
-constexpr int MinDimension = 3;
-constexpr int MaxDimension = 5;
-
 int object_id_to_int(ObjectId id)
 {
         return static_cast<int>(id);
@@ -108,7 +105,7 @@ std::unique_ptr<const Obj<N>> obj_convex_hull(const Obj<N>& obj, ProgressRatio* 
 }
 }
 
-template <size_t N>
+template <size_t N, typename MeshFloat>
 class MainObjectsImpl
 {
         static_assert(N >= 3);
@@ -129,7 +126,7 @@ class MainObjectsImpl
         //
 
         const std::unique_ptr<ObjectRepository<N>> m_object_repository;
-        Meshes<ObjectId, const Mesh<N, double>> m_meshes;
+        Meshes<ObjectId, const Mesh<N, MeshFloat>> m_meshes;
         Meshes<ObjectId, const Obj<N>> m_objects;
         std::vector<Vector<N, float>> m_manifold_points;
         std::unique_ptr<ManifoldConstructor<N>> m_manifold_constructor;
@@ -204,7 +201,9 @@ public:
 
         bool manifold_constructor_exists() const;
         bool object_exists(ObjectId id) const;
+
         bool mesh_exists(ObjectId id) const;
+        std::shared_ptr<const Mesh<N, MeshFloat>> mesh(ObjectId id) const;
 
         void compute_bound_cocone(
                 const std::unordered_set<ObjectId>& objects,
@@ -232,15 +231,10 @@ public:
                 const ObjectLoaded& object_loaded);
 
         void save_to_file(ObjectId id, const std::string& file_name, const std::string& name) const;
-        void paint(
-                ObjectId id,
-                const PaintingInformation3d& info_3d,
-                const PaintingInformationNd& info_nd,
-                const PaintingInformationAll& info_all) const;
 };
 
-template <size_t N>
-MainObjectsImpl<N>::MainObjectsImpl(
+template <size_t N, typename MeshFloat>
+MainObjectsImpl<N, MeshFloat>::MainObjectsImpl(
         int mesh_threads,
         const ObjectsCallback& event_emitter,
         const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
@@ -252,9 +246,9 @@ MainObjectsImpl<N>::MainObjectsImpl(
 {
 }
 
-template <size_t N>
+template <size_t N, typename MeshFloat>
 template <typename F>
-void MainObjectsImpl<N>::catch_all(const F& function) const
+void MainObjectsImpl<N, MeshFloat>::catch_all(const F& function) const
 {
         std::string message;
         try
@@ -267,38 +261,44 @@ void MainObjectsImpl<N>::catch_all(const F& function) const
         }
 }
 
-template <size_t N>
-std::vector<std::string> MainObjectsImpl<N>::repository_point_object_names() const
+template <size_t N, typename MeshFloat>
+std::vector<std::string> MainObjectsImpl<N, MeshFloat>::repository_point_object_names() const
 {
         return m_object_repository->point_object_names();
 }
 
-template <size_t N>
-void MainObjectsImpl<N>::set_show(Show* show)
+template <size_t N, typename MeshFloat>
+void MainObjectsImpl<N, MeshFloat>::set_show(Show* show)
 {
         m_show = show;
 }
 
-template <size_t N>
-bool MainObjectsImpl<N>::object_exists(ObjectId id) const
+template <size_t N, typename MeshFloat>
+bool MainObjectsImpl<N, MeshFloat>::object_exists(ObjectId id) const
 {
         return m_objects.get(id) != nullptr;
 }
 
-template <size_t N>
-bool MainObjectsImpl<N>::mesh_exists(ObjectId id) const
+template <size_t N, typename MeshFloat>
+bool MainObjectsImpl<N, MeshFloat>::mesh_exists(ObjectId id) const
 {
         return m_meshes.get(id) != nullptr;
 }
 
-template <size_t N>
-bool MainObjectsImpl<N>::manifold_constructor_exists() const
+template <size_t N, typename MeshFloat>
+std::shared_ptr<const Mesh<N, MeshFloat>> MainObjectsImpl<N, MeshFloat>::mesh(ObjectId id) const
+{
+        return m_meshes.get(id);
+}
+
+template <size_t N, typename MeshFloat>
+bool MainObjectsImpl<N, MeshFloat>::manifold_constructor_exists() const
 {
         return m_manifold_constructor.get() != nullptr;
 }
 
-template <size_t N>
-std::string MainObjectsImpl<N>::object_name(ObjectType object_type)
+template <size_t N, typename MeshFloat>
+std::string MainObjectsImpl<N, MeshFloat>::object_name(ObjectType object_type)
 {
         switch (object_type)
         {
@@ -312,8 +312,8 @@ std::string MainObjectsImpl<N>::object_name(ObjectType object_type)
         error_fatal("Unknown object type");
 }
 
-template <size_t N>
-ObjectId MainObjectsImpl<N>::object_identifier(ObjectType object_type)
+template <size_t N, typename MeshFloat>
+ObjectId MainObjectsImpl<N, MeshFloat>::object_identifier(ObjectType object_type)
 {
         switch (object_type)
         {
@@ -327,8 +327,8 @@ ObjectId MainObjectsImpl<N>::object_identifier(ObjectType object_type)
         error_fatal("Unknown object type");
 }
 
-template <size_t N>
-ObjectId MainObjectsImpl<N>::convex_hull_identifier(ObjectType object_type)
+template <size_t N, typename MeshFloat>
+ObjectId MainObjectsImpl<N, MeshFloat>::convex_hull_identifier(ObjectType object_type)
 {
         switch (object_type)
         {
@@ -342,8 +342,8 @@ ObjectId MainObjectsImpl<N>::convex_hull_identifier(ObjectType object_type)
         error_fatal("Unknown object type");
 }
 
-template <size_t N>
-void MainObjectsImpl<N>::build_mesh(ProgressRatioList* progress_list, ObjectId id, const Obj<N>& obj)
+template <size_t N, typename MeshFloat>
+void MainObjectsImpl<N, MeshFloat>::build_mesh(ProgressRatioList* progress_list, ObjectId id, const Obj<N>& obj)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -357,13 +357,13 @@ void MainObjectsImpl<N>::build_mesh(ProgressRatioList* progress_list, ObjectId i
         ProgressRatio progress(progress_list);
 
         m_meshes.set(
-                id, std::make_shared<const Mesh<N, double>>(&obj, m_model_vertex_matrix, m_mesh_threads, &progress));
+                id, std::make_shared<const Mesh<N, MeshFloat>>(&obj, m_model_vertex_matrix, m_mesh_threads, &progress));
 
         m_event_emitter.mesh_loaded(id);
 }
 
-template <size_t N>
-void MainObjectsImpl<N>::add_object_and_build_mesh(
+template <size_t N, typename MeshFloat>
+void MainObjectsImpl<N, MeshFloat>::add_object_and_build_mesh(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         ObjectType object_type,
@@ -393,8 +393,8 @@ void MainObjectsImpl<N>::add_object_and_build_mesh(
         build_mesh(progress_list, object_id, *obj);
 }
 
-template <size_t N>
-void MainObjectsImpl<N>::add_object_convex_hull_and_build_mesh(
+template <size_t N, typename MeshFloat>
+void MainObjectsImpl<N, MeshFloat>::add_object_convex_hull_and_build_mesh(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         ObjectType object_type,
@@ -438,8 +438,8 @@ void MainObjectsImpl<N>::add_object_convex_hull_and_build_mesh(
         build_mesh(progress_list, object_id, *obj_ch);
 }
 
-template <size_t N>
-void MainObjectsImpl<N>::object_and_mesh(
+template <size_t N, typename MeshFloat>
+void MainObjectsImpl<N, MeshFloat>::object_and_mesh(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         ObjectType object_type,
@@ -467,8 +467,10 @@ void MainObjectsImpl<N>::object_and_mesh(
         thread_ch.join();
 }
 
-template <size_t N>
-void MainObjectsImpl<N>::cocone(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list)
+template <size_t N, typename MeshFloat>
+void MainObjectsImpl<N, MeshFloat>::cocone(
+        const std::unordered_set<ObjectId>& objects,
+        ProgressRatioList* progress_list)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -503,8 +505,8 @@ void MainObjectsImpl<N>::cocone(const std::unordered_set<ObjectId>& objects, Pro
         object_and_mesh(objects, progress_list, ObjectType::Cocone, obj_cocone);
 }
 
-template <size_t N>
-void MainObjectsImpl<N>::bound_cocone(
+template <size_t N, typename MeshFloat>
+void MainObjectsImpl<N, MeshFloat>::bound_cocone(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         double rho,
@@ -559,8 +561,10 @@ void MainObjectsImpl<N>::bound_cocone(
         object_and_mesh(objects, progress_list, ObjectType::BoundCocone, obj_bound_cocone);
 }
 
-template <size_t N>
-void MainObjectsImpl<N>::build_mst(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list)
+template <size_t N, typename MeshFloat>
+void MainObjectsImpl<N, MeshFloat>::build_mst(
+        const std::unordered_set<ObjectId>& objects,
+        ProgressRatioList* progress_list)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -598,8 +602,8 @@ void MainObjectsImpl<N>::build_mst(const std::unordered_set<ObjectId>& objects, 
         m_objects.set(ObjectId::ModelMst, mst_obj);
 }
 
-template <size_t N>
-void MainObjectsImpl<N>::manifold_constructor(
+template <size_t N, typename MeshFloat>
+void MainObjectsImpl<N, MeshFloat>::manifold_constructor(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         double rho,
@@ -654,8 +658,8 @@ void MainObjectsImpl<N>::manifold_constructor(
         thread_mst.join();
 }
 
-template <size_t N>
-void MainObjectsImpl<N>::clear_all_data()
+template <size_t N, typename MeshFloat>
+void MainObjectsImpl<N, MeshFloat>::clear_all_data()
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -670,9 +674,9 @@ void MainObjectsImpl<N>::clear_all_data()
         m_manifold_points.shrink_to_fit();
 }
 
-template <size_t N>
+template <size_t N, typename MeshFloat>
 template <typename ObjectLoaded>
-void MainObjectsImpl<N>::load_object(
+void MainObjectsImpl<N, MeshFloat>::load_object(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         const std::string& object_name,
@@ -731,8 +735,8 @@ void MainObjectsImpl<N>::load_object(
         thread_manifold.join();
 }
 
-template <size_t N>
-void MainObjectsImpl<N>::compute_bound_cocone(
+template <size_t N, typename MeshFloat>
+void MainObjectsImpl<N, MeshFloat>::compute_bound_cocone(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         double rho,
@@ -741,9 +745,9 @@ void MainObjectsImpl<N>::compute_bound_cocone(
         bound_cocone(objects, progress_list, rho, alpha);
 }
 
-template <size_t N>
+template <size_t N, typename MeshFloat>
 template <typename ObjectLoaded>
-void MainObjectsImpl<N>::load_from_file(
+void MainObjectsImpl<N, MeshFloat>::load_from_file(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         const std::string& file_name,
@@ -765,9 +769,9 @@ void MainObjectsImpl<N>::load_from_file(
         load_object(objects, progress_list, file_name, obj, rho, alpha, object_loaded);
 }
 
-template <size_t N>
+template <size_t N, typename MeshFloat>
 template <typename ObjectLoaded>
-void MainObjectsImpl<N>::load_from_repository(
+void MainObjectsImpl<N, MeshFloat>::load_from_repository(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         const std::string& object_name,
@@ -790,8 +794,9 @@ void MainObjectsImpl<N>::load_from_repository(
         load_object(objects, progress_list, object_name, obj, rho, alpha, object_loaded);
 }
 
-template <size_t N>
-void MainObjectsImpl<N>::save_to_file(ObjectId id, const std::string& file_name, const std::string& name) const
+template <size_t N, typename MeshFloat>
+void MainObjectsImpl<N, MeshFloat>::save_to_file(ObjectId id, const std::string& file_name, const std::string& name)
+        const
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -806,46 +811,21 @@ void MainObjectsImpl<N>::save_to_file(ObjectId id, const std::string& file_name,
         save_geometry(obj.get(), file_name, name);
 }
 
-template <size_t N>
-void MainObjectsImpl<N>::paint(
-        ObjectId id,
-        const PaintingInformation3d& info_3d,
-        const PaintingInformationNd& info_nd,
-        const PaintingInformationAll& info_all) const
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::shared_ptr<const Mesh<N, double>> mesh = m_meshes.get(id);
-
-        if (!mesh)
-        {
-                m_event_emitter.message_warning("No object to paint");
-                return;
-        }
-
-        if constexpr (N == 3)
-        {
-                painting(mesh, info_3d, info_all);
-        }
-        else
-        {
-                painting(mesh, info_nd, info_all);
-        }
-}
-
 //
 
-template <int Min, int Max>
 class MainObjectStorage final : public MainObjects
 {
-        static_assert(Min >= 3 && Min <= Max);
+        static constexpr int MIN = MIN_DIMENSION;
+        static constexpr int MAX = MAX_DIMENSION;
 
-        static constexpr size_t Count = Max - Min + 1;
+        static_assert(MIN >= 3 && MIN <= MAX);
+
+        static constexpr size_t COUNT = MAX - MIN + 1;
 
         //
-        // Каждый элемент контейнера это variant с типами <T<Min, T2...>, T<Min + 1, T2...>, ...>.
-        // По каждому номеру I от Min до Max хранится map[I] = T<I, T2...>.
-        // Например, имеется тип Type и числа Min = 3, Max = 5.
+        // Каждый элемент контейнера это variant с типами <T<MIN, T2...>, T<MIN + 1, T2...>, ...>.
+        // По каждому номеру I от MIN до MAX хранится map[I] = T<I, T2...>.
+        // Например, имеется тип Type и числа MIN = 3, MAX = 5.
         // Тип данных контейнера
         //      variant<Type<3>, Type<4>, Type<5>>
         // Элементы контейнера
@@ -858,9 +838,9 @@ class MainObjectStorage final : public MainObjects
         // объекта одного измерения все объекты других измерений удаляются.
 
         template <template <size_t, typename...> typename T, typename... T2>
-        using Map = std::unordered_map<int, SequenceVariant1<Min, Max, T, T2...>>;
+        using Map = std::unordered_map<int, SequenceVariant1<MIN, MAX, T, T2...>>;
 
-        Map<MainObjectsImpl> m_objects;
+        Map<MainObjectsImpl, MeshFloat> m_objects;
 
         void clear_all_data()
         {
@@ -872,10 +852,10 @@ class MainObjectStorage final : public MainObjects
 
         void check_dimension(int dimension)
         {
-                if (dimension < Min || dimension > Max)
+                if (dimension < MIN || dimension > MAX)
                 {
                         error("Error repository object dimension " + to_string(dimension) +
-                              ", min = " + to_string(Min) + ", max = " + to_string(Max));
+                              ", min = " + to_string(MIN) + ", max = " + to_string(MAX));
                 }
         }
 
@@ -941,6 +921,42 @@ class MainObjectStorage final : public MainObjects
                         error("Too many meshes " + to_string(count));
                 }
                 return count > 0;
+        }
+
+        MeshVariant mesh(ObjectId id) const override
+        {
+                if (!mesh_exists(id))
+                {
+                        error("No mesh");
+                }
+                std::optional<MeshVariant> mesh_opt;
+                int count = 0;
+                for (const auto& p : m_objects)
+                {
+                        std::visit(
+                                [&](const auto& v) {
+                                        if (v.mesh_exists(id))
+                                        {
+                                                if (!mesh_opt)
+                                                {
+                                                        auto ptr = v.mesh(id);
+                                                        if (!ptr)
+                                                        {
+                                                                error("Null mesh pointer");
+                                                        }
+                                                        mesh_opt = std::move(ptr);
+                                                }
+                                                ++count;
+                                        }
+                                },
+                                p.second);
+                }
+                if (count != 1)
+                {
+                        error("Error mesh count " + to_string(count));
+                }
+                ASSERT(mesh_opt);
+                return *mesh_opt;
         }
 
         void compute_bound_cocone(
@@ -1046,38 +1062,6 @@ class MainObjectStorage final : public MainObjects
                 }
         }
 
-        void paint(
-                ObjectId id,
-                const PaintingInformation3d& info_3d,
-                const PaintingInformationNd& info_nd,
-                const PaintingInformationAll& info_all) const override
-        {
-                if (!mesh_exists(id))
-                {
-                        error("No mesh");
-                }
-                int count = 0;
-                for (const auto& p : m_objects)
-                {
-                        std::visit(
-                                [&](const auto& v) {
-                                        if (v.mesh_exists(id))
-                                        {
-                                                if (count == 0)
-                                                {
-                                                        v.paint(id, info_3d, info_nd, info_all);
-                                                }
-                                                ++count;
-                                        }
-                                },
-                                p.second);
-                }
-                if (count != 1)
-                {
-                        error("Error mesh count " + to_string(count));
-                }
-        }
-
         std::vector<FileFormat> formats_for_save(unsigned dimension) const override
         {
                 std::vector<FileFormat> v(1);
@@ -1091,7 +1075,7 @@ class MainObjectStorage final : public MainObjects
         std::vector<FileFormat> formats_for_load() const override
         {
                 std::set<unsigned> dimensions;
-                for (unsigned n = Min; n <= Max; ++n)
+                for (int n = MIN; n <= MAX; ++n)
                 {
                         dimensions.insert(n);
                 }
@@ -1119,15 +1103,15 @@ class MainObjectStorage final : public MainObjects
                 std::integer_sequence<size_t, I...>&&)
         {
                 static_assert(((I >= 0 && I < sizeof...(I)) && ...));
-                static_assert(Min + sizeof...(I) == Max + 1);
+                static_assert(MIN + sizeof...(I) == MAX + 1);
 
                 (m_objects.try_emplace(
-                         Min + I, std::in_place_type_t<MainObjectsImpl<Min + I>>(), mesh_threads, event_emitter,
-                         exception_handler),
+                         MIN + I, std::in_place_type_t<MainObjectsImpl<MIN + I, MeshFloat>>(), mesh_threads,
+                         event_emitter, exception_handler),
                  ...);
 
-                ASSERT((m_objects.count(Min + I) == 1) && ...);
-                ASSERT(m_objects.size() == Count);
+                ASSERT((m_objects.count(MIN + I) == 1) && ...);
+                ASSERT(m_objects.size() == COUNT);
         }
 
 public:
@@ -1136,7 +1120,7 @@ public:
                 const ObjectsCallback& event_emitter,
                 const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
         {
-                init_map(mesh_threads, event_emitter, exception_handler, std::make_integer_sequence<size_t, Count>());
+                init_map(mesh_threads, event_emitter, exception_handler, std::make_integer_sequence<size_t, COUNT>());
         }
 };
 
@@ -1145,6 +1129,5 @@ std::unique_ptr<MainObjects> create_main_objects(
         const ObjectsCallback& event_emitter,
         const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
 {
-        return std::make_unique<MainObjectStorage<MinDimension, MaxDimension>>(
-                mesh_threads, event_emitter, exception_handler);
+        return std::make_unique<MainObjectStorage>(mesh_threads, event_emitter, exception_handler);
 }

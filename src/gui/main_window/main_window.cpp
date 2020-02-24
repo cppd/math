@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "main_window.h"
 
+#include "paintings.h"
+
 #include "../command_line/command_line.h"
 #include "../dialogs/messages/application_about.h"
 #include "../dialogs/messages/application_help.h"
@@ -1626,6 +1628,53 @@ void MainWindow::on_radioButton_bound_cocone_convex_hull_clicked()
         m_show->show_object(object_id_to_int(ObjectId::BoundCoconeConvexHull));
 }
 
+template <template <size_t, typename> typename Mesh, size_t N, typename T>
+void MainWindow::paint(const std::shared_ptr<const Mesh<N, T>>& mesh, const std::string& object_name)
+{
+        ASSERT(mesh);
+
+        PaintingInformationAll info_all;
+
+        info_all.parent_window = this;
+        info_all.window_title = QMainWindow::windowTitle().toStdString();
+        info_all.object_name = object_name;
+        info_all.default_samples_per_dimension = PAINTER_DEFAULT_SAMPLES_PER_DIMENSION;
+        info_all.max_samples_per_dimension = PAINTER_MAX_SAMPLES_PER_DIMENSION;
+        info_all.background_color = qcolor_to_rgb(m_background_color);
+        info_all.default_color = qcolor_to_rgb(m_default_color);
+        info_all.diffuse = diffuse_light();
+
+        if constexpr (N == 3)
+        {
+                ShowCameraInfo c = m_show->camera_information();
+
+                PaintingInformation3d info;
+
+                info.camera_up = c.camera_up;
+                info.camera_direction = c.camera_direction;
+                info.light_direction = c.light_direction;
+                info.view_center = c.view_center;
+                info.view_width = c.view_width;
+                info.paint_width = c.width;
+                info.paint_height = c.height;
+                info.object_position = m_show->object_position();
+                info.object_size = m_show->object_size();
+                info.max_screen_size = PAINTER_3D_MAX_SCREEN_SIZE;
+
+                painting(mesh, info, info_all);
+        }
+        else
+        {
+                PaintingInformationNd info;
+
+                info.default_screen_size = PAINTER_DEFAULT_SCREEN_SIZE;
+                info.minimum_screen_size = PAINTER_MINIMUM_SCREEN_SIZE;
+                info.maximum_screen_size = PAINTER_MAXIMUM_SCREEN_SIZE;
+
+                painting(mesh, info, info_all);
+        }
+}
+
 void MainWindow::on_actionPainter_triggered()
 {
         std::string object_name;
@@ -1645,35 +1694,6 @@ void MainWindow::on_actionPainter_triggered()
         catch_all([&](std::string* message) {
                 *message = "Painter";
 
-                PaintingInformation3d info_3d;
-
-                ShowCameraInfo c = m_show->camera_information();
-                info_3d.camera_up = c.camera_up;
-                info_3d.camera_direction = c.camera_direction;
-                info_3d.light_direction = c.light_direction;
-                info_3d.view_center = c.view_center;
-                info_3d.view_width = c.view_width;
-                info_3d.paint_width = c.width;
-                info_3d.paint_height = c.height;
-                info_3d.object_position = m_show->object_position();
-                info_3d.object_size = m_show->object_size();
-                info_3d.max_screen_size = PAINTER_3D_MAX_SCREEN_SIZE;
-
-                PaintingInformationNd info_nd;
-                info_nd.default_screen_size = PAINTER_DEFAULT_SCREEN_SIZE;
-                info_nd.minimum_screen_size = PAINTER_MINIMUM_SCREEN_SIZE;
-                info_nd.maximum_screen_size = PAINTER_MAXIMUM_SCREEN_SIZE;
-
-                PaintingInformationAll info_all;
-                info_all.parent_window = this;
-                info_all.window_title = QMainWindow::windowTitle().toStdString();
-                info_all.object_name = object_name;
-                info_all.default_samples_per_dimension = PAINTER_DEFAULT_SAMPLES_PER_DIMENSION;
-                info_all.max_samples_per_dimension = PAINTER_MAX_SAMPLES_PER_DIMENSION;
-                info_all.background_color = qcolor_to_rgb(m_background_color);
-                info_all.default_color = qcolor_to_rgb(m_default_color);
-                info_all.diffuse = diffuse_light();
-
-                m_objects->paint(object_id, info_3d, info_nd, info_all);
+                std::visit([&](const auto& v) { paint(v, object_name); }, m_objects->mesh(object_id));
         });
 }

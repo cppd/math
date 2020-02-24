@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "paintings.h"
-
+#include <src/com/variant.h>
+#include <src/painter/shapes/mesh.h>
 #include <src/progress/progress_list.h>
 #include <src/show/interface.h>
 
@@ -58,8 +58,21 @@ public:
         virtual void message_warning(const std::string& msg) const = 0;
 };
 
-struct MainObjects
+class MainObjects
 {
+        template <size_t N, typename... T>
+        using MeshConst = const Mesh<N, T...>;
+
+public:
+        static constexpr int MIN_DIMENSION = 3;
+        static constexpr int MAX_DIMENSION = 5;
+
+        using MeshFloat = double;
+
+        // std::variant<std::shared_ptr<const Mesh<MIN_DIMENSION, MeshFloat>>, ...,
+        //   std::shared_ptr<const Mesh<MAX_DIMENSION, MeshFloat>>>
+        using MeshVariant = SequenceVariant2<MIN_DIMENSION, MAX_DIMENSION, std::shared_ptr, MeshConst, MeshFloat>;
+
         virtual ~MainObjects() = default;
 
         struct RepositoryObjects
@@ -77,7 +90,9 @@ struct MainObjects
 
         virtual bool manifold_constructor_exists() const = 0;
         virtual bool object_exists(ObjectId id) const = 0;
+
         virtual bool mesh_exists(ObjectId id) const = 0;
+        virtual MeshVariant mesh(ObjectId id) const = 0;
 
         struct FileFormat
         {
@@ -110,12 +125,6 @@ struct MainObjects
                 int point_count) = 0;
 
         virtual void save_to_file(ObjectId id, const std::string& file_name, const std::string& name) const = 0;
-
-        virtual void paint(
-                ObjectId id,
-                const PaintingInformation3d& info_3d,
-                const PaintingInformationNd& info_nd,
-                const PaintingInformationAll& info_all) const = 0;
 };
 
 std::unique_ptr<MainObjects> create_main_objects(
