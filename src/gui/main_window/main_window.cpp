@@ -216,14 +216,14 @@ void MainWindow::constructor_buttons()
 
 void MainWindow::constructor_objects_and_repository()
 {
-        m_objects = create_main_objects(
+        m_objects = create_object_storage(
                 std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter,
                 [this](const std::exception_ptr& ptr, const std::string& msg) { exception_handler(ptr, msg, true); });
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
 
-        std::vector<MainObjects::RepositoryObjects> repository_objects = m_objects->repository_point_object_names();
+        std::vector<ObjectStorage::RepositoryObjects> repository_objects = m_objects->repository_point_object_names();
 
         std::sort(repository_objects.begin(), repository_objects.end(), [](const auto& a, const auto& b) {
                 return a.dimension < b.dimension;
@@ -515,7 +515,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         bool read_only = true;
 
                         std::vector<std::string> filters;
-                        for (const MainObjects::FileFormat& v : m_objects->formats_for_load())
+                        for (const ObjectStorage::FileFormat& v : m_objects->formats_for_load())
                         {
                                 filters.push_back(file_filter(v.name, v.extensions));
                         }
@@ -663,7 +663,7 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
                 bool read_only = true;
 
                 std::vector<std::string> filters;
-                for (const MainObjects::FileFormat& v : m_objects->formats_for_save(m_dimension))
+                for (const ObjectStorage::FileFormat& v : m_objects->formats_for_save(m_dimension))
                 {
                         filters.push_back(file_filter(v.name, v.extensions));
                 }
@@ -1082,12 +1082,50 @@ void MainWindow::direct_message_warning(const std::string& msg)
         dialog::message_warning(this, msg);
 }
 
-void MainWindow::direct_object_loaded(int id)
+void MainWindow::direct_show_object_loaded(int id)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
         ASSERT(m_dimension == 3);
         show_object_button(object_id_to_button(int_to_object_id(id)));
+}
+
+template <template <size_t> typename Obj, size_t N, typename Id>
+void MainWindow::object_loaded(const std::shared_ptr<const Obj<N>>& obj, const Id& id)
+{
+        if constexpr (N == 3)
+        {
+                if (!m_show)
+                {
+                        return;
+                }
+                m_show->add_object(obj, object_id_to_int(id), object_id_to_int(ObjectId::Model));
+        }
+}
+
+void MainWindow::direct_object_loaded(ObjectId id, size_t dimension)
+{
+        if (m_show && dimension == 3)
+        {
+                ASSERT(m_objects);
+                std::visit([&](const auto& v) { object_loaded(v, id); }, m_objects->object(id));
+        }
+}
+
+void MainWindow::direct_object_deleted(ObjectId id, size_t dimension)
+{
+        if (m_show && dimension == 3)
+        {
+                m_show->delete_object(object_id_to_int(id));
+        }
+}
+
+void MainWindow::direct_object_deleted_all(size_t dimension)
+{
+        if (m_show && dimension == 3)
+        {
+                m_show->delete_all_objects();
+        }
 }
 
 void MainWindow::direct_mesh_loaded(ObjectId id)
@@ -1235,7 +1273,7 @@ void MainWindow::slot_window_first_shown()
                 m_show_object = create_show_object(api, info);
                 m_show = &m_show_object->show();
 
-                m_objects->set_show(m_show);
+                m_objects->set_object_size_and_position(m_show->object_size(), m_show->object_position());
 
                 //
 

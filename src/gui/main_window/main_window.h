@@ -18,13 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "event_emitter.h"
-#include "objects.h"
 #include "threads.h"
 
 #include "ui_main_window.h"
 
 #include <src/progress/progress_list.h>
 #include <src/show/interface.h>
+#include <src/storage/objects.h>
 #include <src/test/self_test.h>
 
 #include <QColor>
@@ -136,6 +136,9 @@ private:
         template <template <size_t, typename> typename Mesh, size_t N, typename T>
         void paint(const std::shared_ptr<const Mesh<N, T>>& mesh, const std::string& object_name);
 
+        template <template <size_t> typename Obj, size_t N, typename Id>
+        void object_loaded(const std::shared_ptr<const Obj<N>>& obj, const Id& id);
+
         void set_dependent_interface();
 
         static void reset_object_button(QRadioButton* button, bool object_to_load);
@@ -180,7 +183,10 @@ private:
         void direct_message_error_source(const std::string& msg, const std::string& src) override;
         void direct_message_information(const std::string& msg) override;
         void direct_message_warning(const std::string& msg) override;
-        void direct_object_loaded(int id) override;
+        void direct_show_object_loaded(int id) override;
+        void direct_object_loaded(ObjectId id, size_t dimension) override;
+        void direct_object_deleted(ObjectId id, size_t dimension) override;
+        void direct_object_deleted_all(size_t dimension) override;
         void direct_mesh_loaded(ObjectId id) override;
         void direct_file_loaded(
                 const std::string& file_name,
@@ -204,7 +210,7 @@ private:
         std::unique_ptr<ShowObject> m_show_object;
         Show* m_show = nullptr;
 
-        std::unique_ptr<MainObjects> m_objects;
+        std::unique_ptr<ObjectStorage> m_objects;
 
         QColor m_background_color;
         QColor m_default_color;

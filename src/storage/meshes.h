@@ -18,14 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <memory>
-#include <mutex>
+#include <shared_mutex>
 #include <unordered_map>
 #include <vector>
 
 template <typename Index, typename Mesh>
 class Meshes
 {
-        mutable std::mutex m_mutex;
+        mutable std::shared_mutex m_mutex;
 
         std::unordered_map<Index, std::shared_ptr<Mesh>> m_meshes;
 
@@ -41,7 +41,7 @@ public:
                 std::shared_ptr<Mesh> tmp;
 
                 {
-                        std::lock_guard lg(m_mutex);
+                        std::unique_lock lock(m_mutex);
 
                         auto iter = m_meshes.find(id);
                         if (iter != m_meshes.cend())
@@ -61,7 +61,7 @@ public:
                 std::shared_ptr<Mesh> tmp;
 
                 {
-                        std::lock_guard lg(m_mutex);
+                        std::unique_lock lock(m_mutex);
 
                         auto iter = m_meshes.find(id);
                         if (iter != m_meshes.cend())
@@ -76,7 +76,7 @@ public:
                 std::vector<std::shared_ptr<Mesh>> tmp;
 
                 {
-                        std::lock_guard lg(m_mutex);
+                        std::unique_lock lock(m_mutex);
 
                         tmp.reserve(m_meshes.size());
                         for (auto& mesh : m_meshes)
@@ -88,7 +88,7 @@ public:
 
         std::shared_ptr<Mesh> get(const Index& id) const
         {
-                std::lock_guard lg(m_mutex);
+                std::shared_lock lock(m_mutex);
 
                 auto iter = m_meshes.find(id);
                 return (iter != m_meshes.cend()) ? iter->second : nullptr;

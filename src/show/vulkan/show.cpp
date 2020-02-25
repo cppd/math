@@ -172,7 +172,7 @@ class Impl final : public Show
                         error("Null object received");
                 }
                 m_renderer->object_add(obj_ptr.get(), OBJECT_SIZE, OBJECT_POSITION, id, scale_id);
-                m_callback->object_loaded(id);
+                m_callback->show_object_loaded(id);
         }
 
         void delete_object(int id) override

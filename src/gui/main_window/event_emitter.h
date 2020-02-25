@@ -17,12 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "objects.h"
-
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/variant.h>
 #include <src/show/interface.h>
+#include <src/storage/objects.h>
 
 #include <QObject>
 
@@ -37,7 +36,10 @@ public:
         virtual void direct_message_error_source(const std::string& msg, const std::string& src) = 0;
         virtual void direct_message_information(const std::string& msg) = 0;
         virtual void direct_message_warning(const std::string& msg) = 0;
-        virtual void direct_object_loaded(int id) = 0;
+        virtual void direct_show_object_loaded(int id) = 0;
+        virtual void direct_object_loaded(ObjectId id, size_t dimension) = 0;
+        virtual void direct_object_deleted(ObjectId id, size_t dimension) = 0;
+        virtual void direct_object_deleted_all(size_t dimension) = 0;
         virtual void direct_mesh_loaded(ObjectId id) = 0;
         virtual void direct_file_loaded(
                 const std::string& file_name,
@@ -47,7 +49,7 @@ public:
         virtual void direct_log(const std::string& msg) = 0;
 };
 
-class WindowEventEmitter final : public QObject, public LogCallback, public ObjectsCallback, public ShowCallback
+class WindowEventEmitter final : public QObject, public LogCallback, public ObjectStorageCallback, public ShowCallback
 {
         Q_OBJECT
 
@@ -90,10 +92,33 @@ private:
                         {
                         }
                 };
-                struct object_loaded final
+                struct show_object_loaded final
                 {
                         const int id;
-                        explicit object_loaded(int id_) : id(id_)
+                        explicit show_object_loaded(int id_) : id(id_)
+                        {
+                        }
+                };
+                struct object_loaded final
+                {
+                        const ObjectId id;
+                        const size_t dimension;
+                        object_loaded(ObjectId id_, size_t dimension_) : id(id_), dimension(dimension_)
+                        {
+                        }
+                };
+                struct object_deleted final
+                {
+                        const ObjectId id;
+                        const size_t dimension;
+                        object_deleted(ObjectId id_, size_t dimension_) : id(id_), dimension(dimension_)
+                        {
+                        }
+                };
+                struct object_deleted_all final
+                {
+                        const size_t dimension;
+                        explicit object_deleted_all(size_t dimension_) : dimension(dimension_)
                         {
                         }
                 };
@@ -135,7 +160,10 @@ private:
 
                 std::variant<
                         std::monostate,
+                        show_object_loaded,
                         object_loaded,
+                        object_deleted,
+                        object_deleted_all,
                         mesh_loaded,
                         bound_cocone_loaded,
                         file_loaded,
@@ -215,9 +243,21 @@ private:
                 {
                         m_f->direct_message_warning(d.msg);
                 }
+                void operator()(const WindowEvent::show_object_loaded& d)
+                {
+                        m_f->direct_show_object_loaded(d.id);
+                }
                 void operator()(const WindowEvent::object_loaded& d)
                 {
-                        m_f->direct_object_loaded(d.id);
+                        m_f->direct_object_loaded(d.id, d.dimension);
+                }
+                void operator()(const WindowEvent::object_deleted& d)
+                {
+                        m_f->direct_object_deleted(d.id, d.dimension);
+                }
+                void operator()(const WindowEvent::object_deleted_all& d)
+                {
+                        m_f->direct_object_deleted_all(d.dimension);
                 }
                 void operator()(const WindowEvent::mesh_loaded& d)
                 {
@@ -279,9 +319,24 @@ public:
                 emit_message<WindowEvent::message_warning>("Exception in emit message warning", msg);
         }
 
-        void object_loaded(int id) const override
+        void show_object_loaded(int id) const override
         {
-                emit_message<WindowEvent::object_loaded>("Exception in emit object loaded", id);
+                emit_message<WindowEvent::show_object_loaded>("Exception in emit show object loaded", id);
+        }
+
+        void object_loaded(ObjectId id, size_t dimension) const override
+        {
+                emit_message<WindowEvent::object_loaded>("Exception in emit object loaded", id, dimension);
+        }
+
+        void object_deleted(ObjectId id, size_t dimension) const override
+        {
+                emit_message<WindowEvent::object_deleted>("Exception in emit object deleted", id, dimension);
+        }
+
+        void object_deleted_all(size_t dimension) const override
+        {
+                emit_message<WindowEvent::object_deleted_all>("Exception in emit object deleted_all", dimension);
         }
 
         void mesh_loaded(ObjectId id) const override

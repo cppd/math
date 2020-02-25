@@ -34,7 +34,7 @@ protected:
 public:
         virtual void message_error_fatal(const std::string&) const = 0;
         virtual void message_error_source(const std::string&, const std::string&) const = 0;
-        virtual void object_loaded(int) const = 0;
+        virtual void show_object_loaded(int) const = 0;
 };
 
 struct ShowCameraInfo final

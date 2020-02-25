@@ -106,7 +106,7 @@ std::unique_ptr<const Obj<N>> obj_convex_hull(const Obj<N>& obj, ProgressRatio* 
 }
 
 template <size_t N, typename MeshFloat>
-class MainObjectsImpl
+class ObjectStorageDimension
 {
         static_assert(N >= 3);
 
@@ -120,7 +120,7 @@ class MainObjectsImpl
         const std::thread::id m_thread_id = std::this_thread::get_id();
         const int m_mesh_threads;
 
-        const ObjectsCallback& m_event_emitter;
+        const ObjectStorageCallback& m_event_emitter;
         std::function<void(const std::exception_ptr& ptr, const std::string& msg)> m_exception_handler;
 
         //
@@ -139,7 +139,8 @@ class MainObjectsImpl
         double m_bound_cocone_rho;
         double m_bound_cocone_alpha;
 
-        Show* m_show;
+        double m_object_size = 0;
+        vec3 m_object_position = vec3(0);
 
         template <typename F>
         void catch_all(const F& function) const;
@@ -188,19 +189,21 @@ class MainObjectsImpl
                 const ObjectLoaded& object_loaded);
 
 public:
-        MainObjectsImpl(
+        ObjectStorageDimension(
                 int mesh_threads,
-                const ObjectsCallback& event_emitter,
+                const ObjectStorageCallback& event_emitter,
                 const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler);
+
+        void set_object_size_and_position(double size, const vec3& position);
 
         void clear_all_data();
 
         std::vector<std::string> repository_point_object_names() const;
 
-        void set_show(Show* show);
-
         bool manifold_constructor_exists() const;
+
         bool object_exists(ObjectId id) const;
+        std::shared_ptr<const Obj<N>> object(ObjectId id) const;
 
         bool mesh_exists(ObjectId id) const;
         std::shared_ptr<const Mesh<N, MeshFloat>> mesh(ObjectId id) const;
@@ -234,21 +237,20 @@ public:
 };
 
 template <size_t N, typename MeshFloat>
-MainObjectsImpl<N, MeshFloat>::MainObjectsImpl(
+ObjectStorageDimension<N, MeshFloat>::ObjectStorageDimension(
         int mesh_threads,
-        const ObjectsCallback& event_emitter,
+        const ObjectStorageCallback& event_emitter,
         const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
         : m_mesh_threads(mesh_threads),
           m_event_emitter(event_emitter),
           m_exception_handler(exception_handler),
-          m_object_repository(create_object_repository<N>()),
-          m_show(nullptr)
+          m_object_repository(create_object_repository<N>())
 {
 }
 
 template <size_t N, typename MeshFloat>
 template <typename F>
-void MainObjectsImpl<N, MeshFloat>::catch_all(const F& function) const
+void ObjectStorageDimension<N, MeshFloat>::catch_all(const F& function) const
 {
         std::string message;
         try
@@ -262,43 +264,50 @@ void MainObjectsImpl<N, MeshFloat>::catch_all(const F& function) const
 }
 
 template <size_t N, typename MeshFloat>
-std::vector<std::string> MainObjectsImpl<N, MeshFloat>::repository_point_object_names() const
+void ObjectStorageDimension<N, MeshFloat>::set_object_size_and_position(double size, const vec3& position)
+{
+        m_object_size = size;
+        m_object_position = position;
+}
+
+template <size_t N, typename MeshFloat>
+std::vector<std::string> ObjectStorageDimension<N, MeshFloat>::repository_point_object_names() const
 {
         return m_object_repository->point_object_names();
 }
 
 template <size_t N, typename MeshFloat>
-void MainObjectsImpl<N, MeshFloat>::set_show(Show* show)
-{
-        m_show = show;
-}
-
-template <size_t N, typename MeshFloat>
-bool MainObjectsImpl<N, MeshFloat>::object_exists(ObjectId id) const
+bool ObjectStorageDimension<N, MeshFloat>::object_exists(ObjectId id) const
 {
         return m_objects.get(id) != nullptr;
 }
 
 template <size_t N, typename MeshFloat>
-bool MainObjectsImpl<N, MeshFloat>::mesh_exists(ObjectId id) const
+std::shared_ptr<const Obj<N>> ObjectStorageDimension<N, MeshFloat>::object(ObjectId id) const
+{
+        return m_objects.get(id);
+}
+
+template <size_t N, typename MeshFloat>
+bool ObjectStorageDimension<N, MeshFloat>::mesh_exists(ObjectId id) const
 {
         return m_meshes.get(id) != nullptr;
 }
 
 template <size_t N, typename MeshFloat>
-std::shared_ptr<const Mesh<N, MeshFloat>> MainObjectsImpl<N, MeshFloat>::mesh(ObjectId id) const
+std::shared_ptr<const Mesh<N, MeshFloat>> ObjectStorageDimension<N, MeshFloat>::mesh(ObjectId id) const
 {
         return m_meshes.get(id);
 }
 
 template <size_t N, typename MeshFloat>
-bool MainObjectsImpl<N, MeshFloat>::manifold_constructor_exists() const
+bool ObjectStorageDimension<N, MeshFloat>::manifold_constructor_exists() const
 {
         return m_manifold_constructor.get() != nullptr;
 }
 
 template <size_t N, typename MeshFloat>
-std::string MainObjectsImpl<N, MeshFloat>::object_name(ObjectType object_type)
+std::string ObjectStorageDimension<N, MeshFloat>::object_name(ObjectType object_type)
 {
         switch (object_type)
         {
@@ -313,7 +322,7 @@ std::string MainObjectsImpl<N, MeshFloat>::object_name(ObjectType object_type)
 }
 
 template <size_t N, typename MeshFloat>
-ObjectId MainObjectsImpl<N, MeshFloat>::object_identifier(ObjectType object_type)
+ObjectId ObjectStorageDimension<N, MeshFloat>::object_identifier(ObjectType object_type)
 {
         switch (object_type)
         {
@@ -328,7 +337,7 @@ ObjectId MainObjectsImpl<N, MeshFloat>::object_identifier(ObjectType object_type
 }
 
 template <size_t N, typename MeshFloat>
-ObjectId MainObjectsImpl<N, MeshFloat>::convex_hull_identifier(ObjectType object_type)
+ObjectId ObjectStorageDimension<N, MeshFloat>::convex_hull_identifier(ObjectType object_type)
 {
         switch (object_type)
         {
@@ -343,7 +352,7 @@ ObjectId MainObjectsImpl<N, MeshFloat>::convex_hull_identifier(ObjectType object
 }
 
 template <size_t N, typename MeshFloat>
-void MainObjectsImpl<N, MeshFloat>::build_mesh(ProgressRatioList* progress_list, ObjectId id, const Obj<N>& obj)
+void ObjectStorageDimension<N, MeshFloat>::build_mesh(ProgressRatioList* progress_list, ObjectId id, const Obj<N>& obj)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -357,13 +366,14 @@ void MainObjectsImpl<N, MeshFloat>::build_mesh(ProgressRatioList* progress_list,
         ProgressRatio progress(progress_list);
 
         m_meshes.set(
-                id, std::make_shared<const Mesh<N, MeshFloat>>(&obj, m_model_vertex_matrix, m_mesh_threads, &progress));
+                id, std::make_shared<const Mesh<N, MeshFloat>>(
+                            &obj, to_matrix<MeshFloat>(m_model_vertex_matrix), m_mesh_threads, &progress));
 
         m_event_emitter.mesh_loaded(id);
 }
 
 template <size_t N, typename MeshFloat>
-void MainObjectsImpl<N, MeshFloat>::add_object_and_build_mesh(
+void ObjectStorageDimension<N, MeshFloat>::add_object_and_build_mesh(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         ObjectType object_type,
@@ -383,18 +393,14 @@ void MainObjectsImpl<N, MeshFloat>::add_object_and_build_mesh(
                 return;
         }
 
-        if constexpr (N == 3)
-        {
-                m_show->add_object(obj, object_id_to_int(object_id), object_id_to_int(ObjectId::Model));
-        }
-
         m_objects.set(object_id, obj);
+        m_event_emitter.object_loaded(object_id, N);
 
         build_mesh(progress_list, object_id, *obj);
 }
 
 template <size_t N, typename MeshFloat>
-void MainObjectsImpl<N, MeshFloat>::add_object_convex_hull_and_build_mesh(
+void ObjectStorageDimension<N, MeshFloat>::add_object_convex_hull_and_build_mesh(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         ObjectType object_type,
@@ -428,18 +434,14 @@ void MainObjectsImpl<N, MeshFloat>::add_object_convex_hull_and_build_mesh(
                 return;
         }
 
-        if constexpr (N == 3)
-        {
-                m_show->add_object(obj_ch, object_id_to_int(object_id), object_id_to_int(ObjectId::Model));
-        }
-
         m_objects.set(object_id, obj_ch);
+        m_event_emitter.object_loaded(object_id, N);
 
         build_mesh(progress_list, object_id, *obj_ch);
 }
 
 template <size_t N, typename MeshFloat>
-void MainObjectsImpl<N, MeshFloat>::object_and_mesh(
+void ObjectStorageDimension<N, MeshFloat>::object_and_mesh(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         ObjectType object_type,
@@ -468,7 +470,7 @@ void MainObjectsImpl<N, MeshFloat>::object_and_mesh(
 }
 
 template <size_t N, typename MeshFloat>
-void MainObjectsImpl<N, MeshFloat>::cocone(
+void ObjectStorageDimension<N, MeshFloat>::cocone(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list)
 {
@@ -506,7 +508,7 @@ void MainObjectsImpl<N, MeshFloat>::cocone(
 }
 
 template <size_t N, typename MeshFloat>
-void MainObjectsImpl<N, MeshFloat>::bound_cocone(
+void ObjectStorageDimension<N, MeshFloat>::bound_cocone(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         double rho,
@@ -545,12 +547,8 @@ void MainObjectsImpl<N, MeshFloat>::bound_cocone(
                     " s");
         }
 
-        if constexpr (N == 3)
-        {
-                m_show->delete_object(object_id_to_int(ObjectId::BoundCocone));
-                m_show->delete_object(object_id_to_int(ObjectId::BoundCoconeConvexHull));
-        }
-
+        m_event_emitter.object_deleted(ObjectId::BoundCocone, N);
+        m_event_emitter.object_deleted(ObjectId::BoundCoconeConvexHull, N);
         m_meshes.reset(ObjectId::BoundCocone);
         m_meshes.reset(ObjectId::BoundCoconeConvexHull);
         m_objects.reset(ObjectId::BoundCocone);
@@ -562,7 +560,7 @@ void MainObjectsImpl<N, MeshFloat>::bound_cocone(
 }
 
 template <size_t N, typename MeshFloat>
-void MainObjectsImpl<N, MeshFloat>::build_mst(
+void ObjectStorageDimension<N, MeshFloat>::build_mst(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list)
 {
@@ -594,16 +592,12 @@ void MainObjectsImpl<N, MeshFloat>::build_mst(
                 return;
         }
 
-        if constexpr (N == 3)
-        {
-                m_show->add_object(mst_obj, object_id_to_int(ObjectId::ModelMst), object_id_to_int(ObjectId::Model));
-        }
-
         m_objects.set(ObjectId::ModelMst, mst_obj);
+        m_event_emitter.object_loaded(ObjectId::ModelMst, N);
 }
 
 template <size_t N, typename MeshFloat>
-void MainObjectsImpl<N, MeshFloat>::manifold_constructor(
+void ObjectStorageDimension<N, MeshFloat>::manifold_constructor(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         double rho,
@@ -659,14 +653,11 @@ void MainObjectsImpl<N, MeshFloat>::manifold_constructor(
 }
 
 template <size_t N, typename MeshFloat>
-void MainObjectsImpl<N, MeshFloat>::clear_all_data()
+void ObjectStorageDimension<N, MeshFloat>::clear_all_data()
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        if constexpr (N == 3)
-        {
-                m_show->delete_all_objects();
-        }
+        m_event_emitter.object_deleted_all(N);
         m_manifold_constructor.reset();
         m_meshes.reset_all();
         m_objects.reset_all();
@@ -676,7 +667,7 @@ void MainObjectsImpl<N, MeshFloat>::clear_all_data()
 
 template <size_t N, typename MeshFloat>
 template <typename ObjectLoaded>
-void MainObjectsImpl<N, MeshFloat>::load_object(
+void ObjectStorageDimension<N, MeshFloat>::load_object(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         const std::string& object_name,
@@ -708,7 +699,8 @@ void MainObjectsImpl<N, MeshFloat>::load_object(
 
         if constexpr (N == 3)
         {
-                m_model_vertex_matrix = model_vertex_matrix(*obj, m_show->object_size(), m_show->object_position());
+                ASSERT(m_object_size != 0);
+                m_model_vertex_matrix = model_vertex_matrix(*obj, m_object_size, m_object_position);
         }
         else
         {
@@ -736,7 +728,7 @@ void MainObjectsImpl<N, MeshFloat>::load_object(
 }
 
 template <size_t N, typename MeshFloat>
-void MainObjectsImpl<N, MeshFloat>::compute_bound_cocone(
+void ObjectStorageDimension<N, MeshFloat>::compute_bound_cocone(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         double rho,
@@ -747,7 +739,7 @@ void MainObjectsImpl<N, MeshFloat>::compute_bound_cocone(
 
 template <size_t N, typename MeshFloat>
 template <typename ObjectLoaded>
-void MainObjectsImpl<N, MeshFloat>::load_from_file(
+void ObjectStorageDimension<N, MeshFloat>::load_from_file(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         const std::string& file_name,
@@ -771,7 +763,7 @@ void MainObjectsImpl<N, MeshFloat>::load_from_file(
 
 template <size_t N, typename MeshFloat>
 template <typename ObjectLoaded>
-void MainObjectsImpl<N, MeshFloat>::load_from_repository(
+void ObjectStorageDimension<N, MeshFloat>::load_from_repository(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         const std::string& object_name,
@@ -795,8 +787,10 @@ void MainObjectsImpl<N, MeshFloat>::load_from_repository(
 }
 
 template <size_t N, typename MeshFloat>
-void MainObjectsImpl<N, MeshFloat>::save_to_file(ObjectId id, const std::string& file_name, const std::string& name)
-        const
+void ObjectStorageDimension<N, MeshFloat>::save_to_file(
+        ObjectId id,
+        const std::string& file_name,
+        const std::string& name) const
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -813,7 +807,7 @@ void MainObjectsImpl<N, MeshFloat>::save_to_file(ObjectId id, const std::string&
 
 //
 
-class MainObjectStorage final : public MainObjects
+class ObjectStorageImpl final : public ObjectStorage
 {
         static constexpr int MIN = MIN_DIMENSION;
         static constexpr int MAX = MAX_DIMENSION;
@@ -836,17 +830,21 @@ class MainObjectStorage final : public MainObjects
 
         // Объекты поддерживаются только у одного измерения. При загрузке
         // объекта одного измерения все объекты других измерений удаляются.
-
-        template <template <size_t, typename...> typename T, typename... T2>
-        using Map = std::unordered_map<int, SequenceVariant1<MIN, MAX, T, T2...>>;
-
-        Map<MainObjectsImpl, MeshFloat> m_objects;
+        std::unordered_map<int, SequenceVariant1<MIN, MAX, ObjectStorageDimension, MeshFloat>> m_objects;
 
         void clear_all_data()
         {
                 for (auto& p : m_objects)
                 {
                         std::visit([&](auto& v) { v.clear_all_data(); }, p.second);
+                }
+        }
+
+        void set_object_size_and_position(double size, const vec3& position) override
+        {
+                for (auto& p : m_objects)
+                {
+                        std::visit([&](auto& v) { v.set_object_size_and_position(size, position); }, p.second);
                 }
         }
 
@@ -871,14 +869,6 @@ class MainObjectStorage final : public MainObjects
                 }
 
                 return names;
-        }
-
-        void set_show(Show* show) override
-        {
-                for (auto& p : m_objects)
-                {
-                        std::visit([&](auto& v) { v.set_show(show); }, p.second);
-                }
         }
 
         bool manifold_constructor_exists() const override
@@ -921,6 +911,42 @@ class MainObjectStorage final : public MainObjects
                         error("Too many meshes " + to_string(count));
                 }
                 return count > 0;
+        }
+
+        ObjectVariant object(ObjectId id) const override
+        {
+                if (!object_exists(id))
+                {
+                        error("No object");
+                }
+                std::optional<ObjectVariant> object_opt;
+                int count = 0;
+                for (const auto& p : m_objects)
+                {
+                        std::visit(
+                                [&](const auto& v) {
+                                        if (v.object_exists(id))
+                                        {
+                                                if (!object_opt)
+                                                {
+                                                        auto ptr = v.object(id);
+                                                        if (!ptr)
+                                                        {
+                                                                error("Null object pointer");
+                                                        }
+                                                        object_opt = std::move(ptr);
+                                                }
+                                                ++count;
+                                        }
+                                },
+                                p.second);
+                }
+                if (count != 1)
+                {
+                        error("Error object count " + to_string(count));
+                }
+                ASSERT(object_opt);
+                return *object_opt;
         }
 
         MeshVariant mesh(ObjectId id) const override
@@ -1098,7 +1124,7 @@ class MainObjectStorage final : public MainObjects
         template <size_t... I>
         void init_map(
                 int mesh_threads,
-                const ObjectsCallback& event_emitter,
+                const ObjectStorageCallback& event_emitter,
                 const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler,
                 std::integer_sequence<size_t, I...>&&)
         {
@@ -1106,7 +1132,7 @@ class MainObjectStorage final : public MainObjects
                 static_assert(MIN + sizeof...(I) == MAX + 1);
 
                 (m_objects.try_emplace(
-                         MIN + I, std::in_place_type_t<MainObjectsImpl<MIN + I, MeshFloat>>(), mesh_threads,
+                         MIN + I, std::in_place_type_t<ObjectStorageDimension<MIN + I, MeshFloat>>(), mesh_threads,
                          event_emitter, exception_handler),
                  ...);
 
@@ -1115,19 +1141,19 @@ class MainObjectStorage final : public MainObjects
         }
 
 public:
-        MainObjectStorage(
+        ObjectStorageImpl(
                 int mesh_threads,
-                const ObjectsCallback& event_emitter,
+                const ObjectStorageCallback& event_emitter,
                 const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
         {
                 init_map(mesh_threads, event_emitter, exception_handler, std::make_integer_sequence<size_t, COUNT>());
         }
 };
 
-std::unique_ptr<MainObjects> create_main_objects(
+std::unique_ptr<ObjectStorage> create_object_storage(
         int mesh_threads,
-        const ObjectsCallback& event_emitter,
+        const ObjectStorageCallback& event_emitter,
         const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
 {
-        return std::make_unique<MainObjectStorage>(mesh_threads, event_emitter, exception_handler);
+        return std::make_unique<ObjectStorageImpl>(mesh_threads, event_emitter, exception_handler);
 }

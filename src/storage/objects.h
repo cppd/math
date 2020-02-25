@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/variant.h>
+#include <src/obj/obj.h>
 #include <src/painter/shapes/mesh.h>
 #include <src/progress/progress_list.h>
-#include <src/show/interface.h>
 
 #include <exception>
 #include <functional>
@@ -43,10 +43,10 @@ enum class ObjectId
 int object_id_to_int(ObjectId id);
 ObjectId int_to_object_id(int id);
 
-class ObjectsCallback
+class ObjectStorageCallback
 {
 protected:
-        virtual ~ObjectsCallback() = default;
+        virtual ~ObjectStorageCallback() = default;
 
 public:
         virtual void file_loaded(
@@ -54,26 +54,25 @@ public:
                 unsigned dimension,
                 const std::unordered_set<ObjectId>& objects) const = 0;
         virtual void bound_cocone_loaded(double rho, double alpha) const = 0;
+        virtual void object_loaded(ObjectId id, size_t dimension) const = 0;
+        virtual void object_deleted(ObjectId id, size_t dimension) const = 0;
+        virtual void object_deleted_all(size_t dimension) const = 0;
         virtual void mesh_loaded(ObjectId id) const = 0;
         virtual void message_warning(const std::string& msg) const = 0;
 };
 
-class MainObjects
+struct ObjectStorage
 {
-        template <size_t N, typename... T>
-        using MeshConst = const Mesh<N, T...>;
-
-public:
         static constexpr int MIN_DIMENSION = 3;
         static constexpr int MAX_DIMENSION = 5;
-
         using MeshFloat = double;
 
         // std::variant<std::shared_ptr<const Mesh<MIN_DIMENSION, MeshFloat>>, ...,
         //   std::shared_ptr<const Mesh<MAX_DIMENSION, MeshFloat>>>
-        using MeshVariant = SequenceVariant2<MIN_DIMENSION, MAX_DIMENSION, std::shared_ptr, MeshConst, MeshFloat>;
+        using MeshVariant = SequenceVariant2ConstType2<MIN_DIMENSION, MAX_DIMENSION, std::shared_ptr, Mesh, MeshFloat>;
+        using ObjectVariant = SequenceVariant2ConstType2<MIN_DIMENSION, MAX_DIMENSION, std::shared_ptr, Obj>;
 
-        virtual ~MainObjects() = default;
+        virtual ~ObjectStorage() = default;
 
         struct RepositoryObjects
         {
@@ -86,10 +85,10 @@ public:
         };
         virtual std::vector<RepositoryObjects> repository_point_object_names() const = 0;
 
-        virtual void set_show(Show* show) = 0;
-
         virtual bool manifold_constructor_exists() const = 0;
+
         virtual bool object_exists(ObjectId id) const = 0;
+        virtual ObjectVariant object(ObjectId id) const = 0;
 
         virtual bool mesh_exists(ObjectId id) const = 0;
         virtual MeshVariant mesh(ObjectId id) const = 0;
@@ -101,6 +100,8 @@ public:
         };
         virtual std::vector<FileFormat> formats_for_save(unsigned dimension) const = 0;
         virtual std::vector<FileFormat> formats_for_load() const = 0;
+
+        virtual void set_object_size_and_position(double size, const vec3& position) = 0;
 
         virtual void compute_bound_cocone(
                 const std::unordered_set<ObjectId>& objects,
@@ -127,7 +128,7 @@ public:
         virtual void save_to_file(ObjectId id, const std::string& file_name, const std::string& name) const = 0;
 };
 
-std::unique_ptr<MainObjects> create_main_objects(
+std::unique_ptr<ObjectStorage> create_object_storage(
         int mesh_threads,
-        const ObjectsCallback& event_emitter,
+        const ObjectStorageCallback& event_emitter,
         const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler);

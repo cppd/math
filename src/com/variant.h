@@ -38,7 +38,13 @@ struct SequenceVariant1
         };
 };
 
-template <template <typename> typename Type1, template <size_t, typename...> typename Type2, typename... Ts>
+template <
+        bool ConstType2,
+        template <typename>
+        typename Type1,
+        template <size_t, typename...>
+        typename Type2,
+        typename... Ts>
 struct SequenceVariant2
 {
         template <int first, int N, size_t... I>
@@ -51,7 +57,10 @@ struct SequenceVariant2
         struct S<first, 0, I...>
         {
                 static_assert(sizeof...(I) > 0);
-                using V = std::variant<Type1<Type2<first + I, Ts...>>...>;
+                using V = std::variant<Type1<std::conditional_t<
+                        ConstType2,
+                        std::add_const_t<Type2<first + I, Ts...>>,
+                        std::remove_const_t<Type2<first + I, Ts...>>>>...>;
         };
 };
 }
@@ -62,9 +71,11 @@ using SequenceVariant1 =
         typename sequence_variant_implementation::SequenceVariant1<T, Ts...>::template S<From, To - From + 1>::V;
 
 // Тип variant<T1<T2<From, ...>>, T1<T2<From + 1, ...>>, T1<T2<From + 2, ...>>, ...>
+// GCC 9 не работает для задания типа как const передачу шаблона template ... using ... = const T,
+// поэтому используется параметр для const. Clang 9 работает.
 template <int From, int To, template <typename> typename T1, template <size_t, typename...> typename T2, typename... Ts>
-using SequenceVariant2 =
-        typename sequence_variant_implementation::SequenceVariant2<T1, T2, Ts...>::template S<From, To - From + 1>::V;
+using SequenceVariant2ConstType2 = typename sequence_variant_implementation::SequenceVariant2<true, T1, T2, Ts...>::
+        template S<From, To - From + 1>::V;
 
 //
 
