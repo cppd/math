@@ -83,7 +83,7 @@ class ShowThread final : public ShowObject
                 q.set_shadow_zoom(info.shadow_zoom.value());
         }
 
-        void thread_function(ShowCallback* callback, WindowID parent_window, double parent_window_ppi)
+        void thread_function(ShowEvents* events, WindowID parent_window, double parent_window_ppi)
         {
                 try
                 {
@@ -91,7 +91,7 @@ class ShowThread final : public ShowObject
                         {
                                 try
                                 {
-                                        T show(&m_event_queue, callback, parent_window, parent_window_ppi);
+                                        T show(&m_event_queue, events, parent_window, parent_window_ppi);
 
                                         EventQueueSetShow e(&m_event_queue, &show);
 
@@ -112,15 +112,15 @@ class ShowThread final : public ShowObject
                         }
                         catch (ErrorSourceException& e)
                         {
-                                callback->message_error_source(e.msg(), e.src());
+                                events->message_error_source(e.msg(), e.src());
                         }
                         catch (std::exception& e)
                         {
-                                callback->message_error_fatal(e.what());
+                                events->message_error_fatal(e.what());
                         }
                         catch (...)
                         {
-                                callback->message_error_fatal("Unknown Error. Thread ended.");
+                                events->message_error_fatal("Unknown Error. Thread ended.");
                         }
                 }
                 catch (...)
@@ -154,13 +154,13 @@ public:
                         {
                                 add_to_event_queue(&m_event_queue, info);
 
-                                if (!info.callback.value() || !(info.window_ppi.value() > 0))
+                                if (!info.events.value() || !(info.window_ppi.value() > 0))
                                 {
                                         error("Show create information is not complete");
                                 }
 
                                 m_thread = std::thread(
-                                        &ShowThread::thread_function, this, info.callback.value(), info.window.value(),
+                                        &ShowThread::thread_function, this, info.events.value(), info.window.value(),
                                         info.window_ppi.value());
                         }
                         catch (std::bad_optional_access&)

@@ -17,24 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string>
-#include <vector>
-
-void log_init();
-void log_exit();
-
-class LogEvents
+enum class ObjectId
 {
-protected:
-        ~LogEvents() = default;
-
-public:
-        virtual void log(const std::string& msg) const = 0;
+        Model,
+        ModelMst,
+        ModelConvexHull,
+        Cocone,
+        CoconeConvexHull,
+        BoundCocone,
+        BoundCoconeConvexHull
 };
 
-void set_log_events(LogEvents* events);
-
-std::vector<std::string> format_log_message(const std::string& msg) noexcept;
-void write_formatted_log_messages_to_stderr(const std::vector<std::string>& lines) noexcept;
-
-void LOG(const std::string& msg) noexcept;
+int object_id_to_int(ObjectId id);
+ObjectId int_to_object_id(int id);

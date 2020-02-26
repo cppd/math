@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/variant.h>
 #include <src/show/interface.h>
-#include <src/storage/objects.h>
+#include <src/storage/storage.h>
 
 #include <QObject>
 
@@ -49,7 +49,7 @@ public:
         virtual void direct_log(const std::string& msg) = 0;
 };
 
-class WindowEventEmitter final : public QObject, public LogCallback, public ObjectStorageCallback, public ShowCallback
+class WindowEventEmitter final : public QObject, public LogEvents, public ObjectStorageEvents, public ShowEvents
 {
         Q_OBJECT
 

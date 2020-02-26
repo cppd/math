@@ -17,24 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string>
-#include <vector>
+inline constexpr int STORAGE_MIN_DIMENSIONS = 3;
+inline constexpr int STORAGE_MAX_DIMENSIONS = 5;
 
-void log_init();
-void log_exit();
-
-class LogEvents
-{
-protected:
-        ~LogEvents() = default;
-
-public:
-        virtual void log(const std::string& msg) const = 0;
-};
-
-void set_log_events(LogEvents* events);
-
-std::vector<std::string> format_log_message(const std::string& msg) noexcept;
-void write_formatted_log_messages_to_stderr(const std::vector<std::string>& lines) noexcept;
-
-void LOG(const std::string& msg) noexcept;
+using StorageMeshFloatingPoint = double;

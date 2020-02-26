@@ -34,7 +34,7 @@ SpinLock* global_lock = nullptr;
 // в лог, поэтому с этой переменной нужна последовательная работа.
 // Использование единственной блокировки означает, что и сообщения будут
 // последовательные, но это не является проблемой.
-LogCallback* global_log_callback = nullptr;
+LogEvents* global_log_events = nullptr;
 }
 
 void log_init()
@@ -55,11 +55,11 @@ void log_exit()
 
 //
 
-void set_log_callback(LogCallback* callback)
+void set_log_events(LogEvents* events)
 {
         std::lock_guard lg(*global_lock);
 
-        global_log_callback = callback;
+        global_log_events = events;
 }
 
 std::vector<std::string> format_log_message(const std::string& msg) noexcept
@@ -150,9 +150,9 @@ void LOG(const std::string& msg) noexcept
                         {
                                 std::lock_guard lg(*global_lock);
 
-                                if (global_log_callback)
+                                if (global_log_events)
                                 {
-                                        global_log_callback->log(msg);
+                                        global_log_events->log(msg);
                                         return;
                                 }
                         }

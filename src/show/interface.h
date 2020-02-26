@@ -26,10 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <string>
 
-class ShowCallback
+class ShowEvents
 {
 protected:
-        virtual ~ShowCallback() = default;
+        virtual ~ShowEvents() = default;
 
 public:
         virtual void message_error_fatal(const std::string&) const = 0;
@@ -106,7 +106,7 @@ public:
 struct ShowCreateInfo
 {
         // std::optional используется для проверки того, что все значения заданы
-        std::optional<ShowCallback*> callback;
+        std::optional<ShowEvents*> events;
         std::optional<WindowID> window;
         std::optional<double> window_ppi;
         std::optional<Color> background_color;

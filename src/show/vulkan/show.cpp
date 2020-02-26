@@ -104,7 +104,7 @@ std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(b
 class Impl final : public Show
 {
         EventQueue* m_event_queue;
-        ShowCallback* const m_callback;
+        ShowEvents* const m_show_events;
         const double m_window_ppi;
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -172,7 +172,7 @@ class Impl final : public Show
                         error("Null object received");
                 }
                 m_renderer->object_add(obj_ptr.get(), OBJECT_SIZE, OBJECT_POSITION, id, scale_id);
-                m_callback->show_object_loaded(id);
+                m_show_events->show_object_loaded(id);
         }
 
         void delete_object(int id) override
@@ -771,8 +771,8 @@ class Impl final : public Show
         }
 
 public:
-        Impl(EventQueue* event_queue, ShowCallback* callback, const WindowID& window, double window_ppi)
-                : m_event_queue(event_queue), m_callback(callback), m_window_ppi(window_ppi)
+        Impl(EventQueue* event_queue, ShowEvents* show_events, const WindowID& window, double window_ppi)
+                : m_event_queue(event_queue), m_show_events(show_events), m_window_ppi(window_ppi)
         {
                 // Этот цвет меняется в set_background_color
                 constexpr Srgb8 text_color(255, 255, 255);

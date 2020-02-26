@@ -15,26 +15,31 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "object_id.h"
 
-#include <string>
-#include <vector>
+#include <src/com/error.h>
+#include <src/com/print.h>
 
-void log_init();
-void log_exit();
-
-class LogEvents
+int object_id_to_int(ObjectId id)
 {
-protected:
-        ~LogEvents() = default;
+        return static_cast<int>(id);
+}
 
-public:
-        virtual void log(const std::string& msg) const = 0;
-};
+ObjectId int_to_object_id(int int_id)
+{
+        ObjectId id = static_cast<ObjectId>(int_id);
 
-void set_log_events(LogEvents* events);
+        switch (id)
+        {
+        case ObjectId::Model:
+        case ObjectId::ModelMst:
+        case ObjectId::ModelConvexHull:
+        case ObjectId::Cocone:
+        case ObjectId::CoconeConvexHull:
+        case ObjectId::BoundCocone:
+        case ObjectId::BoundCoconeConvexHull:
+                return id;
+        }
 
-std::vector<std::string> format_log_message(const std::string& msg) noexcept;
-void write_formatted_log_messages_to_stderr(const std::vector<std::string>& lines) noexcept;
-
-void LOG(const std::string& msg) noexcept;
+        error_fatal("Wrong ObjectId value " + to_string(int_id));
+}

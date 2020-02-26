@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress_list.h>
 #include <src/show/interface.h>
-#include <src/storage/objects.h>
+#include <src/storage/storage.h>
 #include <src/test/self_test.h>
 
 #include <QColor>

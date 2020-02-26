@@ -125,7 +125,7 @@ MainWindow::MainWindow(QWidget* parent)
         constructor_buttons();
         constructor_objects_and_repository();
 
-        set_log_callback(&m_event_emitter);
+        set_log_events(&m_event_emitter);
 }
 
 void MainWindow::constructor_threads()
@@ -327,7 +327,7 @@ void MainWindow::terminate_all_threads()
         m_show = nullptr;
         m_show_object.reset();
 
-        set_log_callback(nullptr);
+        set_log_events(nullptr);
 }
 
 void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists) const
@@ -1243,7 +1243,7 @@ void MainWindow::slot_window_first_shown()
                 //
 
                 ShowCreateInfo info;
-                info.callback = &m_event_emitter;
+                info.events = &m_event_emitter;
                 info.window = widget_window_id(ui.graphics_widget);
                 info.window_ppi = widget_pixels_per_inch(ui.graphics_widget);
                 info.background_color = qcolor_to_rgb(m_background_color);

@@ -17,8 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "events.h"
+#include "object_id.h"
+#include "options.h"
+
 #include <src/com/variant.h>
-#include <src/obj/obj.h>
 #include <src/painter/shapes/mesh.h>
 #include <src/progress/progress_list.h>
 
@@ -27,50 +30,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 #include <unordered_set>
-#include <vector>
-
-enum class ObjectId
-{
-        Model,
-        ModelMst,
-        ModelConvexHull,
-        Cocone,
-        CoconeConvexHull,
-        BoundCocone,
-        BoundCoconeConvexHull
-};
-
-int object_id_to_int(ObjectId id);
-ObjectId int_to_object_id(int id);
-
-class ObjectStorageCallback
-{
-protected:
-        virtual ~ObjectStorageCallback() = default;
-
-public:
-        virtual void file_loaded(
-                const std::string& msg,
-                unsigned dimension,
-                const std::unordered_set<ObjectId>& objects) const = 0;
-        virtual void bound_cocone_loaded(double rho, double alpha) const = 0;
-        virtual void object_loaded(ObjectId id, size_t dimension) const = 0;
-        virtual void object_deleted(ObjectId id, size_t dimension) const = 0;
-        virtual void object_deleted_all(size_t dimension) const = 0;
-        virtual void mesh_loaded(ObjectId id) const = 0;
-        virtual void message_warning(const std::string& msg) const = 0;
-};
 
 struct ObjectStorage
 {
-        static constexpr int MIN_DIMENSION = 3;
-        static constexpr int MAX_DIMENSION = 5;
-        using MeshFloat = double;
-
-        // std::variant<std::shared_ptr<const Mesh<MIN_DIMENSION, MeshFloat>>, ...,
-        //   std::shared_ptr<const Mesh<MAX_DIMENSION, MeshFloat>>>
-        using MeshVariant = SequenceVariant2ConstType2<MIN_DIMENSION, MAX_DIMENSION, std::shared_ptr, Mesh, MeshFloat>;
-        using ObjectVariant = SequenceVariant2ConstType2<MIN_DIMENSION, MAX_DIMENSION, std::shared_ptr, Obj>;
+        // std::variant<std::shared_ptr<const Mesh<MIN, MeshFloat>>, ...,
+        //   std::shared_ptr<const Mesh<MAX, MeshFloat>>>
+        using MeshVariant = SequenceVariant2ConstType2<
+                STORAGE_MIN_DIMENSIONS,
+                STORAGE_MAX_DIMENSIONS,
+                std::shared_ptr,
+                Mesh,
+                StorageMeshFloatingPoint>;
+        using ObjectVariant =
+                SequenceVariant2ConstType2<STORAGE_MIN_DIMENSIONS, STORAGE_MAX_DIMENSIONS, std::shared_ptr, Obj>;
 
         virtual ~ObjectStorage() = default;
 
@@ -130,5 +102,5 @@ struct ObjectStorage
 
 std::unique_ptr<ObjectStorage> create_object_storage(
         int mesh_threads,
-        const ObjectStorageCallback& event_emitter,
+        const ObjectStorageEvents& event_emitter,
         const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler);

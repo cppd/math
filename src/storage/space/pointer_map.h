@@ -22,49 +22,49 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <vector>
 
-template <typename Index, typename Mesh>
-class Meshes
+template <typename Index, typename T>
+class PointerMap
 {
         mutable std::shared_mutex m_mutex;
 
-        std::unordered_map<Index, std::shared_ptr<Mesh>> m_meshes;
+        std::unordered_map<Index, std::shared_ptr<T>> m_map;
 
 public:
         // Деструкторы могут работать долго, поэтому чтобы не было работы
         // деструкторов при блокировке, помещать во временный объект
 
-        template <typename T>
-        void set(const Index& id, T&& mesh)
+        template <typename SetType>
+        void set(const Index& id, SetType&& v)
         {
-                static_assert(std::is_same_v<std::remove_const_t<std::remove_reference_t<T>>, std::shared_ptr<Mesh>>);
+                static_assert(std::is_same_v<std::remove_cvref_t<SetType>, std::shared_ptr<T>>);
 
-                std::shared_ptr<Mesh> tmp;
+                std::shared_ptr<T> tmp;
 
                 {
                         std::unique_lock lock(m_mutex);
 
-                        auto iter = m_meshes.find(id);
-                        if (iter != m_meshes.cend())
+                        auto iter = m_map.find(id);
+                        if (iter != m_map.cend())
                         {
                                 tmp = std::move(iter->second);
-                                iter->second = std::forward<T>(mesh);
+                                iter->second = std::forward<SetType>(v);
                         }
                         else
                         {
-                                m_meshes.emplace(id, std::forward<T>(mesh));
+                                m_map.emplace(id, std::forward<SetType>(v));
                         }
                 }
         }
 
         void reset(const Index& id)
         {
-                std::shared_ptr<Mesh> tmp;
+                std::shared_ptr<T> tmp;
 
                 {
                         std::unique_lock lock(m_mutex);
 
-                        auto iter = m_meshes.find(id);
-                        if (iter != m_meshes.cend())
+                        auto iter = m_map.find(id);
+                        if (iter != m_map.cend())
                         {
                                 tmp = std::move(iter->second);
                         }
@@ -73,24 +73,24 @@ public:
 
         void reset_all()
         {
-                std::vector<std::shared_ptr<Mesh>> tmp;
+                std::vector<std::shared_ptr<T>> tmp;
 
                 {
                         std::unique_lock lock(m_mutex);
 
-                        tmp.reserve(m_meshes.size());
-                        for (auto& mesh : m_meshes)
+                        tmp.reserve(m_map.size());
+                        for (auto& v : m_map)
                         {
-                                tmp.push_back(std::move(mesh.second));
+                                tmp.push_back(std::move(v.second));
                         }
                 }
         }
 
-        std::shared_ptr<Mesh> get(const Index& id) const
+        std::shared_ptr<T> get(const Index& id) const
         {
                 std::shared_lock lock(m_mutex);
 
-                auto iter = m_meshes.find(id);
-                return (iter != m_meshes.cend()) ? iter->second : nullptr;
+                auto iter = m_map.find(id);
+                return (iter != m_map.cend()) ? iter->second : nullptr;
         }
 };
