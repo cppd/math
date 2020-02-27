@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dialogs/messages/message_box.h"
 #include "../dialogs/messages/source_error.h"
 #include "../dialogs/parameters/bound_cocone.h"
-#include "../dialogs/parameters/gc_api_selection.h"
 #include "../dialogs/parameters/object_selection.h"
 #include "../dialogs/parameters/point_object.h"
 #include "../support/support.h"
@@ -1208,40 +1207,6 @@ void MainWindow::slot_window_first_shown()
 
                 //
 
-                GraphicsAndComputeAPI api;
-
-                if (options.graphics_and_compute_api.has_value())
-                {
-                        api = options.graphics_and_compute_api.value();
-                }
-                else
-                {
-#if defined(OPENGL_FOUND)
-                        QPointer ptr(this);
-                        if (!dialog::graphics_and_compute_api_selection(this, &api))
-                        {
-                                if (!ptr.isNull())
-                                {
-                                        close_without_confirmation();
-                                }
-                                return;
-                        }
-                        if (ptr.isNull())
-                        {
-                                return;
-                        }
-#else
-                        api = GraphicsAndComputeAPI::Vulkan;
-#endif
-                }
-#if defined(OPENGL_FOUND)
-                QLabel* api_label = new QLabel(to_string(api).c_str(), ui.statusBar);
-                api_label->setFrameStyle(QFrame::StyledPanel);
-                ui.statusBar->addPermanentWidget(api_label);
-#endif
-
-                //
-
                 ShowCreateInfo info;
                 info.events = &m_event_emitter;
                 info.window = widget_window_id(ui.graphics_widget);
@@ -1270,7 +1235,7 @@ void MainWindow::slot_window_first_shown()
                 info.vertical_sync = ui.checkBox_vertical_sync->isChecked();
                 info.shadow_zoom = shadow_zoom();
 
-                m_show_object = create_show_object(api, info);
+                m_show_object = create_show_object(info);
                 m_show = &m_show_object->show();
 
                 m_objects->set_object_size_and_position(m_show->object_size(), m_show->object_position());

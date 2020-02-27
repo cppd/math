@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/graphics/api.h>
-
 #include <optional>
 #include <string>
 
@@ -28,7 +26,6 @@ struct CommandLineOptions
 {
         std::string file_name;
         bool no_object_selection_dialog;
-        std::optional<GraphicsAndComputeAPI> graphics_and_compute_api;
 };
 
 CommandLineOptions command_line_options();

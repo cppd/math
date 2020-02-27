@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../../support/support.h"
 
 #include <src/application/name.h>
-#include <src/graphics/opengl/settings.h>
 #include <src/graphics/vulkan/settings.h>
 
 #include <QMessageBox>
@@ -51,11 +50,6 @@ std::string message()
         oss << "__cplusplus " << __cplusplus;
 
         oss << "\n";
-
-#if defined(OPENGL_FOUND)
-        oss << "\n";
-        oss << "OpenGL " << opengl::API_VERSION_MAJOR << "." << opengl::API_VERSION_MINOR;
-#endif
 
         oss << "\n";
         oss << "Vulkan " << vulkan::API_VERSION_MAJOR << "." << vulkan::API_VERSION_MINOR;

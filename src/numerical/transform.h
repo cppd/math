@@ -38,34 +38,6 @@ Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, con
         return m;
 }
 
-#if defined(OPENGL_FOUND)
-template <typename T, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-constexpr Matrix<4, 4, T> ortho_opengl(T1 left, T2 right, T3 bottom, T4 top, T5 near, T6 far)
-{
-        // OpenGL
-        // X направо [-1, 1], Y вверх [-1, 1], Z в экран [-1, 1]
-
-        T left_t = left;
-        T right_t = right;
-        T bottom_t = bottom;
-        T top_t = top;
-        T near_t = near;
-        T far_t = far;
-
-        Matrix<4, 4, T> m(1);
-
-        m(0, 0) = 2 / (right_t - left_t);
-        m(1, 1) = 2 / (top_t - bottom_t);
-        m(2, 2) = 2 / (far_t - near_t);
-
-        m(0, 3) = -(right_t + left_t) / (right_t - left_t);
-        m(1, 3) = -(top_t + bottom_t) / (top_t - bottom_t);
-        m(2, 3) = -(far_t + near_t) / (far_t - near_t);
-
-        return m;
-}
-#endif
-
 template <typename T, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
 constexpr Matrix<4, 4, T> ortho_vulkan(T1 left, T2 right, T3 bottom, T4 top, T5 near, T6 far)
 {

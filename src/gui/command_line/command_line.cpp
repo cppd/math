@@ -23,11 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 constexpr const char* NO_OBJECT_SELECTION_OPTION = "n";
 
-#if defined(OPENGL_FOUND)
-constexpr const char* VULKAN_OPTION = "vulkan";
-constexpr const char* OPENGL_OPTION = "opengl";
-#endif
-
 namespace
 {
 std::string command_line_description_string()
@@ -37,9 +32,7 @@ std::string command_line_description_string()
         s += "Usage:\n";
 
         s += "    program";
-#if defined(OPENGL_FOUND)
-        s += " [--" + std::string(VULKAN_OPTION) + "|--" + std::string(OPENGL_OPTION) + "]";
-#endif
+
         s += " [[-" + std::string(NO_OBJECT_SELECTION_OPTION) + "] FILE]";
         s += '\n';
 
@@ -49,12 +42,6 @@ std::string command_line_description_string()
         s += "        the file to load\n";
         s += "    -" + std::string(NO_OBJECT_SELECTION_OPTION) + "\n";
         s += "        do not open object selection dialog\n";
-#if defined(OPENGL_FOUND)
-        s += "    --" + std::string(VULKAN_OPTION) + "\n";
-        s += "        use Vulkan API\n";
-        s += "    --" + std::string(OPENGL_OPTION) + "\n";
-        s += "        use OpenGL API\n";
-#endif
 
         return s;
 }
@@ -71,19 +58,11 @@ CommandLineOptions command_line_options()
         QCommandLineParser parser;
 
         QCommandLineOption no_object_selection_option(NO_OBJECT_SELECTION_OPTION);
-#if defined(OPENGL_FOUND)
-        QCommandLineOption vulkan_option(VULKAN_OPTION);
-        QCommandLineOption opengl_option(OPENGL_OPTION);
-        if (!parser.addOptions({no_object_selection_option, vulkan_option, opengl_option}))
-        {
-                error("Failed to add command line options");
-        }
-#else
+
         if (!parser.addOptions({no_object_selection_option}))
         {
                 error("Failed to add command line options");
         }
-#endif
 
         if (!parser.parse(QCoreApplication::arguments()))
         {
@@ -122,24 +101,6 @@ CommandLineOptions command_line_options()
                 options.file_name = "";
                 options.no_object_selection_dialog = false;
         }
-
-        //
-
-#if defined(OPENGL_FOUND)
-        if (parser.isSet(vulkan_option) && parser.isSet(opengl_option))
-        {
-                error(std::string("Specified mutually exclusive options ") + VULKAN_OPTION + " and " + OPENGL_OPTION);
-        }
-        else if (parser.isSet(vulkan_option))
-        {
-                options.graphics_and_compute_api = GraphicsAndComputeAPI::Vulkan;
-        }
-        else if (parser.isSet(opengl_option))
-        {
-                options.graphics_and_compute_api = GraphicsAndComputeAPI::OpenGL;
-        }
-#endif
-        //
 
         return options;
 }

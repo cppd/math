@@ -20,13 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/time.h>
-#include <src/window/opengl/window.h>
 #include <src/window/vulkan/window.h>
 
 #include <atomic>
 
 #if defined(__linux__)
-#include <src/graphics/opengl/functions.h>
 #include <src/window/manage.h>
 #endif
 
@@ -49,20 +47,10 @@ Initialization::Initialization()
 
         xlib_init();
 
-#if defined(OPENGL_FOUND)
-        // Для Линукса адреса функций OpenGL не зависят от контекста,
-        // поэтому их можно определять один раз при запуске программы.
-        opengl_functions::init();
-#endif
-
 #endif
 
 #if 0
         vulkan::window_init();
-#endif
-
-#if defined(OPENGL_FOUND)
-        opengl::window_init();
 #endif
 }
 

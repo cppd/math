@@ -17,21 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create.h"
 
-#include "opengl/show.h"
 #include "vulkan/show.h"
 
-#include <src/com/error.h>
-
-std::unique_ptr<ShowObject> create_show_object(GraphicsAndComputeAPI api, const ShowCreateInfo& info)
+std::unique_ptr<ShowObject> create_show_object(const ShowCreateInfo& info)
 {
-        switch (api)
-        {
-#if defined(OPENGL_FOUND)
-        case GraphicsAndComputeAPI::OpenGL:
-                return show_opengl::create_show_object(info);
-#endif
-        case GraphicsAndComputeAPI::Vulkan:
-                return show_vulkan::create_show_object(info);
-        }
-        error("Unknown graphics and compute API for show creation");
+        return show_vulkan::create_show_object(info);
 }
