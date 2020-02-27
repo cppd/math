@@ -17,18 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
-#if !defined(VULKAN)
-// Вставляется в текст программы
-// const bool INVERSE =
-// const uint DATA_SIZE =
-// const uint N =
-// const uint N_MASK =
-// const uint N_BITS =
-// const uint SHARED_SIZE =
-// const bool REVERSE_INPUT =
-// const uint GROUP_SIZE =
-layout(local_size_x = GROUP_SIZE) in;
-#else
 layout(constant_id = 0) const bool INVERSE = true;
 layout(constant_id = 1) const uint DATA_SIZE = 1;
 layout(constant_id = 2) const uint N = 1;
@@ -37,7 +25,6 @@ layout(constant_id = 4) const uint N_BITS = 1;
 layout(constant_id = 5) const uint SHARED_SIZE = 1;
 layout(constant_id = 6) const bool REVERSE_INPUT = true;
 layout(local_size_x_id = 7) in;
-#endif
 
 layout(std430, binding = 0) buffer Buffer
 {

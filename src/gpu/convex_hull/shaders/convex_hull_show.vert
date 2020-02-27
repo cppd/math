@@ -28,12 +28,7 @@ layout(std430, binding = 1) readonly buffer Points
 
 void main(void)
 {
-#if defined(VULKAN)
         const int vertex_index = gl_VertexIndex;
-#else
-        const int vertex_index = gl_VertexID;
-#endif
-
         ivec2 s = points[vertex_index];
         gl_Position = matrix * vec4(s.x, s.y, 0, 1);
 }

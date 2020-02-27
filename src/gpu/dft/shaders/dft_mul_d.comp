@@ -17,17 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
-#if !defined(VULKAN)
-// Вставляется в текст программы
-// const uvec2 GROUP_SIZE =
-// const int ROWS =
-// const int COLUMNS =
-layout(local_size_x = GROUP_SIZE.x, local_size_y = GROUP_SIZE.y) in;
-#else
 layout(local_size_x_id = 0, local_size_y_id = 1) in;
 layout(constant_id = 2) const int ROWS = 1;
 layout(constant_id = 3) const int COLUMNS = 1;
-#endif
 
 // Умножение на диагональ, формулы 13.20, 13.30.
 

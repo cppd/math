@@ -36,11 +36,7 @@ out gl_PerVertex
 
 void main(void)
 {
-#if defined(VULKAN)
         const int vertex_index = gl_VertexIndex;
-#else
-        const int vertex_index = gl_VertexID;
-#endif
 
         // Две вершины на одну точку.
         // Одна вершина начало линии, вторая вершина конец линии.

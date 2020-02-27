@@ -17,11 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(early_fragment_tests) in;
 
-#if !defined(VULKAN)
-layout(std140, binding = 1) uniform Drawing
-#else
 layout(std140, set = 0, binding = 1) uniform Drawing
-#endif
 {
         vec3 default_color;
         vec3 wireframe_color;
@@ -38,11 +34,7 @@ layout(std140, set = 0, binding = 1) uniform Drawing
 }
 drawing;
 
-#if !defined(VULKAN)
-layout(bindless_image, r32ui) writeonly uniform uimage2D object_image;
-#else
 layout(set = 0, binding = 2, r32ui) writeonly uniform uimage2D object_image;
-#endif
 
 layout(location = 0) out vec4 color;
 

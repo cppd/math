@@ -15,22 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined(VULKAN)
-// Вставляется в текст программы
-// const uint GROUP_SIZE =
-// const int RADIUS =
-// const int ITERATION_COUNT =
-// const float STOP_MOVE_SQUARE =
-// const float MIN_DETERMINANT =
-layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
-layout(std140, binding = 4) uniform Images
-{
-        layout(r32f) readonly restrict image2D image_dx;
-        layout(r32f) readonly restrict image2D image_dy;
-        layout(r32f) readonly restrict image2D image_i;
-        sampler2D texture_j;
-};
-#else
 layout(local_size_x_id = 0, local_size_y_id = 1) in;
 layout(constant_id = 2) const int RADIUS = 1;
 layout(constant_id = 3) const int ITERATION_COUNT = 1;
@@ -40,7 +24,6 @@ layout(binding = 4, r32f) readonly restrict uniform image2D image_dx;
 layout(binding = 5, r32f) readonly restrict uniform image2D image_dy;
 layout(binding = 6, r32f) readonly restrict uniform image2D image_i;
 layout(binding = 7) uniform sampler2D texture_j;
-#endif
 
 layout(std430, binding = 0) readonly buffer TopPoints
 {
@@ -65,17 +48,6 @@ layout(std140, binding = 3) uniform Data
         int guess_ky;
         int guess_width;
 };
-
-#if !defined(VULKAN)
-ivec2 screen_to_texture(ivec2 p)
-{
-        return ivec2(p.x, imageSize(image_dx).y - p.y - 1);
-}
-// ivec2 texture_to_screen(ivec2 p)
-//{
-//        return ivec2(p.x, imageSize(image_dx).y - p.y - 1);
-//}
-#endif
 
 vec2 pixel_to_texture(vec2 pixel)
 {
@@ -149,13 +121,7 @@ void main(void)
 
         int point_index = int(gl_GlobalInvocationID.y * point_count_x + gl_GlobalInvocationID.x);
 
-        const ivec2 p_screen = use_all_points ? ivec2(gl_GlobalInvocationID.xy) : top_points[point_index];
-
-#if !defined(VULKAN)
-        const ivec2 p = screen_to_texture(p_screen);
-#else
-        const ivec2 p = p_screen;
-#endif
+        const ivec2 p = use_all_points ? ivec2(gl_GlobalInvocationID.xy) : top_points[point_index];
 
         mat2 g_inv;
 
@@ -167,12 +133,7 @@ void main(void)
 
         vec2 v = vec2(0, 0);
 
-        vec2 guess = use_guess ? get_guess(p_screen) : vec2(0, 0);
-
-#if !defined(VULKAN)
-        // Пишется с 0 вверху экрана, рассчитывается с 0 внизу экрана, поэтому поменять знак y
-        guess.y = -guess.y;
-#endif
+        vec2 guess = use_guess ? get_guess(p) : vec2(0, 0);
 
         for (int i = 0; i < ITERATION_COUNT; ++i)
         {
@@ -202,10 +163,5 @@ void main(void)
 
         vec2 res = v + guess;
 
-#if !defined(VULKAN)
-        // Пишется с 0 вверху экрана, рассчитывается с 0 внизу экрана, поэтому поменять знак y
-        points_flow[point_index] = vec2(res.x, -res.y);
-#else
         points_flow[point_index] = res;
-#endif
 }

@@ -17,10 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
-#if !defined(VULKAN)
-#extension GL_ARB_bindless_texture : require
-#endif
-
 // float rgb_to_srgb(float c)
 //{
 //        if (c >= 1.0)

@@ -20,23 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
-#if !defined(VULKAN)
-// Вставляется в текст программы
-// const uvec2 GROUP_SIZE =
-// const int X =
-// const int Y =
-// const int WIDTH =
-// const int HEIGHT =
-layout(local_size_x = GROUP_SIZE.x, local_size_y = GROUP_SIZE.y) in;
-layout(bindless_sampler, location = 0) uniform sampler2D src;
-#else
 layout(local_size_x_id = 0, local_size_y_id = 1) in;
 layout(constant_id = 2) const int X = 1;
 layout(constant_id = 3) const int Y = 1;
 layout(constant_id = 4) const int WIDTH = 1;
 layout(constant_id = 5) const int HEIGHT = 1;
 layout(binding = 1) uniform sampler2D src;
-#endif
 
 layout(std430, binding = 0) writeonly restrict buffer Buffer
 {

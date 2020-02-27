@@ -19,17 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
-#if !defined(VULKAN)
-// Вставляется в текст программы
-// const uvec2 GROUP_SIZE =
-// const float TO_MUL =
-layout(local_size_x = GROUP_SIZE.x, local_size_y = GROUP_SIZE.y) in;
-layout(bindless_image, r32f, location = 0) uniform writeonly restrict image2D dst;
-#else
 layout(local_size_x_id = 0, local_size_y_id = 1) in;
 layout(constant_id = 2) const float TO_MUL = 1;
 layout(binding = 1, r32f) uniform writeonly restrict image2D dst;
-#endif
 
 layout(std430, binding = 0) readonly restrict buffer Buffer
 {

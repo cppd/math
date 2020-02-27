@@ -42,16 +42,10 @@ layout(std140, binding = 2) uniform Drawing
 }
 drawing;
 
-#if defined(VULKAN)
 layout(binding = 3) uniform sampler2D shadow_texture;
 layout(binding = 4, r32ui) writeonly uniform uimage2D object_image;
-#else
-layout(bindless_sampler) uniform sampler2DShadow shadow_texture;
-layout(bindless_image, r32ui) writeonly uniform uimage2D object_image;
-#endif
 
 // Для каждой группы треугольников с одним материалом отдельно задаётся этот материал и его текстуры
-#if defined(VULKAN)
 layout(std140, set = 1, binding = 0) uniform Material
 {
         vec3 Ka;
@@ -67,23 +61,6 @@ mtl;
 layout(set = 1, binding = 1) uniform sampler2D texture_Ka;
 layout(set = 1, binding = 2) uniform sampler2D texture_Kd;
 layout(set = 1, binding = 3) uniform sampler2D texture_Ks;
-#else
-layout(std140, binding = 3) uniform Material
-{
-        vec3 Ka;
-        vec3 Kd;
-        vec3 Ks;
-        layout(bindless_sampler) sampler2D texture_Ka;
-        layout(bindless_sampler) sampler2D texture_Kd;
-        layout(bindless_sampler) sampler2D texture_Ks;
-        float Ns;
-        bool use_texture_Ka;
-        bool use_texture_Kd;
-        bool use_texture_Ks;
-        bool use_material;
-}
-mtl;
-#endif
 
 //
 
@@ -100,7 +77,6 @@ layout(location = 0) out vec4 color;
 
 //
 
-#if defined(VULKAN)
 vec4 texture_Ka_color(vec2 c)
 {
         return texture(texture_Ka, c);
@@ -118,24 +94,6 @@ float shadow(vec4 shadow_position)
         float dist = texture(shadow_texture, shadow_position.xy).r;
         return dist > gs.shadow_position.z ? 1 : 0;
 }
-#else
-vec4 texture_Ka_color(vec2 c)
-{
-        return texture(mtl.texture_Ka, c);
-}
-vec4 texture_Kd_color(vec2 c)
-{
-        return texture(mtl.texture_Kd, c);
-}
-vec4 texture_Ks_color(vec2 c)
-{
-        return texture(mtl.texture_Ks, c);
-}
-float shadow(vec4 shadow_position)
-{
-        return textureProj(shadow_texture, shadow_position);
-}
-#endif
 
 bool has_texture_coordinates()
 {
