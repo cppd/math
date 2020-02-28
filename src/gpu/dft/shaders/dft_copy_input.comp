@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#version 450
+
 // Перенос данных изображения в исходные данные для ДПФ.
 // Преобразование Фурье делается для яркости пикселов без цвета.
 
@@ -31,6 +33,11 @@ layout(std430, binding = 0) writeonly restrict buffer Buffer
 {
         vec2 dst[];
 };
+
+float luminance_of_rgb(vec4 c)
+{
+        return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+}
 
 void main()
 {

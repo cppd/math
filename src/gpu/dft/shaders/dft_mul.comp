@@ -15,6 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#version 450
+
+const float PI = 3.1415926535897932384626433832795028841971693993751;
+
 // gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
 layout(constant_id = 0) const int FUNCTION_INDEX = 1;
@@ -34,6 +38,11 @@ layout(std430, binding = 1) restrict buffer Buffer
 {
         vec2 buf[];
 };
+
+vec2 complex_mul(vec2 a, vec2 b)
+{
+        return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+}
 
 // Функция подстановки переменных, формулы 13.4, 13.27, 13.28, 13.32.
 // Используется в 4 функциях: по строкам в обе стороны и по столбцам в обе 2 стороны

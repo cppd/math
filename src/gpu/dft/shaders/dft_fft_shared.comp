@@ -15,6 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#version 450
+
+const float PI = 3.1415926535897932384626433832795028841971693993751;
+
 // gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
 layout(constant_id = 0) const bool INVERSE = true;
@@ -35,6 +39,16 @@ layout(std430, binding = 0) buffer Buffer
 const uint N_MAX = (N <= SHARED_SIZE) ? N : SHARED_SIZE;
 
 shared vec2 shared_data[SHARED_SIZE];
+
+uint bit_reverse(uint i, uint bits)
+{
+        return bitfieldReverse(i) >> (32 - bits);
+}
+
+vec2 complex_mul(vec2 a, vec2 b)
+{
+        return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+}
 
 void copy_global_to_shared()
 {

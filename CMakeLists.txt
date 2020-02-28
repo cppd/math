@@ -357,7 +357,6 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
 
 AddIncludeFiles(VULKAN_SHADERS
-                        HEADER_FILE "src/gpu/com/header.glsl"
                         OUTPUT_EXTENSION "spr"
                         SOURCE
                                 "src/gpu/convex_hull/shaders"
