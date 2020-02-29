@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "main_window.h"
 
-#include "paintings.h"
-
 #include "../command_line/command_line.h"
 #include "../dialogs/messages/application_about.h"
 #include "../dialogs/messages/application_help.h"
@@ -29,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dialogs/parameters/bound_cocone.h"
 #include "../dialogs/parameters/object_selection.h"
 #include "../dialogs/parameters/point_object.h"
+#include "../painter_window/painting.h"
 #include "../support/support.h"
 
 #include <src/application/name.h>

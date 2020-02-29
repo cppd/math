@@ -15,11 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "paintings.h"
+#include "painting.h"
+
+#include "painter_window.h"
 
 #include "../dialogs/parameters/painter_3d.h"
 #include "../dialogs/parameters/painter_nd.h"
-#include "../painter_window/painter_window.h"
 #include "../support/support.h"
 
 #include <src/com/math.h>
