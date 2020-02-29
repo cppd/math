@@ -21,13 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/log.h>
-#include <src/graphics/vulkan/buffers.h>
-#include <src/graphics/vulkan/commands.h>
-#include <src/graphics/vulkan/create.h>
-#include <src/graphics/vulkan/error.h>
-#include <src/graphics/vulkan/print.h>
-#include <src/graphics/vulkan/query.h>
-#include <src/graphics/vulkan/queue.h>
+#include <src/vulkan/buffers.h>
+#include <src/vulkan/commands.h>
+#include <src/vulkan/create.h>
+#include <src/vulkan/error.h>
+#include <src/vulkan/print.h>
+#include <src/vulkan/query.h>
+#include <src/vulkan/queue.h>
 
 #include <algorithm>
 #include <sstream>

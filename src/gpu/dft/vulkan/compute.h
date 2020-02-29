@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/graphics/vulkan/buffers.h>
-#include <src/graphics/vulkan/instance.h>
+#include <src/vulkan/buffers.h>
+#include <src/vulkan/instance.h>
 
 #include <complex>
 #include <memory>

@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../../com/glsl.h"
 
 #include <src/color/color.h>
-#include <src/graphics/vulkan/buffers.h>
 #include <src/numerical/matrix.h>
+#include <src/vulkan/buffers.h>
 
 #include <unordered_set>
 #include <vector>

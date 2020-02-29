@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shader_vertex.h"
 
 #include <src/com/error.h>
-#include <src/graphics/vulkan/create.h>
-#include <src/graphics/vulkan/pipeline.h>
+#include <src/vulkan/create.h>
+#include <src/vulkan/pipeline.h>
 
 namespace gpu_vulkan
 {

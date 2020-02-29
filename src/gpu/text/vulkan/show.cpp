@@ -23,15 +23,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/container.h>
 #include <src/com/merge.h>
-#include <src/graphics/vulkan/buffers.h>
-#include <src/graphics/vulkan/commands.h>
-#include <src/graphics/vulkan/error.h>
-#include <src/graphics/vulkan/queue.h>
-#include <src/graphics/vulkan/sync.h>
 #include <src/numerical/transform.h>
 #include <src/text/font.h>
 #include <src/text/glyphs.h>
 #include <src/text/vertices.h>
+#include <src/vulkan/buffers.h>
+#include <src/vulkan/commands.h>
+#include <src/vulkan/error.h>
+#include <src/vulkan/queue.h>
+#include <src/vulkan/sync.h>
 
 #include <array>
 #include <optional>

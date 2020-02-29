@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../../vulkan_interfaces.h"
 
 #include <src/color/color.h>
-#include <src/graphics/vulkan/instance.h>
 #include <src/text/text_data.h>
+#include <src/vulkan/instance.h>
 
 #include <memory>
 #include <vulkan/vulkan.h>

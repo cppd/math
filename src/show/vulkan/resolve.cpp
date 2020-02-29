@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "resolve.h"
 
-#include <src/graphics/vulkan/error.h>
+#include <src/vulkan/error.h>
 
 namespace show_vulkan
 {

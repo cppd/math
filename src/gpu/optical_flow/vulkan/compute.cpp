@@ -40,8 +40,8 @@ Chapter 5. Tracking Objects in Videos.
 
 #include "../com/compute.h"
 
-#include <src/graphics/vulkan/error.h>
-#include <src/graphics/vulkan/queue.h>
+#include <src/vulkan/error.h>
+#include <src/vulkan/queue.h>
 
 #include <thread>
 

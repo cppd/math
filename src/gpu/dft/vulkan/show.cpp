@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/merge.h>
-#include <src/graphics/vulkan/commands.h>
-#include <src/graphics/vulkan/create.h>
-#include <src/graphics/vulkan/queue.h>
+#include <src/vulkan/commands.h>
+#include <src/vulkan/create.h>
+#include <src/vulkan/queue.h>
 
 #include <thread>
 

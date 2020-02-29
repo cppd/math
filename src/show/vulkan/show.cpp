@@ -40,10 +40,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/pencil_sketch/vulkan/show.h>
 #include <src/gpu/renderer/vulkan/renderer.h>
 #include <src/gpu/text/vulkan/show.h>
-#include <src/graphics/vulkan/instance.h>
-#include <src/graphics/vulkan/objects.h>
-#include <src/graphics/vulkan/queue.h>
-#include <src/graphics/vulkan/sync.h>
+#include <src/vulkan/instance.h>
+#include <src/vulkan/objects.h>
+#include <src/vulkan/queue.h>
+#include <src/vulkan/sync.h>
 #include <src/window/manage.h>
 
 constexpr double IDLE_MODE_FRAME_DURATION_IN_SECONDS = 0.1;

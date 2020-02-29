@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/com.h"
 
-#include <src/graphics/vulkan/create.h>
-#include <src/graphics/vulkan/pipeline.h>
+#include <src/vulkan/create.h>
+#include <src/vulkan/pipeline.h>
 
 #include <type_traits>
 

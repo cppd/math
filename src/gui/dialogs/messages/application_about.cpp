@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../../support/support.h"
 
 #include <src/application/name.h>
-#include <src/graphics/vulkan/settings.h>
+#include <src/vulkan/settings.h>
 
 #include <QMessageBox>
 #include <sstream>
