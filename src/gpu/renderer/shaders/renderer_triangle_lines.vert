@@ -22,6 +22,7 @@ layout(location = 0) in vec3 position;
 layout(std140, binding = 0) uniform Matrices
 {
         mat4 main_mvp_matrix;
+        mat4 main_vp_matrix;
         mat4 shadow_mvp_matrix;
         mat4 shadow_mvp_texture_matrix;
         vec4 clip_plane_equation;

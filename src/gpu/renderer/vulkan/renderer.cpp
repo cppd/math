@@ -499,7 +499,8 @@ class Impl final : public Renderer
                         const mat4& shadow_mvp_texture_matrix = m_shadow_vp_texture_matrix * model;
                         const mat4& shadow_mvp_matrix = m_shadow_vp_matrix * model;
 
-                        m_buffers.set_matrices(main_mvp_matrix, shadow_mvp_matrix, shadow_mvp_texture_matrix);
+                        m_buffers.set_matrices(
+                                main_mvp_matrix, m_main_vp_matrix, shadow_mvp_matrix, shadow_mvp_texture_matrix);
 
                         set_clip_plane();
                 }

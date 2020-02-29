@@ -40,6 +40,7 @@ class RendererBuffers
                 struct M
                 {
                         mat4f main_mvp_matrix;
+                        mat4f main_vp_matrix;
                         mat4f shadow_mvp_matrix;
                         mat4f shadow_mvp_texture_matrix;
                 };
@@ -101,6 +102,7 @@ public:
 
         void set_matrices(
                 const mat4& main_mvp_matrix,
+                const mat4& main_vp_matrix,
                 const mat4& shadow_mvp_matrix,
                 const mat4& shadow_mvp_texture_matrix) const;
         void set_clip_plane(const vec4& equation, const vec4& equation_shadow, bool enabled) const;
