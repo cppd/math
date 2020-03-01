@@ -50,6 +50,15 @@ constexpr uint32_t points_1d_vert[]{
 constexpr uint32_t points_frag[]{
 #include "renderer_points.frag.spr"
 };
+constexpr uint32_t normals_vert[]{
+#include "renderer_normals.vert.spr"
+};
+constexpr uint32_t normals_geom[]{
+#include "renderer_normals.geom.spr"
+};
+constexpr uint32_t normals_frag[]{
+#include "renderer_normals.frag.spr"
+};
 
 namespace gpu_vulkan
 {
@@ -106,5 +115,20 @@ Span<const uint32_t> renderer_points_1d_vert()
 Span<const uint32_t> renderer_points_frag()
 {
         return Span<const uint32_t>(points_frag);
+}
+
+Span<const uint32_t> renderer_normals_vert()
+{
+        return Span<const uint32_t>(normals_vert);
+}
+
+Span<const uint32_t> renderer_normals_geom()
+{
+        return Span<const uint32_t>(normals_geom);
+}
+
+Span<const uint32_t> renderer_normals_frag()
+{
+        return Span<const uint32_t>(normals_frag);
 }
 }

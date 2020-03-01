@@ -34,4 +34,7 @@ Span<const uint32_t> renderer_shadow_frag();
 Span<const uint32_t> renderer_points_0d_vert();
 Span<const uint32_t> renderer_points_1d_vert();
 Span<const uint32_t> renderer_points_frag();
+Span<const uint32_t> renderer_normals_vert();
+Span<const uint32_t> renderer_normals_geom();
+Span<const uint32_t> renderer_normals_frag();
 }
