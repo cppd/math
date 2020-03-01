@@ -87,12 +87,14 @@ void RendererBuffers::copy_to_drawing_buffer(VkDeviceSize offset, const T& data)
 
 void RendererBuffers::set_matrices(
         const mat4& main_mvp_matrix,
+        const mat4& main_model_matrix,
         const mat4& main_vp_matrix,
         const mat4& shadow_mvp_matrix,
         const mat4& shadow_mvp_texture_matrix) const
 {
         Matrices::M matrices;
         matrices.main_mvp_matrix = to_matrix<float>(main_mvp_matrix).transpose();
+        matrices.main_model_matrix = to_matrix<float>(main_model_matrix).transpose();
         matrices.main_vp_matrix = to_matrix<float>(main_vp_matrix).transpose();
         matrices.shadow_mvp_matrix = to_matrix<float>(shadow_mvp_matrix).transpose();
         matrices.shadow_mvp_texture_matrix = to_matrix<float>(shadow_mvp_texture_matrix).transpose();
