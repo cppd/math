@@ -102,6 +102,8 @@ constexpr int MESH_OBJECT_NOT_USED_THREAD_COUNT = 2;
 // Максимальное увеличение для освещений ambient, diffuse, specular.
 constexpr double MAXIMUM_COLOR_AMPLIFICATION = 3;
 
+constexpr bool SHOW_NORMALS = false;
+
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
           m_window_thread_id(std::this_thread::get_id()),
@@ -1224,6 +1226,7 @@ void MainWindow::slot_window_first_shown()
                 info.with_dft = ui.checkBox_dft->isChecked();
                 info.with_convex_hull = ui.checkBox_convex_hull_2d->isChecked();
                 info.with_optical_flow = ui.checkBox_optical_flow->isChecked();
+                info.with_normals = SHOW_NORMALS;
                 info.ambient = ambient_light();
                 info.diffuse = diffuse_light();
                 info.specular = specular_light();

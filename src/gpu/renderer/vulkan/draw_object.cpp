@@ -131,8 +131,10 @@ void load_vertices(
         const std::unordered_set<uint32_t>& family_indices,
         const Obj<3>& obj,
         const std::vector<int>& sorted_face_indices,
-        std::unique_ptr<vulkan::BufferWithMemory>& vertex_buffer,
-        std::unique_ptr<vulkan::BufferWithMemory>& index_buffer)
+        std::unique_ptr<vulkan::BufferWithMemory>* vertex_buffer,
+        std::unique_ptr<vulkan::BufferWithMemory>* index_buffer,
+        unsigned* vertex_count,
+        unsigned* index_count)
 {
         if (obj.facets().empty())
         {
@@ -247,12 +249,15 @@ void load_vertices(
 
         double load_time = time_in_seconds();
 
-        vertex_buffer = std::make_unique<vulkan::BufferWithMemory>(
+        *vertex_buffer = std::make_unique<vulkan::BufferWithMemory>(
                 device, transfer_command_pool, transfer_queue, family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                 data_size(vertices), vertices);
-        index_buffer = std::make_unique<vulkan::BufferWithMemory>(
+        *index_buffer = std::make_unique<vulkan::BufferWithMemory>(
                 device, transfer_command_pool, transfer_queue, family_indices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
                 data_size(indices), indices);
+
+        *vertex_count = vertices.size();
+        *index_count = indices.size();
 
         load_time = time_in_seconds() - load_time;
 
@@ -432,7 +437,8 @@ class DrawObject::Triangles final
         std::unique_ptr<vulkan::BufferWithMemory> m_index_buffer;
         std::vector<vulkan::ImageWithMemory> m_textures;
         std::unique_ptr<RendererTrianglesMaterialMemory> m_shader_memory;
-        unsigned m_vertex_count;
+        unsigned m_vertex_count = 0;
+        unsigned m_index_count = 0;
 
         //
 
@@ -474,7 +480,7 @@ public:
                 load_vertices(
                         device, transfer_command_pool, transfer_queue,
                         {graphics_queue.family_index(), transfer_queue.family_index()}, obj, sorted_face_indices,
-                        m_vertex_buffer, m_index_buffer);
+                        &m_vertex_buffer, &m_index_buffer, &m_vertex_count, &m_index_count);
 
                 m_textures = load_textures(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
@@ -484,8 +490,7 @@ public:
                         device, {graphics_queue.family_index()}, sampler, triangles_material_descriptor_set_layout, obj,
                         m_textures);
 
-                m_vertex_count = 3 * obj.facets().size();
-
+                ASSERT(m_index_count == 3 * obj.facets().size());
                 ASSERT(material_face_offset.size() == material_face_count.size());
                 ASSERT(material_face_offset.size() == m_shader_memory->descriptor_set_count());
 
@@ -538,7 +543,20 @@ public:
                 vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
                 vkCmdBindIndexBuffer(command_buffer, *m_index_buffer, 0, VULKAN_INDEX_TYPE);
 
-                vkCmdDrawIndexed(command_buffer, m_vertex_count, 1, 0, 0, 0);
+                vkCmdDrawIndexed(command_buffer, m_index_count, 1, 0, 0, 0);
+        }
+
+        void draw_commands_vertices(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const
+        {
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline);
+
+                vkCmdBindDescriptorSets(
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline_layout,
+                        info.triangles_set_number, 1 /*set count*/, &info.triangles_set, 0, nullptr);
+
+                vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
+
+                vkCmdDraw(command_buffer, m_vertex_count, 1, 0, 0);
         }
 };
 
@@ -694,6 +712,14 @@ void DrawObject::draw_commands_triangles(VkCommandBuffer command_buffer, const D
         if (m_triangles)
         {
                 m_triangles->draw_commands_triangles(command_buffer, info);
+        }
+}
+
+void DrawObject::draw_commands_triangle_vertices(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const
+{
+        if (m_triangles)
+        {
+                m_triangles->draw_commands_vertices(command_buffer, info);
         }
 }
 }

@@ -91,6 +91,7 @@ public:
         virtual void clip_plane_show(double) = 0;
         virtual void clip_plane_position(double) = 0;
         virtual void clip_plane_hide() = 0;
+        virtual void show_normals(bool) = 0;
 
         virtual void mouse_press(int x, int y, ShowMouseButton button) = 0;
         virtual void mouse_release(int x, int y, ShowMouseButton button) = 0;
@@ -123,6 +124,7 @@ struct ShowCreateInfo
         std::optional<bool> with_dft;
         std::optional<bool> with_convex_hull;
         std::optional<bool> with_optical_flow;
+        std::optional<bool> with_normals;
         std::optional<double> ambient;
         std::optional<double> diffuse;
         std::optional<double> specular;

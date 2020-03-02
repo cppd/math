@@ -237,6 +237,13 @@ class EventQueue final : public Show
                 struct clip_plane_hide final
                 {
                 };
+                struct show_normals final
+                {
+                        bool show;
+                        explicit show_normals(bool v) : show(v)
+                        {
+                        }
+                };
                 struct mouse_press final
                 {
                         int x, y;
@@ -308,6 +315,7 @@ class EventQueue final : public Show
                         clip_plane_show,
                         clip_plane_position,
                         clip_plane_hide,
+                        show_normals,
                         mouse_press,
                         mouse_release,
                         mouse_move,
@@ -461,6 +469,10 @@ class EventQueue final : public Show
                 {
                         m_show->clip_plane_hide();
                 }
+                void operator()(const Event::show_normals& d)
+                {
+                        m_show->show_normals(d.show);
+                }
                 void operator()(const Event::mouse_press& d)
                 {
                         m_show->mouse_press(d.x, d.y, d.button);
@@ -610,6 +622,10 @@ class EventQueue final : public Show
         void clip_plane_hide() override
         {
                 m_event_queue.emplace(std::in_place_type<Event::clip_plane_hide>);
+        }
+        void show_normals(bool v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::show_normals>, v);
         }
         void mouse_press(int x, int y, ShowMouseButton button) override
         {

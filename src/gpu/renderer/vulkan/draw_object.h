@@ -83,5 +83,6 @@ public:
         const mat4& model_matrix() const;
         void draw_commands(VkCommandBuffer command_buffer, const DrawInfo& info) const;
         void draw_commands_triangles(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const;
+        void draw_commands_triangle_vertices(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const;
 };
 }

@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "depth_buffer.h"
 #include "draw_object.h"
 #include "sampler.h"
+#include "shader_normals.h"
 #include "shader_points.h"
 #include "shader_shadow.h"
 #include "shader_triangle_lines.h"
@@ -98,6 +99,9 @@ class Impl final : public Renderer
         RendererTriangleLinesProgram m_triangle_lines_program;
         RendererTriangleLinesMemory m_triangle_lines_memory;
 
+        RendererNormalsProgram m_normals_program;
+        RendererNormalsMemory m_normals_memory;
+
         RendererShadowProgram m_shadow_program;
         RendererShadowMemory m_shadow_memory;
 
@@ -107,6 +111,7 @@ class Impl final : public Renderer
         RenderBuffers3D* m_render_buffers = nullptr;
         std::optional<vulkan::Pipeline> m_render_triangles_pipeline;
         std::optional<vulkan::Pipeline> m_render_triangle_lines_pipeline;
+        std::optional<vulkan::Pipeline> m_render_normals_pipeline;
         std::optional<vulkan::Pipeline> m_render_points_pipeline;
         std::optional<vulkan::Pipeline> m_render_lines_pipeline;
         std::optional<vulkan::CommandBuffers> m_render_command_buffers;
@@ -122,6 +127,7 @@ class Impl final : public Renderer
         unsigned m_x, m_y, m_width, m_height;
 
         std::optional<vec4> m_clip_plane;
+        bool m_show_normals = false;
 
         void set_light_a(const Color& light) override
         {
@@ -204,6 +210,16 @@ class Impl final : public Renderer
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 m_buffers.set_show_materials(show);
+        }
+        void set_show_normals(bool show) override
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                if (m_show_normals != show)
+                {
+                        m_show_normals = show;
+                        create_render_command_buffers();
+                }
         }
         void set_shadow_zoom(double zoom) override
         {
@@ -418,6 +434,7 @@ class Impl final : public Renderer
                 m_render_command_buffers.reset();
                 m_render_triangles_pipeline.reset();
                 m_render_triangle_lines_pipeline.reset();
+                m_render_normals_pipeline.reset();
                 m_render_points_pipeline.reset();
                 m_render_lines_pipeline.reset();
         }
@@ -443,6 +460,9 @@ class Impl final : public Renderer
                         m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading, m_x, m_y,
                         m_width, m_height);
                 m_render_triangle_lines_pipeline = m_triangle_lines_program.create_pipeline(
+                        m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading, m_x, m_y,
+                        m_width, m_height);
+                m_render_normals_pipeline = m_normals_program.create_pipeline(
                         m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading, m_x, m_y,
                         m_width, m_height);
                 m_render_points_pipeline = m_points_program.create_pipeline(
@@ -557,6 +577,18 @@ class Impl final : public Renderer
                         info.triangles_set_number = RendererTriangleLinesMemory::set_number();
 
                         m_storage.object()->draw_commands_triangles(command_buffer, info);
+                }
+
+                if (m_show_normals)
+                {
+                        DrawInfoTriangles info;
+
+                        info.triangles_pipeline_layout = m_normals_program.pipeline_layout();
+                        info.triangles_pipeline = *m_render_normals_pipeline;
+                        info.triangles_set = m_normals_memory.descriptor_set();
+                        info.triangles_set_number = RendererNormalsMemory::set_number();
+
+                        m_storage.object()->draw_commands_triangle_vertices(command_buffer, info);
                 }
         }
 
@@ -688,6 +720,9 @@ public:
                   //
                   m_triangle_lines_program(m_device),
                   m_triangle_lines_memory(m_device, m_triangle_lines_program.descriptor_set_layout(), m_buffers),
+                  //
+                  m_normals_program(m_device),
+                  m_normals_memory(m_device, m_normals_program.descriptor_set_layout(), m_buffers),
                   //
                   m_shadow_program(m_device),
                   m_shadow_memory(m_device, m_shadow_program.descriptor_set_layout(), m_buffers),

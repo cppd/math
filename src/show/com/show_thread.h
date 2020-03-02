@@ -81,6 +81,7 @@ class ShowThread final : public ShowObject
                 q.show_optical_flow(info.with_optical_flow.value());
                 q.set_vertical_sync(info.vertical_sync.value());
                 q.set_shadow_zoom(info.shadow_zoom.value());
+                q.show_normals(info.with_normals.value());
         }
 
         void thread_function(ShowEvents* events, WindowID parent_window, double parent_window_ppi)

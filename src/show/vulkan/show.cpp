@@ -412,6 +412,13 @@ class Impl final : public Show
                 m_renderer->clip_plane_hide();
         }
 
+        void show_normals(bool v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                m_renderer->set_show_normals(v);
+        }
+
         void set_vertical_sync(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);

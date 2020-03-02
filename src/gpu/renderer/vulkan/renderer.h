@@ -53,6 +53,7 @@ struct Renderer
         virtual void set_show_shadow(bool show) = 0;
         virtual void set_show_fog(bool show) = 0;
         virtual void set_show_materials(bool show) = 0;
+        virtual void set_show_normals(bool show) = 0;
         virtual void set_shadow_zoom(double zoom) = 0;
         virtual void set_camera(const RendererCameraInfo& c) = 0;
 
