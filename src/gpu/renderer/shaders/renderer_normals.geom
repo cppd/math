@@ -50,16 +50,16 @@ out gl_PerVertex
 
 //
 
-void line(vec3 from, vec3 to)
+void line(vec3 world_from, vec3 world_to)
 {
-        vec4 f = vec4(from, 1.0);
-        gl_Position = f;
-        gl_ClipDistance[0] = matrices.clip_plane_enabled ? dot(matrices.clip_plane_equation, f) : 1;
+        const vec4 from = matrices.main_vp_matrix * vec4(world_from, 1.0);
+        gl_Position = from;
+        gl_ClipDistance[0] = matrices.clip_plane_enabled ? dot(matrices.clip_plane_equation, from) : 1;
         EmitVertex();
 
-        vec4 t = vec4(to, 1.0);
-        gl_Position = t;
-        gl_ClipDistance[0] = matrices.clip_plane_enabled ? dot(matrices.clip_plane_equation, t) : 1;
+        const vec4 to = matrices.main_vp_matrix * vec4(world_to, 1.0);
+        gl_Position = to;
+        gl_ClipDistance[0] = matrices.clip_plane_enabled ? dot(matrices.clip_plane_equation, to) : 1;
         EmitVertex();
 
         EndPrimitive();
@@ -69,11 +69,9 @@ void main()
 {
         const float LENGTH = 0.01;
 
-        const vec3 from = (matrices.main_mvp_matrix * vec4(vs[0].position, 1.0)).xyz;
-
+        const vec3 world_from = (matrices.main_model_matrix * vec4(vs[0].position, 1.0)).xyz;
         const vec3 world_normal = vs[0].normal;
         const vec3 world_normal_vector = LENGTH * normalize(world_normal);
-        const vec3 normal_vector = (matrices.main_vp_matrix * vec4(world_normal_vector, 1)).xyz;
 
-        line(from, from + normal_vector);
+        line(world_from, world_from + world_normal_vector);
 }
