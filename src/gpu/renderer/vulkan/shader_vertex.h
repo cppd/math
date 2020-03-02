@@ -42,6 +42,7 @@ struct RendererTrianglesVertex
 
         static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_triangles();
         static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_triangle_lines();
+        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_normals();
         static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_shadow();
 };
 }
