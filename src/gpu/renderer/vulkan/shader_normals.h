@@ -31,6 +31,7 @@ class RendererNormalsMemory final
 {
         static constexpr int SET_NUMBER = 0;
         static constexpr int MATRICES_BINDING = 0;
+        static constexpr int DRAWING_BINDING = 1;
 
         vulkan::Descriptors m_descriptors;
 

@@ -134,6 +134,24 @@ void RendererBuffers::set_clip_plane_color(const Color& color) const
         copy_to_drawing_buffer(offsetof(Drawing, clip_plane_color), c);
 }
 
+void RendererBuffers::set_normal_length(float length) const
+{
+        decltype(Drawing().normal_length) l = length;
+        copy_to_drawing_buffer(offsetof(Drawing, normal_length), l);
+}
+
+void RendererBuffers::set_normal_color_positive(const Color& color) const
+{
+        decltype(Drawing().normal_color_positive) c = color.to_rgb_vector<float>();
+        copy_to_drawing_buffer(offsetof(Drawing, normal_color_positive), c);
+}
+
+void RendererBuffers::set_normal_color_negative(const Color& color) const
+{
+        decltype(Drawing().normal_color_negative) c = color.to_rgb_vector<float>();
+        copy_to_drawing_buffer(offsetof(Drawing, normal_color_negative), c);
+}
+
 void RendererBuffers::set_default_ns(float default_ns) const
 {
         decltype(Drawing().default_ns) ns = default_ns;

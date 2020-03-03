@@ -23,6 +23,9 @@ layout(std140, binding = 1) uniform Drawing
         vec3 wireframe_color;
         vec3 background_color;
         vec3 clip_plane_color;
+        float normal_length;
+        vec3 normal_color_positive;
+        vec3 normal_color_negative;
         float default_ns;
         vec3 light_a;
         vec3 light_d;

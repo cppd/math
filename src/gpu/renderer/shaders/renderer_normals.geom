@@ -35,6 +35,26 @@ layout(std140, binding = 0) uniform Matrices
 }
 matrices;
 
+layout(std140, binding = 1) uniform Drawing
+{
+        vec3 default_color;
+        vec3 wireframe_color;
+        vec3 background_color;
+        vec3 clip_plane_color;
+        float normal_length;
+        vec3 normal_color_positive;
+        vec3 normal_color_negative;
+        float default_ns;
+        vec3 light_a;
+        vec3 light_d;
+        vec3 light_s;
+        bool show_materials;
+        bool show_wireframe;
+        bool show_shadow;
+        bool show_fog;
+}
+drawing;
+
 layout(location = 0) in VS
 {
         vec3 position;
@@ -48,6 +68,12 @@ out gl_PerVertex
         float gl_ClipDistance[1];
 };
 
+layout(location = 0) out GS
+{
+        vec3 color;
+}
+gs;
+
 //
 
 void line(vec3 world_from, vec3 world_to)
@@ -55,11 +81,13 @@ void line(vec3 world_from, vec3 world_to)
         const vec4 from = matrices.main_vp_matrix * vec4(world_from, 1.0);
         gl_Position = from;
         gl_ClipDistance[0] = matrices.clip_plane_enabled ? dot(matrices.clip_plane_equation, from) : 1;
+        gs.color = drawing.normal_color_negative;
         EmitVertex();
 
         const vec4 to = matrices.main_vp_matrix * vec4(world_to, 1.0);
         gl_Position = to;
         gl_ClipDistance[0] = matrices.clip_plane_enabled ? dot(matrices.clip_plane_equation, to) : 1;
+        gs.color = drawing.normal_color_positive;
         EmitVertex();
 
         EndPrimitive();
@@ -67,11 +95,9 @@ void line(vec3 world_from, vec3 world_to)
 
 void main()
 {
-        const float LENGTH = 0.01;
-
         const vec3 world_from = (matrices.main_model_matrix * vec4(vs[0].position, 1.0)).xyz;
         const vec3 world_normal = vs[0].normal;
-        const vec3 world_normal_vector = LENGTH * normalize(world_normal);
+        const vec3 world_normal_vector = drawing.normal_length * normalize(world_normal);
 
-        line(world_from, world_from + world_normal_vector);
+        line(world_from - world_normal_vector, world_from + world_normal_vector);
 }

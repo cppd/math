@@ -102,7 +102,11 @@ constexpr int MESH_OBJECT_NOT_USED_THREAD_COUNT = 2;
 // Максимальное увеличение для освещений ambient, diffuse, specular.
 constexpr double MAXIMUM_COLOR_AMPLIFICATION = 3;
 
-constexpr bool SHOW_NORMALS = false;
+constexpr float NORMAL_LENGTH_MINIMUM = 0.001;
+constexpr float NORMAL_LENGTH_DEFAULT = 0.05;
+constexpr float NORMAL_LENGTH_MAXIMUM = 0.2;
+constexpr QRgb NORMAL_COLOR_POSITIVE = qRgb(255, 150, 0);
+constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(50, 150, 50);
 
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
@@ -168,6 +172,18 @@ void MainWindow::constructor_interface()
                 ASSERT(((ui.slider_clip_plane->maximum() - ui.slider_clip_plane->minimum()) & 1) == 0);
         }
 
+        {
+                QSignalBlocker blocker_check_box(ui.checkBox_normals);
+                QSignalBlocker blocker_slider(ui.slider_normals);
+                ui.checkBox_normals->setChecked(false);
+                ui.slider_normals->setEnabled(false);
+                constexpr float v = NORMAL_LENGTH_DEFAULT - NORMAL_LENGTH_MINIMUM;
+                constexpr float d = NORMAL_LENGTH_MAXIMUM - NORMAL_LENGTH_MINIMUM;
+                constexpr float p = v / d;
+                static_assert(v >= 0 && v <= d && d > 0);
+                set_slider_position(ui.slider_normals, p);
+        }
+
         set_widgets_enabled(QMainWindow::layout(), true);
         set_dependent_interface();
         reset_all_object_buttons(m_objects_to_load);
@@ -178,6 +194,8 @@ void MainWindow::constructor_interface()
         set_default_color(DEFAULT_COLOR);
         set_wireframe_color(WIREFRAME_COLOR);
         set_clip_plane_color(CLIP_PLANE_COLOR);
+        set_normal_color_positive(NORMAL_COLOR_POSITIVE);
+        set_normal_color_negative(NORMAL_COLOR_NEGATIVE);
 
         set_dft_background_color(DFT_BACKGROUND_COLOR);
         set_dft_color(DFT_COLOR);
@@ -930,6 +948,30 @@ void MainWindow::set_clip_plane_color(const QColor& c)
         ui.widget_clip_plane_color->setPalette(palette);
 }
 
+void MainWindow::set_normal_color_positive(const QColor& c)
+{
+        m_normal_color_positive = c;
+        if (m_show)
+        {
+                m_show->set_normal_color_positive(qcolor_to_rgb(c));
+        }
+        QPalette palette;
+        palette.setColor(QPalette::Window, m_normal_color_positive);
+        ui.widget_normal_color_positive->setPalette(palette);
+}
+
+void MainWindow::set_normal_color_negative(const QColor& c)
+{
+        m_normal_color_negative = c;
+        if (m_show)
+        {
+                m_show->set_normal_color_negative(qcolor_to_rgb(c));
+        }
+        QPalette palette;
+        palette.setColor(QPalette::Window, m_normal_color_negative);
+        ui.widget_normal_color_negative->setPalette(palette);
+}
+
 void MainWindow::set_dft_background_color(const QColor& c)
 {
         m_dft_background_color = c;
@@ -1216,6 +1258,9 @@ void MainWindow::slot_window_first_shown()
                 info.default_color = qcolor_to_rgb(m_default_color);
                 info.wireframe_color = qcolor_to_rgb(m_wireframe_color);
                 info.clip_plane_color = qcolor_to_rgb(m_clip_plane_color);
+                info.normal_length = normal_length();
+                info.normal_color_positive = qcolor_to_rgb(m_normal_color_positive);
+                info.normal_color_negative = qcolor_to_rgb(m_normal_color_negative);
                 info.with_smooth = ui.checkBox_smooth->isChecked();
                 info.with_wireframe = ui.checkBox_wireframe->isChecked();
                 info.with_shadow = ui.checkBox_shadow->isChecked();
@@ -1226,7 +1271,7 @@ void MainWindow::slot_window_first_shown()
                 info.with_dft = ui.checkBox_dft->isChecked();
                 info.with_convex_hull = ui.checkBox_convex_hull_2d->isChecked();
                 info.with_optical_flow = ui.checkBox_optical_flow->isChecked();
-                info.with_normals = SHOW_NORMALS;
+                info.with_normals = ui.checkBox_normals->isChecked();
                 info.ambient = ambient_light();
                 info.diffuse = diffuse_light();
                 info.specular = specular_light();
@@ -1435,6 +1480,11 @@ double MainWindow::shadow_zoom() const
         return ui.slider_shadow_quality->value();
 }
 
+double MainWindow::normal_length() const
+{
+        return interpolation(NORMAL_LENGTH_MINIMUM, NORMAL_LENGTH_MAXIMUM, slider_position(ui.slider_normals));
+}
+
 void MainWindow::on_slider_ambient_valueChanged(int)
 {
         m_show->set_ambient(ambient_light());
@@ -1473,6 +1523,11 @@ void MainWindow::on_slider_clip_plane_valueChanged(int)
         m_show->clip_plane_position(slider_position(ui.slider_clip_plane));
 }
 
+void MainWindow::on_slider_normals_valueChanged(int)
+{
+        m_show->set_normal_length(normal_length());
+}
+
 void MainWindow::on_toolButton_background_color_clicked()
 {
         dialog::color_dialog(
@@ -1494,6 +1549,20 @@ void MainWindow::on_toolButton_clip_plane_color_clicked()
 {
         dialog::color_dialog(
                 this, "Clip Plane Color", m_clip_plane_color, [this](const QColor& c) { set_clip_plane_color(c); });
+}
+
+void MainWindow::on_toolButton_normal_color_positive_clicked()
+{
+        dialog::color_dialog(this, "Positive Normal Color", m_normal_color_positive, [this](const QColor& c) {
+                set_normal_color_positive(c);
+        });
+}
+
+void MainWindow::on_toolButton_normal_color_negative_clicked()
+{
+        dialog::color_dialog(this, "Negative Normal Color", m_normal_color_negative, [this](const QColor& c) {
+                set_normal_color_negative(c);
+        });
 }
 
 void MainWindow::on_toolButton_dft_background_color_clicked()
@@ -1577,6 +1646,13 @@ void MainWindow::on_checkBox_clip_plane_clicked()
         {
                 m_show->clip_plane_hide();
         }
+}
+
+void MainWindow::on_checkBox_normals_clicked()
+{
+        bool checked = ui.checkBox_normals->isChecked();
+        ui.slider_normals->setEnabled(checked);
+        m_show->show_normals(checked);
 }
 
 void MainWindow::on_checkBox_convex_hull_2d_clicked()

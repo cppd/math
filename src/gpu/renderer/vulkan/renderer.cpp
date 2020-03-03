@@ -174,6 +174,24 @@ class Impl final : public Renderer
 
                 m_buffers.set_clip_plane_color(color);
         }
+        void set_normal_length(float length) override
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_buffers.set_normal_length(length);
+        }
+        void set_normal_color_positive(const Color& color) override
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_buffers.set_normal_color_positive(color);
+        }
+        void set_normal_color_negative(const Color& color) override
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_buffers.set_normal_color_negative(color);
+        }
         void set_default_ns(double default_ns) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());

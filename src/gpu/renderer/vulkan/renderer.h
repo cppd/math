@@ -47,6 +47,9 @@ struct Renderer
         virtual void set_default_color(const Color& color) = 0;
         virtual void set_wireframe_color(const Color& color) = 0;
         virtual void set_clip_plane_color(const Color& color) = 0;
+        virtual void set_normal_length(float length) = 0;
+        virtual void set_normal_color_positive(const Color& color) = 0;
+        virtual void set_normal_color_negative(const Color& color) = 0;
         virtual void set_default_ns(double default_ns) = 0;
         virtual void set_show_smooth(bool show) = 0;
         virtual void set_show_wireframe(bool show) = 0;

@@ -65,6 +65,9 @@ class ShowThread final : public ShowObject
                 q.set_default_color(info.default_color.value());
                 q.set_wireframe_color(info.wireframe_color.value());
                 q.set_clip_plane_color(info.clip_plane_color.value());
+                q.set_normal_length(info.normal_length.value());
+                q.set_normal_color_positive(info.normal_color_positive.value());
+                q.set_normal_color_negative(info.normal_color_negative.value());
                 q.set_default_ns(info.default_ns.value());
                 q.show_smooth(info.with_smooth.value());
                 q.show_wireframe(info.with_wireframe.value());

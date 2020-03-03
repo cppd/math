@@ -70,6 +70,7 @@ private slots:
         void on_checkBox_vertical_sync_clicked();
         void on_checkBox_wireframe_clicked();
         void on_checkBox_clip_plane_clicked();
+        void on_checkBox_normals_clicked();
         void on_pushButton_reset_lighting_clicked();
         void on_pushButton_reset_view_clicked();
         void on_radioButton_bound_cocone_clicked();
@@ -86,12 +87,15 @@ private slots:
         void on_slider_shadow_quality_valueChanged(int value);
         void on_slider_specular_valueChanged(int value);
         void on_slider_clip_plane_valueChanged(int value);
+        void on_slider_normals_valueChanged(int value);
         void on_toolButton_background_color_clicked();
         void on_toolButton_default_color_clicked();
         void on_toolButton_dft_background_color_clicked();
         void on_toolButton_dft_color_clicked();
         void on_toolButton_wireframe_color_clicked();
         void on_toolButton_clip_plane_color_clicked();
+        void on_toolButton_normal_color_positive_clicked();
+        void on_toolButton_normal_color_negative_clicked();
 
         void graphics_widget_resize(QResizeEvent*);
         void graphics_widget_mouse_wheel(QWheelEvent*);
@@ -158,6 +162,7 @@ private:
         double default_ns() const;
         double dft_brightness() const;
         double shadow_zoom() const;
+        double normal_length() const;
 
         static double lighting_slider_value(const QSlider* slider);
 
@@ -167,6 +172,8 @@ private:
         void set_default_color(const QColor& c);
         void set_wireframe_color(const QColor& c);
         void set_clip_plane_color(const QColor& c);
+        void set_normal_color_positive(const QColor& c);
+        void set_normal_color_negative(const QColor& c);
 
         void set_dft_background_color(const QColor& c);
         void set_dft_color(const QColor& c);
@@ -216,6 +223,8 @@ private:
         QColor m_default_color;
         QColor m_wireframe_color;
         QColor m_clip_plane_color;
+        QColor m_normal_color_positive;
+        QColor m_normal_color_negative;
 
         QColor m_dft_background_color;
         QColor m_dft_color;

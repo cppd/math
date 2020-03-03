@@ -38,6 +38,15 @@ std::vector<VkDescriptorSetLayoutBinding> RendererNormalsMemory::descriptor_set_
 
                 bindings.push_back(b);
         }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = DRAWING_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT;
+
+                bindings.push_back(b);
+        }
 
         return bindings;
 }
@@ -60,6 +69,16 @@ RendererNormalsMemory::RendererNormalsMemory(
                 infos.emplace_back(buffer_info);
 
                 bindings.push_back(MATRICES_BINDING);
+        }
+        {
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = buffers.drawing_buffer();
+                buffer_info.offset = 0;
+                buffer_info.range = buffers.drawing_size();
+
+                infos.emplace_back(buffer_info);
+
+                bindings.push_back(DRAWING_BINDING);
         }
 
         m_descriptors.update_descriptor_set(0, bindings, infos);

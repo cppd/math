@@ -108,6 +108,27 @@ class EventQueue final : public Show
                         {
                         }
                 };
+                struct set_normal_length final
+                {
+                        float length;
+                        explicit set_normal_length(float v) : length(v)
+                        {
+                        }
+                };
+                struct set_normal_color_positive final
+                {
+                        Color color;
+                        explicit set_normal_color_positive(const Color& v) : color(v)
+                        {
+                        }
+                };
+                struct set_normal_color_negative final
+                {
+                        Color color;
+                        explicit set_normal_color_negative(const Color& v) : color(v)
+                        {
+                        }
+                };
                 struct set_default_ns final
                 {
                         double default_ns;
@@ -301,6 +322,9 @@ class EventQueue final : public Show
                         set_vertical_sync,
                         set_wireframe_color,
                         set_clip_plane_color,
+                        set_normal_length,
+                        set_normal_color_positive,
+                        set_normal_color_negative,
                         show_convex_hull_2d,
                         show_dft,
                         show_fps,
@@ -392,6 +416,18 @@ class EventQueue final : public Show
                 void operator()(const Event::set_clip_plane_color& d)
                 {
                         m_show->set_clip_plane_color(d.clip_plane_color);
+                }
+                void operator()(const Event::set_normal_length& d)
+                {
+                        m_show->set_normal_length(d.length);
+                }
+                void operator()(const Event::set_normal_color_positive& d)
+                {
+                        m_show->set_normal_color_positive(d.color);
+                }
+                void operator()(const Event::set_normal_color_negative& d)
+                {
+                        m_show->set_normal_color_negative(d.color);
                 }
                 void operator()(const Event::set_default_ns& d)
                 {
@@ -546,6 +582,18 @@ class EventQueue final : public Show
         void set_clip_plane_color(const Color& c) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_clip_plane_color>, c);
+        }
+        void set_normal_length(float v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_normal_length>, v);
+        }
+        void set_normal_color_positive(const Color& c) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_normal_color_positive>, c);
+        }
+        void set_normal_color_negative(const Color& c) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_normal_color_negative>, c);
         }
         void set_default_ns(double ns) override
         {

@@ -72,6 +72,9 @@ public:
         virtual void set_default_color(const Color&) = 0;
         virtual void set_wireframe_color(const Color&) = 0;
         virtual void set_clip_plane_color(const Color&) = 0;
+        virtual void set_normal_length(float) = 0;
+        virtual void set_normal_color_positive(const Color&) = 0;
+        virtual void set_normal_color_negative(const Color&) = 0;
         virtual void set_default_ns(double) = 0;
         virtual void show_smooth(bool) = 0;
         virtual void show_wireframe(bool) = 0;
@@ -114,6 +117,9 @@ struct ShowCreateInfo
         std::optional<Color> default_color;
         std::optional<Color> wireframe_color;
         std::optional<Color> clip_plane_color;
+        std::optional<float> normal_length;
+        std::optional<Color> normal_color_positive;
+        std::optional<Color> normal_color_negative;
         std::optional<bool> with_smooth;
         std::optional<bool> with_wireframe;
         std::optional<bool> with_shadow;
