@@ -60,7 +60,7 @@ std::unique_ptr<const LightSource<3, T>> create_light_source(const PaintingInfor
 
 template <typename T>
 void painting(
-        const std::shared_ptr<const Mesh<3, T>>& mesh,
+        const std::shared_ptr<const SpatialMeshModel<3, T>>& mesh,
         const PaintingInformation3d<T>& info_3d,
         const PaintingInformationAll& info_all)
 {
@@ -111,7 +111,7 @@ void painting(
 
 template <size_t N, typename T>
 void painting(
-        const std::shared_ptr<const Mesh<N, T>>& mesh,
+        const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh,
         const PaintingInformationNd& info_nd,
         const PaintingInformationAll& info_all)
 {
@@ -149,36 +149,36 @@ void painting(
 }
 
 template void painting(
-        const std::shared_ptr<const Mesh<3, float>>& mesh,
+        const std::shared_ptr<const SpatialMeshModel<3, float>>& mesh,
         const PaintingInformation3d<float>& info_3d,
         const PaintingInformationAll& info_all);
 template void painting(
-        const std::shared_ptr<const Mesh<3, double>>& mesh,
+        const std::shared_ptr<const SpatialMeshModel<3, double>>& mesh,
         const PaintingInformation3d<double>& info_3d,
         const PaintingInformationAll& info_all);
 
 template void painting(
-        const std::shared_ptr<const Mesh<4, float>>& mesh,
+        const std::shared_ptr<const SpatialMeshModel<4, float>>& mesh,
         const PaintingInformationNd& info_nd,
         const PaintingInformationAll& info_all);
 template void painting(
-        const std::shared_ptr<const Mesh<5, float>>& mesh,
+        const std::shared_ptr<const SpatialMeshModel<5, float>>& mesh,
         const PaintingInformationNd& info_nd,
         const PaintingInformationAll& info_all);
 template void painting(
-        const std::shared_ptr<const Mesh<6, float>>& mesh,
+        const std::shared_ptr<const SpatialMeshModel<6, float>>& mesh,
         const PaintingInformationNd& info_nd,
         const PaintingInformationAll& info_all);
 
 template void painting(
-        const std::shared_ptr<const Mesh<4, double>>& mesh,
+        const std::shared_ptr<const SpatialMeshModel<4, double>>& mesh,
         const PaintingInformationNd& info_nd,
         const PaintingInformationAll& info_all);
 template void painting(
-        const std::shared_ptr<const Mesh<5, double>>& mesh,
+        const std::shared_ptr<const SpatialMeshModel<5, double>>& mesh,
         const PaintingInformationNd& info_nd,
         const PaintingInformationAll& info_all);
 template void painting(
-        const std::shared_ptr<const Mesh<6, double>>& mesh,
+        const std::shared_ptr<const SpatialMeshModel<6, double>>& mesh,
         const PaintingInformationNd& info_nd,
         const PaintingInformationAll& info_all);

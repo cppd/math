@@ -32,13 +32,13 @@ namespace
 // x0 x1 x2 x3 ...
 // x0 x1 x2 x3 ...
 template <size_t N>
-class FileTxt final : public Obj<N>
+class FileTxt final : public MeshModel<N>
 {
-        using typename Obj<N>::Facet;
-        using typename Obj<N>::Point;
-        using typename Obj<N>::Line;
-        using typename Obj<N>::Material;
-        using typename Obj<N>::Image;
+        using typename MeshModel<N>::Facet;
+        using typename MeshModel<N>::Point;
+        using typename MeshModel<N>::Line;
+        using typename MeshModel<N>::Material;
+        using typename MeshModel<N>::Image;
 
         std::vector<Vector<N, float>> m_vertices;
         std::vector<Vector<N, float>> m_normals;
@@ -204,12 +204,12 @@ FileTxt<N>::FileTxt(const std::string& file_name, ProgressRatio* progress)
 }
 
 template <size_t N>
-std::unique_ptr<Obj<N>> load_txt(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<MeshModel<N>> load_from_txt_file(const std::string& file_name, ProgressRatio* progress)
 {
         return std::make_unique<FileTxt<N>>(file_name, progress);
 }
 
-template std::unique_ptr<Obj<3>> load_txt(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Obj<4>> load_txt(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Obj<5>> load_txt(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Obj<6>> load_txt(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<MeshModel<3>> load_from_txt_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<MeshModel<4>> load_from_txt_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<MeshModel<5>> load_from_txt_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<MeshModel<6>> load_from_txt_file(const std::string& file_name, ProgressRatio* progress);

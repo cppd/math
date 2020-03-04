@@ -130,10 +130,10 @@ public:
 template <size_t N, typename T>
 class VisibleSharedMesh final : public GenericObject<N, T>, public Surface<N, T>, public SurfaceProperties<N, T>
 {
-        std::shared_ptr<const Mesh<N, T>> m_mesh;
+        std::shared_ptr<const SpatialMeshModel<N, T>> m_mesh;
 
 public:
-        explicit VisibleSharedMesh(const std::shared_ptr<const Mesh<N, T>>& mesh) : m_mesh(mesh)
+        explicit VisibleSharedMesh(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh) : m_mesh(mesh)
         {
         }
 

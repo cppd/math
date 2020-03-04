@@ -80,7 +80,11 @@ T max_coordinate_modulus(const Vector<N, T>& a, const Vector<N, T>& b)
 }
 
 template <size_t N, typename T>
-void offset_and_rays_for_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, T* offset, std::vector<Ray<N, T>>* rays)
+void offset_and_rays_for_sphere_mesh(
+        const SpatialMeshModel<N, T>& mesh,
+        int ray_count,
+        T* offset,
+        std::vector<Ray<N, T>>* rays)
 {
         Vector<N, T> min;
         Vector<N, T> max;
@@ -108,7 +112,7 @@ void offset_and_rays_for_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, T* o
 
 template <size_t N, typename T>
 void test_sphere_mesh(
-        const Mesh<N, T>& mesh,
+        const SpatialMeshModel<N, T>& mesh,
         int ray_count,
         bool with_ray_log,
         bool with_error_log,

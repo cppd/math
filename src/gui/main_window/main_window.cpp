@@ -1132,8 +1132,8 @@ void MainWindow::direct_show_object_loaded(int id)
         show_object_button(object_id_to_button(int_to_object_id(id)));
 }
 
-template <template <size_t> typename Obj, size_t N, typename Id>
-void MainWindow::object_loaded(const std::shared_ptr<const Obj<N>>& obj, const Id& id)
+template <template <size_t> typename MeshModel, size_t N, typename Id>
+void MainWindow::object_loaded(const std::shared_ptr<const MeshModel<N>>& mesh, const Id& id)
 {
         if constexpr (N == 3)
         {
@@ -1141,7 +1141,7 @@ void MainWindow::object_loaded(const std::shared_ptr<const Obj<N>>& obj, const I
                 {
                         return;
                 }
-                m_show->add_object(obj, object_id_to_int(id), object_id_to_int(ObjectId::Model));
+                m_show->add_object(mesh, object_id_to_int(id), object_id_to_int(ObjectId::Model));
         }
 }
 
@@ -1709,8 +1709,8 @@ void MainWindow::on_radioButton_bound_cocone_convex_hull_clicked()
         m_show->show_object(object_id_to_int(ObjectId::BoundCoconeConvexHull));
 }
 
-template <template <size_t, typename> typename Mesh, size_t N, typename T>
-void MainWindow::paint(const std::shared_ptr<const Mesh<N, T>>& mesh, const std::string& object_name)
+template <template <size_t, typename> typename SpatialMeshModel, size_t N, typename T>
+void MainWindow::paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh, const std::string& object_name)
 {
         ASSERT(mesh);
 

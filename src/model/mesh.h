@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 template <size_t N>
-struct Obj
+struct MeshModel
 {
         struct Facet
         {
@@ -67,7 +67,7 @@ struct Obj
                 std::vector<unsigned char> srgba_pixels;
         };
 
-        virtual ~Obj() = default;
+        virtual ~MeshModel() = default;
 
         virtual const std::vector<Vector<N, float>>& vertices() const = 0;
         virtual const std::vector<Vector<N, float>>& normals() const = 0;

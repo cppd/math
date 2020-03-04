@@ -135,7 +135,7 @@ void write_line(const CFile& file, const std::array<int, 2>& vertices)
 
 // Запись вершин с приведением координат вершин к интервалу [-1, 1] с сохранением пропорций
 template <size_t N>
-void write_vertices(const CFile& file, const Obj<N>* obj)
+void write_vertices(const CFile& file, const MeshModel<N>* obj)
 {
         std::vector<int> facet_indices = unique_facet_indices(obj);
         std::vector<int> line_indices = unique_line_indices(obj);
@@ -180,7 +180,7 @@ void write_vertices(const CFile& file, const Obj<N>* obj)
 }
 
 template <size_t N>
-void write_normals(const CFile& file, const Obj<N>* obj)
+void write_normals(const CFile& file, const MeshModel<N>* obj)
 {
         for (const Vector<N, float>& vn : obj->normals())
         {
@@ -199,7 +199,7 @@ void write_normals(const CFile& file, const Obj<N>* obj)
 }
 
 template <size_t N>
-void write_facets(const CFile& file, const Obj<N>* obj)
+void write_facets(const CFile& file, const MeshModel<N>* obj)
 {
         // Вершины граней надо записывать в трёхмерный OBJ таким образом,
         // чтобы при обходе против часовой стрелки перпендикуляр к грани
@@ -208,7 +208,7 @@ void write_facets(const CFile& file, const Obj<N>* obj)
         // попытаться определить правильное направление по векторам вершин,
         // если у вершин они заданы.
 
-        for (const typename Obj<N>::Facet& f : obj->facets())
+        for (const typename MeshModel<N>::Facet& f : obj->facets())
         {
                 if (!f.has_normal)
                 {
@@ -247,9 +247,9 @@ void write_facets(const CFile& file, const Obj<N>* obj)
 }
 
 template <size_t N>
-void write_lines(const CFile& file, const Obj<N>* obj)
+void write_lines(const CFile& file, const MeshModel<N>* obj)
 {
-        for (const typename Obj<N>::Line& l : obj->lines())
+        for (const typename MeshModel<N>::Line& l : obj->lines())
         {
                 write_line(file, l.vertices);
         }
@@ -281,13 +281,13 @@ std::string file_name_with_extension(const std::string& file_name)
 }
 
 template <size_t N>
-std::string save_obj(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment)
+std::string save_to_obj_file(const MeshModel<N>* mesh, const std::string& file_name, const std::string_view& comment)
 {
         static_assert(N >= 3);
 
-        if (obj->facets().empty() && obj->lines().empty())
+        if (mesh->facets().empty() && mesh->lines().empty())
         {
-                error("Object has neither facets nor lines");
+                error("Mesh has neither facets nor lines");
         }
 
         std::string full_name = file_name_with_extension<N>(file_name);
@@ -297,17 +297,17 @@ std::string save_obj(const Obj<N>* obj, const std::string& file_name, const std:
         double start_time = time_in_seconds();
 
         write_comment(file, comment);
-        write_vertices(file, obj);
-        write_normals(file, obj);
-        write_facets(file, obj);
-        write_lines(file, obj);
+        write_vertices(file, mesh);
+        write_normals(file, mesh);
+        write_facets(file, mesh);
+        write_lines(file, mesh);
 
         LOG(obj_type_name(N) + " saved, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 
         return full_name;
 }
 
-template std::string save_obj(const Obj<3>* obj, const std::string& file_name, const std::string_view& comment);
-template std::string save_obj(const Obj<4>* obj, const std::string& file_name, const std::string_view& comment);
-template std::string save_obj(const Obj<5>* obj, const std::string& file_name, const std::string_view& comment);
-template std::string save_obj(const Obj<6>* obj, const std::string& file_name, const std::string_view& comment);
+template std::string save_to_obj_file(const MeshModel<3>*, const std::string&, const std::string_view&);
+template std::string save_to_obj_file(const MeshModel<4>*, const std::string&, const std::string_view&);
+template std::string save_to_obj_file(const MeshModel<5>*, const std::string&, const std::string_view&);
+template std::string save_to_obj_file(const MeshModel<6>*, const std::string&, const std::string_view&);

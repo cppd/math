@@ -31,11 +31,11 @@ class EventQueue final : public Show
         {
                 struct add_object final
                 {
-                        std::shared_ptr<const Obj<3>> obj;
+                        std::shared_ptr<const MeshModel<3>> mesh;
                         int id;
                         int scale_id;
-                        add_object(const std::shared_ptr<const Obj<3>>& obj_, int id_, int scale_id_)
-                                : obj(obj_), id(id_), scale_id(scale_id_)
+                        add_object(const std::shared_ptr<const MeshModel<3>>& mesh_, int id_, int scale_id_)
+                                : mesh(mesh_), id(id_), scale_id(scale_id_)
                         {
                         }
                 };
@@ -371,7 +371,7 @@ class EventQueue final : public Show
 
                 void operator()(const Event::add_object& d)
                 {
-                        m_show->add_object(d.obj, d.id, d.scale_id);
+                        m_show->add_object(d.mesh, d.id, d.scale_id);
                 }
                 void operator()(const Event::delete_object& d)
                 {
@@ -535,9 +535,9 @@ class EventQueue final : public Show
         Show* m_show = nullptr;
         mutable SpinLock m_lock;
 
-        void add_object(const std::shared_ptr<const Obj<3>>& obj_ptr, int id, int scale_id) override
+        void add_object(const std::shared_ptr<const MeshModel<3>>& mesh, int id, int scale_id) override
         {
-                m_event_queue.emplace(std::in_place_type<Event::add_object>, obj_ptr, id, scale_id);
+                m_event_queue.emplace(std::in_place_type<Event::add_object>, mesh, id, scale_id);
         }
         void delete_object(int id) override
         {

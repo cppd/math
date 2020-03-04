@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/thread.h>
 #include <src/com/time.h>
-#include <src/obj/alg/alg.h>
+#include <src/model/alg/alg.h>
 #include <src/vulkan/buffers.h>
 
 #include <array>
@@ -129,28 +129,28 @@ void load_vertices(
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
         const std::unordered_set<uint32_t>& family_indices,
-        const Obj<3>& obj,
+        const MeshModel<3>& mesh,
         const std::vector<int>& sorted_face_indices,
         std::unique_ptr<vulkan::BufferWithMemory>* vertex_buffer,
         std::unique_ptr<vulkan::BufferWithMemory>* index_buffer,
         unsigned* vertex_count,
         unsigned* index_count)
 {
-        if (obj.facets().empty())
+        if (mesh.facets().empty())
         {
-                error("No OBJ facets found");
+                error("No mesh facets found");
         }
 
-        ASSERT(sorted_face_indices.size() == obj.facets().size());
+        ASSERT(sorted_face_indices.size() == mesh.facets().size());
 
         //
 
         double create_time = time_in_seconds();
 
-        const std::vector<Obj<3>::Facet>& obj_faces = obj.facets();
-        const std::vector<vec3f>& obj_vertices = obj.vertices();
-        const std::vector<vec3f>& obj_normals = obj.normals();
-        const std::vector<vec2f>& obj_texcoords = obj.texcoords();
+        const std::vector<MeshModel<3>::Facet>& mesh_faces = mesh.facets();
+        const std::vector<vec3f>& mesh_vertices = mesh.vertices();
+        const std::vector<vec3f>& mesh_normals = mesh.normals();
+        const std::vector<vec2f>& mesh_texcoords = mesh.texcoords();
 
         std::vector<Face> faces(sorted_face_indices.size());
 
@@ -165,18 +165,18 @@ void load_vertices(
 
                         int face_index = sorted_face_indices[index];
 
-                        const Obj<3>::Facet& f = obj_faces[face_index];
+                        const MeshModel<3>::Facet& f = mesh_faces[face_index];
 
                         for (int i = 0; i < 3; ++i)
                         {
-                                p[i] = obj_vertices[f.vertices[i]];
+                                p[i] = mesh_vertices[f.vertices[i]];
                         }
 
                         if (f.has_normal)
                         {
                                 for (int i = 0; i < 3; ++i)
                                 {
-                                        n[i] = obj_normals[f.normals[i]];
+                                        n[i] = mesh_normals[f.normals[i]];
                                 }
                         }
                         else
@@ -197,7 +197,7 @@ void load_vertices(
                         {
                                 for (int i = 0; i < 3; ++i)
                                 {
-                                        t[i] = obj_texcoords[f.texcoords[i]];
+                                        t[i] = mesh_texcoords[f.texcoords[i]];
                                 }
                         }
                         else
@@ -223,9 +223,9 @@ void load_vertices(
         std::vector<RendererTrianglesVertex> vertices;
         std::vector<IndexType> indices;
         std::unordered_map<MapVertex, unsigned, MapVertex::Hash> map;
-        vertices.reserve(3 * obj_faces.size());
-        indices.reserve(3 * obj_faces.size());
-        map.reserve(3 * obj_faces.size());
+        vertices.reserve(3 * mesh_faces.size());
+        indices.reserve(3 * mesh_faces.size());
+        map.reserve(3 * mesh_faces.size());
 
         for (const Face& face : faces)
         {
@@ -277,22 +277,22 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
         const std::unordered_set<uint32_t>& family_indices,
-        const Obj<3>& obj)
+        const MeshModel<3>& mesh)
 {
-        if (obj.points().empty())
+        if (mesh.points().empty())
         {
-                error("No OBJ points found");
+                error("No mesh points found");
         }
 
-        const std::vector<Obj<3>::Point>& obj_points = obj.points();
-        const std::vector<vec3f>& obj_vertices = obj.vertices();
+        const std::vector<MeshModel<3>::Point>& mesh_points = mesh.points();
+        const std::vector<vec3f>& mesh_vertices = mesh.vertices();
 
         std::vector<RendererPointsVertex> vertices;
-        vertices.reserve(obj_points.size());
+        vertices.reserve(mesh_points.size());
 
-        for (const Obj<3>::Point& p : obj_points)
+        for (const MeshModel<3>::Point& p : mesh_points)
         {
-                vertices.emplace_back(obj_vertices[p.vertex]);
+                vertices.emplace_back(mesh_vertices[p.vertex]);
         }
 
         return std::make_unique<vulkan::BufferWithMemory>(
@@ -305,24 +305,24 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
         const std::unordered_set<uint32_t>& family_indices,
-        const Obj<3>& obj)
+        const MeshModel<3>& mesh)
 {
-        if (obj.lines().empty())
+        if (mesh.lines().empty())
         {
-                error("No OBJ lines found");
+                error("No mesh lines found");
         }
 
-        const std::vector<Obj<3>::Line>& obj_lines = obj.lines();
-        const std::vector<vec3f>& obj_vertices = obj.vertices();
+        const std::vector<MeshModel<3>::Line>& mesh_lines = mesh.lines();
+        const std::vector<vec3f>& mesh_vertices = mesh.vertices();
 
         std::vector<RendererPointsVertex> vertices;
-        vertices.reserve(2 * obj_lines.size());
+        vertices.reserve(2 * mesh_lines.size());
 
-        for (const Obj<3>::Line& line : obj_lines)
+        for (const MeshModel<3>::Line& line : mesh_lines)
         {
                 for (int index : line.vertices)
                 {
-                        vertices.emplace_back(obj_vertices[index]);
+                        vertices.emplace_back(mesh_vertices[index]);
                 }
         }
 
@@ -338,13 +338,13 @@ std::vector<vulkan::ImageWithMemory> load_textures(
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
         const std::unordered_set<uint32_t>& family_indices,
-        const Obj<3>& obj)
+        const MeshModel<3>& mesh)
 {
         constexpr bool storage = false;
 
         std::vector<vulkan::ImageWithMemory> textures;
 
-        for (const typename Obj<3>::Image& image : obj.images())
+        for (const typename MeshModel<3>::Image& image : mesh.images())
         {
                 textures.emplace_back(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
@@ -371,19 +371,19 @@ std::unique_ptr<RendererTrianglesMaterialMemory> load_materials(
         const std::unordered_set<uint32_t>& family_indices,
         VkSampler sampler,
         VkDescriptorSetLayout descriptor_set_layout,
-        const Obj<3>& obj,
+        const MeshModel<3>& mesh,
         const std::vector<vulkan::ImageWithMemory>& textures)
 {
         // Текстур имеется больше на одну для её использования в тех материалах, где нет текстуры
 
-        ASSERT(textures.size() == obj.images().size() + 1);
+        ASSERT(textures.size() == mesh.images().size() + 1);
 
         const vulkan::ImageWithMemory* const no_texture = &textures.back();
 
         std::vector<RendererTrianglesMaterialMemory::MaterialAndTexture> materials;
-        materials.reserve(obj.materials().size() + 1);
+        materials.reserve(mesh.materials().size() + 1);
 
-        for (const typename Obj<3>::Material& material : obj.materials())
+        for (const typename MeshModel<3>::Material& material : mesh.materials())
         {
                 ASSERT(material.map_Ka < static_cast<int>(textures.size()) - 1);
                 ASSERT(material.map_Kd < static_cast<int>(textures.size()) - 1);
@@ -467,30 +467,30 @@ public:
                 const vulkan::Queue& transfer_queue,
                 VkSampler sampler,
                 VkDescriptorSetLayout triangles_material_descriptor_set_layout,
-                const Obj<3>& obj)
+                const MeshModel<3>& mesh)
         {
-                ASSERT(!obj.facets().empty());
+                ASSERT(!mesh.facets().empty());
 
                 std::vector<int> sorted_face_indices;
                 std::vector<int> material_face_offset;
                 std::vector<int> material_face_count;
 
-                sort_facets_by_material(obj, &sorted_face_indices, &material_face_offset, &material_face_count);
+                sort_facets_by_material(mesh, &sorted_face_indices, &material_face_offset, &material_face_count);
 
                 load_vertices(
                         device, transfer_command_pool, transfer_queue,
-                        {graphics_queue.family_index(), transfer_queue.family_index()}, obj, sorted_face_indices,
+                        {graphics_queue.family_index(), transfer_queue.family_index()}, mesh, sorted_face_indices,
                         &m_vertex_buffer, &m_index_buffer, &m_vertex_count, &m_index_count);
 
                 m_textures = load_textures(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                        {graphics_queue.family_index(), transfer_queue.family_index()}, obj);
+                        {graphics_queue.family_index(), transfer_queue.family_index()}, mesh);
 
                 m_shader_memory = load_materials(
-                        device, {graphics_queue.family_index()}, sampler, triangles_material_descriptor_set_layout, obj,
-                        m_textures);
+                        device, {graphics_queue.family_index()}, sampler, triangles_material_descriptor_set_layout,
+                        mesh, m_textures);
 
-                ASSERT(m_index_count == 3 * obj.facets().size());
+                ASSERT(m_index_count == 3 * mesh.facets().size());
                 ASSERT(material_face_offset.size() == material_face_count.size());
                 ASSERT(material_face_offset.size() == m_shader_memory->descriptor_set_count());
 
@@ -576,14 +576,14 @@ public:
               const vulkan::Queue& graphics_queue,
               const vulkan::CommandPool& transfer_command_pool,
               const vulkan::Queue& transfer_queue,
-              const Obj<3>& obj)
+              const MeshModel<3>& mesh)
         {
-                ASSERT(!obj.lines().empty());
+                ASSERT(!mesh.lines().empty());
 
                 m_vertex_buffer = load_line_vertices(
                         device, transfer_command_pool, transfer_queue,
-                        {graphics_queue.family_index(), transfer_queue.family_index()}, obj);
-                m_vertex_count = 2 * obj.lines().size();
+                        {graphics_queue.family_index(), transfer_queue.family_index()}, mesh);
+                m_vertex_count = 2 * mesh.lines().size();
 
                 m_buffers = {*m_vertex_buffer};
                 m_offsets = {0};
@@ -619,14 +619,14 @@ public:
                const vulkan::Queue& graphics_queue,
                const vulkan::CommandPool& transfer_command_pool,
                const vulkan::Queue& transfer_queue,
-               const Obj<3>& obj)
+               const MeshModel<3>& mesh)
         {
-                ASSERT(!obj.points().empty());
+                ASSERT(!mesh.points().empty());
 
                 m_vertex_buffer = load_point_vertices(
                         device, transfer_command_pool, transfer_queue,
-                        {graphics_queue.family_index(), transfer_queue.family_index()}, obj);
-                m_vertex_count = obj.points().size();
+                        {graphics_queue.family_index(), transfer_queue.family_index()}, mesh);
+                m_vertex_count = mesh.points().size();
 
                 m_buffers = {*m_vertex_buffer};
                 m_offsets = {0};
@@ -654,28 +654,28 @@ DrawObject::DrawObject(
         const vulkan::Queue& transfer_queue,
         VkSampler sampler,
         VkDescriptorSetLayout descriptor_set_layout,
-        const Obj<3>& obj,
+        const MeshModel<3>& mesh,
         double size,
         const vec3& position)
-        : m_model_matrix(model_vertex_matrix(obj, size, position))
+        : m_model_matrix(model_vertex_matrix(mesh, size, position))
 {
-        if (!obj.facets().empty())
+        if (!mesh.facets().empty())
         {
                 m_triangles = std::make_unique<DrawObject::Triangles>(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sampler,
-                        descriptor_set_layout, obj);
+                        descriptor_set_layout, mesh);
         }
 
-        if (!obj.lines().empty())
+        if (!mesh.lines().empty())
         {
                 m_lines = std::make_unique<DrawObject::Lines>(
-                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, obj);
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, mesh);
         }
 
-        if (!obj.points().empty())
+        if (!mesh.points().empty())
         {
                 m_points = std::make_unique<DrawObject::Points>(
-                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, obj);
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, mesh);
         }
 }
 

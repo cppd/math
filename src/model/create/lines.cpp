@@ -30,13 +30,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace
 {
 template <size_t N>
-class Lines final : public Obj<N>
+class Impl final : public MeshModel<N>
 {
-        using typename Obj<N>::Facet;
-        using typename Obj<N>::Point;
-        using typename Obj<N>::Line;
-        using typename Obj<N>::Material;
-        using typename Obj<N>::Image;
+        using typename MeshModel<N>::Facet;
+        using typename MeshModel<N>::Point;
+        using typename MeshModel<N>::Line;
+        using typename MeshModel<N>::Material;
+        using typename MeshModel<N>::Image;
 
         std::vector<Vector<N, float>> m_vertices;
         std::vector<Vector<N, float>> m_normals;
@@ -90,7 +90,7 @@ class Lines final : public Obj<N>
                 return m_length;
         }
 
-        void create_obj(const std::vector<Vector<N, float>>& points, const std::vector<std::array<int, 2>>& lines)
+        void create_mesh(const std::vector<Vector<N, float>>& points, const std::vector<std::array<int, 2>>& lines)
         {
                 if (lines.empty())
                 {
@@ -135,11 +135,11 @@ class Lines final : public Obj<N>
         }
 
 public:
-        Lines(const std::vector<Vector<N, float>>& points, const std::vector<std::array<int, 2>>& lines)
+        Impl(const std::vector<Vector<N, float>>& points, const std::vector<std::array<int, 2>>& lines)
         {
                 double start_time = time_in_seconds();
 
-                create_obj(points, lines);
+                create_mesh(points, lines);
 
                 LOG("Lines loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         }
@@ -147,22 +147,22 @@ public:
 }
 
 template <size_t N>
-std::unique_ptr<Obj<N>> create_obj_for_lines(
+std::unique_ptr<MeshModel<N>> create_mesh_for_lines(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, 2>>& lines)
 {
-        return std::make_unique<Lines<N>>(points, lines);
+        return std::make_unique<Impl<N>>(points, lines);
 }
 
-template std::unique_ptr<Obj<3>> create_obj_for_lines(
+template std::unique_ptr<MeshModel<3>> create_mesh_for_lines(
         const std::vector<Vector<3, float>>& points,
         const std::vector<std::array<int, 2>>& lines);
-template std::unique_ptr<Obj<4>> create_obj_for_lines(
+template std::unique_ptr<MeshModel<4>> create_mesh_for_lines(
         const std::vector<Vector<4, float>>& points,
         const std::vector<std::array<int, 2>>& lines);
-template std::unique_ptr<Obj<5>> create_obj_for_lines(
+template std::unique_ptr<MeshModel<5>> create_mesh_for_lines(
         const std::vector<Vector<5, float>>& points,
         const std::vector<std::array<int, 2>>& lines);
-template std::unique_ptr<Obj<6>> create_obj_for_lines(
+template std::unique_ptr<MeshModel<6>> create_mesh_for_lines(
         const std::vector<Vector<6, float>>& points,
         const std::vector<std::array<int, 2>>& lines);

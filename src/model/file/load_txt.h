@@ -17,13 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/numerical/vec.h>
-#include <src/obj/obj.h>
+#include "../mesh.h"
 
-#include <array>
+#include <src/progress/progress.h>
+
 #include <memory>
+#include <string>
 
 template <size_t N>
-std::unique_ptr<Obj<N>> create_obj_for_lines(
-        const std::vector<Vector<N, float>>& points,
-        const std::vector<std::array<int, 2>>& lines);
+std::unique_ptr<MeshModel<N>> load_from_txt_file(const std::string& file_name, ProgressRatio* progress);

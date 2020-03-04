@@ -60,36 +60,36 @@ int tree_max_depth()
 }
 
 template <size_t N, typename T>
-void Mesh<N, T>::create_mesh_object(
-        const Obj<N>* obj,
+void SpatialMeshModel<N, T>::create_mesh_object(
+        const MeshModel<N>* mesh,
         const Matrix<N + 1, N + 1, T>& vertex_matrix,
         unsigned thread_count,
         ProgressRatio* progress)
 {
-        if (obj->vertices().empty())
+        if (mesh->vertices().empty())
         {
-                error("No vertices found in obj");
+                error("No vertices found in mesh");
         }
 
-        if (obj->facets().empty())
+        if (mesh->facets().empty())
         {
-                error("No facets found in obj");
+                error("No facets found in mesh");
         }
 
-        m_vertices = to_vector<T>(obj->vertices());
+        m_vertices = to_vector<T>(mesh->vertices());
         m_vertices.shrink_to_fit();
         std::transform(m_vertices.begin(), m_vertices.end(), m_vertices.begin(), MatrixVectorMultiplier(vertex_matrix));
 
-        m_normals = to_vector<T>(obj->normals());
+        m_normals = to_vector<T>(mesh->normals());
         m_normals.shrink_to_fit();
 
-        m_texcoords = to_vector<T>(obj->texcoords());
+        m_texcoords = to_vector<T>(mesh->texcoords());
         m_texcoords.shrink_to_fit();
 
         m_min = Vector<N, T>(limits<T>::max());
         m_max = Vector<N, T>(limits<T>::lowest());
-        m_facets.reserve(obj->facets().size());
-        for (const typename Obj<N>::Facet& facet : obj->facets())
+        m_facets.reserve(mesh->facets().size());
+        for (const typename MeshModel<N>::Facet& facet : mesh->facets())
         {
                 m_facets.emplace_back(
                         m_vertices, m_normals, m_texcoords, facet.vertices, facet.has_normal, facet.normals,
@@ -102,14 +102,14 @@ void Mesh<N, T>::create_mesh_object(
                 }
         }
 
-        m_materials.reserve(obj->materials().size());
-        for (const typename Obj<N>::Material& m : obj->materials())
+        m_materials.reserve(mesh->materials().size());
+        for (const typename MeshModel<N>::Material& m : mesh->materials())
         {
                 m_materials.emplace_back(m.Kd, m.Ks, m.Ns, m.map_Kd, m.map_Ks);
         }
 
-        m_images.reserve(obj->images().size());
-        for (const typename Obj<N>::Image& image : obj->images())
+        m_images.reserve(mesh->images().size());
+        for (const typename MeshModel<N>::Image& image : mesh->images())
         {
                 m_images.emplace_back(image.size, image.srgba_pixels);
         }
@@ -131,27 +131,31 @@ void Mesh<N, T>::create_mesh_object(
 }
 
 template <size_t N, typename T>
-Mesh<N, T>::Mesh(
-        const Obj<N>* obj,
+SpatialMeshModel<N, T>::SpatialMeshModel(
+        const MeshModel<N>* mesh,
         const Matrix<N + 1, N + 1, T>& vertex_matrix,
         unsigned thread_count,
         ProgressRatio* progress)
 {
         double start_time = time_in_seconds();
 
-        create_mesh_object(obj, vertex_matrix, thread_count, progress);
+        create_mesh_object(mesh, vertex_matrix, thread_count, progress);
 
         LOG("Mesh object created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 }
 
 template <size_t N, typename T>
-bool Mesh<N, T>::intersect_approximate(const Ray<N, T>& r, T* t) const
+bool SpatialMeshModel<N, T>::intersect_approximate(const Ray<N, T>& r, T* t) const
 {
         return m_tree.intersect_root(r, t);
 }
 
 template <size_t N, typename T>
-bool Mesh<N, T>::intersect_precise(const Ray<N, T>& ray, T approximate_t, T* t, const void** intersection_data) const
+bool SpatialMeshModel<N, T>::intersect_precise(
+        const Ray<N, T>& ray,
+        T approximate_t,
+        T* t,
+        const void** intersection_data) const
 {
         const Facet* facet = nullptr;
 
@@ -175,19 +179,19 @@ bool Mesh<N, T>::intersect_precise(const Ray<N, T>& ray, T approximate_t, T* t, 
 }
 
 template <size_t N, typename T>
-Vector<N, T> Mesh<N, T>::geometric_normal(const void* intersection_data) const
+Vector<N, T> SpatialMeshModel<N, T>::geometric_normal(const void* intersection_data) const
 {
         return static_cast<const Facet*>(intersection_data)->geometric_normal();
 }
 
 template <size_t N, typename T>
-Vector<N, T> Mesh<N, T>::shading_normal(const Vector<N, T>& p, const void* intersection_data) const
+Vector<N, T> SpatialMeshModel<N, T>::shading_normal(const Vector<N, T>& p, const void* intersection_data) const
 {
         return static_cast<const Facet*>(intersection_data)->shading_normal(p);
 }
 
 template <size_t N, typename T>
-std::optional<Color> Mesh<N, T>::color(const Vector<N, T>& p, const void* intersection_data) const
+std::optional<Color> SpatialMeshModel<N, T>::color(const Vector<N, T>& p, const void* intersection_data) const
 {
         const Facet* facet = static_cast<const Facet*>(intersection_data);
 
@@ -206,18 +210,18 @@ std::optional<Color> Mesh<N, T>::color(const Vector<N, T>& p, const void* inters
 }
 
 template <size_t N, typename T>
-void Mesh<N, T>::min_max(Vector<N, T>* min, Vector<N, T>* max) const
+void SpatialMeshModel<N, T>::min_max(Vector<N, T>* min, Vector<N, T>* max) const
 {
         *min = m_min;
         *max = m_max;
 }
 
-template class Mesh<3, float>;
-template class Mesh<4, float>;
-template class Mesh<5, float>;
-template class Mesh<6, float>;
+template class SpatialMeshModel<3, float>;
+template class SpatialMeshModel<4, float>;
+template class SpatialMeshModel<5, float>;
+template class SpatialMeshModel<6, float>;
 
-template class Mesh<3, double>;
-template class Mesh<4, double>;
-template class Mesh<5, double>;
-template class Mesh<6, double>;
+template class SpatialMeshModel<3, double>;
+template class SpatialMeshModel<4, double>;
+template class SpatialMeshModel<5, double>;
+template class SpatialMeshModel<6, double>;

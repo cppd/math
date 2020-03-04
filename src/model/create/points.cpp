@@ -27,13 +27,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace
 {
 template <size_t N>
-class Points final : public Obj<N>
+class Impl final : public MeshModel<N>
 {
-        using typename Obj<N>::Facet;
-        using typename Obj<N>::Point;
-        using typename Obj<N>::Line;
-        using typename Obj<N>::Material;
-        using typename Obj<N>::Image;
+        using typename MeshModel<N>::Facet;
+        using typename MeshModel<N>::Point;
+        using typename MeshModel<N>::Line;
+        using typename MeshModel<N>::Material;
+        using typename MeshModel<N>::Image;
 
         std::vector<Vector<N, float>> m_vertices;
         std::vector<Vector<N, float>> m_normals;
@@ -90,11 +90,11 @@ class Points final : public Obj<N>
         }
 
 public:
-        explicit Points(std::vector<Vector<N, float>>&& points);
+        explicit Impl(std::vector<Vector<N, float>>&& points);
 };
 
 template <size_t N>
-void Points<N>::read_points(std::vector<Vector<N, float>>&& points)
+void Impl<N>::read_points(std::vector<Vector<N, float>>&& points)
 {
         m_vertices = std::move(points);
 
@@ -113,7 +113,7 @@ void Points<N>::read_points(std::vector<Vector<N, float>>&& points)
 }
 
 template <size_t N>
-Points<N>::Points(std::vector<Vector<N, float>>&& points)
+Impl<N>::Impl(std::vector<Vector<N, float>>&& points)
 {
         double start_time = time_in_seconds();
 
@@ -124,12 +124,12 @@ Points<N>::Points(std::vector<Vector<N, float>>&& points)
 }
 
 template <size_t N>
-std::unique_ptr<Obj<N>> create_obj_for_points(std::vector<Vector<N, float>>&& points)
+std::unique_ptr<MeshModel<N>> create_mesh_for_points(std::vector<Vector<N, float>>&& points)
 {
-        return std::make_unique<Points<N>>(std::move(points));
+        return std::make_unique<Impl<N>>(std::move(points));
 }
 
-template std::unique_ptr<Obj<3>> create_obj_for_points(std::vector<Vector<3, float>>&& points);
-template std::unique_ptr<Obj<4>> create_obj_for_points(std::vector<Vector<4, float>>&& points);
-template std::unique_ptr<Obj<5>> create_obj_for_points(std::vector<Vector<5, float>>&& points);
-template std::unique_ptr<Obj<6>> create_obj_for_points(std::vector<Vector<6, float>>&& points);
+template std::unique_ptr<MeshModel<3>> create_mesh_for_points(std::vector<Vector<3, float>>&& points);
+template std::unique_ptr<MeshModel<4>> create_mesh_for_points(std::vector<Vector<4, float>>&& points);
+template std::unique_ptr<MeshModel<5>> create_mesh_for_points(std::vector<Vector<5, float>>&& points);
+template std::unique_ptr<MeshModel<6>> create_mesh_for_points(std::vector<Vector<6, float>>&& points);

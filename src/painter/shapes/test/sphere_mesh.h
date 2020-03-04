@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 
 template <size_t N, typename T>
-std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_random_sphere(
+std::unique_ptr<const SpatialMeshModel<N, T>> simplex_mesh_of_random_sphere(
         int point_count,
         int thread_count,
         ProgressRatio* progress);

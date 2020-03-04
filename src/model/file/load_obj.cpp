@@ -125,7 +125,7 @@ bool check_color(const Color& v)
 }
 
 template <size_t N>
-typename Obj<N>::Image read_image_from_file(const std::string& file_name)
+typename MeshModel<N>::Image read_image_from_file(const std::string& file_name)
 {
         if constexpr (N != 3)
         {
@@ -134,7 +134,7 @@ typename Obj<N>::Image read_image_from_file(const std::string& file_name)
         }
         else
         {
-                Obj<3>::Image obj_image;
+                MeshModel<3>::Image obj_image;
                 load_srgba_image_from_file(file_name, &obj_image.size[0], &obj_image.size[1], &obj_image.srgba_pixels);
                 flip_srgba_image_vertically(obj_image.size[0], obj_image.size[1], &obj_image.srgba_pixels);
                 return obj_image;
@@ -146,7 +146,7 @@ void load_image(
         const std::string& dir_name,
         const std::string& image_name,
         std::map<std::string, int>* image_index,
-        std::vector<typename Obj<N>::Image>* images,
+        std::vector<typename MeshModel<N>::Image>* images,
         int* index)
 {
         std::string file_name = trim(image_name);
@@ -289,7 +289,7 @@ void read_facets(
         const T& data,
         long long begin,
         long long end,
-        std::array<typename Obj<N>::Facet, MAX_FACETS_PER_LINE<N>>* facets,
+        std::array<typename MeshModel<N>::Facet, MAX_FACETS_PER_LINE<N>>* facets,
         int* facet_count)
 {
         static_assert(N >= 3);
@@ -531,13 +531,13 @@ bool facet_dimension_is_correct(const std::vector<Vector<N, float>>& vertices, c
 }
 
 template <size_t N>
-class FileObj final : public Obj<N>
+class FileObj final : public MeshModel<N>
 {
-        using typename Obj<N>::Facet;
-        using typename Obj<N>::Point;
-        using typename Obj<N>::Line;
-        using typename Obj<N>::Material;
-        using typename Obj<N>::Image;
+        using typename MeshModel<N>::Facet;
+        using typename MeshModel<N>::Point;
+        using typename MeshModel<N>::Line;
+        using typename MeshModel<N>::Material;
+        using typename MeshModel<N>::Image;
 
         std::vector<Vector<N, float>> m_vertices;
         std::vector<Vector<N, float>> m_normals;
@@ -890,7 +890,7 @@ void FileObj<N>::read_obj_stage_one(
 //   начинаются с -1 для относительных значений назад.
 // Преобразование в абсолютные значения с началом от 0.
 template <size_t N>
-void correct_indices(typename Obj<N>::Facet* facet, int vertices_size, int texcoords_size, int normals_size)
+void correct_indices(typename MeshModel<N>::Facet* facet, int vertices_size, int texcoords_size, int normals_size)
 {
         for (unsigned i = 0; i < N; ++i)
         {
@@ -977,7 +977,7 @@ void FileObj<N>::read_obj_stage_two(
                         }
                         else
                         {
-                                typename Obj<N>::Material mtl;
+                                typename MeshModel<N>::Material mtl;
                                 mtl.name = mtl_name;
                                 m_materials.push_back(std::move(mtl));
                                 material_index->emplace(std::move(mtl_name), m_materials.size() - 1);
@@ -1312,12 +1312,12 @@ FileObj<N>::FileObj(const std::string& file_name, ProgressRatio* progress)
 }
 
 template <size_t N>
-std::unique_ptr<Obj<N>> load_obj(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<MeshModel<N>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress)
 {
         return std::make_unique<FileObj<N>>(file_name, progress);
 }
 
-template std::unique_ptr<Obj<3>> load_obj(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Obj<4>> load_obj(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Obj<5>> load_obj(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Obj<6>> load_obj(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<MeshModel<3>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<MeshModel<4>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<MeshModel<5>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<MeshModel<6>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);

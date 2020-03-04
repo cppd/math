@@ -137,11 +137,11 @@ private:
         void thread_reload_bound_cocone();
         void thread_self_test(SelfTestType test_type, bool with_confirmation);
 
-        template <template <size_t, typename> typename Mesh, size_t N, typename T>
-        void paint(const std::shared_ptr<const Mesh<N, T>>& mesh, const std::string& object_name);
+        template <template <size_t, typename> typename SpatialMeshModel, size_t N, typename T>
+        void paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh, const std::string& object_name);
 
-        template <template <size_t> typename Obj, size_t N, typename Id>
-        void object_loaded(const std::shared_ptr<const Obj<N>>& obj, const Id& id);
+        template <template <size_t> typename MeshModel, size_t N, typename Id>
+        void object_loaded(const std::shared_ptr<const MeshModel<N>>& mesh, const Id& id);
 
         void set_dependent_interface();
 

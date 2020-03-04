@@ -75,7 +75,7 @@ bool is_obj_file_extension(size_t N, const std::string& extension)
 //
 
 template <size_t N>
-std::unique_ptr<Obj<N>> load_geometry(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<MeshModel<N>> load_geometry(const std::string& file_name, ProgressRatio* progress)
 {
         auto [dimension, file_type] = file_dimension_and_type(file_name);
 
@@ -88,21 +88,21 @@ std::unique_ptr<Obj<N>> load_geometry(const std::string& file_name, ProgressRati
         switch (file_type)
         {
         case ObjFileType::Obj:
-                return load_obj<N>(file_name, progress);
+                return load_from_obj_file<N>(file_name, progress);
         case ObjFileType::Txt:
-                return load_txt<N>(file_name, progress);
+                return load_from_txt_file<N>(file_name, progress);
         }
 
         error_fatal("Unknown file type");
 }
 
 template <size_t N>
-std::string save_geometry(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment)
+std::string save_geometry(const MeshModel<N>* mesh, const std::string& file_name, const std::string_view& comment)
 {
         std::string ext = file_extension(file_name);
         if (is_obj_file_extension(N, ext))
         {
-                return save_obj(obj, file_name, comment);
+                return save_to_obj_file(mesh, file_name, comment);
         }
         if (!ext.empty())
         {
@@ -111,12 +111,12 @@ std::string save_geometry(const Obj<N>* obj, const std::string& file_name, const
         error("Empty extension " + file_name);
 }
 
-template std::string save_geometry(const Obj<3>* obj, const std::string& file_name, const std::string_view& comment);
-template std::string save_geometry(const Obj<4>* obj, const std::string& file_name, const std::string_view& comment);
-template std::string save_geometry(const Obj<5>* obj, const std::string& file_name, const std::string_view& comment);
-template std::string save_geometry(const Obj<6>* obj, const std::string& file_name, const std::string_view& comment);
+template std::string save_geometry(const MeshModel<3>*, const std::string&, const std::string_view&);
+template std::string save_geometry(const MeshModel<4>*, const std::string&, const std::string_view&);
+template std::string save_geometry(const MeshModel<5>*, const std::string&, const std::string_view&);
+template std::string save_geometry(const MeshModel<6>*, const std::string&, const std::string_view&);
 
-template std::unique_ptr<Obj<3>> load_geometry(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Obj<4>> load_geometry(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Obj<5>> load_geometry(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Obj<6>> load_geometry(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<MeshModel<3>> load_geometry(const std::string&, ProgressRatio*);
+template std::unique_ptr<MeshModel<4>> load_geometry(const std::string&, ProgressRatio*);
+template std::unique_ptr<MeshModel<5>> load_geometry(const std::string&, ProgressRatio*);
+template std::unique_ptr<MeshModel<6>> load_geometry(const std::string&, ProgressRatio*);

@@ -17,10 +17,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../obj.h"
+#include "mesh.h"
 
+#include <src/progress/progress.h>
+
+#include <memory>
+#include <set>
 #include <string>
 #include <string_view>
+#include <vector>
+
+int file_dimension(const std::string& file_name);
+
+std::string obj_file_extension(size_t N);
+bool is_obj_file_extension(size_t N, const std::string& e);
+
+std::vector<std::string> obj_file_supported_extensions(const std::set<unsigned>& dimensions);
+std::vector<std::string> txt_file_supported_extensions(const std::set<unsigned>& dimensions);
+
+//
 
 template <size_t N>
-std::string save_obj(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment);
+std::unique_ptr<MeshModel<N>> load_geometry(const std::string& file_name, ProgressRatio* progress);
+
+template <size_t N>
+std::string save_geometry(const MeshModel<N>* mesh, const std::string& file_name, const std::string_view& comment);

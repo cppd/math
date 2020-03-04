@@ -48,13 +48,13 @@ Vector<N, T> average_normal(const Vector<N, T>& original_normal, const std::vect
 }
 
 template <size_t N>
-class FacetObj final : public Obj<N>
+class Impl final : public MeshModel<N>
 {
-        using typename Obj<N>::Facet;
-        using typename Obj<N>::Point;
-        using typename Obj<N>::Line;
-        using typename Obj<N>::Material;
-        using typename Obj<N>::Image;
+        using typename MeshModel<N>::Facet;
+        using typename MeshModel<N>::Point;
+        using typename MeshModel<N>::Line;
+        using typename MeshModel<N>::Material;
+        using typename MeshModel<N>::Image;
 
         std::vector<Vector<N, float>> m_vertices;
         std::vector<Vector<N, float>> m_normals;
@@ -108,7 +108,7 @@ class FacetObj final : public Obj<N>
                 return m_length;
         }
 
-        void create_obj(
+        void create_mesh(
                 const std::vector<Vector<N, float>>& points,
                 const std::vector<Vector<N, double>>& point_normals,
                 const std::vector<std::array<int, N>>& facets)
@@ -167,7 +167,7 @@ class FacetObj final : public Obj<N>
                 center_and_length(m_vertices, m_facets, &m_center, &m_length);
         }
 
-        void create_obj(const std::vector<Vector<N, float>>& points, const std::vector<std::array<int, N>>& facets)
+        void create_mesh(const std::vector<Vector<N, float>>& points, const std::vector<std::array<int, N>>& facets)
         {
                 if (facets.empty())
                 {
@@ -219,67 +219,66 @@ class FacetObj final : public Obj<N>
         }
 
 public:
-        FacetObj(
-                const std::vector<Vector<N, float>>& points,
-                const std::vector<Vector<N, double>>& point_normals,
-                const std::vector<std::array<int, N>>& facets)
+        Impl(const std::vector<Vector<N, float>>& points,
+             const std::vector<Vector<N, double>>& point_normals,
+             const std::vector<std::array<int, N>>& facets)
         {
                 ASSERT(points.size() == point_normals.size());
 
-                create_obj(points, point_normals, facets);
+                create_mesh(points, point_normals, facets);
         }
 
-        FacetObj(const std::vector<Vector<N, float>>& points, const std::vector<std::array<int, N>>& facets)
+        Impl(const std::vector<Vector<N, float>>& points, const std::vector<std::array<int, N>>& facets)
         {
-                create_obj(points, facets);
+                create_mesh(points, facets);
         }
 };
 }
 
 template <size_t N>
-std::unique_ptr<Obj<N>> create_obj_for_facets(
+std::unique_ptr<MeshModel<N>> create_mesh_for_facets(
         const std::vector<Vector<N, float>>& points,
         const std::vector<Vector<N, double>>& point_normals,
         const std::vector<std::array<int, N>>& facets)
 
 {
-        return std::make_unique<FacetObj<N>>(points, point_normals, facets);
+        return std::make_unique<Impl<N>>(points, point_normals, facets);
 }
 
 template <size_t N>
-std::unique_ptr<Obj<N>> create_obj_for_facets(
+std::unique_ptr<MeshModel<N>> create_mesh_for_facets(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, N>>& facets)
 {
-        return std::make_unique<FacetObj<N>>(points, facets);
+        return std::make_unique<Impl<N>>(points, facets);
 }
 
-template std::unique_ptr<Obj<3>> create_obj_for_facets(
+template std::unique_ptr<MeshModel<3>> create_mesh_for_facets(
         const std::vector<Vector<3, float>>& points,
         const std::vector<Vector<3, double>>& point_normals,
         const std::vector<std::array<int, 3>>& facets);
-template std::unique_ptr<Obj<4>> create_obj_for_facets(
+template std::unique_ptr<MeshModel<4>> create_mesh_for_facets(
         const std::vector<Vector<4, float>>& points,
         const std::vector<Vector<4, double>>& point_normals,
         const std::vector<std::array<int, 4>>& facets);
-template std::unique_ptr<Obj<5>> create_obj_for_facets(
+template std::unique_ptr<MeshModel<5>> create_mesh_for_facets(
         const std::vector<Vector<5, float>>& points,
         const std::vector<Vector<5, double>>& point_normals,
         const std::vector<std::array<int, 5>>& facets);
-template std::unique_ptr<Obj<6>> create_obj_for_facets(
+template std::unique_ptr<MeshModel<6>> create_mesh_for_facets(
         const std::vector<Vector<6, float>>& points,
         const std::vector<Vector<6, double>>& point_normals,
         const std::vector<std::array<int, 6>>& facets);
 
-template std::unique_ptr<Obj<3>> create_obj_for_facets(
+template std::unique_ptr<MeshModel<3>> create_mesh_for_facets(
         const std::vector<Vector<3, float>>& points,
         const std::vector<std::array<int, 3>>& facets);
-template std::unique_ptr<Obj<4>> create_obj_for_facets(
+template std::unique_ptr<MeshModel<4>> create_mesh_for_facets(
         const std::vector<Vector<4, float>>& points,
         const std::vector<std::array<int, 4>>& facets);
-template std::unique_ptr<Obj<5>> create_obj_for_facets(
+template std::unique_ptr<MeshModel<5>> create_mesh_for_facets(
         const std::vector<Vector<5, float>>& points,
         const std::vector<std::array<int, 5>>& facets);
-template std::unique_ptr<Obj<6>> create_obj_for_facets(
+template std::unique_ptr<MeshModel<6>> create_mesh_for_facets(
         const std::vector<Vector<6, float>>& points,
         const std::vector<std::array<int, 6>>& facets);

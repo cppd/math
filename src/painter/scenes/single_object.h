@@ -70,7 +70,7 @@ public:
                 Color::DataType diffuse,
                 std::unique_ptr<const Projector<N, T>>&& projector,
                 std::unique_ptr<const LightSource<N, T>>&& light_source,
-                std::shared_ptr<const Mesh<N, T>>&& mesh)
+                std::shared_ptr<const SpatialMeshModel<N, T>>&& mesh)
                 : m_object(std::move(mesh)), m_projector(std::move(projector)), m_light_source(std::move(light_source))
         {
                 m_default_surface_properties.set_color(background_color);
@@ -96,7 +96,7 @@ std::unique_ptr<const PaintObjects<N, T>> single_object_scene(
         Color::DataType diffuse,
         std::unique_ptr<const Projector<N, T>>&& projector,
         std::unique_ptr<const LightSource<N, T>>&& light_source,
-        std::shared_ptr<const Mesh<N, T>> mesh)
+        std::shared_ptr<const SpatialMeshModel<N, T>> mesh)
 {
         ASSERT(projector && light_source && mesh);
 
@@ -114,7 +114,7 @@ std::unique_ptr<const PaintObjects<N, T>> single_object_scene(
         Color::DataType diffuse,
         int min_screen_size,
         int max_screen_size,
-        std::shared_ptr<const Mesh<N, T>> mesh)
+        std::shared_ptr<const SpatialMeshModel<N, T>> mesh)
 {
         LOG("Creating single object scene...");
 

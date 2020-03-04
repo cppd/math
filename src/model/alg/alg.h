@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../obj.h"
+#include "../mesh.h"
 
 #include <src/com/alg.h>
 #include <src/com/error.h>
@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace obj_alg_implementation
+namespace mesh_model_alg_implementation
 {
 template <size_t N, typename T>
 std::tuple<Vector<N, T>, T> center_and_length_for_min_max(const Vector<N, T>& min, const Vector<N, T>& max)
@@ -89,13 +89,13 @@ void initial_min_max(Vector<N, T>* min, Vector<N, T>* max)
 }
 
 template <size_t N>
-std::vector<int> unique_facet_indices(const Obj<N>* obj)
+std::vector<int> unique_facet_indices(const MeshModel<N>* mesh)
 {
-        int vertex_count = obj->vertices().size();
+        int vertex_count = mesh->vertices().size();
 
         std::unordered_set<int> vertices(vertex_count);
 
-        for (const typename Obj<N>::Facet& face : obj->facets())
+        for (const typename MeshModel<N>::Facet& face : mesh->facets())
         {
                 for (int index : face.vertices)
                 {
@@ -108,17 +108,17 @@ std::vector<int> unique_facet_indices(const Obj<N>* obj)
                 }
         }
 
-        return obj_alg_implementation::to_vector(vertices);
+        return mesh_model_alg_implementation::to_vector(vertices);
 }
 
 template <size_t N>
-std::vector<int> unique_line_indices(const Obj<N>* obj)
+std::vector<int> unique_line_indices(const MeshModel<N>* mesh)
 {
-        int vertex_count = obj->vertices().size();
+        int vertex_count = mesh->vertices().size();
 
         std::unordered_set<int> vertices(vertex_count);
 
-        for (const typename Obj<N>::Line& line : obj->lines())
+        for (const typename MeshModel<N>::Line& line : mesh->lines())
         {
                 for (int index : line.vertices)
                 {
@@ -131,17 +131,17 @@ std::vector<int> unique_line_indices(const Obj<N>* obj)
                 }
         }
 
-        return obj_alg_implementation::to_vector(vertices);
+        return mesh_model_alg_implementation::to_vector(vertices);
 }
 
 template <size_t N>
-std::vector<int> unique_point_indices(const Obj<N>* obj)
+std::vector<int> unique_point_indices(const MeshModel<N>* mesh)
 {
-        int vertex_count = obj->vertices().size();
+        int vertex_count = mesh->vertices().size();
 
         std::unordered_set<int> vertices(vertex_count);
 
-        for (const typename Obj<N>::Point& point : obj->points())
+        for (const typename MeshModel<N>::Point& point : mesh->points())
         {
                 int index = point.vertex;
 
@@ -153,17 +153,17 @@ std::vector<int> unique_point_indices(const Obj<N>* obj)
                 vertices.insert(index);
         }
 
-        return obj_alg_implementation::to_vector(vertices);
+        return mesh_model_alg_implementation::to_vector(vertices);
 }
 
 template <size_t N>
-std::vector<Vector<N, float>> unique_facet_vertices(const Obj<N>* obj)
+std::vector<Vector<N, float>> unique_facet_vertices(const MeshModel<N>* mesh)
 {
-        int vertex_count = obj->vertices().size();
+        int vertex_count = mesh->vertices().size();
 
         std::unordered_set<Vector<N, float>> vertices(vertex_count);
 
-        for (const typename Obj<N>::Facet& face : obj->facets())
+        for (const typename MeshModel<N>::Facet& face : mesh->facets())
         {
                 for (int index : face.vertices)
                 {
@@ -172,21 +172,21 @@ std::vector<Vector<N, float>> unique_facet_vertices(const Obj<N>* obj)
                                 error("Facet vertex index out of bounds");
                         }
 
-                        vertices.insert(obj->vertices()[index]);
+                        vertices.insert(mesh->vertices()[index]);
                 }
         }
 
-        return obj_alg_implementation::to_vector(vertices);
+        return mesh_model_alg_implementation::to_vector(vertices);
 }
 
 template <size_t N>
-std::vector<Vector<N, float>> unique_line_vertices(const Obj<N>* obj)
+std::vector<Vector<N, float>> unique_line_vertices(const MeshModel<N>* mesh)
 {
-        int vertex_count = obj->vertices().size();
+        int vertex_count = mesh->vertices().size();
 
         std::unordered_set<Vector<N, float>> vertices(vertex_count);
 
-        for (const typename Obj<N>::Line& line : obj->lines())
+        for (const typename MeshModel<N>::Line& line : mesh->lines())
         {
                 for (int index : line.vertices)
                 {
@@ -195,21 +195,21 @@ std::vector<Vector<N, float>> unique_line_vertices(const Obj<N>* obj)
                                 error("Line vertex index out of bounds");
                         }
 
-                        vertices.insert(obj->vertices()[index]);
+                        vertices.insert(mesh->vertices()[index]);
                 }
         }
 
-        return obj_alg_implementation::to_vector(vertices);
+        return mesh_model_alg_implementation::to_vector(vertices);
 }
 
 template <size_t N>
-std::vector<Vector<N, float>> unique_point_vertices(const Obj<N>* obj)
+std::vector<Vector<N, float>> unique_point_vertices(const MeshModel<N>* mesh)
 {
-        int vertex_count = obj->vertices().size();
+        int vertex_count = mesh->vertices().size();
 
         std::unordered_set<Vector<N, float>> vertices(vertex_count);
 
-        for (const typename Obj<N>::Point& point : obj->points())
+        for (const typename MeshModel<N>::Point& point : mesh->points())
         {
                 int index = point.vertex;
 
@@ -218,16 +218,16 @@ std::vector<Vector<N, float>> unique_point_vertices(const Obj<N>* obj)
                         error("Point vertex index out of bounds");
                 }
 
-                vertices.insert(obj->vertices()[index]);
+                vertices.insert(mesh->vertices()[index]);
         }
 
-        return obj_alg_implementation::to_vector(vertices);
+        return mesh_model_alg_implementation::to_vector(vertices);
 }
 
 template <size_t N, typename T>
 void center_and_length(
         const std::vector<Vector<N, T>>& vertices,
-        const std::vector<typename Obj<N>::Facet>& facets,
+        const std::vector<typename MeshModel<N>::Facet>& facets,
         Vector<N, T>* center,
         T* length)
 {
@@ -241,9 +241,9 @@ void center_and_length(
         Vector<N, T> min;
         Vector<N, T> max;
 
-        obj_alg_implementation::initial_min_max(&min, &max);
+        mesh_model_alg_implementation::initial_min_max(&min, &max);
 
-        for (const typename Obj<N>::Facet& facet : facets)
+        for (const typename MeshModel<N>::Facet& facet : facets)
         {
                 for (int index : facet.vertices)
                 {
@@ -257,13 +257,13 @@ void center_and_length(
                 }
         }
 
-        std::tie(*center, *length) = obj_alg_implementation::center_and_length_for_min_max(min, max);
+        std::tie(*center, *length) = mesh_model_alg_implementation::center_and_length_for_min_max(min, max);
 }
 
 template <size_t N, typename T>
 void center_and_length(
         const std::vector<Vector<N, T>>& vertices,
-        const std::vector<typename Obj<N>::Line>& lines,
+        const std::vector<typename MeshModel<N>::Line>& lines,
         Vector<N, T>* center,
         T* length)
 {
@@ -277,9 +277,9 @@ void center_and_length(
         Vector<N, T> min;
         Vector<N, T> max;
 
-        obj_alg_implementation::initial_min_max(&min, &max);
+        mesh_model_alg_implementation::initial_min_max(&min, &max);
 
-        for (const typename Obj<N>::Line& line : lines)
+        for (const typename MeshModel<N>::Line& line : lines)
         {
                 for (int index : line.vertices)
                 {
@@ -293,13 +293,13 @@ void center_and_length(
                 }
         }
 
-        std::tie(*center, *length) = obj_alg_implementation::center_and_length_for_min_max(min, max);
+        std::tie(*center, *length) = mesh_model_alg_implementation::center_and_length_for_min_max(min, max);
 }
 
 template <size_t N, typename T>
 void center_and_length(
         const std::vector<Vector<N, T>>& vertices,
-        const std::vector<typename Obj<N>::Point>& points,
+        const std::vector<typename MeshModel<N>::Point>& points,
         Vector<N, T>* center,
         T* length)
 {
@@ -313,9 +313,9 @@ void center_and_length(
         Vector<N, T> min;
         Vector<N, T> max;
 
-        obj_alg_implementation::initial_min_max(&min, &max);
+        mesh_model_alg_implementation::initial_min_max(&min, &max);
 
-        for (const typename Obj<N>::Point& point : points)
+        for (const typename MeshModel<N>::Point& point : points)
         {
                 int index = point.vertex;
 
@@ -328,7 +328,7 @@ void center_and_length(
                 max = max_vector(max, vertices[index]);
         }
 
-        std::tie(*center, *length) = obj_alg_implementation::center_and_length_for_min_max(min, max);
+        std::tie(*center, *length) = mesh_model_alg_implementation::center_and_length_for_min_max(min, max);
 }
 
 template <size_t N, typename T, typename... Indices>
@@ -351,7 +351,7 @@ std::tuple<Vector<N, T>, Vector<N, T>> min_max_coordinates(
         Vector<N, T> min;
         Vector<N, T> max;
 
-        obj_alg_implementation::initial_min_max(&min, &max);
+        mesh_model_alg_implementation::initial_min_max(&min, &max);
 
         for (const std::vector<int>* ptr : pointers)
         {
@@ -371,24 +371,27 @@ std::tuple<Vector<N, T>, Vector<N, T>> min_max_coordinates(
 }
 
 template <size_t N>
-Matrix<N + 1, N + 1, double> model_vertex_matrix(const Obj<N>& obj, double size, const Vector<N, double>& position)
+Matrix<N + 1, N + 1, double> model_vertex_matrix(
+        const MeshModel<N>& mesh,
+        double size,
+        const Vector<N, double>& position)
 {
-        Matrix<N + 1, N + 1, double> m_to_center = translate(to_vector<double>(-obj.center()));
-        Matrix<N + 1, N + 1, double> m_scale = scale(Vector<N, double>(size / obj.length()));
+        Matrix<N + 1, N + 1, double> m_to_center = translate(to_vector<double>(-mesh.center()));
+        Matrix<N + 1, N + 1, double> m_scale = scale(Vector<N, double>(size / mesh.length()));
         Matrix<N + 1, N + 1, double> m_to_position = translate(position);
         return m_to_position * m_scale * m_to_center;
 }
 
 template <size_t N>
 void sort_facets_by_material(
-        const Obj<N>& obj,
+        const MeshModel<N>& mesh,
         std::vector<int>* sorted_facet_indices,
         std::vector<int>* facet_offset,
         std::vector<int>* facet_count)
 {
         ASSERT(std::all_of(
-                std::cbegin(obj.facets()), std::cend(obj.facets()), [&](const typename Obj<N>::Facet& facet) {
-                        return facet.material < static_cast<int>(obj.materials().size());
+                std::cbegin(mesh.facets()), std::cend(mesh.facets()), [&](const typename MeshModel<N>::Facet& facet) {
+                        return facet.material < static_cast<int>(mesh.materials().size());
                 }));
 
         // Robert Sedgewick, Kevin Wayne.
@@ -399,15 +402,15 @@ void sort_facets_by_material(
 
         // Для граней без материала используется дополнительный материал в конце
 
-        int max_material_index = obj.materials().size();
-        int new_material_size = obj.materials().size() + 1;
+        int max_material_index = mesh.materials().size();
+        int new_material_size = mesh.materials().size() + 1;
 
         auto material_index = [&](int i) { return i >= 0 ? i : max_material_index; };
 
         // Количество граней с заданным материалом
         *facet_count = std::vector<int>(new_material_size, 0);
 
-        for (const typename Obj<N>::Facet& facet : obj.facets())
+        for (const typename MeshModel<N>::Facet& facet : mesh.facets())
         {
                 int m = material_index(facet.material);
                 ++(*facet_count)[m];
@@ -423,23 +426,23 @@ void sort_facets_by_material(
         }
 
         // Индексы граней по возрастанию их материала
-        sorted_facet_indices->resize(obj.facets().size());
+        sorted_facet_indices->resize(mesh.facets().size());
 
         // Текущие начала расположения граней с заданным материалом
         std::vector<int> starting_indices = *facet_offset;
-        for (size_t i = 0; i < obj.facets().size(); ++i)
+        for (size_t i = 0; i < mesh.facets().size(); ++i)
         {
-                int m = material_index(obj.facets()[i].material);
+                int m = material_index(mesh.facets()[i].material);
                 (*sorted_facet_indices)[starting_indices[m]++] = i;
         }
 
         ASSERT(facet_offset->size() == facet_count->size());
-        ASSERT(facet_count->size() == obj.materials().size() + 1);
-        ASSERT(sorted_facet_indices->size() == obj.facets().size());
+        ASSERT(facet_count->size() == mesh.materials().size() + 1);
+        ASSERT(sorted_facet_indices->size() == mesh.facets().size());
         ASSERT(sorted_facet_indices->size() == unique_elements(*sorted_facet_indices).size());
         ASSERT(std::is_sorted(std::cbegin(*sorted_facet_indices), std::cend(*sorted_facet_indices), [&](int a, int b) {
-                int m_a = material_index(obj.facets()[a].material);
-                int m_b = material_index(obj.facets()[b].material);
+                int m_a = material_index(mesh.facets()[a].material);
+                int m_b = material_index(mesh.facets()[b].material);
                 return m_a < m_b;
         }));
 }

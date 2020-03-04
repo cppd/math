@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/geometry/cocone/reconstruction.h>
 #include <src/geometry/objects/points.h>
-#include <src/obj/obj.h>
+#include <src/model/mesh.h>
 #include <src/painter/shapes/mesh.h>
 #include <src/progress/progress_list.h>
 
@@ -58,8 +58,8 @@ class ObjectStorageSpace
         //
 
         const std::unique_ptr<ObjectRepository<N>> m_object_repository;
-        PointerMap<ObjectId, const Mesh<N, MeshFloat>> m_meshes;
-        PointerMap<ObjectId, const Obj<N>> m_objects;
+        PointerMap<ObjectId, const SpatialMeshModel<N, MeshFloat>> m_meshes;
+        PointerMap<ObjectId, const MeshModel<N>> m_objects;
         std::vector<Vector<N, float>> m_manifold_points;
         std::unique_ptr<ManifoldConstructor<N>> m_manifold_constructor;
         Matrix<N + 1, N + 1, double> m_model_vertex_matrix;
@@ -82,22 +82,22 @@ class ObjectStorageSpace
         static ObjectId convex_hull_identifier(ObjectType object_type);
 
         void build_mst(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list);
-        void build_mesh(ProgressRatioList* progress_list, ObjectId id, const Obj<N>& obj);
+        void build_mesh(ProgressRatioList* progress_list, ObjectId id, const MeshModel<N>& mesh);
         void add_object_and_build_mesh(
                 const std::unordered_set<ObjectId>& objects,
                 ProgressRatioList* progress_list,
                 ObjectType object_type,
-                const std::shared_ptr<const Obj<N>>& obj);
+                const std::shared_ptr<const MeshModel<N>>& mesh);
         void add_object_convex_hull_and_build_mesh(
                 const std::unordered_set<ObjectId>& objects,
                 ProgressRatioList* progress_list,
                 ObjectType object_type,
-                const std::shared_ptr<const Obj<N>>& obj);
+                const std::shared_ptr<const MeshModel<N>>& mesh);
         void object_and_mesh(
                 const std::unordered_set<ObjectId>& objects,
                 ProgressRatioList* progress_list,
                 ObjectType object_type,
-                const std::shared_ptr<const Obj<N>>& obj);
+                const std::shared_ptr<const MeshModel<N>>& mesh);
         void manifold_constructor(
                 const std::unordered_set<ObjectId>& objects,
                 ProgressRatioList* progress_list,
@@ -115,7 +115,7 @@ class ObjectStorageSpace
                 const std::unordered_set<ObjectId>& objects,
                 ProgressRatioList* progress_list,
                 const std::string& object_name,
-                const std::shared_ptr<const Obj<N>>& obj,
+                const std::shared_ptr<const MeshModel<N>>& mesh,
                 double rho,
                 double alpha,
                 const ObjectLoaded& object_loaded);
@@ -135,10 +135,10 @@ public:
         bool manifold_constructor_exists() const;
 
         bool object_exists(ObjectId id) const;
-        std::shared_ptr<const Obj<N>> object(ObjectId id) const;
+        std::shared_ptr<const MeshModel<N>> object(ObjectId id) const;
 
         bool mesh_exists(ObjectId id) const;
-        std::shared_ptr<const Mesh<N, MeshFloat>> mesh(ObjectId id) const;
+        std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> mesh(ObjectId id) const;
 
         void compute_bound_cocone(
                 const std::unordered_set<ObjectId>& objects,

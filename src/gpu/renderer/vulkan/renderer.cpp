@@ -301,13 +301,13 @@ class Impl final : public Renderer
                 create_render_command_buffers();
         }
 
-        void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) override
+        void object_add(const MeshModel<3>* mesh, double size, const vec3& position, int id, int scale_id) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 std::unique_ptr draw_object = std::make_unique<DrawObject>(
                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
-                        m_texture_sampler, m_triangles_program.descriptor_set_layout_material(), *obj, size, position);
+                        m_texture_sampler, m_triangles_program.descriptor_set_layout_material(), *mesh, size, position);
 
                 m_storage.add_object(std::move(draw_object), id, scale_id);
 

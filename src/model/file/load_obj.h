@@ -17,10 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../obj.h"
+#include "../mesh.h"
+
+#include <src/progress/progress.h>
 
 #include <memory>
-#include <vector>
+#include <string>
 
 template <size_t N>
-std::unique_ptr<Obj<N>> create_obj_for_points(std::vector<Vector<N, float>>&& points);
+std::unique_ptr<MeshModel<N>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);

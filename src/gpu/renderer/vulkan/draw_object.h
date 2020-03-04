@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/model/mesh.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vec.h>
-#include <src/obj/obj.h>
 #include <src/vulkan/objects.h>
 
 #include <memory>
@@ -74,7 +74,7 @@ public:
                 const vulkan::Queue& transfer_queue,
                 VkSampler sampler,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const Obj<3>& obj,
+                const MeshModel<3>& mesh,
                 double size,
                 const vec3& position);
         ~DrawObject();

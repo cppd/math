@@ -24,14 +24,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/image/image.h>
+#include <src/model/mesh.h>
 #include <src/numerical/matrix.h>
-#include <src/obj/obj.h>
 #include <src/progress/progress.h>
 
 #include <optional>
 
 template <size_t N, typename T>
-class Mesh
+class SpatialMeshModel
 {
         using TreeParallelotope = ParallelotopeOrtho<N, T>;
         using Facet = MeshHyperplaneSimplex<N, T>;
@@ -61,26 +61,27 @@ class Mesh
         Vector<N, T> m_min, m_max;
 
         void create_mesh_object(
-                const Obj<N>* obj,
+                const MeshModel<N>* mesh,
                 const Matrix<N + 1, N + 1, T>& vertex_matrix,
                 unsigned thread_count,
                 ProgressRatio* progress);
 
 public:
-        Mesh(const Obj<N>* obj,
-             const Matrix<N + 1, N + 1, T>& vertex_matrix,
-             unsigned thread_count,
-             ProgressRatio* progress);
+        SpatialMeshModel(
+                const MeshModel<N>* mesh,
+                const Matrix<N + 1, N + 1, T>& vertex_matrix,
+                unsigned thread_count,
+                ProgressRatio* progress);
 
-        ~Mesh() = default;
+        ~SpatialMeshModel() = default;
 
         // Грани имеют адреса первых элементов векторов вершин,
         // нормалей и текстурных координат, поэтому при копировании
         // объекта надо менять адреса этих векторов в гранях.
-        Mesh(const Mesh&) = delete;
-        Mesh(Mesh&&) = delete;
-        Mesh& operator=(const Mesh&) = delete;
-        Mesh& operator=(Mesh&&) = delete;
+        SpatialMeshModel(const SpatialMeshModel&) = delete;
+        SpatialMeshModel(SpatialMeshModel&&) = delete;
+        SpatialMeshModel& operator=(const SpatialMeshModel&) = delete;
+        SpatialMeshModel& operator=(SpatialMeshModel&&) = delete;
 
         bool intersect_approximate(const Ray<N, T>& r, T* t) const;
         bool intersect_precise(const Ray<N, T>&, T approximate_t, T* t, const void** intersection_data) const;

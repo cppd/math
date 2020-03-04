@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gui/painter_window/painter_window.h>
 #include <src/gui/support/support.h>
 #include <src/image/image.h>
-#include <src/obj/file.h>
+#include <src/model/file.h>
 #include <src/util/file/sys.h>
 #include <src/util/string/str.h>
 
@@ -114,28 +114,31 @@ void check_application_instance()
 }
 
 template <size_t N, typename T>
-std::shared_ptr<const Mesh<N, T>> sphere_mesh(int point_count, int thread_count, ProgressRatio* progress)
+std::shared_ptr<const SpatialMeshModel<N, T>> sphere_mesh(int point_count, int thread_count, ProgressRatio* progress)
 {
         LOG("Creating mesh...");
-        std::shared_ptr<const Mesh<N, T>> mesh =
+        std::shared_ptr<const SpatialMeshModel<N, T>> mesh =
                 simplex_mesh_of_random_sphere<N, T>(point_count, thread_count, progress);
 
         return mesh;
 }
 
 template <size_t N, typename T>
-std::shared_ptr<const Mesh<N, T>> file_mesh(const std::string& file_name, int thread_count, ProgressRatio* progress)
+std::shared_ptr<const SpatialMeshModel<N, T>> file_mesh(
+        const std::string& file_name,
+        int thread_count,
+        ProgressRatio* progress)
 {
         constexpr Matrix<N + 1, N + 1, T> matrix(1);
 
         LOG("Loading geometry from file...");
-        std::unique_ptr<const Obj<N>> obj = load_geometry<N>(file_name, progress);
+        std::unique_ptr<const MeshModel<N>> mesh = load_geometry<N>(file_name, progress);
 
         LOG("Creating mesh...");
-        std::shared_ptr<const Mesh<N, T>> mesh =
-                std::make_shared<const Mesh<N, T>>(obj.get(), matrix, thread_count, progress);
+        std::shared_ptr<const SpatialMeshModel<N, T>> spatial_mesh =
+                std::make_shared<const SpatialMeshModel<N, T>>(mesh.get(), matrix, thread_count, progress);
 
-        return mesh;
+        return spatial_mesh;
 }
 
 template <size_t N, typename T>
@@ -191,7 +194,7 @@ enum class PainterTestOutputType
 
 template <PainterTestOutputType type, size_t N, typename T>
 void test_painter(
-        const std::shared_ptr<const Mesh<N, T>>& mesh,
+        const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh,
         int min_screen_size,
         int max_screen_size,
         int samples_per_pixel,
@@ -221,7 +224,7 @@ void test_painter(int samples_per_pixel, int point_count, int min_screen_size, i
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
 
-        std::shared_ptr<const Mesh<N, T>> mesh = sphere_mesh<N, T>(point_count, thread_count, &progress);
+        std::shared_ptr<const SpatialMeshModel<N, T>> mesh = sphere_mesh<N, T>(point_count, thread_count, &progress);
 
         test_painter<type>(mesh, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
 }
@@ -232,7 +235,7 @@ void test_painter(int samples_per_pixel, const std::string& file_name, int min_s
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
 
-        std::shared_ptr<const Mesh<N, T>> mesh = file_mesh<N, T>(file_name, thread_count, &progress);
+        std::shared_ptr<const SpatialMeshModel<N, T>> mesh = file_mesh<N, T>(file_name, thread_count, &progress);
 
         test_painter<type>(mesh, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
 }
