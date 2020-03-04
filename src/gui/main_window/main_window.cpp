@@ -105,7 +105,7 @@ constexpr double MAXIMUM_COLOR_AMPLIFICATION = 3;
 constexpr float NORMAL_LENGTH_MINIMUM = 0.001;
 constexpr float NORMAL_LENGTH_DEFAULT = 0.05;
 constexpr float NORMAL_LENGTH_MAXIMUM = 0.2;
-constexpr QRgb NORMAL_COLOR_POSITIVE = qRgb(255, 150, 0);
+constexpr QRgb NORMAL_COLOR_POSITIVE = qRgb(200, 200, 0);
 constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(50, 150, 50);
 
 MainWindow::MainWindow(QWidget* parent)
