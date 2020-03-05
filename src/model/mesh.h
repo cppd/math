@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 template <size_t N>
-struct MeshModel
+struct MeshModel final
 {
         struct Facet
         {
@@ -67,16 +67,21 @@ struct MeshModel
                 std::vector<unsigned char> srgba_pixels;
         };
 
-        virtual ~MeshModel() = default;
+        std::vector<Vector<N, float>> vertices;
+        std::vector<Vector<N, float>> normals;
+        std::vector<Vector<N - 1, float>> texcoords;
+        std::vector<Facet> facets;
+        std::vector<Point> points;
+        std::vector<Line> lines;
+        std::vector<Material> materials;
+        std::vector<Image> images;
+        Vector<N, float> center{0};
+        float length{0};
 
-        virtual const std::vector<Vector<N, float>>& vertices() const = 0;
-        virtual const std::vector<Vector<N, float>>& normals() const = 0;
-        virtual const std::vector<Vector<N - 1, float>>& texcoords() const = 0;
-        virtual const std::vector<Facet>& facets() const = 0;
-        virtual const std::vector<Point>& points() const = 0;
-        virtual const std::vector<Line>& lines() const = 0;
-        virtual const std::vector<Material>& materials() const = 0;
-        virtual const std::vector<Image>& images() const = 0;
-        virtual Vector<N, float> center() const = 0;
-        virtual float length() const = 0;
+        MeshModel() = default;
+        MeshModel(const MeshModel&) = delete;
+        MeshModel& operator=(const MeshModel&) = delete;
+        MeshModel(MeshModel&&) = default;
+        MeshModel& operator=(MeshModel&&) = default;
+        ~MeshModel() = default;
 };

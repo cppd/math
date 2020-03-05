@@ -26,8 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/time.h>
-#include <src/model/create/facets.h>
-#include <src/model/file.h>
+#include <src/model/mesh_create.h>
+#include <src/model/mesh_file.h>
 #include <src/util/file/sys.h>
 #include <src/util/random/engine.h>
 
@@ -105,21 +105,19 @@ void test_geometry_files(
         std::string comment;
         comment += "Manifold Reconstruction\n";
         comment += name + "\n";
-        comment += "vertices = " + to_string(mesh1->vertices().size()) + "\n";
-        comment += "normals = " + to_string(mesh1->normals().size()) + "\n";
-        comment += "facets = " + to_string(mesh1->facets().size());
-        file_name = save_geometry(mesh1.get(), file_name, comment);
+        comment += "vertices = " + to_string(mesh1->vertices.size()) + "\n";
+        comment += "normals = " + to_string(mesh1->normals.size()) + "\n";
+        comment += "facets = " + to_string(mesh1->facets.size());
+        file_name = save_geometry(*mesh1, file_name, comment);
 
         LOG("load geometry...");
         std::unique_ptr<MeshModel<N>> mesh2 = load_geometry<N>(file_name, progress);
 
         LOG("compare mesh...");
-        if (mesh1->vertices().size() != mesh2->vertices().size() ||
-            mesh1->normals().size() != mesh2->normals().size() ||
-            mesh1->texcoords().size() != mesh2->texcoords().size() ||
-            mesh1->facets().size() != mesh2->facets().size() || mesh1->points().size() != mesh2->points().size() ||
-            mesh1->lines().size() != mesh2->lines().size() || mesh1->materials().size() != mesh2->materials().size() ||
-            mesh1->images().size() != mesh2->images().size())
+        if (mesh1->vertices.size() != mesh2->vertices.size() || mesh1->normals.size() != mesh2->normals.size() ||
+            mesh1->texcoords.size() != mesh2->texcoords.size() || mesh1->facets.size() != mesh2->facets.size() ||
+            mesh1->points.size() != mesh2->points.size() || mesh1->lines.size() != mesh2->lines.size() ||
+            mesh1->materials.size() != mesh2->materials.size() || mesh1->images.size() != mesh2->images.size())
         {
                 error("Error writing and reading geometry files");
         }

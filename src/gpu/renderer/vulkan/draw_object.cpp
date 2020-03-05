@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/thread.h>
 #include <src/com/time.h>
-#include <src/model/alg/alg.h>
+#include <src/model/mesh_function.h>
 #include <src/vulkan/buffers.h>
 
 #include <array>
@@ -136,21 +136,16 @@ void load_vertices(
         unsigned* vertex_count,
         unsigned* index_count)
 {
-        if (mesh.facets().empty())
+        if (mesh.facets.empty())
         {
                 error("No mesh facets found");
         }
 
-        ASSERT(sorted_face_indices.size() == mesh.facets().size());
+        ASSERT(sorted_face_indices.size() == mesh.facets.size());
 
         //
 
         double create_time = time_in_seconds();
-
-        const std::vector<MeshModel<3>::Facet>& mesh_faces = mesh.facets();
-        const std::vector<vec3f>& mesh_vertices = mesh.vertices();
-        const std::vector<vec3f>& mesh_normals = mesh.normals();
-        const std::vector<vec2f>& mesh_texcoords = mesh.texcoords();
 
         std::vector<Face> faces(sorted_face_indices.size());
 
@@ -165,18 +160,18 @@ void load_vertices(
 
                         int face_index = sorted_face_indices[index];
 
-                        const MeshModel<3>::Facet& f = mesh_faces[face_index];
+                        const MeshModel<3>::Facet& f = mesh.facets[face_index];
 
                         for (int i = 0; i < 3; ++i)
                         {
-                                p[i] = mesh_vertices[f.vertices[i]];
+                                p[i] = mesh.vertices[f.vertices[i]];
                         }
 
                         if (f.has_normal)
                         {
                                 for (int i = 0; i < 3; ++i)
                                 {
-                                        n[i] = mesh_normals[f.normals[i]];
+                                        n[i] = mesh.normals[f.normals[i]];
                                 }
                         }
                         else
@@ -197,7 +192,7 @@ void load_vertices(
                         {
                                 for (int i = 0; i < 3; ++i)
                                 {
-                                        t[i] = mesh_texcoords[f.texcoords[i]];
+                                        t[i] = mesh.texcoords[f.texcoords[i]];
                                 }
                         }
                         else
@@ -223,9 +218,9 @@ void load_vertices(
         std::vector<RendererTrianglesVertex> vertices;
         std::vector<IndexType> indices;
         std::unordered_map<MapVertex, unsigned, MapVertex::Hash> map;
-        vertices.reserve(3 * mesh_faces.size());
-        indices.reserve(3 * mesh_faces.size());
-        map.reserve(3 * mesh_faces.size());
+        vertices.reserve(3 * mesh.facets.size());
+        indices.reserve(3 * mesh.facets.size());
+        map.reserve(3 * mesh.facets.size());
 
         for (const Face& face : faces)
         {
@@ -279,20 +274,17 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(
         const std::unordered_set<uint32_t>& family_indices,
         const MeshModel<3>& mesh)
 {
-        if (mesh.points().empty())
+        if (mesh.points.empty())
         {
                 error("No mesh points found");
         }
 
-        const std::vector<MeshModel<3>::Point>& mesh_points = mesh.points();
-        const std::vector<vec3f>& mesh_vertices = mesh.vertices();
-
         std::vector<RendererPointsVertex> vertices;
-        vertices.reserve(mesh_points.size());
+        vertices.reserve(mesh.points.size());
 
-        for (const MeshModel<3>::Point& p : mesh_points)
+        for (const MeshModel<3>::Point& p : mesh.points)
         {
-                vertices.emplace_back(mesh_vertices[p.vertex]);
+                vertices.emplace_back(mesh.vertices[p.vertex]);
         }
 
         return std::make_unique<vulkan::BufferWithMemory>(
@@ -307,22 +299,19 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(
         const std::unordered_set<uint32_t>& family_indices,
         const MeshModel<3>& mesh)
 {
-        if (mesh.lines().empty())
+        if (mesh.lines.empty())
         {
                 error("No mesh lines found");
         }
 
-        const std::vector<MeshModel<3>::Line>& mesh_lines = mesh.lines();
-        const std::vector<vec3f>& mesh_vertices = mesh.vertices();
-
         std::vector<RendererPointsVertex> vertices;
-        vertices.reserve(2 * mesh_lines.size());
+        vertices.reserve(2 * mesh.lines.size());
 
-        for (const MeshModel<3>::Line& line : mesh_lines)
+        for (const MeshModel<3>::Line& line : mesh.lines)
         {
                 for (int index : line.vertices)
                 {
-                        vertices.emplace_back(mesh_vertices[index]);
+                        vertices.emplace_back(mesh.vertices[index]);
                 }
         }
 
@@ -344,7 +333,7 @@ std::vector<vulkan::ImageWithMemory> load_textures(
 
         std::vector<vulkan::ImageWithMemory> textures;
 
-        for (const typename MeshModel<3>::Image& image : mesh.images())
+        for (const typename MeshModel<3>::Image& image : mesh.images)
         {
                 textures.emplace_back(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
@@ -376,14 +365,14 @@ std::unique_ptr<RendererTrianglesMaterialMemory> load_materials(
 {
         // Текстур имеется больше на одну для её использования в тех материалах, где нет текстуры
 
-        ASSERT(textures.size() == mesh.images().size() + 1);
+        ASSERT(textures.size() == mesh.images.size() + 1);
 
         const vulkan::ImageWithMemory* const no_texture = &textures.back();
 
         std::vector<RendererTrianglesMaterialMemory::MaterialAndTexture> materials;
-        materials.reserve(mesh.materials().size() + 1);
+        materials.reserve(mesh.materials.size() + 1);
 
-        for (const typename MeshModel<3>::Material& material : mesh.materials())
+        for (const typename MeshModel<3>::Material& material : mesh.materials)
         {
                 ASSERT(material.map_Ka < static_cast<int>(textures.size()) - 1);
                 ASSERT(material.map_Kd < static_cast<int>(textures.size()) - 1);
@@ -469,7 +458,7 @@ public:
                 VkDescriptorSetLayout triangles_material_descriptor_set_layout,
                 const MeshModel<3>& mesh)
         {
-                ASSERT(!mesh.facets().empty());
+                ASSERT(!mesh.facets.empty());
 
                 std::vector<int> sorted_face_indices;
                 std::vector<int> material_face_offset;
@@ -490,7 +479,7 @@ public:
                         device, {graphics_queue.family_index()}, sampler, triangles_material_descriptor_set_layout,
                         mesh, m_textures);
 
-                ASSERT(m_index_count == 3 * mesh.facets().size());
+                ASSERT(m_index_count == 3 * mesh.facets.size());
                 ASSERT(material_face_offset.size() == material_face_count.size());
                 ASSERT(material_face_offset.size() == m_shader_memory->descriptor_set_count());
 
@@ -578,12 +567,12 @@ public:
               const vulkan::Queue& transfer_queue,
               const MeshModel<3>& mesh)
         {
-                ASSERT(!mesh.lines().empty());
+                ASSERT(!mesh.lines.empty());
 
                 m_vertex_buffer = load_line_vertices(
                         device, transfer_command_pool, transfer_queue,
                         {graphics_queue.family_index(), transfer_queue.family_index()}, mesh);
-                m_vertex_count = 2 * mesh.lines().size();
+                m_vertex_count = 2 * mesh.lines.size();
 
                 m_buffers = {*m_vertex_buffer};
                 m_offsets = {0};
@@ -621,12 +610,12 @@ public:
                const vulkan::Queue& transfer_queue,
                const MeshModel<3>& mesh)
         {
-                ASSERT(!mesh.points().empty());
+                ASSERT(!mesh.points.empty());
 
                 m_vertex_buffer = load_point_vertices(
                         device, transfer_command_pool, transfer_queue,
                         {graphics_queue.family_index(), transfer_queue.family_index()}, mesh);
-                m_vertex_count = mesh.points().size();
+                m_vertex_count = mesh.points.size();
 
                 m_buffers = {*m_vertex_buffer};
                 m_offsets = {0};
@@ -659,20 +648,20 @@ DrawObject::DrawObject(
         const vec3& position)
         : m_model_matrix(model_vertex_matrix(mesh, size, position))
 {
-        if (!mesh.facets().empty())
+        if (!mesh.facets.empty())
         {
                 m_triangles = std::make_unique<DrawObject::Triangles>(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sampler,
                         descriptor_set_layout, mesh);
         }
 
-        if (!mesh.lines().empty())
+        if (!mesh.lines.empty())
         {
                 m_lines = std::make_unique<DrawObject::Lines>(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, mesh);
         }
 
-        if (!mesh.points().empty())
+        if (!mesh.points.empty())
         {
                 m_points = std::make_unique<DrawObject::Points>(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, mesh);

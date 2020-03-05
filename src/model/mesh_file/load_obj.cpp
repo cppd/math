@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "load_obj.h"
 
-#include "../alg/alg.h"
+#include "../mesh_function/position.h"
 #include "read/data.h"
 #include "read/lines.h"
 
@@ -530,174 +530,53 @@ bool facet_dimension_is_correct(const std::vector<Vector<N, float>>& vertices, c
         return false;
 }
 
-template <size_t N>
-class FileObj final : public MeshModel<N>
+enum class ObjLineType
 {
-        using typename MeshModel<N>::Facet;
-        using typename MeshModel<N>::Point;
-        using typename MeshModel<N>::Line;
-        using typename MeshModel<N>::Material;
-        using typename MeshModel<N>::Image;
-
-        std::vector<Vector<N, float>> m_vertices;
-        std::vector<Vector<N, float>> m_normals;
-        std::vector<Vector<N - 1, float>> m_texcoords;
-        std::vector<Facet> m_facets;
-        std::vector<Point> m_points;
-        std::vector<Line> m_lines;
-        std::vector<Material> m_materials;
-        std::vector<Image> m_images;
-        Vector<N, float> m_center;
-        float m_length;
-
-        enum class ObjLineType
-        {
-                v,
-                vt,
-                vn,
-                f,
-                usemtl,
-                mtllib,
-                None,
-                NotSupported
-        };
-
-        struct ObjLine
-        {
-                ObjLineType type;
-                long long second_b;
-                long long second_e;
-                std::array<Facet, MAX_FACETS_PER_LINE<N>> facets;
-                int facet_count;
-                Vector<N, float> v;
-        };
-
-        struct Counters
-        {
-                int vertex = 0;
-                int texcoord = 0;
-                int normal = 0;
-                int facet = 0;
-
-                void operator+=(const Counters& counters)
-                {
-                        vertex += counters.vertex;
-                        texcoord += counters.texcoord;
-                        normal += counters.normal;
-                        facet += counters.facet;
-                }
-        };
-
-        void check_facet_indices() const;
-
-        bool remove_facets_with_incorrect_dimension();
-
-        static void read_obj_stage_one(
-                unsigned thread_num,
-                unsigned thread_count,
-                std::vector<Counters>* counters,
-                std::vector<char>* data_ptr,
-                std::vector<long long>* line_begin,
-                std::vector<ObjLine>* line_prop,
-                ProgressRatio* progress);
-
-        void read_obj_stage_two(
-                const Counters& counters,
-                std::vector<char>* data_ptr,
-                std::vector<ObjLine>* line_prop,
-                ProgressRatio* progress,
-                std::map<std::string, int>* material_index,
-                std::vector<std::string>* library_names);
-
-        Counters sum_counters(const std::vector<Counters>& counters);
-
-        void read_obj_thread(
-                unsigned thread_num,
-                unsigned thread_count,
-                std::vector<Counters>* counters,
-                ThreadBarrier* barrier,
-                std::atomic_bool* error_found,
-                std::vector<char>* data_ptr,
-                std::vector<long long>* line_begin,
-                std::vector<ObjLine>* line_prop,
-                ProgressRatio* progress,
-                std::map<std::string, int>* material_index,
-                std::vector<std::string>* library_names);
-
-        void read_obj(
-                const std::string& file_name,
-                ProgressRatio* progress,
-                std::map<std::string, int>* material_index,
-                std::vector<std::string>* library_names);
-
-        void read_lib(
-                const std::string& dir_name,
-                const std::string& file_name,
-                ProgressRatio* progress,
-                std::map<std::string, int>* material_index,
-                std::map<std::string, int>* image_index);
-
-        void read_libs(
-                const std::string& dir_name,
-                ProgressRatio* progress,
-                std::map<std::string, int>* material_index,
-                const std::vector<std::string>& library_names);
-
-        void read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress);
-
-        const std::vector<Vector<N, float>>& vertices() const override
-        {
-                return m_vertices;
-        }
-        const std::vector<Vector<N, float>>& normals() const override
-        {
-                return m_normals;
-        }
-        const std::vector<Vector<N - 1, float>>& texcoords() const override
-        {
-                return m_texcoords;
-        }
-        const std::vector<Facet>& facets() const override
-        {
-                return m_facets;
-        }
-        const std::vector<Point>& points() const override
-        {
-                return m_points;
-        }
-        const std::vector<Line>& lines() const override
-        {
-                return m_lines;
-        }
-        const std::vector<Material>& materials() const override
-        {
-                return m_materials;
-        }
-        const std::vector<Image>& images() const override
-        {
-                return m_images;
-        }
-        Vector<N, float> center() const override
-        {
-                return m_center;
-        }
-        float length() const override
-        {
-                return m_length;
-        }
-
-public:
-        FileObj(const std::string& file_name, ProgressRatio* progress);
+        v,
+        vt,
+        vn,
+        f,
+        usemtl,
+        mtllib,
+        None,
+        NotSupported
 };
 
 template <size_t N>
-void FileObj<N>::check_facet_indices() const
+struct ObjLine
 {
-        int vertex_count = m_vertices.size();
-        int texcoord_count = m_texcoords.size();
-        int normal_count = m_normals.size();
+        ObjLineType type;
+        long long second_b;
+        long long second_e;
+        std::array<typename MeshModel<N>::Facet, MAX_FACETS_PER_LINE<N>> facets;
+        int facet_count;
+        Vector<N, float> v;
+};
 
-        for (const Facet& facet : m_facets)
+struct Counters
+{
+        int vertex = 0;
+        int texcoord = 0;
+        int normal = 0;
+        int facet = 0;
+
+        void operator+=(const Counters& counters)
+        {
+                vertex += counters.vertex;
+                texcoord += counters.texcoord;
+                normal += counters.normal;
+                facet += counters.facet;
+        }
+};
+
+template <size_t N>
+void check_facet_indices(const MeshModel<N>& mesh)
+{
+        int vertex_count = mesh.vertices.size();
+        int texcoord_count = mesh.texcoords.size();
+        int normal_count = mesh.normals.size();
+
+        for (const typename MeshModel<N>::Facet& facet : mesh.facets)
         {
                 for (unsigned i = 0; i < N; ++i)
                 {
@@ -743,7 +622,7 @@ void FileObj<N>::check_facet_indices() const
 }
 
 template <size_t N>
-bool FileObj<N>::remove_facets_with_incorrect_dimension()
+bool remove_facets_with_incorrect_dimension([[maybe_unused]] MeshModel<N>* mesh)
 {
         if constexpr (N != 3)
         {
@@ -751,13 +630,13 @@ bool FileObj<N>::remove_facets_with_incorrect_dimension()
         }
         else
         {
-                std::vector<bool> wrong_facets(m_facets.size(), false);
+                std::vector<bool> wrong_facets(mesh->facets.size(), false);
 
                 int wrong_facet_count = 0;
 
-                for (size_t i = 0; i < m_facets.size(); ++i)
+                for (size_t i = 0; i < mesh->facets.size(); ++i)
                 {
-                        if (!facet_dimension_is_correct(m_vertices, m_facets[i].vertices))
+                        if (!facet_dimension_is_correct(mesh->vertices, mesh->facets[i].vertices))
                         {
                                 wrong_facets[i] = true;
                                 ++wrong_facet_count;
@@ -769,31 +648,31 @@ bool FileObj<N>::remove_facets_with_incorrect_dimension()
                         return false;
                 }
 
-                std::vector<Facet> facets;
-                facets.reserve(m_facets.size() - wrong_facet_count);
+                std::vector<typename MeshModel<N>::Facet> facets;
+                facets.reserve(mesh->facets.size() - wrong_facet_count);
 
-                for (size_t i = 0; i < m_facets.size(); ++i)
+                for (size_t i = 0; i < mesh->facets.size(); ++i)
                 {
                         if (!wrong_facets[i])
                         {
-                                facets.push_back(m_facets[i]);
+                                facets.push_back(mesh->facets[i]);
                         }
                 }
 
-                m_facets = std::move(facets);
+                mesh->facets = std::move(facets);
 
                 return true;
         }
 }
 
 template <size_t N>
-void FileObj<N>::read_obj_stage_one(
+void read_obj_stage_one(
         unsigned thread_num,
         unsigned thread_count,
         std::vector<Counters>* counters,
         std::vector<char>* data_ptr,
         std::vector<long long>* line_begin,
-        std::vector<ObjLine>* line_prop,
+        std::vector<ObjLine<N>>* line_prop,
         ProgressRatio* progress)
 {
         ASSERT(counters->size() == thread_count);
@@ -809,7 +688,7 @@ void FileObj<N>::read_obj_stage_one(
                         progress->set(line_num * line_count_reciprocal);
                 }
 
-                ObjLine lp;
+                ObjLine<N> lp;
 
                 const char* first;
                 const char* second;
@@ -910,18 +789,19 @@ void correct_indices(typename MeshModel<N>::Facet* facet, int vertices_size, int
 }
 
 template <size_t N>
-void FileObj<N>::read_obj_stage_two(
+void read_obj_stage_two(
         const Counters& counters,
         std::vector<char>* data_ptr,
-        std::vector<ObjLine>* line_prop,
+        std::vector<ObjLine<N>>* line_prop,
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
-        std::vector<std::string>* library_names)
+        std::vector<std::string>* library_names,
+        MeshModel<N>* mesh)
 {
-        m_vertices.reserve(counters.vertex);
-        m_texcoords.reserve(counters.texcoord);
-        m_normals.reserve(counters.normal);
-        m_facets.reserve(counters.facet);
+        mesh->vertices.reserve(counters.vertex);
+        mesh->texcoords.reserve(counters.texcoord);
+        mesh->normals.reserve(counters.normal);
+        mesh->facets.reserve(counters.facet);
 
         const std::vector<char>& data = *data_ptr;
         const long long line_count = line_prop->size();
@@ -937,17 +817,17 @@ void FileObj<N>::read_obj_stage_two(
                         progress->set(line_num * line_count_reciprocal);
                 }
 
-                ObjLine& lp = (*line_prop)[line_num];
+                ObjLine<N>& lp = (*line_prop)[line_num];
 
                 switch (lp.type)
                 {
                 case ObjLineType::v:
-                        m_vertices.push_back(lp.v);
+                        mesh->vertices.push_back(lp.v);
                         break;
                 case ObjLineType::vt:
                 {
-                        m_texcoords.resize(m_texcoords.size() + 1);
-                        Vector<N - 1, float>& new_vector = m_texcoords[m_texcoords.size() - 1];
+                        mesh->texcoords.resize(mesh->texcoords.size() + 1);
+                        Vector<N - 1, float>& new_vector = mesh->texcoords[mesh->texcoords.size() - 1];
                         for (unsigned i = 0; i < N - 1; ++i)
                         {
                                 new_vector[i] = lp.v[i];
@@ -955,15 +835,16 @@ void FileObj<N>::read_obj_stage_two(
                         break;
                 }
                 case ObjLineType::vn:
-                        m_normals.push_back(lp.v);
+                        mesh->normals.push_back(lp.v);
                         break;
                 case ObjLineType::f:
                         for (int i = 0; i < lp.facet_count; ++i)
                         {
                                 lp.facets[i].material = mtl_index;
                                 correct_indices<N>(
-                                        &lp.facets[i], m_vertices.size(), m_texcoords.size(), m_normals.size());
-                                m_facets.push_back(std::move(lp.facets[i]));
+                                        &lp.facets[i], mesh->vertices.size(), mesh->texcoords.size(),
+                                        mesh->normals.size());
+                                mesh->facets.push_back(std::move(lp.facets[i]));
                         }
                         break;
                 case ObjLineType::usemtl:
@@ -979,9 +860,9 @@ void FileObj<N>::read_obj_stage_two(
                         {
                                 typename MeshModel<N>::Material mtl;
                                 mtl.name = mtl_name;
-                                m_materials.push_back(std::move(mtl));
-                                material_index->emplace(std::move(mtl_name), m_materials.size() - 1);
-                                mtl_index = m_materials.size() - 1;
+                                mesh->materials.push_back(std::move(mtl));
+                                material_index->emplace(std::move(mtl_name), mesh->materials.size() - 1);
+                                mtl_index = mesh->materials.size() - 1;
                         }
                         break;
                 }
@@ -995,8 +876,7 @@ void FileObj<N>::read_obj_stage_two(
         }
 }
 
-template <size_t N>
-typename FileObj<N>::Counters FileObj<N>::sum_counters(const std::vector<Counters>& counters)
+Counters sum_counters(const std::vector<Counters>& counters)
 {
         Counters sum;
         for (const Counters& c : counters)
@@ -1007,7 +887,7 @@ typename FileObj<N>::Counters FileObj<N>::sum_counters(const std::vector<Counter
 }
 
 template <size_t N>
-void FileObj<N>::read_obj_thread(
+void read_obj_thread(
         unsigned thread_num,
         unsigned thread_count,
         std::vector<Counters>* counters,
@@ -1015,10 +895,11 @@ void FileObj<N>::read_obj_thread(
         std::atomic_bool* error_found,
         std::vector<char>* data_ptr,
         std::vector<long long>* line_begin,
-        std::vector<ObjLine>* line_prop,
+        std::vector<ObjLine<N>>* line_prop,
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
-        std::vector<std::string>* library_names)
+        std::vector<std::string>* library_names,
+        MeshModel<N>* mesh)
 {
         // параллельно
 
@@ -1048,16 +929,17 @@ void FileObj<N>::read_obj_thread(
         line_begin->clear();
         line_begin->shrink_to_fit();
 
-        read_obj_stage_two(sum_counters(*counters), data_ptr, line_prop, progress, material_index, library_names);
+        read_obj_stage_two(sum_counters(*counters), data_ptr, line_prop, progress, material_index, library_names, mesh);
 }
 
 template <size_t N>
-void FileObj<N>::read_lib(
+void read_lib(
         const std::string& dir_name,
         const std::string& file_name,
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
-        std::map<std::string, int>* image_index)
+        std::map<std::string, int>* image_index,
+        MeshModel<N>* mesh)
 {
         std::vector<char> data;
         std::vector<long long> line_begin;
@@ -1068,7 +950,7 @@ void FileObj<N>::read_lib(
 
         const std::string lib_dir = file_parent_path(lib_name);
 
-        FileObj::Material* mtl = nullptr;
+        typename MeshModel<N>::Material* mtl = nullptr;
         std::string name;
 
         const long long line_count = line_begin.size();
@@ -1106,7 +988,7 @@ void FileObj<N>::read_lib(
                                 auto iter = material_index->find(name);
                                 if (iter != material_index->end())
                                 {
-                                        mtl = &(m_materials[iter->second]);
+                                        mtl = &(mesh->materials[iter->second]);
                                         material_index->erase(name);
                                 }
                                 else
@@ -1179,7 +1061,7 @@ void FileObj<N>::read_lib(
                                 }
 
                                 read_name("file", data, second_b, second_e, &name);
-                                load_image<N>(lib_dir, name, image_index, &m_images, &mtl->map_Ka);
+                                load_image<N>(lib_dir, name, image_index, &mesh->images, &mtl->map_Ka);
                         }
                         else if (str_equal(first, MTL_map_Kd))
                         {
@@ -1189,7 +1071,7 @@ void FileObj<N>::read_lib(
                                 }
 
                                 read_name("file", data, second_b, second_e, &name);
-                                load_image<N>(lib_dir, name, image_index, &m_images, &mtl->map_Kd);
+                                load_image<N>(lib_dir, name, image_index, &mesh->images, &mtl->map_Kd);
                         }
                         else if (str_equal(first, MTL_map_Ks))
                         {
@@ -1199,7 +1081,7 @@ void FileObj<N>::read_lib(
                                 }
 
                                 read_name("file", data, second_b, second_e, &name);
-                                load_image<N>(lib_dir, name, image_index, &m_images, &mtl->map_Ks);
+                                load_image<N>(lib_dir, name, image_index, &mesh->images, &mtl->map_Ks);
                         }
                 }
                 catch (std::exception& e)
@@ -1216,17 +1098,18 @@ void FileObj<N>::read_lib(
 }
 
 template <size_t N>
-void FileObj<N>::read_libs(
+void read_libs(
         const std::string& dir_name,
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
-        const std::vector<std::string>& library_names)
+        const std::vector<std::string>& library_names,
+        MeshModel<N>* mesh)
 {
         std::map<std::string, int> image_index;
 
         for (size_t i = 0; (i < library_names.size()) && !material_index->empty(); ++i)
         {
-                read_lib(dir_name, library_names[i], progress, material_index, &image_index);
+                read_lib(dir_name, library_names[i], progress, material_index, &image_index, mesh);
         }
 
         if (!material_index->empty())
@@ -1234,16 +1117,17 @@ void FileObj<N>::read_libs(
                 error("Materials not found in libraries: " + map_keys_to_string(*material_index));
         }
 
-        m_materials.shrink_to_fit();
-        m_images.shrink_to_fit();
+        mesh->materials.shrink_to_fit();
+        mesh->images.shrink_to_fit();
 }
 
 template <size_t N>
-void FileObj<N>::read_obj(
+void read_obj(
         const std::string& file_name,
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
-        std::vector<std::string>* library_names)
+        std::vector<std::string>* library_names,
+        MeshModel<N>* mesh)
 {
         const int thread_count = hardware_concurrency();
 
@@ -1252,7 +1136,7 @@ void FileObj<N>::read_obj(
 
         read_file_lines(file_name, &data, &line_begin);
 
-        std::vector<ObjLine> line_prop(line_begin.size());
+        std::vector<ObjLine<N>> line_prop(line_begin.size());
         ThreadBarrier barrier(thread_count);
         std::atomic_bool error_found{false};
         std::vector<Counters> counters(thread_count);
@@ -1263,58 +1147,58 @@ void FileObj<N>::read_obj(
                 threads.add([&, i]() {
                         read_obj_thread(
                                 i, thread_count, &counters, &barrier, &error_found, &data, &line_begin, &line_prop,
-                                progress, material_index, library_names);
+                                progress, material_index, library_names, mesh);
                 });
         }
         threads.join();
 }
 
 template <size_t N>
-void FileObj<N>::read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<MeshModel<N>> read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress)
 {
         progress->set_undefined();
 
         std::map<std::string, int> material_index;
         std::vector<std::string> library_names;
 
-        read_obj(file_name, progress, &material_index, &library_names);
+        MeshModel<N> mesh;
 
-        if (m_facets.empty())
+        read_obj(file_name, progress, &material_index, &library_names, &mesh);
+
+        if (mesh.facets.empty())
         {
                 error("No facets found in OBJ file");
         }
 
-        check_facet_indices();
+        check_facet_indices(mesh);
 
-        center_and_length(m_vertices, m_facets, &m_center, &m_length);
+        set_center_and_length(&mesh);
 
-        if (remove_facets_with_incorrect_dimension())
+        if (remove_facets_with_incorrect_dimension(&mesh))
         {
-                if (m_facets.empty())
+                if (mesh.facets.empty())
                 {
                         error("No " + to_string(N - 1) + "-facets found in " + obj_type_name(N) + " file");
                 }
-                center_and_length(m_vertices, m_facets, &m_center, &m_length);
+                set_center_and_length(&mesh);
         }
 
-        read_libs(file_parent_path(file_name), progress, &material_index, library_names);
-}
+        read_libs(file_parent_path(file_name), progress, &material_index, library_names, &mesh);
 
-template <size_t N>
-FileObj<N>::FileObj(const std::string& file_name, ProgressRatio* progress)
-{
-        double start_time = time_in_seconds();
-
-        read_obj_and_mtl(file_name, progress);
-
-        LOG(obj_type_name(N) + " loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        return std::make_unique<MeshModel<N>>(std::move(mesh));
 }
 }
 
 template <size_t N>
 std::unique_ptr<MeshModel<N>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress)
 {
-        return std::make_unique<FileObj<N>>(file_name, progress);
+        double start_time = time_in_seconds();
+
+        std::unique_ptr<MeshModel<N>> mesh = read_obj_and_mtl<N>(file_name, progress);
+
+        LOG(obj_type_name(N) + " loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+
+        return mesh;
 }
 
 template std::unique_ptr<MeshModel<3>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);

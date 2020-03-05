@@ -66,30 +66,30 @@ void SpatialMeshModel<N, T>::create_mesh_object(
         unsigned thread_count,
         ProgressRatio* progress)
 {
-        if (mesh->vertices().empty())
+        if (mesh->vertices.empty())
         {
                 error("No vertices found in mesh");
         }
 
-        if (mesh->facets().empty())
+        if (mesh->facets.empty())
         {
                 error("No facets found in mesh");
         }
 
-        m_vertices = to_vector<T>(mesh->vertices());
+        m_vertices = to_vector<T>(mesh->vertices);
         m_vertices.shrink_to_fit();
         std::transform(m_vertices.begin(), m_vertices.end(), m_vertices.begin(), MatrixVectorMultiplier(vertex_matrix));
 
-        m_normals = to_vector<T>(mesh->normals());
+        m_normals = to_vector<T>(mesh->normals);
         m_normals.shrink_to_fit();
 
-        m_texcoords = to_vector<T>(mesh->texcoords());
+        m_texcoords = to_vector<T>(mesh->texcoords);
         m_texcoords.shrink_to_fit();
 
         m_min = Vector<N, T>(limits<T>::max());
         m_max = Vector<N, T>(limits<T>::lowest());
-        m_facets.reserve(mesh->facets().size());
-        for (const typename MeshModel<N>::Facet& facet : mesh->facets())
+        m_facets.reserve(mesh->facets.size());
+        for (const typename MeshModel<N>::Facet& facet : mesh->facets)
         {
                 m_facets.emplace_back(
                         m_vertices, m_normals, m_texcoords, facet.vertices, facet.has_normal, facet.normals,
@@ -102,14 +102,14 @@ void SpatialMeshModel<N, T>::create_mesh_object(
                 }
         }
 
-        m_materials.reserve(mesh->materials().size());
-        for (const typename MeshModel<N>::Material& m : mesh->materials())
+        m_materials.reserve(mesh->materials.size());
+        for (const typename MeshModel<N>::Material& m : mesh->materials)
         {
                 m_materials.emplace_back(m.Kd, m.Ks, m.Ns, m.map_Kd, m.map_Ks);
         }
 
-        m_images.reserve(mesh->images().size());
-        for (const typename MeshModel<N>::Image& image : mesh->images())
+        m_images.reserve(mesh->images.size());
+        for (const typename MeshModel<N>::Image& image : mesh->images)
         {
                 m_images.emplace_back(image.size, image.srgba_pixels);
         }

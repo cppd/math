@@ -21,11 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/geometry/core/convex_hull.h>
 #include <src/geometry/graph/mst.h>
-#include <src/model/alg/alg.h>
-#include <src/model/create/facets.h>
-#include <src/model/create/lines.h>
-#include <src/model/create/points.h>
-#include <src/model/file.h>
+#include <src/model/mesh_create.h>
+#include <src/model/mesh_file.h>
+#include <src/model/mesh_function.h>
 
 namespace
 {
@@ -33,13 +31,13 @@ template <size_t N>
 std::unique_ptr<const MeshModel<N>> mesh_convex_hull(const MeshModel<N>& mesh, ProgressRatio* progress)
 {
         std::vector<Vector<N, float>> points;
-        if (!mesh.facets().empty())
+        if (!mesh.facets.empty())
         {
-                points = unique_facet_vertices(&mesh);
+                points = unique_facet_vertices(mesh);
         }
-        else if (!mesh.points().empty())
+        else if (!mesh.points.empty())
         {
-                points = unique_point_vertices(&mesh);
+                points = unique_point_vertices(mesh);
         }
         else
         {
@@ -189,7 +187,7 @@ void ObjectStorageSpace<N, MeshFloat>::build_mesh(
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        if (mesh.facets().empty())
+        if (mesh.facets.empty())
         {
                 return;
         }
@@ -221,7 +219,7 @@ void ObjectStorageSpace<N, MeshFloat>::add_object_and_build_mesh(
                 return;
         }
 
-        if (mesh->facets().empty() && !(object_type == ObjectType::Model && !mesh->points().empty()))
+        if (mesh->facets.empty() && !(object_type == ObjectType::Model && !mesh->points.empty()))
         {
                 return;
         }
@@ -248,7 +246,7 @@ void ObjectStorageSpace<N, MeshFloat>::add_object_convex_hull_and_build_mesh(
                 return;
         }
 
-        if (mesh->facets().empty() && !(object_type == ObjectType::Model && !mesh->points().empty()))
+        if (mesh->facets.empty() && !(object_type == ObjectType::Model && !mesh->points.empty()))
         {
                 return;
         }
@@ -262,7 +260,7 @@ void ObjectStorageSpace<N, MeshFloat>::add_object_convex_hull_and_build_mesh(
                 mesh_ch = mesh_convex_hull(*mesh, &progress);
         }
 
-        if (mesh_ch->facets().empty())
+        if (mesh_ch->facets.empty())
         {
                 return;
         }
@@ -420,7 +418,7 @@ void ObjectStorageSpace<N, MeshFloat>::build_mst(
 
         std::shared_ptr<const MeshModel<N>> mst_mesh = create_mesh_for_lines(m_manifold_points, mst_lines);
 
-        if (mst_mesh->lines().empty())
+        if (mst_mesh->lines.empty())
         {
                 return;
         }
@@ -511,12 +509,12 @@ void ObjectStorageSpace<N, MeshFloat>::load_object(
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        if (mesh->facets().empty() && mesh->points().empty())
+        if (mesh->facets.empty() && mesh->points.empty())
         {
                 error("Facets or points not found");
         }
 
-        if (!mesh->facets().empty() && !mesh->points().empty())
+        if (!mesh->facets.empty() && !mesh->points.empty())
         {
                 error("Facets and points together in one object are not supported");
         }
@@ -527,8 +525,7 @@ void ObjectStorageSpace<N, MeshFloat>::load_object(
 
         m_event_emitter.file_loaded(object_name, N, objects);
 
-        m_manifold_points =
-                !mesh->facets().empty() ? unique_facet_vertices(mesh.get()) : unique_point_vertices(mesh.get());
+        m_manifold_points = !mesh->facets.empty() ? unique_facet_vertices(*mesh) : unique_point_vertices(*mesh);
 
         if constexpr (N == 3)
         {
@@ -630,7 +627,7 @@ void ObjectStorageSpace<N, MeshFloat>::save(ObjectId id, const std::string& file
                 return;
         }
 
-        save_geometry(mesh.get(), file_name, name);
+        save_geometry(*mesh, file_name, name);
 }
 
 //

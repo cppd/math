@@ -17,8 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "save_obj.h"
 
-#include "../alg/alg.h"
-#include "../file.h"
+#include "file.h"
+
+#include "../mesh_function/size.h"
+#include "../mesh_function/unique.h"
 
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -135,10 +137,10 @@ void write_line(const CFile& file, const std::array<int, 2>& vertices)
 
 // Запись вершин с приведением координат вершин к интервалу [-1, 1] с сохранением пропорций
 template <size_t N>
-void write_vertices(const CFile& file, const MeshModel<N>* obj)
+void write_vertices(const CFile& file, const MeshModel<N>& mesh)
 {
-        std::vector<int> facet_indices = unique_facet_indices(obj);
-        std::vector<int> line_indices = unique_line_indices(obj);
+        std::vector<int> facet_indices = unique_facet_indices(mesh);
+        std::vector<int> line_indices = unique_line_indices(mesh);
 
         if (facet_indices.empty() && line_indices.empty())
         {
@@ -154,10 +156,7 @@ void write_vertices(const CFile& file, const MeshModel<N>* obj)
                 error("Line unique indices count " + to_string(line_indices.size()) + " is less than " + to_string(2));
         }
 
-        Vector<N, float> min;
-        Vector<N, float> max;
-
-        std::tie(min, max) = min_max_coordinates(obj->vertices(), facet_indices, line_indices);
+        auto [min, max] = mesh_min_max_facets_lines(mesh);
 
         Vector<N, float> delta = max - min;
 
@@ -165,13 +164,13 @@ void write_vertices(const CFile& file, const MeshModel<N>* obj)
 
         if (max_delta == 0)
         {
-                error("Object vertices are equal to each other");
+                error("Mesh vertices are equal to each other");
         }
 
         float scale_factor = 2 / max_delta;
         Vector<N, float> center = min + 0.5f * delta;
 
-        for (const Vector<N, float>& v : obj->vertices())
+        for (const Vector<N, float>& v : mesh.vertices)
         {
                 Vector<N, float> vertex = (v - center) * scale_factor;
 
@@ -180,9 +179,9 @@ void write_vertices(const CFile& file, const MeshModel<N>* obj)
 }
 
 template <size_t N>
-void write_normals(const CFile& file, const MeshModel<N>* obj)
+void write_normals(const CFile& file, const MeshModel<N>& mesh)
 {
-        for (const Vector<N, float>& vn : obj->normals())
+        for (const Vector<N, float>& vn : mesh.normals)
         {
                 Vector<N, double> normal = to_vector<double>(vn);
                 double len = normal.norm();
@@ -199,7 +198,7 @@ void write_normals(const CFile& file, const MeshModel<N>* obj)
 }
 
 template <size_t N>
-void write_facets(const CFile& file, const MeshModel<N>* obj)
+void write_facets(const CFile& file, const MeshModel<N>& mesh)
 {
         // Вершины граней надо записывать в трёхмерный OBJ таким образом,
         // чтобы при обходе против часовой стрелки перпендикуляр к грани
@@ -208,7 +207,7 @@ void write_facets(const CFile& file, const MeshModel<N>* obj)
         // попытаться определить правильное направление по векторам вершин,
         // если у вершин они заданы.
 
-        for (const typename MeshModel<N>::Facet& f : obj->facets())
+        for (const typename MeshModel<N>::Facet& f : mesh.facets)
         {
                 if (!f.has_normal)
                 {
@@ -223,9 +222,9 @@ void write_facets(const CFile& file, const MeshModel<N>* obj)
                         std::array<int, 3> v = f.vertices;
                         std::array<int, 3> n = f.normals;
 
-                        Vector<3, double> v0 = to_vector<double>(obj->vertices()[v[0]]);
-                        Vector<3, double> v1 = to_vector<double>(obj->vertices()[v[1]]);
-                        Vector<3, double> v2 = to_vector<double>(obj->vertices()[v[2]]);
+                        Vector<3, double> v0 = to_vector<double>(mesh.vertices[v[0]]);
+                        Vector<3, double> v1 = to_vector<double>(mesh.vertices[v[1]]);
+                        Vector<3, double> v2 = to_vector<double>(mesh.vertices[v[2]]);
 
                         // Перпендикуляр к грани при обходе вершин против часовой
                         // стрелки и противоположно направлению взгляда
@@ -233,9 +232,9 @@ void write_facets(const CFile& file, const MeshModel<N>* obj)
 
                         // Если перпендикуляр в противоположном направлении со всеми
                         // векторами вершин, то меняется порядок вершин.
-                        if (dot(to_vector<double>(obj->normals()[n[0]]), normal) < 0 &&
-                            dot(to_vector<double>(obj->normals()[n[1]]), normal) < 0 &&
-                            dot(to_vector<double>(obj->normals()[n[2]]), normal) < 0)
+                        if (dot(to_vector<double>(mesh.normals[n[0]]), normal) < 0 &&
+                            dot(to_vector<double>(mesh.normals[n[1]]), normal) < 0 &&
+                            dot(to_vector<double>(mesh.normals[n[2]]), normal) < 0)
                         {
                                 std::swap(v[1], v[2]);
                                 std::swap(n[1], n[2]);
@@ -247,9 +246,9 @@ void write_facets(const CFile& file, const MeshModel<N>* obj)
 }
 
 template <size_t N>
-void write_lines(const CFile& file, const MeshModel<N>* obj)
+void write_lines(const CFile& file, const MeshModel<N>& mesh)
 {
-        for (const typename MeshModel<N>::Line& l : obj->lines())
+        for (const typename MeshModel<N>::Line& l : mesh.lines)
         {
                 write_line(file, l.vertices);
         }
@@ -281,11 +280,11 @@ std::string file_name_with_extension(const std::string& file_name)
 }
 
 template <size_t N>
-std::string save_to_obj_file(const MeshModel<N>* mesh, const std::string& file_name, const std::string_view& comment)
+std::string save_to_obj_file(const MeshModel<N>& mesh, const std::string& file_name, const std::string_view& comment)
 {
         static_assert(N >= 3);
 
-        if (mesh->facets().empty() && mesh->lines().empty())
+        if (mesh.facets.empty() && mesh.lines.empty())
         {
                 error("Mesh has neither facets nor lines");
         }
@@ -307,7 +306,7 @@ std::string save_to_obj_file(const MeshModel<N>* mesh, const std::string& file_n
         return full_name;
 }
 
-template std::string save_to_obj_file(const MeshModel<3>*, const std::string&, const std::string_view&);
-template std::string save_to_obj_file(const MeshModel<4>*, const std::string&, const std::string_view&);
-template std::string save_to_obj_file(const MeshModel<5>*, const std::string&, const std::string_view&);
-template std::string save_to_obj_file(const MeshModel<6>*, const std::string&, const std::string_view&);
+template std::string save_to_obj_file(const MeshModel<3>&, const std::string&, const std::string_view&);
+template std::string save_to_obj_file(const MeshModel<4>&, const std::string&, const std::string_view&);
+template std::string save_to_obj_file(const MeshModel<5>&, const std::string&, const std::string_view&);
+template std::string save_to_obj_file(const MeshModel<6>&, const std::string&, const std::string_view&);

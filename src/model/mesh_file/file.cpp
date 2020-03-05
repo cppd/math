@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "file.h"
 
-#include "file/file_type.h"
-#include "file/load_obj.h"
-#include "file/load_txt.h"
-#include "file/save_obj.h"
+#include "file_type.h"
+#include "load_obj.h"
+#include "load_txt.h"
+#include "save_obj.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
@@ -97,7 +97,7 @@ std::unique_ptr<MeshModel<N>> load_geometry(const std::string& file_name, Progre
 }
 
 template <size_t N>
-std::string save_geometry(const MeshModel<N>* mesh, const std::string& file_name, const std::string_view& comment)
+std::string save_geometry(const MeshModel<N>& mesh, const std::string& file_name, const std::string_view& comment)
 {
         std::string ext = file_extension(file_name);
         if (is_obj_file_extension(N, ext))
@@ -111,10 +111,10 @@ std::string save_geometry(const MeshModel<N>* mesh, const std::string& file_name
         error("Empty extension " + file_name);
 }
 
-template std::string save_geometry(const MeshModel<3>*, const std::string&, const std::string_view&);
-template std::string save_geometry(const MeshModel<4>*, const std::string&, const std::string_view&);
-template std::string save_geometry(const MeshModel<5>*, const std::string&, const std::string_view&);
-template std::string save_geometry(const MeshModel<6>*, const std::string&, const std::string_view&);
+template std::string save_geometry(const MeshModel<3>&, const std::string&, const std::string_view&);
+template std::string save_geometry(const MeshModel<4>&, const std::string&, const std::string_view&);
+template std::string save_geometry(const MeshModel<5>&, const std::string&, const std::string_view&);
+template std::string save_geometry(const MeshModel<6>&, const std::string&, const std::string_view&);
 
 template std::unique_ptr<MeshModel<3>> load_geometry(const std::string&, ProgressRatio*);
 template std::unique_ptr<MeshModel<4>> load_geometry(const std::string&, ProgressRatio*);
