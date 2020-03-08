@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/application/name.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
-#include <src/util/string/vector.h>
+#include <src/utility/string/vector.h>
 
 #include <unordered_set>
 

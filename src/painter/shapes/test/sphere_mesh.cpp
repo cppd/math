@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/geometry/core/convex_hull.h>
 #include <src/model/mesh_utility.h>
-#include <src/util/random/engine.h>
+#include <src/utility/random/engine.h>
 
 #include <array>
 #include <random>

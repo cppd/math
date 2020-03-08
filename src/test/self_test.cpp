@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/dft/test/test_dft.h>
 #include <src/painter/shapes/test/test_mesh.h>
 #include <src/painter/space/test/test_parallelotope.h>
-#include <src/util/string/str.h>
+#include <src/utility/string/str.h>
 
 namespace
 {

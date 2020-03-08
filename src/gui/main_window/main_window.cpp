@@ -39,7 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 #include <src/show/create.h>
-#include <src/util/file/sys.h>
+#include <src/utility/file/sys.h>
 
 #include <QCloseEvent>
 #include <QDesktopWidget>

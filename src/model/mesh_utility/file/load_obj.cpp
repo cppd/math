@@ -32,9 +32,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/com/type/trait.h>
 #include <src/image/file.h>
-#include <src/util/file/sys.h>
-#include <src/util/string/ascii.h>
-#include <src/util/string/str.h>
+#include <src/utility/file/sys.h>
+#include <src/utility/string/ascii.h>
+#include <src/utility/string/str.h>
 
 #include <cstdio>
 #include <cstdlib>

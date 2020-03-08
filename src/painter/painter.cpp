@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/global_index.h>
 #include <src/com/thread.h>
 #include <src/com/type/limit.h>
-#include <src/util/random/engine.h>
+#include <src/utility/random/engine.h>
 
 #include <random>
 #include <thread>

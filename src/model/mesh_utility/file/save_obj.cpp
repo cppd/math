@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
-#include <src/util/file/file.h>
-#include <src/util/file/sys.h>
-#include <src/util/string/str.h>
+#include <src/utility/file/file.h>
+#include <src/utility/file/sys.h>
+#include <src/utility/string/str.h>
 
 namespace mesh::file
 {

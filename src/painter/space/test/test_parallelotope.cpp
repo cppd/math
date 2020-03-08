@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/random.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
-#include <src/util/random/engine.h>
+#include <src/utility/random/engine.h>
 
 #include <algorithm>
 #include <memory>

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/com/type/trait.h>
 #include <src/numerical/vec.h>
-#include <src/util/string/ascii.h>
+#include <src/utility/string/ascii.h>
 
 #include <string>
 

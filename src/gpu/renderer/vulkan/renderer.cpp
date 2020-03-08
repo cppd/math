@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/numerical/transform.h>
 #include <src/numerical/vec.h>
-#include <src/util/string/vector.h>
+#include <src/utility/string/vector.h>
 #include <src/vulkan/commands.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/device.h>
