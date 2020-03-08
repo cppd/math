@@ -22,8 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../visible_shapes.h"
 
 #include <src/color/colors.h>
-#include <src/model/mesh_file.h>
-#include <src/model/mesh_function.h>
+#include <src/model/mesh_utility.h>
 
 namespace
 {

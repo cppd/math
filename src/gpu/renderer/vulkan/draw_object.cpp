@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/thread.h>
 #include <src/com/time.h>
-#include <src/model/mesh_function.h>
+#include <src/model/mesh_utility.h>
 #include <src/vulkan/buffers.h>
 
 #include <array>

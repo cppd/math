@@ -17,6 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "mesh_create/facets.h"
-#include "mesh_create/lines.h"
-#include "mesh_create/points.h"
+#include "../../mesh.h"
+
+#include <src/progress/progress.h>
+
+#include <memory>
+#include <string>
+
+template <size_t N>
+std::unique_ptr<MeshModel<N>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);

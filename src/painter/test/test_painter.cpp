@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gui/painter_window/painter_window.h>
 #include <src/gui/support/support.h>
 #include <src/image/image.h>
-#include <src/model/mesh_file.h>
+#include <src/model/mesh_utility.h>
 #include <src/util/file/sys.h>
 #include <src/util/string/str.h>
 

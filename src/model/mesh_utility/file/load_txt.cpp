@@ -17,9 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "load_txt.h"
 
-#include "../mesh_function/position.h"
-#include "read/data.h"
-#include "read/lines.h"
+#include "read_data.h"
+#include "read_lines.h"
+
+#include "../position.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>

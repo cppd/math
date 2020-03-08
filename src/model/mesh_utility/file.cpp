@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "file.h"
 
-#include "file_type.h"
-#include "load_obj.h"
-#include "load_txt.h"
-#include "save_obj.h"
+#include "file/file_type.h"
+#include "file/load_obj.h"
+#include "file/load_txt.h"
+#include "file/save_obj.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>

@@ -17,10 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../mesh.h"
+#include "../../mesh.h"
 
+#include <src/progress/progress.h>
+
+#include <memory>
 #include <string>
-#include <string_view>
 
 template <size_t N>
-std::string save_to_obj_file(const MeshModel<N>& mesh, const std::string& file_name, const std::string_view& comment);
+std::unique_ptr<MeshModel<N>> load_from_txt_file(const std::string& file_name, ProgressRatio* progress);

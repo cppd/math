@@ -26,8 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/time.h>
-#include <src/model/mesh_create.h>
-#include <src/model/mesh_file.h>
+#include <src/model/mesh_utility.h>
 #include <src/util/file/sys.h>
 #include <src/util/random/engine.h>
 

@@ -17,4 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "mesh_file/file.h"
+#include "../../mesh.h"
+
+#include <string>
+#include <string_view>
+
+template <size_t N>
+std::string save_to_obj_file(const MeshModel<N>& mesh, const std::string& file_name, const std::string_view& comment);

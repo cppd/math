@@ -17,10 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "save_obj.h"
 
-#include "file.h"
-
-#include "../mesh_function/size.h"
-#include "../mesh_function/unique.h"
+#include "../file.h"
+#include "../size.h"
+#include "../unique.h"
 
 #include <src/com/log.h>
 #include <src/com/print.h>
