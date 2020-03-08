@@ -109,7 +109,7 @@ std::unique_ptr<const SpatialMeshModel<N, T>> simplex_mesh_of_sphere(
 
         LOG("mesh...");
 
-        std::unique_ptr<const MeshModel<N>> mesh(create_mesh_for_facets(points, facets));
+        std::unique_ptr<const mesh::MeshModel<N>> mesh(mesh::create_mesh_for_facets(points, facets));
 
         LOG("simplex mesh...");
 

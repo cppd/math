@@ -44,6 +44,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <thread>
 
+namespace mesh::file
+{
 namespace
 {
 template <size_t N>
@@ -1206,3 +1208,4 @@ template std::unique_ptr<MeshModel<3>> load_from_obj_file(const std::string& fil
 template std::unique_ptr<MeshModel<4>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
 template std::unique_ptr<MeshModel<5>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
 template std::unique_ptr<MeshModel<6>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
+}

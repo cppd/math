@@ -27,6 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/com/time.h>
 
+namespace mesh::file
+{
 namespace
 {
 // Чтение вершин из текстового файла. Одна вершина на строку. Координаты через пробел.
@@ -138,3 +140,4 @@ template std::unique_ptr<MeshModel<3>> load_from_txt_file(const std::string& fil
 template std::unique_ptr<MeshModel<4>> load_from_txt_file(const std::string& file_name, ProgressRatio* progress);
 template std::unique_ptr<MeshModel<5>> load_from_txt_file(const std::string& file_name, ProgressRatio* progress);
 template std::unique_ptr<MeshModel<6>> load_from_txt_file(const std::string& file_name, ProgressRatio* progress);
+}

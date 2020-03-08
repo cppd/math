@@ -24,7 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace mesh_model_unique_implementation
+namespace mesh
+{
+namespace unique_implementation
 {
 template <typename T>
 std::vector<T> to_vector(const std::unordered_set<T>& set)
@@ -59,7 +61,7 @@ std::vector<int> unique_facet_indices(const MeshModel<N>& mesh)
                 }
         }
 
-        return mesh_model_unique_implementation::to_vector(vertices);
+        return unique_implementation::to_vector(vertices);
 }
 
 template <size_t N>
@@ -82,7 +84,7 @@ std::vector<int> unique_line_indices(const MeshModel<N>& mesh)
                 }
         }
 
-        return mesh_model_unique_implementation::to_vector(vertices);
+        return unique_implementation::to_vector(vertices);
 }
 
 template <size_t N>
@@ -104,7 +106,7 @@ std::vector<int> unique_point_indices(const MeshModel<N>& mesh)
                 vertices.insert(index);
         }
 
-        return mesh_model_unique_implementation::to_vector(vertices);
+        return unique_implementation::to_vector(vertices);
 }
 
 template <size_t N>
@@ -127,7 +129,7 @@ std::vector<Vector<N, float>> unique_facet_vertices(const MeshModel<N>& mesh)
                 }
         }
 
-        return mesh_model_unique_implementation::to_vector(vertices);
+        return unique_implementation::to_vector(vertices);
 }
 
 template <size_t N>
@@ -150,7 +152,7 @@ std::vector<Vector<N, float>> unique_line_vertices(const MeshModel<N>& mesh)
                 }
         }
 
-        return mesh_model_unique_implementation::to_vector(vertices);
+        return unique_implementation::to_vector(vertices);
 }
 
 template <size_t N>
@@ -172,5 +174,6 @@ std::vector<Vector<N, float>> unique_point_vertices(const MeshModel<N>& mesh)
                 vertices.insert(mesh.vertices[index]);
         }
 
-        return mesh_model_unique_implementation::to_vector(vertices);
+        return unique_implementation::to_vector(vertices);
+}
 }

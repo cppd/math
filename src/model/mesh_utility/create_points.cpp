@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/time.h>
 
+namespace mesh
+{
 namespace
 {
 template <size_t N>
@@ -66,3 +68,4 @@ template std::unique_ptr<MeshModel<3>> create_mesh_for_points(std::vector<Vector
 template std::unique_ptr<MeshModel<4>> create_mesh_for_points(std::vector<Vector<4, float>>&& points);
 template std::unique_ptr<MeshModel<5>> create_mesh_for_points(std::vector<Vector<5, float>>&& points);
 template std::unique_ptr<MeshModel<6>> create_mesh_for_points(std::vector<Vector<6, float>>&& points);
+}

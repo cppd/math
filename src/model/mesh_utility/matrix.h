@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/transform.h>
 #include <src/numerical/vec.h>
 
+namespace mesh
+{
 template <size_t N>
 Matrix<N + 1, N + 1, double> model_vertex_matrix(
         const MeshModel<N>& mesh,
@@ -33,4 +35,5 @@ Matrix<N + 1, N + 1, double> model_vertex_matrix(
         Matrix<N + 1, N + 1, double> m_scale = scale(Vector<N, double>(size / mesh.length));
         Matrix<N + 1, N + 1, double> m_to_position = translate(position);
         return m_to_position * m_scale * m_to_center;
+}
 }

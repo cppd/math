@@ -132,7 +132,7 @@ std::shared_ptr<const SpatialMeshModel<N, T>> file_mesh(
         constexpr Matrix<N + 1, N + 1, T> matrix(1);
 
         LOG("Loading geometry from file...");
-        std::unique_ptr<const MeshModel<N>> mesh = load_geometry<N>(file_name, progress);
+        std::unique_ptr<const mesh::MeshModel<N>> mesh = mesh::load_geometry<N>(file_name, progress);
 
         LOG("Creating mesh...");
         std::shared_ptr<const SpatialMeshModel<N, T>> spatial_mesh =

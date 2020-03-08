@@ -31,6 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Если число указано, то используется оно. Если только txt,
 // то подсчитывается количество чисел в первой строке файла.
 
+namespace mesh::file
+{
 namespace
 {
 // Чтение первой строки файла с ограничением на максимальное количество символов
@@ -195,4 +197,5 @@ std::tuple<int, ObjFileType> file_dimension_and_type(const std::string& file_nam
         }
 
         return {dimension, obj_file_type};
+}
 }

@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <tuple>
 
+namespace mesh::file
+{
 enum class ObjFileType
 {
         Obj,
@@ -27,3 +29,4 @@ enum class ObjFileType
 };
 
 std::tuple<int, ObjFileType> file_dimension_and_type(const std::string& file_name);
+}

@@ -27,6 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <unordered_set>
 
+namespace mesh
+{
 namespace
 {
 template <size_t N>
@@ -107,3 +109,4 @@ template std::unique_ptr<MeshModel<5>> create_mesh_for_lines(
 template std::unique_ptr<MeshModel<6>> create_mesh_for_lines(
         const std::vector<Vector<6, float>>& points,
         const std::vector<std::array<int, 2>>& lines);
+}

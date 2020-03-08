@@ -24,7 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <tuple>
 
-namespace mesh_model_size_implementation
+namespace mesh
+{
+namespace size_implementation
 {
 template <size_t N, typename T>
 void initial_min_max(Vector<N, T>* min, Vector<N, T>* max)
@@ -42,7 +44,7 @@ std::optional<std::tuple<Vector<N, float>, Vector<N, float>>> mesh_min_max_facet
         Vector<N, float> min;
         Vector<N, float> max;
 
-        mesh_model_size_implementation::initial_min_max(&min, &max);
+        size_implementation::initial_min_max(&min, &max);
 
         Vector<N, float> min_check = min;
         Vector<N, float> max_check = max;
@@ -77,7 +79,7 @@ std::optional<std::tuple<Vector<N, float>, Vector<N, float>>> mesh_min_max_lines
         Vector<N, float> min;
         Vector<N, float> max;
 
-        mesh_model_size_implementation::initial_min_max(&min, &max);
+        size_implementation::initial_min_max(&min, &max);
 
         Vector<N, float> min_check = min;
         Vector<N, float> max_check = max;
@@ -112,7 +114,7 @@ std::optional<std::tuple<Vector<N, float>, Vector<N, float>>> mesh_min_max_point
         Vector<N, float> min;
         Vector<N, float> max;
 
-        mesh_model_size_implementation::initial_min_max(&min, &max);
+        size_implementation::initial_min_max(&min, &max);
 
         Vector<N, float> min_check = min;
         Vector<N, float> max_check = max;
@@ -164,4 +166,5 @@ std::tuple<Vector<N, float>, Vector<N, float>> mesh_min_max_facets_lines(const M
         }
 
         return std::make_tuple(min, max);
+}
 }

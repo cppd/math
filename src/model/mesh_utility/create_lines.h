@@ -23,7 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <memory>
 
+namespace mesh
+{
 template <size_t N>
 std::unique_ptr<MeshModel<N>> create_mesh_for_lines(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, 2>>& lines);
+}

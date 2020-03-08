@@ -20,5 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+namespace mesh::file
+{
 template <typename T>
 void read_file_lines(const std::string& file_name, T* file_data, std::vector<long long>* line_begin);
+}

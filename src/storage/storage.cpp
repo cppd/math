@@ -241,7 +241,7 @@ class Impl final : public ObjectStorage
                 double rho,
                 double alpha) override
         {
-                int dimension = file_dimension(file_name);
+                int dimension = mesh::file_dimension(file_name);
 
                 check_dimension(dimension);
 
@@ -310,7 +310,7 @@ class Impl final : public ObjectStorage
                 std::vector<FileFormat> v(1);
 
                 v[0].name = "OBJ Files";
-                v[0].extensions = {obj_file_extension(dimension)};
+                v[0].extensions = {mesh::obj_file_extension(dimension)};
 
                 return v;
         }
@@ -326,11 +326,11 @@ class Impl final : public ObjectStorage
                 std::vector<FileFormat> v(1);
 
                 v[0].name = "All Supported Formats";
-                for (std::string& s : obj_file_supported_extensions(dimensions))
+                for (std::string& s : mesh::obj_file_supported_extensions(dimensions))
                 {
                         v[0].extensions.push_back(std::move(s));
                 }
-                for (std::string& s : txt_file_supported_extensions(dimensions))
+                for (std::string& s : mesh::txt_file_supported_extensions(dimensions))
                 {
                         v[0].extensions.push_back(std::move(s));
                 }

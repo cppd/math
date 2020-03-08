@@ -60,7 +60,7 @@ protected:
         virtual ~Show() = default;
 
 public:
-        virtual void add_object(const std::shared_ptr<const MeshModel<3>>&, int id, int scale_id) = 0;
+        virtual void add_object(const std::shared_ptr<const mesh::MeshModel<3>>&, int id, int scale_id) = 0;
         virtual void delete_object(int id) = 0;
         virtual void delete_all_objects() = 0;
         virtual void show_object(int id) = 0;

@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <vector>
 
+namespace mesh
+{
 template <size_t N>
 void sort_facets_by_material(
         const MeshModel<N>& mesh,
@@ -87,4 +89,5 @@ void sort_facets_by_material(
                 int m_b = material_index(mesh.facets[b].material);
                 return m_a < m_b;
         }));
+}
 }

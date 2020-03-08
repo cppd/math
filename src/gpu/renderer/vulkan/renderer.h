@@ -63,7 +63,12 @@ struct Renderer
         virtual void clip_plane_show(const vec4& plane) = 0;
         virtual void clip_plane_hide() = 0;
 
-        virtual void object_add(const MeshModel<3>* mesh, double size, const vec3& position, int id, int scale_id) = 0;
+        virtual void object_add(
+                const mesh::MeshModel<3>* mesh,
+                double size,
+                const vec3& position,
+                int id,
+                int scale_id) = 0;
         virtual void object_delete(int id) = 0;
         virtual void object_show(int id) = 0;
         virtual void object_delete_all() = 0;

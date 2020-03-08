@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/util/file/read.h>
 
+namespace mesh::file
+{
 namespace
 {
 template <typename T>
@@ -77,3 +79,4 @@ template void read_file_lines(
         const std::string& file_name,
         std::vector<char>* file_data,
         std::vector<long long>* line_begin);
+}

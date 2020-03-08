@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
+namespace mesh::file
+{
 constexpr bool is_hyphen_minus(char c)
 {
         return c == '-';
@@ -178,4 +180,5 @@ void read_float(const char* str, T* v)
         {
                 error(std::string("Error read 1 floating point of ") + type_name<T>() + " type");
         }
+}
 }

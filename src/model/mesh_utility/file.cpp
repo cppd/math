@@ -26,9 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/util/file/sys.h>
 
+namespace mesh
+{
 int file_dimension(const std::string& file_name)
 {
-        return std::get<0>(file_dimension_and_type(file_name));
+        return std::get<0>(file::file_dimension_and_type(file_name));
 }
 
 std::string obj_file_extension(size_t N)
@@ -77,7 +79,7 @@ bool is_obj_file_extension(size_t N, const std::string& extension)
 template <size_t N>
 std::unique_ptr<MeshModel<N>> load_geometry(const std::string& file_name, ProgressRatio* progress)
 {
-        auto [dimension, file_type] = file_dimension_and_type(file_name);
+        auto [dimension, file_type] = file::file_dimension_and_type(file_name);
 
         if (dimension != static_cast<int>(N))
         {
@@ -87,10 +89,10 @@ std::unique_ptr<MeshModel<N>> load_geometry(const std::string& file_name, Progre
 
         switch (file_type)
         {
-        case ObjFileType::Obj:
-                return load_from_obj_file<N>(file_name, progress);
-        case ObjFileType::Txt:
-                return load_from_txt_file<N>(file_name, progress);
+        case file::ObjFileType::Obj:
+                return file::load_from_obj_file<N>(file_name, progress);
+        case file::ObjFileType::Txt:
+                return file::load_from_txt_file<N>(file_name, progress);
         }
 
         error_fatal("Unknown file type");
@@ -102,7 +104,7 @@ std::string save_geometry(const MeshModel<N>& mesh, const std::string& file_name
         std::string ext = file_extension(file_name);
         if (is_obj_file_extension(N, ext))
         {
-                return save_to_obj_file(mesh, file_name, comment);
+                return file::save_to_obj_file(mesh, file_name, comment);
         }
         if (!ext.empty())
         {
@@ -120,3 +122,4 @@ template std::unique_ptr<MeshModel<3>> load_geometry(const std::string&, Progres
 template std::unique_ptr<MeshModel<4>> load_geometry(const std::string&, ProgressRatio*);
 template std::unique_ptr<MeshModel<5>> load_geometry(const std::string&, ProgressRatio*);
 template std::unique_ptr<MeshModel<6>> load_geometry(const std::string&, ProgressRatio*);
+}

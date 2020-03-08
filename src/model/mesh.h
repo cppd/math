@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+namespace mesh
+{
 template <size_t N>
 struct MeshModel final
 {
@@ -85,3 +87,4 @@ struct MeshModel final
         MeshModel& operator=(MeshModel&&) = default;
         ~MeshModel() = default;
 };
+}

@@ -61,7 +61,7 @@ int tree_max_depth()
 
 template <size_t N, typename T>
 void SpatialMeshModel<N, T>::create_mesh_object(
-        const MeshModel<N>* mesh,
+        const mesh::MeshModel<N>* mesh,
         const Matrix<N + 1, N + 1, T>& vertex_matrix,
         unsigned thread_count,
         ProgressRatio* progress)
@@ -89,7 +89,7 @@ void SpatialMeshModel<N, T>::create_mesh_object(
         m_min = Vector<N, T>(limits<T>::max());
         m_max = Vector<N, T>(limits<T>::lowest());
         m_facets.reserve(mesh->facets.size());
-        for (const typename MeshModel<N>::Facet& facet : mesh->facets)
+        for (const typename mesh::MeshModel<N>::Facet& facet : mesh->facets)
         {
                 m_facets.emplace_back(
                         m_vertices, m_normals, m_texcoords, facet.vertices, facet.has_normal, facet.normals,
@@ -103,13 +103,13 @@ void SpatialMeshModel<N, T>::create_mesh_object(
         }
 
         m_materials.reserve(mesh->materials.size());
-        for (const typename MeshModel<N>::Material& m : mesh->materials)
+        for (const typename mesh::MeshModel<N>::Material& m : mesh->materials)
         {
                 m_materials.emplace_back(m.Kd, m.Ks, m.Ns, m.map_Kd, m.map_Ks);
         }
 
         m_images.reserve(mesh->images.size());
-        for (const typename MeshModel<N>::Image& image : mesh->images)
+        for (const typename mesh::MeshModel<N>::Image& image : mesh->images)
         {
                 m_images.emplace_back(image.size, image.srgba_pixels);
         }
@@ -132,7 +132,7 @@ void SpatialMeshModel<N, T>::create_mesh_object(
 
 template <size_t N, typename T>
 SpatialMeshModel<N, T>::SpatialMeshModel(
-        const MeshModel<N>* mesh,
+        const mesh::MeshModel<N>* mesh,
         const Matrix<N + 1, N + 1, T>& vertex_matrix,
         unsigned thread_count,
         ProgressRatio* progress)

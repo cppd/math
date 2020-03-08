@@ -27,6 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string_view>
 #include <vector>
 
+namespace mesh
+{
 int file_dimension(const std::string& file_name);
 
 std::string obj_file_extension(size_t N);
@@ -42,3 +44,4 @@ std::unique_ptr<MeshModel<N>> load_geometry(const std::string& file_name, Progre
 
 template <size_t N>
 std::string save_geometry(const MeshModel<N>& mesh, const std::string& file_name, const std::string_view& comment);
+}

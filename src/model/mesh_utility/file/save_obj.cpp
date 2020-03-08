@@ -29,14 +29,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/util/file/sys.h>
 #include <src/util/string/str.h>
 
+namespace mesh::file
+{
+namespace
+{
 constexpr const char* OBJ_comment_and_space = "# ";
 constexpr const char* OBJ_v = "v";
 constexpr const char* OBJ_vn = "vn";
 constexpr const char* OBJ_f = "f";
 constexpr const char* OBJ_l = "l";
 
-namespace
-{
 void write_comment(const CFile& file, const std::string_view& comment)
 {
         if (comment.empty())
@@ -309,3 +311,4 @@ template std::string save_to_obj_file(const MeshModel<3>&, const std::string&, c
 template std::string save_to_obj_file(const MeshModel<4>&, const std::string&, const std::string_view&);
 template std::string save_to_obj_file(const MeshModel<5>&, const std::string&, const std::string_view&);
 template std::string save_to_obj_file(const MeshModel<6>&, const std::string&, const std::string_view&);
+}
