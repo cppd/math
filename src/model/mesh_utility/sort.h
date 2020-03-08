@@ -28,15 +28,14 @@ namespace mesh
 {
 template <size_t N>
 void sort_facets_by_material(
-        const MeshModel<N>& mesh,
+        const Mesh<N>& mesh,
         std::vector<int>* sorted_facet_indices,
         std::vector<int>* facet_offset,
         std::vector<int>* facet_count)
 {
-        ASSERT(std::all_of(
-                std::cbegin(mesh.facets), std::cend(mesh.facets), [&](const typename MeshModel<N>::Facet& facet) {
-                        return facet.material < static_cast<int>(mesh.materials.size());
-                }));
+        ASSERT(std::all_of(std::cbegin(mesh.facets), std::cend(mesh.facets), [&](const typename Mesh<N>::Facet& facet) {
+                return facet.material < static_cast<int>(mesh.materials.size());
+        }));
 
         // Robert Sedgewick, Kevin Wayne.
         // Algorithms. Fourth edition.
@@ -54,7 +53,7 @@ void sort_facets_by_material(
         // Количество граней с заданным материалом
         *facet_count = std::vector<int>(new_material_size, 0);
 
-        for (const typename MeshModel<N>::Facet& facet : mesh.facets)
+        for (const typename Mesh<N>::Facet& facet : mesh.facets)
         {
                 int m = material_index(facet.material);
                 ++(*facet_count)[m];

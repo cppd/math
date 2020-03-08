@@ -27,5 +27,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace mesh::file
 {
 template <size_t N>
-std::unique_ptr<MeshModel<N>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
+std::unique_ptr<Mesh<N>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
 }

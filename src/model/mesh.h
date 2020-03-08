@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace mesh
 {
 template <size_t N>
-struct MeshModel final
+struct Mesh final
 {
         struct Facet
         {
@@ -80,11 +80,11 @@ struct MeshModel final
         Vector<N, float> center{0};
         float length{0};
 
-        MeshModel() = default;
-        MeshModel(const MeshModel&) = delete;
-        MeshModel& operator=(const MeshModel&) = delete;
-        MeshModel(MeshModel&&) = default;
-        MeshModel& operator=(MeshModel&&) = default;
-        ~MeshModel() = default;
+        Mesh() = default;
+        Mesh(const Mesh&) = delete;
+        Mesh& operator=(const Mesh&) = delete;
+        Mesh(Mesh&&) = default;
+        Mesh& operator=(Mesh&&) = default;
+        ~Mesh() = default;
 };
 }

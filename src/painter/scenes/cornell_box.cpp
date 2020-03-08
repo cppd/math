@@ -121,7 +121,7 @@ CornellBoxScene<T>::CornellBoxScene(
 {
         ProgressRatio progress(nullptr);
 
-        std::unique_ptr<mesh::MeshModel<3>> mesh = mesh::load_geometry<3>(obj_file_name, &progress);
+        std::unique_ptr<mesh::Mesh<3>> mesh = mesh::load_geometry<3>(obj_file_name, &progress);
 
         mat4 vertex_matrix = model_vertex_matrix(*mesh, size, vec3(0));
 

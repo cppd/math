@@ -69,7 +69,7 @@ void initial_min_max(Vector<N, T>* min, Vector<N, T>* max)
 }
 
 template <size_t N>
-void set_center_and_length_for_facets(MeshModel<N>* mesh)
+void set_center_and_length_for_facets(Mesh<N>* mesh)
 {
         ASSERT(mesh);
 
@@ -85,7 +85,7 @@ void set_center_and_length_for_facets(MeshModel<N>* mesh)
 
         initial_min_max(&min, &max);
 
-        for (const typename MeshModel<N>::Facet& facet : mesh->facets)
+        for (const typename Mesh<N>::Facet& facet : mesh->facets)
         {
                 for (int index : facet.vertices)
                 {
@@ -103,7 +103,7 @@ void set_center_and_length_for_facets(MeshModel<N>* mesh)
 }
 
 template <size_t N>
-void set_center_and_length_for_lines(MeshModel<N>* mesh)
+void set_center_and_length_for_lines(Mesh<N>* mesh)
 {
         ASSERT(mesh);
 
@@ -119,7 +119,7 @@ void set_center_and_length_for_lines(MeshModel<N>* mesh)
 
         initial_min_max(&min, &max);
 
-        for (const typename MeshModel<N>::Line& line : mesh->lines)
+        for (const typename Mesh<N>::Line& line : mesh->lines)
         {
                 for (int index : line.vertices)
                 {
@@ -137,7 +137,7 @@ void set_center_and_length_for_lines(MeshModel<N>* mesh)
 }
 
 template <size_t N>
-void set_center_and_length_for_points(MeshModel<N>* mesh)
+void set_center_and_length_for_points(Mesh<N>* mesh)
 {
         ASSERT(mesh);
 
@@ -153,7 +153,7 @@ void set_center_and_length_for_points(MeshModel<N>* mesh)
 
         initial_min_max(&min, &max);
 
-        for (const typename MeshModel<N>::Point& point : mesh->points)
+        for (const typename Mesh<N>::Point& point : mesh->points)
         {
                 int index = point.vertex;
 
@@ -171,7 +171,7 @@ void set_center_and_length_for_points(MeshModel<N>* mesh)
 }
 
 template <size_t N>
-void set_center_and_length(MeshModel<N>* mesh)
+void set_center_and_length(Mesh<N>* mesh)
 {
         int c = 0;
         c += !mesh->facets.empty() ? 1 : 0;

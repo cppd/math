@@ -77,7 +77,7 @@ bool is_obj_file_extension(size_t N, const std::string& extension)
 //
 
 template <size_t N>
-std::unique_ptr<MeshModel<N>> load_geometry(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> load_geometry(const std::string& file_name, ProgressRatio* progress)
 {
         auto [dimension, file_type] = file::file_dimension_and_type(file_name);
 
@@ -99,7 +99,7 @@ std::unique_ptr<MeshModel<N>> load_geometry(const std::string& file_name, Progre
 }
 
 template <size_t N>
-std::string save_geometry(const MeshModel<N>& mesh, const std::string& file_name, const std::string_view& comment)
+std::string save_geometry(const Mesh<N>& mesh, const std::string& file_name, const std::string_view& comment)
 {
         std::string ext = file_extension(file_name);
         if (is_obj_file_extension(N, ext))
@@ -113,13 +113,13 @@ std::string save_geometry(const MeshModel<N>& mesh, const std::string& file_name
         error("Empty extension " + file_name);
 }
 
-template std::string save_geometry(const MeshModel<3>&, const std::string&, const std::string_view&);
-template std::string save_geometry(const MeshModel<4>&, const std::string&, const std::string_view&);
-template std::string save_geometry(const MeshModel<5>&, const std::string&, const std::string_view&);
-template std::string save_geometry(const MeshModel<6>&, const std::string&, const std::string_view&);
+template std::string save_geometry(const Mesh<3>&, const std::string&, const std::string_view&);
+template std::string save_geometry(const Mesh<4>&, const std::string&, const std::string_view&);
+template std::string save_geometry(const Mesh<5>&, const std::string&, const std::string_view&);
+template std::string save_geometry(const Mesh<6>&, const std::string&, const std::string_view&);
 
-template std::unique_ptr<MeshModel<3>> load_geometry(const std::string&, ProgressRatio*);
-template std::unique_ptr<MeshModel<4>> load_geometry(const std::string&, ProgressRatio*);
-template std::unique_ptr<MeshModel<5>> load_geometry(const std::string&, ProgressRatio*);
-template std::unique_ptr<MeshModel<6>> load_geometry(const std::string&, ProgressRatio*);
+template std::unique_ptr<Mesh<3>> load_geometry(const std::string&, ProgressRatio*);
+template std::unique_ptr<Mesh<4>> load_geometry(const std::string&, ProgressRatio*);
+template std::unique_ptr<Mesh<5>> load_geometry(const std::string&, ProgressRatio*);
+template std::unique_ptr<Mesh<6>> load_geometry(const std::string&, ProgressRatio*);
 }

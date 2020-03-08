@@ -128,7 +128,7 @@ bool check_color(const Color& v)
 }
 
 template <size_t N>
-typename MeshModel<N>::Image read_image_from_file(const std::string& file_name)
+typename Mesh<N>::Image read_image_from_file(const std::string& file_name)
 {
         if constexpr (N != 3)
         {
@@ -137,7 +137,7 @@ typename MeshModel<N>::Image read_image_from_file(const std::string& file_name)
         }
         else
         {
-                MeshModel<3>::Image obj_image;
+                Mesh<3>::Image obj_image;
                 load_srgba_image_from_file(file_name, &obj_image.size[0], &obj_image.size[1], &obj_image.srgba_pixels);
                 flip_srgba_image_vertically(obj_image.size[0], obj_image.size[1], &obj_image.srgba_pixels);
                 return obj_image;
@@ -149,7 +149,7 @@ void load_image(
         const std::string& dir_name,
         const std::string& image_name,
         std::map<std::string, int>* image_index,
-        std::vector<typename MeshModel<N>::Image>* images,
+        std::vector<typename Mesh<N>::Image>* images,
         int* index)
 {
         std::string file_name = trim(image_name);
@@ -292,7 +292,7 @@ void read_facets(
         const T& data,
         long long begin,
         long long end,
-        std::array<typename MeshModel<N>::Facet, MAX_FACETS_PER_LINE<N>>* facets,
+        std::array<typename Mesh<N>::Facet, MAX_FACETS_PER_LINE<N>>* facets,
         int* facet_count)
 {
         static_assert(N >= 3);
@@ -551,7 +551,7 @@ struct ObjLine
         ObjLineType type;
         long long second_b;
         long long second_e;
-        std::array<typename MeshModel<N>::Facet, MAX_FACETS_PER_LINE<N>> facets;
+        std::array<typename Mesh<N>::Facet, MAX_FACETS_PER_LINE<N>> facets;
         int facet_count;
         Vector<N, float> v;
 };
@@ -573,13 +573,13 @@ struct Counters
 };
 
 template <size_t N>
-void check_facet_indices(const MeshModel<N>& mesh)
+void check_facet_indices(const Mesh<N>& mesh)
 {
         int vertex_count = mesh.vertices.size();
         int texcoord_count = mesh.texcoords.size();
         int normal_count = mesh.normals.size();
 
-        for (const typename MeshModel<N>::Facet& facet : mesh.facets)
+        for (const typename Mesh<N>::Facet& facet : mesh.facets)
         {
                 for (unsigned i = 0; i < N; ++i)
                 {
@@ -625,7 +625,7 @@ void check_facet_indices(const MeshModel<N>& mesh)
 }
 
 template <size_t N>
-bool remove_facets_with_incorrect_dimension([[maybe_unused]] MeshModel<N>* mesh)
+bool remove_facets_with_incorrect_dimension([[maybe_unused]] Mesh<N>* mesh)
 {
         if constexpr (N != 3)
         {
@@ -651,7 +651,7 @@ bool remove_facets_with_incorrect_dimension([[maybe_unused]] MeshModel<N>* mesh)
                         return false;
                 }
 
-                std::vector<typename MeshModel<N>::Facet> facets;
+                std::vector<typename Mesh<N>::Facet> facets;
                 facets.reserve(mesh->facets.size() - wrong_facet_count);
 
                 for (size_t i = 0; i < mesh->facets.size(); ++i)
@@ -772,7 +772,7 @@ void read_obj_stage_one(
 //   начинаются с -1 для относительных значений назад.
 // Преобразование в абсолютные значения с началом от 0.
 template <size_t N>
-void correct_indices(typename MeshModel<N>::Facet* facet, int vertices_size, int texcoords_size, int normals_size)
+void correct_indices(typename Mesh<N>::Facet* facet, int vertices_size, int texcoords_size, int normals_size)
 {
         for (unsigned i = 0; i < N; ++i)
         {
@@ -799,7 +799,7 @@ void read_obj_stage_two(
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
         std::vector<std::string>* library_names,
-        MeshModel<N>* mesh)
+        Mesh<N>* mesh)
 {
         mesh->vertices.reserve(counters.vertex);
         mesh->texcoords.reserve(counters.texcoord);
@@ -861,7 +861,7 @@ void read_obj_stage_two(
                         }
                         else
                         {
-                                typename MeshModel<N>::Material mtl;
+                                typename Mesh<N>::Material mtl;
                                 mtl.name = mtl_name;
                                 mesh->materials.push_back(std::move(mtl));
                                 material_index->emplace(std::move(mtl_name), mesh->materials.size() - 1);
@@ -902,7 +902,7 @@ void read_obj_thread(
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
         std::vector<std::string>* library_names,
-        MeshModel<N>* mesh)
+        Mesh<N>* mesh)
 {
         // параллельно
 
@@ -942,7 +942,7 @@ void read_lib(
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
         std::map<std::string, int>* image_index,
-        MeshModel<N>* mesh)
+        Mesh<N>* mesh)
 {
         std::vector<char> data;
         std::vector<long long> line_begin;
@@ -953,7 +953,7 @@ void read_lib(
 
         const std::string lib_dir = file_parent_path(lib_name);
 
-        typename MeshModel<N>::Material* mtl = nullptr;
+        typename Mesh<N>::Material* mtl = nullptr;
         std::string name;
 
         const long long line_count = line_begin.size();
@@ -1106,7 +1106,7 @@ void read_libs(
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
         const std::vector<std::string>& library_names,
-        MeshModel<N>* mesh)
+        Mesh<N>* mesh)
 {
         std::map<std::string, int> image_index;
 
@@ -1130,7 +1130,7 @@ void read_obj(
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
         std::vector<std::string>* library_names,
-        MeshModel<N>* mesh)
+        Mesh<N>* mesh)
 {
         const int thread_count = hardware_concurrency();
 
@@ -1157,14 +1157,14 @@ void read_obj(
 }
 
 template <size_t N>
-std::unique_ptr<MeshModel<N>> read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress)
 {
         progress->set_undefined();
 
         std::map<std::string, int> material_index;
         std::vector<std::string> library_names;
 
-        MeshModel<N> mesh;
+        Mesh<N> mesh;
 
         read_obj(file_name, progress, &material_index, &library_names, &mesh);
 
@@ -1188,24 +1188,24 @@ std::unique_ptr<MeshModel<N>> read_obj_and_mtl(const std::string& file_name, Pro
 
         read_libs(file_parent_path(file_name), progress, &material_index, library_names, &mesh);
 
-        return std::make_unique<MeshModel<N>>(std::move(mesh));
+        return std::make_unique<Mesh<N>>(std::move(mesh));
 }
 }
 
 template <size_t N>
-std::unique_ptr<MeshModel<N>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress)
 {
         double start_time = time_in_seconds();
 
-        std::unique_ptr<MeshModel<N>> mesh = read_obj_and_mtl<N>(file_name, progress);
+        std::unique_ptr<Mesh<N>> mesh = read_obj_and_mtl<N>(file_name, progress);
 
         LOG(obj_type_name(N) + " loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 
         return mesh;
 }
 
-template std::unique_ptr<MeshModel<3>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<MeshModel<4>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<MeshModel<5>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<MeshModel<6>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<3>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<4>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<5>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<6>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
 }

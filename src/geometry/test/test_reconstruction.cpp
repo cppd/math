@@ -98,7 +98,7 @@ void test_geometry_files(
         std::string file_name = temp_directory() + "/" + name + "." + mesh::obj_file_extension(N);
 
         LOG("mesh for facets...");
-        std::unique_ptr<mesh::MeshModel<N>> mesh1 = mesh::create_mesh_for_facets(points, normals, facets);
+        std::unique_ptr<mesh::Mesh<N>> mesh1 = mesh::create_mesh_for_facets(points, normals, facets);
 
         LOG("save geometry...");
         std::string comment;
@@ -110,7 +110,7 @@ void test_geometry_files(
         file_name = save_geometry(*mesh1, file_name, comment);
 
         LOG("load geometry...");
-        std::unique_ptr<mesh::MeshModel<N>> mesh2 = mesh::load_geometry<N>(file_name, progress);
+        std::unique_ptr<mesh::Mesh<N>> mesh2 = mesh::load_geometry<N>(file_name, progress);
 
         LOG("compare mesh...");
         if (mesh1->vertices.size() != mesh2->vertices.size() || mesh1->normals.size() != mesh2->normals.size() ||

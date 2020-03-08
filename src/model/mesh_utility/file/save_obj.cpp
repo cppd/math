@@ -138,7 +138,7 @@ void write_line(const CFile& file, const std::array<int, 2>& vertices)
 
 // Запись вершин с приведением координат вершин к интервалу [-1, 1] с сохранением пропорций
 template <size_t N>
-void write_vertices(const CFile& file, const MeshModel<N>& mesh)
+void write_vertices(const CFile& file, const Mesh<N>& mesh)
 {
         std::vector<int> facet_indices = unique_facet_indices(mesh);
         std::vector<int> line_indices = unique_line_indices(mesh);
@@ -180,7 +180,7 @@ void write_vertices(const CFile& file, const MeshModel<N>& mesh)
 }
 
 template <size_t N>
-void write_normals(const CFile& file, const MeshModel<N>& mesh)
+void write_normals(const CFile& file, const Mesh<N>& mesh)
 {
         for (const Vector<N, float>& vn : mesh.normals)
         {
@@ -199,7 +199,7 @@ void write_normals(const CFile& file, const MeshModel<N>& mesh)
 }
 
 template <size_t N>
-void write_facets(const CFile& file, const MeshModel<N>& mesh)
+void write_facets(const CFile& file, const Mesh<N>& mesh)
 {
         // Вершины граней надо записывать в трёхмерный OBJ таким образом,
         // чтобы при обходе против часовой стрелки перпендикуляр к грани
@@ -208,7 +208,7 @@ void write_facets(const CFile& file, const MeshModel<N>& mesh)
         // попытаться определить правильное направление по векторам вершин,
         // если у вершин они заданы.
 
-        for (const typename MeshModel<N>::Facet& f : mesh.facets)
+        for (const typename Mesh<N>::Facet& f : mesh.facets)
         {
                 if (!f.has_normal)
                 {
@@ -247,9 +247,9 @@ void write_facets(const CFile& file, const MeshModel<N>& mesh)
 }
 
 template <size_t N>
-void write_lines(const CFile& file, const MeshModel<N>& mesh)
+void write_lines(const CFile& file, const Mesh<N>& mesh)
 {
-        for (const typename MeshModel<N>::Line& l : mesh.lines)
+        for (const typename Mesh<N>::Line& l : mesh.lines)
         {
                 write_line(file, l.vertices);
         }
@@ -281,7 +281,7 @@ std::string file_name_with_extension(const std::string& file_name)
 }
 
 template <size_t N>
-std::string save_to_obj_file(const MeshModel<N>& mesh, const std::string& file_name, const std::string_view& comment)
+std::string save_to_obj_file(const Mesh<N>& mesh, const std::string& file_name, const std::string_view& comment)
 {
         static_assert(N >= 3);
 
@@ -307,8 +307,8 @@ std::string save_to_obj_file(const MeshModel<N>& mesh, const std::string& file_n
         return full_name;
 }
 
-template std::string save_to_obj_file(const MeshModel<3>&, const std::string&, const std::string_view&);
-template std::string save_to_obj_file(const MeshModel<4>&, const std::string&, const std::string_view&);
-template std::string save_to_obj_file(const MeshModel<5>&, const std::string&, const std::string_view&);
-template std::string save_to_obj_file(const MeshModel<6>&, const std::string&, const std::string_view&);
+template std::string save_to_obj_file(const Mesh<3>&, const std::string&, const std::string_view&);
+template std::string save_to_obj_file(const Mesh<4>&, const std::string&, const std::string_view&);
+template std::string save_to_obj_file(const Mesh<5>&, const std::string&, const std::string_view&);
+template std::string save_to_obj_file(const Mesh<6>&, const std::string&, const std::string_view&);
 }

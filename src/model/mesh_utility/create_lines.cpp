@@ -32,7 +32,7 @@ namespace mesh
 namespace
 {
 template <size_t N>
-std::unique_ptr<MeshModel<N>> create_mesh(
+std::unique_ptr<Mesh<N>> create_mesh(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, 2>>& lines)
 {
@@ -49,7 +49,7 @@ std::unique_ptr<MeshModel<N>> create_mesh(
                 vertices.insert(line[1]);
         }
 
-        std::unique_ptr<MeshModel<N>> mesh = std::make_unique<MeshModel<N>>();
+        std::unique_ptr<Mesh<N>> mesh = std::make_unique<Mesh<N>>();
 
         mesh->vertices.resize(vertices.size());
 
@@ -69,7 +69,7 @@ std::unique_ptr<MeshModel<N>> create_mesh(
 
         for (const std::array<int, 2>& line : lines)
         {
-                typename MeshModel<N>::Line l;
+                typename Mesh<N>::Line l;
 
                 l.vertices[0] = index_map[line[0]];
                 l.vertices[1] = index_map[line[1]];
@@ -84,29 +84,29 @@ std::unique_ptr<MeshModel<N>> create_mesh(
 }
 
 template <size_t N>
-std::unique_ptr<MeshModel<N>> create_mesh_for_lines(
+std::unique_ptr<Mesh<N>> create_mesh_for_lines(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, 2>>& lines)
 {
         double start_time = time_in_seconds();
 
-        std::unique_ptr<MeshModel<N>> mesh = create_mesh(points, lines);
+        std::unique_ptr<Mesh<N>> mesh = create_mesh(points, lines);
 
         LOG("Lines loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 
         return mesh;
 }
 
-template std::unique_ptr<MeshModel<3>> create_mesh_for_lines(
+template std::unique_ptr<Mesh<3>> create_mesh_for_lines(
         const std::vector<Vector<3, float>>& points,
         const std::vector<std::array<int, 2>>& lines);
-template std::unique_ptr<MeshModel<4>> create_mesh_for_lines(
+template std::unique_ptr<Mesh<4>> create_mesh_for_lines(
         const std::vector<Vector<4, float>>& points,
         const std::vector<std::array<int, 2>>& lines);
-template std::unique_ptr<MeshModel<5>> create_mesh_for_lines(
+template std::unique_ptr<Mesh<5>> create_mesh_for_lines(
         const std::vector<Vector<5, float>>& points,
         const std::vector<std::array<int, 2>>& lines);
-template std::unique_ptr<MeshModel<6>> create_mesh_for_lines(
+template std::unique_ptr<Mesh<6>> create_mesh_for_lines(
         const std::vector<Vector<6, float>>& points,
         const std::vector<std::array<int, 2>>& lines);
 }

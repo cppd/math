@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace
 {
 template <size_t N>
-std::unique_ptr<const mesh::MeshModel<N>> mesh_convex_hull(const mesh::MeshModel<N>& mesh, ProgressRatio* progress)
+std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh, ProgressRatio* progress)
 {
         std::vector<Vector<N, float>> points;
         if (!mesh.facets.empty())
@@ -109,7 +109,7 @@ bool ObjectStorageSpace<N, MeshFloat>::object_exists(ObjectId id) const
 }
 
 template <size_t N, typename MeshFloat>
-std::shared_ptr<const mesh::MeshModel<N>> ObjectStorageSpace<N, MeshFloat>::object(ObjectId id) const
+std::shared_ptr<const mesh::Mesh<N>> ObjectStorageSpace<N, MeshFloat>::object(ObjectId id) const
 {
         return m_objects.get(id);
 }
@@ -181,7 +181,7 @@ template <size_t N, typename MeshFloat>
 void ObjectStorageSpace<N, MeshFloat>::build_mesh(
         ProgressRatioList* progress_list,
         ObjectId id,
-        const mesh::MeshModel<N>& mesh)
+        const mesh::Mesh<N>& mesh)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -206,7 +206,7 @@ void ObjectStorageSpace<N, MeshFloat>::add_object_and_build_mesh(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         ObjectType object_type,
-        const std::shared_ptr<const mesh::MeshModel<N>>& mesh)
+        const std::shared_ptr<const mesh::Mesh<N>>& mesh)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -233,7 +233,7 @@ void ObjectStorageSpace<N, MeshFloat>::add_object_convex_hull_and_build_mesh(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         ObjectType object_type,
-        const std::shared_ptr<const mesh::MeshModel<N>>& mesh)
+        const std::shared_ptr<const mesh::Mesh<N>>& mesh)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -249,7 +249,7 @@ void ObjectStorageSpace<N, MeshFloat>::add_object_convex_hull_and_build_mesh(
                 return;
         }
 
-        std::shared_ptr<const mesh::MeshModel<N>> mesh_ch;
+        std::shared_ptr<const mesh::Mesh<N>> mesh_ch;
 
         {
                 ProgressRatio progress(progress_list);
@@ -274,7 +274,7 @@ void ObjectStorageSpace<N, MeshFloat>::object_and_mesh(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         ObjectType object_type,
-        const std::shared_ptr<const mesh::MeshModel<N>>& mesh)
+        const std::shared_ptr<const mesh::Mesh<N>>& mesh)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -315,7 +315,7 @@ void ObjectStorageSpace<N, MeshFloat>::cocone(
                 error("No manifold constructor");
         }
 
-        std::shared_ptr<const mesh::MeshModel<N>> mesh_cocone;
+        std::shared_ptr<const mesh::Mesh<N>> mesh_cocone;
 
         {
                 ProgressRatio progress(progress_list);
@@ -355,7 +355,7 @@ void ObjectStorageSpace<N, MeshFloat>::bound_cocone(
                 error("No manifold constructor");
         }
 
-        std::shared_ptr<const mesh::MeshModel<N>> mesh_bound_cocone;
+        std::shared_ptr<const mesh::Mesh<N>> mesh_bound_cocone;
 
         {
                 ProgressRatio progress(progress_list);
@@ -414,7 +414,7 @@ void ObjectStorageSpace<N, MeshFloat>::build_mst(
                         minimum_spanning_tree(m_manifold_points, m_manifold_constructor->delaunay_objects(), &progress);
         }
 
-        std::shared_ptr<const mesh::MeshModel<N>> mst_mesh = mesh::create_mesh_for_lines(m_manifold_points, mst_lines);
+        std::shared_ptr<const mesh::Mesh<N>> mst_mesh = mesh::create_mesh_for_lines(m_manifold_points, mst_lines);
 
         if (mst_mesh->lines.empty())
         {
@@ -500,7 +500,7 @@ void ObjectStorageSpace<N, MeshFloat>::load_object(
         const std::unordered_set<ObjectId>& objects,
         ProgressRatioList* progress_list,
         const std::string& object_name,
-        const std::shared_ptr<const mesh::MeshModel<N>>& mesh,
+        const std::shared_ptr<const mesh::Mesh<N>>& mesh,
         double rho,
         double alpha,
         const ObjectLoaded& object_loaded)
@@ -576,7 +576,7 @@ void ObjectStorageSpace<N, MeshFloat>::load_from_file(
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        std::shared_ptr<const mesh::MeshModel<N>> mesh;
+        std::shared_ptr<const mesh::Mesh<N>> mesh;
 
         {
                 ProgressRatio progress(progress_list);
@@ -600,7 +600,7 @@ void ObjectStorageSpace<N, MeshFloat>::load_from_repository(
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        std::shared_ptr<const mesh::MeshModel<N>> mesh;
+        std::shared_ptr<const mesh::Mesh<N>> mesh;
 
         {
                 ProgressRatio progress(progress_list);
@@ -617,7 +617,7 @@ void ObjectStorageSpace<N, MeshFloat>::save(ObjectId id, const std::string& file
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        std::shared_ptr<const mesh::MeshModel<N>> mesh = m_objects.get(id);
+        std::shared_ptr<const mesh::Mesh<N>> mesh = m_objects.get(id);
 
         if (!mesh)
         {

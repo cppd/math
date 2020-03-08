@@ -41,11 +41,8 @@ struct ObjectStorage
                 std::shared_ptr,
                 SpatialMeshModel,
                 StorageMeshFloatingPoint>;
-        using ObjectVariant = SequenceVariant2ConstType2<
-                STORAGE_MIN_DIMENSIONS,
-                STORAGE_MAX_DIMENSIONS,
-                std::shared_ptr,
-                mesh::MeshModel>;
+        using ObjectVariant =
+                SequenceVariant2ConstType2<STORAGE_MIN_DIMENSIONS, STORAGE_MAX_DIMENSIONS, std::shared_ptr, mesh::Mesh>;
 
         virtual ~ObjectStorage() = default;
 

@@ -29,9 +29,9 @@ namespace mesh
 namespace
 {
 template <size_t N>
-std::unique_ptr<MeshModel<N>> create_mesh(std::vector<Vector<N, float>>&& points)
+std::unique_ptr<Mesh<N>> create_mesh(std::vector<Vector<N, float>>&& points)
 {
-        std::unique_ptr<MeshModel<N>> mesh = std::make_unique<MeshModel<N>>();
+        std::unique_ptr<Mesh<N>> mesh = std::make_unique<Mesh<N>>();
 
         mesh->vertices = std::move(points);
 
@@ -53,19 +53,19 @@ std::unique_ptr<MeshModel<N>> create_mesh(std::vector<Vector<N, float>>&& points
 }
 
 template <size_t N>
-std::unique_ptr<MeshModel<N>> create_mesh_for_points(std::vector<Vector<N, float>>&& points)
+std::unique_ptr<Mesh<N>> create_mesh_for_points(std::vector<Vector<N, float>>&& points)
 {
         double start_time = time_in_seconds();
 
-        std::unique_ptr<MeshModel<N>> mesh = create_mesh(std::move(points));
+        std::unique_ptr<Mesh<N>> mesh = create_mesh(std::move(points));
 
         LOG("Points loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 
         return mesh;
 }
 
-template std::unique_ptr<MeshModel<3>> create_mesh_for_points(std::vector<Vector<3, float>>&& points);
-template std::unique_ptr<MeshModel<4>> create_mesh_for_points(std::vector<Vector<4, float>>&& points);
-template std::unique_ptr<MeshModel<5>> create_mesh_for_points(std::vector<Vector<5, float>>&& points);
-template std::unique_ptr<MeshModel<6>> create_mesh_for_points(std::vector<Vector<6, float>>&& points);
+template std::unique_ptr<Mesh<3>> create_mesh_for_points(std::vector<Vector<3, float>>&& points);
+template std::unique_ptr<Mesh<4>> create_mesh_for_points(std::vector<Vector<4, float>>&& points);
+template std::unique_ptr<Mesh<5>> create_mesh_for_points(std::vector<Vector<5, float>>&& points);
+template std::unique_ptr<Mesh<6>> create_mesh_for_points(std::vector<Vector<6, float>>&& points);
 }

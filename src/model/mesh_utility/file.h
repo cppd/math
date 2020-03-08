@@ -40,8 +40,8 @@ std::vector<std::string> txt_file_supported_extensions(const std::set<unsigned>&
 //
 
 template <size_t N>
-std::unique_ptr<MeshModel<N>> load_geometry(const std::string& file_name, ProgressRatio* progress);
+std::unique_ptr<Mesh<N>> load_geometry(const std::string& file_name, ProgressRatio* progress);
 
 template <size_t N>
-std::string save_geometry(const MeshModel<N>& mesh, const std::string& file_name, const std::string_view& comment);
+std::string save_geometry(const Mesh<N>& mesh, const std::string& file_name, const std::string_view& comment);
 }

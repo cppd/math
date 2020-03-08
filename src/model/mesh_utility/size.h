@@ -37,7 +37,7 @@ void initial_min_max(Vector<N, T>* min, Vector<N, T>* max)
 }
 
 template <size_t N>
-std::optional<std::tuple<Vector<N, float>, Vector<N, float>>> mesh_min_max_facets(const MeshModel<N>& mesh)
+std::optional<std::tuple<Vector<N, float>, Vector<N, float>>> mesh_min_max_facets(const Mesh<N>& mesh)
 {
         const int vertex_count = mesh.vertices.size();
 
@@ -49,7 +49,7 @@ std::optional<std::tuple<Vector<N, float>, Vector<N, float>>> mesh_min_max_facet
         Vector<N, float> min_check = min;
         Vector<N, float> max_check = max;
 
-        for (const typename MeshModel<N>::Facet& face : mesh.facets)
+        for (const typename Mesh<N>::Facet& face : mesh.facets)
         {
                 for (int index : face.vertices)
                 {
@@ -72,7 +72,7 @@ std::optional<std::tuple<Vector<N, float>, Vector<N, float>>> mesh_min_max_facet
 }
 
 template <size_t N>
-std::optional<std::tuple<Vector<N, float>, Vector<N, float>>> mesh_min_max_lines(const MeshModel<N>& mesh)
+std::optional<std::tuple<Vector<N, float>, Vector<N, float>>> mesh_min_max_lines(const Mesh<N>& mesh)
 {
         int vertex_count = mesh.vertices.size();
 
@@ -84,7 +84,7 @@ std::optional<std::tuple<Vector<N, float>, Vector<N, float>>> mesh_min_max_lines
         Vector<N, float> min_check = min;
         Vector<N, float> max_check = max;
 
-        for (const typename MeshModel<N>::Line& line : mesh.lines)
+        for (const typename Mesh<N>::Line& line : mesh.lines)
         {
                 for (int index : line.vertices)
                 {
@@ -107,7 +107,7 @@ std::optional<std::tuple<Vector<N, float>, Vector<N, float>>> mesh_min_max_lines
 }
 
 template <size_t N>
-std::optional<std::tuple<Vector<N, float>, Vector<N, float>>> mesh_min_max_points(const MeshModel<N>& mesh)
+std::optional<std::tuple<Vector<N, float>, Vector<N, float>>> mesh_min_max_points(const Mesh<N>& mesh)
 {
         int vertex_count = mesh.vertices.size();
 
@@ -119,7 +119,7 @@ std::optional<std::tuple<Vector<N, float>, Vector<N, float>>> mesh_min_max_point
         Vector<N, float> min_check = min;
         Vector<N, float> max_check = max;
 
-        for (const typename MeshModel<N>::Point& point : mesh.points)
+        for (const typename Mesh<N>::Point& point : mesh.points)
         {
                 int index = point.vertex;
 
@@ -141,7 +141,7 @@ std::optional<std::tuple<Vector<N, float>, Vector<N, float>>> mesh_min_max_point
 }
 
 template <size_t N>
-std::tuple<Vector<N, float>, Vector<N, float>> mesh_min_max_facets_lines(const MeshModel<N>& mesh)
+std::tuple<Vector<N, float>, Vector<N, float>> mesh_min_max_facets_lines(const Mesh<N>& mesh)
 {
         std::vector<std::optional<std::tuple<Vector<N, float>, Vector<N, float>>>> sizes;
 

@@ -50,7 +50,7 @@ Vector<N, T> average_normal(const Vector<N, T>& original_normal, const std::vect
 }
 
 template <size_t N>
-std::unique_ptr<MeshModel<N>> create_mesh(
+std::unique_ptr<Mesh<N>> create_mesh(
         const std::vector<Vector<N, float>>& points,
         const std::vector<Vector<N, double>>& point_normals,
         const std::vector<std::array<int, N>>& facets)
@@ -72,7 +72,7 @@ std::unique_ptr<MeshModel<N>> create_mesh(
                 }
         }
 
-        std::unique_ptr<MeshModel<N>> mesh = std::make_unique<MeshModel<N>>();
+        std::unique_ptr<Mesh<N>> mesh = std::make_unique<Mesh<N>>();
 
         mesh->vertices.resize(vertices.size());
         mesh->normals.resize(vertices.size());
@@ -92,7 +92,7 @@ std::unique_ptr<MeshModel<N>> create_mesh(
 
         for (const std::array<int, N>& facet : facets)
         {
-                typename MeshModel<N>::Facet mesh_facet;
+                typename Mesh<N>::Facet mesh_facet;
 
                 mesh_facet.material = -1;
                 mesh_facet.has_texcoord = false;
@@ -114,7 +114,7 @@ std::unique_ptr<MeshModel<N>> create_mesh(
 }
 
 template <size_t N>
-std::unique_ptr<MeshModel<N>> create_mesh(
+std::unique_ptr<Mesh<N>> create_mesh(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, N>>& facets)
 {
@@ -134,7 +134,7 @@ std::unique_ptr<MeshModel<N>> create_mesh(
                 }
         }
 
-        std::unique_ptr<MeshModel<N>> mesh = std::make_unique<MeshModel<N>>();
+        std::unique_ptr<Mesh<N>> mesh = std::make_unique<Mesh<N>>();
 
         mesh->vertices.resize(vertices.size());
 
@@ -150,7 +150,7 @@ std::unique_ptr<MeshModel<N>> create_mesh(
 
         for (const std::array<int, N>& facet : facets)
         {
-                typename MeshModel<N>::Facet mesh_facet;
+                typename Mesh<N>::Facet mesh_facet;
 
                 mesh_facet.material = -1;
                 mesh_facet.has_texcoord = false;
@@ -173,7 +173,7 @@ std::unique_ptr<MeshModel<N>> create_mesh(
 }
 
 template <size_t N>
-std::unique_ptr<MeshModel<N>> create_mesh_for_facets(
+std::unique_ptr<Mesh<N>> create_mesh_for_facets(
         const std::vector<Vector<N, float>>& points,
         const std::vector<Vector<N, double>>& point_normals,
         const std::vector<std::array<int, N>>& facets)
@@ -185,40 +185,40 @@ std::unique_ptr<MeshModel<N>> create_mesh_for_facets(
 }
 
 template <size_t N>
-std::unique_ptr<MeshModel<N>> create_mesh_for_facets(
+std::unique_ptr<Mesh<N>> create_mesh_for_facets(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, N>>& facets)
 {
         return create_mesh(points, facets);
 }
 
-template std::unique_ptr<MeshModel<3>> create_mesh_for_facets(
+template std::unique_ptr<Mesh<3>> create_mesh_for_facets(
         const std::vector<Vector<3, float>>& points,
         const std::vector<Vector<3, double>>& point_normals,
         const std::vector<std::array<int, 3>>& facets);
-template std::unique_ptr<MeshModel<4>> create_mesh_for_facets(
+template std::unique_ptr<Mesh<4>> create_mesh_for_facets(
         const std::vector<Vector<4, float>>& points,
         const std::vector<Vector<4, double>>& point_normals,
         const std::vector<std::array<int, 4>>& facets);
-template std::unique_ptr<MeshModel<5>> create_mesh_for_facets(
+template std::unique_ptr<Mesh<5>> create_mesh_for_facets(
         const std::vector<Vector<5, float>>& points,
         const std::vector<Vector<5, double>>& point_normals,
         const std::vector<std::array<int, 5>>& facets);
-template std::unique_ptr<MeshModel<6>> create_mesh_for_facets(
+template std::unique_ptr<Mesh<6>> create_mesh_for_facets(
         const std::vector<Vector<6, float>>& points,
         const std::vector<Vector<6, double>>& point_normals,
         const std::vector<std::array<int, 6>>& facets);
 
-template std::unique_ptr<MeshModel<3>> create_mesh_for_facets(
+template std::unique_ptr<Mesh<3>> create_mesh_for_facets(
         const std::vector<Vector<3, float>>& points,
         const std::vector<std::array<int, 3>>& facets);
-template std::unique_ptr<MeshModel<4>> create_mesh_for_facets(
+template std::unique_ptr<Mesh<4>> create_mesh_for_facets(
         const std::vector<Vector<4, float>>& points,
         const std::vector<std::array<int, 4>>& facets);
-template std::unique_ptr<MeshModel<5>> create_mesh_for_facets(
+template std::unique_ptr<Mesh<5>> create_mesh_for_facets(
         const std::vector<Vector<5, float>>& points,
         const std::vector<std::array<int, 5>>& facets);
-template std::unique_ptr<MeshModel<6>> create_mesh_for_facets(
+template std::unique_ptr<Mesh<6>> create_mesh_for_facets(
         const std::vector<Vector<6, float>>& points,
         const std::vector<std::array<int, 6>>& facets);
 }

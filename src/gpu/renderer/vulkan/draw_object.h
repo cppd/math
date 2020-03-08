@@ -74,7 +74,7 @@ public:
                 const vulkan::Queue& transfer_queue,
                 VkSampler sampler,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const mesh::MeshModel<3>& mesh,
+                const mesh::Mesh<3>& mesh,
                 double size,
                 const vec3& position);
         ~DrawObject();
