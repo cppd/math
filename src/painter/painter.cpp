@@ -35,6 +35,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <vector>
 
+namespace
+{
 template <size_t N, typename T>
 constexpr T DIFFUSE_LIGHT_COEFFICIENT = cosine_sphere_coefficient(N);
 
@@ -56,8 +58,6 @@ using PainterSampler = StratifiedJitteredSampler<N, T>;
 
 static_assert(std::is_floating_point_v<Color::DataType>);
 
-namespace
-{
 template <size_t N>
 class Pixels
 {

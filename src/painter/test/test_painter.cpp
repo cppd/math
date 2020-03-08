@@ -34,11 +34,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/utility/file/sys.h>
 #include <src/utility/string/str.h>
 
+namespace
+{
 constexpr Srgb8 BACKGROUND_COLOR(50, 100, 150);
 constexpr Srgb8 DEFAULT_COLOR(150, 170, 150);
 
-namespace
-{
 class Images : public PainterNotifier<3>
 {
         static constexpr const char* BEGINNING_OF_FILE_NAME = "painter_";

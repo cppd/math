@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <vector>
 
+namespace
+{
 constexpr int COUNT = 10000000;
 
 template <typename T>
@@ -36,8 +38,6 @@ constexpr T ETA = T(1) / T(1.5);
 template <typename T>
 constexpr Vector<3, T> VECTOR(0.1, -0.2, 0.3);
 
-namespace
-{
 template <typename T>
 std::vector<Vector<3, T>> random_data(int count)
 {

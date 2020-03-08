@@ -21,14 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/numerical/orthogonal.h>
 
+namespace
+{
 // Минимум абсолютного значения косинуса угла между нормалью симплекса и нормалями
 // его вершин, при котором используются эти нормали вершин. При меньших значениях
 // косинуса нормали вершин считаются неправильными и игнорируются.
 template <typename T>
 constexpr T LIMIT_COSINE = 0.7; // 0.7 немного больше 45 градусов
 
-namespace
-{
 template <size_t N, typename T>
 std::string vertices_to_string(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& v)
 {
