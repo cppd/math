@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "save_obj.h"
 
+#include "../bounding_box.h"
 #include "../file.h"
-#include "../size.h"
 #include "../unique.h"
 
 #include <src/com/log.h>
@@ -157,19 +157,23 @@ void write_vertices(const CFile& file, const Mesh<N>& mesh)
                 error("Line unique indices count " + to_string(line_indices.size()) + " is less than " + to_string(2));
         }
 
-        auto [min, max] = mesh_min_max_facets_lines(mesh);
+        std::optional<mesh::BoundingBox<N>> box = mesh::bounding_box_by_facets_and_lines(mesh);
+        if (!box)
+        {
+                error("Facet and line coordinates are not found");
+        }
 
-        Vector<N, float> delta = max - min;
+        Vector<N, float> extent = box->max - box->min;
 
-        float max_delta = delta.norm_infinity();
+        float max_extent = extent.norm_infinity();
 
-        if (max_delta == 0)
+        if (max_extent == 0)
         {
                 error("Mesh vertices are equal to each other");
         }
 
-        float scale_factor = 2 / max_delta;
-        Vector<N, float> center = min + 0.5f * delta;
+        float scale_factor = 2 / max_extent;
+        Vector<N, float> center = box->min + 0.5f * extent;
 
         for (const Vector<N, float>& v : mesh.vertices)
         {

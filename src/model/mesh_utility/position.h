@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "bounding_box.h"
+
 #include "../mesh.h"
 
 #include <src/com/error.h>
@@ -60,146 +62,19 @@ std::tuple<Vector<N, T>, T> center_and_length_for_min_max(const Vector<N, T>& mi
 
         return {center, len};
 }
-
-template <size_t N, typename T>
-void initial_min_max(Vector<N, T>* min, Vector<N, T>* max)
-{
-        *min = Vector<N, T>(limits<T>::max());
-        *max = Vector<N, T>(limits<T>::lowest());
-}
-
-template <size_t N>
-void set_center_and_length_for_facets(Mesh<N>* mesh)
-{
-        ASSERT(mesh);
-
-        if (mesh->facets.empty())
-        {
-                error("No facets");
-        }
-
-        int vertex_count = mesh->vertices.size();
-
-        Vector<N, float> min;
-        Vector<N, float> max;
-
-        initial_min_max(&min, &max);
-
-        for (const typename Mesh<N>::Facet& facet : mesh->facets)
-        {
-                for (int index : facet.vertices)
-                {
-                        if (index < 0 || index >= vertex_count)
-                        {
-                                error("Facet vertex index out of bounds");
-                        }
-
-                        min = min_vector(min, mesh->vertices[index]);
-                        max = max_vector(max, mesh->vertices[index]);
-                }
-        }
-
-        std::tie(mesh->center, mesh->length) = center_and_length_for_min_max(min, max);
-}
-
-template <size_t N>
-void set_center_and_length_for_lines(Mesh<N>* mesh)
-{
-        ASSERT(mesh);
-
-        if (mesh->lines.empty())
-        {
-                error("No lines");
-        }
-
-        int vertex_count = mesh->vertices.size();
-
-        Vector<N, float> min;
-        Vector<N, float> max;
-
-        initial_min_max(&min, &max);
-
-        for (const typename Mesh<N>::Line& line : mesh->lines)
-        {
-                for (int index : line.vertices)
-                {
-                        if (index < 0 || index >= vertex_count)
-                        {
-                                error("Line vertex index out of bounds");
-                        }
-
-                        min = min_vector(min, mesh->vertices[index]);
-                        max = max_vector(max, mesh->vertices[index]);
-                }
-        }
-
-        std::tie(mesh->center, mesh->length) = center_and_length_for_min_max(min, max);
-}
-
-template <size_t N>
-void set_center_and_length_for_points(Mesh<N>* mesh)
-{
-        ASSERT(mesh);
-
-        if (mesh->points.empty())
-        {
-                error("No points");
-        }
-
-        int vertex_count = mesh->vertices.size();
-
-        Vector<N, float> min;
-        Vector<N, float> max;
-
-        initial_min_max(&min, &max);
-
-        for (const typename Mesh<N>::Point& point : mesh->points)
-        {
-                int index = point.vertex;
-
-                if (index < 0 || index >= vertex_count)
-                {
-                        error("Point vertex index out of bounds");
-                }
-
-                min = min_vector(min, mesh->vertices[index]);
-                max = max_vector(max, mesh->vertices[index]);
-        }
-
-        std::tie(mesh->center, mesh->length) = center_and_length_for_min_max(min, max);
-}
 }
 
 template <size_t N>
 void set_center_and_length(Mesh<N>* mesh)
 {
-        int c = 0;
-        c += !mesh->facets.empty() ? 1 : 0;
-        c += !mesh->lines.empty() ? 1 : 0;
-        c += !mesh->points.empty() ? 1 : 0;
-        if (c > 1)
-        {
-                error("Only facets, or lines, or points are supported for mesh center and length");
-        }
+        ASSERT(mesh);
 
-        namespace impl = position_implementation;
-
-        if (!mesh->facets.empty())
+        std::optional<BoundingBox<N>> box = bounding_box(*mesh);
+        if (!box)
         {
-                impl::set_center_and_length_for_facets(mesh);
-                return;
+                error("Mesh has no geometry");
         }
-
-        if (!mesh->lines.empty())
-        {
-                impl::set_center_and_length_for_lines(mesh);
-                return;
-        }
-
-        if (!mesh->points.empty())
-        {
-                impl::set_center_and_length_for_points(mesh);
-                return;
-        }
+        std::tie(mesh->center, mesh->length) =
+                position_implementation::center_and_length_for_min_max(box->min, box->max);
 }
 }
