@@ -118,6 +118,7 @@ MainWindow::MainWindow(QWidget* parent)
           m_objects_to_load(default_objects_to_load())
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
+        static_assert(std::is_same_v<decltype(ui.model_tree), ModelTree*>);
 
         LOG(command_line_description() + "\n");
 
@@ -126,7 +127,6 @@ MainWindow::MainWindow(QWidget* parent)
         constructor_threads();
         constructor_connect();
         constructor_interface();
-        constructor_buttons();
         constructor_objects_and_repository();
 
         set_log_events(&m_event_emitter);
@@ -152,6 +152,8 @@ void MainWindow::constructor_connect()
         connect(ui.graphics_widget, SIGNAL(mouse_release(QMouseEvent*)), this,
                 SLOT(graphics_widget_mouse_release(QMouseEvent*)));
         connect(ui.graphics_widget, SIGNAL(resize(QResizeEvent*)), this, SLOT(graphics_widget_resize(QResizeEvent*)));
+
+        connect(ui.model_tree, SIGNAL(item_changed()), this, SLOT(model_tree_item_changed()));
 
         connect(&m_timer_progress_bar, SIGNAL(timeout()), this, SLOT(slot_timer_progress_bar()));
 }
@@ -186,7 +188,6 @@ void MainWindow::constructor_interface()
 
         set_widgets_enabled(QMainWindow::layout(), true);
         set_dependent_interface();
-        reset_all_object_buttons(m_objects_to_load);
 
         set_bound_cocone_parameters(BOUND_COCONE_DEFAULT_RHO, BOUND_COCONE_DEFAULT_ALPHA);
 
@@ -203,8 +204,6 @@ void MainWindow::constructor_interface()
         ui.mainWidget->layout()->setContentsMargins(3, 3, 3, 3);
         ui.mainWidget->layout()->setSpacing(3);
 
-        ui.radioButton_model->setChecked(true);
-
         ui.tabWidget->setCurrentIndex(0);
 
         ui.actionHelp->setText(QString(APPLICATION_NAME) + " Help");
@@ -219,17 +218,6 @@ void MainWindow::constructor_interface()
         ASSERT(((ui.slider_ambient->maximum() - ui.slider_ambient->minimum()) & 1) == 0);
         ASSERT(((ui.slider_diffuse->maximum() - ui.slider_diffuse->minimum()) & 1) == 0);
         ASSERT(((ui.slider_specular->maximum() - ui.slider_specular->minimum()) & 1) == 0);
-}
-
-void MainWindow::constructor_buttons()
-{
-        m_object_id_to_button.try_emplace(ObjectId::Model, ui.radioButton_model);
-        m_object_id_to_button.try_emplace(ObjectId::ModelMst, ui.radioButton_model_mst);
-        m_object_id_to_button.try_emplace(ObjectId::ModelConvexHull, ui.radioButton_model_convex_hull);
-        m_object_id_to_button.try_emplace(ObjectId::Cocone, ui.radioButton_cocone);
-        m_object_id_to_button.try_emplace(ObjectId::CoconeConvexHull, ui.radioButton_cocone_convex_hull);
-        m_object_id_to_button.try_emplace(ObjectId::BoundCocone, ui.radioButton_bound_cocone);
-        m_object_id_to_button.try_emplace(ObjectId::BoundCoconeConvexHull, ui.radioButton_bound_cocone_convex_hull);
 }
 
 void MainWindow::constructor_objects_and_repository()
@@ -430,37 +418,6 @@ void MainWindow::catch_all(const F& function) const noexcept
         {
                 error_fatal("Exception in the main window catch all");
         }
-}
-
-bool MainWindow::find_object(std::string* object_name, ObjectId* object_id)
-{
-        bool found = false;
-
-        for (const auto& [id, button] : m_object_id_to_button)
-        {
-                if (button->isChecked())
-                {
-                        *object_name = button->text().toStdString();
-                        *object_id = id;
-                        found = true;
-                        break;
-                }
-        }
-
-        if (!found)
-        {
-                m_event_emitter.message_warning("No object button is checked");
-                return false;
-        }
-
-        return true;
-}
-
-QRadioButton* MainWindow::object_id_to_button(ObjectId id)
-{
-        auto f = m_object_id_to_button.find(id);
-        ASSERT(f != m_object_id_to_button.end());
-        return f->second;
 }
 
 bool MainWindow::dialog_object_selection(QWidget* parent, std::unordered_set<ObjectId>* objects_to_load)
@@ -892,12 +849,6 @@ void MainWindow::set_bound_cocone_parameters(double rho, double alpha)
 
         m_bound_cocone_rho = rho;
         m_bound_cocone_alpha = alpha;
-
-        std::string label;
-        label += reinterpret_cast<const char*>(u8"ρ ") + to_string_fixed(rho, -BOUND_COCONE_MINIMUM_RHO_EXPONENT);
-        label += "; ";
-        label += reinterpret_cast<const char*>(u8"α ") + to_string_fixed(alpha, -BOUND_COCONE_MINIMUM_ALPHA_EXPONENT);
-        ui.label_bound_cocone_info->setText(label.c_str());
 }
 
 void MainWindow::set_background_color(const QColor& c)
@@ -1013,54 +964,6 @@ void MainWindow::set_dependent_interface()
         }
 }
 
-void MainWindow::reset_object_button(QRadioButton* button, bool object_to_load)
-{
-        if (object_to_load)
-        {
-                button_strike_out(button, true);
-                button->setEnabled(true);
-        }
-        else
-        {
-                button_strike_out(button, false);
-                button->setEnabled(false);
-        }
-}
-
-void MainWindow::show_object_button(QRadioButton* button)
-{
-        if (!button->isEnabled())
-        {
-                error_fatal("Loaded disabled object for button " + button->text().toStdString());
-        }
-
-        button_strike_out(button, false);
-
-        if (button->isChecked())
-        {
-                button->click();
-        }
-}
-
-void MainWindow::reset_all_object_buttons(const std::unordered_set<ObjectId>& objects_to_load)
-{
-        reset_object_button(ui.radioButton_model, true);
-        reset_object_button(ui.radioButton_model_convex_hull, objects_to_load.count(ObjectId::ModelConvexHull) > 0);
-        reset_object_button(ui.radioButton_model_mst, objects_to_load.count(ObjectId::ModelMst) > 0);
-        reset_object_button(ui.radioButton_cocone, objects_to_load.count(ObjectId::Cocone) > 0);
-        reset_object_button(ui.radioButton_cocone_convex_hull, objects_to_load.count(ObjectId::CoconeConvexHull) > 0);
-        reset_object_button(ui.radioButton_bound_cocone, objects_to_load.count(ObjectId::BoundCocone) > 0);
-        reset_object_button(
-                ui.radioButton_bound_cocone_convex_hull, objects_to_load.count(ObjectId::BoundCoconeConvexHull) > 0);
-}
-
-void MainWindow::reset_bound_cocone_buttons(const std::unordered_set<ObjectId>& objects_to_load)
-{
-        reset_object_button(ui.radioButton_bound_cocone, objects_to_load.count(ObjectId::BoundCocone) > 0);
-        reset_object_button(
-                ui.radioButton_bound_cocone_convex_hull, objects_to_load.count(ObjectId::BoundCoconeConvexHull) > 0);
-}
-
 void MainWindow::direct_message_error(const std::string& msg)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
@@ -1129,7 +1032,11 @@ void MainWindow::direct_show_object_loaded(int id)
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
         ASSERT(m_dimension == 3);
-        show_object_button(object_id_to_button(int_to_object_id(id)));
+
+        if (int_to_object_id(id) == ObjectId::Model)
+        {
+                ui.model_tree->set_current(id);
+        }
 }
 
 template <template <size_t> typename MeshModel, size_t N, typename Id>
@@ -1152,6 +1059,7 @@ void MainWindow::direct_object_loaded(ObjectId id, size_t dimension)
                 ASSERT(m_objects);
                 std::visit([&](const auto& v) { object_loaded(v, id); }, m_objects->object(id));
         }
+        ui.model_tree->add_item(object_id_to_int(id), object_id_to_text(id));
 }
 
 void MainWindow::direct_object_deleted(ObjectId id, size_t dimension)
@@ -1160,6 +1068,7 @@ void MainWindow::direct_object_deleted(ObjectId id, size_t dimension)
         {
                 m_show->delete_object(object_id_to_int(id));
         }
+        ui.model_tree->delete_item(object_id_to_int(id));
 }
 
 void MainWindow::direct_object_deleted_all(size_t dimension)
@@ -1168,16 +1077,17 @@ void MainWindow::direct_object_deleted_all(size_t dimension)
         {
                 m_show->delete_all_objects();
         }
+        ui.model_tree->delete_all();
 }
 
 void MainWindow::direct_mesh_loaded(ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (m_dimension != 3)
-        {
-                show_object_button(object_id_to_button(id));
-        }
+        //if (m_dimension != 3)
+        //{
+        //}
+        ui.model_tree->add_item(object_id_to_int(id), object_id_to_text(id));
 }
 
 void MainWindow::direct_file_loaded(
@@ -1189,8 +1099,6 @@ void MainWindow::direct_file_loaded(
 
         std::string base_name = file_base_name(file_name);
         set_window_title_file(base_name + " [" + space_name(dimension) + "]");
-        reset_all_object_buttons(objects);
-        ui.radioButton_model->setChecked(true);
         m_dimension = dimension;
         m_objects_to_load = objects;
 }
@@ -1200,7 +1108,6 @@ void MainWindow::direct_bound_cocone_loaded(double rho, double alpha)
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
         set_bound_cocone_parameters(rho, alpha);
-        reset_bound_cocone_buttons(m_objects_to_load);
 }
 
 void MainWindow::direct_log(const std::string& msg)
@@ -1323,13 +1230,14 @@ void MainWindow::slot_object_repository()
 
 void MainWindow::on_actionExport_triggered()
 {
-        std::string object_name;
-        ObjectId object_id;
-
-        if (!find_object(&object_name, &object_id))
+        std::optional<int> item = ui.model_tree->current_item();
+        if (!item)
         {
                 return;
         }
+
+        ObjectId object_id = int_to_object_id(*item);
+        std::string object_name = object_id_to_text(object_id);
 
         thread_export(object_name, object_id);
 }
@@ -1419,6 +1327,15 @@ void MainWindow::graphics_widget_resize(QResizeEvent* e)
         if (m_show)
         {
                 m_show->window_resize(e->size().width(), e->size().height());
+        }
+}
+
+void MainWindow::model_tree_item_changed()
+{
+        std::optional<int> id = ui.model_tree->current_item();
+        if (id && m_dimension == 3)
+        {
+                m_show->show_object(*id);
         }
 }
 
@@ -1674,41 +1591,6 @@ void MainWindow::on_actionFullScreen_triggered()
 {
 }
 
-void MainWindow::on_radioButton_model_clicked()
-{
-        m_show->show_object(object_id_to_int(ObjectId::Model));
-}
-
-void MainWindow::on_radioButton_model_convex_hull_clicked()
-{
-        m_show->show_object(object_id_to_int(ObjectId::ModelConvexHull));
-}
-
-void MainWindow::on_radioButton_model_mst_clicked()
-{
-        m_show->show_object(object_id_to_int(ObjectId::ModelMst));
-}
-
-void MainWindow::on_radioButton_cocone_clicked()
-{
-        m_show->show_object(object_id_to_int(ObjectId::Cocone));
-}
-
-void MainWindow::on_radioButton_cocone_convex_hull_clicked()
-{
-        m_show->show_object(object_id_to_int(ObjectId::CoconeConvexHull));
-}
-
-void MainWindow::on_radioButton_bound_cocone_clicked()
-{
-        m_show->show_object(object_id_to_int(ObjectId::BoundCocone));
-}
-
-void MainWindow::on_radioButton_bound_cocone_convex_hull_clicked()
-{
-        m_show->show_object(object_id_to_int(ObjectId::BoundCoconeConvexHull));
-}
-
 template <template <size_t, typename> typename SpatialMeshModel, size_t N, typename T>
 void MainWindow::paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh, const std::string& object_name)
 {
@@ -1758,19 +1640,21 @@ void MainWindow::paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh
 
 void MainWindow::on_actionPainter_triggered()
 {
-        std::string object_name;
-        ObjectId object_id;
-
-        if (!find_object(&object_name, &object_id))
+        std::optional<int> item = ui.model_tree->current_item();
+        if (!item)
         {
                 return;
         }
+
+        ObjectId object_id = int_to_object_id(*item);
 
         if (!m_objects->mesh_exists(object_id))
         {
-                m_event_emitter.message_warning("No object to paint " + object_name);
+                m_event_emitter.message_warning("No object to paint");
                 return;
         }
+
+        std::string object_name = object_id_to_text(object_id);
 
         catch_all([&](std::string* message) {
                 *message = "Painter";

@@ -73,13 +73,6 @@ private slots:
         void on_checkBox_normals_clicked();
         void on_pushButton_reset_lighting_clicked();
         void on_pushButton_reset_view_clicked();
-        void on_radioButton_bound_cocone_clicked();
-        void on_radioButton_bound_cocone_convex_hull_clicked();
-        void on_radioButton_cocone_clicked();
-        void on_radioButton_cocone_convex_hull_clicked();
-        void on_radioButton_model_clicked();
-        void on_radioButton_model_convex_hull_clicked();
-        void on_radioButton_model_mst_clicked();
         void on_slider_ambient_valueChanged(int value);
         void on_slider_default_ns_valueChanged(int value);
         void on_slider_dft_brightness_valueChanged(int value);
@@ -103,6 +96,8 @@ private slots:
         void graphics_widget_mouse_press(QMouseEvent*);
         void graphics_widget_mouse_release(QMouseEvent*);
 
+        void model_tree_item_changed();
+
         void slot_object_repository();
         void slot_timer_progress_bar();
         void slot_window_first_shown();
@@ -111,7 +106,6 @@ private:
         void constructor_threads();
         void constructor_connect();
         void constructor_interface();
-        void constructor_buttons();
         void constructor_objects_and_repository();
 
         static std::unordered_set<ObjectId> default_objects_to_load();
@@ -128,9 +122,6 @@ private:
         template <typename F>
         void catch_all(const F& function) const noexcept;
 
-        bool find_object(std::string* object_name, ObjectId* object_id);
-        QRadioButton* object_id_to_button(ObjectId id);
-
         void thread_load_from_file(std::string file_name, bool use_object_selection_dialog);
         void thread_load_from_repository(int dimension, const std::string& object_name);
         void thread_export(const std::string& name, ObjectId id);
@@ -144,11 +135,6 @@ private:
         void object_loaded(const std::shared_ptr<const MeshModel<N>>& mesh, const Id& id);
 
         void set_dependent_interface();
-
-        static void reset_object_button(QRadioButton* button, bool object_to_load);
-        static void show_object_button(QRadioButton* button);
-        void reset_all_object_buttons(const std::unordered_set<ObjectId>& objects_to_load);
-        void reset_bound_cocone_buttons(const std::unordered_set<ObjectId>& objects_to_load);
 
         void progress_bars(
                 WorkerThreads::Action action,
@@ -209,8 +195,6 @@ private:
         WindowEventEmitter m_event_emitter;
 
         std::unique_ptr<WorkerThreads> m_worker_threads;
-
-        std::unordered_map<ObjectId, QRadioButton*> m_object_id_to_button;
 
         std::unordered_map<QObject*, std::tuple<int, std::string>> m_action_to_dimension_and_object_name;
 

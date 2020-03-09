@@ -30,3 +30,4 @@ enum class ObjectId
 
 int object_id_to_int(ObjectId id);
 ObjectId int_to_object_id(int id);
+const char* object_id_to_text(ObjectId id);

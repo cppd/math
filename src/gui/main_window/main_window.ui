@@ -29,98 +29,18 @@
        </property>
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>2</number>
+         <number>0</number>
         </property>
         <property name="usesScrollButtons">
          <bool>false</bool>
         </property>
-        <widget class="QWidget" name="tabObject">
+        <widget class="QWidget" name="tabModels">
          <attribute name="title">
-          <string>Object</string>
+          <string>Models</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
-           <widget class="QRadioButton" name="radioButton_model">
-            <property name="text">
-             <string>Model</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="radioButton_model_convex_hull">
-            <property name="text">
-             <string>Model CH</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="radioButton_model_mst">
-            <property name="text">
-             <string>Model MST</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="Line" name="line_10">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="radioButton_cocone">
-            <property name="text">
-             <string>Cocone</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="radioButton_cocone_convex_hull">
-            <property name="text">
-             <string>Cocone CH</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="Line" name="line_11">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_bound_cocone_info">
-            <property name="text">
-             <string>BoundCocone Info</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="radioButton_bound_cocone">
-            <property name="text">
-             <string>BoundCocone</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="radioButton_bound_cocone_convex_hull">
-            <property name="text">
-             <string>BoundCocone CH</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="spacer">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>0</width>
-              <height>0</height>
-             </size>
-            </property>
-           </spacer>
+           <widget class="ModelTree" name="model_tree" native="true"/>
           </item>
          </layout>
         </widget>
@@ -1447,6 +1367,12 @@
    <class>GraphicsWidget</class>
    <extends>QWidget</extends>
    <header>src/gui/widgets/graphics_widget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ModelTree</class>
+   <extends>QWidget</extends>
+   <header>src/gui/widgets/model_tree.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

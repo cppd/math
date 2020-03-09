@@ -43,3 +43,26 @@ ObjectId int_to_object_id(int int_id)
 
         error_fatal("Wrong ObjectId value " + to_string(int_id));
 }
+
+const char* object_id_to_text(ObjectId id)
+{
+        switch (id)
+        {
+        case ObjectId::Model:
+                return "Model";
+        case ObjectId::ModelMst:
+                return "Model MST";
+        case ObjectId::ModelConvexHull:
+                return "Model Convex Hull";
+        case ObjectId::Cocone:
+                return "Cocone";
+        case ObjectId::CoconeConvexHull:
+                return "Cocone Convex Hull";
+        case ObjectId::BoundCocone:
+                return "Bound Cocone";
+        case ObjectId::BoundCoconeConvexHull:
+                return "Bound Cocone Convex Hull";
+        }
+
+        error_fatal("Wrong ObjectId value " + to_string(object_id_to_int(id)));
+}
