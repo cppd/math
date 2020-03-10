@@ -178,27 +178,20 @@ ObjectId ObjectStorageSpace<N, MeshFloat>::convex_hull_identifier(ObjectType obj
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::build_mesh(
+std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> ObjectStorageSpace<N, MeshFloat>::build_mesh(
         ProgressRatioList* progress_list,
-        ObjectId id,
         const mesh::Mesh<N>& mesh)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
         if (mesh.facets.empty())
         {
-                return;
+                return nullptr;
         }
-
         std::lock_guard lg(m_mesh_sequential_mutex);
-
         ProgressRatio progress(progress_list);
-
-        m_meshes.set(
-                id, std::make_shared<const SpatialMeshModel<N, MeshFloat>>(
-                            &mesh, to_matrix<MeshFloat>(m_model_vertex_matrix), m_mesh_threads, &progress));
-
-        m_event_emitter.mesh_loaded(id);
+        return std::make_shared<const SpatialMeshModel<N, MeshFloat>>(
+                &mesh, to_matrix<MeshFloat>(m_model_vertex_matrix), m_mesh_threads, &progress);
 }
 
 template <size_t N, typename MeshFloat>
@@ -225,7 +218,9 @@ void ObjectStorageSpace<N, MeshFloat>::add_object_and_build_mesh(
         m_objects.set(object_id, mesh);
         m_event_emitter.object_loaded(object_id, N);
 
-        build_mesh(progress_list, object_id, *mesh);
+        std::shared_ptr ptr = build_mesh(progress_list, *mesh);
+        m_meshes.set(object_id, std::move(ptr));
+        m_event_emitter.mesh_loaded(object_id);
 }
 
 template <size_t N, typename MeshFloat>
@@ -266,7 +261,9 @@ void ObjectStorageSpace<N, MeshFloat>::add_object_convex_hull_and_build_mesh(
         m_objects.set(object_id, mesh_ch);
         m_event_emitter.object_loaded(object_id, N);
 
-        build_mesh(progress_list, object_id, *mesh_ch);
+        std::shared_ptr ptr = build_mesh(progress_list, *mesh_ch);
+        m_meshes.set(object_id, std::move(ptr));
+        m_event_emitter.mesh_loaded(object_id);
 }
 
 template <size_t N, typename MeshFloat>

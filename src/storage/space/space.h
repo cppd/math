@@ -82,28 +82,37 @@ class ObjectStorageSpace
         static ObjectId convex_hull_identifier(ObjectType object_type);
 
         void build_mst(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list);
-        void build_mesh(ProgressRatioList* progress_list, ObjectId id, const mesh::Mesh<N>& mesh);
+
+        std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> build_mesh(
+                ProgressRatioList* progress_list,
+                const mesh::Mesh<N>& mesh);
+
         void add_object_and_build_mesh(
                 const std::unordered_set<ObjectId>& objects,
                 ProgressRatioList* progress_list,
                 ObjectType object_type,
                 const std::shared_ptr<const mesh::Mesh<N>>& mesh);
+
         void add_object_convex_hull_and_build_mesh(
                 const std::unordered_set<ObjectId>& objects,
                 ProgressRatioList* progress_list,
                 ObjectType object_type,
                 const std::shared_ptr<const mesh::Mesh<N>>& mesh);
+
         void object_and_mesh(
                 const std::unordered_set<ObjectId>& objects,
                 ProgressRatioList* progress_list,
                 ObjectType object_type,
                 const std::shared_ptr<const mesh::Mesh<N>>& mesh);
+
         void manifold_constructor(
                 const std::unordered_set<ObjectId>& objects,
                 ProgressRatioList* progress_list,
                 double rho,
                 double alpha);
+
         void cocone(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list);
+
         void bound_cocone(
                 const std::unordered_set<ObjectId>& objects,
                 ProgressRatioList* progress_list,
