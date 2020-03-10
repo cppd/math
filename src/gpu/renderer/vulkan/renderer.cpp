@@ -309,7 +309,18 @@ class Impl final : public Renderer
                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
                         m_texture_sampler, m_triangles_program.descriptor_set_layout_material(), *mesh, size, position);
 
+                bool delete_and_create_command_buffers = m_storage.is_current_object(id);
+                if (delete_and_create_command_buffers)
+                {
+                        delete_all_command_buffers();
+                        m_storage.delete_object(id);
+                }
                 m_storage.add_object(std::move(draw_object), id, scale_id);
+                if (delete_and_create_command_buffers)
+                {
+                        m_storage.show_object(id);
+                        create_all_command_buffers();
+                }
 
                 set_matrices();
         }
