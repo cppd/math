@@ -20,12 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 enum class ObjectId
 {
         Model,
-        ModelMst,
-        ModelConvexHull,
+        Mst,
+        ConvexHull,
         Cocone,
-        CoconeConvexHull,
-        BoundCocone,
-        BoundCoconeConvexHull
+        BoundCocone
 };
 
 int object_id_to_int(ObjectId id);

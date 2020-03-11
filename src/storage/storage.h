@@ -75,11 +75,7 @@ struct ObjectStorage
 
         virtual void set_object_size_and_position(double size, const vec3& position) = 0;
 
-        virtual void compute_bound_cocone(
-                const std::unordered_set<ObjectId>& objects,
-                ProgressRatioList* progress_list,
-                double rho,
-                double alpha) = 0;
+        virtual void compute_bound_cocone(ProgressRatioList* progress_list, double rho, double alpha) = 0;
 
         virtual void load_from_file(
                 const std::unordered_set<ObjectId>& objects,

@@ -202,11 +202,7 @@ class Impl final : public ObjectStorage
                 return *mesh_opt;
         }
 
-        void compute_bound_cocone(
-                const std::unordered_set<ObjectId>& objects,
-                ProgressRatioList* progress_list,
-                double rho,
-                double alpha) override
+        void compute_bound_cocone(ProgressRatioList* progress_list, double rho, double alpha) override
         {
                 if (!manifold_constructor_exists())
                 {
@@ -221,7 +217,7 @@ class Impl final : public ObjectStorage
                                         {
                                                 if (count == 0)
                                                 {
-                                                        v.compute_bound_cocone(objects, progress_list, rho, alpha);
+                                                        v.compute_bound_cocone(progress_list, rho, alpha);
                                                 }
                                                 ++count;
                                         }

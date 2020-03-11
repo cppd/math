@@ -42,13 +42,6 @@ class ObjectStorageSpace
 {
         static_assert(N >= 3);
 
-        enum class ObjectType
-        {
-                Model,
-                Cocone,
-                BoundCocone
-        };
-
         const std::thread::id m_thread_id = std::this_thread::get_id();
         const int m_mesh_threads;
 
@@ -77,32 +70,20 @@ class ObjectStorageSpace
         template <typename F>
         void catch_all(const F& function) const;
 
-        static std::string object_name(ObjectType object_type);
-        static ObjectId object_identifier(ObjectType object_type);
-        static ObjectId convex_hull_identifier(ObjectType object_type);
-
-        void build_mst(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list);
+        void build_mst(ObjectId object_id, ProgressRatioList* progress_list);
 
         std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> build_mesh(
                 ProgressRatioList* progress_list,
                 const mesh::Mesh<N>& mesh);
 
-        void add_object_and_build_mesh(
-                const std::unordered_set<ObjectId>& objects,
+        void add_object_and_mesh(
                 ProgressRatioList* progress_list,
-                ObjectType object_type,
+                ObjectId object_id,
                 const std::shared_ptr<const mesh::Mesh<N>>& mesh);
 
-        void add_object_convex_hull_and_build_mesh(
-                const std::unordered_set<ObjectId>& objects,
+        void add_convex_hull_and_mesh(
                 ProgressRatioList* progress_list,
-                ObjectType object_type,
-                const std::shared_ptr<const mesh::Mesh<N>>& mesh);
-
-        void object_and_mesh(
-                const std::unordered_set<ObjectId>& objects,
-                ProgressRatioList* progress_list,
-                ObjectType object_type,
+                ObjectId object_id,
                 const std::shared_ptr<const mesh::Mesh<N>>& mesh);
 
         void manifold_constructor(
@@ -111,13 +92,9 @@ class ObjectStorageSpace
                 double rho,
                 double alpha);
 
-        void cocone(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list);
+        void cocone(ObjectId object_id, ProgressRatioList* progress_list);
 
-        void bound_cocone(
-                const std::unordered_set<ObjectId>& objects,
-                ProgressRatioList* progress_list,
-                double rho,
-                double alpha);
+        void bound_cocone(ObjectId object_id, ProgressRatioList* progress_list, double rho, double alpha);
 
         template <typename ObjectLoaded>
         void load_object(
@@ -149,11 +126,7 @@ public:
         bool mesh_exists(ObjectId id) const;
         std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> mesh(ObjectId id) const;
 
-        void compute_bound_cocone(
-                const std::unordered_set<ObjectId>& objects,
-                ProgressRatioList* progress_list,
-                double rho,
-                double alpha);
+        void compute_bound_cocone(ProgressRatioList* progress_list, double rho, double alpha);
 
         void load_from_file(
                 const std::unordered_set<ObjectId>& objects,

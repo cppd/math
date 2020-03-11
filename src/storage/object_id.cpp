@@ -32,12 +32,10 @@ ObjectId int_to_object_id(int int_id)
         switch (id)
         {
         case ObjectId::Model:
-        case ObjectId::ModelMst:
-        case ObjectId::ModelConvexHull:
+        case ObjectId::Mst:
+        case ObjectId::ConvexHull:
         case ObjectId::Cocone:
-        case ObjectId::CoconeConvexHull:
         case ObjectId::BoundCocone:
-        case ObjectId::BoundCoconeConvexHull:
                 return id;
         }
 
@@ -50,18 +48,14 @@ const char* object_id_to_text(ObjectId id)
         {
         case ObjectId::Model:
                 return "Model";
-        case ObjectId::ModelMst:
-                return "Model MST";
-        case ObjectId::ModelConvexHull:
-                return "Model Convex Hull";
+        case ObjectId::Mst:
+                return "MST";
+        case ObjectId::ConvexHull:
+                return "Convex Hull";
         case ObjectId::Cocone:
                 return "Cocone";
-        case ObjectId::CoconeConvexHull:
-                return "Cocone Convex Hull";
         case ObjectId::BoundCocone:
                 return "Bound Cocone";
-        case ObjectId::BoundCoconeConvexHull:
-                return "Bound Cocone Convex Hull";
         }
 
         error_fatal("Wrong ObjectId value " + to_string(object_id_to_int(id)));

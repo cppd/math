@@ -34,9 +34,7 @@ public:
                 bool* model_convex_hull,
                 bool* model_minumum_spanning_tree,
                 bool* cocone,
-                bool* cocone_convex_hull,
-                bool* bound_cocone,
-                bool* bound_cocone_convex_hull);
+                bool* bound_cocone);
 
 private slots:
 
@@ -57,7 +55,5 @@ namespace dialog
         bool* model_convex_hull,
         bool* model_minumum_spanning_tree,
         bool* cocone,
-        bool* cocone_convex_hull,
-        bool* bound_cocone,
-        bool* bound_cocone_convex_hull);
+        bool* bound_cocone);
 }

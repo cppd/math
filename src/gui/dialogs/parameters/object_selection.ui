@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>341</width>
-    <height>242</height>
+    <width>468</width>
+    <height>260</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,21 +25,14 @@
            <item>
             <widget class="QCheckBox" name="checkBox_model_convex_hull">
              <property name="text">
-              <string>Model Convex Hull</string>
+              <string>Convex Hull</string>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QCheckBox" name="checkBox_model_minumum_spanning_tree">
              <property name="text">
-              <string>Model Minimum Spanning Tree</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="Line" name="line">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
+              <string>Minimum Spanning Tree</string>
              </property>
             </widget>
            </item>
@@ -51,30 +44,9 @@
             </widget>
            </item>
            <item>
-            <widget class="QCheckBox" name="checkBox_cocone_convex_hull">
-             <property name="text">
-              <string>Cocone Convex Hull</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="Line" name="line_2">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
-           </item>
-           <item>
             <widget class="QCheckBox" name="checkBox_bound_cocone">
              <property name="text">
               <string>BoundCocone</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="checkBox_bound_cocone_convex_hull">
-             <property name="text">
-              <string>BoundCocone Convex Hull</string>
              </property>
             </widget>
            </item>

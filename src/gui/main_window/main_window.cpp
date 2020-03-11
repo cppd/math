@@ -258,12 +258,10 @@ std::unordered_set<ObjectId> MainWindow::default_objects_to_load()
         std::unordered_set<ObjectId> objects_to_load;
 
         // ObjectId::Model добавлять не нужно, так как загружается обязательно
-        objects_to_load.insert(ObjectId::ModelMst);
-        objects_to_load.insert(ObjectId::ModelConvexHull);
+        objects_to_load.insert(ObjectId::Mst);
+        objects_to_load.insert(ObjectId::ConvexHull);
         objects_to_load.insert(ObjectId::Cocone);
-        objects_to_load.insert(ObjectId::CoconeConvexHull);
         objects_to_load.insert(ObjectId::BoundCocone);
-        objects_to_load.insert(ObjectId::BoundCoconeConvexHull);
 
         return objects_to_load;
 }
@@ -424,26 +422,20 @@ bool MainWindow::dialog_object_selection(QWidget* parent, std::unordered_set<Obj
 {
         ASSERT(objects_to_load);
 
-        bool model_convex_hull = objects_to_load->count(ObjectId::ModelConvexHull) != 0u;
-        bool model_minumum_spanning_tree = objects_to_load->count(ObjectId::ModelMst) != 0u;
+        bool model_convex_hull = objects_to_load->count(ObjectId::ConvexHull) != 0u;
+        bool model_minumum_spanning_tree = objects_to_load->count(ObjectId::Mst) != 0u;
         bool cocone = objects_to_load->count(ObjectId::Cocone) != 0u;
-        bool cocone_convex_hull = objects_to_load->count(ObjectId::CoconeConvexHull) != 0u;
         bool bound_cocone = objects_to_load->count(ObjectId::BoundCocone) != 0u;
-        bool bound_cocone_convex_hull = objects_to_load->count(ObjectId::BoundCoconeConvexHull) != 0;
 
-        if (!dialog::object_selection(
-                    parent, &model_convex_hull, &model_minumum_spanning_tree, &cocone, &cocone_convex_hull,
-                    &bound_cocone, &bound_cocone_convex_hull))
+        if (!dialog::object_selection(parent, &model_convex_hull, &model_minumum_spanning_tree, &cocone, &bound_cocone))
         {
                 return false;
         }
 
-        insert_or_erase(model_convex_hull, ObjectId::ModelConvexHull, objects_to_load);
-        insert_or_erase(model_minumum_spanning_tree, ObjectId::ModelMst, objects_to_load);
+        insert_or_erase(model_convex_hull, ObjectId::ConvexHull, objects_to_load);
+        insert_or_erase(model_minumum_spanning_tree, ObjectId::Mst, objects_to_load);
         insert_or_erase(cocone, ObjectId::Cocone, objects_to_load);
-        insert_or_erase(cocone_convex_hull, ObjectId::CoconeConvexHull, objects_to_load);
         insert_or_erase(bound_cocone, ObjectId::BoundCocone, objects_to_load);
-        insert_or_erase(bound_cocone_convex_hull, ObjectId::BoundCoconeConvexHull, objects_to_load);
 
         return true;
 }
@@ -677,11 +669,9 @@ void MainWindow::thread_reload_bound_cocone()
                         return;
                 }
 
-                if (m_objects_to_load.count(ObjectId::BoundCocone) == 0 &&
-                    m_objects_to_load.count(ObjectId::BoundCoconeConvexHull) == 0)
+                if (!m_objects_to_load.count(ObjectId::BoundCocone))
                 {
-                        m_event_emitter.message_warning(
-                                "Neither BoundCocone nor BoundCocone Convex Hull was selected for loading");
+                        m_event_emitter.message_warning("BoundCocone was not selected for loading");
                         return;
                 }
 
@@ -708,7 +698,7 @@ void MainWindow::thread_reload_bound_cocone()
                 auto f = [=, this,
                           objects_to_load = m_objects_to_load](ProgressRatioList* progress_list, std::string* message) {
                         *message = "BoundCocone Reconstruction";
-                        m_objects->compute_bound_cocone(objects_to_load, progress_list, rho, alpha);
+                        m_objects->compute_bound_cocone(progress_list, rho, alpha);
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
