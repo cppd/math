@@ -122,6 +122,7 @@ public:
 
         bool object_exists(ObjectId id) const;
         std::shared_ptr<const mesh::Mesh<N>> object(ObjectId id) const;
+        Matrix<N + 1, N + 1, double> object_matrix() const;
 
         bool mesh_exists(ObjectId id) const;
         std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> mesh(ObjectId id) const;

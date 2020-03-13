@@ -1030,7 +1030,10 @@ void MainWindow::direct_show_object_loaded(int id)
 }
 
 template <template <size_t> typename MeshModel, size_t N, typename Id>
-void MainWindow::object_loaded(const std::shared_ptr<const MeshModel<N>>& mesh, const Id& id)
+void MainWindow::object_loaded(
+        const std::shared_ptr<const MeshModel<N>>& mesh,
+        const Matrix<N + 1, N + 1, double>& matrix,
+        const Id& id)
 {
         if constexpr (N == 3)
         {
@@ -1038,7 +1041,7 @@ void MainWindow::object_loaded(const std::shared_ptr<const MeshModel<N>>& mesh, 
                 {
                         return;
                 }
-                m_show->add_object(mesh, object_id_to_int(id), object_id_to_int(ObjectId::Model));
+                m_show->add_object(mesh, matrix, object_id_to_int(id));
         }
 }
 
@@ -1047,7 +1050,7 @@ void MainWindow::direct_object_loaded(ObjectId id, size_t dimension)
         if (m_show && dimension == 3)
         {
                 ASSERT(m_objects);
-                std::visit([&](const auto& v) { object_loaded(v, id); }, m_objects->object(id));
+                std::visit([&](const auto& v) { object_loaded(v.object, v.matrix, id); }, m_objects->object(id));
         }
         ui.model_tree->add_item(object_id_to_int(id), object_id_to_text(id));
 }

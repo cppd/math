@@ -151,7 +151,8 @@ class Impl final : public ObjectStorage
                                                         {
                                                                 error("Null object pointer");
                                                         }
-                                                        object_opt = std::move(ptr);
+                                                        auto m = v.object_matrix();
+                                                        object_opt = Object(std::move(ptr), m);
                                                 }
                                                 ++count;
                                         }

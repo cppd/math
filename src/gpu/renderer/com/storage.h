@@ -26,8 +26,7 @@ class RendererObjectStorage final
         struct MapEntry
         {
                 std::unique_ptr<T> object;
-                int scale_object_id;
-                MapEntry(std::unique_ptr<T>&& obj_, int scale_id_) : object(std::move(obj_)), scale_object_id(scale_id_)
+                MapEntry(std::unique_ptr<T>&& obj_) : object(std::move(obj_))
                 {
                 }
         };
@@ -35,19 +34,12 @@ class RendererObjectStorage final
         std::unordered_map<int, MapEntry> m_objects;
 
         const T* m_object = nullptr;
-        const T* m_scale_object = nullptr;
         int m_object_id = 0;
-        int m_scale_object_id = 0;
 
 public:
-        void add_object(std::unique_ptr<T>&& object, int id, int scale_id)
+        void add_object(std::unique_ptr<T>&& object, int id)
         {
-                if (m_object && id == m_scale_object_id)
-                {
-                        m_scale_object = object.get();
-                }
-
-                m_objects.insert_or_assign(id, MapEntry(std::move(object), scale_id));
+                m_objects.insert_or_assign(id, MapEntry(std::move(object)));
         }
 
         bool is_current_object(int id) const
@@ -64,10 +56,6 @@ public:
                         {
                                 m_object = nullptr;
                         }
-                        if (iter->second.object.get() == m_scale_object)
-                        {
-                                m_scale_object = nullptr;
-                        }
                         m_objects.erase(iter);
                 }
         }
@@ -78,24 +66,11 @@ public:
                 if (iter != m_objects.cend())
                 {
                         m_object = iter->second.object.get();
-
                         m_object_id = id;
-                        m_scale_object_id = iter->second.scale_object_id;
-
-                        auto scale_iter = m_objects.find(m_scale_object_id);
-                        if (scale_iter != m_objects.cend())
-                        {
-                                m_scale_object = scale_iter->second.object.get();
-                        }
-                        else
-                        {
-                                m_scale_object = nullptr;
-                        }
                 }
                 else
                 {
                         m_object = nullptr;
-                        m_scale_object = nullptr;
                 }
         }
 
@@ -103,16 +78,10 @@ public:
         {
                 m_objects.clear();
                 m_object = nullptr;
-                m_scale_object = nullptr;
         }
 
         const T* object() const
         {
                 return m_object;
-        }
-
-        const T* scale_object() const
-        {
-                return m_scale_object ? m_scale_object : m_object;
         }
 };

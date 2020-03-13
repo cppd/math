@@ -33,16 +33,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 struct ObjectStorage
 {
-        // std::variant<std::shared_ptr<const Mesh<MIN, MeshFloat>>, ...,
-        //   std::shared_ptr<const Mesh<MAX, MeshFloat>>>
+        template <size_t N>
+        struct Object
+        {
+                std::shared_ptr<const mesh::Mesh<N>> object;
+                Matrix<N + 1, N + 1, double> matrix;
+
+                Object(std::shared_ptr<const mesh::Mesh<N>>&& object_, const Matrix<N + 1, N + 1, double>& matrix_)
+                        : object(object_), matrix(matrix_)
+                {
+                }
+        };
+
         using MeshVariant = SequenceVariant2ConstType2<
                 STORAGE_MIN_DIMENSIONS,
                 STORAGE_MAX_DIMENSIONS,
                 std::shared_ptr,
                 SpatialMeshModel,
                 StorageMeshFloatingPoint>;
-        using ObjectVariant =
-                SequenceVariant2ConstType2<STORAGE_MIN_DIMENSIONS, STORAGE_MAX_DIMENSIONS, std::shared_ptr, mesh::Mesh>;
+        using ObjectVariant = SequenceVariant1<STORAGE_MIN_DIMENSIONS, STORAGE_MAX_DIMENSIONS, Object>;
 
         virtual ~ObjectStorage() = default;
 

@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/model/mesh.h>
+#include <src/numerical/matrix.h>
 #include <src/numerical/vec.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/instance.h>
@@ -63,7 +64,7 @@ struct Renderer
         virtual void clip_plane_show(const vec4& plane) = 0;
         virtual void clip_plane_hide() = 0;
 
-        virtual void object_add(const mesh::Mesh<3>* mesh, double size, const vec3& position, int id, int scale_id) = 0;
+        virtual void object_add(const mesh::Mesh<3>& mesh, const mat4& model_matrix, int id) = 0;
         virtual void object_delete(int id) = 0;
         virtual void object_show(int id) = 0;
         virtual void object_delete_all() = 0;

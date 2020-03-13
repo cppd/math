@@ -301,13 +301,13 @@ class Impl final : public Renderer
                 create_render_command_buffers();
         }
 
-        void object_add(const mesh::Mesh<3>* mesh, double size, const vec3& position, int id, int scale_id) override
+        void object_add(const mesh::Mesh<3>& mesh, const mat4& model_matrix, int id) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 std::unique_ptr draw_object = std::make_unique<DrawObject>(
                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
-                        m_texture_sampler, m_triangles_program.descriptor_set_layout_material(), *mesh, size, position);
+                        m_texture_sampler, m_triangles_program.descriptor_set_layout_material(), mesh, model_matrix);
 
                 bool delete_and_create_command_buffers = m_storage.is_current_object(id);
                 if (delete_and_create_command_buffers)
@@ -315,7 +315,7 @@ class Impl final : public Renderer
                         delete_all_command_buffers();
                         m_storage.delete_object(id);
                 }
-                m_storage.add_object(std::move(draw_object), id, scale_id);
+                m_storage.add_object(std::move(draw_object), id);
                 if (delete_and_create_command_buffers)
                 {
                         m_storage.show_object(id);
@@ -539,17 +539,14 @@ class Impl final : public Renderer
 
                 //
 
-                ASSERT(m_storage.scale_object() || !m_storage.object());
-
-                if (m_storage.scale_object())
+                if (m_storage.object())
                 {
-                        const mat4& model = m_storage.scale_object()->model_matrix();
-                        const mat4& main_mvp_matrix = m_main_vp_matrix * model;
-                        const mat4& shadow_mvp_texture_matrix = m_shadow_vp_texture_matrix * model;
-                        const mat4& shadow_mvp_matrix = m_shadow_vp_matrix * model;
+                        const mat4& model = m_storage.object()->model_matrix();
+                        const mat4& main_mvp = m_main_vp_matrix * model;
+                        const mat4& shadow_mvp_texture = m_shadow_vp_texture_matrix * model;
+                        const mat4& shadow_mvp = m_shadow_vp_matrix * model;
 
-                        m_buffers.set_matrices(
-                                main_mvp_matrix, model, m_main_vp_matrix, shadow_mvp_matrix, shadow_mvp_texture_matrix);
+                        m_buffers.set_matrices(main_mvp, model, m_main_vp_matrix, shadow_mvp, shadow_mvp_texture);
 
                         set_clip_plane();
                 }

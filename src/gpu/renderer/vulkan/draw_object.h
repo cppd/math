@@ -75,8 +75,7 @@ public:
                 VkSampler sampler,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const mesh::Mesh<3>& mesh,
-                double size,
-                const vec3& position);
+                const mat4& model_matrix);
         ~DrawObject();
 
         bool has_shadow() const;

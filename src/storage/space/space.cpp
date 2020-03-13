@@ -115,6 +115,12 @@ std::shared_ptr<const mesh::Mesh<N>> ObjectStorageSpace<N, MeshFloat>::object(Ob
 }
 
 template <size_t N, typename MeshFloat>
+Matrix<N + 1, N + 1, double> ObjectStorageSpace<N, MeshFloat>::object_matrix() const
+{
+        return m_model_vertex_matrix;
+}
+
+template <size_t N, typename MeshFloat>
 bool ObjectStorageSpace<N, MeshFloat>::mesh_exists(ObjectId id) const
 {
         return m_meshes.get(id) != nullptr;

@@ -644,9 +644,8 @@ DrawObject::DrawObject(
         VkSampler sampler,
         VkDescriptorSetLayout descriptor_set_layout,
         const mesh::Mesh<3>& mesh,
-        double size,
-        const vec3& position)
-        : m_model_matrix(model_vertex_matrix(mesh, size, position))
+        const mat4& model_matrix)
+        : m_model_matrix(model_matrix)
 {
         if (!mesh.facets.empty())
         {
