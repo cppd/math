@@ -38,7 +38,9 @@ void ModelTree::add_item(ObjectId id, const std::string& name)
                 return;
         }
         std::unique_ptr<QTreeWidgetItem> item = std::make_unique<QTreeWidgetItem>();
-        item->setText(0, name.c_str());
+        QString s = QString::fromStdString(name);
+        item->setText(0, s);
+        item->setToolTip(0, s);
         QTreeWidgetItem* ptr = item.get();
         ui.tree_widget->addTopLevelItem(item.release());
         m_map_item_id[ptr] = id;
