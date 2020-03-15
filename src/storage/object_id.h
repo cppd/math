@@ -17,6 +17,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-using ObjectId = int;
+#include <functional>
 
-ObjectId new_id();
+class ObjectId final
+{
+        using Type = std::uint_least32_t;
+
+        Type m_id;
+
+public:
+        using T = Type;
+
+        ObjectId();
+
+        bool operator==(const ObjectId& id) const noexcept
+        {
+                return m_id == id.m_id;
+        }
+
+        size_t hash() const noexcept
+        {
+                return std::hash<Type>()(m_id);
+        }
+};
+
+namespace std
+{
+template <>
+struct hash<ObjectId>
+{
+        size_t operator()(const ObjectId& id) const noexcept
+        {
+                return id.hash();
+        }
+};
+}

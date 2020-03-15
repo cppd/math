@@ -36,7 +36,7 @@ protected:
 public:
         virtual void message_error_fatal(const std::string&) const = 0;
         virtual void message_error_source(const std::string&, const std::string&) const = 0;
-        virtual void show_object_loaded(int) const = 0;
+        virtual void show_object_loaded(ObjectId) const = 0;
 };
 
 struct ShowCameraInfo final
@@ -63,9 +63,9 @@ protected:
 
 public:
         virtual void add_object(const std::shared_ptr<const MeshObject<3>>&) = 0;
-        virtual void delete_object(int id) = 0;
+        virtual void delete_object(ObjectId id) = 0;
         virtual void delete_all_objects() = 0;
-        virtual void show_object(int id) = 0;
+        virtual void show_object(ObjectId id) = 0;
         virtual void reset_view() = 0;
         virtual void set_ambient(double) = 0;
         virtual void set_diffuse(double) = 0;

@@ -36,7 +36,7 @@ public:
         virtual void direct_message_error_source(const std::string& msg, const std::string& src) = 0;
         virtual void direct_message_information(const std::string& msg) = 0;
         virtual void direct_message_warning(const std::string& msg) = 0;
-        virtual void direct_show_object_loaded(int id) = 0;
+        virtual void direct_show_object_loaded(ObjectId id) = 0;
         virtual void direct_object_loaded(ObjectId id, size_t dimension) = 0;
         virtual void direct_object_deleted(ObjectId id, size_t dimension) = 0;
         virtual void direct_object_deleted_all(size_t dimension) = 0;
@@ -94,8 +94,8 @@ private:
                 };
                 struct show_object_loaded final
                 {
-                        const int id;
-                        explicit show_object_loaded(int id_) : id(id_)
+                        const ObjectId id;
+                        explicit show_object_loaded(ObjectId id_) : id(id_)
                         {
                         }
                 };

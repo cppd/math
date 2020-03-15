@@ -122,7 +122,7 @@ class Impl final : public Renderer
 
         const vulkan::ImageWithMemory* m_object_image = nullptr;
 
-        RendererObjectStorage<DrawObject> m_storage;
+        RendererObjectStorage<ObjectId, DrawObject> m_storage;
 
         unsigned m_x, m_y, m_width, m_height;
 
@@ -301,30 +301,31 @@ class Impl final : public Renderer
                 create_render_command_buffers();
         }
 
-        void object_add(const mesh::Mesh<3>& mesh, const mat4& model_matrix, int id) override
+        void object_add(const MeshObject<3>& object) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 std::unique_ptr draw_object = std::make_unique<DrawObject>(
                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
-                        m_texture_sampler, m_triangles_program.descriptor_set_layout_material(), mesh, model_matrix);
+                        m_texture_sampler, m_triangles_program.descriptor_set_layout_material(), object.mesh(),
+                        object.matrix());
 
-                bool delete_and_create_command_buffers = m_storage.is_current_object(id);
+                bool delete_and_create_command_buffers = m_storage.is_current_object(object.id());
                 if (delete_and_create_command_buffers)
                 {
                         delete_all_command_buffers();
-                        m_storage.delete_object(id);
+                        m_storage.delete_object(object.id());
                 }
-                m_storage.add_object(std::move(draw_object), id);
+                m_storage.add_object(std::move(draw_object), object.id());
                 if (delete_and_create_command_buffers)
                 {
-                        m_storage.show_object(id);
+                        m_storage.show_object(object.id());
                         create_all_command_buffers();
                 }
 
                 set_matrices();
         }
-        void object_delete(int id) override
+        void object_delete(ObjectId id) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -356,7 +357,7 @@ class Impl final : public Renderer
                 }
                 set_matrices();
         }
-        void object_show(int id) override
+        void object_show(ObjectId id) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 

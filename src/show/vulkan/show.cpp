@@ -171,18 +171,18 @@ class Impl final : public Show
                 {
                         error("Null object received");
                 }
-                m_renderer->object_add(object->mesh(), object->matrix(), object->id());
+                m_renderer->object_add(*object);
                 m_show_events->show_object_loaded(object->id());
         }
 
-        void delete_object(int id) override
+        void delete_object(ObjectId id) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_renderer->object_delete(id);
         }
 
-        void show_object(int id) override
+        void show_object(ObjectId id) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 

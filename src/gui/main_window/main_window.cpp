@@ -1018,7 +1018,7 @@ void MainWindow::direct_message_warning(const std::string& msg)
         dialog::message_warning(this, msg);
 }
 
-void MainWindow::direct_show_object_loaded(int /*id*/)
+void MainWindow::direct_show_object_loaded(ObjectId /*id*/)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -1214,7 +1214,7 @@ void MainWindow::slot_object_repository()
 
 void MainWindow::on_actionExport_triggered()
 {
-        std::optional<int> item = ui.model_tree->current_item();
+        std::optional<ObjectId> item = ui.model_tree->current_item();
         if (!item)
         {
                 m_event_emitter.message_warning("No item selected to export");
@@ -1313,7 +1313,7 @@ void MainWindow::graphics_widget_resize(QResizeEvent* e)
 
 void MainWindow::model_tree_item_changed()
 {
-        std::optional<int> id = ui.model_tree->current_item();
+        std::optional<ObjectId> id = ui.model_tree->current_item();
         if (id && m_dimension == 3)
         {
                 m_show->show_object(*id);
@@ -1621,7 +1621,7 @@ void MainWindow::paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh
 
 void MainWindow::on_actionPainter_triggered()
 {
-        std::optional<int> item = ui.model_tree->current_item();
+        std::optional<ObjectId> item = ui.model_tree->current_item();
         if (!item)
         {
                 m_event_emitter.message_warning("No item selected to paint");

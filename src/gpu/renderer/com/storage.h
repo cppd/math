@@ -18,9 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <unordered_map>
 
-template <typename T>
+template <typename Id, typename T>
 class RendererObjectStorage final
 {
         struct MapEntry
@@ -31,23 +32,23 @@ class RendererObjectStorage final
                 }
         };
 
-        std::unordered_map<int, MapEntry> m_objects;
+        std::unordered_map<Id, MapEntry> m_objects;
 
         const T* m_object = nullptr;
-        int m_object_id = 0;
+        std::optional<Id> m_object_id;
 
 public:
-        void add_object(std::unique_ptr<T>&& object, int id)
+        void add_object(std::unique_ptr<T>&& object, Id id)
         {
                 m_objects.insert_or_assign(id, MapEntry(std::move(object)));
         }
 
-        bool is_current_object(int id) const
+        bool is_current_object(Id id) const
         {
-                return m_object && id == m_object_id;
+                return m_object && m_object_id && id == *m_object_id;
         }
 
-        void delete_object(int id)
+        void delete_object(Id id)
         {
                 auto iter = m_objects.find(id);
                 if (iter != m_objects.cend())
@@ -60,7 +61,7 @@ public:
                 }
         }
 
-        void show_object(int id)
+        void show_object(Id id)
         {
                 auto iter = m_objects.find(id);
                 if (iter != m_objects.cend())
@@ -71,6 +72,7 @@ public:
                 else
                 {
                         m_object = nullptr;
+                        m_object_id.reset();
                 }
         }
 
@@ -78,6 +80,7 @@ public:
         {
                 m_objects.clear();
                 m_object = nullptr;
+                m_object_id.reset();
         }
 
         const T* object() const

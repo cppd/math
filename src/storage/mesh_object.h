@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 
 template <size_t N>
-class MeshObject
+class MeshObject final
 {
         std::unique_ptr<const mesh::Mesh<N>> m_mesh;
         Matrix<N + 1, N + 1, double> m_matrix;
@@ -38,9 +38,8 @@ public:
         MeshObject(
                 std::unique_ptr<const mesh::Mesh<N>>&& mesh,
                 const Matrix<N + 1, N + 1, double>& matrix,
-                const std::string& name,
-                const ObjectId& id)
-                : m_mesh(std::move(mesh)), m_matrix(matrix), m_name(name), m_id(id)
+                const std::string& name)
+                : m_mesh(std::move(mesh)), m_matrix(matrix), m_name(name)
         {
                 ASSERT(m_mesh);
         }

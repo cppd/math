@@ -193,7 +193,7 @@ void ObjectStorageSpace<N, MeshFloat>::convex_hull(
         }
 
         std::shared_ptr<MeshObject<N>> ch_object =
-                std::make_shared<MeshObject<N>>(std::move(ch_mesh), object->matrix(), "Convex Hull", new_id());
+                std::make_shared<MeshObject<N>>(std::move(ch_mesh), object->matrix(), "Convex Hull");
 
         add_object_and_mesh(progress_list, ch_object);
 }
@@ -230,7 +230,7 @@ void ObjectStorageSpace<N, MeshFloat>::cocone(ProgressRatioList* progress_list)
         }
 
         std::shared_ptr<MeshObject<N>> cocone_object =
-                std::make_shared<MeshObject<N>>(std::move(cocone_mesh), m_model_vertex_matrix, "Cocone", new_id());
+                std::make_shared<MeshObject<N>>(std::move(cocone_mesh), m_model_vertex_matrix, "Cocone");
 
         add_object_and_mesh(progress_list, cocone_object);
 }
@@ -269,9 +269,9 @@ void ObjectStorageSpace<N, MeshFloat>::bound_cocone(ProgressRatioList* progress_
                 return;
         }
 
-        std::shared_ptr<MeshObject<N>> bound_cocone_object = std::make_shared<MeshObject<N>>(
-                std::move(bound_cocone_mesh), m_model_vertex_matrix,
-                "Bound Cocone (" + bound_cocone_text_rho_alpha(rho, alpha) + ")", new_id());
+        std::string name = "Bound Cocone (" + bound_cocone_text_rho_alpha(rho, alpha) + ")";
+        std::shared_ptr<MeshObject<N>> bound_cocone_object =
+                std::make_shared<MeshObject<N>>(std::move(bound_cocone_mesh), m_model_vertex_matrix, name);
 
         add_object_and_mesh(progress_list, bound_cocone_object);
 }
@@ -300,7 +300,7 @@ void ObjectStorageSpace<N, MeshFloat>::build_mst(ProgressRatioList* progress_lis
         }
 
         std::shared_ptr<MeshObject<N>> mst_object =
-                std::make_shared<MeshObject<N>>(std::move(mst_mesh), m_model_vertex_matrix, "MST", new_id());
+                std::make_shared<MeshObject<N>>(std::move(mst_mesh), m_model_vertex_matrix, "MST");
 
         add_object_and_mesh(progress_list, mst_object);
 }
@@ -427,7 +427,7 @@ void ObjectStorageSpace<N, MeshFloat>::load_object(
         }
 
         std::shared_ptr<MeshObject<N>> model_object =
-                std::make_shared<MeshObject<N>>(std::move(mesh), m_model_vertex_matrix, "Model", new_id());
+                std::make_shared<MeshObject<N>>(std::move(mesh), m_model_vertex_matrix, "Model");
 
         std::vector<std::thread> threads;
 

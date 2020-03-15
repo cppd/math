@@ -38,15 +38,15 @@ class EventQueue final : public Show
                 };
                 struct delete_object final
                 {
-                        int id;
-                        explicit delete_object(int id_) : id(id_)
+                        ObjectId id;
+                        explicit delete_object(ObjectId id_) : id(id_)
                         {
                         }
                 };
                 struct show_object final
                 {
-                        int id;
-                        explicit show_object(int id_) : id(id_)
+                        ObjectId id;
+                        explicit show_object(ObjectId id_) : id(id_)
                         {
                         }
                 };
@@ -536,11 +536,11 @@ class EventQueue final : public Show
         {
                 m_event_queue.emplace(std::in_place_type<Event::add_object>, object);
         }
-        void delete_object(int id) override
+        void delete_object(ObjectId id) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::delete_object>, id);
         }
-        void show_object(int id) override
+        void show_object(ObjectId id) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::show_object>, id);
         }

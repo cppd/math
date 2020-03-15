@@ -176,7 +176,7 @@ private:
         void direct_message_error_source(const std::string& msg, const std::string& src) override;
         void direct_message_information(const std::string& msg) override;
         void direct_message_warning(const std::string& msg) override;
-        void direct_show_object_loaded(int id) override;
+        void direct_show_object_loaded(ObjectId id) override;
         void direct_object_loaded(ObjectId id, size_t dimension) override;
         void direct_object_deleted(ObjectId id, size_t dimension) override;
         void direct_object_deleted_all(size_t dimension) override;

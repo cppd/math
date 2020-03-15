@@ -30,7 +30,7 @@ ModelTree::ModelTree(QWidget* parent) : QWidget(parent)
                 SLOT(current_item_changed(QTreeWidgetItem*, QTreeWidgetItem*)));
 }
 
-void ModelTree::add_item(int id, const std::string& name)
+void ModelTree::add_item(ObjectId id, const std::string& name)
 {
         auto iter = m_map_id_item.find(id);
         if (iter != m_map_id_item.cend())
@@ -45,7 +45,7 @@ void ModelTree::add_item(int id, const std::string& name)
         m_map_id_item[id] = ptr;
 }
 
-void ModelTree::delete_item(int id)
+void ModelTree::delete_item(ObjectId id)
 {
         auto iter = m_map_id_item.find(id);
         if (iter == m_map_id_item.cend())
@@ -78,7 +78,7 @@ void ModelTree::delete_all()
         m_map_id_item.clear();
 }
 
-std::optional<int> ModelTree::current_item() const
+std::optional<ObjectId> ModelTree::current_item() const
 {
         auto iter = m_map_item_id.find(ui.tree_widget->currentItem());
         if (iter != m_map_item_id.cend())
@@ -88,7 +88,7 @@ std::optional<int> ModelTree::current_item() const
         return std::nullopt;
 }
 
-void ModelTree::set_current(int id)
+void ModelTree::set_current(ObjectId id)
 {
         auto iter = m_map_id_item.find(id);
         if (iter == m_map_id_item.cend())

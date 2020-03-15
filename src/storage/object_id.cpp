@@ -21,10 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-std::atomic_int global_id = 0;
+static_assert(std::is_unsigned_v<ObjectId::T>);
+using AtomicType = std::atomic<ObjectId::T>;
+static_assert(AtomicType::is_always_lock_free);
+AtomicType global_id = 0;
 }
 
-ObjectId new_id()
+ObjectId::ObjectId()
 {
-        return 1 + global_id.fetch_add(1, std::memory_order_relaxed);
+        m_id = 1 + global_id.fetch_add(1, std::memory_order_relaxed);
 }

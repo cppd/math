@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_model_tree.h"
 
+#include <src/storage/object_id.h>
+
 #include <optional>
 #include <unordered_map>
 
@@ -29,11 +31,11 @@ class ModelTree final : public QWidget
 public:
         explicit ModelTree(QWidget* parent = nullptr);
 
-        void add_item(int id, const std::string& name);
-        void delete_item(int id);
+        void add_item(ObjectId id, const std::string& name);
+        void delete_item(ObjectId id);
         void delete_all();
-        std::optional<int> current_item() const;
-        void set_current(int id);
+        std::optional<ObjectId> current_item() const;
+        void set_current(ObjectId id);
 
 signals:
         void item_changed();
@@ -42,7 +44,7 @@ private slots:
         void current_item_changed(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
 private:
-        std::unordered_map<QTreeWidgetItem*, int> m_map_item_id;
-        std::unordered_map<int, QTreeWidgetItem*> m_map_id_item;
+        std::unordered_map<QTreeWidgetItem*, ObjectId> m_map_item_id;
+        std::unordered_map<ObjectId, QTreeWidgetItem*> m_map_id_item;
         Ui::ModelTree ui;
 };
