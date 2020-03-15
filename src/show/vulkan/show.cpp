@@ -163,16 +163,16 @@ class Impl final : public Show
         int m_mouse_x = std::numeric_limits<int>::lowest();
         int m_mouse_y = std::numeric_limits<int>::lowest();
 
-        void add_object(const std::shared_ptr<const mesh::Mesh<3>>& mesh, const mat4& model_matrix, int id) override
+        void add_object(const std::shared_ptr<const MeshObject<3>>& object) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                if (!mesh)
+                if (!object)
                 {
                         error("Null object received");
                 }
-                m_renderer->object_add(*mesh, model_matrix, id);
-                m_show_events->show_object_loaded(id);
+                m_renderer->object_add(object->mesh(), object->matrix(), object->id());
+                m_show_events->show_object_loaded(object->id());
         }
 
         void delete_object(int id) override

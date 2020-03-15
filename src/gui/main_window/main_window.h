@@ -108,7 +108,7 @@ private:
         void constructor_interface();
         void constructor_objects_and_repository();
 
-        static std::unordered_set<ObjectId> default_objects_to_load();
+        static std::unordered_set<ComputationType> default_objects_to_load();
 
         void set_window_title_file(const std::string& file_name);
 
@@ -124,18 +124,15 @@ private:
 
         void thread_load_from_file(std::string file_name, bool use_object_selection_dialog);
         void thread_load_from_repository(int dimension, const std::string& object_name);
-        void thread_export(const std::string& name, ObjectId id);
+        void thread_export(ObjectId id);
         void thread_reload_bound_cocone();
         void thread_self_test(SelfTestType test_type, bool with_confirmation);
 
         template <template <size_t, typename> typename SpatialMeshModel, size_t N, typename T>
         void paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh, const std::string& object_name);
 
-        template <template <size_t> typename MeshModel, size_t N, typename Id>
-        void object_loaded(
-                const std::shared_ptr<const MeshModel<N>>& mesh,
-                const Matrix<N + 1, N + 1, double>& matrix,
-                const Id& id);
+        template <size_t N>
+        void object_loaded(const std::shared_ptr<const MeshObject<N>>& object, int dimension);
 
         void set_dependent_interface();
 
@@ -170,7 +167,7 @@ private:
         void exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists) const
                 noexcept;
 
-        static bool dialog_object_selection(QWidget* parent, std::unordered_set<ObjectId>* objects_to_load);
+        static bool dialog_object_selection(QWidget* parent, std::unordered_set<ComputationType>* objects_to_load);
 
         bool stop_action(WorkerThreads::Action action);
 
@@ -187,7 +184,7 @@ private:
         void direct_file_loaded(
                 const std::string& file_name,
                 unsigned dimension,
-                const std::unordered_set<ObjectId>& objects) override;
+                const std::unordered_set<ComputationType>& objects) override;
         void direct_bound_cocone_loaded(double rho, double alpha) override;
         void direct_log(const std::string& msg) override;
 
@@ -227,5 +224,5 @@ private:
 
         bool m_close_without_confirmation;
 
-        std::unordered_set<ObjectId> m_objects_to_load;
+        std::unordered_set<ComputationType> m_objects_to_load;
 };

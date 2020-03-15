@@ -44,7 +44,7 @@ public:
         virtual void direct_file_loaded(
                 const std::string& file_name,
                 unsigned dimension,
-                const std::unordered_set<ObjectId>& objects) = 0;
+                const std::unordered_set<ComputationType>& objects) = 0;
         virtual void direct_bound_cocone_loaded(double rho, double alpha) = 0;
         virtual void direct_log(const std::string& msg) = 0;
 };
@@ -133,11 +133,11 @@ private:
                 {
                         const std::string file_name;
                         const unsigned dimension;
-                        const std::unordered_set<ObjectId> objects;
+                        const std::unordered_set<ComputationType> objects;
                         file_loaded(
                                 const std::string& file_name_,
                                 unsigned dimension_,
-                                const std::unordered_set<ObjectId>& objects_)
+                                const std::unordered_set<ComputationType>& objects_)
                                 : file_name(file_name_), dimension(dimension_), objects(objects_)
                         {
                         }
@@ -319,7 +319,7 @@ public:
                 emit_message<WindowEvent::message_warning>("Exception in emit message warning", msg);
         }
 
-        void show_object_loaded(int id) const override
+        void show_object_loaded(ObjectId id) const override
         {
                 emit_message<WindowEvent::show_object_loaded>("Exception in emit show object loaded", id);
         }
@@ -344,8 +344,10 @@ public:
                 emit_message<WindowEvent::mesh_loaded>("Exception in emit mesh loaded", id);
         }
 
-        void file_loaded(const std::string& file_name, unsigned dimension, const std::unordered_set<ObjectId>& objects)
-                const override
+        void file_loaded(
+                const std::string& file_name,
+                unsigned dimension,
+                const std::unordered_set<ComputationType>& objects) const override
         {
                 emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", file_name, dimension, objects);
         }

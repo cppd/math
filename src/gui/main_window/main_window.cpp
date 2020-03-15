@@ -253,15 +253,14 @@ void MainWindow::constructor_objects_and_repository()
         }
 }
 
-std::unordered_set<ObjectId> MainWindow::default_objects_to_load()
+std::unordered_set<ComputationType> MainWindow::default_objects_to_load()
 {
-        std::unordered_set<ObjectId> objects_to_load;
+        std::unordered_set<ComputationType> objects_to_load;
 
-        // ObjectId::Model добавлять не нужно, так как загружается обязательно
-        objects_to_load.insert(ObjectId::Mst);
-        objects_to_load.insert(ObjectId::ConvexHull);
-        objects_to_load.insert(ObjectId::Cocone);
-        objects_to_load.insert(ObjectId::BoundCocone);
+        objects_to_load.insert(ComputationType::Mst);
+        objects_to_load.insert(ComputationType::ConvexHull);
+        objects_to_load.insert(ComputationType::Cocone);
+        objects_to_load.insert(ComputationType::BoundCocone);
 
         return objects_to_load;
 }
@@ -418,24 +417,24 @@ void MainWindow::catch_all(const F& function) const noexcept
         }
 }
 
-bool MainWindow::dialog_object_selection(QWidget* parent, std::unordered_set<ObjectId>* objects_to_load)
+bool MainWindow::dialog_object_selection(QWidget* parent, std::unordered_set<ComputationType>* objects_to_load)
 {
         ASSERT(objects_to_load);
 
-        bool model_convex_hull = objects_to_load->count(ObjectId::ConvexHull) != 0u;
-        bool model_minumum_spanning_tree = objects_to_load->count(ObjectId::Mst) != 0u;
-        bool cocone = objects_to_load->count(ObjectId::Cocone) != 0u;
-        bool bound_cocone = objects_to_load->count(ObjectId::BoundCocone) != 0u;
+        bool model_convex_hull = objects_to_load->count(ComputationType::ConvexHull) != 0u;
+        bool model_minumum_spanning_tree = objects_to_load->count(ComputationType::Mst) != 0u;
+        bool cocone = objects_to_load->count(ComputationType::Cocone) != 0u;
+        bool bound_cocone = objects_to_load->count(ComputationType::BoundCocone) != 0u;
 
         if (!dialog::object_selection(parent, &model_convex_hull, &model_minumum_spanning_tree, &cocone, &bound_cocone))
         {
                 return false;
         }
 
-        insert_or_erase(model_convex_hull, ObjectId::ConvexHull, objects_to_load);
-        insert_or_erase(model_minumum_spanning_tree, ObjectId::Mst, objects_to_load);
-        insert_or_erase(cocone, ObjectId::Cocone, objects_to_load);
-        insert_or_erase(bound_cocone, ObjectId::BoundCocone, objects_to_load);
+        insert_or_erase(model_convex_hull, ComputationType::ConvexHull, objects_to_load);
+        insert_or_erase(model_minumum_spanning_tree, ComputationType::Mst, objects_to_load);
+        insert_or_erase(cocone, ComputationType::Cocone, objects_to_load);
+        insert_or_erase(bound_cocone, ComputationType::BoundCocone, objects_to_load);
 
         return true;
 }
@@ -498,7 +497,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         }
                 }
 
-                std::unordered_set<ObjectId> objects_to_load = m_objects_to_load;
+                std::unordered_set<ComputationType> objects_to_load = m_objects_to_load;
 
                 if (use_object_selection_dialog)
                 {
@@ -559,7 +558,7 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
                         }
                 }
 
-                std::unordered_set<ObjectId> objects_to_load = m_objects_to_load;
+                std::unordered_set<ComputationType> objects_to_load = m_objects_to_load;
 
                 {
                         QPointer ptr(this);
@@ -584,7 +583,7 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
         });
 }
 
-void MainWindow::thread_export(const std::string& name, ObjectId id)
+void MainWindow::thread_export(ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -604,7 +603,6 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
                         return;
                 }
 
-                if (id == ObjectId::Model)
                 {
                         QPointer ptr(this);
                         if (!dialog::message_question_default_no(
@@ -625,6 +623,9 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
                 }
 
                 std::string file_name;
+
+                std::string name;
+                std::visit([&](const auto& v) { name = v->name(); }, m_objects->object(id));
 
                 std::string caption = "Export " + name + " to OBJ";
                 bool read_only = true;
@@ -669,7 +670,7 @@ void MainWindow::thread_reload_bound_cocone()
                         return;
                 }
 
-                if (!m_objects_to_load.count(ObjectId::BoundCocone))
+                if (!m_objects_to_load.count(ComputationType::BoundCocone))
                 {
                         m_event_emitter.message_warning("BoundCocone was not selected for loading");
                         return;
@@ -1017,51 +1018,39 @@ void MainWindow::direct_message_warning(const std::string& msg)
         dialog::message_warning(this, msg);
 }
 
-void MainWindow::direct_show_object_loaded(int id)
+void MainWindow::direct_show_object_loaded(int /*id*/)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
         ASSERT(m_dimension == 3);
-
-        if (int_to_object_id(id) == ObjectId::Model)
-        {
-                ui.model_tree->set_current(id);
-        }
 }
 
-template <template <size_t> typename MeshModel, size_t N, typename Id>
-void MainWindow::object_loaded(
-        const std::shared_ptr<const MeshModel<N>>& mesh,
-        const Matrix<N + 1, N + 1, double>& matrix,
-        const Id& id)
+template <size_t N>
+void MainWindow::object_loaded(const std::shared_ptr<const MeshObject<N>>& object, int dimension)
 {
         if constexpr (N == 3)
         {
-                if (!m_show)
+                if (m_show && dimension == 3)
                 {
-                        return;
+                        m_show->add_object(object);
                 }
-                m_show->add_object(mesh, matrix, object_id_to_int(id));
         }
+        ui.model_tree->add_item(object->id(), object->name());
 }
 
 void MainWindow::direct_object_loaded(ObjectId id, size_t dimension)
 {
-        if (m_show && dimension == 3)
-        {
-                ASSERT(m_objects);
-                std::visit([&](const auto& v) { object_loaded(v.object, v.matrix, id); }, m_objects->object(id));
-        }
-        ui.model_tree->add_item(object_id_to_int(id), object_id_to_text(id));
+        ASSERT(m_objects);
+        std::visit([&](const auto& v) { object_loaded(v, dimension); }, m_objects->object(id));
 }
 
 void MainWindow::direct_object_deleted(ObjectId id, size_t dimension)
 {
         if (m_show && dimension == 3)
         {
-                m_show->delete_object(object_id_to_int(id));
+                m_show->delete_object(id);
         }
-        ui.model_tree->delete_item(object_id_to_int(id));
+        ui.model_tree->delete_item(id);
 }
 
 void MainWindow::direct_object_deleted_all(size_t dimension)
@@ -1080,13 +1069,15 @@ void MainWindow::direct_mesh_loaded(ObjectId id)
         //if (m_dimension != 3)
         //{
         //}
-        ui.model_tree->add_item(object_id_to_int(id), object_id_to_text(id));
+        std::string object_name;
+        std::visit([&](const auto& v) { object_name = v->name(); }, m_objects->object(id));
+        ui.model_tree->add_item(id, object_name);
 }
 
 void MainWindow::direct_file_loaded(
         const std::string& file_name,
         unsigned dimension,
-        const std::unordered_set<ObjectId>& objects)
+        const std::unordered_set<ComputationType>& objects)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -1226,13 +1217,10 @@ void MainWindow::on_actionExport_triggered()
         std::optional<int> item = ui.model_tree->current_item();
         if (!item)
         {
+                m_event_emitter.message_warning("No item selected to export");
                 return;
         }
-
-        ObjectId object_id = int_to_object_id(*item);
-        std::string object_name = object_id_to_text(object_id);
-
-        thread_export(object_name, object_id);
+        thread_export(*item);
 }
 
 void MainWindow::on_actionBoundCocone_triggered()
@@ -1636,10 +1624,11 @@ void MainWindow::on_actionPainter_triggered()
         std::optional<int> item = ui.model_tree->current_item();
         if (!item)
         {
+                m_event_emitter.message_warning("No item selected to paint");
                 return;
         }
 
-        ObjectId object_id = int_to_object_id(*item);
+        ObjectId object_id = *item;
 
         if (!m_objects->mesh_exists(object_id))
         {
@@ -1647,7 +1636,8 @@ void MainWindow::on_actionPainter_triggered()
                 return;
         }
 
-        std::string object_name = object_id_to_text(object_id);
+        std::string object_name;
+        std::visit([&](const auto& v) { object_name = v->name(); }, m_objects->object(object_id));
 
         catch_all([&](std::string* message) {
                 *message = "Painter";

@@ -151,8 +151,7 @@ class Impl final : public ObjectStorage
                                                         {
                                                                 error("Null object pointer");
                                                         }
-                                                        auto m = v.object_matrix();
-                                                        object_opt = Object(std::move(ptr), m);
+                                                        object_opt = ptr;
                                                 }
                                                 ++count;
                                         }
@@ -232,7 +231,7 @@ class Impl final : public ObjectStorage
         }
 
         void load_from_file(
-                const std::unordered_set<ObjectId>& objects,
+                const std::unordered_set<ComputationType>& objects,
                 ProgressRatioList* progress_list,
                 const std::string& file_name,
                 double rho,
@@ -253,7 +252,7 @@ class Impl final : public ObjectStorage
         }
 
         void load_from_repository(
-                const std::unordered_set<ObjectId>& objects,
+                const std::unordered_set<ComputationType>& objects,
                 ProgressRatioList* progress_list,
                 int dimension,
                 const std::string& object_name,

@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "pointer_map.h"
 
 #include "../events.h"
-#include "../object_id.h"
+#include "../mesh_object.h"
 
 #include <src/geometry/cocone/reconstruction.h>
 #include <src/geometry/objects/points.h>
@@ -52,7 +52,7 @@ class ObjectStorageSpace
 
         const std::unique_ptr<ObjectRepository<N>> m_object_repository;
         PointerMap<ObjectId, const SpatialMeshModel<N, MeshFloat>> m_meshes;
-        PointerMap<ObjectId, const mesh::Mesh<N>> m_objects;
+        PointerMap<ObjectId, const MeshObject<N>> m_objects;
         std::vector<Vector<N, float>> m_manifold_points;
         std::unique_ptr<ManifoldConstructor<N>> m_manifold_constructor;
         Matrix<N + 1, N + 1, double> m_model_vertex_matrix;
@@ -70,38 +70,32 @@ class ObjectStorageSpace
         template <typename F>
         void catch_all(const F& function) const;
 
-        void build_mst(ObjectId object_id, ProgressRatioList* progress_list);
+        void build_mst(ProgressRatioList* progress_list);
 
         std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> build_mesh(
                 ProgressRatioList* progress_list,
                 const mesh::Mesh<N>& mesh);
 
-        void add_object_and_mesh(
-                ProgressRatioList* progress_list,
-                ObjectId object_id,
-                const std::shared_ptr<const mesh::Mesh<N>>& mesh);
-
-        void add_convex_hull_and_mesh(
-                ProgressRatioList* progress_list,
-                ObjectId object_id,
-                const std::shared_ptr<const mesh::Mesh<N>>& mesh);
+        void add_object_and_mesh(ProgressRatioList* progress_list, const std::shared_ptr<const MeshObject<N>>& object);
 
         void manifold_constructor(
-                const std::unordered_set<ObjectId>& objects,
+                const std::unordered_set<ComputationType>& objects,
                 ProgressRatioList* progress_list,
                 double rho,
                 double alpha);
 
-        void cocone(ObjectId object_id, ProgressRatioList* progress_list);
+        void convex_hull(ProgressRatioList* progress_list, const std::shared_ptr<const MeshObject<N>>& object);
 
-        void bound_cocone(ObjectId object_id, ProgressRatioList* progress_list, double rho, double alpha);
+        void cocone(ProgressRatioList* progress_list);
+
+        void bound_cocone(ProgressRatioList* progress_list, double rho, double alpha);
 
         template <typename ObjectLoaded>
         void load_object(
-                const std::unordered_set<ObjectId>& objects,
+                const std::unordered_set<ComputationType>& objects,
                 ProgressRatioList* progress_list,
                 const std::string& object_name,
-                const std::shared_ptr<const mesh::Mesh<N>>& mesh,
+                std::unique_ptr<const mesh::Mesh<N>>&& mesh,
                 double rho,
                 double alpha,
                 const ObjectLoaded& object_loaded);
@@ -121,8 +115,7 @@ public:
         bool manifold_constructor_exists() const;
 
         bool object_exists(ObjectId id) const;
-        std::shared_ptr<const mesh::Mesh<N>> object(ObjectId id) const;
-        Matrix<N + 1, N + 1, double> object_matrix() const;
+        std::shared_ptr<const MeshObject<N>> object(ObjectId id) const;
 
         bool mesh_exists(ObjectId id) const;
         std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> mesh(ObjectId id) const;
@@ -130,7 +123,7 @@ public:
         void compute_bound_cocone(ProgressRatioList* progress_list, double rho, double alpha);
 
         void load_from_file(
-                const std::unordered_set<ObjectId>& objects,
+                const std::unordered_set<ComputationType>& objects,
                 ProgressRatioList* progress_list,
                 const std::string& file_name,
                 double rho,
@@ -138,7 +131,7 @@ public:
                 const std::function<void()>& object_loaded);
 
         void load_from_repository(
-                const std::unordered_set<ObjectId>& objects,
+                const std::unordered_set<ComputationType>& objects,
                 ProgressRatioList* progress_list,
                 const std::string& object_name,
                 double rho,

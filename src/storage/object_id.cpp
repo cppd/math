@@ -17,46 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "object_id.h"
 
-#include <src/com/error.h>
-#include <src/com/print.h>
+#include <atomic>
 
-int object_id_to_int(ObjectId id)
+namespace
 {
-        return static_cast<int>(id);
+std::atomic_int global_id = 0;
 }
 
-ObjectId int_to_object_id(int int_id)
+ObjectId new_id()
 {
-        ObjectId id = static_cast<ObjectId>(int_id);
-
-        switch (id)
-        {
-        case ObjectId::Model:
-        case ObjectId::Mst:
-        case ObjectId::ConvexHull:
-        case ObjectId::Cocone:
-        case ObjectId::BoundCocone:
-                return id;
-        }
-
-        error_fatal("Wrong ObjectId value " + to_string(int_id));
-}
-
-const char* object_id_to_text(ObjectId id)
-{
-        switch (id)
-        {
-        case ObjectId::Model:
-                return "Model";
-        case ObjectId::Mst:
-                return "MST";
-        case ObjectId::ConvexHull:
-                return "Convex Hull";
-        case ObjectId::Cocone:
-                return "Cocone";
-        case ObjectId::BoundCocone:
-                return "Bound Cocone";
-        }
-
-        error_fatal("Wrong ObjectId value " + to_string(object_id_to_int(id)));
+        return 1 + global_id.fetch_add(1, std::memory_order_relaxed);
 }

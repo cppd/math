@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "object_id.h"
+#include "options.h"
 
 #include <string>
 #include <unordered_set>
@@ -31,7 +32,7 @@ public:
         virtual void file_loaded(
                 const std::string& msg,
                 unsigned dimension,
-                const std::unordered_set<ObjectId>& objects) const = 0;
+                const std::unordered_set<ComputationType>& objects) const = 0;
 
         virtual void bound_cocone_loaded(double rho, double alpha) const = 0;
 

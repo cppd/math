@@ -17,15 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-enum class ObjectId
-{
-        Model,
-        Mst,
-        ConvexHull,
-        Cocone,
-        BoundCocone
-};
+using ObjectId = int;
 
-int object_id_to_int(ObjectId id);
-ObjectId int_to_object_id(int id);
-const char* object_id_to_text(ObjectId id);
+ObjectId new_id();

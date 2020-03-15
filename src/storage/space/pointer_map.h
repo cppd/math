@@ -36,8 +36,6 @@ public:
         template <typename SetType>
         void set(const Index& id, SetType&& v)
         {
-                static_assert(std::is_same_v<std::remove_cvref_t<SetType>, std::shared_ptr<T>>);
-
                 std::shared_ptr<T> tmp;
 
                 {

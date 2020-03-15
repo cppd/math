@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "events.h"
-#include "object_id.h"
+#include "mesh_object.h"
 #include "options.h"
 
 #include <src/com/variant.h>
@@ -33,25 +33,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 struct ObjectStorage
 {
-        template <size_t N>
-        struct Object
-        {
-                std::shared_ptr<const mesh::Mesh<N>> object;
-                Matrix<N + 1, N + 1, double> matrix;
-
-                Object(std::shared_ptr<const mesh::Mesh<N>>&& object_, const Matrix<N + 1, N + 1, double>& matrix_)
-                        : object(object_), matrix(matrix_)
-                {
-                }
-        };
-
         using MeshVariant = SequenceVariant2ConstType2<
                 STORAGE_MIN_DIMENSIONS,
                 STORAGE_MAX_DIMENSIONS,
                 std::shared_ptr,
                 SpatialMeshModel,
                 StorageMeshFloatingPoint>;
-        using ObjectVariant = SequenceVariant1<STORAGE_MIN_DIMENSIONS, STORAGE_MAX_DIMENSIONS, Object>;
+
+        using ObjectVariant =
+                SequenceVariant2ConstType2<STORAGE_MIN_DIMENSIONS, STORAGE_MAX_DIMENSIONS, std::shared_ptr, MeshObject>;
 
         virtual ~ObjectStorage() = default;
 
@@ -87,14 +77,14 @@ struct ObjectStorage
         virtual void compute_bound_cocone(ProgressRatioList* progress_list, double rho, double alpha) = 0;
 
         virtual void load_from_file(
-                const std::unordered_set<ObjectId>& objects,
+                const std::unordered_set<ComputationType>& objects,
                 ProgressRatioList* progress_list,
                 const std::string& file_name,
                 double rho,
                 double alpha) = 0;
 
         virtual void load_from_repository(
-                const std::unordered_set<ObjectId>& objects,
+                const std::unordered_set<ComputationType>& objects,
                 ProgressRatioList* progress_list,
                 int dimension,
                 const std::string& object_name,

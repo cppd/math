@@ -21,3 +21,11 @@ inline constexpr int STORAGE_MIN_DIMENSIONS = 3;
 inline constexpr int STORAGE_MAX_DIMENSIONS = 5;
 
 using StorageMeshFloatingPoint = double;
+
+enum class ComputationType
+{
+        Mst,
+        ConvexHull,
+        Cocone,
+        BoundCocone
+};

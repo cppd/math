@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/mesh.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vec.h>
+#include <src/storage/mesh_object.h>
 #include <src/window/handle.h>
 
 #include <memory>
@@ -61,7 +62,7 @@ protected:
         virtual ~Show() = default;
 
 public:
-        virtual void add_object(const std::shared_ptr<const mesh::Mesh<3>>&, const mat4& model_matrix, int id) = 0;
+        virtual void add_object(const std::shared_ptr<const MeshObject<3>>&) = 0;
         virtual void delete_object(int id) = 0;
         virtual void delete_all_objects() = 0;
         virtual void show_object(int id) = 0;
