@@ -115,7 +115,7 @@ std::unique_ptr<const SpatialMeshModel<N, T>> simplex_mesh_of_sphere(
 
         constexpr Matrix<N + 1, N + 1, T> matrix(1);
 
-        return std::make_unique<const SpatialMeshModel<N, T>>(mesh.get(), matrix, thread_count, progress);
+        return std::make_unique<const SpatialMeshModel<N, T>>(*mesh, matrix, thread_count, progress);
 }
 }
 

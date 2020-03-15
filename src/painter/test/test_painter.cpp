@@ -136,7 +136,7 @@ std::shared_ptr<const SpatialMeshModel<N, T>> file_mesh(
 
         LOG("Creating mesh...");
         std::shared_ptr<const SpatialMeshModel<N, T>> spatial_mesh =
-                std::make_shared<const SpatialMeshModel<N, T>>(mesh.get(), matrix, thread_count, progress);
+                std::make_shared<const SpatialMeshModel<N, T>>(*mesh, matrix, thread_count, progress);
 
         return spatial_mesh;
 }

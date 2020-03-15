@@ -144,18 +144,18 @@ bool ObjectStorageSpace<N, MeshFloat>::manifold_constructor_exists() const
 template <size_t N, typename MeshFloat>
 std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> ObjectStorageSpace<N, MeshFloat>::build_mesh(
         ProgressRatioList* progress_list,
-        const mesh::Mesh<N>& mesh)
+        const MeshObject<N>& object)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        if (mesh.facets.empty())
+        if (object.mesh().facets.empty())
         {
                 return nullptr;
         }
         std::lock_guard lg(m_mesh_sequential_mutex);
         ProgressRatio progress(progress_list);
         return std::make_shared<const SpatialMeshModel<N, MeshFloat>>(
-                &mesh, to_matrix<MeshFloat>(m_model_vertex_matrix), m_mesh_threads, &progress);
+                object.mesh(), to_matrix<MeshFloat>(object.matrix()), m_mesh_threads, &progress);
 }
 
 template <size_t N, typename MeshFloat>
@@ -168,7 +168,7 @@ void ObjectStorageSpace<N, MeshFloat>::add_object_and_mesh(
         m_objects.set(object->id(), object);
         m_event_emitter.object_loaded(object->id(), N);
 
-        std::shared_ptr ptr = build_mesh(progress_list, object->mesh());
+        std::shared_ptr ptr = build_mesh(progress_list, *object);
         m_meshes.set(object->id(), std::move(ptr));
         m_event_emitter.mesh_loaded(object->id());
 }

@@ -74,7 +74,7 @@ class ObjectStorageSpace
 
         std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> build_mesh(
                 ProgressRatioList* progress_list,
-                const mesh::Mesh<N>& mesh);
+                const MeshObject<N>& object);
 
         void add_object_and_mesh(ProgressRatioList* progress_list, const std::shared_ptr<const MeshObject<N>>& object);
 

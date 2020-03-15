@@ -60,16 +60,16 @@ class SpatialMeshModel
 
         Vector<N, T> m_min, m_max;
 
-        void create_mesh_object(
-                const mesh::Mesh<N>* mesh,
+        void create(
+                const mesh::Mesh<N>& mesh,
                 const Matrix<N + 1, N + 1, T>& vertex_matrix,
                 unsigned thread_count,
                 ProgressRatio* progress);
 
 public:
         SpatialMeshModel(
-                const mesh::Mesh<N>* mesh,
-                const Matrix<N + 1, N + 1, T>& vertex_matrix,
+                const mesh::Mesh<N>& mesh,
+                const Matrix<N + 1, N + 1, T>& matrix,
                 unsigned thread_count,
                 ProgressRatio* progress);
 
