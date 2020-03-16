@@ -125,7 +125,7 @@ private:
         void thread_load_from_file(std::string file_name, bool use_object_selection_dialog);
         void thread_load_from_repository(int dimension, const std::string& object_name);
         void thread_export(ObjectId id);
-        void thread_reload_bound_cocone();
+        void thread_bound_cocone(ObjectId id);
         void thread_self_test(SelfTestType test_type, bool with_confirmation);
 
         template <template <size_t, typename> typename SpatialMeshModel, size_t N, typename T>
@@ -151,8 +151,6 @@ private:
         double normal_length() const;
 
         static double lighting_slider_value(const QSlider* slider);
-
-        void set_bound_cocone_parameters(double rho, double alpha);
 
         void set_background_color(const QColor& c);
         void set_default_color(const QColor& c);
@@ -185,7 +183,6 @@ private:
                 const std::string& file_name,
                 unsigned dimension,
                 const std::unordered_set<ComputationType>& objects) override;
-        void direct_bound_cocone_loaded(double rho, double alpha) override;
         void direct_log(const std::string& msg) override;
 
         Ui::MainWindow ui;

@@ -88,20 +88,6 @@ class Impl final : public ObjectStorage
                 return names;
         }
 
-        bool manifold_constructor_exists() const override
-        {
-                int count = 0;
-                for (const auto& p : m_objects)
-                {
-                        std::visit([&](const auto& v) { count += v.manifold_constructor_exists() ? 1 : 0; }, p.second);
-                }
-                if (count > 1)
-                {
-                        error("Too many manifold constructors " + to_string(count));
-                }
-                return count > 0;
-        }
-
         bool object_exists(ObjectId id) const override
         {
                 int count = 0;
@@ -202,22 +188,22 @@ class Impl final : public ObjectStorage
                 return *mesh_opt;
         }
 
-        void compute_bound_cocone(ProgressRatioList* progress_list, double rho, double alpha) override
+        void compute_bound_cocone(ProgressRatioList* progress_list, ObjectId id, double rho, double alpha) override
         {
-                if (!manifold_constructor_exists())
+                if (!object_exists(id))
                 {
-                        error("No manifold constructor");
+                        error("No object");
                 }
                 int count = 0;
                 for (auto& p : m_objects)
                 {
                         std::visit(
                                 [&](auto& v) {
-                                        if (v.manifold_constructor_exists())
+                                        if (v.object_exists(id))
                                         {
                                                 if (count == 0)
                                                 {
-                                                        v.compute_bound_cocone(progress_list, rho, alpha);
+                                                        v.compute_bound_cocone(progress_list, id, rho, alpha);
                                                 }
                                                 ++count;
                                         }

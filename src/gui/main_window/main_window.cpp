@@ -113,6 +113,8 @@ MainWindow::MainWindow(QWidget* parent)
           m_window_thread_id(std::this_thread::get_id()),
           m_event_emitter(this),
           m_first_show(true),
+          m_bound_cocone_rho(BOUND_COCONE_DEFAULT_RHO),
+          m_bound_cocone_alpha(BOUND_COCONE_DEFAULT_ALPHA),
           m_dimension(0),
           m_close_without_confirmation(false),
           m_objects_to_load(default_objects_to_load())
@@ -188,8 +190,6 @@ void MainWindow::constructor_interface()
 
         set_widgets_enabled(QMainWindow::layout(), true);
         set_dependent_interface();
-
-        set_bound_cocone_parameters(BOUND_COCONE_DEFAULT_RHO, BOUND_COCONE_DEFAULT_ALPHA);
 
         set_background_color(BACKGROUND_COLOR);
         set_default_color(DEFAULT_COLOR);
@@ -656,7 +656,7 @@ void MainWindow::thread_export(ObjectId id)
         });
 }
 
-void MainWindow::thread_reload_bound_cocone()
+void MainWindow::thread_bound_cocone(ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -670,15 +670,9 @@ void MainWindow::thread_reload_bound_cocone()
                         return;
                 }
 
-                if (!m_objects_to_load.count(ComputationType::BoundCocone))
+                if (!m_objects->object_exists(id))
                 {
-                        m_event_emitter.message_warning("BoundCocone was not selected for loading");
-                        return;
-                }
-
-                if (!m_objects->manifold_constructor_exists())
-                {
-                        m_event_emitter.message_warning("No manifold constructor");
+                        m_event_emitter.message_warning("No object to compute BoundCocone");
                         return;
                 }
 
@@ -696,10 +690,12 @@ void MainWindow::thread_reload_bound_cocone()
                         return;
                 }
 
-                auto f = [=, this,
-                          objects_to_load = m_objects_to_load](ProgressRatioList* progress_list, std::string* message) {
+                m_bound_cocone_rho = rho;
+                m_bound_cocone_alpha = alpha;
+
+                auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
                         *message = "BoundCocone Reconstruction";
-                        m_objects->compute_bound_cocone(progress_list, rho, alpha);
+                        m_objects->compute_bound_cocone(progress_list, id, rho, alpha);
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -831,15 +827,6 @@ void MainWindow::slot_timer_progress_bar()
         {
                 progress_bars(t.action, t.permanent, t.progress_list, t.progress_bars);
         }
-}
-
-void MainWindow::set_bound_cocone_parameters(double rho, double alpha)
-{
-        static_assert(BOUND_COCONE_MINIMUM_RHO_EXPONENT < 0);
-        static_assert(BOUND_COCONE_MINIMUM_ALPHA_EXPONENT < 0);
-
-        m_bound_cocone_rho = rho;
-        m_bound_cocone_alpha = alpha;
 }
 
 void MainWindow::set_background_color(const QColor& c)
@@ -1087,13 +1074,6 @@ void MainWindow::direct_file_loaded(
         m_objects_to_load = objects;
 }
 
-void MainWindow::direct_bound_cocone_loaded(double rho, double alpha)
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        set_bound_cocone_parameters(rho, alpha);
-}
-
 void MainWindow::direct_log(const std::string& msg)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
@@ -1225,7 +1205,13 @@ void MainWindow::on_actionExport_triggered()
 
 void MainWindow::on_actionBoundCocone_triggered()
 {
-        thread_reload_bound_cocone();
+        std::optional<ObjectId> item = ui.model_tree->current_item();
+        if (!item)
+        {
+                m_event_emitter.message_warning("No item selected to export");
+                return;
+        }
+        thread_bound_cocone(*item);
 }
 
 void MainWindow::on_actionExit_triggered()

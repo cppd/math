@@ -34,8 +34,6 @@ public:
                 unsigned dimension,
                 const std::unordered_set<ComputationType>& objects) const = 0;
 
-        virtual void bound_cocone_loaded(double rho, double alpha) const = 0;
-
         virtual void object_loaded(ObjectId id, size_t dimension) const = 0;
         virtual void mesh_loaded(ObjectId id) const = 0;
 

@@ -45,7 +45,6 @@ public:
                 const std::string& file_name,
                 unsigned dimension,
                 const std::unordered_set<ComputationType>& objects) = 0;
-        virtual void direct_bound_cocone_loaded(double rho, double alpha) = 0;
         virtual void direct_log(const std::string& msg) = 0;
 };
 
@@ -142,14 +141,6 @@ private:
                         {
                         }
                 };
-                struct bound_cocone_loaded final
-                {
-                        const double rho;
-                        const double alpha;
-                        bound_cocone_loaded(double rho_, double alpha_) : rho(rho_), alpha(alpha_)
-                        {
-                        }
-                };
                 struct log final
                 {
                         const std::string msg;
@@ -165,7 +156,6 @@ private:
                         object_deleted,
                         object_deleted_all,
                         mesh_loaded,
-                        bound_cocone_loaded,
                         file_loaded,
                         message_error,
                         message_error_fatal,
@@ -267,10 +257,6 @@ private:
                 {
                         m_f->direct_file_loaded(d.file_name, d.dimension, d.objects);
                 }
-                void operator()(const WindowEvent::bound_cocone_loaded& d)
-                {
-                        m_f->direct_bound_cocone_loaded(d.rho, d.alpha);
-                }
                 void operator()(const WindowEvent::log& d)
                 {
                         m_f->direct_log(d.msg);
@@ -350,11 +336,6 @@ public:
                 const std::unordered_set<ComputationType>& objects) const override
         {
                 emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", file_name, dimension, objects);
-        }
-
-        void bound_cocone_loaded(double rho, double alpha) const override
-        {
-                emit_message<WindowEvent::bound_cocone_loaded>("Exception in emit BoundCocone loaded", rho, alpha);
         }
 
         void log(const std::string& msg) const override

@@ -56,8 +56,6 @@ struct ObjectStorage
         };
         virtual std::vector<RepositoryObjects> repository_point_object_names() const = 0;
 
-        virtual bool manifold_constructor_exists() const = 0;
-
         virtual bool object_exists(ObjectId id) const = 0;
         virtual ObjectVariant object(ObjectId id) const = 0;
 
@@ -74,7 +72,7 @@ struct ObjectStorage
 
         virtual void set_object_size_and_position(double size, const vec3& position) = 0;
 
-        virtual void compute_bound_cocone(ProgressRatioList* progress_list, double rho, double alpha) = 0;
+        virtual void compute_bound_cocone(ProgressRatioList* progress_list, ObjectId id, double rho, double alpha) = 0;
 
         virtual void load_from_file(
                 const std::unordered_set<ComputationType>& objects,

@@ -136,12 +136,6 @@ std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> ObjectStorageSpace<N, Mesh
 }
 
 template <size_t N, typename MeshFloat>
-bool ObjectStorageSpace<N, MeshFloat>::manifold_constructor_exists() const
-{
-        return m_manifold_constructor.get() != nullptr;
-}
-
-template <size_t N, typename MeshFloat>
 std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> ObjectStorageSpace<N, MeshFloat>::build_mesh(
         ProgressRatioList* progress_list,
         const MeshObject<N>& object)
@@ -199,14 +193,13 @@ void ObjectStorageSpace<N, MeshFloat>::convex_hull(
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::cocone(ProgressRatioList* progress_list)
+void ObjectStorageSpace<N, MeshFloat>::cocone(
+        ProgressRatioList* progress_list,
+        const ManifoldConstructor<N>& constructor,
+        const std::vector<Vector<N, float>>& points,
+        const MeshObject<N>& object)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
-
-        if (!m_manifold_constructor)
-        {
-                error("No manifold constructor");
-        }
 
         std::unique_ptr<const mesh::Mesh<N>> cocone_mesh;
         {
@@ -217,9 +210,9 @@ void ObjectStorageSpace<N, MeshFloat>::cocone(ProgressRatioList* progress_list)
                 std::vector<vec<N>> normals;
                 std::vector<std::array<int, N>> facets;
 
-                m_manifold_constructor->cocone(&normals, &facets, &progress);
+                constructor.cocone(&normals, &facets, &progress);
 
-                cocone_mesh = mesh::create_mesh_for_facets(m_manifold_points, normals, facets);
+                cocone_mesh = mesh::create_mesh_for_facets(points, normals, facets);
 
                 LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) +
                     " s");
@@ -230,20 +223,21 @@ void ObjectStorageSpace<N, MeshFloat>::cocone(ProgressRatioList* progress_list)
         }
 
         std::shared_ptr<MeshObject<N>> cocone_object =
-                std::make_shared<MeshObject<N>>(std::move(cocone_mesh), m_model_vertex_matrix, "Cocone");
+                std::make_shared<MeshObject<N>>(std::move(cocone_mesh), object.matrix(), "Cocone");
 
         add_object_and_mesh(progress_list, cocone_object);
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::bound_cocone(ProgressRatioList* progress_list, double rho, double alpha)
+void ObjectStorageSpace<N, MeshFloat>::bound_cocone(
+        ProgressRatioList* progress_list,
+        const ManifoldConstructor<N>& constructor,
+        const std::vector<Vector<N, float>>& points,
+        const MeshObject<N>& object,
+        double rho,
+        double alpha)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
-
-        if (!m_manifold_constructor)
-        {
-                error("No manifold constructor");
-        }
 
         std::unique_ptr<const mesh::Mesh<N>> bound_cocone_mesh;
         {
@@ -254,12 +248,9 @@ void ObjectStorageSpace<N, MeshFloat>::bound_cocone(ProgressRatioList* progress_
                 std::vector<vec<N>> normals;
                 std::vector<std::array<int, N>> facets;
 
-                m_manifold_constructor->bound_cocone(rho, alpha, &normals, &facets, &progress);
+                constructor.bound_cocone(rho, alpha, &normals, &facets, &progress);
 
-                bound_cocone_mesh = mesh::create_mesh_for_facets(m_manifold_points, normals, facets);
-
-                m_bound_cocone_rho = rho;
-                m_bound_cocone_alpha = alpha;
+                bound_cocone_mesh = mesh::create_mesh_for_facets(points, normals, facets);
 
                 LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) +
                     " s");
@@ -271,44 +262,43 @@ void ObjectStorageSpace<N, MeshFloat>::bound_cocone(ProgressRatioList* progress_
 
         std::string name = "Bound Cocone (" + bound_cocone_text_rho_alpha(rho, alpha) + ")";
         std::shared_ptr<MeshObject<N>> bound_cocone_object =
-                std::make_shared<MeshObject<N>>(std::move(bound_cocone_mesh), m_model_vertex_matrix, name);
+                std::make_shared<MeshObject<N>>(std::move(bound_cocone_mesh), object.matrix(), name);
 
         add_object_and_mesh(progress_list, bound_cocone_object);
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::build_mst(ProgressRatioList* progress_list)
+void ObjectStorageSpace<N, MeshFloat>::build_mst(
+        ProgressRatioList* progress_list,
+        const ManifoldConstructor<N>& constructor,
+        const std::vector<Vector<N, float>>& points,
+        const MeshObject<N>& object)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
-
-        if (!m_manifold_constructor)
-        {
-                error("No manifold constructor");
-        }
 
         std::vector<std::array<int, 2>> mst_lines;
         {
                 ProgressRatio progress(progress_list);
 
-                mst_lines =
-                        minimum_spanning_tree(m_manifold_points, m_manifold_constructor->delaunay_objects(), &progress);
+                mst_lines = minimum_spanning_tree(points, constructor.delaunay_objects(), &progress);
         }
-        std::unique_ptr<const mesh::Mesh<N>> mst_mesh = mesh::create_mesh_for_lines(m_manifold_points, mst_lines);
+        std::unique_ptr<const mesh::Mesh<N>> mst_mesh = mesh::create_mesh_for_lines(points, mst_lines);
         if (mst_mesh->lines.empty())
         {
                 return;
         }
 
         std::shared_ptr<MeshObject<N>> mst_object =
-                std::make_shared<MeshObject<N>>(std::move(mst_mesh), m_model_vertex_matrix, "MST");
+                std::make_shared<MeshObject<N>>(std::move(mst_mesh), object.matrix(), "MST");
 
         add_object_and_mesh(progress_list, mst_object);
 }
 
 template <size_t N, typename MeshFloat>
 void ObjectStorageSpace<N, MeshFloat>::manifold_constructor(
-        const std::unordered_set<ComputationType>& objects,
         ProgressRatioList* progress_list,
+        const std::unordered_set<ComputationType>& objects,
+        const MeshObject<N>& object,
         double rho,
         double alpha)
 {
@@ -320,12 +310,31 @@ void ObjectStorageSpace<N, MeshFloat>::manifold_constructor(
                 return;
         }
 
+        auto points_iter = m_manifold_constructors_points.find(object.id());
+        if (points_iter == m_manifold_constructors_points.cend())
+        {
+                std::vector<Vector<N, float>> points;
+                if (!object.mesh().facets.empty())
+                {
+                        points = unique_facet_vertices(object.mesh());
+                }
+                else
+                {
+                        points = unique_point_vertices(object.mesh());
+                }
+                points_iter = m_manifold_constructors_points.emplace(object.id(), std::move(points)).first;
+        }
+
+        auto constructor_iter = m_manifold_constructors.find(object.id());
+        if (constructor_iter == m_manifold_constructors.cend())
         {
                 ProgressRatio progress(progress_list);
 
                 double start_time = time_in_seconds();
 
-                m_manifold_constructor = create_manifold_constructor(m_manifold_points, &progress);
+                std::unique_ptr<ManifoldConstructor<N>> constructor =
+                        create_manifold_constructor(points_iter->second, &progress);
+                constructor_iter = m_manifold_constructors.emplace(object.id(), std::move(constructor)).first;
 
                 LOG("Manifold reconstruction first phase, " + to_string_fixed(time_in_seconds() - start_time, 5) +
                     " s");
@@ -339,7 +348,7 @@ void ObjectStorageSpace<N, MeshFloat>::manifold_constructor(
                         catch_all([&](std::string* message) {
                                 *message = "Cocone reconstruction in " + space_name(N);
 
-                                cocone(progress_list);
+                                cocone(progress_list, *constructor_iter->second, points_iter->second, object);
                         });
                 });
         }
@@ -350,7 +359,9 @@ void ObjectStorageSpace<N, MeshFloat>::manifold_constructor(
                         catch_all([&](std::string* message) {
                                 *message = "BoundCocone reconstruction in " + space_name(N);
 
-                                bound_cocone(progress_list, rho, alpha);
+                                bound_cocone(
+                                        progress_list, *constructor_iter->second, points_iter->second, object, rho,
+                                        alpha);
                         });
                 });
         }
@@ -361,7 +372,7 @@ void ObjectStorageSpace<N, MeshFloat>::manifold_constructor(
                         catch_all([&](std::string* message) {
                                 *message = "Minimum spanning tree in " + space_name(N);
 
-                                build_mst(progress_list);
+                                build_mst(progress_list, *constructor_iter->second, points_iter->second, object);
                         });
                 });
         }
@@ -378,11 +389,11 @@ void ObjectStorageSpace<N, MeshFloat>::clear_all_data()
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
         m_event_emitter.object_deleted_all(N);
-        m_manifold_constructor.reset();
-        m_meshes.reset_all();
+
+        m_manifold_constructors_points.clear();
+        m_manifold_constructors.clear();
         m_objects.reset_all();
-        m_manifold_points.clear();
-        m_manifold_points.shrink_to_fit();
+        m_meshes.reset_all();
 }
 
 template <size_t N, typename MeshFloat>
@@ -414,20 +425,19 @@ void ObjectStorageSpace<N, MeshFloat>::load_object(
 
         m_event_emitter.file_loaded(object_name, N, objects);
 
-        m_manifold_points = !mesh->facets.empty() ? unique_facet_vertices(*mesh) : unique_point_vertices(*mesh);
-
+        Matrix<N + 1, N + 1, double> matrix;
         if constexpr (N == 3)
         {
                 ASSERT(m_object_size != 0);
-                m_model_vertex_matrix = model_vertex_matrix(*mesh, m_object_size, m_object_position);
+                matrix = model_vertex_matrix(*mesh, m_object_size, m_object_position);
         }
         else
         {
-                m_model_vertex_matrix = Matrix<N + 1, N + 1, double>(1);
+                matrix = Matrix<N + 1, N + 1, double>(1);
         }
 
-        std::shared_ptr<MeshObject<N>> model_object =
-                std::make_shared<MeshObject<N>>(std::move(mesh), m_model_vertex_matrix, "Model");
+        const std::shared_ptr<const MeshObject<N>> model_object =
+                std::make_shared<const MeshObject<N>>(std::move(mesh), matrix, "Model");
 
         std::vector<std::thread> threads;
 
@@ -457,7 +467,7 @@ void ObjectStorageSpace<N, MeshFloat>::load_object(
                         catch_all([&](std::string* message) {
                                 *message = "Manifold constructor";
 
-                                manifold_constructor(objects, progress_list, rho, alpha);
+                                manifold_constructor(progress_list, objects, *model_object, rho, alpha);
                         });
                 });
         }
@@ -469,9 +479,18 @@ void ObjectStorageSpace<N, MeshFloat>::load_object(
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::compute_bound_cocone(ProgressRatioList* progress_list, double rho, double alpha)
+void ObjectStorageSpace<N, MeshFloat>::compute_bound_cocone(
+        ProgressRatioList* progress_list,
+        ObjectId id,
+        double rho,
+        double alpha)
 {
-        bound_cocone(progress_list, rho, alpha);
+        const std::shared_ptr<const MeshObject<N>> obj = m_objects.get(id);
+        if (!obj)
+        {
+                error("No object found to compute BoundCocone");
+        }
+        manifold_constructor(progress_list, {ComputationType::BoundCocone}, *obj, rho, alpha);
 }
 
 template <size_t N, typename MeshFloat>

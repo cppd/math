@@ -51,26 +51,21 @@ class ObjectStorageSpace
         //
 
         const std::unique_ptr<ObjectRepository<N>> m_object_repository;
-        PointerMap<ObjectId, const SpatialMeshModel<N, MeshFloat>> m_meshes;
+
         PointerMap<ObjectId, const MeshObject<N>> m_objects;
-        std::vector<Vector<N, float>> m_manifold_points;
-        std::unique_ptr<ManifoldConstructor<N>> m_manifold_constructor;
-        Matrix<N + 1, N + 1, double> m_model_vertex_matrix;
+        PointerMap<ObjectId, const SpatialMeshModel<N, MeshFloat>> m_meshes;
+        std::unordered_map<ObjectId, std::vector<Vector<N, float>>> m_manifold_constructors_points;
+        std::unordered_map<ObjectId, std::unique_ptr<ManifoldConstructor<N>>> m_manifold_constructors;
 
         //
 
         std::mutex m_mesh_sequential_mutex;
-
-        double m_bound_cocone_rho;
-        double m_bound_cocone_alpha;
 
         double m_object_size = 0;
         vec3 m_object_position = vec3(0);
 
         template <typename F>
         void catch_all(const F& function) const;
-
-        void build_mst(ProgressRatioList* progress_list);
 
         std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> build_mesh(
                 ProgressRatioList* progress_list,
@@ -79,16 +74,33 @@ class ObjectStorageSpace
         void add_object_and_mesh(ProgressRatioList* progress_list, const std::shared_ptr<const MeshObject<N>>& object);
 
         void manifold_constructor(
-                const std::unordered_set<ComputationType>& objects,
                 ProgressRatioList* progress_list,
+                const std::unordered_set<ComputationType>& objects,
+                const MeshObject<N>& object,
                 double rho,
                 double alpha);
 
         void convex_hull(ProgressRatioList* progress_list, const std::shared_ptr<const MeshObject<N>>& object);
 
-        void cocone(ProgressRatioList* progress_list);
+        void cocone(
+                ProgressRatioList* progress_list,
+                const ManifoldConstructor<N>& constructor,
+                const std::vector<Vector<N, float>>& points,
+                const MeshObject<N>& object);
 
-        void bound_cocone(ProgressRatioList* progress_list, double rho, double alpha);
+        void bound_cocone(
+                ProgressRatioList* progress_list,
+                const ManifoldConstructor<N>& constructor,
+                const std::vector<Vector<N, float>>& points,
+                const MeshObject<N>& object,
+                double rho,
+                double alpha);
+
+        void build_mst(
+                ProgressRatioList* progress_list,
+                const ManifoldConstructor<N>& constructor,
+                const std::vector<Vector<N, float>>& points,
+                const MeshObject<N>& object);
 
         template <typename ObjectLoaded>
         void load_object(
@@ -112,15 +124,13 @@ public:
 
         std::vector<std::string> repository_point_object_names() const;
 
-        bool manifold_constructor_exists() const;
-
         bool object_exists(ObjectId id) const;
         std::shared_ptr<const MeshObject<N>> object(ObjectId id) const;
 
         bool mesh_exists(ObjectId id) const;
         std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> mesh(ObjectId id) const;
 
-        void compute_bound_cocone(ProgressRatioList* progress_list, double rho, double alpha);
+        void compute_bound_cocone(ProgressRatioList* progress_list, ObjectId id, double rho, double alpha);
 
         void load_from_file(
                 const std::unordered_set<ComputationType>& objects,
