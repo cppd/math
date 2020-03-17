@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress_list.h>
 #include <src/show/interface.h>
-#include <src/storage/storage.h>
+#include <src/storage/manage.h>
 #include <src/test/self_test.h>
 
 #include <QColor>
@@ -165,7 +165,7 @@ private:
         void exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists) const
                 noexcept;
 
-        static bool dialog_object_selection(QWidget* parent, std::unordered_set<ComputationType>* objects_to_load);
+        bool dialog_object_selection(std::unordered_set<ComputationType>* objects_to_load);
 
         bool stop_action(WorkerThreads::Action action);
 
@@ -178,11 +178,8 @@ private:
         void direct_object_loaded(ObjectId id, size_t dimension) override;
         void direct_object_deleted(ObjectId id, size_t dimension) override;
         void direct_object_deleted_all(size_t dimension) override;
-        void direct_mesh_loaded(ObjectId id) override;
-        void direct_file_loaded(
-                const std::string& file_name,
-                unsigned dimension,
-                const std::unordered_set<ComputationType>& objects) override;
+        void direct_mesh_loaded(ObjectId id, size_t dimension) override;
+        void direct_file_loaded(const std::string& file_name, size_t dimension) override;
         void direct_log(const std::string& msg) override;
 
         Ui::MainWindow ui;
@@ -198,7 +195,7 @@ private:
         std::unique_ptr<ShowObject> m_show_object;
         Show* m_show = nullptr;
 
-        std::unique_ptr<ObjectStorage> m_objects;
+        std::unique_ptr<StorageManage> m_objects;
 
         QColor m_background_color;
         QColor m_default_color;

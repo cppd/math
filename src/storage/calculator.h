@@ -17,15 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "pointer_map.h"
+#include "calculator_events.h"
+#include "options.h"
+#include "storage.h"
 
-#include "../events.h"
-#include "../mesh_object.h"
-
-#include <src/geometry/cocone/reconstruction.h>
-#include <src/geometry/objects/points.h>
-#include <src/model/mesh.h>
-#include <src/painter/shapes/mesh.h>
 #include <src/progress/progress_list.h>
 
 #include <exception>
@@ -38,31 +33,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 template <size_t N, typename MeshFloat>
-class ObjectStorageSpace
+class ObjectCalculator
 {
         static_assert(N >= 3);
 
         const std::thread::id m_thread_id = std::this_thread::get_id();
         const int m_mesh_threads;
 
-        const ObjectStorageEvents& m_event_emitter;
-        std::function<void(const std::exception_ptr& ptr, const std::string& msg)> m_exception_handler;
-
-        //
-
-        const std::unique_ptr<ObjectRepository<N>> m_object_repository;
-
-        PointerMap<ObjectId, const MeshObject<N>> m_objects;
-        PointerMap<ObjectId, const SpatialMeshModel<N, MeshFloat>> m_meshes;
-        std::unordered_map<ObjectId, std::vector<Vector<N, float>>> m_manifold_constructors_points;
-        std::unordered_map<ObjectId, std::unique_ptr<ManifoldConstructor<N>>> m_manifold_constructors;
-
-        //
-
         std::mutex m_mesh_sequential_mutex;
-
         double m_object_size = 0;
         vec3 m_object_position = vec3(0);
+
+        const ObjectCalculatorEvents& m_event_emitter;
+        std::function<void(const std::exception_ptr& ptr, const std::string& msg)> m_exception_handler;
+
+        ObjectStorage<N, MeshFloat>& m_storage;
 
         template <typename F>
         void catch_all(const F& function) const;
@@ -113,22 +98,13 @@ class ObjectStorageSpace
                 const ObjectLoaded& object_loaded);
 
 public:
-        ObjectStorageSpace(
+        ObjectCalculator(
                 int mesh_threads,
-                const ObjectStorageEvents& event_emitter,
-                const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler);
+                const ObjectCalculatorEvents& event_emitter,
+                const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler,
+                ObjectStorage<N, MeshFloat>& storage);
 
         void set_object_size_and_position(double size, const vec3& position);
-
-        void clear_all_data();
-
-        std::vector<std::string> repository_point_object_names() const;
-
-        bool object_exists(ObjectId id) const;
-        std::shared_ptr<const MeshObject<N>> object(ObjectId id) const;
-
-        bool mesh_exists(ObjectId id) const;
-        std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> mesh(ObjectId id) const;
 
         void compute_bound_cocone(ProgressRatioList* progress_list, ObjectId id, double rho, double alpha);
 

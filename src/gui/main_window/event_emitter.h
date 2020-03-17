@@ -21,7 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/variant.h>
 #include <src/show/interface.h>
-#include <src/storage/storage.h>
+#include <src/storage/calculator_events.h>
+#include <src/storage/storage_events.h>
 
 #include <QObject>
 
@@ -40,15 +41,16 @@ public:
         virtual void direct_object_loaded(ObjectId id, size_t dimension) = 0;
         virtual void direct_object_deleted(ObjectId id, size_t dimension) = 0;
         virtual void direct_object_deleted_all(size_t dimension) = 0;
-        virtual void direct_mesh_loaded(ObjectId id) = 0;
-        virtual void direct_file_loaded(
-                const std::string& file_name,
-                unsigned dimension,
-                const std::unordered_set<ComputationType>& objects) = 0;
+        virtual void direct_mesh_loaded(ObjectId id, size_t dimension) = 0;
+        virtual void direct_file_loaded(const std::string& file_name, size_t dimension) = 0;
         virtual void direct_log(const std::string& msg) = 0;
 };
 
-class WindowEventEmitter final : public QObject, public LogEvents, public ObjectStorageEvents, public ShowEvents
+class WindowEventEmitter final : public QObject,
+                                 public LogEvents,
+                                 public ObjectStorageEvents,
+                                 public ObjectCalculatorEvents,
+                                 public ShowEvents
 {
         Q_OBJECT
 
@@ -124,20 +126,17 @@ private:
                 struct mesh_loaded final
                 {
                         const ObjectId id;
-                        explicit mesh_loaded(ObjectId id_) : id(id_)
+                        const size_t dimension;
+                        explicit mesh_loaded(ObjectId id_, size_t dimension_) : id(id_), dimension(dimension_)
                         {
                         }
                 };
                 struct file_loaded final
                 {
                         const std::string file_name;
-                        const unsigned dimension;
-                        const std::unordered_set<ComputationType> objects;
-                        file_loaded(
-                                const std::string& file_name_,
-                                unsigned dimension_,
-                                const std::unordered_set<ComputationType>& objects_)
-                                : file_name(file_name_), dimension(dimension_), objects(objects_)
+                        const size_t dimension;
+                        file_loaded(const std::string& file_name_, size_t dimension_)
+                                : file_name(file_name_), dimension(dimension_)
                         {
                         }
                 };
@@ -251,11 +250,11 @@ private:
                 }
                 void operator()(const WindowEvent::mesh_loaded& d)
                 {
-                        m_f->direct_mesh_loaded(d.id);
+                        m_f->direct_mesh_loaded(d.id, d.dimension);
                 }
                 void operator()(const WindowEvent::file_loaded& d)
                 {
-                        m_f->direct_file_loaded(d.file_name, d.dimension, d.objects);
+                        m_f->direct_file_loaded(d.file_name, d.dimension);
                 }
                 void operator()(const WindowEvent::log& d)
                 {
@@ -300,7 +299,7 @@ public:
                 emit_message<WindowEvent::message_information>("Exception in emit message information", msg);
         }
 
-        void message_warning(const std::string& msg) const override
+        void message_warning(const std::string& msg) const
         {
                 emit_message<WindowEvent::message_warning>("Exception in emit message warning", msg);
         }
@@ -325,17 +324,14 @@ public:
                 emit_message<WindowEvent::object_deleted_all>("Exception in emit object deleted_all", dimension);
         }
 
-        void mesh_loaded(ObjectId id) const override
+        void mesh_loaded(ObjectId id, size_t dimension) const override
         {
-                emit_message<WindowEvent::mesh_loaded>("Exception in emit mesh loaded", id);
+                emit_message<WindowEvent::mesh_loaded>("Exception in emit mesh loaded", id, dimension);
         }
 
-        void file_loaded(
-                const std::string& file_name,
-                unsigned dimension,
-                const std::unordered_set<ComputationType>& objects) const override
+        void file_loaded(const std::string& file_name, size_t dimension) const override
         {
-                emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", file_name, dimension, objects);
+                emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", file_name, dimension);
         }
 
         void log(const std::string& msg) const override

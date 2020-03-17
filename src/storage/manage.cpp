@@ -15,9 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "storage.h"
+#include "manage.h"
 
-#include "space/space.h"
+#include "calculator.h"
+#include "storage.h"
 
 #include <src/com/error.h>
 #include <src/model/mesh_utility.h>
@@ -31,7 +32,7 @@ constexpr size_t COUNT = MAX - MIN + 1;
 static_assert(MIN >= 3 && MIN <= MAX);
 static_assert(std::is_floating_point_v<StorageMeshFloatingPoint>);
 
-class Impl final : public ObjectStorage
+class Impl final : public StorageManage
 {
         //
         // Каждый элемент контейнера это variant с типами <T<MIN, T2...>, T<MIN + 1, T2...>, ...>.
@@ -44,24 +45,42 @@ class Impl final : public ObjectStorage
         //      map[4] = Type<4>
         //      map[5] = Type<5>
         //
-
         // Объекты поддерживаются только у одного измерения. При загрузке
         // объекта одного измерения все объекты других измерений удаляются.
-        std::unordered_map<int, SequenceVariant1<MIN, MAX, ObjectStorageSpace, StorageMeshFloatingPoint>> m_objects;
+        template <size_t N>
+        struct Data final
+        {
+                ObjectStorage<N, StorageMeshFloatingPoint> storage;
+                ObjectCalculator<N, StorageMeshFloatingPoint> calculator;
+
+                Data(int mesh_threads,
+                     const ObjectStorageEvents& storage_events,
+                     const ObjectCalculatorEvents& calculator_events,
+                     const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>&
+                             exception_handler)
+                        : storage(storage_events),
+                          calculator(mesh_threads, calculator_events, exception_handler, storage)
+                {
+                }
+                Data(const Data&) = delete;
+                Data& operator=(const Data&) = delete;
+        };
+        std::unordered_map<int, SequenceVariant1<MIN, MAX, Data>> m_data;
 
         void clear_all_data()
         {
-                for (auto& p : m_objects)
+                for (auto& p : m_data)
                 {
-                        std::visit([&](auto& v) { v.clear_all_data(); }, p.second);
+                        std::visit([&](auto& v) { v.storage.clear(); }, p.second);
                 }
         }
 
         void set_object_size_and_position(double size, const vec3& position) override
         {
-                for (auto& p : m_objects)
+                for (auto& p : m_data)
                 {
-                        std::visit([&](auto& v) { v.set_object_size_and_position(size, position); }, p.second);
+                        std::visit(
+                                [&](auto& v) { v.calculator.set_object_size_and_position(size, position); }, p.second);
                 }
         }
 
@@ -78,10 +97,12 @@ class Impl final : public ObjectStorage
         {
                 std::vector<RepositoryObjects> names;
 
-                for (const auto& p : m_objects)
+                for (const auto& p : m_data)
                 {
                         std::visit(
-                                [&](const auto& v) { names.emplace_back(p.first, v.repository_point_object_names()); },
+                                [&](const auto& v) {
+                                        names.emplace_back(p.first, v.storage.repository_point_object_names());
+                                },
                                 p.second);
                 }
 
@@ -91,9 +112,9 @@ class Impl final : public ObjectStorage
         bool object_exists(ObjectId id) const override
         {
                 int count = 0;
-                for (const auto& p : m_objects)
+                for (const auto& p : m_data)
                 {
-                        std::visit([&](const auto& v) { count += v.object_exists(id) ? 1 : 0; }, p.second);
+                        std::visit([&](const auto& v) { count += v.storage.object_exists(id) ? 1 : 0; }, p.second);
                 }
                 if (count > 1)
                 {
@@ -105,9 +126,9 @@ class Impl final : public ObjectStorage
         bool mesh_exists(ObjectId id) const override
         {
                 int count = 0;
-                for (const auto& p : m_objects)
+                for (const auto& p : m_data)
                 {
-                        std::visit([&](const auto& v) { count += v.mesh_exists(id) ? 1 : 0; }, p.second);
+                        std::visit([&](const auto& v) { count += v.storage.mesh_exists(id) ? 1 : 0; }, p.second);
                 }
                 if (count > 1)
                 {
@@ -124,15 +145,15 @@ class Impl final : public ObjectStorage
                 }
                 std::optional<ObjectVariant> object_opt;
                 int count = 0;
-                for (const auto& p : m_objects)
+                for (const auto& p : m_data)
                 {
                         std::visit(
                                 [&](const auto& v) {
-                                        if (v.object_exists(id))
+                                        if (v.storage.object_exists(id))
                                         {
                                                 if (!object_opt)
                                                 {
-                                                        auto ptr = v.object(id);
+                                                        auto ptr = v.storage.object(id);
                                                         if (!ptr)
                                                         {
                                                                 error("Null object pointer");
@@ -160,15 +181,15 @@ class Impl final : public ObjectStorage
                 }
                 std::optional<MeshVariant> mesh_opt;
                 int count = 0;
-                for (const auto& p : m_objects)
+                for (const auto& p : m_data)
                 {
                         std::visit(
                                 [&](const auto& v) {
-                                        if (v.mesh_exists(id))
+                                        if (v.storage.mesh_exists(id))
                                         {
                                                 if (!mesh_opt)
                                                 {
-                                                        auto ptr = v.mesh(id);
+                                                        auto ptr = v.storage.mesh(id);
                                                         if (!ptr)
                                                         {
                                                                 error("Null mesh pointer");
@@ -195,15 +216,16 @@ class Impl final : public ObjectStorage
                         error("No object");
                 }
                 int count = 0;
-                for (auto& p : m_objects)
+                for (auto& p : m_data)
                 {
                         std::visit(
                                 [&](auto& v) {
-                                        if (v.object_exists(id))
+                                        if (v.storage.object_exists(id))
                                         {
                                                 if (count == 0)
                                                 {
-                                                        v.compute_bound_cocone(progress_list, id, rho, alpha);
+                                                        v.calculator.compute_bound_cocone(
+                                                                progress_list, id, rho, alpha);
                                                 }
                                                 ++count;
                                         }
@@ -227,12 +249,13 @@ class Impl final : public ObjectStorage
 
                 check_dimension(dimension);
 
-                auto& repository = m_objects.at(dimension);
+                auto& repository = m_data.at(dimension);
 
                 auto clear_function = [&]() { clear_all_data(); };
                 std::visit(
                         [&](auto& v) {
-                                v.load_from_file(objects, progress_list, file_name, rho, alpha, clear_function);
+                                v.calculator.load_from_file(
+                                        objects, progress_list, file_name, rho, alpha, clear_function);
                         },
                         repository);
         }
@@ -248,12 +271,12 @@ class Impl final : public ObjectStorage
         {
                 check_dimension(dimension);
 
-                auto& repository = m_objects.at(dimension);
+                auto& repository = m_data.at(dimension);
 
                 auto clear_function = [&]() { clear_all_data(); };
                 std::visit(
                         [&](auto& v) {
-                                v.load_from_repository(
+                                v.calculator.load_from_repository(
                                         objects, progress_list, object_name, rho, alpha, point_count, clear_function);
                         },
                         repository);
@@ -266,15 +289,15 @@ class Impl final : public ObjectStorage
                         error("No object");
                 }
                 int count = 0;
-                for (const auto& p : m_objects)
+                for (const auto& p : m_data)
                 {
                         std::visit(
                                 [&](const auto& v) {
-                                        if (v.object_exists(id))
+                                        if (v.storage.object_exists(id))
                                         {
                                                 if (count == 0)
                                                 {
-                                                        v.save(id, file_name, name);
+                                                        v.calculator.save(id, file_name, name);
                                                 }
                                                 ++count;
                                         }
@@ -323,36 +346,41 @@ class Impl final : public ObjectStorage
         template <size_t... I>
         void init_map(
                 int mesh_threads,
-                const ObjectStorageEvents& event_emitter,
+                const ObjectStorageEvents& storage_events,
+                const ObjectCalculatorEvents& calculator_events,
                 const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler,
                 std::integer_sequence<size_t, I...>&&)
         {
                 static_assert(((I >= 0 && I < sizeof...(I)) && ...));
                 static_assert(MIN + sizeof...(I) == MAX + 1);
 
-                (m_objects.try_emplace(
-                         MIN + I, std::in_place_type_t<ObjectStorageSpace<MIN + I, StorageMeshFloatingPoint>>(),
-                         mesh_threads, event_emitter, exception_handler),
+                (m_data.try_emplace(
+                         MIN + I, std::in_place_type_t<Data<MIN + I>>(), mesh_threads, storage_events,
+                         calculator_events, exception_handler),
                  ...);
 
-                ASSERT((m_objects.count(MIN + I) == 1) && ...);
-                ASSERT(m_objects.size() == COUNT);
+                ASSERT((m_data.count(MIN + I) == 1) && ...);
+                ASSERT(m_data.size() == COUNT);
         }
 
 public:
         Impl(int mesh_threads,
-             const ObjectStorageEvents& event_emitter,
+             const ObjectStorageEvents& storage_events,
+             const ObjectCalculatorEvents& calculator_events,
              const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
         {
-                init_map(mesh_threads, event_emitter, exception_handler, std::make_integer_sequence<size_t, COUNT>());
+                init_map(
+                        mesh_threads, storage_events, calculator_events, exception_handler,
+                        std::make_integer_sequence<size_t, COUNT>());
         }
 };
 }
 
-std::unique_ptr<ObjectStorage> create_object_storage(
+std::unique_ptr<StorageManage> create_storage_manage(
         int mesh_threads,
-        const ObjectStorageEvents& event_emitter,
+        const ObjectStorageEvents& storage_events,
+        const ObjectCalculatorEvents& calculator_events,
         const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
 {
-        return std::make_unique<Impl>(mesh_threads, event_emitter, exception_handler);
+        return std::make_unique<Impl>(mesh_threads, storage_events, calculator_events, exception_handler);
 }

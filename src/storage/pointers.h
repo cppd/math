@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 template <typename Index, typename T>
-class PointerMap
+class Pointers
 {
         mutable std::shared_mutex m_mutex;
 
@@ -54,7 +54,7 @@ public:
                 }
         }
 
-        void reset(const Index& id)
+        void clear(const Index& id)
         {
                 std::shared_ptr<T> tmp;
 
@@ -69,7 +69,7 @@ public:
                 }
         }
 
-        void reset_all()
+        void clear()
         {
                 std::vector<std::shared_ptr<T>> tmp;
 

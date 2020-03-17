@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "space.h"
+#include "calculator.h"
 
 #include <src/com/names.h>
 #include <src/com/time.h>
@@ -72,20 +72,21 @@ std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh,
 }
 
 template <size_t N, typename MeshFloat>
-ObjectStorageSpace<N, MeshFloat>::ObjectStorageSpace(
+ObjectCalculator<N, MeshFloat>::ObjectCalculator(
         int mesh_threads,
-        const ObjectStorageEvents& event_emitter,
-        const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
+        const ObjectCalculatorEvents& event_emitter,
+        const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler,
+        ObjectStorage<N, MeshFloat>& storage)
         : m_mesh_threads(mesh_threads),
           m_event_emitter(event_emitter),
           m_exception_handler(exception_handler),
-          m_object_repository(create_object_repository<N>())
+          m_storage(storage)
 {
 }
 
 template <size_t N, typename MeshFloat>
 template <typename F>
-void ObjectStorageSpace<N, MeshFloat>::catch_all(const F& function) const
+void ObjectCalculator<N, MeshFloat>::catch_all(const F& function) const
 {
         std::string message;
         try
@@ -99,44 +100,14 @@ void ObjectStorageSpace<N, MeshFloat>::catch_all(const F& function) const
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::set_object_size_and_position(double size, const vec3& position)
+void ObjectCalculator<N, MeshFloat>::set_object_size_and_position(double size, const vec3& position)
 {
         m_object_size = size;
         m_object_position = position;
 }
 
 template <size_t N, typename MeshFloat>
-std::vector<std::string> ObjectStorageSpace<N, MeshFloat>::repository_point_object_names() const
-{
-        return m_object_repository->point_object_names();
-}
-
-template <size_t N, typename MeshFloat>
-bool ObjectStorageSpace<N, MeshFloat>::object_exists(ObjectId id) const
-{
-        return m_objects.get(id) != nullptr;
-}
-
-template <size_t N, typename MeshFloat>
-std::shared_ptr<const MeshObject<N>> ObjectStorageSpace<N, MeshFloat>::object(ObjectId id) const
-{
-        return m_objects.get(id);
-}
-
-template <size_t N, typename MeshFloat>
-bool ObjectStorageSpace<N, MeshFloat>::mesh_exists(ObjectId id) const
-{
-        return m_meshes.get(id) != nullptr;
-}
-
-template <size_t N, typename MeshFloat>
-std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> ObjectStorageSpace<N, MeshFloat>::mesh(ObjectId id) const
-{
-        return m_meshes.get(id);
-}
-
-template <size_t N, typename MeshFloat>
-std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> ObjectStorageSpace<N, MeshFloat>::build_mesh(
+std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> ObjectCalculator<N, MeshFloat>::build_mesh(
         ProgressRatioList* progress_list,
         const MeshObject<N>& object)
 {
@@ -153,22 +124,19 @@ std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> ObjectStorageSpace<N, Mesh
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::add_object_and_mesh(
+void ObjectCalculator<N, MeshFloat>::add_object_and_mesh(
         ProgressRatioList* progress_list,
         const std::shared_ptr<const MeshObject<N>>& object)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        m_objects.set(object->id(), object);
-        m_event_emitter.object_loaded(object->id(), N);
-
+        m_storage.set_object(object);
         std::shared_ptr ptr = build_mesh(progress_list, *object);
-        m_meshes.set(object->id(), std::move(ptr));
-        m_event_emitter.mesh_loaded(object->id());
+        m_storage.set_mesh(object->id(), std::move(ptr));
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::convex_hull(
+void ObjectCalculator<N, MeshFloat>::convex_hull(
         ProgressRatioList* progress_list,
         const std::shared_ptr<const MeshObject<N>>& object)
 {
@@ -193,7 +161,7 @@ void ObjectStorageSpace<N, MeshFloat>::convex_hull(
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::cocone(
+void ObjectCalculator<N, MeshFloat>::cocone(
         ProgressRatioList* progress_list,
         const ManifoldConstructor<N>& constructor,
         const std::vector<Vector<N, float>>& points,
@@ -229,7 +197,7 @@ void ObjectStorageSpace<N, MeshFloat>::cocone(
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::bound_cocone(
+void ObjectCalculator<N, MeshFloat>::bound_cocone(
         ProgressRatioList* progress_list,
         const ManifoldConstructor<N>& constructor,
         const std::vector<Vector<N, float>>& points,
@@ -268,7 +236,7 @@ void ObjectStorageSpace<N, MeshFloat>::bound_cocone(
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::build_mst(
+void ObjectCalculator<N, MeshFloat>::build_mst(
         ProgressRatioList* progress_list,
         const ManifoldConstructor<N>& constructor,
         const std::vector<Vector<N, float>>& points,
@@ -295,7 +263,7 @@ void ObjectStorageSpace<N, MeshFloat>::build_mst(
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::manifold_constructor(
+void ObjectCalculator<N, MeshFloat>::manifold_constructor(
         ProgressRatioList* progress_list,
         const std::unordered_set<ComputationType>& objects,
         const MeshObject<N>& object,
@@ -310,8 +278,8 @@ void ObjectStorageSpace<N, MeshFloat>::manifold_constructor(
                 return;
         }
 
-        auto points_iter = m_manifold_constructors_points.find(object.id());
-        if (points_iter == m_manifold_constructors_points.cend())
+        std::shared_ptr<const std::vector<Vector<N, float>>> points_ptr = m_storage.points(object.id());
+        if (!points_ptr)
         {
                 std::vector<Vector<N, float>> points;
                 if (!object.mesh().facets.empty())
@@ -322,19 +290,19 @@ void ObjectStorageSpace<N, MeshFloat>::manifold_constructor(
                 {
                         points = unique_point_vertices(object.mesh());
                 }
-                points_iter = m_manifold_constructors_points.emplace(object.id(), std::move(points)).first;
+                points_ptr = std::make_shared<const std::vector<Vector<N, float>>>(std::move(points));
+                m_storage.set_points(object.id(), points_ptr);
         }
 
-        auto constructor_iter = m_manifold_constructors.find(object.id());
-        if (constructor_iter == m_manifold_constructors.cend())
+        std::shared_ptr<const ManifoldConstructor<N>> constructor_ptr = m_storage.constructor(object.id());
+        if (!constructor_ptr)
         {
                 ProgressRatio progress(progress_list);
 
                 double start_time = time_in_seconds();
 
-                std::unique_ptr<ManifoldConstructor<N>> constructor =
-                        create_manifold_constructor(points_iter->second, &progress);
-                constructor_iter = m_manifold_constructors.emplace(object.id(), std::move(constructor)).first;
+                constructor_ptr = create_manifold_constructor(*points_ptr, &progress);
+                m_storage.set_constructor(object.id(), constructor_ptr);
 
                 LOG("Manifold reconstruction first phase, " + to_string_fixed(time_in_seconds() - start_time, 5) +
                     " s");
@@ -348,7 +316,7 @@ void ObjectStorageSpace<N, MeshFloat>::manifold_constructor(
                         catch_all([&](std::string* message) {
                                 *message = "Cocone reconstruction in " + space_name(N);
 
-                                cocone(progress_list, *constructor_iter->second, points_iter->second, object);
+                                cocone(progress_list, *constructor_ptr, *points_ptr, object);
                         });
                 });
         }
@@ -359,9 +327,7 @@ void ObjectStorageSpace<N, MeshFloat>::manifold_constructor(
                         catch_all([&](std::string* message) {
                                 *message = "BoundCocone reconstruction in " + space_name(N);
 
-                                bound_cocone(
-                                        progress_list, *constructor_iter->second, points_iter->second, object, rho,
-                                        alpha);
+                                bound_cocone(progress_list, *constructor_ptr, *points_ptr, object, rho, alpha);
                         });
                 });
         }
@@ -372,7 +338,7 @@ void ObjectStorageSpace<N, MeshFloat>::manifold_constructor(
                         catch_all([&](std::string* message) {
                                 *message = "Minimum spanning tree in " + space_name(N);
 
-                                build_mst(progress_list, *constructor_iter->second, points_iter->second, object);
+                                build_mst(progress_list, *constructor_ptr, *points_ptr, object);
                         });
                 });
         }
@@ -384,21 +350,8 @@ void ObjectStorageSpace<N, MeshFloat>::manifold_constructor(
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::clear_all_data()
-{
-        ASSERT(std::this_thread::get_id() != m_thread_id);
-
-        m_event_emitter.object_deleted_all(N);
-
-        m_manifold_constructors_points.clear();
-        m_manifold_constructors.clear();
-        m_objects.reset_all();
-        m_meshes.reset_all();
-}
-
-template <size_t N, typename MeshFloat>
 template <typename ObjectLoaded>
-void ObjectStorageSpace<N, MeshFloat>::load_object(
+void ObjectCalculator<N, MeshFloat>::load_object(
         const std::unordered_set<ComputationType>& objects,
         ProgressRatioList* progress_list,
         const std::string& object_name,
@@ -423,7 +376,7 @@ void ObjectStorageSpace<N, MeshFloat>::load_object(
         // clear_all_data() для всех объектов всех измерений
         object_loaded();
 
-        m_event_emitter.file_loaded(object_name, N, objects);
+        m_event_emitter.file_loaded(object_name, N);
 
         Matrix<N + 1, N + 1, double> matrix;
         if constexpr (N == 3)
@@ -479,13 +432,13 @@ void ObjectStorageSpace<N, MeshFloat>::load_object(
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::compute_bound_cocone(
+void ObjectCalculator<N, MeshFloat>::compute_bound_cocone(
         ProgressRatioList* progress_list,
         ObjectId id,
         double rho,
         double alpha)
 {
-        const std::shared_ptr<const MeshObject<N>> obj = m_objects.get(id);
+        const std::shared_ptr<const MeshObject<N>> obj = m_storage.object(id);
         if (!obj)
         {
                 error("No object found to compute BoundCocone");
@@ -494,7 +447,7 @@ void ObjectStorageSpace<N, MeshFloat>::compute_bound_cocone(
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::load_from_file(
+void ObjectCalculator<N, MeshFloat>::load_from_file(
         const std::unordered_set<ComputationType>& objects,
         ProgressRatioList* progress_list,
         const std::string& file_name,
@@ -515,7 +468,7 @@ void ObjectStorageSpace<N, MeshFloat>::load_from_file(
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::load_from_repository(
+void ObjectCalculator<N, MeshFloat>::load_from_repository(
         const std::unordered_set<ComputationType>& objects,
         ProgressRatioList* progress_list,
         const std::string& object_name,
@@ -531,22 +484,21 @@ void ObjectStorageSpace<N, MeshFloat>::load_from_repository(
                 ProgressRatio progress(progress_list);
 
                 progress.set_text("Loading object: %p%");
-                mesh = mesh::create_mesh_for_points(m_object_repository->point_object(object_name, point_count));
+                mesh = mesh::create_mesh_for_points(m_storage.repository_point_object(object_name, point_count));
         }
         load_object(objects, progress_list, object_name, std::move(mesh), rho, alpha, object_loaded);
 }
 
 template <size_t N, typename MeshFloat>
-void ObjectStorageSpace<N, MeshFloat>::save(ObjectId id, const std::string& file_name, const std::string& name) const
+void ObjectCalculator<N, MeshFloat>::save(ObjectId id, const std::string& file_name, const std::string& name) const
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        std::shared_ptr<const MeshObject<N>> object = m_objects.get(id);
+        const std::shared_ptr<const MeshObject<N>> object = m_storage.object(id);
 
         if (!object)
         {
-                m_event_emitter.message_warning("No object to export");
-                return;
+                error("No object to export");
         }
 
         save_geometry(object->mesh(), file_name, name);
@@ -554,9 +506,9 @@ void ObjectStorageSpace<N, MeshFloat>::save(ObjectId id, const std::string& file
 
 //
 
-template class ObjectStorageSpace<3, float>;
-template class ObjectStorageSpace<3, double>;
-template class ObjectStorageSpace<4, float>;
-template class ObjectStorageSpace<4, double>;
-template class ObjectStorageSpace<5, float>;
-template class ObjectStorageSpace<5, double>;
+template class ObjectCalculator<3, float>;
+template class ObjectCalculator<3, double>;
+template class ObjectCalculator<4, float>;
+template class ObjectCalculator<4, double>;
+template class ObjectCalculator<5, float>;
+template class ObjectCalculator<5, double>;

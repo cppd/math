@@ -17,28 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "object_id.h"
-#include "options.h"
-
 #include <string>
-#include <unordered_set>
 
-class ObjectStorageEvents
+class ObjectCalculatorEvents
 {
 protected:
-        virtual ~ObjectStorageEvents() = default;
+        virtual ~ObjectCalculatorEvents() = default;
 
 public:
-        virtual void file_loaded(
-                const std::string& msg,
-                unsigned dimension,
-                const std::unordered_set<ComputationType>& objects) const = 0;
-
-        virtual void object_loaded(ObjectId id, size_t dimension) const = 0;
-        virtual void mesh_loaded(ObjectId id) const = 0;
-
-        virtual void object_deleted(ObjectId id, size_t dimension) const = 0;
-        virtual void object_deleted_all(size_t dimension) const = 0;
-
-        virtual void message_warning(const std::string& msg) const = 0;
+        virtual void file_loaded(const std::string& msg, size_t dimension) const = 0;
 };

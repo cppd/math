@@ -222,14 +222,15 @@ void MainWindow::constructor_interface()
 
 void MainWindow::constructor_objects_and_repository()
 {
-        m_objects = create_object_storage(
+        m_objects = create_storage_manage(
                 std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter,
+                m_event_emitter,
                 [this](const std::exception_ptr& ptr, const std::string& msg) { exception_handler(ptr, msg, true); });
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
 
-        std::vector<ObjectStorage::RepositoryObjects> repository_objects = m_objects->repository_point_object_names();
+        std::vector<StorageManage::RepositoryObjects> repository_objects = m_objects->repository_point_object_names();
 
         std::sort(repository_objects.begin(), repository_objects.end(), [](const auto& a, const auto& b) {
                 return a.dimension < b.dimension;
@@ -417,7 +418,7 @@ void MainWindow::catch_all(const F& function) const noexcept
         }
 }
 
-bool MainWindow::dialog_object_selection(QWidget* parent, std::unordered_set<ComputationType>* objects_to_load)
+bool MainWindow::dialog_object_selection(std::unordered_set<ComputationType>* objects_to_load)
 {
         ASSERT(objects_to_load);
 
@@ -426,7 +427,12 @@ bool MainWindow::dialog_object_selection(QWidget* parent, std::unordered_set<Com
         bool cocone = objects_to_load->count(ComputationType::Cocone) != 0u;
         bool bound_cocone = objects_to_load->count(ComputationType::BoundCocone) != 0u;
 
-        if (!dialog::object_selection(parent, &model_convex_hull, &model_minumum_spanning_tree, &cocone, &bound_cocone))
+        QPointer ptr(this);
+        if (!dialog::object_selection(this, &model_convex_hull, &model_minumum_spanning_tree, &cocone, &bound_cocone))
+        {
+                return false;
+        }
+        if (ptr.isNull())
         {
                 return false;
         }
@@ -481,7 +487,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         bool read_only = true;
 
                         std::vector<std::string> filters;
-                        for (const ObjectStorage::FileFormat& v : m_objects->formats_for_load())
+                        for (const StorageManage::FileFormat& v : m_objects->formats_for_load())
                         {
                                 filters.push_back(file_filter(v.name, v.extensions));
                         }
@@ -497,23 +503,16 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         }
                 }
 
-                std::unordered_set<ComputationType> objects_to_load = m_objects_to_load;
-
                 if (use_object_selection_dialog)
                 {
-                        QPointer ptr(this);
-                        if (!dialog_object_selection(this, &objects_to_load))
-                        {
-                                return;
-                        }
-                        if (ptr.isNull())
+                        if (!dialog_object_selection(&m_objects_to_load))
                         {
                                 return;
                         }
                 }
 
-                auto f = [=, this, rho = m_bound_cocone_rho,
-                          alpha = m_bound_cocone_alpha](ProgressRatioList* progress_list, std::string* message) {
+                auto f = [=, this, rho = m_bound_cocone_rho, alpha = m_bound_cocone_alpha,
+                          objects_to_load = m_objects_to_load](ProgressRatioList* progress_list, std::string* message) {
                         *message = "Load " + file_name;
                         m_objects->load_from_file(objects_to_load, progress_list, file_name, rho, alpha);
                 };
@@ -558,22 +557,13 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
                         }
                 }
 
-                std::unordered_set<ComputationType> objects_to_load = m_objects_to_load;
-
+                if (!dialog_object_selection(&m_objects_to_load))
                 {
-                        QPointer ptr(this);
-                        if (!dialog_object_selection(this, &objects_to_load))
-                        {
-                                return;
-                        }
-                        if (ptr.isNull())
-                        {
-                                return;
-                        }
+                        return;
                 }
 
-                auto f = [=, this, rho = m_bound_cocone_rho,
-                          alpha = m_bound_cocone_alpha](ProgressRatioList* progress_list, std::string* message) {
+                auto f = [=, this, rho = m_bound_cocone_rho, alpha = m_bound_cocone_alpha,
+                          objects_to_load = m_objects_to_load](ProgressRatioList* progress_list, std::string* message) {
                         *message = "Load " + space_name(dimension) + " " + object_name;
                         m_objects->load_from_repository(
                                 objects_to_load, progress_list, dimension, object_name, rho, alpha, point_count);
@@ -631,7 +621,7 @@ void MainWindow::thread_export(ObjectId id)
                 bool read_only = true;
 
                 std::vector<std::string> filters;
-                for (const ObjectStorage::FileFormat& v : m_objects->formats_for_save(m_dimension))
+                for (const StorageManage::FileFormat& v : m_objects->formats_for_save(m_dimension))
                 {
                         filters.push_back(file_filter(v.name, v.extensions));
                 }
@@ -1049,7 +1039,7 @@ void MainWindow::direct_object_deleted_all(size_t dimension)
         ui.model_tree->delete_all();
 }
 
-void MainWindow::direct_mesh_loaded(ObjectId id)
+void MainWindow::direct_mesh_loaded(ObjectId id, size_t /*dimension*/)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -1061,17 +1051,13 @@ void MainWindow::direct_mesh_loaded(ObjectId id)
         ui.model_tree->add_item(id, object_name);
 }
 
-void MainWindow::direct_file_loaded(
-        const std::string& file_name,
-        unsigned dimension,
-        const std::unordered_set<ComputationType>& objects)
+void MainWindow::direct_file_loaded(const std::string& file_name, size_t dimension)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
         std::string base_name = file_base_name(file_name);
         set_window_title_file(base_name + " [" + space_name(dimension) + "]");
         m_dimension = dimension;
-        m_objects_to_load = objects;
 }
 
 void MainWindow::direct_log(const std::string& msg)
