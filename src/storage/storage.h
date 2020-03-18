@@ -90,37 +90,21 @@ public:
 
         //
 
-        bool object_exists(ObjectId id) const
-        {
-                return m_objects.get(id) != nullptr;
-        }
         std::shared_ptr<const MeshObject<N>> object(ObjectId id) const
         {
                 return m_objects.get(id);
         }
 
-        bool mesh_exists(ObjectId id) const
-        {
-                return m_meshes.get(id) != nullptr;
-        }
         std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> mesh(ObjectId id) const
         {
                 return m_meshes.get(id);
         }
 
-        bool points_exist(ObjectId id) const
-        {
-                return m_manifold_constructors_points.get(id) != nullptr;
-        }
         std::shared_ptr<const std::vector<Vector<N, float>>> points(ObjectId id) const
         {
                 return m_manifold_constructors_points.get(id);
         }
 
-        bool constructor_exists(ObjectId id) const
-        {
-                return m_manifold_constructors.get(id) != nullptr;
-        }
         std::shared_ptr<const ManifoldConstructor<N>> constructor(ObjectId id) const
         {
                 return m_manifold_constructors.get(id);

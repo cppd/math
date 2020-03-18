@@ -97,5 +97,4 @@ struct StorageManage
 std::unique_ptr<StorageManage> create_storage_manage(
         int mesh_threads,
         const ObjectStorageEvents& storage_events,
-        const ObjectCalculatorEvents& calculator_events,
-        const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler);
+        const ObjectCalculatorEvents& calculator_events);

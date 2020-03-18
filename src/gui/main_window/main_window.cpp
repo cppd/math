@@ -224,8 +224,7 @@ void MainWindow::constructor_objects_and_repository()
 {
         m_objects = create_storage_manage(
                 std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter,
-                m_event_emitter,
-                [this](const std::exception_ptr& ptr, const std::string& msg) { exception_handler(ptr, msg, true); });
+                m_event_emitter);
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);

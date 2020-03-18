@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <exception>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <thread>
 #include <unordered_set>
@@ -40,23 +39,12 @@ class ObjectCalculator
         const std::thread::id m_thread_id = std::this_thread::get_id();
         const int m_mesh_threads;
 
-        std::mutex m_mesh_sequential_mutex;
         double m_object_size = 0;
         vec3 m_object_position = vec3(0);
 
         const ObjectCalculatorEvents& m_event_emitter;
-        std::function<void(const std::exception_ptr& ptr, const std::string& msg)> m_exception_handler;
 
-        ObjectStorage<N, MeshFloat>& m_storage;
-
-        template <typename F>
-        void catch_all(const F& function) const;
-
-        std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> build_mesh(
-                ProgressRatioList* progress_list,
-                const MeshObject<N>& object);
-
-        void add_object_and_mesh(ProgressRatioList* progress_list, const std::shared_ptr<const MeshObject<N>>& object);
+        ObjectStorage<N, MeshFloat>* m_storage;
 
         void manifold_constructor(
                 ProgressRatioList* progress_list,
@@ -101,8 +89,7 @@ public:
         ObjectCalculator(
                 int mesh_threads,
                 const ObjectCalculatorEvents& event_emitter,
-                const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler,
-                ObjectStorage<N, MeshFloat>& storage);
+                ObjectStorage<N, MeshFloat>* storage);
 
         void set_object_size_and_position(double size, const vec3& position);
 

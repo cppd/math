@@ -55,11 +55,8 @@ class Impl final : public StorageManage
 
                 Data(int mesh_threads,
                      const ObjectStorageEvents& storage_events,
-                     const ObjectCalculatorEvents& calculator_events,
-                     const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>&
-                             exception_handler)
-                        : storage(storage_events),
-                          calculator(mesh_threads, calculator_events, exception_handler, storage)
+                     const ObjectCalculatorEvents& calculator_events)
+                        : storage(storage_events), calculator(mesh_threads, calculator_events, &storage)
                 {
                 }
                 Data(const Data&) = delete;
@@ -114,7 +111,7 @@ class Impl final : public StorageManage
                 int count = 0;
                 for (const auto& p : m_data)
                 {
-                        std::visit([&](const auto& v) { count += v.storage.object_exists(id) ? 1 : 0; }, p.second);
+                        std::visit([&](const auto& v) { count += v.storage.object(id) ? 1 : 0; }, p.second);
                 }
                 if (count > 1)
                 {
@@ -128,7 +125,7 @@ class Impl final : public StorageManage
                 int count = 0;
                 for (const auto& p : m_data)
                 {
-                        std::visit([&](const auto& v) { count += v.storage.mesh_exists(id) ? 1 : 0; }, p.second);
+                        std::visit([&](const auto& v) { count += v.storage.mesh(id) ? 1 : 0; }, p.second);
                 }
                 if (count > 1)
                 {
@@ -139,88 +136,70 @@ class Impl final : public StorageManage
 
         ObjectVariant object(ObjectId id) const override
         {
-                if (!object_exists(id))
-                {
-                        error("No object");
-                }
-                std::optional<ObjectVariant> object_opt;
+                std::optional<ObjectVariant> opt;
                 int count = 0;
                 for (const auto& p : m_data)
                 {
                         std::visit(
                                 [&](const auto& v) {
-                                        if (v.storage.object_exists(id))
+                                        auto ptr = v.storage.object(id);
+                                        if (ptr)
                                         {
-                                                if (!object_opt)
-                                                {
-                                                        auto ptr = v.storage.object(id);
-                                                        if (!ptr)
-                                                        {
-                                                                error("Null object pointer");
-                                                        }
-                                                        object_opt = ptr;
-                                                }
+                                                opt = std::move(ptr);
                                                 ++count;
                                         }
                                 },
                                 p.second);
                 }
-                if (count != 1)
+                if (count > 1)
                 {
-                        error("Error object count " + to_string(count));
+                        error("Too many objects " + to_string(count));
                 }
-                ASSERT(object_opt);
-                return *object_opt;
+                if (count == 0)
+                {
+                        error("No object found");
+                }
+                ASSERT(opt);
+                return *opt;
         }
 
         MeshVariant mesh(ObjectId id) const override
         {
-                if (!mesh_exists(id))
-                {
-                        error("No mesh");
-                }
-                std::optional<MeshVariant> mesh_opt;
+                std::optional<MeshVariant> opt;
                 int count = 0;
                 for (const auto& p : m_data)
                 {
                         std::visit(
                                 [&](const auto& v) {
-                                        if (v.storage.mesh_exists(id))
+                                        auto ptr = v.storage.mesh(id);
+                                        if (ptr)
                                         {
-                                                if (!mesh_opt)
-                                                {
-                                                        auto ptr = v.storage.mesh(id);
-                                                        if (!ptr)
-                                                        {
-                                                                error("Null mesh pointer");
-                                                        }
-                                                        mesh_opt = std::move(ptr);
-                                                }
+                                                opt = std::move(ptr);
                                                 ++count;
                                         }
                                 },
                                 p.second);
                 }
-                if (count != 1)
+                if (count > 1)
                 {
-                        error("Error mesh count " + to_string(count));
+                        error("Too many meshes " + to_string(count));
                 }
-                ASSERT(mesh_opt);
-                return *mesh_opt;
+                if (count == 0)
+                {
+                        error("No mesh found");
+                }
+                ASSERT(opt);
+                return *opt;
         }
 
         void compute_bound_cocone(ProgressRatioList* progress_list, ObjectId id, double rho, double alpha) override
         {
-                if (!object_exists(id))
-                {
-                        error("No object");
-                }
                 int count = 0;
                 for (auto& p : m_data)
                 {
                         std::visit(
                                 [&](auto& v) {
-                                        if (v.storage.object_exists(id))
+                                        if (v.storage.object(id))
                                         {
                                                 if (count == 0)
                                                 {
@@ -234,7 +213,7 @@ class Impl final : public StorageManage
                 }
                 if (count != 1)
                 {
-                        error("Error manifold constructor count " + to_string(count));
+                        error("Error object count " + to_string(count));
                 }
         }
 
@@ -284,16 +263,12 @@ class Impl final : public StorageManage
 
         void save_to_file(ObjectId id, const std::string& file_name, const std::string& name) const override
         {
-                if (!object_exists(id))
-                {
-                        error("No object");
-                }
                 int count = 0;
                 for (const auto& p : m_data)
                 {
                         std::visit(
                                 [&](const auto& v) {
-                                        if (v.storage.object_exists(id))
+                                        if (v.storage.object(id))
                                         {
                                                 if (count == 0)
                                                 {
@@ -348,7 +323,6 @@ class Impl final : public StorageManage
                 int mesh_threads,
                 const ObjectStorageEvents& storage_events,
                 const ObjectCalculatorEvents& calculator_events,
-                const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler,
                 std::integer_sequence<size_t, I...>&&)
         {
                 static_assert(((I >= 0 && I < sizeof...(I)) && ...));
@@ -356,7 +330,7 @@ class Impl final : public StorageManage
 
                 (m_data.try_emplace(
                          MIN + I, std::in_place_type_t<Data<MIN + I>>(), mesh_threads, storage_events,
-                         calculator_events, exception_handler),
+                         calculator_events),
                  ...);
 
                 ASSERT((m_data.count(MIN + I) == 1) && ...);
@@ -366,12 +340,9 @@ class Impl final : public StorageManage
 public:
         Impl(int mesh_threads,
              const ObjectStorageEvents& storage_events,
-             const ObjectCalculatorEvents& calculator_events,
-             const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
+             const ObjectCalculatorEvents& calculator_events)
         {
-                init_map(
-                        mesh_threads, storage_events, calculator_events, exception_handler,
-                        std::make_integer_sequence<size_t, COUNT>());
+                init_map(mesh_threads, storage_events, calculator_events, std::make_integer_sequence<size_t, COUNT>());
         }
 };
 }
@@ -379,8 +350,7 @@ public:
 std::unique_ptr<StorageManage> create_storage_manage(
         int mesh_threads,
         const ObjectStorageEvents& storage_events,
-        const ObjectCalculatorEvents& calculator_events,
-        const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
+        const ObjectCalculatorEvents& calculator_events)
 {
-        return std::make_unique<Impl>(mesh_threads, storage_events, calculator_events, exception_handler);
+        return std::make_unique<Impl>(mesh_threads, storage_events, calculator_events);
 }

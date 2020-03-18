@@ -18,13 +18,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "calculator.h"
 
 #include <src/com/names.h>
+#include <src/com/thread.h>
 #include <src/com/time.h>
 #include <src/geometry/core/convex_hull.h>
 #include <src/geometry/graph/mst.h>
 #include <src/model/mesh_utility.h>
 
+#include <mutex>
+
 namespace
 {
+std::mutex global_mesh_sequential_mutex;
+
 std::string bound_cocone_text_rho_alpha(double rho, double alpha)
 {
         std::string text;
@@ -69,34 +74,46 @@ std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh,
 
         return mesh::create_mesh_for_facets(points, facets);
 }
+
+template <typename MeshFloat, size_t N>
+std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> build_mesh(
+        ProgressRatioList* progress_list,
+        const MeshObject<N>& object,
+        int mesh_threads)
+{
+        if (object.mesh().facets.empty())
+        {
+                return nullptr;
+        }
+
+        std::lock_guard lg(global_mesh_sequential_mutex);
+
+        ProgressRatio progress(progress_list);
+        return std::make_shared<const SpatialMeshModel<N, MeshFloat>>(
+                object.mesh(), to_matrix<MeshFloat>(object.matrix()), mesh_threads, &progress);
+}
+
+template <size_t N, typename MeshFloat>
+void add_object_and_mesh(
+        ProgressRatioList* progress_list,
+        const std::shared_ptr<const MeshObject<N>>& object,
+        int mesh_threads,
+        ObjectStorage<N, MeshFloat>* storage)
+{
+        storage->set_object(object);
+        std::shared_ptr ptr = build_mesh<MeshFloat>(progress_list, *object, mesh_threads);
+        storage->set_mesh(object->id(), std::move(ptr));
+}
 }
 
 template <size_t N, typename MeshFloat>
 ObjectCalculator<N, MeshFloat>::ObjectCalculator(
         int mesh_threads,
         const ObjectCalculatorEvents& event_emitter,
-        const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler,
-        ObjectStorage<N, MeshFloat>& storage)
-        : m_mesh_threads(mesh_threads),
-          m_event_emitter(event_emitter),
-          m_exception_handler(exception_handler),
-          m_storage(storage)
+        ObjectStorage<N, MeshFloat>* storage)
+        : m_mesh_threads(mesh_threads), m_event_emitter(event_emitter), m_storage(storage)
 {
-}
-
-template <size_t N, typename MeshFloat>
-template <typename F>
-void ObjectCalculator<N, MeshFloat>::catch_all(const F& function) const
-{
-        std::string message;
-        try
-        {
-                function(&message);
-        }
-        catch (...)
-        {
-                m_exception_handler(std::current_exception(), message);
-        }
+        ASSERT(m_storage);
 }
 
 template <size_t N, typename MeshFloat>
@@ -104,35 +121,6 @@ void ObjectCalculator<N, MeshFloat>::set_object_size_and_position(double size, c
 {
         m_object_size = size;
         m_object_position = position;
-}
-
-template <size_t N, typename MeshFloat>
-std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> ObjectCalculator<N, MeshFloat>::build_mesh(
-        ProgressRatioList* progress_list,
-        const MeshObject<N>& object)
-{
-        ASSERT(std::this_thread::get_id() != m_thread_id);
-
-        if (object.mesh().facets.empty())
-        {
-                return nullptr;
-        }
-        std::lock_guard lg(m_mesh_sequential_mutex);
-        ProgressRatio progress(progress_list);
-        return std::make_shared<const SpatialMeshModel<N, MeshFloat>>(
-                object.mesh(), to_matrix<MeshFloat>(object.matrix()), m_mesh_threads, &progress);
-}
-
-template <size_t N, typename MeshFloat>
-void ObjectCalculator<N, MeshFloat>::add_object_and_mesh(
-        ProgressRatioList* progress_list,
-        const std::shared_ptr<const MeshObject<N>>& object)
-{
-        ASSERT(std::this_thread::get_id() != m_thread_id);
-
-        m_storage.set_object(object);
-        std::shared_ptr ptr = build_mesh(progress_list, *object);
-        m_storage.set_mesh(object->id(), std::move(ptr));
 }
 
 template <size_t N, typename MeshFloat>
@@ -154,10 +142,10 @@ void ObjectCalculator<N, MeshFloat>::convex_hull(
                 return;
         }
 
-        std::shared_ptr<MeshObject<N>> ch_object =
+        const std::shared_ptr<const MeshObject<N>> obj =
                 std::make_shared<MeshObject<N>>(std::move(ch_mesh), object->matrix(), "Convex Hull");
 
-        add_object_and_mesh(progress_list, ch_object);
+        add_object_and_mesh(progress_list, obj, m_mesh_threads, m_storage);
 }
 
 template <size_t N, typename MeshFloat>
@@ -190,10 +178,10 @@ void ObjectCalculator<N, MeshFloat>::cocone(
                 return;
         }
 
-        std::shared_ptr<MeshObject<N>> cocone_object =
+        const std::shared_ptr<const MeshObject<N>> obj =
                 std::make_shared<MeshObject<N>>(std::move(cocone_mesh), object.matrix(), "Cocone");
 
-        add_object_and_mesh(progress_list, cocone_object);
+        add_object_and_mesh(progress_list, obj, m_mesh_threads, m_storage);
 }
 
 template <size_t N, typename MeshFloat>
@@ -229,10 +217,10 @@ void ObjectCalculator<N, MeshFloat>::bound_cocone(
         }
 
         std::string name = "Bound Cocone (" + bound_cocone_text_rho_alpha(rho, alpha) + ")";
-        std::shared_ptr<MeshObject<N>> bound_cocone_object =
+        const std::shared_ptr<const MeshObject<N>> obj =
                 std::make_shared<MeshObject<N>>(std::move(bound_cocone_mesh), object.matrix(), name);
 
-        add_object_and_mesh(progress_list, bound_cocone_object);
+        add_object_and_mesh(progress_list, obj, m_mesh_threads, m_storage);
 }
 
 template <size_t N, typename MeshFloat>
@@ -256,10 +244,10 @@ void ObjectCalculator<N, MeshFloat>::build_mst(
                 return;
         }
 
-        std::shared_ptr<MeshObject<N>> mst_object =
+        const std::shared_ptr<const MeshObject<N>> obj =
                 std::make_shared<MeshObject<N>>(std::move(mst_mesh), object.matrix(), "MST");
 
-        add_object_and_mesh(progress_list, mst_object);
+        add_object_and_mesh(progress_list, obj, m_mesh_threads, m_storage);
 }
 
 template <size_t N, typename MeshFloat>
@@ -278,7 +266,7 @@ void ObjectCalculator<N, MeshFloat>::manifold_constructor(
                 return;
         }
 
-        std::shared_ptr<const std::vector<Vector<N, float>>> points_ptr = m_storage.points(object.id());
+        std::shared_ptr<const std::vector<Vector<N, float>>> points_ptr = m_storage->points(object.id());
         if (!points_ptr)
         {
                 std::vector<Vector<N, float>> points;
@@ -291,10 +279,10 @@ void ObjectCalculator<N, MeshFloat>::manifold_constructor(
                         points = unique_point_vertices(object.mesh());
                 }
                 points_ptr = std::make_shared<const std::vector<Vector<N, float>>>(std::move(points));
-                m_storage.set_points(object.id(), points_ptr);
+                m_storage->set_points(object.id(), points_ptr);
         }
 
-        std::shared_ptr<const ManifoldConstructor<N>> constructor_ptr = m_storage.constructor(object.id());
+        std::shared_ptr<const ManifoldConstructor<N>> constructor_ptr = m_storage->constructor(object.id());
         if (!constructor_ptr)
         {
                 ProgressRatio progress(progress_list);
@@ -302,51 +290,38 @@ void ObjectCalculator<N, MeshFloat>::manifold_constructor(
                 double start_time = time_in_seconds();
 
                 constructor_ptr = create_manifold_constructor(*points_ptr, &progress);
-                m_storage.set_constructor(object.id(), constructor_ptr);
+                m_storage->set_constructor(object.id(), constructor_ptr);
 
                 LOG("Manifold reconstruction first phase, " + to_string_fixed(time_in_seconds() - start_time, 5) +
                     " s");
         }
 
-        std::vector<std::thread> threads;
-
-        if (objects.count(ComputationType::Cocone) > 0)
+        ThreadsWithCatch threads(3);
+        try
         {
-                threads.emplace_back([&]() {
-                        catch_all([&](std::string* message) {
-                                *message = "Cocone reconstruction in " + space_name(N);
+                if (objects.count(ComputationType::Cocone) > 0)
+                {
+                        threads.add([&]() { cocone(progress_list, *constructor_ptr, *points_ptr, object); });
+                }
 
-                                cocone(progress_list, *constructor_ptr, *points_ptr, object);
-                        });
-                });
-        }
-
-        if (objects.count(ComputationType::BoundCocone) > 0)
-        {
-                threads.emplace_back([&]() {
-                        catch_all([&](std::string* message) {
-                                *message = "BoundCocone reconstruction in " + space_name(N);
-
+                if (objects.count(ComputationType::BoundCocone) > 0)
+                {
+                        threads.add([&]() {
                                 bound_cocone(progress_list, *constructor_ptr, *points_ptr, object, rho, alpha);
                         });
-                });
-        }
+                }
 
-        if (objects.count(ComputationType::Mst) > 0)
+                if (objects.count(ComputationType::Mst) > 0)
+                {
+                        threads.add([&]() { build_mst(progress_list, *constructor_ptr, *points_ptr, object); });
+                }
+        }
+        catch (...)
         {
-                threads.emplace_back([&]() {
-                        catch_all([&](std::string* message) {
-                                *message = "Minimum spanning tree in " + space_name(N);
-
-                                build_mst(progress_list, *constructor_ptr, *points_ptr, object);
-                        });
-                });
+                threads.join();
+                throw;
         }
-
-        for (std::thread& thread : threads)
-        {
-                thread.join();
-        }
+        threads.join();
 }
 
 template <size_t N, typename MeshFloat>
@@ -392,43 +367,28 @@ void ObjectCalculator<N, MeshFloat>::load_object(
         const std::shared_ptr<const MeshObject<N>> model_object =
                 std::make_shared<const MeshObject<N>>(std::move(mesh), matrix, "Model");
 
-        std::vector<std::thread> threads;
-
-        threads.emplace_back([&]() {
-                catch_all([&](std::string* message) {
-                        *message = "Model";
-
-                        add_object_and_mesh(progress_list, model_object);
-                });
-        });
-
-        if (objects.count(ComputationType::ConvexHull) > 0)
+        ThreadsWithCatch threads(3);
+        try
         {
-                threads.emplace_back([&]() {
-                        catch_all([&](std::string* message) {
-                                *message = "Convex hull";
+                threads.add([&]() { add_object_and_mesh(progress_list, model_object, m_mesh_threads, m_storage); });
 
-                                convex_hull(progress_list, model_object);
-                        });
-                });
+                if (objects.count(ComputationType::ConvexHull) > 0)
+                {
+                        threads.add([&]() { convex_hull(progress_list, model_object); });
+                }
+
+                if (objects.count(ComputationType::Cocone) > 0 || objects.count(ComputationType::BoundCocone) > 0 ||
+                    objects.count(ComputationType::Mst) > 0)
+                {
+                        threads.add([&]() { manifold_constructor(progress_list, objects, *model_object, rho, alpha); });
+                }
         }
-
-        if (objects.count(ComputationType::Cocone) > 0 || objects.count(ComputationType::BoundCocone) > 0 ||
-            objects.count(ComputationType::Mst) > 0)
+        catch (...)
         {
-                threads.emplace_back([&]() {
-                        catch_all([&](std::string* message) {
-                                *message = "Manifold constructor";
-
-                                manifold_constructor(progress_list, objects, *model_object, rho, alpha);
-                        });
-                });
+                threads.join();
+                throw;
         }
-
-        for (std::thread& thread : threads)
-        {
-                thread.join();
-        }
+        threads.join();
 }
 
 template <size_t N, typename MeshFloat>
@@ -438,7 +398,7 @@ void ObjectCalculator<N, MeshFloat>::compute_bound_cocone(
         double rho,
         double alpha)
 {
-        const std::shared_ptr<const MeshObject<N>> obj = m_storage.object(id);
+        const std::shared_ptr<const MeshObject<N>> obj = m_storage->object(id);
         if (!obj)
         {
                 error("No object found to compute BoundCocone");
@@ -484,7 +444,7 @@ void ObjectCalculator<N, MeshFloat>::load_from_repository(
                 ProgressRatio progress(progress_list);
 
                 progress.set_text("Loading object: %p%");
-                mesh = mesh::create_mesh_for_points(m_storage.repository_point_object(object_name, point_count));
+                mesh = mesh::create_mesh_for_points(m_storage->repository_point_object(object_name, point_count));
         }
         load_object(objects, progress_list, object_name, std::move(mesh), rho, alpha, object_loaded);
 }
@@ -494,7 +454,7 @@ void ObjectCalculator<N, MeshFloat>::save(ObjectId id, const std::string& file_n
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        const std::shared_ptr<const MeshObject<N>> object = m_storage.object(id);
+        const std::shared_ptr<const MeshObject<N>> object = m_storage->object(id);
 
         if (!object)
         {
