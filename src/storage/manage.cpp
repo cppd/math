@@ -51,12 +51,12 @@ class Impl final : public StorageManage
         struct Data final
         {
                 static constexpr size_t Dimension = N;
+                const std::unique_ptr<const ObjectRepository<N>> repository;
                 ObjectStorage<N, StorageMeshFloatingPoint> storage;
-                Data(const StorageEvents& storage_events) : storage(storage_events)
+                explicit Data(const StorageEvents& storage_events)
+                        : repository(create_object_repository<N>()), storage(storage_events)
                 {
                 }
-                Data(const Data&) = delete;
-                Data& operator=(const Data&) = delete;
         };
         std::unordered_map<int, SequenceVariant1<MIN, MAX, Data>> m_data;
 
@@ -84,9 +84,7 @@ class Impl final : public StorageManage
                 for (const auto& p : m_data)
                 {
                         std::visit(
-                                [&](const auto& v) {
-                                        names.emplace_back(p.first, v.storage.repository_point_object_names());
-                                },
+                                [&](const auto& v) { names.emplace_back(p.first, v.repository->point_object_names()); },
                                 p.second);
                 }
 
@@ -270,7 +268,7 @@ class Impl final : public StorageManage
                 std::visit(
                         [&](auto& v) {
                                 auto mesh = processor::load_from_repository(
-                                        progress_list, v.storage, object_name, point_count);
+                                        progress_list, *v.repository, object_name, point_count);
 
                                 clear_all_data();
                                 load_event();
@@ -353,7 +351,7 @@ class Impl final : public StorageManage
         }
 
 public:
-        Impl(const StorageEvents& storage_events)
+        explicit Impl(const StorageEvents& storage_events)
         {
                 init_map(storage_events, std::make_integer_sequence<size_t, COUNT>());
         }

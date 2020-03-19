@@ -36,30 +36,14 @@ class ObjectStorage
 
         const StorageEvents& m_events;
 
-        const std::unique_ptr<ObjectRepository<N>> m_object_repository;
-
         Pointers<ObjectId, const MeshObject<N>> m_objects;
         Pointers<ObjectId, const SpatialMeshModel<N, MeshFloat>> m_meshes;
         Pointers<ObjectId, const std::vector<Vector<N, float>>> m_manifold_constructors_points;
         Pointers<ObjectId, const ManifoldConstructor<N>> m_manifold_constructors;
 
 public:
-        ObjectStorage(const StorageEvents& events)
-                : m_events(events), m_object_repository(create_object_repository<N>())
+        explicit ObjectStorage(const StorageEvents& events) : m_events(events)
         {
-        }
-
-        //
-
-        std::vector<std::string> repository_point_object_names() const
-        {
-                return m_object_repository->point_object_names();
-        }
-
-        std::vector<Vector<N, float>> repository_point_object(const std::string& object_name, unsigned point_count)
-                const
-        {
-                return m_object_repository->point_object(object_name, point_count);
         }
 
         //

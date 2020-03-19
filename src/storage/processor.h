@@ -423,16 +423,16 @@ std::unique_ptr<const mesh::Mesh<N>> load_from_file(ProgressRatioList* progress_
         return mesh::load_geometry<N>(file_name, &progress);
 }
 
-template <size_t N, typename MeshFloat>
+template <size_t N>
 std::unique_ptr<const mesh::Mesh<N>> load_from_repository(
         ProgressRatioList* progress_list,
-        const ObjectStorage<N, MeshFloat>& storage,
+        const ObjectRepository<N>& repository,
         const std::string& object_name,
         int point_count)
 {
         ProgressRatio progress(progress_list);
         progress.set_text("Loading object: %p%");
-        return mesh::create_mesh_for_points(storage.repository_point_object(object_name, point_count));
+        return mesh::create_mesh_for_points(repository.point_object(object_name, point_count));
 }
 
 template <size_t N, typename MeshFloat>
