@@ -17,10 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "calculator_events.h"
+#include "events.h"
 #include "mesh_object.h"
 #include "options.h"
-#include "storage_events.h"
 
 #include <src/com/variant.h>
 #include <src/painter/shapes/mesh.h>
@@ -71,30 +70,44 @@ struct StorageManage
         virtual std::vector<FileFormat> formats_for_save(unsigned dimension) const = 0;
         virtual std::vector<FileFormat> formats_for_load() const = 0;
 
-        virtual void set_object_size_and_position(double size, const vec3& position) = 0;
-
-        virtual void compute_bound_cocone(ProgressRatioList* progress_list, ObjectId id, double rho, double alpha) = 0;
+        virtual void compute_bound_cocone(
+                ProgressRatioList* progress_list,
+                ObjectId id,
+                double rho,
+                double alpha,
+                int mesh_threads) = 0;
 
         virtual void load_from_file(
-                const std::unordered_set<ComputationType>& objects,
+                bool build_convex_hull,
+                bool build_cocone,
+                bool build_bound_cocone,
+                bool build_mst,
                 ProgressRatioList* progress_list,
                 const std::string& file_name,
+                double object_size,
+                const vec3& object_position,
                 double rho,
-                double alpha) = 0;
+                double alpha,
+                int mesh_threads,
+                const std::function<void(size_t dimension)>& load_event) = 0;
 
         virtual void load_from_repository(
-                const std::unordered_set<ComputationType>& objects,
+                bool build_convex_hull,
+                bool build_cocone,
+                bool build_bound_cocone,
+                bool build_mst,
                 ProgressRatioList* progress_list,
                 int dimension,
                 const std::string& object_name,
+                double object_size,
+                const vec3& object_position,
                 double rho,
                 double alpha,
-                int point_count) = 0;
+                int mesh_threads,
+                int point_count,
+                const std::function<void()>& load_event) = 0;
 
         virtual void save_to_file(ObjectId id, const std::string& file_name, const std::string& name) const = 0;
 };
 
-std::unique_ptr<StorageManage> create_storage_manage(
-        int mesh_threads,
-        const ObjectStorageEvents& storage_events,
-        const ObjectCalculatorEvents& calculator_events);
+std::unique_ptr<StorageManage> create_storage_manage(const StorageEvents& storage_events);

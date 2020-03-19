@@ -21,36 +21,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/variant.h>
 #include <src/show/interface.h>
-#include <src/storage/calculator_events.h>
-#include <src/storage/storage_events.h>
+#include <src/storage/events.h>
 
 #include <QObject>
 
-class DirectEvents
+class AllEvents
 {
 protected:
-        virtual ~DirectEvents() = default;
+        virtual ~AllEvents() = default;
 
 public:
-        virtual void direct_message_error(const std::string& msg) = 0;
-        virtual void direct_message_error_fatal(const std::string& msg) = 0;
-        virtual void direct_message_error_source(const std::string& msg, const std::string& src) = 0;
-        virtual void direct_message_information(const std::string& msg) = 0;
-        virtual void direct_message_warning(const std::string& msg) = 0;
-        virtual void direct_show_object_loaded(ObjectId id) = 0;
-        virtual void direct_object_loaded(ObjectId id, size_t dimension) = 0;
-        virtual void direct_object_deleted(ObjectId id, size_t dimension) = 0;
-        virtual void direct_object_deleted_all(size_t dimension) = 0;
-        virtual void direct_mesh_loaded(ObjectId id, size_t dimension) = 0;
-        virtual void direct_file_loaded(const std::string& file_name, size_t dimension) = 0;
-        virtual void direct_log(const std::string& msg) = 0;
+        virtual void message_error(const std::string& msg) = 0;
+        virtual void message_error_fatal(const std::string& msg) = 0;
+        virtual void message_error_source(const std::string& msg, const std::string& src) = 0;
+        virtual void message_information(const std::string& msg) = 0;
+        virtual void message_warning(const std::string& msg) = 0;
+        virtual void show_object_loaded(ObjectId id) = 0;
+
+        virtual void loaded_object(ObjectId id, size_t dimension) = 0;
+        virtual void loaded_mesh(ObjectId id, size_t dimension) = 0;
+        virtual void deleted_object(ObjectId id, size_t dimension) = 0;
+        virtual void deleted_all(size_t dimension) = 0;
+
+        virtual void file_loaded(const std::string& file_name, size_t dimension) = 0;
+        virtual void log(const std::string& msg) = 0;
 };
 
-class WindowEventEmitter final : public QObject,
-                                 public LogEvents,
-                                 public ObjectStorageEvents,
-                                 public ObjectCalculatorEvents,
-                                 public ShowEvents
+class WindowEventEmitter final : public QObject, public LogEvents, public StorageEvents, public ShowEvents
 {
         Q_OBJECT
 
@@ -100,34 +97,34 @@ private:
                         {
                         }
                 };
-                struct object_loaded final
+                struct loaded_object final
                 {
                         const ObjectId id;
                         const size_t dimension;
-                        object_loaded(ObjectId id_, size_t dimension_) : id(id_), dimension(dimension_)
+                        loaded_object(ObjectId id_, size_t dimension_) : id(id_), dimension(dimension_)
                         {
                         }
                 };
-                struct object_deleted final
+                struct loaded_mesh final
                 {
                         const ObjectId id;
                         const size_t dimension;
-                        object_deleted(ObjectId id_, size_t dimension_) : id(id_), dimension(dimension_)
+                        explicit loaded_mesh(ObjectId id_, size_t dimension_) : id(id_), dimension(dimension_)
                         {
                         }
                 };
-                struct object_deleted_all final
-                {
-                        const size_t dimension;
-                        explicit object_deleted_all(size_t dimension_) : dimension(dimension_)
-                        {
-                        }
-                };
-                struct mesh_loaded final
+                struct deleted_object final
                 {
                         const ObjectId id;
                         const size_t dimension;
-                        explicit mesh_loaded(ObjectId id_, size_t dimension_) : id(id_), dimension(dimension_)
+                        deleted_object(ObjectId id_, size_t dimension_) : id(id_), dimension(dimension_)
+                        {
+                        }
+                };
+                struct deleted_all final
+                {
+                        const size_t dimension;
+                        explicit deleted_all(size_t dimension_) : dimension(dimension_)
                         {
                         }
                 };
@@ -151,10 +148,10 @@ private:
                 std::variant<
                         std::monostate,
                         show_object_loaded,
-                        object_loaded,
-                        object_deleted,
-                        object_deleted_all,
-                        mesh_loaded,
+                        loaded_object,
+                        loaded_mesh,
+                        deleted_object,
+                        deleted_all,
                         file_loaded,
                         message_error,
                         message_error_fatal,
@@ -198,14 +195,14 @@ private:
                 }
         }
 
-        DirectEvents* m_direct_events;
+        AllEvents* m_all_events;
 
         class Visitor
         {
-                DirectEvents* m_f;
+                AllEvents* m_f;
 
         public:
-                explicit Visitor(DirectEvents* f) : m_f(f)
+                explicit Visitor(AllEvents* f) : m_f(f)
                 {
                 }
 
@@ -214,51 +211,51 @@ private:
                 }
                 void operator()(const WindowEvent::message_error& d)
                 {
-                        m_f->direct_message_error(d.msg);
+                        m_f->message_error(d.msg);
                 }
                 void operator()(const WindowEvent::message_error_fatal& d)
                 {
-                        m_f->direct_message_error_fatal(d.msg);
+                        m_f->message_error_fatal(d.msg);
                 }
                 void operator()(const WindowEvent::message_error_source& d)
                 {
-                        m_f->direct_message_error_source(d.msg, d.src);
+                        m_f->message_error_source(d.msg, d.src);
                 }
                 void operator()(const WindowEvent::message_information& d)
                 {
-                        m_f->direct_message_information(d.msg);
+                        m_f->message_information(d.msg);
                 }
                 void operator()(const WindowEvent::message_warning& d)
                 {
-                        m_f->direct_message_warning(d.msg);
+                        m_f->message_warning(d.msg);
                 }
                 void operator()(const WindowEvent::show_object_loaded& d)
                 {
-                        m_f->direct_show_object_loaded(d.id);
+                        m_f->show_object_loaded(d.id);
                 }
-                void operator()(const WindowEvent::object_loaded& d)
+                void operator()(const WindowEvent::loaded_object& d)
                 {
-                        m_f->direct_object_loaded(d.id, d.dimension);
+                        m_f->loaded_object(d.id, d.dimension);
                 }
-                void operator()(const WindowEvent::object_deleted& d)
+                void operator()(const WindowEvent::loaded_mesh& d)
                 {
-                        m_f->direct_object_deleted(d.id, d.dimension);
+                        m_f->loaded_mesh(d.id, d.dimension);
                 }
-                void operator()(const WindowEvent::object_deleted_all& d)
+                void operator()(const WindowEvent::deleted_object& d)
                 {
-                        m_f->direct_object_deleted_all(d.dimension);
+                        m_f->deleted_object(d.id, d.dimension);
                 }
-                void operator()(const WindowEvent::mesh_loaded& d)
+                void operator()(const WindowEvent::deleted_all& d)
                 {
-                        m_f->direct_mesh_loaded(d.id, d.dimension);
+                        m_f->deleted_all(d.dimension);
                 }
                 void operator()(const WindowEvent::file_loaded& d)
                 {
-                        m_f->direct_file_loaded(d.file_name, d.dimension);
+                        m_f->file_loaded(d.file_name, d.dimension);
                 }
                 void operator()(const WindowEvent::log& d)
                 {
-                        m_f->direct_log(d.msg);
+                        m_f->log(d.msg);
                 }
         };
 
@@ -266,13 +263,13 @@ private slots:
 
         void slot_window_event(const WindowEvent& event)
         {
-                std::visit(Visitor(m_direct_events), event.event);
+                std::visit(Visitor(m_all_events), event.event);
         }
 
 public:
-        explicit WindowEventEmitter(DirectEvents* direct_events) : m_direct_events(direct_events)
+        explicit WindowEventEmitter(AllEvents* all_events) : m_all_events(all_events)
         {
-                ASSERT(m_direct_events);
+                ASSERT(m_all_events);
 
                 qRegisterMetaType<WindowEvent>("WindowEvent");
                 connect(this, SIGNAL(window_event(WindowEvent)), this, SLOT(slot_window_event(WindowEvent)),
@@ -309,27 +306,27 @@ public:
                 emit_message<WindowEvent::show_object_loaded>("Exception in emit show object loaded", id);
         }
 
-        void object_loaded(ObjectId id, size_t dimension) const override
+        void loaded_object(ObjectId id, size_t dimension) const override
         {
-                emit_message<WindowEvent::object_loaded>("Exception in emit object loaded", id, dimension);
+                emit_message<WindowEvent::loaded_object>("Exception in emit loaded object", id, dimension);
         }
 
-        void object_deleted(ObjectId id, size_t dimension) const override
+        void loaded_mesh(ObjectId id, size_t dimension) const override
         {
-                emit_message<WindowEvent::object_deleted>("Exception in emit object deleted", id, dimension);
+                emit_message<WindowEvent::loaded_mesh>("Exception in emit loaded mesh", id, dimension);
         }
 
-        void object_deleted_all(size_t dimension) const override
+        void deleted_object(ObjectId id, size_t dimension) const override
         {
-                emit_message<WindowEvent::object_deleted_all>("Exception in emit object deleted_all", dimension);
+                emit_message<WindowEvent::deleted_object>("Exception in emit deleted object", id, dimension);
         }
 
-        void mesh_loaded(ObjectId id, size_t dimension) const override
+        void deleted_all(size_t dimension) const override
         {
-                emit_message<WindowEvent::mesh_loaded>("Exception in emit mesh loaded", id, dimension);
+                emit_message<WindowEvent::deleted_all>("Exception in emit deleted_all", dimension);
         }
 
-        void file_loaded(const std::string& file_name, size_t dimension) const override
+        void file_loaded(const std::string& file_name, size_t dimension) const
         {
                 emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", file_name, dimension);
         }

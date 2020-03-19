@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "events.h"
 #include "mesh_object.h"
 #include "pointers.h"
-#include "storage_events.h"
 
 #include <src/geometry/cocone/reconstruction.h>
 #include <src/geometry/objects/points.h>
@@ -34,7 +34,7 @@ class ObjectStorage
 {
         static_assert(N >= 3);
 
-        const ObjectStorageEvents& m_event_emitter;
+        const StorageEvents& m_events;
 
         const std::unique_ptr<ObjectRepository<N>> m_object_repository;
 
@@ -44,8 +44,8 @@ class ObjectStorage
         Pointers<ObjectId, const ManifoldConstructor<N>> m_manifold_constructors;
 
 public:
-        ObjectStorage(const ObjectStorageEvents& events)
-                : m_event_emitter(events), m_object_repository(create_object_repository<N>())
+        ObjectStorage(const StorageEvents& events)
+                : m_events(events), m_object_repository(create_object_repository<N>())
         {
         }
 
@@ -68,14 +68,14 @@ public:
         void set_object(SetType&& object)
         {
                 m_objects.set(object->id(), std::forward<SetType>(object));
-                m_event_emitter.object_loaded(object->id(), N);
+                m_events.loaded_object(object->id(), N);
         }
 
         template <typename SetType>
         void set_mesh(ObjectId id, SetType&& mesh)
         {
                 m_meshes.set(id, std::forward<SetType>(mesh));
-                m_event_emitter.mesh_loaded(id, N);
+                m_events.loaded_mesh(id, N);
         }
 
         void set_points(ObjectId id, const std::shared_ptr<const std::vector<Vector<N, float>>>& points)
@@ -119,6 +119,6 @@ public:
                 m_objects.clear();
                 m_meshes.clear();
 
-                m_event_emitter.object_deleted_all(N);
+                m_events.deleted_all(N);
         }
 };

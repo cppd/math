@@ -17,13 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string>
+#include "object_id.h"
 
-class ObjectCalculatorEvents
+class StorageEvents
 {
 protected:
-        virtual ~ObjectCalculatorEvents() = default;
+        virtual ~StorageEvents() = default;
 
 public:
-        virtual void file_loaded(const std::string& msg, size_t dimension) const = 0;
+        virtual void loaded_object(ObjectId id, size_t dimension) const = 0;
+        virtual void loaded_mesh(ObjectId id, size_t dimension) const = 0;
+
+        virtual void deleted_object(ObjectId id, size_t dimension) const = 0;
+        virtual void deleted_all(size_t dimension) const = 0;
 };

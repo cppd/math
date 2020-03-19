@@ -117,7 +117,7 @@ MainWindow::MainWindow(QWidget* parent)
           m_bound_cocone_alpha(BOUND_COCONE_DEFAULT_ALPHA),
           m_dimension(0),
           m_close_without_confirmation(false),
-          m_objects_to_load(default_objects_to_load())
+          m_mesh_threads(std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT))
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
         static_assert(std::is_same_v<decltype(ui.model_tree), ModelTree*>);
@@ -222,9 +222,12 @@ void MainWindow::constructor_interface()
 
 void MainWindow::constructor_objects_and_repository()
 {
-        m_objects = create_storage_manage(
-                std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter,
-                m_event_emitter);
+        m_objects_to_load.insert(ComputationType::Mst);
+        m_objects_to_load.insert(ComputationType::ConvexHull);
+        m_objects_to_load.insert(ComputationType::Cocone);
+        m_objects_to_load.insert(ComputationType::BoundCocone);
+
+        m_objects = create_storage_manage(m_event_emitter);
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
@@ -251,18 +254,6 @@ void MainWindow::constructor_objects_and_repository()
                         connect(action, SIGNAL(triggered()), this, SLOT(slot_object_repository()));
                 }
         }
-}
-
-std::unordered_set<ComputationType> MainWindow::default_objects_to_load()
-{
-        std::unordered_set<ComputationType> objects_to_load;
-
-        objects_to_load.insert(ComputationType::Mst);
-        objects_to_load.insert(ComputationType::ConvexHull);
-        objects_to_load.insert(ComputationType::Cocone);
-        objects_to_load.insert(ComputationType::BoundCocone);
-
-        return objects_to_load;
 }
 
 void MainWindow::set_window_title_file(const std::string& file_name)
@@ -510,10 +501,19 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         }
                 }
 
-                auto f = [=, this, rho = m_bound_cocone_rho, alpha = m_bound_cocone_alpha,
-                          objects_to_load = m_objects_to_load](ProgressRatioList* progress_list, std::string* message) {
+                double rho = m_bound_cocone_rho;
+                double alpha = m_bound_cocone_alpha;
+                bool build_convex_hull = m_objects_to_load.count(ComputationType::ConvexHull) > 0;
+                bool build_cocone = m_objects_to_load.count(ComputationType::Cocone) > 0;
+                bool build_bound_cocone = m_objects_to_load.count(ComputationType::BoundCocone) > 0;
+                bool build_mst = m_objects_to_load.count(ComputationType::Mst) > 0;
+
+                auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
                         *message = "Load " + file_name;
-                        m_objects->load_from_file(objects_to_load, progress_list, file_name, rho, alpha);
+                        m_objects->load_from_file(
+                                build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
+                                file_name, m_show->object_size(), m_show->object_position(), rho, alpha, m_mesh_threads,
+                                [&](size_t dimension) { m_event_emitter.file_loaded(file_name, dimension); });
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -561,11 +561,20 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
                         return;
                 }
 
-                auto f = [=, this, rho = m_bound_cocone_rho, alpha = m_bound_cocone_alpha,
-                          objects_to_load = m_objects_to_load](ProgressRatioList* progress_list, std::string* message) {
+                double rho = m_bound_cocone_rho;
+                double alpha = m_bound_cocone_alpha;
+                bool build_convex_hull = m_objects_to_load.count(ComputationType::ConvexHull) > 0;
+                bool build_cocone = m_objects_to_load.count(ComputationType::Cocone) > 0;
+                bool build_bound_cocone = m_objects_to_load.count(ComputationType::BoundCocone) > 0;
+                bool build_mst = m_objects_to_load.count(ComputationType::Mst) > 0;
+
+                auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
                         *message = "Load " + space_name(dimension) + " " + object_name;
                         m_objects->load_from_repository(
-                                objects_to_load, progress_list, dimension, object_name, rho, alpha, point_count);
+                                build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
+                                dimension, object_name, m_show->object_size(), m_show->object_position(), rho, alpha,
+                                m_mesh_threads, point_count,
+                                [&]() { m_event_emitter.file_loaded(object_name, dimension); });
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -684,7 +693,7 @@ void MainWindow::thread_bound_cocone(ObjectId id)
 
                 auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
                         *message = "BoundCocone Reconstruction";
-                        m_objects->compute_bound_cocone(progress_list, id, rho, alpha);
+                        m_objects->compute_bound_cocone(progress_list, id, rho, alpha, m_mesh_threads);
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -931,7 +940,7 @@ void MainWindow::set_dependent_interface()
         }
 }
 
-void MainWindow::direct_message_error(const std::string& msg)
+void MainWindow::message_error(const std::string& msg)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -939,7 +948,7 @@ void MainWindow::direct_message_error(const std::string& msg)
         dialog::message_critical(this, msg);
 }
 
-void MainWindow::direct_message_error_fatal(const std::string& msg)
+void MainWindow::message_error_fatal(const std::string& msg)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -957,7 +966,7 @@ void MainWindow::direct_message_error_fatal(const std::string& msg)
         close_without_confirmation();
 }
 
-void MainWindow::direct_message_error_source(const std::string& msg, const std::string& src)
+void MainWindow::message_error_source(const std::string& msg, const std::string& src)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -976,7 +985,7 @@ void MainWindow::direct_message_error_source(const std::string& msg, const std::
         close_without_confirmation();
 }
 
-void MainWindow::direct_message_information(const std::string& msg)
+void MainWindow::message_information(const std::string& msg)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -985,7 +994,7 @@ void MainWindow::direct_message_information(const std::string& msg)
         dialog::message_information(this, msg);
 }
 
-void MainWindow::direct_message_warning(const std::string& msg)
+void MainWindow::message_warning(const std::string& msg)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -994,7 +1003,7 @@ void MainWindow::direct_message_warning(const std::string& msg)
         dialog::message_warning(this, msg);
 }
 
-void MainWindow::direct_show_object_loaded(ObjectId /*id*/)
+void MainWindow::show_object_loaded(ObjectId /*id*/)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -1002,7 +1011,7 @@ void MainWindow::direct_show_object_loaded(ObjectId /*id*/)
 }
 
 template <size_t N>
-void MainWindow::object_loaded(const std::shared_ptr<const MeshObject<N>>& object, int dimension)
+void MainWindow::loaded_object(const std::shared_ptr<const MeshObject<N>>& object, int dimension)
 {
         if constexpr (N == 3)
         {
@@ -1014,31 +1023,13 @@ void MainWindow::object_loaded(const std::shared_ptr<const MeshObject<N>>& objec
         ui.model_tree->add_item(object->id(), object->name());
 }
 
-void MainWindow::direct_object_loaded(ObjectId id, size_t dimension)
+void MainWindow::loaded_object(ObjectId id, size_t dimension)
 {
         ASSERT(m_objects);
-        std::visit([&](const auto& v) { object_loaded(v, dimension); }, m_objects->object(id));
+        std::visit([&](const auto& v) { loaded_object(v, dimension); }, m_objects->object(id));
 }
 
-void MainWindow::direct_object_deleted(ObjectId id, size_t dimension)
-{
-        if (m_show && dimension == 3)
-        {
-                m_show->delete_object(id);
-        }
-        ui.model_tree->delete_item(id);
-}
-
-void MainWindow::direct_object_deleted_all(size_t dimension)
-{
-        if (m_show && dimension == 3)
-        {
-                m_show->delete_all_objects();
-        }
-        ui.model_tree->delete_all();
-}
-
-void MainWindow::direct_mesh_loaded(ObjectId id, size_t /*dimension*/)
+void MainWindow::loaded_mesh(ObjectId id, size_t /*dimension*/)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -1050,7 +1041,25 @@ void MainWindow::direct_mesh_loaded(ObjectId id, size_t /*dimension*/)
         ui.model_tree->add_item(id, object_name);
 }
 
-void MainWindow::direct_file_loaded(const std::string& file_name, size_t dimension)
+void MainWindow::deleted_object(ObjectId id, size_t dimension)
+{
+        if (m_show && dimension == 3)
+        {
+                m_show->delete_object(id);
+        }
+        ui.model_tree->delete_item(id);
+}
+
+void MainWindow::deleted_all(size_t dimension)
+{
+        if (m_show && dimension == 3)
+        {
+                m_show->delete_all_objects();
+        }
+        ui.model_tree->delete_all();
+}
+
+void MainWindow::file_loaded(const std::string& file_name, size_t dimension)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -1059,7 +1068,7 @@ void MainWindow::direct_file_loaded(const std::string& file_name, size_t dimensi
         m_dimension = dimension;
 }
 
-void MainWindow::direct_log(const std::string& msg)
+void MainWindow::log(const std::string& msg)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -1140,8 +1149,6 @@ void MainWindow::slot_window_first_shown()
 
                 m_show_object = create_show_object(info);
                 m_show = &m_show_object->show();
-
-                m_objects->set_object_size_and_position(m_show->object_size(), m_show->object_position());
 
                 //
 

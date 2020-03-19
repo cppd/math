@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-class MainWindow final : public QMainWindow, public DirectEvents
+class MainWindow final : public QMainWindow, public AllEvents
 {
         Q_OBJECT
 
@@ -108,7 +108,13 @@ private:
         void constructor_interface();
         void constructor_objects_and_repository();
 
-        static std::unordered_set<ComputationType> default_objects_to_load();
+        enum class ComputationType
+        {
+                Mst,
+                ConvexHull,
+                Cocone,
+                BoundCocone
+        };
 
         void set_window_title_file(const std::string& file_name);
 
@@ -132,7 +138,7 @@ private:
         void paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh, const std::string& object_name);
 
         template <size_t N>
-        void object_loaded(const std::shared_ptr<const MeshObject<N>>& object, int dimension);
+        void loaded_object(const std::shared_ptr<const MeshObject<N>>& object, int dimension);
 
         void set_dependent_interface();
 
@@ -169,18 +175,18 @@ private:
 
         bool stop_action(WorkerThreads::Action action);
 
-        void direct_message_error(const std::string& msg) override;
-        void direct_message_error_fatal(const std::string& msg) override;
-        void direct_message_error_source(const std::string& msg, const std::string& src) override;
-        void direct_message_information(const std::string& msg) override;
-        void direct_message_warning(const std::string& msg) override;
-        void direct_show_object_loaded(ObjectId id) override;
-        void direct_object_loaded(ObjectId id, size_t dimension) override;
-        void direct_object_deleted(ObjectId id, size_t dimension) override;
-        void direct_object_deleted_all(size_t dimension) override;
-        void direct_mesh_loaded(ObjectId id, size_t dimension) override;
-        void direct_file_loaded(const std::string& file_name, size_t dimension) override;
-        void direct_log(const std::string& msg) override;
+        void message_error(const std::string& msg) override;
+        void message_error_fatal(const std::string& msg) override;
+        void message_error_source(const std::string& msg, const std::string& src) override;
+        void message_information(const std::string& msg) override;
+        void message_warning(const std::string& msg) override;
+        void show_object_loaded(ObjectId id) override;
+        void loaded_object(ObjectId id, size_t dimension) override;
+        void loaded_mesh(ObjectId id, size_t dimension) override;
+        void deleted_object(ObjectId id, size_t dimension) override;
+        void deleted_all(size_t dimension) override;
+        void file_loaded(const std::string& file_name, size_t dimension) override;
+        void log(const std::string& msg) override;
 
         Ui::MainWindow ui;
 
@@ -219,4 +225,6 @@ private:
         bool m_close_without_confirmation;
 
         std::unordered_set<ComputationType> m_objects_to_load;
+
+        const int m_mesh_threads;
 };
