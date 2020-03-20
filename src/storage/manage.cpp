@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/model/mesh_utility.h>
 
+#include <tuple>
+
 namespace
 {
 constexpr int MIN = STORAGE_MIN_DIMENSIONS;
@@ -32,149 +34,89 @@ constexpr size_t COUNT = MAX - MIN + 1;
 static_assert(MIN >= 3 && MIN <= MAX);
 static_assert(std::is_floating_point_v<StorageMeshFloatingPoint>);
 
+[[noreturn]] void error_dimension_not_supported(unsigned dimension)
+{
+        error("Dimension " + to_string(dimension) + " is not supported, min dimension = " + to_string(MIN) +
+              ", max dimension = " + to_string(MAX));
+}
+
 class Impl final : public StorageManage
 {
-        //
-        // Каждый элемент контейнера это variant с типами <T<MIN, T2...>, T<MIN + 1, T2...>, ...>.
-        // По каждому номеру I от MIN до MAX хранится map[I] = T<I, T2...>.
-        // Например, имеется тип Type и числа MIN = 3, MAX = 5.
-        // Тип данных контейнера
-        //      variant<Type<3>, Type<4>, Type<5>>
-        // Элементы контейнера
-        //      map[3] = Type<3>
-        //      map[4] = Type<4>
-        //      map[5] = Type<5>
-        //
-        // Объекты поддерживаются только у одного измерения. При загрузке
-        // объекта одного измерения все объекты других измерений удаляются.
-        template <size_t N>
+        template <size_t DIMENSION>
         struct Data final
         {
-                static constexpr size_t Dimension = N;
+                static constexpr size_t N = DIMENSION;
+
                 const std::unique_ptr<const ObjectRepository<N>> repository;
                 ObjectStorage<N, StorageMeshFloatingPoint> storage;
+
                 explicit Data(const StorageEvents& storage_events)
                         : repository(create_object_repository<N>()), storage(storage_events)
                 {
                 }
         };
-        std::unordered_map<int, SequenceVariant1<MIN, MAX, Data>> m_data;
+
+        // std::tuple<Data<MIN>, ..., Data<MAX>>.
+        SequenceType1<std::tuple, MIN, MAX, Data> m_data;
 
         void clear_all_data()
         {
-                for (auto& p : m_data)
-                {
-                        std::visit([&](auto& v) { v.storage.clear(); }, p.second);
-                }
-        }
-
-        void check_dimension(int dimension)
-        {
-                if (dimension < MIN || dimension > MAX)
-                {
-                        error("Error repository object dimension " + to_string(dimension) +
-                              ", min = " + to_string(MIN) + ", max = " + to_string(MAX));
-                }
+                std::apply([](auto&... v) { (v.storage.clear(), ...); }, m_data);
         }
 
         std::vector<RepositoryObjects> repository_point_object_names() const override
         {
                 std::vector<RepositoryObjects> names;
 
-                for (const auto& p : m_data)
-                {
-                        std::visit(
-                                [&](const auto& v) { names.emplace_back(p.first, v.repository->point_object_names()); },
-                                p.second);
-                }
+                std::apply(
+                        [&](const auto&... v) { (names.emplace_back(v.N, v.repository->point_object_names()), ...); },
+                        m_data);
 
                 return names;
         }
 
-        bool object_exists(ObjectId id) const override
-        {
-                int count = 0;
-                for (const auto& p : m_data)
-                {
-                        std::visit([&](const auto& v) { count += v.storage.object(id) ? 1 : 0; }, p.second);
-                }
-                if (count > 1)
-                {
-                        error("Too many objects " + to_string(count));
-                }
-                return count > 0;
-        }
-
-        bool mesh_exists(ObjectId id) const override
-        {
-                int count = 0;
-                for (const auto& p : m_data)
-                {
-                        std::visit([&](const auto& v) { count += v.storage.mesh(id) ? 1 : 0; }, p.second);
-                }
-                if (count > 1)
-                {
-                        error("Too many meshes " + to_string(count));
-                }
-                return count > 0;
-        }
-
-        ObjectVariant object(ObjectId id) const override
+        std::optional<ObjectVariant> object(ObjectId id) const override
         {
                 std::optional<ObjectVariant> opt;
-                int count = 0;
-                for (const auto& p : m_data)
-                {
-                        std::visit(
-                                [&](const auto& v) {
+
+                std::apply(
+                        [&](const auto&... v) {
+                                ([&]() {
                                         auto ptr = v.storage.object(id);
                                         if (ptr)
                                         {
                                                 opt = std::move(ptr);
-                                                ++count;
+                                                return true;
                                         }
-                                },
-                                p.second);
-                }
-                if (count > 1)
-                {
-                        error("Too many objects " + to_string(count));
-                }
-                if (count == 0)
-                {
-                        error("No object found");
-                }
-                ASSERT(opt);
-                return *opt;
+                                        return false;
+                                }() ||
+                                 ...);
+                        },
+                        m_data);
+
+                return opt;
         }
 
-        MeshVariant mesh(ObjectId id) const override
+        std::optional<MeshVariant> mesh(ObjectId id) const override
         {
                 std::optional<MeshVariant> opt;
-                int count = 0;
-                for (const auto& p : m_data)
-                {
-                        std::visit(
-                                [&](const auto& v) {
+
+                std::apply(
+                        [&](const auto&... v) {
+                                ([&]() {
                                         auto ptr = v.storage.mesh(id);
                                         if (ptr)
                                         {
                                                 opt = std::move(ptr);
-                                                ++count;
+                                                return true;
                                         }
-                                },
-                                p.second);
-                }
-                if (count > 1)
-                {
-                        error("Too many meshes " + to_string(count));
-                }
-                if (count == 0)
-                {
-                        error("No mesh found");
-                }
-                ASSERT(opt);
-                return *opt;
+                                        return false;
+                                }() ||
+                                 ...);
+                        },
+                        m_data);
+
+                return opt;
         }
 
         void compute_bound_cocone(
@@ -184,27 +126,48 @@ class Impl final : public StorageManage
                 double alpha,
                 int mesh_threads) override
         {
-                int count = 0;
-                for (auto& p : m_data)
-                {
-                        std::visit(
-                                [&](auto& v) {
-                                        if (v.storage.object(id))
+                bool found = std::apply(
+                        [&](auto&... v) {
+                                return ([&]() {
+                                        if (!v.storage.object(id))
                                         {
-                                                if (count == 0)
-                                                {
-                                                        processor::compute_bound_cocone(
-                                                                progress_list, &v.storage, id, rho, alpha,
-                                                                mesh_threads);
-                                                }
-                                                ++count;
+                                                return false;
                                         }
-                                },
-                                p.second);
-                }
-                if (count != 1)
+
+                                        processor::compute_bound_cocone(
+                                                progress_list, &v.storage, id, rho, alpha, mesh_threads);
+
+                                        return true;
+                                }() || ...);
+                        },
+                        m_data);
+
+                if (!found)
                 {
-                        error("Error object count " + to_string(count));
+                        error("No object found");
+                }
+        }
+
+        void save_to_file(ObjectId id, const std::string& file_name, const std::string& name) const override
+        {
+                bool found = std::apply(
+                        [&](const auto&... v) {
+                                return ([&]() {
+                                        if (!v.storage.object(id))
+                                        {
+                                                return false;
+                                        }
+
+                                        processor::save(v.storage, id, file_name, name);
+
+                                        return true;
+                                }() || ...);
+                        },
+                        m_data);
+
+                if (!found)
+                {
+                        error("No object found");
                 }
         }
 
@@ -222,27 +185,37 @@ class Impl final : public StorageManage
                 int mesh_threads,
                 const std::function<void(size_t dimension)>& load_event) override
         {
-                int dimension = mesh::file_dimension(file_name);
+                unsigned dimension = mesh::file_dimension(file_name);
 
-                check_dimension(dimension);
+                bool found = std::apply(
+                        [&](auto&... v) {
+                                return ([&]() {
+                                        constexpr unsigned N = std::remove_reference_t<decltype(v)>::N;
 
-                auto& repository = m_data.at(dimension);
+                                        if (N != dimension)
+                                        {
+                                                return false;
+                                        }
 
-                std::visit(
-                        [&](auto& v) {
-                                constexpr size_t N = std::remove_reference_t<decltype(v)>::Dimension;
+                                        auto mesh = processor::load_from_file<N>(progress_list, file_name);
 
-                                auto mesh = processor::load_from_file<N>(progress_list, file_name);
+                                        clear_all_data();
+                                        load_event(dimension);
 
-                                clear_all_data();
-                                load_event(dimension);
+                                        processor::compute(
+                                                progress_list, &v.storage, build_convex_hull, build_cocone,
+                                                build_bound_cocone, build_mst, std::move(mesh), object_size,
+                                                object_position, rho, alpha, mesh_threads);
 
-                                processor::compute(
-                                        progress_list, &v.storage, build_convex_hull, build_cocone, build_bound_cocone,
-                                        build_mst, std::move(mesh), object_size, object_position, rho, alpha,
-                                        mesh_threads);
+                                        return true;
+                                }() || ...);
                         },
-                        repository);
+                        m_data);
+
+                if (!found)
+                {
+                        error_dimension_not_supported(dimension);
+                }
         }
 
         void load_from_repository(
@@ -261,47 +234,35 @@ class Impl final : public StorageManage
                 int point_count,
                 const std::function<void()>& load_event) override
         {
-                check_dimension(dimension);
+                bool found = std::apply(
+                        [&](auto&... v) {
+                                return ([&]() {
+                                        constexpr unsigned N = std::remove_reference_t<decltype(v)>::N;
 
-                auto& repository = m_data.at(dimension);
-
-                std::visit(
-                        [&](auto& v) {
-                                auto mesh = processor::load_from_repository(
-                                        progress_list, *v.repository, object_name, point_count);
-
-                                clear_all_data();
-                                load_event();
-
-                                processor::compute(
-                                        progress_list, &v.storage, build_convex_hull, build_cocone, build_bound_cocone,
-                                        build_mst, std::move(mesh), object_size, object_position, rho, alpha,
-                                        mesh_threads);
-                        },
-                        repository);
-        }
-
-        void save_to_file(ObjectId id, const std::string& file_name, const std::string& name) const override
-        {
-                int count = 0;
-                for (const auto& p : m_data)
-                {
-                        std::visit(
-                                [&](const auto& v) {
-                                        if (v.storage.object(id))
+                                        if (N != dimension)
                                         {
-                                                if (count == 0)
-                                                {
-                                                        processor::save(v.storage, id, file_name, name);
-                                                }
-                                                ++count;
+                                                return false;
                                         }
-                                },
-                                p.second);
-                }
-                if (count != 1)
+
+                                        auto mesh = processor::load_from_repository(
+                                                progress_list, *v.repository, object_name, point_count);
+
+                                        clear_all_data();
+                                        load_event();
+
+                                        processor::compute(
+                                                progress_list, &v.storage, build_convex_hull, build_cocone,
+                                                build_bound_cocone, build_mst, std::move(mesh), object_size,
+                                                object_position, rho, alpha, mesh_threads);
+
+                                        return true;
+                                }() || ...);
+                        },
+                        m_data);
+
+                if (!found)
                 {
-                        error("Error object count " + to_string(count));
+                        error_dimension_not_supported(dimension);
                 }
         }
 
@@ -339,21 +300,15 @@ class Impl final : public StorageManage
         }
 
         template <size_t... I>
-        void init_map(const StorageEvents& storage_events, std::integer_sequence<size_t, I...>&&)
+        Impl(const StorageEvents& storage_events, std::integer_sequence<size_t, I...>&&)
+                : m_data((static_cast<void>(I), storage_events)...)
         {
-                static_assert(((I >= 0 && I < sizeof...(I)) && ...));
-                static_assert(MIN + sizeof...(I) == MAX + 1);
-
-                (m_data.try_emplace(MIN + I, std::in_place_type_t<Data<MIN + I>>(), storage_events), ...);
-
-                ASSERT((m_data.count(MIN + I) == 1) && ...);
-                ASSERT(m_data.size() == COUNT);
         }
 
 public:
         explicit Impl(const StorageEvents& storage_events)
+                : Impl(storage_events, std::make_integer_sequence<size_t, COUNT>())
         {
-                init_map(storage_events, std::make_integer_sequence<size_t, COUNT>());
         }
 };
 }

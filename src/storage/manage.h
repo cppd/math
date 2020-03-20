@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_object.h"
 #include "options.h"
 
-#include <src/com/variant.h>
+#include <src/com/sequence.h>
 #include <src/painter/shapes/mesh.h>
 #include <src/progress/progress_list.h>
 
@@ -30,18 +30,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <variant>
 
 struct StorageManage
 {
-        using MeshVariant = SequenceVariant2ConstType2<
+        using MeshVariant = SequenceType2ConstType2<
+                std::variant,
                 STORAGE_MIN_DIMENSIONS,
                 STORAGE_MAX_DIMENSIONS,
                 std::shared_ptr,
                 SpatialMeshModel,
                 StorageMeshFloatingPoint>;
 
-        using ObjectVariant =
-                SequenceVariant2ConstType2<STORAGE_MIN_DIMENSIONS, STORAGE_MAX_DIMENSIONS, std::shared_ptr, MeshObject>;
+        using ObjectVariant = SequenceType2ConstType2<
+                std::variant,
+                STORAGE_MIN_DIMENSIONS,
+                STORAGE_MAX_DIMENSIONS,
+                std::shared_ptr,
+                MeshObject>;
 
         virtual ~StorageManage() = default;
 
@@ -56,11 +62,8 @@ struct StorageManage
         };
         virtual std::vector<RepositoryObjects> repository_point_object_names() const = 0;
 
-        virtual bool object_exists(ObjectId id) const = 0;
-        virtual ObjectVariant object(ObjectId id) const = 0;
-
-        virtual bool mesh_exists(ObjectId id) const = 0;
-        virtual MeshVariant mesh(ObjectId id) const = 0;
+        virtual std::optional<ObjectVariant> object(ObjectId id) const = 0;
+        virtual std::optional<MeshVariant> mesh(ObjectId id) const = 0;
 
         struct FileFormat
         {

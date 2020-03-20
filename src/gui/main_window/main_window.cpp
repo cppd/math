@@ -595,7 +595,8 @@ void MainWindow::thread_export(ObjectId id)
                         return;
                 }
 
-                if (!m_objects->object_exists(id))
+                std::optional<StorageManage::ObjectVariant> object = m_objects->object(id);
+                if (!object)
                 {
                         m_event_emitter.message_warning("No object to export");
                         return;
@@ -623,7 +624,7 @@ void MainWindow::thread_export(ObjectId id)
                 std::string file_name;
 
                 std::string name;
-                std::visit([&](const auto& v) { name = v->name(); }, m_objects->object(id));
+                std::visit([&](const auto& v) { name = v->name(); }, *object);
 
                 std::string caption = "Export " + name + " to OBJ";
                 bool read_only = true;
@@ -668,7 +669,7 @@ void MainWindow::thread_bound_cocone(ObjectId id)
                         return;
                 }
 
-                if (!m_objects->object_exists(id))
+                if (!m_objects->object(id))
                 {
                         m_event_emitter.message_warning("No object to compute BoundCocone");
                         return;
@@ -1025,8 +1026,16 @@ void MainWindow::loaded_object(const std::shared_ptr<const MeshObject<N>>& objec
 
 void MainWindow::loaded_object(ObjectId id, size_t dimension)
 {
-        ASSERT(m_objects);
-        std::visit([&](const auto& v) { loaded_object(v, dimension); }, m_objects->object(id));
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        std::optional<StorageManage::ObjectVariant> object = m_objects->object(id);
+        if (!object)
+        {
+                m_event_emitter.message_warning("No loaded object");
+                return;
+        }
+
+        std::visit([&](const auto& v) { loaded_object(v, dimension); }, *object);
 }
 
 void MainWindow::loaded_mesh(ObjectId id, size_t /*dimension*/)
@@ -1036,8 +1045,17 @@ void MainWindow::loaded_mesh(ObjectId id, size_t /*dimension*/)
         //if (m_dimension != 3)
         //{
         //}
+
+        std::optional<StorageManage::ObjectVariant> object = m_objects->object(id);
+        if (!object)
+        {
+                m_event_emitter.message_warning("No loaded object for mesh");
+                return;
+        }
+
         std::string object_name;
-        std::visit([&](const auto& v) { object_name = v->name(); }, m_objects->object(id));
+        std::visit([&](const auto& v) { object_name = v->name(); }, *object);
+
         ui.model_tree->add_item(id, object_name);
 }
 
@@ -1608,18 +1626,26 @@ void MainWindow::on_actionPainter_triggered()
 
         ObjectId object_id = *item;
 
-        if (!m_objects->mesh_exists(object_id))
+        std::optional<StorageManage::ObjectVariant> object = m_objects->object(object_id);
+        if (!object)
+        {
+                m_event_emitter.message_warning("No object to paint");
+                return;
+        }
+
+        std::optional<StorageManage::MeshVariant> mesh = m_objects->mesh(object_id);
+        if (!mesh)
         {
                 m_event_emitter.message_warning("No object to paint");
                 return;
         }
 
         std::string object_name;
-        std::visit([&](const auto& v) { object_name = v->name(); }, m_objects->object(object_id));
+        std::visit([&](const auto& v) { object_name = v->name(); }, *object);
 
         catch_all([&](std::string* message) {
                 *message = "Painter";
 
-                std::visit([&](const auto& v) { paint(v, object_name); }, m_objects->mesh(object_id));
+                std::visit([&](const auto& v) { paint(v, object_name); }, *mesh);
         });
 }

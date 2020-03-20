@@ -20,7 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../interface.h"
 
 #include <src/com/thread.h>
-#include <src/com/variant.h>
+
+#include <variant>
 
 // Класс для вызова функций не напрямую, а через очередь.
 // Это нужно для работы функций в другом потоке.
