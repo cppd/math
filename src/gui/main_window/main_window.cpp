@@ -227,13 +227,13 @@ void MainWindow::constructor_objects_and_repository()
         m_objects_to_load.insert(ComputationType::Cocone);
         m_objects_to_load.insert(ComputationType::BoundCocone);
 
-        m_storage.emplace(m_event_emitter);
-        m_objects = create_storage_manage(m_storage->data());
+        m_storage = std::make_unique<ObjectMultiStorage>(m_event_emitter);
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
 
-        std::vector<StorageManage::RepositoryObjects> repository_objects = m_objects->repository_point_object_names();
+        std::vector<ObjectMultiStorage::RepositoryObjects> repository_objects =
+                m_storage->repository_point_object_names();
 
         std::sort(repository_objects.begin(), repository_objects.end(), [](const auto& a, const auto& b) {
                 return a.dimension < b.dimension;
@@ -244,14 +244,13 @@ void MainWindow::constructor_objects_and_repository()
                 ASSERT(dimension_objects.dimension > 0);
 
                 QMenu* sub_menu = ui.menuCreate->addMenu(space_name(dimension_objects.dimension).c_str());
-                for (const std::string& object_name : dimension_objects.object_names)
+                for (const std::string& name : dimension_objects.names)
                 {
-                        ASSERT(!object_name.empty());
+                        ASSERT(!name.empty());
 
-                        std::string text = object_name + "...";
+                        std::string text = name + "...";
                         QAction* action = sub_menu->addAction(text.c_str());
-                        m_action_to_dimension_and_object_name.try_emplace(
-                                action, dimension_objects.dimension, object_name);
+                        m_action_to_dimension_and_object_name.try_emplace(action, dimension_objects.dimension, name);
                         connect(action, SIGNAL(triggered()), this, SLOT(slot_object_repository()));
                 }
         }
@@ -478,7 +477,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         bool read_only = true;
 
                         std::vector<std::string> filters;
-                        for (const StorageManage::FileFormat& v : m_objects->formats_for_load())
+                        for (const FileFormat& v : formats_for_load())
                         {
                                 filters.push_back(file_filter(v.name, v.extensions));
                         }
@@ -511,10 +510,11 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
 
                 auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
                         *message = "Load " + file_name;
-                        m_objects->load_from_file(
+                        load_from_file(
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
                                 file_name, m_show->object_size(), m_show->object_position(), rho, alpha, m_mesh_threads,
-                                [&](size_t dimension) { m_event_emitter.file_loaded(file_name, dimension); });
+                                [&](size_t dimension) { m_event_emitter.file_loaded(file_name, dimension); },
+                                m_storage.get());
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -571,11 +571,11 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
 
                 auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
                         *message = "Load " + space_name(dimension) + " " + object_name;
-                        m_objects->load_from_repository(
+                        load_from_repository(
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
                                 dimension, object_name, m_show->object_size(), m_show->object_position(), rho, alpha,
                                 m_mesh_threads, point_count,
-                                [&]() { m_event_emitter.file_loaded(object_name, dimension); });
+                                [&]() { m_event_emitter.file_loaded(object_name, dimension); }, m_storage.get());
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -596,7 +596,7 @@ void MainWindow::thread_export(ObjectId id)
                         return;
                 }
 
-                std::optional<ObjectVariant> object = m_objects->object(id);
+                std::optional<ObjectMultiStorage::ObjectVariant> object = m_storage->object(id);
                 if (!object)
                 {
                         m_event_emitter.message_warning("No object to export");
@@ -631,7 +631,7 @@ void MainWindow::thread_export(ObjectId id)
                 bool read_only = true;
 
                 std::vector<std::string> filters;
-                for (const StorageManage::FileFormat& v : m_objects->formats_for_save(m_dimension))
+                for (const FileFormat& v : formats_for_save(m_dimension))
                 {
                         filters.push_back(file_filter(v.name, v.extensions));
                 }
@@ -648,7 +648,7 @@ void MainWindow::thread_export(ObjectId id)
 
                 auto f = [=, this](ProgressRatioList*, std::string* message) {
                         *message = "Export " + name + " to " + file_name;
-                        m_objects->save_to_file(id, file_name, name);
+                        save_to_file(id, file_name, name, *m_storage);
                         m_event_emitter.message_information(name + " exported to file " + file_name);
                 };
 
@@ -670,7 +670,7 @@ void MainWindow::thread_bound_cocone(ObjectId id)
                         return;
                 }
 
-                if (!m_objects->object(id))
+                if (!m_storage->object(id))
                 {
                         m_event_emitter.message_warning("No object to compute BoundCocone");
                         return;
@@ -695,7 +695,7 @@ void MainWindow::thread_bound_cocone(ObjectId id)
 
                 auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
                         *message = "BoundCocone Reconstruction";
-                        m_objects->compute_bound_cocone(progress_list, id, rho, alpha, m_mesh_threads);
+                        compute_bound_cocone(progress_list, id, rho, alpha, m_mesh_threads, m_storage.get());
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -1029,7 +1029,7 @@ void MainWindow::loaded_object(ObjectId id, size_t dimension)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        std::optional<ObjectVariant> object = m_objects->object(id);
+        std::optional<ObjectMultiStorage::ObjectVariant> object = m_storage->object(id);
         if (!object)
         {
                 m_event_emitter.message_warning("No loaded object");
@@ -1047,7 +1047,7 @@ void MainWindow::loaded_mesh(ObjectId id, size_t /*dimension*/)
         //{
         //}
 
-        std::optional<ObjectVariant> object = m_objects->object(id);
+        std::optional<ObjectMultiStorage::ObjectVariant> object = m_storage->object(id);
         if (!object)
         {
                 m_event_emitter.message_warning("No loaded object for mesh");
@@ -1627,14 +1627,14 @@ void MainWindow::on_actionPainter_triggered()
 
         ObjectId object_id = *item;
 
-        std::optional<ObjectVariant> object = m_objects->object(object_id);
+        std::optional<ObjectMultiStorage::ObjectVariant> object = m_storage->object(object_id);
         if (!object)
         {
                 m_event_emitter.message_warning("No object to paint");
                 return;
         }
 
-        std::optional<MeshVariant> mesh = m_objects->mesh(object_id);
+        std::optional<ObjectMultiStorage::MeshVariant> mesh = m_storage->mesh(object_id);
         if (!mesh)
         {
                 m_event_emitter.message_warning("No object to paint");

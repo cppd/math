@@ -21,74 +21,60 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress_list.h>
 
-#include <memory>
+#include <functional>
 #include <string>
 #include <vector>
 
-struct StorageManage
+void compute_bound_cocone(
+        ProgressRatioList* progress_list,
+        ObjectId id,
+        double rho,
+        double alpha,
+        int mesh_threads,
+        ObjectMultiStorage* storage);
+
+void save_to_file(
+        ObjectId id,
+        const std::string& file_name,
+        const std::string& name,
+        const ObjectMultiStorage& storage);
+
+void load_from_file(
+        bool build_convex_hull,
+        bool build_cocone,
+        bool build_bound_cocone,
+        bool build_mst,
+        ProgressRatioList* progress_list,
+        const std::string& file_name,
+        double object_size,
+        const vec3& object_position,
+        double rho,
+        double alpha,
+        int mesh_threads,
+        const std::function<void(size_t dimension)>& load_event,
+        ObjectMultiStorage* storage);
+
+void load_from_repository(
+        bool build_convex_hull,
+        bool build_cocone,
+        bool build_bound_cocone,
+        bool build_mst,
+        ProgressRatioList* progress_list,
+        int dimension,
+        const std::string& object_name,
+        double object_size,
+        const vec3& object_position,
+        double rho,
+        double alpha,
+        int mesh_threads,
+        int point_count,
+        const std::function<void()>& load_event,
+        ObjectMultiStorage* storage);
+
+struct FileFormat
 {
-        virtual ~StorageManage() = default;
-
-        struct RepositoryObjects
-        {
-                int dimension;
-                std::vector<std::string> object_names;
-                RepositoryObjects(int dimension_, std::vector<std::string>&& object_names_)
-                        : dimension(dimension_), object_names(std::move(object_names_))
-                {
-                }
-        };
-        virtual std::vector<RepositoryObjects> repository_point_object_names() const = 0;
-
-        virtual std::optional<ObjectVariant> object(ObjectId id) const = 0;
-        virtual std::optional<MeshVariant> mesh(ObjectId id) const = 0;
-
-        struct FileFormat
-        {
-                std::string name;
-                std::vector<std::string> extensions;
-        };
-        virtual std::vector<FileFormat> formats_for_save(unsigned dimension) const = 0;
-        virtual std::vector<FileFormat> formats_for_load() const = 0;
-
-        virtual void compute_bound_cocone(
-                ProgressRatioList* progress_list,
-                ObjectId id,
-                double rho,
-                double alpha,
-                int mesh_threads) = 0;
-
-        virtual void load_from_file(
-                bool build_convex_hull,
-                bool build_cocone,
-                bool build_bound_cocone,
-                bool build_mst,
-                ProgressRatioList* progress_list,
-                const std::string& file_name,
-                double object_size,
-                const vec3& object_position,
-                double rho,
-                double alpha,
-                int mesh_threads,
-                const std::function<void(size_t dimension)>& load_event) = 0;
-
-        virtual void load_from_repository(
-                bool build_convex_hull,
-                bool build_cocone,
-                bool build_bound_cocone,
-                bool build_mst,
-                ProgressRatioList* progress_list,
-                int dimension,
-                const std::string& object_name,
-                double object_size,
-                const vec3& object_position,
-                double rho,
-                double alpha,
-                int mesh_threads,
-                int point_count,
-                const std::function<void()>& load_event) = 0;
-
-        virtual void save_to_file(ObjectId id, const std::string& file_name, const std::string& name) const = 0;
+        std::string name;
+        std::vector<std::string> extensions;
 };
-
-std::unique_ptr<StorageManage> create_storage_manage(ObjectMultiStorage::Data& storage);
+std::vector<FileFormat> formats_for_save(unsigned dimension);
+std::vector<FileFormat> formats_for_load();

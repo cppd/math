@@ -144,6 +144,21 @@ class ObjectMultiStorage
 public:
         using Data = Tuple;
 
+        using MeshVariant = SequenceType2ConstType2<
+                std::variant,
+                STORAGE_MIN_DIMENSIONS,
+                STORAGE_MAX_DIMENSIONS,
+                std::shared_ptr,
+                SpatialMeshModel,
+                StorageMeshFloatingPoint>;
+
+        using ObjectVariant = SequenceType2ConstType2<
+                std::variant,
+                STORAGE_MIN_DIMENSIONS,
+                STORAGE_MAX_DIMENSIONS,
+                std::shared_ptr,
+                MeshObject>;
+
         ObjectMultiStorage(const StorageEvents& events)
                 : ObjectMultiStorage(
                           events,
@@ -155,19 +170,82 @@ public:
         {
                 return m_data;
         }
+
+        const Data& data() const
+        {
+                return m_data;
+        }
+
+        void clear_all_data()
+        {
+                std::apply([](auto&... v) { (v.storage.clear(), ...); }, m_data);
+        }
+
+        struct RepositoryObjects
+        {
+                int dimension;
+                std::vector<std::string> names;
+        };
+        std::vector<RepositoryObjects> repository_point_object_names() const
+        {
+                std::vector<RepositoryObjects> names;
+
+                std::apply(
+                        [&](const auto&... v) {
+                                (
+                                        [&]() {
+                                                names.resize(names.size() + 1);
+                                                names.back().dimension = v.N;
+                                                names.back().names = v.repository->point_object_names();
+                                        }(),
+                                        ...);
+                        },
+                        m_data);
+
+                return names;
+        }
+
+        std::optional<ObjectVariant> object(ObjectId id) const
+        {
+                std::optional<ObjectVariant> opt;
+
+                std::apply(
+                        [&](const auto&... v) {
+                                ([&]() {
+                                        auto ptr = v.storage.object(id);
+                                        if (ptr)
+                                        {
+                                                opt = std::move(ptr);
+                                                return true;
+                                        }
+                                        return false;
+                                }() ||
+                                 ...);
+                        },
+                        m_data);
+
+                return opt;
+        }
+
+        std::optional<MeshVariant> mesh(ObjectId id) const
+        {
+                std::optional<MeshVariant> opt;
+
+                std::apply(
+                        [&](const auto&... v) {
+                                ([&]() {
+                                        auto ptr = v.storage.mesh(id);
+                                        if (ptr)
+                                        {
+                                                opt = std::move(ptr);
+                                                return true;
+                                        }
+                                        return false;
+                                }() ||
+                                 ...);
+                        },
+                        m_data);
+
+                return opt;
+        }
 };
-
-using MeshVariant = SequenceType2ConstType2<
-        std::variant,
-        STORAGE_MIN_DIMENSIONS,
-        STORAGE_MAX_DIMENSIONS,
-        std::shared_ptr,
-        SpatialMeshModel,
-        StorageMeshFloatingPoint>;
-
-using ObjectVariant = SequenceType2ConstType2<
-        std::variant,
-        STORAGE_MIN_DIMENSIONS,
-        STORAGE_MAX_DIMENSIONS,
-        std::shared_ptr,
-        MeshObject>;
