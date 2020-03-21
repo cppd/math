@@ -19,14 +19,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "events.h"
 #include "mesh_object.h"
+#include "options.h"
 #include "pointers.h"
 
+#include <src/com/sequence.h>
 #include <src/geometry/cocone/reconstruction.h>
 #include <src/geometry/objects/points.h>
 #include <src/painter/shapes/mesh.h>
 
 #include <memory>
 #include <string>
+#include <tuple>
+#include <variant>
 #include <vector>
 
 template <size_t N, typename MeshFloat>
@@ -106,3 +110,64 @@ public:
                 m_events.deleted_all(N);
         }
 };
+
+//
+
+template <size_t DIMENSION>
+struct ObjectStorageWithRepository final
+{
+        static constexpr size_t N = DIMENSION;
+
+        const std::unique_ptr<const ObjectRepository<N>> repository;
+        ObjectStorage<N, StorageMeshFloatingPoint> storage;
+
+        explicit ObjectStorageWithRepository(const StorageEvents& storage_events)
+                : repository(create_object_repository<N>()), storage(storage_events)
+        {
+        }
+};
+
+class ObjectMultiStorage
+{
+        // std::tuple<T<MIN>, ..., T<MAX>>.
+        using Tuple =
+                SequenceType1<std::tuple, STORAGE_MIN_DIMENSIONS, STORAGE_MAX_DIMENSIONS, ObjectStorageWithRepository>;
+
+        Tuple m_data;
+
+        template <size_t... I>
+        ObjectMultiStorage(const StorageEvents& events, std::integer_sequence<size_t, I...>&&)
+                : m_data((static_cast<void>(I), events)...)
+        {
+        }
+
+public:
+        using Data = Tuple;
+
+        ObjectMultiStorage(const StorageEvents& events)
+                : ObjectMultiStorage(
+                          events,
+                          std::make_integer_sequence<size_t, STORAGE_MAX_DIMENSIONS - STORAGE_MIN_DIMENSIONS + 1>())
+        {
+        }
+
+        Data& data()
+        {
+                return m_data;
+        }
+};
+
+using MeshVariant = SequenceType2ConstType2<
+        std::variant,
+        STORAGE_MIN_DIMENSIONS,
+        STORAGE_MAX_DIMENSIONS,
+        std::shared_ptr,
+        SpatialMeshModel,
+        StorageMeshFloatingPoint>;
+
+using ObjectVariant = SequenceType2ConstType2<
+        std::variant,
+        STORAGE_MIN_DIMENSIONS,
+        STORAGE_MAX_DIMENSIONS,
+        std::shared_ptr,
+        MeshObject>;

@@ -23,41 +23,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/model/mesh_utility.h>
 
-#include <tuple>
-
 namespace
 {
-constexpr int MIN = STORAGE_MIN_DIMENSIONS;
-constexpr int MAX = STORAGE_MAX_DIMENSIONS;
-constexpr size_t COUNT = MAX - MIN + 1;
-
-static_assert(MIN >= 3 && MIN <= MAX);
-static_assert(std::is_floating_point_v<StorageMeshFloatingPoint>);
-
 [[noreturn]] void error_dimension_not_supported(unsigned dimension)
 {
-        error("Dimension " + to_string(dimension) + " is not supported, min dimension = " + to_string(MIN) +
-              ", max dimension = " + to_string(MAX));
+        error("Dimension " + to_string(dimension) + " is not supported, supported dimensions [" +
+              to_string(STORAGE_MIN_DIMENSIONS) + "," + to_string(STORAGE_MAX_DIMENSIONS));
 }
 
 class Impl final : public StorageManage
 {
-        template <size_t DIMENSION>
-        struct Data final
-        {
-                static constexpr size_t N = DIMENSION;
-
-                const std::unique_ptr<const ObjectRepository<N>> repository;
-                ObjectStorage<N, StorageMeshFloatingPoint> storage;
-
-                explicit Data(const StorageEvents& storage_events)
-                        : repository(create_object_repository<N>()), storage(storage_events)
-                {
-                }
-        };
-
-        // std::tuple<Data<MIN>, ..., Data<MAX>>.
-        SequenceType1<std::tuple, MIN, MAX, Data> m_data;
+        ObjectMultiStorage::Data& m_data;
 
         void clear_all_data()
         {
@@ -279,7 +255,7 @@ class Impl final : public StorageManage
         std::vector<FileFormat> formats_for_load() const override
         {
                 std::set<unsigned> dimensions;
-                for (int n = MIN; n <= MAX; ++n)
+                for (int n = STORAGE_MIN_DIMENSIONS; n <= STORAGE_MAX_DIMENSIONS; ++n)
                 {
                         dimensions.insert(n);
                 }
@@ -299,21 +275,14 @@ class Impl final : public StorageManage
                 return v;
         }
 
-        template <size_t... I>
-        Impl(const StorageEvents& storage_events, std::integer_sequence<size_t, I...>&&)
-                : m_data((static_cast<void>(I), storage_events)...)
-        {
-        }
-
 public:
-        explicit Impl(const StorageEvents& storage_events)
-                : Impl(storage_events, std::make_integer_sequence<size_t, COUNT>())
+        explicit Impl(ObjectMultiStorage::Data& storage) : m_data(storage)
         {
         }
 };
 }
 
-std::unique_ptr<StorageManage> create_storage_manage(const StorageEvents& storage_events)
+std::unique_ptr<StorageManage> create_storage_manage(ObjectMultiStorage::Data& storage)
 {
-        return std::make_unique<Impl>(storage_events);
+        return std::make_unique<Impl>(storage);
 }

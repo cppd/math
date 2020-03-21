@@ -201,6 +201,7 @@ private:
         std::unique_ptr<ShowObject> m_show_object;
         Show* m_show = nullptr;
 
+        std::optional<ObjectMultiStorage> m_storage;
         std::unique_ptr<StorageManage> m_objects;
 
         QColor m_background_color;

@@ -227,7 +227,8 @@ void MainWindow::constructor_objects_and_repository()
         m_objects_to_load.insert(ComputationType::Cocone);
         m_objects_to_load.insert(ComputationType::BoundCocone);
 
-        m_objects = create_storage_manage(m_event_emitter);
+        m_storage.emplace(m_event_emitter);
+        m_objects = create_storage_manage(m_storage->data());
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
@@ -595,7 +596,7 @@ void MainWindow::thread_export(ObjectId id)
                         return;
                 }
 
-                std::optional<StorageManage::ObjectVariant> object = m_objects->object(id);
+                std::optional<ObjectVariant> object = m_objects->object(id);
                 if (!object)
                 {
                         m_event_emitter.message_warning("No object to export");
@@ -1028,7 +1029,7 @@ void MainWindow::loaded_object(ObjectId id, size_t dimension)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        std::optional<StorageManage::ObjectVariant> object = m_objects->object(id);
+        std::optional<ObjectVariant> object = m_objects->object(id);
         if (!object)
         {
                 m_event_emitter.message_warning("No loaded object");
@@ -1046,7 +1047,7 @@ void MainWindow::loaded_mesh(ObjectId id, size_t /*dimension*/)
         //{
         //}
 
-        std::optional<StorageManage::ObjectVariant> object = m_objects->object(id);
+        std::optional<ObjectVariant> object = m_objects->object(id);
         if (!object)
         {
                 m_event_emitter.message_warning("No loaded object for mesh");
@@ -1626,14 +1627,14 @@ void MainWindow::on_actionPainter_triggered()
 
         ObjectId object_id = *item;
 
-        std::optional<StorageManage::ObjectVariant> object = m_objects->object(object_id);
+        std::optional<ObjectVariant> object = m_objects->object(object_id);
         if (!object)
         {
                 m_event_emitter.message_warning("No object to paint");
                 return;
         }
 
-        std::optional<StorageManage::MeshVariant> mesh = m_objects->mesh(object_id);
+        std::optional<MeshVariant> mesh = m_objects->mesh(object_id);
         if (!mesh)
         {
                 m_event_emitter.message_warning("No object to paint");

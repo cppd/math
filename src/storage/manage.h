@@ -17,38 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "events.h"
-#include "mesh_object.h"
-#include "options.h"
+#include "storage.h"
 
-#include <src/com/sequence.h>
-#include <src/painter/shapes/mesh.h>
 #include <src/progress/progress_list.h>
 
-#include <exception>
-#include <functional>
 #include <memory>
 #include <string>
-#include <unordered_set>
-#include <variant>
+#include <vector>
 
 struct StorageManage
 {
-        using MeshVariant = SequenceType2ConstType2<
-                std::variant,
-                STORAGE_MIN_DIMENSIONS,
-                STORAGE_MAX_DIMENSIONS,
-                std::shared_ptr,
-                SpatialMeshModel,
-                StorageMeshFloatingPoint>;
-
-        using ObjectVariant = SequenceType2ConstType2<
-                std::variant,
-                STORAGE_MIN_DIMENSIONS,
-                STORAGE_MAX_DIMENSIONS,
-                std::shared_ptr,
-                MeshObject>;
-
         virtual ~StorageManage() = default;
 
         struct RepositoryObjects
@@ -113,4 +91,4 @@ struct StorageManage
         virtual void save_to_file(ObjectId id, const std::string& file_name, const std::string& name) const = 0;
 };
 
-std::unique_ptr<StorageManage> create_storage_manage(const StorageEvents& storage_events);
+std::unique_ptr<StorageManage> create_storage_manage(ObjectMultiStorage::Data& storage);
