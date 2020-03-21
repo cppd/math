@@ -28,7 +28,7 @@ void compute_bound_cocone(
         double rho,
         double alpha,
         int mesh_threads,
-        ObjectMultiStorage* storage)
+        MultiStorage* storage)
 {
         bool found = std::apply(
                 [&](auto&... v) {
@@ -52,7 +52,7 @@ void compute_bound_cocone(
         }
 }
 
-void save_to_file(ObjectId id, const std::string& file_name, const std::string& name, const ObjectMultiStorage& storage)
+void save_to_file(ObjectId id, const std::string& file_name, const std::string& name, const MultiStorage& storage)
 {
         bool found = std::apply(
                 [&](const auto&... v) {
@@ -88,7 +88,7 @@ void load_from_file(
         double alpha,
         int mesh_threads,
         const std::function<void(size_t dimension)>& load_event,
-        ObjectMultiStorage* storage)
+        MultiStorage* storage)
 {
         unsigned dimension = mesh::file_dimension(file_name);
 
@@ -104,7 +104,7 @@ void load_from_file(
 
                                 auto mesh = processor::load_from_file<N>(progress_list, file_name);
 
-                                storage->clear_all_data();
+                                storage->clear();
                                 load_event(dimension);
 
                                 processor::compute(
@@ -119,8 +119,8 @@ void load_from_file(
 
         if (!found)
         {
-                error("Dimension " + to_string(dimension) + " is not supported, supported dimensions [" +
-                      to_string(STORAGE_MIN_DIMENSIONS) + "," + to_string(STORAGE_MAX_DIMENSIONS));
+                error("Dimension " + to_string(dimension) + " is not supported, supported dimensions " +
+                      to_string(MultiStorage::dimensions()));
         }
 }
 
@@ -139,7 +139,7 @@ void load_from_repository(
         int mesh_threads,
         int point_count,
         const std::function<void()>& load_event,
-        ObjectMultiStorage* storage)
+        MultiStorage* storage)
 {
         bool found = std::apply(
                 [&](auto&... v) {
@@ -154,7 +154,7 @@ void load_from_repository(
                                 auto mesh = processor::load_from_repository(
                                         progress_list, *v.repository, object_name, point_count);
 
-                                storage->clear_all_data();
+                                storage->clear();
                                 load_event();
 
                                 processor::compute(
@@ -169,8 +169,8 @@ void load_from_repository(
 
         if (!found)
         {
-                error("Dimension " + to_string(dimension) + " is not supported, supported dimensions [" +
-                      to_string(STORAGE_MIN_DIMENSIONS) + "," + to_string(STORAGE_MAX_DIMENSIONS));
+                error("Dimension " + to_string(dimension) + " is not supported, supported dimensions " +
+                      to_string(MultiStorage::dimensions()));
         }
 }
 
@@ -184,12 +184,13 @@ std::vector<FileFormat> formats_for_save(unsigned dimension)
         return v;
 }
 
+template <typename MultiStorageType>
 std::vector<FileFormat> formats_for_load()
 {
         std::set<unsigned> dimensions;
-        for (int n = STORAGE_MIN_DIMENSIONS; n <= STORAGE_MAX_DIMENSIONS; ++n)
+        for (int d : MultiStorageType::dimensions())
         {
-                dimensions.insert(n);
+                dimensions.insert(d);
         }
 
         std::vector<FileFormat> v(1);
@@ -206,3 +207,5 @@ std::vector<FileFormat> formats_for_load()
 
         return v;
 }
+
+template std::vector<FileFormat> formats_for_load<MultiStorage>();

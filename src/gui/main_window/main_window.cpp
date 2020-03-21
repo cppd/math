@@ -39,6 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 #include <src/show/create.h>
+#include <src/storage/manage.h>
 #include <src/utility/file/sys.h>
 
 #include <QCloseEvent>
@@ -227,13 +228,12 @@ void MainWindow::constructor_objects_and_repository()
         m_objects_to_load.insert(ComputationType::Cocone);
         m_objects_to_load.insert(ComputationType::BoundCocone);
 
-        m_storage = std::make_unique<ObjectMultiStorage>(m_event_emitter);
+        m_storage = std::make_unique<MultiStorage>(m_event_emitter);
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
 
-        std::vector<ObjectMultiStorage::RepositoryObjects> repository_objects =
-                m_storage->repository_point_object_names();
+        std::vector<MultiStorage::RepositoryObjects> repository_objects = m_storage->repository_point_object_names();
 
         std::sort(repository_objects.begin(), repository_objects.end(), [](const auto& a, const auto& b) {
                 return a.dimension < b.dimension;
@@ -477,7 +477,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         bool read_only = true;
 
                         std::vector<std::string> filters;
-                        for (const FileFormat& v : formats_for_load())
+                        for (const FileFormat& v : formats_for_load<MultiStorage>())
                         {
                                 filters.push_back(file_filter(v.name, v.extensions));
                         }
@@ -596,7 +596,7 @@ void MainWindow::thread_export(ObjectId id)
                         return;
                 }
 
-                std::optional<ObjectMultiStorage::ObjectVariant> object = m_storage->object(id);
+                std::optional<MultiStorage::ObjectVariant> object = m_storage->object(id);
                 if (!object)
                 {
                         m_event_emitter.message_warning("No object to export");
@@ -1029,7 +1029,7 @@ void MainWindow::loaded_object(ObjectId id, size_t dimension)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        std::optional<ObjectMultiStorage::ObjectVariant> object = m_storage->object(id);
+        std::optional<MultiStorage::ObjectVariant> object = m_storage->object(id);
         if (!object)
         {
                 m_event_emitter.message_warning("No loaded object");
@@ -1047,7 +1047,7 @@ void MainWindow::loaded_mesh(ObjectId id, size_t /*dimension*/)
         //{
         //}
 
-        std::optional<ObjectMultiStorage::ObjectVariant> object = m_storage->object(id);
+        std::optional<MultiStorage::ObjectVariant> object = m_storage->object(id);
         if (!object)
         {
                 m_event_emitter.message_warning("No loaded object for mesh");
@@ -1627,14 +1627,14 @@ void MainWindow::on_actionPainter_triggered()
 
         ObjectId object_id = *item;
 
-        std::optional<ObjectMultiStorage::ObjectVariant> object = m_storage->object(object_id);
+        std::optional<MultiStorage::ObjectVariant> object = m_storage->object(object_id);
         if (!object)
         {
                 m_event_emitter.message_warning("No object to paint");
                 return;
         }
 
-        std::optional<ObjectMultiStorage::MeshVariant> mesh = m_storage->mesh(object_id);
+        std::optional<MultiStorage::MeshVariant> mesh = m_storage->mesh(object_id);
         if (!mesh)
         {
                 m_event_emitter.message_warning("No object to paint");

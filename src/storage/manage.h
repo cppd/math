@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "storage.h"
+#include "multi_storage.h"
 
 #include <src/progress/progress_list.h>
 
@@ -31,13 +31,9 @@ void compute_bound_cocone(
         double rho,
         double alpha,
         int mesh_threads,
-        ObjectMultiStorage* storage);
+        MultiStorage* storage);
 
-void save_to_file(
-        ObjectId id,
-        const std::string& file_name,
-        const std::string& name,
-        const ObjectMultiStorage& storage);
+void save_to_file(ObjectId id, const std::string& file_name, const std::string& name, const MultiStorage& storage);
 
 void load_from_file(
         bool build_convex_hull,
@@ -52,7 +48,7 @@ void load_from_file(
         double alpha,
         int mesh_threads,
         const std::function<void(size_t dimension)>& load_event,
-        ObjectMultiStorage* storage);
+        MultiStorage* storage);
 
 void load_from_repository(
         bool build_convex_hull,
@@ -69,7 +65,7 @@ void load_from_repository(
         int mesh_threads,
         int point_count,
         const std::function<void()>& load_event,
-        ObjectMultiStorage* storage);
+        MultiStorage* storage);
 
 struct FileFormat
 {
@@ -77,4 +73,5 @@ struct FileFormat
         std::vector<std::string> extensions;
 };
 std::vector<FileFormat> formats_for_save(unsigned dimension);
+template <typename MultiStorageType>
 std::vector<FileFormat> formats_for_load();

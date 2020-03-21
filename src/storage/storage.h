@@ -19,22 +19,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "events.h"
 #include "mesh_object.h"
-#include "options.h"
 #include "pointers.h"
 
-#include <src/com/sequence.h>
 #include <src/geometry/cocone/reconstruction.h>
 #include <src/geometry/objects/points.h>
 #include <src/painter/shapes/mesh.h>
 
 #include <memory>
-#include <string>
-#include <tuple>
-#include <variant>
 #include <vector>
 
 template <size_t N, typename MeshFloat>
-class ObjectStorage
+class Storage
 {
         static_assert(N >= 3);
 
@@ -46,7 +41,7 @@ class ObjectStorage
         Pointers<ObjectId, const ManifoldConstructor<N>> m_manifold_constructors;
 
 public:
-        explicit ObjectStorage(const StorageEvents& events) : m_events(events)
+        explicit Storage(const StorageEvents& events) : m_events(events)
         {
         }
 
@@ -108,144 +103,5 @@ public:
                 m_meshes.clear();
 
                 m_events.deleted_all(N);
-        }
-};
-
-//
-
-template <size_t DIMENSION>
-struct ObjectStorageWithRepository final
-{
-        static constexpr size_t N = DIMENSION;
-
-        const std::unique_ptr<const ObjectRepository<N>> repository;
-        ObjectStorage<N, StorageMeshFloatingPoint> storage;
-
-        explicit ObjectStorageWithRepository(const StorageEvents& storage_events)
-                : repository(create_object_repository<N>()), storage(storage_events)
-        {
-        }
-};
-
-class ObjectMultiStorage
-{
-        // std::tuple<T<MIN>, ..., T<MAX>>.
-        using Tuple =
-                SequenceType1<std::tuple, STORAGE_MIN_DIMENSIONS, STORAGE_MAX_DIMENSIONS, ObjectStorageWithRepository>;
-
-        Tuple m_data;
-
-        template <size_t... I>
-        ObjectMultiStorage(const StorageEvents& events, std::integer_sequence<size_t, I...>&&)
-                : m_data((static_cast<void>(I), events)...)
-        {
-        }
-
-public:
-        using Data = Tuple;
-
-        using MeshVariant = SequenceType2ConstType2<
-                std::variant,
-                STORAGE_MIN_DIMENSIONS,
-                STORAGE_MAX_DIMENSIONS,
-                std::shared_ptr,
-                SpatialMeshModel,
-                StorageMeshFloatingPoint>;
-
-        using ObjectVariant = SequenceType2ConstType2<
-                std::variant,
-                STORAGE_MIN_DIMENSIONS,
-                STORAGE_MAX_DIMENSIONS,
-                std::shared_ptr,
-                MeshObject>;
-
-        ObjectMultiStorage(const StorageEvents& events)
-                : ObjectMultiStorage(
-                          events,
-                          std::make_integer_sequence<size_t, STORAGE_MAX_DIMENSIONS - STORAGE_MIN_DIMENSIONS + 1>())
-        {
-        }
-
-        Data& data()
-        {
-                return m_data;
-        }
-
-        const Data& data() const
-        {
-                return m_data;
-        }
-
-        void clear_all_data()
-        {
-                std::apply([](auto&... v) { (v.storage.clear(), ...); }, m_data);
-        }
-
-        struct RepositoryObjects
-        {
-                int dimension;
-                std::vector<std::string> names;
-        };
-        std::vector<RepositoryObjects> repository_point_object_names() const
-        {
-                std::vector<RepositoryObjects> names;
-
-                std::apply(
-                        [&](const auto&... v) {
-                                (
-                                        [&]() {
-                                                names.resize(names.size() + 1);
-                                                names.back().dimension = v.N;
-                                                names.back().names = v.repository->point_object_names();
-                                        }(),
-                                        ...);
-                        },
-                        m_data);
-
-                return names;
-        }
-
-        std::optional<ObjectVariant> object(ObjectId id) const
-        {
-                std::optional<ObjectVariant> opt;
-
-                std::apply(
-                        [&](const auto&... v) {
-                                ([&]() {
-                                        auto ptr = v.storage.object(id);
-                                        if (ptr)
-                                        {
-                                                opt = std::move(ptr);
-                                                return true;
-                                        }
-                                        return false;
-                                }() ||
-                                 ...);
-                        },
-                        m_data);
-
-                return opt;
-        }
-
-        std::optional<MeshVariant> mesh(ObjectId id) const
-        {
-                std::optional<MeshVariant> opt;
-
-                std::apply(
-                        [&](const auto&... v) {
-                                ([&]() {
-                                        auto ptr = v.storage.mesh(id);
-                                        if (ptr)
-                                        {
-                                                opt = std::move(ptr);
-                                                return true;
-                                        }
-                                        return false;
-                                }() ||
-                                 ...);
-                        },
-                        m_data);
-
-                return opt;
         }
 };

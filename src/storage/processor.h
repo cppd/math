@@ -107,7 +107,7 @@ void add_object_and_mesh(
         ProgressRatioList* progress_list,
         const std::shared_ptr<const MeshObject<N>>& object,
         int mesh_threads,
-        ObjectStorage<N, MeshFloat>* storage)
+        Storage<N, MeshFloat>* storage)
 {
         storage->set_object(object);
         std::shared_ptr ptr = build_mesh<MeshFloat>(progress_list, *object, mesh_threads);
@@ -119,7 +119,7 @@ void convex_hull(
         ProgressRatioList* progress_list,
         const std::shared_ptr<const MeshObject<N>>& object,
         int mesh_threads,
-        ObjectStorage<N, MeshFloat>* storage)
+        Storage<N, MeshFloat>* storage)
 {
         std::unique_ptr<const mesh::Mesh<N>> ch_mesh;
         {
@@ -146,7 +146,7 @@ void cocone(
         const std::vector<Vector<N, float>>& points,
         const MeshObject<N>& object,
         int mesh_threads,
-        ObjectStorage<N, MeshFloat>* storage)
+        Storage<N, MeshFloat>* storage)
 {
         std::unique_ptr<const mesh::Mesh<N>> cocone_mesh;
         {
@@ -184,7 +184,7 @@ void bound_cocone(
         double rho,
         double alpha,
         int mesh_threads,
-        ObjectStorage<N, MeshFloat>* storage)
+        Storage<N, MeshFloat>* storage)
 {
         std::unique_ptr<const mesh::Mesh<N>> bound_cocone_mesh;
         {
@@ -221,7 +221,7 @@ void mst(
         const std::vector<Vector<N, float>>& points,
         const MeshObject<N>& object,
         int mesh_threads,
-        ObjectStorage<N, MeshFloat>* storage)
+        Storage<N, MeshFloat>* storage)
 {
         std::vector<std::array<int, 2>> mst_lines;
         {
@@ -251,7 +251,7 @@ void manifold_constructor(
         double rho,
         double alpha,
         int mesh_threads,
-        ObjectStorage<N, MeshFloat>* storage)
+        Storage<N, MeshFloat>* storage)
 {
         if (!build_cocone && !build_bound_cocone && !build_mst)
         {
@@ -328,7 +328,7 @@ namespace processor
 template <size_t N, typename MeshFloat>
 void compute_bound_cocone(
         ProgressRatioList* progress_list,
-        ObjectStorage<N, MeshFloat>* storage,
+        Storage<N, MeshFloat>* storage,
         ObjectId id,
         double rho,
         double alpha,
@@ -350,7 +350,7 @@ void compute_bound_cocone(
 template <size_t N, typename MeshFloat>
 void compute(
         ProgressRatioList* progress_list,
-        ObjectStorage<N, MeshFloat>* storage,
+        Storage<N, MeshFloat>* storage,
         bool build_convex_hull,
         bool build_cocone,
         bool build_bound_cocone,
@@ -436,11 +436,7 @@ std::unique_ptr<const mesh::Mesh<N>> load_from_repository(
 }
 
 template <size_t N, typename MeshFloat>
-void save(
-        const ObjectStorage<N, MeshFloat>& storage,
-        ObjectId id,
-        const std::string& file_name,
-        const std::string& name)
+void save(const Storage<N, MeshFloat>& storage, ObjectId id, const std::string& file_name, const std::string& name)
 {
         const std::shared_ptr<const MeshObject<N>> object = storage.object(id);
 

@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress_list.h>
 #include <src/show/interface.h>
-#include <src/storage/manage.h>
+#include <src/storage/multi_storage.h>
 #include <src/test/self_test.h>
 
 #include <QColor>
@@ -201,7 +201,7 @@ private:
         std::unique_ptr<ShowObject> m_show_object;
         Show* m_show = nullptr;
 
-        std::unique_ptr<ObjectMultiStorage> m_storage;
+        std::unique_ptr<MultiStorage> m_storage;
 
         QColor m_background_color;
         QColor m_default_color;
