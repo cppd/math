@@ -66,12 +66,3 @@ void load_from_repository(
         int point_count,
         const std::function<void()>& load_event,
         MultiStorage* storage);
-
-struct FileFormat
-{
-        std::string name;
-        std::vector<std::string> extensions;
-};
-std::vector<FileFormat> formats_for_save(unsigned dimension);
-template <typename MultiStorageType>
-std::vector<FileFormat> formats_for_load();

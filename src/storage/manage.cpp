@@ -173,39 +173,3 @@ void load_from_repository(
                       to_string(MultiStorage::dimensions()));
         }
 }
-
-std::vector<FileFormat> formats_for_save(unsigned dimension)
-{
-        std::vector<FileFormat> v(1);
-
-        v[0].name = "OBJ Files";
-        v[0].extensions = {mesh::obj_file_extension(dimension)};
-
-        return v;
-}
-
-template <typename MultiStorageType>
-std::vector<FileFormat> formats_for_load()
-{
-        std::set<unsigned> dimensions;
-        for (int d : MultiStorageType::dimensions())
-        {
-                dimensions.insert(d);
-        }
-
-        std::vector<FileFormat> v(1);
-
-        v[0].name = "All Supported Formats";
-        for (std::string& s : mesh::obj_file_supported_extensions(dimensions))
-        {
-                v[0].extensions.push_back(std::move(s));
-        }
-        for (std::string& s : mesh::txt_file_supported_extensions(dimensions))
-        {
-                v[0].extensions.push_back(std::move(s));
-        }
-
-        return v;
-}
-
-template std::vector<FileFormat> formats_for_load<MultiStorage>();

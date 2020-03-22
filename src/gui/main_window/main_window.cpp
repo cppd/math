@@ -38,6 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
+#include <src/model/mesh_utility.h>
 #include <src/show/create.h>
 #include <src/storage/manage.h>
 #include <src/utility/file/sys.h>
@@ -477,9 +478,9 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         bool read_only = true;
 
                         std::vector<std::string> filters;
-                        for (const FileFormat& v : formats_for_load<MultiStorage>())
+                        for (const mesh::FileFormat& v : mesh::formats_for_load(MultiStorage::dimensions()))
                         {
-                                filters.push_back(file_filter(v.name, v.extensions));
+                                filters.push_back(file_filter(v.format_name, v.file_name_extensions));
                         }
 
                         QPointer ptr(this);
@@ -603,19 +604,6 @@ void MainWindow::thread_export(ObjectId id)
                         return;
                 }
 
-                {
-                        QPointer ptr(this);
-                        if (!dialog::message_question_default_no(
-                                    this, "Only export of geometry is supported.\nDo you want to continue?"))
-                        {
-                                return;
-                        }
-                        if (ptr.isNull())
-                        {
-                                return;
-                        }
-                }
-
                 if (m_dimension < 3)
                 {
                         m_event_emitter.message_error("No dimension information");
@@ -627,13 +615,13 @@ void MainWindow::thread_export(ObjectId id)
                 std::string name;
                 std::visit([&](const auto& v) { name = v->name(); }, *object);
 
-                std::string caption = "Export " + name + " to OBJ";
+                std::string caption = "Export " + name + " to file";
                 bool read_only = true;
 
                 std::vector<std::string> filters;
-                for (const FileFormat& v : formats_for_save(m_dimension))
+                for (const mesh::FileFormat& v : mesh::formats_for_save(m_dimension))
                 {
-                        filters.push_back(file_filter(v.name, v.extensions));
+                        filters.push_back(file_filter(v.format_name, v.file_name_extensions));
                 }
 
                 QPointer ptr(this);

@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/sequence.h>
 
+#include <set>
 #include <string>
 #include <tuple>
 #include <variant>
@@ -70,12 +71,12 @@ public:
 
         using ObjectVariant = SequenceType2ConstType2<std::variant, MIN, MAX, std::shared_ptr, MeshObject>;
 
-        static std::array<int, COUNT> dimensions()
+        static std::set<unsigned> dimensions()
         {
-                std::array<int, COUNT> v;
-                for (int i = 0, d = MIN; d <= MAX; ++d, ++i)
+                std::set<unsigned> v;
+                for (int d = MIN; d <= MAX; ++d)
                 {
-                        v[i] = d;
+                        v.insert(d);
                 }
                 return v;
         }

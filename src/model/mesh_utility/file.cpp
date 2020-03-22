@@ -28,16 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace mesh
 {
-int file_dimension(const std::string& file_name)
+namespace
 {
-        return std::get<0>(file::file_dimension_and_type(file_name));
-}
-
-std::string obj_file_extension(size_t N)
-{
-        return (N == 3) ? "obj" : "obj" + to_string(N);
-}
-
 std::vector<std::string> obj_file_supported_extensions(const std::set<unsigned>& dimensions)
 {
         std::vector<std::string> result;
@@ -68,10 +60,48 @@ std::vector<std::string> txt_file_supported_extensions(const std::set<unsigned>&
         }
         return result;
 }
+}
+
+int file_dimension(const std::string& file_name)
+{
+        return std::get<0>(file::file_dimension_and_type(file_name));
+}
+
+std::string obj_file_extension(size_t N)
+{
+        return (N == 3) ? "obj" : "obj" + to_string(N);
+}
 
 bool is_obj_file_extension(size_t N, const std::string& extension)
 {
         return (extension == obj_file_extension(N)) || (extension == "obj" + to_string(N));
+}
+
+std::vector<FileFormat> formats_for_save(unsigned dimension)
+{
+        std::vector<FileFormat> v(1);
+
+        v[0].format_name = "OBJ Files";
+        v[0].file_name_extensions = {mesh::obj_file_extension(dimension)};
+
+        return v;
+}
+
+std::vector<FileFormat> formats_for_load(const std::set<unsigned>& dimensions)
+{
+        std::vector<FileFormat> v(1);
+
+        v[0].format_name = "All Supported Formats";
+        for (std::string& s : mesh::obj_file_supported_extensions(dimensions))
+        {
+                v[0].file_name_extensions.push_back(std::move(s));
+        }
+        for (std::string& s : mesh::txt_file_supported_extensions(dimensions))
+        {
+                v[0].file_name_extensions.push_back(std::move(s));
+        }
+
+        return v;
 }
 
 //

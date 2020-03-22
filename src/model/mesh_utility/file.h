@@ -34,8 +34,13 @@ int file_dimension(const std::string& file_name);
 std::string obj_file_extension(size_t N);
 bool is_obj_file_extension(size_t N, const std::string& e);
 
-std::vector<std::string> obj_file_supported_extensions(const std::set<unsigned>& dimensions);
-std::vector<std::string> txt_file_supported_extensions(const std::set<unsigned>& dimensions);
+struct FileFormat
+{
+        std::string format_name;
+        std::vector<std::string> file_name_extensions;
+};
+std::vector<FileFormat> formats_for_save(unsigned dimension);
+std::vector<FileFormat> formats_for_load(const std::set<unsigned>& dimensions);
 
 //
 
