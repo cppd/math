@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_model_tree.h"
 
-#include <src/storage/object_id.h>
+#include <src/model/object_id.h>
 
 #include <optional>
 #include <unordered_map>

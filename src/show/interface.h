@@ -18,10 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/color/color.h>
-#include <src/model/mesh.h>
+#include <src/model/mesh_object.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vec.h>
-#include <src/storage/mesh_object.h>
 #include <src/window/handle.h>
 
 #include <memory>

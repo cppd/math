@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "object_id.h"
+#include <src/model/object_id.h>
 
 class StorageEvents
 {

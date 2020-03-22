@@ -18,11 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "events.h"
-#include "mesh_object.h"
 #include "pointers.h"
 
 #include <src/geometry/cocone/reconstruction.h>
 #include <src/geometry/objects/points.h>
+#include <src/model/mesh_object.h>
 #include <src/painter/shapes/mesh.h>
 
 #include <memory>

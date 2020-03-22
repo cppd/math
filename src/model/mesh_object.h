@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "mesh.h"
 #include "object_id.h"
 
 #include <src/com/error.h>
-#include <src/model/mesh.h>
 #include <src/numerical/matrix.h>
 
 #include <memory>

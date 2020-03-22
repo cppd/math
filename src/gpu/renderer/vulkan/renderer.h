@@ -21,9 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../camera_info.h"
 
 #include <src/color/color.h>
+#include <src/model/mesh_object.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vec.h>
-#include <src/storage/mesh_object.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/instance.h>
 #include <src/vulkan/swapchain.h>
