@@ -130,13 +130,13 @@ std::string buffer_info(
         return oss.str();
 }
 
-unsigned compute_buffer_count(show_vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain)
+unsigned compute_buffer_count(view_vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain)
 {
         switch (buffer_count)
         {
-        case show_vulkan::RenderBufferCount::One:
+        case view_vulkan::RenderBufferCount::One:
                 return 1;
-        case show_vulkan::RenderBufferCount::Swapchain:
+        case view_vulkan::RenderBufferCount::Swapchain:
                 ASSERT(!swapchain.image_views().empty());
                 return swapchain.image_views().size();
         }
@@ -218,7 +218,7 @@ protected:
         ~Impl2D() override = default;
 };
 
-class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl2D
+class Impl final : public view_vulkan::RenderBuffers, public Impl3D, public Impl2D
 {
         const vulkan::Device& m_device;
         VkFormat m_swapchain_format;
@@ -291,7 +291,7 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
         const std::vector<VkFramebuffer>& framebuffers_2d() const override;
 
 public:
-        Impl(show_vulkan::RenderBufferCount buffer_count,
+        Impl(view_vulkan::RenderBufferCount buffer_count,
              const vulkan::Swapchain& swapchain,
              const vulkan::CommandPool& command_pool,
              const vulkan::Device& device,
@@ -303,7 +303,7 @@ public:
 };
 
 Impl::Impl(
-        show_vulkan::RenderBufferCount buffer_count,
+        view_vulkan::RenderBufferCount buffer_count,
         const vulkan::Swapchain& swapchain,
         const vulkan::CommandPool& command_pool,
         const vulkan::Device& device,
@@ -392,7 +392,7 @@ void Impl::create_color_buffer_rendering(
         //
 
         m_3d_render_pass =
-                show_vulkan::render_pass_color_depth(m_device, swapchain.format(), depth_format, sample_count);
+                view_vulkan::render_pass_color_depth(m_device, swapchain.format(), depth_format, sample_count);
 
         attachments.resize(2);
         for (unsigned i = 0; i < buffer_count; ++i)
@@ -407,7 +407,7 @@ void Impl::create_color_buffer_rendering(
 
         //
 
-        m_2d_render_pass = show_vulkan::render_pass_color(m_device, swapchain.format(), sample_count);
+        m_2d_render_pass = view_vulkan::render_pass_color(m_device, swapchain.format(), sample_count);
 
         attachments.resize(1);
         for (unsigned i = 0; i < buffer_count; ++i)
@@ -421,7 +421,7 @@ void Impl::create_color_buffer_rendering(
 
         //
 
-        m_resolve_render_pass = show_vulkan::render_pass_swapchain_color(m_device, swapchain.format(), sample_count);
+        m_resolve_render_pass = view_vulkan::render_pass_swapchain_color(m_device, swapchain.format(), sample_count);
 
         attachments.resize(2);
         for (unsigned i = 0; i < swapchain.image_views().size(); ++i)
@@ -622,7 +622,7 @@ VkSemaphore Impl::resolve_to_swapchain(
 }
 }
 
-namespace show_vulkan
+namespace view_vulkan
 {
 std::unique_ptr<RenderBuffers> create_render_buffers(
         RenderBufferCount buffer_count,

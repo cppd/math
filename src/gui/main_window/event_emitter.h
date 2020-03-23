@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/variant.h>
-#include <src/show/interface.h>
 #include <src/storage/events.h>
+#include <src/view/interface.h>
 
 #include <QObject>
 #include <variant>
@@ -37,7 +37,7 @@ public:
         virtual void message_error_source(const std::string& msg, const std::string& src) = 0;
         virtual void message_information(const std::string& msg) = 0;
         virtual void message_warning(const std::string& msg) = 0;
-        virtual void show_object_loaded(ObjectId id) = 0;
+        virtual void view_object_loaded(ObjectId id) = 0;
 
         virtual void loaded_object(ObjectId id, size_t dimension) = 0;
         virtual void loaded_mesh(ObjectId id, size_t dimension) = 0;
@@ -48,7 +48,7 @@ public:
         virtual void log(const std::string& msg) = 0;
 };
 
-class WindowEventEmitter final : public QObject, public LogEvents, public StorageEvents, public ShowEvents
+class WindowEventEmitter final : public QObject, public LogEvents, public StorageEvents, public ViewEvents
 {
         Q_OBJECT
 
@@ -91,10 +91,10 @@ private:
                         {
                         }
                 };
-                struct show_object_loaded final
+                struct view_object_loaded final
                 {
                         const ObjectId id;
-                        explicit show_object_loaded(ObjectId id_) : id(id_)
+                        explicit view_object_loaded(ObjectId id_) : id(id_)
                         {
                         }
                 };
@@ -148,7 +148,7 @@ private:
 
                 std::variant<
                         std::monostate,
-                        show_object_loaded,
+                        view_object_loaded,
                         loaded_object,
                         loaded_mesh,
                         deleted_object,
@@ -230,9 +230,9 @@ private:
                 {
                         m_f->message_warning(d.msg);
                 }
-                void operator()(const WindowEvent::show_object_loaded& d)
+                void operator()(const WindowEvent::view_object_loaded& d)
                 {
-                        m_f->show_object_loaded(d.id);
+                        m_f->view_object_loaded(d.id);
                 }
                 void operator()(const WindowEvent::loaded_object& d)
                 {
@@ -302,9 +302,9 @@ public:
                 emit_message<WindowEvent::message_warning>("Exception in emit message warning", msg);
         }
 
-        void show_object_loaded(ObjectId id) const override
+        void view_object_loaded(ObjectId id) const override
         {
-                emit_message<WindowEvent::show_object_loaded>("Exception in emit show object loaded", id);
+                emit_message<WindowEvent::view_object_loaded>("Exception in emit view object loaded", id);
         }
 
         void loaded_object(ObjectId id, size_t dimension) const override

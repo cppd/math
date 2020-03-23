@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "show.h"
+#include "view.h"
 
 #include "render_buffer.h"
 #include "resolve.h"
@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/event_window.h"
 #include "../com/frame_rate.h"
 #include "../com/rectangle.h"
-#include "../com/show_thread.h"
+#include "../com/view_thread.h"
 
 #include <src/com/conversion.h>
 #include <src/com/error.h>
@@ -77,7 +77,7 @@ constexpr double FRAME_SIZE_IN_MILLIMETERS = 0.5;
 
 //
 
-namespace show_vulkan
+namespace view_vulkan
 {
 namespace
 {
@@ -101,10 +101,10 @@ std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(b
         return {};
 }
 
-class Impl final : public Show
+class Impl final : public View
 {
         EventQueue* m_event_queue;
-        ShowEvents* const m_show_events;
+        ViewEvents* const m_view_events;
         const double m_window_ppi;
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -159,7 +159,7 @@ class Impl final : public Show
                 int delta_x;
                 int delta_y;
         };
-        std::unordered_map<ShowMouseButton, PressedMouseButton> m_mouse;
+        std::unordered_map<ViewMouseButton, PressedMouseButton> m_mouse;
         int m_mouse_x = std::numeric_limits<int>::lowest();
         int m_mouse_y = std::numeric_limits<int>::lowest();
 
@@ -172,7 +172,7 @@ class Impl final : public Show
                         error("Null object received");
                 }
                 m_renderer->object_add(*object);
-                m_show_events->show_object_loaded(object->id());
+                m_view_events->view_object_loaded(object->id());
         }
 
         void delete_object(ObjectId id) override
@@ -454,11 +454,11 @@ class Impl final : public Show
                 m_renderer->set_shadow_zoom(v);
         }
 
-        ShowCameraInfo camera_information() const override
+        ViewCameraInfo camera_information() const override
         {
                 ASSERT(std::this_thread::get_id() != m_thread_id);
 
-                return m_camera.show_info();
+                return m_camera.view_info();
         }
 
         double object_size() const override
@@ -477,7 +477,7 @@ class Impl final : public Show
 
         //
 
-        const PressedMouseButton& pressed_mouse_button(ShowMouseButton button) const
+        const PressedMouseButton& pressed_mouse_button(ViewMouseButton button) const
         {
                 auto iter = m_mouse.find(button);
                 if (iter != m_mouse.cend())
@@ -489,7 +489,7 @@ class Impl final : public Show
                 return m;
         }
 
-        void mouse_press(int x, int y, ShowMouseButton button) override
+        void mouse_press(int x, int y, ViewMouseButton button) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -504,7 +504,7 @@ class Impl final : public Show
                 m.delta_y = 0;
         }
 
-        void mouse_release(int x, int y, ShowMouseButton button) override
+        void mouse_release(int x, int y, ViewMouseButton button) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -533,7 +533,7 @@ class Impl final : public Show
 
                 bool changed = false;
 
-                const PressedMouseButton& right = pressed_mouse_button(ShowMouseButton::Right);
+                const PressedMouseButton& right = pressed_mouse_button(ViewMouseButton::Right);
                 if (right.pressed &&
                     pointIsInsideRectangle(
                             right.pressed_x, right.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
@@ -543,7 +543,7 @@ class Impl final : public Show
                         changed = true;
                 }
 
-                const PressedMouseButton& left = pressed_mouse_button(ShowMouseButton::Left);
+                const PressedMouseButton& left = pressed_mouse_button(ViewMouseButton::Left);
                 if (left.pressed &&
                     pointIsInsideRectangle(
                             left.pressed_x, left.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
@@ -799,8 +799,8 @@ class Impl final : public Show
         }
 
 public:
-        Impl(EventQueue* event_queue, ShowEvents* show_events, const WindowID& window, double window_ppi)
-                : m_event_queue(event_queue), m_show_events(show_events), m_window_ppi(window_ppi)
+        Impl(EventQueue* event_queue, ViewEvents* show_events, const WindowID& window, double window_ppi)
+                : m_event_queue(event_queue), m_view_events(show_events), m_window_ppi(window_ppi)
         {
                 // Этот цвет меняется в set_background_color
                 constexpr Srgb8 text_color(255, 255, 255);
@@ -923,8 +923,8 @@ public:
 };
 }
 
-std::unique_ptr<ShowObject> create_show_object(const ShowCreateInfo& info)
+std::unique_ptr<ViewObject> create_view_object(const ViewCreateInfo& info)
 {
-        return std::make_unique<ShowThread<Impl>>(info);
+        return std::make_unique<ViewThread<Impl>>(info);
 }
 }

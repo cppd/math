@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/vulkan/error.h>
 
-namespace show_vulkan
+namespace view_vulkan
 {
 vulkan::CommandBuffers create_command_buffers_resolve(
         VkDevice device,

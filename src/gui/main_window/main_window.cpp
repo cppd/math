@@ -39,9 +39,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 #include <src/model/mesh_utility.h>
-#include <src/show/create.h>
 #include <src/storage/manage.h>
 #include <src/utility/file/sys.h>
+#include <src/view/create.h>
 
 #include <QCloseEvent>
 #include <QDesktopWidget>
@@ -319,8 +319,8 @@ void MainWindow::terminate_all_threads()
 
         m_worker_threads->terminate_all();
 
-        m_show = nullptr;
-        m_show_object.reset();
+        m_view = nullptr;
+        m_view_object.reset();
 
         set_log_events(nullptr);
 }
@@ -513,7 +513,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         *message = "Load " + file_name;
                         load_from_file(
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
-                                file_name, m_show->object_size(), m_show->object_position(), rho, alpha, m_mesh_threads,
+                                file_name, m_view->object_size(), m_view->object_position(), rho, alpha, m_mesh_threads,
                                 [&](size_t dimension) { m_event_emitter.file_loaded(file_name, dimension); },
                                 m_storage.get());
                 };
@@ -574,7 +574,7 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
                         *message = "Load " + space_name(dimension) + " " + object_name;
                         load_from_repository(
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
-                                dimension, object_name, m_show->object_size(), m_show->object_position(), rho, alpha,
+                                dimension, object_name, m_view->object_size(), m_view->object_position(), rho, alpha,
                                 m_mesh_threads, point_count,
                                 [&]() { m_event_emitter.file_loaded(object_name, dimension); }, m_storage.get());
                 };
@@ -820,9 +820,9 @@ void MainWindow::slot_timer_progress_bar()
 void MainWindow::set_background_color(const QColor& c)
 {
         m_background_color = c;
-        if (m_show)
+        if (m_view)
         {
-                m_show->set_background_color(qcolor_to_rgb(c));
+                m_view->set_background_color(qcolor_to_rgb(c));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_background_color);
@@ -832,9 +832,9 @@ void MainWindow::set_background_color(const QColor& c)
 void MainWindow::set_default_color(const QColor& c)
 {
         m_default_color = c;
-        if (m_show)
+        if (m_view)
         {
-                m_show->set_default_color(qcolor_to_rgb(c));
+                m_view->set_default_color(qcolor_to_rgb(c));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_default_color);
@@ -844,9 +844,9 @@ void MainWindow::set_default_color(const QColor& c)
 void MainWindow::set_wireframe_color(const QColor& c)
 {
         m_wireframe_color = c;
-        if (m_show)
+        if (m_view)
         {
-                m_show->set_wireframe_color(qcolor_to_rgb(c));
+                m_view->set_wireframe_color(qcolor_to_rgb(c));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_wireframe_color);
@@ -856,9 +856,9 @@ void MainWindow::set_wireframe_color(const QColor& c)
 void MainWindow::set_clip_plane_color(const QColor& c)
 {
         m_clip_plane_color = c;
-        if (m_show)
+        if (m_view)
         {
-                m_show->set_clip_plane_color(qcolor_to_rgb(c));
+                m_view->set_clip_plane_color(qcolor_to_rgb(c));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_clip_plane_color);
@@ -868,9 +868,9 @@ void MainWindow::set_clip_plane_color(const QColor& c)
 void MainWindow::set_normal_color_positive(const QColor& c)
 {
         m_normal_color_positive = c;
-        if (m_show)
+        if (m_view)
         {
-                m_show->set_normal_color_positive(qcolor_to_rgb(c));
+                m_view->set_normal_color_positive(qcolor_to_rgb(c));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_normal_color_positive);
@@ -880,9 +880,9 @@ void MainWindow::set_normal_color_positive(const QColor& c)
 void MainWindow::set_normal_color_negative(const QColor& c)
 {
         m_normal_color_negative = c;
-        if (m_show)
+        if (m_view)
         {
-                m_show->set_normal_color_negative(qcolor_to_rgb(c));
+                m_view->set_normal_color_negative(qcolor_to_rgb(c));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_normal_color_negative);
@@ -892,9 +892,9 @@ void MainWindow::set_normal_color_negative(const QColor& c)
 void MainWindow::set_dft_background_color(const QColor& c)
 {
         m_dft_background_color = c;
-        if (m_show)
+        if (m_view)
         {
-                m_show->set_dft_background_color(qcolor_to_rgb(c));
+                m_view->set_dft_background_color(qcolor_to_rgb(c));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_dft_background_color);
@@ -904,9 +904,9 @@ void MainWindow::set_dft_background_color(const QColor& c)
 void MainWindow::set_dft_color(const QColor& c)
 {
         m_dft_color = c;
-        if (m_show)
+        if (m_view)
         {
-                m_show->set_dft_color(qcolor_to_rgb(c));
+                m_view->set_dft_color(qcolor_to_rgb(c));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_dft_color);
@@ -993,7 +993,7 @@ void MainWindow::message_warning(const std::string& msg)
         dialog::message_warning(this, msg);
 }
 
-void MainWindow::show_object_loaded(ObjectId /*id*/)
+void MainWindow::view_object_loaded(ObjectId /*id*/)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -1005,9 +1005,9 @@ void MainWindow::loaded_object(const std::shared_ptr<const MeshObject<N>>& objec
 {
         if constexpr (N == 3)
         {
-                if (m_show && dimension == 3)
+                if (m_view && dimension == 3)
                 {
-                        m_show->add_object(object);
+                        m_view->add_object(object);
                 }
         }
         ui.model_tree->add_item(object->id(), object->name());
@@ -1050,18 +1050,18 @@ void MainWindow::loaded_mesh(ObjectId id, size_t /*dimension*/)
 
 void MainWindow::deleted_object(ObjectId id, size_t dimension)
 {
-        if (m_show && dimension == 3)
+        if (m_view && dimension == 3)
         {
-                m_show->delete_object(id);
+                m_view->delete_object(id);
         }
         ui.model_tree->delete_item(id);
 }
 
 void MainWindow::deleted_all(size_t dimension)
 {
-        if (m_show && dimension == 3)
+        if (m_view && dimension == 3)
         {
-                m_show->delete_all_objects();
+                m_view->delete_all_objects();
         }
         ui.model_tree->delete_all();
 }
@@ -1122,7 +1122,7 @@ void MainWindow::slot_window_first_shown()
 
                 //
 
-                ShowCreateInfo info;
+                ViewCreateInfo info;
                 info.events = &m_event_emitter;
                 info.window = widget_window_id(ui.graphics_widget);
                 info.window_ppi = widget_pixels_per_inch(ui.graphics_widget);
@@ -1154,8 +1154,8 @@ void MainWindow::slot_window_first_shown()
                 info.vertical_sync = ui.checkBox_vertical_sync->isChecked();
                 info.shadow_zoom = shadow_zoom();
 
-                m_show_object = create_show_object(info);
-                m_show = &m_show_object->show();
+                m_view_object = create_view_object(info);
+                m_view = &m_view_object->view();
 
                 //
 
@@ -1235,37 +1235,37 @@ void MainWindow::on_actionAbout_triggered()
 
 void MainWindow::on_pushButton_reset_view_clicked()
 {
-        m_show->reset_view();
+        m_view->reset_view();
 }
 
 void MainWindow::graphics_widget_mouse_wheel(QWheelEvent* e)
 {
-        if (m_show)
+        if (m_view)
         {
-                m_show->mouse_wheel(e->x(), e->y(), e->angleDelta().ry() / 120.0);
+                m_view->mouse_wheel(e->x(), e->y(), e->angleDelta().ry() / 120.0);
         }
 }
 
 void MainWindow::graphics_widget_mouse_move(QMouseEvent* e)
 {
-        if (m_show)
+        if (m_view)
         {
-                m_show->mouse_move(e->x(), e->y());
+                m_view->mouse_move(e->x(), e->y());
         }
 }
 
 void MainWindow::graphics_widget_mouse_press(QMouseEvent* e)
 {
-        if (m_show)
+        if (m_view)
         {
                 if (e->button() == Qt::MouseButton::LeftButton)
                 {
-                        m_show->mouse_press(e->x(), e->y(), ShowMouseButton::Left);
+                        m_view->mouse_press(e->x(), e->y(), ViewMouseButton::Left);
                         return;
                 }
                 if (e->button() == Qt::MouseButton::RightButton)
                 {
-                        m_show->mouse_press(e->x(), e->y(), ShowMouseButton::Right);
+                        m_view->mouse_press(e->x(), e->y(), ViewMouseButton::Right);
                         return;
                 }
         }
@@ -1273,16 +1273,16 @@ void MainWindow::graphics_widget_mouse_press(QMouseEvent* e)
 
 void MainWindow::graphics_widget_mouse_release(QMouseEvent* e)
 {
-        if (m_show)
+        if (m_view)
         {
                 if (e->button() == Qt::MouseButton::LeftButton)
                 {
-                        m_show->mouse_release(e->x(), e->y(), ShowMouseButton::Left);
+                        m_view->mouse_release(e->x(), e->y(), ViewMouseButton::Left);
                         return;
                 }
                 if (e->button() == Qt::MouseButton::RightButton)
                 {
-                        m_show->mouse_release(e->x(), e->y(), ShowMouseButton::Right);
+                        m_view->mouse_release(e->x(), e->y(), ViewMouseButton::Right);
                         return;
                 }
         }
@@ -1290,9 +1290,9 @@ void MainWindow::graphics_widget_mouse_release(QMouseEvent* e)
 
 void MainWindow::graphics_widget_resize(QResizeEvent* e)
 {
-        if (m_show)
+        if (m_view)
         {
-                m_show->window_resize(e->size().width(), e->size().height());
+                m_view->window_resize(e->size().width(), e->size().height());
         }
 }
 
@@ -1301,7 +1301,7 @@ void MainWindow::model_tree_item_changed()
         std::optional<ObjectId> id = ui.model_tree->current_item();
         if (id && m_dimension == 3)
         {
-                m_show->show_object(*id);
+                m_view->show_object(*id);
         }
 }
 
@@ -1370,45 +1370,45 @@ double MainWindow::normal_length() const
 
 void MainWindow::on_slider_ambient_valueChanged(int)
 {
-        m_show->set_ambient(ambient_light());
+        m_view->set_ambient(ambient_light());
 }
 
 void MainWindow::on_slider_diffuse_valueChanged(int)
 {
-        m_show->set_diffuse(diffuse_light());
+        m_view->set_diffuse(diffuse_light());
 }
 
 void MainWindow::on_slider_specular_valueChanged(int)
 {
-        m_show->set_specular(specular_light());
+        m_view->set_specular(specular_light());
 }
 
 void MainWindow::on_slider_dft_brightness_valueChanged(int)
 {
-        m_show->set_dft_brightness(dft_brightness());
+        m_view->set_dft_brightness(dft_brightness());
 }
 
 void MainWindow::on_slider_default_ns_valueChanged(int)
 {
-        m_show->set_default_ns(default_ns());
+        m_view->set_default_ns(default_ns());
 }
 
 void MainWindow::on_slider_shadow_quality_valueChanged(int)
 {
-        if (m_show)
+        if (m_view)
         {
-                m_show->set_shadow_zoom(shadow_zoom());
+                m_view->set_shadow_zoom(shadow_zoom());
         }
 }
 
 void MainWindow::on_slider_clip_plane_valueChanged(int)
 {
-        m_show->clip_plane_position(slider_position(ui.slider_clip_plane));
+        m_view->clip_plane_position(slider_position(ui.slider_clip_plane));
 }
 
 void MainWindow::on_slider_normals_valueChanged(int)
 {
-        m_show->set_normal_length(normal_length());
+        m_view->set_normal_length(normal_length());
 }
 
 void MainWindow::on_toolButton_background_color_clicked()
@@ -1467,37 +1467,37 @@ void MainWindow::on_checkBox_shadow_clicked()
         ui.label_shadow_quality->setEnabled(checked);
         ui.slider_shadow_quality->setEnabled(checked);
 
-        m_show->show_shadow(checked);
+        m_view->show_shadow(checked);
 }
 
 void MainWindow::on_checkBox_fog_clicked()
 {
-        m_show->show_fog(ui.checkBox_fog->isChecked());
+        m_view->show_fog(ui.checkBox_fog->isChecked());
 }
 
 void MainWindow::on_checkBox_wireframe_clicked()
 {
-        m_show->show_wireframe(ui.checkBox_wireframe->isChecked());
+        m_view->show_wireframe(ui.checkBox_wireframe->isChecked());
 }
 
 void MainWindow::on_checkBox_materials_clicked()
 {
-        m_show->show_materials(ui.checkBox_materials->isChecked());
+        m_view->show_materials(ui.checkBox_materials->isChecked());
 }
 
 void MainWindow::on_checkBox_smooth_clicked()
 {
-        m_show->show_smooth(ui.checkBox_smooth->isChecked());
+        m_view->show_smooth(ui.checkBox_smooth->isChecked());
 }
 
 void MainWindow::on_checkBox_fps_clicked()
 {
-        m_show->show_fps(ui.checkBox_fps->isChecked());
+        m_view->show_fps(ui.checkBox_fps->isChecked());
 }
 
 void MainWindow::on_checkBox_pencil_sketch_clicked()
 {
-        m_show->show_pencil_sketch(ui.checkBox_pencil_sketch->isChecked());
+        m_view->show_pencil_sketch(ui.checkBox_pencil_sketch->isChecked());
 }
 
 void MainWindow::on_checkBox_dft_clicked()
@@ -1507,7 +1507,7 @@ void MainWindow::on_checkBox_dft_clicked()
         ui.label_dft_brightness->setEnabled(checked);
         ui.slider_dft_brightness->setEnabled(checked);
 
-        m_show->show_dft(checked);
+        m_view->show_dft(checked);
 }
 
 void MainWindow::on_checkBox_clip_plane_clicked()
@@ -1523,11 +1523,11 @@ void MainWindow::on_checkBox_clip_plane_clicked()
         }
         if (checked)
         {
-                m_show->clip_plane_show(slider_position(ui.slider_clip_plane));
+                m_view->clip_plane_show(slider_position(ui.slider_clip_plane));
         }
         else
         {
-                m_show->clip_plane_hide();
+                m_view->clip_plane_hide();
         }
 }
 
@@ -1535,22 +1535,22 @@ void MainWindow::on_checkBox_normals_clicked()
 {
         bool checked = ui.checkBox_normals->isChecked();
         ui.slider_normals->setEnabled(checked);
-        m_show->show_normals(checked);
+        m_view->show_normals(checked);
 }
 
 void MainWindow::on_checkBox_convex_hull_2d_clicked()
 {
-        m_show->show_convex_hull_2d(ui.checkBox_convex_hull_2d->isChecked());
+        m_view->show_convex_hull_2d(ui.checkBox_convex_hull_2d->isChecked());
 }
 
 void MainWindow::on_checkBox_optical_flow_clicked()
 {
-        m_show->show_optical_flow(ui.checkBox_optical_flow->isChecked());
+        m_view->show_optical_flow(ui.checkBox_optical_flow->isChecked());
 }
 
 void MainWindow::on_checkBox_vertical_sync_clicked()
 {
-        m_show->set_vertical_sync(ui.checkBox_vertical_sync->isChecked());
+        m_view->set_vertical_sync(ui.checkBox_vertical_sync->isChecked());
 }
 
 void MainWindow::on_actionFullScreen_triggered()
@@ -1575,7 +1575,7 @@ void MainWindow::paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh
 
         if constexpr (N == 3)
         {
-                ShowCameraInfo c = m_show->camera_information();
+                ViewCameraInfo c = m_view->camera_information();
 
                 PaintingInformation3d<T> info;
 
@@ -1586,8 +1586,8 @@ void MainWindow::paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh
                 info.view_width = c.view_width;
                 info.paint_width = c.width;
                 info.paint_height = c.height;
-                info.object_position = to_vector<T>(m_show->object_position());
-                info.object_size = m_show->object_size();
+                info.object_position = to_vector<T>(m_view->object_position());
+                info.object_size = m_view->object_size();
                 info.max_screen_size = PAINTER_3D_MAX_SCREEN_SIZE;
 
                 painting(mesh, info, info_all);

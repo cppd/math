@@ -15,11 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "create.h"
+#pragma once
 
-#include "vulkan/show.h"
+#include "interface.h"
 
-std::unique_ptr<ShowObject> create_show_object(const ShowCreateInfo& info)
-{
-        return show_vulkan::create_show_object(info);
-}
+std::unique_ptr<ViewObject> create_view_object(const ViewCreateInfo& info);

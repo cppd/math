@@ -57,6 +57,6 @@ public:
         void move(const vec2& delta);
         void resize(int width, int height);
 
-        ShowCameraInfo show_info() const;
+        ViewCameraInfo view_info() const;
         RendererCameraInfo renderer_info() const;
 };

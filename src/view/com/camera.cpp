@@ -160,11 +160,11 @@ void Camera::resize(int width, int height)
         m_height = height;
 }
 
-ShowCameraInfo Camera::show_info() const
+ViewCameraInfo Camera::view_info() const
 {
         std::lock_guard lg(m_lock);
 
-        ShowCameraInfo v;
+        ViewCameraInfo v;
 
         v.camera_up = m_camera_up;
         v.camera_direction = m_camera_direction;

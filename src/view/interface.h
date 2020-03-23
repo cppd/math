@@ -27,18 +27,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <string>
 
-class ShowEvents
+class ViewEvents
 {
 protected:
-        virtual ~ShowEvents() = default;
+        virtual ~ViewEvents() = default;
 
 public:
         virtual void message_error_fatal(const std::string&) const = 0;
         virtual void message_error_source(const std::string&, const std::string&) const = 0;
-        virtual void show_object_loaded(ObjectId) const = 0;
+        virtual void view_object_loaded(ObjectId) const = 0;
 };
 
-struct ShowCameraInfo final
+struct ViewCameraInfo final
 {
         vec3 camera_up;
         vec3 camera_direction;
@@ -49,16 +49,16 @@ struct ShowCameraInfo final
         int height;
 };
 
-enum class ShowMouseButton
+enum class ViewMouseButton
 {
         Left,
         Right
 };
 
-class Show
+class View
 {
 protected:
-        virtual ~Show() = default;
+        virtual ~View() = default;
 
 public:
         virtual void add_object(const std::shared_ptr<const MeshObject<3>>&) = 0;
@@ -97,21 +97,21 @@ public:
         virtual void clip_plane_hide() = 0;
         virtual void show_normals(bool) = 0;
 
-        virtual void mouse_press(int x, int y, ShowMouseButton button) = 0;
-        virtual void mouse_release(int x, int y, ShowMouseButton button) = 0;
+        virtual void mouse_press(int x, int y, ViewMouseButton button) = 0;
+        virtual void mouse_release(int x, int y, ViewMouseButton button) = 0;
         virtual void mouse_move(int x, int y) = 0;
         virtual void mouse_wheel(int x, int y, double delta) = 0;
         virtual void window_resize(int x, int y) = 0;
 
-        virtual ShowCameraInfo camera_information() const = 0;
+        virtual ViewCameraInfo camera_information() const = 0;
         virtual double object_size() const = 0;
         virtual vec3 object_position() const = 0;
 };
 
-struct ShowCreateInfo
+struct ViewCreateInfo
 {
         // std::optional используется для проверки того, что все значения заданы
-        std::optional<ShowEvents*> events;
+        std::optional<ViewEvents*> events;
         std::optional<WindowID> window;
         std::optional<double> window_ppi;
         std::optional<Color> background_color;
@@ -143,8 +143,8 @@ struct ShowCreateInfo
         std::optional<double> shadow_zoom;
 };
 
-struct ShowObject
+struct ViewObject
 {
-        virtual ~ShowObject() = default;
-        virtual Show& show() = 0;
+        virtual ~ViewObject() = default;
+        virtual View& view() = 0;
 };

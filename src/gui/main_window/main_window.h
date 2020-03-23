@@ -23,9 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_main_window.h"
 
 #include <src/progress/progress_list.h>
-#include <src/show/interface.h>
 #include <src/storage/multi_storage.h>
 #include <src/test/self_test.h>
+#include <src/view/interface.h>
 
 #include <QColor>
 #include <QTimer>
@@ -180,7 +180,7 @@ private:
         void message_error_source(const std::string& msg, const std::string& src) override;
         void message_information(const std::string& msg) override;
         void message_warning(const std::string& msg) override;
-        void show_object_loaded(ObjectId id) override;
+        void view_object_loaded(ObjectId id) override;
         void loaded_object(ObjectId id, size_t dimension) override;
         void loaded_mesh(ObjectId id, size_t dimension) override;
         void deleted_object(ObjectId id, size_t dimension) override;
@@ -198,8 +198,8 @@ private:
 
         std::unordered_map<QObject*, std::tuple<int, std::string>> m_action_to_dimension_and_object_name;
 
-        std::unique_ptr<ShowObject> m_show_object;
-        Show* m_show = nullptr;
+        std::unique_ptr<ViewObject> m_view_object;
+        View* m_view = nullptr;
 
         std::unique_ptr<MultiStorage> m_storage;
 

@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 
 template <typename T>
-class ShowThread final : public ShowObject
+class ViewThread final : public ViewObject
 {
         std::thread::id m_thread_id = std::this_thread::get_id();
         EventQueue m_event_queue;
@@ -35,28 +35,28 @@ class ShowThread final : public ShowObject
         std::atomic_bool m_stop{false};
         std::atomic_bool m_started{false};
 
-        class EventQueueSetShow final
+        class EventQueueSetView final
         {
                 EventQueue* m_event_queue;
 
         public:
-                EventQueueSetShow(EventQueue* event_queue, Show* show) : m_event_queue(event_queue)
+                EventQueueSetView(EventQueue* event_queue, View* view) : m_event_queue(event_queue)
                 {
-                        m_event_queue->set_show(show);
+                        m_event_queue->set_view(view);
                 }
-                ~EventQueueSetShow()
+                ~EventQueueSetView()
                 {
-                        m_event_queue->set_show(nullptr);
+                        m_event_queue->set_view(nullptr);
                 }
-                EventQueueSetShow(const EventQueueSetShow&) = delete;
-                EventQueueSetShow(EventQueueSetShow&&) = delete;
-                EventQueueSetShow& operator=(const EventQueueSetShow&) = delete;
-                EventQueueSetShow& operator=(EventQueueSetShow&&) = delete;
+                EventQueueSetView(const EventQueueSetView&) = delete;
+                EventQueueSetView(EventQueueSetView&&) = delete;
+                EventQueueSetView& operator=(const EventQueueSetView&) = delete;
+                EventQueueSetView& operator=(EventQueueSetView&&) = delete;
         };
 
-        static void add_to_event_queue(EventQueue* queue, const ShowCreateInfo& info)
+        static void add_to_event_queue(EventQueue* queue, const ViewCreateInfo& info)
         {
-                Show& q = *queue;
+                View& q = *queue;
 
                 q.set_ambient(info.ambient.value());
                 q.set_diffuse(info.diffuse.value());
@@ -87,7 +87,7 @@ class ShowThread final : public ShowObject
                 q.show_normals(info.with_normals.value());
         }
 
-        void thread_function(ShowEvents* events, WindowID parent_window, double parent_window_ppi)
+        void thread_function(ViewEvents* events, WindowID parent_window, double parent_window_ppi)
         {
                 try
                 {
@@ -95,13 +95,13 @@ class ShowThread final : public ShowObject
                         {
                                 try
                                 {
-                                        T show(&m_event_queue, events, parent_window, parent_window_ppi);
+                                        T view(&m_event_queue, events, parent_window, parent_window_ppi);
 
-                                        EventQueueSetShow e(&m_event_queue, &show);
+                                        EventQueueSetView e(&m_event_queue, &view);
 
                                         m_started = true;
 
-                                        show.loop(&m_stop);
+                                        view.loop(&m_stop);
 
                                         if (!m_stop)
                                         {
@@ -129,11 +129,11 @@ class ShowThread final : public ShowObject
                 }
                 catch (...)
                 {
-                        error_fatal("Exception in the show thread exception handlers");
+                        error_fatal("Exception in the view thread exception handlers");
                 }
         }
 
-        Show& show() override
+        View& view() override
         {
                 return m_event_queue;
         }
@@ -150,7 +150,7 @@ class ShowThread final : public ShowObject
         }
 
 public:
-        explicit ShowThread(const ShowCreateInfo& info)
+        explicit ViewThread(const ViewCreateInfo& info)
         {
                 try
                 {
@@ -160,16 +160,16 @@ public:
 
                                 if (!info.events.value() || !(info.window_ppi.value() > 0))
                                 {
-                                        error("Show create information is not complete");
+                                        error("View create information is not complete");
                                 }
 
                                 m_thread = std::thread(
-                                        &ShowThread::thread_function, this, info.events.value(), info.window.value(),
+                                        &ViewThread::thread_function, this, info.events.value(), info.window.value(),
                                         info.window_ppi.value());
                         }
                         catch (std::bad_optional_access&)
                         {
-                                error("Show create information is not complete");
+                                error("View create information is not complete");
                         }
 
                         do
@@ -184,7 +184,7 @@ public:
                 }
         }
 
-        ~ShowThread() override
+        ~ViewThread() override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 

@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Класс для вызова функций не напрямую, а через очередь.
 // Это нужно для работы функций в другом потоке.
 
-class EventQueue final : public Show
+class EventQueue final : public View
 {
         struct Event final
         {
@@ -266,16 +266,16 @@ class EventQueue final : public Show
                 struct mouse_press final
                 {
                         int x, y;
-                        ShowMouseButton button;
-                        mouse_press(int x_coord, int y_coord, ShowMouseButton b) : x(x_coord), y(y_coord), button(b)
+                        ViewMouseButton button;
+                        mouse_press(int x_coord, int y_coord, ViewMouseButton b) : x(x_coord), y(y_coord), button(b)
                         {
                         }
                 };
                 struct mouse_release final
                 {
                         int x, y;
-                        ShowMouseButton button;
-                        mouse_release(int x_coord, int y_coord, ShowMouseButton b) : x(x_coord), y(y_coord), button(b)
+                        ViewMouseButton button;
+                        mouse_release(int x_coord, int y_coord, ViewMouseButton b) : x(x_coord), y(y_coord), button(b)
                         {
                         }
                 };
@@ -360,177 +360,177 @@ class EventQueue final : public Show
 
         class Visitor final
         {
-                Show* m_show;
+                View* m_view;
 
         public:
-                explicit Visitor(Show* show) : m_show(show)
+                explicit Visitor(View* show) : m_view(show)
                 {
                 }
 
                 void operator()(const Event::add_object& d)
                 {
-                        m_show->add_object(d.object);
+                        m_view->add_object(d.object);
                 }
                 void operator()(const Event::delete_object& d)
                 {
-                        m_show->delete_object(d.id);
+                        m_view->delete_object(d.id);
                 }
                 void operator()(const Event::show_object& d)
                 {
-                        m_show->show_object(d.id);
+                        m_view->show_object(d.id);
                 }
                 void operator()(const Event::delete_all_objects&)
                 {
-                        m_show->delete_all_objects();
+                        m_view->delete_all_objects();
                 }
                 void operator()(const Event::reset_view)
                 {
-                        m_show->reset_view();
+                        m_view->reset_view();
                 }
                 void operator()(const Event::set_ambient& d)
                 {
-                        m_show->set_ambient(d.ambient);
+                        m_view->set_ambient(d.ambient);
                 }
                 void operator()(const Event::set_diffuse& d)
                 {
-                        m_show->set_diffuse(d.diffuse);
+                        m_view->set_diffuse(d.diffuse);
                 }
                 void operator()(const Event::set_specular& d)
                 {
-                        m_show->set_specular(d.specular);
+                        m_view->set_specular(d.specular);
                 }
                 void operator()(const Event::set_background_color& d)
                 {
-                        m_show->set_background_color(d.background_color);
+                        m_view->set_background_color(d.background_color);
                 }
                 void operator()(const Event::set_default_color& d)
                 {
-                        m_show->set_default_color(d.default_color);
+                        m_view->set_default_color(d.default_color);
                 }
                 void operator()(const Event::set_wireframe_color& d)
                 {
-                        m_show->set_wireframe_color(d.wireframe_color);
+                        m_view->set_wireframe_color(d.wireframe_color);
                 }
                 void operator()(const Event::set_clip_plane_color& d)
                 {
-                        m_show->set_clip_plane_color(d.clip_plane_color);
+                        m_view->set_clip_plane_color(d.clip_plane_color);
                 }
                 void operator()(const Event::set_normal_length& d)
                 {
-                        m_show->set_normal_length(d.length);
+                        m_view->set_normal_length(d.length);
                 }
                 void operator()(const Event::set_normal_color_positive& d)
                 {
-                        m_show->set_normal_color_positive(d.color);
+                        m_view->set_normal_color_positive(d.color);
                 }
                 void operator()(const Event::set_normal_color_negative& d)
                 {
-                        m_show->set_normal_color_negative(d.color);
+                        m_view->set_normal_color_negative(d.color);
                 }
                 void operator()(const Event::set_default_ns& d)
                 {
-                        m_show->set_default_ns(d.default_ns);
+                        m_view->set_default_ns(d.default_ns);
                 }
                 void operator()(const Event::show_smooth& d)
                 {
-                        m_show->show_smooth(d.show);
+                        m_view->show_smooth(d.show);
                 }
                 void operator()(const Event::show_wireframe& d)
                 {
-                        m_show->show_wireframe(d.show);
+                        m_view->show_wireframe(d.show);
                 }
                 void operator()(const Event::show_shadow& d)
                 {
-                        m_show->show_shadow(d.show);
+                        m_view->show_shadow(d.show);
                 }
                 void operator()(const Event::show_fog& d)
                 {
-                        m_show->show_fog(d.show);
+                        m_view->show_fog(d.show);
                 }
                 void operator()(const Event::show_materials& d)
                 {
-                        m_show->show_materials(d.show);
+                        m_view->show_materials(d.show);
                 }
                 void operator()(const Event::show_fps& d)
                 {
-                        m_show->show_fps(d.show);
+                        m_view->show_fps(d.show);
                 }
                 void operator()(const Event::show_pencil_sketch& d)
                 {
-                        m_show->show_pencil_sketch(d.show);
+                        m_view->show_pencil_sketch(d.show);
                 }
                 void operator()(const Event::show_dft& d)
                 {
-                        m_show->show_dft(d.show);
+                        m_view->show_dft(d.show);
                 }
                 void operator()(const Event::set_dft_brightness& d)
                 {
-                        m_show->set_dft_brightness(d.dft_brightness);
+                        m_view->set_dft_brightness(d.dft_brightness);
                 }
                 void operator()(const Event::set_dft_background_color& d)
                 {
-                        m_show->set_dft_background_color(d.color);
+                        m_view->set_dft_background_color(d.color);
                 }
                 void operator()(const Event::set_dft_color& d)
                 {
-                        m_show->set_dft_color(d.color);
+                        m_view->set_dft_color(d.color);
                 }
                 void operator()(const Event::show_convex_hull_2d& d)
                 {
-                        m_show->show_convex_hull_2d(d.show);
+                        m_view->show_convex_hull_2d(d.show);
                 }
                 void operator()(const Event::show_optical_flow& d)
                 {
-                        m_show->show_optical_flow(d.show);
+                        m_view->show_optical_flow(d.show);
                 }
                 void operator()(const Event::set_vertical_sync& d)
                 {
-                        m_show->set_vertical_sync(d.enable);
+                        m_view->set_vertical_sync(d.enable);
                 }
                 void operator()(const Event::set_shadow_zoom& d)
                 {
-                        m_show->set_shadow_zoom(d.zoom);
+                        m_view->set_shadow_zoom(d.zoom);
                 }
                 void operator()(const Event::clip_plane_show& d)
                 {
-                        m_show->clip_plane_show(d.position);
+                        m_view->clip_plane_show(d.position);
                 }
                 void operator()(const Event::clip_plane_position& d)
                 {
-                        m_show->clip_plane_position(d.position);
+                        m_view->clip_plane_position(d.position);
                 }
                 void operator()(const Event::clip_plane_hide&)
                 {
-                        m_show->clip_plane_hide();
+                        m_view->clip_plane_hide();
                 }
                 void operator()(const Event::show_normals& d)
                 {
-                        m_show->show_normals(d.show);
+                        m_view->show_normals(d.show);
                 }
                 void operator()(const Event::mouse_press& d)
                 {
-                        m_show->mouse_press(d.x, d.y, d.button);
+                        m_view->mouse_press(d.x, d.y, d.button);
                 }
                 void operator()(const Event::mouse_release& d)
                 {
-                        m_show->mouse_release(d.x, d.y, d.button);
+                        m_view->mouse_release(d.x, d.y, d.button);
                 }
                 void operator()(const Event::mouse_move& d)
                 {
-                        m_show->mouse_move(d.x, d.y);
+                        m_view->mouse_move(d.x, d.y);
                 }
                 void operator()(const Event::mouse_wheel& d)
                 {
-                        m_show->mouse_wheel(d.x, d.y, d.delta);
+                        m_view->mouse_wheel(d.x, d.y, d.delta);
                 }
                 void operator()(const Event::window_resize& d)
                 {
-                        m_show->window_resize(d.x, d.y);
+                        m_view->window_resize(d.x, d.y);
                 }
         };
 
         ThreadQueue<Event> m_event_queue;
-        Show* m_show = nullptr;
+        View* m_view = nullptr;
         mutable SpinLock m_lock;
 
         void add_object(const std::shared_ptr<const MeshObject<3>>& object) override
@@ -673,11 +673,11 @@ class EventQueue final : public Show
         {
                 m_event_queue.emplace(std::in_place_type<Event::show_normals>, v);
         }
-        void mouse_press(int x, int y, ShowMouseButton button) override
+        void mouse_press(int x, int y, ViewMouseButton button) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::mouse_press>, x, y, button);
         }
-        void mouse_release(int x, int y, ShowMouseButton button) override
+        void mouse_release(int x, int y, ViewMouseButton button) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::mouse_release>, x, y, button);
         }
@@ -694,47 +694,47 @@ class EventQueue final : public Show
                 m_event_queue.emplace(std::in_place_type<Event::window_resize>, x, y);
         }
 
-        ShowCameraInfo camera_information() const override
+        ViewCameraInfo camera_information() const override
         {
                 std::lock_guard lg(m_lock);
-                if (!m_show)
+                if (!m_view)
                 {
-                        error("No show");
+                        error("No view");
                 }
-                return m_show->camera_information();
+                return m_view->camera_information();
         }
         double object_size() const override
         {
                 std::lock_guard lg(m_lock);
-                if (!m_show)
+                if (!m_view)
                 {
-                        error("No show");
+                        error("No view");
                 }
-                return m_show->object_size();
+                return m_view->object_size();
         }
         vec3 object_position() const override
         {
                 std::lock_guard lg(m_lock);
-                if (!m_show)
+                if (!m_view)
                 {
-                        error("No show");
+                        error("No view");
                 }
-                return m_show->object_position();
+                return m_view->object_position();
         }
 
 public:
-        void set_show(Show* show)
+        void set_view(View* view)
         {
                 std::lock_guard lg(m_lock);
-                m_show = show;
+                m_view = view;
         }
 
-        void pull_and_dispatch_events(Show* show)
+        void pull_and_dispatch_events(View* view)
         {
                 std::optional<Event> event;
                 while ((event = m_event_queue.pop()))
                 {
-                        std::visit(Visitor(show), event->event());
+                        std::visit(Visitor(view), event->event());
                 }
         }
 };
