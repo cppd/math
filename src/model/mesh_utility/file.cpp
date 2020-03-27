@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "file.h"
 
+#include "file_info.h"
+
 #include "file/file_type.h"
 #include "file/load_obj.h"
 #include "file/load_txt.h"
@@ -29,66 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace mesh
 {
-namespace
-{
-std::vector<std::string> obj_file_supported_extensions(const std::set<unsigned>& dimensions)
-{
-        std::vector<std::string> result;
-        for (unsigned d : dimensions)
-        {
-                ASSERT(d >= 3);
-                if (d == 3)
-                {
-                        result.emplace_back("obj");
-                        result.emplace_back("obj3");
-                }
-                else
-                {
-                        result.push_back("obj" + to_string(d));
-                }
-        }
-        return result;
-}
-
-std::vector<std::string> txt_file_supported_extensions(const std::set<unsigned>& dimensions)
-{
-        std::vector<std::string> result;
-        result.emplace_back("txt");
-        for (unsigned d : dimensions)
-        {
-                ASSERT(d >= 3);
-                result.push_back("txt" + to_string(d));
-        }
-        return result;
-}
-}
-
-int file_dimension(const std::string& file_name)
-{
-        return std::get<0>(file::file_dimension_and_type(file_name));
-}
-
-std::string obj_file_extension(size_t N)
-{
-        return (N == 3) ? "obj" : "obj" + to_string(N);
-}
-
-bool is_obj_file_extension(size_t N, const std::string& extension)
-{
-        return (extension == obj_file_extension(N)) || (extension == "obj" + to_string(N));
-}
-
-std::string stl_file_extension(size_t N)
-{
-        return (N == 3) ? "stl" : "stl" + to_string(N);
-}
-
-bool is_stl_file_extension(size_t N, const std::string& extension)
-{
-        return (extension == stl_file_extension(N)) || (extension == "stl" + to_string(N));
-}
-
-std::vector<FileFormat> formats_for_save(unsigned dimension)
+std::vector<FileFormat> save_formats(unsigned dimension)
 {
         std::vector<FileFormat> v(2);
 
@@ -101,16 +44,16 @@ std::vector<FileFormat> formats_for_save(unsigned dimension)
         return v;
 }
 
-std::vector<FileFormat> formats_for_load(const std::set<unsigned>& dimensions)
+std::vector<FileFormat> load_formats(const std::set<unsigned>& dimensions)
 {
         std::vector<FileFormat> v(1);
 
         v[0].format_name = "All Supported Formats";
-        for (std::string& s : mesh::obj_file_supported_extensions(dimensions))
+        for (std::string& s : mesh::obj_file_extensions(dimensions))
         {
                 v[0].file_name_extensions.push_back(std::move(s));
         }
-        for (std::string& s : mesh::txt_file_supported_extensions(dimensions))
+        for (std::string& s : mesh::txt_file_extensions(dimensions))
         {
                 v[0].file_name_extensions.push_back(std::move(s));
         }
@@ -121,7 +64,7 @@ std::vector<FileFormat> formats_for_load(const std::set<unsigned>& dimensions)
 //
 
 template <size_t N>
-std::unique_ptr<Mesh<N>> load_geometry(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> load(const std::string& file_name, ProgressRatio* progress)
 {
         auto [dimension, file_type] = file::file_dimension_and_type(file_name);
 
@@ -143,7 +86,7 @@ std::unique_ptr<Mesh<N>> load_geometry(const std::string& file_name, ProgressRat
 }
 
 template <size_t N>
-std::string save_geometry(const Mesh<N>& mesh, const std::string& file_name, const std::string_view& comment)
+std::string save(const Mesh<N>& mesh, const std::string& file_name, const std::string_view& comment)
 {
         std::string ext = file_extension(file_name);
         if (is_obj_file_extension(N, ext))
@@ -161,13 +104,13 @@ std::string save_geometry(const Mesh<N>& mesh, const std::string& file_name, con
         error("Empty extension " + file_name);
 }
 
-template std::string save_geometry(const Mesh<3>&, const std::string&, const std::string_view&);
-template std::string save_geometry(const Mesh<4>&, const std::string&, const std::string_view&);
-template std::string save_geometry(const Mesh<5>&, const std::string&, const std::string_view&);
-template std::string save_geometry(const Mesh<6>&, const std::string&, const std::string_view&);
+template std::string save(const Mesh<3>&, const std::string&, const std::string_view&);
+template std::string save(const Mesh<4>&, const std::string&, const std::string_view&);
+template std::string save(const Mesh<5>&, const std::string&, const std::string_view&);
+template std::string save(const Mesh<6>&, const std::string&, const std::string_view&);
 
-template std::unique_ptr<Mesh<3>> load_geometry(const std::string&, ProgressRatio*);
-template std::unique_ptr<Mesh<4>> load_geometry(const std::string&, ProgressRatio*);
-template std::unique_ptr<Mesh<5>> load_geometry(const std::string&, ProgressRatio*);
-template std::unique_ptr<Mesh<6>> load_geometry(const std::string&, ProgressRatio*);
+template std::unique_ptr<Mesh<3>> load(const std::string&, ProgressRatio*);
+template std::unique_ptr<Mesh<4>> load(const std::string&, ProgressRatio*);
+template std::unique_ptr<Mesh<5>> load(const std::string&, ProgressRatio*);
+template std::unique_ptr<Mesh<6>> load(const std::string&, ProgressRatio*);
 }

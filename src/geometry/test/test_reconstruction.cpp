@@ -107,10 +107,10 @@ void test_geometry_files(
         comment += "vertices = " + to_string(mesh1->vertices.size()) + "\n";
         comment += "normals = " + to_string(mesh1->normals.size()) + "\n";
         comment += "facets = " + to_string(mesh1->facets.size());
-        file_name = save_geometry(*mesh1, file_name, comment);
+        file_name = mesh::save(*mesh1, file_name, comment);
 
         LOG("load geometry...");
-        std::unique_ptr<mesh::Mesh<N>> mesh2 = mesh::load_geometry<N>(file_name, progress);
+        std::unique_ptr<mesh::Mesh<N>> mesh2 = mesh::load<N>(file_name, progress);
 
         LOG("compare mesh...");
         if (mesh1->vertices.size() != mesh2->vertices.size() || mesh1->normals.size() != mesh2->normals.size() ||

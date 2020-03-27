@@ -17,29 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../mesh.h"
-
-#include <src/progress/progress.h>
-
-#include <memory>
 #include <set>
 #include <string>
-#include <string_view>
 #include <vector>
 
 namespace mesh
 {
-struct FileFormat
-{
-        std::string format_name;
-        std::vector<std::string> file_name_extensions;
-};
-std::vector<FileFormat> save_formats(unsigned dimension);
-std::vector<FileFormat> load_formats(const std::set<unsigned>& dimensions);
+int file_dimension(const std::string& file_name);
 
-template <size_t N>
-std::unique_ptr<Mesh<N>> load(const std::string& file_name, ProgressRatio* progress);
+std::string obj_file_extension(size_t N);
+std::vector<std::string> obj_file_extensions(const std::set<unsigned>& dimensions);
+bool is_obj_file_extension(size_t N, const std::string& e);
 
-template <size_t N>
-std::string save(const Mesh<N>& mesh, const std::string& file_name, const std::string_view& comment);
+std::string stl_file_extension(size_t N);
+std::vector<std::string> stl_file_extensions(const std::set<unsigned>& dimensions);
+bool is_stl_file_extension(size_t N, const std::string& e);
+
+std::vector<std::string> txt_file_extensions(const std::set<unsigned>& dimensions);
 }

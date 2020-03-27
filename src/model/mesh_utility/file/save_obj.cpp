@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "save_obj.h"
 
 #include "../bounding_box.h"
-#include "../file.h"
+#include "../file_info.h"
 #include "../unique.h"
 
 #include <src/com/log.h>

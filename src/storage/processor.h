@@ -420,7 +420,7 @@ std::unique_ptr<const mesh::Mesh<N>> load_from_file(ProgressRatioList* progress_
 {
         ProgressRatio progress(progress_list);
         progress.set_text("Loading file: %p%");
-        return mesh::load_geometry<N>(file_name, &progress);
+        return mesh::load<N>(file_name, &progress);
 }
 
 template <size_t N>
@@ -445,6 +445,6 @@ void save(const Storage<N, MeshFloat>& storage, ObjectId id, const std::string& 
                 error("No object to export");
         }
 
-        save_geometry(object->mesh(), file_name, name);
+        mesh::save(object->mesh(), file_name, name);
 }
 }

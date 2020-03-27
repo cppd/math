@@ -478,7 +478,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         bool read_only = true;
 
                         std::vector<std::string> filters;
-                        for (const mesh::FileFormat& v : mesh::formats_for_load(MultiStorage::dimensions()))
+                        for (const mesh::FileFormat& v : mesh::load_formats(MultiStorage::dimensions()))
                         {
                                 filters.push_back(file_filter(v.format_name, v.file_name_extensions));
                         }
@@ -619,7 +619,7 @@ void MainWindow::thread_export(ObjectId id)
                 bool read_only = true;
 
                 std::vector<std::string> filters;
-                for (const mesh::FileFormat& v : mesh::formats_for_save(m_dimension))
+                for (const mesh::FileFormat& v : mesh::save_formats(m_dimension))
                 {
                         filters.push_back(file_filter(v.format_name, v.file_name_extensions));
                 }
