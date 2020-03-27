@@ -34,6 +34,9 @@ int file_dimension(const std::string& file_name);
 std::string obj_file_extension(size_t N);
 bool is_obj_file_extension(size_t N, const std::string& e);
 
+std::string stl_file_extension(size_t N);
+bool is_stl_file_extension(size_t N, const std::string& e);
+
 struct FileFormat
 {
         std::string format_name;
