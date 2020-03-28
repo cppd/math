@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "save_stl.h"
 
-#include "write.h"
+#include "data_write.h"
 
 #include "../bounding_box.h"
 #include "../file_info.h"

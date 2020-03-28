@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "load_obj.h"
 
-#include "read_data.h"
-#include "read_lines.h"
+#include "data_read.h"
+#include "file_lines.h"
 
 #include "../position.h"
 

@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "read_lines.h"
+#include "file_lines.h"
 
 #include <src/com/error.h>
 #include <src/utility/file/read.h>
