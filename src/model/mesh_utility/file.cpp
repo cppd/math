@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "file/file_type.h"
 #include "file/load_obj.h"
+#include "file/load_stl.h"
 #include "file/load_txt.h"
 #include "file/save_obj.h"
 #include "file/save_stl.h"
@@ -53,6 +54,10 @@ std::vector<FileFormat> load_formats(const std::set<unsigned>& dimensions)
         {
                 v[0].file_name_extensions.push_back(std::move(s));
         }
+        for (std::string& s : mesh::stl_file_extensions(dimensions))
+        {
+                v[0].file_name_extensions.push_back(std::move(s));
+        }
         for (std::string& s : mesh::txt_file_extensions(dimensions))
         {
                 v[0].file_name_extensions.push_back(std::move(s));
@@ -76,9 +81,11 @@ std::unique_ptr<Mesh<N>> load(const std::string& file_name, ProgressRatio* progr
 
         switch (file_type)
         {
-        case file::ObjFileType::Obj:
+        case file::MeshFileType::Obj:
                 return file::load_from_obj_file<N>(file_name, progress);
-        case file::ObjFileType::Txt:
+        case file::MeshFileType::Stl:
+                return file::load_from_stl_file<N>(file_name, progress);
+        case file::MeshFileType::Txt:
                 return file::load_from_txt_file<N>(file_name, progress);
         }
 

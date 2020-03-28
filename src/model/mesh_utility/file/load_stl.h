@@ -17,17 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../../mesh.h"
+
+#include <src/progress/progress.h>
+
+#include <memory>
 #include <string>
-#include <tuple>
 
 namespace mesh::file
 {
-enum class MeshFileType
-{
-        Obj,
-        Stl,
-        Txt
-};
-
-std::tuple<int, MeshFileType> file_dimension_and_type(const std::string& file_name);
+template <size_t N>
+std::unique_ptr<Mesh<N>> load_from_stl_file(const std::string& file_name, ProgressRatio* progress);
 }

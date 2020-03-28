@@ -26,8 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <sstream>
 
-// Для 3 измерений расширения obj, obj3, txt, txt3.
-// Для 4 и более измерений objN, txt, txtN.
+// Для 3 измерений расширения obj, obj3, stl, stl3, txt, txt3.
+// Для 4 и более измерений objN, stlN, txt, txtN.
 // Если число указано, то используется оно. Если только txt,
 // то подсчитывается количество чисел в первой строке файла.
 
@@ -142,53 +142,56 @@ int read_dimension_number(const std::string& s)
 }
 }
 
-std::tuple<int, ObjFileType> file_dimension_and_type(const std::string& file_name)
+std::tuple<int, MeshFileType> file_dimension_and_type(const std::string& file_name)
 {
-        // Если не только obj или txt, то после obj или txt должно быть целое
+        // Если не только obj, stl, txt, то после obj, stl, txt должно быть целое
         // число и только целое число, например, строка "obj4" или "txt4"
 
         const std::string OBJ = "obj";
+        const std::string STL = "stl";
         const std::string TXT = "txt";
 
         std::string e = file_extension(file_name);
 
         if (e.empty())
         {
-                error("No OBJ file extension found");
+                error("No file extension found");
         }
 
         int dimension;
-        ObjFileType obj_file_type;
+        MeshFileType file_type;
 
-        if (e == TXT)
+        if (e.find(OBJ) == 0)
         {
-                dimension = count_numbers_in_file(file_name);
-                obj_file_type = ObjFileType::Txt;
+                dimension = (e == OBJ) ? 3 : read_dimension_number(e.substr(OBJ.size()));
+                file_type = MeshFileType::Obj;
         }
-        else if (e == OBJ)
+        else if (e.find(STL) == 0)
         {
-                dimension = 3;
-                obj_file_type = ObjFileType::Obj;
-        }
-        else if (e.find(OBJ) == 0)
-        {
-                dimension = read_dimension_number(e.substr(OBJ.size()));
-                obj_file_type = ObjFileType::Obj;
+                dimension = (e == STL) ? 3 : read_dimension_number(e.substr(STL.size()));
+                file_type = MeshFileType::Stl;
         }
         else if (e.find(TXT) == 0)
         {
-                dimension = read_dimension_number(e.substr(TXT.size()));
-                int dimension_numbers = count_numbers_in_file(file_name);
-                if (dimension != dimension_numbers)
+                if (e == TXT)
                 {
-                        error("Conflicting dimensions in file extension " + to_string(dimension) +
-                              " and in file data " + to_string(dimension_numbers));
+                        dimension = count_numbers_in_file(file_name);
                 }
-                obj_file_type = ObjFileType::Txt;
+                else
+                {
+                        dimension = read_dimension_number(e.substr(TXT.size()));
+                        int dimension_numbers = count_numbers_in_file(file_name);
+                        if (dimension != dimension_numbers)
+                        {
+                                error("Conflicting dimensions in file extension " + to_string(dimension) +
+                                      " and in file data " + to_string(dimension_numbers));
+                        }
+                }
+                file_type = MeshFileType::Txt;
         }
         else
         {
-                error("Unsupported OBJ file format " + e);
+                error("Unsupported file format " + e);
         }
 
         if (dimension < 3)
@@ -196,6 +199,6 @@ std::tuple<int, ObjFileType> file_dimension_and_type(const std::string& file_nam
                 error("Wrong dimension number " + to_string(dimension));
         }
 
-        return {dimension, obj_file_type};
+        return {dimension, file_type};
 }
 }
