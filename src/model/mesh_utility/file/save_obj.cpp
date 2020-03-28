@@ -17,8 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "save_obj.h"
 
+#include "write.h"
+
 #include "../bounding_box.h"
 #include "../file_info.h"
+#include "../normalize.h"
 #include "../unique.h"
 
 #include <src/com/log.h>
@@ -33,6 +36,8 @@ namespace mesh::file
 {
 namespace
 {
+constexpr bool NORMALIZE_VERTEX_COORDINATES = false;
+
 constexpr const char* OBJ_comment_and_space = "# ";
 constexpr const char* OBJ_v = "v";
 constexpr const char* OBJ_vn = "vn";
@@ -64,21 +69,6 @@ void write_comment(const CFile& file, const std::string_view& comment)
         str += '\n';
 
         fprintf(file, "%s", str.c_str());
-}
-
-template <size_t N, typename T>
-void write_vector(const CFile& file, const Vector<N, T>& vector)
-{
-        static_assert(limits<float>::max_digits10 <= 9);
-        static_assert(limits<double>::max_digits10 <= 17);
-        static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
-
-        constexpr const char* format = (std::is_same_v<T, float>) ? " %12.9f" : " %20.17f";
-
-        for (unsigned i = 0; i < N; ++i)
-        {
-                fprintf(file, format, vector[i]);
-        }
 }
 
 template <size_t N>
@@ -136,50 +126,30 @@ void write_line(const CFile& file, const std::array<int, 2>& vertices)
         fprintf(file, "\n");
 }
 
-// Запись вершин с приведением координат вершин к интервалу [-1, 1] с сохранением пропорций
+template <size_t N>
+void write_vertices(const CFile& file, const std::vector<Vector<N, float>>& vertices)
+{
+        for (const Vector<N, float>& v : vertices)
+        {
+                write_vertex(file, v);
+        }
+}
+
 template <size_t N>
 void write_vertices(const CFile& file, const Mesh<N>& mesh)
 {
-        std::vector<int> facet_indices = unique_facet_indices(mesh);
-        std::vector<int> line_indices = unique_line_indices(mesh);
-
-        if (facet_indices.empty() && line_indices.empty())
+        if (NORMALIZE_VERTEX_COORDINATES)
         {
-                error("Facet and line unique indices are not found");
+                std::optional<mesh::BoundingBox<N>> box = mesh::bounding_box_by_facets_and_lines(mesh);
+                if (!box)
+                {
+                        error("Facet and line coordinates are not found");
+                }
+                write_vertices(file, normalize_vertices(mesh, *box));
         }
-        if (!facet_indices.empty() && facet_indices.size() < N)
+        else
         {
-                error("Facet unique indices count " + to_string(facet_indices.size()) + " is less than " +
-                      to_string(N));
-        }
-        if (!line_indices.empty() && line_indices.size() < 2)
-        {
-                error("Line unique indices count " + to_string(line_indices.size()) + " is less than " + to_string(2));
-        }
-
-        std::optional<mesh::BoundingBox<N>> box = mesh::bounding_box_by_facets_and_lines(mesh);
-        if (!box)
-        {
-                error("Facet and line coordinates are not found");
-        }
-
-        Vector<N, float> extent = box->max - box->min;
-
-        float max_extent = extent.norm_infinity();
-
-        if (max_extent == 0)
-        {
-                error("Mesh vertices are equal to each other");
-        }
-
-        float scale_factor = 2 / max_extent;
-        Vector<N, float> center = box->min + 0.5f * extent;
-
-        for (const Vector<N, float>& v : mesh.vertices)
-        {
-                Vector<N, float> vertex = (v - center) * scale_factor;
-
-                write_vertex(file, vertex);
+                write_vertices(file, mesh.vertices);
         }
 }
 
@@ -282,6 +252,32 @@ std::string file_name_with_extension(const std::string& file_name)
         // Если имя заканчивается на точку, то пусть будет 2 точки подряд
         return file_name + "." + obj_file_extension(N);
 }
+
+template <size_t N>
+void check_facets_and_lines(const Mesh<N>& mesh)
+{
+        if (mesh.facets.empty() && mesh.lines.empty())
+        {
+                error("Mesh has neither facets nor lines");
+        }
+
+        std::vector<int> facet_indices = unique_facet_indices(mesh);
+        std::vector<int> line_indices = unique_line_indices(mesh);
+
+        if (facet_indices.empty() && line_indices.empty())
+        {
+                error("Facet and line unique indices are not found");
+        }
+        if (!facet_indices.empty() && facet_indices.size() < N)
+        {
+                error("Facet unique indices count " + to_string(facet_indices.size()) + " is less than " +
+                      to_string(N));
+        }
+        if (!line_indices.empty() && line_indices.size() < 2)
+        {
+                error("Line unique indices count " + to_string(line_indices.size()) + " is less than " + to_string(2));
+        }
+}
 }
 
 template <size_t N>
@@ -289,10 +285,7 @@ std::string save_to_obj_file(const Mesh<N>& mesh, const std::string& file_name, 
 {
         static_assert(N >= 3);
 
-        if (mesh.facets.empty() && mesh.lines.empty())
-        {
-                error("Mesh has neither facets nor lines");
-        }
+        check_facets_and_lines(mesh);
 
         std::string full_name = file_name_with_extension<N>(file_name);
 

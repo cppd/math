@@ -17,14 +17,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "mesh_utility/bounding_box.h"
-#include "mesh_utility/create_facets.h"
-#include "mesh_utility/create_lines.h"
-#include "mesh_utility/create_points.h"
-#include "mesh_utility/file.h"
-#include "mesh_utility/file_info.h"
-#include "mesh_utility/matrix.h"
-#include "mesh_utility/normalize.h"
-#include "mesh_utility/position.h"
-#include "mesh_utility/sort.h"
-#include "mesh_utility/unique.h"
+#include <src/numerical/vec.h>
+#include <src/utility/file/file.h>
+
+namespace mesh::file
+{
+template <size_t N, typename T>
+void write_vector(const CFile& file, const Vector<N, T>& vector)
+{
+        static_assert(limits<float>::max_digits10 <= 9);
+        static_assert(limits<double>::max_digits10 <= 17);
+        static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
+
+        constexpr const char* format = (std::is_same_v<T, float>) ? " %16.9e" : " %24.17e";
+
+        for (unsigned i = 0; i < N; ++i)
+        {
+                fprintf(file, format, vector[i]);
+        }
+}
+}

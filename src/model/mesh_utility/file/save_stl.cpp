@@ -17,8 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "save_stl.h"
 
+#include "write.h"
+
 #include "../bounding_box.h"
 #include "../file_info.h"
+#include "../normalize.h"
 #include "../unique.h"
 
 #include <src/com/log.h>
@@ -33,6 +36,8 @@ namespace mesh::file
 {
 namespace
 {
+constexpr bool NORMALIZE_VERTEX_COORDINATES = false;
+
 // clang-format off
 constexpr const char* SOLID        = "solid s";
 constexpr const char* FACET_NORMAL = "facet normal";
@@ -51,21 +56,6 @@ void write_begin(const CFile& file)
 void write_end(const CFile& file)
 {
         fprintf(file, "%s\n", END_SOLID);
-}
-
-template <size_t N, typename T>
-void write_vector(const CFile& file, const Vector<N, T>& vector)
-{
-        static_assert(limits<float>::max_digits10 <= 9);
-        static_assert(limits<double>::max_digits10 <= 17);
-        static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
-
-        constexpr const char* format = (std::is_same_v<T, float>) ? " %12.9f" : " %20.17f";
-
-        for (unsigned i = 0; i < N; ++i)
-        {
-                fprintf(file, format, vector[i]);
-        }
 }
 
 template <size_t N>
@@ -96,58 +86,9 @@ void write_facet(
         fprintf(file, "%s\n", END_FACET);
 }
 
-// Преообразование координат вершин с приведением к интервалу [-1, 1] с сохранением пропорций
 template <size_t N>
-std::vector<Vector<N, float>> normalize_vertices(const Mesh<N>& mesh)
+void write_facets(const CFile& file, const Mesh<N>& mesh, const std::vector<Vector<N, float>>& vertices)
 {
-        std::vector<int> facet_indices = unique_facet_indices(mesh);
-
-        if (facet_indices.empty())
-        {
-                error("Facet unique indices are not found");
-        }
-        if (!facet_indices.empty() && facet_indices.size() < N)
-        {
-                error("Facet unique indices count " + to_string(facet_indices.size()) + " is less than " +
-                      to_string(N));
-        }
-
-        std::optional<mesh::BoundingBox<N>> box = mesh::bounding_box_by_facets(mesh);
-        if (!box)
-        {
-                error("Facet coordinates are not found");
-        }
-
-        Vector<N, float> extent = box->max - box->min;
-
-        float max_extent = extent.norm_infinity();
-
-        if (max_extent == 0)
-        {
-                error("Mesh vertices are equal to each other");
-        }
-
-        float scale_factor = 2 / max_extent;
-        Vector<N, float> center = box->min + 0.5f * extent;
-
-        std::vector<Vector<N, float>> normalized_vertices;
-        normalized_vertices.reserve(mesh.vertices.size());
-
-        for (const Vector<N, float>& v : mesh.vertices)
-        {
-                Vector<N, float> vertex = (v - center) * scale_factor;
-
-                normalized_vertices.push_back(vertex);
-        }
-
-        return normalized_vertices;
-}
-
-template <size_t N>
-void write_facets(const CFile& file, const Mesh<N>& mesh)
-{
-        const std::vector<Vector<N, float>> vertices = normalize_vertices(mesh);
-
         // Вершины граней надо записывать в трёхмерный STL таким образом,
         // чтобы при обходе против часовой стрелки перпендикуляр к грани
         // был направлен противоположно направлению взгляда. В данной модели
@@ -194,6 +135,24 @@ void write_facets(const CFile& file, const Mesh<N>& mesh)
         }
 }
 
+template <size_t N>
+void write_facets(const CFile& file, const Mesh<N>& mesh)
+{
+        if (NORMALIZE_VERTEX_COORDINATES)
+        {
+                std::optional<mesh::BoundingBox<N>> box = mesh::bounding_box_by_facets(mesh);
+                if (!box)
+                {
+                        error("Facet coordinates are not found");
+                }
+                write_facets(file, mesh, normalize_vertices(mesh, *box));
+        }
+        else
+        {
+                write_facets(file, mesh, mesh.vertices);
+        }
+}
+
 std::string stl_type_name(size_t N)
 {
         return "STL-" + to_string(N);
@@ -217,6 +176,27 @@ std::string file_name_with_extension(const std::string& file_name)
         // Если имя заканчивается на точку, то пусть будет 2 точки подряд
         return file_name + "." + stl_file_extension(N);
 }
+
+template <size_t N>
+void check_facets(const Mesh<N>& mesh)
+{
+        if (mesh.facets.empty())
+        {
+                error("Mesh has no facets");
+        }
+
+        std::vector<int> facet_indices = unique_facet_indices(mesh);
+
+        if (facet_indices.empty())
+        {
+                error("Facet unique indices are not found");
+        }
+        if (!facet_indices.empty() && facet_indices.size() < N)
+        {
+                error("Facet unique indices count " + to_string(facet_indices.size()) + " is less than " +
+                      to_string(N));
+        }
+}
 }
 
 template <size_t N>
@@ -224,10 +204,7 @@ std::string save_to_stl_file(const Mesh<N>& mesh, const std::string& file_name)
 {
         static_assert(N >= 3);
 
-        if (mesh.facets.empty())
-        {
-                error("Mesh has no facets");
-        }
+        check_facets(mesh);
 
         std::string full_name = file_name_with_extension<N>(file_name);
 
