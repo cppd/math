@@ -43,6 +43,10 @@ constexpr bool is_not_blank(char c)
 {
         return !is_blank(c);
 }
+constexpr bool is_not_new_line(char c)
+{
+        return c != '\n';
+}
 constexpr bool is_digit(char c)
 {
         return c >= '0' && c <= '9';
