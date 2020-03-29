@@ -45,7 +45,7 @@ constexpr const char* OUTER_LOOP   = "  outer loop";
 constexpr const char* VERTEX       = "    vertex";
 constexpr const char* END_LOOP     = "  endloop";
 constexpr const char* END_FACET    = "endfacet";
-constexpr const char* END_SOLID    = "endsolid";
+constexpr const char* END_SOLID    = "endsolid s";
 // clang-format on
 
 void write_begin(const CFile& file)
