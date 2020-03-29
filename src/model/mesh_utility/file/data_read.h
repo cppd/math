@@ -42,6 +42,8 @@ void read(const Data& data, long long size, const Op& op, long long* i)
         }
 }
 
+namespace data_read_implementation
+{
 // Между begin и end находится уже проверенное целое число в формате DDDDD без знака
 template <typename Integer, typename T>
 Integer digits_to_integer(const T& data, long long begin, long long end)
@@ -66,11 +68,13 @@ Integer digits_to_integer(const T& data, long long begin, long long end)
 
         return sum;
 }
+}
 
 template <typename T, typename Integer>
 bool read_integer(const T& data, long long size, long long* pos, Integer* value)
 {
         static_assert(is_signed<Integer>);
+        namespace impl = data_read_implementation;
 
         long long begin = *pos;
 
@@ -85,8 +89,8 @@ bool read_integer(const T& data, long long size, long long* pos, Integer* value)
 
         if (end > begin)
         {
-                *value = (begin == *pos) ? digits_to_integer<Integer>(data, begin, end) :
-                                           -digits_to_integer<Integer>(data, begin, end);
+                *value = (begin == *pos) ? impl::digits_to_integer<Integer>(data, begin, end) :
+                                           -impl::digits_to_integer<Integer>(data, begin, end);
                 *pos = end;
 
                 return true;
@@ -95,6 +99,8 @@ bool read_integer(const T& data, long long size, long long* pos, Integer* value)
         return false;
 }
 
+namespace data_read_implementation
+{
 template <typename T>
 bool read_one_float_from_string(const char** str, T* p)
 {
@@ -129,7 +135,7 @@ bool read_one_float_from_string(const char** str, T* p)
 };
 
 template <typename... T>
-int string_to_floats(const char* str, T*... floats)
+int string_to_floats(const char** str, T*... floats)
 {
         constexpr int N = sizeof...(T);
 
@@ -141,44 +147,53 @@ int string_to_floats(const char* str, T*... floats)
         errno = 0;
         int cnt = 0;
 
-        ((read_one_float_from_string(&str, floats) ? ++cnt : false) && ...);
+        ((read_one_float_from_string(str, floats) ? ++cnt : false) && ...);
 
         return cnt;
 }
-
-template <size_t N, typename T, unsigned... I>
-int read_vector(const char* str, Vector<N, T>* v, std::integer_sequence<unsigned, I...>&&)
-{
-        static_assert(N == sizeof...(I));
-
-        return string_to_floats(str, &(*v)[I]...);
 }
 
 template <size_t N, typename T, unsigned... I>
-int read_vector(const char* str, Vector<N, T>* v, T* n, std::integer_sequence<unsigned, I...>&&)
+std::pair<int, const char*> read_vector(const char* str, Vector<N, T>* v, std::integer_sequence<unsigned, I...>&&)
 {
         static_assert(N == sizeof...(I));
+        namespace impl = data_read_implementation;
 
-        return string_to_floats(str, &(*v)[I]..., n);
+        int cnt = impl::string_to_floats(&str, &(*v)[I]...);
+        return {cnt, str};
+}
+
+template <size_t N, typename T, unsigned... I>
+std::pair<int, const char*> read_vector(const char* str, Vector<N, T>* v, T* n, std::integer_sequence<unsigned, I...>&&)
+{
+        static_assert(N == sizeof...(I));
+        namespace impl = data_read_implementation;
+
+        int cnt = impl::string_to_floats(&str, &(*v)[I]..., n);
+        return {cnt, str};
 }
 
 template <size_t N, typename T>
-void read_float(const char* str, Vector<N, T>* v)
+const char* read_float(const char* str, Vector<N, T>* v)
 {
-        if (N != read_vector(str, v, std::make_integer_sequence<unsigned, N>()))
+        const auto [cnt, ptr] = read_vector(str, v, std::make_integer_sequence<unsigned, N>());
+        if (N != cnt)
         {
                 error(std::string("Error read " + to_string(N) + " floating points of ") + type_name<T>() + " type");
         }
+        return ptr;
 }
 
 template <typename T>
-void read_float(const char* str, T* v)
+const char* read_float(const char* str, T* v)
 {
         static_assert(std::is_floating_point_v<T>);
+        namespace impl = data_read_implementation;
 
-        if (1 != string_to_floats(str, v))
+        if (1 != impl::string_to_floats(&str, v))
         {
                 error(std::string("Error read 1 floating point of ") + type_name<T>() + " type");
         }
+        return str;
 }
 }

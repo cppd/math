@@ -338,7 +338,7 @@ void read_float_texture(const char* str, Vector<N, T>* v)
 {
         T tmp;
 
-        int n = read_vector(str, v, &tmp, std::make_integer_sequence<unsigned, N>());
+        int n = read_vector(str, v, &tmp, std::make_integer_sequence<unsigned, N>()).first;
 
         if (n != N && n != N + 1)
         {
