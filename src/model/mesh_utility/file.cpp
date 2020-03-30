@@ -36,10 +36,10 @@ std::vector<FileFormat> save_formats(unsigned dimension)
 {
         std::vector<FileFormat> v(2);
 
-        v[0].format_name = "OBJ Files";
+        v[0].format_name = "OBJ";
         v[0].file_name_extensions = {mesh::obj_file_extension(dimension)};
 
-        v[1].format_name = "STL Files";
+        v[1].format_name = "STL";
         v[1].file_name_extensions = {mesh::stl_file_extension(dimension)};
 
         return v;
