@@ -22,7 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 
 #include <QFileDialog>
+#include <map>
 
+namespace dialog
+{
 namespace
 {
 bool exec_dialog_for_single_file(QtObjectInDynamicMemory<QFileDialog>* w, std::string* name)
@@ -63,23 +66,102 @@ QFileDialog::Options make_options(bool read_only)
         return options;
 }
 
-QString join_filters(const std::vector<std::string>& filters)
+template <typename... T>
+QString file_filter(const std::string& name, const T&... extensions)
+{
+        static_assert(sizeof...(T) > 0);
+
+        if (name.empty())
+        {
+                error("No filter file name");
+        }
+
+        std::string filter;
+
+        filter += name + " (";
+
+        bool first = true;
+
+        auto add_string = [&](const std::string& ext) {
+                if (std::count(ext.cbegin(), ext.cend(), '*') > 0)
+                {
+                        error("Character * in file filter extension " + ext);
+                }
+                if (!first)
+                {
+                        filter += " ";
+                }
+                first = false;
+                filter += "*." + ext;
+        };
+
+        auto add = [&](const auto& ext) {
+                if constexpr (has_begin_end<decltype(ext)>)
+                {
+                        if constexpr (!std::is_same_v<char, std::remove_cvref_t<decltype(*std::cbegin(ext))>>)
+                        {
+                                for (const std::string& e : ext)
+                                {
+                                        add_string(e);
+                                }
+                        }
+                        else
+                        {
+                                add_string(ext);
+                        }
+                }
+                else
+                {
+                        add_string(ext);
+                }
+        };
+
+        (add(extensions), ...);
+
+        if (first)
+        {
+                error("No file filter extensions");
+        }
+
+        filter += ")";
+
+        return QString::fromStdString(filter);
+}
+
+QString join_filters(const std::vector<QString>& filters)
 {
         QString filter_string;
-        for (const std::string& filter : filters)
+        for (const QString& filter : filters)
         {
                 if (!filter_string.isEmpty())
                 {
                         filter_string += ";;";
                 }
-                filter_string += QString::fromStdString(filter);
+                filter_string += filter;
         }
         return filter_string;
 }
+
+void check_filter(const FileFilter& filter)
+{
+        if (filter.name.empty())
+        {
+                error("File filter has no name");
+        }
+        if (filter.file_extensions.empty())
+        {
+                error("File filter has no file expensions");
+        }
+        for (const std::string& s : filter.file_extensions)
+        {
+                if (s.empty())
+                {
+                        error("File filter extension is empty");
+                }
+        }
+}
 }
 
-namespace dialog
-{
 bool save_file(
         QWidget* parent,
         const std::string& caption,
@@ -87,15 +169,28 @@ bool save_file(
         bool read_only,
         std::string* name)
 {
-        std::vector<std::string> dialog_filters;
+        std::map<QString, QString> map;
+        std::vector<QString> dialog_filters;
         for (const FileFilter& v : filters)
         {
-                std::string filter = file_filter(v.name, v.file_extensions);
+                check_filter(v);
+                const QString filter = file_filter(v.name, v.file_extensions);
                 dialog_filters.push_back(filter);
+                map.emplace(filter, QString::fromStdString(v.file_extensions.front()));
         }
 
         QtObjectInDynamicMemory<QFileDialog> w(
                 parent, QString::fromStdString(caption), QString(), join_filters(dialog_filters));
+
+        QObject::connect(w.data(), &QFileDialog::filterSelected, [&](const QString& filter) {
+                ASSERT(map.count(filter) == 1);
+                w->setDefaultSuffix(map[filter]);
+        });
+
+        if (!dialog_filters.empty())
+        {
+                w->filterSelected(dialog_filters.front());
+        }
 
         w->setOptions(make_options(read_only));
         w->setAcceptMode(QFileDialog::AcceptSave);
@@ -111,11 +206,11 @@ bool open_file(
         bool read_only,
         std::string* name)
 {
-        std::vector<std::string> dialog_filters;
+        std::vector<QString> dialog_filters;
         for (const FileFilter& v : filters)
         {
-                std::string filter = file_filter(v.name, v.file_extensions);
-                dialog_filters.push_back(filter);
+                check_filter(v);
+                dialog_filters.push_back(file_filter(v.name, v.file_extensions));
         }
 
         QtObjectInDynamicMemory<QFileDialog> w(

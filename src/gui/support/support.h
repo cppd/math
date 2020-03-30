@@ -64,68 +64,6 @@ public:
         }
 };
 
-template <typename... T>
-std::string file_filter(const std::string& name, const T&... extensions)
-{
-        static_assert(sizeof...(T) > 0);
-
-        if (name.empty())
-        {
-                error("No filter file name");
-        }
-
-        std::string filter;
-
-        filter += name + " (";
-
-        bool first = true;
-
-        auto add_string = [&](const std::string& ext) {
-                if (std::count(ext.cbegin(), ext.cend(), '*') > 0)
-                {
-                        error("Character * in file filter extension " + ext);
-                }
-                if (!first)
-                {
-                        filter += " ";
-                }
-                first = false;
-                filter += "*." + ext;
-        };
-
-        auto add = [&](const auto& ext) {
-                if constexpr (has_begin_end<decltype(ext)>)
-                {
-                        if constexpr (!std::is_same_v<char, std::remove_cvref_t<decltype(*std::cbegin(ext))>>)
-                        {
-                                for (const std::string& e : ext)
-                                {
-                                        add_string(e);
-                                }
-                        }
-                        else
-                        {
-                                add_string(ext);
-                        }
-                }
-                else
-                {
-                        add_string(ext);
-                }
-        };
-
-        (add(extensions), ...);
-
-        if (first)
-        {
-                error("No file filter extensions");
-        }
-
-        filter += ")";
-
-        return filter;
-}
-
 enum class TextEditMessageType
 {
         Normal,
