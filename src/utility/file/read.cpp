@@ -93,7 +93,36 @@ void read_text_file(const std::string& file_name, T* s)
         f.seekg(0, std::ios_base::beg);
         f.read(s->data(), length);
 }
+
+template <typename T>
+void read_binary_file(const std::string& file_name, T* s)
+{
+        static_assert(sizeof(typename T::value_type) == 1);
+
+        std::ifstream f(file_name, std::ios_base::binary);
+
+        if (!f)
+        {
+                error("Failed to open file " + file_name);
+        }
+
+        f.seekg(0, std::ios_base::end);
+        long long length = f.tellg();
+
+        if (length == 0)
+        {
+                s->clear();
+                return;
+        }
+
+        s->resize(length);
+        f.seekg(0, std::ios_base::beg);
+        f.read(s->data(), length);
+}
 #endif
 
 template void read_text_file(const std::string& file_name, std::string* s);
 template void read_text_file(const std::string& file_name, std::vector<char>* s);
+
+template void read_binary_file(const std::string& file_name, std::string* s);
+template void read_binary_file(const std::string& file_name, std::vector<char>* s);

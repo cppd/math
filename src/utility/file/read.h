@@ -22,3 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 template <typename T>
 void read_text_file(const std::string& file_name, T* s);
+
+template <typename T>
+void read_binary_file(const std::string& file_name, T* s);
