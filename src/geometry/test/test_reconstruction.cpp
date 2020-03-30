@@ -84,6 +84,84 @@ constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
 }
 
 template <size_t N>
+void test_obj_file(
+        const mesh::Mesh<N>& mesh,
+        const std::string& file_name,
+        const std::string& comment,
+        ProgressRatio* progress)
+{
+        LOG("saving to OBJ...");
+
+        std::string saved_file = mesh::save(mesh, file_name + "." + mesh::obj_file_extension(N), comment);
+
+        LOG("loading from OBJ...");
+
+        std::unique_ptr<const mesh::Mesh<N>> file_mesh = mesh::load<N>(saved_file, progress);
+
+        LOG("comparing meshes...");
+
+        if (mesh.vertices.size() != file_mesh->vertices.size())
+        {
+                error("Error writing and reading OBJ files (vertices)");
+        }
+        if (mesh.normals.size() != file_mesh->normals.size())
+        {
+                error("Error writing and reading OBJ files (normals)");
+        }
+        if (mesh.texcoords.size() != file_mesh->texcoords.size())
+        {
+                error("Error writing and reading OBJ files (texture)");
+        }
+        if (mesh.facets.size() != file_mesh->facets.size())
+        {
+                error("Error writing and reading OBJ files (facets)");
+        }
+        if (mesh.points.size() != file_mesh->points.size())
+        {
+                error("Error writing and reading OBJ files (points)");
+        }
+        if (mesh.lines.size() != file_mesh->lines.size())
+        {
+                error("Error writing and reading OBJ files (lines)");
+        }
+        if (mesh.materials.size() != file_mesh->materials.size())
+        {
+                error("Error writing and reading OBJ files (materials)");
+        }
+        if (mesh.images.size() != file_mesh->images.size())
+        {
+                error("Error writing and reading OBJ files (images)");
+        }
+}
+
+template <size_t N>
+void test_stl_file(
+        const mesh::Mesh<N>& mesh,
+        const std::string& file_name,
+        const std::string& comment,
+        ProgressRatio* progress)
+{
+        LOG("saving to STL...");
+
+        std::string saved_file = mesh::save(mesh, file_name + "." + mesh::stl_file_extension(N), comment);
+
+        LOG("loading from STL...");
+
+        std::unique_ptr<const mesh::Mesh<N>> file_mesh = mesh::load<N>(saved_file, progress);
+
+        LOG("comparing meshes...");
+
+        if (mesh.vertices.size() != file_mesh->vertices.size())
+        {
+                error("Error writing and reading STL files (vertices)");
+        }
+        if (mesh.facets.size() != file_mesh->facets.size())
+        {
+                error("Error writing and reading STL files (facets)");
+        }
+}
+
+template <size_t N>
 void test_geometry_files(
         const std::string& name,
         const std::vector<Vector<N, float>>& points,
@@ -95,31 +173,21 @@ void test_geometry_files(
 
         LOG("Test saving and loading");
 
-        std::string file_name = temp_directory() + "/" + name + "." + mesh::obj_file_extension(N);
+        std::string file_name = temp_directory() + "/" + name;
 
-        LOG("mesh for facets...");
-        std::unique_ptr<mesh::Mesh<N>> mesh1 = mesh::create_mesh_for_facets(points, normals, facets);
+        LOG("creating mesh for facets...");
+        std::unique_ptr<const mesh::Mesh<N>> mesh = mesh::create_mesh_for_facets(points, normals, facets);
 
-        LOG("save geometry...");
         std::string comment;
         comment += "Manifold Reconstruction\n";
         comment += name + "\n";
-        comment += "vertices = " + to_string(mesh1->vertices.size()) + "\n";
-        comment += "normals = " + to_string(mesh1->normals.size()) + "\n";
-        comment += "facets = " + to_string(mesh1->facets.size());
-        file_name = mesh::save(*mesh1, file_name, comment);
+        comment += "vertices = " + to_string(mesh->vertices.size()) + "\n";
+        comment += "normals = " + to_string(mesh->normals.size()) + "\n";
+        comment += "facets = " + to_string(mesh->facets.size());
 
-        LOG("load geometry...");
-        std::unique_ptr<mesh::Mesh<N>> mesh2 = mesh::load<N>(file_name, progress);
+        test_obj_file(*mesh, file_name, comment, progress);
 
-        LOG("compare mesh...");
-        if (mesh1->vertices.size() != mesh2->vertices.size() || mesh1->normals.size() != mesh2->normals.size() ||
-            mesh1->texcoords.size() != mesh2->texcoords.size() || mesh1->facets.size() != mesh2->facets.size() ||
-            mesh1->points.size() != mesh2->points.size() || mesh1->lines.size() != mesh2->lines.size() ||
-            mesh1->materials.size() != mesh2->materials.size() || mesh1->images.size() != mesh2->images.size())
-        {
-                error("Error writing and reading geometry files");
-        }
+        test_stl_file(*mesh, file_name, comment, progress);
 }
 
 // Файлы не поддерживают двухмерные объекты
