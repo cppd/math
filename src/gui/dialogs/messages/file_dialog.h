@@ -23,17 +23,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace dialog
 {
+struct FileFilter
+{
+        std::string name;
+        std::vector<std::string> file_extensions;
+};
+
 [[nodiscard]] bool save_file(
         QWidget* parent,
         const std::string& caption,
-        const std::vector<std::string>& filters,
+        const std::vector<FileFilter>& filters,
         bool read_only,
         std::string* name);
 
 [[nodiscard]] bool open_file(
         QWidget* parent,
         const std::string& caption,
-        const std::vector<std::string>& filters,
+        const std::vector<FileFilter>& filters,
         bool read_only,
         std::string* name);
 }

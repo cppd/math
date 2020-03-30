@@ -477,10 +477,12 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         std::string caption = "Open";
                         bool read_only = true;
 
-                        std::vector<std::string> filters;
+                        std::vector<dialog::FileFilter> filters;
                         for (const mesh::FileFormat& v : mesh::load_formats(MultiStorage::dimensions()))
                         {
-                                filters.push_back(file_filter(v.format_name, v.file_name_extensions));
+                                dialog::FileFilter& f = filters.emplace_back();
+                                f.name = v.format_name;
+                                f.file_extensions = v.file_name_extensions;
                         }
 
                         QPointer ptr(this);
@@ -618,10 +620,12 @@ void MainWindow::thread_export(ObjectId id)
                 std::string caption = "Export " + name + " to file";
                 bool read_only = true;
 
-                std::vector<std::string> filters;
+                std::vector<dialog::FileFilter> filters;
                 for (const mesh::FileFormat& v : mesh::save_formats(m_dimension))
                 {
-                        filters.push_back(file_filter(v.format_name, v.file_name_extensions));
+                        dialog::FileFilter& f = filters.emplace_back();
+                        f.name = v.format_name;
+                        f.file_extensions = v.file_name_extensions;
                 }
 
                 QPointer ptr(this);

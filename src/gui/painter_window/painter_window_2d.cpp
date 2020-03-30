@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../dialogs/messages/file_dialog.h"
 #include "../dialogs/messages/message_box.h"
-#include "../support/support.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -367,7 +366,9 @@ void PainterWindow2d::on_pushButton_save_to_file_clicked()
                 std::memcpy(pixels.data(), &pixels_bgr()[pixels_offset()], m_image_byte_count);
 
                 const std::string caption = "Save";
-                const std::string filter = file_filter("Images", SAVE_IMAGE_FILE_FORMAT);
+                dialog::FileFilter filter;
+                filter.name = "Images";
+                filter.file_extensions = {SAVE_IMAGE_FILE_FORMAT};
                 const bool read_only = true;
                 std::string file_name;
                 QPointer ptr(this);
