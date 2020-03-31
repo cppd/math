@@ -31,6 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/orthogonal.h>
 #include <src/utility/file/file.h>
 #include <src/utility/file/sys.h>
+#include <src/utility/string/str.h>
+
+#include <bit>
 
 namespace mesh::file
 {
@@ -38,27 +41,70 @@ namespace
 {
 constexpr bool NORMALIZE_VERTEX_COORDINATES = false;
 
+static_assert(std::endian::native == std::endian::little, "Binary STL numbers must be little-endian");
+
 // clang-format off
-constexpr const char* SOLID        = "solid s";
+constexpr const char* SOLID        = "solid";
 constexpr const char* FACET_NORMAL = "facet normal";
 constexpr const char* OUTER_LOOP   = "  outer loop";
 constexpr const char* VERTEX       = "    vertex";
 constexpr const char* END_LOOP     = "  endloop";
 constexpr const char* END_FACET    = "endfacet";
-constexpr const char* END_SOLID    = "endsolid s";
+constexpr const char* END_SOLID    = "endsolid";
 // clang-format on
 
-void write_begin(const CFile& file)
+std::string comment_to_solid_name(const std::string_view& comment)
 {
-        fprintf(file, "%s\n", SOLID);
+        std::string str;
+        for (char c : comment)
+        {
+                str += (c != '\n') ? c : ' ';
+        }
+        str = trim(str);
+        if (!str.empty())
+        {
+                return str;
+        }
+        return "s";
 }
 
-void write_end(const CFile& file)
+void write_begin_ascii(const CFile& file, const std::string& solid_name)
 {
-        fprintf(file, "%s\n", END_SOLID);
+        std::fprintf(file, "%s %s\n", SOLID, solid_name.c_str());
 }
 
-template <size_t N>
+void write_end_ascii(const CFile& file, const std::string& solid_name)
+{
+        std::fprintf(file, "%s %s\n", END_SOLID, solid_name.c_str());
+}
+
+void write_begin_binary(const CFile& file, unsigned facet_count)
+{
+        struct Begin
+        {
+                std::array<uint8_t, 80> header;
+                uint32_t number_of_triangles;
+        };
+        static_assert(sizeof(Begin) == 84 * sizeof(uint8_t));
+        Begin begin;
+        std::memset(begin.header.data(), 0, begin.header.size());
+        begin.number_of_triangles = facet_count;
+        std::fwrite(&begin, sizeof(begin), 1, file);
+}
+
+void write_end_binary(const CFile& file)
+{
+        struct End
+        {
+                uint16_t attribute_byte_count;
+        };
+        static_assert(sizeof(End) == 2 * sizeof(uint8_t));
+        End end;
+        end.attribute_byte_count = 0;
+        std::fwrite(&end, sizeof(end), 1, file);
+}
+
+template <bool ascii, size_t N>
 void write_facet(
         const CFile& file,
         const Vector<N, double>& normal,
@@ -71,22 +117,35 @@ void write_facet(
                 n = Vector<N, float>(0);
         }
 
-        fprintf(file, "%s", FACET_NORMAL);
-        write_vector(file, n);
-        fprintf(file, "\n");
-
-        fprintf(file, "%s\n", OUTER_LOOP);
-        for (unsigned i = 0; i < N; ++i)
+        if (ascii)
         {
-                fprintf(file, "%s", VERTEX);
-                write_vector(file, vertices[indices[i]]);
-                fprintf(file, "\n");
+                std::fprintf(file, "%s", FACET_NORMAL);
+                write_vector(file, n);
+                std::fprintf(file, "\n");
+
+                std::fprintf(file, "%s\n", OUTER_LOOP);
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        std::fprintf(file, "%s", VERTEX);
+                        write_vector(file, vertices[indices[i]]);
+                        std::fprintf(file, "\n");
+                }
+                std::fprintf(file, "%s\n", END_LOOP);
+                std::fprintf(file, "%s\n", END_FACET);
         }
-        fprintf(file, "%s\n", END_LOOP);
-        fprintf(file, "%s\n", END_FACET);
+        else
+        {
+                static_assert(sizeof(n) == N * sizeof(float));
+                std::fwrite(&n, sizeof(n), 1, file);
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        static_assert(sizeof(vertices[indices[i]]) == N * sizeof(float));
+                        std::fwrite(&vertices[indices[i]], sizeof(vertices[indices[i]]), 1, file);
+                }
+        }
 }
 
-template <size_t N>
+template <bool ascii, size_t N>
 void write_facets(const CFile& file, const Mesh<N>& mesh, const std::vector<Vector<N, float>>& vertices)
 {
         // Вершины граней надо записывать в трёхмерный STL таким образом,
@@ -101,12 +160,12 @@ void write_facets(const CFile& file, const Mesh<N>& mesh, const std::vector<Vect
                 if (!f.has_normal)
                 {
                         Vector<N, double> normal = ortho_nn<N, float, double>(vertices, f.vertices);
-                        write_facet(file, normal, f.vertices, vertices);
+                        write_facet<ascii>(file, normal, f.vertices, vertices);
                 }
                 else if constexpr (N != 3)
                 {
                         Vector<N, double> normal = ortho_nn<N, float, double>(vertices, f.vertices);
-                        write_facet(file, normal, f.vertices, vertices);
+                        write_facet<ascii>(file, normal, f.vertices, vertices);
                 }
                 else
                 {
@@ -130,12 +189,12 @@ void write_facets(const CFile& file, const Mesh<N>& mesh, const std::vector<Vect
                                 normal = -normal;
                         }
 
-                        write_facet(file, normal, v, vertices);
+                        write_facet<ascii>(file, normal, v, vertices);
                 }
         }
 }
 
-template <size_t N>
+template <bool ascii, size_t N>
 void write_facets(const CFile& file, const Mesh<N>& mesh)
 {
         if (NORMALIZE_VERTEX_COORDINATES)
@@ -145,11 +204,11 @@ void write_facets(const CFile& file, const Mesh<N>& mesh)
                 {
                         error("Facet coordinates are not found");
                 }
-                write_facets(file, mesh, normalize_vertices(mesh, *box));
+                write_facets<ascii>(file, mesh, normalize_vertices(mesh, *box));
         }
         else
         {
-                write_facets(file, mesh, mesh.vertices);
+                write_facets<ascii>(file, mesh, mesh.vertices);
         }
 }
 
@@ -197,10 +256,32 @@ void check_facets(const Mesh<N>& mesh)
                       to_string(N));
         }
 }
+
+template <size_t N>
+void write(bool ascii, const CFile& file, const Mesh<N>& mesh, const std::string_view& comment)
+{
+        if (ascii)
+        {
+                const std::string solid_name = comment_to_solid_name(comment);
+                write_begin_ascii(file, solid_name);
+                write_facets<true>(file, mesh);
+                write_end_ascii(file, solid_name);
+        }
+        else
+        {
+                write_begin_binary(file, mesh.facets.size());
+                write_facets<false>(file, mesh);
+                write_end_binary(file);
+        }
+}
 }
 
 template <size_t N>
-std::string save_to_stl_file(const Mesh<N>& mesh, const std::string& file_name)
+std::string save_to_stl_file(
+        const Mesh<N>& mesh,
+        const std::string& file_name,
+        const std::string_view& comment,
+        bool ascii_format)
 {
         static_assert(N >= 3);
 
@@ -212,17 +293,15 @@ std::string save_to_stl_file(const Mesh<N>& mesh, const std::string& file_name)
 
         double start_time = time_in_seconds();
 
-        write_begin(file);
-        write_facets(file, mesh);
-        write_end(file);
+        write(ascii_format, file, mesh, comment);
 
         LOG(stl_type_name(N) + " saved, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 
         return full_name;
 }
 
-template std::string save_to_stl_file(const Mesh<3>&, const std::string&);
-template std::string save_to_stl_file(const Mesh<4>&, const std::string&);
-template std::string save_to_stl_file(const Mesh<5>&, const std::string&);
-template std::string save_to_stl_file(const Mesh<6>&, const std::string&);
+template std::string save_to_stl_file(const Mesh<3>&, const std::string&, const std::string_view&, bool);
+template std::string save_to_stl_file(const Mesh<4>&, const std::string&, const std::string_view&, bool);
+template std::string save_to_stl_file(const Mesh<5>&, const std::string&, const std::string_view&, bool);
+template std::string save_to_stl_file(const Mesh<6>&, const std::string&, const std::string_view&, bool);
 }

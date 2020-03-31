@@ -52,7 +52,7 @@ void compute_bound_cocone(
         }
 }
 
-void save_to_file(ObjectId id, const std::string& file_name, const std::string& name, const MultiStorage& storage)
+void save_to_obj(ObjectId id, const std::string& file_name, const std::string& comment, const MultiStorage& storage)
 {
         bool found = std::apply(
                 [&](const auto&... v) {
@@ -62,7 +62,35 @@ void save_to_file(ObjectId id, const std::string& file_name, const std::string& 
                                         return false;
                                 }
 
-                                processor::save(v.storage, id, file_name, name);
+                                processor::save_to_obj(v.storage, id, file_name, comment);
+
+                                return true;
+                        }() || ...);
+                },
+                storage.data());
+
+        if (!found)
+        {
+                error("No object found");
+        }
+}
+
+void save_to_stl(
+        ObjectId id,
+        const std::string& file_name,
+        const std::string& comment,
+        const MultiStorage& storage,
+        bool ascii_format)
+{
+        bool found = std::apply(
+                [&](const auto&... v) {
+                        return ([&]() {
+                                if (!v.storage.object(id))
+                                {
+                                        return false;
+                                }
+
+                                processor::save_to_stl(v.storage, id, file_name, comment, ascii_format);
 
                                 return true;
                         }() || ...);

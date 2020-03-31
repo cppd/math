@@ -30,4 +30,5 @@ enum class MeshFileType
 };
 
 std::tuple<int, MeshFileType> file_dimension_and_type(const std::string& file_name);
+int read_dimension_number(const std::string& s);
 }

@@ -92,7 +92,7 @@ void test_obj_file(
 {
         LOG("saving to OBJ...");
 
-        std::string saved_file = mesh::save(mesh, file_name + "." + mesh::obj_file_extension(N), comment);
+        std::string saved_file = mesh::save_to_obj(mesh, file_name + "." + mesh::obj_file_extension(N), comment);
 
         LOG("loading from OBJ...");
 
@@ -143,7 +143,9 @@ void test_stl_file(
 {
         LOG("saving to STL...");
 
-        std::string saved_file = mesh::save(mesh, file_name + "." + mesh::stl_file_extension(N), comment);
+        constexpr bool ascii_format = true;
+        std::string saved_file =
+                mesh::save_to_stl(mesh, file_name + "." + mesh::stl_file_extension(N), comment, ascii_format);
 
         LOG("loading from STL...");
 

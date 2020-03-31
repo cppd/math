@@ -113,6 +113,7 @@ int count_numbers_in_file(const std::string& file_name)
 
         return count_numbers(line);
 }
+}
 
 // Чтение числа из строки с проверкой, что строка содержит только целое число без других символов
 int read_dimension_number(const std::string& s)
@@ -139,7 +140,6 @@ int read_dimension_number(const std::string& s)
         }
 
         return d;
-}
 }
 
 std::tuple<int, MeshFileType> file_dimension_and_type(const std::string& file_name)

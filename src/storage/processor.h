@@ -436,7 +436,11 @@ std::unique_ptr<const mesh::Mesh<N>> load_from_repository(
 }
 
 template <size_t N, typename MeshFloat>
-void save(const Storage<N, MeshFloat>& storage, ObjectId id, const std::string& file_name, const std::string& name)
+void save_to_obj(
+        const Storage<N, MeshFloat>& storage,
+        ObjectId id,
+        const std::string& file_name,
+        const std::string& comment)
 {
         const std::shared_ptr<const MeshObject<N>> object = storage.object(id);
 
@@ -445,6 +449,24 @@ void save(const Storage<N, MeshFloat>& storage, ObjectId id, const std::string& 
                 error("No object to export");
         }
 
-        mesh::save(object->mesh(), file_name, name);
+        mesh::save_to_obj(object->mesh(), file_name, comment);
+}
+
+template <size_t N, typename MeshFloat>
+void save_to_stl(
+        const Storage<N, MeshFloat>& storage,
+        ObjectId id,
+        const std::string& file_name,
+        const std::string& comment,
+        bool ascii_format)
+{
+        const std::shared_ptr<const MeshObject<N>> object = storage.object(id);
+
+        if (!object)
+        {
+                error("No object to export");
+        }
+
+        mesh::save_to_stl(object->mesh(), file_name, comment, ascii_format);
 }
 }

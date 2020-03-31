@@ -110,6 +110,8 @@ constexpr float NORMAL_LENGTH_MAXIMUM = 0.2;
 constexpr QRgb NORMAL_COLOR_POSITIVE = qRgb(200, 200, 0);
 constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(50, 150, 50);
 
+constexpr bool STL_EXPORT_FORMAT_ASCII = true;
+
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
           m_window_thread_id(std::this_thread::get_id()),
@@ -638,10 +640,22 @@ void MainWindow::thread_export(ObjectId id)
                         return;
                 }
 
+                mesh::FileType file_type = mesh::file_type_by_extension(file_name);
+
                 auto f = [=, this](ProgressRatioList*, std::string* message) {
                         *message = "Export " + name + " to " + file_name;
-                        save_to_file(id, file_name, name, *m_storage);
-                        m_event_emitter.message_information(name + " exported to file " + file_name);
+                        switch (file_type)
+                        {
+                        case mesh::FileType::Obj:
+                                save_to_obj(id, file_name, name, *m_storage);
+                                m_event_emitter.message_information(name + " exported to OBJ file " + file_name);
+                                return;
+                        case mesh::FileType::Stl:
+                                save_to_stl(id, file_name, name, *m_storage, STL_EXPORT_FORMAT_ASCII);
+                                m_event_emitter.message_information(name + " exported to STL file " + file_name);
+                                return;
+                        }
+                        error_fatal("Unknown file type for export");
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));

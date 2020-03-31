@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "file/save_stl.h"
 
 #include <src/com/error.h>
+#include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/utility/file/sys.h>
 
@@ -93,31 +94,45 @@ std::unique_ptr<Mesh<N>> load(const std::string& file_name, ProgressRatio* progr
 }
 
 template <size_t N>
-std::string save(const Mesh<N>& mesh, const std::string& file_name, const std::string_view& comment)
+std::string save_to_obj(const Mesh<N>& mesh, const std::string& file_name, const std::string_view& comment)
 {
         std::string ext = file_extension(file_name);
-        if (is_obj_file_extension(N, ext))
+        if (!is_obj_file_extension(N, ext))
         {
-                return file::save_to_obj_file(mesh, file_name, comment);
+                error("Not OBJ file extension \"" + ext + "\" for saving to OBJ format, " + space_name(N));
         }
-        if (is_stl_file_extension(N, ext))
-        {
-                return file::save_to_stl_file(mesh, file_name);
-        }
-        if (!ext.empty())
-        {
-                error("Unsupported format " + file_name);
-        }
-        error("Empty extension " + file_name);
+        return file::save_to_obj_file(mesh, file_name, comment);
 }
 
-template std::string save(const Mesh<3>&, const std::string&, const std::string_view&);
-template std::string save(const Mesh<4>&, const std::string&, const std::string_view&);
-template std::string save(const Mesh<5>&, const std::string&, const std::string_view&);
-template std::string save(const Mesh<6>&, const std::string&, const std::string_view&);
+template <size_t N>
+std::string save_to_stl(
+        const Mesh<N>& mesh,
+        const std::string& file_name,
+        const std::string_view& comment,
+        bool ascii_format)
+{
+        std::string ext = file_extension(file_name);
+        if (!is_stl_file_extension(N, ext))
+        {
+                error("Not STL file extension \"" + ext + "\" for saving to STL format, " + space_name(N));
+        }
+        return file::save_to_stl_file(mesh, file_name, comment, ascii_format);
+}
+
+//
 
 template std::unique_ptr<Mesh<3>> load(const std::string&, ProgressRatio*);
 template std::unique_ptr<Mesh<4>> load(const std::string&, ProgressRatio*);
 template std::unique_ptr<Mesh<5>> load(const std::string&, ProgressRatio*);
 template std::unique_ptr<Mesh<6>> load(const std::string&, ProgressRatio*);
+
+template std::string save_to_obj(const Mesh<3>&, const std::string&, const std::string_view&);
+template std::string save_to_obj(const Mesh<4>&, const std::string&, const std::string_view&);
+template std::string save_to_obj(const Mesh<5>&, const std::string&, const std::string_view&);
+template std::string save_to_obj(const Mesh<6>&, const std::string&, const std::string_view&);
+
+template std::string save_to_stl(const Mesh<3>&, const std::string&, const std::string_view&, bool);
+template std::string save_to_stl(const Mesh<4>&, const std::string&, const std::string_view&, bool);
+template std::string save_to_stl(const Mesh<5>&, const std::string&, const std::string_view&, bool);
+template std::string save_to_stl(const Mesh<6>&, const std::string&, const std::string_view&, bool);
 }

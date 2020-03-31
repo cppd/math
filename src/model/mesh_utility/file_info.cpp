@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/utility/file/sys.h>
 
 namespace mesh
 {
@@ -89,6 +90,24 @@ std::vector<std::string> stl_file_extensions(const std::set<unsigned>& dimension
 bool is_stl_file_extension(size_t N, const std::string& extension)
 {
         return (extension == stl_file_extension(N)) || (extension == "stl" + to_string(N));
+}
+
+//
+
+FileType file_type_by_extension(const std::string& file_name)
+{
+        const std::string ext = file_extension(file_name);
+        const std::string OBJ = "obj";
+        if (ext.find(OBJ) == 0 && (ext == OBJ || file::read_dimension_number(ext.substr(OBJ.size()))))
+        {
+                return FileType::Obj;
+        }
+        const std::string STL = "stl";
+        if (ext.find(STL) == 0 && (ext == STL || file::read_dimension_number(ext.substr(STL.size()))))
+        {
+                return FileType::Stl;
+        }
+        error("Failed to find the file type by its extension for the file name " + file_name);
 }
 
 //

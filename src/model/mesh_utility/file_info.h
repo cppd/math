@@ -25,6 +25,13 @@ namespace mesh
 {
 int file_dimension(const std::string& file_name);
 
+enum class FileType
+{
+        Obj,
+        Stl
+};
+FileType file_type_by_extension(const std::string& file_name);
+
 std::string obj_file_extension(size_t N);
 std::vector<std::string> obj_file_extensions(const std::set<unsigned>& dimensions);
 bool is_obj_file_extension(size_t N, const std::string& e);

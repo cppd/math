@@ -41,5 +41,12 @@ template <size_t N>
 std::unique_ptr<Mesh<N>> load(const std::string& file_name, ProgressRatio* progress);
 
 template <size_t N>
-std::string save(const Mesh<N>& mesh, const std::string& file_name, const std::string_view& comment);
+std::string save_to_obj(const Mesh<N>& mesh, const std::string& file_name, const std::string_view& comment);
+
+template <size_t N>
+std::string save_to_stl(
+        const Mesh<N>& mesh,
+        const std::string& file_name,
+        const std::string_view& comment,
+        bool ascii_format);
 }
