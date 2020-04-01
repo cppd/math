@@ -139,15 +139,17 @@ void test_stl_file(
         const mesh::Mesh<N>& mesh,
         const std::string& file_name,
         const std::string& comment,
-        ProgressRatio* progress)
+        ProgressRatio* progress,
+        bool ascii_format)
 {
-        LOG("saving to STL...");
+        const std::string type_name = ascii_format ? "ASCII" : "binary";
 
-        constexpr bool ascii_format = true;
+        LOG("saving to " + type_name + " STL...");
+
         std::string saved_file =
                 mesh::save_to_stl(mesh, file_name + "." + mesh::stl_file_extension(N), comment, ascii_format);
 
-        LOG("loading from STL...");
+        LOG("loading from " + type_name + " STL...");
 
         std::unique_ptr<const mesh::Mesh<N>> file_mesh = mesh::load<N>(saved_file, progress);
 
@@ -189,7 +191,8 @@ void test_geometry_files(
 
         test_obj_file(*mesh, file_name, comment, progress);
 
-        test_stl_file(*mesh, file_name, comment, progress);
+        test_stl_file(*mesh, file_name, comment, progress, true /*ascii_format*/);
+        test_stl_file(*mesh, file_name, comment, progress, false /*ascii_format*/);
 }
 
 // Файлы не поддерживают двухмерные объекты
