@@ -51,6 +51,10 @@ constexpr bool is_digit(char c)
 {
         return c >= '0' && c <= '9';
 }
+constexpr bool is_print(char c)
+{
+        return c >= '\x20' && c <= '\x7e';
+}
 constexpr int char_to_int(char c)
 {
         return c - '0';
