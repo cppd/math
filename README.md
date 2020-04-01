@@ -22,8 +22,8 @@ Just for fun with mathematics and stuff
 
 External Input
 
-* OBJ files (.obj) with vertices, normals, triangles and textures.
-* Extended OBJ files (.objn) with vertices, normals and (n-1)-simplices in n-space.
+* OBJ and STL files with objects in 3-space.
+* Extended OBJ and STL files with objects in n-space.
 * Text files with the coordinates of points in n-space, one point per line.
 
 Internal Input
@@ -41,8 +41,8 @@ Output
   * real-time rendering of 3-space objects,
   * non-real-time rendering of n-space objects on the internal (n-1)-dimensional screen,
   * algorithms in 2-space.
-* OBJ files with the output of algorithms in 3-space.
-* Extended OBJ files with the output of algorithms in n-space.
+* OBJ and STL files with the output of algorithms in 3-space.
+* Extended OBJ and STL files with the output of algorithms in n-space.
 
 ## Algorithms
 
