@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_buffers.h"
 
-#include "../../com/glsl.h"
-
 #include <src/numerical/vec.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/descriptor.h>
@@ -88,9 +86,9 @@ public:
 
         struct Material
         {
-                alignas(GLSL_VEC3_ALIGN) vec3f Ka;
-                alignas(GLSL_VEC3_ALIGN) vec3f Kd;
-                alignas(GLSL_VEC3_ALIGN) vec3f Ks;
+                alignas(sizeof(vec4f)) vec3f Ka;
+                alignas(sizeof(vec4f)) vec3f Kd;
+                alignas(sizeof(vec4f)) vec3f Ks;
                 float Ns;
                 uint32_t use_texture_Ka;
                 uint32_t use_texture_Kd;

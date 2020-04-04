@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../../com/glsl.h"
-
 #include <src/color/color.h>
 #include <src/numerical/matrix.h>
 #include <src/vulkan/buffers.h>
@@ -57,24 +55,24 @@ class RendererBuffers
 
         struct Lighting
         {
-                alignas(GLSL_VEC3_ALIGN) vec3f direction_to_light;
-                alignas(GLSL_VEC3_ALIGN) vec3f direction_to_camera;
+                alignas(sizeof(vec4f)) vec3f direction_to_light;
+                alignas(sizeof(vec4f)) vec3f direction_to_camera;
                 uint32_t show_smooth;
         };
 
         struct Drawing
         {
-                alignas(GLSL_VEC3_ALIGN) vec3f default_color;
-                alignas(GLSL_VEC3_ALIGN) vec3f wireframe_color;
-                alignas(GLSL_VEC3_ALIGN) vec3f background_color;
-                alignas(GLSL_VEC3_ALIGN) vec3f clip_plane_color;
+                alignas(sizeof(vec4f)) vec3f default_color;
+                alignas(sizeof(vec4f)) vec3f wireframe_color;
+                alignas(sizeof(vec4f)) vec3f background_color;
+                alignas(sizeof(vec4f)) vec3f clip_plane_color;
                 float normal_length;
-                alignas(GLSL_VEC3_ALIGN) vec3f normal_color_positive;
-                alignas(GLSL_VEC3_ALIGN) vec3f normal_color_negative;
+                alignas(sizeof(vec4f)) vec3f normal_color_positive;
+                alignas(sizeof(vec4f)) vec3f normal_color_negative;
                 float default_ns;
-                alignas(GLSL_VEC3_ALIGN) vec3f light_a;
-                alignas(GLSL_VEC3_ALIGN) vec3f light_d;
-                alignas(GLSL_VEC3_ALIGN) vec3f light_s;
+                alignas(sizeof(vec4f)) vec3f light_a;
+                alignas(sizeof(vec4f)) vec3f light_d;
+                alignas(sizeof(vec4f)) vec3f light_s;
                 uint32_t show_materials;
                 uint32_t show_wireframe;
                 uint32_t show_shadow;

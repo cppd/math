@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../../com/glsl.h"
-
 #include <src/color/color.h>
 #include <src/numerical/matrix.h>
 #include <src/vulkan/buffers.h>
@@ -49,7 +47,7 @@ class TextShowMemory final
 
         struct Drawing
         {
-                alignas(GLSL_VEC3_ALIGN) vec3f color;
+                vec3f color;
         };
 
         size_t m_matrices_buffer_index;
