@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "renderer.h"
 
 #include "depth_buffer.h"
-#include "draw_object.h"
+#include "mesh_object.h"
 #include "sampler.h"
 #include "shader_normals.h"
 #include "shader_points.h"
@@ -122,7 +122,7 @@ class Impl final : public Renderer
 
         const vulkan::ImageWithMemory* m_object_image = nullptr;
 
-        RendererObjectStorage<ObjectId, DrawObject> m_storage;
+        RendererObjectStorage<ObjectId, MeshObject> m_storage;
 
         unsigned m_x, m_y, m_width, m_height;
 
@@ -305,7 +305,7 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                std::unique_ptr draw_object = std::make_unique<DrawObject>(
+                std::unique_ptr draw_object = std::make_unique<MeshObject>(
                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
                         m_texture_sampler, m_triangles_program.descriptor_set_layout_material(), object.mesh(),
                         object.matrix());
@@ -365,7 +365,7 @@ class Impl final : public Renderer
                 {
                         return;
                 }
-                const DrawObject* object = m_storage.object();
+                const MeshObject* object = m_storage.object();
                 m_storage.show_object(id);
                 if (object != m_storage.object())
                 {

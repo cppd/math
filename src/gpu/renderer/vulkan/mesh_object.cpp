@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "draw_object.h"
+#include "mesh_object.h"
 
 #include "shader_points.h"
 #include "shader_triangles.h"
@@ -420,7 +420,7 @@ std::unique_ptr<RendererTrianglesMaterialMemory> load_materials(
 }
 }
 
-class DrawObject::Triangles final
+class MeshObject::Triangles final
 {
         std::unique_ptr<vulkan::BufferWithMemory> m_vertex_buffer;
         std::unique_ptr<vulkan::BufferWithMemory> m_index_buffer;
@@ -549,7 +549,7 @@ public:
         }
 };
 
-class DrawObject::Lines final
+class MeshObject::Lines final
 {
         std::unique_ptr<vulkan::BufferWithMemory> m_vertex_buffer;
         unsigned m_vertex_count;
@@ -592,7 +592,7 @@ public:
         }
 };
 
-class DrawObject::Points final
+class MeshObject::Points final
 {
         std::unique_ptr<vulkan::BufferWithMemory> m_vertex_buffer;
         unsigned m_vertex_count;
@@ -635,7 +635,7 @@ public:
         }
 };
 
-DrawObject::DrawObject(
+MeshObject::MeshObject(
         const vulkan::Device& device,
         const vulkan::CommandPool& graphics_command_pool,
         const vulkan::Queue& graphics_queue,
@@ -649,37 +649,37 @@ DrawObject::DrawObject(
 {
         if (!mesh.facets.empty())
         {
-                m_triangles = std::make_unique<DrawObject::Triangles>(
+                m_triangles = std::make_unique<MeshObject::Triangles>(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sampler,
                         descriptor_set_layout, mesh);
         }
 
         if (!mesh.lines.empty())
         {
-                m_lines = std::make_unique<DrawObject::Lines>(
+                m_lines = std::make_unique<MeshObject::Lines>(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, mesh);
         }
 
         if (!mesh.points.empty())
         {
-                m_points = std::make_unique<DrawObject::Points>(
+                m_points = std::make_unique<MeshObject::Points>(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, mesh);
         }
 }
 
-DrawObject::~DrawObject() = default;
+MeshObject::~MeshObject() = default;
 
-bool DrawObject::has_shadow() const
+bool MeshObject::has_shadow() const
 {
         return m_triangles.get() != nullptr;
 }
 
-const mat4& DrawObject::model_matrix() const
+const mat4& MeshObject::model_matrix() const
 {
         return m_model_matrix;
 }
 
-void DrawObject::draw_commands(VkCommandBuffer command_buffer, const DrawInfo& info) const
+void MeshObject::draw_commands(VkCommandBuffer command_buffer, const DrawInfo& info) const
 {
         if (m_triangles)
         {
@@ -695,7 +695,7 @@ void DrawObject::draw_commands(VkCommandBuffer command_buffer, const DrawInfo& i
         }
 }
 
-void DrawObject::draw_commands_triangles(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const
+void MeshObject::draw_commands_triangles(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const
 {
         if (m_triangles)
         {
@@ -703,7 +703,7 @@ void DrawObject::draw_commands_triangles(VkCommandBuffer command_buffer, const D
         }
 }
 
-void DrawObject::draw_commands_triangle_vertices(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const
+void MeshObject::draw_commands_triangle_vertices(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const
 {
         if (m_triangles)
         {

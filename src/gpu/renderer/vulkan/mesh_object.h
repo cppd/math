@@ -53,7 +53,7 @@ struct DrawInfoTriangles
         unsigned triangles_set_number;
 };
 
-class DrawObject final
+class MeshObject final
 {
         class Triangles;
         class Lines;
@@ -66,7 +66,7 @@ class DrawObject final
         std::unique_ptr<Points> m_points;
 
 public:
-        DrawObject(
+        MeshObject(
                 const vulkan::Device& device,
                 const vulkan::CommandPool& graphics_command_pool,
                 const vulkan::Queue& graphics_queue,
@@ -76,7 +76,8 @@ public:
                 VkDescriptorSetLayout descriptor_set_layout,
                 const mesh::Mesh<3>& mesh,
                 const mat4& model_matrix);
-        ~DrawObject();
+
+        ~MeshObject();
 
         bool has_shadow() const;
         const mat4& model_matrix() const;
