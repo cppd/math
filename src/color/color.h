@@ -30,6 +30,16 @@ struct Srgb8
         constexpr Srgb8(unsigned char r, unsigned char g, unsigned char b) : red(r), green(g), blue(b)
         {
         }
+
+        constexpr std::uint_least32_t to_uint_rgb() const
+        {
+                return red | (green << 8u) | (blue << 16u);
+        }
+
+        constexpr std::uint_least32_t to_uint_bgr() const
+        {
+                return blue | (green << 8u) | (red << 16u);
+        }
 };
 
 class Color
