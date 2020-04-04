@@ -27,32 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_vulkan
 {
-struct DrawInfo
-{
-        VkPipelineLayout triangles_pipeline_layout;
-        VkPipeline triangles_pipeline;
-        VkDescriptorSet triangles_shared_set;
-        unsigned triangles_shared_set_number;
-
-        VkPipelineLayout points_pipeline_layout;
-        VkPipeline points_pipeline;
-        VkDescriptorSet points_set;
-        unsigned points_set_number;
-
-        VkPipelineLayout lines_pipeline_layout;
-        VkPipeline lines_pipeline;
-        VkDescriptorSet lines_set;
-        unsigned lines_set_number;
-};
-
-struct DrawInfoTriangles
-{
-        VkPipelineLayout triangles_pipeline_layout;
-        VkPipeline triangles_pipeline;
-        VkDescriptorSet triangles_set;
-        unsigned triangles_set_number;
-};
-
 class MeshObject final
 {
         class Triangles;
@@ -81,8 +55,64 @@ public:
 
         bool has_shadow() const;
         const mat4& model_matrix() const;
-        void draw_commands(VkCommandBuffer command_buffer, const DrawInfo& info) const;
-        void draw_commands_triangles(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const;
-        void draw_commands_triangle_vertices(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const;
+
+        //
+
+        struct DrawInfoAll final
+        {
+                struct Triangles
+                {
+                        VkPipelineLayout pipeline_layout;
+                        VkPipeline pipeline;
+                        VkDescriptorSet shared_descriptor_set;
+                        uint32_t shared_descriptor_set_number;
+                };
+
+                struct Lines
+                {
+                        VkPipelineLayout pipeline_layout;
+                        VkPipeline pipeline;
+                        VkDescriptorSet descriptor_set;
+                        uint32_t descriptor_set_number;
+                };
+
+                struct Points
+                {
+                        VkPipelineLayout pipeline_layout;
+                        VkPipeline pipeline;
+                        VkDescriptorSet descriptor_set;
+                        uint32_t descriptor_set_number;
+                };
+
+                Triangles triangles;
+                Lines lines;
+                Points points;
+        };
+
+        void draw_commands_all(VkCommandBuffer buffer, const DrawInfoAll& info) const;
+
+        //
+
+        struct DrawInfoPlainTriangles final
+        {
+                VkPipelineLayout pipeline_layout;
+                VkPipeline pipeline;
+                VkDescriptorSet descriptor_set;
+                uint32_t descriptor_set_number;
+        };
+
+        void draw_commands_plain_triangles(VkCommandBuffer buffer, const DrawInfoPlainTriangles& info) const;
+
+        //
+
+        struct DrawInfoTriangleVertices final
+        {
+                VkPipelineLayout pipeline_layout;
+                VkPipeline pipeline;
+                VkDescriptorSet descriptor_set;
+                uint32_t descriptor_set_number;
+        };
+
+        void draw_commands_triangle_vertices(VkCommandBuffer buffer, const DrawInfoTriangleVertices& info) const;
 };
 }

@@ -574,46 +574,46 @@ class Impl final : public Renderer
                 }
 
                 {
-                        DrawInfo info;
+                        MeshObject::DrawInfoAll info;
 
-                        info.triangles_pipeline_layout = m_triangles_program.pipeline_layout();
-                        info.triangles_pipeline = *m_render_triangles_pipeline;
-                        info.triangles_shared_set = m_triangles_shared_memory.descriptor_set();
-                        info.triangles_shared_set_number = RendererTrianglesSharedMemory::set_number();
+                        info.triangles.pipeline_layout = m_triangles_program.pipeline_layout();
+                        info.triangles.pipeline = *m_render_triangles_pipeline;
+                        info.triangles.shared_descriptor_set = m_triangles_shared_memory.descriptor_set();
+                        info.triangles.shared_descriptor_set_number = RendererTrianglesSharedMemory::set_number();
 
-                        info.points_pipeline_layout = m_points_program.pipeline_layout();
-                        info.points_pipeline = *m_render_points_pipeline;
-                        info.points_set = m_points_memory.descriptor_set();
-                        info.points_set_number = RendererPointsMemory::set_number();
+                        info.lines.pipeline_layout = m_points_program.pipeline_layout();
+                        info.lines.pipeline = *m_render_lines_pipeline;
+                        info.lines.descriptor_set = m_points_memory.descriptor_set();
+                        info.lines.descriptor_set_number = RendererPointsMemory::set_number();
 
-                        info.lines_pipeline_layout = m_points_program.pipeline_layout();
-                        info.lines_pipeline = *m_render_lines_pipeline;
-                        info.lines_set = m_points_memory.descriptor_set();
-                        info.lines_set_number = RendererPointsMemory::set_number();
+                        info.points.pipeline_layout = m_points_program.pipeline_layout();
+                        info.points.pipeline = *m_render_points_pipeline;
+                        info.points.descriptor_set = m_points_memory.descriptor_set();
+                        info.points.descriptor_set_number = RendererPointsMemory::set_number();
 
-                        m_storage.object()->draw_commands(command_buffer, info);
+                        m_storage.object()->draw_commands_all(command_buffer, info);
                 }
 
                 if (m_clip_plane)
                 {
-                        DrawInfoTriangles info;
+                        MeshObject::DrawInfoPlainTriangles info;
 
-                        info.triangles_pipeline_layout = m_triangle_lines_program.pipeline_layout();
-                        info.triangles_pipeline = *m_render_triangle_lines_pipeline;
-                        info.triangles_set = m_triangle_lines_memory.descriptor_set();
-                        info.triangles_set_number = RendererTriangleLinesMemory::set_number();
+                        info.pipeline_layout = m_triangle_lines_program.pipeline_layout();
+                        info.pipeline = *m_render_triangle_lines_pipeline;
+                        info.descriptor_set = m_triangle_lines_memory.descriptor_set();
+                        info.descriptor_set_number = RendererTriangleLinesMemory::set_number();
 
-                        m_storage.object()->draw_commands_triangles(command_buffer, info);
+                        m_storage.object()->draw_commands_plain_triangles(command_buffer, info);
                 }
 
                 if (m_show_normals)
                 {
-                        DrawInfoTriangles info;
+                        MeshObject::DrawInfoTriangleVertices info;
 
-                        info.triangles_pipeline_layout = m_normals_program.pipeline_layout();
-                        info.triangles_pipeline = *m_render_normals_pipeline;
-                        info.triangles_set = m_normals_memory.descriptor_set();
-                        info.triangles_set_number = RendererNormalsMemory::set_number();
+                        info.pipeline_layout = m_normals_program.pipeline_layout();
+                        info.pipeline = *m_render_normals_pipeline;
+                        info.descriptor_set = m_normals_memory.descriptor_set();
+                        info.descriptor_set_number = RendererNormalsMemory::set_number();
 
                         m_storage.object()->draw_commands_triangle_vertices(command_buffer, info);
                 }
@@ -630,16 +630,16 @@ class Impl final : public Renderer
                         return;
                 }
 
-                DrawInfoTriangles info;
+                MeshObject::DrawInfoPlainTriangles info;
 
-                info.triangles_pipeline_layout = m_shadow_program.pipeline_layout();
-                info.triangles_pipeline = *m_shadow_pipeline;
-                info.triangles_set = m_shadow_memory.descriptor_set();
-                info.triangles_set_number = RendererShadowMemory::set_number();
+                info.pipeline_layout = m_shadow_program.pipeline_layout();
+                info.pipeline = *m_shadow_pipeline;
+                info.descriptor_set = m_shadow_memory.descriptor_set();
+                info.descriptor_set_number = RendererShadowMemory::set_number();
 
                 vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
 
-                m_storage.object()->draw_commands_triangles(command_buffer, info);
+                m_storage.object()->draw_commands_plain_triangles(command_buffer, info);
         }
 
         void create_render_command_buffers()

@@ -497,13 +497,13 @@ public:
                 m_offsets = {0};
         }
 
-        void draw_commands(VkCommandBuffer command_buffer, const DrawInfo& info) const
+        void draw_commands(VkCommandBuffer command_buffer, const DrawInfoAll::Triangles& info) const
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline);
 
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline_layout,
-                        info.triangles_shared_set_number, 1 /*set count*/, &info.triangles_shared_set, 0, nullptr);
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline_layout,
+                        info.shared_descriptor_set_number, 1 /*set count*/, &info.shared_descriptor_set, 0, nullptr);
 
                 vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
                 vkCmdBindIndexBuffer(command_buffer, *m_index_buffer, 0, VULKAN_INDEX_TYPE);
@@ -513,7 +513,7 @@ public:
                         ASSERT(material.vertex_count > 0);
 
                         vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline_layout,
+                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline_layout,
                                 RendererTrianglesMaterialMemory::set_number(), 1 /*set count*/,
                                 &material.descriptor_set, 0, nullptr);
 
@@ -521,13 +521,13 @@ public:
                 }
         }
 
-        void draw_commands_triangles(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const
+        void draw_commands_triangles(VkCommandBuffer command_buffer, const DrawInfoPlainTriangles& info) const
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline);
 
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline_layout,
-                        info.triangles_set_number, 1 /*set count*/, &info.triangles_set, 0, nullptr);
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline_layout,
+                        info.descriptor_set_number, 1 /*set count*/, &info.descriptor_set, 0, nullptr);
 
                 vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
                 vkCmdBindIndexBuffer(command_buffer, *m_index_buffer, 0, VULKAN_INDEX_TYPE);
@@ -535,13 +535,13 @@ public:
                 vkCmdDrawIndexed(command_buffer, m_index_count, 1, 0, 0, 0);
         }
 
-        void draw_commands_vertices(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const
+        void draw_commands_vertices(VkCommandBuffer command_buffer, const DrawInfoTriangleVertices& info) const
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline);
 
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline_layout,
-                        info.triangles_set_number, 1 /*set count*/, &info.triangles_set, 0, nullptr);
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline_layout,
+                        info.descriptor_set_number, 1 /*set count*/, &info.descriptor_set, 0, nullptr);
 
                 vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
 
@@ -578,13 +578,13 @@ public:
                 m_offsets = {0};
         }
 
-        void draw_commands(VkCommandBuffer command_buffer, const DrawInfo& info) const
+        void draw_commands(VkCommandBuffer command_buffer, const DrawInfoAll::Lines& info) const
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.lines_pipeline);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline);
 
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.lines_pipeline_layout,
-                        info.lines_set_number, 1 /*set count*/, &info.lines_set, 0, nullptr);
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline_layout,
+                        info.descriptor_set_number, 1 /*set count*/, &info.descriptor_set, 0, nullptr);
 
                 vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
 
@@ -621,13 +621,13 @@ public:
                 m_offsets = {0};
         }
 
-        void draw_commands(VkCommandBuffer command_buffer, const DrawInfo& info) const
+        void draw_commands(VkCommandBuffer command_buffer, const DrawInfoAll::Points& info) const
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.points_pipeline);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline);
 
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.points_pipeline_layout,
-                        info.points_set_number, 1 /*set count*/, &info.points_set, 0, nullptr);
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline_layout,
+                        info.descriptor_set_number, 1 /*set count*/, &info.descriptor_set, 0, nullptr);
 
                 vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
 
@@ -679,35 +679,35 @@ const mat4& MeshObject::model_matrix() const
         return m_model_matrix;
 }
 
-void MeshObject::draw_commands(VkCommandBuffer command_buffer, const DrawInfo& info) const
+void MeshObject::draw_commands_all(VkCommandBuffer buffer, const DrawInfoAll& info) const
 {
         if (m_triangles)
         {
-                m_triangles->draw_commands(command_buffer, info);
+                m_triangles->draw_commands(buffer, info.triangles);
         }
         if (m_lines)
         {
-                m_lines->draw_commands(command_buffer, info);
+                m_lines->draw_commands(buffer, info.lines);
         }
         if (m_points)
         {
-                m_points->draw_commands(command_buffer, info);
+                m_points->draw_commands(buffer, info.points);
         }
 }
 
-void MeshObject::draw_commands_triangles(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const
+void MeshObject::draw_commands_plain_triangles(VkCommandBuffer buffer, const DrawInfoPlainTriangles& info) const
 {
         if (m_triangles)
         {
-                m_triangles->draw_commands_triangles(command_buffer, info);
+                m_triangles->draw_commands_triangles(buffer, info);
         }
 }
 
-void MeshObject::draw_commands_triangle_vertices(VkCommandBuffer command_buffer, const DrawInfoTriangles& info) const
+void MeshObject::draw_commands_triangle_vertices(VkCommandBuffer buffer, const DrawInfoTriangleVertices& info) const
 {
         if (m_triangles)
         {
-                m_triangles->draw_commands_vertices(command_buffer, info);
+                m_triangles->draw_commands_vertices(buffer, info);
         }
 }
 }
