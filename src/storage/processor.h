@@ -87,7 +87,7 @@ std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh,
 template <typename MeshFloat, size_t N>
 std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> build_mesh(
         ProgressRatioList* progress_list,
-        const MeshObject<N>& object,
+        const mesh::MeshObject<N>& object,
         int mesh_threads)
 {
         if (object.mesh().facets.empty())
@@ -105,7 +105,7 @@ std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> build_mesh(
 template <size_t N, typename MeshFloat>
 void add_object_and_mesh(
         ProgressRatioList* progress_list,
-        const std::shared_ptr<const MeshObject<N>>& object,
+        const std::shared_ptr<const mesh::MeshObject<N>>& object,
         int mesh_threads,
         Storage<N, MeshFloat>* storage)
 {
@@ -117,7 +117,7 @@ void add_object_and_mesh(
 template <size_t N, typename MeshFloat>
 void convex_hull(
         ProgressRatioList* progress_list,
-        const std::shared_ptr<const MeshObject<N>>& object,
+        const std::shared_ptr<const mesh::MeshObject<N>>& object,
         int mesh_threads,
         Storage<N, MeshFloat>* storage)
 {
@@ -133,8 +133,8 @@ void convex_hull(
                 return;
         }
 
-        const std::shared_ptr<const MeshObject<N>> obj =
-                std::make_shared<MeshObject<N>>(std::move(ch_mesh), object->matrix(), "Convex Hull");
+        const std::shared_ptr<const mesh::MeshObject<N>> obj =
+                std::make_shared<mesh::MeshObject<N>>(std::move(ch_mesh), object->matrix(), "Convex Hull");
 
         add_object_and_mesh(progress_list, obj, mesh_threads, storage);
 }
@@ -144,7 +144,7 @@ void cocone(
         ProgressRatioList* progress_list,
         const ManifoldConstructor<N>& constructor,
         const std::vector<Vector<N, float>>& points,
-        const MeshObject<N>& object,
+        const mesh::MeshObject<N>& object,
         int mesh_threads,
         Storage<N, MeshFloat>* storage)
 {
@@ -169,8 +169,8 @@ void cocone(
                 return;
         }
 
-        const std::shared_ptr<const MeshObject<N>> obj =
-                std::make_shared<MeshObject<N>>(std::move(cocone_mesh), object.matrix(), "Cocone");
+        const std::shared_ptr<const mesh::MeshObject<N>> obj =
+                std::make_shared<mesh::MeshObject<N>>(std::move(cocone_mesh), object.matrix(), "Cocone");
 
         add_object_and_mesh(progress_list, obj, mesh_threads, storage);
 }
@@ -180,7 +180,7 @@ void bound_cocone(
         ProgressRatioList* progress_list,
         const ManifoldConstructor<N>& constructor,
         const std::vector<Vector<N, float>>& points,
-        const MeshObject<N>& object,
+        const mesh::MeshObject<N>& object,
         double rho,
         double alpha,
         int mesh_threads,
@@ -208,8 +208,8 @@ void bound_cocone(
         }
 
         std::string name = "Bound Cocone (" + bound_cocone_text_rho_alpha(rho, alpha) + ")";
-        const std::shared_ptr<const MeshObject<N>> obj =
-                std::make_shared<MeshObject<N>>(std::move(bound_cocone_mesh), object.matrix(), name);
+        const std::shared_ptr<const mesh::MeshObject<N>> obj =
+                std::make_shared<mesh::MeshObject<N>>(std::move(bound_cocone_mesh), object.matrix(), name);
 
         add_object_and_mesh(progress_list, obj, mesh_threads, storage);
 }
@@ -219,7 +219,7 @@ void mst(
         ProgressRatioList* progress_list,
         const ManifoldConstructor<N>& constructor,
         const std::vector<Vector<N, float>>& points,
-        const MeshObject<N>& object,
+        const mesh::MeshObject<N>& object,
         int mesh_threads,
         Storage<N, MeshFloat>* storage)
 {
@@ -235,8 +235,8 @@ void mst(
                 return;
         }
 
-        const std::shared_ptr<const MeshObject<N>> obj =
-                std::make_shared<MeshObject<N>>(std::move(mst_mesh), object.matrix(), "MST");
+        const std::shared_ptr<const mesh::MeshObject<N>> obj =
+                std::make_shared<mesh::MeshObject<N>>(std::move(mst_mesh), object.matrix(), "MST");
 
         add_object_and_mesh(progress_list, obj, mesh_threads, storage);
 }
@@ -247,7 +247,7 @@ void manifold_constructor(
         bool build_cocone,
         bool build_bound_cocone,
         bool build_mst,
-        const MeshObject<N>& object,
+        const mesh::MeshObject<N>& object,
         double rho,
         double alpha,
         int mesh_threads,
@@ -335,7 +335,7 @@ void compute_bound_cocone(
         int mesh_threads)
 {
         namespace impl = processor_implementation;
-        const std::shared_ptr<const MeshObject<N>> obj = storage->object(id);
+        const std::shared_ptr<const mesh::MeshObject<N>> obj = storage->object(id);
         if (!obj)
         {
                 error("No object found to compute BoundCocone");
@@ -385,8 +385,8 @@ void compute(
                 matrix = Matrix<N + 1, N + 1, double>(1);
         }
 
-        const std::shared_ptr<const MeshObject<N>> model_object =
-                std::make_shared<const MeshObject<N>>(std::move(mesh), matrix, "Model");
+        const std::shared_ptr<const mesh::MeshObject<N>> model_object =
+                std::make_shared<const mesh::MeshObject<N>>(std::move(mesh), matrix, "Model");
 
         ThreadsWithCatch threads(3);
         try
@@ -442,7 +442,7 @@ void save_to_obj(
         const std::string& file_name,
         const std::string& comment)
 {
-        const std::shared_ptr<const MeshObject<N>> object = storage.object(id);
+        const std::shared_ptr<const mesh::MeshObject<N>> object = storage.object(id);
 
         if (!object)
         {
@@ -460,7 +460,7 @@ void save_to_stl(
         const std::string& comment,
         bool ascii_format)
 {
-        const std::shared_ptr<const MeshObject<N>> object = storage.object(id);
+        const std::shared_ptr<const mesh::MeshObject<N>> object = storage.object(id);
 
         if (!object)
         {

@@ -301,7 +301,7 @@ class Impl final : public Renderer
                 create_render_command_buffers();
         }
 
-        void object_add(const MeshObject<3>& object) override
+        void object_add(const mesh::MeshObject<3>& object) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 

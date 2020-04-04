@@ -35,7 +35,7 @@ class Storage
 
         const StorageEvents& m_events;
 
-        Pointers<ObjectId, const MeshObject<N>> m_objects;
+        Pointers<ObjectId, const mesh::MeshObject<N>> m_objects;
         Pointers<ObjectId, const SpatialMeshModel<N, MeshFloat>> m_meshes;
         Pointers<ObjectId, const std::vector<Vector<N, float>>> m_manifold_constructors_points;
         Pointers<ObjectId, const ManifoldConstructor<N>> m_manifold_constructors;
@@ -73,7 +73,7 @@ public:
 
         //
 
-        std::shared_ptr<const MeshObject<N>> object(ObjectId id) const
+        std::shared_ptr<const mesh::MeshObject<N>> object(ObjectId id) const
         {
                 return m_objects.get(id);
         }

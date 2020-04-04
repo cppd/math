@@ -163,7 +163,7 @@ class Impl final : public View
         int m_mouse_x = std::numeric_limits<int>::lowest();
         int m_mouse_y = std::numeric_limits<int>::lowest();
 
-        void add_object(const std::shared_ptr<const MeshObject<3>>& object) override
+        void add_object(const std::shared_ptr<const mesh::MeshObject<3>>& object) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 

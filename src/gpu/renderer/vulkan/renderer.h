@@ -64,7 +64,7 @@ struct Renderer
         virtual void clip_plane_show(const vec4& plane) = 0;
         virtual void clip_plane_hide() = 0;
 
-        virtual void object_add(const MeshObject<3>& object) = 0;
+        virtual void object_add(const mesh::MeshObject<3>& object) = 0;
         virtual void object_delete(ObjectId id) = 0;
         virtual void object_show(ObjectId id) = 0;
         virtual void object_delete_all() = 0;

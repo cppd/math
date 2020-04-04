@@ -138,7 +138,7 @@ private:
         void paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh, const std::string& object_name);
 
         template <size_t N>
-        void loaded_object(const std::shared_ptr<const MeshObject<N>>& object, int dimension);
+        void loaded_object(const std::shared_ptr<const mesh::MeshObject<N>>& object, int dimension);
 
         void set_dependent_interface();
 

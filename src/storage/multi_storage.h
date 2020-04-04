@@ -69,7 +69,7 @@ public:
         using MeshVariant =
                 SequenceType2ConstType2<std::variant, MIN, MAX, std::shared_ptr, SpatialMeshModel, MeshFloatingPoint>;
 
-        using ObjectVariant = SequenceType2ConstType2<std::variant, MIN, MAX, std::shared_ptr, MeshObject>;
+        using ObjectVariant = SequenceType2ConstType2<std::variant, MIN, MAX, std::shared_ptr, mesh::MeshObject>;
 
         static std::set<unsigned> dimensions()
         {

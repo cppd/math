@@ -61,7 +61,7 @@ protected:
         virtual ~View() = default;
 
 public:
-        virtual void add_object(const std::shared_ptr<const MeshObject<3>>&) = 0;
+        virtual void add_object(const std::shared_ptr<const mesh::MeshObject<3>>&) = 0;
         virtual void delete_object(ObjectId id) = 0;
         virtual void delete_all_objects() = 0;
         virtual void show_object(ObjectId id) = 0;

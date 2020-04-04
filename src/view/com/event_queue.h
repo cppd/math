@@ -32,8 +32,8 @@ class EventQueue final : public View
         {
                 struct add_object final
                 {
-                        std::shared_ptr<const MeshObject<3>> object;
-                        add_object(const std::shared_ptr<const MeshObject<3>>& object_) : object(object_)
+                        std::shared_ptr<const mesh::MeshObject<3>> object;
+                        add_object(const std::shared_ptr<const mesh::MeshObject<3>>& object_) : object(object_)
                         {
                         }
                 };
@@ -533,7 +533,7 @@ class EventQueue final : public View
         View* m_view = nullptr;
         mutable SpinLock m_lock;
 
-        void add_object(const std::shared_ptr<const MeshObject<3>>& object) override
+        void add_object(const std::shared_ptr<const mesh::MeshObject<3>>& object) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::add_object>, object);
         }

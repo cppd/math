@@ -1019,7 +1019,7 @@ void MainWindow::view_object_loaded(ObjectId /*id*/)
 }
 
 template <size_t N>
-void MainWindow::loaded_object(const std::shared_ptr<const MeshObject<N>>& object, int dimension)
+void MainWindow::loaded_object(const std::shared_ptr<const mesh::MeshObject<N>>& object, int dimension)
 {
         if constexpr (N == 3)
         {
