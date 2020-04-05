@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vec.h"
 
+#include <src/com/error.h>
+
 template <size_t N, typename T>
 class Region final
 {
@@ -141,5 +143,22 @@ public:
                 static_assert(sizeof...(Types) == N);
                 int i = -1;
                 return (((++i, p >= m_offset0[i] && p < m_offset1[i])) && ...);
+        }
+
+        bool is_positive() const
+        {
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        if (m_offset0[i] < 0)
+                        {
+                                return false;
+                        }
+                        if (m_extent[i] <= 0)
+                        {
+                                return false;
+                        }
+                        ASSERT(m_offset0[i] + m_extent[i] == m_offset1[i]);
+                }
+                return true;
         }
 };
