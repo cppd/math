@@ -483,21 +483,19 @@ class Impl final : public Renderer
 
                 m_render_triangles_pipeline = m_triangles_program.create_pipeline(
                         m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading,
-                        m_rectangle.x0(), m_rectangle.y0(), m_rectangle.width(), m_rectangle.height());
+                        m_rectangle);
                 m_render_triangle_lines_pipeline = m_triangle_lines_program.create_pipeline(
                         m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading,
-                        m_rectangle.x0(), m_rectangle.y0(), m_rectangle.width(), m_rectangle.height());
+                        m_rectangle);
                 m_render_normals_pipeline = m_normals_program.create_pipeline(
                         m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading,
-                        m_rectangle.x0(), m_rectangle.y0(), m_rectangle.width(), m_rectangle.height());
+                        m_rectangle);
                 m_render_points_pipeline = m_points_program.create_pipeline(
                         m_render_buffers->render_pass(), m_render_buffers->sample_count(),
-                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, m_rectangle.x0(), m_rectangle.y0(), m_rectangle.width(),
-                        m_rectangle.height());
+                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, m_rectangle);
                 m_render_lines_pipeline = m_points_program.create_pipeline(
                         m_render_buffers->render_pass(), m_render_buffers->sample_count(),
-                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, m_rectangle.x0(), m_rectangle.y0(), m_rectangle.width(),
-                        m_rectangle.height());
+                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, m_rectangle);
         }
 
         void delete_shadow_buffers()
@@ -527,8 +525,8 @@ class Impl final : public Renderer
                 m_triangles_shared_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
 
                 m_shadow_pipeline = m_shadow_program.create_pipeline(
-                        m_shadow_buffers->render_pass(), m_shadow_buffers->sample_count(), 0, 0,
-                        m_shadow_buffers->width(), m_shadow_buffers->height());
+                        m_shadow_buffers->render_pass(), m_shadow_buffers->sample_count(),
+                        Region<2, int>(0, 0, m_shadow_buffers->width(), m_shadow_buffers->height()));
         }
 
         void set_matrices()

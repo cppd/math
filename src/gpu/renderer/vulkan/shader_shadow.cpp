@@ -103,13 +103,10 @@ VkPipelineLayout RendererShadowProgram::pipeline_layout() const
 vulkan::Pipeline RendererShadowProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
-        unsigned x,
-        unsigned y,
-        unsigned width,
-        unsigned height) const
+        const Region<2, int>& rectangle) const
 {
         ASSERT(sample_count = VK_SAMPLE_COUNT_1_BIT);
-        ASSERT(x < width && y < height);
+        ASSERT(rectangle.is_positive());
 
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -119,10 +116,10 @@ vulkan::Pipeline RendererShadowProgram::create_pipeline(
         info.sample_count = sample_count;
         info.sample_shading = false;
         info.pipeline_layout = m_pipeline_layout;
-        info.viewport_x = x;
-        info.viewport_y = y;
-        info.viewport_width = width;
-        info.viewport_height = height;
+        info.viewport_x = rectangle.x0();
+        info.viewport_y = rectangle.y0();
+        info.viewport_width = rectangle.width();
+        info.viewport_height = rectangle.height();
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         info.depth_bias = true;
         info.color_blend = false;

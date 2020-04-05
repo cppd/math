@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_buffers.h"
 
+#include <src/numerical/region.h>
 #include <src/numerical/vec.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/descriptor.h>
@@ -151,10 +152,7 @@ public:
                 VkRenderPass render_pass,
                 VkSampleCountFlagBits sample_count,
                 bool sample_shading,
-                unsigned x,
-                unsigned y,
-                unsigned width,
-                unsigned height) const;
+                const Region<2, int>& rectangle) const;
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
         VkDescriptorSetLayout descriptor_set_layout_material() const;
