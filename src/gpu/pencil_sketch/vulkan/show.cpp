@@ -92,10 +92,7 @@ class Impl final : public PencilSketchShow
                 RenderBuffers2D* render_buffers,
                 const vulkan::ImageWithMemory& input,
                 const vulkan::ImageWithMemory& objects,
-                unsigned x,
-                unsigned y,
-                unsigned width,
-                unsigned height) override
+                const Region<2, int>& rectangle) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -105,14 +102,17 @@ class Impl final : public PencilSketchShow
                 m_image = std::make_unique<vulkan::ImageWithMemory>(
                         m_device, m_graphics_command_pool, m_graphics_queue,
                         std::unordered_set<uint32_t>({m_graphics_family_index}), std::vector<VkFormat>({IMAGE_FORMAT}),
-                        width, height, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, storage);
+                        rectangle.width(), rectangle.height(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, storage);
 
                 m_memory.set_image(m_sampler, *m_image);
 
                 m_pipeline = m_program.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), x, y, width, height);
+                        render_buffers->render_pass(), render_buffers->sample_count(), rectangle.x0(), rectangle.y0(),
+                        rectangle.width(), rectangle.height());
 
-                m_compute->create_buffers(m_sampler, input, objects, x, y, width, height, *m_image);
+                m_compute->create_buffers(
+                        m_sampler, input, objects, rectangle.x0(), rectangle.y0(), rectangle.width(),
+                        rectangle.height(), *m_image);
 
                 vulkan::CommandBufferCreateInfo info;
                 info.device = m_device;

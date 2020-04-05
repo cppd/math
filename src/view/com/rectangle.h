@@ -18,28 +18,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/error.h>
+#include <src/numerical/region.h>
 
-template <typename T>
-bool pointIsInsideRectangle(T x, T y, T x0, T y0, T x1, T y1)
-{
-        return x >= x0 && x < x1 && y >= y0 && y < y1;
-}
-
-inline bool windowPositionAndSize(
+inline bool window_position_and_size(
         bool two_windows,
         int width,
         int height,
         int frame,
-        int* w1_x,
-        int* w1_y,
-        int* w1_w,
-        int* w1_h,
-        int* w2_x,
-        int* w2_y,
-        int* w2_w,
-        int* w2_h)
+        Region<2, int>* window_1,
+        Region<2, int>* window_2)
 {
-        ASSERT(w1_x && w1_y && w1_w && w1_h && w2_x && w2_y && w2_w && w2_h);
+        ASSERT(window_1);
+        ASSERT(window_2);
 
         if (two_windows)
         {
@@ -47,29 +37,14 @@ inline bool windowPositionAndSize(
                 int h = (height - 2 * frame);
                 if (w > 0 && h > 0)
                 {
-                        *w1_x = frame;
-                        *w1_y = frame;
-                        *w1_w = w;
-                        *w1_h = h;
-
-                        *w2_x = width - frame - w;
-                        *w2_y = frame;
-                        *w2_w = w;
-                        *w2_h = h;
-
+                        *window_1 = Region<2, int>(frame, frame, w, h);
+                        *window_2 = Region<2, int>(width - frame - w, frame, w, h);
                         return true;
                 }
         }
 
-        *w1_x = 0;
-        *w1_y = 0;
-        *w1_w = width;
-        *w1_h = height;
-
-        *w2_x = 0;
-        *w2_y = 0;
-        *w2_w = 0;
-        *w2_h = 0;
+        *window_1 = Region<2, int>(0, 0, width, height);
+        *window_2 = Region<2, int>(0, 0, 0, 0);
 
         return false;
 }

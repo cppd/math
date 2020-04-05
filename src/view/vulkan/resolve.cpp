@@ -28,12 +28,9 @@ vulkan::CommandBuffers create_command_buffers_resolve(
         VkImageLayout src_image_layout,
         const std::vector<VkImage>& dst_images,
         VkImageLayout dst_image_layout,
-        unsigned x,
-        unsigned y,
-        unsigned width,
-        unsigned height)
+        const Region<2, int>& rectangle)
 {
-        ASSERT(width > 0 && height > 0);
+        ASSERT(rectangle.width() > 0 && rectangle.height() > 0);
         ASSERT(src_images.size() == dst_images.size());
         ASSERT(!src_images.empty());
 
@@ -60,18 +57,18 @@ vulkan::CommandBuffers create_command_buffers_resolve(
         image_resolve.srcSubresource.mipLevel = 0;
         image_resolve.srcSubresource.baseArrayLayer = 0;
         image_resolve.srcSubresource.layerCount = 1;
-        image_resolve.srcOffset.x = x;
-        image_resolve.srcOffset.y = y;
+        image_resolve.srcOffset.x = rectangle.x0();
+        image_resolve.srcOffset.y = rectangle.y0();
         image_resolve.srcOffset.z = 0;
         image_resolve.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         image_resolve.dstSubresource.mipLevel = 0;
         image_resolve.dstSubresource.baseArrayLayer = 0;
         image_resolve.dstSubresource.layerCount = 1;
-        image_resolve.dstOffset.x = x;
-        image_resolve.dstOffset.y = y;
+        image_resolve.dstOffset.x = rectangle.x0();
+        image_resolve.dstOffset.y = rectangle.y0();
         image_resolve.dstOffset.z = 0;
-        image_resolve.extent.width = width;
-        image_resolve.extent.height = height;
+        image_resolve.extent.width = rectangle.width();
+        image_resolve.extent.height = rectangle.height();
         image_resolve.extent.depth = 1;
 
         VkResult result;

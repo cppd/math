@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/model/mesh_object.h>
 #include <src/numerical/matrix.h>
+#include <src/numerical/region.h>
 #include <src/numerical/vec.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/instance.h>
@@ -77,10 +78,7 @@ struct Renderer
                 const vulkan::Swapchain* swapchain,
                 RenderBuffers3D* render_buffers,
                 const vulkan::ImageWithMemory* objects,
-                unsigned x,
-                unsigned y,
-                unsigned width,
-                unsigned height) = 0;
+                const Region<2, int>& rectangle) = 0;
         virtual void delete_buffers() = 0;
 };
 

@@ -40,6 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/pencil_sketch/vulkan/show.h>
 #include <src/gpu/renderer/vulkan/renderer.h>
 #include <src/gpu/text/vulkan/show.h>
+#include <src/numerical/region.h>
 #include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/queue.h>
@@ -113,10 +114,7 @@ class Impl final : public View
         FrameRate m_frame_rate{m_window_ppi};
         Camera m_camera;
 
-        int m_draw_x0 = limits<int>::lowest();
-        int m_draw_y0 = limits<int>::lowest();
-        int m_draw_x1 = limits<int>::lowest();
-        int m_draw_y1 = limits<int>::lowest();
+        Region<2, int> m_draw_rectangle{limits<int>::lowest(), limits<int>::lowest(), 0, 0};
 
         //
 
@@ -534,9 +532,7 @@ class Impl final : public View
                 bool changed = false;
 
                 const PressedMouseButton& right = pressed_mouse_button(ViewMouseButton::Right);
-                if (right.pressed &&
-                    pointIsInsideRectangle(
-                            right.pressed_x, right.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
+                if (right.pressed && m_draw_rectangle.is_inside(right.pressed_x, right.pressed_y) &&
                     (right.delta_x != 0 || right.delta_y != 0))
                 {
                         m_camera.rotate(-right.delta_x, -right.delta_y);
@@ -544,9 +540,7 @@ class Impl final : public View
                 }
 
                 const PressedMouseButton& left = pressed_mouse_button(ViewMouseButton::Left);
-                if (left.pressed &&
-                    pointIsInsideRectangle(
-                            left.pressed_x, left.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
+                if (left.pressed && m_draw_rectangle.is_inside(left.pressed_x, left.pressed_y) &&
                     (left.delta_x != 0 || left.delta_y != 0))
                 {
                         m_camera.move(vec2(-left.delta_x, left.delta_y));
@@ -563,7 +557,7 @@ class Impl final : public View
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_camera.scale(x - m_draw_x0, y - m_draw_y0, delta);
+                m_camera.scale(x - m_draw_rectangle.x0(), y - m_draw_rectangle.y0(), delta);
 
                 m_renderer->set_camera(m_camera.renderer_info());
         }
@@ -663,58 +657,52 @@ class Impl final : public View
 
                 //
 
-                int w1_x, w1_y, w1_w, w1_h;
-                int w2_x, w2_y, w2_w, w2_h;
-                const bool two_windows = windowPositionAndSize(
-                        m_dft_active, m_swapchain->width(), m_swapchain->height(), m_frame_size_in_pixels, &w1_x, &w1_y,
-                        &w1_w, &w1_h, &w2_x, &w2_y, &w2_w, &w2_h);
+                Region<2, int> w_2;
+                const bool two_windows = window_position_and_size(
+                        m_dft_active, m_swapchain->width(), m_swapchain->height(), m_frame_size_in_pixels,
+                        &m_draw_rectangle, &w_2);
 
-                m_draw_x0 = w1_x;
-                m_draw_y0 = w1_y;
-                m_draw_x1 = w1_x + w1_w;
-                m_draw_y1 = w1_y + w1_h;
-
-                ASSERT(m_draw_x0 >= 0 && m_draw_y0 >= 0 && m_draw_x0 < m_draw_x1 && m_draw_y0 < m_draw_y1);
-                ASSERT(m_draw_x1 <= static_cast<int>(m_swapchain->width()));
-                ASSERT(m_draw_y1 <= static_cast<int>(m_swapchain->height()));
+                ASSERT(m_draw_rectangle.x0() >= 0 && m_draw_rectangle.y0() >= 0);
+                ASSERT(m_draw_rectangle.width() > 0 && m_draw_rectangle.height() > 0);
+                ASSERT(m_draw_rectangle.x1() <= static_cast<int>(m_swapchain->width()));
+                ASSERT(m_draw_rectangle.y1() <= static_cast<int>(m_swapchain->height()));
 
                 //
 
                 m_resolve_command_buffers = std::make_unique<vulkan::CommandBuffers>(create_command_buffers_resolve(
                         m_instance->device(), m_instance->graphics_compute_command_pool(), m_render_buffers->images(),
                         m_render_buffers->image_layout(), std::vector<VkImage>({m_resolve_texture->image()}),
-                        RESOLVE_TEXTURE_IMAGE_LAYOUT, w1_x, w1_y, w1_w, w1_h));
+                        RESOLVE_TEXTURE_IMAGE_LAYOUT, m_draw_rectangle));
 
                 //
 
                 m_renderer->create_buffers(
-                        m_swapchain.get(), &m_render_buffers->buffers_3d(), m_object_image.get(), w1_x, w1_y, w1_w,
-                        w1_h);
+                        m_swapchain.get(), &m_render_buffers->buffers_3d(), m_object_image.get(), m_draw_rectangle);
 
                 //
 
-                m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), *m_object_image, w1_x, w1_y, w1_w, w1_h);
+                m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), *m_object_image, m_draw_rectangle);
 
                 m_pencil_sketch->create_buffers(
-                        &m_render_buffers->buffers_2d(), *m_resolve_texture, *m_object_image, w1_x, w1_y, w1_w, w1_h);
+                        &m_render_buffers->buffers_2d(), *m_resolve_texture, *m_object_image, m_draw_rectangle);
 
                 m_optical_flow->create_buffers(
-                        &m_render_buffers->buffers_2d(), *m_resolve_texture, m_window_ppi, w1_x, w1_y, w1_w, w1_h);
+                        &m_render_buffers->buffers_2d(), *m_resolve_texture, m_window_ppi, m_draw_rectangle);
 
                 if (two_windows)
                 {
-                        ASSERT(w2_x >= 0 && w2_y >= 0 && w2_w > 0 && w2_h > 0);
-                        ASSERT(w2_x + w2_w <= static_cast<int>(m_swapchain->width()));
-                        ASSERT(w2_y + w2_h <= static_cast<int>(m_swapchain->height()));
+                        ASSERT(w_2.x0() >= 0 && w_2.y0() >= 0);
+                        ASSERT(w_2.width() > 0 && w_2.height() > 0);
+                        ASSERT(w_2.x1() <= static_cast<int>(m_swapchain->width()));
+                        ASSERT(w_2.y1() <= static_cast<int>(m_swapchain->height()));
 
                         m_dft->create_buffers(
-                                &m_render_buffers->buffers_2d(), *m_resolve_texture, w1_x, w1_y, w1_w, w1_h, w2_x, w2_y,
-                                w2_w, w2_h);
+                                &m_render_buffers->buffers_2d(), *m_resolve_texture, m_draw_rectangle, w_2);
                 }
 
                 //
 
-                m_camera.resize(w1_w, w1_h);
+                m_camera.resize(m_draw_rectangle.width(), m_draw_rectangle.height());
                 m_renderer->set_camera(m_camera.renderer_info());
         }
 

@@ -96,35 +96,32 @@ class Impl final : public DftShow
         void create_buffers(
                 RenderBuffers2D* render_buffers,
                 const vulkan::ImageWithMemory& input,
-                unsigned src_x,
-                unsigned src_y,
-                unsigned src_width,
-                unsigned src_height,
-                unsigned dst_x,
-                unsigned dst_y,
-                unsigned dst_width,
-                unsigned dst_height) override
+                const Region<2, int>& source_rectangle,
+                const Region<2, int>& draw_rectangle) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
-                ASSERT(src_width == dst_width && src_height == dst_height);
+                ASSERT(source_rectangle.width() == draw_rectangle.width());
+                ASSERT(source_rectangle.height() == draw_rectangle.height());
 
                 const bool storage = true;
                 m_image = std::make_unique<vulkan::ImageWithMemory>(
                         m_device, m_graphics_command_pool, m_graphics_queue,
                         std::unordered_set<uint32_t>({m_graphics_family_index}), std::vector<VkFormat>({IMAGE_FORMAT}),
-                        src_width, src_height, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, storage);
+                        source_rectangle.width(), source_rectangle.height(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                        storage);
 
                 m_memory.set_image(m_sampler, *m_image);
 
                 m_pipeline = m_program.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), dst_x, dst_y, dst_width,
-                        dst_height);
+                        render_buffers->render_pass(), render_buffers->sample_count(), draw_rectangle.x0(),
+                        draw_rectangle.y0(), draw_rectangle.width(), draw_rectangle.height());
 
                 m_compute->create_buffers(
-                        m_sampler, input, *m_image, src_x, src_y, src_width, src_height, m_graphics_family_index);
+                        m_sampler, input, *m_image, source_rectangle.x0(), source_rectangle.y0(),
+                        source_rectangle.width(), source_rectangle.height(), m_graphics_family_index);
 
                 vulkan::CommandBufferCreateInfo info;
                 info.device = m_device;

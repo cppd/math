@@ -99,10 +99,7 @@ class Impl final : public OpticalFlowShow
                 RenderBuffers2D* render_buffers,
                 const vulkan::ImageWithMemory& input,
                 double window_ppi,
-                unsigned x,
-                unsigned y,
-                unsigned width,
-                unsigned height) override
+                const Region<2, int>& rectangle) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -112,7 +109,7 @@ class Impl final : public OpticalFlowShow
                 int point_count_x;
                 int point_count_y;
                 create_top_level_optical_flow_points(
-                        width, height, window_ppi, &point_count_x, &point_count_y, &points);
+                        rectangle.width(), rectangle.height(), window_ppi, &point_count_x, &point_count_y, &points);
 
                 m_top_point_count = points.size();
 
@@ -135,21 +132,21 @@ class Impl final : public OpticalFlowShow
 
                 m_pipeline_points = m_program.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
-                        x, y, width, height);
+                        rectangle.x0(), rectangle.y0(), rectangle.width(), rectangle.height());
                 m_pipeline_lines = m_program.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
-                        x, y, width, height);
+                        rectangle.x0(), rectangle.y0(), rectangle.width(), rectangle.height());
                 m_memory.set_points(*m_top_points);
                 m_memory.set_flow(*m_top_flow);
 
                 m_compute->create_buffers(
-                        m_sampler, input, x, y, width, height, point_count_x, point_count_y, *m_top_points,
-                        *m_top_flow);
+                        m_sampler, input, rectangle.x0(), rectangle.y0(), rectangle.width(), rectangle.height(),
+                        point_count_x, point_count_y, *m_top_points, *m_top_flow);
 
                 // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
                 double left = 0;
-                double right = width;
-                double bottom = height;
+                double right = rectangle.width();
+                double bottom = rectangle.height();
                 double top = 0;
                 double near = 1;
                 double far = -1;

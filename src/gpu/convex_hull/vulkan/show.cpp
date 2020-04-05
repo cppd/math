@@ -91,10 +91,7 @@ class Impl final : public ConvexHullShow
         void create_buffers(
                 RenderBuffers2D* render_buffers,
                 const vulkan::ImageWithMemory& objects,
-                unsigned x,
-                unsigned y,
-                unsigned width,
-                unsigned height) override
+                const Region<2, int>& rectangle) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -103,14 +100,14 @@ class Impl final : public ConvexHullShow
                 m_points.emplace(
                         vulkan::BufferMemoryType::DeviceLocal, m_instance.device(),
                         std::unordered_set({m_family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                        convex_hull_points_buffer_size(height));
+                        convex_hull_points_buffer_size(rectangle.height()));
 
                 m_memory.set_points(*m_points);
 
                 // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
                 double left = 0;
-                double right = width;
-                double bottom = height;
+                double right = rectangle.width();
+                double bottom = rectangle.height();
                 double top = 0;
                 double near = 1;
                 double far = -1;
@@ -119,10 +116,12 @@ class Impl final : public ConvexHullShow
                 m_memory.set_matrix(p * t);
 
                 m_pipeline = m_program.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, x, y, width,
-                        height);
+                        render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, rectangle.x0(),
+                        rectangle.y0(), rectangle.width(), rectangle.height());
 
-                m_compute->create_buffers(objects, x, y, width, height, *m_points, m_indirect_buffer, m_family_index);
+                m_compute->create_buffers(
+                        objects, rectangle.x0(), rectangle.y0(), rectangle.width(), rectangle.height(), *m_points,
+                        m_indirect_buffer, m_family_index);
 
                 vulkan::CommandBufferCreateInfo info;
                 info.device = m_instance.device();

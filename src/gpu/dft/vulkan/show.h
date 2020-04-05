@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../vulkan_interfaces.h"
 
+#include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/instance.h>
 
@@ -36,14 +37,8 @@ struct DftShow
         virtual void create_buffers(
                 RenderBuffers2D* render_buffers,
                 const vulkan::ImageWithMemory& input,
-                unsigned src_x,
-                unsigned src_y,
-                unsigned src_width,
-                unsigned src_height,
-                unsigned dst_x,
-                unsigned dst_y,
-                unsigned dst_width,
-                unsigned dst_height) = 0;
+                const Region<2, int>& source_rectangle,
+                const Region<2, int>& draw_rectangle) = 0;
         virtual void delete_buffers() = 0;
 
         virtual VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index) = 0;

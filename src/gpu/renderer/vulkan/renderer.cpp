@@ -124,7 +124,7 @@ class Impl final : public Renderer
 
         RendererObjectStorage<ObjectId, MeshObject> m_storage;
 
-        unsigned m_x, m_y, m_width, m_height;
+        Region<2, int> m_rectangle;
 
         std::optional<vec4> m_clip_plane;
         bool m_show_normals = false;
@@ -424,24 +424,19 @@ class Impl final : public Renderer
                 const vulkan::Swapchain* swapchain,
                 RenderBuffers3D* render_buffers,
                 const vulkan::ImageWithMemory* objects,
-                unsigned x,
-                unsigned y,
-                unsigned width,
-                unsigned height) override
+                const Region<2, int>& rectangle) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
-                ASSERT(x + width <= objects->width() && y + height <= objects->height());
+                ASSERT(rectangle.x1() <= static_cast<int>(objects->width()));
+                ASSERT(rectangle.y1() <= static_cast<int>(objects->height()));
 
                 m_swapchain = swapchain;
                 m_render_buffers = render_buffers;
                 m_object_image = objects;
-                m_x = x;
-                m_y = y;
-                m_width = width;
-                m_height = height;
+                m_rectangle = rectangle;
 
                 create_render_buffers();
                 create_shadow_buffers();
@@ -487,20 +482,22 @@ class Impl final : public Renderer
                 m_points_memory.set_object_image(m_object_image);
 
                 m_render_triangles_pipeline = m_triangles_program.create_pipeline(
-                        m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading, m_x, m_y,
-                        m_width, m_height);
+                        m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading,
+                        m_rectangle.x0(), m_rectangle.y0(), m_rectangle.width(), m_rectangle.height());
                 m_render_triangle_lines_pipeline = m_triangle_lines_program.create_pipeline(
-                        m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading, m_x, m_y,
-                        m_width, m_height);
+                        m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading,
+                        m_rectangle.x0(), m_rectangle.y0(), m_rectangle.width(), m_rectangle.height());
                 m_render_normals_pipeline = m_normals_program.create_pipeline(
-                        m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading, m_x, m_y,
-                        m_width, m_height);
+                        m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading,
+                        m_rectangle.x0(), m_rectangle.y0(), m_rectangle.width(), m_rectangle.height());
                 m_render_points_pipeline = m_points_program.create_pipeline(
                         m_render_buffers->render_pass(), m_render_buffers->sample_count(),
-                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, m_x, m_y, m_width, m_height);
+                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, m_rectangle.x0(), m_rectangle.y0(), m_rectangle.width(),
+                        m_rectangle.height());
                 m_render_lines_pipeline = m_points_program.create_pipeline(
                         m_render_buffers->render_pass(), m_render_buffers->sample_count(),
-                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, m_x, m_y, m_width, m_height);
+                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, m_rectangle.x0(), m_rectangle.y0(), m_rectangle.width(),
+                        m_rectangle.height());
         }
 
         void delete_shadow_buffers()
@@ -525,7 +522,7 @@ class Impl final : public Renderer
                 constexpr RendererDepthBufferCount buffer_count = RendererDepthBufferCount::One;
                 m_shadow_buffers = create_renderer_depth_buffers(
                         buffer_count, *m_swapchain, {m_graphics_queue.family_index()}, m_graphics_command_pool,
-                        m_graphics_queue, m_device, m_width, m_height, m_shadow_zoom);
+                        m_graphics_queue, m_device, m_rectangle.width(), m_rectangle.height(), m_shadow_zoom);
 
                 m_triangles_shared_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
 

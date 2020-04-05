@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/objects.h>
 
@@ -29,8 +30,5 @@ vulkan::CommandBuffers create_command_buffers_resolve(
         VkImageLayout src_image_layout,
         const std::vector<VkImage>& dst_images,
         VkImageLayout dst_image_layout,
-        unsigned x,
-        unsigned y,
-        unsigned width,
-        unsigned height);
+        const Region<2, int>& rectangle);
 }
