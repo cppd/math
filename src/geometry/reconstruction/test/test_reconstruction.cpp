@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_reconstruction.h"
 
-#include "../cocone/reconstruction.h"
-#include "../objects/points.h"
+#include "../cocone.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -27,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/time.h>
 #include <src/model/mesh_utility.h>
+#include <src/numerical/random.h>
 #include <src/utility/file/sys.h>
 #include <src/utility/random/engine.h>
 
@@ -35,9 +35,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <unordered_set>
 
+namespace
+{
 // Для BoundCocone
 constexpr double RHO = 0.3;
 constexpr double ALPHA = 0.14;
+
+constexpr double COS_FOR_BOUND = -0.3;
 
 enum class Algorithms
 {
@@ -45,8 +49,68 @@ enum class Algorithms
         BoundCocone
 };
 
-namespace
+template <typename T, size_t... I, typename V>
+constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_sequence<size_t, I...>&&)
 {
+        return {(static_cast<void>(I), 0)..., std::forward<V>(value)};
+}
+
+template <size_t N, typename T>
+constexpr Vector<N, T> LAST_AXIS = make_last_axis<T>(1, std::make_integer_sequence<size_t, N - 1>());
+
+template <size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_on_sphere(RandomEngine& engine)
+{
+        static_assert(std::is_floating_point_v<T>);
+        std::uniform_real_distribution<T> urd(-1.0, 1.0);
+        Vector<N, T> v;
+        do
+        {
+                v = random_vector<N, T>(engine, urd);
+        } while (dot(v, v) > 1);
+        return v.normalized();
+}
+
+template <size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_on_sphere(RandomEngine& engine, bool bound)
+{
+        if (!bound)
+        {
+                return random_on_sphere<N, T>(engine);
+        }
+        Vector<N, T> v;
+        do
+        {
+                v = random_on_sphere<N, T>(engine);
+        } while (dot(v, LAST_AXIS<N, T>) < COS_FOR_BOUND);
+        return v;
+}
+
+// Точки на сфере с углублением со стороны последней оси
+// в положительном направлении этой оси
+template <size_t N>
+std::vector<Vector<N, float>> points_sphere_with_notch(unsigned point_count, bool bound)
+{
+        std::mt19937_64 engine(point_count);
+
+        std::vector<Vector<N, float>> points;
+
+        while (points.size() < point_count)
+        {
+                Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
+
+                double dot_z = dot(LAST_AXIS<N, double>, v);
+                if (dot_z > 0)
+                {
+                        v[N - 1] *= 1 - std::abs(0.5 * std::pow(dot_z, 5));
+                }
+
+                points.push_back(to_vector<float>(v));
+        }
+
+        return points;
+}
+
 template <size_t N>
 constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
 {
@@ -374,13 +438,13 @@ void test(int low, int high, ProgressRatio* progress)
         all_tests<N>(
                 space_name(N) + ", unbounded " + to_string(N - 1) + "-manifold",
                 std::unordered_set<Algorithms>{Algorithms::Cocone, Algorithms::BoundCocone},
-                create_object_repository<N>()->sphere_with_notch(point_count), progress);
+                points_sphere_with_notch<N>(point_count, false), progress);
 
         LOG("\n--- Bound " + to_string(N - 1) + "-manifold reconstructions in " + space_name(N) + " ---\n");
         all_tests<N>(
                 space_name(N) + ", bounded " + to_string(N - 1) + "-manifold",
-                std::unordered_set<Algorithms>{Algorithms::BoundCocone},
-                create_object_repository<N>()->sphere_with_notch_bound(point_count), progress);
+                std::unordered_set<Algorithms>{Algorithms::BoundCocone}, points_sphere_with_notch<N>(point_count, true),
+                progress);
 }
 }
 

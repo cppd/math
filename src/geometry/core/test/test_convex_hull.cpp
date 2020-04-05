@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_convex_hull.h"
 
-#include "../core/convex_hull.h"
-#include "../core/ridge.h"
+#include "../convex_hull.h"
+#include "../ridge.h"
 
 #include <src/com/log.h>
 #include <src/com/names.h>

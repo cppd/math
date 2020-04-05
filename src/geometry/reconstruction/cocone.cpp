@@ -25,7 +25,7 @@ Curve and Surface Reconstruction: Algorithms with Mathematical Analysis.
 Cambridge University Press, 2007.
 */
 
-#include "reconstruction.h"
+#include "cocone.h"
 
 #include "extract_manifold.h"
 #include "print.h"

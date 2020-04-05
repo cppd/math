@@ -31,11 +31,11 @@ struct StorageWithRepository final
 {
         static constexpr size_t N = DIMENSION;
 
-        const std::unique_ptr<const ObjectRepository<N>> repository;
+        const std::unique_ptr<const PointObjectRepository<N>> repository;
         Storage<N, MeshFloat> storage;
 
         explicit StorageWithRepository(const StorageEvents& storage_events)
-                : repository(create_object_repository<N>()), storage(storage_events)
+                : repository(create_point_object_repository<N>()), storage(storage_events)
         {
         }
 };

@@ -24,8 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../core/delaunay.h"
 
 #include <src/com/log.h>
+#include <src/com/print.h>
 
-#include <com/print.h>
 #include <vector>
 
 template <size_t N>

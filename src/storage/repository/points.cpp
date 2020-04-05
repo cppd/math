@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/numerical/quaternion.h>
+#include <src/numerical/random.h>
 
 #include <map>
 #include <random>
@@ -131,35 +132,26 @@ public:
 };
 
 template <size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_sphere(RandomEngine& engine)
+Vector<N, T> random_on_sphere(RandomEngine& engine)
 {
         static_assert(std::is_floating_point_v<T>);
-
         std::uniform_real_distribution<T> urd(-1.0, 1.0);
-
         Vector<N, T> v;
-
         do
         {
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        v[n] = urd(engine);
-                }
+                v = random_vector<N, T>(engine, urd);
         } while (dot(v, v) > 1);
-
         return v.normalized();
 }
 
 template <size_t N, typename T, typename V, typename RandomEngine>
-Vector<N, T> random_sphere_bound(RandomEngine& engine, V cos_alpha)
+Vector<N, T> random_on_sphere_bound(RandomEngine& engine, V cos_alpha)
 {
         Vector<N, T> v;
-
         do
         {
-                v = random_sphere<N, T>(engine);
+                v = random_on_sphere<N, T>(engine);
         } while (dot(v, LAST_AXIS<N, T>) < cos_alpha);
-
         return v;
 }
 
@@ -198,8 +190,8 @@ std::vector<Vector<N, float>> generate_points_ellipsoid(unsigned point_count, bo
 
         while (points.size() < point_count)
         {
-                Vector<N, double> v = (!bound) ? random_sphere<N, double>(engine) :
-                                                 random_sphere_bound<N, double>(engine, COS_FOR_BOUND);
+                Vector<N, double> v = (!bound) ? random_on_sphere<N, double>(engine) :
+                                                 random_on_sphere_bound<N, double>(engine, COS_FOR_BOUND);
 
                 v[0] *= 2;
 
@@ -209,6 +201,8 @@ std::vector<Vector<N, float>> generate_points_ellipsoid(unsigned point_count, bo
         return points.release();
 }
 
+// Точки на сфере с углублением со стороны последней оси
+// в положительном направлении этой оси
 template <size_t N>
 std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_count, bool bound)
 {
@@ -218,11 +212,8 @@ std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_c
 
         while (points.size() < point_count)
         {
-                // Точки на сфере с углублением со стороны последней оси
-                // в положительном направлении этой оси
-
-                Vector<N, double> v = (!bound) ? random_sphere<N, double>(engine) :
-                                                 random_sphere_bound<N, double>(engine, COS_FOR_BOUND);
+                Vector<N, double> v = (!bound) ? random_on_sphere<N, double>(engine) :
+                                                 random_on_sphere_bound<N, double>(engine, COS_FOR_BOUND);
 
                 double dot_z = dot(LAST_AXIS<N, double>, v);
                 if (dot_z > 0)
@@ -298,7 +289,7 @@ Vector<N, T> torus_point(Engine& engine)
                 Vector<N, T> ortho(0);
                 ortho[n] = v_length;
 
-                Vector<2, T> s = random_sphere<2, T>(engine);
+                Vector<2, T> s = random_on_sphere<2, T>(engine);
                 Vector<N, T> vn = T(0.5) * (s[0] * v + s[1] * ortho);
                 sum += vn;
 
@@ -348,9 +339,9 @@ std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 }
 
 template <size_t N>
-class ObjectRepositoryImpl final : public ObjectRepository<N>
+class Impl final : public PointObjectRepository<N>
 {
-        std::map<std::string, std::vector<Vector<N, float>> (ObjectRepositoryImpl<N>::*)(unsigned) const> m_map;
+        std::map<std::string, std::vector<Vector<N, float>> (Impl<N>::*)(unsigned) const> m_map;
 
         std::vector<Vector<N, float>> ellipsoid(unsigned point_count) const override
         {
@@ -400,37 +391,35 @@ class ObjectRepositoryImpl final : public ObjectRepository<N>
         }
 
 public:
-        ObjectRepositoryImpl()
+        Impl()
         {
-                m_map.emplace("Ellipsoid", &ObjectRepositoryImpl<N>::ellipsoid);
-                m_map.emplace("Ellipsoid, bound", &ObjectRepositoryImpl<N>::ellipsoid_bound);
+                m_map.emplace("Ellipsoid", &Impl<N>::ellipsoid);
+                m_map.emplace("Ellipsoid, bound", &Impl<N>::ellipsoid_bound);
 
-                m_map.emplace("Sphere with a notch", &ObjectRepositoryImpl<N>::sphere_with_notch);
-                m_map.emplace("Sphere with a notch, bound", &ObjectRepositoryImpl<N>::sphere_with_notch_bound);
+                m_map.emplace("Sphere with a notch", &Impl<N>::sphere_with_notch);
+                m_map.emplace("Sphere with a notch, bound", &Impl<N>::sphere_with_notch_bound);
 
                 if constexpr (N == 3)
                 {
-                        m_map.emplace(
-                                reinterpret_cast<const char*>(u8"Möbius strip"),
-                                &ObjectRepositoryImpl<N>::mobius_strip);
+                        m_map.emplace(reinterpret_cast<const char*>(u8"Möbius strip"), &Impl<N>::mobius_strip);
                 }
 
                 if constexpr (N >= 3)
                 {
-                        m_map.emplace("Torus", &ObjectRepositoryImpl<N>::torus);
-                        m_map.emplace("Torus, bound", &ObjectRepositoryImpl<N>::torus_bound);
+                        m_map.emplace("Torus", &Impl<N>::torus);
+                        m_map.emplace("Torus, bound", &Impl<N>::torus_bound);
                 }
         }
 };
 }
 
 template <size_t N>
-std::unique_ptr<ObjectRepository<N>> create_object_repository()
+std::unique_ptr<PointObjectRepository<N>> create_point_object_repository()
 {
-        return std::make_unique<ObjectRepositoryImpl<N>>();
+        return std::make_unique<Impl<N>>();
 }
 
-template std::unique_ptr<ObjectRepository<2>> create_object_repository<2>();
-template std::unique_ptr<ObjectRepository<3>> create_object_repository<3>();
-template std::unique_ptr<ObjectRepository<4>> create_object_repository<4>();
-template std::unique_ptr<ObjectRepository<5>> create_object_repository<5>();
+template std::unique_ptr<PointObjectRepository<2>> create_point_object_repository<2>();
+template std::unique_ptr<PointObjectRepository<3>> create_point_object_repository<3>();
+template std::unique_ptr<PointObjectRepository<4>> create_point_object_repository<4>();
+template std::unique_ptr<PointObjectRepository<5>> create_point_object_repository<5>();

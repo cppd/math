@@ -20,8 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "events.h"
 #include "pointers.h"
 
-#include <src/geometry/cocone/reconstruction.h>
-#include <src/geometry/objects/points.h>
+#include "repository/points.h"
+
+#include <src/geometry/reconstruction/cocone.h>
 #include <src/model/mesh_object.h>
 #include <src/painter/shapes/mesh.h>
 

@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "self_test.h"
 
 #include <src/com/names.h>
-#include <src/geometry/test/test_convex_hull.h>
-#include <src/geometry/test/test_reconstruction.h>
+#include <src/geometry/core/test/test_convex_hull.h>
+#include <src/geometry/reconstruction/test/test_reconstruction.h>
 #include <src/gpu/dft/test/test_dft.h>
 #include <src/painter/shapes/test/test_mesh.h>
 #include <src/painter/space/test/test_parallelotope.h>

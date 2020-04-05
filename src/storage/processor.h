@@ -426,7 +426,7 @@ std::unique_ptr<const mesh::Mesh<N>> load_from_file(ProgressRatioList* progress_
 template <size_t N>
 std::unique_ptr<const mesh::Mesh<N>> load_from_repository(
         ProgressRatioList* progress_list,
-        const ObjectRepository<N>& repository,
+        const PointObjectRepository<N>& repository,
         const std::string& object_name,
         int point_count)
 {

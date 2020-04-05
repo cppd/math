@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "structure.h"
 
-#include "cocone.h"
+#include "functions.h"
 
 #include <src/com/alg.h>
 #include <src/com/error.h>
