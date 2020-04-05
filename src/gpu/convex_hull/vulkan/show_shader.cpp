@@ -151,10 +151,7 @@ vulkan::Pipeline ConvexHullShowProgram::create_pipeline(
         info.sample_count = sample_count;
         info.sample_shading = sample_shading;
         info.pipeline_layout = m_pipeline_layout;
-        info.viewport_x = rectangle.x0();
-        info.viewport_y = rectangle.y0();
-        info.viewport_width = rectangle.width();
-        info.viewport_height = rectangle.height();
+        info.viewport = rectangle;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
         info.depth_bias = false;
         info.color_blend = false;

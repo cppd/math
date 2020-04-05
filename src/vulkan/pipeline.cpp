@@ -84,19 +84,21 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
         input_assembly_state_info.topology = info.primitive_topology.value();
         input_assembly_state_info.primitiveRestartEnable = VK_FALSE;
 
+        ASSERT(info.viewport.value().is_positive());
+
         VkViewport viewport = {};
-        viewport.x = info.viewport_x.value();
-        viewport.y = info.viewport_y.value();
-        viewport.width = info.viewport_width.value();
-        viewport.height = info.viewport_height.value();
+        viewport.x = info.viewport.value().x0();
+        viewport.y = info.viewport.value().y0();
+        viewport.width = info.viewport.value().width();
+        viewport.height = info.viewport.value().height();
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
         VkRect2D scissor = {};
-        scissor.offset.x = info.viewport_x.value();
-        scissor.offset.y = info.viewport_y.value();
-        scissor.extent.width = info.viewport_width.value();
-        scissor.extent.height = info.viewport_height.value();
+        scissor.offset.x = info.viewport.value().x0();
+        scissor.offset.y = info.viewport.value().y0();
+        scissor.extent.width = info.viewport.value().width();
+        scissor.extent.height = info.viewport.value().height();
 
         VkPipelineViewportStateCreateInfo viewport_state_info = {};
         viewport_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;

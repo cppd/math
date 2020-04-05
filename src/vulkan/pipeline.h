@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 #include "shader.h"
 
+#include <src/numerical/region.h>
+
 #include <optional>
 #include <vector>
 
@@ -34,10 +36,7 @@ struct GraphicsPipelineCreateInfo
         std::optional<VkSampleCountFlagBits> sample_count;
         std::optional<bool> sample_shading;
         std::optional<VkPipelineLayout> pipeline_layout;
-        std::optional<uint32_t> viewport_x;
-        std::optional<uint32_t> viewport_y;
-        std::optional<uint32_t> viewport_width;
-        std::optional<uint32_t> viewport_height;
+        std::optional<Region<2, int>> viewport;
         std::optional<VkPrimitiveTopology> primitive_topology;
         std::optional<const std::vector<const Shader*>*> shaders;
         std::optional<const std::vector<const SpecializationConstant*>*> constants;
