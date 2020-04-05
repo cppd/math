@@ -132,16 +132,15 @@ class Impl final : public OpticalFlowShow
 
                 m_pipeline_points = m_program.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
-                        rectangle.x0(), rectangle.y0(), rectangle.width(), rectangle.height());
+                        rectangle);
                 m_pipeline_lines = m_program.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
-                        rectangle.x0(), rectangle.y0(), rectangle.width(), rectangle.height());
+                        rectangle);
                 m_memory.set_points(*m_top_points);
                 m_memory.set_flow(*m_top_flow);
 
                 m_compute->create_buffers(
-                        m_sampler, input, rectangle.x0(), rectangle.y0(), rectangle.width(), rectangle.height(),
-                        point_count_x, point_count_y, *m_top_points, *m_top_flow);
+                        m_sampler, input, rectangle, point_count_x, point_count_y, *m_top_points, *m_top_flow);
 
                 // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
                 double left = 0;

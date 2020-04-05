@@ -150,27 +150,18 @@ OpticalFlowGrayscaleConstant::OpticalFlowGrayscaleConstant()
         }
 }
 
-void OpticalFlowGrayscaleConstant::set(
-        uint32_t local_size_x,
-        uint32_t local_size_y,
-        int32_t x,
-        int32_t y,
-        int32_t width,
-        int32_t height)
+void OpticalFlowGrayscaleConstant::set(uint32_t local_size_x, uint32_t local_size_y, const Region<2, int>& rectangle)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
         m_data.local_size_x = local_size_x;
         static_assert(std::is_same_v<decltype(m_data.local_size_y), decltype(local_size_y)>);
         m_data.local_size_y = local_size_y;
 
-        static_assert(std::is_same_v<decltype(m_data.x), decltype(x)>);
-        m_data.x = x;
-        static_assert(std::is_same_v<decltype(m_data.y), decltype(y)>);
-        m_data.y = y;
-        static_assert(std::is_same_v<decltype(m_data.width), decltype(width)>);
-        m_data.width = width;
-        static_assert(std::is_same_v<decltype(m_data.height), decltype(height)>);
-        m_data.height = height;
+        ASSERT(rectangle.is_positive());
+        m_data.x = rectangle.x0();
+        m_data.y = rectangle.y0();
+        m_data.width = rectangle.width();
+        m_data.height = rectangle.height();
 }
 
 const std::vector<VkSpecializationMapEntry>& OpticalFlowGrayscaleConstant::entries() const
@@ -222,12 +213,9 @@ VkPipeline OpticalFlowGrayscaleProgram::pipeline() const
 void OpticalFlowGrayscaleProgram::create_pipeline(
         uint32_t local_size_x,
         uint32_t local_size_y,
-        int32_t x,
-        int32_t y,
-        int32_t width,
-        int32_t height)
+        const Region<2, int>& rectangle)
 {
-        m_constant.set(local_size_x, local_size_y, x, y, width, height);
+        m_constant.set(local_size_x, local_size_y, rectangle);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = &m_device;

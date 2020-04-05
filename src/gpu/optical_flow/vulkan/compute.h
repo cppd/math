@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/instance.h>
 
@@ -35,10 +36,7 @@ struct OpticalFlowCompute
         virtual void create_buffers(
                 VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
-                unsigned x,
-                unsigned y,
-                unsigned width,
-                unsigned height,
+                const Region<2, int>& rectangle,
                 unsigned top_point_count_x,
                 unsigned top_point_count_y,
                 const vulkan::BufferWithMemory& top_points,

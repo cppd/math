@@ -568,10 +568,7 @@ class Impl final : public OpticalFlowCompute
         void create_buffers(
                 VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
-                unsigned x,
-                unsigned y,
-                unsigned width,
-                unsigned height,
+                const Region<2, int>& rectangle,
                 unsigned top_point_count_x,
                 unsigned top_point_count_y,
                 const vulkan::BufferWithMemory& top_points,
@@ -583,8 +580,9 @@ class Impl final : public OpticalFlowCompute
 
                 ASSERT(sampler != VK_NULL_HANDLE);
 
-                ASSERT(width > 0 && height > 0);
-                ASSERT(x + width <= input.width() && y + height <= input.height());
+                ASSERT(rectangle.is_positive());
+                ASSERT(rectangle.x1() <= static_cast<int>(input.width()));
+                ASSERT(rectangle.y1() <= static_cast<int>(input.height()));
 
                 const std::vector<vec2i> sizes =
                         optical_flow_pyramid_sizes(input.width(), input.height(), OPTICAL_FLOW_BOTTOM_IMAGE_SIZE);
@@ -602,7 +600,7 @@ class Impl final : public OpticalFlowCompute
                 constexpr int GROUPS_Y = OPTICAL_FLOW_GROUP_SIZE[1];
 
                 m_grayscale_groups = optical_flow_grayscale_groups(GROUPS, sizes);
-                m_grayscale_program.create_pipeline(GROUPS_X, GROUPS_Y, x, y, width, height);
+                m_grayscale_program.create_pipeline(GROUPS_X, GROUPS_Y, rectangle);
                 m_grayscale_memory.set_src(sampler, input);
                 m_grayscale_memory.set_dst(m_images[0][0], m_images[1][0]);
 
