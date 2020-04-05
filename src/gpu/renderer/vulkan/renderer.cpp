@@ -124,7 +124,7 @@ class Impl final : public Renderer
 
         RendererObjectStorage<ObjectId, MeshObject> m_storage;
 
-        Region<2, int> m_rectangle;
+        Region<2, int> m_viewport;
 
         std::optional<vec4> m_clip_plane;
         bool m_show_normals = false;
@@ -424,19 +424,19 @@ class Impl final : public Renderer
                 const vulkan::Swapchain* swapchain,
                 RenderBuffers3D* render_buffers,
                 const vulkan::ImageWithMemory* objects,
-                const Region<2, int>& rectangle) override
+                const Region<2, int>& viewport) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
-                ASSERT(rectangle.x1() <= static_cast<int>(objects->width()));
-                ASSERT(rectangle.y1() <= static_cast<int>(objects->height()));
+                ASSERT(viewport.x1() <= static_cast<int>(objects->width()));
+                ASSERT(viewport.y1() <= static_cast<int>(objects->height()));
 
                 m_swapchain = swapchain;
                 m_render_buffers = render_buffers;
                 m_object_image = objects;
-                m_rectangle = rectangle;
+                m_viewport = viewport;
 
                 create_render_buffers();
                 create_shadow_buffers();
@@ -483,19 +483,19 @@ class Impl final : public Renderer
 
                 m_render_triangles_pipeline = m_triangles_program.create_pipeline(
                         m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading,
-                        m_rectangle);
+                        m_viewport);
                 m_render_triangle_lines_pipeline = m_triangle_lines_program.create_pipeline(
                         m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading,
-                        m_rectangle);
+                        m_viewport);
                 m_render_normals_pipeline = m_normals_program.create_pipeline(
                         m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading,
-                        m_rectangle);
+                        m_viewport);
                 m_render_points_pipeline = m_points_program.create_pipeline(
                         m_render_buffers->render_pass(), m_render_buffers->sample_count(),
-                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, m_rectangle);
+                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, m_viewport);
                 m_render_lines_pipeline = m_points_program.create_pipeline(
                         m_render_buffers->render_pass(), m_render_buffers->sample_count(),
-                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, m_rectangle);
+                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, m_viewport);
         }
 
         void delete_shadow_buffers()
@@ -520,7 +520,7 @@ class Impl final : public Renderer
                 constexpr RendererDepthBufferCount buffer_count = RendererDepthBufferCount::One;
                 m_shadow_buffers = create_renderer_depth_buffers(
                         buffer_count, *m_swapchain, {m_graphics_queue.family_index()}, m_graphics_command_pool,
-                        m_graphics_queue, m_device, m_rectangle.width(), m_rectangle.height(), m_shadow_zoom);
+                        m_graphics_queue, m_device, m_viewport.width(), m_viewport.height(), m_shadow_zoom);
 
                 m_triangles_shared_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
 

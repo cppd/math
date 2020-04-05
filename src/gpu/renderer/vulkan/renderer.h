@@ -78,7 +78,7 @@ struct Renderer
                 const vulkan::Swapchain* swapchain,
                 RenderBuffers3D* render_buffers,
                 const vulkan::ImageWithMemory* objects,
-                const Region<2, int>& rectangle) = 0;
+                const Region<2, int>& viewport) = 0;
         virtual void delete_buffers() = 0;
 };
 

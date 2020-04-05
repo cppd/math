@@ -37,7 +37,7 @@ struct TextShow
 
         virtual void set_color(const Color& color) const = 0;
 
-        virtual void create_buffers(RenderBuffers2D* render_buffers, const Region<2, int>& rectangle) = 0;
+        virtual void create_buffers(RenderBuffers2D* render_buffers, const Region<2, int>& viewport) = 0;
         virtual void delete_buffers() = 0;
 
         virtual VkSemaphore draw(

@@ -181,7 +181,7 @@ vulkan::Pipeline RendererPointsProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         VkPrimitiveTopology primitive_topology,
-        const Region<2, int>& rectangle) const
+        const Region<2, int>& viewport) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -191,7 +191,7 @@ vulkan::Pipeline RendererPointsProgram::create_pipeline(
         info.sample_count = sample_count;
         info.sample_shading = false;
         info.pipeline_layout = m_pipeline_layout;
-        info.viewport = rectangle;
+        info.viewport = viewport;
         info.primitive_topology = primitive_topology;
         info.depth_bias = false;
         info.color_blend = false;

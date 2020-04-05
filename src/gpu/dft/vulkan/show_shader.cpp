@@ -187,7 +187,7 @@ VkPipelineLayout DftShowProgram::pipeline_layout() const
 vulkan::Pipeline DftShowProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
-        const Region<2, int>& rectangle) const
+        const Region<2, int>& viewport) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -197,7 +197,7 @@ vulkan::Pipeline DftShowProgram::create_pipeline(
         info.sample_count = sample_count;
         info.sample_shading = false;
         info.pipeline_layout = m_pipeline_layout;
-        info.viewport = rectangle;
+        info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
         info.depth_bias = false;
         info.color_blend = false;

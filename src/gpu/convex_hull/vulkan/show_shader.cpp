@@ -141,7 +141,7 @@ vulkan::Pipeline ConvexHullShowProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         bool sample_shading,
-        const Region<2, int>& rectangle) const
+        const Region<2, int>& viewport) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -151,7 +151,7 @@ vulkan::Pipeline ConvexHullShowProgram::create_pipeline(
         info.sample_count = sample_count;
         info.sample_shading = sample_shading;
         info.pipeline_layout = m_pipeline_layout;
-        info.viewport = rectangle;
+        info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
         info.depth_bias = false;
         info.color_blend = false;

@@ -90,7 +90,7 @@ public:
         vulkan::Pipeline create_pipeline(
                 VkRenderPass render_pass,
                 VkSampleCountFlagBits sample_count,
-                const Region<2, int>& rectangle) const;
+                const Region<2, int>& viewport) const;
 
         VkDescriptorSetLayout descriptor_set_layout() const;
         VkPipelineLayout pipeline_layout() const;
