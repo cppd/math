@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../../vulkan_interfaces.h"
 
 #include <src/color/color.h>
+#include <src/numerical/region.h>
 #include <src/text/text_data.h>
 #include <src/vulkan/instance.h>
 
@@ -36,12 +37,7 @@ struct TextShow
 
         virtual void set_color(const Color& color) const = 0;
 
-        virtual void create_buffers(
-                RenderBuffers2D* render_buffers,
-                unsigned x,
-                unsigned y,
-                unsigned width,
-                unsigned height) = 0;
+        virtual void create_buffers(RenderBuffers2D* render_buffers, const Region<2, int>& rectangle) = 0;
         virtual void delete_buffers() = 0;
 
         virtual VkSemaphore draw(

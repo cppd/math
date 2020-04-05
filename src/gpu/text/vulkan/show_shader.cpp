@@ -223,10 +223,7 @@ vulkan::Pipeline TextShowProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         bool sample_shading,
-        unsigned x,
-        unsigned y,
-        unsigned width,
-        unsigned height) const
+        const Region<2, int>& rectangle) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -236,10 +233,10 @@ vulkan::Pipeline TextShowProgram::create_pipeline(
         info.sample_count = sample_count;
         info.sample_shading = sample_shading;
         info.pipeline_layout = m_pipeline_layout;
-        info.viewport_x = x;
-        info.viewport_y = y;
-        info.viewport_width = width;
-        info.viewport_height = height;
+        info.viewport_x = rectangle.x0();
+        info.viewport_y = rectangle.y0();
+        info.viewport_width = rectangle.width();
+        info.viewport_height = rectangle.height();
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         info.depth_bias = false;
         info.color_blend = true;

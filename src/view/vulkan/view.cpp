@@ -653,7 +653,8 @@ class Impl final : public View
                 //
 
                 m_text->create_buffers(
-                        &m_render_buffers->buffers_2d(), 0, 0, m_swapchain->width(), m_swapchain->height());
+                        &m_render_buffers->buffers_2d(),
+                        Region<2, int>(0, 0, m_swapchain->width(), m_swapchain->height()));
 
                 //
 

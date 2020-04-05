@@ -156,8 +156,7 @@ class Impl final : public TextShow
                 return vulkan::create_command_buffers(info);
         }
 
-        void create_buffers(RenderBuffers2D* render_buffers, unsigned x, unsigned y, unsigned width, unsigned height)
-                override
+        void create_buffers(RenderBuffers2D* render_buffers, const Region<2, int>& rectangle) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -166,15 +165,14 @@ class Impl final : public TextShow
                 m_render_buffers = render_buffers;
 
                 m_pipeline = m_program.create_pipeline(
-                        m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading, x, y,
-                        width, height);
+                        m_render_buffers->render_pass(), m_render_buffers->sample_count(), m_sample_shading, rectangle);
 
                 m_command_buffers = create_commands();
 
                 // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
                 double left = 0;
-                double right = width;
-                double bottom = height;
+                double right = rectangle.width();
+                double bottom = rectangle.height();
                 double top = 0;
                 double near = 1;
                 double far = -1;
