@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/constant.h>
 #include <src/vulkan/descriptor.h>
@@ -84,7 +85,7 @@ class PencilSketchComputeConstant final : public vulkan::SpecializationConstant
 public:
         PencilSketchComputeConstant();
 
-        void set(int32_t local_size, int32_t x, int32_t y, int32_t width, int32_t height);
+        void set(int32_t local_size, const Region<2, int>& rectangle);
 };
 
 class PencilSketchComputeProgram final
@@ -107,7 +108,7 @@ public:
         PencilSketchComputeProgram(PencilSketchComputeProgram&&) = default;
         ~PencilSketchComputeProgram() = default;
 
-        void create_pipeline(unsigned group_size, unsigned x, unsigned y, unsigned width, unsigned height);
+        void create_pipeline(unsigned group_size, const Region<2, int>& rectangle);
         void delete_pipeline();
 
         VkDescriptorSetLayout descriptor_set_layout() const;

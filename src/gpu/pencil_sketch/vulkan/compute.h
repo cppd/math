@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/instance.h>
 
@@ -36,10 +37,7 @@ struct PencilSketchCompute
                 VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
                 const vulkan::ImageWithMemory& objects,
-                unsigned x,
-                unsigned y,
-                unsigned width,
-                unsigned height,
+                const Region<2, int>& rectangle,
                 const vulkan::ImageWithMemory& output) = 0;
         virtual void delete_buffers() = 0;
 };

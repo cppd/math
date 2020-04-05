@@ -107,12 +107,9 @@ class Impl final : public PencilSketchShow
                 m_memory.set_image(m_sampler, *m_image);
 
                 m_pipeline = m_program.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), rectangle.x0(), rectangle.y0(),
-                        rectangle.width(), rectangle.height());
+                        render_buffers->render_pass(), render_buffers->sample_count(), rectangle);
 
-                m_compute->create_buffers(
-                        m_sampler, input, objects, rectangle.x0(), rectangle.y0(), rectangle.width(),
-                        rectangle.height(), *m_image);
+                m_compute->create_buffers(m_sampler, input, objects, rectangle, *m_image);
 
                 vulkan::CommandBufferCreateInfo info;
                 info.device = m_device;

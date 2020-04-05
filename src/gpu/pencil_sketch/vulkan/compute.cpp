@@ -135,10 +135,7 @@ class Impl final : public PencilSketchCompute
                 VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
                 const vulkan::ImageWithMemory& objects,
-                unsigned x,
-                unsigned y,
-                unsigned width,
-                unsigned height,
+                const Region<2, int>& rectangle,
                 const vulkan::ImageWithMemory& output) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
@@ -151,10 +148,12 @@ class Impl final : public PencilSketchCompute
 
                 ASSERT(sampler != VK_NULL_HANDLE);
                 ASSERT(input.width() == objects.width() && input.height() == objects.height());
-                ASSERT(output.width() == width && output.height() == height);
-                ASSERT(width > 0 && height > 0);
-                ASSERT(x + width <= objects.width());
-                ASSERT(y + height <= objects.height());
+
+                ASSERT(rectangle.is_positive());
+                ASSERT(rectangle.width() == static_cast<int>(output.width()));
+                ASSERT(rectangle.height() == static_cast<int>(output.height()));
+                ASSERT(rectangle.x1() <= static_cast<int>(objects.width()));
+                ASSERT(rectangle.y1() <= static_cast<int>(objects.height()));
 
                 m_memory.set_input(sampler, input);
                 m_memory.set_object_image(objects);
@@ -162,10 +161,10 @@ class Impl final : public PencilSketchCompute
 
                 //
 
-                m_program.create_pipeline(GROUP_SIZE, x, y, width, height);
+                m_program.create_pipeline(GROUP_SIZE, rectangle);
 
-                m_groups_x = group_count(width, GROUP_SIZE);
-                m_groups_y = group_count(height, GROUP_SIZE);
+                m_groups_x = group_count(rectangle.width(), GROUP_SIZE);
+                m_groups_y = group_count(rectangle.height(), GROUP_SIZE);
         }
 
         void delete_buffers() override
