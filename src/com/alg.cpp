@@ -23,12 +23,12 @@ static_assert(1 == multiply_all<int>(std::array<int_least16_t, 5>{1, 1, 1, 1, 1}
 static_assert(100000 == multiply_all<int>(std::array<int_least16_t, 5>{10, 10, 10, 10, 10}));
 static_assert(
         static_cast<__int128>(463838240001029376) * static_cast<__int128>(2134257315012840192) ==
-        multiply_all<__int128>(std::array<int_least16_t, 10>{1234, 5678, 9876, 5432, 1234, 5678, 9876, 5432, 1234,
-                                                             5678}));
+        multiply_all<__int128>(std::array<int_least16_t, 10>{
+                1234, 5678, 9876, 5432, 1234, 5678, 9876, 5432, 1234, 5678}));
 static_assert(
         static_cast<unsigned __int128>(463838240001029376) * static_cast<unsigned __int128>(2134257315012840192) ==
-        multiply_all<unsigned __int128>(std::array<uint_least16_t, 10>{1234, 5678, 9876, 5432, 1234, 5678, 9876, 5432,
-                                                                       1234, 5678}));
+        multiply_all<unsigned __int128>(std::array<uint_least16_t, 10>{
+                1234, 5678, 9876, 5432, 1234, 5678, 9876, 5432, 1234, 5678}));
 static_assert(
         static_cast<__float128>(463838240001029376) * static_cast<__float128>(2134257315012840192) ==
         multiply_all<__float128>(std::array<float, 10>{1234, 5678, 9876, 5432, 1234, 5678, 9876, 5432, 1234, 5678}));
@@ -39,8 +39,8 @@ static_assert(
         51352 ==
         add_all<__int128>(std::array<int_least16_t, 10>{1234, 5678, 9876, 5432, 1234, 5678, 9876, 5432, 1234, 5678}));
 static_assert(
-        51352 == add_all<unsigned __int128>(std::array<uint_least16_t, 10>{1234, 5678, 9876, 5432, 1234, 5678, 9876,
-                                                                           5432, 1234, 5678}));
+        51352 == add_all<unsigned __int128>(std::array<uint_least16_t, 10>{
+                         1234, 5678, 9876, 5432, 1234, 5678, 9876, 5432, 1234, 5678}));
 static_assert(
         51352 ==
         add_all<__float128>(std::array<float, 10>{1234, 5678, 9876, 5432, 1234, 5678, 9876, 5432, 1234, 5678}));

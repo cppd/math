@@ -45,8 +45,9 @@ void test_pivot()
                 error("b error");
         }
 
-        if (!(a == std::array<Vector<3, T>, 3>{Vector<3, T>(0.25, -0.75, -2.5), Vector<3, T>(0.5, -1.5, -4),
-                                               Vector<3, T>(-0.25, -0.25, -0.5)}))
+        if (!(a ==
+              std::array<Vector<3, T>, 3>{
+                      Vector<3, T>(0.25, -0.75, -2.5), Vector<3, T>(0.5, -1.5, -4), Vector<3, T>(-0.25, -0.25, -0.5)}))
         {
                 impl::print_simplex_algorithm_data(b, a, v, c);
                 error("a error");
@@ -89,8 +90,9 @@ void test_feasible()
         }
         {
                 std::array<T, 5> b{-1.23456, 3.12321, -1.14321, 3.32123, -4.3214e10};
-                std::array<Vector<2, T>, 5> a{Vector<2, T>(1, 0), Vector<2, T>(-1, 0), Vector<2, T>(0, 1),
-                                              Vector<2, T>(0, -1), Vector<2, T>(1.01e10, 1.00132e10)};
+                std::array<Vector<2, T>, 5> a{
+                        Vector<2, T>(1, 0), Vector<2, T>(-1, 0), Vector<2, T>(0, 1), Vector<2, T>(0, -1),
+                        Vector<2, T>(1.01e10, 1.00132e10)};
 
                 n::ConstraintSolution cs = n::solve_constraints(a, b);
                 if (cs != n::ConstraintSolution::Feasible)
@@ -103,8 +105,9 @@ void test_feasible()
         }
         {
                 std::array<T, 5> b{-1.23456, -3.12321, -1.14321, 3.32123, -4.3214};
-                std::array<Vector<2, T>, 5> a{Vector<2, T>(1, 0), Vector<2, T>(-1, 0), Vector<2, T>(0, 1),
-                                              Vector<2, T>(0, -1), Vector<2, T>(1.01, 1.00132)};
+                std::array<Vector<2, T>, 5> a{
+                        Vector<2, T>(1, 0), Vector<2, T>(-1, 0), Vector<2, T>(0, 1), Vector<2, T>(0, -1),
+                        Vector<2, T>(1.01, 1.00132)};
 
                 n::ConstraintSolution cs = n::solve_constraints(a, b);
                 if (cs != n::ConstraintSolution::Infeasible)

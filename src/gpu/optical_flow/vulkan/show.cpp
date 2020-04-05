@@ -123,9 +123,9 @@ class Impl final : public OpticalFlowShow
 
                 m_top_points.emplace(
                         m_device, m_transfer_command_pool, m_transfer_queue,
-                        std::unordered_set<uint32_t>({m_graphics_command_pool.family_index(),
-                                                      m_compute_command_pool.family_index(),
-                                                      m_transfer_command_pool.family_index()}),
+                        std::unordered_set<uint32_t>(
+                                {m_graphics_command_pool.family_index(), m_compute_command_pool.family_index(),
+                                 m_transfer_command_pool.family_index()}),
                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, data_size(points), points);
                 m_top_flow.emplace(
                         vulkan::BufferMemoryType::DeviceLocal, m_device,

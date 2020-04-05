@@ -344,8 +344,10 @@ std::vector<vulkan::ImageWithMemory> load_textures(
         }
 
         // На одну текстуру больше для её указания, но не использования в тех материалах, где нет текстуры
-        std::vector<std::uint_least8_t> pixels = {/*0*/ 0, 0, 0, 0, /*1*/ 0, 0, 0, 0,
-                                                  /*2*/ 0, 0, 0, 0, /*3*/ 0, 0, 0, 0};
+        std::vector<std::uint_least8_t> pixels = {/*0*/ 0, 0, 0, 0,
+                                                  /*1*/ 0, 0, 0, 0,
+                                                  /*2*/ 0, 0, 0, 0,
+                                                  /*3*/ 0, 0, 0, 0};
         textures.emplace_back(
                 device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, family_indices,
                 COLOR_IMAGE_FORMATS, 2, 2, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, pixels, storage);

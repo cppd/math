@@ -164,7 +164,7 @@ public:
                 return m_size;
         }
 
-        operator const vulkan::BufferWithMemory&() const&
+        operator const vulkan::BufferWithMemory &() const&
         {
                 return m_buffer;
         }
@@ -174,7 +174,7 @@ public:
                 return m_buffer;
         }
 
-        operator const vulkan::BufferWithMemory&() const&& = delete;
+        operator const vulkan::BufferWithMemory &() const&& = delete;
         operator VkBuffer() const&& = delete;
 };
 

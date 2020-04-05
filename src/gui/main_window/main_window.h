@@ -168,8 +168,8 @@ private:
         void set_dft_background_color(const QColor& c);
         void set_dft_color(const QColor& c);
 
-        void exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists) const
-                noexcept;
+        void exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists)
+                const noexcept;
 
         bool dialog_object_selection(std::unordered_set<ComputationType>* objects_to_load);
 

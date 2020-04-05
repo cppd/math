@@ -327,8 +327,8 @@ void MainWindow::terminate_all_threads()
         set_log_events(nullptr);
 }
 
-void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists) const
-        noexcept
+void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists)
+        const noexcept
 {
         try
         {

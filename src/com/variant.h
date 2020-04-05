@@ -23,4 +23,4 @@ struct Visitors : T...
         using T::operator()...;
 };
 template <typename... T>
-Visitors(T...)->Visitors<T...>;
+Visitors(T...) -> Visitors<T...>;
