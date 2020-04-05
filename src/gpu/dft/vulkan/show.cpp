@@ -116,12 +116,9 @@ class Impl final : public DftShow
                 m_memory.set_image(m_sampler, *m_image);
 
                 m_pipeline = m_program.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), draw_rectangle.x0(),
-                        draw_rectangle.y0(), draw_rectangle.width(), draw_rectangle.height());
+                        render_buffers->render_pass(), render_buffers->sample_count(), draw_rectangle);
 
-                m_compute->create_buffers(
-                        m_sampler, input, *m_image, source_rectangle.x0(), source_rectangle.y0(),
-                        source_rectangle.width(), source_rectangle.height(), m_graphics_family_index);
+                m_compute->create_buffers(m_sampler, input, *m_image, source_rectangle, m_graphics_family_index);
 
                 vulkan::CommandBufferCreateInfo info;
                 info.device = m_device;

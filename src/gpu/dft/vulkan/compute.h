@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/instance.h>
 
@@ -37,10 +38,7 @@ struct DftComputeImage
                 VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
                 const vulkan::ImageWithMemory& output,
-                unsigned x,
-                unsigned y,
-                unsigned width,
-                unsigned height,
+                const Region<2, int>& rectangle,
                 uint32_t family_index) = 0;
         virtual void delete_buffers() = 0;
 };

@@ -748,22 +748,25 @@ class DftImage final : public DftComputeImage
                 VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
                 const vulkan::ImageWithMemory& output,
-                unsigned x,
-                unsigned y,
-                unsigned width,
-                unsigned height,
+                const Region<2, int>& rectangle,
                 uint32_t family_index) override
         {
                 ASSERT(sampler != VK_NULL_HANDLE);
-                ASSERT(output.width() == width && output.height() == height);
-                ASSERT(x + width <= input.width() && y + height <= input.height());
 
-                m_dft.create_buffers(width, height, family_index);
+                ASSERT(rectangle.width() == static_cast<int>(output.width()));
+                ASSERT(rectangle.height() == static_cast<int>(output.height()));
+                ASSERT(rectangle.x1() <= static_cast<int>(input.width()));
+                ASSERT(rectangle.y1() <= static_cast<int>(input.height()));
+
+                m_dft.create_buffers(rectangle.width(), rectangle.height(), family_index);
 
                 //
 
                 m_copy_input_memory.set(sampler, input, m_dft.buffer());
-                m_copy_input_program.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], x, y, width, height);
+                m_copy_input_program.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], rectangle);
+
+                const int width = rectangle.width();
+                const int height = rectangle.height();
 
                 m_copy_output_memory.set(m_dft.buffer(), output);
                 m_copy_output_program.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], 1.0 / (width * height));

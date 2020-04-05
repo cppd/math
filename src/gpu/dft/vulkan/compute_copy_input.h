@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/constant.h>
 #include <src/vulkan/descriptor.h>
@@ -79,7 +80,7 @@ class DftCopyInputConstant final : public vulkan::SpecializationConstant
 public:
         DftCopyInputConstant();
 
-        void set(int32_t local_size_x, int32_t local_size_y, int32_t x, int32_t y, int32_t width, int32_t height);
+        void set(int32_t local_size_x, int32_t local_size_y, const Region<2, int>& rectangle);
 };
 
 class DftCopyInputProgram final
@@ -102,13 +103,7 @@ public:
         DftCopyInputProgram(DftCopyInputProgram&&) = default;
         ~DftCopyInputProgram() = default;
 
-        void create_pipeline(
-                int32_t local_size_x,
-                int32_t local_size_y,
-                int32_t x,
-                int32_t y,
-                int32_t width,
-                int32_t height);
+        void create_pipeline(int32_t local_size_x, int32_t local_size_y, const Region<2, int>& rectangle);
         void delete_pipeline();
 
         VkDescriptorSetLayout descriptor_set_layout() const;
