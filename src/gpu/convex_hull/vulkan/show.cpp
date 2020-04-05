@@ -116,12 +116,9 @@ class Impl final : public ConvexHullShow
                 m_memory.set_matrix(p * t);
 
                 m_pipeline = m_program.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, rectangle.x0(),
-                        rectangle.y0(), rectangle.width(), rectangle.height());
+                        render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, rectangle);
 
-                m_compute->create_buffers(
-                        objects, rectangle.x0(), rectangle.y0(), rectangle.width(), rectangle.height(), *m_points,
-                        m_indirect_buffer, m_family_index);
+                m_compute->create_buffers(objects, rectangle, *m_points, m_indirect_buffer, m_family_index);
 
                 vulkan::CommandBufferCreateInfo info;
                 info.device = m_instance.device();

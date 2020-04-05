@@ -157,10 +157,7 @@ class Impl final : public ConvexHullCompute
 
         void create_buffers(
                 const vulkan::ImageWithMemory& objects,
-                unsigned x,
-                unsigned y,
-                unsigned width,
-                unsigned height,
+                const Region<2, int>& rectangle,
                 const vulkan::BufferWithMemory& points_buffer,
                 const vulkan::BufferWithMemory& point_count_buffer,
                 uint32_t family_index) override
@@ -169,8 +166,15 @@ class Impl final : public ConvexHullCompute
 
                 //
 
-                ASSERT(points_buffer.size() == (2 * height + 1) * (2 * sizeof(int32_t)));
+                ASSERT(rectangle.is_positive());
+                ASSERT(rectangle.x1() <= static_cast<int>(objects.width()));
+                ASSERT(rectangle.y1() <= static_cast<int>(objects.height()));
+
+                ASSERT(points_buffer.size() == (2 * rectangle.height() + 1) * (2 * sizeof(int32_t)));
                 ASSERT(point_count_buffer.size() >= sizeof(int32_t));
+
+                const int width = rectangle.width();
+                const int height = rectangle.height();
 
                 m_lines_buffer.emplace(
                         vulkan::BufferMemoryType::DeviceLocal, m_instance.device(), std::unordered_set({family_index}),
@@ -178,13 +182,10 @@ class Impl final : public ConvexHullCompute
                 m_points_buffer = points_buffer;
                 m_point_count_buffer = point_count_buffer;
 
-                ASSERT(width > 0 && height > 0);
-                ASSERT(x + width <= objects.width());
-                ASSERT(y + height <= objects.height());
                 m_prepare_memory.set_object_image(objects);
                 m_prepare_memory.set_lines(*m_lines_buffer);
                 m_prepare_group_count = height;
-                m_prepare_program.create_pipeline(group_size_prepare(width, m_instance.limits()), x, y, width, height);
+                m_prepare_program.create_pipeline(group_size_prepare(width, m_instance.limits()), rectangle);
 
                 m_merge_memory.set_lines(*m_lines_buffer);
                 m_merge_program.create_pipeline(

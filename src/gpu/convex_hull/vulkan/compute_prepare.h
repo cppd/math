@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/constant.h>
 #include <src/vulkan/descriptor.h>
@@ -80,7 +81,7 @@ class ConvexHullPrepareConstant final : public vulkan::SpecializationConstant
 public:
         ConvexHullPrepareConstant();
 
-        void set(int32_t local_size_x, int32_t buffer_size, int32_t x, int32_t y, int32_t width, int32_t height);
+        void set(int32_t local_size_x, int32_t buffer_size, const Region<2, int>& rectangle);
 };
 
 class ConvexHullPrepareProgram final
@@ -103,7 +104,7 @@ public:
         ConvexHullPrepareProgram(ConvexHullPrepareProgram&&) = default;
         ~ConvexHullPrepareProgram() = default;
 
-        void create_pipeline(unsigned buffer_and_group_size, unsigned x, unsigned y, unsigned width, unsigned height);
+        void create_pipeline(unsigned buffer_and_group_size, const Region<2, int>& rectangle);
         void delete_pipeline();
 
         VkDescriptorSetLayout descriptor_set_layout() const;

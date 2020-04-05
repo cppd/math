@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/instance.h>
 
@@ -34,10 +35,7 @@ struct ConvexHullCompute
         virtual void compute_commands(VkCommandBuffer command_buffer) const = 0;
         virtual void create_buffers(
                 const vulkan::ImageWithMemory& objects,
-                unsigned x,
-                unsigned y,
-                unsigned width,
-                unsigned height,
+                const Region<2, int>& rectangle,
                 const vulkan::BufferWithMemory& points_buffer,
                 const vulkan::BufferWithMemory& point_count_buffer,
                 uint32_t family_index) = 0;

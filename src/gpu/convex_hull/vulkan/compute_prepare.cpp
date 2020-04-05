@@ -142,26 +142,18 @@ ConvexHullPrepareConstant::ConvexHullPrepareConstant()
         }
 }
 
-void ConvexHullPrepareConstant::set(
-        int32_t local_size_x,
-        int32_t buffer_size,
-        int32_t x,
-        int32_t y,
-        int32_t width,
-        int32_t height)
+void ConvexHullPrepareConstant::set(int32_t local_size_x, int32_t buffer_size, const Region<2, int>& rectangle)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
         m_data.local_size_x = local_size_x;
         static_assert(std::is_same_v<decltype(m_data.buffer_size), decltype(buffer_size)>);
         m_data.buffer_size = buffer_size;
-        static_assert(std::is_same_v<decltype(m_data.x), decltype(x)>);
-        m_data.x = x;
-        static_assert(std::is_same_v<decltype(m_data.y), decltype(y)>);
-        m_data.y = y;
-        static_assert(std::is_same_v<decltype(m_data.width), decltype(width)>);
-        m_data.width = width;
-        static_assert(std::is_same_v<decltype(m_data.height), decltype(height)>);
-        m_data.height = height;
+
+        ASSERT(rectangle.is_positive());
+        m_data.x = rectangle.x0();
+        m_data.y = rectangle.y0();
+        m_data.width = rectangle.width();
+        m_data.height = rectangle.height();
 }
 
 const std::vector<VkSpecializationMapEntry>& ConvexHullPrepareConstant::entries() const
@@ -194,14 +186,9 @@ ConvexHullPrepareProgram::ConvexHullPrepareProgram(const vulkan::Device& device)
 {
 }
 
-void ConvexHullPrepareProgram::create_pipeline(
-        unsigned buffer_and_group_size,
-        unsigned x,
-        unsigned y,
-        unsigned width,
-        unsigned height)
+void ConvexHullPrepareProgram::create_pipeline(unsigned buffer_and_group_size, const Region<2, int>& rectangle)
 {
-        m_constant.set(buffer_and_group_size, buffer_and_group_size, x, y, width, height);
+        m_constant.set(buffer_and_group_size, buffer_and_group_size, rectangle);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = &m_device;
