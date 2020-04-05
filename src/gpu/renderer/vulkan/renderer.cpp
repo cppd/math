@@ -44,6 +44,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <thread>
 
+namespace gpu
+{
+namespace
+{
 // clang-format off
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
@@ -53,10 +57,6 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 };
 // clang-format on
 
-namespace gpu_vulkan
-{
-namespace
-{
 class Impl final : public Renderer
 {
         // Для получения текстуры для тени результат рисования находится в интервалах x(-1, 1) y(-1, 1) z(0, 1).

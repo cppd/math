@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_source.h"
 
+namespace gpu
+{
+namespace
+{
 constexpr uint32_t sobel_comp[]{
 #include "optical_flow_sobel.comp.spr"
 };
@@ -41,9 +45,8 @@ constexpr uint32_t show_debug_vert[]{
 constexpr uint32_t show_debug_frag[]{
 #include "optical_flow_show_debug.frag.spr"
 };
+}
 
-namespace gpu_vulkan
-{
 Span<const uint32_t> optical_flow_sobel_comp()
 {
         return sobel_comp;

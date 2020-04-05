@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../com/groups.h"
 
+namespace gpu
+{
 std::vector<vec2i> optical_flow_pyramid_sizes(int width, int height, int min_size)
 {
         std::vector<vec2i> sizes;
@@ -107,4 +109,5 @@ std::vector<vec2i> optical_flow_flow_groups(
         }
 
         return groups;
+}
 }

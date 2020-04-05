@@ -38,16 +38,16 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 #include <optional>
 #include <thread>
 
+namespace gpu
+{
+namespace
+{
 // clang-format off
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
 };
 // clang-format on
 
-namespace gpu_vulkan
-{
-namespace
-{
 int group_size_merge(int height, const VkPhysicalDeviceLimits& limits)
 {
         return convex_hull_group_size_merge(

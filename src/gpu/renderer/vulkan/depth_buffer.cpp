@@ -26,6 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <sstream>
 
+namespace gpu
+{
+namespace
+{
 // clang-format off
 constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 {
@@ -38,10 +42,6 @@ constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 constexpr VkSampleCountFlagBits SAMPLE_COUNT = VK_SAMPLE_COUNT_1_BIT;
 constexpr VkImageLayout IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-namespace gpu_vulkan
-{
-namespace
-{
 vulkan::RenderPass create_render_pass_depth(VkDevice device, VkFormat depth_format)
 {
         std::array<VkAttachmentDescription, 1> attachments = {};

@@ -143,7 +143,7 @@ unsigned compute_buffer_count(view_vulkan::RenderBufferCount buffer_count, const
         error_fatal("Error render buffer count");
 }
 
-class Impl3D : public gpu_vulkan::RenderBuffers3D
+class Impl3D : public gpu::RenderBuffers3D
 {
         virtual unsigned width_3d() const = 0;
         virtual unsigned height_3d() const = 0;
@@ -183,7 +183,7 @@ protected:
         ~Impl3D() override = default;
 };
 
-class Impl2D : public gpu_vulkan::RenderBuffers2D
+class Impl2D : public gpu::RenderBuffers2D
 {
         virtual unsigned width_2d() const = 0;
         virtual unsigned height_2d() const = 0;
@@ -340,12 +340,12 @@ Impl::Impl(
         LOG(buffer_info(m_color_attachments, m_depth_attachments));
 }
 
-gpu_vulkan::RenderBuffers3D& Impl::buffers_3d()
+gpu::RenderBuffers3D& Impl::buffers_3d()
 {
         return *this;
 }
 
-gpu_vulkan::RenderBuffers2D& Impl::buffers_2d()
+gpu::RenderBuffers2D& Impl::buffers_2d()
 {
         return *this;
 }

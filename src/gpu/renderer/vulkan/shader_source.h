@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstdint>
 
-namespace gpu_vulkan
+namespace gpu
 {
 Span<const uint32_t> renderer_triangles_vert();
 Span<const uint32_t> renderer_triangles_geom();

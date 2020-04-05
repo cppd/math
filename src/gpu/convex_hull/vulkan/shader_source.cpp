@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_source.h"
 
+namespace gpu
+{
+namespace
+{
 constexpr uint32_t prepare_comp[]{
 #include "convex_hull_prepare.comp.spr"
 };
@@ -32,9 +36,8 @@ constexpr uint32_t show_vert[]{
 constexpr uint32_t show_frag[]{
 #include "convex_hull_show.frag.spr"
 };
+}
 
-namespace gpu_vulkan
-{
 Span<const uint32_t> convex_hull_prepare_comp()
 {
         return prepare_comp;

@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_source.h"
 
+namespace gpu
+{
+namespace
+{
 constexpr uint32_t fft_global_comp[]{
 #include "dft_fft_global.comp.spr"
 };
@@ -44,9 +48,8 @@ constexpr uint32_t show_vert[]{
 constexpr uint32_t show_frag[]{
 #include "dft_show.frag.spr"
 };
+}
 
-namespace gpu_vulkan
-{
 Span<const uint32_t> dft_fft_global_comp()
 {
         return fft_global_comp;

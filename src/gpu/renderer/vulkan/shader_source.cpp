@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_source.h"
 
+namespace gpu
+{
+namespace
+{
 constexpr uint32_t triangles_vert[]{
 #include "renderer_triangles.vert.spr"
 };
@@ -59,9 +63,8 @@ constexpr uint32_t normals_geom[]{
 constexpr uint32_t normals_frag[]{
 #include "renderer_normals.frag.spr"
 };
+}
 
-namespace gpu_vulkan
-{
 Span<const uint32_t> renderer_triangles_vert()
 {
         return Span<const uint32_t>(triangles_vert);

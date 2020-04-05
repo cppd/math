@@ -30,6 +30,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <thread>
 
+namespace gpu
+{
+namespace
+{
 // clang-format off
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
@@ -40,10 +44,6 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 constexpr int VERTEX_COUNT = 4;
 constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
 
-namespace gpu_vulkan
-{
-namespace
-{
 class Impl final : public PencilSketchShow
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();

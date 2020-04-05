@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <type_traits>
 
-namespace gpu_vulkan
+namespace gpu
 {
 std::vector<VkDescriptorSetLayoutBinding> ConvexHullFilterMemory::descriptor_set_layout_bindings()
 {

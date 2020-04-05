@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 
+namespace gpu
+{
 int convex_hull_points_buffer_size(int height)
 {
         // 2 линии точек + 1 точка, тип ivec2
@@ -82,4 +84,5 @@ int convex_hull_iteration_count_merge(int size)
         // Этот индекс должен быть строго меньше заданного числа size.
         // Поэтому число итераций равно максимальной степени 2, в которой число 2 строго меньше заданного числа size.
         return (size > 2) ? log_2(size - 1) : 0;
+}
 }

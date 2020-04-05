@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/constant.h>
 
+namespace gpu
+{
 // rad / ms
 constexpr double CONVEX_HULL_ANGULAR_FREQUENCY = TWO_PI<double> * 5;
 
@@ -35,3 +37,4 @@ int convex_hull_group_size_merge(
         unsigned max_group_invocations,
         unsigned max_shared_memory_size);
 int convex_hull_iteration_count_merge(int size);
+}

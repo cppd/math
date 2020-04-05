@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <complex>
 #include <vector>
 
+namespace gpu
+{
 int dft_compute_m(int n);
 std::vector<std::complex<double>> dft_compute_h(int n, bool inverse, double coef);
 std::vector<std::complex<double>> dft_compute_h2(int n, int m, const std::vector<std::complex<double>>& h);
@@ -55,4 +57,5 @@ template <typename Dst, typename Src>
 std::enable_if_t<std::is_same_v<Dst, Src>, std::vector<std::complex<Dst>>&&> conv(std::vector<std::complex<Src>>&& data)
 {
         return std::move(data);
+}
 }

@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace gpu_vulkan
+namespace gpu
 {
 struct Renderer
 {

@@ -39,6 +39,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <vector>
 
+namespace gpu
+{
+namespace
+{
 constexpr int VERTEX_BUFFER_FIRST_SIZE = 10;
 
 // clang-format off
@@ -53,10 +57,6 @@ constexpr std::initializer_list<VkFormat> GRAYSCALE_IMAGE_FORMATS =
 };
 // clang-format on
 
-namespace gpu_vulkan
-{
-namespace
-{
 class Glyphs
 {
         int m_width;

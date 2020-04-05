@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <unordered_map>
 
+namespace gpu
+{
 template <typename Id, typename T>
 class RendererObjectStorage final
 {
@@ -88,3 +90,4 @@ public:
                 return m_object;
         }
 };
+}

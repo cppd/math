@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/span.h>
 
-namespace gpu_vulkan
+namespace gpu
 {
 Span<const uint32_t> dft_fft_global_comp();
 Span<const uint32_t> dft_fft_shared_comp();

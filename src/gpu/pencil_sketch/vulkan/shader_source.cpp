@@ -16,6 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "shader_source.h"
+
+namespace gpu
+{
+namespace
+{
 constexpr uint32_t compute_comp[]{
 #include "pencil_sketch_compute.comp.spr"
 };
@@ -25,9 +30,8 @@ constexpr uint32_t show_vert[]{
 constexpr uint32_t show_frag[]{
 #include "pencil_sketch_show.frag.spr"
 };
+}
 
-namespace gpu_vulkan
-{
 Span<const uint32_t> pencil_sketch_compute_comp()
 {
         return compute_comp;

@@ -66,6 +66,10 @@ Chapter 13: FFTs for Arbitrary N.
 #include <optional>
 #include <thread>
 
+namespace gpu
+{
+namespace
+{
 // clang-format off
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> DFT_IMAGE_REQUIRED_DEVICE_FEATURES =
 {
@@ -78,10 +82,6 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> DFT_VECTOR_REQUI
 constexpr const int GROUP_SIZE_1D = 256;
 constexpr const vec2i GROUP_SIZE_2D = vec2i(16, 16);
 
-namespace gpu_vulkan
-{
-namespace
-{
 void begin_commands(VkCommandBuffer command_buffer)
 {
         VkResult result;

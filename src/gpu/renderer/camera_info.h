@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/vec.h>
 
+namespace gpu
+{
 struct RendererCameraInfo final
 {
         struct Volume
@@ -34,3 +36,4 @@ struct RendererCameraInfo final
         vec3 light_direction;
         vec3 camera_direction;
 };
+}

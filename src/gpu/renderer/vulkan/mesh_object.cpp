@@ -35,6 +35,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <unordered_set>
 
+namespace gpu
+{
+namespace
+{
 // clang-format off
 constexpr std::initializer_list<VkFormat> COLOR_IMAGE_FORMATS =
 {
@@ -44,19 +48,16 @@ constexpr std::initializer_list<VkFormat> COLOR_IMAGE_FORMATS =
 };
 // clang-format on
 
-namespace gpu_vulkan
-{
 // Число используется в шейдере для определения наличия текстурных координат
 constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
 
 constexpr VkIndexType VULKAN_INDEX_TYPE = VK_INDEX_TYPE_UINT32;
+
 using IndexType = std::conditional_t<
         VULKAN_INDEX_TYPE == VK_INDEX_TYPE_UINT32,
         uint32_t,
         std::conditional_t<VULKAN_INDEX_TYPE == VK_INDEX_TYPE_UINT16, uint16_t, void>>;
 
-namespace
-{
 std::string time_string(double time)
 {
         return to_string_fixed(1000.0 * time, 5) + " ms";

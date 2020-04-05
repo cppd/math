@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vulkan/vulkan.h>
 
-namespace gpu_vulkan
+namespace gpu
 {
 struct TextShow
 {

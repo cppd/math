@@ -45,6 +45,10 @@ Chapter 5. Tracking Objects in Videos.
 
 #include <thread>
 
+namespace gpu
+{
+namespace
+{
 constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
 
 // clang-format off
@@ -53,10 +57,6 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 };
 // clang-format on
 
-namespace gpu_vulkan
-{
-namespace
-{
 void image_barrier(
         VkCommandBuffer command_buffer,
         const std::vector<VkImage>& images,

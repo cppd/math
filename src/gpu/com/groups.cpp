@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "groups.h"
 
+namespace gpu
+{
 static_assert(group_count(11, 4) == 3);
 static_assert(group_count(12, 4) == 3);
 static_assert(group_count(13, 4) == 4);
@@ -25,3 +27,4 @@ static_assert(group_count(1, 100) == 1);
 static_assert(group_count(100, 1) == 100);
 static_assert(group_count(11, 17, vec2i(4, 5)) == vec2i(3, 4));
 static_assert(group_count(11, 17, 19, vec3i(4, 5, 3)) == vec3i(3, 4, 7));
+}

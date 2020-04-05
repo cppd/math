@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/bits.h>
 #include <src/com/constant.h>
 
+namespace gpu
+{
 // Или само число степень двух,
 // или минимальная степень двух, равная или больше 2N-2
 int dft_compute_m(int n)
@@ -112,3 +114,4 @@ int dft_group_size(
 
 template int dft_shared_size<std::complex<float>>(unsigned, unsigned);
 template int dft_group_size<std::complex<float>>(unsigned, unsigned, unsigned, unsigned);
+}

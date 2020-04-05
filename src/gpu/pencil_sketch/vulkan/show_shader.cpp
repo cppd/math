@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-namespace gpu_vulkan
+namespace gpu
 {
 std::vector<VkDescriptorSetLayoutBinding> PencilSketchShowMemory::descriptor_set_layout_bindings()
 {

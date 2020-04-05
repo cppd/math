@@ -26,6 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <thread>
 
+namespace gpu
+{
+namespace
+{
 // clang-format off
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
@@ -34,10 +38,6 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 
 constexpr unsigned GROUP_SIZE = 16;
 
-namespace gpu_vulkan
-{
-namespace
-{
 void image_barrier_before(VkCommandBuffer command_buffer, VkImage image)
 {
         ASSERT(command_buffer != VK_NULL_HANDLE && image != VK_NULL_HANDLE);

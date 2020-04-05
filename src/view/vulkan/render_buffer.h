@@ -30,8 +30,8 @@ struct RenderBuffers
 {
         virtual ~RenderBuffers() = default;
 
-        virtual gpu_vulkan::RenderBuffers3D& buffers_3d() = 0;
-        virtual gpu_vulkan::RenderBuffers2D& buffers_2d() = 0;
+        virtual gpu::RenderBuffers3D& buffers_3d() = 0;
+        virtual gpu::RenderBuffers2D& buffers_2d() = 0;
 
         virtual VkSemaphore resolve_to_swapchain(
                 const vulkan::Queue& graphics_queue,

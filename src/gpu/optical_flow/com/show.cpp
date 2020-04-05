@@ -20,8 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 
+namespace gpu
+{
+namespace
+{
 // Расстояние между точками потока на экране в миллиметрах
 constexpr double DISTANCE_BETWEEN_POINTS = 2;
+}
 
 void create_top_level_optical_flow_points(
         int width,
@@ -74,4 +79,5 @@ void create_top_level_optical_flow_points(
 
         ASSERT(index == point_count);
         ASSERT(static_cast<size_t>(*point_count_x) * *point_count_y == points->size());
+}
 }

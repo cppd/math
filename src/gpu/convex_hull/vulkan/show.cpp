@@ -36,6 +36,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <thread>
 
+namespace gpu
+{
+namespace
+{
 // clang-format off
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
@@ -43,10 +47,6 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 };
 // clang-format on
 
-namespace gpu_vulkan
-{
-namespace
-{
 class Impl final : public ConvexHullShow
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();

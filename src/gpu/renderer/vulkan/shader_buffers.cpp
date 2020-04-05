@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_buffers.h"
 
-namespace gpu_vulkan
+namespace gpu
 {
 RendererBuffers::RendererBuffers(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
 {

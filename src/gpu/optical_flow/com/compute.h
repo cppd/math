@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
+namespace gpu
+{
 // Размеры групп потоков вычислительных шейдеров
 constexpr vec2i OPTICAL_FLOW_GROUP_SIZE(16, 16);
 // Минимальный размер изображения для пирамиды изображений
@@ -46,3 +48,4 @@ std::vector<vec2i> optical_flow_flow_groups(
         const std::vector<vec2i>& sizes,
         int top_point_count_x,
         int top_point_count_y);
+}

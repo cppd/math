@@ -46,12 +46,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using complex = std::complex<float>;
 
+namespace gpu
+{
+namespace
+{
 #if defined(CUDA_FOUND) || defined(FFTW_FOUND)
 constexpr double DISCREPANCY_LIMIT = 1e-4;
 #endif
 
-namespace
-{
 #if defined(CUDA_FOUND) || defined(FFTW_FOUND)
 void compare(
         const std::string& name_compute,
@@ -184,7 +186,7 @@ std::string time_string(double start_time)
 
 void compute_vulkan(bool inverse, int n1, int n2, std::vector<complex>* data)
 {
-        std::unique_ptr<gpu_vulkan::DftComputeVector> dft = gpu_vulkan::create_dft_compute_vector();
+        std::unique_ptr<DftComputeVector> dft = create_dft_compute_vector();
 
         {
                 RandomEngineWithSeed<std::mt19937_64> engine;
@@ -427,4 +429,5 @@ void test_dft(ProgressRatio* progress)
         const TestSize test_size = find_test_size();
         const std::array<int, 2> dimensions = find_dimensions(test_size);
         random_data_test(dimensions, progress);
+}
 }
