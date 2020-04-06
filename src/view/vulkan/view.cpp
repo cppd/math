@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/camera.h"
 #include "../com/frame_rate.h"
-#include "../com/rectangle.h"
 #include "../com/view_thread.h"
+#include "../com/window.h"
 
 #include <src/com/conversion.h>
 #include <src/com/error.h>
@@ -46,6 +46,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/sync.h>
 #include <src/window/manage.h>
 
+namespace view
+{
+namespace
+{
 constexpr double IDLE_MODE_FRAME_DURATION_IN_SECONDS = 0.1;
 
 // Камера и тени рассчитаны на размер объекта 2 и на положение в точке (0, 0, 0).
@@ -77,10 +81,6 @@ constexpr double FRAME_SIZE_IN_MILLIMETERS = 0.5;
 
 //
 
-namespace view_vulkan
-{
-namespace
-{
 std::vector<vulkan::PhysicalDeviceFeatures> device_features_sample_shading(int sample_count, bool sample_shading)
 {
         if (sample_count > 1 && sample_shading)
@@ -103,7 +103,7 @@ std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(b
 
 class Impl final : public View
 {
-        ViewEvents* const m_view_events;
+        Events* const m_view_events;
         const double m_window_ppi;
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -155,11 +155,11 @@ class Impl final : public View
                 int delta_x;
                 int delta_y;
         };
-        std::unordered_map<ViewMouseButton, PressedMouseButton> m_mouse;
+        std::unordered_map<MouseButton, PressedMouseButton> m_mouse;
         int m_mouse_x = std::numeric_limits<int>::lowest();
         int m_mouse_y = std::numeric_limits<int>::lowest();
 
-        const PressedMouseButton& pressed_mouse_button(ViewMouseButton button) const
+        const PressedMouseButton& pressed_mouse_button(MouseButton button) const
         {
                 auto iter = m_mouse.find(button);
                 if (iter != m_mouse.cend())
@@ -227,7 +227,7 @@ class Impl final : public View
 
                 bool changed = false;
 
-                const PressedMouseButton& right = pressed_mouse_button(ViewMouseButton::Right);
+                const PressedMouseButton& right = pressed_mouse_button(MouseButton::Right);
                 if (right.pressed && m_draw_rectangle.is_inside(right.pressed_x, right.pressed_y) &&
                     (right.delta_x != 0 || right.delta_y != 0))
                 {
@@ -235,7 +235,7 @@ class Impl final : public View
                         changed = true;
                 }
 
-                const PressedMouseButton& left = pressed_mouse_button(ViewMouseButton::Left);
+                const PressedMouseButton& left = pressed_mouse_button(MouseButton::Left);
                 if (left.pressed && m_draw_rectangle.is_inside(left.pressed_x, left.pressed_y) &&
                     (left.delta_x != 0 || left.delta_y != 0))
                 {
@@ -249,7 +249,7 @@ class Impl final : public View
                 }
         }
 
-        void send(ViewEvent&& event) override
+        void send(Event&& event) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -257,7 +257,7 @@ class Impl final : public View
                 static const auto visitors =
                 Visitors
                 {
-                [this](const ViewEvent::add_object_t& d)
+                [this](const Event::add_object_t& d)
                 {
                         if (!d.object)
                         {
@@ -266,101 +266,101 @@ class Impl final : public View
                         m_renderer->object_add(*d.object);
                         m_view_events->view_object_loaded(d.object->id());
                 },
-                [this](const ViewEvent::delete_object_t& d)
+                [this](const Event::delete_object_t& d)
                 {
                         m_renderer->object_delete(d.id);
                 },
-                [this](const ViewEvent::show_object_t& d)
+                [this](const Event::show_object_t& d)
                 {
                         m_renderer->object_show(d.id);
                 },
-                [this](const ViewEvent::delete_all_objects_t&)
+                [this](const Event::delete_all_objects_t&)
                 {
                         m_renderer->object_delete_all();
                         reset_view_handler();
                 },
-                [this](const ViewEvent::reset_view_t&)
+                [this](const Event::reset_view_t&)
                 {
                         reset_view_handler();
                 },
-                [this](const ViewEvent::set_ambient_t& d)
+                [this](const Event::set_ambient_t& d)
                 {
                         Color light = Color(d.ambient);
                         m_renderer->set_light_a(light);
                 },
-                [this](const ViewEvent::set_diffuse_t& d)
+                [this](const Event::set_diffuse_t& d)
                 {
                         Color light = Color(d.diffuse);
                         m_renderer->set_light_d(light);
                 },
-                [this](const ViewEvent::set_specular_t& d)
+                [this](const Event::set_specular_t& d)
                 {
                         Color light = Color(d.specular);
                         m_renderer->set_light_s(light);
                 },
-                [this](const ViewEvent::set_background_color_t& d)
+                [this](const Event::set_background_color_t& d)
                 {
                         m_renderer->set_background_color(d.background_color);
                         bool background_is_dark = d.background_color.luminance() <= 0.5;
                         m_text->set_color(background_is_dark ? Color(1) : Color(0));
                 },
-                [this](const ViewEvent::set_default_color_t& d)
+                [this](const Event::set_default_color_t& d)
                 {
                         m_renderer->set_default_color(d.default_color);
                 },
-                [this](const ViewEvent::set_wireframe_color_t& d)
+                [this](const Event::set_wireframe_color_t& d)
                 {
                         m_renderer->set_wireframe_color(d.wireframe_color);
                 },
-                [this](const ViewEvent::set_clip_plane_color_t& d)
+                [this](const Event::set_clip_plane_color_t& d)
                 {
                         m_renderer->set_clip_plane_color(d.clip_plane_color);
                 },
-                [this](const ViewEvent::set_normal_length_t& d)
+                [this](const Event::set_normal_length_t& d)
                 {
                         m_renderer->set_normal_length(d.length);
                 },
-                [this](const ViewEvent::set_normal_color_positive_t& d)
+                [this](const Event::set_normal_color_positive_t& d)
                 {
                         m_renderer->set_normal_color_positive(d.color);
                 },
-                [this](const ViewEvent::set_normal_color_negative_t& d)
+                [this](const Event::set_normal_color_negative_t& d)
                 {
                         m_renderer->set_normal_color_negative(d.color);
                 },
-                [this](const ViewEvent::set_default_ns_t& d)
+                [this](const Event::set_default_ns_t& d)
                 {
                         m_renderer->set_default_ns(d.default_ns);
                 },
-                [this](const ViewEvent::show_smooth_t& d)
+                [this](const Event::show_smooth_t& d)
                 {
                         m_renderer->set_show_smooth(d.show);
                 },
-                [this](const ViewEvent::show_wireframe_t& d)
+                [this](const Event::show_wireframe_t& d)
                 {
                         m_renderer->set_show_wireframe(d.show);
                 },
-                [this](const ViewEvent::show_shadow_t& d)
+                [this](const Event::show_shadow_t& d)
                 {
                         m_renderer->set_show_shadow(d.show);
                 },
-                [this](const ViewEvent::show_fog_t& d)
+                [this](const Event::show_fog_t& d)
                 {
                         m_renderer->set_show_fog(d.show);
                 },
-                [this](const ViewEvent::show_materials_t& d)
+                [this](const Event::show_materials_t& d)
                 {
                         m_renderer->set_show_materials(d.show);
                 },
-                [this](const ViewEvent::show_fps_t& d)
+                [this](const Event::show_fps_t& d)
                 {
                         m_text_active = d.show;
                 },
-                [this](const ViewEvent::show_pencil_sketch_t& d)
+                [this](const Event::show_pencil_sketch_t& d)
                 {
                         m_pencil_sketch_active = d.show;
                 },
-                [this](const ViewEvent::show_dft_t& d)
+                [this](const Event::show_dft_t& d)
                 {
                         if (m_dft_active != d.show)
                         {
@@ -368,19 +368,19 @@ class Impl final : public View
                                 create_swapchain();
                         }
                 },
-                [this](const ViewEvent::set_dft_brightness_t& d)
+                [this](const Event::set_dft_brightness_t& d)
                 {
                         m_dft->set_brightness(d.dft_brightness);
                 },
-                [this](const ViewEvent::set_dft_background_color_t& d)
+                [this](const Event::set_dft_background_color_t& d)
                 {
                         m_dft->set_background_color(d.color);
                 },
-                [this](const ViewEvent::set_dft_color_t& d)
+                [this](const Event::set_dft_color_t& d)
                 {
                         m_dft->set_color(d.color);
                 },
-                [this](const ViewEvent::show_convex_hull_2d_t& d)
+                [this](const Event::show_convex_hull_2d_t& d)
                 {
                         m_convex_hull_active = d.show;
                         if (m_convex_hull_active)
@@ -388,35 +388,35 @@ class Impl final : public View
                                 m_convex_hull->reset_timer();
                         }
                 },
-                [this](const ViewEvent::show_optical_flow_t& d)
+                [this](const Event::show_optical_flow_t& d)
                 {
                         m_optical_flow_active = d.show;
                 },
-                [this](const ViewEvent::set_vertical_sync_t& d)
+                [this](const Event::set_vertical_sync_t& d)
                 {
                         set_vertical_sync_swapchain(d.enable);
                 },
-                [this](const ViewEvent::set_shadow_zoom_t& d)
+                [this](const Event::set_shadow_zoom_t& d)
                 {
                         m_renderer->set_shadow_zoom(d.zoom);
                 },
-                [this](const ViewEvent::clip_plane_show_t& d)
+                [this](const Event::clip_plane_show_t& d)
                 {
                         clip_plane_show(d.position);
                 },
-                [this](const ViewEvent::clip_plane_position_t& d)
+                [this](const Event::clip_plane_position_t& d)
                 {
                         clip_plane_position(d.position);
                 },
-                [this](const ViewEvent::clip_plane_hide_t&)
+                [this](const Event::clip_plane_hide_t&)
                 {
                         clip_plane_hide();
                 },
-                [this](const ViewEvent::show_normals_t& d)
+                [this](const Event::show_normals_t& d)
                 {
                         m_renderer->set_show_normals(d.show);
                 },
-                [this](const ViewEvent::mouse_press_t& d)
+                [this](const Event::mouse_press_t& d)
                 {
                         m_mouse_x = d.x;
                         m_mouse_y = d.y;
@@ -427,22 +427,22 @@ class Impl final : public View
                         m.delta_x = 0;
                         m.delta_y = 0;
                 },
-                [this](const ViewEvent::mouse_release_t& d)
+                [this](const Event::mouse_release_t& d)
                 {
                         m_mouse[d.button].pressed = false;
                         m_mouse_x = d.x;
                         m_mouse_y = d.y;
                 },
-                [this](const ViewEvent::mouse_move_t& d)
+                [this](const Event::mouse_move_t& d)
                 {
                         mouse_move(d.x, d.y);
                 },
-                [this](const ViewEvent::mouse_wheel_t& d)
+                [this](const Event::mouse_wheel_t& d)
                 {
                         m_camera.scale(d.x - m_draw_rectangle.x0(), d.y - m_draw_rectangle.y0(), d.delta);
                         m_renderer->set_camera(m_camera.renderer_info());
                 },
-                [](const ViewEvent::window_resize_t&)
+                [](const Event::window_resize_t&)
                 {
                 }
                 };
@@ -451,7 +451,7 @@ class Impl final : public View
                 std::visit(visitors, event.event());
         }
 
-        void receive(const std::vector<ViewInfo*>& info) override
+        void receive(const std::vector<Info*>& info) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -459,22 +459,22 @@ class Impl final : public View
                 static const auto visitors =
                 Visitors
                 {
-                [this](ViewInfo::camera_information_t& d)
+                [this](Info::camera_information_t& d)
                 {
                         d.camera_info = m_camera.view_info();
                 },
-                [](ViewInfo::object_size_t& d)
+                [](Info::object_size_t& d)
                 {
                         d.size = OBJECT_SIZE;
                 },
-                [](ViewInfo::object_position_t& d)
+                [](Info::object_position_t& d)
                 {
                         d.position = OBJECT_POSITION;
                 }
                 };
                 // clang-format on
 
-                for (ViewInfo* v : info)
+                for (Info* v : info)
                 {
                         std::visit(visitors, v->event());
                 }
@@ -701,8 +701,8 @@ class Impl final : public View
         }
 
 public:
-        Impl(ViewEvents* show_events, const WindowID& window, double window_ppi)
-                : m_view_events(show_events), m_window_ppi(window_ppi)
+        Impl(Events* view_events, const WindowID& window, double window_ppi)
+                : m_view_events(view_events), m_window_ppi(window_ppi)
         {
                 if (window_ppi <= 0)
                 {
@@ -830,11 +830,11 @@ public:
 };
 }
 
-std::unique_ptr<View> create_view(
-        ViewEvents* events,
+std::unique_ptr<View> create_view_impl(
+        Events* events,
         WindowID parent_window,
         double parent_window_ppi,
-        std::vector<ViewEvent>&& initial_events)
+        std::vector<Event>&& initial_events)
 {
         return std::make_unique<ViewThread<Impl>>(events, parent_window, parent_window_ppi, std::move(initial_events));
 }

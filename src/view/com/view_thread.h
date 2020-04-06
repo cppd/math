@@ -27,13 +27,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <mutex>
 #include <thread>
 
-class ViewEventQueues final
+namespace view
 {
-        ThreadQueue<ViewEvent> m_send_queue;
+class EventQueues final
+{
+        ThreadQueue<Event> m_send_queue;
 
         struct ViewInfoExt
         {
-                const std::vector<ViewInfo*>* info;
+                const std::vector<Info*>* info;
 
                 std::mutex mutex;
                 std::condition_variable cv;
@@ -42,20 +44,20 @@ class ViewEventQueues final
         ThreadQueue<ViewInfoExt*> m_receive_queue;
 
 public:
-        explicit ViewEventQueues(std::vector<ViewEvent>&& initial_events)
+        explicit EventQueues(std::vector<Event>&& initial_events)
         {
-                for (ViewEvent& event : initial_events)
+                for (Event& event : initial_events)
                 {
                         send(std::move(event));
                 }
         }
 
-        void send(ViewEvent&& event)
+        void send(Event&& event)
         {
                 m_send_queue.push(std::move(event));
         }
 
-        void receive(const std::vector<ViewInfo*>& info)
+        void receive(const std::vector<Info*>& info)
         {
                 ViewInfoExt v;
                 v.info = &info;
@@ -69,7 +71,7 @@ public:
         void dispatch_events(View* view)
         {
                 {
-                        std::optional<ViewEvent> event;
+                        std::optional<Event> event;
                         while ((event = m_send_queue.pop()))
                         {
                                 view->send(std::move(*event));
@@ -95,22 +97,22 @@ template <typename T>
 class ViewThread final : public View
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
-        ViewEventQueues m_event_queues;
+        EventQueues m_event_queues;
         std::thread m_thread;
         std::atomic_bool m_stop{false};
         std::atomic_bool m_started{false};
 
-        void send(ViewEvent&& event) override
+        void send(Event&& event) override
         {
                 m_event_queues.send(std::move(event));
         }
 
-        void receive(const std::vector<ViewInfo*>& info) override
+        void receive(const std::vector<Info*>& info) override
         {
                 m_event_queues.receive(info);
         }
 
-        void thread_function(ViewEvents* events, WindowID parent_window, double parent_window_ppi)
+        void thread_function(Events* events, WindowID parent_window, double parent_window_ppi)
         {
                 try
                 {
@@ -160,10 +162,10 @@ class ViewThread final : public View
 
 public:
         ViewThread(
-                ViewEvents* events,
+                Events* events,
                 WindowID parent_window,
                 double parent_window_ppi,
-                std::vector<ViewEvent>&& initial_events)
+                std::vector<Event>&& initial_events)
                 : m_event_queues(std::move(initial_events))
         {
                 try
@@ -198,3 +200,4 @@ public:
                 join_thread();
         }
 };
+}

@@ -25,13 +25,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <variant>
 
-enum class ViewMouseButton
+namespace view
+{
+enum class MouseButton
 {
         Left,
         Right
 };
 
-struct ViewEvent final
+struct Event final
 {
         struct add_object_t final
         {
@@ -269,16 +271,16 @@ struct ViewEvent final
         struct mouse_press_t final
         {
                 int x, y;
-                ViewMouseButton button;
-                mouse_press_t(int x_coord, int y_coord, ViewMouseButton b) : x(x_coord), y(y_coord), button(b)
+                MouseButton button;
+                mouse_press_t(int x_coord, int y_coord, MouseButton b) : x(x_coord), y(y_coord), button(b)
                 {
                 }
         };
         struct mouse_release_t final
         {
                 int x, y;
-                ViewMouseButton button;
-                mouse_release_t(int x_coord, int y_coord, ViewMouseButton b) : x(x_coord), y(y_coord), button(b)
+                MouseButton button;
+                mouse_release_t(int x_coord, int y_coord, MouseButton b) : x(x_coord), y(y_coord), button(b)
                 {
                 }
         };
@@ -348,7 +350,7 @@ struct ViewEvent final
                 window_resize_t>;
 
         template <typename... Args>
-        explicit ViewEvent(Args&&... args) : m_event(std::forward<Args>(args)...)
+        explicit Event(Args&&... args) : m_event(std::forward<Args>(args)...)
         {
         }
 
@@ -357,172 +359,172 @@ struct ViewEvent final
                 return m_event;
         }
 
-        static ViewEvent add_object(const std::shared_ptr<const mesh::MeshObject<3>>& object)
+        static Event add_object(const std::shared_ptr<const mesh::MeshObject<3>>& object)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::add_object_t>, object);
+                return Event(std::in_place_type<Event::add_object_t>, object);
         }
-        static ViewEvent delete_object(ObjectId id)
+        static Event delete_object(ObjectId id)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::delete_object_t>, id);
+                return Event(std::in_place_type<Event::delete_object_t>, id);
         }
-        static ViewEvent show_object(ObjectId id)
+        static Event show_object(ObjectId id)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::show_object_t>, id);
+                return Event(std::in_place_type<Event::show_object_t>, id);
         }
-        static ViewEvent delete_all_objects()
+        static Event delete_all_objects()
         {
-                return ViewEvent(std::in_place_type<ViewEvent::delete_all_objects_t>);
+                return Event(std::in_place_type<Event::delete_all_objects_t>);
         }
-        static ViewEvent reset_view()
+        static Event reset_view()
         {
-                return ViewEvent(std::in_place_type<ViewEvent::reset_view_t>);
+                return Event(std::in_place_type<Event::reset_view_t>);
         }
-        static ViewEvent set_ambient(double v)
+        static Event set_ambient(double v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_ambient_t>, v);
+                return Event(std::in_place_type<Event::set_ambient_t>, v);
         }
-        static ViewEvent set_diffuse(double v)
+        static Event set_diffuse(double v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_diffuse_t>, v);
+                return Event(std::in_place_type<Event::set_diffuse_t>, v);
         }
-        static ViewEvent set_specular(double v)
+        static Event set_specular(double v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_specular_t>, v);
+                return Event(std::in_place_type<Event::set_specular_t>, v);
         }
-        static ViewEvent set_background_color(const Color& c)
+        static Event set_background_color(const Color& c)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_background_color_t>, c);
+                return Event(std::in_place_type<Event::set_background_color_t>, c);
         }
-        static ViewEvent set_default_color(const Color& c)
+        static Event set_default_color(const Color& c)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_default_color_t>, c);
+                return Event(std::in_place_type<Event::set_default_color_t>, c);
         }
-        static ViewEvent set_wireframe_color(const Color& c)
+        static Event set_wireframe_color(const Color& c)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_wireframe_color_t>, c);
+                return Event(std::in_place_type<Event::set_wireframe_color_t>, c);
         }
-        static ViewEvent set_clip_plane_color(const Color& c)
+        static Event set_clip_plane_color(const Color& c)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_clip_plane_color_t>, c);
+                return Event(std::in_place_type<Event::set_clip_plane_color_t>, c);
         }
-        static ViewEvent set_normal_length(float v)
+        static Event set_normal_length(float v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_normal_length_t>, v);
+                return Event(std::in_place_type<Event::set_normal_length_t>, v);
         }
-        static ViewEvent set_normal_color_positive(const Color& c)
+        static Event set_normal_color_positive(const Color& c)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_normal_color_positive_t>, c);
+                return Event(std::in_place_type<Event::set_normal_color_positive_t>, c);
         }
-        static ViewEvent set_normal_color_negative(const Color& c)
+        static Event set_normal_color_negative(const Color& c)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_normal_color_negative_t>, c);
+                return Event(std::in_place_type<Event::set_normal_color_negative_t>, c);
         }
-        static ViewEvent set_default_ns(double ns)
+        static Event set_default_ns(double ns)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_default_ns_t>, ns);
+                return Event(std::in_place_type<Event::set_default_ns_t>, ns);
         }
-        static ViewEvent show_smooth(bool v)
+        static Event show_smooth(bool v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::show_smooth_t>, v);
+                return Event(std::in_place_type<Event::show_smooth_t>, v);
         }
-        static ViewEvent show_wireframe(bool v)
+        static Event show_wireframe(bool v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::show_wireframe_t>, v);
+                return Event(std::in_place_type<Event::show_wireframe_t>, v);
         }
-        static ViewEvent show_shadow(bool v)
+        static Event show_shadow(bool v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::show_shadow_t>, v);
+                return Event(std::in_place_type<Event::show_shadow_t>, v);
         }
-        static ViewEvent show_fog(bool v)
+        static Event show_fog(bool v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::show_fog_t>, v);
+                return Event(std::in_place_type<Event::show_fog_t>, v);
         }
-        static ViewEvent show_materials(bool v)
+        static Event show_materials(bool v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::show_materials_t>, v);
+                return Event(std::in_place_type<Event::show_materials_t>, v);
         }
-        static ViewEvent show_fps(bool v)
+        static Event show_fps(bool v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::show_fps_t>, v);
+                return Event(std::in_place_type<Event::show_fps_t>, v);
         }
-        static ViewEvent show_pencil_sketch(bool v)
+        static Event show_pencil_sketch(bool v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::show_pencil_sketch_t>, v);
+                return Event(std::in_place_type<Event::show_pencil_sketch_t>, v);
         }
-        static ViewEvent show_dft(bool v)
+        static Event show_dft(bool v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::show_dft_t>, v);
+                return Event(std::in_place_type<Event::show_dft_t>, v);
         }
-        static ViewEvent set_dft_brightness(double v)
+        static Event set_dft_brightness(double v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_dft_brightness_t>, v);
+                return Event(std::in_place_type<Event::set_dft_brightness_t>, v);
         }
-        static ViewEvent set_dft_background_color(const Color& c)
+        static Event set_dft_background_color(const Color& c)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_dft_background_color_t>, c);
+                return Event(std::in_place_type<Event::set_dft_background_color_t>, c);
         }
-        static ViewEvent set_dft_color(const Color& c)
+        static Event set_dft_color(const Color& c)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_dft_color_t>, c);
+                return Event(std::in_place_type<Event::set_dft_color_t>, c);
         }
-        static ViewEvent show_convex_hull_2d(bool v)
+        static Event show_convex_hull_2d(bool v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::show_convex_hull_2d_t>, v);
+                return Event(std::in_place_type<Event::show_convex_hull_2d_t>, v);
         }
-        static ViewEvent show_optical_flow(bool v)
+        static Event show_optical_flow(bool v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::show_optical_flow_t>, v);
+                return Event(std::in_place_type<Event::show_optical_flow_t>, v);
         }
-        static ViewEvent set_vertical_sync(bool v)
+        static Event set_vertical_sync(bool v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_vertical_sync_t>, v);
+                return Event(std::in_place_type<Event::set_vertical_sync_t>, v);
         }
-        static ViewEvent set_shadow_zoom(double v)
+        static Event set_shadow_zoom(double v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::set_shadow_zoom_t>, v);
+                return Event(std::in_place_type<Event::set_shadow_zoom_t>, v);
         }
-        static ViewEvent clip_plane_show(double v)
+        static Event clip_plane_show(double v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::clip_plane_show_t>, v);
+                return Event(std::in_place_type<Event::clip_plane_show_t>, v);
         }
-        static ViewEvent clip_plane_position(double v)
+        static Event clip_plane_position(double v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::clip_plane_position_t>, v);
+                return Event(std::in_place_type<Event::clip_plane_position_t>, v);
         }
-        static ViewEvent clip_plane_hide()
+        static Event clip_plane_hide()
         {
-                return ViewEvent(std::in_place_type<ViewEvent::clip_plane_hide_t>);
+                return Event(std::in_place_type<Event::clip_plane_hide_t>);
         }
-        static ViewEvent show_normals(bool v)
+        static Event show_normals(bool v)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::show_normals_t>, v);
+                return Event(std::in_place_type<Event::show_normals_t>, v);
         }
-        static ViewEvent mouse_press(int x, int y, ViewMouseButton button)
+        static Event mouse_press(int x, int y, MouseButton button)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::mouse_press_t>, x, y, button);
+                return Event(std::in_place_type<Event::mouse_press_t>, x, y, button);
         }
-        static ViewEvent mouse_release(int x, int y, ViewMouseButton button)
+        static Event mouse_release(int x, int y, MouseButton button)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::mouse_release_t>, x, y, button);
+                return Event(std::in_place_type<Event::mouse_release_t>, x, y, button);
         }
-        static ViewEvent mouse_move(int x, int y)
+        static Event mouse_move(int x, int y)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::mouse_move_t>, x, y);
+                return Event(std::in_place_type<Event::mouse_move_t>, x, y);
         }
-        static ViewEvent mouse_wheel(int x, int y, double delta)
+        static Event mouse_wheel(int x, int y, double delta)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::mouse_wheel_t>, x, y, delta);
+                return Event(std::in_place_type<Event::mouse_wheel_t>, x, y, delta);
         }
-        static ViewEvent window_resize(int x, int y)
+        static Event window_resize(int x, int y)
         {
-                return ViewEvent(std::in_place_type<ViewEvent::window_resize_t>, x, y);
+                return Event(std::in_place_type<Event::window_resize_t>, x, y);
         }
 
 private:
         EventType m_event;
 };
 
-struct ViewCameraInfo final
+struct CameraInfo final
 {
         vec3 camera_up;
         vec3 camera_direction;
@@ -533,11 +535,11 @@ struct ViewCameraInfo final
         int height;
 };
 
-struct ViewInfo final
+struct Info final
 {
         struct camera_information_t final
         {
-                ViewCameraInfo camera_info;
+                CameraInfo camera_info;
         };
         struct object_size_t final
         {
@@ -551,7 +553,7 @@ struct ViewInfo final
         using EventType = std::variant<camera_information_t, object_size_t, object_position_t>;
 
         template <typename... Args>
-        explicit ViewInfo(Args&&... args) : m_event(std::forward<Args>(args)...)
+        explicit Info(Args&&... args) : m_event(std::forward<Args>(args)...)
         {
         }
 
@@ -560,32 +562,33 @@ struct ViewInfo final
                 return m_event;
         }
 
-        const ViewCameraInfo& as_camera_information() const
+        const CameraInfo& as_camera_information() const
         {
-                return std::get<ViewInfo::camera_information_t>(m_event).camera_info;
+                return std::get<Info::camera_information_t>(m_event).camera_info;
         }
         const double& as_object_size() const
         {
-                return std::get<ViewInfo::object_size_t>(m_event).size;
+                return std::get<Info::object_size_t>(m_event).size;
         }
         const vec3& as_object_position() const
         {
-                return std::get<ViewInfo::object_position_t>(m_event).position;
+                return std::get<Info::object_position_t>(m_event).position;
         }
 
-        static ViewInfo camera_information()
+        static Info camera_information()
         {
-                return ViewInfo(std::in_place_type<ViewInfo::camera_information_t>);
+                return Info(std::in_place_type<Info::camera_information_t>);
         }
-        static ViewInfo object_size()
+        static Info object_size()
         {
-                return ViewInfo(std::in_place_type<ViewInfo::object_size_t>);
+                return Info(std::in_place_type<Info::object_size_t>);
         }
-        static ViewInfo object_position()
+        static Info object_position()
         {
-                return ViewInfo(std::in_place_type<ViewInfo::object_position_t>);
+                return Info(std::in_place_type<Info::object_position_t>);
         }
 
 private:
         EventType m_event;
 };
+}

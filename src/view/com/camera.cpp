@@ -23,6 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <mutex>
 
+namespace view
+{
+namespace
+{
 constexpr double SCALE_BASE = 1.1;
 constexpr double SCALE_EXP_MIN = -50;
 constexpr double SCALE_EXP_MAX = 100;
@@ -34,8 +38,6 @@ constexpr double to_radians(double angle)
         return angle * PI_DIV_180;
 }
 
-namespace
-{
 vec3 rotate_vector_degree(const vec3& axis, double angle_degree, const vec3& v)
 {
         return rotate_vector(axis, to_radians(angle_degree), v);
@@ -160,11 +162,11 @@ void Camera::resize(int width, int height)
         m_height = height;
 }
 
-ViewCameraInfo Camera::view_info() const
+CameraInfo Camera::view_info() const
 {
         std::lock_guard lg(m_lock);
 
-        ViewCameraInfo v;
+        CameraInfo v;
 
         v.camera_up = m_camera_up;
         v.camera_direction = m_camera_direction;
@@ -203,4 +205,5 @@ gpu::RendererCameraInfo Camera::renderer_info() const
         v.camera_direction = m_camera_direction;
 
         return v;
+}
 }

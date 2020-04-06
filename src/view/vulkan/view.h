@@ -22,11 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
-namespace view_vulkan
+namespace view
 {
-std::unique_ptr<View> create_view(
-        ViewEvents* events,
+std::unique_ptr<View> create_view_impl(
+        Events* events,
         WindowID parent_window,
         double parent_window_ppi,
-        std::vector<ViewEvent>&& initial_events);
+        std::vector<Event>&& initial_events);
 }

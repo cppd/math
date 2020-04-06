@@ -22,6 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
+namespace view
+{
+namespace
+{
 constexpr double INTERVAL_LENGTH = 1;
 constexpr int SAMPLE_COUNT = 10;
 
@@ -30,6 +34,7 @@ constexpr double TEXT_STEP_Y_IN_POINTS = 1.3 * TEXT_SIZE_IN_POINTS;
 constexpr double TEXT_X_IN_POINTS = 5;
 constexpr double TEXT_Y_IN_POINTS = TEXT_STEP_Y_IN_POINTS;
 constexpr const char* TEXT = "FPS: ";
+}
 
 FrameRate::FrameRate(double ppi) : m_frequency(INTERVAL_LENGTH, SAMPLE_COUNT)
 {
@@ -46,4 +51,5 @@ FrameRate::FrameRate(double ppi) : m_frequency(INTERVAL_LENGTH, SAMPLE_COUNT)
 void FrameRate::calculate()
 {
         m_text_data.text[1] = to_string(std::lround(m_frequency.calculate()));
+}
 }

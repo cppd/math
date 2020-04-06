@@ -24,10 +24,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-class ViewEvents
+namespace view
+{
+class Events
 {
 protected:
-        virtual ~ViewEvents() = default;
+        virtual ~Events() = default;
 
 public:
         virtual void message_error_fatal(const std::string&) const = 0;
@@ -40,6 +42,7 @@ class View
 public:
         virtual ~View() = default;
 
-        virtual void send(ViewEvent&&) = 0;
-        virtual void receive(const std::vector<ViewInfo*>& info) = 0;
+        virtual void send(Event&&) = 0;
+        virtual void receive(const std::vector<Info*>& info) = 0;
 };
+}

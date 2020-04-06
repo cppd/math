@@ -48,7 +48,7 @@ public:
         virtual void log(const std::string& msg) = 0;
 };
 
-class WindowEventEmitter final : public QObject, public LogEvents, public StorageEvents, public ViewEvents
+class WindowEventEmitter final : public QObject, public LogEvents, public StorageEvents, public view::Events
 {
         Q_OBJECT
 

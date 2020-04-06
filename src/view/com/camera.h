@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/vec.h>
 
+namespace view
+{
 class Camera final
 {
         mutable SpinLock m_lock;
@@ -57,6 +59,7 @@ public:
         void move(const vec2& delta);
         void resize(int width, int height);
 
-        ViewCameraInfo view_info() const;
+        CameraInfo view_info() const;
         gpu::RendererCameraInfo renderer_info() const;
 };
+}
