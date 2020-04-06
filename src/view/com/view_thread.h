@@ -135,17 +135,13 @@ class ViewThread final : public View
                                 throw;
                         }
                 }
-                catch (ErrorSourceException& e)
-                {
-                        events->message_error_source(e.msg(), e.src());
-                }
                 catch (std::exception& e)
                 {
-                        events->message_error_fatal(e.what());
+                        events->view_error_fatal(e.what());
                 }
                 catch (...)
                 {
-                        events->message_error_fatal("Unknown Error. Thread ended.");
+                        events->view_error_fatal("Unknown Error. Thread ended.");
                 }
         }
 

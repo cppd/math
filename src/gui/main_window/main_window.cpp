@@ -340,19 +340,6 @@ void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::str
                 catch (TerminateRequestException&)
                 {
                 }
-                catch (ErrorSourceException& e)
-                {
-                        std::string s = !msg.empty() ? (msg + ":\n") : std::string();
-
-                        if (window_exists)
-                        {
-                                m_event_emitter.message_error_source(s + e.msg(), e.src());
-                        }
-                        else
-                        {
-                                error_fatal("Exception caught.\n" + s + e.msg() + "\n" + e.src());
-                        }
-                }
                 catch (std::exception& e)
                 {
                         std::string s = !msg.empty() ? (msg + ":\n") : std::string();
@@ -984,25 +971,6 @@ void MainWindow::message_error_fatal(const std::string& msg)
         close_without_confirmation();
 }
 
-void MainWindow::message_error_source(const std::string& msg, const std::string& src)
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        std::string source = source_with_line_numbers(src);
-
-        add_to_text_edit_and_to_stderr(
-                ui.text_log, format_log_message(msg + "\n" + source), TextEditMessageType::Error);
-
-        QPointer ptr(this);
-        dialog::message_source_error(this, msg, source);
-        if (ptr.isNull())
-        {
-                return;
-        }
-
-        close_without_confirmation();
-}
-
 void MainWindow::message_information(const std::string& msg)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
@@ -1019,6 +987,11 @@ void MainWindow::message_warning(const std::string& msg)
         add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(msg), TextEditMessageType::Warning);
 
         dialog::message_warning(this, msg);
+}
+
+void MainWindow::view_error_fatal(const std::string& msg)
+{
+        message_error_fatal(msg);
 }
 
 void MainWindow::view_object_loaded(ObjectId /*id*/)

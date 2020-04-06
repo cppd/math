@@ -32,8 +32,7 @@ protected:
         virtual ~Events() = default;
 
 public:
-        virtual void message_error_fatal(const std::string&) const = 0;
-        virtual void message_error_source(const std::string&, const std::string&) const = 0;
+        virtual void view_error_fatal(const std::string&) const = 0;
         virtual void view_object_loaded(ObjectId) const = 0;
 };
 

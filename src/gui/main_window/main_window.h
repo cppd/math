@@ -177,9 +177,9 @@ private:
 
         void message_error(const std::string& msg) override;
         void message_error_fatal(const std::string& msg) override;
-        void message_error_source(const std::string& msg, const std::string& src) override;
         void message_information(const std::string& msg) override;
         void message_warning(const std::string& msg) override;
+        void view_error_fatal(const std::string& msg) override;
         void view_object_loaded(ObjectId id) override;
         void loaded_object(ObjectId id, size_t dimension) override;
         void loaded_mesh(ObjectId id, size_t dimension) override;

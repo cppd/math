@@ -32,37 +32,3 @@ std::string to_string(__float128 t)
         return buf.data();
 }
 #endif
-
-std::string source_with_line_numbers(const std::string& s)
-{
-        size_t cnt = std::count(s.begin(), s.end(), '\n');
-        if (cnt == 0)
-        {
-                return s;
-        }
-
-        int width = std::floor(std::log10(cnt)) + 1;
-
-        std::ostringstream os;
-
-        os << std::setfill('0');
-
-        int line = 1;
-        os << std::setw(width) << line << ": ";
-
-        for (char c : s)
-        {
-                if (c != '\n')
-                {
-                        os << c;
-                }
-                else
-                {
-                        os << '\n';
-                        ++line;
-                        os << std::setw(width) << line << ": ";
-                }
-        }
-
-        return os.str();
-}

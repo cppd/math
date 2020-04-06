@@ -36,34 +36,8 @@ public:
         }
 };
 
-class ErrorSourceException final : public std::exception
-{
-        std::string m_text;
-        std::string m_source_text;
-
-public:
-        template <typename T1, typename T2>
-        ErrorSourceException(T1&& text, T2&& source_text)
-                : m_text(std::forward<T1>(text)), m_source_text(std::forward<T2>(source_text))
-        {
-        }
-        const char* what() const noexcept override
-        {
-                return m_text.c_str();
-        }
-        const std::string& msg() const noexcept
-        {
-                return m_text;
-        }
-        const std::string& src() const noexcept
-        {
-                return m_source_text;
-        }
-};
-
 [[noreturn]] void error(const std::string& text);
 [[noreturn]] void error(std::string&& text);
-[[noreturn]] void error_source(std::string&& text, std::string&& source_text);
 
 [[noreturn]] void error_fatal(const char* text) noexcept;
 [[noreturn]] void error_fatal(const std::string& text) noexcept;

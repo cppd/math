@@ -28,12 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <string>
 
-//
-
-std::string source_with_line_numbers(const std::string& s);
-
-//
-
 std::string to_string(__float128 t);
 
 template <typename T>

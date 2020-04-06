@@ -34,9 +34,10 @@ protected:
 public:
         virtual void message_error(const std::string& msg) = 0;
         virtual void message_error_fatal(const std::string& msg) = 0;
-        virtual void message_error_source(const std::string& msg, const std::string& src) = 0;
         virtual void message_information(const std::string& msg) = 0;
         virtual void message_warning(const std::string& msg) = 0;
+
+        virtual void view_error_fatal(const std::string& msg) = 0;
         virtual void view_object_loaded(ObjectId id) = 0;
 
         virtual void loaded_object(ObjectId id, size_t dimension) = 0;
@@ -69,14 +70,6 @@ private:
                         {
                         }
                 };
-                struct message_error_source final
-                {
-                        const std::string msg;
-                        const std::string src;
-                        message_error_source(const std::string& msg_, const std::string& src_) : msg(msg_), src(src_)
-                        {
-                        }
-                };
                 struct message_information final
                 {
                         const std::string msg;
@@ -88,6 +81,13 @@ private:
                 {
                         const std::string msg;
                         explicit message_warning(const std::string& msg_) : msg(msg_)
+                        {
+                        }
+                };
+                struct view_error_fatal final
+                {
+                        const std::string msg;
+                        explicit view_error_fatal(const std::string& msg_) : msg(msg_)
                         {
                         }
                 };
@@ -148,6 +148,7 @@ private:
 
                 std::variant<
                         std::monostate,
+                        view_error_fatal,
                         view_object_loaded,
                         loaded_object,
                         loaded_mesh,
@@ -156,7 +157,6 @@ private:
                         file_loaded,
                         message_error,
                         message_error_fatal,
-                        message_error_source,
                         message_information,
                         message_warning,
                         log>
@@ -218,10 +218,6 @@ private:
                 {
                         m_f->message_error_fatal(d.msg);
                 }
-                void operator()(const WindowEvent::message_error_source& d)
-                {
-                        m_f->message_error_source(d.msg, d.src);
-                }
                 void operator()(const WindowEvent::message_information& d)
                 {
                         m_f->message_information(d.msg);
@@ -229,6 +225,10 @@ private:
                 void operator()(const WindowEvent::message_warning& d)
                 {
                         m_f->message_warning(d.msg);
+                }
+                void operator()(const WindowEvent::view_error_fatal& d)
+                {
+                        m_f->view_error_fatal(d.msg);
                 }
                 void operator()(const WindowEvent::view_object_loaded& d)
                 {
@@ -282,14 +282,9 @@ public:
                 emit_message<WindowEvent::message_error>("Exception in emit message error", msg);
         }
 
-        void message_error_fatal(const std::string& msg) const override
+        void message_error_fatal(const std::string& msg) const
         {
                 emit_message<WindowEvent::message_error_fatal>("Exception in emit message error fatal", msg);
-        }
-
-        void message_error_source(const std::string& msg, const std::string& src) const override
-        {
-                emit_message<WindowEvent::message_error_source>("Exception in emit message error source", msg, src);
         }
 
         void message_information(const std::string& msg) const
@@ -300,6 +295,11 @@ public:
         void message_warning(const std::string& msg) const
         {
                 emit_message<WindowEvent::message_warning>("Exception in emit message warning", msg);
+        }
+
+        void view_error_fatal(const std::string& msg) const override
+        {
+                emit_message<WindowEvent::view_error_fatal>("Exception in emit message view error fatal", msg);
         }
 
         void view_object_loaded(ObjectId id) const override
