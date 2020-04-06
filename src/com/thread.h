@@ -74,12 +74,12 @@ public:
                 m_queue.pop();
                 return value;
         }
-        // template <typename A>
-        // void push(A&& e)
-        //{
-        //        std::lock_guard lg(m_lock);
-        //        m_queue.push(std::forward<A>(e));
-        //}
+        template <typename A>
+        void push(A&& e)
+        {
+                std::lock_guard lg(m_lock);
+                m_queue.push(std::forward<A>(e));
+        }
         template <typename... Args>
         void emplace(Args&&... e)
         {
