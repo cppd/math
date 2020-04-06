@@ -375,9 +375,9 @@ Color trace_path(
 
         if (!ray_intersection(paint_data.objects, ray, &t, &surface, &intersection_data))
         {
-                return (paint_data.default_surface_properties.is_light_source() && diffuse_reflection) ?
-                               paint_data.default_surface_properties.get_light_source_color() :
-                               paint_data.default_surface_properties.get_color();
+                return (paint_data.default_surface_properties.is_light_source() && diffuse_reflection)
+                               ? paint_data.default_surface_properties.get_light_source_color()
+                               : paint_data.default_surface_properties.get_color();
         }
 
         Vector<N, T> point = ray.point(t);
@@ -397,8 +397,8 @@ Color trace_path(
 
         if (surface_properties.is_light_source())
         {
-                return (diffuse_reflection) ? surface_properties.get_light_source_color() :
-                                              surface_properties.get_color();
+                return (diffuse_reflection) ? surface_properties.get_light_source_color()
+                                            : surface_properties.get_color();
         }
 
         Vector<N, T> shading_normal =

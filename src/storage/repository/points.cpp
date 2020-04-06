@@ -190,8 +190,8 @@ std::vector<Vector<N, float>> generate_points_ellipsoid(unsigned point_count, bo
 
         while (points.size() < point_count)
         {
-                Vector<N, double> v = (!bound) ? random_on_sphere<N, double>(engine) :
-                                                 random_on_sphere_bound<N, double>(engine, COS_FOR_BOUND);
+                Vector<N, double> v = (!bound) ? random_on_sphere<N, double>(engine)
+                                               : random_on_sphere_bound<N, double>(engine, COS_FOR_BOUND);
 
                 v[0] *= 2;
 
@@ -212,8 +212,8 @@ std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_c
 
         while (points.size() < point_count)
         {
-                Vector<N, double> v = (!bound) ? random_on_sphere<N, double>(engine) :
-                                                 random_on_sphere_bound<N, double>(engine, COS_FOR_BOUND);
+                Vector<N, double> v = (!bound) ? random_on_sphere<N, double>(engine)
+                                               : random_on_sphere_bound<N, double>(engine, COS_FOR_BOUND);
 
                 double dot_z = dot(LAST_AXIS<N, double>, v);
                 if (dot_z > 0)

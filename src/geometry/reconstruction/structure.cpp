@@ -190,8 +190,8 @@ double voronoi_edge_radius(
         // Если вершины Вороного совпадают, то до этого места не дойдёт, так как тогда они внутри cocone.
         // Поэтому можно брать разницу между вершинами как вектор направления от a к b.
         // Но могут быть и небольшие разницы на границах cocone.
-        vec<N> a_to_b = facet.one_sided() ? facet.ortho() :
-                                            (delaunay_objects[facet.delaunay(1)].voronoi_vertex() -
+        vec<N> a_to_b = facet.one_sided() ? facet.ortho()
+                                          : (delaunay_objects[facet.delaunay(1)].voronoi_vertex() -
                                              delaunay_objects[facet.delaunay(0)].voronoi_vertex());
 
         double max_distance;

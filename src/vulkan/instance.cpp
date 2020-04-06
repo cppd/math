@@ -52,8 +52,8 @@ std::vector<std::string> merge_required_device_extensions(
         bool with_swapchain,
         const std::vector<std::string>& required_device_extensions)
 {
-        return with_swapchain ? merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME) :
-                                required_device_extensions;
+        return with_swapchain ? merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME)
+                              : required_device_extensions;
 }
 }
 
@@ -69,9 +69,8 @@ VulkanInstance::VulkanInstance(
                   required_instance_extensions,
                   string_vector(VALIDATION_LAYERS))),
           m_callback(
-                  m_instance.validation_layers_enabled() ?
-                          std::make_optional(create_debug_report_callback(m_instance)) :
-                          std::nullopt),
+                  m_instance.validation_layers_enabled() ? std::make_optional(create_debug_report_callback(m_instance))
+                                                         : std::nullopt),
           m_surface(create_surface ? std::optional(SurfaceKHR(m_instance, *create_surface)) : std::nullopt),
           //
           m_physical_device(find_physical_device(

@@ -99,8 +99,8 @@ std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vecto
         for (const Vector<N, T>& unit_vector : vectors)
         {
                 std::array<Vector<N, T>, N - 1> complement =
-                        GramSchmidt ? orthogonal_complement_of_unit_vector_by_gram_schmidt(unit_vector) :
-                                      orthogonal_complement_of_unit_vector_by_subspace(unit_vector);
+                        GramSchmidt ? orthogonal_complement_of_unit_vector_by_gram_schmidt(unit_vector)
+                                    : orthogonal_complement_of_unit_vector_by_subspace(unit_vector);
 
                 res.push_back(complement);
         }

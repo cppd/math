@@ -627,9 +627,9 @@ BufferWithMemory::BufferWithMemory(
         VkDeviceSize size)
         : m_buffer(create_buffer(device, size, usage, family_indices)),
           m_memory_properties(
-                  memory_type == BufferMemoryType::HostVisible ?
-                          (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) :
-                          (VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
+                  memory_type == BufferMemoryType::HostVisible
+                          ? (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+                          : (VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
           m_device_memory(create_device_memory(device, m_buffer, m_memory_properties))
 {
         ASSERT(size > 0);

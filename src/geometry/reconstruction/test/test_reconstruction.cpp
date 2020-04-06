@@ -331,9 +331,9 @@ void test_algorithms(
                 std::vector<std::array<int, N>> facets(10000);
 
                 std::string facet_count_str =
-                        (expected_facets_min == expected_facets_max) ?
-                                to_string(expected_facets_min) :
-                                "[" + to_string(expected_facets_min) + ", " + to_string(expected_facets_max) + "]";
+                        (expected_facets_min == expected_facets_max)
+                                ? to_string(expected_facets_min)
+                                : "[" + to_string(expected_facets_min) + ", " + to_string(expected_facets_max) + "]";
 
                 LOG("Expected facet count: " + facet_count_str);
 
@@ -355,10 +355,10 @@ void test_algorithms(
                 std::vector<Vector<N, double>> normals(10000);
                 std::vector<std::array<int, N>> facets(10000);
 
-                std::string bound_facet_count_str = (expected_bound_facets_min == expected_bound_facets_max) ?
-                                                            to_string(expected_bound_facets_min) :
-                                                            "[" + to_string(expected_bound_facets_min) + ", " +
-                                                                    to_string(expected_bound_facets_max) + "]";
+                std::string bound_facet_count_str = (expected_bound_facets_min == expected_bound_facets_max)
+                                                            ? to_string(expected_bound_facets_min)
+                                                            : "[" + to_string(expected_bound_facets_min) + ", " +
+                                                                      to_string(expected_bound_facets_max) + "]";
 
                 LOG("Expected bound facet count: " + bound_facet_count_str);
 

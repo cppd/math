@@ -92,8 +92,8 @@ class GlobalIndex
                         error("Error computing global index strides");
                 }
 
-                if (!((I == 0 ? true :
-                                ((strides[I] > strides[I - 1] && sizes[I - 1] > 1) ||
+                if (!((I == 0 ? true
+                              : ((strides[I] > strides[I - 1] && sizes[I - 1] > 1) ||
                                  (strides[I] == strides[I - 1] && sizes[I - 1] == 1))) &&
                       ...))
                 {

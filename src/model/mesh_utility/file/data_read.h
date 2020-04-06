@@ -89,8 +89,8 @@ bool read_integer(const T& data, long long size, long long* pos, Integer* value)
 
         if (end > begin)
         {
-                *value = (begin == *pos) ? impl::digits_to_integer<Integer>(data, begin, end) :
-                                           -impl::digits_to_integer<Integer>(data, begin, end);
+                *value = (begin == *pos) ? impl::digits_to_integer<Integer>(data, begin, end)
+                                         : -impl::digits_to_integer<Integer>(data, begin, end);
                 *pos = end;
 
                 return true;
