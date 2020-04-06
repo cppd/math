@@ -17,15 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/color/color.h>
-#include <src/model/mesh_object.h>
-#include <src/numerical/matrix.h>
-#include <src/numerical/vec.h>
-#include <src/window/handle.h>
+#include "event.h"
 
-#include <memory>
-#include <optional>
+#include <src/model/object_id.h>
+
 #include <string>
+#include <vector>
 
 class ViewEvents
 {
@@ -38,113 +35,11 @@ public:
         virtual void view_object_loaded(ObjectId) const = 0;
 };
 
-struct ViewCameraInfo final
-{
-        vec3 camera_up;
-        vec3 camera_direction;
-        vec3 light_direction;
-        vec3 view_center;
-        double view_width;
-        int width;
-        int height;
-};
-
-enum class ViewMouseButton
-{
-        Left,
-        Right
-};
-
 class View
 {
-protected:
+public:
         virtual ~View() = default;
 
-public:
-        virtual void add_object(const std::shared_ptr<const mesh::MeshObject<3>>&) = 0;
-        virtual void delete_object(ObjectId id) = 0;
-        virtual void delete_all_objects() = 0;
-        virtual void show_object(ObjectId id) = 0;
-        virtual void reset_view() = 0;
-        virtual void set_ambient(double) = 0;
-        virtual void set_diffuse(double) = 0;
-        virtual void set_specular(double) = 0;
-        virtual void set_background_color(const Color&) = 0;
-        virtual void set_default_color(const Color&) = 0;
-        virtual void set_wireframe_color(const Color&) = 0;
-        virtual void set_clip_plane_color(const Color&) = 0;
-        virtual void set_normal_length(float) = 0;
-        virtual void set_normal_color_positive(const Color&) = 0;
-        virtual void set_normal_color_negative(const Color&) = 0;
-        virtual void set_default_ns(double) = 0;
-        virtual void show_smooth(bool) = 0;
-        virtual void show_wireframe(bool) = 0;
-        virtual void show_shadow(bool) = 0;
-        virtual void show_fog(bool) = 0;
-        virtual void show_materials(bool) = 0;
-        virtual void show_fps(bool) = 0;
-        virtual void show_pencil_sketch(bool) = 0;
-        virtual void show_dft(bool) = 0;
-        virtual void set_dft_brightness(double) = 0;
-        virtual void set_dft_background_color(const Color&) = 0;
-        virtual void set_dft_color(const Color&) = 0;
-        virtual void show_convex_hull_2d(bool) = 0;
-        virtual void show_optical_flow(bool) = 0;
-        virtual void set_vertical_sync(bool v) = 0;
-        virtual void set_shadow_zoom(double v) = 0;
-        virtual void clip_plane_show(double) = 0;
-        virtual void clip_plane_position(double) = 0;
-        virtual void clip_plane_hide() = 0;
-        virtual void show_normals(bool) = 0;
-
-        virtual void mouse_press(int x, int y, ViewMouseButton button) = 0;
-        virtual void mouse_release(int x, int y, ViewMouseButton button) = 0;
-        virtual void mouse_move(int x, int y) = 0;
-        virtual void mouse_wheel(int x, int y, double delta) = 0;
-        virtual void window_resize(int x, int y) = 0;
-
-        virtual ViewCameraInfo camera_information() const = 0;
-        virtual double object_size() const = 0;
-        virtual vec3 object_position() const = 0;
-};
-
-struct ViewCreateInfo
-{
-        // std::optional используется для проверки того, что все значения заданы
-        std::optional<ViewEvents*> events;
-        std::optional<WindowID> window;
-        std::optional<double> window_ppi;
-        std::optional<Color> background_color;
-        std::optional<Color> default_color;
-        std::optional<Color> wireframe_color;
-        std::optional<Color> clip_plane_color;
-        std::optional<float> normal_length;
-        std::optional<Color> normal_color_positive;
-        std::optional<Color> normal_color_negative;
-        std::optional<bool> with_smooth;
-        std::optional<bool> with_wireframe;
-        std::optional<bool> with_shadow;
-        std::optional<bool> with_fog;
-        std::optional<bool> with_materials;
-        std::optional<bool> with_fps;
-        std::optional<bool> with_pencil_sketch;
-        std::optional<bool> with_dft;
-        std::optional<bool> with_convex_hull;
-        std::optional<bool> with_optical_flow;
-        std::optional<bool> with_normals;
-        std::optional<double> ambient;
-        std::optional<double> diffuse;
-        std::optional<double> specular;
-        std::optional<double> dft_brightness;
-        std::optional<Color> dft_color;
-        std::optional<Color> dft_background_color;
-        std::optional<double> default_ns;
-        std::optional<bool> vertical_sync;
-        std::optional<double> shadow_zoom;
-};
-
-struct ViewObject
-{
-        virtual ~ViewObject() = default;
-        virtual View& view() = 0;
+        virtual void send(ViewEvent&&) = 0;
+        virtual void receive(const std::vector<ViewInfo*>& info) = 0;
 };

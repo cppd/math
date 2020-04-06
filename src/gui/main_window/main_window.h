@@ -198,8 +198,7 @@ private:
 
         std::unordered_map<QObject*, std::tuple<int, std::string>> m_action_to_dimension_and_object_name;
 
-        std::unique_ptr<ViewObject> m_view_object;
-        View* m_view = nullptr;
+        std::unique_ptr<View> m_view;
 
         std::unique_ptr<MultiStorage> m_storage;
 

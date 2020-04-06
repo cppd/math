@@ -19,7 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vulkan/view.h"
 
-std::unique_ptr<ViewObject> create_view_object(const ViewCreateInfo& info)
+std::unique_ptr<View> create_view(
+        ViewEvents* events,
+        WindowID parent_window,
+        double parent_window_ppi,
+        std::vector<ViewEvent>&& initial_events)
 {
-        return view_vulkan::create_view_object(info);
+        return view_vulkan::create_view(events, parent_window, parent_window_ppi, std::move(initial_events));
 }

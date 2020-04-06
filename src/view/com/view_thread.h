@@ -17,74 +17,97 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "event_queue.h"
-
 #include "../interface.h"
 
 #include <src/com/error.h>
+#include <src/com/thread.h>
 
 #include <atomic>
+#include <condition_variable>
+#include <mutex>
 #include <thread>
 
-template <typename T>
-class ViewThread final : public ViewObject
+class ViewEventQueues final
 {
-        std::thread::id m_thread_id = std::this_thread::get_id();
-        EventQueue m_event_queue;
+        ThreadQueue<ViewEvent> m_send_queue;
+
+        struct ViewInfoExt
+        {
+                const std::vector<ViewInfo*>* info;
+
+                std::mutex mutex;
+                std::condition_variable cv;
+                bool received;
+        };
+        ThreadQueue<ViewInfoExt*> m_receive_queue;
+
+public:
+        explicit ViewEventQueues(std::vector<ViewEvent>&& initial_events)
+        {
+                for (ViewEvent& event : initial_events)
+                {
+                        send(std::move(event));
+                }
+        }
+
+        void send(ViewEvent&& event)
+        {
+                m_send_queue.push(std::move(event));
+        }
+
+        void receive(const std::vector<ViewInfo*>& info)
+        {
+                ViewInfoExt v;
+                v.info = &info;
+                v.received = false;
+                m_receive_queue.push(&v);
+
+                std::unique_lock<std::mutex> lock(v.mutex);
+                v.cv.wait(lock, [&] { return v.received; });
+        }
+
+        void dispatch_events(View* view)
+        {
+                {
+                        std::optional<ViewEvent> event;
+                        while ((event = m_send_queue.pop()))
+                        {
+                                view->send(std::move(*event));
+                        }
+                }
+                {
+                        std::optional<ViewInfoExt*> event;
+                        while ((event = m_receive_queue.pop()))
+                        {
+                                view->receive(*((*event)->info));
+
+                                {
+                                        std::lock_guard<std::mutex> lock((*event)->mutex);
+                                        (*event)->received = true;
+                                }
+                                (*event)->cv.notify_all();
+                        }
+                }
+        }
+};
+
+template <typename T>
+class ViewThread final : public View
+{
+        const std::thread::id m_thread_id = std::this_thread::get_id();
+        ViewEventQueues m_event_queues;
         std::thread m_thread;
         std::atomic_bool m_stop{false};
         std::atomic_bool m_started{false};
 
-        class EventQueueSetView final
+        void send(ViewEvent&& event) override
         {
-                EventQueue* m_event_queue;
+                m_event_queues.send(std::move(event));
+        }
 
-        public:
-                EventQueueSetView(EventQueue* event_queue, View* view) : m_event_queue(event_queue)
-                {
-                        m_event_queue->set_view(view);
-                }
-                ~EventQueueSetView()
-                {
-                        m_event_queue->set_view(nullptr);
-                }
-                EventQueueSetView(const EventQueueSetView&) = delete;
-                EventQueueSetView(EventQueueSetView&&) = delete;
-                EventQueueSetView& operator=(const EventQueueSetView&) = delete;
-                EventQueueSetView& operator=(EventQueueSetView&&) = delete;
-        };
-
-        static void add_to_event_queue(EventQueue* queue, const ViewCreateInfo& info)
+        void receive(const std::vector<ViewInfo*>& info) override
         {
-                View& q = *queue;
-
-                q.set_ambient(info.ambient.value());
-                q.set_diffuse(info.diffuse.value());
-                q.set_specular(info.specular.value());
-                q.set_background_color(info.background_color.value());
-                q.set_default_color(info.default_color.value());
-                q.set_wireframe_color(info.wireframe_color.value());
-                q.set_clip_plane_color(info.clip_plane_color.value());
-                q.set_normal_length(info.normal_length.value());
-                q.set_normal_color_positive(info.normal_color_positive.value());
-                q.set_normal_color_negative(info.normal_color_negative.value());
-                q.set_default_ns(info.default_ns.value());
-                q.show_smooth(info.with_smooth.value());
-                q.show_wireframe(info.with_wireframe.value());
-                q.show_shadow(info.with_shadow.value());
-                q.show_fog(info.with_fog.value());
-                q.show_fps(info.with_fps.value());
-                q.show_pencil_sketch(info.with_pencil_sketch.value());
-                q.show_dft(info.with_dft.value());
-                q.set_dft_brightness(info.dft_brightness.value());
-                q.set_dft_background_color(info.dft_background_color.value());
-                q.set_dft_color(info.dft_color.value());
-                q.show_materials(info.with_materials.value());
-                q.show_convex_hull_2d(info.with_convex_hull.value());
-                q.show_optical_flow(info.with_optical_flow.value());
-                q.set_vertical_sync(info.vertical_sync.value());
-                q.set_shadow_zoom(info.shadow_zoom.value());
-                q.show_normals(info.with_normals.value());
+                m_event_queues.receive(info);
         }
 
         void thread_function(ViewEvents* events, WindowID parent_window, double parent_window_ppi)
@@ -93,49 +116,35 @@ class ViewThread final : public ViewObject
                 {
                         try
                         {
-                                try
+                                T view(events, parent_window, parent_window_ppi);
+
+                                m_started = true;
+
+                                view.loop([&]() { m_event_queues.dispatch_events(&view); }, &m_stop);
+
+                                if (!m_stop)
                                 {
-                                        T view(&m_event_queue, events, parent_window, parent_window_ppi);
-
-                                        EventQueueSetView e(&m_event_queue, &view);
-
-                                        m_started = true;
-
-                                        view.loop(&m_stop);
-
-                                        if (!m_stop)
-                                        {
-                                                error("Thread ended without stop.");
-                                        }
+                                        error("Thread ended without stop.");
                                 }
-                                catch (...)
-                                {
-                                        m_started = true;
-                                        throw;
-                                }
-                        }
-                        catch (ErrorSourceException& e)
-                        {
-                                events->message_error_source(e.msg(), e.src());
-                        }
-                        catch (std::exception& e)
-                        {
-                                events->message_error_fatal(e.what());
                         }
                         catch (...)
                         {
-                                events->message_error_fatal("Unknown Error. Thread ended.");
+                                m_started = true;
+                                throw;
                         }
+                }
+                catch (ErrorSourceException& e)
+                {
+                        events->message_error_source(e.msg(), e.src());
+                }
+                catch (std::exception& e)
+                {
+                        events->message_error_fatal(e.what());
                 }
                 catch (...)
                 {
-                        error_fatal("Exception in the view thread exception handlers");
+                        events->message_error_fatal("Unknown Error. Thread ended.");
                 }
-        }
-
-        View& view() override
-        {
-                return m_event_queue;
         }
 
         void join_thread()
@@ -150,27 +159,25 @@ class ViewThread final : public ViewObject
         }
 
 public:
-        explicit ViewThread(const ViewCreateInfo& info)
+        ViewThread(
+                ViewEvents* events,
+                WindowID parent_window,
+                double parent_window_ppi,
+                std::vector<ViewEvent>&& initial_events)
+                : m_event_queues(std::move(initial_events))
         {
                 try
                 {
-                        try
-                        {
-                                add_to_event_queue(&m_event_queue, info);
-
-                                if (!info.events.value() || !(info.window_ppi.value() > 0))
+                        m_thread = std::thread([=, this]() {
+                                try
                                 {
-                                        error("View create information is not complete");
+                                        thread_function(events, parent_window, parent_window_ppi);
                                 }
-
-                                m_thread = std::thread(
-                                        &ViewThread::thread_function, this, info.events.value(), info.window.value(),
-                                        info.window_ppi.value());
-                        }
-                        catch (std::bad_optional_access&)
-                        {
-                                error("View create information is not complete");
-                        }
+                                catch (...)
+                                {
+                                        error_fatal("Exception in the view thread function");
+                                }
+                        });
 
                         do
                         {

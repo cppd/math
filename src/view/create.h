@@ -19,4 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "interface.h"
 
-std::unique_ptr<ViewObject> create_view_object(const ViewCreateInfo& info);
+#include <memory>
+#include <vector>
+
+std::unique_ptr<View> create_view(
+        ViewEvents* events,
+        WindowID parent_window,
+        double parent_window_ppi,
+        std::vector<ViewEvent>&& initial_events);

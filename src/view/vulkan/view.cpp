@@ -21,8 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "resolve.h"
 
 #include "../com/camera.h"
-#include "../com/event_queue.h"
-#include "../com/event_window.h"
 #include "../com/frame_rate.h"
 #include "../com/rectangle.h"
 #include "../com/view_thread.h"
@@ -34,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
+#include <src/com/variant.h>
 #include <src/gpu/convex_hull/vulkan/show.h>
 #include <src/gpu/dft/vulkan/show.h>
 #include <src/gpu/optical_flow/vulkan/show.h>
@@ -104,7 +103,6 @@ std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(b
 
 class Impl final : public View
 {
-        EventQueue* m_event_queue;
         ViewEvents* const m_view_events;
         const double m_window_ppi;
         const std::thread::id m_thread_id = std::this_thread::get_id();
@@ -161,243 +159,26 @@ class Impl final : public View
         int m_mouse_x = std::numeric_limits<int>::lowest();
         int m_mouse_y = std::numeric_limits<int>::lowest();
 
-        void add_object(const std::shared_ptr<const mesh::MeshObject<3>>& object) override
+        const PressedMouseButton& pressed_mouse_button(ViewMouseButton button) const
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                if (!object)
+                auto iter = m_mouse.find(button);
+                if (iter != m_mouse.cend())
                 {
-                        error("Null object received");
+                        return iter->second;
                 }
-                m_renderer->object_add(*object);
-                m_view_events->view_object_loaded(object->id());
+
+                thread_local const PressedMouseButton m{};
+                return m;
         }
 
-        void delete_object(ObjectId id) override
+        void clip_plane_show(double position)
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->object_delete(id);
-        }
-
-        void show_object(ObjectId id) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->object_show(id);
-        }
-
-        void delete_all_objects() override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->object_delete_all();
-
-                reset_view_handler();
-        }
-
-        void reset_view() override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                reset_view_handler();
-        }
-
-        void set_ambient(double v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                Color light = Color(v);
-                m_renderer->set_light_a(light);
-        }
-
-        void set_diffuse(double v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                Color light = Color(v);
-                m_renderer->set_light_d(light);
-        }
-
-        void set_specular(double v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                Color light = Color(v);
-                m_renderer->set_light_s(light);
-        }
-
-        void set_background_color(const Color& c) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->set_background_color(c);
-
-                bool background_is_dark = c.luminance() <= 0.5;
-                m_text->set_color(background_is_dark ? Color(1) : Color(0));
-        }
-
-        void set_default_color(const Color& c) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->set_default_color(c);
-        }
-
-        void set_wireframe_color(const Color& c) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->set_wireframe_color(c);
-        }
-
-        void set_clip_plane_color(const Color& c) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->set_clip_plane_color(c);
-        }
-
-        void set_normal_length(float v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->set_normal_length(v);
-        }
-
-        void set_normal_color_positive(const Color& c) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->set_normal_color_positive(c);
-        }
-
-        void set_normal_color_negative(const Color& c) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->set_normal_color_negative(c);
-        }
-
-        void set_default_ns(double ns) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->set_default_ns(ns);
-        }
-
-        void show_smooth(bool v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->set_show_smooth(v);
-        }
-
-        void show_wireframe(bool v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->set_show_wireframe(v);
-        }
-
-        void show_shadow(bool v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->set_show_shadow(v);
-        }
-
-        void show_fog(bool v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->set_show_fog(v);
-        }
-
-        void show_materials(bool v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->set_show_materials(v);
-        }
-
-        void show_fps(bool v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_text_active = v;
-        }
-
-        void show_pencil_sketch(bool v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_pencil_sketch_active = v;
-        }
-
-        void show_dft(bool v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                if (m_dft_active != v)
-                {
-                        m_dft_active = v;
-
-                        create_swapchain();
-                }
-        }
-
-        void set_dft_brightness(double v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_dft->set_brightness(v);
-        }
-
-        void set_dft_background_color(const Color& c) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_dft->set_background_color(c);
-        }
-
-        void set_dft_color(const Color& c) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_dft->set_color(c);
-        }
-
-        void show_convex_hull_2d(bool v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_convex_hull_active = v;
-                if (m_convex_hull_active)
-                {
-                        m_convex_hull->reset_timer();
-                }
-        }
-
-        void show_optical_flow(bool v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_optical_flow_active = v;
-        }
-
-        void clip_plane_show(double position) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
                 m_clip_plane_view_matrix = m_camera.renderer_info().main_view_matrix;
                 clip_plane_position(position);
         }
 
-        void clip_plane_position(double position) override
+        void clip_plane_position(double position)
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
                 if (!m_clip_plane_view_matrix)
                 {
                         error("Clip plane is not set");
@@ -423,99 +204,14 @@ class Impl final : public View
                 m_renderer->clip_plane_show(plane);
         }
 
-        void clip_plane_hide() override
+        void clip_plane_hide()
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
                 m_clip_plane_view_matrix.reset();
                 m_renderer->clip_plane_hide();
         }
 
-        void show_normals(bool v) override
+        void mouse_move(int x, int y)
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->set_show_normals(v);
-        }
-
-        void set_vertical_sync(bool v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                set_vertical_sync_swapchain(v);
-        }
-
-        void set_shadow_zoom(double v) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_renderer->set_shadow_zoom(v);
-        }
-
-        ViewCameraInfo camera_information() const override
-        {
-                ASSERT(std::this_thread::get_id() != m_thread_id);
-
-                return m_camera.view_info();
-        }
-
-        double object_size() const override
-        {
-                ASSERT(std::this_thread::get_id() != m_thread_id);
-
-                return OBJECT_SIZE;
-        }
-
-        vec3 object_position() const override
-        {
-                ASSERT(std::this_thread::get_id() != m_thread_id);
-
-                return OBJECT_POSITION;
-        }
-
-        //
-
-        const PressedMouseButton& pressed_mouse_button(ViewMouseButton button) const
-        {
-                auto iter = m_mouse.find(button);
-                if (iter != m_mouse.cend())
-                {
-                        return iter->second;
-                }
-
-                thread_local const PressedMouseButton m{};
-                return m;
-        }
-
-        void mouse_press(int x, int y, ViewMouseButton button) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_mouse_x = x;
-                m_mouse_y = y;
-
-                PressedMouseButton& m = m_mouse[button];
-                m.pressed = true;
-                m.pressed_x = m_mouse_x;
-                m.pressed_y = m_mouse_y;
-                m.delta_x = 0;
-                m.delta_y = 0;
-        }
-
-        void mouse_release(int x, int y, ViewMouseButton button) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_mouse[button].pressed = false;
-
-                m_mouse_x = x;
-                m_mouse_y = y;
-        }
-
-        void mouse_move(int x, int y) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
                 for (auto& [button, m] : m_mouse)
                 {
                         if (m.pressed)
@@ -553,18 +249,235 @@ class Impl final : public View
                 }
         }
 
-        void mouse_wheel(int x, int y, double delta) override
+        void send(ViewEvent&& event) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_camera.scale(x - m_draw_rectangle.x0(), y - m_draw_rectangle.y0(), delta);
+                // clang-format off
+                static const auto visitors =
+                Visitors
+                {
+                [this](const ViewEvent::add_object_t& d)
+                {
+                        if (!d.object)
+                        {
+                                error("Null object received");
+                        }
+                        m_renderer->object_add(*d.object);
+                        m_view_events->view_object_loaded(d.object->id());
+                },
+                [this](const ViewEvent::delete_object_t& d)
+                {
+                        m_renderer->object_delete(d.id);
+                },
+                [this](const ViewEvent::show_object_t& d)
+                {
+                        m_renderer->object_show(d.id);
+                },
+                [this](const ViewEvent::delete_all_objects_t&)
+                {
+                        m_renderer->object_delete_all();
+                        reset_view_handler();
+                },
+                [this](const ViewEvent::reset_view_t&)
+                {
+                        reset_view_handler();
+                },
+                [this](const ViewEvent::set_ambient_t& d)
+                {
+                        Color light = Color(d.ambient);
+                        m_renderer->set_light_a(light);
+                },
+                [this](const ViewEvent::set_diffuse_t& d)
+                {
+                        Color light = Color(d.diffuse);
+                        m_renderer->set_light_d(light);
+                },
+                [this](const ViewEvent::set_specular_t& d)
+                {
+                        Color light = Color(d.specular);
+                        m_renderer->set_light_s(light);
+                },
+                [this](const ViewEvent::set_background_color_t& d)
+                {
+                        m_renderer->set_background_color(d.background_color);
+                        bool background_is_dark = d.background_color.luminance() <= 0.5;
+                        m_text->set_color(background_is_dark ? Color(1) : Color(0));
+                },
+                [this](const ViewEvent::set_default_color_t& d)
+                {
+                        m_renderer->set_default_color(d.default_color);
+                },
+                [this](const ViewEvent::set_wireframe_color_t& d)
+                {
+                        m_renderer->set_wireframe_color(d.wireframe_color);
+                },
+                [this](const ViewEvent::set_clip_plane_color_t& d)
+                {
+                        m_renderer->set_clip_plane_color(d.clip_plane_color);
+                },
+                [this](const ViewEvent::set_normal_length_t& d)
+                {
+                        m_renderer->set_normal_length(d.length);
+                },
+                [this](const ViewEvent::set_normal_color_positive_t& d)
+                {
+                        m_renderer->set_normal_color_positive(d.color);
+                },
+                [this](const ViewEvent::set_normal_color_negative_t& d)
+                {
+                        m_renderer->set_normal_color_negative(d.color);
+                },
+                [this](const ViewEvent::set_default_ns_t& d)
+                {
+                        m_renderer->set_default_ns(d.default_ns);
+                },
+                [this](const ViewEvent::show_smooth_t& d)
+                {
+                        m_renderer->set_show_smooth(d.show);
+                },
+                [this](const ViewEvent::show_wireframe_t& d)
+                {
+                        m_renderer->set_show_wireframe(d.show);
+                },
+                [this](const ViewEvent::show_shadow_t& d)
+                {
+                        m_renderer->set_show_shadow(d.show);
+                },
+                [this](const ViewEvent::show_fog_t& d)
+                {
+                        m_renderer->set_show_fog(d.show);
+                },
+                [this](const ViewEvent::show_materials_t& d)
+                {
+                        m_renderer->set_show_materials(d.show);
+                },
+                [this](const ViewEvent::show_fps_t& d)
+                {
+                        m_text_active = d.show;
+                },
+                [this](const ViewEvent::show_pencil_sketch_t& d)
+                {
+                        m_pencil_sketch_active = d.show;
+                },
+                [this](const ViewEvent::show_dft_t& d)
+                {
+                        if (m_dft_active != d.show)
+                        {
+                                m_dft_active = d.show;
+                                create_swapchain();
+                        }
+                },
+                [this](const ViewEvent::set_dft_brightness_t& d)
+                {
+                        m_dft->set_brightness(d.dft_brightness);
+                },
+                [this](const ViewEvent::set_dft_background_color_t& d)
+                {
+                        m_dft->set_background_color(d.color);
+                },
+                [this](const ViewEvent::set_dft_color_t& d)
+                {
+                        m_dft->set_color(d.color);
+                },
+                [this](const ViewEvent::show_convex_hull_2d_t& d)
+                {
+                        m_convex_hull_active = d.show;
+                        if (m_convex_hull_active)
+                        {
+                                m_convex_hull->reset_timer();
+                        }
+                },
+                [this](const ViewEvent::show_optical_flow_t& d)
+                {
+                        m_optical_flow_active = d.show;
+                },
+                [this](const ViewEvent::set_vertical_sync_t& d)
+                {
+                        set_vertical_sync_swapchain(d.enable);
+                },
+                [this](const ViewEvent::set_shadow_zoom_t& d)
+                {
+                        m_renderer->set_shadow_zoom(d.zoom);
+                },
+                [this](const ViewEvent::clip_plane_show_t& d)
+                {
+                        clip_plane_show(d.position);
+                },
+                [this](const ViewEvent::clip_plane_position_t& d)
+                {
+                        clip_plane_position(d.position);
+                },
+                [this](const ViewEvent::clip_plane_hide_t&)
+                {
+                        clip_plane_hide();
+                },
+                [this](const ViewEvent::show_normals_t& d)
+                {
+                        m_renderer->set_show_normals(d.show);
+                },
+                [this](const ViewEvent::mouse_press_t& d)
+                {
+                        m_mouse_x = d.x;
+                        m_mouse_y = d.y;
+                        PressedMouseButton& m = m_mouse[d.button];
+                        m.pressed = true;
+                        m.pressed_x = m_mouse_x;
+                        m.pressed_y = m_mouse_y;
+                        m.delta_x = 0;
+                        m.delta_y = 0;
+                },
+                [this](const ViewEvent::mouse_release_t& d)
+                {
+                        m_mouse[d.button].pressed = false;
+                        m_mouse_x = d.x;
+                        m_mouse_y = d.y;
+                },
+                [this](const ViewEvent::mouse_move_t& d)
+                {
+                        mouse_move(d.x, d.y);
+                },
+                [this](const ViewEvent::mouse_wheel_t& d)
+                {
+                        m_camera.scale(d.x - m_draw_rectangle.x0(), d.y - m_draw_rectangle.y0(), d.delta);
+                        m_renderer->set_camera(m_camera.renderer_info());
+                },
+                [](const ViewEvent::window_resize_t&)
+                {
+                }
+                };
+                // clang-format on
 
-                m_renderer->set_camera(m_camera.renderer_info());
+                std::visit(visitors, event.event());
         }
 
-        void window_resize(int /*x*/, int /*y*/) override
+        void receive(const std::vector<ViewInfo*>& info) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                // clang-format off
+                static const auto visitors =
+                Visitors
+                {
+                [this](ViewInfo::camera_information_t& d)
+                {
+                        d.camera_info = m_camera.view_info();
+                },
+                [](ViewInfo::object_size_t& d)
+                {
+                        d.size = OBJECT_SIZE;
+                },
+                [](ViewInfo::object_position_t& d)
+                {
+                        d.position = OBJECT_POSITION;
+                }
+                };
+                // clang-format on
+
+                for (ViewInfo* v : info)
+                {
+                        std::visit(visitors, v->event());
+                }
         }
 
         //
@@ -788,9 +701,14 @@ class Impl final : public View
         }
 
 public:
-        Impl(EventQueue* event_queue, ViewEvents* show_events, const WindowID& window, double window_ppi)
-                : m_event_queue(event_queue), m_view_events(show_events), m_window_ppi(window_ppi)
+        Impl(ViewEvents* show_events, const WindowID& window, double window_ppi)
+                : m_view_events(show_events), m_window_ppi(window_ppi)
         {
+                if (window_ppi <= 0)
+                {
+                        error("Window PPI is not positive");
+                }
+
                 // Этот цвет меняется в set_background_color
                 constexpr Srgb8 text_color(255, 255, 255);
 
@@ -880,14 +798,14 @@ public:
                 ASSERT(std::this_thread::get_id() == m_thread_id);
         }
 
-        void loop(std::atomic_bool* stop)
+        void loop(const std::function<void()>& dispatch_events, std::atomic_bool* stop)
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 double last_frame_time = time_in_seconds();
                 while (!(*stop))
                 {
-                        m_event_queue->pull_and_dispatch_events(this);
+                        dispatch_events();
 
                         m_frame_rate.calculate();
 
@@ -912,8 +830,12 @@ public:
 };
 }
 
-std::unique_ptr<ViewObject> create_view_object(const ViewCreateInfo& info)
+std::unique_ptr<View> create_view(
+        ViewEvents* events,
+        WindowID parent_window,
+        double parent_window_ppi,
+        std::vector<ViewEvent>&& initial_events)
 {
-        return std::make_unique<ViewThread<Impl>>(info);
+        return std::make_unique<ViewThread<Impl>>(events, parent_window, parent_window_ppi, std::move(initial_events));
 }
 }
