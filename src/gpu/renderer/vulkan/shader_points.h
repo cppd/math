@@ -69,7 +69,7 @@ struct RendererPointsVertex
 {
         vec3f position;
 
-        explicit constexpr RendererPointsVertex(const vec3f& position_) : position(position_)
+        explicit constexpr RendererPointsVertex(const vec3f& position) : position(position)
         {
         }
 

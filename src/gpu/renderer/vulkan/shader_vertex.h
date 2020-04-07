@@ -30,11 +30,8 @@ struct RendererTrianglesVertex
         vec3f normal;
         vec2f texture_coordinates;
 
-        constexpr RendererTrianglesVertex(
-                const vec3f& position_,
-                const vec3f& normal_,
-                const vec2f& texture_coordinates_)
-                : position(position_), normal(normal_), texture_coordinates(texture_coordinates_)
+        constexpr RendererTrianglesVertex(const vec3f& position, const vec3f& normal, const vec2f& texture_coordinates)
+                : position(position), normal(normal), texture_coordinates(texture_coordinates)
         {
         }
 

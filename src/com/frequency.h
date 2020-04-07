@@ -26,7 +26,7 @@ class Frequency
         {
                 int sample_number;
                 double event_count = 0;
-                explicit Events(int sample_number_) : sample_number(sample_number_)
+                explicit Events(int sample_number) : sample_number(sample_number)
                 {
                 }
         };

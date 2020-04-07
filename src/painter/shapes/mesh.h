@@ -45,8 +45,8 @@ class SpatialMeshModel
                 Color Kd, Ks;
                 Color::DataType Ns;
                 int map_Kd, map_Ks;
-                Material(const Color& Kd_, const Color& Ks_, Color::DataType Ns_, int map_Kd_, int map_Ks_)
-                        : Kd(Kd_), Ks(Ks_), Ns(Ns_), map_Kd(map_Kd_), map_Ks(map_Ks_)
+                Material(const Color& Kd, const Color& Ks, Color::DataType Ns, int map_Kd, int map_Ks)
+                        : Kd(Kd), Ks(Ks), Ns(Ns), map_Kd(map_Kd), map_Ks(map_Ks)
                 {
                 }
         };

@@ -44,7 +44,7 @@ struct VertexConnections
                 int facet_index;
                 // локальный индекс вершины грани, являющейся данной вершиной
                 int vertex_index;
-                Facet(int facet_index_, int vertex_index_) : facet_index(facet_index_), vertex_index(vertex_index_)
+                Facet(int facet_index, int vertex_index) : facet_index(facet_index), vertex_index(vertex_index)
                 {
                 }
         };

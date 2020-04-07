@@ -33,8 +33,8 @@ struct ManifoldVertex
         const double radius;
         std::vector<int> cocone_neighbors;
 
-        ManifoldVertex(const vec<N>& positive_norm_, double height_, double radius_)
-                : positive_norm(positive_norm_), height(height_), radius(radius_)
+        ManifoldVertex(const vec<N>& positive_norm, double height, double radius)
+                : positive_norm(positive_norm), height(height), radius(radius)
         {
         }
 };

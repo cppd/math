@@ -127,16 +127,16 @@ struct PaintData
         const bool smooth_normal;
 
         PaintData(
-                const std::vector<const GenericObject<N, T>*>& objects_,
-                const std::vector<const LightSource<N, T>*>& light_sources_,
-                const SurfaceProperties<N, T>& default_surface_properties_,
-                const T& ray_offset_,
-                bool smooth_normal_)
-                : objects(objects_),
-                  light_sources(light_sources_),
-                  default_surface_properties(default_surface_properties_),
-                  ray_offset(ray_offset_),
-                  smooth_normal(smooth_normal_)
+                const std::vector<const GenericObject<N, T>*>& objects,
+                const std::vector<const LightSource<N, T>*>& light_sources,
+                const SurfaceProperties<N, T>& default_surface_properties,
+                const T& ray_offset,
+                bool smooth_normal)
+                : objects(objects),
+                  light_sources(light_sources),
+                  default_surface_properties(default_surface_properties),
+                  ray_offset(ray_offset),
+                  smooth_normal(smooth_normal)
         {
         }
 };

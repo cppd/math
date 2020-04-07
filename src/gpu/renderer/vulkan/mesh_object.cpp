@@ -443,8 +443,8 @@ class MeshObject::Triangles final
                 unsigned vertex_offset;
                 unsigned vertex_count;
 
-                Material(VkDescriptorSet descriptor_set_, unsigned vertex_offset_, unsigned vertex_count_)
-                        : descriptor_set(descriptor_set_), vertex_offset(vertex_offset_), vertex_count(vertex_count_)
+                Material(VkDescriptorSet descriptor_set, unsigned vertex_offset, unsigned vertex_count)
+                        : descriptor_set(descriptor_set), vertex_offset(vertex_offset), vertex_count(vertex_count)
                 {
                 }
         };

@@ -29,7 +29,7 @@ class RendererObjectStorage final
         struct MapEntry
         {
                 std::unique_ptr<T> object;
-                MapEntry(std::unique_ptr<T>&& obj_) : object(std::move(obj_))
+                MapEntry(std::unique_ptr<T>&& object) : object(std::move(object))
                 {
                 }
         };
