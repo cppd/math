@@ -32,8 +32,8 @@ protected:
         virtual ~Events() = default;
 
 public:
-        virtual void view_error_fatal(const std::string&) const = 0;
-        virtual void view_object_loaded(ObjectId) const = 0;
+        virtual void error_fatal(const std::string&) const = 0;
+        virtual void object_loaded(ObjectId) const = 0;
 };
 
 class View
@@ -42,6 +42,6 @@ public:
         virtual ~View() = default;
 
         virtual void send(Event&&) = 0;
-        virtual void receive(const std::vector<Info*>& info) = 0;
+        virtual void receive(const std::vector<Info>& info) = 0;
 };
 }

@@ -59,7 +59,7 @@ public:
         void move(const vec2& delta);
         void resize(int width, int height);
 
-        CameraInfo view_info() const;
+        info::Camera view_info() const;
         gpu::RendererCameraInfo renderer_info() const;
 };
 }

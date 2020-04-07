@@ -60,7 +60,7 @@ class PainterWindow2d::Difference
         {
                 std::array<long long, 3> data;
                 double time;
-                Point(std::array<long long, 3> data_, double time_) : data(data_), time(time_)
+                Point(std::array<long long, 3> data, double time) : data(data), time(time)
                 {
                 }
         };

@@ -17,323 +17,258 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/error.h>
 #include <src/com/log.h>
-#include <src/com/variant.h>
+#include <src/model/object_id.h>
 #include <src/storage/events.h>
 #include <src/view/interface.h>
 
 #include <QObject>
+#include <string>
 #include <variant>
 
-class AllEvents
+struct WindowEvent
 {
-protected:
-        virtual ~AllEvents() = default;
+        struct MessageError final
+        {
+                std::string msg;
+                explicit MessageError(const std::string& msg) : msg(msg)
+                {
+                }
+        };
 
-public:
-        virtual void message_error(const std::string& msg) = 0;
-        virtual void message_error_fatal(const std::string& msg) = 0;
-        virtual void message_information(const std::string& msg) = 0;
-        virtual void message_warning(const std::string& msg) = 0;
+        struct MessageErrorFatal final
+        {
+                std::string msg;
+                explicit MessageErrorFatal(const std::string& msg) : msg(msg)
+                {
+                }
+        };
 
-        virtual void view_error_fatal(const std::string& msg) = 0;
-        virtual void view_object_loaded(ObjectId id) = 0;
+        struct MessageInformation final
+        {
+                std::string msg;
+                explicit MessageInformation(const std::string& msg) : msg(msg)
+                {
+                }
+        };
 
-        virtual void loaded_object(ObjectId id, size_t dimension) = 0;
-        virtual void loaded_mesh(ObjectId id, size_t dimension) = 0;
-        virtual void deleted_object(ObjectId id, size_t dimension) = 0;
-        virtual void deleted_all(size_t dimension) = 0;
+        struct MessageWarning final
+        {
+                std::string msg;
+                explicit MessageWarning(const std::string& msg) : msg(msg)
+                {
+                }
+        };
 
-        virtual void file_loaded(const std::string& file_name, size_t dimension) = 0;
-        virtual void log(const std::string& msg) = 0;
+        struct FileLoaded final
+        {
+                std::string file_name;
+                size_t dimension;
+                FileLoaded(const std::string& file_name, size_t dimension) : file_name(file_name), dimension(dimension)
+                {
+                }
+        };
+
+        using T = std::
+                variant<std::monostate, FileLoaded, MessageError, MessageErrorFatal, MessageInformation, MessageWarning>;
+
+        WindowEvent() : m_data(std::monostate())
+        {
+        }
+
+        template <typename Type>
+        WindowEvent(Type&& arg) : m_data(std::forward<Type>(arg))
+        {
+        }
+
+        const T& data() const
+        {
+                return m_data;
+        }
+
+private:
+        T m_data;
 };
 
-class WindowEventEmitter final : public QObject, public LogEvents, public StorageEvents, public view::Events
+class WindowEventEmitter final : public QObject
 {
         Q_OBJECT
 
-private:
-        struct WindowEvent final
-        {
-                struct message_error final
-                {
-                        const std::string msg;
-                        explicit message_error(const std::string& msg_) : msg(msg_)
-                        {
-                        }
-                };
-                struct message_error_fatal final
-                {
-                        const std::string msg;
-                        explicit message_error_fatal(const std::string& msg_) : msg(msg_)
-                        {
-                        }
-                };
-                struct message_information final
-                {
-                        const std::string msg;
-                        explicit message_information(const std::string& msg_) : msg(msg_)
-                        {
-                        }
-                };
-                struct message_warning final
-                {
-                        const std::string msg;
-                        explicit message_warning(const std::string& msg_) : msg(msg_)
-                        {
-                        }
-                };
-                struct view_error_fatal final
-                {
-                        const std::string msg;
-                        explicit view_error_fatal(const std::string& msg_) : msg(msg_)
-                        {
-                        }
-                };
-                struct view_object_loaded final
-                {
-                        const ObjectId id;
-                        explicit view_object_loaded(ObjectId id_) : id(id_)
-                        {
-                        }
-                };
-                struct loaded_object final
-                {
-                        const ObjectId id;
-                        const size_t dimension;
-                        loaded_object(ObjectId id_, size_t dimension_) : id(id_), dimension(dimension_)
-                        {
-                        }
-                };
-                struct loaded_mesh final
-                {
-                        const ObjectId id;
-                        const size_t dimension;
-                        explicit loaded_mesh(ObjectId id_, size_t dimension_) : id(id_), dimension(dimension_)
-                        {
-                        }
-                };
-                struct deleted_object final
-                {
-                        const ObjectId id;
-                        const size_t dimension;
-                        deleted_object(ObjectId id_, size_t dimension_) : id(id_), dimension(dimension_)
-                        {
-                        }
-                };
-                struct deleted_all final
-                {
-                        const size_t dimension;
-                        explicit deleted_all(size_t dimension_) : dimension(dimension_)
-                        {
-                        }
-                };
-                struct file_loaded final
-                {
-                        const std::string file_name;
-                        const size_t dimension;
-                        file_loaded(const std::string& file_name_, size_t dimension_)
-                                : file_name(file_name_), dimension(dimension_)
-                        {
-                        }
-                };
-                struct log final
-                {
-                        const std::string msg;
-                        explicit log(const std::string& msg_) : msg(msg_)
-                        {
-                        }
-                };
-
-                std::variant<
-                        std::monostate,
-                        view_error_fatal,
-                        view_object_loaded,
-                        loaded_object,
-                        loaded_mesh,
-                        deleted_object,
-                        deleted_all,
-                        file_loaded,
-                        message_error,
-                        message_error_fatal,
-                        message_information,
-                        message_warning,
-                        log>
-                        event;
-
-                template <typename... Args>
-                explicit WindowEvent(Args&&... args) : event(std::forward<Args>(args)...)
-                {
-                }
-        };
-
 signals:
-        void window_event(const WindowEvent&) const;
-
-private:
-        template <typename T, typename... Args>
-        void emit_message(const char* error_message, Args&&... args) const noexcept
-        {
-                try
-                {
-                        try
-                        {
-                                emit window_event(WindowEvent(std::in_place_type<T>, std::forward<Args>(args)...));
-                        }
-                        catch (std::exception& e)
-                        {
-                                error_fatal(std::string(error_message) + ": " + e.what() + ".");
-                        }
-                        catch (...)
-                        {
-                                error_fatal(std::string(error_message) + ".");
-                        }
-                }
-                catch (...)
-                {
-                        error_fatal("Error emit message");
-                }
-        }
-
-        AllEvents* m_all_events;
-
-        class Visitor
-        {
-                AllEvents* m_f;
-
-        public:
-                explicit Visitor(AllEvents* f) : m_f(f)
-                {
-                }
-
-                void operator()(const std::monostate&)
-                {
-                }
-                void operator()(const WindowEvent::message_error& d)
-                {
-                        m_f->message_error(d.msg);
-                }
-                void operator()(const WindowEvent::message_error_fatal& d)
-                {
-                        m_f->message_error_fatal(d.msg);
-                }
-                void operator()(const WindowEvent::message_information& d)
-                {
-                        m_f->message_information(d.msg);
-                }
-                void operator()(const WindowEvent::message_warning& d)
-                {
-                        m_f->message_warning(d.msg);
-                }
-                void operator()(const WindowEvent::view_error_fatal& d)
-                {
-                        m_f->view_error_fatal(d.msg);
-                }
-                void operator()(const WindowEvent::view_object_loaded& d)
-                {
-                        m_f->view_object_loaded(d.id);
-                }
-                void operator()(const WindowEvent::loaded_object& d)
-                {
-                        m_f->loaded_object(d.id, d.dimension);
-                }
-                void operator()(const WindowEvent::loaded_mesh& d)
-                {
-                        m_f->loaded_mesh(d.id, d.dimension);
-                }
-                void operator()(const WindowEvent::deleted_object& d)
-                {
-                        m_f->deleted_object(d.id, d.dimension);
-                }
-                void operator()(const WindowEvent::deleted_all& d)
-                {
-                        m_f->deleted_all(d.dimension);
-                }
-                void operator()(const WindowEvent::file_loaded& d)
-                {
-                        m_f->file_loaded(d.file_name, d.dimension);
-                }
-                void operator()(const WindowEvent::log& d)
-                {
-                        m_f->log(d.msg);
-                }
-        };
-
-private slots:
-
-        void slot_window_event(const WindowEvent& event)
-        {
-                std::visit(Visitor(m_all_events), event.event);
-        }
+        void window_event_signal(const WindowEvent&) const;
 
 public:
-        explicit WindowEventEmitter(AllEvents* all_events) : m_all_events(all_events)
-        {
-                ASSERT(m_all_events);
+        void message_error(const std::string& msg) const;
+        void message_error_fatal(const std::string& msg) const;
+        void message_information(const std::string& msg) const;
+        void message_warning(const std::string& msg) const;
+        void file_loaded(const std::string& file_name, size_t dimension) const;
+};
 
-                qRegisterMetaType<WindowEvent>("WindowEvent");
-                connect(this, SIGNAL(window_event(WindowEvent)), this, SLOT(slot_window_event(WindowEvent)),
-                        Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
+//
+
+struct WindowEventStorage
+{
+        struct LoadedObject final
+        {
+                ObjectId id;
+                size_t dimension;
+                LoadedObject(ObjectId id, size_t dimension) : id(id), dimension(dimension)
+                {
+                }
+        };
+
+        struct LoadedMesh final
+        {
+                ObjectId id;
+                size_t dimension;
+                explicit LoadedMesh(ObjectId id, size_t dimension) : id(id), dimension(dimension)
+                {
+                }
+        };
+
+        struct DeletedObject final
+        {
+                ObjectId id;
+                size_t dimension;
+                DeletedObject(ObjectId id, size_t dimension) : id(id), dimension(dimension)
+                {
+                }
+        };
+
+        struct DeletedAll final
+        {
+                size_t dimension;
+                explicit DeletedAll(size_t dimension) : dimension(dimension)
+                {
+                }
+        };
+
+        using T = std::variant<std::monostate, DeletedAll, DeletedObject, LoadedMesh, LoadedObject>;
+
+        WindowEventStorage() : m_data(std::monostate())
+        {
         }
 
-        void message_error(const std::string& msg) const
+        template <typename Type>
+        WindowEventStorage(Type&& arg) : m_data(std::forward<Type>(arg))
         {
-                emit_message<WindowEvent::message_error>("Exception in emit message error", msg);
         }
 
-        void message_error_fatal(const std::string& msg) const
+        const T& data() const
         {
-                emit_message<WindowEvent::message_error_fatal>("Exception in emit message error fatal", msg);
+                return m_data;
         }
 
-        void message_information(const std::string& msg) const
+private:
+        T m_data;
+};
+
+class WindowEventEmitterStorage final : public QObject, public StorageEvents
+{
+        Q_OBJECT
+
+signals:
+        void window_event_signal(const WindowEventStorage&) const;
+
+public:
+        void loaded_object(ObjectId id, size_t dimension) const override;
+        void loaded_mesh(ObjectId id, size_t dimension) const override;
+        void deleted_object(ObjectId id, size_t dimension) const override;
+        void deleted_all(size_t dimension) const override;
+};
+
+//
+
+struct WindowEventView
+{
+        struct ErrorFatal final
         {
-                emit_message<WindowEvent::message_information>("Exception in emit message information", msg);
+                std::string msg;
+                explicit ErrorFatal(const std::string& msg) : msg(msg)
+                {
+                }
+        };
+
+        struct ObjectLoaded final
+        {
+                ObjectId id;
+                explicit ObjectLoaded(ObjectId id) : id(id)
+                {
+                }
+        };
+
+        using T = std::variant<std::monostate, ErrorFatal, ObjectLoaded>;
+
+        WindowEventView() : m_data(std::monostate())
+        {
         }
 
-        void message_warning(const std::string& msg) const
+        template <typename Type>
+        WindowEventView(Type&& arg) : m_data(std::forward<Type>(arg))
         {
-                emit_message<WindowEvent::message_warning>("Exception in emit message warning", msg);
         }
 
-        void view_error_fatal(const std::string& msg) const override
+        const T& data() const
         {
-                emit_message<WindowEvent::view_error_fatal>("Exception in emit message view error fatal", msg);
+                return m_data;
         }
 
-        void view_object_loaded(ObjectId id) const override
+private:
+        T m_data;
+};
+
+class WindowEventEmitterView final : public QObject, public view::Events
+{
+        Q_OBJECT
+
+signals:
+        void window_event_signal(const WindowEventView&) const;
+
+public:
+        void error_fatal(const std::string& msg) const override;
+        void object_loaded(ObjectId id) const override;
+};
+
+//
+
+struct WindowEventLog
+{
+        struct Log final
         {
-                emit_message<WindowEvent::view_object_loaded>("Exception in emit view object loaded", id);
+                std::string msg;
+                explicit Log(const std::string& msg) : msg(msg)
+                {
+                }
+        };
+
+        using T = std::variant<std::monostate, Log>;
+
+        WindowEventLog() : m_data(std::monostate())
+        {
         }
 
-        void loaded_object(ObjectId id, size_t dimension) const override
+        template <typename Type>
+        WindowEventLog(Type&& arg) : m_data(std::forward<Type>(arg))
         {
-                emit_message<WindowEvent::loaded_object>("Exception in emit loaded object", id, dimension);
         }
 
-        void loaded_mesh(ObjectId id, size_t dimension) const override
+        const T& data() const
         {
-                emit_message<WindowEvent::loaded_mesh>("Exception in emit loaded mesh", id, dimension);
+                return m_data;
         }
 
-        void deleted_object(ObjectId id, size_t dimension) const override
-        {
-                emit_message<WindowEvent::deleted_object>("Exception in emit deleted object", id, dimension);
-        }
+private:
+        T m_data;
+};
 
-        void deleted_all(size_t dimension) const override
-        {
-                emit_message<WindowEvent::deleted_all>("Exception in emit deleted_all", dimension);
-        }
+class WindowEventEmitterLog final : public QObject, public LogEvents
+{
+        Q_OBJECT
 
-        void file_loaded(const std::string& file_name, size_t dimension) const
-        {
-                emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", file_name, dimension);
-        }
+signals:
+        void window_event_signal(const WindowEventLog&) const;
 
-        void log(const std::string& msg) const override
-        {
-                emit_message<WindowEvent::log>("Exception in emit log", msg);
-        }
+public:
+        void log(const std::string& msg) const override;
 };

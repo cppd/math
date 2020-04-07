@@ -35,7 +35,7 @@ class EventQueues final
 
         struct ViewInfoExt
         {
-                const std::vector<Info*>* info;
+                const std::vector<Info>* info;
 
                 std::mutex mutex;
                 std::condition_variable cv;
@@ -57,7 +57,7 @@ public:
                 m_send_queue.push(std::move(event));
         }
 
-        void receive(const std::vector<Info*>& info)
+        void receive(const std::vector<Info>& info)
         {
                 ViewInfoExt v;
                 v.info = &info;
@@ -107,7 +107,7 @@ class ViewThread final : public View
                 m_event_queues.send(std::move(event));
         }
 
-        void receive(const std::vector<Info*>& info) override
+        void receive(const std::vector<Info>& info) override
         {
                 m_event_queues.receive(info);
         }
@@ -137,11 +137,11 @@ class ViewThread final : public View
                 }
                 catch (std::exception& e)
                 {
-                        events->view_error_fatal(e.what());
+                        events->error_fatal(e.what());
                 }
                 catch (...)
                 {
-                        events->view_error_fatal("Unknown Error. Thread ended.");
+                        events->error_fatal("Unknown Error. Thread ended.");
                 }
         }
 
