@@ -23,7 +23,7 @@ function(SetCompilerWarnings source_files)
                         -Wmissing-include-dirs
                         -Wpacked
                         -Wredundant-decls
-                        -Wshadow
+                        -Wshadow=local
                         -Wstack-usage=20000
                         -Wstrict-aliasing=3
                         -Wstrict-overflow=1
@@ -75,6 +75,7 @@ function(SetCompilerWarnings source_files)
                         -Wno-exit-time-destructors
                         -Wno-float-equal
                         -Wno-padded
+                        -Wno-shadow-field-in-constructor
                         -Wno-weak-vtables
 
                         -Wno-undefined-func-template
