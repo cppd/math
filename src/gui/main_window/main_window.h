@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "event_emitter.h"
+#include "event.h"
 #include "threads.h"
 
 #include "ui_main_window.h"
@@ -45,6 +45,14 @@ class MainWindow final : public QMainWindow
 public:
         explicit MainWindow(QWidget* parent = nullptr);
         ~MainWindow() override;
+
+signals:
+        void window_signal(const std::function<void()>&) const;
+private slots:
+        void window_slot(const std::function<void()>&) const;
+
+private:
+        void run_in_window_thread(const std::function<void()>&) const;
 
 public slots:
 
@@ -102,11 +110,6 @@ private slots:
         void slot_timer_progress_bar();
         void slot_window_first_shown();
 
-        void window_event_slot(const WindowEvent&);
-        void window_event_slot(const WindowEventStorage&);
-        void window_event_slot(const WindowEventView&);
-        void window_event_slot(const WindowEventLog&);
-
 private:
         void constructor_threads();
         void constructor_connect();
@@ -141,9 +144,6 @@ private:
 
         template <template <size_t, typename> typename SpatialMeshModel, size_t N, typename T>
         void paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh, const std::string& object_name);
-
-        template <size_t N>
-        void loaded_object(const std::shared_ptr<const mesh::MeshObject<N>>& object, int dimension);
 
         void set_dependent_interface();
 
@@ -180,26 +180,16 @@ private:
 
         bool stop_action(WorkerThreads::Action action);
 
-        void event_message_error(const std::string& msg);
-        void event_message_error_fatal(const std::string& msg);
-        void event_message_information(const std::string& msg);
-        void event_message_warning(const std::string& msg);
-        void event_view_object_loaded(ObjectId id);
-        void event_loaded_object(ObjectId id, size_t dimension);
-        void event_loaded_mesh(ObjectId id, size_t dimension);
-        void event_deleted_object(ObjectId id, size_t dimension);
-        void event_deleted_all(size_t dimension);
-        void event_file_loaded(const std::string& file_name, size_t dimension);
-        void event_log(const std::string& msg);
+        void event_from_window(const WindowEvent& event);
+        void event_from_log(const LogEvent& event);
+        void event_from_view(const view::Event& event);
+        void event_from_storage(const StorageEvent& event);
 
         Ui::MainWindow ui;
 
         const std::thread::id m_window_thread_id;
 
-        WindowEventEmitter m_event_emitter;
-        WindowEventEmitterStorage m_event_emitter_storage;
-        WindowEventEmitterView m_event_emitter_view;
-        WindowEventEmitterLog m_event_emitter_log;
+        std::function<void(WindowEvent&&)> m_events;
 
         std::unique_ptr<WorkerThreads> m_worker_threads;
 

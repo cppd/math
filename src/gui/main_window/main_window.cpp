@@ -135,7 +135,13 @@ MainWindow::MainWindow(QWidget* parent)
         constructor_interface();
         constructor_objects_and_repository();
 
-        set_log_events(&m_event_emitter_log);
+        m_events = [this](WindowEvent&& event) {
+                run_in_window_thread([&, event = std::move(event)]() { event_from_window(event); });
+        };
+
+        set_log_events([this](LogEvent&& event) {
+                run_in_window_thread([&, event = std::move(event)]() { event_from_log(event); });
+        });
 }
 
 void MainWindow::constructor_threads()
@@ -165,23 +171,22 @@ void MainWindow::constructor_connect()
 
         //
 
-        const Qt::ConnectionType ct = Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection);
+        qRegisterMetaType<std::function<void()>>("std::function<void()>");
+        connect(this, SIGNAL(window_signal(const std::function<void()>&)), this,
+                SLOT(window_slot(const std::function<void()>&)));
+}
 
-        qRegisterMetaType<WindowEvent>("WindowEvent");
-        connect(&m_event_emitter, SIGNAL(window_event_signal(const WindowEvent&)), this,
-                SLOT(window_event_slot(const WindowEvent&)), ct);
+void MainWindow::window_slot(const std::function<void()>& f) const
+{
+        catch_all([&](std::string* msg) {
+                *msg = "Running in the window thread";
+                f();
+        });
+}
 
-        qRegisterMetaType<WindowEventStorage>("WindowEventStorage");
-        connect(&m_event_emitter_storage, SIGNAL(window_event_signal(const WindowEventStorage&)), this,
-                SLOT(window_event_slot(const WindowEventStorage&)), ct);
-
-        qRegisterMetaType<WindowEventView>("WindowEventView");
-        connect(&m_event_emitter_view, SIGNAL(window_event_signal(const WindowEventView&)), this,
-                SLOT(window_event_slot(const WindowEventView&)), ct);
-
-        qRegisterMetaType<WindowEventLog>("WindowEventLog");
-        connect(&m_event_emitter_log, SIGNAL(window_event_signal(const WindowEventLog&)), this,
-                SLOT(window_event_slot(const WindowEventLog&)), ct);
+void MainWindow::run_in_window_thread(const std::function<void()>& f) const
+{
+        emit window_signal(f);
 }
 
 void MainWindow::constructor_interface()
@@ -251,7 +256,9 @@ void MainWindow::constructor_objects_and_repository()
         m_objects_to_load.insert(ComputationType::Cocone);
         m_objects_to_load.insert(ComputationType::BoundCocone);
 
-        m_storage = std::make_unique<MultiStorage>(m_event_emitter_storage);
+        m_storage = std::make_unique<MultiStorage>([this](StorageEvent&& event) {
+                run_in_window_thread([&, event = std::move(event)]() { event_from_storage(event); });
+        });
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
@@ -366,7 +373,7 @@ void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::str
 
                         if (window_exists)
                         {
-                                m_event_emitter.message_error(s + e.what());
+                                m_events(WindowEvent::MessageError(s + e.what()));
                         }
                         else
                         {
@@ -379,7 +386,7 @@ void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::str
 
                         if (window_exists)
                         {
-                                m_event_emitter.message_error(s + "Unknown error");
+                                m_events(WindowEvent::MessageError(s + "Unknown error"));
                         }
                         else
                         {
@@ -529,7 +536,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         load_from_file(
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
                                 file_name, object_size.value, object_position.value, rho, alpha, m_mesh_threads,
-                                [&](size_t dimension) { m_event_emitter.file_loaded(file_name, dimension); },
+                                [&](size_t dimension) { m_events(WindowEvent::FileLoaded(file_name, dimension)); },
                                 m_storage.get());
                 };
 
@@ -548,7 +555,7 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
 
                 if (object_name.empty())
                 {
-                        m_event_emitter.message_error("Empty repository object name");
+                        m_events(WindowEvent::MessageError("Empty repository object name"));
                         return;
                 }
 
@@ -596,7 +603,7 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
                                 dimension, object_name, object_size.value, object_position.value, rho, alpha,
                                 m_mesh_threads, point_count,
-                                [&]() { m_event_emitter.file_loaded(object_name, dimension); }, m_storage.get());
+                                [&]() { m_events(WindowEvent::FileLoaded(object_name, dimension)); }, m_storage.get());
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -620,13 +627,13 @@ void MainWindow::thread_export(ObjectId id)
                 std::optional<MultiStorage::ObjectVariant> object = m_storage->object(id);
                 if (!object)
                 {
-                        m_event_emitter.message_warning("No object to export");
+                        m_events(WindowEvent::MessageWarning("No object to export"));
                         return;
                 }
 
                 if (m_dimension < 3)
                 {
-                        m_event_emitter.message_error("No dimension information");
+                        m_events(WindowEvent::MessageError("No dimension information"));
                         return;
                 }
 
@@ -664,11 +671,11 @@ void MainWindow::thread_export(ObjectId id)
                         {
                         case mesh::FileType::Obj:
                                 save_to_obj(id, file_name, name, *m_storage);
-                                m_event_emitter.message_information(name + " exported to OBJ file " + file_name);
+                                m_events(WindowEvent::MessageInformation(name + " exported to OBJ file " + file_name));
                                 return;
                         case mesh::FileType::Stl:
                                 save_to_stl(id, file_name, name, *m_storage, STL_EXPORT_FORMAT_ASCII);
-                                m_event_emitter.message_information(name + " exported to STL file " + file_name);
+                                m_events(WindowEvent::MessageInformation(name + " exported to STL file " + file_name));
                                 return;
                         }
                         error_fatal("Unknown file type for export");
@@ -694,7 +701,7 @@ void MainWindow::thread_bound_cocone(ObjectId id)
 
                 if (!m_storage->object(id))
                 {
-                        m_event_emitter.message_warning("No object to compute BoundCocone");
+                        m_events(WindowEvent::MessageWarning("No object to compute BoundCocone"));
                         return;
                 }
 
@@ -856,7 +863,7 @@ void MainWindow::set_background_color(const QColor& c)
         m_background_color = c;
         if (m_view)
         {
-                m_view->send(view::event::SetBackgroundColor(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetBackgroundColor(qcolor_to_rgb(c)));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_background_color);
@@ -868,7 +875,7 @@ void MainWindow::set_default_color(const QColor& c)
         m_default_color = c;
         if (m_view)
         {
-                m_view->send(view::event::SetDefaultColor(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetDefaultColor(qcolor_to_rgb(c)));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_default_color);
@@ -880,7 +887,7 @@ void MainWindow::set_wireframe_color(const QColor& c)
         m_wireframe_color = c;
         if (m_view)
         {
-                m_view->send(view::event::SetWireframeColor(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetWireframeColor(qcolor_to_rgb(c)));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_wireframe_color);
@@ -892,7 +899,7 @@ void MainWindow::set_clip_plane_color(const QColor& c)
         m_clip_plane_color = c;
         if (m_view)
         {
-                m_view->send(view::event::SetClipPlaneColor(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetClipPlaneColor(qcolor_to_rgb(c)));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_clip_plane_color);
@@ -904,7 +911,7 @@ void MainWindow::set_normal_color_positive(const QColor& c)
         m_normal_color_positive = c;
         if (m_view)
         {
-                m_view->send(view::event::SetNormalColorPositive(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetNormalColorPositive(qcolor_to_rgb(c)));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_normal_color_positive);
@@ -916,7 +923,7 @@ void MainWindow::set_normal_color_negative(const QColor& c)
         m_normal_color_negative = c;
         if (m_view)
         {
-                m_view->send(view::event::SetNormalColorNegative(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetNormalColorNegative(qcolor_to_rgb(c)));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_normal_color_negative);
@@ -928,7 +935,7 @@ void MainWindow::set_dft_background_color(const QColor& c)
         m_dft_background_color = c;
         if (m_view)
         {
-                m_view->send(view::event::SetDftBackgroundColor(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetDftBackgroundColor(qcolor_to_rgb(c)));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_dft_background_color);
@@ -940,7 +947,7 @@ void MainWindow::set_dft_color(const QColor& c)
         m_dft_color = c;
         if (m_view)
         {
-                m_view->send(view::event::SetDftColor(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetDftColor(qcolor_to_rgb(c)));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_dft_color);
@@ -964,178 +971,133 @@ void MainWindow::set_dependent_interface()
         }
 }
 
-void MainWindow::event_message_error(const std::string& msg)
+void MainWindow::event_from_window(const WindowEvent& event)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(msg), TextEditMessageType::Error);
-        dialog::message_critical(this, msg);
-}
-
-void MainWindow::event_message_error_fatal(const std::string& msg)
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        std::string message = !msg.empty() ? msg : "Unknown Error. Exit failure.";
-
-        add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Error);
-
-        QPointer ptr(this);
-        dialog::message_critical(this, message);
-        if (ptr.isNull())
-        {
-                return;
-        }
-
-        close_without_confirmation();
-}
-
-void MainWindow::event_message_information(const std::string& msg)
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(msg), TextEditMessageType::Information);
-
-        dialog::message_information(this, msg);
-}
-
-void MainWindow::event_message_warning(const std::string& msg)
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(msg), TextEditMessageType::Warning);
-
-        dialog::message_warning(this, msg);
-}
-
-void MainWindow::event_view_object_loaded(ObjectId /*id*/)
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        ASSERT(m_dimension == 3);
-}
-
-template <size_t N>
-void MainWindow::loaded_object(const std::shared_ptr<const mesh::MeshObject<N>>& object, int dimension)
-{
-        if constexpr (N == 3)
-        {
-                if (m_view && dimension == 3)
-                {
-                        m_view->send(view::event::AddObject(object));
-                }
-        }
-        ui.model_tree->add_item(object->id(), object->name());
-}
-
-void MainWindow::event_loaded_object(ObjectId id, size_t dimension)
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        std::optional<MultiStorage::ObjectVariant> object = m_storage->object(id);
-        if (!object)
-        {
-                m_event_emitter.message_warning("No loaded object");
-                return;
-        }
-
-        std::visit([&](const auto& v) { loaded_object(v, dimension); }, *object);
-}
-
-void MainWindow::event_loaded_mesh(ObjectId id, size_t /*dimension*/)
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        //if (m_dimension != 3)
-        //{
-        //}
-
-        std::optional<MultiStorage::ObjectVariant> object = m_storage->object(id);
-        if (!object)
-        {
-                m_event_emitter.message_warning("No loaded object for mesh");
-                return;
-        }
-
-        std::string object_name;
-        std::visit([&](const auto& v) { object_name = v->name(); }, *object);
-
-        ui.model_tree->add_item(id, object_name);
-}
-
-void MainWindow::event_deleted_object(ObjectId id, size_t dimension)
-{
-        if (m_view && dimension == 3)
-        {
-                m_view->send(view::event::DeleteObject(id));
-        }
-        ui.model_tree->delete_item(id);
-}
-
-void MainWindow::event_deleted_all(size_t dimension)
-{
-        if (m_view && dimension == 3)
-        {
-                m_view->send(view::event::DeleteAllObjects());
-        }
-        ui.model_tree->delete_all();
-}
-
-void MainWindow::event_file_loaded(const std::string& file_name, size_t dimension)
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        std::string base_name = file_base_name(file_name);
-        set_window_title_file(base_name + " [" + space_name(dimension) + "]");
-        m_dimension = dimension;
-}
-
-void MainWindow::event_log(const std::string& msg)
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        // Здесь без вызовов функции LOG, так как начнёт вызывать сама себя
-        add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(msg), TextEditMessageType::Normal);
-}
-
-void MainWindow::window_event_slot(const WindowEvent& event)
-{
         const auto visitors = Visitors{
-                [](const std::monostate&) {},
-                [this](const WindowEvent::MessageError& d) { event_message_error(d.msg); },
-                [this](const WindowEvent::MessageErrorFatal& d) { event_message_error_fatal(d.msg); },
-                [this](const WindowEvent::MessageInformation& d) { event_message_information(d.msg); },
-                [this](const WindowEvent::MessageWarning& d) { event_message_warning(d.msg); },
-                [this](const WindowEvent::FileLoaded& d) { event_file_loaded(d.file_name, d.dimension); }};
+                [this](const WindowEvent::MessageError& d) {
+                        add_to_text_edit_and_to_stderr(
+                                ui.text_log, format_log_message(d.text), TextEditMessageType::Error);
+                        dialog::message_critical(this, d.text);
+                },
+                [this](const WindowEvent::MessageErrorFatal& d) {
+                        std::string message = !d.text.empty() ? d.text : "Unknown Error. Exit failure.";
+                        add_to_text_edit_and_to_stderr(
+                                ui.text_log, format_log_message(message), TextEditMessageType::Error);
+                        QPointer ptr(this);
+                        dialog::message_critical(this, message);
+                        if (ptr.isNull())
+                        {
+                                return;
+                        }
+                        close_without_confirmation();
+                },
+                [this](const WindowEvent::MessageInformation& d) {
+                        add_to_text_edit_and_to_stderr(
+                                ui.text_log, format_log_message(d.text), TextEditMessageType::Information);
+                        dialog::message_information(this, d.text);
+                },
+                [this](const WindowEvent::MessageWarning& d) {
+                        add_to_text_edit_and_to_stderr(
+                                ui.text_log, format_log_message(d.text), TextEditMessageType::Warning);
+                        dialog::message_warning(this, d.text);
+                },
+                [this](const WindowEvent::FileLoaded& d) {
+                        std::string base_name = file_base_name(d.file_name);
+                        set_window_title_file(base_name + " [" + space_name(d.dimension) + "]");
+                        m_dimension = d.dimension;
+                }};
+
+        try
+        {
+                std::visit(visitors, event.data());
+        }
+        catch (const std::exception& e)
+        {
+                error_fatal(std::string("Error in the event from window: ") + e.what());
+        }
+        catch (...)
+        {
+                error_fatal("Unknown error in the event from window.");
+        }
+}
+
+void MainWindow::event_from_storage(const StorageEvent& event)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        const auto visitors = Visitors{
+                [this](const StorageEvent::LoadedObject& d) {
+                        std::optional<MultiStorage::ObjectVariant> object = m_storage->object(d.id);
+                        if (!object)
+                        {
+                                m_events(WindowEvent::MessageWarning("No loaded object"));
+                                return;
+                        }
+                        std::visit(
+                                [&](const auto& v) {
+                                        using MeshType = std::decay_t<typename std::decay_t<decltype(v)>::element_type>;
+                                        if constexpr (std::is_same_v<MeshType, mesh::MeshObject<3>>)
+                                        {
+                                                ASSERT(d.dimension == 3);
+                                                if (m_view)
+                                                {
+                                                        m_view->send(view::command::AddObject(v));
+                                                }
+                                        }
+                                        ui.model_tree->add_item(v->id(), v->name());
+                                },
+                                *object);
+                },
+                [this](const StorageEvent::LoadedMesh& d) {
+                        std::optional<MultiStorage::ObjectVariant> object = m_storage->object(d.id);
+                        if (!object)
+                        {
+                                m_events(WindowEvent::MessageWarning("No loaded object for mesh"));
+                                return;
+                        }
+                        std::string object_name;
+                        std::visit([&](const auto& v) { object_name = v->name(); }, *object);
+                        ui.model_tree->add_item(d.id, object_name);
+                },
+                [this](const StorageEvent::DeletedObject& d) {
+                        if (m_view && d.dimension == 3)
+                        {
+                                m_view->send(view::command::DeleteObject(d.id));
+                        }
+                        ui.model_tree->delete_item(d.id);
+                },
+                [this](const StorageEvent::DeletedAll& d) {
+                        if (m_view && d.dimension == 3)
+                        {
+                                m_view->send(view::command::DeleteAllObjects());
+                        }
+                        ui.model_tree->delete_all();
+                }};
 
         std::visit(visitors, event.data());
 }
 
-void MainWindow::window_event_slot(const WindowEventView& event)
+void MainWindow::event_from_log(const LogEvent& event)
 {
-        const auto visitors = Visitors{
-                [](const std::monostate&) {},
-                [this](const WindowEventView::ErrorFatal& d) { event_message_error_fatal(d.msg); },
-                [this](const WindowEventView::ObjectLoaded& d) { event_view_object_loaded(d.id); }};
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        const auto visitors = Visitors{[this](const LogEvent::Message& d) {
+                // Здесь без вызовов функции LOG, так как начнёт вызывать сама себя
+                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(d.text), TextEditMessageType::Normal);
+        }};
 
         std::visit(visitors, event.data());
 }
 
-void MainWindow::window_event_slot(const WindowEventStorage& event)
+void MainWindow::event_from_view(const view::Event& event)
 {
-        const auto visitors = Visitors{
-                [](const std::monostate&) {},
-                [this](const WindowEventStorage::LoadedObject& d) { event_loaded_object(d.id, d.dimension); },
-                [this](const WindowEventStorage::LoadedMesh& d) { event_loaded_mesh(d.id, d.dimension); },
-                [this](const WindowEventStorage::DeletedObject& d) { event_deleted_object(d.id, d.dimension); },
-                [this](const WindowEventStorage::DeletedAll& d) { event_deleted_all(d.dimension); }};
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        std::visit(visitors, event.data());
-}
-void MainWindow::window_event_slot(const WindowEventLog& event)
-{
-        const auto visitors =
-                Visitors{[](const std::monostate&) {}, [this](const WindowEventLog::Log& d) { event_log(d.msg); }};
+        const auto visitors = Visitors{
+                [this](const view::event::ErrorFatal& d) { m_events(WindowEvent::MessageErrorFatal(d.text)); },
+                [this](const view::event::ObjectLoaded&) { ASSERT(m_dimension == 3); }};
 
         std::visit(visitors, event.data());
 }
@@ -1179,36 +1141,38 @@ void MainWindow::slot_window_first_shown()
 
                 //
 
-                m_view = create_view(
-                        &m_event_emitter_view, widget_window_id(ui.graphics_widget),
-                        widget_pixels_per_inch(ui.graphics_widget),
-                        {view::event::SetBackgroundColor(qcolor_to_rgb(m_background_color)),
-                         view::event::SetDefaultColor(qcolor_to_rgb(m_default_color)),
-                         view::event::SetWireframeColor(qcolor_to_rgb(m_wireframe_color)),
-                         view::event::SetClipPlaneColor(qcolor_to_rgb(m_clip_plane_color)),
-                         view::event::SetNormalLength(normal_length()),
-                         view::event::SetNormalColorPositive(qcolor_to_rgb(m_normal_color_positive)),
-                         view::event::SetNormalColorNegative(qcolor_to_rgb(m_normal_color_negative)),
-                         view::event::ShowSmooth(ui.checkBox_smooth->isChecked()),
-                         view::event::ShowWireframe(ui.checkBox_wireframe->isChecked()),
-                         view::event::ShowShadow(ui.checkBox_shadow->isChecked()),
-                         view::event::ShowFog(ui.checkBox_fog->isChecked()),
-                         view::event::ShowMaterials(ui.checkBox_materials->isChecked()),
-                         view::event::ShowFps(ui.checkBox_fps->isChecked()),
-                         view::event::ShowPencilSketch(ui.checkBox_pencil_sketch->isChecked()),
-                         view::event::ShowDft(ui.checkBox_dft->isChecked()),
-                         view::event::ShowConvexHull2D(ui.checkBox_convex_hull_2d->isChecked()),
-                         view::event::ShowOpticalFlow(ui.checkBox_optical_flow->isChecked()),
-                         view::event::ShowNormals(ui.checkBox_normals->isChecked()),
-                         view::event::SetAmbient(ambient_light()),
-                         view::event::SetDiffuse(diffuse_light()),
-                         view::event::SetSpecular(specular_light()),
-                         view::event::SetDftBrightness(dft_brightness()),
-                         view::event::SetDftBackgroundColor(qcolor_to_rgb(m_dft_background_color)),
-                         view::event::SetDftColor(qcolor_to_rgb(m_dft_color)),
-                         view::event::SetDefaultNs(default_ns()),
-                         view::event::SetVerticalSync(ui.checkBox_vertical_sync->isChecked()),
-                         view::event::SetShadowZoom(shadow_zoom())});
+                m_view = view::create_view(
+                        [this](view::Event&& event) {
+                                run_in_window_thread([&, event = std::move(event)]() { event_from_view(event); });
+                        },
+                        widget_window_id(ui.graphics_widget), widget_pixels_per_inch(ui.graphics_widget),
+                        {view::command::SetBackgroundColor(qcolor_to_rgb(m_background_color)),
+                         view::command::SetDefaultColor(qcolor_to_rgb(m_default_color)),
+                         view::command::SetWireframeColor(qcolor_to_rgb(m_wireframe_color)),
+                         view::command::SetClipPlaneColor(qcolor_to_rgb(m_clip_plane_color)),
+                         view::command::SetNormalLength(normal_length()),
+                         view::command::SetNormalColorPositive(qcolor_to_rgb(m_normal_color_positive)),
+                         view::command::SetNormalColorNegative(qcolor_to_rgb(m_normal_color_negative)),
+                         view::command::ShowSmooth(ui.checkBox_smooth->isChecked()),
+                         view::command::ShowWireframe(ui.checkBox_wireframe->isChecked()),
+                         view::command::ShowShadow(ui.checkBox_shadow->isChecked()),
+                         view::command::ShowFog(ui.checkBox_fog->isChecked()),
+                         view::command::ShowMaterials(ui.checkBox_materials->isChecked()),
+                         view::command::ShowFps(ui.checkBox_fps->isChecked()),
+                         view::command::ShowPencilSketch(ui.checkBox_pencil_sketch->isChecked()),
+                         view::command::ShowDft(ui.checkBox_dft->isChecked()),
+                         view::command::ShowConvexHull2D(ui.checkBox_convex_hull_2d->isChecked()),
+                         view::command::ShowOpticalFlow(ui.checkBox_optical_flow->isChecked()),
+                         view::command::ShowNormals(ui.checkBox_normals->isChecked()),
+                         view::command::SetAmbient(ambient_light()),
+                         view::command::SetDiffuse(diffuse_light()),
+                         view::command::SetSpecular(specular_light()),
+                         view::command::SetDftBrightness(dft_brightness()),
+                         view::command::SetDftBackgroundColor(qcolor_to_rgb(m_dft_background_color)),
+                         view::command::SetDftColor(qcolor_to_rgb(m_dft_color)),
+                         view::command::SetDefaultNs(default_ns()),
+                         view::command::SetVerticalSync(ui.checkBox_vertical_sync->isChecked()),
+                         view::command::SetShadowZoom(shadow_zoom())});
 
                 //
 
@@ -1219,11 +1183,11 @@ void MainWindow::slot_window_first_shown()
         }
         catch (std::exception& e)
         {
-                m_event_emitter.message_error_fatal(e.what());
+                m_events(WindowEvent::MessageErrorFatal(e.what()));
         }
         catch (...)
         {
-                m_event_emitter.message_error_fatal("Error first show");
+                m_events(WindowEvent::MessageErrorFatal("Error first show"));
         }
 }
 
@@ -1237,7 +1201,7 @@ void MainWindow::slot_object_repository()
         auto iter = m_action_to_dimension_and_object_name.find(sender());
         if (iter == m_action_to_dimension_and_object_name.cend())
         {
-                m_event_emitter.message_error("Open object sender not found in map");
+                m_events(WindowEvent::MessageError("Open object sender not found in map"));
                 return;
         }
 
@@ -1249,7 +1213,7 @@ void MainWindow::on_actionExport_triggered()
         std::optional<ObjectId> item = ui.model_tree->current_item();
         if (!item)
         {
-                m_event_emitter.message_warning("No item selected to export");
+                m_events(WindowEvent::MessageWarning("No item selected to export"));
                 return;
         }
         thread_export(*item);
@@ -1260,7 +1224,7 @@ void MainWindow::on_actionBoundCocone_triggered()
         std::optional<ObjectId> item = ui.model_tree->current_item();
         if (!item)
         {
-                m_event_emitter.message_warning("No item selected to export");
+                m_events(WindowEvent::MessageWarning("No item selected to export"));
                 return;
         }
         thread_bound_cocone(*item);
@@ -1288,14 +1252,14 @@ void MainWindow::on_actionAbout_triggered()
 
 void MainWindow::on_pushButton_reset_view_clicked()
 {
-        m_view->send(view::event::ResetView());
+        m_view->send(view::command::ResetView());
 }
 
 void MainWindow::graphics_widget_mouse_wheel(QWheelEvent* e)
 {
         if (m_view)
         {
-                m_view->send(view::event::MouseWheel(e->x(), e->y(), e->angleDelta().ry() / 120.0));
+                m_view->send(view::command::MouseWheel(e->x(), e->y(), e->angleDelta().ry() / 120.0));
         }
 }
 
@@ -1303,7 +1267,7 @@ void MainWindow::graphics_widget_mouse_move(QMouseEvent* e)
 {
         if (m_view)
         {
-                m_view->send(view::event::MouseMove(e->x(), e->y()));
+                m_view->send(view::command::MouseMove(e->x(), e->y()));
         }
 }
 
@@ -1313,12 +1277,12 @@ void MainWindow::graphics_widget_mouse_press(QMouseEvent* e)
         {
                 if (e->button() == Qt::MouseButton::LeftButton)
                 {
-                        m_view->send(view::event::MousePress(e->x(), e->y(), view::event::MouseButton::Left));
+                        m_view->send(view::command::MousePress(e->x(), e->y(), view::command::MouseButton::Left));
                         return;
                 }
                 if (e->button() == Qt::MouseButton::RightButton)
                 {
-                        m_view->send(view::event::MousePress(e->x(), e->y(), view::event::MouseButton::Right));
+                        m_view->send(view::command::MousePress(e->x(), e->y(), view::command::MouseButton::Right));
                         return;
                 }
         }
@@ -1330,12 +1294,12 @@ void MainWindow::graphics_widget_mouse_release(QMouseEvent* e)
         {
                 if (e->button() == Qt::MouseButton::LeftButton)
                 {
-                        m_view->send(view::event::MouseRelease(e->x(), e->y(), view::event::MouseButton::Left));
+                        m_view->send(view::command::MouseRelease(e->x(), e->y(), view::command::MouseButton::Left));
                         return;
                 }
                 if (e->button() == Qt::MouseButton::RightButton)
                 {
-                        m_view->send(view::event::MouseRelease(e->x(), e->y(), view::event::MouseButton::Right));
+                        m_view->send(view::command::MouseRelease(e->x(), e->y(), view::command::MouseButton::Right));
                         return;
                 }
         }
@@ -1345,7 +1309,7 @@ void MainWindow::graphics_widget_resize(QResizeEvent* e)
 {
         if (m_view)
         {
-                m_view->send(view::event::WindowResize(e->size().width(), e->size().height()));
+                m_view->send(view::command::WindowResize(e->size().width(), e->size().height()));
         }
 }
 
@@ -1354,7 +1318,7 @@ void MainWindow::model_tree_item_changed()
         std::optional<ObjectId> id = ui.model_tree->current_item();
         if (id && m_dimension == 3)
         {
-                m_view->send(view::event::ShowObject(*id));
+                m_view->send(view::command::ShowObject(*id));
         }
 }
 
@@ -1423,45 +1387,45 @@ double MainWindow::normal_length() const
 
 void MainWindow::on_slider_ambient_valueChanged(int)
 {
-        m_view->send(view::event::SetAmbient(ambient_light()));
+        m_view->send(view::command::SetAmbient(ambient_light()));
 }
 
 void MainWindow::on_slider_diffuse_valueChanged(int)
 {
-        m_view->send(view::event::SetDiffuse(diffuse_light()));
+        m_view->send(view::command::SetDiffuse(diffuse_light()));
 }
 
 void MainWindow::on_slider_specular_valueChanged(int)
 {
-        m_view->send(view::event::SetSpecular(specular_light()));
+        m_view->send(view::command::SetSpecular(specular_light()));
 }
 
 void MainWindow::on_slider_dft_brightness_valueChanged(int)
 {
-        m_view->send(view::event::SetDftBrightness(dft_brightness()));
+        m_view->send(view::command::SetDftBrightness(dft_brightness()));
 }
 
 void MainWindow::on_slider_default_ns_valueChanged(int)
 {
-        m_view->send(view::event::SetDefaultNs(default_ns()));
+        m_view->send(view::command::SetDefaultNs(default_ns()));
 }
 
 void MainWindow::on_slider_shadow_quality_valueChanged(int)
 {
         if (m_view)
         {
-                m_view->send(view::event::SetShadowZoom(shadow_zoom()));
+                m_view->send(view::command::SetShadowZoom(shadow_zoom()));
         }
 }
 
 void MainWindow::on_slider_clip_plane_valueChanged(int)
 {
-        m_view->send(view::event::ClipPlanePosition(slider_position(ui.slider_clip_plane)));
+        m_view->send(view::command::ClipPlanePosition(slider_position(ui.slider_clip_plane)));
 }
 
 void MainWindow::on_slider_normals_valueChanged(int)
 {
-        m_view->send(view::event::SetNormalLength(normal_length()));
+        m_view->send(view::command::SetNormalLength(normal_length()));
 }
 
 void MainWindow::on_toolButton_background_color_clicked()
@@ -1520,37 +1484,37 @@ void MainWindow::on_checkBox_shadow_clicked()
         ui.label_shadow_quality->setEnabled(checked);
         ui.slider_shadow_quality->setEnabled(checked);
 
-        m_view->send(view::event::ShowShadow(checked));
+        m_view->send(view::command::ShowShadow(checked));
 }
 
 void MainWindow::on_checkBox_fog_clicked()
 {
-        m_view->send(view::event::ShowFog(ui.checkBox_fog->isChecked()));
+        m_view->send(view::command::ShowFog(ui.checkBox_fog->isChecked()));
 }
 
 void MainWindow::on_checkBox_wireframe_clicked()
 {
-        m_view->send(view::event::ShowWireframe(ui.checkBox_wireframe->isChecked()));
+        m_view->send(view::command::ShowWireframe(ui.checkBox_wireframe->isChecked()));
 }
 
 void MainWindow::on_checkBox_materials_clicked()
 {
-        m_view->send(view::event::ShowMaterials(ui.checkBox_materials->isChecked()));
+        m_view->send(view::command::ShowMaterials(ui.checkBox_materials->isChecked()));
 }
 
 void MainWindow::on_checkBox_smooth_clicked()
 {
-        m_view->send(view::event::ShowSmooth(ui.checkBox_smooth->isChecked()));
+        m_view->send(view::command::ShowSmooth(ui.checkBox_smooth->isChecked()));
 }
 
 void MainWindow::on_checkBox_fps_clicked()
 {
-        m_view->send(view::event::ShowFps(ui.checkBox_fps->isChecked()));
+        m_view->send(view::command::ShowFps(ui.checkBox_fps->isChecked()));
 }
 
 void MainWindow::on_checkBox_pencil_sketch_clicked()
 {
-        m_view->send(view::event::ShowPencilSketch(ui.checkBox_pencil_sketch->isChecked()));
+        m_view->send(view::command::ShowPencilSketch(ui.checkBox_pencil_sketch->isChecked()));
 }
 
 void MainWindow::on_checkBox_dft_clicked()
@@ -1560,7 +1524,7 @@ void MainWindow::on_checkBox_dft_clicked()
         ui.label_dft_brightness->setEnabled(checked);
         ui.slider_dft_brightness->setEnabled(checked);
 
-        m_view->send(view::event::ShowDft(checked));
+        m_view->send(view::command::ShowDft(checked));
 }
 
 void MainWindow::on_checkBox_clip_plane_clicked()
@@ -1576,11 +1540,11 @@ void MainWindow::on_checkBox_clip_plane_clicked()
         }
         if (checked)
         {
-                m_view->send(view::event::ClipPlaneShow(slider_position(ui.slider_clip_plane)));
+                m_view->send(view::command::ClipPlaneShow(slider_position(ui.slider_clip_plane)));
         }
         else
         {
-                m_view->send(view::event::ClipPlaneHide());
+                m_view->send(view::command::ClipPlaneHide());
         }
 }
 
@@ -1588,22 +1552,22 @@ void MainWindow::on_checkBox_normals_clicked()
 {
         bool checked = ui.checkBox_normals->isChecked();
         ui.slider_normals->setEnabled(checked);
-        m_view->send(view::event::ShowNormals(checked));
+        m_view->send(view::command::ShowNormals(checked));
 }
 
 void MainWindow::on_checkBox_convex_hull_2d_clicked()
 {
-        m_view->send(view::event::ShowConvexHull2D(ui.checkBox_convex_hull_2d->isChecked()));
+        m_view->send(view::command::ShowConvexHull2D(ui.checkBox_convex_hull_2d->isChecked()));
 }
 
 void MainWindow::on_checkBox_optical_flow_clicked()
 {
-        m_view->send(view::event::ShowOpticalFlow(ui.checkBox_optical_flow->isChecked()));
+        m_view->send(view::command::ShowOpticalFlow(ui.checkBox_optical_flow->isChecked()));
 }
 
 void MainWindow::on_checkBox_vertical_sync_clicked()
 {
-        m_view->send(view::event::SetVerticalSync(ui.checkBox_vertical_sync->isChecked()));
+        m_view->send(view::command::SetVerticalSync(ui.checkBox_vertical_sync->isChecked()));
 }
 
 void MainWindow::on_actionFullScreen_triggered()
@@ -1665,7 +1629,7 @@ void MainWindow::on_actionPainter_triggered()
         std::optional<ObjectId> item = ui.model_tree->current_item();
         if (!item)
         {
-                m_event_emitter.message_warning("No item selected to paint");
+                m_events(WindowEvent::MessageWarning("No item selected to paint"));
                 return;
         }
 
@@ -1674,14 +1638,14 @@ void MainWindow::on_actionPainter_triggered()
         std::optional<MultiStorage::ObjectVariant> object = m_storage->object(object_id);
         if (!object)
         {
-                m_event_emitter.message_warning("No object to paint");
+                m_events(WindowEvent::MessageWarning("No object to paint"));
                 return;
         }
 
         std::optional<MultiStorage::MeshVariant> mesh = m_storage->mesh(object_id);
         if (!mesh)
         {
-                m_event_emitter.message_warning("No object to paint");
+                m_events(WindowEvent::MessageWarning("No object to paint"));
                 return;
         }
 

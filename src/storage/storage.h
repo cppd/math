@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "events.h"
-#include "pointers.h"
+#include "event.h"
 
 #include "repository/points.h"
 
@@ -27,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/painter/shapes/mesh.h>
 
 #include <memory>
+#include <shared_mutex>
+#include <unordered_map>
 #include <vector>
 
 template <size_t N, typename MeshFloat>
@@ -34,75 +35,110 @@ class Storage
 {
         static_assert(N >= 3);
 
-        const StorageEvents& m_events;
+        const std::function<void(StorageEvent&&)> m_events;
 
-        Pointers<ObjectId, const mesh::MeshObject<N>> m_objects;
-        Pointers<ObjectId, const SpatialMeshModel<N, MeshFloat>> m_meshes;
-        Pointers<ObjectId, const std::vector<Vector<N, float>>> m_manifold_constructors_points;
-        Pointers<ObjectId, const ManifoldConstructor<N>> m_manifold_constructors;
+        struct MeshData
+        {
+                std::shared_ptr<const mesh::MeshObject<N>> object;
+                std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> mesh;
+                std::shared_ptr<const std::vector<Vector<N, float>>> manifold_constructor_points;
+                std::shared_ptr<const ManifoldConstructor<N>> manifold_constructor;
+        };
+
+        mutable std::shared_mutex m_mutex;
+        std::unordered_map<ObjectId, MeshData> m_map;
 
 public:
-        explicit Storage(const StorageEvents& events) : m_events(events)
+        explicit Storage(const std::function<void(StorageEvent&&)> events) : m_events(events)
         {
         }
 
         //
 
-        template <typename SetType>
-        void set_object(SetType&& object)
+        template <typename T>
+        void set_object(T&& object)
         {
-                m_objects.set(object->id(), std::forward<SetType>(object));
-                m_events.loaded_object(object->id(), N);
+                std::shared_ptr<const mesh::MeshObject<N>> tmp;
+                {
+                        std::unique_lock lock(m_mutex);
+                        MeshData& v = m_map.try_emplace(object->id()).first->second;
+                        tmp = std::move(v.object);
+                        v.object = std::forward<T>(object);
+                }
+                m_events(StorageEvent::LoadedObject(object->id(), N));
         }
 
-        template <typename SetType>
-        void set_mesh(ObjectId id, SetType&& mesh)
+        template <typename T>
+        void set_mesh(ObjectId id, T&& mesh)
         {
-                m_meshes.set(id, std::forward<SetType>(mesh));
-                m_events.loaded_mesh(id, N);
+                std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> tmp;
+                {
+                        std::unique_lock lock(m_mutex);
+                        MeshData& v = m_map.try_emplace(id).first->second;
+                        tmp = std::move(v.mesh);
+                        v.mesh = std::forward<T>(mesh);
+                }
+                m_events(StorageEvent::LoadedMesh(id, N));
         }
 
         void set_points(ObjectId id, const std::shared_ptr<const std::vector<Vector<N, float>>>& points)
         {
-                m_manifold_constructors_points.set(id, points);
+                std::shared_ptr<const std::vector<Vector<N, float>>> tmp;
+                std::unique_lock lock(m_mutex);
+                MeshData& v = m_map.try_emplace(id).first->second;
+                tmp = std::move(v.manifold_constructor_points);
+                v.manifold_constructor_points = points;
         }
 
         void set_constructor(ObjectId id, const std::shared_ptr<const ManifoldConstructor<N>>& constructor)
         {
-                m_manifold_constructors.set(id, constructor);
+                std::shared_ptr<const ManifoldConstructor<N>> tmp;
+                std::unique_lock lock(m_mutex);
+                MeshData& v = m_map.try_emplace(id).first->second;
+                tmp = std::move(v.manifold_constructor);
+                v.manifold_constructor = constructor;
         }
 
         //
 
         std::shared_ptr<const mesh::MeshObject<N>> object(ObjectId id) const
         {
-                return m_objects.get(id);
+                std::shared_lock lock(m_mutex);
+                auto iter = m_map.find(id);
+                return (iter != m_map.cend()) ? iter->second.object : nullptr;
         }
 
         std::shared_ptr<const SpatialMeshModel<N, MeshFloat>> mesh(ObjectId id) const
         {
-                return m_meshes.get(id);
+                std::shared_lock lock(m_mutex);
+                auto iter = m_map.find(id);
+                return (iter != m_map.cend()) ? iter->second.mesh : nullptr;
         }
 
         std::shared_ptr<const std::vector<Vector<N, float>>> points(ObjectId id) const
         {
-                return m_manifold_constructors_points.get(id);
+                std::shared_lock lock(m_mutex);
+                auto iter = m_map.find(id);
+                return (iter != m_map.cend()) ? iter->second.manifold_constructor_points : nullptr;
         }
 
         std::shared_ptr<const ManifoldConstructor<N>> constructor(ObjectId id) const
         {
-                return m_manifold_constructors.get(id);
+                std::shared_lock lock(m_mutex);
+                auto iter = m_map.find(id);
+                return (iter != m_map.cend()) ? iter->second.manifold_constructor : nullptr;
         }
 
         //
 
         void clear()
         {
-                m_manifold_constructors_points.clear();
-                m_manifold_constructors.clear();
-                m_objects.clear();
-                m_meshes.clear();
-
-                m_events.deleted_all(N);
+                std::unordered_map<ObjectId, MeshData> tmp;
+                {
+                        std::unique_lock lock(m_mutex);
+                        tmp = std::move(m_map);
+                        m_map.clear();
+                }
+                m_events(StorageEvent::DeletedAll(N));
         }
 };

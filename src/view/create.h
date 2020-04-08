@@ -25,8 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace view
 {
 std::unique_ptr<View> create_view(
-        Events* events,
+        const std::function<void(Event&&)>& events,
         WindowID parent_window,
         double parent_window_ppi,
-        std::vector<Event>&& initial_events);
+        std::vector<Command>&& initial_commands);
 }

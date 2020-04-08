@@ -19,29 +19,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "event.h"
 
-#include <src/model/object_id.h>
-
-#include <string>
 #include <vector>
 
 namespace view
 {
-class Events
-{
-protected:
-        virtual ~Events() = default;
-
-public:
-        virtual void error_fatal(const std::string&) const = 0;
-        virtual void object_loaded(ObjectId) const = 0;
-};
-
 class View
 {
 public:
         virtual ~View() = default;
 
-        virtual void send(Event&&) = 0;
+        virtual void send(Command&&) = 0;
         virtual void receive(const std::vector<Info>& info) = 0;
 };
 }

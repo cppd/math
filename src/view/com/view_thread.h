@@ -31,7 +31,7 @@ namespace view
 {
 class EventQueues final
 {
-        ThreadQueue<Event> m_send_queue;
+        ThreadQueue<Command> m_send_queue;
 
         struct ViewInfoExt
         {
@@ -44,15 +44,15 @@ class EventQueues final
         ThreadQueue<ViewInfoExt*> m_receive_queue;
 
 public:
-        explicit EventQueues(std::vector<Event>&& initial_events)
+        explicit EventQueues(std::vector<Command>&& initial_events)
         {
-                for (Event& event : initial_events)
+                for (Command& event : initial_events)
                 {
                         send(std::move(event));
                 }
         }
 
-        void send(Event&& event)
+        void send(Command&& event)
         {
                 m_send_queue.push(std::move(event));
         }
@@ -71,7 +71,7 @@ public:
         void dispatch_events(View* view)
         {
                 {
-                        std::optional<Event> event;
+                        std::optional<Command> event;
                         while ((event = m_send_queue.pop()))
                         {
                                 view->send(std::move(*event));
@@ -102,7 +102,7 @@ class ViewThread final : public View
         std::atomic_bool m_stop{false};
         std::atomic_bool m_started{false};
 
-        void send(Event&& event) override
+        void send(Command&& event) override
         {
                 m_event_queues.send(std::move(event));
         }
@@ -112,7 +112,10 @@ class ViewThread final : public View
                 m_event_queues.receive(info);
         }
 
-        void thread_function(Events* events, WindowID parent_window, double parent_window_ppi)
+        void thread_function(
+                const std::function<void(Event&&)>& events,
+                WindowID parent_window,
+                double parent_window_ppi)
         {
                 try
                 {
@@ -137,11 +140,11 @@ class ViewThread final : public View
                 }
                 catch (std::exception& e)
                 {
-                        events->error_fatal(e.what());
+                        events(event::ErrorFatal(e.what()));
                 }
                 catch (...)
                 {
-                        events->error_fatal("Unknown Error. Thread ended.");
+                        events(event::ErrorFatal("Unknown Error. Thread ended."));
                 }
         }
 
@@ -158,11 +161,11 @@ class ViewThread final : public View
 
 public:
         ViewThread(
-                Events* events,
+                const std::function<void(Event&&)>& events,
                 WindowID parent_window,
                 double parent_window_ppi,
-                std::vector<Event>&& initial_events)
-                : m_event_queues(std::move(initial_events))
+                std::vector<Command>&& initial_commands)
+                : m_event_queues(std::move(initial_commands))
         {
                 try
                 {

@@ -34,7 +34,7 @@ SpinLock* global_lock = nullptr;
 // в лог, поэтому с этой переменной нужна последовательная работа.
 // Использование единственной блокировки означает, что и сообщения будут
 // последовательные, но это не является проблемой.
-LogEvents* global_log_events = nullptr;
+std::function<void(LogEvent&&)>* global_log_events = nullptr;
 }
 
 void log_init()
@@ -55,11 +55,19 @@ void log_exit()
 
 //
 
-void set_log_events(LogEvents* events)
+void set_log_events(const std::function<void(LogEvent&&)>& events)
 {
         std::lock_guard lg(*global_lock);
 
-        global_log_events = events;
+        if (events)
+        {
+                global_log_events = new std::function<void(LogEvent &&)>(events);
+        }
+        else
+        {
+                delete global_log_events;
+                global_log_events = nullptr;
+        }
 }
 
 std::vector<std::string> format_log_message(const std::string& msg) noexcept
@@ -152,16 +160,16 @@ void LOG(const std::string& msg) noexcept
 
                                 if (global_log_events)
                                 {
-                                        global_log_events->log(msg);
+                                        (*global_log_events)(LogEvent::Message(msg));
                                         return;
                                 }
                         }
 
-                        // Здесь переменная global_log_callback теоретически уже может быть
+                        // Здесь переменная global_log_events теоретически уже может быть
                         // установлена в не nullptr, но по имеющейся логике программы установка
                         // этой переменной в не nullptr происходит только в начале программы
                         // и только один раз. Зато так будет больше параллельности в сообщениях
-                        // с установленной в nullptr переменной global_log_callback.
+                        // с установленной в nullptr переменной global_log_events.
 
                         write_formatted_log_messages_to_stderr(format_log_message(msg));
                 }

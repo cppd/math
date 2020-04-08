@@ -17,22 +17,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <functional>
 #include <string>
+#include <variant>
 #include <vector>
 
 void log_init();
 void log_exit();
 
-class LogEvents
+struct LogEvent final
 {
-protected:
-        ~LogEvents() = default;
+        struct Message final
+        {
+                std::string text;
+                template <typename T>
+                explicit Message(T&& text) : text(std::forward<T>(text))
+                {
+                }
+        };
 
-public:
-        virtual void log(const std::string& msg) const = 0;
+        using T = std::variant<Message>;
+
+        template <typename Type>
+        LogEvent(Type&& arg) : m_data(std::forward<Type>(arg))
+        {
+        }
+
+        const T& data() const
+        {
+                return m_data;
+        }
+
+private:
+        T m_data;
 };
 
-void set_log_events(LogEvents* events);
+void set_log_events(const std::function<void(LogEvent&&)>& events);
 
 std::vector<std::string> format_log_message(const std::string& msg) noexcept;
 void write_formatted_log_messages_to_stderr(const std::vector<std::string>& lines) noexcept;

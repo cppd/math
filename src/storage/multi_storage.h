@@ -34,7 +34,7 @@ struct StorageWithRepository final
         const std::unique_ptr<const PointObjectRepository<N>> repository;
         Storage<N, MeshFloat> storage;
 
-        explicit StorageWithRepository(const StorageEvents& storage_events)
+        explicit StorageWithRepository(const std::function<void(StorageEvent&&)>& storage_events)
                 : repository(create_point_object_repository<N>()), storage(storage_events)
         {
         }
@@ -58,7 +58,7 @@ class MultiStorage final
         Tuple m_data;
 
         template <size_t... I>
-        MultiStorage(const StorageEvents& events, std::integer_sequence<size_t, I...>&&)
+        MultiStorage(const std::function<void(StorageEvent&&)>& events, std::integer_sequence<size_t, I...>&&)
                 : m_data((static_cast<void>(I), events)...)
         {
         }
@@ -81,7 +81,8 @@ public:
                 return v;
         }
 
-        MultiStorage(const StorageEvents& events) : MultiStorage(events, std::make_integer_sequence<size_t, COUNT>())
+        explicit MultiStorage(const std::function<void(StorageEvent&&)>& events)
+                : MultiStorage(events, std::make_integer_sequence<size_t, COUNT>())
         {
         }
 

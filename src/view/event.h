@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace view
 {
-namespace event
+namespace command
 {
 enum class MouseButton
 {
@@ -347,49 +347,86 @@ struct WindowResize final
 };
 }
 
-struct Event final
+struct Command final
 {
         using T = std::variant<
-                event::AddObject,
-                event::ClipPlaneHide,
-                event::ClipPlanePosition,
-                event::ClipPlaneShow,
-                event::DeleteAllObjects,
-                event::DeleteObject,
-                event::MouseMove,
-                event::MousePress,
-                event::MouseRelease,
-                event::MouseWheel,
-                event::ResetView,
-                event::SetAmbient,
-                event::SetBackgroundColor,
-                event::SetClipPlaneColor,
-                event::SetDefaultColor,
-                event::SetDefaultNs,
-                event::SetDftBackgroundColor,
-                event::SetDftBrightness,
-                event::SetDftColor,
-                event::SetDiffuse,
-                event::SetNormalColorNegative,
-                event::SetNormalColorPositive,
-                event::SetNormalLength,
-                event::SetShadowZoom,
-                event::SetSpecular,
-                event::SetVerticalSync,
-                event::SetWireframeColor,
-                event::ShowConvexHull2D,
-                event::ShowDft,
-                event::ShowFog,
-                event::ShowFps,
-                event::ShowMaterials,
-                event::ShowNormals,
-                event::ShowObject,
-                event::ShowOpticalFlow,
-                event::ShowPencilSketch,
-                event::ShowShadow,
-                event::ShowSmooth,
-                event::ShowWireframe,
-                event::WindowResize>;
+                command::AddObject,
+                command::ClipPlaneHide,
+                command::ClipPlanePosition,
+                command::ClipPlaneShow,
+                command::DeleteAllObjects,
+                command::DeleteObject,
+                command::MouseMove,
+                command::MousePress,
+                command::MouseRelease,
+                command::MouseWheel,
+                command::ResetView,
+                command::SetAmbient,
+                command::SetBackgroundColor,
+                command::SetClipPlaneColor,
+                command::SetDefaultColor,
+                command::SetDefaultNs,
+                command::SetDftBackgroundColor,
+                command::SetDftBrightness,
+                command::SetDftColor,
+                command::SetDiffuse,
+                command::SetNormalColorNegative,
+                command::SetNormalColorPositive,
+                command::SetNormalLength,
+                command::SetShadowZoom,
+                command::SetSpecular,
+                command::SetVerticalSync,
+                command::SetWireframeColor,
+                command::ShowConvexHull2D,
+                command::ShowDft,
+                command::ShowFog,
+                command::ShowFps,
+                command::ShowMaterials,
+                command::ShowNormals,
+                command::ShowObject,
+                command::ShowOpticalFlow,
+                command::ShowPencilSketch,
+                command::ShowShadow,
+                command::ShowSmooth,
+                command::ShowWireframe,
+                command::WindowResize>;
+
+        template <typename Type>
+        Command(Type&& arg) : m_data(std::forward<Type>(arg))
+        {
+        }
+
+        const T& data() const
+        {
+                return m_data;
+        }
+
+private:
+        T m_data;
+};
+
+namespace event
+{
+struct ErrorFatal final
+{
+        std::string text;
+        explicit ErrorFatal(const std::string& text) : text(text)
+        {
+        }
+};
+
+struct ObjectLoaded final
+{
+        ObjectId id;
+        explicit ObjectLoaded(ObjectId id) : id(id)
+        {
+        }
+};
+}
+
+struct Event final
+{
+        using T = std::variant<event::ErrorFatal, event::ObjectLoaded>;
 
         template <typename Type>
         Event(Type&& arg) : m_data(std::forward<Type>(arg))
