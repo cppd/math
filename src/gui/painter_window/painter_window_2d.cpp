@@ -135,7 +135,7 @@ void PainterWindow2d::catch_all(const F& function) const noexcept
                 {
                         function(&msg);
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         std::string s = !msg.empty() ? (msg + ":\n") : std::string();
                         if (!ptr.isNull())

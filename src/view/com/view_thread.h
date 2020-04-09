@@ -138,7 +138,7 @@ class ViewThread final : public View
                                 throw;
                         }
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         events(event::ErrorFatal(e.what()));
                 }

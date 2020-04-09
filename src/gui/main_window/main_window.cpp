@@ -367,7 +367,7 @@ void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::str
                 catch (TerminateRequestException&)
                 {
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         std::string s = !msg.empty() ? (msg + ":\n") : std::string();
 
@@ -1181,7 +1181,7 @@ void MainWindow::slot_window_first_shown()
                         thread_load_from_file(options.file_name, !options.no_object_selection_dialog);
                 }
         }
-        catch (std::exception& e)
+        catch (const std::exception& e)
         {
                 m_events(WindowEvent::MessageErrorFatal(e.what()));
         }

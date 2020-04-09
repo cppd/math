@@ -57,7 +57,7 @@ std::string overview()
                 s += INDENT;
                 s += api_version_to_string(supported_instance_api_version());
         }
-        catch (std::exception& e)
+        catch (const std::exception& e)
         {
                 s += "\n";
                 s += INDENT;
@@ -75,7 +75,7 @@ std::string overview()
                         s += extension;
                 }
         }
-        catch (std::exception& e)
+        catch (const std::exception& e)
         {
                 s += "\n";
                 s += INDENT;
@@ -93,7 +93,7 @@ std::string overview()
                         s += layer;
                 }
         }
-        catch (std::exception& e)
+        catch (const std::exception& e)
         {
                 s += "\n";
                 s += INDENT;
@@ -111,7 +111,7 @@ std::string overview()
                         s += extension;
                 }
         }
-        catch (std::exception& e)
+        catch (const std::exception& e)
         {
                 s += "\n";
                 s += INDENT;
@@ -164,7 +164,7 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
                                 nodes[extension_node].children.push_back(nodes.size() - 1);
                         }
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         nodes.emplace_back(e.what());
                         nodes[extension_node].children.push_back(nodes.size() - 1);
@@ -228,7 +228,7 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
                                 }
                         }
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         nodes.emplace_back(e.what());
                         nodes[queue_families_node].children.push_back(nodes.size() - 1);

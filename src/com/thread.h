@@ -130,7 +130,7 @@ public:
                                         m_cv.wait(lock, [this, g] { return g != m_generation; });
                                 }
                         }
-                        catch (std::exception& e)
+                        catch (const std::exception& e)
                         {
                                 error_fatal(std::string("Error thread barrier wait: ") + e.what());
                         }
@@ -234,7 +234,7 @@ class ThreadsWithCatch
 
                                 m_threads.clear();
                         }
-                        catch (std::exception& e)
+                        catch (const std::exception& e)
                         {
                                 error_fatal(std::string("Error while joining threads-with-catch: ") + e.what());
                         }
@@ -280,7 +280,7 @@ public:
                                                 catch (TerminateRequestException&)
                                                 {
                                                 }
-                                                catch (std::exception& e)
+                                                catch (const std::exception& e)
                                                 {
                                                         m_threads[thread_num].set_error(e.what());
                                                 }
@@ -297,7 +297,7 @@ public:
 
                                 m_threads.emplace_back(std::thread(lambda));
                         }
-                        catch (std::exception& e)
+                        catch (const std::exception& e)
                         {
                                 error_fatal(std::string("Error while adding a thread-with-catch: ") + e.what());
                         }

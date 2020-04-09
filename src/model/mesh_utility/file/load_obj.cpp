@@ -754,7 +754,7 @@ void read_obj_stage_one(
                                 lp.type = ObjLineType::NotSupported;
                         }
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         error("Line " + to_string(line_num) + ": " + first + " " + second + "\n" + e.what());
                 }
@@ -1087,7 +1087,7 @@ void read_lib(
                                 load_image<N>(lib_dir, name, image_index, &mesh->images, &mtl->map_Ks);
                         }
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         error("Library: " + lib_name + "\n" + "Line " + to_string(line_num) + ": " + first + " " +
                               second + "\n" + e.what());

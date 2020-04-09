@@ -67,7 +67,7 @@ void read_points_thread(
                 {
                         read_float(str, &(*lines)[line_num]);
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         error("Line " + to_string(line_num) + ": " + str + "\n" + e.what());
                 }

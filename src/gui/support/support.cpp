@@ -154,7 +154,7 @@ void add_to_text_edit_and_to_stderr(
                                 text_edit->verticalScrollBar()->setValue(v);
                         }
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         error_fatal(std::string("error add message: ") + e.what());
                 }

@@ -35,7 +35,7 @@ class Application final : public QApplication
                         {
                                 return QApplication::notify(receiver, event);
                         }
-                        catch (std::exception& e)
+                        catch (const std::exception& e)
                         {
                                 std::string msg;
                                 msg += "Error in an event receiver:\n";

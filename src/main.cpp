@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 
                         return application(argc, argv);
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         error_fatal(std::string("Error in the main function\n") + e.what());
                 }

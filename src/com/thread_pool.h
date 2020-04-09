@@ -82,7 +82,7 @@ class ThreadPool
                                 m_cv_run.wait(lock, [this] { return m_enable || m_exit; });
                                 return !m_exit;
                         }
-                        catch (std::exception& e)
+                        catch (const std::exception& e)
                         {
                                 error_fatal(std::string("exception in thread pool start code: ") + e.what());
                         }
@@ -116,7 +116,7 @@ class ThreadPool
                                         m_cv_finish.wait(lock, [this, g] { return g != m_generation; });
                                 }
                         }
-                        catch (std::exception& e)
+                        catch (const std::exception& e)
                         {
                                 error_fatal(std::string("exception in thread pool finish code: ") + e.what());
                         }
@@ -140,7 +140,7 @@ class ThreadPool
                                 catch (TerminateRequestException&)
                                 {
                                 }
-                                catch (std::exception& e)
+                                catch (const std::exception& e)
                                 {
                                         m_thread_errors[thread_num].set(e.what());
                                 }
@@ -149,7 +149,7 @@ class ThreadPool
                                         m_thread_errors[thread_num].set("Unknown error in thread of thread pool");
                                 }
                         }
-                        catch (std::exception& e)
+                        catch (const std::exception& e)
                         {
                                 error_fatal(
                                         std::string("exception in thread pool while working with exception: ") +
@@ -206,7 +206,7 @@ class ThreadPool
                                         m_cv_finish.wait(lock, [this, g] { return g != m_generation; });
                                 }
                         }
-                        catch (std::exception& e)
+                        catch (const std::exception& e)
                         {
                                 error_fatal(std::string("Error start and wait threads: ") + e.what());
                         }
@@ -293,7 +293,7 @@ public:
                 {
                         m_threads.join();
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         error_fatal(std::string("Thread pool thread(s) exited with error(s): ") + e.what());
                 }

@@ -112,7 +112,7 @@ std::vector<std::string> format_log_message(const std::string& msg) noexcept
 
                         return res;
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         error_fatal(std::string("error format log message: ") + e.what());
                 }
@@ -138,7 +138,7 @@ void write_formatted_log_messages_to_stderr(const std::vector<std::string>& line
                         std::fprintf(stderr, "%s", m.c_str());
                         std::fflush(stderr);
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         error_fatal(std::string("error log write message: ") + e.what());
                 }
@@ -173,7 +173,7 @@ void LOG(const std::string& msg) noexcept
 
                         write_formatted_log_messages_to_stderr(format_log_message(msg));
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         error_fatal(std::string("error log write message: ") + e.what());
                 }

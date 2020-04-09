@@ -559,7 +559,7 @@ void work_thread(
                                 }
                         }
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         *stop = true;
                         *error_caught = true;
@@ -686,7 +686,7 @@ void paint(
                                 painter_notifier, samples_per_pixel, paint_objects, paintbrush, thread_count, stop,
                                 smooth_normal);
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         painter_notifier->painter_error_message(std::string("Painter error:\n") + e.what());
                 }

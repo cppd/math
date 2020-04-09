@@ -206,7 +206,7 @@ void VulkanInstance::device_wait_idle_noexcept(const char* msg) const noexcept
                 {
                         device_wait_idle();
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                         if (!msg)
                         {
