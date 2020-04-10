@@ -35,6 +35,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <vector>
 
+namespace painter
+{
 namespace
 {
 template <size_t N, typename T>
@@ -766,3 +768,4 @@ template void paint(
         int thread_count,
         std::atomic_bool* stop,
         bool smooth_normal) noexcept;
+}

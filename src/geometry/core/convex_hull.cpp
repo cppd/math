@@ -80,6 +80,8 @@ Chapman & Hall/CRC, 2004.
 #include <unordered_map>
 #include <unordered_set>
 
+namespace geometry
+{
 namespace
 {
 //   Входные данные переводятся в целые числа с диапазоном от 0 до максимума с заданной дискретизацией,
@@ -1070,3 +1072,4 @@ template void compute_convex_hull(
         const std::vector<Vector<6, float>>& source_points,
         std::vector<ConvexHullFacet<6>>* ch_facets,
         ProgressRatio* progress);
+}

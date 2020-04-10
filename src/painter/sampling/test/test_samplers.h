@@ -17,4 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+namespace painter
+{
 void write_samples_to_files_and_test_performance();
+}

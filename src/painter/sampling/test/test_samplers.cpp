@@ -31,6 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <string_view>
 
+namespace painter
+{
 namespace
 {
 std::string replace_space(const std::string_view& s)
@@ -233,4 +235,5 @@ void write_samples_to_files_and_test_performance()
         test_performance<double>();
         LOG("");
         test_performance<long double>();
+}
 }

@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vec.h>
 
+namespace painter
+{
 // a * x + b
 template <size_t N, typename T>
 struct Constraint
@@ -26,3 +28,4 @@ struct Constraint
         Vector<N, T> a;
         T b;
 };
+}

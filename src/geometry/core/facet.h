@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vector>
 
+namespace geometry
+{
 template <size_t N, typename Derived, template <typename> typename FacetIter>
 class FacetBase
 {
@@ -409,3 +411,4 @@ public:
                 return mpz_sgn(m_ortho[N - 1].get_mpz_t()) < 0;
         }
 };
+}

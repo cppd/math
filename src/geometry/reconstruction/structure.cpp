@@ -23,6 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
 
+namespace geometry
+{
+namespace
+{
 constexpr double MIN_DOUBLE = limits<double>::lowest();
 
 // Значения косинусов для частного случая, когда вместе имеется:
@@ -33,8 +37,6 @@ constexpr double MIN_DOUBLE = limits<double>::lowest();
 constexpr double LIMIT_COSINE_FOR_INTERSECTION_PA_POLE = 0.99;
 constexpr double LIMIT_COSINE_FOR_INTERSECTION_PA_AB = -0.9999;
 
-namespace
-{
 // Соединения вершины с объектами Делоне и гранями объектов Делоне
 struct VertexConnections
 {
@@ -458,3 +460,4 @@ template void vertex_and_facet_data(
         const std::vector<DelaunayFacet<5>>& delaunay_facets,
         std::vector<ManifoldVertex<5>>* vertex_data,
         std::vector<ManifoldFacet<5>>* facet_data);
+}

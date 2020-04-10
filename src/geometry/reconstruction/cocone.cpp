@@ -40,11 +40,13 @@ Cambridge University Press, 2007.
 
 #include <unordered_set>
 
+namespace geometry
+{
+namespace
+{
 constexpr double RHO_MIN = 0, RHO_MAX = 1;
 constexpr double ALPHA_MIN = 0, ALPHA_MAX = 1;
 
-namespace
-{
 template <size_t N>
 bool cocone_facet(const std::vector<ManifoldFacet<N>>& facet_data, int facet)
 {
@@ -475,3 +477,4 @@ template std::unique_ptr<ManifoldConstructorCocone<4>> create_manifold_construct
 template std::unique_ptr<ManifoldConstructorCocone<5>> create_manifold_constructor_cocone(
         const std::vector<Vector<5, float>>& source_points,
         ProgressRatio* progress);
+}

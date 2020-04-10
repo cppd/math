@@ -30,8 +30,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
+namespace painter
+{
 template <size_t N, typename T>
-class SpatialMeshModel
+class MeshObject
 {
         using TreeParallelotope = ParallelotopeOrtho<N, T>;
         using Facet = MeshHyperplaneSimplex<N, T>;
@@ -67,21 +69,21 @@ class SpatialMeshModel
                 ProgressRatio* progress);
 
 public:
-        SpatialMeshModel(
+        MeshObject(
                 const mesh::Mesh<N>& mesh,
                 const Matrix<N + 1, N + 1, T>& matrix,
                 unsigned thread_count,
                 ProgressRatio* progress);
 
-        ~SpatialMeshModel() = default;
+        ~MeshObject() = default;
 
         // Грани имеют адреса первых элементов векторов вершин,
         // нормалей и текстурных координат, поэтому при копировании
         // объекта надо менять адреса этих векторов в гранях.
-        SpatialMeshModel(const SpatialMeshModel&) = delete;
-        SpatialMeshModel(SpatialMeshModel&&) = delete;
-        SpatialMeshModel& operator=(const SpatialMeshModel&) = delete;
-        SpatialMeshModel& operator=(SpatialMeshModel&&) = delete;
+        MeshObject(const MeshObject&) = delete;
+        MeshObject(MeshObject&&) = delete;
+        MeshObject& operator=(const MeshObject&) = delete;
+        MeshObject& operator=(MeshObject&&) = delete;
 
         bool intersect_approximate(const Ray<N, T>& r, T* t) const;
         bool intersect_precise(const Ray<N, T>&, T approximate_t, T* t, const void** intersection_data) const;
@@ -93,3 +95,4 @@ public:
 
         void min_max(Vector<N, T>* min, Vector<N, T>* max) const;
 };
+}

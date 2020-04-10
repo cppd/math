@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <type_traits>
 
+namespace painter
+{
 template <typename Parallelotope>
 class ParallelotopeAlgorithm final
 {
@@ -227,4 +229,5 @@ template <typename Parallelotope>
 typename ParallelotopeAlgorithm<Parallelotope>::VertexRidges parallelotope_vertex_ridges(const Parallelotope& p)
 {
         return ParallelotopeAlgorithm<Parallelotope>::vertex_ridges(p);
+}
 }

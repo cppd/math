@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <utility>
 
+namespace painter
+{
 namespace shape_intersection_implementation
 {
 #if 0
@@ -375,4 +377,5 @@ bool shape_intersection(
 
                 return (impl::shapes_intersect_by_spaces(shape_1, shape_2, distance_from_flat_shapes_in_epsilons));
         }
+}
 }

@@ -47,7 +47,7 @@ void self_test_essential(ProgressRatios* progress_ratios, const T& catch_all)
 
                 ProgressRatio progress(progress_ratios, *test_name);
                 progress.set(0);
-                test_parallelotope(2);
+                painter::test_parallelotope(2);
         });
 
         catch_all([&](std::string* test_name) {
@@ -55,7 +55,7 @@ void self_test_essential(ProgressRatios* progress_ratios, const T& catch_all)
 
                 ProgressRatio progress(progress_ratios, *test_name);
                 progress.set(0);
-                test_parallelotope(3);
+                painter::test_parallelotope(3);
         });
 
         catch_all([&](std::string* test_name) {
@@ -63,56 +63,56 @@ void self_test_essential(ProgressRatios* progress_ratios, const T& catch_all)
 
                 ProgressRatio progress(progress_ratios, *test_name);
                 progress.set(0);
-                test_parallelotope(4);
+                painter::test_parallelotope(4);
         });
 
         catch_all([&](std::string* test_name) {
                 *test_name = "Self-Test, Mesh in " + space_name_upper(3);
 
                 ProgressRatio progress(progress_ratios, *test_name);
-                test_mesh(3, &progress);
+                painter::test_mesh(3, &progress);
         });
 
         catch_all([&](std::string* test_name) {
                 *test_name = "Self-Test, Mesh in " + space_name_upper(4);
 
                 ProgressRatio progress(progress_ratios, *test_name);
-                test_mesh(4, &progress);
+                painter::test_mesh(4, &progress);
         });
 
         catch_all([&](std::string* test_name) {
                 *test_name = "Self-Test, Convex Hull in " + space_name_upper(2);
 
                 ProgressRatio progress(progress_ratios, *test_name);
-                test_convex_hull(2, &progress);
+                geometry::test_convex_hull(2, &progress);
         });
 
         catch_all([&](std::string* test_name) {
                 *test_name = "Self-Test, Convex Hull in " + space_name_upper(3);
 
                 ProgressRatio progress(progress_ratios, *test_name);
-                test_convex_hull(3, &progress);
+                geometry::test_convex_hull(3, &progress);
         });
 
         catch_all([&](std::string* test_name) {
                 *test_name = "Self-Test, Convex Hull in " + space_name_upper(4);
 
                 ProgressRatio progress(progress_ratios, *test_name);
-                test_convex_hull(4, &progress);
+                geometry::test_convex_hull(4, &progress);
         });
 
         catch_all([&](std::string* test_name) {
                 *test_name = "Self-Test, 1-Manifold Reconstruction in " + space_name_upper(2);
 
                 ProgressRatio progress(progress_ratios, *test_name);
-                test_reconstruction(2, &progress);
+                geometry::test_reconstruction(2, &progress);
         });
 
         catch_all([&](std::string* test_name) {
                 *test_name = "Self-Test, 2-Manifold Reconstruction in " + space_name_upper(3);
 
                 ProgressRatio progress(progress_ratios, *test_name);
-                test_reconstruction(3, &progress);
+                geometry::test_reconstruction(3, &progress);
         });
 }
 
@@ -123,28 +123,28 @@ void self_test_extended(ProgressRatios* progress_ratios, const T& catch_all)
                 *test_name = "Self-Test, Convex Hull in " + space_name_upper(5);
 
                 ProgressRatio progress(progress_ratios, *test_name);
-                test_convex_hull(5, &progress);
+                geometry::test_convex_hull(5, &progress);
         });
 
         catch_all([&](std::string* test_name) {
                 *test_name = "Self-Test, Mesh in " + space_name_upper(5);
 
                 ProgressRatio progress(progress_ratios, *test_name);
-                test_mesh(5, &progress);
+                painter::test_mesh(5, &progress);
         });
 
         catch_all([&](std::string* test_name) {
                 *test_name = "Self-Test, Mesh in " + space_name_upper(6);
 
                 ProgressRatio progress(progress_ratios, *test_name);
-                test_mesh(6, &progress);
+                painter::test_mesh(6, &progress);
         });
 
         catch_all([&](std::string* test_name) {
                 *test_name = "Self-Test, 3-Manifold Reconstruction in " + space_name_upper(4);
 
                 ProgressRatio progress(progress_ratios, *test_name);
-                test_reconstruction(4, &progress);
+                geometry::test_reconstruction(4, &progress);
         });
 }
 }

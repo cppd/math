@@ -34,6 +34,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <utility>
 
+namespace painter
+{
 // Donald Knuth. The Art of Computer Programming. Second edition. Addison-Wesley, 1981.
 // Volume 2. Seminumerical Algorithms. 3.4.2. Random Sampling and Shuffling.
 // Функция std::shuffle не подходит, так как надо по отдельному измерению.
@@ -198,3 +200,4 @@ public:
                 }
         }
 };
+}

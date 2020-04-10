@@ -39,6 +39,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <random>
 
+namespace painter
+{
 template <typename RandomEngine, size_t N, typename T>
 void random_in_sphere_by_rejection(RandomEngine& random_engine, Vector<N, T>& v, T& v_length_square)
 {
@@ -148,3 +150,4 @@ Vector<N, T> random_in_hemisphere(RandomEngine& random_engine, const Vector<N, T
 //   T r = std::sqrt(v_length_square);
 //   x = r * std::cos(theta);
 //   y = r * std::sin(theta);
+}

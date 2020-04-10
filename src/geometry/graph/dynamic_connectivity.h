@@ -32,6 +32,8 @@ Pearson Education, 2011.
 #include <type_traits>
 #include <vector>
 
+namespace geometry
+{
 template <typename T>
 class WeightedQuickUnion
 {
@@ -95,3 +97,4 @@ public:
                 return find(p) == find(q);
         }
 };
+}

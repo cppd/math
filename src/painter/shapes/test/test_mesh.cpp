@@ -34,6 +34,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <vector>
 
+namespace painter
+{
 namespace
 {
 template <typename T, typename RandomEngine>
@@ -81,7 +83,7 @@ T max_coordinate_modulus(const Vector<N, T>& a, const Vector<N, T>& b)
 
 template <size_t N, typename T>
 void offset_and_rays_for_sphere_mesh(
-        const SpatialMeshModel<N, T>& mesh,
+        const MeshObject<N, T>& mesh,
         int ray_count,
         T* offset,
         std::vector<Ray<N, T>>* rays)
@@ -112,7 +114,7 @@ void offset_and_rays_for_sphere_mesh(
 
 template <size_t N, typename T>
 void test_sphere_mesh(
-        const SpatialMeshModel<N, T>& mesh,
+        const MeshObject<N, T>& mesh,
         int ray_count,
         bool with_ray_log,
         bool with_error_log,
@@ -299,4 +301,5 @@ void test_mesh(int number_of_dimensions, ProgressRatio* progress)
         default:
                 error("Error mesh test number of dimensions " + to_string(number_of_dimensions));
         }
+}
 }

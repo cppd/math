@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "paintbrushes/paintbrush.h"
 
+namespace painter
+{
 template <size_t N>
 class VisibleBarPaintbrush final : public Paintbrush<N>
 {
@@ -65,3 +67,4 @@ public:
                 m_paintbrush.statistics(pass_count, pixel_count, ray_count, sample_count, previous_pass_duration);
         }
 };
+}

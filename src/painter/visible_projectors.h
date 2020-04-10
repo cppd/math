@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "projectors/projector.h"
 
+namespace painter
+{
 template <size_t N, typename T>
 class VisiblePerspectiveProjector final : public Projector<N, T>
 {
@@ -101,3 +103,4 @@ public:
                 return m_projector.ray(point);
         }
 };
+}

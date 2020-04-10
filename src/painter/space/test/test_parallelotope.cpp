@@ -38,6 +38,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <utility>
 
+namespace painter
+{
 namespace
 {
 constexpr bool PRINT_ALL = false;
@@ -752,4 +754,5 @@ void test_parallelotope(int number_of_dimensions)
         default:
                 error("Error parallelotope test number of dimensions " + to_string(number_of_dimensions));
         }
+}
 }

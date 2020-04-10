@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <type_traits>
 
+namespace painter
+{
 template <typename Parallelotope, typename = void>
 class ParallelotopeWrapperForShapeIntersection
 {
@@ -144,3 +146,4 @@ public:
                 return m_vertex_ridges;
         }
 };
+}

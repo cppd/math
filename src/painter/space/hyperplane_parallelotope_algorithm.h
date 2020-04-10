@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 
+namespace painter
+{
 template <typename HyperplaneParallelotope>
 class HyperplaneParallelotopeAlgorithm final
 {
@@ -80,4 +82,5 @@ typename HyperplaneParallelotopeAlgorithm<HyperplaneParallelotope>::Vertices hyp
         const HyperplaneParallelotope& r)
 {
         return HyperplaneParallelotopeAlgorithm<HyperplaneParallelotope>::vertices(r);
+}
 }

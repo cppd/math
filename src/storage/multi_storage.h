@@ -31,11 +31,11 @@ struct StorageWithRepository final
 {
         static constexpr size_t N = DIMENSION;
 
-        const std::unique_ptr<const PointObjectRepository<N>> repository;
+        const std::unique_ptr<const PointObjectRepository<N>> point_object_repository;
         Storage<N, MeshFloat> storage;
 
         explicit StorageWithRepository(const std::function<void(StorageEvent&&)>& storage_events)
-                : repository(create_point_object_repository<N>()), storage(storage_events)
+                : point_object_repository(create_point_object_repository<N>()), storage(storage_events)
         {
         }
 };
@@ -46,14 +46,14 @@ class MultiStorage final
         static constexpr int MAX = 5;
         static constexpr int COUNT = MAX - MIN + 1;
 
-        using MeshFloatingPoint = double;
+        using PainterFloatingPoint = double;
 
         static_assert(MIN >= 3 && MIN <= MAX);
         static_assert(COUNT > 0);
-        static_assert(std::is_floating_point_v<MeshFloatingPoint>);
+        static_assert(std::is_floating_point_v<PainterFloatingPoint>);
 
         // std::tuple<T<MIN>, ..., T<MAX>>.
-        using Tuple = SequenceType1<std::tuple, MIN, MAX, StorageWithRepository, MeshFloatingPoint>;
+        using Tuple = SequenceType1<std::tuple, MIN, MAX, StorageWithRepository, PainterFloatingPoint>;
 
         Tuple m_data;
 
@@ -66,10 +66,15 @@ class MultiStorage final
 public:
         using Data = Tuple;
 
-        using MeshVariant =
-                SequenceType2ConstType2<std::variant, MIN, MAX, std::shared_ptr, SpatialMeshModel, MeshFloatingPoint>;
+        using MeshObject = SequenceType2ConstType2<std::variant, MIN, MAX, std::shared_ptr, mesh::MeshObject>;
 
-        using ObjectVariant = SequenceType2ConstType2<std::variant, MIN, MAX, std::shared_ptr, mesh::MeshObject>;
+        using PainterMeshObject = SequenceType2ConstType2<
+                std::variant,
+                MIN,
+                MAX,
+                std::shared_ptr,
+                painter::MeshObject,
+                PainterFloatingPoint>;
 
         static std::set<unsigned> dimensions()
         {
@@ -106,7 +111,7 @@ public:
                 int dimension;
                 std::vector<std::string> names;
         };
-        std::vector<RepositoryObjects> repository_point_object_names() const
+        std::vector<RepositoryObjects> repository_objects() const
         {
                 std::vector<RepositoryObjects> names;
 
@@ -116,7 +121,7 @@ public:
                                         [&]() {
                                                 names.resize(names.size() + 1);
                                                 names.back().dimension = v.N;
-                                                names.back().names = v.repository->point_object_names();
+                                                names.back().names = v.point_object_repository->object_names();
                                         }(),
                                         ...);
                         },
@@ -125,14 +130,14 @@ public:
                 return names;
         }
 
-        std::optional<ObjectVariant> object(ObjectId id) const
+        std::optional<MeshObject> mesh_object(ObjectId id) const
         {
-                std::optional<ObjectVariant> opt;
+                std::optional<MeshObject> opt;
 
                 std::apply(
                         [&](const auto&... v) {
                                 ([&]() {
-                                        auto ptr = v.storage.object(id);
+                                        auto ptr = v.storage.mesh_object(id);
                                         if (ptr)
                                         {
                                                 opt = std::move(ptr);
@@ -147,14 +152,14 @@ public:
                 return opt;
         }
 
-        std::optional<MeshVariant> mesh(ObjectId id) const
+        std::optional<PainterMeshObject> painter_mesh_object(ObjectId id) const
         {
-                std::optional<MeshVariant> opt;
+                std::optional<PainterMeshObject> opt;
 
                 std::apply(
                         [&](const auto&... v) {
                                 ([&]() {
-                                        auto ptr = v.storage.mesh(id);
+                                        auto ptr = v.storage.painter_mesh_object(id);
                                         if (ptr)
                                         {
                                                 opt = std::move(ptr);

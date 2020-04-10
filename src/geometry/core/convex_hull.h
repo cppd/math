@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vector>
 
+namespace geometry
+{
 template <size_t N>
 class ConvexHullFacet
 {
@@ -77,3 +79,4 @@ void compute_convex_hull(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<ConvexHullFacet<N>>* ch_facets,
         ProgressRatio* progress);
+}

@@ -27,6 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define USE_COLOR_LOOKUP_TABLES
 
+namespace
+{
 constexpr unsigned char MAX8 = (1u << 8) - 1;
 constexpr std::uint_least16_t MAX16 = (1u << 16) - 1;
 
@@ -65,8 +67,6 @@ constexpr Float uint8_to_float(UInt8 c)
         return Float(c) / Float(MAX8);
 }
 
-namespace
-{
 #if defined(USE_COLOR_LOOKUP_TABLES)
 
 // clang-format off

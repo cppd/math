@@ -64,6 +64,8 @@ Princeton University Press, 2011.
 #include <Eigen/LU>
 #endif
 
+namespace geometry
+{
 // Для вершин объекта Делоне найти вершину Вороного, соответствующую этому объекту Делоне
 template <size_t N, typename T>
 Vector<N, T> compute_voronoi_vertex(const std::vector<Vector<N, T>>& points, const std::array<int, N + 1>& vertices)
@@ -157,4 +159,5 @@ Vector<N, T> compute_voronoi_vertex(const std::vector<Vector<N, T>>& points, con
         return voronoi_vertex;
 #endif
 #endif
+}
 }

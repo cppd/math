@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
+namespace painter
+{
 template <size_t N, typename T>
 class HyperplaneParallelotope
 {
@@ -104,4 +106,5 @@ const Vector<N, T>& HyperplaneParallelotope<N, T>::e(unsigned n) const
 {
         ASSERT(n < N - 1);
         return m_vectors[n];
+}
 }

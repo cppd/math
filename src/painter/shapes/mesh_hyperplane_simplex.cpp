@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/numerical/orthogonal.h>
 
+namespace painter
+{
 namespace
 {
 // Минимум абсолютного значения косинуса угла между нормалью симплекса и нормалями
@@ -237,3 +239,4 @@ template class MeshHyperplaneSimplex<3, double>;
 template class MeshHyperplaneSimplex<4, double>;
 template class MeshHyperplaneSimplex<5, double>;
 template class MeshHyperplaneSimplex<6, double>;
+}

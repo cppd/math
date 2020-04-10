@@ -19,5 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress.h>
 
+namespace geometry
+{
 void test_convex_hull(int number_of_dimensions, ProgressRatio* progress);
 void test_convex_hull_speed();
+}

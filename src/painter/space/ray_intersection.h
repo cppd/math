@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <tuple>
 
+namespace painter
+{
 template <size_t N, typename T, typename Object, typename Surface, typename Data>
 bool ray_intersection(
         const std::vector<const Object*>& objects,
@@ -169,4 +171,5 @@ bool ray_intersection(
         }
 
         return false;
+}
 }

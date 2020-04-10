@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
+namespace geometry
+{
 namespace functions_implementation
 {
 // Константа алгоритмов Cocone, равна cos(3 * PI / 8)
@@ -160,4 +162,5 @@ bool intersect_cocone(
         }
 
         return true;
+}
 }

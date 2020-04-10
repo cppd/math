@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
+namespace painter
+{
 // Свойства поверхности в точке.
 template <size_t N, typename T>
 class SurfaceProperties
@@ -237,3 +239,4 @@ struct PaintObjects
 
         virtual const SurfaceProperties<N, T>& default_surface_properties() const = 0;
 };
+}

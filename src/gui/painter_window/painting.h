@@ -61,12 +61,12 @@ struct PaintingInformationAll
 
 template <typename T>
 void painting(
-        const std::shared_ptr<const SpatialMeshModel<3, T>>& mesh,
+        const std::shared_ptr<const painter::MeshObject<3, T>>& mesh,
         const PaintingInformation3d<T>& info_3d,
         const PaintingInformationAll& info_all);
 
 template <size_t N, typename T>
 void painting(
-        const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh,
+        const std::shared_ptr<const painter::MeshObject<N, T>>& mesh,
         const PaintingInformationNd& info_nd,
         const PaintingInformationAll& info_all);

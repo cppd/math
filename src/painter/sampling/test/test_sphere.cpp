@@ -31,6 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <map>
 
+namespace painter
+{
 namespace
 {
 template <typename T>
@@ -185,4 +187,5 @@ void test_cosine_hemisphere(int count, T discrepancy_limit)
 void test_cosine_hemisphere()
 {
         test_cosine_hemisphere<double, std::mt19937_64>(10'000'000, 0.02);
+}
 }

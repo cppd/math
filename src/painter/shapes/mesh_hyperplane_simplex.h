@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vector>
 
+namespace painter
+{
 template <size_t N, typename T>
 class MeshHyperplaneSimplex
 {
@@ -84,3 +86,4 @@ public:
 
         void constraints(std::array<Constraint<N, T>, N>* c, Constraint<N, T>* c_eq) const;
 };
+}

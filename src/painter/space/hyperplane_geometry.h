@@ -37,6 +37,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cmath>
 
+namespace painter
+{
 namespace hyperplane_geometry_implementation
 {
 template <size_t N, typename T>
@@ -265,3 +267,4 @@ public:
                 return true;
         }
 };
+}

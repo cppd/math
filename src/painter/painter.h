@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <atomic>
 #include <string>
 
+namespace painter
+{
 template <size_t N>
 struct PainterNotifier
 {
@@ -47,3 +49,4 @@ void paint(
         int thread_count,
         std::atomic_bool* stop,
         bool smooth_normal) noexcept;
+}

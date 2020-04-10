@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/colors.h>
 #include <src/model/mesh_utility.h>
 
+namespace painter
+{
 namespace
 {
 template <typename T>
@@ -100,7 +102,7 @@ public:
         CornellBoxScene(
                 int width,
                 int height,
-                const std::shared_ptr<const SpatialMeshModel<3, T>>& mesh,
+                const std::shared_ptr<const MeshObject<3, T>>& mesh,
                 T size,
                 const Color& default_color,
                 Color::DataType diffuse,
@@ -125,7 +127,7 @@ CornellBoxScene<T>::CornellBoxScene(
 
         mat4 vertex_matrix = model_vertex_matrix(*mesh, size, vec3(0));
 
-        std::shared_ptr spatial_mesh = std::make_shared<SpatialMeshModel<3, T>>(
+        std::shared_ptr spatial_mesh = std::make_shared<MeshObject<3, T>>(
                 *mesh, to_matrix<T>(vertex_matrix), hardware_concurrency(), &progress);
 
         m_mesh = std::make_unique<VisibleSharedMesh<3, T>>(spatial_mesh);
@@ -137,7 +139,7 @@ template <typename T>
 CornellBoxScene<T>::CornellBoxScene(
         int width,
         int height,
-        const std::shared_ptr<const SpatialMeshModel<3, T>>& mesh,
+        const std::shared_ptr<const MeshObject<3, T>>& mesh,
         T size,
         const Color& default_color,
         Color::DataType diffuse,
@@ -277,7 +279,7 @@ template <typename T>
 std::unique_ptr<const PaintObjects<3, T>> cornell_box_scene(
         int width,
         int height,
-        const std::shared_ptr<const SpatialMeshModel<3, T>>& mesh,
+        const std::shared_ptr<const MeshObject<3, T>>& mesh,
         T size,
         const Color& default_color,
         Color::DataType diffuse,
@@ -313,7 +315,7 @@ template std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(
 template std::unique_ptr<const PaintObjects<3, float>> cornell_box_scene(
         int width,
         int height,
-        const std::shared_ptr<const SpatialMeshModel<3, float>>& mesh,
+        const std::shared_ptr<const MeshObject<3, float>>& mesh,
         float size,
         const Color& default_color,
         Color::DataType diffuse,
@@ -323,9 +325,10 @@ template std::unique_ptr<const PaintObjects<3, float>> cornell_box_scene(
 template std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(
         int width,
         int height,
-        const std::shared_ptr<const SpatialMeshModel<3, double>>& mesh,
+        const std::shared_ptr<const MeshObject<3, double>>& mesh,
         double size,
         const Color& default_color,
         Color::DataType diffuse,
         const Vector<3, double>& camera_direction,
         const Vector<3, double>& camera_up);
+}

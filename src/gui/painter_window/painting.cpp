@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace
 {
 template <typename T>
-std::unique_ptr<const Projector<3, T>> create_projector(
+std::unique_ptr<const painter::Projector<3, T>> create_projector(
         const PaintingInformation3d<T>& info,
         int paint_width,
         int paint_height)
@@ -45,22 +45,22 @@ std::unique_ptr<const Projector<3, T>> create_projector(
 
         T units_per_pixel = info.view_width / paint_width;
 
-        return std::make_unique<const VisibleParallelProjector<3, T>>(
+        return std::make_unique<const painter::VisibleParallelProjector<3, T>>(
                 camera_position, info.camera_direction, screen_axes, units_per_pixel, screen_size);
 }
 
 template <typename T>
-std::unique_ptr<const LightSource<3, T>> create_light_source(const PaintingInformation3d<T>& info)
+std::unique_ptr<const painter::LightSource<3, T>> create_light_source(const PaintingInformation3d<T>& info)
 {
         Vector<3, T> light_position = info.object_position - info.light_direction * info.object_size * T(1000);
 
-        return std::make_unique<const VisibleConstantLight<3, T>>(light_position, Color(1));
+        return std::make_unique<const painter::VisibleConstantLight<3, T>>(light_position, Color(1));
 }
 }
 
 template <typename T>
 void painting(
-        const std::shared_ptr<const SpatialMeshModel<3, T>>& mesh,
+        const std::shared_ptr<const painter::MeshObject<3, T>>& mesh,
         const PaintingInformation3d<T>& info_3d,
         const PaintingInformationAll& info_all)
 {
@@ -86,7 +86,7 @@ void painting(
         }
 
         std::string title;
-        std::unique_ptr<const PaintObjects<3, T>> scene;
+        std::unique_ptr<const painter::PaintObjects<3, T>> scene;
 
         if (!cornell_box)
         {
@@ -111,7 +111,7 @@ void painting(
 
 template <size_t N, typename T>
 void painting(
-        const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh,
+        const std::shared_ptr<const painter::MeshObject<N, T>>& mesh,
         const PaintingInformationNd& info_nd,
         const PaintingInformationAll& info_all)
 {
@@ -141,7 +141,7 @@ void painting(
 
         std::string title = info_all.window_title + " (" + info_all.object_name + ")";
 
-        std::unique_ptr<const PaintObjects<N, T>> scene = single_object_scene(
+        std::unique_ptr<const painter::PaintObjects<N, T>> scene = single_object_scene(
                 info_all.background_color, info_all.default_color, info_all.diffuse, min_size, max_size, mesh);
 
         create_and_show_delete_on_close_window<PainterWindow<N, T>>(
@@ -149,36 +149,36 @@ void painting(
 }
 
 template void painting(
-        const std::shared_ptr<const SpatialMeshModel<3, float>>& mesh,
+        const std::shared_ptr<const painter::MeshObject<3, float>>& mesh,
         const PaintingInformation3d<float>& info_3d,
         const PaintingInformationAll& info_all);
 template void painting(
-        const std::shared_ptr<const SpatialMeshModel<3, double>>& mesh,
+        const std::shared_ptr<const painter::MeshObject<3, double>>& mesh,
         const PaintingInformation3d<double>& info_3d,
         const PaintingInformationAll& info_all);
 
 template void painting(
-        const std::shared_ptr<const SpatialMeshModel<4, float>>& mesh,
+        const std::shared_ptr<const painter::MeshObject<4, float>>& mesh,
         const PaintingInformationNd& info_nd,
         const PaintingInformationAll& info_all);
 template void painting(
-        const std::shared_ptr<const SpatialMeshModel<5, float>>& mesh,
+        const std::shared_ptr<const painter::MeshObject<5, float>>& mesh,
         const PaintingInformationNd& info_nd,
         const PaintingInformationAll& info_all);
 template void painting(
-        const std::shared_ptr<const SpatialMeshModel<6, float>>& mesh,
+        const std::shared_ptr<const painter::MeshObject<6, float>>& mesh,
         const PaintingInformationNd& info_nd,
         const PaintingInformationAll& info_all);
 
 template void painting(
-        const std::shared_ptr<const SpatialMeshModel<4, double>>& mesh,
+        const std::shared_ptr<const painter::MeshObject<4, double>>& mesh,
         const PaintingInformationNd& info_nd,
         const PaintingInformationAll& info_all);
 template void painting(
-        const std::shared_ptr<const SpatialMeshModel<5, double>>& mesh,
+        const std::shared_ptr<const painter::MeshObject<5, double>>& mesh,
         const PaintingInformationNd& info_nd,
         const PaintingInformationAll& info_all);
 template void painting(
-        const std::shared_ptr<const SpatialMeshModel<6, double>>& mesh,
+        const std::shared_ptr<const painter::MeshObject<6, double>>& mesh,
         const PaintingInformationNd& info_nd,
         const PaintingInformationAll& info_all);

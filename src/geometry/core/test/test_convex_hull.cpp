@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <unordered_set>
 
+namespace geometry
+{
 namespace
 {
 constexpr double CHECK_EPSILON = 0.01;
@@ -245,4 +247,5 @@ void test_convex_hull(int number_of_dimensions, ProgressRatio* progress)
         default:
                 error("Error convex hull test number of dimensions " + to_string(number_of_dimensions));
         }
+}
 }

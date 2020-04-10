@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <utility>
 
+namespace painter
+{
 namespace
 {
 constexpr int TREE_MIN_OBJECTS_PER_BOX = 10;
@@ -60,7 +62,7 @@ int tree_max_depth()
 }
 
 template <size_t N, typename T>
-void SpatialMeshModel<N, T>::create(
+void MeshObject<N, T>::create(
         const mesh::Mesh<N>& mesh,
         const Matrix<N + 1, N + 1, T>& matrix,
         unsigned thread_count,
@@ -131,7 +133,7 @@ void SpatialMeshModel<N, T>::create(
 }
 
 template <size_t N, typename T>
-SpatialMeshModel<N, T>::SpatialMeshModel(
+MeshObject<N, T>::MeshObject(
         const mesh::Mesh<N>& mesh,
         const Matrix<N + 1, N + 1, T>& matrix,
         unsigned thread_count,
@@ -145,17 +147,14 @@ SpatialMeshModel<N, T>::SpatialMeshModel(
 }
 
 template <size_t N, typename T>
-bool SpatialMeshModel<N, T>::intersect_approximate(const Ray<N, T>& r, T* t) const
+bool MeshObject<N, T>::intersect_approximate(const Ray<N, T>& r, T* t) const
 {
         return m_tree.intersect_root(r, t);
 }
 
 template <size_t N, typename T>
-bool SpatialMeshModel<N, T>::intersect_precise(
-        const Ray<N, T>& ray,
-        T approximate_t,
-        T* t,
-        const void** intersection_data) const
+bool MeshObject<N, T>::intersect_precise(const Ray<N, T>& ray, T approximate_t, T* t, const void** intersection_data)
+        const
 {
         const Facet* facet = nullptr;
 
@@ -179,19 +178,19 @@ bool SpatialMeshModel<N, T>::intersect_precise(
 }
 
 template <size_t N, typename T>
-Vector<N, T> SpatialMeshModel<N, T>::geometric_normal(const void* intersection_data) const
+Vector<N, T> MeshObject<N, T>::geometric_normal(const void* intersection_data) const
 {
         return static_cast<const Facet*>(intersection_data)->geometric_normal();
 }
 
 template <size_t N, typename T>
-Vector<N, T> SpatialMeshModel<N, T>::shading_normal(const Vector<N, T>& p, const void* intersection_data) const
+Vector<N, T> MeshObject<N, T>::shading_normal(const Vector<N, T>& p, const void* intersection_data) const
 {
         return static_cast<const Facet*>(intersection_data)->shading_normal(p);
 }
 
 template <size_t N, typename T>
-std::optional<Color> SpatialMeshModel<N, T>::color(const Vector<N, T>& p, const void* intersection_data) const
+std::optional<Color> MeshObject<N, T>::color(const Vector<N, T>& p, const void* intersection_data) const
 {
         const Facet* facet = static_cast<const Facet*>(intersection_data);
 
@@ -210,18 +209,19 @@ std::optional<Color> SpatialMeshModel<N, T>::color(const Vector<N, T>& p, const 
 }
 
 template <size_t N, typename T>
-void SpatialMeshModel<N, T>::min_max(Vector<N, T>* min, Vector<N, T>* max) const
+void MeshObject<N, T>::min_max(Vector<N, T>* min, Vector<N, T>* max) const
 {
         *min = m_min;
         *max = m_max;
 }
 
-template class SpatialMeshModel<3, float>;
-template class SpatialMeshModel<4, float>;
-template class SpatialMeshModel<5, float>;
-template class SpatialMeshModel<6, float>;
+template class MeshObject<3, float>;
+template class MeshObject<4, float>;
+template class MeshObject<5, float>;
+template class MeshObject<6, float>;
 
-template class SpatialMeshModel<3, double>;
-template class SpatialMeshModel<4, double>;
-template class SpatialMeshModel<5, double>;
-template class SpatialMeshModel<6, double>;
+template class MeshObject<3, double>;
+template class MeshObject<4, double>;
+template class MeshObject<5, double>;
+template class MeshObject<6, double>;
+}

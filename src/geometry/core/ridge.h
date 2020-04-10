@@ -27,6 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <list>
 
+namespace geometry
+{
 template <size_t N>
 class Ridge
 {
@@ -74,18 +76,6 @@ public:
                 return array_hash(m_vertices);
         }
 };
-
-namespace std
-{
-template <size_t N>
-struct hash<Ridge<N>>
-{
-        size_t operator()(const Ridge<N>& v) const
-        {
-                return v.hash();
-        }
-};
-}
 
 template <typename Facet>
 class RidgeDataElement
@@ -277,4 +267,17 @@ void add_to_ridges(const Facet& facet, int exclude_point, Set<Ridge<N>>* ridges)
                         ridges->emplace(sort(del_elem(vertices, r)));
                 }
         }
+}
+}
+
+namespace std
+{
+template <size_t N>
+struct hash<geometry::Ridge<N>>
+{
+        size_t operator()(const geometry::Ridge<N>& v) const
+        {
+                return v.hash();
+        }
+};
 }

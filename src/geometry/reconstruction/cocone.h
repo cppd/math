@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
+namespace geometry
+{
 template <size_t N>
 struct ManifoldConstructorCocone
 {
@@ -65,3 +67,4 @@ template <size_t N>
 std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone(
         const std::vector<Vector<N, float>>& source_points,
         ProgressRatio* progress);
+}

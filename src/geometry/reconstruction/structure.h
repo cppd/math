@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
+namespace geometry
+{
 template <size_t N>
 struct ManifoldVertex
 {
@@ -57,3 +59,4 @@ void vertex_and_facet_data(
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         std::vector<ManifoldVertex<N>>* vertex_data,
         std::vector<ManifoldFacet<N>>* facet_data);
+}

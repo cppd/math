@@ -23,20 +23,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 struct StorageEvent
 {
-        struct LoadedObject final
+        struct LoadedMeshObject final
         {
                 ObjectId id;
                 size_t dimension;
-                LoadedObject(ObjectId id, size_t dimension) : id(id), dimension(dimension)
+                LoadedMeshObject(ObjectId id, size_t dimension) : id(id), dimension(dimension)
                 {
                 }
         };
 
-        struct LoadedMesh final
+        struct LoadedPainterMeshObject final
         {
                 ObjectId id;
                 size_t dimension;
-                explicit LoadedMesh(ObjectId id, size_t dimension) : id(id), dimension(dimension)
+                explicit LoadedPainterMeshObject(ObjectId id, size_t dimension) : id(id), dimension(dimension)
                 {
                 }
         };
@@ -58,7 +58,7 @@ struct StorageEvent
                 }
         };
 
-        using T = std::variant<DeletedAll, DeletedObject, LoadedMesh, LoadedObject>;
+        using T = std::variant<DeletedAll, DeletedObject, LoadedMeshObject, LoadedPainterMeshObject>;
 
         template <typename Type>
         StorageEvent(Type&& arg) : m_data(std::forward<Type>(arg))

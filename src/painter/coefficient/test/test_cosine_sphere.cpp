@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <sstream>
 
+namespace painter
+{
 namespace
 {
 #if !(defined(__clang__) && defined(STD_BETA_FUNCTION_NOT_FOUND))
@@ -150,4 +152,5 @@ void test_cosine_sphere_coefficient()
         test<float>();
         LOG("");
         test<double>();
+}
 }

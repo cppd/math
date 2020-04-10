@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 template <size_t N, typename T>
-class PainterWindow final : public PainterWindow2d, public PainterNotifier<N - 1>
+class PainterWindow final : public PainterWindow2d, public painter::PainterNotifier<N - 1>
 {
         static_assert(N >= 3);
 
@@ -45,13 +45,13 @@ class PainterWindow final : public PainterWindow2d, public PainterNotifier<N - 1
 
         static constexpr size_t N_IMAGE = N - 1;
 
-        const std::unique_ptr<const PaintObjects<N, T>> m_paint_objects;
+        const std::unique_ptr<const painter::PaintObjects<N, T>> m_paint_objects;
         const GlobalIndex<N_IMAGE, long long> m_global_index;
         const int m_height;
         const std::thread::id m_window_thread_id;
         long long m_slice_offset;
         std::vector<std::uint_least32_t> m_pixels_bgr;
-        VisibleBarPaintbrush<N_IMAGE> m_paintbrush;
+        painter::VisibleBarPaintbrush<N_IMAGE> m_paintbrush;
         std::vector<long long> m_busy_pixels;
         std::atomic_bool m_stop;
         std::thread m_thread;
@@ -191,7 +191,7 @@ public:
                 unsigned thread_count,
                 int samples_per_pixel,
                 bool smooth_normal,
-                std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
+                std::unique_ptr<const painter::PaintObjects<N, T>>&& paint_objects)
                 : PainterWindow2d(
                           title,
                           array_to_vector(paint_objects->projector().screen_size()),

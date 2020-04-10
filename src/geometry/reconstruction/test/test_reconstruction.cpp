@@ -35,6 +35,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <unordered_set>
 
+namespace geometry
+{
 namespace
 {
 // Для BoundCocone
@@ -466,4 +468,5 @@ void test_reconstruction(int number_of_dimensions, ProgressRatio* progress)
         default:
                 error("Error manifold reconstruction test number of dimensions " + to_string(number_of_dimensions));
         }
+}
 }

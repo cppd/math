@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <numeric>
 
+namespace painter
+{
 /*
  Фихтенгольц Г. М.
  Курс дифференциального и интегрального исчисления, 8-е изд.
@@ -159,4 +161,5 @@ constexpr long double cosine_sphere_coefficient(const unsigned N)
         }
 
         return p;
+}
 }

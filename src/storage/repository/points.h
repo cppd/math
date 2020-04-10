@@ -28,14 +28,8 @@ struct PointObjectRepository
 {
         virtual ~PointObjectRepository() = default;
 
-        virtual std::vector<Vector<N, float>> ellipsoid(unsigned point_count) const = 0;
-        virtual std::vector<Vector<N, float>> ellipsoid_bound(unsigned point_count) const = 0;
-        virtual std::vector<Vector<N, float>> sphere_with_notch(unsigned point_count) const = 0;
-        virtual std::vector<Vector<N, float>> sphere_with_notch_bound(unsigned point_count) const = 0;
-
-        virtual std::vector<std::string> point_object_names() const = 0;
-        virtual std::vector<Vector<N, float>> point_object(const std::string& object_name, unsigned point_count)
-                const = 0;
+        virtual std::vector<std::string> object_names() const = 0;
+        virtual std::vector<Vector<N, float>> object(const std::string& object_name, unsigned point_count) const = 0;
 };
 
 template <size_t N>

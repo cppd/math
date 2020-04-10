@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <iterator>
 
+namespace painter
+{
 template <typename Container, typename T, size_t N>
 void vertex_min_max(const Container& vertices, Vector<N, T>* min, Vector<N, T>* max)
 {
@@ -40,4 +42,5 @@ void vertex_min_max(const Container& vertices, Vector<N, T>* min, Vector<N, T>* 
                 *min = min_vector(*i, *min);
                 *max = max_vector(*i, *max);
         }
+}
 }

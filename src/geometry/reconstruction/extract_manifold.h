@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stack>
 #include <vector>
 
+namespace geometry
+{
 namespace extract_manifold_implementation
 {
 template <size_t N>
@@ -135,4 +137,5 @@ void extract_manifold(
                 delaunay_facets, delaunay_object_facets, *cocone_facets, &visited_delaunay, &visited_cocone_facets);
 
         *cocone_facets = std::move(visited_cocone_facets);
+}
 }

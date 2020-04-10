@@ -19,8 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
+namespace painter
+{
 void test_painter_file();
 void test_painter_file(const std::string& file_name);
 
 void test_painter_window();
 void test_painter_window(const std::string& file_name);
+}

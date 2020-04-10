@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
+namespace painter
+{
 namespace projector_implementation
 {
 template <size_t N, typename T>
@@ -286,3 +288,4 @@ public:
                 return Ray<N, T>(m_camera_org, m_camera_dir * z + screen_dir);
         }
 };
+}

@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/math.h>
 #include <src/com/names.h>
 
+namespace painter
+{
 template <size_t N, typename T>
 class StratifiedJitteredSampler
 {
@@ -80,3 +82,4 @@ public:
                 m_engine.generate(random_engine, samples);
         }
 };
+}

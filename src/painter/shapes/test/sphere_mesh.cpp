@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <vector>
 
+namespace painter
+{
 namespace
 {
 template <typename T, typename RandomEngine, typename T1, typename T2>
@@ -74,24 +76,24 @@ void create_spherical_convex_hull(
 {
         *points = generate_random_points_on_sphere<N, float>(center, radius, point_count);
 
-        std::vector<ConvexHullFacet<N>> ch_facets;
+        std::vector<geometry::ConvexHullFacet<N>> ch_facets;
 
         LOG("convex hull...");
         double start_time = time_in_seconds();
-        compute_convex_hull(*points, &ch_facets, progress);
+        geometry::compute_convex_hull(*points, &ch_facets, progress);
         LOG("convex hull created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         LOG("facet count = " + to_string(ch_facets.size()));
 
         facets->clear();
         facets->reserve(ch_facets.size());
-        for (const ConvexHullFacet<N>& ch_facet : ch_facets)
+        for (const geometry::ConvexHullFacet<N>& ch_facet : ch_facets)
         {
                 facets->push_back(ch_facet.vertices());
         }
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const SpatialMeshModel<N, T>> simplex_mesh_of_sphere(
+std::unique_ptr<const MeshObject<N, T>> simplex_mesh_of_sphere(
         const Vector<N, float>& center,
         float radius,
         int point_count,
@@ -115,12 +117,12 @@ std::unique_ptr<const SpatialMeshModel<N, T>> simplex_mesh_of_sphere(
 
         constexpr Matrix<N + 1, N + 1, T> matrix(1);
 
-        return std::make_unique<const SpatialMeshModel<N, T>>(*mesh, matrix, thread_count, progress);
+        return std::make_unique<const MeshObject<N, T>>(*mesh, matrix, thread_count, progress);
 }
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const SpatialMeshModel<N, T>> simplex_mesh_of_random_sphere(
+std::unique_ptr<const MeshObject<N, T>> simplex_mesh_of_random_sphere(
         int point_count,
         int thread_count,
         ProgressRatio* progress)
@@ -155,36 +157,37 @@ std::unique_ptr<const SpatialMeshModel<N, T>> simplex_mesh_of_random_sphere(
         return simplex_mesh_of_sphere<N, T>(center, radius, point_count, thread_count, progress);
 }
 
-template std::unique_ptr<const SpatialMeshModel<3, float>> simplex_mesh_of_random_sphere(
+template std::unique_ptr<const MeshObject<3, float>> simplex_mesh_of_random_sphere(
         int point_count,
         int thread_count,
         ProgressRatio* progress);
-template std::unique_ptr<const SpatialMeshModel<4, float>> simplex_mesh_of_random_sphere(
+template std::unique_ptr<const MeshObject<4, float>> simplex_mesh_of_random_sphere(
         int point_count,
         int thread_count,
         ProgressRatio* progress);
-template std::unique_ptr<const SpatialMeshModel<5, float>> simplex_mesh_of_random_sphere(
+template std::unique_ptr<const MeshObject<5, float>> simplex_mesh_of_random_sphere(
         int point_count,
         int thread_count,
         ProgressRatio* progress);
-template std::unique_ptr<const SpatialMeshModel<6, float>> simplex_mesh_of_random_sphere(
+template std::unique_ptr<const MeshObject<6, float>> simplex_mesh_of_random_sphere(
         int point_count,
         int thread_count,
         ProgressRatio* progress);
 
-template std::unique_ptr<const SpatialMeshModel<3, double>> simplex_mesh_of_random_sphere(
+template std::unique_ptr<const MeshObject<3, double>> simplex_mesh_of_random_sphere(
         int point_count,
         int thread_count,
         ProgressRatio* progress);
-template std::unique_ptr<const SpatialMeshModel<4, double>> simplex_mesh_of_random_sphere(
+template std::unique_ptr<const MeshObject<4, double>> simplex_mesh_of_random_sphere(
         int point_count,
         int thread_count,
         ProgressRatio* progress);
-template std::unique_ptr<const SpatialMeshModel<5, double>> simplex_mesh_of_random_sphere(
+template std::unique_ptr<const MeshObject<5, double>> simplex_mesh_of_random_sphere(
         int point_count,
         int thread_count,
         ProgressRatio* progress);
-template std::unique_ptr<const SpatialMeshModel<6, double>> simplex_mesh_of_random_sphere(
+template std::unique_ptr<const MeshObject<6, double>> simplex_mesh_of_random_sphere(
         int point_count,
         int thread_count,
         ProgressRatio* progress);
+}

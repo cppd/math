@@ -38,12 +38,14 @@ Pearson Education, 2011.
 #include <src/com/print.h>
 #include <src/com/time.h>
 
+namespace geometry
+{
+namespace
+{
 // Для данной задачи ребро состоит из 2 вершин.
 // Можно использовать готовый класс как бы для трёхмерного случая с двумя вершинами.
 using Edge2 = Ridge<3>;
 
-namespace
-{
 struct WeightedEdge
 {
         double m_weight;
@@ -239,3 +241,4 @@ template std::vector<std::array<int, 2>> minimum_spanning_tree(
         const std::vector<Vector<5, float>>& points,
         const std::vector<std::array<int, 6>>& delaunay_objects,
         ProgressRatio* progress);
+}

@@ -33,7 +33,7 @@ void compute_bound_cocone(
         bool found = std::apply(
                 [&](auto&... v) {
                         return ([&]() {
-                                if (!v.storage.object(id))
+                                if (!v.storage.mesh_object(id))
                                 {
                                         return false;
                                 }
@@ -57,7 +57,7 @@ void save_to_obj(ObjectId id, const std::string& file_name, const std::string& c
         bool found = std::apply(
                 [&](const auto&... v) {
                         return ([&]() {
-                                if (!v.storage.object(id))
+                                if (!v.storage.mesh_object(id))
                                 {
                                         return false;
                                 }
@@ -85,7 +85,7 @@ void save_to_stl(
         bool found = std::apply(
                 [&](const auto&... v) {
                         return ([&]() {
-                                if (!v.storage.object(id))
+                                if (!v.storage.mesh_object(id))
                                 {
                                         return false;
                                 }
@@ -179,8 +179,8 @@ void load_from_repository(
                                         return false;
                                 }
 
-                                auto mesh = processor::load_from_repository(
-                                        progress_list, *v.repository, object_name, point_count);
+                                auto mesh = processor::load_mesh_from_point_repository(
+                                        progress_list, *v.point_object_repository, object_name, point_count);
 
                                 storage->clear();
                                 load_event();

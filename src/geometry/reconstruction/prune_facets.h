@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
+namespace geometry
+{
 namespace prune_facets_implementation
 {
 template <size_t N>
@@ -208,4 +210,5 @@ void prune_facets_incident_to_sharp_ridges(
 
                 suspicious_ridges = std::move(tmp_ridges);
         }
+}
 }

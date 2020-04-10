@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <utility>
 
+namespace
+{
 // Надо располагать точки по целым числам, так как выпуклая оболочка работает с целыми числами.
 // Для float большое число не надо.
 constexpr unsigned DISCRETIZATION = 100000;
@@ -41,6 +43,10 @@ constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_seq
         return {(static_cast<void>(I), 0)..., std::forward<V>(value)};
 }
 
+template <size_t N, typename T>
+constexpr Vector<N, T> LAST_AXIS = make_last_axis<T>(1, std::make_integer_sequence<size_t, N - 1>());
+
+#if 0
 template <typename T, size_t... I, typename V>
 constexpr Vector<sizeof...(I) + 1, T> add_axis(
         const Vector<sizeof...(I), T>& vector,
@@ -49,9 +55,6 @@ constexpr Vector<sizeof...(I) + 1, T> add_axis(
 {
         return {vector[I]..., std::forward<V>(value)};
 }
-
-template <size_t N, typename T>
-constexpr Vector<N, T> LAST_AXIS = make_last_axis<T>(1, std::make_integer_sequence<size_t, N - 1>());
 
 template <size_t N, typename T>
 constexpr Vector<N + 1, T> add_dimension_with_zero(const Vector<N, T>& v)
@@ -66,9 +69,8 @@ constexpr Vector<N, T> vector_with_last_dimension(V&& v)
 
         return make_last_axis<T>(std::forward<V>(v), std::make_integer_sequence<size_t, N - 1>());
 }
+#endif
 
-namespace
-{
 template <size_t N>
 class DiscretePoints
 {
@@ -343,20 +345,20 @@ class Impl final : public PointObjectRepository<N>
 {
         std::map<std::string, std::vector<Vector<N, float>> (Impl<N>::*)(unsigned) const> m_map;
 
-        std::vector<Vector<N, float>> ellipsoid(unsigned point_count) const override
+        std::vector<Vector<N, float>> ellipsoid(unsigned point_count) const
         {
                 return generate_points_ellipsoid<N>(point_count, false);
         }
-        std::vector<Vector<N, float>> ellipsoid_bound(unsigned point_count) const override
+        std::vector<Vector<N, float>> ellipsoid_bound(unsigned point_count) const
         {
                 return generate_points_ellipsoid<N>(point_count, true);
         }
 
-        std::vector<Vector<N, float>> sphere_with_notch(unsigned point_count) const override
+        std::vector<Vector<N, float>> sphere_with_notch(unsigned point_count) const
         {
                 return generate_points_sphere_with_notch<N>(point_count, false);
         }
-        std::vector<Vector<N, float>> sphere_with_notch_bound(unsigned point_count) const override
+        std::vector<Vector<N, float>> sphere_with_notch_bound(unsigned point_count) const
         {
                 return generate_points_sphere_with_notch<N>(point_count, true);
         }
@@ -375,12 +377,12 @@ class Impl final : public PointObjectRepository<N>
                 return generate_points_torus<N>(point_count, true);
         }
 
-        std::vector<std::string> point_object_names() const override
+        std::vector<std::string> object_names() const override
         {
                 return names_of_map(m_map);
         }
 
-        std::vector<Vector<N, float>> point_object(const std::string& object_name, unsigned point_count) const override
+        std::vector<Vector<N, float>> object(const std::string& object_name, unsigned point_count) const override
         {
                 auto iter = m_map.find(object_name);
                 if (iter != m_map.cend())

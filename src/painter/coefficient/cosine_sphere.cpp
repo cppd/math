@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/math.h>
 #include <src/com/type/limit.h>
 
+namespace painter
+{
 namespace
 {
 template <typename T>
@@ -59,3 +61,4 @@ static_assert(compare(100, cosine_sphere_coefficient(10000), 125.328280485377698
 static_assert(compare(100, cosine_sphere_coefficient(11111), 132.10727688710841589303636622242392351328925358716L));
 static_assert(compare(100, cosine_sphere_coefficient(100000), 396.33173893001525509395803345305504249366537658804L));
 static_assert(compare(100, cosine_sphere_coefficient(111111), 417.77023023440949387785892293393789130459621662998L));
+}

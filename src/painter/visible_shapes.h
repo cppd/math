@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
+namespace painter
+{
 template <size_t N, typename T>
 class VisibleHyperplaneParallelotope final : public GenericObject<N, T>,
                                              public Surface<N, T>,
@@ -130,10 +132,10 @@ public:
 template <size_t N, typename T>
 class VisibleSharedMesh final : public GenericObject<N, T>, public Surface<N, T>, public SurfaceProperties<N, T>
 {
-        std::shared_ptr<const SpatialMeshModel<N, T>> m_mesh;
+        std::shared_ptr<const MeshObject<N, T>> m_mesh;
 
 public:
-        explicit VisibleSharedMesh(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh) : m_mesh(mesh)
+        explicit VisibleSharedMesh(const std::shared_ptr<const MeshObject<N, T>>& mesh) : m_mesh(mesh)
         {
         }
 
@@ -178,3 +180,4 @@ public:
                 m_mesh->min_max(min, max);
         }
 };
+}

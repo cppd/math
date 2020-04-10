@@ -19,4 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress.h>
 
+namespace geometry
+{
 void test_reconstruction(int number_of_dimensions, ProgressRatio* progress);
+}

@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "lights/light_source.h"
 
+namespace painter
+{
 template <size_t N, typename T>
 class VisiblePointLight final : public LightSource<N, T>
 {
@@ -55,3 +57,4 @@ public:
                 m_light.properties(point, color, vector_from_point_to_light);
         }
 };
+}

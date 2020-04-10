@@ -40,6 +40,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <utility>
 
+namespace painter
+{
 namespace parallelotope_implementation
 {
 // Вспомогательная функция для следующей после неё функции
@@ -367,9 +369,10 @@ const Vector<N, T>& Parallelotope<N, T>::e(unsigned n) const
         ASSERT(n < N);
         return m_vectors[n];
 }
+}
 
 template <size_t N, typename T>
-std::string to_string(const Parallelotope<N, T>& p)
+std::string to_string(const painter::Parallelotope<N, T>& p)
 {
         std::string s;
         s += "org = " + to_string(p.org()) + "\n";

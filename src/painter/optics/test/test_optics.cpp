@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <vector>
 
+namespace painter
+{
 namespace
 {
 constexpr int COUNT = 10000000;
@@ -125,4 +127,5 @@ void test_optics_performance()
         test_optics_performance<float>();
         test_optics_performance<double>();
         test_optics_performance<long double>();
+}
 }

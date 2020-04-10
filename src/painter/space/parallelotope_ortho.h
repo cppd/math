@@ -38,6 +38,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <utility>
 
+namespace painter
+{
 namespace parallelotope_ortho_implementation
 {
 // Вспомогательная функция для следующей после неё функции
@@ -423,9 +425,10 @@ Vector<N, T> ParallelotopeOrtho<N, T>::e(unsigned n) const
         ASSERT(n < N);
         return parallelotope_ortho_implementation::index_vector<N, T>(n, m_sizes[n]);
 }
+}
 
 template <size_t N, typename T>
-std::string to_string(const ParallelotopeOrtho<N, T>& p)
+std::string to_string(const painter::ParallelotopeOrtho<N, T>& p)
 {
         std::string s;
         s += "org = " + to_string(p.org()) + "\n";

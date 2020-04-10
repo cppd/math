@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <vector>
 
+namespace geometry
+{
 template <size_t N>
 class DelaunayFacet
 {
@@ -155,4 +157,5 @@ void create_delaunay_objects_and_facets(
                                 facet.vertices(), facet_ortho, delaunay_i_0->second, delaunay_i_1->second);
                 }
         }
+}
 }

@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
+namespace painter
+{
 template <typename T>
 std::unique_ptr<const PaintObjects<3, T>> cornell_box_scene(
         int width,
@@ -39,9 +41,10 @@ template <typename T>
 std::unique_ptr<const PaintObjects<3, T>> cornell_box_scene(
         int width,
         int height,
-        const std::shared_ptr<const SpatialMeshModel<3, T>>& mesh,
+        const std::shared_ptr<const MeshObject<3, T>>& mesh,
         T size,
         const Color& default_color,
         Color::DataType diffuse,
         const Vector<3, T>& camera_direction,
         const Vector<3, T>& camera_up);
+}

@@ -32,6 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/math.h>
 #include <src/numerical/vec.h>
 
+namespace painter
+{
 namespace optics_implementation
 {
 template <typename T>
@@ -143,4 +145,5 @@ T fresnel_conductor(const Vector<3, T>& v, const Vector<3, T>& normal, T eta, T 
         T r_perpendicular_square = (t_perpendicular - two_eta_cos1) / (t_perpendicular + two_eta_cos1);
 
         return T(0.5) * (r_parallel_square + r_perpendicular_square);
+}
 }
