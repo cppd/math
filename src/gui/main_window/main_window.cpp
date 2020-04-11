@@ -256,6 +256,8 @@ void MainWindow::constructor_objects_and_repository()
         m_objects_to_load.insert(ComputationType::Cocone);
         m_objects_to_load.insert(ComputationType::BoundCocone);
 
+        m_repository = std::make_unique<MultiRepository>();
+
         m_storage = std::make_unique<MultiStorage>([this](StorageEvent&& event) {
                 run_in_window_thread([&, event = std::move(event)]() { event_from_storage(event); });
         });
@@ -263,7 +265,7 @@ void MainWindow::constructor_objects_and_repository()
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
 
-        std::vector<MultiStorage::RepositoryObjects> repository_objects = m_storage->repository_objects();
+        std::vector<MultiRepository::ObjectNames> repository_objects = m_repository->point_object_names();
 
         std::sort(repository_objects.begin(), repository_objects.end(), [](const auto& a, const auto& b) {
                 return a.dimension < b.dimension;
@@ -493,7 +495,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         bool read_only = true;
 
                         std::vector<dialog::FileFilter> filters;
-                        for (const mesh::FileFormat& v : mesh::load_formats(MultiStorage::dimensions()))
+                        for (const mesh::FileFormat& v : mesh::load_formats(MultiStorage::supported_dimensions()))
                         {
                                 dialog::FileFilter& f = filters.emplace_back();
                                 f.name = v.format_name;
@@ -599,11 +601,12 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
                         view::info::ObjectPosition object_position;
                         m_view->receive({&object_size, &object_position});
 
-                        load_from_repository(
+                        load_from_point_repository(
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
                                 dimension, object_name, object_size.value, object_position.value, rho, alpha,
                                 m_mesh_threads, point_count,
-                                [&]() { m_events(WindowEvent::FileLoaded(object_name, dimension)); }, m_storage.get());
+                                [&]() { m_events(WindowEvent::FileLoaded(object_name, dimension)); }, *m_repository,
+                                m_storage.get());
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));

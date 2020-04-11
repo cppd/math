@@ -33,13 +33,12 @@ void compute_bound_cocone(
         bool found = std::apply(
                 [&](auto&... v) {
                         return ([&]() {
-                                if (!v.storage.mesh_object(id))
+                                if (!v.mesh_object(id))
                                 {
                                         return false;
                                 }
 
-                                processor::compute_bound_cocone(
-                                        progress_list, &v.storage, id, rho, alpha, mesh_threads);
+                                processor::compute_bound_cocone(progress_list, &v, id, rho, alpha, mesh_threads);
 
                                 return true;
                         }() || ...);
@@ -57,12 +56,12 @@ void save_to_obj(ObjectId id, const std::string& file_name, const std::string& c
         bool found = std::apply(
                 [&](const auto&... v) {
                         return ([&]() {
-                                if (!v.storage.mesh_object(id))
+                                if (!v.mesh_object(id))
                                 {
                                         return false;
                                 }
 
-                                processor::save_to_obj(v.storage, id, file_name, comment);
+                                processor::save_to_obj(v, id, file_name, comment);
 
                                 return true;
                         }() || ...);
@@ -85,12 +84,12 @@ void save_to_stl(
         bool found = std::apply(
                 [&](const auto&... v) {
                         return ([&]() {
-                                if (!v.storage.mesh_object(id))
+                                if (!v.mesh_object(id))
                                 {
                                         return false;
                                 }
 
-                                processor::save_to_stl(v.storage, id, file_name, comment, ascii_format);
+                                processor::save_to_stl(v, id, file_name, comment, ascii_format);
 
                                 return true;
                         }() || ...);
@@ -123,7 +122,7 @@ void load_from_file(
         bool found = std::apply(
                 [&](auto&... v) {
                         return ([&]() {
-                                constexpr unsigned N = std::remove_reference_t<decltype(v)>::N;
+                                constexpr unsigned N = std::remove_reference_t<decltype(v)>::DIMENSION;
 
                                 if (N != dimension)
                                 {
@@ -136,7 +135,7 @@ void load_from_file(
                                 load_event(dimension);
 
                                 processor::compute(
-                                        progress_list, &v.storage, build_convex_hull, build_cocone, build_bound_cocone,
+                                        progress_list, &v, build_convex_hull, build_cocone, build_bound_cocone,
                                         build_mst, std::move(mesh), object_size, object_position, rho, alpha,
                                         mesh_threads);
 
@@ -148,11 +147,11 @@ void load_from_file(
         if (!found)
         {
                 error("Dimension " + to_string(dimension) + " is not supported, supported dimensions " +
-                      to_string(MultiStorage::dimensions()));
+                      to_string(MultiStorage::supported_dimensions()));
         }
 }
 
-void load_from_repository(
+void load_from_point_repository(
         bool build_convex_hull,
         bool build_cocone,
         bool build_bound_cocone,
@@ -167,12 +166,13 @@ void load_from_repository(
         int mesh_threads,
         int point_count,
         const std::function<void()>& load_event,
+        const MultiRepository& repository,
         MultiStorage* storage)
 {
         bool found = std::apply(
                 [&](auto&... v) {
                         return ([&]() {
-                                constexpr unsigned N = std::remove_reference_t<decltype(v)>::N;
+                                constexpr unsigned N = std::remove_reference_t<decltype(v)>::DIMENSION;
 
                                 if (N != dimension)
                                 {
@@ -180,13 +180,14 @@ void load_from_repository(
                                 }
 
                                 auto mesh = processor::load_mesh_from_point_repository(
-                                        progress_list, *v.point_object_repository, object_name, point_count);
+                                        progress_list, repository.repository<N>().point_object_repository(),
+                                        object_name, point_count);
 
                                 storage->clear();
                                 load_event();
 
                                 processor::compute(
-                                        progress_list, &v.storage, build_convex_hull, build_cocone, build_bound_cocone,
+                                        progress_list, &v, build_convex_hull, build_cocone, build_bound_cocone,
                                         build_mst, std::move(mesh), object_size, object_position, rho, alpha,
                                         mesh_threads);
 
@@ -198,6 +199,6 @@ void load_from_repository(
         if (!found)
         {
                 error("Dimension " + to_string(dimension) + " is not supported, supported dimensions " +
-                      to_string(MultiStorage::dimensions()));
+                      to_string(MultiStorage::supported_dimensions()));
         }
 }

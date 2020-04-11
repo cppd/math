@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_main_window.h"
 
 #include <src/progress/progress_list.h>
+#include <src/storage/multi_repository.h>
 #include <src/storage/multi_storage.h>
 #include <src/test/self_test.h>
 #include <src/view/interface.h>
@@ -197,6 +198,7 @@ private:
 
         std::unique_ptr<view::View> m_view;
 
+        std::unique_ptr<MultiRepository> m_repository;
         std::unique_ptr<MultiStorage> m_storage;
 
         QColor m_background_color;

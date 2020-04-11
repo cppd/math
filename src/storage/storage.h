@@ -17,9 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "event.h"
-
-#include "repository/points.h"
+#include "storage_event.h"
 
 #include <src/geometry/reconstruction/cocone.h>
 #include <src/model/mesh_object.h>
@@ -48,6 +46,8 @@ class Storage
         std::unordered_map<ObjectId, MeshData> m_map;
 
 public:
+        static constexpr size_t DIMENSION = N;
+
         explicit Storage(const std::function<void(StorageEvent&&)> events) : m_events(events)
         {
         }

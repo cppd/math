@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "options.h"
 #include "storage.h"
 
 #include <src/com/sequence.h>
@@ -26,34 +27,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <variant>
 
-template <size_t DIMENSION, typename MeshFloat>
-struct StorageWithRepository final
-{
-        static constexpr size_t N = DIMENSION;
-
-        const std::unique_ptr<const PointObjectRepository<N>> point_object_repository;
-        Storage<N, MeshFloat> storage;
-
-        explicit StorageWithRepository(const std::function<void(StorageEvent&&)>& storage_events)
-                : point_object_repository(create_point_object_repository<N>()), storage(storage_events)
-        {
-        }
-};
-
 class MultiStorage final
 {
-        static constexpr int MIN = 3;
-        static constexpr int MAX = 5;
-        static constexpr int COUNT = MAX - MIN + 1;
+        static_assert(STORAGE_MIN_DIMENSION >= 3 && STORAGE_MIN_DIMENSION <= STORAGE_MAX_DIMENSION);
+        static constexpr int COUNT = STORAGE_MAX_DIMENSION - STORAGE_MIN_DIMENSION + 1;
 
         using PainterFloatingPoint = double;
 
-        static_assert(MIN >= 3 && MIN <= MAX);
         static_assert(COUNT > 0);
         static_assert(std::is_floating_point_v<PainterFloatingPoint>);
 
         // std::tuple<T<MIN>, ..., T<MAX>>.
-        using Tuple = SequenceType1<std::tuple, MIN, MAX, StorageWithRepository, PainterFloatingPoint>;
+        using Tuple =
+                SequenceType1<std::tuple, STORAGE_MIN_DIMENSION, STORAGE_MAX_DIMENSION, Storage, PainterFloatingPoint>;
 
         Tuple m_data;
 
@@ -66,20 +52,25 @@ class MultiStorage final
 public:
         using Data = Tuple;
 
-        using MeshObject = SequenceType2ConstType2<std::variant, MIN, MAX, std::shared_ptr, mesh::MeshObject>;
+        using MeshObject = SequenceType2ConstType2<
+                std::variant,
+                STORAGE_MIN_DIMENSION,
+                STORAGE_MAX_DIMENSION,
+                std::shared_ptr,
+                mesh::MeshObject>;
 
         using PainterMeshObject = SequenceType2ConstType2<
                 std::variant,
-                MIN,
-                MAX,
+                STORAGE_MIN_DIMENSION,
+                STORAGE_MAX_DIMENSION,
                 std::shared_ptr,
                 painter::MeshObject,
                 PainterFloatingPoint>;
 
-        static std::set<unsigned> dimensions()
+        static std::set<unsigned> supported_dimensions()
         {
                 std::set<unsigned> v;
-                for (int d = MIN; d <= MAX; ++d)
+                for (int d = STORAGE_MIN_DIMENSION; d <= STORAGE_MAX_DIMENSION; ++d)
                 {
                         v.insert(d);
                 }
@@ -103,31 +94,7 @@ public:
 
         void clear()
         {
-                std::apply([](auto&... v) { (v.storage.clear(), ...); }, m_data);
-        }
-
-        struct RepositoryObjects
-        {
-                int dimension;
-                std::vector<std::string> names;
-        };
-        std::vector<RepositoryObjects> repository_objects() const
-        {
-                std::vector<RepositoryObjects> names;
-
-                std::apply(
-                        [&](const auto&... v) {
-                                (
-                                        [&]() {
-                                                names.resize(names.size() + 1);
-                                                names.back().dimension = v.N;
-                                                names.back().names = v.point_object_repository->object_names();
-                                        }(),
-                                        ...);
-                        },
-                        m_data);
-
-                return names;
+                std::apply([](auto&... v) { (v.clear(), ...); }, m_data);
         }
 
         std::optional<MeshObject> mesh_object(ObjectId id) const
@@ -137,7 +104,7 @@ public:
                 std::apply(
                         [&](const auto&... v) {
                                 ([&]() {
-                                        auto ptr = v.storage.mesh_object(id);
+                                        auto ptr = v.mesh_object(id);
                                         if (ptr)
                                         {
                                                 opt = std::move(ptr);
@@ -159,7 +126,7 @@ public:
                 std::apply(
                         [&](const auto&... v) {
                                 ([&]() {
-                                        auto ptr = v.storage.painter_mesh_object(id);
+                                        auto ptr = v.painter_mesh_object(id);
                                         if (ptr)
                                         {
                                                 opt = std::move(ptr);
