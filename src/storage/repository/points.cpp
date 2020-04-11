@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/quaternion.h>
 #include <src/numerical/random.h>
 
+#include <functional>
 #include <map>
 #include <random>
 #include <type_traits>
@@ -326,6 +327,51 @@ std::vector<Vector<N, float>> generate_points_torus(unsigned point_count, bool b
         return points.release();
 }
 
+//
+
+template <size_t N>
+std::vector<Vector<N, float>> ellipsoid(unsigned point_count)
+{
+        return generate_points_ellipsoid<N>(point_count, false);
+}
+
+template <size_t N>
+std::vector<Vector<N, float>> ellipsoid_bound(unsigned point_count)
+{
+        return generate_points_ellipsoid<N>(point_count, true);
+}
+
+template <size_t N>
+std::vector<Vector<N, float>> sphere_with_notch(unsigned point_count)
+{
+        return generate_points_sphere_with_notch<N>(point_count, false);
+}
+
+template <size_t N>
+std::vector<Vector<N, float>> sphere_with_notch_bound(unsigned point_count)
+{
+        return generate_points_sphere_with_notch<N>(point_count, true);
+}
+
+std::vector<Vector<3, float>> mobius_strip(unsigned point_count)
+{
+        return generate_points_mobius_strip(point_count);
+}
+
+template <size_t N>
+std::vector<Vector<N, float>> torus(unsigned point_count)
+{
+        return generate_points_torus<N>(point_count, false);
+}
+
+template <size_t N>
+std::vector<Vector<N, float>> torus_bound(unsigned point_count)
+{
+        return generate_points_torus<N>(point_count, true);
+}
+
+//
+
 template <typename T>
 std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 {
@@ -343,39 +389,7 @@ std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 template <size_t N>
 class Impl final : public PointObjectRepository<N>
 {
-        std::map<std::string, std::vector<Vector<N, float>> (Impl<N>::*)(unsigned) const> m_map;
-
-        std::vector<Vector<N, float>> ellipsoid(unsigned point_count) const
-        {
-                return generate_points_ellipsoid<N>(point_count, false);
-        }
-        std::vector<Vector<N, float>> ellipsoid_bound(unsigned point_count) const
-        {
-                return generate_points_ellipsoid<N>(point_count, true);
-        }
-
-        std::vector<Vector<N, float>> sphere_with_notch(unsigned point_count) const
-        {
-                return generate_points_sphere_with_notch<N>(point_count, false);
-        }
-        std::vector<Vector<N, float>> sphere_with_notch_bound(unsigned point_count) const
-        {
-                return generate_points_sphere_with_notch<N>(point_count, true);
-        }
-
-        std::vector<Vector<3, float>> mobius_strip(unsigned point_count) const
-        {
-                return generate_points_mobius_strip(point_count);
-        }
-
-        std::vector<Vector<N, float>> torus(unsigned point_count) const
-        {
-                return generate_points_torus<N>(point_count, false);
-        }
-        std::vector<Vector<N, float>> torus_bound(unsigned point_count) const
-        {
-                return generate_points_torus<N>(point_count, true);
-        }
+        std::map<std::string, std::function<std::vector<Vector<N, float>>(unsigned)>> m_map;
 
         std::vector<std::string> object_names() const override
         {
@@ -387,7 +401,7 @@ class Impl final : public PointObjectRepository<N>
                 auto iter = m_map.find(object_name);
                 if (iter != m_map.cend())
                 {
-                        return (this->*(iter->second))(point_count);
+                        return iter->second(point_count);
                 }
                 error("Object not found in repository: " + object_name);
         }
@@ -395,21 +409,21 @@ class Impl final : public PointObjectRepository<N>
 public:
         Impl()
         {
-                m_map.emplace("Ellipsoid", &Impl<N>::ellipsoid);
-                m_map.emplace("Ellipsoid, bound", &Impl<N>::ellipsoid_bound);
+                m_map.emplace("Ellipsoid", ellipsoid<N>);
+                m_map.emplace("Ellipsoid, bound", ellipsoid_bound<N>);
 
-                m_map.emplace("Sphere with a notch", &Impl<N>::sphere_with_notch);
-                m_map.emplace("Sphere with a notch, bound", &Impl<N>::sphere_with_notch_bound);
+                m_map.emplace("Sphere with a notch", sphere_with_notch<N>);
+                m_map.emplace("Sphere with a notch, bound", sphere_with_notch_bound<N>);
 
                 if constexpr (N == 3)
                 {
-                        m_map.emplace(reinterpret_cast<const char*>(u8"Möbius strip"), &Impl<N>::mobius_strip);
+                        m_map.emplace(reinterpret_cast<const char*>(u8"Möbius strip"), mobius_strip);
                 }
 
                 if constexpr (N >= 3)
                 {
-                        m_map.emplace("Torus", &Impl<N>::torus);
-                        m_map.emplace("Torus, bound", &Impl<N>::torus_bound);
+                        m_map.emplace("Torus", torus<N>);
+                        m_map.emplace("Torus, bound", torus_bound<N>);
                 }
         }
 };
@@ -421,7 +435,6 @@ std::unique_ptr<PointObjectRepository<N>> create_point_object_repository()
         return std::make_unique<Impl<N>>();
 }
 
-template std::unique_ptr<PointObjectRepository<2>> create_point_object_repository<2>();
 template std::unique_ptr<PointObjectRepository<3>> create_point_object_repository<3>();
 template std::unique_ptr<PointObjectRepository<4>> create_point_object_repository<4>();
 template std::unique_ptr<PointObjectRepository<5>> create_point_object_repository<5>();
