@@ -271,18 +271,23 @@ void MainWindow::constructor_objects_and_repository()
                 return a.dimension < b.dimension;
         });
 
-        for (const auto& dimension_objects : repository_objects)
+        for (const auto& objects : repository_objects)
         {
-                ASSERT(dimension_objects.dimension > 0);
+                ASSERT(objects.dimension > 0);
 
-                QMenu* sub_menu = ui.menuCreate->addMenu(space_name(dimension_objects.dimension).c_str());
-                for (const std::string& name : dimension_objects.point_names)
+                QMenu* sub_menu = ui.menuCreate->addMenu(space_name(objects.dimension).c_str());
+                for (const std::string& object_name : objects.point_names)
                 {
-                        ASSERT(!name.empty());
+                        ASSERT(!object_name.empty());
 
-                        std::string text = name + "...";
-                        QAction* action = sub_menu->addAction(text.c_str());
-                        m_action_to_dimension_and_object_name.try_emplace(action, dimension_objects.dimension, name);
+                        std::string action_text = object_name + "...";
+                        QAction* action = sub_menu->addAction(action_text.c_str());
+
+                        RepositoryActionDescription action_description;
+                        action_description.dimension = objects.dimension;
+                        action_description.object_name = object_name;
+
+                        m_repository_actions.try_emplace(action, action_description);
                         connect(action, SIGNAL(triggered()), this, SLOT(slot_point_object_repository()));
                 }
         }
@@ -1201,14 +1206,14 @@ void MainWindow::on_actionLoad_triggered()
 
 void MainWindow::slot_point_object_repository()
 {
-        auto iter = m_action_to_dimension_and_object_name.find(sender());
-        if (iter == m_action_to_dimension_and_object_name.cend())
+        auto iter = m_repository_actions.find(sender());
+        if (iter == m_repository_actions.cend())
         {
-                m_events(WindowEvent::MessageError("Open object sender not found in map"));
+                m_events(WindowEvent::MessageError("Failed to find sender in action map"));
                 return;
         }
 
-        thread_load_from_point_repository(std::get<0>(iter->second), std::get<1>(iter->second));
+        thread_load_from_point_repository(iter->second.dimension, iter->second.object_name);
 }
 
 void MainWindow::on_actionExport_triggered()

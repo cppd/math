@@ -194,7 +194,12 @@ private:
 
         std::unique_ptr<WorkerThreads> m_worker_threads;
 
-        std::unordered_map<QObject*, std::tuple<int, std::string>> m_action_to_dimension_and_object_name;
+        struct RepositoryActionDescription final
+        {
+                int dimension;
+                std::string object_name;
+        };
+        std::unordered_map<QObject*, RepositoryActionDescription> m_repository_actions;
 
         std::unique_ptr<view::View> m_view;
 
