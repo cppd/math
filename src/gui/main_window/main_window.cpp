@@ -265,7 +265,7 @@ void MainWindow::constructor_objects_and_repository()
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
 
-        std::vector<MultiRepository::ObjectNames> repository_objects = m_repository->point_object_names();
+        std::vector<MultiRepository::ObjectNames> repository_objects = m_repository->object_names();
 
         std::sort(repository_objects.begin(), repository_objects.end(), [](const auto& a, const auto& b) {
                 return a.dimension < b.dimension;
@@ -276,14 +276,14 @@ void MainWindow::constructor_objects_and_repository()
                 ASSERT(dimension_objects.dimension > 0);
 
                 QMenu* sub_menu = ui.menuCreate->addMenu(space_name(dimension_objects.dimension).c_str());
-                for (const std::string& name : dimension_objects.names)
+                for (const std::string& name : dimension_objects.point_names)
                 {
                         ASSERT(!name.empty());
 
                         std::string text = name + "...";
                         QAction* action = sub_menu->addAction(text.c_str());
                         m_action_to_dimension_and_object_name.try_emplace(action, dimension_objects.dimension, name);
-                        connect(action, SIGNAL(triggered()), this, SLOT(slot_object_repository()));
+                        connect(action, SIGNAL(triggered()), this, SLOT(slot_point_object_repository()));
                 }
         }
 }
@@ -546,7 +546,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
         });
 }
 
-void MainWindow::thread_load_from_repository(int dimension, const std::string& object_name)
+void MainWindow::thread_load_from_point_repository(int dimension, const std::string& object_name)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -1199,7 +1199,7 @@ void MainWindow::on_actionLoad_triggered()
         thread_load_from_file("", true);
 }
 
-void MainWindow::slot_object_repository()
+void MainWindow::slot_point_object_repository()
 {
         auto iter = m_action_to_dimension_and_object_name.find(sender());
         if (iter == m_action_to_dimension_and_object_name.cend())
@@ -1208,7 +1208,7 @@ void MainWindow::slot_object_repository()
                 return;
         }
 
-        thread_load_from_repository(std::get<0>(iter->second), std::get<1>(iter->second));
+        thread_load_from_point_repository(std::get<0>(iter->second), std::get<1>(iter->second));
 }
 
 void MainWindow::on_actionExport_triggered()
