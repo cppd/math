@@ -17,6 +17,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "volume_utility/bounding_box.h"
-#include "volume_utility/position.h"
-#include "volume_utility/vertices.h"
+#include "bounding_box.h"
+
+#include "../com/functions.h"
+#include "../volume.h"
+
+#include <src/com/error.h>
+
+namespace volume
+{
+template <size_t N>
+void center_and_length(const Volume<N>& volume, Vector<N, double>* center, double* length)
+{
+        std::optional<BoundingBox<N>> box = bounding_box(volume);
+        if (!box)
+        {
+                error("Volume has no geometry");
+        }
+        std::tie(*center, *length) = model::center_and_length_for_min_max(box->min, box->max);
+}
+}
