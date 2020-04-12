@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/model/mesh_object.h>
+#include <src/model/volume_object.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/region.h>
 #include <src/numerical/vec.h>
@@ -66,6 +67,7 @@ struct Renderer
         virtual void clip_plane_hide() = 0;
 
         virtual void object_add(const mesh::MeshObject<3>& object) = 0;
+        virtual void object_add(const volume::VolumeObject<3>& object) = 0;
         virtual void object_delete(ObjectId id) = 0;
         virtual void object_show(ObjectId id) = 0;
         virtual void object_delete_all() = 0;

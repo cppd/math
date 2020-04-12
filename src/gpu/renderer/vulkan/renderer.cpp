@@ -325,6 +325,9 @@ class Impl final : public Renderer
 
                 set_matrices();
         }
+        void object_add(const volume::VolumeObject<3>& /*object*/) override
+        {
+        }
         void object_delete(ObjectId id) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
