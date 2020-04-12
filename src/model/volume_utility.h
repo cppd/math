@@ -18,5 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "volume_utility/bounding_box.h"
+#include "volume_utility/matrix.h"
 #include "volume_utility/position.h"
 #include "volume_utility/vertices.h"
