@@ -30,10 +30,8 @@ namespace storage
 {
 class MultiRepository final
 {
-        static_assert(STORAGE_MIN_DIMENSION >= 3 && STORAGE_MIN_DIMENSION <= STORAGE_MAX_DIMENSION);
-
         // std::tuple<T<MIN>, ..., T<MAX>>.
-        using Tuple = SequenceType1<std::tuple, STORAGE_MIN_DIMENSION, STORAGE_MAX_DIMENSION, Repository>;
+        using Tuple = SequenceType1<std::tuple, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, Repository>;
 
         Tuple m_data;
 
@@ -41,7 +39,7 @@ public:
         std::set<unsigned> supported_dimensions()
         {
                 std::set<unsigned> v;
-                for (int d = STORAGE_MIN_DIMENSION; d <= STORAGE_MAX_DIMENSION; ++d)
+                for (int d = MINIMUM_DIMENSION; d <= MAXIMUM_DIMENSION; ++d)
                 {
                         v.insert(d);
                 }
@@ -51,7 +49,7 @@ public:
         template <size_t N>
         const Repository<N>& repository() const
         {
-                static_assert(N >= STORAGE_MIN_DIMENSION && N <= STORAGE_MAX_DIMENSION);
+                static_assert(N >= MINIMUM_DIMENSION && N <= MAXIMUM_DIMENSION);
                 return std::get<Repository<N>>(m_data);
         }
 

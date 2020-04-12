@@ -258,7 +258,7 @@ void MainWindow::constructor_objects_and_repository()
 
         m_repository = std::make_unique<storage::MultiRepository>();
 
-        m_storage = std::make_unique<storage::MultiStorage>([this](storage::StorageEvent&& event) {
+        m_storage = std::make_unique<storage::MultiStorage>([this](storage::Event&& event) {
                 run_in_window_thread([&, event = std::move(event)]() { event_from_storage(event); });
         });
 
@@ -1032,12 +1032,12 @@ void MainWindow::event_from_window(const WindowEvent& event)
         }
 }
 
-void MainWindow::event_from_storage(const storage::StorageEvent& event)
+void MainWindow::event_from_storage(const storage::Event& event)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
         const auto visitors = Visitors{
-                [this](const storage::StorageEvent::LoadedMeshObject& d) {
+                [this](const storage::Event::LoadedMeshObject& d) {
                         std::optional<storage::MultiStorage::MeshObject> object = m_storage->mesh_object(d.id);
                         if (!object)
                         {
@@ -1059,7 +1059,7 @@ void MainWindow::event_from_storage(const storage::StorageEvent& event)
                                 },
                                 *object);
                 },
-                [this](const storage::StorageEvent::LoadedPainterMeshObject& d) {
+                [this](const storage::Event::LoadedPainterMeshObject& d) {
                         std::optional<storage::MultiStorage::MeshObject> object = m_storage->mesh_object(d.id);
                         if (!object)
                         {
@@ -1070,7 +1070,7 @@ void MainWindow::event_from_storage(const storage::StorageEvent& event)
                         std::visit([&](const auto& v) { object_name = v->name(); }, *object);
                         ui.model_tree->add_item(d.id, object_name);
                 },
-                [this](const storage::StorageEvent::LoadedVolumeObject& d) {
+                [this](const storage::Event::LoadedVolumeObject& d) {
                         std::optional<storage::MultiStorage::VolumeObject> object = m_storage->volume_object(d.id);
                         if (!object)
                         {
@@ -1093,14 +1093,14 @@ void MainWindow::event_from_storage(const storage::StorageEvent& event)
                                 },
                                 *object);
                 },
-                [this](const storage::StorageEvent::DeletedObject& d) {
+                [this](const storage::Event::DeletedObject& d) {
                         if (m_view && d.dimension == 3)
                         {
                                 m_view->send(view::command::DeleteObject(d.id));
                         }
                         ui.model_tree->delete_item(d.id);
                 },
-                [this](const storage::StorageEvent::DeletedAll& d) {
+                [this](const storage::Event::DeletedAll& d) {
                         if (m_view && d.dimension == 3)
                         {
                                 m_view->send(view::command::DeleteAllObjects());

@@ -36,7 +36,7 @@ class Storage
 {
         static_assert(N >= 3);
 
-        const std::function<void(StorageEvent&&)> m_events;
+        const std::function<void(Event&&)> m_events;
 
         struct MeshData
         {
@@ -59,7 +59,7 @@ class Storage
 public:
         static constexpr size_t DIMENSION = N;
 
-        explicit Storage(const std::function<void(StorageEvent&&)> events) : m_events(events)
+        explicit Storage(const std::function<void(Event&&)> events) : m_events(events)
         {
         }
 
@@ -73,7 +73,7 @@ public:
                 MeshData& v = m_mesh_map.try_emplace(object->id()).first->second;
                 tmp = std::move(v.mesh_object);
                 v.mesh_object = std::forward<T>(object);
-                m_events(StorageEvent::LoadedMeshObject(v.mesh_object->id(), N));
+                m_events(Event::LoadedMeshObject(v.mesh_object->id(), N));
         }
 
         template <typename T>
@@ -84,7 +84,7 @@ public:
                 MeshData& v = m_mesh_map.try_emplace(id).first->second;
                 tmp = std::move(v.painter_mesh_object);
                 v.painter_mesh_object = std::forward<T>(mesh);
-                m_events(StorageEvent::LoadedPainterMeshObject(id, N));
+                m_events(Event::LoadedPainterMeshObject(id, N));
         }
 
         void set_manifold_constructor(
@@ -106,7 +106,7 @@ public:
                 VolumeData& v = m_volume_map.try_emplace(object->id()).first->second;
                 tmp = std::move(v.volume_object);
                 v.volume_object = std::forward<T>(object);
-                m_events(StorageEvent::LoadedVolumeObject(v.volume_object->id(), N));
+                m_events(Event::LoadedVolumeObject(v.volume_object->id(), N));
         }
 
         //
@@ -152,7 +152,7 @@ public:
                 tmp_volume = std::move(m_volume_map);
                 m_mesh_map.clear();
                 m_volume_map.clear();
-                m_events(StorageEvent::DeletedAll(N));
+                m_events(Event::DeletedAll(N));
         }
 };
 }

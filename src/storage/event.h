@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace storage
 {
-struct StorageEvent
+struct Event
 {
         struct LoadedMeshObject final
         {
@@ -73,7 +73,7 @@ struct StorageEvent
                 std::variant<DeletedAll, DeletedObject, LoadedMeshObject, LoadedPainterMeshObject, LoadedVolumeObject>;
 
         template <typename Type>
-        StorageEvent(Type&& arg) : m_data(std::forward<Type>(arg))
+        Event(Type&& arg) : m_data(std::forward<Type>(arg))
         {
         }
 

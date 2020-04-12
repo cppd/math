@@ -15,12 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "options.h"
+
+#include <type_traits>
 
 namespace storage
 {
-constexpr int MINIMUM_DIMENSION = 3;
-constexpr int MAXIMUM_DIMENSION = 5;
-
-using PainterFloatingPoint = double;
+static_assert(MINIMUM_DIMENSION >= 3 && MINIMUM_DIMENSION <= MAXIMUM_DIMENSION);
+static_assert(std::is_floating_point_v<PainterFloatingPoint>);
 }

@@ -184,7 +184,7 @@ private:
         void event_from_window(const WindowEvent& event);
         void event_from_log(const LogEvent& event);
         void event_from_view(const view::Event& event);
-        void event_from_storage(const storage::StorageEvent& event);
+        void event_from_storage(const storage::Event& event);
 
         Ui::MainWindow ui;
 
