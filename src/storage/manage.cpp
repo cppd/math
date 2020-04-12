@@ -179,7 +179,7 @@ void load_from_point_repository(
                                         return false;
                                 }
 
-                                auto mesh = processor::load_mesh_from_point_repository(
+                                std::unique_ptr<const mesh::Mesh<N>> mesh = processor::load_mesh_from_point_repository(
                                         progress_list, repository.repository<N>().point_object_repository(),
                                         object_name, point_count);
 
@@ -190,6 +190,45 @@ void load_from_point_repository(
                                         progress_list, &v, build_convex_hull, build_cocone, build_bound_cocone,
                                         build_mst, std::move(mesh), object_size, object_position, rho, alpha,
                                         mesh_threads);
+
+                                return true;
+                        }() || ...);
+                },
+                storage->data());
+
+        if (!found)
+        {
+                error("Dimension " + to_string(dimension) + " is not supported, supported dimensions " +
+                      to_string(MultiStorage::supported_dimensions()));
+        }
+}
+
+void add_from_volume_repository(
+        ProgressRatioList* progress_list,
+        int dimension,
+        const std::string& object_name,
+        double object_size,
+        const vec3& object_position,
+        int image_size,
+        const MultiRepository& repository,
+        MultiStorage* storage)
+{
+        bool found = std::apply(
+                [&](auto&... v) {
+                        return ([&]() {
+                                constexpr unsigned N = std::remove_reference_t<decltype(v)>::DIMENSION;
+
+                                if (N != dimension)
+                                {
+                                        return false;
+                                }
+
+                                std::unique_ptr<const volume::Volume<N>> volume =
+                                        processor::load_volume_from_volume_repository(
+                                                progress_list, repository.repository<N>().volume_object_repository(),
+                                                object_name, image_size);
+
+                                processor::compute(&v, std::move(volume), object_size, object_position);
 
                                 return true;
                         }() || ...);

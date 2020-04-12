@@ -74,3 +74,13 @@ void load_from_point_repository(
         const std::function<void()>& load_event,
         const MultiRepository& repository,
         MultiStorage* storage);
+
+void add_from_volume_repository(
+        ProgressRatioList* progress_list,
+        int dimension,
+        const std::string& object_name,
+        double object_size,
+        const vec3& object_position,
+        int image_size,
+        const MultiRepository& repository,
+        MultiStorage* storage);
