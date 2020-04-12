@@ -80,7 +80,8 @@ void MeshObject<N, T>::create(
 
         m_vertices = to_vector<T>(mesh.vertices);
         m_vertices.shrink_to_fit();
-        std::transform(m_vertices.begin(), m_vertices.end(), m_vertices.begin(), MatrixVectorMultiplier(matrix));
+        std::transform(
+                m_vertices.begin(), m_vertices.end(), m_vertices.begin(), matrix::MatrixVectorMultiplier(matrix));
 
         m_normals = to_vector<T>(mesh.normals);
         m_normals.shrink_to_fit();

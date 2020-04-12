@@ -36,9 +36,9 @@ Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(
         Vector<N, double> center;
         double length;
         center_and_length(volume, &center, &length);
-        Matrix<N + 1, N + 1, double> t1 = translate(-center);
-        Matrix<N + 1, N + 1, double> t2 = scale(Vector<N, double>(size / length));
-        Matrix<N + 1, N + 1, double> t3 = translate(position);
+        Matrix<N + 1, N + 1, double> t1 = matrix::translate(-center);
+        Matrix<N + 1, N + 1, double> t2 = matrix::scale(Vector<N, double>(size / length));
+        Matrix<N + 1, N + 1, double> t3 = matrix::translate(position);
         return t3 * t2 * t1;
 }
 }

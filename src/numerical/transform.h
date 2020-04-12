@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+namespace matrix
+{
 template <typename T>
 Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, const Vector<3, T>& up)
 {
@@ -38,12 +40,11 @@ Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, con
         return m;
 }
 
+// Исходная система координат: X направо, Y вверх, Z от экрана.
+// Vulkan: X направо [-1, 1], Y вниз [-1, 1], Z в экран [0, 1].
 template <typename T, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
 constexpr Matrix<4, 4, T> ortho_vulkan(T1 left, T2 right, T3 bottom, T4 top, T5 near, T6 far)
 {
-        // Vulkan
-        // X направо [-1, 1], Y вниз [-1, 1], Z в экран [0, 1]
-
         T left_t = left;
         T right_t = right;
         T bottom_t = bottom;
@@ -135,3 +136,4 @@ public:
                 return res;
         }
 };
+}

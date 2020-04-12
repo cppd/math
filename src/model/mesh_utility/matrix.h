@@ -31,9 +31,9 @@ Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(
         double size,
         const Vector<N, double>& position)
 {
-        Matrix<N + 1, N + 1, double> t1 = translate(to_vector<double>(-mesh.center));
-        Matrix<N + 1, N + 1, double> t2 = scale(Vector<N, double>(size / mesh.length));
-        Matrix<N + 1, N + 1, double> t3 = translate(position);
+        Matrix<N + 1, N + 1, double> t1 = matrix::translate(to_vector<double>(-mesh.center));
+        Matrix<N + 1, N + 1, double> t2 = matrix::scale(Vector<N, double>(size / mesh.length));
+        Matrix<N + 1, N + 1, double> t3 = matrix::translate(position);
         return t3 * t2 * t1;
 }
 }

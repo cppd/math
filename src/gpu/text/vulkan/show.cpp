@@ -176,7 +176,7 @@ class Impl final : public TextShow
                 double top = 0;
                 double near = 1;
                 double far = -1;
-                m_memory.set_matrix(ortho_vulkan<double>(left, right, bottom, top, near, far));
+                m_memory.set_matrix(matrix::ortho_vulkan<double>(left, right, bottom, top, near, far));
         }
 
         void delete_buffers() override

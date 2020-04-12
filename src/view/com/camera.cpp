@@ -82,12 +82,12 @@ void Camera::shadow_volume(double* left, double* right, double* bottom, double* 
 
 mat4 Camera::main_view_matrix() const
 {
-        return look_at<double>(vec3(0, 0, 0), m_camera_direction, m_camera_up);
+        return matrix::look_at<double>(vec3(0, 0, 0), m_camera_direction, m_camera_up);
 }
 
 mat4 Camera::shadow_view_matrix() const
 {
-        return look_at(vec3(0, 0, 0), m_light_direction, m_light_up);
+        return matrix::look_at(vec3(0, 0, 0), m_light_direction, m_light_up);
 }
 
 void Camera::reset(const vec3& right, const vec3& up, double scale, const vec2& window_center)
