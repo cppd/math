@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/model/mesh_utility.h>
 
+namespace storage
+{
 void compute_bound_cocone(
         ProgressRatioList* progress_list,
         ObjectId id,
@@ -237,4 +239,5 @@ void add_from_volume_repository(
                 error("Dimension " + to_string(dimension) + " is not supported, supported dimensions " +
                       to_string(MultiStorage::supported_dimensions()));
         }
+}
 }

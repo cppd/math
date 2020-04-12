@@ -27,6 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <variant>
 
+namespace storage
+{
 class MultiStorage final
 {
         static_assert(STORAGE_MIN_DIMENSION >= 3 && STORAGE_MIN_DIMENSION <= STORAGE_MAX_DIMENSION);
@@ -170,3 +172,4 @@ public:
                 return opt;
         }
 };
+}

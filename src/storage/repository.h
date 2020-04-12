@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "repository/meshes.h"
 #include "repository/volumes.h"
 
+namespace storage
+{
 template <size_t N>
 class Repository final
 {
@@ -45,3 +47,4 @@ public:
                 return *m_volume_object_repository;
         }
 };
+}

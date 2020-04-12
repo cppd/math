@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <functional>
 #include <map>
 
+namespace storage
+{
 namespace
 {
 constexpr unsigned MAXIMUM_VOLUME_SIZE = 1'000'000'000;
@@ -115,3 +117,4 @@ std::unique_ptr<VolumeObjectRepository<N>> create_volume_object_repository()
 template std::unique_ptr<VolumeObjectRepository<3>> create_volume_object_repository();
 template std::unique_ptr<VolumeObjectRepository<4>> create_volume_object_repository();
 template std::unique_ptr<VolumeObjectRepository<5>> create_volume_object_repository();
+}

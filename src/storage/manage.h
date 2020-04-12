@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+namespace storage
+{
 void compute_bound_cocone(
         ProgressRatioList* progress_list,
         ObjectId id,
@@ -83,3 +85,4 @@ void add_from_volume_repository(
         int image_size,
         const MultiRepository& repository,
         MultiStorage* storage);
+}

@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+namespace storage
+{
 template <size_t N>
 struct MeshObjectRepository
 {
@@ -34,3 +36,4 @@ struct MeshObjectRepository
 
 template <size_t N>
 std::unique_ptr<MeshObjectRepository<N>> create_mesh_object_repository();
+}

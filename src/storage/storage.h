@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <vector>
 
+namespace storage
+{
 template <size_t N, typename MeshFloat>
 class Storage
 {
@@ -153,3 +155,4 @@ public:
                 m_events(StorageEvent::DeletedAll(N));
         }
 };
+}

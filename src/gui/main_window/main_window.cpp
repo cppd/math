@@ -256,16 +256,16 @@ void MainWindow::constructor_objects_and_repository()
         m_objects_to_load.insert(ComputationType::Cocone);
         m_objects_to_load.insert(ComputationType::BoundCocone);
 
-        m_repository = std::make_unique<MultiRepository>();
+        m_repository = std::make_unique<storage::MultiRepository>();
 
-        m_storage = std::make_unique<MultiStorage>([this](StorageEvent&& event) {
+        m_storage = std::make_unique<storage::MultiStorage>([this](storage::StorageEvent&& event) {
                 run_in_window_thread([&, event = std::move(event)]() { event_from_storage(event); });
         });
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
 
-        std::vector<MultiRepository::ObjectNames> repository_objects = m_repository->object_names();
+        std::vector<storage::MultiRepository::ObjectNames> repository_objects = m_repository->object_names();
 
         std::sort(repository_objects.begin(), repository_objects.end(), [](const auto& a, const auto& b) {
                 return a.dimension < b.dimension;
@@ -500,7 +500,8 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         bool read_only = true;
 
                         std::vector<dialog::FileFilter> filters;
-                        for (const mesh::FileFormat& v : mesh::load_formats(MultiStorage::supported_dimensions()))
+                        for (const mesh::FileFormat& v :
+                             mesh::load_formats(storage::MultiStorage::supported_dimensions()))
                         {
                                 dialog::FileFilter& f = filters.emplace_back();
                                 f.name = v.format_name;
@@ -632,7 +633,7 @@ void MainWindow::thread_export(ObjectId id)
                         return;
                 }
 
-                std::optional<MultiStorage::MeshObject> object = m_storage->mesh_object(id);
+                std::optional<storage::MultiStorage::MeshObject> object = m_storage->mesh_object(id);
                 if (!object)
                 {
                         m_events(WindowEvent::MessageWarning("No object to export"));
@@ -1031,13 +1032,13 @@ void MainWindow::event_from_window(const WindowEvent& event)
         }
 }
 
-void MainWindow::event_from_storage(const StorageEvent& event)
+void MainWindow::event_from_storage(const storage::StorageEvent& event)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
         const auto visitors = Visitors{
-                [this](const StorageEvent::LoadedMeshObject& d) {
-                        std::optional<MultiStorage::MeshObject> object = m_storage->mesh_object(d.id);
+                [this](const storage::StorageEvent::LoadedMeshObject& d) {
+                        std::optional<storage::MultiStorage::MeshObject> object = m_storage->mesh_object(d.id);
                         if (!object)
                         {
                                 m_events(WindowEvent::MessageWarning("No loaded object"));
@@ -1058,8 +1059,8 @@ void MainWindow::event_from_storage(const StorageEvent& event)
                                 },
                                 *object);
                 },
-                [this](const StorageEvent::LoadedPainterMeshObject& d) {
-                        std::optional<MultiStorage::MeshObject> object = m_storage->mesh_object(d.id);
+                [this](const storage::StorageEvent::LoadedPainterMeshObject& d) {
+                        std::optional<storage::MultiStorage::MeshObject> object = m_storage->mesh_object(d.id);
                         if (!object)
                         {
                                 m_events(WindowEvent::MessageWarning("No loaded painter mesh object for mesh object"));
@@ -1069,8 +1070,8 @@ void MainWindow::event_from_storage(const StorageEvent& event)
                         std::visit([&](const auto& v) { object_name = v->name(); }, *object);
                         ui.model_tree->add_item(d.id, object_name);
                 },
-                [this](const StorageEvent::LoadedVolumeObject& d) {
-                        std::optional<MultiStorage::VolumeObject> object = m_storage->volume_object(d.id);
+                [this](const storage::StorageEvent::LoadedVolumeObject& d) {
+                        std::optional<storage::MultiStorage::VolumeObject> object = m_storage->volume_object(d.id);
                         if (!object)
                         {
                                 m_events(WindowEvent::MessageWarning("No loaded object"));
@@ -1092,14 +1093,14 @@ void MainWindow::event_from_storage(const StorageEvent& event)
                                 },
                                 *object);
                 },
-                [this](const StorageEvent::DeletedObject& d) {
+                [this](const storage::StorageEvent::DeletedObject& d) {
                         if (m_view && d.dimension == 3)
                         {
                                 m_view->send(view::command::DeleteObject(d.id));
                         }
                         ui.model_tree->delete_item(d.id);
                 },
-                [this](const StorageEvent::DeletedAll& d) {
+                [this](const storage::StorageEvent::DeletedAll& d) {
                         if (m_view && d.dimension == 3)
                         {
                                 m_view->send(view::command::DeleteAllObjects());
@@ -1666,14 +1667,14 @@ void MainWindow::on_actionPainter_triggered()
 
         ObjectId object_id = *item;
 
-        std::optional<MultiStorage::MeshObject> object = m_storage->mesh_object(object_id);
+        std::optional<storage::MultiStorage::MeshObject> object = m_storage->mesh_object(object_id);
         if (!object)
         {
                 m_events(WindowEvent::MessageWarning("No object to paint"));
                 return;
         }
 
-        std::optional<MultiStorage::PainterMeshObject> mesh = m_storage->painter_mesh_object(object_id);
+        std::optional<storage::MultiStorage::PainterMeshObject> mesh = m_storage->painter_mesh_object(object_id);
         if (!mesh)
         {
                 m_events(WindowEvent::MessageWarning("No object to paint"));

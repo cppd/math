@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <tuple>
 
+namespace storage
+{
 class MultiRepository final
 {
         static_assert(STORAGE_MIN_DIMENSION >= 3 && STORAGE_MIN_DIMENSION <= STORAGE_MAX_DIMENSION);
@@ -80,3 +82,4 @@ public:
                 return names;
         }
 };
+}

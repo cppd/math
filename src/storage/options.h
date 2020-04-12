@@ -17,5 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+namespace storage
+{
 constexpr int STORAGE_MIN_DIMENSION = 3;
 constexpr int STORAGE_MAX_DIMENSION = 5;
+}

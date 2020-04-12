@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <variant>
 
+namespace storage
+{
 struct StorageEvent
 {
         struct LoadedMeshObject final
@@ -83,3 +85,4 @@ struct StorageEvent
 private:
         T m_data;
 };
+}

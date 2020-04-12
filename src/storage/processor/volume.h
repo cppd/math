@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-namespace processor
+namespace storage::processor
 {
 template <size_t N, typename MeshFloat>
 void compute(

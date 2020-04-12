@@ -184,7 +184,7 @@ private:
         void event_from_window(const WindowEvent& event);
         void event_from_log(const LogEvent& event);
         void event_from_view(const view::Event& event);
-        void event_from_storage(const StorageEvent& event);
+        void event_from_storage(const storage::StorageEvent& event);
 
         Ui::MainWindow ui;
 
@@ -203,8 +203,8 @@ private:
 
         std::unique_ptr<view::View> m_view;
 
-        std::unique_ptr<MultiRepository> m_repository;
-        std::unique_ptr<MultiStorage> m_storage;
+        std::unique_ptr<storage::MultiRepository> m_repository;
+        std::unique_ptr<storage::MultiStorage> m_storage;
 
         QColor m_background_color;
         QColor m_default_color;

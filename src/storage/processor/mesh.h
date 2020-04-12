@@ -35,6 +35,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+namespace storage
+{
 namespace processor_implementation
 {
 inline std::mutex global_mesh_sequential_mutex;
@@ -454,5 +456,6 @@ void save_to_stl(
         }
 
         mesh::save_to_stl(object->mesh(), file_name, comment, ascii_format);
+}
 }
 }

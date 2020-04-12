@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <utility>
 
+namespace storage
+{
 namespace
 {
 // Надо располагать точки по целым числам, так как выпуклая оболочка работает с целыми числами.
@@ -439,3 +441,4 @@ std::unique_ptr<MeshObjectRepository<N>> create_mesh_object_repository()
 template std::unique_ptr<MeshObjectRepository<3>> create_mesh_object_repository<3>();
 template std::unique_ptr<MeshObjectRepository<4>> create_mesh_object_repository<4>();
 template std::unique_ptr<MeshObjectRepository<5>> create_mesh_object_repository<5>();
+}
