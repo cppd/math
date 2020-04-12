@@ -125,7 +125,7 @@ CornellBoxScene<T>::CornellBoxScene(
 
         std::unique_ptr<mesh::Mesh<3>> mesh = mesh::load<3>(obj_file_name, &progress);
 
-        mat4 vertex_matrix = model_vertex_matrix(*mesh, size, vec3(0));
+        mat4 vertex_matrix = model_matrix_for_size_and_position(*mesh, size, vec3(0));
 
         std::shared_ptr spatial_mesh = std::make_shared<MeshObject<3, T>>(
                 *mesh, to_matrix<T>(vertex_matrix), hardware_concurrency(), &progress);

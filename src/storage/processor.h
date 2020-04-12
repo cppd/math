@@ -374,7 +374,7 @@ void compute(
         if constexpr (N == 3)
         {
                 ASSERT(object_size != 0);
-                matrix = model_vertex_matrix(*mesh, object_size, object_position);
+                matrix = model_matrix_for_size_and_position(*mesh, object_size, object_position);
         }
         else
         {

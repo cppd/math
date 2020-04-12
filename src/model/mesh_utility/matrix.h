@@ -26,11 +26,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace mesh
 {
 template <size_t N>
-Matrix<N + 1, N + 1, double> model_vertex_matrix(const Mesh<N>& mesh, double size, const Vector<N, double>& position)
+Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(
+        const Mesh<N>& mesh,
+        double size,
+        const Vector<N, double>& position)
 {
-        Matrix<N + 1, N + 1, double> m_to_center = translate(to_vector<double>(-mesh.center));
-        Matrix<N + 1, N + 1, double> m_scale = scale(Vector<N, double>(size / mesh.length));
-        Matrix<N + 1, N + 1, double> m_to_position = translate(position);
-        return m_to_position * m_scale * m_to_center;
+        Matrix<N + 1, N + 1, double> t1 = translate(to_vector<double>(-mesh.center));
+        Matrix<N + 1, N + 1, double> t2 = scale(Vector<N, double>(size / mesh.length));
+        Matrix<N + 1, N + 1, double> t3 = translate(position);
+        return t3 * t2 * t1;
 }
 }

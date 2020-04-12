@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace volume
 {
 template <size_t N>
-Matrix<N + 1, N + 1, double> model_vertex_matrix(
+Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(
         const Volume<N>& volume,
         double size,
         const Vector<N, double>& position)
@@ -36,9 +36,9 @@ Matrix<N + 1, N + 1, double> model_vertex_matrix(
         Vector<N, double> center;
         double length;
         center_and_length(volume, &center, &length);
-        Matrix<N + 1, N + 1, double> m_to_center = translate(-center);
-        Matrix<N + 1, N + 1, double> m_scale = scale(Vector<N, double>(size / length));
-        Matrix<N + 1, N + 1, double> m_to_position = translate(position);
-        return m_to_position * m_scale * m_to_center;
+        Matrix<N + 1, N + 1, double> t1 = translate(-center);
+        Matrix<N + 1, N + 1, double> t2 = scale(Vector<N, double>(size / length));
+        Matrix<N + 1, N + 1, double> t3 = translate(position);
+        return t3 * t2 * t1;
 }
 }
