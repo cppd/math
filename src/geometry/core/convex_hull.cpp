@@ -70,7 +70,7 @@ Chapman & Hall/CRC, 2004.
 #include <src/com/type/limit.h>
 #include <src/com/type/trait.h>
 #include <src/numerical/determinant.h>
-#include <src/numerical/subtraction.h>
+#include <src/numerical/difference.h>
 #include <src/numerical/vec.h>
 
 #include <algorithm>
@@ -303,7 +303,7 @@ void find_simplex_points(
 
         for (; point_i < points.size(); ++point_i)
         {
-                minus(&(*simplex_vectors)[simplex_i - 1], points[point_i], points[(*simplex_points)[0]]);
+                difference(&(*simplex_vectors)[simplex_i - 1], points[point_i], points[(*simplex_points)[0]]);
 
                 if (linearly_independent<simplex_i>(*simplex_vectors))
                 {

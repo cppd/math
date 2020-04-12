@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/mpz.h>
 
 template <size_t N, typename T, typename ResultType>
-void minus(Vector<N, ResultType>* result, const Vector<N, T>& a, const Vector<N, T>& b)
+void difference(Vector<N, ResultType>* result, const Vector<N, T>& a, const Vector<N, T>& b)
 {
         for (unsigned i = 0; i < N; ++i)
         {
@@ -31,7 +31,7 @@ void minus(Vector<N, ResultType>* result, const Vector<N, T>& a, const Vector<N,
 }
 
 template <size_t N, typename T>
-void minus(Vector<N, mpz_class>* result, const Vector<N, T>& a, const Vector<N, T>& b)
+void difference(Vector<N, mpz_class>* result, const Vector<N, T>& a, const Vector<N, T>& b)
 {
         for (unsigned i = 0; i < N; ++i)
         {
@@ -40,7 +40,7 @@ void minus(Vector<N, mpz_class>* result, const Vector<N, T>& a, const Vector<N, 
 }
 
 template <size_t N>
-void minus(Vector<N, mpz_class>* result, const Vector<N, mpz_class>& a, const Vector<N, mpz_class>& b)
+void difference(Vector<N, mpz_class>* result, const Vector<N, mpz_class>& a, const Vector<N, mpz_class>& b)
 {
         for (unsigned i = 0; i < N; ++i)
         {

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "determinant.h"
-#include "subtraction.h"
+#include "difference.h"
 #include "vec.h"
 
 #include <src/com/arrays.h>
@@ -157,7 +157,7 @@ Vector<N, CalculationType> ortho_nn(const std::vector<Vector<N, T>>& points, con
 
         for (unsigned i = 0; i < N - 1; ++i)
         {
-                minus(&vectors[i], points[indices[i + 1]], points[indices[0]]);
+                difference(&vectors[i], points[indices[i + 1]], points[indices[0]]);
         }
 
         return ortho_nn(vectors);
@@ -179,10 +179,10 @@ void ortho_e0_e1(
 
         for (unsigned i = 0; i < N - 2; ++i)
         {
-                minus(&vectors[i], points[indices[i + 1]], points[indices[0]]);
+                difference(&vectors[i], points[indices[i + 1]], points[indices[0]]);
         }
 
-        minus(&vectors[N - 2], points[point], points[indices[0]]);
+        difference(&vectors[N - 2], points[point], points[indices[0]]);
 
         *e1 = ortho_nn(vectors).normalized();
 
