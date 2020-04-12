@@ -1,0 +1,92 @@
+/*
+Copyright (C) 2017-2020 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+
+#include "vertices.h"
+
+#include <src/com/error.h>
+
+#include <optional>
+
+namespace volume
+{
+template <size_t N>
+struct BoundingBox
+{
+        Vector<N, double> min;
+        Vector<N, double> max;
+};
+
+namespace bounding_box_implementation
+{
+template <size_t N, typename T>
+void init_min_max(Vector<N, T>* min, Vector<N, T>* max)
+{
+        *min = Vector<N, T>(limits<T>::max());
+        *max = Vector<N, T>(limits<T>::lowest());
+}
+
+template <size_t N, typename T>
+bool min_max_found(const Vector<N, T>& min, const Vector<N, T>& max)
+{
+        for (unsigned i = 0; i < N; ++i)
+        {
+                if (!is_finite(min[i]))
+                {
+                        error("Volume min is not finite");
+                }
+                if (!is_finite(max[i]))
+                {
+                        error("Volume max is not finite");
+                }
+                if (min[i] > max[i])
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+}
+
+template <size_t N>
+std::optional<BoundingBox<N>> bounding_box(const Volume<N>& volume)
+{
+        namespace impl = bounding_box_implementation;
+
+        Vector<N, double> min;
+        Vector<N, double> max;
+
+        impl::init_min_max(&min, &max);
+
+        for (const Vector<N, double>& v : vertices(volume))
+        {
+                min = min_vector(min, v);
+                max = max_vector(max, v);
+        }
+
+        if (!impl::min_max_found(min, max))
+        {
+                return std::nullopt;
+        }
+
+        BoundingBox<N> b;
+        b.min = min;
+        b.max = max;
+        return b;
+}
+}
