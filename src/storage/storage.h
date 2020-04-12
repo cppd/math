@@ -71,7 +71,7 @@ public:
                 MeshData& v = m_mesh_map.try_emplace(object->id()).first->second;
                 tmp = std::move(v.mesh_object);
                 v.mesh_object = std::forward<T>(object);
-                m_events(StorageEvent::LoadedMeshObject(object->id(), N));
+                m_events(StorageEvent::LoadedMeshObject(v.mesh_object->id(), N));
         }
 
         template <typename T>
@@ -104,7 +104,7 @@ public:
                 VolumeData& v = m_volume_map.try_emplace(object->id()).first->second;
                 tmp = std::move(v.volume_object);
                 v.volume_object = std::forward<T>(object);
-                m_events(StorageEvent::LoadedVolumeObject(object->id(), N));
+                m_events(StorageEvent::LoadedVolumeObject(v.volume_object->id(), N));
         }
 
         //
