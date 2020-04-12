@@ -276,7 +276,7 @@ void MainWindow::constructor_objects_and_repository()
                 ASSERT(objects.dimension > 0);
 
                 QMenu* sub_menu = ui.menuCreate->addMenu(space_name(objects.dimension).c_str());
-                for (const std::string& object_name : objects.point_names)
+                for (const std::string& object_name : objects.mesh_names)
                 {
                         ASSERT(!object_name.empty());
 

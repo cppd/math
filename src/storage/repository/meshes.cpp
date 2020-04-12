@@ -15,10 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "points.h"
+#include "meshes.h"
 
 #include <src/com/constant.h>
 #include <src/com/error.h>
+#include <src/model/mesh_utility.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/random.h>
 
@@ -387,7 +388,7 @@ std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 }
 
 template <size_t N>
-class Impl final : public PointObjectRepository<N>
+class Impl final : public MeshObjectRepository<N>
 {
         std::map<std::string, std::function<std::vector<Vector<N, float>>(unsigned)>> m_map;
 
@@ -396,12 +397,12 @@ class Impl final : public PointObjectRepository<N>
                 return names_of_map(m_map);
         }
 
-        std::vector<Vector<N, float>> object(const std::string& object_name, unsigned point_count) const override
+        std::unique_ptr<mesh::Mesh<N>> object(const std::string& object_name, unsigned point_count) const override
         {
                 auto iter = m_map.find(object_name);
                 if (iter != m_map.cend())
                 {
-                        return iter->second(point_count);
+                        return mesh::create_mesh_for_points(iter->second(point_count));
                 }
                 error("Object not found in repository: " + object_name);
         }
@@ -430,11 +431,11 @@ public:
 }
 
 template <size_t N>
-std::unique_ptr<PointObjectRepository<N>> create_point_object_repository()
+std::unique_ptr<MeshObjectRepository<N>> create_mesh_object_repository()
 {
         return std::make_unique<Impl<N>>();
 }
 
-template std::unique_ptr<PointObjectRepository<3>> create_point_object_repository<3>();
-template std::unique_ptr<PointObjectRepository<4>> create_point_object_repository<4>();
-template std::unique_ptr<PointObjectRepository<5>> create_point_object_repository<5>();
+template std::unique_ptr<MeshObjectRepository<3>> create_mesh_object_repository<3>();
+template std::unique_ptr<MeshObjectRepository<4>> create_mesh_object_repository<4>();
+template std::unique_ptr<MeshObjectRepository<5>> create_mesh_object_repository<5>();

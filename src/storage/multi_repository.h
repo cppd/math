@@ -56,7 +56,7 @@ public:
         struct ObjectNames
         {
                 int dimension;
-                std::vector<std::string> point_names;
+                std::vector<std::string> mesh_names;
                 std::vector<std::string> volume_names;
         };
 
@@ -70,8 +70,8 @@ public:
                                         [&]() {
                                                 names.resize(names.size() + 1);
                                                 names.back().dimension = v.DIMENSION;
-                                                names.back().point_names = v.point_object_repository().object_names();
-                                                names.back().volume_names = v.volume_object_repository().object_names();
+                                                names.back().mesh_names = v.meshes().object_names();
+                                                names.back().volume_names = v.volumes().object_names();
                                         }(),
                                         ...);
                         },

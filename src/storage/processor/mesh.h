@@ -17,18 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "storage.h"
+#include "../storage.h"
 
-#include "repository/points.h"
-#include "repository/volumes.h"
-
+#include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/thread.h>
 #include <src/com/time.h>
 #include <src/geometry/core/convex_hull.h>
 #include <src/geometry/graph/mst.h>
 #include <src/model/mesh_utility.h>
-#include <src/model/volume_utility.h>
+#include <src/numerical/vec.h>
 #include <src/progress/progress_list.h>
 
 #include <array>
@@ -378,7 +376,7 @@ void compute(
         if constexpr (N == 3)
         {
                 ASSERT(object_size != 0);
-                matrix = model_matrix_for_size_and_position(*mesh, object_size, object_position);
+                matrix = mesh::model_matrix_for_size_and_position(*mesh, object_size, object_position);
         }
         else
         {
@@ -423,18 +421,6 @@ std::unique_ptr<const mesh::Mesh<N>> load_from_file(ProgressRatioList* progress_
         return mesh::load<N>(file_name, &progress);
 }
 
-template <size_t N>
-std::unique_ptr<const mesh::Mesh<N>> load_mesh_from_point_repository(
-        ProgressRatioList* progress_list,
-        const PointObjectRepository<N>& repository,
-        const std::string& object_name,
-        int point_count)
-{
-        ProgressRatio progress(progress_list);
-        progress.set_text("Loading object: %p%");
-        return mesh::create_mesh_for_points(repository.object(object_name, point_count));
-}
-
 template <size_t N, typename MeshFloat>
 void save_to_obj(
         const Storage<N, MeshFloat>& storage,
@@ -468,43 +454,5 @@ void save_to_stl(
         }
 
         mesh::save_to_stl(object->mesh(), file_name, comment, ascii_format);
-}
-
-//
-
-template <size_t N, typename MeshFloat>
-void compute(
-        Storage<N, MeshFloat>* storage,
-        std::unique_ptr<const volume::Volume<N>>&& volume,
-        double object_size,
-        const vec3& object_position)
-{
-        Matrix<N + 1, N + 1, double> matrix;
-        if constexpr (N == 3)
-        {
-                ASSERT(object_size != 0);
-                matrix = model_matrix_for_size_and_position(*volume, object_size, object_position);
-        }
-        else
-        {
-                matrix = Matrix<N + 1, N + 1, double>(1);
-        }
-
-        std::shared_ptr<const volume::VolumeObject<N>> model_object =
-                std::make_shared<const volume::VolumeObject<N>>(std::move(volume), matrix, "Volume");
-
-        storage->set_volume_object(std::move(model_object));
-}
-
-template <size_t N>
-std::unique_ptr<const volume::Volume<N>> load_volume_from_volume_repository(
-        ProgressRatioList* progress_list,
-        const VolumeObjectRepository<N>& repository,
-        const std::string& object_name,
-        int image_size)
-{
-        ProgressRatio progress(progress_list);
-        progress.set_text("Loading object: %p%");
-        return repository.object(object_name, image_size);
 }
 }

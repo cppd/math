@@ -17,20 +17,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/numerical/vec.h>
+#include <src/model/mesh.h>
 
 #include <memory>
 #include <string>
 #include <vector>
 
 template <size_t N>
-struct PointObjectRepository
+struct MeshObjectRepository
 {
-        virtual ~PointObjectRepository() = default;
+        virtual ~MeshObjectRepository() = default;
 
         virtual std::vector<std::string> object_names() const = 0;
-        virtual std::vector<Vector<N, float>> object(const std::string& object_name, unsigned point_count) const = 0;
+        virtual std::unique_ptr<mesh::Mesh<N>> object(const std::string& object_name, unsigned point_count) const = 0;
 };
 
 template <size_t N>
-std::unique_ptr<PointObjectRepository<N>> create_point_object_repository();
+std::unique_ptr<MeshObjectRepository<N>> create_mesh_object_repository();

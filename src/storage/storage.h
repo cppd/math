@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "storage_event.h"
+#include "event.h"
 
 #include <src/geometry/reconstruction/cocone.h>
 #include <src/model/mesh_object.h>

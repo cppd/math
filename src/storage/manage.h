@@ -76,7 +76,6 @@ void load_from_point_repository(
         MultiStorage* storage);
 
 void add_from_volume_repository(
-        ProgressRatioList* progress_list,
         int dimension,
         const std::string& object_name,
         double object_size,

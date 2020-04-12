@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "manage.h"
 
-#include "processor.h"
+#include "processor/mesh.h"
+#include "processor/volume.h"
 
 #include <src/com/error.h>
 #include <src/model/mesh_utility.h>
@@ -179,9 +180,8 @@ void load_from_point_repository(
                                         return false;
                                 }
 
-                                std::unique_ptr<const mesh::Mesh<N>> mesh = processor::load_mesh_from_point_repository(
-                                        progress_list, repository.repository<N>().point_object_repository(),
-                                        object_name, point_count);
+                                std::unique_ptr<const mesh::Mesh<N>> mesh =
+                                        repository.repository<N>().meshes().object(object_name, point_count);
 
                                 storage->clear();
                                 load_event();
@@ -204,7 +204,6 @@ void load_from_point_repository(
 }
 
 void add_from_volume_repository(
-        ProgressRatioList* progress_list,
         int dimension,
         const std::string& object_name,
         double object_size,
@@ -224,9 +223,7 @@ void add_from_volume_repository(
                                 }
 
                                 std::unique_ptr<const volume::Volume<N>> volume =
-                                        processor::load_volume_from_volume_repository(
-                                                progress_list, repository.repository<N>().volume_object_repository(),
-                                                object_name, image_size);
+                                        repository.repository<N>().volumes().object(object_name, image_size);
 
                                 processor::compute(&v, std::move(volume), object_size, object_position);
 

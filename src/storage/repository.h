@@ -17,30 +17,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "repository/points.h"
+#include "repository/meshes.h"
 #include "repository/volumes.h"
 
 template <size_t N>
 class Repository final
 {
-        std::unique_ptr<const PointObjectRepository<N>> m_point_object_repository;
+        std::unique_ptr<const MeshObjectRepository<N>> m_mesh_object_repository;
         std::unique_ptr<const VolumeObjectRepository<N>> m_volume_object_repository;
 
 public:
         static constexpr size_t DIMENSION = N;
 
         Repository()
-                : m_point_object_repository(create_point_object_repository<N>()),
+                : m_mesh_object_repository(create_mesh_object_repository<N>()),
                   m_volume_object_repository(create_volume_object_repository<N>())
         {
         }
 
-        const PointObjectRepository<N>& point_object_repository() const
+        const MeshObjectRepository<N>& meshes() const
         {
-                return *m_point_object_repository;
+                return *m_mesh_object_repository;
         }
 
-        const VolumeObjectRepository<N>& volume_object_repository() const
+        const VolumeObjectRepository<N>& volumes() const
         {
                 return *m_volume_object_repository;
         }
