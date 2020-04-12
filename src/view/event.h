@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/model/mesh_object.h>
+#include <src/model/volume_object.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vec.h>
 #include <src/window/handle.h>
@@ -35,10 +36,18 @@ enum class MouseButton
         Right
 };
 
-struct AddObject final
+struct AddMeshObject final
 {
         std::shared_ptr<const mesh::MeshObject<3>> object;
-        explicit AddObject(const std::shared_ptr<const mesh::MeshObject<3>>& object) : object(object)
+        explicit AddMeshObject(const std::shared_ptr<const mesh::MeshObject<3>>& object) : object(object)
+        {
+        }
+};
+
+struct AddVolumeObject final
+{
+        std::shared_ptr<const volume::VolumeObject<3>> object;
+        explicit AddVolumeObject(const std::shared_ptr<const volume::VolumeObject<3>>& object) : object(object)
         {
         }
 };
@@ -350,7 +359,8 @@ struct WindowResize final
 struct Command final
 {
         using T = std::variant<
-                command::AddObject,
+                command::AddMeshObject,
+                command::AddVolumeObject,
                 command::ClipPlaneHide,
                 command::ClipPlanePosition,
                 command::ClipPlaneShow,

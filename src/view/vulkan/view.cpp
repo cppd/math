@@ -257,11 +257,20 @@ class Impl final : public View
                 const auto visitors =
                 Visitors
                 {
-                [this](const command::AddObject& d)
+                [this](const command::AddMeshObject& d)
                 {
                         if (!d.object)
                         {
-                                error("Null object received");
+                                error("Null mesh object received");
+                        }
+                        m_renderer->object_add(*d.object);
+                        m_events(event::ObjectLoaded(d.object->id()));
+                },
+                [this](const command::AddVolumeObject& d)
+                {
+                        if (!d.object)
+                        {
+                                error("Null volume object received");
                         }
                         m_renderer->object_add(*d.object);
                         m_events(event::ObjectLoaded(d.object->id()));

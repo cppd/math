@@ -1051,7 +1051,7 @@ void MainWindow::event_from_storage(const StorageEvent& event)
                                                 ASSERT(d.dimension == 3);
                                                 if (m_view)
                                                 {
-                                                        m_view->send(view::command::AddObject(v));
+                                                        m_view->send(view::command::AddMeshObject(v));
                                                 }
                                         }
                                         ui.model_tree->add_item(v->id(), v->name());
