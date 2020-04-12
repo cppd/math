@@ -19,51 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "bounding_box.h"
 
+#include "../com/functions.h"
 #include "../mesh.h"
 
 #include <src/com/error.h>
 
 namespace mesh
 {
-namespace position_implementation
-{
-template <size_t N, typename T>
-std::tuple<Vector<N, T>, T> center_and_length_for_min_max(const Vector<N, T>& min, const Vector<N, T>& max)
-{
-        static_assert(is_floating_point<T>);
-
-        for (unsigned i = 0; i < N; ++i)
-        {
-                if (min[i] >= max[i])
-                {
-                        error("Object size error");
-                }
-        }
-
-        Vector<N, T> center = min + (max - min) / static_cast<T>(2);
-
-        // Т может быть float и координаты точек могут иметь большие
-        // для float величины, например, 10^30, что не позволяет считать
-        // квадраты на float, поэтому используется функция norm_stable.
-        T len = (max - min).norm_stable();
-
-        if (!is_finite(center))
-        {
-                error("Object center is not finite");
-        }
-        if (!is_finite(len))
-        {
-                error("Object length is not finite");
-        }
-        if (!(len > 0))
-        {
-                error("Object length " + to_string(len) + " is not positive");
-        }
-
-        return {center, len};
-}
-}
-
 template <size_t N>
 void set_center_and_length(Mesh<N>* mesh)
 {
@@ -74,7 +36,6 @@ void set_center_and_length(Mesh<N>* mesh)
         {
                 error("Mesh has no geometry");
         }
-        std::tie(mesh->center, mesh->length) =
-                position_implementation::center_and_length_for_min_max(box->min, box->max);
+        std::tie(mesh->center, mesh->length) = model::center_and_length_for_min_max(box->min, box->max);
 }
 }
