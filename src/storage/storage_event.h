@@ -41,6 +41,15 @@ struct StorageEvent
                 }
         };
 
+        struct LoadedVolumeObject final
+        {
+                ObjectId id;
+                size_t dimension;
+                LoadedVolumeObject(ObjectId id, size_t dimension) : id(id), dimension(dimension)
+                {
+                }
+        };
+
         struct DeletedObject final
         {
                 ObjectId id;
@@ -58,7 +67,8 @@ struct StorageEvent
                 }
         };
 
-        using T = std::variant<DeletedAll, DeletedObject, LoadedMeshObject, LoadedPainterMeshObject>;
+        using T =
+                std::variant<DeletedAll, DeletedObject, LoadedMeshObject, LoadedPainterMeshObject, LoadedVolumeObject>;
 
         template <typename Type>
         StorageEvent(Type&& arg) : m_data(std::forward<Type>(arg))

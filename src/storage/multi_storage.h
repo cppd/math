@@ -67,6 +67,13 @@ public:
                 painter::MeshObject,
                 PainterFloatingPoint>;
 
+        using VolumeObject = SequenceType2ConstType2<
+                std::variant,
+                STORAGE_MIN_DIMENSION,
+                STORAGE_MAX_DIMENSION,
+                std::shared_ptr,
+                volume::VolumeObject>;
+
         static std::set<unsigned> supported_dimensions()
         {
                 std::set<unsigned> v;
@@ -127,6 +134,28 @@ public:
                         [&](const auto&... v) {
                                 ([&]() {
                                         auto ptr = v.painter_mesh_object(id);
+                                        if (ptr)
+                                        {
+                                                opt = std::move(ptr);
+                                                return true;
+                                        }
+                                        return false;
+                                }() ||
+                                 ...);
+                        },
+                        m_data);
+
+                return opt;
+        }
+
+        std::optional<VolumeObject> volume_object(ObjectId id) const
+        {
+                std::optional<VolumeObject> opt;
+
+                std::apply(
+                        [&](const auto&... v) {
+                                ([&]() {
+                                        auto ptr = v.volume_object(id);
                                         if (ptr)
                                         {
                                                 opt = std::move(ptr);

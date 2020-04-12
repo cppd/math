@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/geometry/reconstruction/cocone.h>
 #include <src/model/mesh_object.h>
+#include <src/model/volume_object.h>
 #include <src/painter/shapes/mesh.h>
 
 #include <memory>
@@ -42,8 +43,16 @@ class Storage
                 std::shared_ptr<const geometry::ManifoldConstructor<N>> manifold_constructor;
         };
 
-        mutable std::shared_mutex m_mutex;
-        std::unordered_map<ObjectId, MeshData> m_map;
+        struct VolumeData
+        {
+                std::shared_ptr<const volume::VolumeObject<N>> volume_object;
+        };
+
+        mutable std::shared_mutex m_mesh_mutex;
+        std::unordered_map<ObjectId, MeshData> m_mesh_map;
+
+        mutable std::shared_mutex m_volume_mutex;
+        std::unordered_map<ObjectId, VolumeData> m_volume_map;
 
 public:
         static constexpr size_t DIMENSION = N;
@@ -58,12 +67,10 @@ public:
         void set_mesh_object(T&& object)
         {
                 std::shared_ptr<const mesh::MeshObject<N>> tmp;
-                {
-                        std::unique_lock lock(m_mutex);
-                        MeshData& v = m_map.try_emplace(object->id()).first->second;
-                        tmp = std::move(v.mesh_object);
-                        v.mesh_object = std::forward<T>(object);
-                }
+                std::unique_lock lock(m_mesh_mutex);
+                MeshData& v = m_mesh_map.try_emplace(object->id()).first->second;
+                tmp = std::move(v.mesh_object);
+                v.mesh_object = std::forward<T>(object);
                 m_events(StorageEvent::LoadedMeshObject(object->id(), N));
         }
 
@@ -71,12 +78,10 @@ public:
         void set_painter_mesh_object(ObjectId id, T&& mesh)
         {
                 std::shared_ptr<const painter::MeshObject<N, MeshFloat>> tmp;
-                {
-                        std::unique_lock lock(m_mutex);
-                        MeshData& v = m_map.try_emplace(id).first->second;
-                        tmp = std::move(v.painter_mesh_object);
-                        v.painter_mesh_object = std::forward<T>(mesh);
-                }
+                std::unique_lock lock(m_mesh_mutex);
+                MeshData& v = m_mesh_map.try_emplace(id).first->second;
+                tmp = std::move(v.painter_mesh_object);
+                v.painter_mesh_object = std::forward<T>(mesh);
                 m_events(StorageEvent::LoadedPainterMeshObject(id, N));
         }
 
@@ -85,45 +90,66 @@ public:
                 const std::shared_ptr<const geometry::ManifoldConstructor<N>>& manifold_constructor)
         {
                 std::shared_ptr<const geometry::ManifoldConstructor<N>> tmp;
-                std::unique_lock lock(m_mutex);
-                MeshData& v = m_map.try_emplace(id).first->second;
+                std::unique_lock lock(m_mesh_mutex);
+                MeshData& v = m_mesh_map.try_emplace(id).first->second;
                 tmp = std::move(v.manifold_constructor);
                 v.manifold_constructor = manifold_constructor;
+        }
+
+        template <typename T>
+        void set_volume_object(T&& object)
+        {
+                std::shared_ptr<const volume::VolumeObject<N>> tmp;
+                std::unique_lock lock(m_volume_mutex);
+                VolumeData& v = m_volume_map.try_emplace(object->id()).first->second;
+                tmp = std::move(v.volume_object);
+                v.volume_object = std::forward<T>(object);
+                m_events(StorageEvent::LoadedVolumeObject(object->id(), N));
         }
 
         //
 
         std::shared_ptr<const mesh::MeshObject<N>> mesh_object(ObjectId id) const
         {
-                std::shared_lock lock(m_mutex);
-                auto iter = m_map.find(id);
-                return (iter != m_map.cend()) ? iter->second.mesh_object : nullptr;
+                std::shared_lock lock(m_mesh_mutex);
+                auto iter = m_mesh_map.find(id);
+                return (iter != m_mesh_map.cend()) ? iter->second.mesh_object : nullptr;
         }
 
         std::shared_ptr<const painter::MeshObject<N, MeshFloat>> painter_mesh_object(ObjectId id) const
         {
-                std::shared_lock lock(m_mutex);
-                auto iter = m_map.find(id);
-                return (iter != m_map.cend()) ? iter->second.painter_mesh_object : nullptr;
+                std::shared_lock lock(m_mesh_mutex);
+                auto iter = m_mesh_map.find(id);
+                return (iter != m_mesh_map.cend()) ? iter->second.painter_mesh_object : nullptr;
         }
 
         std::shared_ptr<const geometry::ManifoldConstructor<N>> manifold_constructor(ObjectId id) const
         {
-                std::shared_lock lock(m_mutex);
-                auto iter = m_map.find(id);
-                return (iter != m_map.cend()) ? iter->second.manifold_constructor : nullptr;
+                std::shared_lock lock(m_mesh_mutex);
+                auto iter = m_mesh_map.find(id);
+                return (iter != m_mesh_map.cend()) ? iter->second.manifold_constructor : nullptr;
+        }
+
+        std::shared_ptr<const volume::VolumeObject<N>> volume_object(ObjectId id) const
+        {
+                std::shared_lock lock(m_volume_mutex);
+                auto iter = m_volume_map.find(id);
+                return (iter != m_volume_map.cend()) ? iter->second.volume_object : nullptr;
         }
 
         //
 
         void clear()
         {
-                std::unordered_map<ObjectId, MeshData> tmp;
-                {
-                        std::unique_lock lock(m_mutex);
-                        tmp = std::move(m_map);
-                        m_map.clear();
-                }
+                std::unordered_map<ObjectId, MeshData> tmp_mesh;
+                std::unordered_map<ObjectId, VolumeData> tmp_volume;
+                std::unique_lock lock_mesh(m_mesh_mutex, std::defer_lock);
+                std::unique_lock lock_volume(m_volume_mutex, std::defer_lock);
+                std::lock(lock_mesh, lock_volume);
+                tmp_mesh = std::move(m_mesh_map);
+                tmp_volume = std::move(m_volume_map);
+                m_mesh_map.clear();
+                m_volume_map.clear();
                 m_events(StorageEvent::DeletedAll(N));
         }
 };

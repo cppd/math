@@ -1069,6 +1069,29 @@ void MainWindow::event_from_storage(const StorageEvent& event)
                         std::visit([&](const auto& v) { object_name = v->name(); }, *object);
                         ui.model_tree->add_item(d.id, object_name);
                 },
+                [this](const StorageEvent::LoadedVolumeObject& d) {
+                        std::optional<MultiStorage::VolumeObject> object = m_storage->volume_object(d.id);
+                        if (!object)
+                        {
+                                m_events(WindowEvent::MessageWarning("No loaded object"));
+                                return;
+                        }
+                        std::visit(
+                                [&](const auto& v) {
+                                        using VolumeType =
+                                                std::decay_t<typename std::decay_t<decltype(v)>::element_type>;
+                                        if constexpr (std::is_same_v<VolumeType, volume::VolumeObject<3>>)
+                                        {
+                                                ASSERT(d.dimension == 3);
+                                                if (m_view)
+                                                {
+                                                        m_view->send(view::command::AddVolumeObject(v));
+                                                }
+                                        }
+                                        ui.model_tree->add_item(v->id(), v->name());
+                                },
+                                *object);
+                },
                 [this](const StorageEvent::DeletedObject& d) {
                         if (m_view && d.dimension == 3)
                         {
