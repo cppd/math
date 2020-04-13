@@ -38,16 +38,18 @@ VkFormat find_supported_format(
         const std::vector<VkFormat>& candidates,
         VkImageTiling tiling,
         VkFormatFeatureFlags features);
-VkFormat find_supported_2d_image_format(
+VkFormat find_supported_image_format(
         VkPhysicalDevice physical_device,
         const std::vector<VkFormat>& candidates,
+        VkImageType image_type,
         VkImageTiling tiling,
         VkFormatFeatureFlags features,
         VkImageUsageFlags usage,
         VkSampleCountFlags sample_count);
-VkExtent2D max_2d_image_extent(
+VkExtent3D max_image_extent(
         VkPhysicalDevice physical_device,
         VkFormat format,
+        VkImageType image_type,
         VkImageTiling tiling,
         VkImageUsageFlags usage);
 

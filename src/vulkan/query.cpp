@@ -227,9 +227,10 @@ VkFormat find_supported_format(
         error(oss.str());
 }
 
-VkFormat find_supported_2d_image_format(
+VkFormat find_supported_image_format(
         VkPhysicalDevice physical_device,
         const std::vector<VkFormat>& candidates,
+        VkImageType image_type,
         VkImageTiling tiling,
         VkFormatFeatureFlags features,
         VkImageUsageFlags usage,
@@ -261,7 +262,7 @@ VkFormat find_supported_2d_image_format(
 
                 VkImageFormatProperties image_properties;
                 VkResult result = vkGetPhysicalDeviceImageFormatProperties(
-                        physical_device, format, VK_IMAGE_TYPE_2D, tiling, usage, 0 /*VkImageCreateFlags*/,
+                        physical_device, format, image_type, tiling, usage, 0 /*VkImageCreateFlags*/,
                         &image_properties);
                 if (result != VK_SUCCESS)
                 {
@@ -278,8 +279,9 @@ VkFormat find_supported_2d_image_format(
 
         std::ostringstream oss;
 
-        oss << "Failed to find supported 2D image format.";
+        oss << "Failed to find supported image format.";
         oss << " Format candidates " << vulkan_formats_to_string(candidates) << ".";
+        oss << " Image type " << image_type_to_string(image_type) << ".";
         oss << " Tiling " << static_cast<long long>(tiling) << ".";
         oss << std::hex;
         oss << " Features 0x" << features << ".";
@@ -289,26 +291,23 @@ VkFormat find_supported_2d_image_format(
         error(oss.str());
 }
 
-VkExtent2D max_2d_image_extent(
+VkExtent3D max_image_extent(
         VkPhysicalDevice physical_device,
         VkFormat format,
+        VkImageType image_type,
         VkImageTiling tiling,
         VkImageUsageFlags usage)
 {
         VkImageFormatProperties image_properties;
 
         VkResult result = vkGetPhysicalDeviceImageFormatProperties(
-                physical_device, format, VK_IMAGE_TYPE_2D, tiling, usage, 0 /*VkImageCreateFlags*/, &image_properties);
+                physical_device, format, image_type, tiling, usage, 0 /*VkImageCreateFlags*/, &image_properties);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkGetPhysicalDeviceImageFormatProperties", result);
         }
 
-        VkExtent2D extent;
-        extent.width = image_properties.maxExtent.width;
-        extent.height = image_properties.maxExtent.height;
-
-        return extent;
+        return image_properties.maxExtent;
 }
 
 VkSampleCountFlagBits supported_framebuffer_sample_count_flag(

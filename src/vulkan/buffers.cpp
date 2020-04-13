@@ -710,8 +710,8 @@ void ImageWithMemory::init(
         m_usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
                   (storage ? VK_IMAGE_USAGE_STORAGE_BIT : 0);
 
-        m_format = find_supported_2d_image_format(
-                device.physical_device(), format_candidates, tiling, features, m_usage, samples);
+        m_format = find_supported_image_format(
+                device.physical_device(), format_candidates, VK_IMAGE_TYPE_2D, tiling, features, m_usage, samples);
         m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, m_usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
@@ -905,10 +905,10 @@ DepthAttachment::DepthAttachment(
                 VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT | (sampled ? VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT : 0);
         m_usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | (sampled ? VK_IMAGE_USAGE_SAMPLED_BIT : 0);
 
-        m_format =
-                find_supported_2d_image_format(device.physical_device(), formats, tiling, features, m_usage, samples);
+        m_format = find_supported_image_format(
+                device.physical_device(), formats, VK_IMAGE_TYPE_2D, tiling, features, m_usage, samples);
 
-        VkExtent2D max_extent = max_2d_image_extent(device.physical_device(), m_format, tiling, m_usage);
+        VkExtent3D max_extent = max_image_extent(device.physical_device(), m_format, VK_IMAGE_TYPE_2D, tiling, m_usage);
         m_width = std::min(width, max_extent.width);
         m_height = std::min(height, max_extent.height);
 
@@ -989,8 +989,8 @@ ColorAttachment::ColorAttachment(
         VkFormatFeatureFlags features = VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_TRANSFER_SRC_BIT;
         VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
-        m_format =
-                find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
+        m_format = find_supported_image_format(
+                device.physical_device(), candidates, VK_IMAGE_TYPE_2D, tiling, features, usage, samples);
         m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
