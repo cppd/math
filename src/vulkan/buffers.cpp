@@ -71,27 +71,82 @@ Buffer create_buffer(
         return Buffer(device, create_info);
 }
 
-Image create_2d_image(
-        VkDevice device,
-        uint32_t width,
-        uint32_t height,
+void correct_image_extent(VkImageType type, VkExtent3D* extent)
+{
+        if (type == VK_IMAGE_TYPE_1D)
+        {
+                extent->depth = 1;
+                extent->height = 1;
+        }
+        else if (type == VK_IMAGE_TYPE_2D)
+        {
+                extent->depth = 1;
+        }
+        else if (type != VK_IMAGE_TYPE_3D)
+        {
+                error("Unknown image type " + image_type_to_string(type));
+        }
+}
+
+void check_image_size(
+        const Device& device,
+        VkImageType type,
+        VkExtent3D extent,
+        VkFormat format,
+        VkImageTiling tiling,
+        VkImageUsageFlags usage)
+{
+        if (type == VK_IMAGE_TYPE_1D && (extent.width < 1 || extent.height != 1 || extent.depth != 1))
+        {
+                error("Image 1D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", " +
+                      to_string(extent.depth) + ")");
+        }
+        if (type == VK_IMAGE_TYPE_2D && (extent.width < 1 || extent.height < 1 || extent.depth != 1))
+        {
+                error("Image 2D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", " +
+                      to_string(extent.depth) + ")");
+        }
+        if (type == VK_IMAGE_TYPE_3D && (extent.width < 1 || extent.height < 1 || extent.depth < 1))
+        {
+                error("Image 3D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", " +
+                      to_string(extent.depth) + ")");
+        }
+
+        const VkExtent3D max_extent = max_image_extent(device.physical_device(), format, type, tiling, usage);
+        if (extent.width > max_extent.width)
+        {
+                error("Image " + format_to_string(format) + " extent width " + to_string(extent.width) +
+                      " is out of range [1, " + to_string(max_extent.width) + "]");
+        }
+        if (extent.height > max_extent.height)
+        {
+                error("Image " + format_to_string(format) + " extent height " + to_string(extent.height) +
+                      " is out of range [1, " + to_string(max_extent.height) + "]");
+        }
+        if (extent.depth > max_extent.depth)
+        {
+                error("Image " + format_to_string(format) + " extent depth " + to_string(extent.depth) +
+                      " is out of range [1, " + to_string(max_extent.depth) + "]");
+        }
+}
+
+Image create_image(
+        const Device& device,
+        VkImageType type,
+        VkExtent3D extent,
         VkFormat format,
         const std::unordered_set<uint32_t>& family_indices,
         VkSampleCountFlagBits samples,
         VkImageTiling tiling,
         VkImageUsageFlags usage)
 {
-        if (!(width > 0))
-        {
-                error("Image zero width");
-        }
-        if (!(height > 0))
-        {
-                error("Image zero height");
-        }
+        correct_image_extent(type, &extent);
+
+        check_image_size(device, type, extent, format, tiling, usage);
+
         if (family_indices.empty())
         {
-                error("2D image family index set is empty");
+                error("Image family index set is empty");
         }
 
         const std::vector<uint32_t> indices(family_indices.cbegin(), family_indices.cend());
@@ -99,10 +154,8 @@ Image create_2d_image(
         VkImageCreateInfo create_info = {};
 
         create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        create_info.imageType = VK_IMAGE_TYPE_2D;
-        create_info.extent.width = width;
-        create_info.extent.height = height;
-        create_info.extent.depth = 1;
+        create_info.imageType = type;
+        create_info.extent = extent;
         create_info.mipLevels = 1;
         create_info.arrayLayers = 1;
         create_info.format = format;
@@ -712,7 +765,10 @@ void ImageWithMemory::init(
 
         m_format = find_supported_image_format(
                 device.physical_device(), format_candidates, VK_IMAGE_TYPE_2D, tiling, features, m_usage, samples);
-        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, m_usage);
+        VkExtent3D extent;
+        extent.width = width;
+        extent.height = height;
+        m_image = create_image(device, VK_IMAGE_TYPE_2D, extent, m_format, family_indices, samples, tiling, m_usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
 
@@ -911,8 +967,10 @@ DepthAttachment::DepthAttachment(
         VkExtent3D max_extent = max_image_extent(device.physical_device(), m_format, VK_IMAGE_TYPE_2D, tiling, m_usage);
         m_width = std::min(width, max_extent.width);
         m_height = std::min(height, max_extent.height);
-
-        m_image = create_2d_image(device, m_width, m_height, m_format, family_indices, samples, tiling, m_usage);
+        VkExtent3D extent;
+        extent.width = m_width;
+        extent.height = m_height;
+        m_image = create_image(device, VK_IMAGE_TYPE_2D, extent, m_format, family_indices, samples, tiling, m_usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
         m_sample_count = samples;
@@ -991,7 +1049,10 @@ ColorAttachment::ColorAttachment(
 
         m_format = find_supported_image_format(
                 device.physical_device(), candidates, VK_IMAGE_TYPE_2D, tiling, features, usage, samples);
-        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
+        VkExtent3D extent;
+        extent.width = width;
+        extent.height = height;
+        m_image = create_image(device, VK_IMAGE_TYPE_2D, extent, m_format, family_indices, samples, tiling, usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
         m_sample_count = samples;
