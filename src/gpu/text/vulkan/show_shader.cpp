@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show_shader.h"
 
-#include "shader_source.h"
+#include "../shaders/source.h"
 
 #include <src/text/vertices.h>
 #include <src/vulkan/create.h>

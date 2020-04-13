@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_sobel.h"
 
-#include "shader_source.h"
+#include "../shaders/source.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>

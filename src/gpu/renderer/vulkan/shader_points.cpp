@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_points.h"
 
-#include "shader_source.h"
+#include "../shaders/source.h"
 
 #include <src/com/error.h>
 #include <src/vulkan/create.h>

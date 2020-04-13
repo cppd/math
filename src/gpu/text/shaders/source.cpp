@@ -15,35 +15,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "shader_source.h"
+#include "source.h"
 
 namespace gpu
 {
 namespace
 {
-constexpr uint32_t compute_comp[]{
-#include "pencil_sketch_compute.comp.spr"
+constexpr uint32_t vert[]{
+#include "text.vert.spr"
 };
-constexpr uint32_t show_vert[]{
-#include "pencil_sketch_show.vert.spr"
-};
-constexpr uint32_t show_frag[]{
-#include "pencil_sketch_show.frag.spr"
+constexpr uint32_t frag[]{
+#include "text.frag.spr"
 };
 }
 
-Span<const uint32_t> pencil_sketch_compute_comp()
+Span<const uint32_t> text_vert()
 {
-        return compute_comp;
+        return vert;
 }
 
-Span<const uint32_t> pencil_sketch_show_vert()
+Span<const uint32_t> text_frag()
 {
-        return show_vert;
-}
-
-Span<const uint32_t> pencil_sketch_show_frag()
-{
-        return show_frag;
+        return frag;
 }
 }
