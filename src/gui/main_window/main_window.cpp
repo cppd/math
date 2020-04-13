@@ -1209,7 +1209,7 @@ void MainWindow::event_from_view(const view::Event& event)
 
         const auto visitors = Visitors{
                 [this](const view::event::ErrorFatal& d) { m_events(WindowEvent::MessageErrorFatal(d.text)); },
-                [this](const view::event::ObjectLoaded&) { ASSERT(m_dimension == 3); }};
+                [](const view::event::ObjectLoaded&) {}};
 
         std::visit(visitors, event.data());
 }
