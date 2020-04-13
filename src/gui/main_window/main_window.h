@@ -107,7 +107,8 @@ private slots:
 
         void model_tree_item_changed();
 
-        void slot_point_object_repository();
+        void slot_mesh_object_repository();
+        void slot_volume_object_repository();
         void slot_timer_progress_bar();
         void slot_window_first_shown();
 
@@ -138,7 +139,8 @@ private:
         void catch_all(const F& function) const noexcept;
 
         void thread_load_from_file(std::string file_name, bool use_object_selection_dialog);
-        void thread_load_from_point_repository(int dimension, const std::string& object_name);
+        void thread_load_from_mesh_repository(int dimension, const std::string& object_name);
+        void thread_load_from_volume_repository(int dimension, const std::string& object_name);
         void thread_export(ObjectId id);
         void thread_bound_cocone(ObjectId id);
         void thread_self_test(SelfTestType test_type, bool with_confirmation);

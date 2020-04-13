@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dialogs/parameters/bound_cocone.h"
 #include "../dialogs/parameters/object_selection.h"
 #include "../dialogs/parameters/point_object.h"
+#include "../dialogs/parameters/volume_object.h"
 #include "../painter_window/painting.h"
 #include "../support/support.h"
 
@@ -69,6 +70,11 @@ constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
 constexpr int POINT_COUNT_MINIMUM = 100;
 constexpr int POINT_COUNT_DEFAULT = 10000;
 constexpr int POINT_COUNT_MAXIMUM = 1000000;
+
+// Размер изображений по одному измерению для готовых объёмов.
+constexpr int VOLUME_IMAGE_SIZE_MINIMUM = 10;
+constexpr int VOLUME_IMAGE_SIZE_DEFAULT = 500;
+constexpr int VOLUME_IMAGE_SIZE_MAXIMUM = 1000;
 
 // Цвета по умолчанию
 constexpr QRgb BACKGROUND_COLOR = qRgb(50, 100, 150);
@@ -271,11 +277,12 @@ void MainWindow::constructor_objects_and_repository()
                 return a.dimension < b.dimension;
         });
 
-        for (const auto& objects : repository_objects)
+        for (storage::MultiRepository::ObjectNames& objects : repository_objects)
         {
                 ASSERT(objects.dimension > 0);
-
                 QMenu* sub_menu = ui.menuCreate->addMenu(space_name(objects.dimension).c_str());
+
+                std::sort(objects.mesh_names.begin(), objects.mesh_names.end());
                 for (const std::string& object_name : objects.mesh_names)
                 {
                         ASSERT(!object_name.empty());
@@ -288,7 +295,28 @@ void MainWindow::constructor_objects_and_repository()
                         action_description.object_name = object_name;
 
                         m_repository_actions.try_emplace(action, action_description);
-                        connect(action, SIGNAL(triggered()), this, SLOT(slot_point_object_repository()));
+                        connect(action, SIGNAL(triggered()), this, SLOT(slot_mesh_object_repository()));
+                }
+
+                if (objects.dimension == 3)
+                {
+                        sub_menu->addSeparator();
+
+                        std::sort(objects.volume_names.begin(), objects.volume_names.end());
+                        for (const std::string& object_name : objects.volume_names)
+                        {
+                                ASSERT(!object_name.empty());
+
+                                std::string action_text = object_name + "...";
+                                QAction* action = sub_menu->addAction(action_text.c_str());
+
+                                RepositoryActionDescription action_description;
+                                action_description.dimension = objects.dimension;
+                                action_description.object_name = object_name;
+
+                                m_repository_actions.try_emplace(action, action_description);
+                                connect(action, SIGNAL(triggered()), this, SLOT(slot_volume_object_repository()));
+                        }
                 }
         }
 }
@@ -552,18 +580,18 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
         });
 }
 
-void MainWindow::thread_load_from_point_repository(int dimension, const std::string& object_name)
+void MainWindow::thread_load_from_mesh_repository(int dimension, const std::string& object_name)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
 
         catch_all([&](std::string* msg) {
-                *msg = "Load from repository";
+                *msg = "Load from mesh repository";
 
                 if (object_name.empty())
                 {
-                        m_events(WindowEvent::MessageError("Empty repository object name"));
+                        m_events(WindowEvent::MessageError("Empty mesh repository object name"));
                         return;
                 }
 
@@ -607,12 +635,64 @@ void MainWindow::thread_load_from_point_repository(int dimension, const std::str
                         view::info::ObjectPosition object_position;
                         m_view->receive({&object_size, &object_position});
 
-                        load_from_point_repository(
+                        storage::load_from_point_repository(
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
                                 dimension, object_name, object_size.value, object_position.value, rho, alpha,
                                 m_mesh_threads, point_count,
                                 [&]() { m_events(WindowEvent::FileLoaded(object_name, dimension)); }, *m_repository,
                                 m_storage.get());
+                };
+
+                m_worker_threads->start(ACTION, std::move(f));
+        });
+}
+
+void MainWindow::thread_load_from_volume_repository(int dimension, const std::string& object_name)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
+
+        catch_all([&](std::string* msg) {
+                *msg = "Load from volume repository";
+
+                if (object_name.empty())
+                {
+                        m_events(WindowEvent::MessageError("Empty volume repository object name"));
+                        return;
+                }
+
+                if (!stop_action(ACTION))
+                {
+                        return;
+                }
+
+                int image_size;
+
+                {
+                        QPointer ptr(this);
+                        if (!dialog::volume_object_parameters(
+                                    this, dimension, object_name, VOLUME_IMAGE_SIZE_DEFAULT, VOLUME_IMAGE_SIZE_MINIMUM,
+                                    VOLUME_IMAGE_SIZE_MAXIMUM, &image_size))
+                        {
+                                return;
+                        }
+                        if (ptr.isNull())
+                        {
+                                return;
+                        }
+                }
+
+                auto f = [=, this](ProgressRatioList* /*progress_list*/, std::string* message) {
+                        *message = "Load " + space_name(dimension) + " " + object_name;
+
+                        view::info::ObjectSize object_size;
+                        view::info::ObjectPosition object_position;
+                        m_view->receive({&object_size, &object_position});
+
+                        storage::add_from_volume_repository(
+                                dimension, object_name, object_size.value, object_position.value, image_size,
+                                *m_repository, m_storage.get());
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -1228,7 +1308,7 @@ void MainWindow::on_actionLoad_triggered()
         thread_load_from_file("", true);
 }
 
-void MainWindow::slot_point_object_repository()
+void MainWindow::slot_mesh_object_repository()
 {
         auto iter = m_repository_actions.find(sender());
         if (iter == m_repository_actions.cend())
@@ -1237,7 +1317,19 @@ void MainWindow::slot_point_object_repository()
                 return;
         }
 
-        thread_load_from_point_repository(iter->second.dimension, iter->second.object_name);
+        thread_load_from_mesh_repository(iter->second.dimension, iter->second.object_name);
+}
+
+void MainWindow::slot_volume_object_repository()
+{
+        auto iter = m_repository_actions.find(sender());
+        if (iter == m_repository_actions.cend())
+        {
+                m_events(WindowEvent::MessageError("Failed to find sender in action map"));
+                return;
+        }
+
+        thread_load_from_volume_repository(iter->second.dimension, iter->second.object_name);
 }
 
 void MainWindow::on_actionExport_triggered()
