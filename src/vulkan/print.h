@@ -28,4 +28,5 @@ std::array<std::string, 2> result_to_strings(const VkResult& code);
 std::string physical_device_type_to_string(VkPhysicalDeviceType type);
 std::string format_to_string(VkFormat format);
 std::string color_space_to_string(VkColorSpaceKHR color_space);
+std::string image_type_to_string(VkImageType image_type);
 }

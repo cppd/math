@@ -652,4 +652,21 @@ std::string color_space_to_string(VkColorSpaceKHR color_space)
 
         return "Unknown Vulkan VkColorSpaceKHR " + enum_to_string(color_space);
 }
+
+std::string image_type_to_string(VkImageType image_type)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
+        switch (image_type)
+        {
+        case VK_IMAGE_TYPE_1D:
+                return "VK_IMAGE_TYPE_1D";
+        case VK_IMAGE_TYPE_2D:
+                return "VK_IMAGE_TYPE_2D";
+        case VK_IMAGE_TYPE_3D:
+                return "VK_IMAGE_TYPE_3D";
+        }
+#pragma GCC diagnostic pop
+        return "Unknown image type " + enum_to_string(image_type);
+}
 }
