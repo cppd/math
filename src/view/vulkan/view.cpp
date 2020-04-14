@@ -33,12 +33,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/com/variant.h>
-#include <src/gpu/convex_hull/vulkan/show.h>
-#include <src/gpu/dft/vulkan/show.h>
-#include <src/gpu/optical_flow/vulkan/show.h>
-#include <src/gpu/pencil_sketch/vulkan/show.h>
+#include <src/gpu/convex_hull/vulkan/view.h>
+#include <src/gpu/dft/vulkan/view.h>
+#include <src/gpu/optical_flow/vulkan/view.h>
+#include <src/gpu/pencil_sketch/vulkan/view.h>
 #include <src/gpu/renderer/vulkan/renderer.h>
-#include <src/gpu/text/vulkan/show.h>
+#include <src/gpu/text/vulkan/view.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>
@@ -135,11 +135,11 @@ class Impl final : public View
         std::unique_ptr<vulkan::Semaphore> m_resolve_semaphore;
         std::unique_ptr<vulkan::ImageWithMemory> m_object_image;
         std::unique_ptr<gpu::Renderer> m_renderer;
-        std::unique_ptr<gpu::TextShow> m_text;
-        std::unique_ptr<gpu::ConvexHullShow> m_convex_hull;
-        std::unique_ptr<gpu::PencilSketchShow> m_pencil_sketch;
-        std::unique_ptr<gpu::DftShow> m_dft;
-        std::unique_ptr<gpu::OpticalFlowShow> m_optical_flow;
+        std::unique_ptr<gpu::TextView> m_text;
+        std::unique_ptr<gpu::ConvexHullView> m_convex_hull;
+        std::unique_ptr<gpu::PencilSketchView> m_pencil_sketch;
+        std::unique_ptr<gpu::DftView> m_dft;
+        std::unique_ptr<gpu::OpticalFlowView> m_optical_flow;
 
         //
 
@@ -731,12 +731,12 @@ public:
 
                         const std::vector<vulkan::PhysicalDeviceFeatures> required_features =
                                 merge<vulkan::PhysicalDeviceFeatures>(
-                                        gpu::ConvexHullShow::required_device_features(),
-                                        gpu::DftShow::required_device_features(),
-                                        gpu::OpticalFlowShow::required_device_features(),
-                                        gpu::PencilSketchShow::required_device_features(),
+                                        gpu::ConvexHullView::required_device_features(),
+                                        gpu::DftView::required_device_features(),
+                                        gpu::OpticalFlowView::required_device_features(),
+                                        gpu::PencilSketchView::required_device_features(),
                                         gpu::Renderer::required_device_features(),
-                                        gpu::TextShow::required_device_features(),
+                                        gpu::TextView::required_device_features(),
                                         device_features_sample_shading(
                                                 VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING),
                                         device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY));
@@ -772,23 +772,23 @@ public:
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
                         transfer_queue, VULKAN_SAMPLE_SHADING, VULKAN_SAMPLER_ANISOTROPY);
 
-                m_text = gpu::create_text_show(
+                m_text = gpu::create_text_view(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
                         transfer_queue, VULKAN_SAMPLE_SHADING, m_frame_rate.text_size(), text_color);
 
-                m_convex_hull = gpu::create_convex_hull_show(
+                m_convex_hull = gpu::create_convex_hull_view(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue.family_index(),
                         VULKAN_SAMPLE_SHADING);
 
-                m_pencil_sketch = gpu::create_convex_hull_show(
+                m_pencil_sketch = gpu::create_pencil_sketch_view(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
                         transfer_queue, VULKAN_SAMPLE_SHADING);
 
-                m_dft = gpu::create_dft_show(
+                m_dft = gpu::create_dft_view(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
                         transfer_queue, VULKAN_SAMPLE_SHADING);
 
-                m_optical_flow = gpu::create_optical_flow_show(
+                m_optical_flow = gpu::create_optical_flow_view(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, compute_command_pool,
                         compute_queue, transfer_command_pool, transfer_queue, VULKAN_SAMPLE_SHADING);
 

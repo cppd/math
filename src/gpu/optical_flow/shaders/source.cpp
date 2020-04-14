@@ -33,17 +33,17 @@ constexpr uint32_t downsample_comp[]{
 constexpr uint32_t grayscale_comp[]{
 #include "optical_flow_grayscale.comp.spr"
 };
-constexpr uint32_t show_vert[]{
-#include "optical_flow_show.vert.spr"
+constexpr uint32_t view_vert[]{
+#include "optical_flow_view.vert.spr"
 };
-constexpr uint32_t show_frag[]{
-#include "optical_flow_show.frag.spr"
+constexpr uint32_t view_frag[]{
+#include "optical_flow_view.frag.spr"
 };
-constexpr uint32_t show_debug_vert[]{
-#include "optical_flow_show_debug.vert.spr"
+constexpr uint32_t view_debug_vert[]{
+#include "optical_flow_view_debug.vert.spr"
 };
-constexpr uint32_t show_debug_frag[]{
-#include "optical_flow_show_debug.frag.spr"
+constexpr uint32_t view_debug_frag[]{
+#include "optical_flow_view_debug.frag.spr"
 };
 }
 
@@ -67,23 +67,23 @@ Span<const uint32_t> optical_flow_grayscale_comp()
         return grayscale_comp;
 }
 
-Span<const uint32_t> optical_flow_show_vert()
+Span<const uint32_t> optical_flow_view_vert()
 {
-        return show_vert;
+        return view_vert;
 }
 
-Span<const uint32_t> optical_flow_show_frag()
+Span<const uint32_t> optical_flow_view_frag()
 {
-        return show_frag;
+        return view_frag;
 }
 
-Span<const uint32_t> optical_flow_show_debug_vert()
+Span<const uint32_t> optical_flow_view_debug_vert()
 {
-        return show_debug_vert;
+        return view_debug_vert;
 }
 
-Span<const uint32_t> optical_flow_show_debug_frag()
+Span<const uint32_t> optical_flow_view_debug_frag()
 {
-        return show_debug_frag;
+        return view_debug_frag;
 }
 }

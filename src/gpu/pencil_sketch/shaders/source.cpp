@@ -24,11 +24,11 @@ namespace
 constexpr uint32_t compute_comp[]{
 #include "pencil_sketch_compute.comp.spr"
 };
-constexpr uint32_t show_vert[]{
-#include "pencil_sketch_show.vert.spr"
+constexpr uint32_t view_vert[]{
+#include "pencil_sketch_view.vert.spr"
 };
-constexpr uint32_t show_frag[]{
-#include "pencil_sketch_show.frag.spr"
+constexpr uint32_t view_frag[]{
+#include "pencil_sketch_view.frag.spr"
 };
 }
 
@@ -37,13 +37,13 @@ Span<const uint32_t> pencil_sketch_compute_comp()
         return compute_comp;
 }
 
-Span<const uint32_t> pencil_sketch_show_vert()
+Span<const uint32_t> pencil_sketch_view_vert()
 {
-        return show_vert;
+        return view_vert;
 }
 
-Span<const uint32_t> pencil_sketch_show_frag()
+Span<const uint32_t> pencil_sketch_view_frag()
 {
-        return show_frag;
+        return view_frag;
 }
 }

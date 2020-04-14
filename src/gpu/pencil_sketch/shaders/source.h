@@ -22,6 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace gpu
 {
 Span<const uint32_t> pencil_sketch_compute_comp();
-Span<const uint32_t> pencil_sketch_show_vert();
-Span<const uint32_t> pencil_sketch_show_frag();
+Span<const uint32_t> pencil_sketch_view_vert();
+Span<const uint32_t> pencil_sketch_view_frag();
 }

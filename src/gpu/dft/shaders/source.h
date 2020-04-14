@@ -28,6 +28,6 @@ Span<const uint32_t> dft_copy_input_comp();
 Span<const uint32_t> dft_copy_output_comp();
 Span<const uint32_t> dft_mul_comp();
 Span<const uint32_t> dft_mul_d_comp();
-Span<const uint32_t> dft_show_vert();
-Span<const uint32_t> dft_show_frag();
+Span<const uint32_t> dft_view_vert();
+Span<const uint32_t> dft_view_frag();
 }

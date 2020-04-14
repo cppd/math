@@ -42,11 +42,11 @@ constexpr uint32_t mul_comp[]{
 constexpr uint32_t mul_d_comp[]{
 #include "dft_mul_d.comp.spr"
 };
-constexpr uint32_t show_vert[]{
-#include "dft_show.vert.spr"
+constexpr uint32_t view_vert[]{
+#include "dft_view.vert.spr"
 };
-constexpr uint32_t show_frag[]{
-#include "dft_show.frag.spr"
+constexpr uint32_t view_frag[]{
+#include "dft_view.frag.spr"
 };
 }
 
@@ -85,13 +85,13 @@ Span<const uint32_t> dft_mul_d_comp()
         return mul_d_comp;
 }
 
-Span<const uint32_t> dft_show_vert()
+Span<const uint32_t> dft_view_vert()
 {
-        return show_vert;
+        return view_vert;
 }
 
-Span<const uint32_t> dft_show_frag()
+Span<const uint32_t> dft_view_frag()
 {
-        return show_frag;
+        return view_frag;
 }
 }

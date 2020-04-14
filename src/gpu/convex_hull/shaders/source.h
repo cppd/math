@@ -24,6 +24,6 @@ namespace gpu
 Span<const uint32_t> convex_hull_prepare_comp();
 Span<const uint32_t> convex_hull_merge_comp();
 Span<const uint32_t> convex_hull_filter_comp();
-Span<const uint32_t> convex_hull_show_frag();
-Span<const uint32_t> convex_hull_show_vert();
+Span<const uint32_t> convex_hull_view_frag();
+Span<const uint32_t> convex_hull_view_vert();
 }

@@ -25,8 +25,8 @@ Span<const uint32_t> optical_flow_sobel_comp();
 Span<const uint32_t> optical_flow_flow_comp();
 Span<const uint32_t> optical_flow_downsample_comp();
 Span<const uint32_t> optical_flow_grayscale_comp();
-Span<const uint32_t> optical_flow_show_vert();
-Span<const uint32_t> optical_flow_show_frag();
-Span<const uint32_t> optical_flow_show_debug_vert();
-Span<const uint32_t> optical_flow_show_debug_frag();
+Span<const uint32_t> optical_flow_view_vert();
+Span<const uint32_t> optical_flow_view_frag();
+Span<const uint32_t> optical_flow_view_debug_vert();
+Span<const uint32_t> optical_flow_view_debug_frag();
 }

@@ -30,11 +30,11 @@ constexpr uint32_t merge_comp[]{
 constexpr uint32_t filter_comp[]{
 #include "convex_hull_filter.comp.spr"
 };
-constexpr uint32_t show_vert[]{
-#include "convex_hull_show.vert.spr"
+constexpr uint32_t view_vert[]{
+#include "convex_hull_view.vert.spr"
 };
-constexpr uint32_t show_frag[]{
-#include "convex_hull_show.frag.spr"
+constexpr uint32_t view_frag[]{
+#include "convex_hull_view.frag.spr"
 };
 }
 
@@ -53,13 +53,13 @@ Span<const uint32_t> convex_hull_filter_comp()
         return filter_comp;
 }
 
-Span<const uint32_t> convex_hull_show_frag()
+Span<const uint32_t> convex_hull_view_frag()
 {
-        return show_frag;
+        return view_frag;
 }
 
-Span<const uint32_t> convex_hull_show_vert()
+Span<const uint32_t> convex_hull_view_vert()
 {
-        return show_vert;
+        return view_vert;
 }
 }

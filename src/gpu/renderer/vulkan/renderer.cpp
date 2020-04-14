@@ -20,13 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "depth_buffer.h"
 #include "mesh_object.h"
 #include "sampler.h"
-#include "shader_normals.h"
-#include "shader_points.h"
-#include "shader_shadow.h"
-#include "shader_triangle_lines.h"
-#include "shader_triangles.h"
 
-#include "../com/storage.h"
+#include "shader/normals.h"
+#include "shader/points.h"
+#include "shader/shadow.h"
+#include "shader/triangle_lines.h"
+#include "shader/triangles.h"
 
 #include <src/com/log.h>
 #include <src/com/math.h>
@@ -42,7 +41,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/queue.h>
 
 #include <algorithm>
+#include <memory>
+#include <optional>
 #include <thread>
+#include <unordered_map>
 
 namespace gpu
 {
@@ -56,6 +58,22 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
         vulkan::PhysicalDeviceFeatures::shaderClipDistance
 };
 // clang-format on
+
+template <typename T, typename Id>
+std::enable_if_t<std::is_same_v<Id, ObjectId>, const T*> find_object(
+        const std::unordered_map<ObjectId, std::unique_ptr<T>>& map,
+        const Id& id)
+{
+        auto iter = map.find(id);
+        return (iter != map.cend()) ? iter->second.get() : nullptr;
+}
+template <typename T, typename OptionalId>
+std::enable_if_t<std::is_same_v<OptionalId, std::optional<ObjectId>>, const T*> find_object(
+        const std::unordered_map<ObjectId, std::unique_ptr<T>>& map,
+        const OptionalId& id)
+{
+        return id ? find_object(map, *id) : nullptr;
+}
 
 class Impl final : public Renderer
 {
@@ -122,7 +140,8 @@ class Impl final : public Renderer
 
         const vulkan::ImageWithMemory* m_object_image = nullptr;
 
-        RendererObjectStorage<ObjectId, MeshObject> m_storage;
+        std::unordered_map<ObjectId, std::unique_ptr<MeshObject>> m_mesh_storage;
+        std::optional<ObjectId> m_current_object_id;
 
         Region<2, int> m_viewport;
 
@@ -310,20 +329,17 @@ class Impl final : public Renderer
                         m_texture_sampler, m_triangles_program.descriptor_set_layout_material(), object.mesh(),
                         object.matrix());
 
-                bool delete_and_create_command_buffers = m_storage.is_current_object(object.id());
+                bool delete_and_create_command_buffers = (m_current_object_id == object.id());
                 if (delete_and_create_command_buffers)
                 {
                         delete_all_command_buffers();
-                        m_storage.delete_object(object.id());
                 }
-                m_storage.add_object(std::move(draw_object), object.id());
+                m_mesh_storage.insert_or_assign(object.id(), std::move(draw_object));
                 if (delete_and_create_command_buffers)
                 {
-                        m_storage.show_object(object.id());
                         create_all_command_buffers();
+                        set_matrices();
                 }
-
-                set_matrices();
         }
         void object_add(const volume::VolumeObject<3>& /*object*/) override
         {
@@ -332,49 +348,46 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                bool delete_and_create_command_buffers = m_storage.is_current_object(id);
+                if (find_object(m_mesh_storage, id) == nullptr)
+                {
+                        return;
+                }
+                bool delete_and_create_command_buffers = (m_current_object_id == id);
                 if (delete_and_create_command_buffers)
                 {
                         delete_all_command_buffers();
                 }
-                m_storage.delete_object(id);
+                m_mesh_storage.erase(id);
                 if (delete_and_create_command_buffers)
                 {
                         create_all_command_buffers();
+                        set_matrices();
                 }
-                set_matrices();
         }
         void object_delete_all() override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                bool delete_and_create_command_buffers = m_storage.object() != nullptr;
-                if (delete_and_create_command_buffers)
+                if (m_mesh_storage.empty())
                 {
-                        delete_all_command_buffers();
+                        return;
                 }
-                m_storage.delete_all();
-                if (delete_and_create_command_buffers)
-                {
-                        create_all_command_buffers();
-                }
+                delete_all_command_buffers();
+                m_mesh_storage.clear();
+                m_current_object_id.reset();
+                create_all_command_buffers();
                 set_matrices();
         }
         void object_show(ObjectId id) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                if (m_storage.is_current_object(id))
+                if (!(m_current_object_id == id))
                 {
-                        return;
-                }
-                const MeshObject* object = m_storage.object();
-                m_storage.show_object(id);
-                if (object != m_storage.object())
-                {
+                        m_current_object_id = id;
                         create_all_command_buffers();
+                        set_matrices();
                 }
-                set_matrices();
         }
 
         VkSemaphore draw(const vulkan::Queue& graphics_queue, unsigned image_index) const override
@@ -391,7 +404,7 @@ class Impl final : public Renderer
 
                 const unsigned render_index = m_render_command_buffers->count() == 1 ? 0 : image_index;
 
-                if (!m_show_shadow || !m_storage.object() || !m_storage.object()->has_shadow())
+                if (!m_show_shadow)
                 {
                         vulkan::queue_submit(
                                 (*m_render_command_buffers)[render_index], m_render_signal_semaphore, graphics_queue);
@@ -420,7 +433,7 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                return m_storage.object() == nullptr;
+                return find_object(m_mesh_storage, m_current_object_id) == nullptr;
         }
 
         void create_buffers(
@@ -538,17 +551,20 @@ class Impl final : public Renderer
 
                 //
 
-                if (m_storage.object())
+                const MeshObject* mesh = find_object(m_mesh_storage, m_current_object_id);
+                if (!mesh)
                 {
-                        const mat4& model = m_storage.object()->model_matrix();
-                        const mat4& main_mvp = m_main_vp_matrix * model;
-                        const mat4& shadow_mvp_texture = m_shadow_vp_texture_matrix * model;
-                        const mat4& shadow_mvp = m_shadow_vp_matrix * model;
-
-                        m_buffers.set_matrices(main_mvp, model, m_main_vp_matrix, shadow_mvp, shadow_mvp_texture);
-
-                        set_clip_plane();
+                        return;
                 }
+
+                const mat4& model = mesh->model_matrix();
+                const mat4& main_mvp = m_main_vp_matrix * model;
+                const mat4& shadow_mvp_texture = m_shadow_vp_texture_matrix * model;
+                const mat4& shadow_mvp = m_shadow_vp_matrix * model;
+
+                m_buffers.set_matrices(main_mvp, model, m_main_vp_matrix, shadow_mvp, shadow_mvp_texture);
+
+                set_clip_plane();
         }
 
         void before_render_pass_commands(VkCommandBuffer command_buffer) const
@@ -566,7 +582,8 @@ class Impl final : public Renderer
 
                 //
 
-                if (!m_storage.object())
+                const MeshObject* mesh = find_object(m_mesh_storage, m_current_object_id);
+                if (!mesh)
                 {
                         return;
                 }
@@ -589,7 +606,7 @@ class Impl final : public Renderer
                         info.points.descriptor_set = m_points_memory.descriptor_set();
                         info.points.descriptor_set_number = RendererPointsMemory::set_number();
 
-                        m_storage.object()->draw_commands_all(command_buffer, info);
+                        mesh->draw_commands_all(command_buffer, info);
                 }
 
                 if (m_clip_plane)
@@ -601,7 +618,7 @@ class Impl final : public Renderer
                         info.descriptor_set = m_triangle_lines_memory.descriptor_set();
                         info.descriptor_set_number = RendererTriangleLinesMemory::set_number();
 
-                        m_storage.object()->draw_commands_plain_triangles(command_buffer, info);
+                        mesh->draw_commands_plain_triangles(command_buffer, info);
                 }
 
                 if (m_show_normals)
@@ -613,7 +630,7 @@ class Impl final : public Renderer
                         info.descriptor_set = m_normals_memory.descriptor_set();
                         info.descriptor_set_number = RendererNormalsMemory::set_number();
 
-                        m_storage.object()->draw_commands_triangle_vertices(command_buffer, info);
+                        mesh->draw_commands_triangle_vertices(command_buffer, info);
                 }
         }
 
@@ -623,7 +640,8 @@ class Impl final : public Renderer
 
                 //
 
-                if (!m_storage.object())
+                const MeshObject* mesh = find_object(m_mesh_storage, m_current_object_id);
+                if (!mesh)
                 {
                         return;
                 }
@@ -637,7 +655,7 @@ class Impl final : public Renderer
 
                 vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
 
-                m_storage.object()->draw_commands_plain_triangles(command_buffer, info);
+                mesh->draw_commands_plain_triangles(command_buffer, info);
         }
 
         void create_render_command_buffers()
