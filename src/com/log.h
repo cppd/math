@@ -38,7 +38,7 @@ struct LogEvent final
 
         using T = std::variant<Message>;
 
-        template <typename Type>
+        template <typename Type, typename = std::enable_if_t<!std::is_same_v<LogEvent, std::remove_cvref_t<Type>>>>
         LogEvent(Type&& arg) : m_data(std::forward<Type>(arg))
         {
         }

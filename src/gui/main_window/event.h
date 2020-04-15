@@ -65,7 +65,7 @@ struct WindowEvent
 
         using T = std::variant<FileLoaded, MessageError, MessageErrorFatal, MessageInformation, MessageWarning>;
 
-        template <typename Type>
+        template <typename Type, typename = std::enable_if_t<!std::is_same_v<WindowEvent, std::remove_cvref_t<Type>>>>
         WindowEvent(Type&& arg) : m_data(std::forward<Type>(arg))
         {
         }
