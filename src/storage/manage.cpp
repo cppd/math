@@ -139,7 +139,7 @@ void load_from_file(
 
                                 processor::compute(
                                         progress_list, &v, build_convex_hull, build_cocone, build_bound_cocone,
-                                        build_mst, std::move(mesh), object_size, object_position, rho, alpha,
+                                        build_mst, std::move(mesh), "Model", object_size, object_position, rho, alpha,
                                         mesh_threads);
 
                                 return true;
@@ -190,8 +190,8 @@ void load_from_point_repository(
 
                                 processor::compute(
                                         progress_list, &v, build_convex_hull, build_cocone, build_bound_cocone,
-                                        build_mst, std::move(mesh), object_size, object_position, rho, alpha,
-                                        mesh_threads);
+                                        build_mst, std::move(mesh), object_name, object_size, object_position, rho,
+                                        alpha, mesh_threads);
 
                                 return true;
                         }() || ...);
@@ -227,7 +227,7 @@ void add_from_volume_repository(
                                 std::unique_ptr<const volume::Volume<N>> volume =
                                         repository.repository<N>().volumes().object(object_name, image_size);
 
-                                processor::compute(&v, std::move(volume), object_size, object_position);
+                                processor::compute(&v, std::move(volume), object_name, object_size, object_position);
 
                                 return true;
                         }() || ...);

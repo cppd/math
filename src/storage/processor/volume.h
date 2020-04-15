@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vec.h>
 
 #include <memory>
+#include <string>
 
 namespace storage::processor
 {
@@ -30,6 +31,7 @@ template <size_t N, typename MeshFloat>
 void compute(
         Storage<N, MeshFloat>* storage,
         std::unique_ptr<const volume::Volume<N>>&& volume,
+        const std::string& name,
         double object_size,
         const vec3& object_position)
 {
@@ -45,7 +47,7 @@ void compute(
         }
 
         std::shared_ptr<const volume::VolumeObject<N>> model_object =
-                std::make_shared<const volume::VolumeObject<N>>(std::move(volume), matrix, "Volume");
+                std::make_shared<const volume::VolumeObject<N>>(std::move(volume), matrix, name);
 
         storage->set_volume_object(std::move(model_object));
 }

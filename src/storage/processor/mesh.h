@@ -121,16 +121,16 @@ void add_meshes(
 template <size_t N, typename MeshFloat>
 void convex_hull(
         ProgressRatioList* progress_list,
-        const std::shared_ptr<const mesh::MeshObject<N>>& object,
+        const mesh::MeshObject<N>& object,
         int mesh_threads,
         Storage<N, MeshFloat>* storage)
 {
         std::unique_ptr<const mesh::Mesh<N>> ch_mesh;
         {
                 ProgressRatio progress(progress_list);
-                progress.set_text(object->name() + " convex hull in " + space_name(N) + ": %v of %m");
+                progress.set_text(object.name() + " convex hull in " + space_name(N) + ": %v of %m");
 
-                ch_mesh = mesh_convex_hull(object->mesh(), &progress);
+                ch_mesh = mesh_convex_hull(object.mesh(), &progress);
         }
         if (ch_mesh->facets.empty())
         {
@@ -138,7 +138,7 @@ void convex_hull(
         }
 
         const std::shared_ptr<const mesh::MeshObject<N>> obj =
-                std::make_shared<mesh::MeshObject<N>>(std::move(ch_mesh), object->matrix(), "Convex Hull");
+                std::make_shared<mesh::MeshObject<N>>(std::move(ch_mesh), object.matrix(), "Convex Hull");
 
         add_meshes(progress_list, obj, mesh_threads, storage);
 }
@@ -356,6 +356,7 @@ void compute(
         bool build_bound_cocone,
         bool build_mst,
         std::unique_ptr<const mesh::Mesh<N>>&& mesh,
+        const std::string& name,
         double object_size,
         const vec3& object_position,
         double rho,
@@ -386,7 +387,7 @@ void compute(
         }
 
         const std::shared_ptr<const mesh::MeshObject<N>> model_object =
-                std::make_shared<const mesh::MeshObject<N>>(std::move(mesh), matrix, "Model");
+                std::make_shared<const mesh::MeshObject<N>>(std::move(mesh), matrix, name);
 
         ThreadsWithCatch threads(3);
         try
@@ -395,7 +396,7 @@ void compute(
 
                 if (build_convex_hull)
                 {
-                        threads.add([&]() { impl::convex_hull(progress_list, model_object, mesh_threads, storage); });
+                        threads.add([&]() { impl::convex_hull(progress_list, *model_object, mesh_threads, storage); });
                 }
 
                 if (build_cocone || build_bound_cocone || build_mst)
