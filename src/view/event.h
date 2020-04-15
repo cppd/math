@@ -424,19 +424,11 @@ struct ErrorFatal final
         {
         }
 };
-
-struct ObjectLoaded final
-{
-        ObjectId id;
-        explicit ObjectLoaded(ObjectId id) : id(id)
-        {
-        }
-};
 }
 
 struct Event final
 {
-        using T = std::variant<event::ErrorFatal, event::ObjectLoaded>;
+        using T = std::variant<event::ErrorFatal>;
 
         template <typename Type>
         Event(Type&& arg) : m_data(std::forward<Type>(arg))

@@ -1208,8 +1208,7 @@ void MainWindow::event_from_view(const view::Event& event)
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
         const auto visitors = Visitors{
-                [this](const view::event::ErrorFatal& d) { m_events(WindowEvent::MessageErrorFatal(d.text)); },
-                [](const view::event::ObjectLoaded&) {}};
+                [this](const view::event::ErrorFatal& d) { m_events(WindowEvent::MessageErrorFatal(d.text)); }};
 
         std::visit(visitors, event.data());
 }

@@ -264,7 +264,6 @@ class Impl final : public View
                                 error("Null mesh object received");
                         }
                         m_renderer->object_add(*d.object);
-                        m_events(event::ObjectLoaded(d.object->id()));
                 },
                 [this](const command::AddVolumeObject& d)
                 {
@@ -273,7 +272,6 @@ class Impl final : public View
                                 error("Null volume object received");
                         }
                         m_renderer->object_add(*d.object);
-                        m_events(event::ObjectLoaded(d.object->id()));
                 },
                 [this](const command::DeleteObject& d)
                 {
