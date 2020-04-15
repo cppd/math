@@ -645,7 +645,7 @@ class Impl final : public View
                 return *m_resolve_semaphore;
         }
 
-        bool render(const text::TextData& text_data)
+        bool render() const
         {
                 static_assert(!std::remove_reference_t<decltype(m_instance->graphics_compute_queues())>().empty());
 
@@ -692,7 +692,8 @@ class Impl final : public View
 
                 if (m_text_active)
                 {
-                        wait_semaphore = m_text->draw(graphics_queue, wait_semaphore, image_index, text_data);
+                        wait_semaphore =
+                                m_text->draw(graphics_queue, wait_semaphore, image_index, m_frame_rate.text_data());
                 }
 
                 wait_semaphore = m_render_buffers->resolve_to_swapchain(
@@ -816,9 +817,12 @@ public:
                 {
                         dispatch_events();
 
-                        m_frame_rate.calculate();
+                        if (m_text_active)
+                        {
+                                m_frame_rate.calculate();
+                        }
 
-                        if (!render(m_frame_rate.text_data()))
+                        if (!render())
                         {
                                 create_swapchain();
                                 continue;
