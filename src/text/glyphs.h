@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <vector>
 
+namespace text
+{
 struct FontGlyph
 {
         int width, height, left, top, advance_x;
@@ -41,3 +43,4 @@ void create_font_glyphs(
         int* texture_width,
         int* texture_height,
         std::vector<std::uint_least8_t>* texture_pixels);
+}

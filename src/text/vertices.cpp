@@ -21,10 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-constexpr char32_t DEFAULT_CHARACTER = unicode::SPACE;
-
+namespace text
+{
 namespace
 {
+constexpr char32_t DEFAULT_CHARACTER = unicode::SPACE;
+
 template <typename T>
 const FontGlyph& code_point_glyph(const std::unordered_map<T, FontGlyph>& glyphs, T code_point)
 {
@@ -99,4 +101,5 @@ void text_vertices(
         {
                 text_vertices(glyphs, text_data.step_y, text_data.start_x, s, &x, &y, vertices);
         }
+}
 }

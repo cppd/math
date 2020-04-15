@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 
+namespace text
+{
 class Font final
 {
         class Impl;
@@ -42,3 +44,4 @@ public:
         template <typename T>
         std::enable_if_t<std::is_same_v<T, char32_t>, std::optional<Char>> render(T code_point) const;
 };
+}

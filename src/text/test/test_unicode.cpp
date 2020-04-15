@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 
+namespace text
+{
 namespace
 {
 void test_utf32_to_utf8_to_utf32()
@@ -164,4 +166,5 @@ void test_unicode()
         test_utf8_replacement_character_and_self_synchronizing();
         test_utf32_to_utf8();
         test_utf8_to_utf32();
+}
 }

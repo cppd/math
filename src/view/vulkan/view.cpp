@@ -645,7 +645,7 @@ class Impl final : public View
                 return *m_resolve_semaphore;
         }
 
-        bool render(const TextData& text_data)
+        bool render(const text::TextData& text_data)
         {
                 static_assert(!std::remove_reference_t<decltype(m_instance->graphics_compute_queues())>().empty());
 

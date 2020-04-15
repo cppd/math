@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <numeric>
 #include <utility>
 
+namespace text
+{
 namespace
 {
 template <size_t... I>
@@ -250,4 +252,5 @@ void create_font_glyphs(
         {
                 save_grayscale_image_to_file("font_texture.png", *texture_width, *texture_height, *texture_pixels);
         }
+}
 }

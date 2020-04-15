@@ -31,12 +31,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include FT_FREETYPE_H
 
+namespace text
+{
+namespace
+{
 constexpr const FT_Byte font_bytes[]{
 #include "DejaVuSans.ttf.bin"
 };
 
-namespace
-{
 class Library final
 {
         FT_Library m_library;
@@ -239,3 +241,4 @@ std::enable_if_t<std::is_same_v<T, char32_t>, std::optional<Font::Char>> Font::r
 }
 
 template std::optional<Font::Char> Font::render(char32_t code_point) const;
+}

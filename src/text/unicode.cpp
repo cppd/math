@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // U+0800  .. U+FFFF    1110xxxx 10xxxxxx 10xxxxxx
 // U+10000 .. U+10FFFF  11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
 
+namespace text
+{
 namespace unicode
 {
 template <typename T>
@@ -184,4 +186,5 @@ char32_t utf8_to_utf32(const std::string& s)
 
 template std::string utf32_to_number_string(char32_t code_point);
 template std::string utf32_to_utf8(char32_t code_point);
+}
 }

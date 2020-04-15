@@ -44,7 +44,7 @@ struct TextView
                 const vulkan::Queue& queue,
                 VkSemaphore wait_semaphore,
                 unsigned image_index,
-                const TextData& text_data) = 0;
+                const text::TextData& text_data) = 0;
 };
 
 std::unique_ptr<TextView> create_text_view(

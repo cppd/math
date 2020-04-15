@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+namespace text
+{
 struct TextData
 {
         int step_y;
@@ -27,3 +29,4 @@ struct TextData
         int start_y;
         std::vector<std::string> text;
 };
+}

@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "code_points.h"
 
+namespace text
+{
 std::vector<char32_t> supported_code_points()
 {
         std::vector<char32_t> code_points;
@@ -135,4 +137,5 @@ std::vector<char32_t> supported_code_points()
         code_points.push_back(0xFFFD);
 
         return code_points;
+}
 }

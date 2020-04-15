@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
+namespace text
+{
 namespace unicode
 {
 template <typename T>
@@ -35,4 +37,5 @@ char32_t utf8_to_utf32(const std::string& s);
 
 inline constexpr char32_t SPACE = 0x20;
 inline constexpr char32_t REPLACEMENT_CHARACTER = 0xFFFD;
+}
 }

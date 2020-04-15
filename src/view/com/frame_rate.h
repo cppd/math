@@ -26,7 +26,7 @@ class FrameRate
 {
         Frequency m_frequency;
         int m_text_size;
-        TextData m_text_data;
+        text::TextData m_text_data;
 
 public:
         explicit FrameRate(double ppi);
@@ -37,7 +37,7 @@ public:
         {
                 return m_text_size;
         }
-        const TextData& text_data() const
+        const text::TextData& text_data() const
         {
                 return m_text_data;
         }

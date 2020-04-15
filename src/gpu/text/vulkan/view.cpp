@@ -60,13 +60,13 @@ class Glyphs
 {
         int m_width;
         int m_height;
-        std::unordered_map<char32_t, FontGlyph> m_glyphs;
+        std::unordered_map<char32_t, text::FontGlyph> m_glyphs;
         std::vector<std::uint_least8_t> m_pixels;
 
 public:
         Glyphs(int size, unsigned max_image_dimension)
         {
-                Font font(size);
+                text::Font font(size);
                 create_font_glyphs(
                         font, max_image_dimension, max_image_dimension, &m_glyphs, &m_width, &m_height, &m_pixels);
         }
@@ -78,7 +78,7 @@ public:
         {
                 return m_height;
         }
-        std::unordered_map<char32_t, FontGlyph>& glyphs()
+        std::unordered_map<char32_t, text::FontGlyph>& glyphs()
         {
                 return m_glyphs;
         }
@@ -99,7 +99,7 @@ class Impl final : public TextView
         VkCommandPool m_graphics_command_pool;
 
         vulkan::ImageWithMemory m_glyph_texture;
-        std::unordered_map<char32_t, FontGlyph> m_glyphs;
+        std::unordered_map<char32_t, text::FontGlyph> m_glyphs;
 
         vulkan::Semaphore m_semaphore;
         vulkan::Sampler m_sampler;
@@ -192,7 +192,7 @@ class Impl final : public TextView
                 const vulkan::Queue& queue,
                 VkSemaphore wait_semaphore,
                 unsigned image_index,
-                const TextData& text_data) override
+                const text::TextData& text_data) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -201,15 +201,15 @@ class Impl final : public TextView
                 ASSERT(m_render_buffers);
                 ASSERT(queue.family_index() == m_graphics_family_index);
 
-                thread_local std::vector<::TextVertex> vertices;
+                thread_local std::vector<text::TextVertex> vertices;
 
                 text_vertices(m_glyphs, text_data, &vertices);
 
-                static_assert(sizeof(::TextVertex) == sizeof(TextVertex));
-                static_assert(offsetof(::TextVertex, v) == offsetof(TextVertex, window_coordinates));
-                static_assert(offsetof(::TextVertex, t) == offsetof(TextVertex, texture_coordinates));
-                static_assert(std::is_same_v<decltype(::TextVertex::v), decltype(TextVertex::window_coordinates)>);
-                static_assert(std::is_same_v<decltype(::TextVertex::t), decltype(TextVertex::texture_coordinates)>);
+                static_assert(sizeof(text::TextVertex) == sizeof(TextVertex));
+                static_assert(offsetof(text::TextVertex, v) == offsetof(TextVertex, window_coordinates));
+                static_assert(offsetof(text::TextVertex, t) == offsetof(TextVertex, texture_coordinates));
+                static_assert(std::is_same_v<decltype(text::TextVertex::v), decltype(TextVertex::window_coordinates)>);
+                static_assert(std::is_same_v<decltype(text::TextVertex::t), decltype(TextVertex::texture_coordinates)>);
 
                 const size_t data_size = storage_size(vertices);
 

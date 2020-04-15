@@ -26,9 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <vector>
 
-// Данные вершин треугольников для непосредственной передачи в шейдеры.
-// Типы данных GLSL для координат вершин ivec2 и для координат текстуры vec2.
-// Для общего случая используется int_least32_t вместо int32_t.
+namespace text
+{
 struct TextVertex
 {
         Vector<2, int_least32_t> v; // Координаты вершины в пространстве экрана.
@@ -43,3 +42,4 @@ void text_vertices(
         const std::unordered_map<char32_t, FontGlyph>& glyphs,
         const TextData& text_data,
         std::vector<TextVertex>* vertices);
+}
