@@ -145,6 +145,11 @@ const VkDescriptorSetLayoutBinding& Descriptors::layout_binding(uint32_t binding
         return m_descriptor_set_layout_bindings[i->second];
 }
 
+VkDescriptorSetLayout Descriptors::descriptor_set_layout() const noexcept
+{
+        return m_descriptor_set_layout;
+}
+
 uint32_t Descriptors::descriptor_set_count() const
 {
         return m_descriptor_sets.count();

@@ -59,6 +59,8 @@ public:
 
         //
 
+        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
+
         uint32_t descriptor_set_count() const;
         const VkDescriptorSet& descriptor_set(uint32_t index) const;
 
