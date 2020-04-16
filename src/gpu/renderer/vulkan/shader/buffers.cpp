@@ -217,4 +217,24 @@ void RendererBuffers::set_show_smooth(bool show) const
         decltype(Lighting().show_smooth) s = show ? 1 : 0;
         copy_to_lighting_buffer(offsetof(Lighting, show_smooth), s);
 }
+
+//
+
+MaterialBuffer::MaterialBuffer(
+        const vulkan::Device& device,
+        const std::unordered_set<uint32_t>& family_indices,
+        const Material& material)
+        : m_uniform_buffer(device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Material), material)
+{
+}
+
+VkBuffer MaterialBuffer::buffer() const
+{
+        return m_uniform_buffer;
+}
+
+VkDeviceSize MaterialBuffer::buffer_size() const
+{
+        return m_uniform_buffer.size();
+}
 }

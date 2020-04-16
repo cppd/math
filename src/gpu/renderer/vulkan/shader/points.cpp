@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "points.h"
 
+#include "vertex_points.h"
+
 #include "../../shaders/source.h"
 
 #include <src/com/error.h>
@@ -114,41 +116,6 @@ void RendererPointsMemory::set_object_image(const vulkan::ImageWithMemory* stora
         image_info.imageView = storage_image->image_view();
 
         m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
-}
-
-//
-
-std::vector<VkVertexInputBindingDescription> RendererPointsVertex::binding_descriptions()
-{
-        std::vector<VkVertexInputBindingDescription> descriptions;
-
-        {
-                VkVertexInputBindingDescription d = {};
-                d.binding = 0;
-                d.stride = sizeof(RendererPointsVertex);
-                d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-                descriptions.push_back(d);
-        }
-
-        return descriptions;
-}
-
-std::vector<VkVertexInputAttributeDescription> RendererPointsVertex::attribute_descriptions()
-{
-        std::vector<VkVertexInputAttributeDescription> descriptions;
-
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 0;
-                d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(RendererPointsVertex, position);
-
-                descriptions.push_back(d);
-        }
-
-        return descriptions;
 }
 
 //

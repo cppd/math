@@ -148,6 +148,8 @@ class Impl final : public Renderer
         std::optional<vec4> m_clip_plane;
         bool m_show_normals = false;
 
+        VkDescriptorSetLayout m_material_descriptor_set_layout;
+
         void set_light_a(const Color& light) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
@@ -326,8 +328,14 @@ class Impl final : public Renderer
 
                 std::unique_ptr draw_object = std::make_unique<MeshObject>(
                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
-                        m_texture_sampler, m_triangles_program.descriptor_set_layout_material(), object.mesh(),
-                        object.matrix());
+                        object.mesh(), object.matrix());
+
+                draw_object->add_material_layout(
+                        [&](const std::vector<MaterialInfo>& materials) {
+                                return RendererTrianglesMaterialMemory::create(
+                                        m_device, m_texture_sampler, m_material_descriptor_set_layout, materials);
+                        },
+                        RendererTrianglesMaterialMemory::set_number());
 
                 bool delete_and_create_command_buffers = (m_current_object_id == object.id());
                 if (delete_and_create_command_buffers)
@@ -595,6 +603,7 @@ class Impl final : public Renderer
                         info.triangles.pipeline = *m_render_triangles_pipeline;
                         info.triangles.shared_descriptor_set = m_triangles_shared_memory.descriptor_set();
                         info.triangles.shared_descriptor_set_number = RendererTrianglesSharedMemory::set_number();
+                        info.triangles.material_descriptor_set_layout = m_material_descriptor_set_layout;
 
                         info.lines.pipeline_layout = m_points_program.pipeline_layout();
                         info.lines.pipeline = *m_render_lines_pipeline;
@@ -771,7 +780,9 @@ public:
                   m_shadow_memory(m_device, m_shadow_program.descriptor_set_layout(), m_buffers),
                   //
                   m_points_program(m_device),
-                  m_points_memory(m_device, m_points_program.descriptor_set_layout(), m_buffers)
+                  m_points_memory(m_device, m_points_program.descriptor_set_layout(), m_buffers),
+                  //
+                  m_material_descriptor_set_layout(m_triangles_program.descriptor_set_layout_material())
         {
         }
 

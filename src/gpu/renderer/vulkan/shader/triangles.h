@@ -78,53 +78,15 @@ class RendererTrianglesMaterialMemory final
         static constexpr int TEXTURE_KD_BINDING = 2;
         static constexpr int TEXTURE_KS_BINDING = 3;
 
-        vulkan::Descriptors m_descriptors;
-        std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
-
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        struct Material
-        {
-                alignas(sizeof(vec4f)) vec3f Ka;
-                alignas(sizeof(vec4f)) vec3f Kd;
-                alignas(sizeof(vec4f)) vec3f Ks;
-                float Ns;
-                uint32_t use_texture_Ka;
-                uint32_t use_texture_Kd;
-                uint32_t use_texture_Ks;
-                uint32_t use_material;
-        };
-
-        struct MaterialAndTexture
-        {
-                Material material;
-                const vulkan::ImageWithMemory* texture_Ka;
-                const vulkan::ImageWithMemory* texture_Kd;
-                const vulkan::ImageWithMemory* texture_Ks;
-        };
-
-        //
-
-        RendererTrianglesMaterialMemory(
-                const vulkan::Device& device,
-                const std::unordered_set<uint32_t>& family_indices,
+        static vulkan::Descriptors create(
+                VkDevice device,
                 VkSampler sampler,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const std::vector<MaterialAndTexture>& materials);
-
-        RendererTrianglesMaterialMemory(const RendererTrianglesMaterialMemory&) = delete;
-        RendererTrianglesMaterialMemory& operator=(const RendererTrianglesMaterialMemory&) = delete;
-        RendererTrianglesMaterialMemory& operator=(RendererTrianglesMaterialMemory&&) = delete;
-
-        RendererTrianglesMaterialMemory(RendererTrianglesMaterialMemory&&) = default;
-        ~RendererTrianglesMaterialMemory() = default;
-
-        //
-
-        uint32_t descriptor_set_count() const;
-        const VkDescriptorSet& descriptor_set(uint32_t index) const;
+                const std::vector<MaterialInfo>& materials);
 };
 
 class RendererTrianglesProgram final

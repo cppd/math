@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "triangles.h"
 
-#include "vertex.h"
+#include "vertex_triangles.h"
 
 #include "../../shaders/source.h"
 
@@ -209,41 +209,35 @@ std::vector<VkDescriptorSetLayoutBinding> RendererTrianglesMaterialMemory::descr
         return bindings;
 }
 
-RendererTrianglesMaterialMemory::RendererTrianglesMaterialMemory(
-        const vulkan::Device& device,
-        const std::unordered_set<uint32_t>& family_indices,
+vulkan::Descriptors RendererTrianglesMaterialMemory::create(
+        VkDevice device,
         VkSampler sampler,
         VkDescriptorSetLayout descriptor_set_layout,
-        const std::vector<MaterialAndTexture>& materials)
-        : m_descriptors(vulkan::Descriptors(
-                  device,
-                  materials.size(),
-                  descriptor_set_layout,
-                  descriptor_set_layout_bindings()))
+        const std::vector<MaterialInfo>& materials)
 {
         ASSERT(!materials.empty());
-        ASSERT(std::all_of(materials.cbegin(), materials.cend(), [](const MaterialAndTexture& m) {
-                return m.texture_Ka && m.texture_Kd && m.texture_Ks;
+        ASSERT(std::all_of(materials.cbegin(), materials.cend(), [](const MaterialInfo& m) {
+                return m.buffer != VK_NULL_HANDLE && m.buffer_size > 0 && m.texture_Ka != VK_NULL_HANDLE &&
+                       m.texture_Kd != VK_NULL_HANDLE && m.texture_Ks != VK_NULL_HANDLE;
         }));
+
+        vulkan::Descriptors descriptors(
+                vulkan::Descriptors(device, materials.size(), descriptor_set_layout, descriptor_set_layout_bindings()));
 
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         for (size_t i = 0; i < materials.size(); ++i)
         {
-                const MaterialAndTexture& material = materials[i];
+                const MaterialInfo& material = materials[i];
 
                 infos.clear();
                 bindings.clear();
                 {
-                        m_uniform_buffers.emplace_back(
-                                device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Material),
-                                materials[i].material);
-
                         VkDescriptorBufferInfo buffer_info = {};
-                        buffer_info.buffer = m_uniform_buffers.back();
+                        buffer_info.buffer = material.buffer;
                         buffer_info.offset = 0;
-                        buffer_info.range = m_uniform_buffers.back().size();
+                        buffer_info.range = material.buffer_size;
 
                         infos.emplace_back(buffer_info);
 
@@ -252,7 +246,7 @@ RendererTrianglesMaterialMemory::RendererTrianglesMaterialMemory(
                 {
                         VkDescriptorImageInfo image_info = {};
                         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                        image_info.imageView = material.texture_Ka->image_view();
+                        image_info.imageView = material.texture_Ka;
                         image_info.sampler = sampler;
 
                         infos.emplace_back(image_info);
@@ -262,7 +256,7 @@ RendererTrianglesMaterialMemory::RendererTrianglesMaterialMemory(
                 {
                         VkDescriptorImageInfo image_info = {};
                         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                        image_info.imageView = material.texture_Kd->image_view();
+                        image_info.imageView = material.texture_Kd;
                         image_info.sampler = sampler;
 
                         infos.emplace_back(image_info);
@@ -272,30 +266,22 @@ RendererTrianglesMaterialMemory::RendererTrianglesMaterialMemory(
                 {
                         VkDescriptorImageInfo image_info = {};
                         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                        image_info.imageView = material.texture_Ks->image_view();
+                        image_info.imageView = material.texture_Ks;
                         image_info.sampler = sampler;
 
                         infos.emplace_back(image_info);
 
                         bindings.push_back(TEXTURE_KS_BINDING);
                 }
-                m_descriptors.update_descriptor_set(i, bindings, infos);
+                descriptors.update_descriptor_set(i, bindings, infos);
         }
+
+        return descriptors;
 }
 
 unsigned RendererTrianglesMaterialMemory::set_number()
 {
         return SET_NUMBER;
-}
-
-uint32_t RendererTrianglesMaterialMemory::descriptor_set_count() const
-{
-        return m_descriptors.descriptor_set_count();
-}
-
-const VkDescriptorSet& RendererTrianglesMaterialMemory::descriptor_set(uint32_t index) const
-{
-        return m_descriptors.descriptor_set(index);
 }
 
 //

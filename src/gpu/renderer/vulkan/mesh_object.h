@@ -17,9 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "shader/buffers.h"
+
 #include <src/model/mesh.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vec.h>
+#include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
 
 #include <memory>
@@ -46,10 +49,13 @@ public:
                 const vulkan::Queue& graphics_queue,
                 const vulkan::CommandPool& transfer_command_pool,
                 const vulkan::Queue& transfer_queue,
-                VkSampler sampler,
-                VkDescriptorSetLayout descriptor_set_layout,
                 const mesh::Mesh<3>& mesh,
                 const mat4& model_matrix);
+
+        void add_material_layout(
+                const std::function<vulkan::Descriptors(const std::vector<MaterialInfo>& materials)>&
+                        create_descriptor_sets,
+                uint32_t descriptor_set_number);
 
         ~MeshObject();
 
@@ -66,6 +72,7 @@ public:
                         VkPipeline pipeline;
                         VkDescriptorSet shared_descriptor_set;
                         uint32_t shared_descriptor_set_number;
+                        VkDescriptorSetLayout material_descriptor_set_layout;
                 };
 
                 struct Lines

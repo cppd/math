@@ -128,4 +128,39 @@ public:
         void set_show_shadow(bool show) const;
         void set_show_fog(bool show) const;
 };
+
+class MaterialBuffer final
+{
+        vulkan::BufferWithMemory m_uniform_buffer;
+
+public:
+        struct Material
+        {
+                alignas(sizeof(vec4f)) vec3f Ka;
+                alignas(sizeof(vec4f)) vec3f Kd;
+                alignas(sizeof(vec4f)) vec3f Ks;
+                float Ns;
+                uint32_t use_texture_Ka;
+                uint32_t use_texture_Kd;
+                uint32_t use_texture_Ks;
+                uint32_t use_material;
+        };
+
+        MaterialBuffer(
+                const vulkan::Device& device,
+                const std::unordered_set<uint32_t>& family_indices,
+                const Material& material);
+
+        VkBuffer buffer() const;
+        VkDeviceSize buffer_size() const;
+};
+
+struct MaterialInfo final
+{
+        VkBuffer buffer;
+        VkDeviceSize buffer_size;
+        VkImageView texture_Ka;
+        VkImageView texture_Kd;
+        VkImageView texture_Ks;
+};
 }

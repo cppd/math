@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shadow.h"
 
-#include "vertex.h"
+#include "vertex_triangles.h"
 
 #include "../../shaders/source.h"
 

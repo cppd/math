@@ -65,19 +65,6 @@ public:
         void set_object_image(const vulkan::ImageWithMemory* storage_image) const;
 };
 
-struct RendererPointsVertex
-{
-        vec3f position;
-
-        explicit constexpr RendererPointsVertex(const vec3f& position) : position(position)
-        {
-        }
-
-        static std::vector<VkVertexInputBindingDescription> binding_descriptions();
-
-        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
-};
-
 class RendererPointsProgram final
 {
         const vulkan::Device& m_device;

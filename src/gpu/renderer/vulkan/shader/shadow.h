@@ -34,7 +34,6 @@ class RendererShadowMemory final
 
         static constexpr int MATRICES_BINDING = 0;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
 
 public:
