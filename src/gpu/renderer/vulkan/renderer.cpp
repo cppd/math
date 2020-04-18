@@ -569,18 +569,25 @@ class Impl final : public Renderer
                 m_object_image->clear_commands(command_buffer, VK_IMAGE_LAYOUT_GENERAL);
         }
 
-        void draw_commands(VkCommandBuffer command_buffer) const
+        void draw_commands(VkCommandBuffer command_buffer, bool depth) const
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
                 const MeshObject* mesh = find_object(m_mesh_storage, m_current_object_id);
+
                 if (!mesh)
                 {
                         return;
                 }
 
+                if (depth)
+                {
+                        vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
+                }
+
+                if (!depth)
                 {
                         MeshObject::InfoTriangles info;
                         info.pipeline_layout = m_triangles_program.pipeline_layout();
@@ -590,6 +597,17 @@ class Impl final : public Renderer
                         info.material_descriptor_set_layout = m_material_descriptor_set_layout;
                         mesh->commands_triangles(command_buffer, info);
                 }
+                else
+                {
+                        MeshObject::InfoPlainTriangles info;
+                        info.pipeline_layout = m_triangles_depth_program.pipeline_layout();
+                        info.pipeline = *m_render_triangles_depth_pipeline;
+                        info.descriptor_set = m_triangles_depth_memory.descriptor_set();
+                        info.descriptor_set_number = RendererTrianglesDepthMemory::set_number();
+                        mesh->commands_plain_triangles(command_buffer, info);
+                }
+
+                if (!depth)
                 {
                         MeshObject::InfoLines info;
                         info.pipeline_layout = m_points_program.pipeline_layout();
@@ -598,6 +616,8 @@ class Impl final : public Renderer
                         info.descriptor_set_number = RendererPointsMemory::set_number();
                         mesh->commands_lines(command_buffer, info);
                 }
+
+                if (!depth)
                 {
                         MeshObject::InfoPoints info;
                         info.pipeline_layout = m_points_program.pipeline_layout();
@@ -607,7 +627,7 @@ class Impl final : public Renderer
                         mesh->commands_points(command_buffer, info);
                 }
 
-                if (m_clip_plane)
+                if (!depth && m_clip_plane)
                 {
                         MeshObject::InfoPlainTriangles info;
                         info.pipeline_layout = m_triangle_lines_program.pipeline_layout();
@@ -617,7 +637,7 @@ class Impl final : public Renderer
                         mesh->commands_plain_triangles(command_buffer, info);
                 }
 
-                if (m_show_normals)
+                if (!depth && m_show_normals)
                 {
                         MeshObject::InfoTriangleVertices info;
                         info.pipeline_layout = m_normals_program.pipeline_layout();
@@ -626,30 +646,6 @@ class Impl final : public Renderer
                         info.descriptor_set_number = RendererNormalsMemory::set_number();
                         mesh->commands_triangle_vertices(command_buffer, info);
                 }
-        }
-
-        void draw_depth_commands(VkCommandBuffer command_buffer) const
-        {
-                ASSERT(m_thread_id == std::this_thread::get_id());
-
-                //
-
-                const MeshObject* mesh = find_object(m_mesh_storage, m_current_object_id);
-                if (!mesh)
-                {
-                        return;
-                }
-
-                MeshObject::InfoPlainTriangles info;
-
-                info.pipeline_layout = m_triangles_depth_program.pipeline_layout();
-                info.pipeline = *m_render_triangles_depth_pipeline;
-                info.descriptor_set = m_triangles_depth_memory.descriptor_set();
-                info.descriptor_set_number = RendererTrianglesDepthMemory::set_number();
-
-                vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
-
-                mesh->commands_plain_triangles(command_buffer, info);
         }
 
         void create_render_command_buffers()
@@ -663,6 +659,7 @@ class Impl final : public Renderer
                 m_render_command_buffers.reset();
 
                 vulkan::CommandBufferCreateInfo info;
+
                 info.device = m_device;
                 info.render_area.emplace();
                 info.render_area->offset.x = 0;
@@ -672,12 +669,15 @@ class Impl final : public Renderer
                 info.render_pass = m_render_buffers->render_pass();
                 info.framebuffers = &m_render_buffers->framebuffers();
                 info.command_pool = m_graphics_command_pool;
+                const std::vector<VkClearValue> clear_values = m_render_buffers->clear_values(m_clear_color);
+                info.clear_values = &clear_values;
                 info.before_render_pass_commands = [this](VkCommandBuffer command_buffer) {
                         before_render_pass_commands(command_buffer);
                 };
-                info.render_pass_commands = [this](VkCommandBuffer command_buffer) { draw_commands(command_buffer); };
-                const std::vector<VkClearValue> clear_values = m_render_buffers->clear_values(m_clear_color);
-                info.clear_values = &clear_values;
+                info.render_pass_commands = [this](VkCommandBuffer command_buffer) {
+                        draw_commands(command_buffer, false /*depth*/);
+                };
+
                 m_render_command_buffers = vulkan::create_command_buffers(info);
         }
 
@@ -692,6 +692,7 @@ class Impl final : public Renderer
                 m_render_depth_command_buffers.reset();
 
                 vulkan::CommandBufferCreateInfo info;
+
                 info.device = m_device;
                 info.render_area.emplace();
                 info.render_area->offset.x = 0;
@@ -703,8 +704,9 @@ class Impl final : public Renderer
                 info.command_pool = m_graphics_command_pool;
                 info.clear_values = &m_depth_buffers->clear_values();
                 info.render_pass_commands = [this](VkCommandBuffer command_buffer) {
-                        draw_depth_commands(command_buffer);
+                        draw_commands(command_buffer, true /*depth*/);
                 };
+
                 m_render_depth_command_buffers = vulkan::create_command_buffers(info);
         }
 
