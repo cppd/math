@@ -27,7 +27,6 @@ layout(std140, set = 0, binding = 0) uniform Matrices
         mat4 shadow_mvp_matrix;
         mat4 shadow_mvp_texture_matrix;
         vec4 clip_plane_equation;
-        vec4 clip_plane_equation_shadow;
         bool clip_plane_enabled;
 }
 matrices;
@@ -42,5 +41,13 @@ void main(void)
 {
         vec4 pos = matrices.main_mvp_matrix * vec4(position, 1.0);
         gl_Position = pos;
-        gl_ClipDistance[0] = matrices.clip_plane_enabled ? dot(matrices.clip_plane_equation, pos) : 1;
+        if (matrices.clip_plane_enabled)
+        {
+                vec4 world = matrices.main_model_matrix * vec4(position, 1.0);
+                gl_ClipDistance[0] = dot(matrices.clip_plane_equation, world);
+        }
+        else
+        {
+                gl_ClipDistance[0] = 1;
+        }
 }

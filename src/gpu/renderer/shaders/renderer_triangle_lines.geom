@@ -30,16 +30,15 @@ layout(std140, binding = 0) uniform Matrices
         mat4 shadow_mvp_matrix;
         mat4 shadow_mvp_texture_matrix;
         vec4 clip_plane_equation;
-        vec4 clip_plane_equation_shadow;
         bool clip_plane_enabled;
 }
 matrices;
 
-in gl_PerVertex
+layout(location = 0) in VS
 {
-        vec4 gl_Position;
+        vec4 world_position;
 }
-gl_in[3];
+vs[3];
 
 out gl_PerVertex
 {
@@ -50,10 +49,12 @@ out gl_PerVertex
 
 void line(int i0, int i1, int i2, float d0, float d1, float d2)
 {
-        gl_Position = mix(gl_in[i0].gl_Position, gl_in[i1].gl_Position, d0 / (d0 - d1));
+        vec4 from = mix(vs[i0].world_position, vs[i1].world_position, d0 / (d0 - d1));
+        gl_Position = matrices.main_vp_matrix * from;
         EmitVertex();
 
-        gl_Position = mix(gl_in[i0].gl_Position, gl_in[i2].gl_Position, d0 / (d0 - d2));
+        vec4 to = mix(vs[i0].world_position, vs[i2].world_position, d0 / (d0 - d2));
+        gl_Position = matrices.main_vp_matrix * to;
         EmitVertex();
 
         EndPrimitive();
@@ -66,7 +67,7 @@ void main()
 
         for (int i = 0; i < 3; ++i)
         {
-                float v = dot(matrices.clip_plane_equation, gl_in[i].gl_Position);
+                float v = dot(matrices.clip_plane_equation, vs[i].world_position);
                 d[i] = v;
                 s[i] = sign(v);
         }

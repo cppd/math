@@ -27,17 +27,17 @@ layout(std140, binding = 0) uniform Matrices
         mat4 shadow_mvp_matrix;
         mat4 shadow_mvp_texture_matrix;
         vec4 clip_plane_equation;
-        vec4 clip_plane_equation_shadow;
         bool clip_plane_enabled;
 }
 matrices;
 
-out gl_PerVertex
+layout(location = 0) out VS
 {
-        vec4 gl_Position;
-};
+        vec4 world_position;
+}
+vs;
 
 void main()
 {
-        gl_Position = matrices.main_mvp_matrix * vec4(position, 1.0);
+        vs.world_position = matrices.main_model_matrix * vec4(position, 1.0);
 }

@@ -290,23 +290,12 @@ class Impl final : public Renderer
                 set_matrices();
         }
 
-        void set_clip_plane() const
-        {
-                if (m_clip_plane)
-                {
-                        vec4 main_plane = *m_clip_plane * m_main_vp_matrix.inverse();
-                        vec4 shadow_plane = *m_clip_plane * m_shadow_vp_matrix.inverse();
-                        m_buffers.set_clip_plane(main_plane, shadow_plane, true);
-                }
-        }
-
         void clip_plane_show(const vec4& plane) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 m_clip_plane = plane;
-
-                set_clip_plane();
+                m_buffers.set_clip_plane(plane, true);
 
                 create_render_command_buffers();
         }
@@ -316,8 +305,7 @@ class Impl final : public Renderer
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 m_clip_plane.reset();
-
-                m_buffers.set_clip_plane(vec4(0), vec4(0), false);
+                m_buffers.set_clip_plane(vec4(0), false);
 
                 create_render_command_buffers();
         }
@@ -571,8 +559,6 @@ class Impl final : public Renderer
                 const mat4& shadow_mvp = m_shadow_vp_matrix * model;
 
                 m_buffers.set_matrices(main_mvp, model, m_main_vp_matrix, shadow_mvp, shadow_mvp_texture);
-
-                set_clip_plane();
         }
 
         void before_render_pass_commands(VkCommandBuffer command_buffer) const

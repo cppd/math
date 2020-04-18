@@ -46,7 +46,6 @@ class RendererBuffers
                 struct C
                 {
                         vec4f equation;
-                        vec4f equation_shadow;
                         uint32_t enabled;
                 };
                 M matrices;
@@ -108,7 +107,7 @@ public:
                 const mat4& main_vp_matrix,
                 const mat4& shadow_mvp_matrix,
                 const mat4& shadow_mvp_texture_matrix) const;
-        void set_clip_plane(const vec4& equation, const vec4& equation_shadow, bool enabled) const;
+        void set_clip_plane(const vec4& equation, bool enabled) const;
         void set_default_color(const Color& color) const;
         void set_wireframe_color(const Color& color) const;
         void set_background_color(const Color& color) const;
