@@ -23,9 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader/normals.h"
 #include "shader/points.h"
-#include "shader/shadow.h"
 #include "shader/triangle_lines.h"
 #include "shader/triangles.h"
+#include "shader/triangles_depth.h"
 
 #include <src/com/log.h>
 #include <src/com/math.h>
@@ -103,8 +103,8 @@ class Impl final : public Renderer
 
         const vulkan::Swapchain* m_swapchain = nullptr;
 
-        vulkan::Semaphore m_shadow_signal_semaphore;
         vulkan::Semaphore m_render_signal_semaphore;
+        vulkan::Semaphore m_render_depth_signal_semaphore;
 
         vulkan::Sampler m_texture_sampler;
         vulkan::Sampler m_shadow_sampler;
@@ -112,7 +112,7 @@ class Impl final : public Renderer
         RendererBuffers m_buffers;
 
         RendererTrianglesProgram m_triangles_program;
-        RendererTrianglesSharedMemory m_triangles_shared_memory;
+        RendererTrianglesMemory m_triangles_memory;
 
         RendererTriangleLinesProgram m_triangle_lines_program;
         RendererTriangleLinesMemory m_triangle_lines_memory;
@@ -120,8 +120,8 @@ class Impl final : public Renderer
         RendererNormalsProgram m_normals_program;
         RendererNormalsMemory m_normals_memory;
 
-        RendererShadowProgram m_shadow_program;
-        RendererShadowMemory m_shadow_memory;
+        RendererTrianglesDepthProgram m_triangles_depth_program;
+        RendererTrianglesDepthMemory m_triangles_depth_memory;
 
         RendererPointsProgram m_points_program;
         RendererPointsMemory m_points_memory;
@@ -134,9 +134,9 @@ class Impl final : public Renderer
         std::optional<vulkan::Pipeline> m_render_lines_pipeline;
         std::optional<vulkan::CommandBuffers> m_render_command_buffers;
 
-        std::unique_ptr<RendererDepthBuffers> m_shadow_buffers;
-        std::optional<vulkan::Pipeline> m_shadow_pipeline;
-        std::optional<vulkan::CommandBuffers> m_shadow_command_buffers;
+        std::unique_ptr<RendererDepthBuffers> m_depth_buffers;
+        std::optional<vulkan::Pipeline> m_render_triangles_depth_pipeline;
+        std::optional<vulkan::CommandBuffers> m_render_depth_command_buffers;
 
         const vulkan::ImageWithMemory* m_object_image = nullptr;
 
@@ -266,7 +266,7 @@ class Impl final : public Renderer
 
                 m_shadow_zoom = zoom;
 
-                create_shadow_buffers();
+                create_depth_buffers();
                 create_all_command_buffers();
         }
         void set_camera(const RendererCameraInfo& c) override
@@ -403,18 +403,20 @@ class Impl final : public Renderer
                 }
                 else
                 {
-                        ASSERT(m_shadow_command_buffers->count() == m_swapchain->image_views().size() ||
-                               m_shadow_command_buffers->count() == 1);
+                        ASSERT(m_render_depth_command_buffers->count() == m_swapchain->image_views().size() ||
+                               m_render_depth_command_buffers->count() == 1);
 
-                        const unsigned shadow_index = m_shadow_command_buffers->count() == 1 ? 0 : image_index;
+                        const unsigned render_depth_index =
+                                m_render_depth_command_buffers->count() == 1 ? 0 : image_index;
 
                         vulkan::queue_submit(
-                                (*m_shadow_command_buffers)[shadow_index], m_shadow_signal_semaphore, graphics_queue);
+                                (*m_render_depth_command_buffers)[render_depth_index], m_render_depth_signal_semaphore,
+                                graphics_queue);
 
                         //
 
                         vulkan::queue_submit(
-                                m_shadow_signal_semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                m_render_depth_signal_semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                                 (*m_render_command_buffers)[render_index], m_render_signal_semaphore, graphics_queue);
                 }
 
@@ -447,7 +449,7 @@ class Impl final : public Renderer
                 m_viewport = viewport;
 
                 create_render_buffers();
-                create_shadow_buffers();
+                create_depth_buffers();
 
                 create_all_command_buffers();
         }
@@ -458,7 +460,7 @@ class Impl final : public Renderer
 
                 //
 
-                delete_shadow_buffers();
+                delete_depth_buffers();
                 delete_render_buffers();
         }
 
@@ -486,7 +488,7 @@ class Impl final : public Renderer
 
                 //
 
-                m_triangles_shared_memory.set_object_image(m_object_image);
+                m_triangles_memory.set_object_image(m_object_image);
                 m_points_memory.set_object_image(m_object_image);
 
                 m_render_triangles_pipeline = m_triangles_program.create_pipeline(
@@ -506,14 +508,14 @@ class Impl final : public Renderer
                         VK_PRIMITIVE_TOPOLOGY_LINE_LIST, m_viewport);
         }
 
-        void delete_shadow_buffers()
+        void delete_depth_buffers()
         {
-                m_shadow_command_buffers.reset();
-                m_shadow_pipeline.reset();
-                m_shadow_buffers.reset();
+                m_render_depth_command_buffers.reset();
+                m_render_triangles_depth_pipeline.reset();
+                m_depth_buffers.reset();
         }
 
-        void create_shadow_buffers()
+        void create_depth_buffers()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -521,20 +523,20 @@ class Impl final : public Renderer
 
                 ASSERT(m_swapchain);
 
-                delete_shadow_buffers();
+                delete_depth_buffers();
 
                 //
 
                 constexpr RendererDepthBufferCount buffer_count = RendererDepthBufferCount::One;
-                m_shadow_buffers = create_renderer_depth_buffers(
+                m_depth_buffers = create_renderer_depth_buffers(
                         buffer_count, *m_swapchain, {m_graphics_queue.family_index()}, m_graphics_command_pool,
                         m_graphics_queue, m_device, m_viewport.width(), m_viewport.height(), m_shadow_zoom);
 
-                m_triangles_shared_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
+                m_triangles_memory.set_shadow_texture(m_shadow_sampler, m_depth_buffers->texture(0));
 
-                m_shadow_pipeline = m_shadow_program.create_pipeline(
-                        m_shadow_buffers->render_pass(), m_shadow_buffers->sample_count(),
-                        Region<2, int>(0, 0, m_shadow_buffers->width(), m_shadow_buffers->height()));
+                m_render_triangles_depth_pipeline = m_triangles_depth_program.create_pipeline(
+                        m_depth_buffers->render_pass(), m_depth_buffers->sample_count(),
+                        Region<2, int>(0, 0, m_depth_buffers->width(), m_depth_buffers->height()));
         }
 
         void set_matrices()
@@ -584,8 +586,8 @@ class Impl final : public Renderer
 
                         info.triangles.pipeline_layout = m_triangles_program.pipeline_layout();
                         info.triangles.pipeline = *m_render_triangles_pipeline;
-                        info.triangles.shared_descriptor_set = m_triangles_shared_memory.descriptor_set();
-                        info.triangles.shared_descriptor_set_number = RendererTrianglesSharedMemory::set_number();
+                        info.triangles.descriptor_set = m_triangles_memory.descriptor_set();
+                        info.triangles.descriptor_set_number = RendererTrianglesMemory::set_number();
                         info.triangles.material_descriptor_set_layout = m_material_descriptor_set_layout;
 
                         info.lines.pipeline_layout = m_points_program.pipeline_layout();
@@ -626,7 +628,7 @@ class Impl final : public Renderer
                 }
         }
 
-        void draw_shadow_commands(VkCommandBuffer command_buffer) const
+        void draw_depth_commands(VkCommandBuffer command_buffer) const
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -640,10 +642,10 @@ class Impl final : public Renderer
 
                 MeshObject::DrawInfoPlainTriangles info;
 
-                info.pipeline_layout = m_shadow_program.pipeline_layout();
-                info.pipeline = *m_shadow_pipeline;
-                info.descriptor_set = m_shadow_memory.descriptor_set();
-                info.descriptor_set_number = RendererShadowMemory::set_number();
+                info.pipeline_layout = m_triangles_depth_program.pipeline_layout();
+                info.pipeline = *m_render_triangles_depth_pipeline;
+                info.descriptor_set = m_triangles_depth_memory.descriptor_set();
+                info.descriptor_set_number = RendererTrianglesDepthMemory::set_number();
 
                 vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
 
@@ -679,31 +681,31 @@ class Impl final : public Renderer
                 m_render_command_buffers = vulkan::create_command_buffers(info);
         }
 
-        void create_shadow_command_buffers()
+        void create_render_depth_command_buffers()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
-                ASSERT(m_shadow_buffers);
+                ASSERT(m_depth_buffers);
 
-                m_shadow_command_buffers.reset();
+                m_render_depth_command_buffers.reset();
 
                 vulkan::CommandBufferCreateInfo info;
                 info.device = m_device;
                 info.render_area.emplace();
                 info.render_area->offset.x = 0;
                 info.render_area->offset.y = 0;
-                info.render_area->extent.width = m_shadow_buffers->width();
-                info.render_area->extent.height = m_shadow_buffers->height();
-                info.render_pass = m_shadow_buffers->render_pass();
-                info.framebuffers = &m_shadow_buffers->framebuffers();
+                info.render_area->extent.width = m_depth_buffers->width();
+                info.render_area->extent.height = m_depth_buffers->height();
+                info.render_pass = m_depth_buffers->render_pass();
+                info.framebuffers = &m_depth_buffers->framebuffers();
                 info.command_pool = m_graphics_command_pool;
-                info.clear_values = &m_shadow_buffers->clear_values();
+                info.clear_values = &m_depth_buffers->clear_values();
                 info.render_pass_commands = [this](VkCommandBuffer command_buffer) {
-                        draw_shadow_commands(command_buffer);
+                        draw_depth_commands(command_buffer);
                 };
-                m_shadow_command_buffers = vulkan::create_command_buffers(info);
+                m_render_depth_command_buffers = vulkan::create_command_buffers(info);
         }
 
         void create_all_command_buffers()
@@ -713,7 +715,7 @@ class Impl final : public Renderer
                 //
 
                 create_render_command_buffers();
-                create_shadow_command_buffers();
+                create_render_depth_command_buffers();
         }
 
         void delete_all_command_buffers()
@@ -725,7 +727,7 @@ class Impl final : public Renderer
                 ASSERT(m_render_buffers);
 
                 m_render_command_buffers.reset();
-                m_shadow_command_buffers.reset();
+                m_render_depth_command_buffers.reset();
         }
 
 public:
@@ -743,17 +745,17 @@ public:
                   m_graphics_queue(graphics_queue),
                   m_transfer_command_pool(transfer_command_pool),
                   m_transfer_queue(transfer_queue),
-                  m_shadow_signal_semaphore(m_device),
                   m_render_signal_semaphore(m_device),
+                  m_render_depth_signal_semaphore(m_device),
                   m_texture_sampler(create_renderer_texture_sampler(m_device, sampler_anisotropy)),
                   m_shadow_sampler(create_renderer_shadow_sampler(m_device)),
                   //
                   m_buffers(m_device, {m_graphics_queue.family_index()}),
                   //
                   m_triangles_program(m_device),
-                  m_triangles_shared_memory(
+                  m_triangles_memory(
                           m_device,
-                          m_triangles_program.descriptor_set_layout_shared(),
+                          m_triangles_program.descriptor_set_layout(),
                           m_buffers.matrices_buffer(),
                           m_buffers.lighting_buffer(),
                           m_buffers.drawing_buffer()),
@@ -772,10 +774,10 @@ public:
                           m_buffers.matrices_buffer(),
                           m_buffers.drawing_buffer()),
                   //
-                  m_shadow_program(m_device),
-                  m_shadow_memory(
+                  m_triangles_depth_program(m_device),
+                  m_triangles_depth_memory(
                           m_device,
-                          m_shadow_program.descriptor_set_layout(),
+                          m_triangles_depth_program.descriptor_set_layout(),
                           m_buffers.shadow_matrices_buffer(),
                           m_buffers.drawing_buffer()),
                   //

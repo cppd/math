@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu
 {
-std::vector<VkDescriptorSetLayoutBinding> RendererTrianglesSharedMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> RendererTrianglesMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -82,7 +82,7 @@ std::vector<VkDescriptorSetLayoutBinding> RendererTrianglesSharedMemory::descrip
         return bindings;
 }
 
-RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(
+RendererTrianglesMemory::RendererTrianglesMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const vulkan::Buffer& matrices,
@@ -127,18 +127,17 @@ RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned RendererTrianglesSharedMemory::set_number()
+unsigned RendererTrianglesMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& RendererTrianglesSharedMemory::descriptor_set() const
+const VkDescriptorSet& RendererTrianglesMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void RendererTrianglesSharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachment* shadow_texture)
-        const
+void RendererTrianglesMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachment* shadow_texture) const
 {
         ASSERT(shadow_texture && (shadow_texture->usage() & VK_IMAGE_USAGE_SAMPLED_BIT));
         ASSERT(shadow_texture && (shadow_texture->sample_count() == VK_SAMPLE_COUNT_1_BIT));
@@ -150,7 +149,8 @@ void RendererTrianglesSharedMemory::set_shadow_texture(VkSampler sampler, const 
 
         m_descriptors.update_descriptor_set(0, SHADOW_BINDING, image_info);
 }
-void RendererTrianglesSharedMemory::set_object_image(const vulkan::ImageWithMemory* storage_image) const
+
+void RendererTrianglesMemory::set_object_image(const vulkan::ImageWithMemory* storage_image) const
 {
         ASSERT(storage_image && storage_image->format() == VK_FORMAT_R32_UINT);
         ASSERT(storage_image && (storage_image->usage() & VK_IMAGE_USAGE_STORAGE_BIT));
@@ -290,25 +290,25 @@ unsigned RendererTrianglesMaterialMemory::set_number()
 
 RendererTrianglesProgram::RendererTrianglesProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout_shared(vulkan::create_descriptor_set_layout(
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
                   device,
-                  RendererTrianglesSharedMemory::descriptor_set_layout_bindings())),
+                  RendererTrianglesMemory::descriptor_set_layout_bindings())),
           m_descriptor_set_layout_material(vulkan::create_descriptor_set_layout(
                   device,
                   RendererTrianglesMaterialMemory::descriptor_set_layout_bindings())),
           m_pipeline_layout(vulkan::create_pipeline_layout(
                   device,
-                  {RendererTrianglesSharedMemory::set_number(), RendererTrianglesMaterialMemory::set_number()},
-                  {m_descriptor_set_layout_shared, m_descriptor_set_layout_material})),
+                  {RendererTrianglesMemory::set_number(), RendererTrianglesMaterialMemory::set_number()},
+                  {m_descriptor_set_layout, m_descriptor_set_layout_material})),
           m_vertex_shader(m_device, renderer_triangles_vert(), "main"),
           m_geometry_shader(m_device, renderer_triangles_geom(), "main"),
           m_fragment_shader(m_device, renderer_triangles_frag(), "main")
 {
 }
 
-VkDescriptorSetLayout RendererTrianglesProgram::descriptor_set_layout_shared() const
+VkDescriptorSetLayout RendererTrianglesProgram::descriptor_set_layout() const
 {
-        return m_descriptor_set_layout_shared;
+        return m_descriptor_set_layout;
 }
 
 VkDescriptorSetLayout RendererTrianglesProgram::descriptor_set_layout_material() const

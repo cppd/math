@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu
 {
-class RendererTrianglesSharedMemory final
+class RendererTrianglesMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -47,19 +47,19 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        RendererTrianglesSharedMemory(
+        RendererTrianglesMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const vulkan::Buffer& matrices,
                 const vulkan::Buffer& lighting,
                 const vulkan::Buffer& drawing);
 
-        RendererTrianglesSharedMemory(const RendererTrianglesSharedMemory&) = delete;
-        RendererTrianglesSharedMemory& operator=(const RendererTrianglesSharedMemory&) = delete;
-        RendererTrianglesSharedMemory& operator=(RendererTrianglesSharedMemory&&) = delete;
+        RendererTrianglesMemory(const RendererTrianglesMemory&) = delete;
+        RendererTrianglesMemory& operator=(const RendererTrianglesMemory&) = delete;
+        RendererTrianglesMemory& operator=(RendererTrianglesMemory&&) = delete;
 
-        RendererTrianglesSharedMemory(RendererTrianglesSharedMemory&&) = default;
-        ~RendererTrianglesSharedMemory() = default;
+        RendererTrianglesMemory(RendererTrianglesMemory&&) = default;
+        ~RendererTrianglesMemory() = default;
 
         //
 
@@ -95,7 +95,7 @@ class RendererTrianglesProgram final
 {
         const vulkan::Device& m_device;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout_shared;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::DescriptorSetLayout m_descriptor_set_layout_material;
         vulkan::PipelineLayout m_pipeline_layout;
         vulkan::VertexShader m_vertex_shader;
@@ -118,7 +118,7 @@ public:
                 bool sample_shading,
                 const Region<2, int>& viewport) const;
 
-        VkDescriptorSetLayout descriptor_set_layout_shared() const;
+        VkDescriptorSetLayout descriptor_set_layout() const;
         VkDescriptorSetLayout descriptor_set_layout_material() const;
         VkPipelineLayout pipeline_layout() const;
 };

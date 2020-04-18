@@ -26,11 +26,10 @@ namespace gpu
 Span<const uint32_t> renderer_triangles_vert();
 Span<const uint32_t> renderer_triangles_geom();
 Span<const uint32_t> renderer_triangles_frag();
+Span<const uint32_t> renderer_triangles_depth_vert();
 Span<const uint32_t> renderer_triangle_lines_vert();
 Span<const uint32_t> renderer_triangle_lines_geom();
 Span<const uint32_t> renderer_triangle_lines_frag();
-Span<const uint32_t> renderer_shadow_vert();
-Span<const uint32_t> renderer_shadow_frag();
 Span<const uint32_t> renderer_points_0d_vert();
 Span<const uint32_t> renderer_points_1d_vert();
 Span<const uint32_t> renderer_points_frag();

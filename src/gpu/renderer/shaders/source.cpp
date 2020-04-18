@@ -30,6 +30,9 @@ constexpr uint32_t triangles_geom[]{
 constexpr uint32_t triangles_frag[]{
 #include "renderer_triangles.frag.spr"
 };
+constexpr uint32_t triangles_depth_vert[]{
+#include "renderer_triangles_depth.vert.spr"
+};
 constexpr uint32_t triangle_lines_vert[]{
 #include "renderer_triangle_lines.vert.spr"
 };
@@ -38,12 +41,6 @@ constexpr uint32_t triangle_lines_geom[]{
 };
 constexpr uint32_t triangle_lines_frag[]{
 #include "renderer_triangle_lines.frag.spr"
-};
-constexpr uint32_t shadow_vert[]{
-#include "renderer_shadow.vert.spr"
-};
-constexpr uint32_t shadow_frag[]{
-#include "renderer_shadow.frag.spr"
 };
 constexpr uint32_t points_0d_vert[]{
 #include "renderer_points_0d.vert.spr"
@@ -80,6 +77,11 @@ Span<const uint32_t> renderer_triangles_frag()
         return Span<const uint32_t>(triangles_frag);
 }
 
+Span<const uint32_t> renderer_triangles_depth_vert()
+{
+        return Span<const uint32_t>(triangles_depth_vert);
+}
+
 Span<const uint32_t> renderer_triangle_lines_vert()
 {
         return Span<const uint32_t>(triangle_lines_vert);
@@ -93,16 +95,6 @@ Span<const uint32_t> renderer_triangle_lines_geom()
 Span<const uint32_t> renderer_triangle_lines_frag()
 {
         return Span<const uint32_t>(triangle_lines_frag);
-}
-
-Span<const uint32_t> renderer_shadow_vert()
-{
-        return Span<const uint32_t>(shadow_vert);
-}
-
-Span<const uint32_t> renderer_shadow_frag()
-{
-        return Span<const uint32_t>(shadow_frag);
 }
 
 Span<const uint32_t> renderer_points_0d_vert()

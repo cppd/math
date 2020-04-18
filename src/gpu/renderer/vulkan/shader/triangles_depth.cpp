@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "shadow.h"
+#include "triangles_depth.h"
 
 #include "vertex_triangles.h"
 
@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu
 {
-std::vector<VkDescriptorSetLayoutBinding> RendererShadowMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> RendererTrianglesDepthMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -52,7 +52,7 @@ std::vector<VkDescriptorSetLayoutBinding> RendererShadowMemory::descriptor_set_l
         return bindings;
 }
 
-RendererShadowMemory::RendererShadowMemory(
+RendererTrianglesDepthMemory::RendererTrianglesDepthMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const vulkan::Buffer& matrices,
@@ -87,42 +87,42 @@ RendererShadowMemory::RendererShadowMemory(
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned RendererShadowMemory::set_number()
+unsigned RendererTrianglesDepthMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& RendererShadowMemory::descriptor_set() const
+const VkDescriptorSet& RendererTrianglesDepthMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
 //
 
-RendererShadowProgram::RendererShadowProgram(const vulkan::Device& device)
+RendererTrianglesDepthProgram::RendererTrianglesDepthProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, RendererShadowMemory::descriptor_set_layout_bindings())),
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                  device,
+                  RendererTrianglesDepthMemory::descriptor_set_layout_bindings())),
           m_pipeline_layout(vulkan::create_pipeline_layout(
                   device,
-                  {RendererShadowMemory::set_number()},
+                  {RendererTrianglesDepthMemory::set_number()},
                   {m_descriptor_set_layout})),
-          m_vertex_shader(m_device, renderer_shadow_vert(), "main"),
-          m_fragment_shader(m_device, renderer_shadow_frag(), "main")
+          m_vertex_shader(m_device, renderer_triangles_depth_vert(), "main")
 {
 }
 
-VkDescriptorSetLayout RendererShadowProgram::descriptor_set_layout() const
+VkDescriptorSetLayout RendererTrianglesDepthProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout RendererShadowProgram::pipeline_layout() const
+VkPipelineLayout RendererTrianglesDepthProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline RendererShadowProgram::create_pipeline(
+vulkan::Pipeline RendererTrianglesDepthProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         const Region<2, int>& viewport) const
@@ -143,10 +143,10 @@ vulkan::Pipeline RendererShadowProgram::create_pipeline(
         info.depth_bias = true;
         info.color_blend = false;
 
-        const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader, &m_fragment_shader};
+        const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader};
         info.shaders = &shaders;
 
-        const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
+        const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr};
         info.constants = &constants;
 
         const std::vector<VkVertexInputBindingDescription> binding_descriptions =
@@ -154,7 +154,7 @@ vulkan::Pipeline RendererShadowProgram::create_pipeline(
         info.binding_descriptions = &binding_descriptions;
 
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
-                RendererTrianglesVertex::attribute_descriptions_shadow();
+                RendererTrianglesVertex::attribute_descriptions_triangles_depth();
         info.attribute_descriptions = &attribute_descriptions;
 
         return vulkan::create_graphics_pipeline(info);

@@ -59,7 +59,6 @@ public:
 
         ~MeshObject();
 
-        bool has_shadow() const;
         const mat4& model_matrix() const;
 
         //
@@ -70,8 +69,8 @@ public:
                 {
                         VkPipelineLayout pipeline_layout;
                         VkPipeline pipeline;
-                        VkDescriptorSet shared_descriptor_set;
-                        uint32_t shared_descriptor_set_number;
+                        VkDescriptorSet descriptor_set;
+                        uint32_t descriptor_set_number;
                         VkDescriptorSetLayout material_descriptor_set_layout;
                 };
 

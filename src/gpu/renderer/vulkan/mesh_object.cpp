@@ -512,7 +512,7 @@ public:
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline_layout,
-                        info.shared_descriptor_set_number, 1 /*set count*/, &info.shared_descriptor_set, 0, nullptr);
+                        info.descriptor_set_number, 1 /*set count*/, &info.descriptor_set, 0, nullptr);
 
                 const std::array<VkBuffer, 1> buffers = {*m_vertex_buffer};
                 const std::array<VkDeviceSize, 1> offsets = {0};
@@ -695,11 +695,6 @@ void MeshObject::add_material_layout(
 }
 
 MeshObject::~MeshObject() = default;
-
-bool MeshObject::has_shadow() const
-{
-        return m_triangles.get() != nullptr;
-}
 
 const mat4& MeshObject::model_matrix() const
 {

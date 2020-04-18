@@ -72,6 +72,23 @@ std::vector<VkVertexInputAttributeDescription> RendererTrianglesVertex::attribut
         return descriptions;
 }
 
+std::vector<VkVertexInputAttributeDescription> RendererTrianglesVertex::attribute_descriptions_triangles_depth()
+{
+        std::vector<VkVertexInputAttributeDescription> descriptions;
+
+        {
+                VkVertexInputAttributeDescription d = {};
+                d.binding = 0;
+                d.location = 0;
+                d.format = VK_FORMAT_R32G32B32_SFLOAT;
+                d.offset = offsetof(RendererTrianglesVertex, position);
+
+                descriptions.push_back(d);
+        }
+
+        return descriptions;
+}
+
 std::vector<VkVertexInputAttributeDescription> RendererTrianglesVertex::attribute_descriptions_triangle_lines()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
@@ -108,23 +125,6 @@ std::vector<VkVertexInputAttributeDescription> RendererTrianglesVertex::attribut
                 d.location = 1;
                 d.format = VK_FORMAT_R32G32B32_SFLOAT;
                 d.offset = offsetof(RendererTrianglesVertex, normal);
-
-                descriptions.push_back(d);
-        }
-
-        return descriptions;
-}
-
-std::vector<VkVertexInputAttributeDescription> RendererTrianglesVertex::attribute_descriptions_shadow()
-{
-        std::vector<VkVertexInputAttributeDescription> descriptions;
-
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 0;
-                d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(RendererTrianglesVertex, position);
 
                 descriptions.push_back(d);
         }

@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu
 {
-class RendererShadowMemory final
+class RendererTrianglesDepthMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -39,42 +39,41 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        RendererShadowMemory(
+        RendererTrianglesDepthMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const vulkan::Buffer& matrices,
                 const vulkan::Buffer& drawing);
 
-        RendererShadowMemory(const RendererShadowMemory&) = delete;
-        RendererShadowMemory& operator=(const RendererShadowMemory&) = delete;
-        RendererShadowMemory& operator=(RendererShadowMemory&&) = delete;
+        RendererTrianglesDepthMemory(const RendererTrianglesDepthMemory&) = delete;
+        RendererTrianglesDepthMemory& operator=(const RendererTrianglesDepthMemory&) = delete;
+        RendererTrianglesDepthMemory& operator=(RendererTrianglesDepthMemory&&) = delete;
 
-        RendererShadowMemory(RendererShadowMemory&&) = default;
-        ~RendererShadowMemory() = default;
+        RendererTrianglesDepthMemory(RendererTrianglesDepthMemory&&) = default;
+        ~RendererTrianglesDepthMemory() = default;
 
         //
 
         const VkDescriptorSet& descriptor_set() const;
 };
 
-class RendererShadowProgram final
+class RendererTrianglesDepthProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
         vulkan::VertexShader m_vertex_shader;
-        vulkan::FragmentShader m_fragment_shader;
 
 public:
-        explicit RendererShadowProgram(const vulkan::Device& device);
+        explicit RendererTrianglesDepthProgram(const vulkan::Device& device);
 
-        RendererShadowProgram(const RendererShadowProgram&) = delete;
-        RendererShadowProgram& operator=(const RendererShadowProgram&) = delete;
-        RendererShadowProgram& operator=(RendererShadowProgram&&) = delete;
+        RendererTrianglesDepthProgram(const RendererTrianglesDepthProgram&) = delete;
+        RendererTrianglesDepthProgram& operator=(const RendererTrianglesDepthProgram&) = delete;
+        RendererTrianglesDepthProgram& operator=(RendererTrianglesDepthProgram&&) = delete;
 
-        RendererShadowProgram(RendererShadowProgram&&) = default;
-        ~RendererShadowProgram() = default;
+        RendererTrianglesDepthProgram(RendererTrianglesDepthProgram&&) = default;
+        ~RendererTrianglesDepthProgram() = default;
 
         vulkan::Pipeline create_pipeline(
                 VkRenderPass render_pass,
