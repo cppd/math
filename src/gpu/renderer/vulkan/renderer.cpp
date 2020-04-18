@@ -554,7 +554,8 @@ class Impl final : public Renderer
                 const mat4& shadow_mvp_texture = m_shadow_vp_texture_matrix * model;
                 const mat4& shadow_mvp = m_shadow_vp_matrix * model;
 
-                m_buffers.set_matrices(main_mvp, model, m_main_vp_matrix, shadow_mvp, shadow_mvp_texture);
+                m_buffers.set_matrices(
+                        model, main_mvp, m_main_vp_matrix, shadow_mvp, m_shadow_vp_matrix, shadow_mvp_texture);
         }
 
         void before_render_pass_commands(VkCommandBuffer command_buffer) const
@@ -750,19 +751,40 @@ public:
                   m_buffers(m_device, {m_graphics_queue.family_index()}),
                   //
                   m_triangles_program(m_device),
-                  m_triangles_shared_memory(m_device, m_triangles_program.descriptor_set_layout_shared(), m_buffers),
+                  m_triangles_shared_memory(
+                          m_device,
+                          m_triangles_program.descriptor_set_layout_shared(),
+                          m_buffers.matrices_buffer(),
+                          m_buffers.lighting_buffer(),
+                          m_buffers.drawing_buffer()),
                   //
                   m_triangle_lines_program(m_device),
-                  m_triangle_lines_memory(m_device, m_triangle_lines_program.descriptor_set_layout(), m_buffers),
+                  m_triangle_lines_memory(
+                          m_device,
+                          m_triangle_lines_program.descriptor_set_layout(),
+                          m_buffers.matrices_buffer(),
+                          m_buffers.drawing_buffer()),
                   //
                   m_normals_program(m_device),
-                  m_normals_memory(m_device, m_normals_program.descriptor_set_layout(), m_buffers),
+                  m_normals_memory(
+                          m_device,
+                          m_normals_program.descriptor_set_layout(),
+                          m_buffers.matrices_buffer(),
+                          m_buffers.drawing_buffer()),
                   //
                   m_shadow_program(m_device),
-                  m_shadow_memory(m_device, m_shadow_program.descriptor_set_layout(), m_buffers),
+                  m_shadow_memory(
+                          m_device,
+                          m_shadow_program.descriptor_set_layout(),
+                          m_buffers.shadow_matrices_buffer(),
+                          m_buffers.drawing_buffer()),
                   //
                   m_points_program(m_device),
-                  m_points_memory(m_device, m_points_program.descriptor_set_layout(), m_buffers),
+                  m_points_memory(
+                          m_device,
+                          m_points_program.descriptor_set_layout(),
+                          m_buffers.matrices_buffer(),
+                          m_buffers.drawing_buffer()),
                   //
                   m_material_descriptor_set_layout(m_triangles_program.descriptor_set_layout_material())
         {

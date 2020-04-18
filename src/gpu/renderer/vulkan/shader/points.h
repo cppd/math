@@ -17,11 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "buffers.h"
-
 #include <src/color/color.h>
 #include <src/numerical/region.h>
 #include <src/numerical/vec.h>
+#include <src/vulkan/buffers.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
@@ -47,7 +46,8 @@ public:
         RendererPointsMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const RendererBuffers& buffers);
+                const vulkan::Buffer& matrices,
+                const vulkan::Buffer& drawing);
 
         RendererPointsMemory(const RendererPointsMemory&) = delete;
         RendererPointsMemory& operator=(const RendererPointsMemory&) = delete;

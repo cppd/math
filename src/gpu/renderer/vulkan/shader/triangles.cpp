@@ -85,7 +85,9 @@ std::vector<VkDescriptorSetLayoutBinding> RendererTrianglesSharedMemory::descrip
 RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
-        const RendererBuffers& buffers)
+        const vulkan::Buffer& matrices,
+        const vulkan::Buffer& lighting,
+        const vulkan::Buffer& drawing)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
@@ -93,9 +95,9 @@ RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(
 
         {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = buffers.matrices_buffer();
+                buffer_info.buffer = matrices;
                 buffer_info.offset = 0;
-                buffer_info.range = buffers.matrices_size();
+                buffer_info.range = matrices.size();
 
                 infos.emplace_back(buffer_info);
 
@@ -103,9 +105,9 @@ RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(
         }
         {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = buffers.lighting_buffer();
+                buffer_info.buffer = lighting;
                 buffer_info.offset = 0;
-                buffer_info.range = buffers.lighting_size();
+                buffer_info.range = lighting.size();
 
                 infos.emplace_back(buffer_info);
 
@@ -113,9 +115,9 @@ RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(
         }
         {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = buffers.drawing_buffer();
+                buffer_info.buffer = drawing;
                 buffer_info.offset = 0;
-                buffer_info.range = buffers.drawing_size();
+                buffer_info.range = drawing.size();
 
                 infos.emplace_back(buffer_info);
 

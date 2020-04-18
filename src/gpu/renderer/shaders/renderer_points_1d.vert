@@ -24,7 +24,6 @@ layout(std140, set = 0, binding = 0) uniform Matrices
         mat4 main_mvp_matrix;
         mat4 main_model_matrix;
         mat4 main_vp_matrix;
-        mat4 shadow_mvp_matrix;
         mat4 shadow_mvp_texture_matrix;
 }
 matrices;

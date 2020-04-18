@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "buffers.h"
-
 #include <src/numerical/region.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
@@ -43,7 +41,8 @@ public:
         RendererNormalsMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const RendererBuffers& buffers);
+                const vulkan::Buffer& matrices,
+                const vulkan::Buffer& drawing);
 
         RendererNormalsMemory(const RendererNormalsMemory&) = delete;
         RendererNormalsMemory& operator=(const RendererNormalsMemory&) = delete;

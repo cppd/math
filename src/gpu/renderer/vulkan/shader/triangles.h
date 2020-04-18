@@ -50,7 +50,9 @@ public:
         RendererTrianglesSharedMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const RendererBuffers& buffers);
+                const vulkan::Buffer& matrices,
+                const vulkan::Buffer& lighting,
+                const vulkan::Buffer& drawing);
 
         RendererTrianglesSharedMemory(const RendererTrianglesSharedMemory&) = delete;
         RendererTrianglesSharedMemory& operator=(const RendererTrianglesSharedMemory&) = delete;

@@ -38,7 +38,6 @@ class RendererBuffers
                 mat4f main_mvp_matrix;
                 mat4f main_model_matrix;
                 mat4f main_vp_matrix;
-                mat4f shadow_mvp_matrix;
                 mat4f shadow_mvp_texture_matrix;
         };
 
@@ -71,11 +70,14 @@ class RendererBuffers
         };
 
         size_t m_matrices_buffer_index;
+        size_t m_shadow_matrices_buffer_index;
         size_t m_lighting_buffer_index;
         size_t m_drawing_buffer_index;
 
         template <typename T>
         void copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const;
+        template <typename T>
+        void copy_to_shadow_matrices_buffer(VkDeviceSize offset, const T& data) const;
         template <typename T>
         void copy_to_lighting_buffer(VkDeviceSize offset, const T& data) const;
         template <typename T>
@@ -84,21 +86,19 @@ class RendererBuffers
 public:
         RendererBuffers(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
 
-        VkBuffer matrices_buffer() const;
-        VkDeviceSize matrices_size() const;
-
-        VkBuffer lighting_buffer() const;
-        VkDeviceSize lighting_size() const;
-
-        VkBuffer drawing_buffer() const;
-        VkDeviceSize drawing_size() const;
+        const vulkan::Buffer& matrices_buffer() const;
+        const vulkan::Buffer& shadow_matrices_buffer() const;
+        const vulkan::Buffer& lighting_buffer() const;
+        const vulkan::Buffer& drawing_buffer() const;
 
         void set_matrices(
-                const mat4& main_mvp_matrix,
                 const mat4& main_model_matrix,
+                const mat4& main_mvp_matrix,
                 const mat4& main_vp_matrix,
                 const mat4& shadow_mvp_matrix,
+                const mat4& shadow_vp_matrix,
                 const mat4& shadow_mvp_texture_matrix) const;
+
         void set_clip_plane(const vec4& equation, bool enabled) const;
         void set_default_color(const Color& color) const;
         void set_wireframe_color(const Color& color) const;

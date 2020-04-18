@@ -28,6 +28,11 @@ RendererBuffers::RendererBuffers(const vulkan::Device& device, const std::unorde
 
         m_uniform_buffers.emplace_back(
                 vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                sizeof(Matrices));
+        m_shadow_matrices_buffer_index = m_uniform_buffers.size() - 1;
+
+        m_uniform_buffers.emplace_back(
+                vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 sizeof(Lighting));
         m_lighting_buffer_index = m_uniform_buffers.size() - 1;
 
@@ -37,40 +42,36 @@ RendererBuffers::RendererBuffers(const vulkan::Device& device, const std::unorde
         m_drawing_buffer_index = m_uniform_buffers.size() - 1;
 }
 
-VkBuffer RendererBuffers::matrices_buffer() const
+const vulkan::Buffer& RendererBuffers::matrices_buffer() const
 {
-        return m_uniform_buffers[m_matrices_buffer_index];
+        return m_uniform_buffers[m_matrices_buffer_index].buffer();
 }
 
-VkDeviceSize RendererBuffers::matrices_size() const
+const vulkan::Buffer& RendererBuffers::shadow_matrices_buffer() const
 {
-        return m_uniform_buffers[m_matrices_buffer_index].size();
+        return m_uniform_buffers[m_shadow_matrices_buffer_index].buffer();
 }
 
-VkBuffer RendererBuffers::lighting_buffer() const
+const vulkan::Buffer& RendererBuffers::lighting_buffer() const
 {
-        return m_uniform_buffers[m_lighting_buffer_index];
+        return m_uniform_buffers[m_lighting_buffer_index].buffer();
 }
 
-VkDeviceSize RendererBuffers::lighting_size() const
+const vulkan::Buffer& RendererBuffers::drawing_buffer() const
 {
-        return m_uniform_buffers[m_lighting_buffer_index].size();
-}
-
-VkBuffer RendererBuffers::drawing_buffer() const
-{
-        return m_uniform_buffers[m_drawing_buffer_index];
-}
-
-VkDeviceSize RendererBuffers::drawing_size() const
-{
-        return m_uniform_buffers[m_drawing_buffer_index].size();
+        return m_uniform_buffers[m_drawing_buffer_index].buffer();
 }
 
 template <typename T>
 void RendererBuffers::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_matrices_buffer_index], offset, data);
+}
+
+template <typename T>
+void RendererBuffers::copy_to_shadow_matrices_buffer(VkDeviceSize offset, const T& data) const
+{
+        vulkan::map_and_write_to_buffer(m_uniform_buffers[m_shadow_matrices_buffer_index], offset, data);
 }
 
 template <typename T>
@@ -86,19 +87,29 @@ void RendererBuffers::copy_to_drawing_buffer(VkDeviceSize offset, const T& data)
 }
 
 void RendererBuffers::set_matrices(
-        const mat4& main_mvp_matrix,
         const mat4& main_model_matrix,
+        const mat4& main_mvp_matrix,
         const mat4& main_vp_matrix,
         const mat4& shadow_mvp_matrix,
+        const mat4& shadow_vp_matrix,
         const mat4& shadow_mvp_texture_matrix) const
 {
-        Matrices matrices;
-        matrices.main_mvp_matrix = to_matrix<float>(main_mvp_matrix).transpose();
-        matrices.main_model_matrix = to_matrix<float>(main_model_matrix).transpose();
-        matrices.main_vp_matrix = to_matrix<float>(main_vp_matrix).transpose();
-        matrices.shadow_mvp_matrix = to_matrix<float>(shadow_mvp_matrix).transpose();
-        matrices.shadow_mvp_texture_matrix = to_matrix<float>(shadow_mvp_texture_matrix).transpose();
-        copy_to_matrices_buffer(0, matrices);
+        {
+                Matrices matrices;
+                matrices.main_mvp_matrix = to_matrix<float>(main_mvp_matrix).transpose();
+                matrices.main_model_matrix = to_matrix<float>(main_model_matrix).transpose();
+                matrices.main_vp_matrix = to_matrix<float>(main_vp_matrix).transpose();
+                matrices.shadow_mvp_texture_matrix = to_matrix<float>(shadow_mvp_texture_matrix).transpose();
+                copy_to_matrices_buffer(0, matrices);
+        }
+        {
+                Matrices matrices;
+                matrices.main_mvp_matrix = to_matrix<float>(shadow_mvp_matrix).transpose();
+                matrices.main_model_matrix = to_matrix<float>(main_model_matrix).transpose();
+                matrices.main_vp_matrix = to_matrix<float>(shadow_vp_matrix).transpose();
+                matrices.shadow_mvp_texture_matrix = to_matrix<float>(shadow_mvp_texture_matrix).transpose();
+                copy_to_shadow_matrices_buffer(0, matrices);
+        }
 }
 
 void RendererBuffers::set_clip_plane(const vec4& equation, bool enabled) const
