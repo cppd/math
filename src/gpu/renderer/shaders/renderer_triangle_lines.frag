@@ -34,6 +34,8 @@ layout(std140, binding = 1) uniform Drawing
         bool show_wireframe;
         bool show_shadow;
         bool show_fog;
+        vec4 clip_plane_equation;
+        bool clip_plane_enabled;
 }
 drawing;
 

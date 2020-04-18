@@ -29,10 +29,30 @@ layout(std140, binding = 0) uniform Matrices
         mat4 main_vp_matrix;
         mat4 shadow_mvp_matrix;
         mat4 shadow_mvp_texture_matrix;
+}
+matrices;
+
+layout(std140, binding = 1) uniform Drawing
+{
+        vec3 default_color;
+        vec3 wireframe_color;
+        vec3 background_color;
+        vec3 clip_plane_color;
+        float normal_length;
+        vec3 normal_color_positive;
+        vec3 normal_color_negative;
+        float default_ns;
+        vec3 light_a;
+        vec3 light_d;
+        vec3 light_s;
+        bool show_materials;
+        bool show_wireframe;
+        bool show_shadow;
+        bool show_fog;
         vec4 clip_plane_equation;
         bool clip_plane_enabled;
 }
-matrices;
+drawing;
 
 layout(location = 0) in VS
 {
@@ -67,7 +87,7 @@ void main()
 
         for (int i = 0; i < 3; ++i)
         {
-                float v = dot(matrices.clip_plane_equation, vs[i].world_position);
+                float v = dot(drawing.clip_plane_equation, vs[i].world_position);
                 d[i] = v;
                 s[i] = sign(v);
         }

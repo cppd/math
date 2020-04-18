@@ -92,21 +92,31 @@ void RendererBuffers::set_matrices(
         const mat4& shadow_mvp_matrix,
         const mat4& shadow_mvp_texture_matrix) const
 {
-        Matrices::M matrices;
+        Matrices matrices;
         matrices.main_mvp_matrix = to_matrix<float>(main_mvp_matrix).transpose();
         matrices.main_model_matrix = to_matrix<float>(main_model_matrix).transpose();
         matrices.main_vp_matrix = to_matrix<float>(main_vp_matrix).transpose();
         matrices.shadow_mvp_matrix = to_matrix<float>(shadow_mvp_matrix).transpose();
         matrices.shadow_mvp_texture_matrix = to_matrix<float>(shadow_mvp_texture_matrix).transpose();
-        copy_to_matrices_buffer(offsetof(Matrices, matrices), matrices);
+        copy_to_matrices_buffer(0, matrices);
 }
 
 void RendererBuffers::set_clip_plane(const vec4& equation, bool enabled) const
 {
-        Matrices::C clip_plane;
-        clip_plane.equation = to_vector<float>(equation);
-        clip_plane.enabled = enabled ? 1 : 0;
-        copy_to_matrices_buffer(offsetof(Matrices, clip_plane), clip_plane);
+        static_assert(
+                offsetof(Drawing, clip_plane_equation) + sizeof(Drawing::clip_plane_equation) ==
+                offsetof(Drawing, clip_plane_enabled));
+
+        constexpr size_t offset = offsetof(Drawing, clip_plane_equation);
+        constexpr size_t size = sizeof(Drawing::clip_plane_equation) + sizeof(Drawing::clip_plane_enabled);
+
+        vulkan::BufferMapper map(m_uniform_buffers[m_drawing_buffer_index], offset, size);
+
+        decltype(Drawing().clip_plane_equation) clip_plane_equation = to_vector<float>(equation);
+        decltype(Drawing().clip_plane_enabled) clip_plane_enabled = enabled ? 1 : 0;
+
+        map.write(0, clip_plane_equation);
+        map.write(sizeof(clip_plane_equation), clip_plane_enabled);
 }
 
 void RendererBuffers::set_default_color(const Color& color) const

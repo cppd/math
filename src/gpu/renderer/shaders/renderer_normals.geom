@@ -29,8 +29,6 @@ layout(std140, binding = 0) uniform Matrices
         mat4 main_vp_matrix;
         mat4 shadow_mvp_matrix;
         mat4 shadow_mvp_texture_matrix;
-        vec4 clip_plane_equation;
-        bool clip_plane_enabled;
 }
 matrices;
 
@@ -51,6 +49,8 @@ layout(std140, binding = 1) uniform Drawing
         bool show_wireframe;
         bool show_shadow;
         bool show_fog;
+        vec4 clip_plane_equation;
+        bool clip_plane_enabled;
 }
 drawing;
 
@@ -79,13 +79,13 @@ void line(vec3 world_from, vec3 world_to)
 {
         const vec4 from = matrices.main_vp_matrix * vec4(world_from, 1.0);
         gl_Position = from;
-        gl_ClipDistance[0] = matrices.clip_plane_enabled ? dot(matrices.clip_plane_equation, vec4(world_from, 1.0)) : 1;
+        gl_ClipDistance[0] = drawing.clip_plane_enabled ? dot(drawing.clip_plane_equation, vec4(world_from, 1.0)) : 1;
         gs.color = drawing.normal_color_negative;
         EmitVertex();
 
         const vec4 to = matrices.main_vp_matrix * vec4(world_to, 1.0);
         gl_Position = to;
-        gl_ClipDistance[0] = matrices.clip_plane_enabled ? dot(matrices.clip_plane_equation, vec4(world_to, 1.0)) : 1;
+        gl_ClipDistance[0] = drawing.clip_plane_enabled ? dot(drawing.clip_plane_equation, vec4(world_to, 1.0)) : 1;
         gs.color = drawing.normal_color_positive;
         EmitVertex();
 

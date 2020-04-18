@@ -35,21 +35,11 @@ class RendererBuffers
 
         struct Matrices
         {
-                struct M
-                {
-                        mat4f main_mvp_matrix;
-                        mat4f main_model_matrix;
-                        mat4f main_vp_matrix;
-                        mat4f shadow_mvp_matrix;
-                        mat4f shadow_mvp_texture_matrix;
-                };
-                struct C
-                {
-                        vec4f equation;
-                        uint32_t enabled;
-                };
-                M matrices;
-                C clip_plane;
+                mat4f main_mvp_matrix;
+                mat4f main_model_matrix;
+                mat4f main_vp_matrix;
+                mat4f shadow_mvp_matrix;
+                mat4f shadow_mvp_texture_matrix;
         };
 
         struct Lighting
@@ -76,6 +66,8 @@ class RendererBuffers
                 uint32_t show_wireframe;
                 uint32_t show_shadow;
                 uint32_t show_fog;
+                alignas(sizeof(vec4f)) vec4f clip_plane_equation;
+                uint32_t clip_plane_enabled;
         };
 
         size_t m_matrices_buffer_index;
