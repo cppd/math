@@ -24,9 +24,31 @@ layout(std140, binding = 1) uniform Lighting
 {
         vec3 direction_to_light;
         vec3 direction_to_camera;
-        bool show_smooth;
 }
 lighting;
+
+layout(std140, binding = 2) uniform Drawing
+{
+        vec3 default_color;
+        vec3 wireframe_color;
+        vec3 background_color;
+        float normal_length;
+        vec3 normal_color_positive;
+        vec3 normal_color_negative;
+        float default_ns;
+        vec3 light_a;
+        vec3 light_d;
+        vec3 light_s;
+        bool show_materials;
+        bool show_wireframe;
+        bool show_shadow;
+        bool show_fog;
+        bool show_smooth;
+        vec3 clip_plane_color;
+        vec4 clip_plane_equation;
+        bool clip_plane_enabled;
+}
+drawing;
 
 //
 
@@ -76,7 +98,7 @@ vec3[3] compute_normals()
         // к той стороне грани, которая обращена к камере.
         // direction_to_camera - это направление на камеру.
 
-        if (lighting.show_smooth)
+        if (drawing.show_smooth)
         {
                 // в направлении от камеры
                 geometric_world_normal =

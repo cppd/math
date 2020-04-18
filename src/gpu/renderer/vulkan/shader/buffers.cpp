@@ -209,6 +209,12 @@ void RendererBuffers::set_show_fog(bool show) const
         copy_to_drawing_buffer(offsetof(Drawing, show_fog), s);
 }
 
+void RendererBuffers::set_show_smooth(bool show) const
+{
+        decltype(Drawing().show_smooth) s = show ? 1 : 0;
+        copy_to_drawing_buffer(offsetof(Drawing, show_smooth), s);
+}
+
 void RendererBuffers::set_direction_to_light(const vec3f& direction) const
 {
         decltype(Lighting().direction_to_light) d = direction;
@@ -219,12 +225,6 @@ void RendererBuffers::set_direction_to_camera(const vec3f& direction) const
 {
         decltype(Lighting().direction_to_camera) d = direction;
         copy_to_lighting_buffer(offsetof(Lighting, direction_to_camera), d);
-}
-
-void RendererBuffers::set_show_smooth(bool show) const
-{
-        decltype(Lighting().show_smooth) s = show ? 1 : 0;
-        copy_to_lighting_buffer(offsetof(Lighting, show_smooth), s);
 }
 
 //

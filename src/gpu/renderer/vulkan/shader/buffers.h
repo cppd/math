@@ -46,7 +46,6 @@ class RendererBuffers
         {
                 alignas(sizeof(vec4f)) vec3f direction_to_light;
                 alignas(sizeof(vec4f)) vec3f direction_to_camera;
-                uint32_t show_smooth;
         };
 
         struct Drawing
@@ -54,7 +53,6 @@ class RendererBuffers
                 alignas(sizeof(vec4f)) vec3f default_color;
                 alignas(sizeof(vec4f)) vec3f wireframe_color;
                 alignas(sizeof(vec4f)) vec3f background_color;
-                alignas(sizeof(vec4f)) vec3f clip_plane_color;
                 float normal_length;
                 alignas(sizeof(vec4f)) vec3f normal_color_positive;
                 alignas(sizeof(vec4f)) vec3f normal_color_negative;
@@ -66,6 +64,8 @@ class RendererBuffers
                 uint32_t show_wireframe;
                 uint32_t show_shadow;
                 uint32_t show_fog;
+                uint32_t show_smooth;
+                alignas(sizeof(vec4f)) vec3f clip_plane_color;
                 alignas(sizeof(vec4f)) vec4f clip_plane_equation;
                 uint32_t clip_plane_enabled;
         };

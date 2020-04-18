@@ -22,7 +22,6 @@ layout(std140, binding = 1) uniform Drawing
         vec3 default_color;
         vec3 wireframe_color;
         vec3 background_color;
-        vec3 clip_plane_color;
         float normal_length;
         vec3 normal_color_positive;
         vec3 normal_color_negative;
@@ -34,6 +33,8 @@ layout(std140, binding = 1) uniform Drawing
         bool show_wireframe;
         bool show_shadow;
         bool show_fog;
+        bool show_smooth;
+        vec3 clip_plane_color;
         vec4 clip_plane_equation;
         bool clip_plane_enabled;
 }

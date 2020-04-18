@@ -24,7 +24,6 @@ layout(std140, binding = 1) uniform Lighting
 {
         vec3 direction_to_light;
         vec3 direction_to_camera;
-        bool show_smooth;
 }
 lighting;
 layout(std140, binding = 2) uniform Drawing
@@ -32,7 +31,6 @@ layout(std140, binding = 2) uniform Drawing
         vec3 default_color;
         vec3 wireframe_color;
         vec3 background_color;
-        vec3 clip_plane_color;
         float normal_length;
         vec3 normal_color_positive;
         vec3 normal_color_negative;
@@ -44,6 +42,8 @@ layout(std140, binding = 2) uniform Drawing
         bool show_wireframe;
         bool show_shadow;
         bool show_fog;
+        bool show_smooth;
+        vec3 clip_plane_color;
         vec4 clip_plane_equation;
         bool clip_plane_enabled;
 }
