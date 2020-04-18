@@ -63,62 +63,54 @@ public:
 
         //
 
-        struct DrawInfoAll final
+        struct InfoTriangles
         {
-                struct Triangles
-                {
-                        VkPipelineLayout pipeline_layout;
-                        VkPipeline pipeline;
-                        VkDescriptorSet descriptor_set;
-                        uint32_t descriptor_set_number;
-                        VkDescriptorSetLayout material_descriptor_set_layout;
-                };
-
-                struct Lines
-                {
-                        VkPipelineLayout pipeline_layout;
-                        VkPipeline pipeline;
-                        VkDescriptorSet descriptor_set;
-                        uint32_t descriptor_set_number;
-                };
-
-                struct Points
-                {
-                        VkPipelineLayout pipeline_layout;
-                        VkPipeline pipeline;
-                        VkDescriptorSet descriptor_set;
-                        uint32_t descriptor_set_number;
-                };
-
-                Triangles triangles;
-                Lines lines;
-                Points points;
+                VkPipelineLayout pipeline_layout;
+                VkPipeline pipeline;
+                VkDescriptorSet descriptor_set;
+                uint32_t descriptor_set_number;
+                VkDescriptorSetLayout material_descriptor_set_layout;
         };
+        void commands_triangles(VkCommandBuffer buffer, const InfoTriangles& info) const;
 
-        void draw_commands_all(VkCommandBuffer buffer, const DrawInfoAll& info) const;
-
-        //
-
-        struct DrawInfoPlainTriangles final
+        struct InfoPlainTriangles final
         {
                 VkPipelineLayout pipeline_layout;
                 VkPipeline pipeline;
                 VkDescriptorSet descriptor_set;
                 uint32_t descriptor_set_number;
         };
+        void commands_plain_triangles(VkCommandBuffer buffer, const InfoPlainTriangles& info) const;
 
-        void draw_commands_plain_triangles(VkCommandBuffer buffer, const DrawInfoPlainTriangles& info) const;
-
-        //
-
-        struct DrawInfoTriangleVertices final
+        struct InfoTriangleVertices final
         {
                 VkPipelineLayout pipeline_layout;
                 VkPipeline pipeline;
                 VkDescriptorSet descriptor_set;
                 uint32_t descriptor_set_number;
         };
+        void commands_triangle_vertices(VkCommandBuffer buffer, const InfoTriangleVertices& info) const;
 
-        void draw_commands_triangle_vertices(VkCommandBuffer buffer, const DrawInfoTriangleVertices& info) const;
+        //
+
+        struct InfoLines
+        {
+                VkPipelineLayout pipeline_layout;
+                VkPipeline pipeline;
+                VkDescriptorSet descriptor_set;
+                uint32_t descriptor_set_number;
+        };
+        void commands_lines(VkCommandBuffer buffer, const InfoLines& info) const;
+
+        //
+
+        struct InfoPoints
+        {
+                VkPipelineLayout pipeline_layout;
+                VkPipeline pipeline;
+                VkDescriptorSet descriptor_set;
+                uint32_t descriptor_set_number;
+        };
+        void commands_points(VkCommandBuffer buffer, const InfoPoints& info) const;
 };
 }
