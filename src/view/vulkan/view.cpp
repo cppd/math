@@ -201,13 +201,13 @@ class Impl final : public View
 
                 plane /= n.norm();
 
-                m_renderer->clip_plane_show(plane);
+                m_renderer->set_clip_plane(plane);
         }
 
         void clip_plane_hide()
         {
                 m_clip_plane_view_matrix.reset();
-                m_renderer->clip_plane_hide();
+                m_renderer->set_clip_plane(std::nullopt);
         }
 
         void mouse_move(int x, int y)

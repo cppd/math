@@ -290,23 +290,19 @@ class Impl final : public Renderer
                 set_matrices();
         }
 
-        void clip_plane_show(const vec4& plane) override
+        void set_clip_plane(const std::optional<vec4>& plane) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 m_clip_plane = plane;
-                m_buffers.set_clip_plane(plane, true);
-
-                create_render_command_buffers();
-        }
-
-        void clip_plane_hide() override
-        {
-                ASSERT(m_thread_id == std::this_thread::get_id());
-
-                m_clip_plane.reset();
-                m_buffers.set_clip_plane(vec4(0), false);
-
+                if (m_clip_plane)
+                {
+                        m_buffers.set_clip_plane(*m_clip_plane, true);
+                }
+                else
+                {
+                        m_buffers.set_clip_plane(vec4(0), false);
+                }
                 create_render_command_buffers();
         }
 
