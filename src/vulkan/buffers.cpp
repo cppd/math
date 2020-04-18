@@ -698,6 +698,11 @@ VkDeviceSize BufferWithMemory::size() const
         return m_buffer.size();
 }
 
+const vulkan::Buffer& BufferWithMemory::buffer() const
+{
+        return m_buffer;
+}
+
 bool BufferWithMemory::usage(VkBufferUsageFlagBits flag) const
 {
         return m_buffer.usage(flag);
