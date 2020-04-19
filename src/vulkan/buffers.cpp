@@ -98,35 +98,35 @@ void check_image_size(
 {
         if (type == VK_IMAGE_TYPE_1D && (extent.width < 1 || extent.height != 1 || extent.depth != 1))
         {
-                error("Image 1D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", " +
-                      to_string(extent.depth) + ")");
+                error("Image 1D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
+                      + to_string(extent.depth) + ")");
         }
         if (type == VK_IMAGE_TYPE_2D && (extent.width < 1 || extent.height < 1 || extent.depth != 1))
         {
-                error("Image 2D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", " +
-                      to_string(extent.depth) + ")");
+                error("Image 2D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
+                      + to_string(extent.depth) + ")");
         }
         if (type == VK_IMAGE_TYPE_3D && (extent.width < 1 || extent.height < 1 || extent.depth < 1))
         {
-                error("Image 3D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", " +
-                      to_string(extent.depth) + ")");
+                error("Image 3D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
+                      + to_string(extent.depth) + ")");
         }
 
         const VkExtent3D max_extent = max_image_extent(device.physical_device(), format, type, tiling, usage);
         if (extent.width > max_extent.width)
         {
-                error("Image " + format_to_string(format) + " extent width " + to_string(extent.width) +
-                      " is out of range [1, " + to_string(max_extent.width) + "]");
+                error("Image " + format_to_string(format) + " extent width " + to_string(extent.width)
+                      + " is out of range [1, " + to_string(max_extent.width) + "]");
         }
         if (extent.height > max_extent.height)
         {
-                error("Image " + format_to_string(format) + " extent height " + to_string(extent.height) +
-                      " is out of range [1, " + to_string(max_extent.height) + "]");
+                error("Image " + format_to_string(format) + " extent height " + to_string(extent.height)
+                      + " is out of range [1, " + to_string(max_extent.height) + "]");
         }
         if (extent.depth > max_extent.depth)
         {
-                error("Image " + format_to_string(format) + " extent depth " + to_string(extent.depth) +
-                      " is out of range [1, " + to_string(max_extent.depth) + "]");
+                error("Image " + format_to_string(format) + " extent depth " + to_string(extent.depth)
+                      + " is out of range [1, " + to_string(max_extent.depth) + "]");
         }
 }
 
@@ -388,8 +388,8 @@ void cmd_transition_texture_layout(
                 destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
         }
         else if (
-                old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
-                new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+                && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
         {
                 barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
                 barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
@@ -398,8 +398,8 @@ void cmd_transition_texture_layout(
                 destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
         }
         else if (
-                old_layout == VK_IMAGE_LAYOUT_UNDEFINED &&
-                (new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL || new_layout == VK_IMAGE_LAYOUT_GENERAL))
+                old_layout == VK_IMAGE_LAYOUT_UNDEFINED
+                && (new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL || new_layout == VK_IMAGE_LAYOUT_GENERAL))
         {
                 barrier.srcAccessMask = 0;
                 barrier.dstAccessMask = 0;
@@ -487,8 +487,9 @@ void staging_image_copy(
         const T& pixels)
 {
         static_assert(
-                std::is_same_v<typename T::value_type, uint8_t> || std::is_same_v<typename T::value_type, uint16_t> ||
-                std::is_same_v<typename T::value_type, float>);
+                std::is_same_v<
+                        typename T::value_type,
+                        uint8_t> || std::is_same_v<typename T::value_type, uint16_t> || std::is_same_v<typename T::value_type, float>);
         static_assert(std::is_same_v<typename T::value_type, std::remove_cvref_t<decltype(pixels[0])>>);
 
         ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
@@ -545,8 +546,8 @@ void check_color_buffer_size(const T& pixels, unsigned width, unsigned height)
 {
         if (pixels.size() != 4ull * width * height)
         {
-                error("Wrong RGBA pixel component count " + to_string(pixels.size()) + " for image dimensions width " +
-                      to_string(width) + " and height " + to_string(height));
+                error("Wrong RGBA pixel component count " + to_string(pixels.size()) + " for image dimensions width "
+                      + to_string(width) + " and height " + to_string(height));
         }
 }
 template <typename T>
@@ -554,8 +555,8 @@ void check_grayscale_buffer_size(const T& pixels, unsigned width, unsigned heigh
 {
         if (pixels.size() != 1ull * width * height)
         {
-                error("Wrong grayscale pixel component count " + to_string(pixels.size()) +
-                      " for image dimensions width " + to_string(width) + " and height " + to_string(height));
+                error("Wrong grayscale pixel component count " + to_string(pixels.size())
+                      + " for image dimensions width " + to_string(width) + " and height " + to_string(height));
         }
 }
 
@@ -763,10 +764,10 @@ void ImageWithMemory::init(
         VkSampleCountFlagBits samples)
 {
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
-                                        (storage ? VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT : 0);
-        m_usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
-                  (storage ? VK_IMAGE_USAGE_STORAGE_BIT : 0);
+        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
+                                        | (storage ? VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT : 0);
+        m_usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
+                  | (storage ? VK_IMAGE_USAGE_STORAGE_BIT : 0);
 
         m_format = find_supported_image_format(
                 device.physical_device(), format_candidates, VK_IMAGE_TYPE_2D, tiling, features, m_usage, samples);
@@ -854,16 +855,16 @@ ImageWithMemory::ImageWithMemory(
         VkImageLayout image_layout,
         bool storage)
         : ImageWithMemory(
-                  device,
-                  graphics_command_pool,
-                  graphics_queue,
-                  family_indices,
-                  format_candidates,
-                  VK_SAMPLE_COUNT_1_BIT,
-                  width,
-                  height,
-                  image_layout,
-                  storage)
+                device,
+                graphics_command_pool,
+                graphics_queue,
+                family_indices,
+                format_candidates,
+                VK_SAMPLE_COUNT_1_BIT,
+                width,
+                height,
+                image_layout,
+                storage)
 {
 }
 

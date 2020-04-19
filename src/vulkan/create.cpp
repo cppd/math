@@ -210,8 +210,8 @@ VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, con
                 }
         }
 
-        error("Unsupported clear color format " + format_to_string(format) + " and color space " +
-              color_space_to_string(color_space));
+        error("Unsupported clear color format " + format_to_string(format) + " and color space "
+              + color_space_to_string(color_space));
 }
 
 VkClearValue depth_stencil_clear_value()

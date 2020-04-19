@@ -52,8 +52,8 @@ bool PointObjectParameters::show(
         }
         if (!(1 <= min_point_count && min_point_count <= default_point_count && default_point_count <= max_point_count))
         {
-                error("Error point count parameters: min = " + to_string(min_point_count) +
-                      ", max = " + to_string(max_point_count) + ", default = " + to_string(default_point_count));
+                error("Error point count parameters: min = " + to_string(min_point_count)
+                      + ", max = " + to_string(max_point_count) + ", default = " + to_string(default_point_count));
         }
 
         m_min_point_count = min_point_count;

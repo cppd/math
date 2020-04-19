@@ -53,8 +53,8 @@ constexpr T determinant_by_cofactor_expansion(
         }
         if constexpr (DET_SIZE == 2)
         {
-                return vectors[v_map[0]][h_map[0]] * vectors[v_map[1]][h_map[1]] -
-                       vectors[v_map[0]][h_map[1]] * vectors[v_map[1]][h_map[0]];
+                return vectors[v_map[0]][h_map[0]] * vectors[v_map[1]][h_map[1]]
+                       - vectors[v_map[0]][h_map[1]] * vectors[v_map[1]][h_map[0]];
         }
         if constexpr (DET_SIZE == 3)
         {

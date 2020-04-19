@@ -65,8 +65,8 @@ int convex_hull_group_size_merge(
 
         if (max_shared_memory_size < height * shared_size_per_item)
         {
-                error("Shared memory problem: needs " + to_string(height * shared_size_per_item) + ", exists " +
-                      to_string(max_shared_memory_size));
+                error("Shared memory problem: needs " + to_string(height * shared_size_per_item) + ", exists "
+                      + to_string(max_shared_memory_size));
         }
 
         int max_group_size = std::min(max_group_size_x, max_group_invocations);

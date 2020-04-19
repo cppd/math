@@ -38,13 +38,13 @@ bool BoundCoconeParameters::show(int minimum_rho_exponent, int minimum_alpha_exp
 {
         if (!(-10 <= minimum_rho_exponent && minimum_rho_exponent < 0))
         {
-                error(reinterpret_cast<const char*>(u8"Error BoundCocone minimum ρ exponent: ") +
-                      to_string(minimum_rho_exponent));
+                error(reinterpret_cast<const char*>(u8"Error BoundCocone minimum ρ exponent: ")
+                      + to_string(minimum_rho_exponent));
         }
         if (!(-10 <= minimum_alpha_exponent && minimum_alpha_exponent < 0))
         {
-                error(reinterpret_cast<const char*>(u8"Error BoundCocone minimum α exponent: ") +
-                      to_string(minimum_alpha_exponent));
+                error(reinterpret_cast<const char*>(u8"Error BoundCocone minimum α exponent: ")
+                      + to_string(minimum_alpha_exponent));
         }
 
         double min_rho = std::pow(10, minimum_rho_exponent);
@@ -54,13 +54,13 @@ bool BoundCoconeParameters::show(int minimum_rho_exponent, int minimum_alpha_exp
 
         if (!(min_rho <= *rho && *rho <= max_rho))
         {
-                error(reinterpret_cast<const char*>(u8"BoundCocone parameter ρ range error: ρ = ") + to_string(*rho) +
-                      ", range = (" + to_string(min_rho) + ", " + to_string(max_rho) + ")");
+                error(reinterpret_cast<const char*>(u8"BoundCocone parameter ρ range error: ρ = ") + to_string(*rho)
+                      + ", range = (" + to_string(min_rho) + ", " + to_string(max_rho) + ")");
         }
         if (!(min_alpha <= *alpha && *alpha <= max_alpha))
         {
-                error(reinterpret_cast<const char*>(u8"BoundCocone parameter α range error: α = ") + to_string(*alpha) +
-                      ", range = (" + to_string(min_alpha) + ", " + to_string(max_alpha) + ")");
+                error(reinterpret_cast<const char*>(u8"BoundCocone parameter α range error: α = ") + to_string(*alpha)
+                      + ", range = (" + to_string(min_alpha) + ", " + to_string(max_alpha) + ")");
         }
 
         m_min_rho = min_rho;
@@ -102,8 +102,8 @@ void BoundCoconeParameters::done(int r)
         m_rho = ui.doubleSpinBox_rho->value();
         if (!(m_min_rho <= m_rho && m_rho <= m_max_rho))
         {
-                std::string msg = reinterpret_cast<const char*>(u8"ρ range error (") + to_string(m_min_rho) + ", " +
-                                  to_string(m_max_rho) + ")";
+                std::string msg = reinterpret_cast<const char*>(u8"ρ range error (") + to_string(m_min_rho) + ", "
+                                  + to_string(m_max_rho) + ")";
                 dialog::message_critical(this, msg);
                 return;
         }
@@ -111,8 +111,8 @@ void BoundCoconeParameters::done(int r)
         m_alpha = ui.doubleSpinBox_alpha->value();
         if (!(m_min_alpha <= m_alpha && m_alpha <= m_max_alpha))
         {
-                std::string msg = reinterpret_cast<const char*>(u8"α range error (") + to_string(m_min_alpha) + ", " +
-                                  to_string(m_max_alpha) + ")";
+                std::string msg = reinterpret_cast<const char*>(u8"α range error (") + to_string(m_min_alpha) + ", "
+                                  + to_string(m_max_alpha) + ")";
                 dialog::message_critical(this, msg);
                 return;
         }

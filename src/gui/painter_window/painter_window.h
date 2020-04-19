@@ -118,8 +118,8 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                         int dimension = i + 2;
                         pixel[dimension] = slider_positions[i];
 
-                        ASSERT(pixel[dimension] >= 0 &&
-                               pixel[dimension] < m_paint_objects->projector().screen_size()[dimension]);
+                        ASSERT(pixel[dimension] >= 0
+                               && pixel[dimension] < m_paint_objects->projector().screen_size()[dimension]);
                 }
 
                 return pixel_index(pixel);
@@ -193,9 +193,9 @@ public:
                 bool smooth_normal,
                 std::unique_ptr<const painter::PaintObjects<N, T>>&& paint_objects)
                 : PainterWindow2d(
-                          title,
-                          array_to_vector(paint_objects->projector().screen_size()),
-                          initial_slider_positions()),
+                        title,
+                        array_to_vector(paint_objects->projector().screen_size()),
+                        initial_slider_positions()),
                   m_paint_objects(std::move(paint_objects)),
                   m_global_index(m_paint_objects->projector().screen_size()),
                   m_height(m_paint_objects->projector().screen_size()[1]),

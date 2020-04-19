@@ -49,8 +49,8 @@ std::unique_ptr<volume::Volume<N>> cube(unsigned size)
 
         if (volume_size<N>(size) > MAXIMUM_VOLUME_SIZE)
         {
-                error("Volume size is too large (" + to_string(volume_size<N>(size)) + "), maximum volume size is " +
-                      to_string(MAXIMUM_VOLUME_SIZE));
+                error("Volume size is too large (" + to_string(volume_size<N>(size)) + "), maximum volume size is "
+                      + to_string(MAXIMUM_VOLUME_SIZE));
         }
 
         volume::Volume<N> volume;

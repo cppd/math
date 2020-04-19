@@ -129,8 +129,8 @@ std::unique_ptr<const PaintObjects<N, T>> single_object_scene(
 
         if (min_screen_size > max_screen_size)
         {
-                error("Wrong min and max screen sizes: min = " + to_string(min_screen_size) +
-                      ", max = " + to_string(max_screen_size));
+                error("Wrong min and max screen sizes: min = " + to_string(min_screen_size)
+                      + ", max = " + to_string(max_screen_size));
         }
 
         Vector<N, T> min;

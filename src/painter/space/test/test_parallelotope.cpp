@@ -310,8 +310,8 @@ bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Con
 
                 if (!is_finite(r))
                 {
-                        error("Not finite point " + to_string(point) + " and constraint a = " + to_string(c[i].a) +
-                              ", b = " + to_string(c[i].b));
+                        error("Not finite point " + to_string(point) + " and constraint a = " + to_string(c[i].a)
+                              + ", b = " + to_string(c[i].b));
                 }
 
                 if (r < 0)
@@ -377,8 +377,8 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
                 }
                 if (t >= max_length)
                 {
-                        error("Intersection out of parallelotope.\ndistance = " + to_string(t) + ", " +
-                              "max distance = " + to_string(max_length) + "\n" + to_string(ray));
+                        error("Intersection out of parallelotope.\ndistance = " + to_string(t) + ", "
+                              + "max distance = " + to_string(max_length) + "\n" + to_string(ray));
                 }
 
                 ray = Ray<N, T>(ray_orig.point(-10 * max_length), direction);
@@ -425,8 +425,8 @@ void verify_intersection(const Ray<N, T>& ray, const Parallelotope&... p)
                 }
                 if (intersections[i] && !almost_equal(distances[i], distances[0]))
                 {
-                        error("Error intersection distance comparison.\nDistance = " + to_string(distances[i]) +
-                              ", first distance  = " + to_string(distances[0]) + "\n" + to_string(ray));
+                        error("Error intersection distance comparison.\nDistance = " + to_string(distances[i])
+                              + ", first distance  = " + to_string(distances[0]) + "\n" + to_string(ray));
                 }
         }
 }
@@ -438,8 +438,8 @@ void verify_vectors(const std::array<Vector<N, T>, Count>& vectors, const std::s
         {
                 if (!almost_equal(vectors[i], vectors[0]))
                 {
-                        error("Error comparison of " + name + ".\n" + to_string(vectors[i]) + " and " +
-                              to_string(vectors[0]));
+                        error("Error comparison of " + name + ".\n" + to_string(vectors[i]) + " and "
+                              + to_string(vectors[0]));
                 }
         }
 }
@@ -461,8 +461,8 @@ void compare_parallelotopes(RandomEngine& engine, int point_count, const Paralle
         {
                 if (!almost_equal(max_length[i], max_length[0]))
                 {
-                        error("Error diagonal max length.\n" + to_string(max_length[i]) + " and " +
-                              to_string(max_length[0]));
+                        error("Error diagonal max length.\n" + to_string(max_length[i]) + " and "
+                              + to_string(max_length[0]));
                 }
         }
 

@@ -388,8 +388,8 @@ class Impl final : public Renderer
                 ASSERT(graphics_queue.family_index() == m_graphics_queue.family_index());
 
                 ASSERT(image_index < m_swapchain->image_views().size());
-                ASSERT(m_render_command_buffers->count() == m_swapchain->image_views().size() ||
-                       m_render_command_buffers->count() == 1);
+                ASSERT(m_render_command_buffers->count() == m_swapchain->image_views().size()
+                       || m_render_command_buffers->count() == 1);
 
                 const unsigned render_index = m_render_command_buffers->count() == 1 ? 0 : image_index;
 
@@ -400,8 +400,8 @@ class Impl final : public Renderer
                 }
                 else
                 {
-                        ASSERT(m_render_depth_command_buffers->count() == m_swapchain->image_views().size() ||
-                               m_render_depth_command_buffers->count() == 1);
+                        ASSERT(m_render_depth_command_buffers->count() == m_swapchain->image_views().size()
+                               || m_render_depth_command_buffers->count() == 1);
 
                         const unsigned render_depth_index =
                                 m_render_depth_command_buffers->count() == 1 ? 0 : image_index;

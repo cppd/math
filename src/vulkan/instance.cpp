@@ -64,10 +64,10 @@ VulkanInstance::VulkanInstance(
         const std::vector<PhysicalDeviceFeatures>& optional_features,
         const std::optional<std::function<VkSurfaceKHR(VkInstance)>>& create_surface)
         : m_instance(create_instance(
-                  API_VERSION_MAJOR,
-                  API_VERSION_MINOR,
-                  required_instance_extensions,
-                  string_vector(VALIDATION_LAYERS))),
+                API_VERSION_MAJOR,
+                API_VERSION_MINOR,
+                required_instance_extensions,
+                string_vector(VALIDATION_LAYERS))),
           m_callback(
                   m_instance.validation_layers_enabled() ? std::make_optional(create_debug_report_callback(m_instance))
                                                          : std::nullopt),

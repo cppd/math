@@ -90,8 +90,8 @@ constexpr bool str_equal(const char* s1, const char* s2)
 }
 
 static_assert(
-        str_equal("ab", "ab") && str_equal("", "") && !str_equal("", "ab") && !str_equal("ab", "") &&
-        !str_equal("ab", "ac") && !str_equal("ba", "ca") && !str_equal("a", "xyz"));
+        str_equal("ab", "ab") && str_equal("", "") && !str_equal("", "ab") && !str_equal("ab", "")
+        && !str_equal("ab", "ac") && !str_equal("ba", "ca") && !str_equal("a", "xyz"));
 
 std::string obj_type_name(size_t N)
 {
@@ -132,8 +132,8 @@ typename Mesh<N>::Image read_image_from_file(const std::string& file_name)
 {
         if constexpr (N != 3)
         {
-                error("Reading " + to_string(N - 1) + "-dimensional images for " + obj_type_name(N) +
-                      " is not supported");
+                error("Reading " + to_string(N - 1) + "-dimensional images for " + obj_type_name(N)
+                      + " is not supported");
         }
         else
         {
@@ -204,8 +204,8 @@ void read_digit_groups(
 
                 if (group_index >= static_cast<int>(group_ptr->size()))
                 {
-                        error("Found too many facet vertices " + to_string(group_index + 1) +
-                              " (max supported = " + to_string(group_ptr->size()) + ")");
+                        error("Found too many facet vertices " + to_string(group_index + 1)
+                              + " (max supported = " + to_string(group_ptr->size()) + ")");
                 }
 
                 std::array<IndexType, GroupSize>& indices = (*group_ptr)[group_index];
@@ -342,8 +342,8 @@ void read_float_texture(const char* str, Vector<N, T>* v)
 
         if (n != N && n != N + 1)
         {
-                error(std::string("Error read " + to_string(N) + " or " + to_string(N + 1) + " floating points of ") +
-                      type_name<T>() + " type");
+                error(std::string("Error read " + to_string(N) + " or " + to_string(N + 1) + " floating points of ")
+                      + type_name<T>() + " type");
         }
 
         if (n == N + 1 && tmp != 0)
@@ -585,16 +585,16 @@ void check_facet_indices(const Mesh<N>& mesh)
                 {
                         if (facet.vertices[i] < 0 || facet.vertices[i] >= vertex_count)
                         {
-                                error("Vertex index " + to_string(facet.vertices[i]) + " is out of bounds [0, " +
-                                      to_string(vertex_count) + ")");
+                                error("Vertex index " + to_string(facet.vertices[i]) + " is out of bounds [0, "
+                                      + to_string(vertex_count) + ")");
                         }
 
                         if (facet.has_texcoord)
                         {
                                 if (facet.texcoords[i] < 0 || facet.texcoords[i] >= texcoord_count)
                                 {
-                                        error("Texture coordinate index " + to_string(facet.texcoords[i]) +
-                                              " is out of bounds [0, " + to_string(texcoord_count) + ")");
+                                        error("Texture coordinate index " + to_string(facet.texcoords[i])
+                                              + " is out of bounds [0, " + to_string(texcoord_count) + ")");
                                 }
                         }
                         else
@@ -609,8 +609,8 @@ void check_facet_indices(const Mesh<N>& mesh)
                         {
                                 if (facet.normals[i] < 0 || facet.normals[i] >= normal_count)
                                 {
-                                        error("Normal index " + to_string(facet.normals[i]) + " is out of bounds [0, " +
-                                              to_string(normal_count) + ")");
+                                        error("Normal index " + to_string(facet.normals[i]) + " is out of bounds [0, "
+                                              + to_string(normal_count) + ")");
                                 }
                         }
                         else
@@ -1089,13 +1089,13 @@ void read_lib(
                 }
                 catch (const std::exception& e)
                 {
-                        error("Library: " + lib_name + "\n" + "Line " + to_string(line_num) + ": " + first + " " +
-                              second + "\n" + e.what());
+                        error("Library: " + lib_name + "\n" + "Line " + to_string(line_num) + ": " + first + " "
+                              + second + "\n" + e.what());
                 }
                 catch (...)
                 {
-                        error("Library: " + lib_name + "\n" + "Line " + to_string(line_num) + ": " + first + " " +
-                              second + "\n" + "Unknown error");
+                        error("Library: " + lib_name + "\n" + "Line " + to_string(line_num) + ": " + first + " "
+                              + second + "\n" + "Unknown error");
                 }
         }
 }

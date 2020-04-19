@@ -149,8 +149,8 @@ void load_from_file(
 
         if (!found)
         {
-                error("Dimension " + to_string(dimension) + " is not supported, supported dimensions " +
-                      to_string(MultiStorage::supported_dimensions()));
+                error("Dimension " + to_string(dimension) + " is not supported, supported dimensions "
+                      + to_string(MultiStorage::supported_dimensions()));
         }
 }
 
@@ -200,8 +200,8 @@ void load_from_point_repository(
 
         if (!found)
         {
-                error("Dimension " + to_string(dimension) + " is not supported, supported dimensions " +
-                      to_string(MultiStorage::supported_dimensions()));
+                error("Dimension " + to_string(dimension) + " is not supported, supported dimensions "
+                      + to_string(MultiStorage::supported_dimensions()));
         }
 }
 
@@ -236,8 +236,8 @@ void add_from_volume_repository(
 
         if (!found)
         {
-                error("Dimension " + to_string(dimension) + " is not supported, supported dimensions " +
-                      to_string(MultiStorage::supported_dimensions()));
+                error("Dimension " + to_string(dimension) + " is not supported, supported dimensions "
+                      + to_string(MultiStorage::supported_dimensions()));
         }
 }
 }

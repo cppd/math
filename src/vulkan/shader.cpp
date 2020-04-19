@@ -28,9 +28,9 @@ Shader::Shader(
         const std::string_view& entry_point_name)
         : m_module(device, code), m_stage(stage), m_entry_point_name(entry_point_name)
 {
-        ASSERT(stage == VK_SHADER_STAGE_VERTEX_BIT || stage == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT ||
-               stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT || stage == VK_SHADER_STAGE_GEOMETRY_BIT ||
-               stage == VK_SHADER_STAGE_FRAGMENT_BIT || stage == VK_SHADER_STAGE_COMPUTE_BIT);
+        ASSERT(stage == VK_SHADER_STAGE_VERTEX_BIT || stage == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT
+               || stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT || stage == VK_SHADER_STAGE_GEOMETRY_BIT
+               || stage == VK_SHADER_STAGE_FRAGMENT_BIT || stage == VK_SHADER_STAGE_COMPUTE_BIT);
         ASSERT(!entry_point_name.empty());
 }
 

@@ -845,10 +845,10 @@ void paraboloid_convex_hull(
         using FacetCH = Facet<N + 1, DataTypeParaboloid<N + 1>, ComputeTypeParaboloid<N + 1>>;
         using PointCH = Vector<N + 1, DataTypeParaboloid<N + 1>>;
 
-        LOG("Paraboloid " + space_name(N + 1) + ". Max: " + to_string(PARABOLOID_BITS) + ". Data: " +
-            type_str<DataTypeParaboloid<N + 1>>() + ". Compute: " + type_str<ComputeTypeParaboloid<N + 1>>() + ". " +
-            space_name(N) + ". Data: " + type_str<DataTypeAfterParaboloid<N>>() +
-            "; Compute: " + type_str<ComputeTypeAfterParaboloid<N>>());
+        LOG("Paraboloid " + space_name(N + 1) + ". Max: " + to_string(PARABOLOID_BITS) + ". Data: "
+            + type_str<DataTypeParaboloid<N + 1>>() + ". Compute: " + type_str<ComputeTypeParaboloid<N + 1>>() + ". "
+            + space_name(N) + ". Data: " + type_str<DataTypeAfterParaboloid<N>>()
+            + "; Compute: " + type_str<ComputeTypeAfterParaboloid<N>>());
 
         // Рассчитать Делоне на основе нижней части выпуклой оболочки параболоида размерности N + 1
 
@@ -922,8 +922,8 @@ void ordinary_convex_hull(
         using Facet = Facet<N, DataTypeOrdinary<N>, ComputeTypeOrdinary<N>>;
         using Point = Vector<N, DataTypeOrdinary<N>>;
 
-        LOG(space_name(N) + ".  Max: " + to_string(ORDINARY_BITS) + ". Data: " + type_str<DataTypeOrdinary<N>>() +
-            ". Compute: " + type_str<ComputeTypeOrdinary<N>>());
+        LOG(space_name(N) + ".  Max: " + to_string(ORDINARY_BITS) + ". Data: " + type_str<DataTypeOrdinary<N>>()
+            + ". Compute: " + type_str<ComputeTypeOrdinary<N>>());
 
         std::vector<Point> data(points.size());
 

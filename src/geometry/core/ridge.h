@@ -135,9 +135,9 @@ public:
                         }
                 }
 
-                error("Add to ridge: too many facets exist in the link: facet " + to_string(facet->vertices()) +
-                      ", index " + to_string(external_point_index) + ", not ridge point " +
-                      to_string(facet->vertices()[external_point_index]));
+                error("Add to ridge: too many facets exist in the link: facet " + to_string(facet->vertices())
+                      + ", index " + to_string(external_point_index) + ", not ridge point "
+                      + to_string(facet->vertices()[external_point_index]));
         }
 
         void remove(const Facet* facet)

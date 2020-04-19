@@ -131,8 +131,8 @@ void find_interior_vertices(
                 }
         }
 
-        LOG("interior points after initial phase: " + to_string(interior_count) + " (" + to_string(vertex_data.size()) +
-            ")");
+        LOG("interior points after initial phase: " + to_string(interior_count) + " (" + to_string(vertex_data.size())
+            + ")");
 
         if (interior_count == 0)
         {
@@ -179,8 +179,8 @@ void find_interior_vertices(
 
         } while (found);
 
-        LOG("interior points after expansion phase: " + to_string(interior_count) + " (" +
-            to_string(vertex_data.size()) + ")");
+        LOG("interior points after expansion phase: " + to_string(interior_count) + " (" + to_string(vertex_data.size())
+            + ")");
 }
 
 template <size_t N>
@@ -318,8 +318,8 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 prune_facets_incident_to_sharp_ridges(m_points, m_delaunay_facets, interior_vertices, &cocone_facets);
                 if (all_false(cocone_facets))
                 {
-                        error("Cocone facets not found after prune. " + to_string(N - 1) +
-                              "-manifold is not reconstructable.");
+                        error("Cocone facets not found after prune. " + to_string(N - 1)
+                              + "-manifold is not reconstructable.");
                 }
 
                 progress->set(2, 4);
@@ -328,8 +328,8 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 extract_manifold(m_delaunay_objects, m_delaunay_facets, &cocone_facets);
                 if (all_false(cocone_facets))
                 {
-                        error("Cocone facets not found after manifold extraction. " + to_string(N - 1) +
-                              "-manifold is not reconstructable.");
+                        error("Cocone facets not found after manifold extraction. " + to_string(N - 1)
+                              + "-manifold is not reconstructable.");
                 }
 
                 progress->set(3, 4);
@@ -393,8 +393,8 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 find_cocone_interior_facets(m_delaunay_facets, m_facet_data, interior_vertices, &cocone_facets);
                 if (all_false(cocone_facets))
                 {
-                        error("Cocone interior facets not found. " + to_string(N - 1) +
-                              "-manifold is not reconstructable.");
+                        error("Cocone interior facets not found. " + to_string(N - 1)
+                              + "-manifold is not reconstructable.");
                 }
 
                 common_computation(interior_vertices, std::move(cocone_facets), normals, facets, progress);
@@ -421,8 +421,8 @@ public:
                 // Проверить на самый минимум по количеству точек
                 if (source_points.size() < N + 2)
                 {
-                        error("Error point count " + to_string(source_points.size()) +
-                              " for cocone manifold reconstruction in " + space_name(N));
+                        error("Error point count " + to_string(source_points.size())
+                              + " for cocone manifold reconstruction in " + space_name(N));
                 }
 
                 progress->set_text("Voronoi-Delaunay: %v of %m");

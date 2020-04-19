@@ -118,8 +118,8 @@ void test_distribution(int count, T discrepancy_limit)
 
                 if (discrepancy > discrepancy_limit)
                 {
-                        LOG("angle = " + to_string(cos_to_angle(cosine), 5) + ", cos = " + to_string(cosine, 5) +
-                            ", value = " + to_string(value, 5) + ", d = " + to_string(discrepancy, 5));
+                        LOG("angle = " + to_string(cos_to_angle(cosine), 5) + ", cos = " + to_string(cosine, 5)
+                            + ", value = " + to_string(value, 5) + ", d = " + to_string(discrepancy, 5));
 
                         error("Huge discrepancy");
                 }
@@ -151,8 +151,8 @@ void test_speed(int count)
                 sum += random_cosine_weighted_on_hemisphere(random_engine, n);
         }
 
-        LOG("Time = " + to_string_fixed(time_in_seconds() - start_time, 5) +
-            " seconds, sum = " + to_string(component_sum(sum)));
+        LOG("Time = " + to_string_fixed(time_in_seconds() - start_time, 5)
+            + " seconds, sum = " + to_string(component_sum(sum)));
 }
 
 template <size_t N, typename T, typename RandomEngine>

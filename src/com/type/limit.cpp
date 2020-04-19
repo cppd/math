@@ -65,6 +65,6 @@ static_assert(limits<signed __int128>::max() > 0);
 static_assert(limits<signed __int128>::lowest() < 0);
 static_assert(static_cast<unsigned __int128>(limits<signed __int128>::max()) == limits<unsigned __int128>::max() >> 1);
 static_assert(
-        (static_cast<unsigned __int128>(1) << 127) ==
-        static_cast<unsigned __int128>(limits<signed __int128>::max()) + 1);
+        (static_cast<unsigned __int128>(1) << 127)
+        == static_cast<unsigned __int128>(limits<signed __int128>::max()) + 1);
 static_assert(limits<signed __int128>::lowest() + 1 + limits<signed __int128>::max() == 0);

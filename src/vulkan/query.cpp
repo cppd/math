@@ -176,8 +176,8 @@ void check_api_version(uint32_t required_api_version)
 
         if (required_api_version > api_version)
         {
-                error("Vulkan API version " + api_version_to_string(required_api_version) +
-                      " is not supported. Supported " + api_version_to_string(api_version) + ".");
+                error("Vulkan API version " + api_version_to_string(required_api_version)
+                      + " is not supported. Supported " + api_version_to_string(api_version) + ".");
         }
 }
 
@@ -319,13 +319,13 @@ VkSampleCountFlagBits supported_framebuffer_sample_count_flag(
 
         if (required_minimum_sample_count < MIN_SAMPLE_COUNT)
         {
-                error("The required minimum sample count " + to_string(required_minimum_sample_count) +
-                      " is less than " + to_string(MIN_SAMPLE_COUNT));
+                error("The required minimum sample count " + to_string(required_minimum_sample_count) + " is less than "
+                      + to_string(MIN_SAMPLE_COUNT));
         }
         if (required_minimum_sample_count > MAX_SAMPLE_COUNT)
         {
-                error("The required minimum sample count " + to_string(required_minimum_sample_count) +
-                      " is greater than " + to_string(MAX_SAMPLE_COUNT));
+                error("The required minimum sample count " + to_string(required_minimum_sample_count)
+                      + " is greater than " + to_string(MAX_SAMPLE_COUNT));
         }
 
         VkPhysicalDeviceProperties properties;
@@ -410,8 +410,9 @@ uint32_t physical_device_memory_type_index(
 
         for (uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i)
         {
-                if ((memory_type_bits & (static_cast<uint32_t>(1) << i)) &&
-                    (memory_properties.memoryTypes[i].propertyFlags & memory_property_flags) == memory_property_flags)
+                if ((memory_type_bits & (static_cast<uint32_t>(1) << i))
+                    && (memory_properties.memoryTypes[i].propertyFlags & memory_property_flags)
+                               == memory_property_flags)
                 {
                         return i;
                 }

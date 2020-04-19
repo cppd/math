@@ -115,8 +115,8 @@ void RendererBuffers::set_matrices(
 void RendererBuffers::set_clip_plane(const vec4& equation, bool enabled) const
 {
         static_assert(
-                offsetof(Drawing, clip_plane_equation) + sizeof(Drawing::clip_plane_equation) ==
-                offsetof(Drawing, clip_plane_enabled));
+                offsetof(Drawing, clip_plane_equation) + sizeof(Drawing::clip_plane_equation)
+                == offsetof(Drawing, clip_plane_enabled));
 
         constexpr size_t offset = offsetof(Drawing, clip_plane_equation);
         constexpr size_t size = sizeof(Drawing::clip_plane_equation) + sizeof(Drawing::clip_plane_enabled);

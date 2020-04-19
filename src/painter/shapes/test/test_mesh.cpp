@@ -155,8 +155,8 @@ void test_sphere_mesh(
                 {
                         if (with_error_log)
                         {
-                                LOG("No the first approximate intersection with ray #" + to_string(i) + "\n" +
-                                    to_string(ray));
+                                LOG("No the first approximate intersection with ray #" + to_string(i) + "\n"
+                                    + to_string(ray));
                         }
                         ++error_count;
                         continue;
@@ -169,8 +169,8 @@ void test_sphere_mesh(
                 {
                         if (with_error_log)
                         {
-                                LOG("No the first precise intersection with ray #" + to_string(i) + "\n" +
-                                    "approximate " + to_string(approximate) + "\n" + to_string(ray));
+                                LOG("No the first precise intersection with ray #" + to_string(i) + "\n"
+                                    + "approximate " + to_string(approximate) + "\n" + to_string(ray));
                         }
                         ++error_count;
                         continue;
@@ -186,8 +186,8 @@ void test_sphere_mesh(
                 {
                         if (with_error_log)
                         {
-                                LOG("No the second approximate intersection with ray #" + to_string(i) + "\n" +
-                                    to_string(ray));
+                                LOG("No the second approximate intersection with ray #" + to_string(i) + "\n"
+                                    + to_string(ray));
                         }
                         ++error_count;
                         continue;
@@ -200,8 +200,8 @@ void test_sphere_mesh(
                 {
                         if (with_error_log)
                         {
-                                LOG("No the second precise intersection with ray #" + to_string(i) + "\n" +
-                                    "approximate " + to_string(approximate) + "\n" + to_string(ray));
+                                LOG("No the second precise intersection with ray #" + to_string(i) + "\n"
+                                    + "approximate " + to_string(approximate) + "\n" + to_string(ray));
                         }
                         ++error_count;
                         continue;
@@ -213,13 +213,13 @@ void test_sphere_mesh(
 
                 ray.move_along_dir(precise + ray_offset);
 
-                if (mesh.intersect_approximate(ray, &approximate) &&
-                    mesh.intersect_precise(ray, approximate, &precise, &intersection_data))
+                if (mesh.intersect_approximate(ray, &approximate)
+                    && mesh.intersect_precise(ray, approximate, &precise, &intersection_data))
                 {
                         if (with_error_log)
                         {
-                                LOG("The third intersection with ray #" + to_string(i) + "\n" + to_string(ray) + "\n" +
-                                    "at point " + to_string(precise));
+                                LOG("The third intersection with ray #" + to_string(i) + "\n" + to_string(ray) + "\n"
+                                    + "at point " + to_string(precise));
                         }
                         ++error_count;
                         continue;
@@ -230,8 +230,8 @@ void test_sphere_mesh(
 
         LOG("intersections " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         LOG("");
-        LOG(to_string(error_count) + " errors, " + to_string(rays.size()) + " rays, " +
-            to_string_fixed(error_percent, 5) + "%");
+        LOG(to_string(error_count) + " errors, " + to_string(rays.size()) + " rays, "
+            + to_string_fixed(error_percent, 5) + "%");
         LOG("");
 
         if (error_percent > 0.05)

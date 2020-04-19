@@ -317,8 +317,8 @@ void test_algorithms(
         ProgressRatio* progress)
 {
         ASSERT(points.size() > N);
-        ASSERT(expected_facets_min > 0 && expected_facets_max > 0 && expected_bound_facets_min > 0 &&
-               expected_bound_facets_max > 0);
+        ASSERT(expected_facets_min > 0 && expected_facets_max > 0 && expected_bound_facets_min > 0
+               && expected_bound_facets_max > 0);
 
         double start_time = time_in_seconds();
 
@@ -344,8 +344,8 @@ void test_algorithms(
                 LOG("Cocone facet count: " + to_string(facets.size()));
                 if (!(expected_facets_min <= facets.size() && facets.size() <= expected_facets_max))
                 {
-                        error("Error facet count: expected " + facet_count_str + ", Cocone computed " +
-                              to_string(facets.size()));
+                        error("Error facet count: expected " + facet_count_str + ", Cocone computed "
+                              + to_string(facets.size()));
                 }
 
                 test_geometry_files(name + ", Cocone", points, normals, facets, progress);
@@ -359,8 +359,8 @@ void test_algorithms(
 
                 std::string bound_facet_count_str = (expected_bound_facets_min == expected_bound_facets_max)
                                                             ? to_string(expected_bound_facets_min)
-                                                            : "[" + to_string(expected_bound_facets_min) + ", " +
-                                                                      to_string(expected_bound_facets_max) + "]";
+                                                            : "[" + to_string(expected_bound_facets_min) + ", "
+                                                                      + to_string(expected_bound_facets_max) + "]";
 
                 LOG("Expected bound facet count: " + bound_facet_count_str);
 
@@ -369,8 +369,8 @@ void test_algorithms(
                 LOG("BoundCocone facet count: " + to_string(facets.size()));
                 if (!(expected_bound_facets_min <= facets.size() && facets.size() <= expected_bound_facets_max))
                 {
-                        error("Error bound facet count: expected " + bound_facet_count_str + ", BoundCocone computed " +
-                              to_string(facets.size()));
+                        error("Error bound facet count: expected " + bound_facet_count_str + ", BoundCocone computed "
+                              + to_string(facets.size()));
                 }
 
                 test_geometry_files(name + ", BoundCocone", points, normals, facets, progress);

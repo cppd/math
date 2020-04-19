@@ -114,8 +114,8 @@ public:
                                                 return true;
                                         }
                                         return false;
-                                }() ||
-                                 ...);
+                                }()
+                                 || ...);
                         },
                         m_data);
 
@@ -136,8 +136,8 @@ public:
                                                 return true;
                                         }
                                         return false;
-                                }() ||
-                                 ...);
+                                }()
+                                 || ...);
                         },
                         m_data);
 
@@ -158,8 +158,8 @@ public:
                                                 return true;
                                         }
                                         return false;
-                                }() ||
-                                 ...);
+                                }()
+                                 || ...);
                         },
                         m_data);
 

@@ -183,8 +183,8 @@ std::tuple<int, MeshFileType> file_dimension_and_type(const std::string& file_na
                         int dimension_numbers = count_numbers_in_file(file_name);
                         if (dimension != dimension_numbers)
                         {
-                                error("Conflicting dimensions in file extension " + to_string(dimension) +
-                                      " and in file data " + to_string(dimension_numbers));
+                                error("Conflicting dimensions in file extension " + to_string(dimension)
+                                      + " and in file data " + to_string(dimension_numbers));
                         }
                 }
                 file_type = MeshFileType::Txt;

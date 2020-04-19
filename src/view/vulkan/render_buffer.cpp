@@ -382,8 +382,8 @@ void Impl::create_color_buffer_rendering(
 
         const VkFormat depth_format = m_depth_attachments[0].format();
 
-        ASSERT(m_depth_attachments.size() == 1 ||
-               std::all_of(
+        ASSERT(m_depth_attachments.size() == 1
+               || std::all_of(
                        m_depth_attachments.cbegin(), m_depth_attachments.cend(),
                        [&](const vulkan::DepthAttachment& d) { return d.format() == depth_format; }));
 

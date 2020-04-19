@@ -222,9 +222,9 @@ void min_max_and_distance(
                 T one_half_of_min_box_size = (max[i] - min[i]) / max_divisions / 2;
                 if (dist >= one_half_of_min_box_size)
                 {
-                        error("The minimal distance from facets " + to_string(dist) +
-                              " is greater than one half of the minimum box size " +
-                              to_string(one_half_of_min_box_size) + " (dimension #" + to_string(i) + ")");
+                        error("The minimal distance from facets " + to_string(dist)
+                              + " is greater than one half of the minimum box size "
+                              + to_string(one_half_of_min_box_size) + " (dimension #" + to_string(i) + ")");
                 }
         }
 
@@ -351,8 +351,10 @@ try
         // Адреса имеющихся элементов не должны меняться при вставке
         // новых элементов, поэтому требуется std::deque или std::list.
         static_assert(
-                std::is_same_v<Container<Box<Parallelotope>>, std::deque<Box<Parallelotope>>> ||
-                std::is_same_v<Container<Box<Parallelotope>>, std::list<Box<Parallelotope>>>);
+                std::is_same_v<
+                        Container<Box<Parallelotope>>,
+                        std::deque<Box<
+                                Parallelotope>>> || std::is_same_v<Container<Box<Parallelotope>>, std::list<Box<Parallelotope>>>);
 
         constexpr auto integer_sequence_n = std::make_integer_sequence<int, BOX_COUNT<Parallelotope::DIMENSION>>();
 
@@ -499,24 +501,24 @@ public:
 
                 namespace impl = spatial_subdivision_tree_implementation;
 
-                if (!(max_depth >= MAX_DEPTH_LEFT_BOUND && max_depth <= MAX_DEPTH_RIGHT_BOUND) ||
-                    !(min_objects_per_box >= MIN_OBJECTS_LEFT_BOUND && min_objects_per_box <= MIN_OBJECTS_RIGHT_BOUND))
+                if (!(max_depth >= MAX_DEPTH_LEFT_BOUND && max_depth <= MAX_DEPTH_RIGHT_BOUND)
+                    || !(min_objects_per_box >= MIN_OBJECTS_LEFT_BOUND
+                         && min_objects_per_box <= MIN_OBJECTS_RIGHT_BOUND))
                 {
-                        error("Error limits for spatial subdivision " + to_string(BOX_COUNT) +
-                              "-tree. Maximum depth (" + to_string(max_depth) + ") must be in the interval [" +
-                              to_string(MAX_DEPTH_LEFT_BOUND) + ", " + to_string(MAX_DEPTH_RIGHT_BOUND) +
-                              "] and minimum objects per box (" + to_string(min_objects_per_box) +
-                              ") must be in the interval [" + to_string(MIN_OBJECTS_LEFT_BOUND) + ", " +
-                              to_string(MIN_OBJECTS_RIGHT_BOUND) + "].");
+                        error("Error limits for spatial subdivision " + to_string(BOX_COUNT) + "-tree. Maximum depth ("
+                              + to_string(max_depth) + ") must be in the interval [" + to_string(MAX_DEPTH_LEFT_BOUND)
+                              + ", " + to_string(MAX_DEPTH_RIGHT_BOUND) + "] and minimum objects per box ("
+                              + to_string(min_objects_per_box) + ") must be in the interval ["
+                              + to_string(MIN_OBJECTS_LEFT_BOUND) + ", " + to_string(MIN_OBJECTS_RIGHT_BOUND) + "].");
                 }
 
                 // Немного прибавить к максимуму для учёта ошибок плавающей точки
                 if (maximum_box_count(BOX_COUNT, max_depth) > MAX_BOX_COUNT_LIMIT + 0.1)
                 {
-                        error("Spatial subdivision " + to_string(BOX_COUNT) + "-tree is too deep. Depth " +
-                              to_string(max_depth) + ", maximum box count " +
-                              to_string(maximum_box_count(BOX_COUNT, max_depth)) + ", maximum box count limit " +
-                              to_string(MAX_BOX_COUNT_LIMIT));
+                        error("Spatial subdivision " + to_string(BOX_COUNT) + "-tree is too deep. Depth "
+                              + to_string(max_depth) + ", maximum box count "
+                              + to_string(maximum_box_count(BOX_COUNT, max_depth)) + ", maximum box count limit "
+                              + to_string(MAX_BOX_COUNT_LIMIT));
                 }
 
                 const int max_box_count = std::lround(maximum_box_count(BOX_COUNT, max_depth));
@@ -577,9 +579,9 @@ public:
                         if (find_box_for_point(m_boxes[ROOT_BOX], interior_point, &box))
                         {
                                 Vector<N, T> point;
-                                if (box->object_index_count() > 0 &&
-                                    functor_find_intersection(box->object_indices(), &point) &&
-                                    box->parallelotope().inside(point))
+                                if (box->object_index_count() > 0
+                                    && functor_find_intersection(box->object_indices(), &point)
+                                    && box->parallelotope().inside(point))
                                 {
                                         return true;
                                 }

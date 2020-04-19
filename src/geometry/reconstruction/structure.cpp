@@ -193,8 +193,8 @@ double voronoi_edge_radius(
         // Поэтому можно брать разницу между вершинами как вектор направления от a к b.
         // Но могут быть и небольшие разницы на границах cocone.
         vec<N> a_to_b = facet.one_sided() ? facet.ortho()
-                                          : (delaunay_objects[facet.delaunay(1)].voronoi_vertex() -
-                                             delaunay_objects[facet.delaunay(0)].voronoi_vertex());
+                                          : (delaunay_objects[facet.delaunay(1)].voronoi_vertex()
+                                             - delaunay_objects[facet.delaunay(0)].voronoi_vertex());
 
         double max_distance;
 

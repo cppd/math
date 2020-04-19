@@ -595,8 +595,8 @@ void check_paintbrush_projector(const Paintbrush<N - 1>& paintbrush, const Proje
 {
         if (paintbrush.screen_size() != projector.screen_size())
         {
-                error("The paintbrush screen size (" + to_string(paintbrush.screen_size()) +
-                      ") are not equal to the projector screen size (" + to_string(projector.screen_size()) + ")");
+                error("The paintbrush screen size (" + to_string(paintbrush.screen_size())
+                      + ") are not equal to the projector screen size (" + to_string(projector.screen_size()) + ")");
         }
 }
 

@@ -57,8 +57,8 @@ bool PainterParametersFor3d::show(
         }
         if (!(width >= 1 && height >= 1))
         {
-                error("Error width and height parameters: width = " + to_string(width) +
-                      ", height = " + to_string(height));
+                error("Error width and height parameters: width = " + to_string(width)
+                      + ", height = " + to_string(height));
         }
         if (!(max_screen_size >= 1))
         {
@@ -66,8 +66,8 @@ bool PainterParametersFor3d::show(
         }
         if (!(1 <= default_samples_per_pixel && default_samples_per_pixel <= max_samples_per_pixel))
         {
-                error("Error samples per pixel parameters: max = " + to_string(max_samples_per_pixel) +
-                      ", default = " + to_string(default_samples_per_pixel));
+                error("Error samples per pixel parameters: max = " + to_string(max_samples_per_pixel)
+                      + ", default = " + to_string(default_samples_per_pixel));
         }
 
         m_aspect_ratio = static_cast<double>(width) / height;
@@ -140,8 +140,8 @@ void PainterParametersFor3d::done(int r)
         m_samples_per_pixel = ui.spinBox_samples_per_pixel->value();
         if (!(m_samples_per_pixel >= 1 && m_samples_per_pixel <= m_max_samples_per_pixel))
         {
-                std::string msg = "Error samples per pixel. Must be in the range [1, " +
-                                  to_string(m_max_samples_per_pixel) + "].";
+                std::string msg = "Error samples per pixel. Must be in the range [1, "
+                                  + to_string(m_max_samples_per_pixel) + "].";
                 dialog::message_critical(this, msg);
                 return;
         }
@@ -149,8 +149,8 @@ void PainterParametersFor3d::done(int r)
         m_width = ui.spinBox_width->value();
         if (!(m_min_width <= m_width && m_width <= m_max_width))
         {
-                std::string msg = "Error width " + to_string(m_width) + ", min = " + to_string(m_min_width) +
-                                  ", max = " + to_string(m_max_width);
+                std::string msg = "Error width " + to_string(m_width) + ", min = " + to_string(m_min_width)
+                                  + ", max = " + to_string(m_max_width);
                 dialog::message_critical(this, msg);
                 return;
         }
@@ -158,8 +158,8 @@ void PainterParametersFor3d::done(int r)
         m_height = ui.spinBox_height->value();
         if (!(m_min_height <= m_height && m_height <= m_max_height))
         {
-                std::string msg = "Error height " + to_string(m_height) + ", min = " + to_string(m_min_height) +
-                                  ", max = " + to_string(m_max_height);
+                std::string msg = "Error height " + to_string(m_height) + ", min = " + to_string(m_min_height)
+                                  + ", max = " + to_string(m_max_height);
                 dialog::message_critical(this, msg);
                 return;
         }

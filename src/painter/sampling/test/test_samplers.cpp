@@ -88,8 +88,8 @@ const std::string_view& short_sampler_name(const LatinHypercubeSampler<N, T>&)
 template <template <size_t, typename> typename S, size_t N, typename T>
 const std::string& sampler_file_name(const S<N, T>& sampler)
 {
-        static const std::string s = "samples_" + std::string(short_sampler_name(sampler)) + "_" + to_string(N) + "d_" +
-                                     replace_space(type_name<T>()) + ".txt";
+        static const std::string s = "samples_" + std::string(short_sampler_name(sampler)) + "_" + to_string(N) + "d_"
+                                     + replace_space(type_name<T>()) + ".txt";
         return s;
 }
 
@@ -149,8 +149,8 @@ void test_performance(RandomEngine& random_engine, const Sampler& sampler, int i
                 sampler.generate(random_engine, &data);
         }
 
-        LOG(std::string(sampler_name(sampler)) + ": time = " + to_string_fixed(time_in_seconds() - t, 5) +
-            " seconds, size = " + to_string(data.size()));
+        LOG(std::string(sampler_name(sampler)) + ": time = " + to_string_fixed(time_in_seconds() - t, 5)
+            + " seconds, size = " + to_string(data.size()));
 }
 
 template <size_t N, typename T, typename RandomEngine>

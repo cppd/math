@@ -38,8 +38,8 @@ const FontGlyph& code_point_glyph(const std::unordered_map<T, FontGlyph>& glyphs
                 iter = glyphs.find(DEFAULT_CHARACTER);
                 if (iter == glyphs.cend())
                 {
-                        error("Error finding character " + unicode::utf32_to_number_string(code_point) +
-                              " and default character " + unicode::utf32_to_number_string(DEFAULT_CHARACTER));
+                        error("Error finding character " + unicode::utf32_to_number_string(code_point)
+                              + " and default character " + unicode::utf32_to_number_string(DEFAULT_CHARACTER));
                 }
         }
         return iter->second;

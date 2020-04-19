@@ -74,8 +74,8 @@ public:
         {
                 if (m_one_dimension_sample_count < 1)
                 {
-                        error("Stratified jittered one dimension sample count (" +
-                              to_string(m_one_dimension_sample_count) + ") is not a positive integer");
+                        error("Stratified jittered one dimension sample count ("
+                              + to_string(m_one_dimension_sample_count) + ") is not a positive integer");
                 }
 
                 m_offset.resize(m_one_dimension_sample_count);
@@ -174,8 +174,8 @@ public:
         {
                 if (m_sample_count < 1)
                 {
-                        error("Latin hypercube sample count (" + to_string(m_sample_count) +
-                              ") is not a positive integer");
+                        error("Latin hypercube sample count (" + to_string(m_sample_count)
+                              + ") is not a positive integer");
                 }
         }
 

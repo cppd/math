@@ -88,11 +88,11 @@ public:
                 VkDeviceSize size,
                 const T& data)
                 : BufferWithMemory(
-                          BufferMemoryType::DeviceLocal,
-                          device,
-                          family_indices,
-                          usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                          size)
+                        BufferMemoryType::DeviceLocal,
+                        device,
+                        family_indices,
+                        usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                        size)
         {
                 if (size != data_size(data))
                 {

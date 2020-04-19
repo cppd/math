@@ -152,8 +152,8 @@ class ThreadPool
                         catch (const std::exception& e)
                         {
                                 error_fatal(
-                                        std::string("exception in thread pool while working with exception: ") +
-                                        e.what());
+                                        std::string("exception in thread pool while working with exception: ")
+                                        + e.what());
                         }
                 }
                 catch (...)

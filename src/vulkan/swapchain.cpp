@@ -43,8 +43,8 @@ VkSurfaceFormatKHR choose_surface_format(
 
         for (const VkSurfaceFormatKHR& format : surface_formats)
         {
-                if (format.format == required_surface_format.format &&
-                    format.colorSpace == required_surface_format.colorSpace)
+                if (format.format == required_surface_format.format
+                    && format.colorSpace == required_surface_format.colorSpace)
                 {
                         return required_surface_format;
                 }
@@ -59,9 +59,9 @@ VkSurfaceFormatKHR choose_surface_format(
                 }
                 s += vulkan::format_to_string(format.format) + ", " + vulkan::color_space_to_string(format.colorSpace);
         }
-        error("Failed to find surface format " + vulkan::format_to_string(required_surface_format.format) + ", " +
-              vulkan::color_space_to_string(required_surface_format.colorSpace) + ".\nSupported surface formats:\n" +
-              s);
+        error("Failed to find surface format " + vulkan::format_to_string(required_surface_format.format) + ", "
+              + vulkan::color_space_to_string(required_surface_format.colorSpace) + ".\nSupported surface formats:\n"
+              + s);
 }
 
 VkPresentModeKHR choose_present_mode(

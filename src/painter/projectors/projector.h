@@ -44,8 +44,8 @@ void check_vectors_orthogonal(const Vector<N, T>& camera_dir, const std::array<V
                 {
                         if (!(std::abs(dot(screen_axes[i], screen_axes[j])) <= LIMIT_COS))
                         {
-                                error("The screen axis " + to_string(i) + " is not orthogonal to the screen axes " +
-                                      to_string(j));
+                                error("The screen axis " + to_string(i) + " is not orthogonal to the screen axes "
+                                      + to_string(j));
                         }
                 }
         }
@@ -249,8 +249,8 @@ public:
 
                 if (!(width_view_angle_degrees > 0))
                 {
-                        error("Spherical projection view angle " + to_string(width_view_angle_degrees) +
-                              " is not positive");
+                        error("Spherical projection view angle " + to_string(width_view_angle_degrees)
+                              + " is not positive");
                 }
                 T k = sin_alpha / screen_size[0];
                 T r = square(sin_alpha);

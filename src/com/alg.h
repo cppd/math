@@ -100,8 +100,8 @@ template <typename T, typename V>
 constexpr T multiply_all(const V& v)
 {
         static_assert(
-                (is_native_integral<typename V::value_type> && is_native_integral<T>) ||
-                (is_native_floating_point<typename V::value_type> && is_native_floating_point<T>));
+                (is_native_integral<typename V::value_type> && is_native_integral<T>)
+                || (is_native_floating_point<typename V::value_type> && is_native_floating_point<T>));
         static_assert(is_signed<typename V::value_type> == is_signed<T>);
         static_assert(limits<typename V::value_type>::digits <= limits<T>::digits);
 
@@ -123,8 +123,8 @@ template <typename T, typename V>
 constexpr T add_all(const V& v)
 {
         static_assert(
-                (is_native_integral<typename V::value_type> && is_native_integral<T>) ||
-                (is_native_floating_point<typename V::value_type> && is_native_floating_point<T>));
+                (is_native_integral<typename V::value_type> && is_native_integral<T>)
+                || (is_native_floating_point<typename V::value_type> && is_native_floating_point<T>));
         static_assert(is_signed<typename V::value_type> == is_signed<T>);
         static_assert(limits<typename V::value_type>::digits <= limits<T>::digits);
 

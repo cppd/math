@@ -76,8 +76,8 @@ std::unique_ptr<Mesh<N>> load(const std::string& file_name, ProgressRatio* progr
 
         if (dimension != static_cast<int>(N))
         {
-                error("Requested file dimension " + to_string(N) + ", detected file dimension " + to_string(dimension) +
-                      ", file " + file_name);
+                error("Requested file dimension " + to_string(N) + ", detected file dimension " + to_string(dimension)
+                      + ", file " + file_name);
         }
 
         switch (file_type)

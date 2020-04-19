@@ -45,8 +45,8 @@ void test_pivot()
                 error("b error");
         }
 
-        if (!(a ==
-              std::array<Vector<3, T>, 3>{
+        if (!(a
+              == std::array<Vector<3, T>, 3>{
                       Vector<3, T>(0.25, -0.75, -2.5), Vector<3, T>(0.5, -1.5, -4), Vector<3, T>(-0.25, -0.25, -0.5)}))
         {
                 impl::print_simplex_algorithm_data(b, a, v, c);

@@ -40,8 +40,8 @@ bool ray_intersection(
                 const Surface* surface;
                 const Data* data;
 
-                if (objects[0]->intersect_approximate(ray, &approximate_distance) &&
-                    objects[0]->intersect_precise(ray, approximate_distance, &distance, &surface, &data))
+                if (objects[0]->intersect_approximate(ray, &approximate_distance)
+                    && objects[0]->intersect_precise(ray, approximate_distance, &distance, &surface, &data))
                 {
                         *intersection_distance = distance;
                         *intersection_surface = surface;
@@ -93,8 +93,8 @@ bool ray_intersection(
                 const Surface* surface;
                 const Data* data;
 
-                if (object->intersect_precise(ray, approximate_distance, &distance, &surface, &data) &&
-                    distance < min_distance)
+                if (object->intersect_precise(ray, approximate_distance, &distance, &surface, &data)
+                    && distance < min_distance)
                 {
                         min_distance = distance;
                         *intersection_surface = surface;

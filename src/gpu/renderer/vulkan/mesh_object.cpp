@@ -180,8 +180,9 @@ void load_vertices(
                                 vec3f geometric_normal = cross(p[1] - p[0], p[2] - p[0]).normalized();
                                 if (!is_finite(geometric_normal))
                                 {
-                                        error("Face unit orthogonal vector is not finite for the face with vertices (" +
-                                              to_string(p[0]) + ", " + to_string(p[1]) + ", " + to_string(p[2]) + ")");
+                                        error("Face unit orthogonal vector is not finite for the face with vertices ("
+                                              + to_string(p[0]) + ", " + to_string(p[1]) + ", " + to_string(p[2])
+                                              + ")");
                                 }
                                 for (int i = 0; i < 3; ++i)
                                 {

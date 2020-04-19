@@ -836,8 +836,8 @@ uint32_t PhysicalDevice::family_index(VkQueueFlags set_flags, VkQueueFlags not_s
         {
                 return index;
         }
-        error("Queue family not found, flags " + to_string(set_flags) + " " + to_string(not_set_flags) + " " +
-              to_string(default_flags));
+        error("Queue family not found, flags " + to_string(set_flags) + " " + to_string(not_set_flags) + " "
+              + to_string(default_flags));
 }
 
 uint32_t PhysicalDevice::presentation_family_index() const
@@ -966,10 +966,10 @@ PhysicalDevice find_physical_device(
         {
                 PhysicalDevice physical_device(d, surface);
 
-                if (physical_device.properties().deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
-                    physical_device.properties().deviceType != VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU &&
-                    physical_device.properties().deviceType != VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU &&
-                    physical_device.properties().deviceType != VK_PHYSICAL_DEVICE_TYPE_CPU)
+                if (physical_device.properties().deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU
+                    && physical_device.properties().deviceType != VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU
+                    && physical_device.properties().deviceType != VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU
+                    && physical_device.properties().deviceType != VK_PHYSICAL_DEVICE_TYPE_CPU)
                 {
                         continue;
                 }

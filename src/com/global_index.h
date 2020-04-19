@@ -57,9 +57,9 @@ class GlobalIndex
                 static_assert((is_array<T> && T().size() == N) || is_vector<T>);
                 static_assert(is_native_integral<typename T::value_type>);
                 static_assert(
-                        limits<IndexType>::digits >= limits<typename T::value_type>::digits ||
-                        (limits<IndexType>::digits >= limits<std::ptrdiff_t>::digits &&
-                         limits<typename T::value_type>::digits >= limits<std::ptrdiff_t>::digits));
+                        limits<IndexType>::digits >= limits<typename T::value_type>::digits
+                        || (limits<IndexType>::digits >= limits<std::ptrdiff_t>::digits
+                            && limits<typename T::value_type>::digits >= limits<std::ptrdiff_t>::digits));
         }
 
         template <typename T, unsigned... I>
@@ -86,16 +86,16 @@ class GlobalIndex
                 std::array<IndexType, N> strides{(I == 0 ? 1 : previous = sizes[I - 1] * previous)...};
 
                 using CheckType = std::conditional_t<is_signed<typename T::value_type>, __int128, unsigned __int128>;
-                if (static_cast<CheckType>(strides[N - 1]) * static_cast<CheckType>(sizes[N - 1]) !=
-                    multiply_all<CheckType>(sizes))
+                if (static_cast<CheckType>(strides[N - 1]) * static_cast<CheckType>(sizes[N - 1])
+                    != multiply_all<CheckType>(sizes))
                 {
                         error("Error computing global index strides");
                 }
 
                 if (!((I == 0 ? true
-                              : ((strides[I] > strides[I - 1] && sizes[I - 1] > 1) ||
-                                 (strides[I] == strides[I - 1] && sizes[I - 1] == 1))) &&
-                      ...))
+                              : ((strides[I] > strides[I - 1] && sizes[I - 1] > 1)
+                                 || (strides[I] == strides[I - 1] && sizes[I - 1] == 1)))
+                      && ...))
                 {
                         error("Error computing global index strides");
                 }

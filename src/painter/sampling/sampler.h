@@ -34,8 +34,8 @@ class StratifiedJitteredSampler
         {
                 if (sample_count < 1)
                 {
-                        error("Stratified jittered sample count (" + to_string(sample_count) +
-                              ") is not a positive integer");
+                        error("Stratified jittered sample count (" + to_string(sample_count)
+                              + ") is not a positive integer");
                 }
 
                 double v = std::pow(sample_count, 1.0 / N);
@@ -50,8 +50,8 @@ class StratifiedJitteredSampler
                         return v_ceil;
                 }
 
-                error("Could not compute one dimension sample count for " + to_string(sample_count) + " samples in " +
-                      space_name(N));
+                error("Could not compute one dimension sample count for " + to_string(sample_count) + " samples in "
+                      + space_name(N));
         }
 
 public:

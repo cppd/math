@@ -52,8 +52,8 @@ bool VolumeObjectParameters::show(
         }
         if (!(1 <= min_image_size && min_image_size <= default_image_size && default_image_size <= max_image_size))
         {
-                error("Error image size parameters: min = " + to_string(min_image_size) +
-                      ", max = " + to_string(max_image_size) + ", default = " + to_string(default_image_size));
+                error("Error image size parameters: min = " + to_string(min_image_size)
+                      + ", max = " + to_string(max_image_size) + ", default = " + to_string(default_image_size));
         }
 
         m_min_image_size = min_image_size;
@@ -88,8 +88,8 @@ void VolumeObjectParameters::done(int r)
         m_image_size = ui.spinBox_image_size->value();
         if (!(m_image_size >= m_min_image_size && m_image_size <= m_max_image_size))
         {
-                std::string msg = "Error image size. It must be in the range [" + to_string(m_min_image_size) + ", " +
-                                  to_string(m_max_image_size) + "].";
+                std::string msg = "Error image size. It must be in the range [" + to_string(m_min_image_size) + ", "
+                                  + to_string(m_max_image_size) + "].";
                 dialog::message_critical(this, msg);
                 return;
         }

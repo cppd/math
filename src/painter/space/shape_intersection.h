@@ -200,10 +200,10 @@ bool shapes_intersect_by_spaces(
         constexpr size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
 
-        constexpr size_t CONSTRAINT_COUNT = std::remove_reference_t<decltype(shape_1.constraints())>().size() +
-                                            std::remove_reference_t<decltype(shape_2.constraints())>().size() +
-                                            2 * std::remove_reference_t<decltype(shape_1.constraints_eq())>().size() +
-                                            2 * std::remove_reference_t<decltype(shape_2.constraints_eq())>().size();
+        constexpr size_t CONSTRAINT_COUNT = std::remove_reference_t<decltype(shape_1.constraints())>().size()
+                                            + std::remove_reference_t<decltype(shape_2.constraints())>().size()
+                                            + 2 * std::remove_reference_t<decltype(shape_1.constraints_eq())>().size()
+                                            + 2 * std::remove_reference_t<decltype(shape_2.constraints_eq())>().size();
 
         const Vector<N, T> min = min_vector(shape_1.min(), shape_2.min());
 
@@ -354,9 +354,9 @@ bool shape_intersection(
 
         constexpr size_t N = Shape1::SPACE_DIMENSION;
 
-        ASSERT(((N > Shape1::SHAPE_DIMENSION || N > Shape2::SHAPE_DIMENSION) &&
-                distance_from_flat_shapes_in_epsilons > 0) ||
-               (N == Shape1::SHAPE_DIMENSION && N == Shape2::SHAPE_DIMENSION));
+        ASSERT(((N > Shape1::SHAPE_DIMENSION || N > Shape2::SHAPE_DIMENSION)
+                && distance_from_flat_shapes_in_epsilons > 0)
+               || (N == Shape1::SHAPE_DIMENSION && N == Shape2::SHAPE_DIMENSION));
 
         if (impl::shapes_intersect_by_vertices(shape_1, shape_2))
         {

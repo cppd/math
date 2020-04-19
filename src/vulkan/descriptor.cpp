@@ -66,13 +66,13 @@ VkWriteDescriptorSet create_write_descriptor_set(
         write.descriptorCount = descriptor_set_layout_binding.descriptorCount;
 
         auto buffer = [&](const VkDescriptorBufferInfo& info) {
-                ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ||
-                       descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+                ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+                       || descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
                 write.pBufferInfo = &info;
         };
         auto image = [&](const VkDescriptorImageInfo& info) {
-                ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
-                       descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+                ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+                       || descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
                 write.pImageInfo = &info;
         };
         std::visit(Visitors{buffer, image}, descriptor_info);
@@ -89,8 +89,8 @@ std::unordered_map<uint32_t, uint32_t> create_binding_map(const std::vector<VkDe
         {
                 if (!map.emplace(bindings[index].binding, index).second)
                 {
-                        error("Multiple binding " + to_string(bindings[index].binding) +
-                              " in descriptor set layout bindings");
+                        error("Multiple binding " + to_string(bindings[index].binding)
+                              + " in descriptor set layout bindings");
                 }
         }
         return map;

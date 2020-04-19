@@ -138,8 +138,8 @@ public:
                 {
                         if (screen_size[i] < 1)
                         {
-                                error("Paintbrush size " + to_string(i) + " is not positive (" +
-                                      to_string(screen_size[i]) + ")");
+                                error("Paintbrush size " + to_string(i) + " is not positive ("
+                                      + to_string(screen_size[i]) + ")");
                         }
                 }
                 if (paint_height < 1)

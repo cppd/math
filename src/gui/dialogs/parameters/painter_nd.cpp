@@ -58,13 +58,13 @@ bool PainterParametersForNd::show(
         }
         if (!(1 <= min_screen_size && min_screen_size <= default_screen_size && default_screen_size <= max_screen_size))
         {
-                error("Error screen size parameters: min = " + to_string(min_screen_size) +
-                      ", max = " + to_string(max_screen_size) + ", default = " + to_string(default_screen_size));
+                error("Error screen size parameters: min = " + to_string(min_screen_size)
+                      + ", max = " + to_string(max_screen_size) + ", default = " + to_string(default_screen_size));
         }
         if (!(1 <= default_samples_per_pixel && default_samples_per_pixel <= max_samples_per_pixel))
         {
-                error("Error samples per pixel parameters: max = " + to_string(max_samples_per_pixel) +
-                      ", default = " + to_string(default_samples_per_pixel));
+                error("Error samples per pixel parameters: max = " + to_string(max_samples_per_pixel)
+                      + ", default = " + to_string(default_samples_per_pixel));
         }
 
         m_max_thread_count = max_thread_count;
@@ -144,8 +144,8 @@ void PainterParametersForNd::done(int r)
         m_samples_per_pixel = ui.spinBox_samples_per_pixel->value();
         if (!(m_samples_per_pixel >= 1 && m_samples_per_pixel <= m_max_samples_per_pixel))
         {
-                std::string msg = "Error samples per pixel. Must be in the range [1, " +
-                                  to_string(m_max_samples_per_pixel) + "].";
+                std::string msg = "Error samples per pixel. Must be in the range [1, "
+                                  + to_string(m_max_samples_per_pixel) + "].";
                 dialog::message_critical(this, msg);
                 return;
         }
@@ -153,8 +153,8 @@ void PainterParametersForNd::done(int r)
         m_min_size = ui.spinBox_min_size->value();
         if (!(m_min_size >= m_min_screen_size && m_min_size <= m_max_screen_size))
         {
-                std::string msg = "Error min size. Must be in the range [" + to_string(m_min_screen_size) + ", " +
-                                  to_string(m_max_screen_size) + "].";
+                std::string msg = "Error min size. Must be in the range [" + to_string(m_min_screen_size) + ", "
+                                  + to_string(m_max_screen_size) + "].";
                 dialog::message_critical(this, msg);
                 return;
         }
@@ -162,8 +162,8 @@ void PainterParametersForNd::done(int r)
         m_max_size = ui.spinBox_max_size->value();
         if (!(m_max_size >= m_min_screen_size && m_max_size <= m_max_screen_size))
         {
-                std::string msg = "Error max size. Must be in the range [" + to_string(m_min_screen_size) + ", " +
-                                  to_string(m_max_screen_size) + "].";
+                std::string msg = "Error max size. Must be in the range [" + to_string(m_min_screen_size) + ", "
+                                  + to_string(m_max_screen_size) + "].";
                 dialog::message_critical(this, msg);
                 return;
         }

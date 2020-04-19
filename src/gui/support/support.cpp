@@ -139,8 +139,8 @@ void add_to_text_edit_and_to_stderr(
                         write_formatted_log_messages_to_stderr(lines);
 
                         bool bottom =
-                                text_edit->verticalScrollBar()->value() == text_edit->verticalScrollBar()->maximum() ||
-                                text_edit->verticalScrollBar()->maximum() == 0;
+                                text_edit->verticalScrollBar()->value() == text_edit->verticalScrollBar()->maximum()
+                                || text_edit->verticalScrollBar()->maximum() == 0;
 
                         if (bottom)
                         {

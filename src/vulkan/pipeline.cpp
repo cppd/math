@@ -154,8 +154,8 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
         // multisampling_state_info.alphaToOneEnable = VK_FALSE;
 
         VkPipelineColorBlendAttachmentState color_blend_attachment_state = {};
-        color_blend_attachment_state.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-                                                      VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        color_blend_attachment_state.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
+                                                      | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         if (!info.color_blend.value())
         {
                 color_blend_attachment_state.blendEnable = VK_FALSE;
@@ -243,8 +243,8 @@ Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
         ASSERT(!info.constants.has_value() || info.constants.value()->data() != nullptr);
         ASSERT(!info.constants.has_value() || !info.constants.value()->entries().empty());
 
-        ASSERT(!info.constants.has_value() ||
-               std::all_of(
+        ASSERT(!info.constants.has_value()
+               || std::all_of(
                        info.constants.value()->entries().cbegin(), info.constants.value()->entries().cend(),
                        [&](const VkSpecializationMapEntry& entry) {
                                return entry.offset + entry.size <= info.constants.value()->size();

@@ -37,8 +37,8 @@ template <size_t... I>
         const std::array<int, sizeof...(I)>& size,
         std::integer_sequence<size_t, I...>&&)
 {
-        return ((offset[I] >= 0) && ...) && ((copy_size[I] >= 0) && ...) && ((size[I] >= 0) && ...) &&
-               ((offset[I] + copy_size[I] <= size[I]) && ...);
+        return ((offset[I] >= 0) && ...) && ((copy_size[I] >= 0) && ...) && ((size[I] >= 0) && ...)
+               && ((offset[I] + copy_size[I] <= size[I]) && ...);
 }
 
 template <size_t N>
@@ -63,10 +63,10 @@ void copy_image(
         const std::array<int, 2>& copy_size)
 {
         ASSERT(dst);
-        ASSERT(src.size() ==
-               std::accumulate(src_size.begin(), src_size.end(), 1ull, std::multiplies<unsigned long long>()));
-        ASSERT(dst->size() ==
-               std::accumulate(dst_size.begin(), dst_size.end(), 1ull, std::multiplies<unsigned long long>()));
+        ASSERT(src.size()
+               == std::accumulate(src_size.begin(), src_size.end(), 1ull, std::multiplies<unsigned long long>()));
+        ASSERT(dst->size()
+               == std::accumulate(dst_size.begin(), dst_size.end(), 1ull, std::multiplies<unsigned long long>()));
         ASSERT(check(src_offset, copy_size, src_size));
         ASSERT(check(dst_offset, copy_size, dst_size));
 

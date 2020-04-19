@@ -207,9 +207,9 @@ void write_facets(const CFile& file, const Mesh<N>& mesh)
 
                         // Если перпендикуляр в противоположном направлении со всеми
                         // векторами вершин, то меняется порядок вершин.
-                        if (dot(to_vector<double>(mesh.normals[n[0]]), normal) < 0 &&
-                            dot(to_vector<double>(mesh.normals[n[1]]), normal) < 0 &&
-                            dot(to_vector<double>(mesh.normals[n[2]]), normal) < 0)
+                        if (dot(to_vector<double>(mesh.normals[n[0]]), normal) < 0
+                            && dot(to_vector<double>(mesh.normals[n[1]]), normal) < 0
+                            && dot(to_vector<double>(mesh.normals[n[2]]), normal) < 0)
                         {
                                 std::swap(v[1], v[2]);
                                 std::swap(n[1], n[2]);
@@ -270,8 +270,8 @@ void check_facets_and_lines(const Mesh<N>& mesh)
         }
         if (!facet_indices.empty() && facet_indices.size() < N)
         {
-                error("Facet unique indices count " + to_string(facet_indices.size()) + " is less than " +
-                      to_string(N));
+                error("Facet unique indices count " + to_string(facet_indices.size()) + " is less than "
+                      + to_string(N));
         }
         if (!line_indices.empty() && line_indices.size() < 2)
         {

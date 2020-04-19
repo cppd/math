@@ -95,8 +95,8 @@ namespace integral_to_string_implementation
 template <unsigned digit_group_size, typename T>
 void f(T v, int i, std::string& r, [[maybe_unused]] char s)
 {
-        constexpr bool longlong_less_i128 = limits<long long>::max() < limits<__int128>::max() &&
-                                            limits<long long>::lowest() > limits<__int128>::lowest();
+        constexpr bool longlong_less_i128 = limits<long long>::max() < limits<__int128>::max()
+                                            && limits<long long>::lowest() > limits<__int128>::lowest();
 
         constexpr bool ulonglong_less_ui128 = limits<unsigned long long>::max() < limits<unsigned __int128>::max();
 

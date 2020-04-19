@@ -115,8 +115,8 @@ void test_complement(int count)
 {
         ASSERT(count > 0);
 
-        LOG("Test complement in " + space_name(N) + ", " + to_string_digit_groups(count) + " " + type_name<T>() + ": " +
-            (GramSchmidt ? "Gram-Schmidt" : "Subspace"));
+        LOG("Test complement in " + space_name(N) + ", " + to_string_digit_groups(count) + " " + type_name<T>() + ": "
+            + (GramSchmidt ? "Gram-Schmidt" : "Subspace"));
 
         std::vector<Vector<N, T>> vectors = random_vectors<N, T>(count);
 

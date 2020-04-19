@@ -219,8 +219,8 @@ vulkan::Descriptors RendererTrianglesMaterialMemory::create(
 {
         ASSERT(!materials.empty());
         ASSERT(std::all_of(materials.cbegin(), materials.cend(), [](const MaterialInfo& m) {
-                return m.buffer != VK_NULL_HANDLE && m.buffer_size > 0 && m.texture_Ka != VK_NULL_HANDLE &&
-                       m.texture_Kd != VK_NULL_HANDLE && m.texture_Ks != VK_NULL_HANDLE;
+                return m.buffer != VK_NULL_HANDLE && m.buffer_size > 0 && m.texture_Ka != VK_NULL_HANDLE
+                       && m.texture_Kd != VK_NULL_HANDLE && m.texture_Ks != VK_NULL_HANDLE;
         }));
 
         vulkan::Descriptors descriptors(

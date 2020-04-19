@@ -141,8 +141,9 @@ int string_to_floats(const char** str, T*... floats)
 
         static_assert(N > 0);
         static_assert(((
-                std::is_same_v<std::remove_volatile_t<T>, float> || std::is_same_v<std::remove_volatile_t<T>, double> ||
-                std::is_same_v<std::remove_volatile_t<T>, long double>)&&...));
+                std::is_same_v<
+                        std::remove_volatile_t<T>,
+                        float> || std::is_same_v<std::remove_volatile_t<T>, double> || std::is_same_v<std::remove_volatile_t<T>, long double>)&&...));
 
         errno = 0;
         int cnt = 0;

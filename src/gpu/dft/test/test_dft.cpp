@@ -63,8 +63,8 @@ void compare(
 {
         if (x_compute.size() != x_library.size())
         {
-                error("DFT compare data size error: " + to_string(x_compute.size()) + ", " +
-                      to_string(x_library.size()));
+                error("DFT compare data size error: " + to_string(x_compute.size()) + ", "
+                      + to_string(x_library.size()));
         }
 
         double sum = 0;
@@ -373,8 +373,9 @@ void random_data_test(const std::array<int, 2>& dimensions, ProgressRatio* progr
 
         if (dimensions[0] != n1 || dimensions[1] != n2)
         {
-                error("Error test data dimensions: saved to file (" + to_string(dimensions[0]) + ", " +
-                      to_string(dimensions[1]) + "), loaded from file (" + to_string(n1) + ", " + to_string(n2) + ")");
+                error("Error test data dimensions: saved to file (" + to_string(dimensions[0]) + ", "
+                      + to_string(dimensions[1]) + "), loaded from file (" + to_string(n1) + ", " + to_string(n2)
+                      + ")");
         }
 
         dft_test(

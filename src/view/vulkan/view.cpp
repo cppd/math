@@ -228,16 +228,16 @@ class Impl final : public View
                 bool changed = false;
 
                 const PressedMouseButton& right = pressed_mouse_button(command::MouseButton::Right);
-                if (right.pressed && m_draw_rectangle.is_inside(right.pressed_x, right.pressed_y) &&
-                    (right.delta_x != 0 || right.delta_y != 0))
+                if (right.pressed && m_draw_rectangle.is_inside(right.pressed_x, right.pressed_y)
+                    && (right.delta_x != 0 || right.delta_y != 0))
                 {
                         m_camera.rotate(-right.delta_x, -right.delta_y);
                         changed = true;
                 }
 
                 const PressedMouseButton& left = pressed_mouse_button(command::MouseButton::Left);
-                if (left.pressed && m_draw_rectangle.is_inside(left.pressed_x, left.pressed_y) &&
-                    (left.delta_x != 0 || left.delta_y != 0))
+                if (left.pressed && m_draw_rectangle.is_inside(left.pressed_x, left.pressed_y)
+                    && (left.delta_x != 0 || left.delta_y != 0))
                 {
                         m_camera.move(vec2(-left.delta_x, left.delta_y));
                         changed = true;
@@ -751,11 +751,11 @@ public:
                                 surface_function);
                 }
 
-                ASSERT(m_instance->graphics_compute_command_pool().family_index() ==
-                       m_instance->graphics_compute_queues()[0].family_index());
+                ASSERT(m_instance->graphics_compute_command_pool().family_index()
+                       == m_instance->graphics_compute_queues()[0].family_index());
                 ASSERT(m_instance->compute_command_pool().family_index() == m_instance->compute_queue().family_index());
-                ASSERT(m_instance->transfer_command_pool().family_index() ==
-                       m_instance->transfer_queue().family_index());
+                ASSERT(m_instance->transfer_command_pool().family_index()
+                       == m_instance->transfer_queue().family_index());
 
                 m_image_semaphore = std::make_unique<vulkan::Semaphore>(m_instance->device());
                 m_resolve_semaphore = std::make_unique<vulkan::Semaphore>(m_instance->device());

@@ -165,8 +165,8 @@ void cocone(
 
                 cocone_mesh = mesh::create_mesh_for_facets(points, normals, facets);
 
-                LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) +
-                    " s");
+                LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5)
+                    + " s");
         }
         if (cocone_mesh->facets.empty())
         {
@@ -203,8 +203,8 @@ void bound_cocone(
 
                 bound_cocone_mesh = mesh::create_mesh_for_facets(points, normals, facets);
 
-                LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) +
-                    " s");
+                LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5)
+                    + " s");
         }
         if (bound_cocone_mesh->facets.empty())
         {
@@ -284,8 +284,8 @@ void manifold_constructor(
                 manifold_constructor_ptr = geometry::create_manifold_constructor(points, &progress);
                 storage->set_manifold_constructor(object.id(), manifold_constructor_ptr);
 
-                LOG("Manifold reconstruction first phase, " + to_string_fixed(time_in_seconds() - start_time, 5) +
-                    " s");
+                LOG("Manifold reconstruction first phase, " + to_string_fixed(time_in_seconds() - start_time, 5)
+                    + " s");
         }
 
         ThreadsWithCatch threads(3);

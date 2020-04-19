@@ -62,9 +62,10 @@ public:
         }
 
         Color(const Srgb8& c)
-                : m_data(color_conversion::srgb_uint8_to_rgb_float<T>(c.red),
-                         color_conversion::srgb_uint8_to_rgb_float<T>(c.green),
-                         color_conversion::srgb_uint8_to_rgb_float<T>(c.blue))
+                : m_data(
+                        color_conversion::srgb_uint8_to_rgb_float<T>(c.red),
+                        color_conversion::srgb_uint8_to_rgb_float<T>(c.green),
+                        color_conversion::srgb_uint8_to_rgb_float<T>(c.blue))
         {
         }
 
