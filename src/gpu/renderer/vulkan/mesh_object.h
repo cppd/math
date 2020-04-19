@@ -68,14 +68,7 @@ public:
 
         void commands_plain_triangles(VkCommandBuffer buffer) const;
 
-        struct InfoTriangleVertices final
-        {
-                VkPipelineLayout pipeline_layout;
-                VkPipeline pipeline;
-                VkDescriptorSet descriptor_set;
-                uint32_t descriptor_set_number;
-        };
-        void commands_triangle_vertices(VkCommandBuffer buffer, const InfoTriangleVertices& info) const;
+        void commands_triangle_vertices(VkCommandBuffer buffer) const;
 
         //
 

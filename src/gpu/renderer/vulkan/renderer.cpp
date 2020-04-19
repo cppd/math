@@ -654,12 +654,14 @@ class Impl final : public Renderer
 
                 if (!depth && m_show_normals)
                 {
-                        MeshObject::InfoTriangleVertices info;
-                        info.pipeline_layout = m_normals_program.pipeline_layout();
-                        info.pipeline = *m_render_normals_pipeline;
-                        info.descriptor_set = m_normals_memory.descriptor_set();
-                        info.descriptor_set_number = RendererNormalsMemory::set_number();
-                        mesh->commands_triangle_vertices(command_buffer, info);
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_render_normals_pipeline);
+
+                        vkCmdBindDescriptorSets(
+                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_normals_program.pipeline_layout(),
+                                RendererNormalsMemory::set_number(), 1 /*set count*/,
+                                &m_normals_memory.descriptor_set(), 0, nullptr);
+
+                        mesh->commands_triangle_vertices(command_buffer);
                 }
         }
 
