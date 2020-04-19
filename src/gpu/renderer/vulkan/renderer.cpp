@@ -633,12 +633,14 @@ class Impl final : public Renderer
 
                 if (!depth)
                 {
-                        MeshObject::InfoPoints info;
-                        info.pipeline_layout = m_points_program.pipeline_layout();
-                        info.pipeline = *m_render_points_pipeline;
-                        info.descriptor_set = m_points_memory.descriptor_set();
-                        info.descriptor_set_number = RendererPointsMemory::set_number();
-                        mesh->commands_points(command_buffer, info);
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_render_points_pipeline);
+
+                        vkCmdBindDescriptorSets(
+                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_program.pipeline_layout(),
+                                RendererPointsMemory::set_number(), 1 /*set count*/, &m_points_memory.descriptor_set(),
+                                0, nullptr);
+
+                        mesh->commands_points(command_buffer);
                 }
 
                 if (!depth && m_clip_plane)

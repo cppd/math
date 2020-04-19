@@ -70,19 +70,8 @@ public:
 
         void commands_triangle_vertices(VkCommandBuffer buffer) const;
 
-        //
-
         void commands_lines(VkCommandBuffer buffer) const;
 
-        //
-
-        struct InfoPoints
-        {
-                VkPipelineLayout pipeline_layout;
-                VkPipeline pipeline;
-                VkDescriptorSet descriptor_set;
-                uint32_t descriptor_set_number;
-        };
-        void commands_points(VkCommandBuffer buffer, const InfoPoints& info) const;
+        void commands_points(VkCommandBuffer buffer) const;
 };
 }
