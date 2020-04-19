@@ -72,14 +72,7 @@ public:
 
         //
 
-        struct InfoLines
-        {
-                VkPipelineLayout pipeline_layout;
-                VkPipeline pipeline;
-                VkDescriptorSet descriptor_set;
-                uint32_t descriptor_set_number;
-        };
-        void commands_lines(VkCommandBuffer buffer, const InfoLines& info) const;
+        void commands_lines(VkCommandBuffer buffer) const;
 
         //
 

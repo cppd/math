@@ -581,14 +581,8 @@ public:
                 m_offsets = {0};
         }
 
-        void draw_commands(VkCommandBuffer command_buffer, const InfoLines& info) const
+        void draw_commands(VkCommandBuffer command_buffer) const
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline);
-
-                vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline_layout,
-                        info.descriptor_set_number, 1 /*set count*/, &info.descriptor_set, 0, nullptr);
-
                 vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
 
                 vkCmdDraw(command_buffer, m_vertex_count, 1, 0, 0);
@@ -710,11 +704,11 @@ void MeshObject::commands_triangle_vertices(VkCommandBuffer buffer) const
         }
 }
 
-void MeshObject::commands_lines(VkCommandBuffer buffer, const InfoLines& info) const
+void MeshObject::commands_lines(VkCommandBuffer buffer) const
 {
         if (m_lines)
         {
-                m_lines->draw_commands(buffer, info);
+                m_lines->draw_commands(buffer);
         }
 }
 
