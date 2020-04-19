@@ -20,8 +20,6 @@ AlwaysBreakBeforeMultilineStrings: true
 AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: true
 BinPackParameters: false
-BreakBeforeBinaryOperators: None
-BreakBeforeBraces: Custom
 BraceWrapping:
         AfterCaseLabel: true
         AfterClass: true
@@ -38,7 +36,8 @@ BraceWrapping:
         SplitEmptyFunction: true
         SplitEmptyRecord: true
         SplitEmptyNamespace: true
-BreakBeforeBinaryOperators: None
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeBraces: Custom
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: BeforeColon
