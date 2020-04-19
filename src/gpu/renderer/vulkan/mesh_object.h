@@ -52,10 +52,8 @@ public:
                 const mesh::Mesh<3>& mesh,
                 const mat4& model_matrix);
 
-        void add_material_layout(
-                const std::function<vulkan::Descriptors(const std::vector<MaterialInfo>& materials)>&
-                        create_descriptor_sets,
-                uint32_t descriptor_set_number);
+        void create_descriptor_sets(
+                const std::function<vulkan::Descriptors(const std::vector<MaterialInfo>& materials)>& create);
 
         ~MeshObject();
 
@@ -63,15 +61,10 @@ public:
 
         //
 
-        struct InfoTriangles
-        {
-                VkPipelineLayout pipeline_layout;
-                VkPipeline pipeline;
-                VkDescriptorSet descriptor_set;
-                uint32_t descriptor_set_number;
-                VkDescriptorSetLayout material_descriptor_set_layout;
-        };
-        void commands_triangles(VkCommandBuffer buffer, const InfoTriangles& info) const;
+        void commands_triangles(
+                VkCommandBuffer buffer,
+                VkDescriptorSetLayout material_descriptor_set_layout,
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set) const;
 
         struct InfoPlainTriangles final
         {

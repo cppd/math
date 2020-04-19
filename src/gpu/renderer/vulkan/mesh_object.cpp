@@ -435,12 +435,7 @@ class MeshObject::Triangles final
         unsigned m_vertex_count = 0;
         unsigned m_index_count = 0;
 
-        struct MaterialLayout
-        {
-                std::unique_ptr<vulkan::Descriptors> descriptor_sets;
-                uint32_t descriptor_set_number;
-        };
-        std::unordered_map<VkDescriptorSetLayout, MaterialLayout> m_layouts;
+        std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_material_descriptor_sets;
 
 public:
         Triangles(
@@ -484,42 +479,45 @@ public:
                 }
         }
 
-        void add_material_layout(
-                const std::function<vulkan::Descriptors(const std::vector<MaterialInfo>& materials)>&
-                        create_descriptor_sets,
-                uint32_t descriptor_set_number)
+        void create_descriptor_sets(
+                const std::function<vulkan::Descriptors(const std::vector<MaterialInfo>& materials)>& create)
         {
-                MaterialLayout layout;
-                layout.descriptor_sets = std::make_unique<vulkan::Descriptors>(create_descriptor_sets(m_material_info));
-                layout.descriptor_set_number = descriptor_set_number;
+                vulkan::Descriptors descriptor_sets = create(m_material_info);
 
-                ASSERT(layout.descriptor_sets->descriptor_set_count() == m_material_vertex_count.size());
-                ASSERT(layout.descriptor_sets->descriptor_set_count() == m_material_vertex_offset.size());
+                ASSERT(descriptor_sets.descriptor_set_count() == m_material_vertex_count.size());
+                ASSERT(descriptor_sets.descriptor_set_count() == m_material_vertex_offset.size());
 
-                VkDescriptorSetLayout descriptor_set_layout = layout.descriptor_sets->descriptor_set_layout();
-                m_layouts.insert_or_assign(descriptor_set_layout, std::move(layout));
+                m_material_descriptor_sets.erase(descriptor_sets.descriptor_set_layout());
+                m_material_descriptor_sets.emplace(descriptor_sets.descriptor_set_layout(), std::move(descriptor_sets));
         }
 
-        void draw_commands(VkCommandBuffer command_buffer, const InfoTriangles& info) const
+        const vulkan::Descriptors& find_descriptor_sets(VkDescriptorSetLayout material_descriptor_set_layout) const
         {
-                auto iter = m_layouts.find(info.material_descriptor_set_layout);
-                if (iter == m_layouts.cend())
+                auto iter = m_material_descriptor_sets.find(material_descriptor_set_layout);
+                if (iter == m_material_descriptor_sets.cend())
                 {
-                        error("Material layout not found");
+                        error("Failed to find material descriptor sets for material descriptor set layout");
                 }
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline);
+                ASSERT(iter->second.descriptor_set_count() == m_material_vertex_count.size());
+                ASSERT(iter->second.descriptor_set_count() == m_material_vertex_offset.size());
 
-                vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline_layout,
-                        info.descriptor_set_number, 1 /*set count*/, &info.descriptor_set, 0, nullptr);
+                return iter->second;
+        }
+
+        void draw_commands(
+                VkCommandBuffer command_buffer,
+                VkDescriptorSetLayout material_descriptor_set_layout,
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set) const
+        {
+                const vulkan::Descriptors& descriptor_sets = find_descriptor_sets(material_descriptor_set_layout);
 
                 const std::array<VkBuffer, 1> buffers = {*m_vertex_buffer};
                 const std::array<VkDeviceSize, 1> offsets = {0};
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
                 vkCmdBindIndexBuffer(command_buffer, *m_index_buffer, 0, VULKAN_INDEX_TYPE);
 
-                const unsigned size = iter->second.descriptor_sets->descriptor_set_count();
+                const unsigned size = descriptor_sets.descriptor_set_count();
                 for (unsigned i = 0; i < size; ++i)
                 {
                         if (m_material_vertex_count[i] <= 0)
@@ -527,10 +525,7 @@ public:
                                 continue;
                         }
 
-                        vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline_layout,
-                                iter->second.descriptor_set_number, 1 /*set count*/,
-                                &iter->second.descriptor_sets->descriptor_set(i), 0, nullptr);
+                        bind_material_descriptor_set(descriptor_sets.descriptor_set(i));
 
                         vkCmdDrawIndexed(
                                 command_buffer, m_material_vertex_count[i], 1, m_material_vertex_offset[i], 0, 0);
@@ -684,13 +679,12 @@ MeshObject::MeshObject(
         }
 }
 
-void MeshObject::add_material_layout(
-        const std::function<vulkan::Descriptors(const std::vector<MaterialInfo>& materials)>& create_descriptor_sets,
-        uint32_t descriptor_set_number)
+void MeshObject::create_descriptor_sets(
+        const std::function<vulkan::Descriptors(const std::vector<MaterialInfo>& materials)>& create)
 {
         if (m_triangles)
         {
-                m_triangles->add_material_layout(create_descriptor_sets, descriptor_set_number);
+                m_triangles->create_descriptor_sets(create);
         }
 }
 
@@ -701,11 +695,14 @@ const mat4& MeshObject::model_matrix() const
         return m_model_matrix;
 }
 
-void MeshObject::commands_triangles(VkCommandBuffer buffer, const InfoTriangles& info) const
+void MeshObject::commands_triangles(
+        VkCommandBuffer buffer,
+        VkDescriptorSetLayout material_descriptor_set_layout,
+        const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set) const
 {
         if (m_triangles)
         {
-                m_triangles->draw_commands(buffer, info);
+                m_triangles->draw_commands(buffer, material_descriptor_set_layout, bind_material_descriptor_set);
         }
 }
 

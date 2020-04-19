@@ -148,8 +148,6 @@ class Impl final : public Renderer
         std::optional<vec4> m_clip_plane;
         bool m_show_normals = false;
 
-        VkDescriptorSetLayout m_material_descriptor_set_layout;
-
         void set_light_a(const Color& light) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
@@ -314,12 +312,11 @@ class Impl final : public Renderer
                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
                         object.mesh(), object.matrix());
 
-                draw_object->add_material_layout(
-                        [&](const std::vector<MaterialInfo>& materials) {
-                                return RendererTrianglesMaterialMemory::create(
-                                        m_device, m_texture_sampler, m_material_descriptor_set_layout, materials);
-                        },
-                        RendererTrianglesMaterialMemory::set_number());
+                draw_object->create_descriptor_sets([&](const std::vector<MaterialInfo>& materials) {
+                        return RendererTrianglesMaterialMemory::create(
+                                m_device, m_texture_sampler, m_triangles_program.descriptor_set_layout_material(),
+                                materials);
+                });
 
                 bool delete_and_create_command_buffers = (m_current_object_id == object.id());
                 if (delete_and_create_command_buffers)
@@ -589,13 +586,25 @@ class Impl final : public Renderer
 
                 if (!depth)
                 {
-                        MeshObject::InfoTriangles info;
-                        info.pipeline_layout = m_triangles_program.pipeline_layout();
-                        info.pipeline = *m_render_triangles_pipeline;
-                        info.descriptor_set = m_triangles_memory.descriptor_set();
-                        info.descriptor_set_number = RendererTrianglesMemory::set_number();
-                        info.material_descriptor_set_layout = m_material_descriptor_set_layout;
-                        mesh->commands_triangles(command_buffer, info);
+                        vkCmdBindPipeline(
+                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_render_triangles_pipeline);
+
+                        vkCmdBindDescriptorSets(
+                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_program.pipeline_layout(),
+                                RendererTrianglesMemory::set_number(), 1 /*set count*/,
+                                &m_triangles_memory.descriptor_set(), 0, nullptr);
+
+                        auto bind_material_descriptor_set = [&](VkDescriptorSet descriptor_set) {
+                                vkCmdBindDescriptorSets(
+                                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                        m_triangles_program.pipeline_layout(),
+                                        RendererTrianglesMaterialMemory::set_number(), 1 /*set count*/, &descriptor_set,
+                                        0, nullptr);
+                        };
+
+                        mesh->commands_triangles(
+                                command_buffer, m_triangles_program.descriptor_set_layout_material(),
+                                bind_material_descriptor_set);
                 }
                 else
                 {
@@ -788,9 +797,8 @@ public:
                           m_device,
                           m_points_program.descriptor_set_layout(),
                           m_buffers.matrices_buffer(),
-                          m_buffers.drawing_buffer()),
-                  //
-                  m_material_descriptor_set_layout(m_triangles_program.descriptor_set_layout_material())
+                          m_buffers.drawing_buffer())
+
         {
         }
 
