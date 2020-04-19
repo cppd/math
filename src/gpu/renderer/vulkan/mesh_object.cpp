@@ -437,6 +437,9 @@ class MeshObject::Triangles final
 
         std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_material_descriptor_sets;
 
+        std::array<VkBuffer, 1> m_buffers;
+        std::array<VkDeviceSize, 1> m_offsets;
+
 public:
         Triangles(
                 const vulkan::Device& device,
@@ -477,6 +480,9 @@ public:
                         m_material_vertex_offset[i] = 3 * material_face_offset[i];
                         m_material_vertex_count[i] = 3 * material_face_count[i];
                 }
+
+                m_buffers[0] = *m_vertex_buffer;
+                m_offsets[0] = 0;
         }
 
         void create_descriptor_sets(
@@ -512,13 +518,10 @@ public:
         {
                 const vulkan::Descriptors& descriptor_sets = find_descriptor_sets(material_descriptor_set_layout);
 
-                const std::array<VkBuffer, 1> buffers = {*m_vertex_buffer};
-                const std::array<VkDeviceSize, 1> offsets = {0};
-                vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
+                vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
                 vkCmdBindIndexBuffer(command_buffer, *m_index_buffer, 0, VULKAN_INDEX_TYPE);
 
-                const unsigned size = descriptor_sets.descriptor_set_count();
-                for (unsigned i = 0; i < size; ++i)
+                for (unsigned i = 0; i < m_material_vertex_count.size(); ++i)
                 {
                         if (m_material_vertex_count[i] <= 0)
                         {
@@ -534,9 +537,7 @@ public:
 
         void draw_commands_plain(VkCommandBuffer command_buffer) const
         {
-                const std::array<VkBuffer, 1> buffers = {*m_vertex_buffer};
-                const std::array<VkDeviceSize, 1> offsets = {0};
-                vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
+                vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
                 vkCmdBindIndexBuffer(command_buffer, *m_index_buffer, 0, VULKAN_INDEX_TYPE);
 
                 vkCmdDrawIndexed(command_buffer, m_index_count, 1, 0, 0, 0);
@@ -544,9 +545,7 @@ public:
 
         void draw_commands_vertices(VkCommandBuffer command_buffer) const
         {
-                const std::array<VkBuffer, 1> buffers = {*m_vertex_buffer};
-                const std::array<VkDeviceSize, 1> offsets = {0};
-                vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
+                vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
 
                 vkCmdDraw(command_buffer, m_vertex_count, 1, 0, 0);
         }
@@ -556,8 +555,6 @@ class MeshObject::Lines final
 {
         std::unique_ptr<vulkan::BufferWithMemory> m_vertex_buffer;
         unsigned m_vertex_count;
-
-        //
 
         std::array<VkBuffer, 1> m_buffers;
         std::array<VkDeviceSize, 1> m_offsets;
@@ -577,8 +574,8 @@ public:
                         {graphics_queue.family_index(), transfer_queue.family_index()}, mesh);
                 m_vertex_count = 2 * mesh.lines.size();
 
-                m_buffers = {*m_vertex_buffer};
-                m_offsets = {0};
+                m_buffers[0] = *m_vertex_buffer;
+                m_offsets[0] = 0;
         }
 
         void draw_commands(VkCommandBuffer command_buffer) const
@@ -593,8 +590,6 @@ class MeshObject::Points final
 {
         std::unique_ptr<vulkan::BufferWithMemory> m_vertex_buffer;
         unsigned m_vertex_count;
-
-        //
 
         std::array<VkBuffer, 1> m_buffers;
         std::array<VkDeviceSize, 1> m_offsets;
@@ -614,8 +609,8 @@ public:
                         {graphics_queue.family_index(), transfer_queue.family_index()}, mesh);
                 m_vertex_count = mesh.points.size();
 
-                m_buffers = {*m_vertex_buffer};
-                m_offsets = {0};
+                m_buffers[0] = *m_vertex_buffer;
+                m_offsets[0] = 0;
         }
 
         void draw_commands(VkCommandBuffer command_buffer) const
