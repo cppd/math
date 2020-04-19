@@ -532,14 +532,8 @@ public:
                 }
         }
 
-        void draw_commands_plain_triangles(VkCommandBuffer command_buffer, const InfoPlainTriangles& info) const
+        void draw_commands_plain(VkCommandBuffer command_buffer) const
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline);
-
-                vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline_layout,
-                        info.descriptor_set_number, 1 /*set count*/, &info.descriptor_set, 0, nullptr);
-
                 const std::array<VkBuffer, 1> buffers = {*m_vertex_buffer};
                 const std::array<VkDeviceSize, 1> offsets = {0};
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
@@ -706,11 +700,11 @@ void MeshObject::commands_triangles(
         }
 }
 
-void MeshObject::commands_plain_triangles(VkCommandBuffer buffer, const InfoPlainTriangles& info) const
+void MeshObject::commands_plain_triangles(VkCommandBuffer buffer) const
 {
         if (m_triangles)
         {
-                m_triangles->draw_commands_plain_triangles(buffer, info);
+                m_triangles->draw_commands_plain(buffer);
         }
 }
 

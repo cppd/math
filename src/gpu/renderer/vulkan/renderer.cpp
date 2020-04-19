@@ -608,12 +608,15 @@ class Impl final : public Renderer
                 }
                 else
                 {
-                        MeshObject::InfoPlainTriangles info;
-                        info.pipeline_layout = m_triangles_depth_program.pipeline_layout();
-                        info.pipeline = *m_render_triangles_depth_pipeline;
-                        info.descriptor_set = m_triangles_depth_memory.descriptor_set();
-                        info.descriptor_set_number = RendererTrianglesDepthMemory::set_number();
-                        mesh->commands_plain_triangles(command_buffer, info);
+                        vkCmdBindPipeline(
+                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_render_triangles_depth_pipeline);
+
+                        vkCmdBindDescriptorSets(
+                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                m_triangles_depth_program.pipeline_layout(), RendererTrianglesDepthMemory::set_number(),
+                                1 /*set count*/, &m_triangles_depth_memory.descriptor_set(), 0, nullptr);
+
+                        mesh->commands_plain_triangles(command_buffer);
                 }
 
                 if (!depth)
@@ -638,12 +641,15 @@ class Impl final : public Renderer
 
                 if (!depth && m_clip_plane)
                 {
-                        MeshObject::InfoPlainTriangles info;
-                        info.pipeline_layout = m_triangle_lines_program.pipeline_layout();
-                        info.pipeline = *m_render_triangle_lines_pipeline;
-                        info.descriptor_set = m_triangle_lines_memory.descriptor_set();
-                        info.descriptor_set_number = RendererTriangleLinesMemory::set_number();
-                        mesh->commands_plain_triangles(command_buffer, info);
+                        vkCmdBindPipeline(
+                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_render_triangle_lines_pipeline);
+
+                        vkCmdBindDescriptorSets(
+                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                m_triangle_lines_program.pipeline_layout(), RendererTriangleLinesMemory::set_number(),
+                                1 /*set count*/, &m_triangle_lines_memory.descriptor_set(), 0, nullptr);
+
+                        mesh->commands_plain_triangles(command_buffer);
                 }
 
                 if (!depth && m_show_normals)

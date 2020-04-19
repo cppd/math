@@ -66,14 +66,7 @@ public:
                 VkDescriptorSetLayout material_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set) const;
 
-        struct InfoPlainTriangles final
-        {
-                VkPipelineLayout pipeline_layout;
-                VkPipeline pipeline;
-                VkDescriptorSet descriptor_set;
-                uint32_t descriptor_set_number;
-        };
-        void commands_plain_triangles(VkCommandBuffer buffer, const InfoPlainTriangles& info) const;
+        void commands_plain_triangles(VkCommandBuffer buffer) const;
 
         struct InfoTriangleVertices final
         {
