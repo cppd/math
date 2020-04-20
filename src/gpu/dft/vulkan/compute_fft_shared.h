@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::dft
 {
-class DftFftSharedMemory final
+class FftSharedMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -39,14 +39,14 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        DftFftSharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        FftSharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        DftFftSharedMemory(const DftFftSharedMemory&) = delete;
-        DftFftSharedMemory& operator=(const DftFftSharedMemory&) = delete;
-        DftFftSharedMemory& operator=(DftFftSharedMemory&&) = delete;
+        FftSharedMemory(const FftSharedMemory&) = delete;
+        FftSharedMemory& operator=(const FftSharedMemory&) = delete;
+        FftSharedMemory& operator=(FftSharedMemory&&) = delete;
 
-        DftFftSharedMemory(DftFftSharedMemory&&) = default;
-        ~DftFftSharedMemory() = default;
+        FftSharedMemory(FftSharedMemory&&) = default;
+        ~FftSharedMemory() = default;
 
         //
 
@@ -57,7 +57,7 @@ public:
         void set_buffer(const vulkan::BufferWithMemory& buffer) const;
 };
 
-class DftFftSharedConstant final : public vulkan::SpecializationConstant
+class FftSharedConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -78,7 +78,7 @@ class DftFftSharedConstant final : public vulkan::SpecializationConstant
         size_t size() const override;
 
 public:
-        DftFftSharedConstant();
+        FftSharedConstant();
 
         void set(
                 bool inverse,
@@ -91,26 +91,26 @@ public:
                 uint32_t group_size);
 };
 
-class DftFftSharedProgram final
+class FftSharedProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        DftFftSharedConstant m_constant;
+        FftSharedConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::Pipeline m_pipeline_forward;
         vulkan::Pipeline m_pipeline_inverse;
 
 public:
-        explicit DftFftSharedProgram(const vulkan::Device& device);
+        explicit FftSharedProgram(const vulkan::Device& device);
 
-        DftFftSharedProgram(const DftFftSharedProgram&) = delete;
-        DftFftSharedProgram& operator=(const DftFftSharedProgram&) = delete;
-        DftFftSharedProgram& operator=(DftFftSharedProgram&&) = delete;
+        FftSharedProgram(const FftSharedProgram&) = delete;
+        FftSharedProgram& operator=(const FftSharedProgram&) = delete;
+        FftSharedProgram& operator=(FftSharedProgram&&) = delete;
 
-        DftFftSharedProgram(DftFftSharedProgram&&) = default;
-        ~DftFftSharedProgram() = default;
+        FftSharedProgram(FftSharedProgram&&) = default;
+        ~FftSharedProgram() = default;
 
         void create_pipelines(
                 uint32_t data_size,

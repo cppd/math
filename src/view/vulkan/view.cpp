@@ -138,7 +138,7 @@ class Impl final : public View
         std::unique_ptr<gpu::text_writer::View> m_text;
         std::unique_ptr<gpu::convex_hull::View> m_convex_hull;
         std::unique_ptr<gpu::PencilSketchView> m_pencil_sketch;
-        std::unique_ptr<gpu::DftView> m_dft;
+        std::unique_ptr<gpu::dft::View> m_dft;
         std::unique_ptr<gpu::OpticalFlowView> m_optical_flow;
 
         //
@@ -731,7 +731,7 @@ public:
                         const std::vector<vulkan::PhysicalDeviceFeatures> required_features =
                                 merge<vulkan::PhysicalDeviceFeatures>(
                                         gpu::convex_hull::View::required_device_features(),
-                                        gpu::DftView::required_device_features(),
+                                        gpu::dft::View::required_device_features(),
                                         gpu::OpticalFlowView::required_device_features(),
                                         gpu::PencilSketchView::required_device_features(),
                                         gpu::renderer::Renderer::required_device_features(),
@@ -783,7 +783,7 @@ public:
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
                         transfer_queue, VULKAN_SAMPLE_SHADING);
 
-                m_dft = gpu::create_dft_view(
+                m_dft = gpu::dft::create_view(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
                         transfer_queue, VULKAN_SAMPLE_SHADING);
 

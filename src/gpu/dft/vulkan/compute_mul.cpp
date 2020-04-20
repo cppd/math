@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_mul.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-namespace gpu
+namespace gpu::dft
 {
-std::vector<VkDescriptorSetLayoutBinding> DftMulMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> MulMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -53,22 +53,22 @@ std::vector<VkDescriptorSetLayoutBinding> DftMulMemory::descriptor_set_layout_bi
         return bindings;
 }
 
-DftMulMemory::DftMulMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+MulMemory::MulMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-unsigned DftMulMemory::set_number()
+unsigned MulMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& DftMulMemory::descriptor_set() const
+const VkDescriptorSet& MulMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void DftMulMemory::set(const vulkan::BufferWithMemory& data, const vulkan::BufferWithMemory& buffer) const
+void MulMemory::set(const vulkan::BufferWithMemory& data, const vulkan::BufferWithMemory& buffer) const
 {
         {
                 ASSERT(data.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
@@ -94,7 +94,7 @@ void DftMulMemory::set(const vulkan::BufferWithMemory& data, const vulkan::Buffe
 
 //
 
-DftMulConstant::DftMulConstant()
+MulConstant::MulConstant()
 {
         {
                 VkSpecializationMapEntry entry = {};
@@ -154,13 +154,7 @@ DftMulConstant::DftMulConstant()
         }
 }
 
-void DftMulConstant::set_data(
-        int32_t n1,
-        int32_t n2,
-        int32_t m1,
-        int32_t m2,
-        uint32_t group_size_x,
-        uint32_t group_size_y)
+void MulConstant::set_data(int32_t n1, int32_t n2, int32_t m1, int32_t m2, uint32_t group_size_x, uint32_t group_size_y)
 {
         static_assert(std::is_same_v<decltype(m_data.n1), decltype(n1)>);
         m_data.n1 = n1;
@@ -176,7 +170,7 @@ void DftMulConstant::set_data(
         m_data.group_size_y = group_size_y;
 }
 
-void DftMulConstant::set_function(int32_t function_index, bool inverse)
+void MulConstant::set_function(int32_t function_index, bool inverse)
 {
         static_assert(std::is_same_v<decltype(m_data.function_index), int32_t>);
         m_data.function_index = function_index;
@@ -184,44 +178,44 @@ void DftMulConstant::set_function(int32_t function_index, bool inverse)
         m_data.inverse = inverse ? 1 : 0;
 }
 
-const std::vector<VkSpecializationMapEntry>& DftMulConstant::entries() const
+const std::vector<VkSpecializationMapEntry>& MulConstant::entries() const
 {
         return m_entries;
 }
 
-const void* DftMulConstant::data() const
+const void* MulConstant::data() const
 {
         return &m_data;
 }
 
-size_t DftMulConstant::size() const
+size_t MulConstant::size() const
 {
         return sizeof(m_data);
 }
 
 //
 
-DftMulProgram::DftMulProgram(const vulkan::Device& device)
+MulProgram::MulProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, DftMulMemory::descriptor_set_layout_bindings())),
+                  vulkan::create_descriptor_set_layout(device, MulMemory::descriptor_set_layout_bindings())),
           m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {DftMulMemory::set_number()}, {m_descriptor_set_layout})),
-          m_shader(device, dft_mul_comp(), "main")
+                  vulkan::create_pipeline_layout(device, {MulMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, code_mul_comp(), "main")
 {
 }
 
-VkDescriptorSetLayout DftMulProgram::descriptor_set_layout() const
+VkDescriptorSetLayout MulProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout DftMulProgram::pipeline_layout() const
+VkPipelineLayout MulProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-VkPipeline DftMulProgram::pipeline_rows_to_buffer(bool inverse) const
+VkPipeline MulProgram::pipeline_rows_to_buffer(bool inverse) const
 {
         if (!inverse)
         {
@@ -233,7 +227,7 @@ VkPipeline DftMulProgram::pipeline_rows_to_buffer(bool inverse) const
         return m_pipeline_rows_to_buffer_inverse;
 }
 
-VkPipeline DftMulProgram::pipeline_rows_from_buffer(bool inverse) const
+VkPipeline MulProgram::pipeline_rows_from_buffer(bool inverse) const
 {
         if (!inverse)
         {
@@ -245,7 +239,7 @@ VkPipeline DftMulProgram::pipeline_rows_from_buffer(bool inverse) const
         return m_pipeline_rows_from_buffer_inverse;
 }
 
-VkPipeline DftMulProgram::pipeline_columns_to_buffer(bool inverse) const
+VkPipeline MulProgram::pipeline_columns_to_buffer(bool inverse) const
 {
         if (!inverse)
         {
@@ -257,7 +251,7 @@ VkPipeline DftMulProgram::pipeline_columns_to_buffer(bool inverse) const
         return m_pipeline_columns_to_buffer_inverse;
 }
 
-VkPipeline DftMulProgram::pipeline_columns_from_buffer(bool inverse) const
+VkPipeline MulProgram::pipeline_columns_from_buffer(bool inverse) const
 {
         if (!inverse)
         {
@@ -269,7 +263,7 @@ VkPipeline DftMulProgram::pipeline_columns_from_buffer(bool inverse) const
         return m_pipeline_columns_from_buffer_inverse;
 }
 
-void DftMulProgram::create_pipelines(
+void MulProgram::create_pipelines(
         int32_t n1,
         int32_t n2,
         int32_t m1,
@@ -306,7 +300,7 @@ void DftMulProgram::create_pipelines(
         m_pipeline_columns_from_buffer_inverse = create_compute_pipeline(info);
 }
 
-void DftMulProgram::delete_pipelines()
+void MulProgram::delete_pipelines()
 {
         m_pipeline_rows_to_buffer_forward = vulkan::Pipeline();
         m_pipeline_rows_to_buffer_inverse = vulkan::Pipeline();

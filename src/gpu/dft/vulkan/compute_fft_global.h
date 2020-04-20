@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::dft
 {
-class DftFftGlobalMemory final
+class FftGlobalMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -47,17 +47,17 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        DftFftGlobalMemory(
+        FftGlobalMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::unordered_set<uint32_t>& family_indices);
 
-        DftFftGlobalMemory(const DftFftGlobalMemory&) = delete;
-        DftFftGlobalMemory& operator=(const DftFftGlobalMemory&) = delete;
-        DftFftGlobalMemory& operator=(DftFftGlobalMemory&&) = delete;
+        FftGlobalMemory(const FftGlobalMemory&) = delete;
+        FftGlobalMemory& operator=(const FftGlobalMemory&) = delete;
+        FftGlobalMemory& operator=(FftGlobalMemory&&) = delete;
 
-        DftFftGlobalMemory(DftFftGlobalMemory&&) = default;
-        ~DftFftGlobalMemory() = default;
+        FftGlobalMemory(FftGlobalMemory&&) = default;
+        ~FftGlobalMemory() = default;
 
         //
 
@@ -69,7 +69,7 @@ public:
         void set_buffer(const vulkan::BufferWithMemory& buffer) const;
 };
 
-class DftFftGlobalConstant final : public vulkan::SpecializationConstant
+class FftGlobalConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -86,31 +86,31 @@ class DftFftGlobalConstant final : public vulkan::SpecializationConstant
         size_t size() const override;
 
 public:
-        DftFftGlobalConstant();
+        FftGlobalConstant();
 
         void set(uint32_t group_size, bool inverse, uint32_t data_size, uint32_t n);
 };
 
-class DftFftGlobalProgram final
+class FftGlobalProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        DftFftGlobalConstant m_constant;
+        FftGlobalConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::Pipeline m_pipeline_forward;
         vulkan::Pipeline m_pipeline_inverse;
 
 public:
-        explicit DftFftGlobalProgram(const vulkan::Device& device);
+        explicit FftGlobalProgram(const vulkan::Device& device);
 
-        DftFftGlobalProgram(const DftFftGlobalProgram&) = delete;
-        DftFftGlobalProgram& operator=(const DftFftGlobalProgram&) = delete;
-        DftFftGlobalProgram& operator=(DftFftGlobalProgram&&) = delete;
+        FftGlobalProgram(const FftGlobalProgram&) = delete;
+        FftGlobalProgram& operator=(const FftGlobalProgram&) = delete;
+        FftGlobalProgram& operator=(FftGlobalProgram&&) = delete;
 
-        DftFftGlobalProgram(DftFftGlobalProgram&&) = default;
-        ~DftFftGlobalProgram() = default;
+        FftGlobalProgram(FftGlobalProgram&&) = default;
+        ~FftGlobalProgram() = default;
 
         void create_pipelines(uint32_t group_size, uint32_t data_size, uint32_t n);
         void delete_pipelines();

@@ -19,15 +19,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/span.h>
 
-namespace gpu
+namespace gpu::dft
 {
-Span<const uint32_t> dft_fft_global_comp();
-Span<const uint32_t> dft_fft_shared_comp();
-Span<const uint32_t> dft_bit_reverse_comp();
-Span<const uint32_t> dft_copy_input_comp();
-Span<const uint32_t> dft_copy_output_comp();
-Span<const uint32_t> dft_mul_comp();
-Span<const uint32_t> dft_mul_d_comp();
-Span<const uint32_t> dft_view_vert();
-Span<const uint32_t> dft_view_frag();
+Span<const uint32_t> code_fft_global_comp();
+Span<const uint32_t> code_fft_shared_comp();
+Span<const uint32_t> code_bit_reverse_comp();
+Span<const uint32_t> code_copy_input_comp();
+Span<const uint32_t> code_copy_output_comp();
+Span<const uint32_t> code_mul_comp();
+Span<const uint32_t> code_mul_d_comp();
+Span<const uint32_t> code_view_vert();
+Span<const uint32_t> code_view_frag();
 }

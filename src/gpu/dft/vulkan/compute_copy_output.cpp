@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_copy_output.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-namespace gpu
+namespace gpu::dft
 {
-std::vector<VkDescriptorSetLayoutBinding> DftCopyOutputMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> CopyOutputMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -52,22 +52,22 @@ std::vector<VkDescriptorSetLayoutBinding> DftCopyOutputMemory::descriptor_set_la
         return bindings;
 }
 
-DftCopyOutputMemory::DftCopyOutputMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+CopyOutputMemory::CopyOutputMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-unsigned DftCopyOutputMemory::set_number()
+unsigned CopyOutputMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& DftCopyOutputMemory::descriptor_set() const
+const VkDescriptorSet& CopyOutputMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void DftCopyOutputMemory::set(const vulkan::BufferWithMemory& input, const vulkan::ImageWithMemory& output) const
+void CopyOutputMemory::set(const vulkan::BufferWithMemory& input, const vulkan::ImageWithMemory& output) const
 {
         {
                 ASSERT(input.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
@@ -93,7 +93,7 @@ void DftCopyOutputMemory::set(const vulkan::BufferWithMemory& input, const vulka
 
 //
 
-DftCopyOutputConstant::DftCopyOutputConstant()
+CopyOutputConstant::CopyOutputConstant()
 {
         {
                 VkSpecializationMapEntry entry = {};
@@ -118,7 +118,7 @@ DftCopyOutputConstant::DftCopyOutputConstant()
         }
 }
 
-void DftCopyOutputConstant::set(uint32_t local_size_x, uint32_t local_size_y, float to_mul)
+void CopyOutputConstant::set(uint32_t local_size_x, uint32_t local_size_y, float to_mul)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
         m_data.local_size_x = local_size_x;
@@ -128,52 +128,50 @@ void DftCopyOutputConstant::set(uint32_t local_size_x, uint32_t local_size_y, fl
         m_data.to_mul = to_mul;
 }
 
-const std::vector<VkSpecializationMapEntry>& DftCopyOutputConstant::entries() const
+const std::vector<VkSpecializationMapEntry>& CopyOutputConstant::entries() const
 {
         return m_entries;
 }
 
-const void* DftCopyOutputConstant::data() const
+const void* CopyOutputConstant::data() const
 {
         return &m_data;
 }
 
-size_t DftCopyOutputConstant::size() const
+size_t CopyOutputConstant::size() const
 {
         return sizeof(m_data);
 }
 
 //
 
-DftCopyOutputProgram::DftCopyOutputProgram(const vulkan::Device& device)
+CopyOutputProgram::CopyOutputProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, DftCopyOutputMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device,
-                  {DftCopyOutputMemory::set_number()},
-                  {m_descriptor_set_layout})),
-          m_shader(device, dft_copy_output_comp(), "main")
+                  vulkan::create_descriptor_set_layout(device, CopyOutputMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {CopyOutputMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, code_copy_output_comp(), "main")
 {
 }
 
-VkDescriptorSetLayout DftCopyOutputProgram::descriptor_set_layout() const
+VkDescriptorSetLayout CopyOutputProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout DftCopyOutputProgram::pipeline_layout() const
+VkPipelineLayout CopyOutputProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-VkPipeline DftCopyOutputProgram::pipeline() const
+VkPipeline CopyOutputProgram::pipeline() const
 {
         ASSERT(m_pipeline != VK_NULL_HANDLE);
         return m_pipeline;
 }
 
-void DftCopyOutputProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y, float to_mul)
+void CopyOutputProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y, float to_mul)
 {
         m_constant.set(local_size_x, local_size_y, to_mul);
 
@@ -185,7 +183,7 @@ void DftCopyOutputProgram::create_pipeline(uint32_t local_size_x, uint32_t local
         m_pipeline = create_compute_pipeline(info);
 }
 
-void DftCopyOutputProgram::delete_pipeline()
+void CopyOutputProgram::delete_pipeline()
 {
         m_pipeline = vulkan::Pipeline();
 }

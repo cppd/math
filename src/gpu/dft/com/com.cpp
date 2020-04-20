@@ -20,11 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/bits.h>
 #include <src/com/constant.h>
 
-namespace gpu
+namespace gpu::dft
 {
 // Или само число степень двух,
 // или минимальная степень двух, равная или больше 2N-2
-int dft_compute_m(int n)
+int compute_m(int n)
 {
         int log2_n = log_2(n);
         if ((1 << log2_n) == n)
@@ -43,7 +43,7 @@ int dft_compute_m(int n)
 
 // Compute the symmetric Toeplitz H: for given N, compute the scalar constants
 // Формулы 13.4, 13.22.
-std::vector<std::complex<double>> dft_compute_h(int n, bool inverse, double coef)
+std::vector<std::complex<double>> compute_h(int n, bool inverse, double coef)
 {
         std::vector<std::complex<double>> h(n);
 
@@ -70,7 +70,7 @@ std::vector<std::complex<double>> dft_compute_h(int n, bool inverse, double coef
 // Embed H in the circulant H(2)
 // На основе исправленных формул 13.11, 13.23, 13.24, 13.25.
 // Об исправлении в комментарии о книге.
-std::vector<std::complex<double>> dft_compute_h2(int n, int m, const std::vector<std::complex<double>>& h)
+std::vector<std::complex<double>> compute_h2(int n, int m, const std::vector<std::complex<double>>& h)
 {
         std::vector<std::complex<double>> h2(m);
 
@@ -90,7 +90,7 @@ std::vector<std::complex<double>> dft_compute_h2(int n, int m, const std::vector
 }
 
 template <typename T>
-int dft_shared_size(unsigned dft_size, unsigned max_shared_memory_size)
+int shared_size(unsigned dft_size, unsigned max_shared_memory_size)
 {
         // минимум из
         // 1) требуемый размер, но не меньше 128, чтобы в группе было хотя бы 64 потока по потоку на 2 элемента:
@@ -100,18 +100,18 @@ int dft_shared_size(unsigned dft_size, unsigned max_shared_memory_size)
 }
 
 template <typename T>
-int dft_group_size(
+int group_size(
         unsigned dft_size,
         unsigned max_group_size_x,
         unsigned max_group_invocations,
         unsigned max_shared_memory_size)
 {
         // не больше 1 потока на 2 элемента
-        int max_threads_required = dft_shared_size<T>(dft_size, max_shared_memory_size) / 2;
+        int max_threads_required = shared_size<T>(dft_size, max_shared_memory_size) / 2;
         int max_threads_supported = std::min(max_group_size_x, max_group_invocations);
         return std::min(max_threads_required, max_threads_supported);
 }
 
-template int dft_shared_size<std::complex<float>>(unsigned, unsigned);
-template int dft_group_size<std::complex<float>>(unsigned, unsigned, unsigned, unsigned);
+template int shared_size<std::complex<float>>(unsigned, unsigned);
+template int group_size<std::complex<float>>(unsigned, unsigned, unsigned, unsigned);
 }

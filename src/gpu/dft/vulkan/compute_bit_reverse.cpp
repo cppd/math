@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_bit_reverse.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-namespace gpu
+namespace gpu::dft
 {
-std::vector<VkDescriptorSetLayoutBinding> DftBitReverseMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> BitReverseMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -42,22 +42,22 @@ std::vector<VkDescriptorSetLayoutBinding> DftBitReverseMemory::descriptor_set_la
         return bindings;
 }
 
-DftBitReverseMemory::DftBitReverseMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+BitReverseMemory::BitReverseMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-unsigned DftBitReverseMemory::set_number()
+unsigned BitReverseMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& DftBitReverseMemory::descriptor_set() const
+const VkDescriptorSet& BitReverseMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void DftBitReverseMemory::set_buffer(const vulkan::BufferWithMemory& buffer) const
+void BitReverseMemory::set_buffer(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -71,7 +71,7 @@ void DftBitReverseMemory::set_buffer(const vulkan::BufferWithMemory& buffer) con
 
 //
 
-DftBitReverseConstant::DftBitReverseConstant()
+BitReverseConstant::BitReverseConstant()
 {
         {
                 VkSpecializationMapEntry entry = {};
@@ -103,7 +103,7 @@ DftBitReverseConstant::DftBitReverseConstant()
         }
 }
 
-void DftBitReverseConstant::set(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits)
+void BitReverseConstant::set(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits)
 {
         static_assert(std::is_same_v<decltype(m_data.group_size), decltype(group_size)>);
         m_data.group_size = group_size;
@@ -115,52 +115,50 @@ void DftBitReverseConstant::set(uint32_t group_size, uint32_t data_size, uint32_
         m_data.n_bits = n_bits;
 }
 
-const std::vector<VkSpecializationMapEntry>& DftBitReverseConstant::entries() const
+const std::vector<VkSpecializationMapEntry>& BitReverseConstant::entries() const
 {
         return m_entries;
 }
 
-const void* DftBitReverseConstant::data() const
+const void* BitReverseConstant::data() const
 {
         return &m_data;
 }
 
-size_t DftBitReverseConstant::size() const
+size_t BitReverseConstant::size() const
 {
         return sizeof(m_data);
 }
 
 //
 
-DftBitReverseProgram::DftBitReverseProgram(const vulkan::Device& device)
+BitReverseProgram::BitReverseProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, DftBitReverseMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device,
-                  {DftBitReverseMemory::set_number()},
-                  {m_descriptor_set_layout})),
-          m_shader(device, dft_bit_reverse_comp(), "main")
+                  vulkan::create_descriptor_set_layout(device, BitReverseMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {BitReverseMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, code_bit_reverse_comp(), "main")
 {
 }
 
-VkDescriptorSetLayout DftBitReverseProgram::descriptor_set_layout() const
+VkDescriptorSetLayout BitReverseProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout DftBitReverseProgram::pipeline_layout() const
+VkPipelineLayout BitReverseProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-VkPipeline DftBitReverseProgram::pipeline() const
+VkPipeline BitReverseProgram::pipeline() const
 {
         ASSERT(m_pipeline != VK_NULL_HANDLE);
         return m_pipeline;
 }
 
-void DftBitReverseProgram::create_pipeline(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits)
+void BitReverseProgram::create_pipeline(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits)
 {
         m_constant.set(group_size, data_size, n_mask, n_bits);
 
@@ -172,7 +170,7 @@ void DftBitReverseProgram::create_pipeline(uint32_t group_size, uint32_t data_si
         m_pipeline = create_compute_pipeline(info);
 }
 
-void DftBitReverseProgram::delete_pipeline()
+void BitReverseProgram::delete_pipeline()
 {
         m_pipeline = vulkan::Pipeline();
 }

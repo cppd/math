@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::dft
 {
-class DftCopyOutputMemory final
+class CopyOutputMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -40,14 +40,14 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        DftCopyOutputMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        CopyOutputMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        DftCopyOutputMemory(const DftCopyOutputMemory&) = delete;
-        DftCopyOutputMemory& operator=(const DftCopyOutputMemory&) = delete;
-        DftCopyOutputMemory& operator=(DftCopyOutputMemory&&) = delete;
+        CopyOutputMemory(const CopyOutputMemory&) = delete;
+        CopyOutputMemory& operator=(const CopyOutputMemory&) = delete;
+        CopyOutputMemory& operator=(CopyOutputMemory&&) = delete;
 
-        DftCopyOutputMemory(DftCopyOutputMemory&&) = default;
-        ~DftCopyOutputMemory() = default;
+        CopyOutputMemory(CopyOutputMemory&&) = default;
+        ~CopyOutputMemory() = default;
 
         //
 
@@ -58,7 +58,7 @@ public:
         void set(const vulkan::BufferWithMemory& input, const vulkan::ImageWithMemory& output) const;
 };
 
-class DftCopyOutputConstant final : public vulkan::SpecializationConstant
+class CopyOutputConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -74,30 +74,30 @@ class DftCopyOutputConstant final : public vulkan::SpecializationConstant
         size_t size() const override;
 
 public:
-        DftCopyOutputConstant();
+        CopyOutputConstant();
 
         void set(uint32_t local_size_x, uint32_t local_size_y, float to_mul);
 };
 
-class DftCopyOutputProgram final
+class CopyOutputProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        DftCopyOutputConstant m_constant;
+        CopyOutputConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::Pipeline m_pipeline;
 
 public:
-        explicit DftCopyOutputProgram(const vulkan::Device& device);
+        explicit CopyOutputProgram(const vulkan::Device& device);
 
-        DftCopyOutputProgram(const DftCopyOutputProgram&) = delete;
-        DftCopyOutputProgram& operator=(const DftCopyOutputProgram&) = delete;
-        DftCopyOutputProgram& operator=(DftCopyOutputProgram&&) = delete;
+        CopyOutputProgram(const CopyOutputProgram&) = delete;
+        CopyOutputProgram& operator=(const CopyOutputProgram&) = delete;
+        CopyOutputProgram& operator=(CopyOutputProgram&&) = delete;
 
-        DftCopyOutputProgram(DftCopyOutputProgram&&) = default;
-        ~DftCopyOutputProgram() = default;
+        CopyOutputProgram(CopyOutputProgram&&) = default;
+        ~CopyOutputProgram() = default;
 
         void create_pipeline(uint32_t local_size_x, uint32_t local_size_y, float to_mul);
         void delete_pipeline();

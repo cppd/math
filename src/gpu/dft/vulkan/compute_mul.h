@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::dft
 {
-class DftMulMemory final
+class MulMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -40,14 +40,14 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        DftMulMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        MulMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        DftMulMemory(const DftMulMemory&) = delete;
-        DftMulMemory& operator=(const DftMulMemory&) = delete;
-        DftMulMemory& operator=(DftMulMemory&&) = delete;
+        MulMemory(const MulMemory&) = delete;
+        MulMemory& operator=(const MulMemory&) = delete;
+        MulMemory& operator=(MulMemory&&) = delete;
 
-        DftMulMemory(DftMulMemory&&) = default;
-        ~DftMulMemory() = default;
+        MulMemory(MulMemory&&) = default;
+        ~MulMemory() = default;
 
         //
 
@@ -58,7 +58,7 @@ public:
         void set(const vulkan::BufferWithMemory& data, const vulkan::BufferWithMemory& buffer) const;
 };
 
-class DftMulConstant final : public vulkan::SpecializationConstant
+class MulConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -79,19 +79,19 @@ class DftMulConstant final : public vulkan::SpecializationConstant
         size_t size() const override;
 
 public:
-        DftMulConstant();
+        MulConstant();
 
         void set_data(int32_t n1, int32_t n2, int32_t m1, int32_t m2, uint32_t group_size_x, uint32_t group_size_y);
         void set_function(int32_t function_index, bool inverse);
 };
 
-class DftMulProgram final
+class MulProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        DftMulConstant m_constant;
+        MulConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::Pipeline m_pipeline_rows_to_buffer_forward;
         vulkan::Pipeline m_pipeline_rows_to_buffer_inverse;
@@ -103,14 +103,14 @@ class DftMulProgram final
         vulkan::Pipeline m_pipeline_columns_from_buffer_inverse;
 
 public:
-        explicit DftMulProgram(const vulkan::Device& device);
+        explicit MulProgram(const vulkan::Device& device);
 
-        DftMulProgram(const DftMulProgram&) = delete;
-        DftMulProgram& operator=(const DftMulProgram&) = delete;
-        DftMulProgram& operator=(DftMulProgram&&) = delete;
+        MulProgram(const MulProgram&) = delete;
+        MulProgram& operator=(const MulProgram&) = delete;
+        MulProgram& operator=(MulProgram&&) = delete;
 
-        DftMulProgram(DftMulProgram&&) = default;
-        ~DftMulProgram() = default;
+        MulProgram(MulProgram&&) = default;
+        ~MulProgram() = default;
 
         void create_pipelines(
                 int32_t n1,

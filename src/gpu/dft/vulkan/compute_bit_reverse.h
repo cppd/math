@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::dft
 {
-class DftBitReverseMemory final
+class BitReverseMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -39,14 +39,14 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        DftBitReverseMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        BitReverseMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        DftBitReverseMemory(const DftBitReverseMemory&) = delete;
-        DftBitReverseMemory& operator=(const DftBitReverseMemory&) = delete;
-        DftBitReverseMemory& operator=(DftBitReverseMemory&&) = delete;
+        BitReverseMemory(const BitReverseMemory&) = delete;
+        BitReverseMemory& operator=(const BitReverseMemory&) = delete;
+        BitReverseMemory& operator=(BitReverseMemory&&) = delete;
 
-        DftBitReverseMemory(DftBitReverseMemory&&) = default;
-        ~DftBitReverseMemory() = default;
+        BitReverseMemory(BitReverseMemory&&) = default;
+        ~BitReverseMemory() = default;
 
         //
 
@@ -57,7 +57,7 @@ public:
         void set_buffer(const vulkan::BufferWithMemory& buffer) const;
 };
 
-class DftBitReverseConstant final : public vulkan::SpecializationConstant
+class BitReverseConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -74,30 +74,30 @@ class DftBitReverseConstant final : public vulkan::SpecializationConstant
         size_t size() const override;
 
 public:
-        DftBitReverseConstant();
+        BitReverseConstant();
 
         void set(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits);
 };
 
-class DftBitReverseProgram final
+class BitReverseProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        DftBitReverseConstant m_constant;
+        BitReverseConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::Pipeline m_pipeline;
 
 public:
-        explicit DftBitReverseProgram(const vulkan::Device& device);
+        explicit BitReverseProgram(const vulkan::Device& device);
 
-        DftBitReverseProgram(const DftBitReverseProgram&) = delete;
-        DftBitReverseProgram& operator=(const DftBitReverseProgram&) = delete;
-        DftBitReverseProgram& operator=(DftBitReverseProgram&&) = delete;
+        BitReverseProgram(const BitReverseProgram&) = delete;
+        BitReverseProgram& operator=(const BitReverseProgram&) = delete;
+        BitReverseProgram& operator=(BitReverseProgram&&) = delete;
 
-        DftBitReverseProgram(DftBitReverseProgram&&) = default;
-        ~DftBitReverseProgram() = default;
+        BitReverseProgram(BitReverseProgram&&) = default;
+        ~BitReverseProgram() = default;
 
         void create_pipeline(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits);
         void delete_pipeline();

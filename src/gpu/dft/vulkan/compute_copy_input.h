@@ -26,9 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::dft
 {
-class DftCopyInputMemory final
+class CopyInputMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -41,14 +41,14 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        DftCopyInputMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        CopyInputMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        DftCopyInputMemory(const DftCopyInputMemory&) = delete;
-        DftCopyInputMemory& operator=(const DftCopyInputMemory&) = delete;
-        DftCopyInputMemory& operator=(DftCopyInputMemory&&) = delete;
+        CopyInputMemory(const CopyInputMemory&) = delete;
+        CopyInputMemory& operator=(const CopyInputMemory&) = delete;
+        CopyInputMemory& operator=(CopyInputMemory&&) = delete;
 
-        DftCopyInputMemory(DftCopyInputMemory&&) = default;
-        ~DftCopyInputMemory() = default;
+        CopyInputMemory(CopyInputMemory&&) = default;
+        ~CopyInputMemory() = default;
 
         //
 
@@ -59,7 +59,7 @@ public:
         void set(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::BufferWithMemory& output) const;
 };
 
-class DftCopyInputConstant final : public vulkan::SpecializationConstant
+class CopyInputConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -78,30 +78,30 @@ class DftCopyInputConstant final : public vulkan::SpecializationConstant
         size_t size() const override;
 
 public:
-        DftCopyInputConstant();
+        CopyInputConstant();
 
         void set(int32_t local_size_x, int32_t local_size_y, const Region<2, int>& rectangle);
 };
 
-class DftCopyInputProgram final
+class CopyInputProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        DftCopyInputConstant m_constant;
+        CopyInputConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::Pipeline m_pipeline;
 
 public:
-        explicit DftCopyInputProgram(const vulkan::Device& device);
+        explicit CopyInputProgram(const vulkan::Device& device);
 
-        DftCopyInputProgram(const DftCopyInputProgram&) = delete;
-        DftCopyInputProgram& operator=(const DftCopyInputProgram&) = delete;
-        DftCopyInputProgram& operator=(DftCopyInputProgram&&) = delete;
+        CopyInputProgram(const CopyInputProgram&) = delete;
+        CopyInputProgram& operator=(const CopyInputProgram&) = delete;
+        CopyInputProgram& operator=(CopyInputProgram&&) = delete;
 
-        DftCopyInputProgram(DftCopyInputProgram&&) = default;
-        ~DftCopyInputProgram() = default;
+        CopyInputProgram(CopyInputProgram&&) = default;
+        ~CopyInputProgram() = default;
 
         void create_pipeline(int32_t local_size_x, int32_t local_size_y, const Region<2, int>& rectangle);
         void delete_pipeline();

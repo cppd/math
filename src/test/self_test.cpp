@@ -39,7 +39,7 @@ void self_test_essential(ProgressRatios* progress_ratios, const T& catch_all)
                 *test_name = "Self-Test, DFT in " + space_name_upper(2);
 
                 ProgressRatio progress(progress_ratios, *test_name);
-                gpu::test_dft(&progress);
+                gpu::dft::test(&progress);
         });
 
         catch_all([&](std::string* test_name) {

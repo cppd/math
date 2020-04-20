@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <thread>
 
-namespace gpu
+namespace gpu::dft
 {
 namespace
 {
@@ -49,7 +49,7 @@ vec4f color_to_vec4f(const Color& c)
         return vec4f(c.red(), c.green(), c.blue(), 1);
 }
 
-class Impl final : public DftView
+class Impl final : public View
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -64,15 +64,15 @@ class Impl final : public DftView
         uint32_t m_graphics_family_index;
 
         vulkan::Semaphore m_signal_semaphore;
-        DftViewProgram m_program;
-        DftViewMemory m_memory;
+        ViewProgram m_program;
+        ViewMemory m_memory;
         std::unique_ptr<vulkan::BufferWithMemory> m_vertices;
         vulkan::Sampler m_sampler;
         std::unique_ptr<vulkan::ImageWithMemory> m_image;
         std::optional<vulkan::Pipeline> m_pipeline;
         std::optional<vulkan::CommandBuffers> m_command_buffers;
 
-        std::unique_ptr<DftComputeImage> m_compute;
+        std::unique_ptr<ComputeImage> m_compute;
 
         void draw_commands(VkCommandBuffer command_buffer) const
         {
@@ -84,7 +84,7 @@ class Impl final : public DftView
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
-                        DftViewMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
+                        ViewMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
 
                 const std::array<VkBuffer, 1> buffers{*m_vertices};
                 const std::array<VkDeviceSize, 1> offsets{0};
@@ -184,7 +184,7 @@ class Impl final : public DftView
 
         void create_vertices()
         {
-                std::array<DftViewVertex, VERTEX_COUNT> vertices;
+                std::array<ViewVertex, VERTEX_COUNT> vertices;
 
                 // Текстурный 0 находится вверху
                 vertices[0] = {{-1, +1, 0, 1}, {0, 1}};
@@ -220,8 +220,8 @@ public:
                   m_signal_semaphore(instance.device()),
                   m_program(instance.device()),
                   m_memory(instance.device(), m_program.descriptor_set_layout(), {graphics_queue.family_index()}),
-                  m_sampler(create_dft_sampler(instance.device())),
-                  m_compute(create_dft_compute_image(
+                  m_sampler(create_sampler(instance.device())),
+                  m_compute(create_compute_image(
                           instance,
                           graphics_command_pool,
                           graphics_queue,
@@ -242,14 +242,14 @@ public:
 };
 }
 
-std::vector<vulkan::PhysicalDeviceFeatures> DftView::required_device_features()
+std::vector<vulkan::PhysicalDeviceFeatures> View::required_device_features()
 {
         return merge<vulkan::PhysicalDeviceFeatures>(
                 std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),
-                DftComputeImage::required_device_features());
+                ComputeImage::required_device_features());
 }
 
-std::unique_ptr<DftView> create_dft_view(
+std::unique_ptr<View> create_view(
         const vulkan::VulkanInstance& instance,
         const vulkan::CommandPool& graphics_command_pool,
         const vulkan::Queue& graphics_queue,

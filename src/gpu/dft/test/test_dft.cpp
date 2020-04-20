@@ -46,7 +46,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using complex = std::complex<float>;
 
-namespace gpu
+namespace gpu::dft
 {
 namespace
 {
@@ -186,7 +186,7 @@ std::string time_string(double start_time)
 
 void compute_vulkan(bool inverse, int n1, int n2, std::vector<complex>* data)
 {
-        std::unique_ptr<DftComputeVector> dft = create_dft_compute_vector();
+        std::unique_ptr<ComputeVector> dft = create_compute_vector();
 
         {
                 RandomEngineWithSeed<std::mt19937_64> engine;
@@ -419,7 +419,7 @@ std::array<int, 2> find_dimensions(TestSize test_size)
 }
 }
 
-void test_dft(ProgressRatio* progress)
+void test(ProgressRatio* progress)
 {
         ASSERT(progress);
 

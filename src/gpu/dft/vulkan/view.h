@@ -26,13 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
-namespace gpu
+namespace gpu::dft
 {
-struct DftView
+struct View
 {
         static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
 
-        virtual ~DftView() = default;
+        virtual ~View() = default;
 
         virtual void create_buffers(
                 RenderBuffers2D* render_buffers,
@@ -48,7 +48,7 @@ struct DftView
         virtual void set_color(const Color& color) = 0;
 };
 
-std::unique_ptr<DftView> create_dft_view(
+std::unique_ptr<View> create_view(
         const vulkan::VulkanInstance& instance,
         const vulkan::CommandPool& graphics_command_pool,
         const vulkan::Queue& graphics_queue,

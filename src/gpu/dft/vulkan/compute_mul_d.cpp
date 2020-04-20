@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_mul_d.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-namespace gpu
+namespace gpu::dft
 {
-std::vector<VkDescriptorSetLayoutBinding> DftMulDMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> MulDMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -53,22 +53,22 @@ std::vector<VkDescriptorSetLayoutBinding> DftMulDMemory::descriptor_set_layout_b
         return bindings;
 }
 
-DftMulDMemory::DftMulDMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+MulDMemory::MulDMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-unsigned DftMulDMemory::set_number()
+unsigned MulDMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& DftMulDMemory::descriptor_set() const
+const VkDescriptorSet& MulDMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void DftMulDMemory::set(const vulkan::BufferWithMemory& diagonal, const vulkan::BufferWithMemory& data) const
+void MulDMemory::set(const vulkan::BufferWithMemory& diagonal, const vulkan::BufferWithMemory& data) const
 {
         {
                 ASSERT(diagonal.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
@@ -94,7 +94,7 @@ void DftMulDMemory::set(const vulkan::BufferWithMemory& diagonal, const vulkan::
 
 //
 
-DftMulDConstant::DftMulDConstant()
+MulDConstant::MulDConstant()
 {
         {
                 VkSpecializationMapEntry entry = {};
@@ -127,7 +127,7 @@ DftMulDConstant::DftMulDConstant()
         }
 }
 
-void DftMulDConstant::set(uint32_t group_size_x, uint32_t group_size_y, int32_t rows, int32_t columns)
+void MulDConstant::set(uint32_t group_size_x, uint32_t group_size_y, int32_t rows, int32_t columns)
 {
         static_assert(std::is_same_v<decltype(m_data.group_size_x), decltype(group_size_x)>);
         m_data.group_size_x = group_size_x;
@@ -139,56 +139,56 @@ void DftMulDConstant::set(uint32_t group_size_x, uint32_t group_size_y, int32_t 
         m_data.columns = columns;
 }
 
-const std::vector<VkSpecializationMapEntry>& DftMulDConstant::entries() const
+const std::vector<VkSpecializationMapEntry>& MulDConstant::entries() const
 {
         return m_entries;
 }
 
-const void* DftMulDConstant::data() const
+const void* MulDConstant::data() const
 {
         return &m_data;
 }
 
-size_t DftMulDConstant::size() const
+size_t MulDConstant::size() const
 {
         return sizeof(m_data);
 }
 
 //
 
-DftMulDProgram::DftMulDProgram(const vulkan::Device& device)
+MulDProgram::MulDProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, DftMulDMemory::descriptor_set_layout_bindings())),
+                  vulkan::create_descriptor_set_layout(device, MulDMemory::descriptor_set_layout_bindings())),
           m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {DftMulDMemory::set_number()}, {m_descriptor_set_layout})),
-          m_shader(device, dft_mul_d_comp(), "main")
+                  vulkan::create_pipeline_layout(device, {MulDMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, code_mul_d_comp(), "main")
 {
 }
 
-VkDescriptorSetLayout DftMulDProgram::descriptor_set_layout() const
+VkDescriptorSetLayout MulDProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout DftMulDProgram::pipeline_layout() const
+VkPipelineLayout MulDProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-VkPipeline DftMulDProgram::pipeline_rows() const
+VkPipeline MulDProgram::pipeline_rows() const
 {
         ASSERT(m_pipeline_rows != VK_NULL_HANDLE);
         return m_pipeline_rows;
 }
 
-VkPipeline DftMulDProgram::pipeline_columns() const
+VkPipeline MulDProgram::pipeline_columns() const
 {
         ASSERT(m_pipeline_columns != VK_NULL_HANDLE);
         return m_pipeline_columns;
 }
 
-void DftMulDProgram::create_pipelines(
+void MulDProgram::create_pipelines(
         uint32_t n1,
         uint32_t n2,
         uint32_t m1,
@@ -218,7 +218,7 @@ void DftMulDProgram::create_pipelines(
         }
 }
 
-void DftMulDProgram::delete_pipelines()
+void MulDProgram::delete_pipelines()
 {
         m_pipeline_rows = vulkan::Pipeline();
         m_pipeline_columns = vulkan::Pipeline();

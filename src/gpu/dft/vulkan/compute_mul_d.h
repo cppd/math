@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::dft
 {
-class DftMulDMemory final
+class MulDMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -40,14 +40,14 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        DftMulDMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        MulDMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        DftMulDMemory(const DftMulDMemory&) = delete;
-        DftMulDMemory& operator=(const DftMulDMemory&) = delete;
-        DftMulDMemory& operator=(DftMulDMemory&&) = delete;
+        MulDMemory(const MulDMemory&) = delete;
+        MulDMemory& operator=(const MulDMemory&) = delete;
+        MulDMemory& operator=(MulDMemory&&) = delete;
 
-        DftMulDMemory(DftMulDMemory&&) = default;
-        ~DftMulDMemory() = default;
+        MulDMemory(MulDMemory&&) = default;
+        ~MulDMemory() = default;
 
         //
 
@@ -58,7 +58,7 @@ public:
         void set(const vulkan::BufferWithMemory& diagonal, const vulkan::BufferWithMemory& data) const;
 };
 
-class DftMulDConstant final : public vulkan::SpecializationConstant
+class MulDConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -75,31 +75,31 @@ class DftMulDConstant final : public vulkan::SpecializationConstant
         size_t size() const override;
 
 public:
-        DftMulDConstant();
+        MulDConstant();
 
         void set(uint32_t group_size_x, uint32_t group_size_y, int32_t rows, int32_t columns);
 };
 
-class DftMulDProgram final
+class MulDProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        DftMulDConstant m_constant;
+        MulDConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::Pipeline m_pipeline_rows;
         vulkan::Pipeline m_pipeline_columns;
 
 public:
-        explicit DftMulDProgram(const vulkan::Device& device);
+        explicit MulDProgram(const vulkan::Device& device);
 
-        DftMulDProgram(const DftMulDProgram&) = delete;
-        DftMulDProgram& operator=(const DftMulDProgram&) = delete;
-        DftMulDProgram& operator=(DftMulDProgram&&) = delete;
+        MulDProgram(const MulDProgram&) = delete;
+        MulDProgram& operator=(const MulDProgram&) = delete;
+        MulDProgram& operator=(MulDProgram&&) = delete;
 
-        DftMulDProgram(DftMulDProgram&&) = default;
-        ~DftMulDProgram() = default;
+        MulDProgram(MulDProgram&&) = default;
+        ~MulDProgram() = default;
 
         void create_pipelines(
                 uint32_t n1,

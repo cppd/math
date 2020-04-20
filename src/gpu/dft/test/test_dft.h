@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress.h>
 
-namespace gpu
+namespace gpu::dft
 {
-void test_dft(ProgressRatio* progress);
+void test(ProgressRatio* progress);
 }

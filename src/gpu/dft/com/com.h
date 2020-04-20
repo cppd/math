@@ -20,16 +20,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <complex>
 #include <vector>
 
-namespace gpu
+namespace gpu::dft
 {
-int dft_compute_m(int n);
-std::vector<std::complex<double>> dft_compute_h(int n, bool inverse, double coef);
-std::vector<std::complex<double>> dft_compute_h2(int n, int m, const std::vector<std::complex<double>>& h);
+int compute_m(int n);
+std::vector<std::complex<double>> compute_h(int n, bool inverse, double coef);
+std::vector<std::complex<double>> compute_h2(int n, int m, const std::vector<std::complex<double>>& h);
 
 template <typename T>
-int dft_shared_size(unsigned dft_size, unsigned max_shared_memory_size);
+int shared_size(unsigned dft_size, unsigned max_shared_memory_size);
 template <typename T>
-int dft_group_size(
+int group_size(
         unsigned dft_size,
         unsigned max_group_size_x,
         unsigned max_group_invocations,

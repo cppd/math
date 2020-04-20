@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_fft_shared.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-namespace gpu
+namespace gpu::dft
 {
-std::vector<VkDescriptorSetLayoutBinding> DftFftSharedMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> FftSharedMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -42,22 +42,22 @@ std::vector<VkDescriptorSetLayoutBinding> DftFftSharedMemory::descriptor_set_lay
         return bindings;
 }
 
-DftFftSharedMemory::DftFftSharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+FftSharedMemory::FftSharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-unsigned DftFftSharedMemory::set_number()
+unsigned FftSharedMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& DftFftSharedMemory::descriptor_set() const
+const VkDescriptorSet& FftSharedMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void DftFftSharedMemory::set_buffer(const vulkan::BufferWithMemory& buffer) const
+void FftSharedMemory::set_buffer(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -71,7 +71,7 @@ void DftFftSharedMemory::set_buffer(const vulkan::BufferWithMemory& buffer) cons
 
 //
 
-DftFftSharedConstant::DftFftSharedConstant()
+FftSharedConstant::FftSharedConstant()
 {
         {
                 VkSpecializationMapEntry entry = {};
@@ -131,7 +131,7 @@ DftFftSharedConstant::DftFftSharedConstant()
         }
 }
 
-void DftFftSharedConstant::set(
+void FftSharedConstant::set(
         bool inverse,
         uint32_t data_size,
         uint32_t n,
@@ -159,46 +159,44 @@ void DftFftSharedConstant::set(
         m_data.group_size = group_size;
 }
 
-const std::vector<VkSpecializationMapEntry>& DftFftSharedConstant::entries() const
+const std::vector<VkSpecializationMapEntry>& FftSharedConstant::entries() const
 {
         return m_entries;
 }
 
-const void* DftFftSharedConstant::data() const
+const void* FftSharedConstant::data() const
 {
         return &m_data;
 }
 
-size_t DftFftSharedConstant::size() const
+size_t FftSharedConstant::size() const
 {
         return sizeof(m_data);
 }
 
 //
 
-DftFftSharedProgram::DftFftSharedProgram(const vulkan::Device& device)
+FftSharedProgram::FftSharedProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, DftFftSharedMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device,
-                  {DftFftSharedMemory::set_number()},
-                  {m_descriptor_set_layout})),
-          m_shader(device, dft_fft_shared_comp(), "main")
+                  vulkan::create_descriptor_set_layout(device, FftSharedMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {FftSharedMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, code_fft_shared_comp(), "main")
 {
 }
 
-VkDescriptorSetLayout DftFftSharedProgram::descriptor_set_layout() const
+VkDescriptorSetLayout FftSharedProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout DftFftSharedProgram::pipeline_layout() const
+VkPipelineLayout FftSharedProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-VkPipeline DftFftSharedProgram::pipeline(bool inverse) const
+VkPipeline FftSharedProgram::pipeline(bool inverse) const
 {
         if (inverse)
         {
@@ -210,7 +208,7 @@ VkPipeline DftFftSharedProgram::pipeline(bool inverse) const
         return m_pipeline_forward;
 }
 
-void DftFftSharedProgram::create_pipelines(
+void FftSharedProgram::create_pipelines(
         uint32_t data_size,
         uint32_t n,
         uint32_t n_mask,
@@ -241,7 +239,7 @@ void DftFftSharedProgram::create_pipelines(
         }
 }
 
-void DftFftSharedProgram::delete_pipelines()
+void FftSharedProgram::delete_pipelines()
 {
         m_pipeline_forward = vulkan::Pipeline();
         m_pipeline_inverse = vulkan::Pipeline();
