@@ -60,6 +60,6 @@ public:
         void resize(int width, int height);
 
         info::Camera view_info() const;
-        gpu::renderer::RendererCameraInfo renderer_info() const;
+        gpu::renderer::CameraInfo renderer_info() const;
 };
 }

@@ -143,20 +143,20 @@ std::string buffer_info(const std::vector<vulkan::DepthAttachment>& depth, doubl
         return oss.str();
 }
 
-unsigned compute_buffer_count(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapchain)
+unsigned compute_buffer_count(DepthBufferCount buffer_count, const vulkan::Swapchain& swapchain)
 {
         switch (buffer_count)
         {
-        case RendererDepthBufferCount::One:
+        case DepthBufferCount::One:
                 return 1;
-        case RendererDepthBufferCount::Swapchain:
+        case DepthBufferCount::Swapchain:
                 ASSERT(!swapchain.image_views().empty());
                 return swapchain.image_views().size();
         }
         error_fatal("Error depth buffer count");
 }
 
-class Impl final : public RendererDepthBuffers
+class Impl final : public DepthBuffers
 {
         const vulkan::Device& m_device;
 
@@ -179,7 +179,7 @@ class Impl final : public RendererDepthBuffers
         const std::vector<VkClearValue>& clear_values() const override;
 
 public:
-        Impl(RendererDepthBufferCount buffer_count,
+        Impl(DepthBufferCount buffer_count,
              const vulkan::Swapchain& swapchain,
              const std::unordered_set<uint32_t>& attachment_family_indices,
              VkCommandPool graphics_command_pool,
@@ -195,7 +195,7 @@ public:
 };
 
 Impl::Impl(
-        RendererDepthBufferCount buffer_count,
+        DepthBufferCount buffer_count,
         const vulkan::Swapchain& swapchain,
         const std::unordered_set<uint32_t>& attachment_family_indices,
         VkCommandPool graphics_command_pool,
@@ -300,8 +300,8 @@ const std::vector<VkClearValue>& Impl::clear_values() const
 }
 }
 
-std::unique_ptr<RendererDepthBuffers> create_renderer_depth_buffers(
-        RendererDepthBufferCount buffer_count,
+std::unique_ptr<DepthBuffers> create_depth_buffers(
+        DepthBufferCount buffer_count,
         const vulkan::Swapchain& swapchain,
         const std::unordered_set<uint32_t>& attachment_family_indices,
         VkCommandPool graphics_command_pool,

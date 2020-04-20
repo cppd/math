@@ -19,14 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-std::vector<VkVertexInputBindingDescription> RendererPointsVertex::binding_descriptions()
+std::vector<VkVertexInputBindingDescription> PointsVertex::binding_descriptions()
 {
         std::vector<VkVertexInputBindingDescription> descriptions;
 
         {
                 VkVertexInputBindingDescription d = {};
                 d.binding = 0;
-                d.stride = sizeof(RendererPointsVertex);
+                d.stride = sizeof(PointsVertex);
                 d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
                 descriptions.push_back(d);
@@ -35,7 +35,7 @@ std::vector<VkVertexInputBindingDescription> RendererPointsVertex::binding_descr
         return descriptions;
 }
 
-std::vector<VkVertexInputAttributeDescription> RendererPointsVertex::attribute_descriptions()
+std::vector<VkVertexInputAttributeDescription> PointsVertex::attribute_descriptions()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
 
@@ -44,7 +44,7 @@ std::vector<VkVertexInputAttributeDescription> RendererPointsVertex::attribute_d
                 d.binding = 0;
                 d.location = 0;
                 d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(RendererPointsVertex, position);
+                d.offset = offsetof(PointsVertex, position);
 
                 descriptions.push_back(d);
         }

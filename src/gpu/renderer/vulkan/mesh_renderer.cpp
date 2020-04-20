@@ -28,7 +28,7 @@ MeshRenderer::MeshRenderer(
         const vulkan::Device& device,
         bool sample_shading,
         bool sampler_anisotropy,
-        const RendererBuffers& buffers)
+        const ShaderBuffers& buffers)
         : m_device(device),
           m_sample_shading(sample_shading),
           //
@@ -68,14 +68,14 @@ MeshRenderer::MeshRenderer(
                   buffers.matrices_buffer(),
                   buffers.drawing_buffer()),
           //
-          m_texture_sampler(create_renderer_texture_sampler(m_device, sampler_anisotropy)),
-          m_shadow_sampler(create_renderer_shadow_sampler(m_device))
+          m_texture_sampler(create_texture_sampler(m_device, sampler_anisotropy)),
+          m_shadow_sampler(create_shadow_sampler(m_device))
 {
 }
 
 vulkan::Descriptors MeshRenderer::create_material_descriptors_sets(const std::vector<MaterialInfo>& materials)
 {
-        return RendererTrianglesMaterialMemory::create(
+        return TrianglesMaterialMemory::create(
                 m_device, m_texture_sampler, m_triangles_program.descriptor_set_layout_material(), materials);
 }
 
@@ -120,7 +120,7 @@ void MeshRenderer::delete_render_buffers()
         m_render_lines_pipeline.reset();
 }
 
-void MeshRenderer::create_depth_buffers(const RendererDepthBuffers* depth_buffers)
+void MeshRenderer::create_depth_buffers(const DepthBuffers* depth_buffers)
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -171,14 +171,13 @@ void MeshRenderer::draw_commands(
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_program.pipeline_layout(),
-                        RendererTrianglesMemory::set_number(), 1 /*set count*/, &m_triangles_memory.descriptor_set(), 0,
+                        TrianglesMemory::set_number(), 1 /*set count*/, &m_triangles_memory.descriptor_set(), 0,
                         nullptr);
 
                 auto bind_material_descriptor_set = [&](VkDescriptorSet descriptor_set) {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_program.pipeline_layout(),
-                                RendererTrianglesMaterialMemory::set_number(), 1 /*set count*/, &descriptor_set, 0,
-                                nullptr);
+                                TrianglesMaterialMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
                 mesh->commands_triangles(
@@ -191,8 +190,8 @@ void MeshRenderer::draw_commands(
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_depth_program.pipeline_layout(),
-                        RendererTrianglesDepthMemory::set_number(), 1 /*set count*/,
-                        &m_triangles_depth_memory.descriptor_set(), 0, nullptr);
+                        TrianglesDepthMemory::set_number(), 1 /*set count*/, &m_triangles_depth_memory.descriptor_set(),
+                        0, nullptr);
 
                 mesh->commands_plain_triangles(command_buffer);
         }
@@ -203,8 +202,7 @@ void MeshRenderer::draw_commands(
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_program.pipeline_layout(),
-                        RendererPointsMemory::set_number(), 1 /*set count*/, &m_points_memory.descriptor_set(), 0,
-                        nullptr);
+                        PointsMemory::set_number(), 1 /*set count*/, &m_points_memory.descriptor_set(), 0, nullptr);
 
                 mesh->commands_lines(command_buffer);
         }
@@ -215,8 +213,7 @@ void MeshRenderer::draw_commands(
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_program.pipeline_layout(),
-                        RendererPointsMemory::set_number(), 1 /*set count*/, &m_points_memory.descriptor_set(), 0,
-                        nullptr);
+                        PointsMemory::set_number(), 1 /*set count*/, &m_points_memory.descriptor_set(), 0, nullptr);
 
                 mesh->commands_points(command_buffer);
         }
@@ -227,8 +224,8 @@ void MeshRenderer::draw_commands(
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangle_lines_program.pipeline_layout(),
-                        RendererTriangleLinesMemory::set_number(), 1 /*set count*/,
-                        &m_triangle_lines_memory.descriptor_set(), 0, nullptr);
+                        TriangleLinesMemory::set_number(), 1 /*set count*/, &m_triangle_lines_memory.descriptor_set(),
+                        0, nullptr);
 
                 mesh->commands_plain_triangles(command_buffer);
         }
@@ -239,8 +236,7 @@ void MeshRenderer::draw_commands(
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_normals_program.pipeline_layout(),
-                        RendererNormalsMemory::set_number(), 1 /*set count*/, &m_normals_memory.descriptor_set(), 0,
-                        nullptr);
+                        NormalsMemory::set_number(), 1 /*set count*/, &m_normals_memory.descriptor_set(), 0, nullptr);
 
                 mesh->commands_triangle_vertices(command_buffer);
         }

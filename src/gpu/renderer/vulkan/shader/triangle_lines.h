@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class RendererTriangleLinesMemory final
+class TriangleLinesMemory final
 {
         static constexpr int SET_NUMBER = 0;
         static constexpr int MATRICES_BINDING = 0;
@@ -38,25 +38,25 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        RendererTriangleLinesMemory(
+        TriangleLinesMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const vulkan::Buffer& matrices,
                 const vulkan::Buffer& drawing);
 
-        RendererTriangleLinesMemory(const RendererTriangleLinesMemory&) = delete;
-        RendererTriangleLinesMemory& operator=(const RendererTriangleLinesMemory&) = delete;
-        RendererTriangleLinesMemory& operator=(RendererTriangleLinesMemory&&) = delete;
+        TriangleLinesMemory(const TriangleLinesMemory&) = delete;
+        TriangleLinesMemory& operator=(const TriangleLinesMemory&) = delete;
+        TriangleLinesMemory& operator=(TriangleLinesMemory&&) = delete;
 
-        RendererTriangleLinesMemory(RendererTriangleLinesMemory&&) = default;
-        ~RendererTriangleLinesMemory() = default;
+        TriangleLinesMemory(TriangleLinesMemory&&) = default;
+        ~TriangleLinesMemory() = default;
 
         //
 
         const VkDescriptorSet& descriptor_set() const;
 };
 
-class RendererTriangleLinesProgram final
+class TriangleLinesProgram final
 {
         const vulkan::Device& m_device;
 
@@ -67,14 +67,14 @@ class RendererTriangleLinesProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        explicit RendererTriangleLinesProgram(const vulkan::Device& device);
+        explicit TriangleLinesProgram(const vulkan::Device& device);
 
-        RendererTriangleLinesProgram(const RendererTriangleLinesProgram&) = delete;
-        RendererTriangleLinesProgram& operator=(const RendererTriangleLinesProgram&) = delete;
-        RendererTriangleLinesProgram& operator=(RendererTriangleLinesProgram&&) = delete;
+        TriangleLinesProgram(const TriangleLinesProgram&) = delete;
+        TriangleLinesProgram& operator=(const TriangleLinesProgram&) = delete;
+        TriangleLinesProgram& operator=(TriangleLinesProgram&&) = delete;
 
-        RendererTriangleLinesProgram(RendererTriangleLinesProgram&&) = default;
-        ~RendererTriangleLinesProgram() = default;
+        TriangleLinesProgram(TriangleLinesProgram&&) = default;
+        ~TriangleLinesProgram() = default;
 
         vulkan::Pipeline create_pipeline(
                 VkRenderPass render_pass,

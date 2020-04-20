@@ -40,22 +40,22 @@ class MeshRenderer
         const bool m_sample_shading;
 
         const RenderBuffers3D* m_render_buffers = nullptr;
-        const RendererDepthBuffers* m_depth_buffers = nullptr;
+        const DepthBuffers* m_depth_buffers = nullptr;
 
-        RendererTrianglesProgram m_triangles_program;
-        RendererTrianglesMemory m_triangles_memory;
+        TrianglesProgram m_triangles_program;
+        TrianglesMemory m_triangles_memory;
 
-        RendererTriangleLinesProgram m_triangle_lines_program;
-        RendererTriangleLinesMemory m_triangle_lines_memory;
+        TriangleLinesProgram m_triangle_lines_program;
+        TriangleLinesMemory m_triangle_lines_memory;
 
-        RendererNormalsProgram m_normals_program;
-        RendererNormalsMemory m_normals_memory;
+        NormalsProgram m_normals_program;
+        NormalsMemory m_normals_memory;
 
-        RendererTrianglesDepthProgram m_triangles_depth_program;
-        RendererTrianglesDepthMemory m_triangles_depth_memory;
+        TrianglesDepthProgram m_triangles_depth_program;
+        TrianglesDepthMemory m_triangles_depth_memory;
 
-        RendererPointsProgram m_points_program;
-        RendererPointsMemory m_points_memory;
+        PointsProgram m_points_program;
+        PointsMemory m_points_memory;
 
         std::optional<vulkan::Pipeline> m_render_triangles_pipeline;
         std::optional<vulkan::Pipeline> m_render_triangle_lines_pipeline;
@@ -82,7 +82,7 @@ public:
                 const vulkan::Device& device,
                 bool sample_shading,
                 bool sampler_anisotropy,
-                const RendererBuffers& buffers);
+                const ShaderBuffers& buffers);
 
         vulkan::Descriptors create_material_descriptors_sets(const std::vector<MaterialInfo>& materials);
 
@@ -92,7 +92,7 @@ public:
                 const Region<2, int>& viewport);
         void delete_render_buffers();
 
-        void create_depth_buffers(const RendererDepthBuffers* depth_buffers);
+        void create_depth_buffers(const DepthBuffers* depth_buffers);
         void delete_depth_buffers();
 
         void create_render_command_buffers(

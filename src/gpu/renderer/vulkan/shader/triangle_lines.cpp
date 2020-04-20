@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> RendererTriangleLinesMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> TriangleLinesMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -52,7 +52,7 @@ std::vector<VkDescriptorSetLayoutBinding> RendererTriangleLinesMemory::descripto
         return bindings;
 }
 
-RendererTriangleLinesMemory::RendererTriangleLinesMemory(
+TriangleLinesMemory::TriangleLinesMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const vulkan::Buffer& matrices,
@@ -86,26 +86,25 @@ RendererTriangleLinesMemory::RendererTriangleLinesMemory(
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned RendererTriangleLinesMemory::set_number()
+unsigned TriangleLinesMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& RendererTriangleLinesMemory::descriptor_set() const
+const VkDescriptorSet& TriangleLinesMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
 //
 
-RendererTriangleLinesProgram::RendererTriangleLinesProgram(const vulkan::Device& device)
+TriangleLinesProgram::TriangleLinesProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                  device,
-                  RendererTriangleLinesMemory::descriptor_set_layout_bindings())),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, TriangleLinesMemory::descriptor_set_layout_bindings())),
           m_pipeline_layout(vulkan::create_pipeline_layout(
                   device,
-                  {RendererTriangleLinesMemory::set_number()},
+                  {TriangleLinesMemory::set_number()},
                   {m_descriptor_set_layout})),
           m_vertex_shader(m_device, renderer_triangle_lines_vert(), "main"),
           m_geometry_shader(m_device, renderer_triangle_lines_geom(), "main"),
@@ -113,17 +112,17 @@ RendererTriangleLinesProgram::RendererTriangleLinesProgram(const vulkan::Device&
 {
 }
 
-VkDescriptorSetLayout RendererTriangleLinesProgram::descriptor_set_layout() const
+VkDescriptorSetLayout TriangleLinesProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout RendererTriangleLinesProgram::pipeline_layout() const
+VkPipelineLayout TriangleLinesProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline RendererTriangleLinesProgram::create_pipeline(
+vulkan::Pipeline TriangleLinesProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         bool sample_shading,
@@ -145,9 +144,9 @@ vulkan::Pipeline RendererTriangleLinesProgram::create_pipeline(
         const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader, &m_geometry_shader, &m_fragment_shader};
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr, nullptr};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions =
-                RendererTrianglesVertex::binding_descriptions();
+                TrianglesVertex::binding_descriptions();
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
-                RendererTrianglesVertex::attribute_descriptions_triangle_lines();
+                TrianglesVertex::attribute_descriptions_triangle_lines();
 
         info.shaders = &shaders;
         info.constants = &constants;

@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> RendererTrianglesMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> TrianglesMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -82,7 +82,7 @@ std::vector<VkDescriptorSetLayoutBinding> RendererTrianglesMemory::descriptor_se
         return bindings;
 }
 
-RendererTrianglesMemory::RendererTrianglesMemory(
+TrianglesMemory::TrianglesMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const vulkan::Buffer& matrices,
@@ -127,17 +127,17 @@ RendererTrianglesMemory::RendererTrianglesMemory(
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned RendererTrianglesMemory::set_number()
+unsigned TrianglesMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& RendererTrianglesMemory::descriptor_set() const
+const VkDescriptorSet& TrianglesMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void RendererTrianglesMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachment* shadow_texture) const
+void TrianglesMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachment* shadow_texture) const
 {
         ASSERT(shadow_texture && (shadow_texture->usage() & VK_IMAGE_USAGE_SAMPLED_BIT));
         ASSERT(shadow_texture && (shadow_texture->sample_count() == VK_SAMPLE_COUNT_1_BIT));
@@ -150,7 +150,7 @@ void RendererTrianglesMemory::set_shadow_texture(VkSampler sampler, const vulkan
         m_descriptors.update_descriptor_set(0, SHADOW_BINDING, image_info);
 }
 
-void RendererTrianglesMemory::set_object_image(const vulkan::ImageWithMemory* storage_image) const
+void TrianglesMemory::set_object_image(const vulkan::ImageWithMemory* storage_image) const
 {
         ASSERT(storage_image && storage_image->format() == VK_FORMAT_R32_UINT);
         ASSERT(storage_image && (storage_image->usage() & VK_IMAGE_USAGE_STORAGE_BIT));
@@ -164,7 +164,7 @@ void RendererTrianglesMemory::set_object_image(const vulkan::ImageWithMemory* st
 
 //
 
-std::vector<VkDescriptorSetLayoutBinding> RendererTrianglesMaterialMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> TrianglesMaterialMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -211,7 +211,7 @@ std::vector<VkDescriptorSetLayoutBinding> RendererTrianglesMaterialMemory::descr
         return bindings;
 }
 
-vulkan::Descriptors RendererTrianglesMaterialMemory::create(
+vulkan::Descriptors TrianglesMaterialMemory::create(
         VkDevice device,
         VkSampler sampler,
         VkDescriptorSetLayout descriptor_set_layout,
@@ -281,24 +281,23 @@ vulkan::Descriptors RendererTrianglesMaterialMemory::create(
         return descriptors;
 }
 
-unsigned RendererTrianglesMaterialMemory::set_number()
+unsigned TrianglesMaterialMemory::set_number()
 {
         return SET_NUMBER;
 }
 
 //
 
-RendererTrianglesProgram::RendererTrianglesProgram(const vulkan::Device& device)
+TrianglesProgram::TrianglesProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                  device,
-                  RendererTrianglesMemory::descriptor_set_layout_bindings())),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, TrianglesMemory::descriptor_set_layout_bindings())),
           m_descriptor_set_layout_material(vulkan::create_descriptor_set_layout(
                   device,
-                  RendererTrianglesMaterialMemory::descriptor_set_layout_bindings())),
+                  TrianglesMaterialMemory::descriptor_set_layout_bindings())),
           m_pipeline_layout(vulkan::create_pipeline_layout(
                   device,
-                  {RendererTrianglesMemory::set_number(), RendererTrianglesMaterialMemory::set_number()},
+                  {TrianglesMemory::set_number(), TrianglesMaterialMemory::set_number()},
                   {m_descriptor_set_layout, m_descriptor_set_layout_material})),
           m_vertex_shader(m_device, renderer_triangles_vert(), "main"),
           m_geometry_shader(m_device, renderer_triangles_geom(), "main"),
@@ -306,22 +305,22 @@ RendererTrianglesProgram::RendererTrianglesProgram(const vulkan::Device& device)
 {
 }
 
-VkDescriptorSetLayout RendererTrianglesProgram::descriptor_set_layout() const
+VkDescriptorSetLayout TrianglesProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkDescriptorSetLayout RendererTrianglesProgram::descriptor_set_layout_material() const
+VkDescriptorSetLayout TrianglesProgram::descriptor_set_layout_material() const
 {
         return m_descriptor_set_layout_material;
 }
 
-VkPipelineLayout RendererTrianglesProgram::pipeline_layout() const
+VkPipelineLayout TrianglesProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline RendererTrianglesProgram::create_pipeline(
+vulkan::Pipeline TrianglesProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         bool sample_shading,
@@ -343,9 +342,9 @@ vulkan::Pipeline RendererTrianglesProgram::create_pipeline(
         const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader, &m_geometry_shader, &m_fragment_shader};
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr, nullptr};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions =
-                RendererTrianglesVertex::binding_descriptions();
+                TrianglesVertex::binding_descriptions();
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
-                RendererTrianglesVertex::attribute_descriptions_triangles();
+                TrianglesVertex::attribute_descriptions_triangles();
 
         info.shaders = &shaders;
         info.constants = &constants;

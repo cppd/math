@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class RendererTrianglesMemory final
+class TrianglesMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -47,19 +47,19 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        RendererTrianglesMemory(
+        TrianglesMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const vulkan::Buffer& matrices,
                 const vulkan::Buffer& lighting,
                 const vulkan::Buffer& drawing);
 
-        RendererTrianglesMemory(const RendererTrianglesMemory&) = delete;
-        RendererTrianglesMemory& operator=(const RendererTrianglesMemory&) = delete;
-        RendererTrianglesMemory& operator=(RendererTrianglesMemory&&) = delete;
+        TrianglesMemory(const TrianglesMemory&) = delete;
+        TrianglesMemory& operator=(const TrianglesMemory&) = delete;
+        TrianglesMemory& operator=(TrianglesMemory&&) = delete;
 
-        RendererTrianglesMemory(RendererTrianglesMemory&&) = default;
-        ~RendererTrianglesMemory() = default;
+        TrianglesMemory(TrianglesMemory&&) = default;
+        ~TrianglesMemory() = default;
 
         //
 
@@ -71,7 +71,7 @@ public:
         void set_object_image(const vulkan::ImageWithMemory* storage_image) const;
 };
 
-class RendererTrianglesMaterialMemory final
+class TrianglesMaterialMemory final
 {
         static constexpr int SET_NUMBER = 1;
 
@@ -91,7 +91,7 @@ public:
                 const std::vector<MaterialInfo>& materials);
 };
 
-class RendererTrianglesProgram final
+class TrianglesProgram final
 {
         const vulkan::Device& m_device;
 
@@ -103,14 +103,14 @@ class RendererTrianglesProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        explicit RendererTrianglesProgram(const vulkan::Device& device);
+        explicit TrianglesProgram(const vulkan::Device& device);
 
-        RendererTrianglesProgram(const RendererTrianglesProgram&) = delete;
-        RendererTrianglesProgram& operator=(const RendererTrianglesProgram&) = delete;
-        RendererTrianglesProgram& operator=(RendererTrianglesProgram&&) = delete;
+        TrianglesProgram(const TrianglesProgram&) = delete;
+        TrianglesProgram& operator=(const TrianglesProgram&) = delete;
+        TrianglesProgram& operator=(TrianglesProgram&&) = delete;
 
-        RendererTrianglesProgram(RendererTrianglesProgram&&) = default;
-        ~RendererTrianglesProgram() = default;
+        TrianglesProgram(TrianglesProgram&&) = default;
+        ~TrianglesProgram() = default;
 
         vulkan::Pipeline create_pipeline(
                 VkRenderPass render_pass,

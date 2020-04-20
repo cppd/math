@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> RendererPointsMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> PointsMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -63,7 +63,7 @@ std::vector<VkDescriptorSetLayoutBinding> RendererPointsMemory::descriptor_set_l
         return bindings;
 }
 
-RendererPointsMemory::RendererPointsMemory(
+PointsMemory::PointsMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const vulkan::Buffer& matrices,
@@ -97,17 +97,17 @@ RendererPointsMemory::RendererPointsMemory(
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned RendererPointsMemory::set_number()
+unsigned PointsMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& RendererPointsMemory::descriptor_set() const
+const VkDescriptorSet& PointsMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void RendererPointsMemory::set_object_image(const vulkan::ImageWithMemory* storage_image) const
+void PointsMemory::set_object_image(const vulkan::ImageWithMemory* storage_image) const
 {
         ASSERT(storage_image && storage_image->format() == VK_FORMAT_R32_UINT);
         ASSERT(storage_image && (storage_image->usage() & VK_IMAGE_USAGE_STORAGE_BIT));
@@ -121,31 +121,29 @@ void RendererPointsMemory::set_object_image(const vulkan::ImageWithMemory* stora
 
 //
 
-RendererPointsProgram::RendererPointsProgram(const vulkan::Device& device)
+PointsProgram::PointsProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, RendererPointsMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device,
-                  {RendererPointsMemory::set_number()},
-                  {m_descriptor_set_layout})),
+                  vulkan::create_descriptor_set_layout(device, PointsMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {PointsMemory::set_number()}, {m_descriptor_set_layout})),
           m_vertex_shader_0d(m_device, renderer_points_0d_vert(), "main"),
           m_vertex_shader_1d(m_device, renderer_points_1d_vert(), "main"),
           m_fragment_shader(m_device, renderer_points_frag(), "main")
 {
 }
 
-VkDescriptorSetLayout RendererPointsProgram::descriptor_set_layout() const
+VkDescriptorSetLayout PointsProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout RendererPointsProgram::pipeline_layout() const
+VkPipelineLayout PointsProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline RendererPointsProgram::create_pipeline(
+vulkan::Pipeline PointsProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         VkPrimitiveTopology primitive_topology,
@@ -178,10 +176,9 @@ vulkan::Pipeline RendererPointsProgram::create_pipeline(
                 error_fatal("Unsupported primitive topology for renderer points program");
         }
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions =
-                RendererPointsVertex::binding_descriptions();
+        const std::vector<VkVertexInputBindingDescription> binding_descriptions = PointsVertex::binding_descriptions();
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
-                RendererPointsVertex::attribute_descriptions();
+                PointsVertex::attribute_descriptions();
 
         info.shaders = &shaders;
         info.constants = &constants;

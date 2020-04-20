@@ -24,13 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-struct RendererTrianglesVertex
+struct TrianglesVertex
 {
         vec3f position;
         vec3f normal;
         vec2f texture_coordinates;
 
-        constexpr RendererTrianglesVertex(const vec3f& position, const vec3f& normal, const vec2f& texture_coordinates)
+        constexpr TrianglesVertex(const vec3f& position, const vec3f& normal, const vec2f& texture_coordinates)
                 : position(position), normal(normal), texture_coordinates(texture_coordinates)
         {
         }

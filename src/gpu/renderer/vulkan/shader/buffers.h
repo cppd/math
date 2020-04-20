@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class RendererBuffers
+class ShaderBuffers
 {
         std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
 
@@ -84,7 +84,7 @@ class RendererBuffers
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
-        RendererBuffers(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+        ShaderBuffers(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
 
         const vulkan::Buffer& matrices_buffer() const;
         const vulkan::Buffer& shadow_matrices_buffer() const;

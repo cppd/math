@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-vulkan::Sampler create_renderer_texture_sampler(const vulkan::Device& device, bool anisotropy)
+vulkan::Sampler create_texture_sampler(const vulkan::Device& device, bool anisotropy)
 {
         VkSamplerCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -64,7 +64,7 @@ vulkan::Sampler create_renderer_texture_sampler(const vulkan::Device& device, bo
         return vulkan::Sampler(device, create_info);
 }
 
-vulkan::Sampler create_renderer_shadow_sampler(VkDevice device)
+vulkan::Sampler create_shadow_sampler(VkDevice device)
 {
         VkSamplerCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;

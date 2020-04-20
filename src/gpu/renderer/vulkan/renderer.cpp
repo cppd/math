@@ -91,12 +91,12 @@ class Impl final : public Renderer
         const RenderBuffers3D* m_render_buffers = nullptr;
         const vulkan::ImageWithMemory* m_object_image = nullptr;
 
-        RendererBuffers m_shader_buffers;
+        ShaderBuffers m_shader_buffers;
 
         std::unordered_map<ObjectId, std::unique_ptr<MeshObject>> m_mesh_storage;
         std::optional<ObjectId> m_current_object_id;
 
-        std::unique_ptr<RendererDepthBuffers> m_mesh_renderer_depth_render_buffers;
+        std::unique_ptr<DepthBuffers> m_mesh_renderer_depth_render_buffers;
         vulkan::Semaphore m_mesh_renderer_signal_semaphore;
         vulkan::Semaphore m_mesh_renderer_depth_signal_semaphore;
         MeshRenderer m_mesh_renderer;
@@ -221,7 +221,7 @@ class Impl final : public Renderer
                 create_mesh_render_command_buffers();
                 create_mesh_depth_command_buffers();
         }
-        void set_camera(const RendererCameraInfo& c) override
+        void set_camera(const CameraInfo& c) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -427,8 +427,8 @@ class Impl final : public Renderer
 
                 delete_mesh_depth_buffers();
 
-                constexpr RendererDepthBufferCount buffer_count = RendererDepthBufferCount::One;
-                m_mesh_renderer_depth_render_buffers = create_renderer_depth_buffers(
+                constexpr DepthBufferCount buffer_count = DepthBufferCount::One;
+                m_mesh_renderer_depth_render_buffers = create_depth_buffers(
                         buffer_count, *m_swapchain, {m_graphics_queue.family_index()}, m_graphics_command_pool,
                         m_graphics_queue, m_device, m_viewport.width(), m_viewport.height(), m_shadow_zoom);
 

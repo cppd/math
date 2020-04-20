@@ -24,11 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-struct RendererPointsVertex
+struct PointsVertex
 {
         vec3f position;
 
-        explicit constexpr RendererPointsVertex(const vec3f& position) : position(position)
+        explicit constexpr PointsVertex(const vec3f& position) : position(position)
         {
         }
 

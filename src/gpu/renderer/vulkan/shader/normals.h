@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class RendererNormalsMemory final
+class NormalsMemory final
 {
         static constexpr int SET_NUMBER = 0;
         static constexpr int MATRICES_BINDING = 0;
@@ -38,25 +38,25 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        RendererNormalsMemory(
+        NormalsMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const vulkan::Buffer& matrices,
                 const vulkan::Buffer& drawing);
 
-        RendererNormalsMemory(const RendererNormalsMemory&) = delete;
-        RendererNormalsMemory& operator=(const RendererNormalsMemory&) = delete;
-        RendererNormalsMemory& operator=(RendererNormalsMemory&&) = delete;
+        NormalsMemory(const NormalsMemory&) = delete;
+        NormalsMemory& operator=(const NormalsMemory&) = delete;
+        NormalsMemory& operator=(NormalsMemory&&) = delete;
 
-        RendererNormalsMemory(RendererNormalsMemory&&) = default;
-        ~RendererNormalsMemory() = default;
+        NormalsMemory(NormalsMemory&&) = default;
+        ~NormalsMemory() = default;
 
         //
 
         const VkDescriptorSet& descriptor_set() const;
 };
 
-class RendererNormalsProgram final
+class NormalsProgram final
 {
         const vulkan::Device& m_device;
 
@@ -67,14 +67,14 @@ class RendererNormalsProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        explicit RendererNormalsProgram(const vulkan::Device& device);
+        explicit NormalsProgram(const vulkan::Device& device);
 
-        RendererNormalsProgram(const RendererNormalsProgram&) = delete;
-        RendererNormalsProgram& operator=(const RendererNormalsProgram&) = delete;
-        RendererNormalsProgram& operator=(RendererNormalsProgram&&) = delete;
+        NormalsProgram(const NormalsProgram&) = delete;
+        NormalsProgram& operator=(const NormalsProgram&) = delete;
+        NormalsProgram& operator=(NormalsProgram&&) = delete;
 
-        RendererNormalsProgram(RendererNormalsProgram&&) = default;
-        ~RendererNormalsProgram() = default;
+        NormalsProgram(NormalsProgram&&) = default;
+        ~NormalsProgram() = default;
 
         vulkan::Pipeline create_pipeline(
                 VkRenderPass render_pass,

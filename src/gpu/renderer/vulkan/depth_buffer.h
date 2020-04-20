@@ -31,9 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-struct RendererDepthBuffers
+struct DepthBuffers
 {
-        virtual ~RendererDepthBuffers() = default;
+        virtual ~DepthBuffers() = default;
 
         virtual const vulkan::DepthAttachment* texture(unsigned index) const = 0;
         virtual unsigned width() const = 0;
@@ -44,14 +44,14 @@ struct RendererDepthBuffers
         virtual const std::vector<VkClearValue>& clear_values() const = 0;
 };
 
-enum class RendererDepthBufferCount
+enum class DepthBufferCount
 {
         One,
         Swapchain
 };
 
-std::unique_ptr<RendererDepthBuffers> create_renderer_depth_buffers(
-        RendererDepthBufferCount buffer_count,
+std::unique_ptr<DepthBuffers> create_depth_buffers(
+        DepthBufferCount buffer_count,
         const vulkan::Swapchain& swapchain,
         const std::unordered_set<uint32_t>& attachment_family_indices,
         VkCommandPool graphics_command_pool,

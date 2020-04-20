@@ -217,7 +217,7 @@ void load_vertices(
 
         double map_time = time_in_seconds();
 
-        std::vector<RendererTrianglesVertex> vertices;
+        std::vector<TrianglesVertex> vertices;
         std::vector<IndexType> indices;
         std::unordered_map<MapVertex, unsigned, MapVertex::Hash> map;
         vertices.reserve(3 * mesh.facets.size());
@@ -281,7 +281,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(
                 error("No mesh points found");
         }
 
-        std::vector<RendererPointsVertex> vertices;
+        std::vector<PointsVertex> vertices;
         vertices.reserve(mesh.points.size());
 
         for (const mesh::Mesh<3>::Point& p : mesh.points)
@@ -306,7 +306,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(
                 error("No mesh lines found");
         }
 
-        std::vector<RendererPointsVertex> vertices;
+        std::vector<PointsVertex> vertices;
         vertices.reserve(2 * mesh.lines.size());
 
         for (const mesh::Mesh<3>::Line& line : mesh.lines)

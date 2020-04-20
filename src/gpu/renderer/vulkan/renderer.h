@@ -61,7 +61,7 @@ struct Renderer
         virtual void set_show_materials(bool show) = 0;
         virtual void set_show_normals(bool show) = 0;
         virtual void set_shadow_zoom(double zoom) = 0;
-        virtual void set_camera(const RendererCameraInfo& c) = 0;
+        virtual void set_camera(const CameraInfo& c) = 0;
         virtual void set_clip_plane(const std::optional<vec4>& plane) = 0;
 
         virtual void object_add(const mesh::MeshObject<3>& object) = 0;

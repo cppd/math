@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class RendererPointsMemory final
+class PointsMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -43,18 +43,18 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        RendererPointsMemory(
+        PointsMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const vulkan::Buffer& matrices,
                 const vulkan::Buffer& drawing);
 
-        RendererPointsMemory(const RendererPointsMemory&) = delete;
-        RendererPointsMemory& operator=(const RendererPointsMemory&) = delete;
-        RendererPointsMemory& operator=(RendererPointsMemory&&) = delete;
+        PointsMemory(const PointsMemory&) = delete;
+        PointsMemory& operator=(const PointsMemory&) = delete;
+        PointsMemory& operator=(PointsMemory&&) = delete;
 
-        RendererPointsMemory(RendererPointsMemory&&) = default;
-        ~RendererPointsMemory() = default;
+        PointsMemory(PointsMemory&&) = default;
+        ~PointsMemory() = default;
 
         //
 
@@ -65,7 +65,7 @@ public:
         void set_object_image(const vulkan::ImageWithMemory* storage_image) const;
 };
 
-class RendererPointsProgram final
+class PointsProgram final
 {
         const vulkan::Device& m_device;
 
@@ -76,14 +76,14 @@ class RendererPointsProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        explicit RendererPointsProgram(const vulkan::Device& device);
+        explicit PointsProgram(const vulkan::Device& device);
 
-        RendererPointsProgram(const RendererPointsProgram&) = delete;
-        RendererPointsProgram& operator=(const RendererPointsProgram&) = delete;
-        RendererPointsProgram& operator=(RendererPointsProgram&&) = delete;
+        PointsProgram(const PointsProgram&) = delete;
+        PointsProgram& operator=(const PointsProgram&) = delete;
+        PointsProgram& operator=(PointsProgram&&) = delete;
 
-        RendererPointsProgram(RendererPointsProgram&&) = default;
-        ~RendererPointsProgram() = default;
+        PointsProgram(PointsProgram&&) = default;
+        ~PointsProgram() = default;
 
         vulkan::Pipeline create_pipeline(
                 VkRenderPass render_pass,

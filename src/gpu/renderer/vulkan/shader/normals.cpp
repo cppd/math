@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> RendererNormalsMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> NormalsMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -52,7 +52,7 @@ std::vector<VkDescriptorSetLayoutBinding> RendererNormalsMemory::descriptor_set_
         return bindings;
 }
 
-RendererNormalsMemory::RendererNormalsMemory(
+NormalsMemory::NormalsMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const vulkan::Buffer& matrices,
@@ -86,44 +86,41 @@ RendererNormalsMemory::RendererNormalsMemory(
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned RendererNormalsMemory::set_number()
+unsigned NormalsMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& RendererNormalsMemory::descriptor_set() const
+const VkDescriptorSet& NormalsMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
 //
 
-RendererNormalsProgram::RendererNormalsProgram(const vulkan::Device& device)
+NormalsProgram::NormalsProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                  device,
-                  RendererNormalsMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device,
-                  {RendererNormalsMemory::set_number()},
-                  {m_descriptor_set_layout})),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, NormalsMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {NormalsMemory::set_number()}, {m_descriptor_set_layout})),
           m_vertex_shader(m_device, renderer_normals_vert(), "main"),
           m_geometry_shader(m_device, renderer_normals_geom(), "main"),
           m_fragment_shader(m_device, renderer_normals_frag(), "main")
 {
 }
 
-VkDescriptorSetLayout RendererNormalsProgram::descriptor_set_layout() const
+VkDescriptorSetLayout NormalsProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout RendererNormalsProgram::pipeline_layout() const
+VkPipelineLayout NormalsProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline RendererNormalsProgram::create_pipeline(
+vulkan::Pipeline NormalsProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         bool sample_shading,
@@ -145,9 +142,9 @@ vulkan::Pipeline RendererNormalsProgram::create_pipeline(
         const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader, &m_geometry_shader, &m_fragment_shader};
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr, nullptr};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions =
-                RendererTrianglesVertex::binding_descriptions();
+                TrianglesVertex::binding_descriptions();
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
-                RendererTrianglesVertex::attribute_descriptions_normals();
+                TrianglesVertex::attribute_descriptions_normals();
 
         info.shaders = &shaders;
         info.constants = &constants;
