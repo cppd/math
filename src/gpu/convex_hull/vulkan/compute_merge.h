@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::convex_hull
 {
-class ConvexHullMergeMemory final
+class MergeMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -39,14 +39,14 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        ConvexHullMergeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        MergeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        ConvexHullMergeMemory(const ConvexHullMergeMemory&) = delete;
-        ConvexHullMergeMemory& operator=(const ConvexHullMergeMemory&) = delete;
-        ConvexHullMergeMemory& operator=(ConvexHullMergeMemory&&) = delete;
+        MergeMemory(const MergeMemory&) = delete;
+        MergeMemory& operator=(const MergeMemory&) = delete;
+        MergeMemory& operator=(MergeMemory&&) = delete;
 
-        ConvexHullMergeMemory(ConvexHullMergeMemory&&) = default;
-        ~ConvexHullMergeMemory() = default;
+        MergeMemory(MergeMemory&&) = default;
+        ~MergeMemory() = default;
 
         //
 
@@ -57,7 +57,7 @@ public:
         void set_lines(const vulkan::BufferWithMemory& buffer) const;
 };
 
-class ConvexHullMergeConstant final : public vulkan::SpecializationConstant
+class MergeConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -73,32 +73,32 @@ class ConvexHullMergeConstant final : public vulkan::SpecializationConstant
         size_t size() const override;
 
 public:
-        ConvexHullMergeConstant();
+        MergeConstant();
 
         void set_line_size(int32_t v);
         void set_iteration_count(int32_t v);
         void set_local_size_x(int32_t v);
 };
 
-class ConvexHullMergeProgram final
+class MergeProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        ConvexHullMergeConstant m_constant;
+        MergeConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::Pipeline m_pipeline;
 
 public:
-        explicit ConvexHullMergeProgram(const vulkan::Device& device);
+        explicit MergeProgram(const vulkan::Device& device);
 
-        ConvexHullMergeProgram(const ConvexHullMergeProgram&) = delete;
-        ConvexHullMergeProgram& operator=(const ConvexHullMergeProgram&) = delete;
-        ConvexHullMergeProgram& operator=(ConvexHullMergeProgram&&) = delete;
+        MergeProgram(const MergeProgram&) = delete;
+        MergeProgram& operator=(const MergeProgram&) = delete;
+        MergeProgram& operator=(MergeProgram&&) = delete;
 
-        ConvexHullMergeProgram(ConvexHullMergeProgram&&) = default;
-        ~ConvexHullMergeProgram() = default;
+        MergeProgram(MergeProgram&&) = default;
+        ~MergeProgram() = default;
 
         void create_pipeline(unsigned height, unsigned local_size_x, unsigned iteration_count);
         void delete_pipeline();

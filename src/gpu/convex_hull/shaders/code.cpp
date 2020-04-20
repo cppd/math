@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "source.h"
+#include "code.h"
 
-namespace gpu
+namespace gpu::convex_hull
 {
 namespace
 {
@@ -38,27 +38,27 @@ constexpr uint32_t view_frag[]{
 };
 }
 
-Span<const uint32_t> convex_hull_prepare_comp()
+Span<const uint32_t> code_prepare_comp()
 {
         return prepare_comp;
 }
 
-Span<const uint32_t> convex_hull_merge_comp()
+Span<const uint32_t> code_merge_comp()
 {
         return merge_comp;
 }
 
-Span<const uint32_t> convex_hull_filter_comp()
+Span<const uint32_t> code_filter_comp()
 {
         return filter_comp;
 }
 
-Span<const uint32_t> convex_hull_view_frag()
+Span<const uint32_t> code_view_frag()
 {
         return view_frag;
 }
 
-Span<const uint32_t> convex_hull_view_vert()
+Span<const uint32_t> code_view_vert()
 {
         return view_vert;
 }

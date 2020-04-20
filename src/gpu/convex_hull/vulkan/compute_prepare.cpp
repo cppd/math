@@ -17,16 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_prepare.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
 #include <type_traits>
 
-namespace gpu
+namespace gpu::convex_hull
 {
-std::vector<VkDescriptorSetLayoutBinding> ConvexHullPrepareMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> PrepareMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -53,24 +53,22 @@ std::vector<VkDescriptorSetLayoutBinding> ConvexHullPrepareMemory::descriptor_se
         return bindings;
 }
 
-ConvexHullPrepareMemory::ConvexHullPrepareMemory(
-        const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout)
+PrepareMemory::PrepareMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-unsigned ConvexHullPrepareMemory::set_number()
+unsigned PrepareMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& ConvexHullPrepareMemory::descriptor_set() const
+const VkDescriptorSet& PrepareMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void ConvexHullPrepareMemory::set_object_image(const vulkan::ImageWithMemory& storage_image) const
+void PrepareMemory::set_object_image(const vulkan::ImageWithMemory& storage_image) const
 {
         ASSERT(storage_image.format() == VK_FORMAT_R32_UINT);
         ASSERT(storage_image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
@@ -82,7 +80,7 @@ void ConvexHullPrepareMemory::set_object_image(const vulkan::ImageWithMemory& st
         m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }
 
-void ConvexHullPrepareMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
+void PrepareMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -96,7 +94,7 @@ void ConvexHullPrepareMemory::set_lines(const vulkan::BufferWithMemory& buffer) 
 
 //
 
-ConvexHullPrepareConstant::ConvexHullPrepareConstant()
+PrepareConstant::PrepareConstant()
 {
         {
                 VkSpecializationMapEntry entry = {};
@@ -142,7 +140,7 @@ ConvexHullPrepareConstant::ConvexHullPrepareConstant()
         }
 }
 
-void ConvexHullPrepareConstant::set(int32_t local_size_x, int32_t buffer_size, const Region<2, int>& rectangle)
+void PrepareConstant::set(int32_t local_size_x, int32_t buffer_size, const Region<2, int>& rectangle)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
         m_data.local_size_x = local_size_x;
@@ -156,37 +154,34 @@ void ConvexHullPrepareConstant::set(int32_t local_size_x, int32_t buffer_size, c
         m_data.height = rectangle.height();
 }
 
-const std::vector<VkSpecializationMapEntry>& ConvexHullPrepareConstant::entries() const
+const std::vector<VkSpecializationMapEntry>& PrepareConstant::entries() const
 {
         return m_entries;
 }
 
-const void* ConvexHullPrepareConstant::data() const
+const void* PrepareConstant::data() const
 {
         return &m_data;
 }
 
-size_t ConvexHullPrepareConstant::size() const
+size_t PrepareConstant::size() const
 {
         return sizeof(m_data);
 }
 
 //
 
-ConvexHullPrepareProgram::ConvexHullPrepareProgram(const vulkan::Device& device)
+PrepareProgram::PrepareProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                  device,
-                  ConvexHullPrepareMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device,
-                  {ConvexHullPrepareMemory::set_number()},
-                  {m_descriptor_set_layout})),
-          m_shader(device, convex_hull_prepare_comp(), "main")
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, PrepareMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {PrepareMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, code_prepare_comp(), "main")
 {
 }
 
-void ConvexHullPrepareProgram::create_pipeline(unsigned buffer_and_group_size, const Region<2, int>& rectangle)
+void PrepareProgram::create_pipeline(unsigned buffer_and_group_size, const Region<2, int>& rectangle)
 {
         m_constant.set(buffer_and_group_size, buffer_and_group_size, rectangle);
 
@@ -198,22 +193,22 @@ void ConvexHullPrepareProgram::create_pipeline(unsigned buffer_and_group_size, c
         m_pipeline = create_compute_pipeline(info);
 }
 
-void ConvexHullPrepareProgram::delete_pipeline()
+void PrepareProgram::delete_pipeline()
 {
         m_pipeline = vulkan::Pipeline();
 }
 
-VkDescriptorSetLayout ConvexHullPrepareProgram::descriptor_set_layout() const
+VkDescriptorSetLayout PrepareProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout ConvexHullPrepareProgram::pipeline_layout() const
+VkPipelineLayout PrepareProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-VkPipeline ConvexHullPrepareProgram::pipeline() const
+VkPipeline PrepareProgram::pipeline() const
 {
         return m_pipeline;
 }

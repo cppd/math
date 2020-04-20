@@ -38,7 +38,7 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 #include <optional>
 #include <thread>
 
-namespace gpu
+namespace gpu::convex_hull
 {
 namespace
 {
@@ -48,16 +48,16 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 };
 // clang-format on
 
-int group_size_merge(int height, const VkPhysicalDeviceLimits& limits)
+int limits_group_size_merge(int height, const VkPhysicalDeviceLimits& limits)
 {
-        return convex_hull_group_size_merge(
+        return group_size_merge(
                 height, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
                 limits.maxComputeSharedMemorySize);
 }
 
-int group_size_prepare(int width, const VkPhysicalDeviceLimits& limits)
+int limits_group_size_prepare(int width, const VkPhysicalDeviceLimits& limits)
 {
-        return convex_hull_group_size_prepare(
+        return group_size_prepare(
                 width, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
                 limits.maxComputeSharedMemorySize);
 }
@@ -85,7 +85,7 @@ void buffer_barrier(
                 nullptr, 1, &barrier, 0, nullptr);
 }
 
-class Impl final : public ConvexHullCompute
+class Impl final : public Compute
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -96,14 +96,14 @@ class Impl final : public ConvexHullCompute
         VkBuffer m_point_count_buffer = VK_NULL_HANDLE;
 
         unsigned m_prepare_group_count = 0;
-        ConvexHullPrepareProgram m_prepare_program;
-        ConvexHullPrepareMemory m_prepare_memory;
+        PrepareProgram m_prepare_program;
+        PrepareMemory m_prepare_memory;
 
-        ConvexHullMergeProgram m_merge_program;
-        ConvexHullMergeMemory m_merge_memory;
+        MergeProgram m_merge_program;
+        MergeMemory m_merge_memory;
 
-        ConvexHullFilterProgram m_filter_program;
-        ConvexHullFilterMemory m_filter_memory;
+        FilterProgram m_filter_program;
+        FilterMemory m_filter_memory;
 
         void compute_commands(VkCommandBuffer command_buffer) const override
         {
@@ -114,7 +114,7 @@ class Impl final : public ConvexHullCompute
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_program.pipeline());
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_program.pipeline_layout(),
-                        ConvexHullPrepareMemory::set_number(), 1, &m_prepare_memory.descriptor_set(), 0, nullptr);
+                        PrepareMemory::set_number(), 1, &m_prepare_memory.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, m_prepare_group_count, 1, 1);
 
                 //
@@ -128,7 +128,7 @@ class Impl final : public ConvexHullCompute
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_merge_program.pipeline());
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_merge_program.pipeline_layout(),
-                        ConvexHullMergeMemory::set_number(), 1, &m_merge_memory.descriptor_set(), 0, nullptr);
+                        MergeMemory::set_number(), 1, &m_merge_memory.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, 2, 1, 1);
 
                 //
@@ -142,7 +142,7 @@ class Impl final : public ConvexHullCompute
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_filter_program.pipeline());
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_filter_program.pipeline_layout(),
-                        ConvexHullFilterMemory::set_number(), 1, &m_filter_memory.descriptor_set(), 0, nullptr);
+                        FilterMemory::set_number(), 1, &m_filter_memory.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, 1, 1, 1);
 
                 //
@@ -185,12 +185,11 @@ class Impl final : public ConvexHullCompute
                 m_prepare_memory.set_object_image(objects);
                 m_prepare_memory.set_lines(*m_lines_buffer);
                 m_prepare_group_count = height;
-                m_prepare_program.create_pipeline(group_size_prepare(width, m_instance.limits()), rectangle);
+                m_prepare_program.create_pipeline(limits_group_size_prepare(width, m_instance.limits()), rectangle);
 
                 m_merge_memory.set_lines(*m_lines_buffer);
                 m_merge_program.create_pipeline(
-                        height, group_size_merge(height, m_instance.limits()),
-                        convex_hull_iteration_count_merge(height));
+                        height, limits_group_size_merge(height, m_instance.limits()), iteration_count_merge(height));
 
                 m_filter_memory.set_lines(*m_lines_buffer);
                 m_filter_memory.set_points(points_buffer);
@@ -237,12 +236,12 @@ public:
 };
 }
 
-std::vector<vulkan::PhysicalDeviceFeatures> ConvexHullCompute::required_device_features()
+std::vector<vulkan::PhysicalDeviceFeatures> Compute::required_device_features()
 {
         return REQUIRED_DEVICE_FEATURES;
 }
 
-std::unique_ptr<ConvexHullCompute> create_convex_hull_compute(const vulkan::VulkanInstance& instance)
+std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance& instance)
 {
         return std::make_unique<Impl>(instance);
 }

@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view_shader.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-namespace gpu
+namespace gpu::convex_hull
 {
-std::vector<VkDescriptorSetLayoutBinding> ConvexHullViewMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> ViewMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -50,7 +50,7 @@ std::vector<VkDescriptorSetLayoutBinding> ConvexHullViewMemory::descriptor_set_l
         return bindings;
 }
 
-ConvexHullViewMemory::ConvexHullViewMemory(
+ViewMemory::ViewMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const std::unordered_set<uint32_t>& family_indices)
@@ -78,29 +78,29 @@ ConvexHullViewMemory::ConvexHullViewMemory(
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned ConvexHullViewMemory::set_number()
+unsigned ViewMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& ConvexHullViewMemory::descriptor_set() const
+const VkDescriptorSet& ViewMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void ConvexHullViewMemory::set_matrix(const mat4& matrix) const
+void ViewMemory::set_matrix(const mat4& matrix) const
 {
         decltype(Data().matrix) m = to_matrix<float>(matrix).transpose();
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_data_buffer_index], offsetof(Data, matrix), m);
 }
 
-void ConvexHullViewMemory::set_brightness(float brightness) const
+void ViewMemory::set_brightness(float brightness) const
 {
         decltype(Data().brightness) b = brightness;
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_data_buffer_index], offsetof(Data, brightness), b);
 }
 
-void ConvexHullViewMemory::set_points(const vulkan::BufferWithMemory& buffer) const
+void ViewMemory::set_points(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -114,30 +114,28 @@ void ConvexHullViewMemory::set_points(const vulkan::BufferWithMemory& buffer) co
 
 //
 
-ConvexHullViewProgram::ConvexHullViewProgram(const vulkan::Device& device)
+ViewProgram::ViewProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, ConvexHullViewMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device,
-                  {ConvexHullViewMemory::set_number()},
-                  {m_descriptor_set_layout})),
-          m_vertex_shader(m_device, convex_hull_view_vert(), "main"),
-          m_fragment_shader(m_device, convex_hull_view_frag(), "main")
+                  vulkan::create_descriptor_set_layout(device, ViewMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {ViewMemory::set_number()}, {m_descriptor_set_layout})),
+          m_vertex_shader(m_device, code_view_vert(), "main"),
+          m_fragment_shader(m_device, code_view_frag(), "main")
 {
 }
 
-VkDescriptorSetLayout ConvexHullViewProgram::descriptor_set_layout() const
+VkDescriptorSetLayout ViewProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout ConvexHullViewProgram::pipeline_layout() const
+VkPipelineLayout ViewProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline ConvexHullViewProgram::create_pipeline(
+vulkan::Pipeline ViewProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         bool sample_shading,

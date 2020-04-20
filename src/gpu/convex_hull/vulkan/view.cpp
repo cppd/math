@@ -36,7 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <thread>
 
-namespace gpu
+namespace gpu::convex_hull
 {
 namespace
 {
@@ -47,7 +47,7 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 };
 // clang-format on
 
-class Impl final : public ConvexHullView
+class Impl final : public View
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -60,14 +60,14 @@ class Impl final : public ConvexHullView
         VkCommandPool m_graphics_command_pool;
 
         vulkan::Semaphore m_semaphore;
-        ConvexHullViewProgram m_program;
-        ConvexHullViewMemory m_memory;
+        ViewProgram m_program;
+        ViewMemory m_memory;
         std::optional<vulkan::BufferWithMemory> m_points;
         vulkan::BufferWithMemory m_indirect_buffer;
         std::optional<vulkan::Pipeline> m_pipeline;
         std::optional<vulkan::CommandBuffers> m_command_buffers;
 
-        std::unique_ptr<ConvexHullCompute> m_compute;
+        std::unique_ptr<Compute> m_compute;
 
         void reset_timer() override
         {
@@ -82,7 +82,7 @@ class Impl final : public ConvexHullView
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
-                        ConvexHullViewMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
+                        ViewMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
 
                 ASSERT(m_indirect_buffer.usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
                 vkCmdDrawIndirect(command_buffer, m_indirect_buffer, 0, 1, sizeof(VkDrawIndirectCommand));
@@ -100,7 +100,7 @@ class Impl final : public ConvexHullView
                 m_points.emplace(
                         vulkan::BufferMemoryType::DeviceLocal, m_instance.device(),
                         std::unordered_set({m_family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                        convex_hull_points_buffer_size(rectangle.height()));
+                        points_buffer_size(rectangle.height()));
 
                 m_memory.set_points(*m_points);
 
@@ -157,8 +157,7 @@ class Impl final : public ConvexHullView
 
                 ASSERT(queue.family_index() == m_family_index);
 
-                float brightness =
-                        0.5 + 0.5 * std::sin(CONVEX_HULL_ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
+                float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_memory.set_brightness(brightness);
 
                 //
@@ -202,7 +201,7 @@ public:
                           VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                           sizeof(VkDrawIndirectCommand),
                           draw_indirect_command_data()),
-                  m_compute(create_convex_hull_compute(instance))
+                  m_compute(create_compute(instance))
         {
         }
 
@@ -217,14 +216,14 @@ public:
 };
 }
 
-std::vector<vulkan::PhysicalDeviceFeatures> ConvexHullView::required_device_features()
+std::vector<vulkan::PhysicalDeviceFeatures> View::required_device_features()
 {
         return merge<vulkan::PhysicalDeviceFeatures>(
                 std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),
-                ConvexHullCompute::required_device_features());
+                Compute::required_device_features());
 }
 
-std::unique_ptr<ConvexHullView> create_convex_hull_view(
+std::unique_ptr<View> create_view(
         const vulkan::VulkanInstance& instance,
         VkCommandPool graphics_command_pool,
         uint32_t family_index,

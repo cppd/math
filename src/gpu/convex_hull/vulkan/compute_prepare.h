@@ -26,9 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::convex_hull
 {
-class ConvexHullPrepareMemory final
+class PrepareMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -41,14 +41,14 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        ConvexHullPrepareMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        PrepareMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        ConvexHullPrepareMemory(const ConvexHullPrepareMemory&) = delete;
-        ConvexHullPrepareMemory& operator=(const ConvexHullPrepareMemory&) = delete;
-        ConvexHullPrepareMemory& operator=(ConvexHullPrepareMemory&&) = delete;
+        PrepareMemory(const PrepareMemory&) = delete;
+        PrepareMemory& operator=(const PrepareMemory&) = delete;
+        PrepareMemory& operator=(PrepareMemory&&) = delete;
 
-        ConvexHullPrepareMemory(ConvexHullPrepareMemory&&) = default;
-        ~ConvexHullPrepareMemory() = default;
+        PrepareMemory(PrepareMemory&&) = default;
+        ~PrepareMemory() = default;
 
         //
 
@@ -60,7 +60,7 @@ public:
         void set_lines(const vulkan::BufferWithMemory& buffer) const;
 };
 
-class ConvexHullPrepareConstant final : public vulkan::SpecializationConstant
+class PrepareConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -79,30 +79,30 @@ class ConvexHullPrepareConstant final : public vulkan::SpecializationConstant
         size_t size() const override;
 
 public:
-        ConvexHullPrepareConstant();
+        PrepareConstant();
 
         void set(int32_t local_size_x, int32_t buffer_size, const Region<2, int>& rectangle);
 };
 
-class ConvexHullPrepareProgram final
+class PrepareProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        ConvexHullPrepareConstant m_constant;
+        PrepareConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::Pipeline m_pipeline;
 
 public:
-        explicit ConvexHullPrepareProgram(const vulkan::Device& device);
+        explicit PrepareProgram(const vulkan::Device& device);
 
-        ConvexHullPrepareProgram(const ConvexHullPrepareProgram&) = delete;
-        ConvexHullPrepareProgram& operator=(const ConvexHullPrepareProgram&) = delete;
-        ConvexHullPrepareProgram& operator=(ConvexHullPrepareProgram&&) = delete;
+        PrepareProgram(const PrepareProgram&) = delete;
+        PrepareProgram& operator=(const PrepareProgram&) = delete;
+        PrepareProgram& operator=(PrepareProgram&&) = delete;
 
-        ConvexHullPrepareProgram(ConvexHullPrepareProgram&&) = default;
-        ~ConvexHullPrepareProgram() = default;
+        PrepareProgram(PrepareProgram&&) = default;
+        ~PrepareProgram() = default;
 
         void create_pipeline(unsigned buffer_and_group_size, const Region<2, int>& rectangle);
         void delete_pipeline();

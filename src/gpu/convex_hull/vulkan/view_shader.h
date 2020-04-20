@@ -27,9 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace gpu
+namespace gpu::convex_hull
 {
-class ConvexHullViewMemory final
+class ViewMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -51,17 +51,17 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        ConvexHullViewMemory(
+        ViewMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::unordered_set<uint32_t>& family_indices);
 
-        ConvexHullViewMemory(const ConvexHullViewMemory&) = delete;
-        ConvexHullViewMemory& operator=(const ConvexHullViewMemory&) = delete;
-        ConvexHullViewMemory& operator=(ConvexHullViewMemory&&) = delete;
+        ViewMemory(const ViewMemory&) = delete;
+        ViewMemory& operator=(const ViewMemory&) = delete;
+        ViewMemory& operator=(ViewMemory&&) = delete;
 
-        ConvexHullViewMemory(ConvexHullViewMemory&&) = default;
-        ~ConvexHullViewMemory() = default;
+        ViewMemory(ViewMemory&&) = default;
+        ~ViewMemory() = default;
 
         //
 
@@ -74,7 +74,7 @@ public:
         void set_points(const vulkan::BufferWithMemory& buffer) const;
 };
 
-class ConvexHullViewProgram final
+class ViewProgram final
 {
         const vulkan::Device& m_device;
 
@@ -84,14 +84,14 @@ class ConvexHullViewProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        explicit ConvexHullViewProgram(const vulkan::Device& device);
+        explicit ViewProgram(const vulkan::Device& device);
 
-        ConvexHullViewProgram(const ConvexHullViewProgram&) = delete;
-        ConvexHullViewProgram& operator=(const ConvexHullViewProgram&) = delete;
-        ConvexHullViewProgram& operator=(ConvexHullViewProgram&&) = delete;
+        ViewProgram(const ViewProgram&) = delete;
+        ViewProgram& operator=(const ViewProgram&) = delete;
+        ViewProgram& operator=(ViewProgram&&) = delete;
 
-        ConvexHullViewProgram(ConvexHullViewProgram&&) = default;
-        ~ConvexHullViewProgram() = default;
+        ViewProgram(ViewProgram&&) = default;
+        ~ViewProgram() = default;
 
         vulkan::Pipeline create_pipeline(
                 VkRenderPass render_pass,

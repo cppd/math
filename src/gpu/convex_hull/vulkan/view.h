@@ -26,13 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
-namespace gpu
+namespace gpu::convex_hull
 {
-struct ConvexHullView
+struct View
 {
         static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
 
-        virtual ~ConvexHullView() = default;
+        virtual ~View() = default;
 
         virtual void create_buffers(
                 RenderBuffers2D* render_buffers,
@@ -45,7 +45,7 @@ struct ConvexHullView
         virtual void reset_timer() = 0;
 };
 
-std::unique_ptr<ConvexHullView> create_convex_hull_view(
+std::unique_ptr<View> create_view(
         const vulkan::VulkanInstance& instance,
         VkCommandPool graphics_command_pool,
         uint32_t family_index,

@@ -17,16 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_merge.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
 #include <type_traits>
 
-namespace gpu
+namespace gpu::convex_hull
 {
-std::vector<VkDescriptorSetLayoutBinding> ConvexHullMergeMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> MergeMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -43,22 +43,22 @@ std::vector<VkDescriptorSetLayoutBinding> ConvexHullMergeMemory::descriptor_set_
         return bindings;
 }
 
-ConvexHullMergeMemory::ConvexHullMergeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+MergeMemory::MergeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-unsigned ConvexHullMergeMemory::set_number()
+unsigned MergeMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& ConvexHullMergeMemory::descriptor_set() const
+const VkDescriptorSet& MergeMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void ConvexHullMergeMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
+void MergeMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -72,7 +72,7 @@ void ConvexHullMergeMemory::set_lines(const vulkan::BufferWithMemory& buffer) co
 
 //
 
-ConvexHullMergeConstant::ConvexHullMergeConstant()
+MergeConstant::MergeConstant()
 {
         {
                 VkSpecializationMapEntry entry = {};
@@ -97,55 +97,52 @@ ConvexHullMergeConstant::ConvexHullMergeConstant()
         }
 }
 
-void ConvexHullMergeConstant::set_line_size(int32_t v)
+void MergeConstant::set_line_size(int32_t v)
 {
         static_assert(std::is_same_v<decltype(m_data.line_size), decltype(v)>);
         m_data.line_size = v;
 }
 
-void ConvexHullMergeConstant::set_iteration_count(int32_t v)
+void MergeConstant::set_iteration_count(int32_t v)
 {
         static_assert(std::is_same_v<decltype(m_data.iteration_count), decltype(v)>);
         m_data.iteration_count = v;
 }
 
-void ConvexHullMergeConstant::set_local_size_x(int32_t v)
+void MergeConstant::set_local_size_x(int32_t v)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(v)>);
         m_data.local_size_x = v;
 }
 
-const std::vector<VkSpecializationMapEntry>& ConvexHullMergeConstant::entries() const
+const std::vector<VkSpecializationMapEntry>& MergeConstant::entries() const
 {
         return m_entries;
 }
 
-const void* ConvexHullMergeConstant::data() const
+const void* MergeConstant::data() const
 {
         return &m_data;
 }
 
-size_t ConvexHullMergeConstant::size() const
+size_t MergeConstant::size() const
 {
         return sizeof(m_data);
 }
 
 //
 
-ConvexHullMergeProgram::ConvexHullMergeProgram(const vulkan::Device& device)
+MergeProgram::MergeProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                  device,
-                  ConvexHullMergeMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device,
-                  {ConvexHullMergeMemory::set_number()},
-                  {m_descriptor_set_layout})),
-          m_shader(device, convex_hull_merge_comp(), "main")
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, MergeMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {MergeMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, code_merge_comp(), "main")
 {
 }
 
-void ConvexHullMergeProgram::create_pipeline(unsigned height, unsigned local_size_x, unsigned iteration_count)
+void MergeProgram::create_pipeline(unsigned height, unsigned local_size_x, unsigned iteration_count)
 {
         m_constant.set_line_size(height);
         m_constant.set_local_size_x(local_size_x);
@@ -159,22 +156,22 @@ void ConvexHullMergeProgram::create_pipeline(unsigned height, unsigned local_siz
         m_pipeline = create_compute_pipeline(info);
 }
 
-void ConvexHullMergeProgram::delete_pipeline()
+void MergeProgram::delete_pipeline()
 {
         m_pipeline = vulkan::Pipeline();
 }
 
-VkDescriptorSetLayout ConvexHullMergeProgram::descriptor_set_layout() const
+VkDescriptorSetLayout MergeProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout ConvexHullMergeProgram::pipeline_layout() const
+VkPipelineLayout MergeProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-VkPipeline ConvexHullMergeProgram::pipeline() const
+VkPipeline MergeProgram::pipeline() const
 {
         return m_pipeline;
 }

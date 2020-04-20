@@ -19,22 +19,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/constant.h>
 
-namespace gpu
+namespace gpu::convex_hull
 {
 // rad / ms
-constexpr double CONVEX_HULL_ANGULAR_FREQUENCY = TWO_PI<double> * 5;
+constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
 
-int convex_hull_points_buffer_size(int height);
+int points_buffer_size(int height);
 
-int convex_hull_group_size_prepare(
+int group_size_prepare(
         int width,
         unsigned max_group_size_x,
         unsigned max_group_invocations,
         unsigned max_shared_memory_size);
-int convex_hull_group_size_merge(
+int group_size_merge(
         int height,
         unsigned max_group_size_x,
         unsigned max_group_invocations,
         unsigned max_shared_memory_size);
-int convex_hull_iteration_count_merge(int size);
+int iteration_count_merge(int size);
 }

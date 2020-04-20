@@ -24,13 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
-namespace gpu
+namespace gpu::convex_hull
 {
-struct ConvexHullCompute
+struct Compute
 {
         static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
 
-        virtual ~ConvexHullCompute() = default;
+        virtual ~Compute() = default;
 
         virtual void compute_commands(VkCommandBuffer command_buffer) const = 0;
         virtual void create_buffers(
@@ -42,5 +42,5 @@ struct ConvexHullCompute
         virtual void delete_buffers() = 0;
 };
 
-std::unique_ptr<ConvexHullCompute> create_convex_hull_compute(const vulkan::VulkanInstance& instance);
+std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance& instance);
 }

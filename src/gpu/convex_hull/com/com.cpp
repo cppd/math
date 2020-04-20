@@ -25,15 +25,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 
-namespace gpu
+namespace gpu::convex_hull
 {
-int convex_hull_points_buffer_size(int height)
+int points_buffer_size(int height)
 {
         // 2 линии точек + 1 точка, тип ivec2
         return (2 * height + 1) * (2 * sizeof(int32_t));
 }
 
-int convex_hull_group_size_prepare(
+int group_size_prepare(
         int width,
         unsigned max_group_size_x,
         unsigned max_group_invocations,
@@ -53,7 +53,7 @@ int convex_hull_group_size_prepare(
         return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
 }
 
-int convex_hull_group_size_merge(
+int group_size_merge(
         int height,
         unsigned max_group_size_x,
         unsigned max_group_invocations,
@@ -77,7 +77,7 @@ int convex_hull_group_size_merge(
         return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
 }
 
-int convex_hull_iteration_count_merge(int size)
+int iteration_count_merge(int size)
 {
         // Расчёт начинается с 4 элементов, правый средний индекс (начало второй половины) равен 2.
         // На каждой итерации индекс увеличивается в 2 раза.

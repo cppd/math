@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::convex_hull
 {
-class ConvexHullFilterMemory final
+class FilterMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -41,14 +41,14 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        ConvexHullFilterMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        FilterMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        ConvexHullFilterMemory(const ConvexHullFilterMemory&) = delete;
-        ConvexHullFilterMemory& operator=(const ConvexHullFilterMemory&) = delete;
-        ConvexHullFilterMemory& operator=(ConvexHullFilterMemory&&) = delete;
+        FilterMemory(const FilterMemory&) = delete;
+        FilterMemory& operator=(const FilterMemory&) = delete;
+        FilterMemory& operator=(FilterMemory&&) = delete;
 
-        ConvexHullFilterMemory(ConvexHullFilterMemory&&) = default;
-        ~ConvexHullFilterMemory() = default;
+        FilterMemory(FilterMemory&&) = default;
+        ~FilterMemory() = default;
 
         //
 
@@ -61,7 +61,7 @@ public:
         void set_point_count(const vulkan::BufferWithMemory& buffer) const;
 };
 
-class ConvexHullFilterConstant final : public vulkan::SpecializationConstant
+class FilterConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -75,30 +75,30 @@ class ConvexHullFilterConstant final : public vulkan::SpecializationConstant
         size_t size() const override;
 
 public:
-        ConvexHullFilterConstant();
+        FilterConstant();
 
         void set_line_size(int32_t v);
 };
 
-class ConvexHullFilterProgram final
+class FilterProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        ConvexHullFilterConstant m_constant;
+        FilterConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::Pipeline m_pipeline;
 
 public:
-        explicit ConvexHullFilterProgram(const vulkan::Device& device);
+        explicit FilterProgram(const vulkan::Device& device);
 
-        ConvexHullFilterProgram(const ConvexHullFilterProgram&) = delete;
-        ConvexHullFilterProgram& operator=(const ConvexHullFilterProgram&) = delete;
-        ConvexHullFilterProgram& operator=(ConvexHullFilterProgram&&) = delete;
+        FilterProgram(const FilterProgram&) = delete;
+        FilterProgram& operator=(const FilterProgram&) = delete;
+        FilterProgram& operator=(FilterProgram&&) = delete;
 
-        ConvexHullFilterProgram(ConvexHullFilterProgram&&) = default;
-        ~ConvexHullFilterProgram() = default;
+        FilterProgram(FilterProgram&&) = default;
+        ~FilterProgram() = default;
 
         void create_pipeline(unsigned height);
         void delete_pipeline();

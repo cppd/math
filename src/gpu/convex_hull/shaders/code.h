@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/span.h>
 
-namespace gpu
+namespace gpu::convex_hull
 {
-Span<const uint32_t> convex_hull_prepare_comp();
-Span<const uint32_t> convex_hull_merge_comp();
-Span<const uint32_t> convex_hull_filter_comp();
-Span<const uint32_t> convex_hull_view_frag();
-Span<const uint32_t> convex_hull_view_vert();
+Span<const uint32_t> code_prepare_comp();
+Span<const uint32_t> code_merge_comp();
+Span<const uint32_t> code_filter_comp();
+Span<const uint32_t> code_view_frag();
+Span<const uint32_t> code_view_vert();
 }
