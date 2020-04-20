@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view_shader.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-namespace gpu
+namespace gpu::pencil_sketch
 {
-std::vector<VkDescriptorSetLayoutBinding> PencilSketchViewMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> ViewMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -41,24 +41,22 @@ std::vector<VkDescriptorSetLayoutBinding> PencilSketchViewMemory::descriptor_set
         return bindings;
 }
 
-PencilSketchViewMemory::PencilSketchViewMemory(
-        const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout)
+ViewMemory::ViewMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-unsigned PencilSketchViewMemory::set_number()
+unsigned ViewMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& PencilSketchViewMemory::descriptor_set() const
+const VkDescriptorSet& ViewMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void PencilSketchViewMemory::set_image(VkSampler sampler, const vulkan::ImageWithMemory& image) const
+void ViewMemory::set_image(VkSampler sampler, const vulkan::ImageWithMemory& image) const
 {
         ASSERT(image.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
 
@@ -72,14 +70,14 @@ void PencilSketchViewMemory::set_image(VkSampler sampler, const vulkan::ImageWit
 
 //
 
-std::vector<VkVertexInputBindingDescription> PencilSketchViewVertex::binding_descriptions()
+std::vector<VkVertexInputBindingDescription> ViewVertex::binding_descriptions()
 {
         std::vector<VkVertexInputBindingDescription> descriptions;
 
         {
                 VkVertexInputBindingDescription d = {};
                 d.binding = 0;
-                d.stride = sizeof(PencilSketchViewVertex);
+                d.stride = sizeof(ViewVertex);
                 d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
                 descriptions.push_back(d);
@@ -88,7 +86,7 @@ std::vector<VkVertexInputBindingDescription> PencilSketchViewVertex::binding_des
         return descriptions;
 }
 
-std::vector<VkVertexInputAttributeDescription> PencilSketchViewVertex::attribute_descriptions()
+std::vector<VkVertexInputAttributeDescription> ViewVertex::attribute_descriptions()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
 
@@ -97,7 +95,7 @@ std::vector<VkVertexInputAttributeDescription> PencilSketchViewVertex::attribute
                 d.binding = 0;
                 d.location = 0;
                 d.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-                d.offset = offsetof(PencilSketchViewVertex, position);
+                d.offset = offsetof(ViewVertex, position);
 
                 descriptions.push_back(d);
         }
@@ -106,7 +104,7 @@ std::vector<VkVertexInputAttributeDescription> PencilSketchViewVertex::attribute
                 d.binding = 0;
                 d.location = 1;
                 d.format = VK_FORMAT_R32G32_SFLOAT;
-                d.offset = offsetof(PencilSketchViewVertex, texture_coordinates);
+                d.offset = offsetof(ViewVertex, texture_coordinates);
 
                 descriptions.push_back(d);
         }
@@ -116,31 +114,28 @@ std::vector<VkVertexInputAttributeDescription> PencilSketchViewVertex::attribute
 
 //
 
-PencilSketchViewProgram::PencilSketchViewProgram(const vulkan::Device& device)
+ViewProgram::ViewProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                  device,
-                  PencilSketchViewMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device,
-                  {PencilSketchViewMemory::set_number()},
-                  {m_descriptor_set_layout})),
-          m_vertex_shader(m_device, pencil_sketch_view_vert(), "main"),
-          m_fragment_shader(m_device, pencil_sketch_view_frag(), "main")
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, ViewMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {ViewMemory::set_number()}, {m_descriptor_set_layout})),
+          m_vertex_shader(m_device, code_view_vert(), "main"),
+          m_fragment_shader(m_device, code_view_frag(), "main")
 {
 }
 
-VkDescriptorSetLayout PencilSketchViewProgram::descriptor_set_layout() const
+VkDescriptorSetLayout ViewProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout PencilSketchViewProgram::pipeline_layout() const
+VkPipelineLayout ViewProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline PencilSketchViewProgram::create_pipeline(
+vulkan::Pipeline ViewProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         const Region<2, int>& viewport) const
@@ -164,12 +159,11 @@ vulkan::Pipeline PencilSketchViewProgram::create_pipeline(
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
         info.constants = &constants;
 
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions =
-                PencilSketchViewVertex::binding_descriptions();
+        const std::vector<VkVertexInputBindingDescription> binding_descriptions = ViewVertex::binding_descriptions();
         info.binding_descriptions = &binding_descriptions;
 
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
-                PencilSketchViewVertex::attribute_descriptions();
+                ViewVertex::attribute_descriptions();
         info.attribute_descriptions = &attribute_descriptions;
 
         return vulkan::create_graphics_pipeline(info);

@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "source.h"
+#include "code.h"
 
-namespace gpu
+namespace gpu::pencil_sketch
 {
 namespace
 {
@@ -32,17 +32,17 @@ constexpr uint32_t view_frag[]{
 };
 }
 
-Span<const uint32_t> pencil_sketch_compute_comp()
+Span<const uint32_t> code_compute_comp()
 {
         return compute_comp;
 }
 
-Span<const uint32_t> pencil_sketch_view_vert()
+Span<const uint32_t> code_view_vert()
 {
         return view_vert;
 }
 
-Span<const uint32_t> pencil_sketch_view_frag()
+Span<const uint32_t> code_view_frag()
 {
         return view_frag;
 }

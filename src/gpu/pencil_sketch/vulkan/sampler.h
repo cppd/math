@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/vulkan/objects.h>
 
-namespace gpu
+namespace gpu::pencil_sketch
 {
-vulkan::Sampler create_pencil_sketch_sampler(VkDevice device);
+vulkan::Sampler create_sampler(VkDevice device);
 }

@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/span.h>
 
-namespace gpu
+namespace gpu::pencil_sketch
 {
-Span<const uint32_t> pencil_sketch_compute_comp();
-Span<const uint32_t> pencil_sketch_view_vert();
-Span<const uint32_t> pencil_sketch_view_frag();
+Span<const uint32_t> code_compute_comp();
+Span<const uint32_t> code_view_vert();
+Span<const uint32_t> code_view_frag();
 }

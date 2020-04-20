@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <thread>
 
-namespace gpu
+namespace gpu::pencil_sketch
 {
 namespace
 {
@@ -44,7 +44,7 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 constexpr int VERTEX_COUNT = 4;
 constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
 
-class Impl final : public PencilSketchView
+class Impl final : public View
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -59,15 +59,15 @@ class Impl final : public PencilSketchView
         uint32_t m_graphics_family_index;
 
         vulkan::Semaphore m_signal_semaphore;
-        PencilSketchViewProgram m_program;
-        PencilSketchViewMemory m_memory;
+        ViewProgram m_program;
+        ViewMemory m_memory;
         std::unique_ptr<vulkan::BufferWithMemory> m_vertices;
         vulkan::Sampler m_sampler;
         std::unique_ptr<vulkan::ImageWithMemory> m_image;
         std::optional<vulkan::Pipeline> m_pipeline;
         std::optional<vulkan::CommandBuffers> m_command_buffers;
 
-        std::unique_ptr<PencilSketchCompute> m_compute;
+        std::unique_ptr<Compute> m_compute;
 
         void draw_commands(VkCommandBuffer command_buffer) const
         {
@@ -79,7 +79,7 @@ class Impl final : public PencilSketchView
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
-                        PencilSketchViewMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
+                        ViewMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
 
                 const std::array<VkBuffer, 1> buffers{*m_vertices};
                 const std::array<VkDeviceSize, 1> offsets{0};
@@ -160,7 +160,7 @@ class Impl final : public PencilSketchView
 
         void create_vertices()
         {
-                std::array<PencilSketchViewVertex, VERTEX_COUNT> vertices;
+                std::array<ViewVertex, VERTEX_COUNT> vertices;
 
                 // Текстурный 0 находится вверху
                 vertices[0] = {{-1, +1, 0, 1}, {0, 1}};
@@ -196,8 +196,8 @@ public:
                   m_signal_semaphore(instance.device()),
                   m_program(instance.device()),
                   m_memory(instance.device(), m_program.descriptor_set_layout()),
-                  m_sampler(create_pencil_sketch_sampler(instance.device())),
-                  m_compute(create_pencil_sketch_compute(instance))
+                  m_sampler(create_sampler(instance.device())),
+                  m_compute(create_compute(instance))
         {
                 create_vertices();
         }
@@ -213,14 +213,14 @@ public:
 };
 }
 
-std::vector<vulkan::PhysicalDeviceFeatures> PencilSketchView::required_device_features()
+std::vector<vulkan::PhysicalDeviceFeatures> View::required_device_features()
 {
         return merge<vulkan::PhysicalDeviceFeatures>(
                 std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),
-                PencilSketchCompute::required_device_features());
+                Compute::required_device_features());
 }
 
-std::unique_ptr<PencilSketchView> create_pencil_sketch_view(
+std::unique_ptr<View> create_view(
         const vulkan::VulkanInstance& instance,
         const vulkan::CommandPool& graphics_command_pool,
         const vulkan::Queue& graphics_queue,

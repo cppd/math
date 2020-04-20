@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <thread>
 
-namespace gpu
+namespace gpu::pencil_sketch
 {
 namespace
 {
@@ -98,14 +98,14 @@ void image_barrier_after(VkCommandBuffer command_buffer, VkImage image)
                 VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
-class Impl final : public PencilSketchCompute
+class Impl final : public Compute
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
         const vulkan::VulkanInstance& m_instance;
 
-        PencilSketchComputeProgram m_program;
-        PencilSketchComputeMemory m_memory;
+        ComputeProgram m_program;
+        ComputeMemory m_memory;
 
         unsigned m_groups_x = 0;
         unsigned m_groups_y = 0;
@@ -125,7 +125,7 @@ class Impl final : public PencilSketchCompute
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_program.pipeline());
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_program.pipeline_layout(),
-                        PencilSketchComputeMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
+                        ComputeMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, m_groups_x, m_groups_y, 1);
 
                 image_barrier_after(command_buffer, m_image);
@@ -200,12 +200,12 @@ public:
 };
 }
 
-std::vector<vulkan::PhysicalDeviceFeatures> PencilSketchCompute::required_device_features()
+std::vector<vulkan::PhysicalDeviceFeatures> Compute::required_device_features()
 {
         return REQUIRED_DEVICE_FEATURES;
 }
 
-std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(const vulkan::VulkanInstance& instance)
+std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance& instance)
 {
         return std::make_unique<Impl>(instance);
 }

@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sampler.h"
 
-namespace gpu
+namespace gpu::pencil_sketch
 {
-vulkan::Sampler create_pencil_sketch_sampler(VkDevice device)
+vulkan::Sampler create_sampler(VkDevice device)
 {
         VkSamplerCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;

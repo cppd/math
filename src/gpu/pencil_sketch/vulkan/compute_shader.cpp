@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_shader.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-namespace gpu
+namespace gpu::pencil_sketch
 {
-std::vector<VkDescriptorSetLayoutBinding> PencilSketchComputeMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> ComputeMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -62,24 +62,22 @@ std::vector<VkDescriptorSetLayoutBinding> PencilSketchComputeMemory::descriptor_
         return bindings;
 }
 
-unsigned PencilSketchComputeMemory::set_number()
+unsigned ComputeMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-PencilSketchComputeMemory::PencilSketchComputeMemory(
-        const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout)
+ComputeMemory::ComputeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-const VkDescriptorSet& PencilSketchComputeMemory::descriptor_set() const
+const VkDescriptorSet& ComputeMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void PencilSketchComputeMemory::set_input(VkSampler sampler, const vulkan::ImageWithMemory& image) const
+void ComputeMemory::set_input(VkSampler sampler, const vulkan::ImageWithMemory& image) const
 {
         ASSERT(image.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
 
@@ -91,7 +89,7 @@ void PencilSketchComputeMemory::set_input(VkSampler sampler, const vulkan::Image
         m_descriptors.update_descriptor_set(0, INPUT_BINDING, image_info);
 }
 
-void PencilSketchComputeMemory::set_output_image(const vulkan::ImageWithMemory& image) const
+void ComputeMemory::set_output_image(const vulkan::ImageWithMemory& image) const
 {
         ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
         ASSERT(image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
@@ -103,7 +101,7 @@ void PencilSketchComputeMemory::set_output_image(const vulkan::ImageWithMemory& 
         m_descriptors.update_descriptor_set(0, OUTPUT_BINDING, image_info);
 }
 
-void PencilSketchComputeMemory::set_object_image(const vulkan::ImageWithMemory& image) const
+void ComputeMemory::set_object_image(const vulkan::ImageWithMemory& image) const
 {
         ASSERT(image.format() == VK_FORMAT_R32_UINT);
         ASSERT(image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
@@ -117,7 +115,7 @@ void PencilSketchComputeMemory::set_object_image(const vulkan::ImageWithMemory& 
 
 //
 
-PencilSketchComputeConstant::PencilSketchComputeConstant()
+ComputeConstant::ComputeConstant()
 {
         {
                 VkSpecializationMapEntry entry = {};
@@ -156,7 +154,7 @@ PencilSketchComputeConstant::PencilSketchComputeConstant()
         }
 }
 
-void PencilSketchComputeConstant::set(int32_t local_size, const Region<2, int>& rectangle)
+void ComputeConstant::set(int32_t local_size, const Region<2, int>& rectangle)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size), decltype(local_size)>);
         m_data.local_size = local_size;
@@ -168,53 +166,50 @@ void PencilSketchComputeConstant::set(int32_t local_size, const Region<2, int>& 
         m_data.height = rectangle.height();
 }
 
-const std::vector<VkSpecializationMapEntry>& PencilSketchComputeConstant::entries() const
+const std::vector<VkSpecializationMapEntry>& ComputeConstant::entries() const
 {
         return m_entries;
 }
 
-const void* PencilSketchComputeConstant::data() const
+const void* ComputeConstant::data() const
 {
         return &m_data;
 }
 
-size_t PencilSketchComputeConstant::size() const
+size_t ComputeConstant::size() const
 {
         return sizeof(m_data);
 }
 
 //
 
-PencilSketchComputeProgram::PencilSketchComputeProgram(const vulkan::Device& device)
+ComputeProgram::ComputeProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                  device,
-                  PencilSketchComputeMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device,
-                  {PencilSketchComputeMemory::set_number()},
-                  {m_descriptor_set_layout})),
-          m_shader(device, pencil_sketch_compute_comp(), "main")
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, ComputeMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {ComputeMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, code_compute_comp(), "main")
 {
 }
 
-VkDescriptorSetLayout PencilSketchComputeProgram::descriptor_set_layout() const
+VkDescriptorSetLayout ComputeProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout PencilSketchComputeProgram::pipeline_layout() const
+VkPipelineLayout ComputeProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-VkPipeline PencilSketchComputeProgram::pipeline() const
+VkPipeline ComputeProgram::pipeline() const
 {
         ASSERT(m_pipeline != VK_NULL_HANDLE);
         return m_pipeline;
 }
 
-void PencilSketchComputeProgram::create_pipeline(unsigned group_size, const Region<2, int>& rectangle)
+void ComputeProgram::create_pipeline(unsigned group_size, const Region<2, int>& rectangle)
 {
         m_constant.set(group_size, rectangle);
 
@@ -226,7 +221,7 @@ void PencilSketchComputeProgram::create_pipeline(unsigned group_size, const Regi
         m_pipeline = create_compute_pipeline(info);
 }
 
-void PencilSketchComputeProgram::delete_pipeline()
+void ComputeProgram::delete_pipeline()
 {
         m_pipeline = vulkan::Pipeline();
 }

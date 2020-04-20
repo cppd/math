@@ -24,13 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
-namespace gpu
+namespace gpu::pencil_sketch
 {
-struct PencilSketchCompute
+struct Compute
 {
         static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
 
-        virtual ~PencilSketchCompute() = default;
+        virtual ~Compute() = default;
 
         virtual void compute_commands(VkCommandBuffer command_buffer) const = 0;
         virtual void create_buffers(
@@ -42,5 +42,5 @@ struct PencilSketchCompute
         virtual void delete_buffers() = 0;
 };
 
-std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(const vulkan::VulkanInstance& instance);
+std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance& instance);
 }

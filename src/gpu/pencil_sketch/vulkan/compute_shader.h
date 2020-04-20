@@ -26,9 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::pencil_sketch
 {
-class PencilSketchComputeMemory final
+class ComputeMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -44,14 +44,14 @@ public:
 
         //
 
-        PencilSketchComputeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        ComputeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        PencilSketchComputeMemory(const PencilSketchComputeMemory&) = delete;
-        PencilSketchComputeMemory& operator=(const PencilSketchComputeMemory&) = delete;
-        PencilSketchComputeMemory& operator=(PencilSketchComputeMemory&&) = delete;
+        ComputeMemory(const ComputeMemory&) = delete;
+        ComputeMemory& operator=(const ComputeMemory&) = delete;
+        ComputeMemory& operator=(ComputeMemory&&) = delete;
 
-        PencilSketchComputeMemory(PencilSketchComputeMemory&&) = default;
-        ~PencilSketchComputeMemory() = default;
+        ComputeMemory(ComputeMemory&&) = default;
+        ~ComputeMemory() = default;
 
         //
 
@@ -64,7 +64,7 @@ public:
         void set_object_image(const vulkan::ImageWithMemory& image) const;
 };
 
-class PencilSketchComputeConstant final : public vulkan::SpecializationConstant
+class ComputeConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -83,30 +83,30 @@ class PencilSketchComputeConstant final : public vulkan::SpecializationConstant
         size_t size() const override;
 
 public:
-        PencilSketchComputeConstant();
+        ComputeConstant();
 
         void set(int32_t local_size, const Region<2, int>& rectangle);
 };
 
-class PencilSketchComputeProgram final
+class ComputeProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        PencilSketchComputeConstant m_constant;
+        ComputeConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::Pipeline m_pipeline;
 
 public:
-        explicit PencilSketchComputeProgram(const vulkan::Device& device);
+        explicit ComputeProgram(const vulkan::Device& device);
 
-        PencilSketchComputeProgram(const PencilSketchComputeProgram&) = delete;
-        PencilSketchComputeProgram& operator=(const PencilSketchComputeProgram&) = delete;
-        PencilSketchComputeProgram& operator=(PencilSketchComputeProgram&&) = delete;
+        ComputeProgram(const ComputeProgram&) = delete;
+        ComputeProgram& operator=(const ComputeProgram&) = delete;
+        ComputeProgram& operator=(ComputeProgram&&) = delete;
 
-        PencilSketchComputeProgram(PencilSketchComputeProgram&&) = default;
-        ~PencilSketchComputeProgram() = default;
+        ComputeProgram(ComputeProgram&&) = default;
+        ~ComputeProgram() = default;
 
         void create_pipeline(unsigned group_size, const Region<2, int>& rectangle);
         void delete_pipeline();

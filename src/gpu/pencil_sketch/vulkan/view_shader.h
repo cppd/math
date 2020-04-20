@@ -27,9 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace gpu
+namespace gpu::pencil_sketch
 {
-class PencilSketchViewMemory final
+class ViewMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -41,14 +41,14 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        PencilSketchViewMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        ViewMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        PencilSketchViewMemory(const PencilSketchViewMemory&) = delete;
-        PencilSketchViewMemory& operator=(const PencilSketchViewMemory&) = delete;
-        PencilSketchViewMemory& operator=(PencilSketchViewMemory&&) = delete;
+        ViewMemory(const ViewMemory&) = delete;
+        ViewMemory& operator=(const ViewMemory&) = delete;
+        ViewMemory& operator=(ViewMemory&&) = delete;
 
-        PencilSketchViewMemory(PencilSketchViewMemory&&) = default;
-        ~PencilSketchViewMemory() = default;
+        ViewMemory(ViewMemory&&) = default;
+        ~ViewMemory() = default;
 
         //
 
@@ -59,7 +59,7 @@ public:
         void set_image(VkSampler sampler, const vulkan::ImageWithMemory& image) const;
 };
 
-struct PencilSketchViewVertex
+struct ViewVertex
 {
         vec4f position;
         vec2f texture_coordinates;
@@ -68,7 +68,7 @@ struct PencilSketchViewVertex
         static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
 };
 
-class PencilSketchViewProgram final
+class ViewProgram final
 {
         const vulkan::Device& m_device;
 
@@ -78,14 +78,14 @@ class PencilSketchViewProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        explicit PencilSketchViewProgram(const vulkan::Device& device);
+        explicit ViewProgram(const vulkan::Device& device);
 
-        PencilSketchViewProgram(const PencilSketchViewProgram&) = delete;
-        PencilSketchViewProgram& operator=(const PencilSketchViewProgram&) = delete;
-        PencilSketchViewProgram& operator=(PencilSketchViewProgram&&) = delete;
+        ViewProgram(const ViewProgram&) = delete;
+        ViewProgram& operator=(const ViewProgram&) = delete;
+        ViewProgram& operator=(ViewProgram&&) = delete;
 
-        PencilSketchViewProgram(PencilSketchViewProgram&&) = default;
-        ~PencilSketchViewProgram() = default;
+        ViewProgram(ViewProgram&&) = default;
+        ~ViewProgram() = default;
 
         vulkan::Pipeline create_pipeline(
                 VkRenderPass render_pass,

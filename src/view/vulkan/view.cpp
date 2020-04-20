@@ -137,7 +137,7 @@ class Impl final : public View
         std::unique_ptr<gpu::renderer::Renderer> m_renderer;
         std::unique_ptr<gpu::text_writer::View> m_text;
         std::unique_ptr<gpu::convex_hull::View> m_convex_hull;
-        std::unique_ptr<gpu::PencilSketchView> m_pencil_sketch;
+        std::unique_ptr<gpu::pencil_sketch::View> m_pencil_sketch;
         std::unique_ptr<gpu::dft::View> m_dft;
         std::unique_ptr<gpu::optical_flow::View> m_optical_flow;
 
@@ -733,7 +733,7 @@ public:
                                         gpu::convex_hull::View::required_device_features(),
                                         gpu::dft::View::required_device_features(),
                                         gpu::optical_flow::View::required_device_features(),
-                                        gpu::PencilSketchView::required_device_features(),
+                                        gpu::pencil_sketch::View::required_device_features(),
                                         gpu::renderer::Renderer::required_device_features(),
                                         gpu::text_writer::View::required_device_features(),
                                         device_features_sample_shading(
@@ -779,7 +779,7 @@ public:
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue.family_index(),
                         VULKAN_SAMPLE_SHADING);
 
-                m_pencil_sketch = gpu::create_pencil_sketch_view(
+                m_pencil_sketch = gpu::pencil_sketch::create_view(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
                         transfer_queue, VULKAN_SAMPLE_SHADING);
 
