@@ -185,11 +185,11 @@ info::Camera Camera::view_info() const
         return v;
 }
 
-gpu::RendererCameraInfo Camera::renderer_info() const
+gpu::renderer::RendererCameraInfo Camera::renderer_info() const
 {
         std::lock_guard lg(m_lock);
 
-        gpu::RendererCameraInfo v;
+        gpu::renderer::RendererCameraInfo v;
 
         main_volume(
                 &v.main_volume.left, &v.main_volume.right, &v.main_volume.bottom, &v.main_volume.top,

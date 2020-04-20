@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vertex_points.h"
 
-namespace gpu
+namespace gpu::renderer
 {
 std::vector<VkVertexInputBindingDescription> RendererPointsVertex::binding_descriptions()
 {

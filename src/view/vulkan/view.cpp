@@ -134,7 +134,7 @@ class Impl final : public View
         std::unique_ptr<vulkan::CommandBuffers> m_resolve_command_buffers;
         std::unique_ptr<vulkan::Semaphore> m_resolve_semaphore;
         std::unique_ptr<vulkan::ImageWithMemory> m_object_image;
-        std::unique_ptr<gpu::Renderer> m_renderer;
+        std::unique_ptr<gpu::renderer::Renderer> m_renderer;
         std::unique_ptr<gpu::TextView> m_text;
         std::unique_ptr<gpu::ConvexHullView> m_convex_hull;
         std::unique_ptr<gpu::PencilSketchView> m_pencil_sketch;
@@ -734,7 +734,7 @@ public:
                                         gpu::DftView::required_device_features(),
                                         gpu::OpticalFlowView::required_device_features(),
                                         gpu::PencilSketchView::required_device_features(),
-                                        gpu::Renderer::required_device_features(),
+                                        gpu::renderer::Renderer::required_device_features(),
                                         gpu::TextView::required_device_features(),
                                         device_features_sample_shading(
                                                 VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING),
@@ -767,7 +767,7 @@ public:
                 const vulkan::Queue& transfer_queue = m_instance->transfer_queue();
                 const vulkan::CommandPool& transfer_command_pool = m_instance->transfer_command_pool();
 
-                m_renderer = gpu::create_renderer(
+                m_renderer = gpu::renderer::create_renderer(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
                         transfer_queue, VULKAN_SAMPLE_SHADING, VULKAN_SAMPLER_ANISOTROPY);
 

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/vulkan/commands.h>
 
-namespace gpu
+namespace gpu::renderer
 {
 MeshRenderer::MeshRenderer(
         const vulkan::Device& device,

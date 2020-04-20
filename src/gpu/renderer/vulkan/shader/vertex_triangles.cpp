@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vertex_triangles.h"
 
-namespace gpu
+namespace gpu::renderer
 {
 std::vector<VkVertexInputBindingDescription> RendererTrianglesVertex::binding_descriptions()
 {
