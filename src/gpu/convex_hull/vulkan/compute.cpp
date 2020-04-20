@@ -48,16 +48,16 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 };
 // clang-format on
 
-int limits_group_size_merge(int height, const VkPhysicalDeviceLimits& limits)
+int group_size_merge(int height, const VkPhysicalDeviceLimits& limits)
 {
-        return group_size_merge(
+        return convex_hull::group_size_merge(
                 height, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
                 limits.maxComputeSharedMemorySize);
 }
 
-int limits_group_size_prepare(int width, const VkPhysicalDeviceLimits& limits)
+int group_size_prepare(int width, const VkPhysicalDeviceLimits& limits)
 {
-        return group_size_prepare(
+        return convex_hull::group_size_prepare(
                 width, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
                 limits.maxComputeSharedMemorySize);
 }
@@ -185,11 +185,11 @@ class Impl final : public Compute
                 m_prepare_memory.set_object_image(objects);
                 m_prepare_memory.set_lines(*m_lines_buffer);
                 m_prepare_group_count = height;
-                m_prepare_program.create_pipeline(limits_group_size_prepare(width, m_instance.limits()), rectangle);
+                m_prepare_program.create_pipeline(group_size_prepare(width, m_instance.limits()), rectangle);
 
                 m_merge_memory.set_lines(*m_lines_buffer);
                 m_merge_program.create_pipeline(
-                        height, limits_group_size_merge(height, m_instance.limits()), iteration_count_merge(height));
+                        height, group_size_merge(height, m_instance.limits()), iteration_count_merge(height));
 
                 m_filter_memory.set_lines(*m_lines_buffer);
                 m_filter_memory.set_points(points_buffer);
