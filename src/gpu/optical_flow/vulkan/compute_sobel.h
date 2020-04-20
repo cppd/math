@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::optical_flow
 {
-class OpticalFlowSobelMemory final
+class SobelMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -41,14 +41,14 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        OpticalFlowSobelMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        SobelMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        OpticalFlowSobelMemory(const OpticalFlowSobelMemory&) = delete;
-        OpticalFlowSobelMemory& operator=(const OpticalFlowSobelMemory&) = delete;
-        OpticalFlowSobelMemory& operator=(OpticalFlowSobelMemory&&) = delete;
+        SobelMemory(const SobelMemory&) = delete;
+        SobelMemory& operator=(const SobelMemory&) = delete;
+        SobelMemory& operator=(SobelMemory&&) = delete;
 
-        OpticalFlowSobelMemory(OpticalFlowSobelMemory&&) = default;
-        ~OpticalFlowSobelMemory() = default;
+        SobelMemory(SobelMemory&&) = default;
+        ~SobelMemory() = default;
 
         //
 
@@ -61,7 +61,7 @@ public:
         void set_dy(const vulkan::ImageWithMemory& image_dy);
 };
 
-class OpticalFlowSobelConstant final : public vulkan::SpecializationConstant
+class SobelConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -76,30 +76,30 @@ class OpticalFlowSobelConstant final : public vulkan::SpecializationConstant
         size_t size() const override;
 
 public:
-        OpticalFlowSobelConstant();
+        SobelConstant();
 
         void set(uint32_t local_size_x, uint32_t local_size_y);
 };
 
-class OpticalFlowSobelProgram final
+class SobelProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        OpticalFlowSobelConstant m_constant;
+        SobelConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::Pipeline m_pipeline;
 
 public:
-        explicit OpticalFlowSobelProgram(const vulkan::Device& device);
+        explicit SobelProgram(const vulkan::Device& device);
 
-        OpticalFlowSobelProgram(const OpticalFlowSobelProgram&) = delete;
-        OpticalFlowSobelProgram& operator=(const OpticalFlowSobelProgram&) = delete;
-        OpticalFlowSobelProgram& operator=(OpticalFlowSobelProgram&&) = delete;
+        SobelProgram(const SobelProgram&) = delete;
+        SobelProgram& operator=(const SobelProgram&) = delete;
+        SobelProgram& operator=(SobelProgram&&) = delete;
 
-        OpticalFlowSobelProgram(OpticalFlowSobelProgram&&) = default;
-        ~OpticalFlowSobelProgram() = default;
+        SobelProgram(SobelProgram&&) = default;
+        ~SobelProgram() = default;
 
         void create_pipeline(uint32_t local_size_x, uint32_t local_size_y);
         void delete_pipeline();

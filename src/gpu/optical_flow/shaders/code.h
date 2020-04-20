@@ -19,14 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/span.h>
 
-namespace gpu
+namespace gpu::optical_flow
 {
-Span<const uint32_t> optical_flow_sobel_comp();
-Span<const uint32_t> optical_flow_flow_comp();
-Span<const uint32_t> optical_flow_downsample_comp();
-Span<const uint32_t> optical_flow_grayscale_comp();
-Span<const uint32_t> optical_flow_view_vert();
-Span<const uint32_t> optical_flow_view_frag();
-Span<const uint32_t> optical_flow_view_debug_vert();
-Span<const uint32_t> optical_flow_view_debug_frag();
+Span<const uint32_t> code_sobel_comp();
+Span<const uint32_t> code_flow_comp();
+Span<const uint32_t> code_downsample_comp();
+Span<const uint32_t> code_grayscale_comp();
+Span<const uint32_t> code_view_vert();
+Span<const uint32_t> code_view_frag();
+Span<const uint32_t> code_view_debug_vert();
+Span<const uint32_t> code_view_debug_frag();
 }

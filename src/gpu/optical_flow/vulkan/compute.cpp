@@ -45,7 +45,7 @@ Chapter 5. Tracking Objects in Videos.
 
 #include <thread>
 
-namespace gpu
+namespace gpu::optical_flow
 {
 namespace
 {
@@ -130,7 +130,7 @@ void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkPipelineS
                 nullptr, 1, &barrier, 0, nullptr);
 }
 
-class Impl final : public OpticalFlowCompute
+class Impl final : public Compute
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -153,20 +153,20 @@ class Impl final : public OpticalFlowCompute
         std::vector<vulkan::ImageWithMemory> m_dy;
         std::vector<vulkan::BufferWithMemory> m_flow_buffers;
 
-        OpticalFlowGrayscaleProgram m_grayscale_program;
-        OpticalFlowGrayscaleMemory m_grayscale_memory;
+        GrayscaleProgram m_grayscale_program;
+        GrayscaleMemory m_grayscale_memory;
         vec2i m_grayscale_groups;
 
-        OpticalFlowDownsampleProgram m_downsample_program;
-        std::vector<OpticalFlowDownsampleMemory> m_downsample_memory;
+        DownsampleProgram m_downsample_program;
+        std::vector<DownsampleMemory> m_downsample_memory;
         std::vector<vec2i> m_downsample_groups;
 
-        OpticalFlowSobelProgram m_sobel_program;
-        std::vector<OpticalFlowSobelMemory> m_sobel_memory;
+        SobelProgram m_sobel_program;
+        std::vector<SobelMemory> m_sobel_memory;
         std::vector<vec2i> m_sobel_groups;
 
-        OpticalFlowFlowProgram m_flow_program;
-        std::vector<OpticalFlowFlowMemory> m_flow_memory;
+        FlowProgram m_flow_program;
+        std::vector<FlowMemory> m_flow_memory;
         std::vector<vec2i> m_flow_groups;
 
         int m_i_index = -1;
@@ -213,14 +213,14 @@ class Impl final : public OpticalFlowCompute
                 return buffers;
         }
 
-        static std::vector<OpticalFlowDownsampleMemory> create_downsample_memory(
+        static std::vector<DownsampleMemory> create_downsample_memory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images)
         {
                 ASSERT(images[0].size() == images[1].size());
 
-                std::vector<OpticalFlowDownsampleMemory> downsample_images;
+                std::vector<DownsampleMemory> downsample_images;
 
                 for (unsigned i = 1; i < images[0].size(); ++i)
                 {
@@ -232,7 +232,7 @@ class Impl final : public OpticalFlowCompute
                 return downsample_images;
         }
 
-        static std::vector<OpticalFlowSobelMemory> create_sobel_memory(
+        static std::vector<SobelMemory> create_sobel_memory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,
@@ -243,7 +243,7 @@ class Impl final : public OpticalFlowCompute
                 ASSERT(images[0].size() == dx.size());
                 ASSERT(images[0].size() == dy.size());
 
-                std::vector<OpticalFlowSobelMemory> sobel_images;
+                std::vector<SobelMemory> sobel_images;
 
                 for (size_t i = 0; i < images[0].size(); ++i)
                 {
@@ -256,7 +256,7 @@ class Impl final : public OpticalFlowCompute
                 return sobel_images;
         }
 
-        static std::vector<OpticalFlowFlowMemory> create_flow_memory(
+        static std::vector<FlowMemory> create_flow_memory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 uint32_t family_index,
@@ -291,7 +291,7 @@ class Impl final : public OpticalFlowCompute
 
                 const std::unordered_set<uint32_t> family_indices{family_index};
 
-                std::vector<OpticalFlowFlowMemory> flow_memory;
+                std::vector<FlowMemory> flow_memory;
 
                 for (size_t i = 0; i < size; ++i)
                 {
@@ -299,7 +299,7 @@ class Impl final : public OpticalFlowCompute
                         const vulkan::BufferWithMemory* flow_ptr;
                         const vulkan::BufferWithMemory* flow_guess_ptr;
 
-                        OpticalFlowFlowMemory::Data data;
+                        FlowMemory::Data data;
 
                         const bool top = (i == 0);
                         const bool bottom = (i + 1 == size);
@@ -369,8 +369,7 @@ class Impl final : public OpticalFlowCompute
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_grayscale_program.pipeline());
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_grayscale_program.pipeline_layout(),
-                        OpticalFlowGrayscaleMemory::set_number(), 1, &m_grayscale_memory.descriptor_set(index), 0,
-                        nullptr);
+                        GrayscaleMemory::set_number(), 1, &m_grayscale_memory.descriptor_set(index), 0, nullptr);
                 vkCmdDispatch(command_buffer, m_grayscale_groups[0], m_grayscale_groups[1], 1);
 
                 image_barrier(
@@ -384,8 +383,8 @@ class Impl final : public OpticalFlowCompute
                                 command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_downsample_program.pipeline());
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_downsample_program.pipeline_layout(),
-                                OpticalFlowDownsampleMemory::set_number(), 1,
-                                &m_downsample_memory[i].descriptor_set(index), 0, nullptr);
+                                DownsampleMemory::set_number(), 1, &m_downsample_memory[i].descriptor_set(index), 0,
+                                nullptr);
                         vkCmdDispatch(command_buffer, m_downsample_groups[i][0], m_downsample_groups[i][1], 1);
 
                         image_barrier(
@@ -406,8 +405,7 @@ class Impl final : public OpticalFlowCompute
                         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_sobel_program.pipeline());
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_sobel_program.pipeline_layout(),
-                                OpticalFlowSobelMemory::set_number(), 1, &m_sobel_memory[i].descriptor_set(index), 0,
-                                nullptr);
+                                SobelMemory::set_number(), 1, &m_sobel_memory[i].descriptor_set(index), 0, nullptr);
                         vkCmdDispatch(command_buffer, m_sobel_groups[i][0], m_sobel_groups[i][1], 1);
                 }
 
@@ -434,8 +432,7 @@ class Impl final : public OpticalFlowCompute
                         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_flow_program.pipeline());
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_flow_program.pipeline_layout(),
-                                OpticalFlowFlowMemory::set_number(), 1, &m_flow_memory[i].descriptor_set(index), 0,
-                                nullptr);
+                                FlowMemory::set_number(), 1, &m_flow_memory[i].descriptor_set(index), 0, nullptr);
                         vkCmdDispatch(command_buffer, m_flow_groups[i][0], m_flow_groups[i][1], 1);
 
                         buffer_barrier(
@@ -584,8 +581,7 @@ class Impl final : public OpticalFlowCompute
                 ASSERT(rectangle.x1() <= static_cast<int>(input.width()));
                 ASSERT(rectangle.y1() <= static_cast<int>(input.height()));
 
-                const std::vector<vec2i> sizes =
-                        optical_flow_pyramid_sizes(input.width(), input.height(), OPTICAL_FLOW_BOTTOM_IMAGE_SIZE);
+                const std::vector<vec2i> sizes = pyramid_sizes(input.width(), input.height(), BOTTOM_IMAGE_SIZE);
 
                 const uint32_t family_index = m_compute_command_pool.family_index();
 
@@ -595,29 +591,28 @@ class Impl final : public OpticalFlowCompute
                 m_dy = create_images(sizes, family_index);
                 m_flow_buffers = create_flow_buffers(sizes, family_index);
 
-                constexpr vec2i GROUPS = OPTICAL_FLOW_GROUP_SIZE;
-                constexpr int GROUPS_X = OPTICAL_FLOW_GROUP_SIZE[0];
-                constexpr int GROUPS_Y = OPTICAL_FLOW_GROUP_SIZE[1];
+                constexpr vec2i GROUPS = GROUP_SIZE;
+                constexpr int GROUPS_X = GROUP_SIZE[0];
+                constexpr int GROUPS_Y = GROUP_SIZE[1];
 
-                m_grayscale_groups = optical_flow_grayscale_groups(GROUPS, sizes);
+                m_grayscale_groups = grayscale_groups(GROUPS, sizes);
                 m_grayscale_program.create_pipeline(GROUPS_X, GROUPS_Y, rectangle);
                 m_grayscale_memory.set_src(sampler, input);
                 m_grayscale_memory.set_dst(m_images[0][0], m_images[1][0]);
 
-                m_downsample_groups = optical_flow_downsample_groups(GROUPS, sizes);
+                m_downsample_groups = downsample_groups(GROUPS, sizes);
                 m_downsample_program.create_pipeline(GROUPS_X, GROUPS_Y);
                 m_downsample_memory =
                         create_downsample_memory(m_device, m_downsample_program.descriptor_set_layout(), m_images);
 
-                m_sobel_groups = optical_flow_sobel_groups(GROUPS, sizes);
+                m_sobel_groups = sobel_groups(GROUPS, sizes);
                 m_sobel_program.create_pipeline(GROUPS_X, GROUPS_Y);
                 m_sobel_memory =
                         create_sobel_memory(m_device, m_sobel_program.descriptor_set_layout(), m_images, m_dx, m_dy);
 
-                m_flow_groups = optical_flow_flow_groups(GROUPS, sizes, top_point_count_x, top_point_count_y);
+                m_flow_groups = flow_groups(GROUPS, sizes, top_point_count_x, top_point_count_y);
                 m_flow_program.create_pipeline(
-                        GROUPS_X, GROUPS_Y, OPTICAL_FLOW_RADIUS, OPTICAL_FLOW_ITERATION_COUNT,
-                        OPTICAL_FLOW_STOP_MOVE_SQUARE, OPTICAL_FLOW_MIN_DETERMINANT);
+                        GROUPS_X, GROUPS_Y, RADIUS, ITERATION_COUNT, STOP_MOVE_SQUARE, MIN_DETERMINANT);
                 m_flow_memory = create_flow_memory(
                         m_device, m_flow_program.descriptor_set_layout(), family_index, sampler, sizes, m_flow_buffers,
                         top_point_count_x, top_point_count_y, top_points, top_flow, m_images, m_dx, m_dy);
@@ -691,12 +686,12 @@ public:
 };
 }
 
-std::vector<vulkan::PhysicalDeviceFeatures> OpticalFlowCompute::required_device_features()
+std::vector<vulkan::PhysicalDeviceFeatures> Compute::required_device_features()
 {
         return REQUIRED_DEVICE_FEATURES;
 }
 
-std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(
+std::unique_ptr<Compute> create_compute(
         const vulkan::VulkanInstance& instance,
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,

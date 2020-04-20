@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <thread>
 
-namespace gpu
+namespace gpu::optical_flow
 {
 namespace
 {
@@ -44,7 +44,7 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 };
 // clang-format on
 
-class Impl final : public OpticalFlowView
+class Impl final : public View
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -60,8 +60,8 @@ class Impl final : public OpticalFlowView
         const vulkan::Queue& m_transfer_queue;
 
         vulkan::Semaphore m_signal_semaphore;
-        OpticalFlowViewProgram m_program;
-        OpticalFlowViewMemory m_memory;
+        ViewProgram m_program;
+        ViewMemory m_memory;
         vulkan::Sampler m_sampler;
         std::optional<vulkan::BufferWithMemory> m_top_points;
         std::optional<vulkan::BufferWithMemory> m_top_flow;
@@ -71,7 +71,7 @@ class Impl final : public OpticalFlowView
 
         int m_top_point_count;
 
-        std::unique_ptr<OpticalFlowCompute> m_compute;
+        std::unique_ptr<Compute> m_compute;
 
         void draw_commands(VkCommandBuffer command_buffer) const
         {
@@ -86,7 +86,7 @@ class Impl final : public OpticalFlowView
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
-                        OpticalFlowViewMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
+                        ViewMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline_points);
                 vkCmdDraw(command_buffer, m_top_point_count * 2, 1, 0, 0);
@@ -108,7 +108,7 @@ class Impl final : public OpticalFlowView
                 std::vector<vec2i> points;
                 int point_count_x;
                 int point_count_y;
-                create_top_level_optical_flow_points(
+                create_top_level_points(
                         rectangle.width(), rectangle.height(), window_ppi, &point_count_x, &point_count_y, &points);
 
                 m_top_point_count = points.size();
@@ -246,8 +246,8 @@ public:
                   m_signal_semaphore(instance.device()),
                   m_program(instance.device()),
                   m_memory(instance.device(), m_program.descriptor_set_layout(), {graphics_queue.family_index()}),
-                  m_sampler(create_optical_flow_sampler(instance.device())),
-                  m_compute(create_optical_flow_compute(
+                  m_sampler(create_sampler(instance.device())),
+                  m_compute(create_compute(
                           instance,
                           compute_command_pool,
                           compute_queue,
@@ -267,14 +267,14 @@ public:
 };
 }
 
-std::vector<vulkan::PhysicalDeviceFeatures> OpticalFlowView::required_device_features()
+std::vector<vulkan::PhysicalDeviceFeatures> View::required_device_features()
 {
         return merge<vulkan::PhysicalDeviceFeatures>(
                 std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),
-                OpticalFlowCompute::required_device_features());
+                Compute::required_device_features());
 }
 
-std::unique_ptr<OpticalFlowView> create_optical_flow_view(
+std::unique_ptr<View> create_view(
         const vulkan::VulkanInstance& instance,
         const vulkan::CommandPool& graphics_command_pool,
         const vulkan::Queue& graphics_queue,

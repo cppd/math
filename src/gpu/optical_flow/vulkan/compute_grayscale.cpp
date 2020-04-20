@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_grayscale.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-namespace gpu
+namespace gpu::optical_flow
 {
-std::vector<VkDescriptorSetLayoutBinding> OpticalFlowGrayscaleMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> GrayscaleMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -52,25 +52,23 @@ std::vector<VkDescriptorSetLayoutBinding> OpticalFlowGrayscaleMemory::descriptor
         return bindings;
 }
 
-OpticalFlowGrayscaleMemory::OpticalFlowGrayscaleMemory(
-        const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout)
+GrayscaleMemory::GrayscaleMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-unsigned OpticalFlowGrayscaleMemory::set_number()
+unsigned GrayscaleMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& OpticalFlowGrayscaleMemory::descriptor_set(int index) const
+const VkDescriptorSet& GrayscaleMemory::descriptor_set(int index) const
 {
         ASSERT(index == 0 || index == 1);
         return m_descriptors.descriptor_set(index);
 }
 
-void OpticalFlowGrayscaleMemory::set_src(VkSampler sampler, const vulkan::ImageWithMemory& image)
+void GrayscaleMemory::set_src(VkSampler sampler, const vulkan::ImageWithMemory& image)
 {
         ASSERT(image.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
 
@@ -85,7 +83,7 @@ void OpticalFlowGrayscaleMemory::set_src(VkSampler sampler, const vulkan::ImageW
         }
 }
 
-void OpticalFlowGrayscaleMemory::set_dst(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1)
+void GrayscaleMemory::set_dst(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1)
 {
         ASSERT(&image_0 != &image_1);
         ASSERT(image_0.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
@@ -104,7 +102,7 @@ void OpticalFlowGrayscaleMemory::set_dst(const vulkan::ImageWithMemory& image_0,
 
 //
 
-OpticalFlowGrayscaleConstant::OpticalFlowGrayscaleConstant()
+GrayscaleConstant::GrayscaleConstant()
 {
         {
                 VkSpecializationMapEntry entry = {};
@@ -150,7 +148,7 @@ OpticalFlowGrayscaleConstant::OpticalFlowGrayscaleConstant()
         }
 }
 
-void OpticalFlowGrayscaleConstant::set(uint32_t local_size_x, uint32_t local_size_y, const Region<2, int>& rectangle)
+void GrayscaleConstant::set(uint32_t local_size_x, uint32_t local_size_y, const Region<2, int>& rectangle)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
         m_data.local_size_x = local_size_x;
@@ -164,56 +162,50 @@ void OpticalFlowGrayscaleConstant::set(uint32_t local_size_x, uint32_t local_siz
         m_data.height = rectangle.height();
 }
 
-const std::vector<VkSpecializationMapEntry>& OpticalFlowGrayscaleConstant::entries() const
+const std::vector<VkSpecializationMapEntry>& GrayscaleConstant::entries() const
 {
         return m_entries;
 }
 
-const void* OpticalFlowGrayscaleConstant::data() const
+const void* GrayscaleConstant::data() const
 {
         return &m_data;
 }
 
-size_t OpticalFlowGrayscaleConstant::size() const
+size_t GrayscaleConstant::size() const
 {
         return sizeof(m_data);
 }
 
 //
 
-OpticalFlowGrayscaleProgram::OpticalFlowGrayscaleProgram(const vulkan::Device& device)
+GrayscaleProgram::GrayscaleProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                  device,
-                  OpticalFlowGrayscaleMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device,
-                  {OpticalFlowGrayscaleMemory::set_number()},
-                  {m_descriptor_set_layout})),
-          m_shader(device, optical_flow_grayscale_comp(), "main")
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, GrayscaleMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {GrayscaleMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, code_grayscale_comp(), "main")
 {
 }
 
-VkDescriptorSetLayout OpticalFlowGrayscaleProgram::descriptor_set_layout() const
+VkDescriptorSetLayout GrayscaleProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout OpticalFlowGrayscaleProgram::pipeline_layout() const
+VkPipelineLayout GrayscaleProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-VkPipeline OpticalFlowGrayscaleProgram::pipeline() const
+VkPipeline GrayscaleProgram::pipeline() const
 {
         ASSERT(m_pipeline != VK_NULL_HANDLE);
         return m_pipeline;
 }
 
-void OpticalFlowGrayscaleProgram::create_pipeline(
-        uint32_t local_size_x,
-        uint32_t local_size_y,
-        const Region<2, int>& rectangle)
+void GrayscaleProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y, const Region<2, int>& rectangle)
 {
         m_constant.set(local_size_x, local_size_y, rectangle);
 
@@ -225,7 +217,7 @@ void OpticalFlowGrayscaleProgram::create_pipeline(
         m_pipeline = create_compute_pipeline(info);
 }
 
-void OpticalFlowGrayscaleProgram::delete_pipeline()
+void GrayscaleProgram::delete_pipeline()
 {
         m_pipeline = vulkan::Pipeline();
 }

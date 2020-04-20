@@ -26,9 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::optical_flow
 {
-class OpticalFlowGrayscaleMemory final
+class GrayscaleMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -41,14 +41,14 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        OpticalFlowGrayscaleMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        GrayscaleMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        OpticalFlowGrayscaleMemory(const OpticalFlowGrayscaleMemory&) = delete;
-        OpticalFlowGrayscaleMemory& operator=(const OpticalFlowGrayscaleMemory&) = delete;
-        OpticalFlowGrayscaleMemory& operator=(OpticalFlowGrayscaleMemory&&) = delete;
+        GrayscaleMemory(const GrayscaleMemory&) = delete;
+        GrayscaleMemory& operator=(const GrayscaleMemory&) = delete;
+        GrayscaleMemory& operator=(GrayscaleMemory&&) = delete;
 
-        OpticalFlowGrayscaleMemory(OpticalFlowGrayscaleMemory&&) = default;
-        ~OpticalFlowGrayscaleMemory() = default;
+        GrayscaleMemory(GrayscaleMemory&&) = default;
+        ~GrayscaleMemory() = default;
 
         //
 
@@ -60,7 +60,7 @@ public:
         void set_dst(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1);
 };
 
-class OpticalFlowGrayscaleConstant final : public vulkan::SpecializationConstant
+class GrayscaleConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -79,30 +79,30 @@ class OpticalFlowGrayscaleConstant final : public vulkan::SpecializationConstant
         size_t size() const override;
 
 public:
-        OpticalFlowGrayscaleConstant();
+        GrayscaleConstant();
 
         void set(uint32_t local_size_x, uint32_t local_size_y, const Region<2, int>& rectangle);
 };
 
-class OpticalFlowGrayscaleProgram final
+class GrayscaleProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        OpticalFlowGrayscaleConstant m_constant;
+        GrayscaleConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::Pipeline m_pipeline;
 
 public:
-        explicit OpticalFlowGrayscaleProgram(const vulkan::Device& device);
+        explicit GrayscaleProgram(const vulkan::Device& device);
 
-        OpticalFlowGrayscaleProgram(const OpticalFlowGrayscaleProgram&) = delete;
-        OpticalFlowGrayscaleProgram& operator=(const OpticalFlowGrayscaleProgram&) = delete;
-        OpticalFlowGrayscaleProgram& operator=(OpticalFlowGrayscaleProgram&&) = delete;
+        GrayscaleProgram(const GrayscaleProgram&) = delete;
+        GrayscaleProgram& operator=(const GrayscaleProgram&) = delete;
+        GrayscaleProgram& operator=(GrayscaleProgram&&) = delete;
 
-        OpticalFlowGrayscaleProgram(OpticalFlowGrayscaleProgram&&) = default;
-        ~OpticalFlowGrayscaleProgram() = default;
+        GrayscaleProgram(GrayscaleProgram&&) = default;
+        ~GrayscaleProgram() = default;
 
         void create_pipeline(uint32_t local_size_x, uint32_t local_size_y, const Region<2, int>& rectangle);
         void delete_pipeline();

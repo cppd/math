@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_downsample.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-namespace gpu
+namespace gpu::optical_flow
 {
-std::vector<VkDescriptorSetLayoutBinding> OpticalFlowDownsampleMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> DownsampleMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -52,27 +52,23 @@ std::vector<VkDescriptorSetLayoutBinding> OpticalFlowDownsampleMemory::descripto
         return bindings;
 }
 
-OpticalFlowDownsampleMemory::OpticalFlowDownsampleMemory(
-        const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout)
+DownsampleMemory::DownsampleMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-unsigned OpticalFlowDownsampleMemory::set_number()
+unsigned DownsampleMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& OpticalFlowDownsampleMemory::descriptor_set(int index) const
+const VkDescriptorSet& DownsampleMemory::descriptor_set(int index) const
 {
         ASSERT(index == 0 || index == 1);
         return m_descriptors.descriptor_set(index);
 }
 
-void OpticalFlowDownsampleMemory::set_big(
-        const vulkan::ImageWithMemory& image_0,
-        const vulkan::ImageWithMemory& image_1) const
+void DownsampleMemory::set_big(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const
 {
         ASSERT(&image_0 != &image_1);
         ASSERT(image_0.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
@@ -89,9 +85,7 @@ void OpticalFlowDownsampleMemory::set_big(
         m_descriptors.update_descriptor_set(1, BIG_BINDING, image_info);
 }
 
-void OpticalFlowDownsampleMemory::set_small(
-        const vulkan::ImageWithMemory& image_0,
-        const vulkan::ImageWithMemory& image_1) const
+void DownsampleMemory::set_small(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const
 {
         ASSERT(&image_0 != &image_1);
         ASSERT(image_0.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
@@ -110,7 +104,7 @@ void OpticalFlowDownsampleMemory::set_small(
 
 //
 
-OpticalFlowDownsampleConstant::OpticalFlowDownsampleConstant()
+DownsampleConstant::DownsampleConstant()
 {
         {
                 VkSpecializationMapEntry entry = {};
@@ -128,7 +122,7 @@ OpticalFlowDownsampleConstant::OpticalFlowDownsampleConstant()
         }
 }
 
-void OpticalFlowDownsampleConstant::set(uint32_t local_size_x, uint32_t local_size_y)
+void DownsampleConstant::set(uint32_t local_size_x, uint32_t local_size_y)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
         m_data.local_size_x = local_size_x;
@@ -136,53 +130,50 @@ void OpticalFlowDownsampleConstant::set(uint32_t local_size_x, uint32_t local_si
         m_data.local_size_y = local_size_y;
 }
 
-const std::vector<VkSpecializationMapEntry>& OpticalFlowDownsampleConstant::entries() const
+const std::vector<VkSpecializationMapEntry>& DownsampleConstant::entries() const
 {
         return m_entries;
 }
 
-const void* OpticalFlowDownsampleConstant::data() const
+const void* DownsampleConstant::data() const
 {
         return &m_data;
 }
 
-size_t OpticalFlowDownsampleConstant::size() const
+size_t DownsampleConstant::size() const
 {
         return sizeof(m_data);
 }
 
 //
 
-OpticalFlowDownsampleProgram::OpticalFlowDownsampleProgram(const vulkan::Device& device)
+DownsampleProgram::DownsampleProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                  device,
-                  OpticalFlowDownsampleMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device,
-                  {OpticalFlowDownsampleMemory::set_number()},
-                  {m_descriptor_set_layout})),
-          m_shader(device, optical_flow_downsample_comp(), "main")
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, DownsampleMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {DownsampleMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, code_downsample_comp(), "main")
 {
 }
 
-VkDescriptorSetLayout OpticalFlowDownsampleProgram::descriptor_set_layout() const
+VkDescriptorSetLayout DownsampleProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout OpticalFlowDownsampleProgram::pipeline_layout() const
+VkPipelineLayout DownsampleProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-VkPipeline OpticalFlowDownsampleProgram::pipeline() const
+VkPipeline DownsampleProgram::pipeline() const
 {
         ASSERT(m_pipeline != VK_NULL_HANDLE);
         return m_pipeline;
 }
 
-void OpticalFlowDownsampleProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y)
+void DownsampleProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y)
 {
         m_constant.set(local_size_x, local_size_y);
 
@@ -194,7 +185,7 @@ void OpticalFlowDownsampleProgram::create_pipeline(uint32_t local_size_x, uint32
         m_pipeline = create_compute_pipeline(info);
 }
 
-void OpticalFlowDownsampleProgram::delete_pipeline()
+void DownsampleProgram::delete_pipeline()
 {
         m_pipeline = vulkan::Pipeline();
 }

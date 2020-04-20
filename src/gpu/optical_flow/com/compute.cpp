@@ -22,9 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../com/groups.h"
 
-namespace gpu
+namespace gpu::optical_flow
 {
-std::vector<vec2i> optical_flow_pyramid_sizes(int width, int height, int min_size)
+std::vector<vec2i> pyramid_sizes(int width, int height, int min_size)
 {
         std::vector<vec2i> sizes;
 
@@ -63,12 +63,12 @@ std::vector<vec2i> optical_flow_pyramid_sizes(int width, int height, int min_siz
         return sizes;
 }
 
-vec2i optical_flow_grayscale_groups(const vec2i& group_size, const std::vector<vec2i>& sizes)
+vec2i grayscale_groups(const vec2i& group_size, const std::vector<vec2i>& sizes)
 {
         return group_count(sizes[0][0], sizes[0][1], group_size);
 }
 
-std::vector<vec2i> optical_flow_downsample_groups(const vec2i& group_size, const std::vector<vec2i>& sizes)
+std::vector<vec2i> downsample_groups(const vec2i& group_size, const std::vector<vec2i>& sizes)
 {
         std::vector<vec2i> groups;
 
@@ -80,7 +80,7 @@ std::vector<vec2i> optical_flow_downsample_groups(const vec2i& group_size, const
         return groups;
 }
 
-std::vector<vec2i> optical_flow_sobel_groups(const vec2i& group_size, const std::vector<vec2i>& sizes)
+std::vector<vec2i> sobel_groups(const vec2i& group_size, const std::vector<vec2i>& sizes)
 {
         std::vector<vec2i> groups;
         groups.reserve(sizes.size());
@@ -93,7 +93,7 @@ std::vector<vec2i> optical_flow_sobel_groups(const vec2i& group_size, const std:
         return groups;
 }
 
-std::vector<vec2i> optical_flow_flow_groups(
+std::vector<vec2i> flow_groups(
         const vec2i& group_size,
         const std::vector<vec2i>& sizes,
         int top_point_count_x,

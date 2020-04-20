@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/vulkan/objects.h>
 
-namespace gpu
+namespace gpu::optical_flow
 {
-vulkan::Sampler create_optical_flow_sampler(VkDevice device);
+vulkan::Sampler create_sampler(VkDevice device);
 }

@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view_shader.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-namespace gpu
+namespace gpu::optical_flow
 {
-std::vector<VkDescriptorSetLayoutBinding> OpticalFlowViewMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> ViewMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -59,7 +59,7 @@ std::vector<VkDescriptorSetLayoutBinding> OpticalFlowViewMemory::descriptor_set_
         return bindings;
 }
 
-OpticalFlowViewMemory::OpticalFlowViewMemory(
+ViewMemory::ViewMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const std::unordered_set<uint32_t>& family_indices)
@@ -86,17 +86,17 @@ OpticalFlowViewMemory::OpticalFlowViewMemory(
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned OpticalFlowViewMemory::set_number()
+unsigned ViewMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& OpticalFlowViewMemory::descriptor_set() const
+const VkDescriptorSet& ViewMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void OpticalFlowViewMemory::set_points(const vulkan::BufferWithMemory& buffer) const
+void ViewMemory::set_points(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
         VkDescriptorBufferInfo buffer_info = {};
@@ -107,7 +107,7 @@ void OpticalFlowViewMemory::set_points(const vulkan::BufferWithMemory& buffer) c
         m_descriptors.update_descriptor_set(0, POINTS_BINDING, buffer_info);
 }
 
-void OpticalFlowViewMemory::set_flow(const vulkan::BufferWithMemory& buffer) const
+void ViewMemory::set_flow(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
         VkDescriptorBufferInfo buffer_info = {};
@@ -118,7 +118,7 @@ void OpticalFlowViewMemory::set_flow(const vulkan::BufferWithMemory& buffer) con
         m_descriptors.update_descriptor_set(0, FLOW_BINDING, buffer_info);
 }
 
-void OpticalFlowViewMemory::set_matrix(const mat4& matrix) const
+void ViewMemory::set_matrix(const mat4& matrix) const
 {
         Data data;
         data.matrix = to_matrix<float>(matrix).transpose();
@@ -127,31 +127,28 @@ void OpticalFlowViewMemory::set_matrix(const mat4& matrix) const
 
 //
 
-OpticalFlowViewProgram::OpticalFlowViewProgram(const vulkan::Device& device)
+ViewProgram::ViewProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                  device,
-                  OpticalFlowViewMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device,
-                  {OpticalFlowViewMemory::set_number()},
-                  {m_descriptor_set_layout})),
-          m_vertex_shader(m_device, optical_flow_view_vert(), "main"),
-          m_fragment_shader(m_device, optical_flow_view_frag(), "main")
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, ViewMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {ViewMemory::set_number()}, {m_descriptor_set_layout})),
+          m_vertex_shader(m_device, code_view_vert(), "main"),
+          m_fragment_shader(m_device, code_view_frag(), "main")
 {
 }
 
-VkDescriptorSetLayout OpticalFlowViewProgram::descriptor_set_layout() const
+VkDescriptorSetLayout ViewProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout OpticalFlowViewProgram::pipeline_layout() const
+VkPipelineLayout ViewProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline OpticalFlowViewProgram::create_pipeline(
+vulkan::Pipeline ViewProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         VkPrimitiveTopology primitive_topology,

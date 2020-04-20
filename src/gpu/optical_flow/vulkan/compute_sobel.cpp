@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_sobel.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-namespace gpu
+namespace gpu::optical_flow
 {
-std::vector<VkDescriptorSetLayoutBinding> OpticalFlowSobelMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> SobelMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -62,25 +62,23 @@ std::vector<VkDescriptorSetLayoutBinding> OpticalFlowSobelMemory::descriptor_set
         return bindings;
 }
 
-OpticalFlowSobelMemory::OpticalFlowSobelMemory(
-        const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout)
+SobelMemory::SobelMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-unsigned OpticalFlowSobelMemory::set_number()
+unsigned SobelMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& OpticalFlowSobelMemory::descriptor_set(int index) const
+const VkDescriptorSet& SobelMemory::descriptor_set(int index) const
 {
         ASSERT(index == 0 || index == 1);
         return m_descriptors.descriptor_set(index);
 }
 
-void OpticalFlowSobelMemory::set_i(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1)
+void SobelMemory::set_i(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1)
 {
         ASSERT(&image_0 != &image_1);
         ASSERT(image_0.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
@@ -97,7 +95,7 @@ void OpticalFlowSobelMemory::set_i(const vulkan::ImageWithMemory& image_0, const
         m_descriptors.update_descriptor_set(1, I_BINDING, image_info);
 }
 
-void OpticalFlowSobelMemory::set_dx(const vulkan::ImageWithMemory& image_dx)
+void SobelMemory::set_dx(const vulkan::ImageWithMemory& image_dx)
 {
         ASSERT(image_dx.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
         ASSERT(image_dx.format() == VK_FORMAT_R32_SFLOAT);
@@ -112,7 +110,7 @@ void OpticalFlowSobelMemory::set_dx(const vulkan::ImageWithMemory& image_dx)
         }
 }
 
-void OpticalFlowSobelMemory::set_dy(const vulkan::ImageWithMemory& image_dy)
+void SobelMemory::set_dy(const vulkan::ImageWithMemory& image_dy)
 {
         ASSERT(image_dy.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
         ASSERT(image_dy.format() == VK_FORMAT_R32_SFLOAT);
@@ -129,7 +127,7 @@ void OpticalFlowSobelMemory::set_dy(const vulkan::ImageWithMemory& image_dy)
 
 //
 
-OpticalFlowSobelConstant::OpticalFlowSobelConstant()
+SobelConstant::SobelConstant()
 {
         {
                 VkSpecializationMapEntry entry = {};
@@ -147,7 +145,7 @@ OpticalFlowSobelConstant::OpticalFlowSobelConstant()
         }
 }
 
-void OpticalFlowSobelConstant::set(uint32_t local_size_x, uint32_t local_size_y)
+void SobelConstant::set(uint32_t local_size_x, uint32_t local_size_y)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
         m_data.local_size_x = local_size_x;
@@ -155,53 +153,50 @@ void OpticalFlowSobelConstant::set(uint32_t local_size_x, uint32_t local_size_y)
         m_data.local_size_y = local_size_y;
 }
 
-const std::vector<VkSpecializationMapEntry>& OpticalFlowSobelConstant::entries() const
+const std::vector<VkSpecializationMapEntry>& SobelConstant::entries() const
 {
         return m_entries;
 }
 
-const void* OpticalFlowSobelConstant::data() const
+const void* SobelConstant::data() const
 {
         return &m_data;
 }
 
-size_t OpticalFlowSobelConstant::size() const
+size_t SobelConstant::size() const
 {
         return sizeof(m_data);
 }
 
 //
 
-OpticalFlowSobelProgram::OpticalFlowSobelProgram(const vulkan::Device& device)
+SobelProgram::SobelProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                  device,
-                  OpticalFlowSobelMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device,
-                  {OpticalFlowSobelMemory::set_number()},
-                  {m_descriptor_set_layout})),
-          m_shader(device, optical_flow_sobel_comp(), "main")
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, SobelMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {SobelMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, code_sobel_comp(), "main")
 {
 }
 
-VkDescriptorSetLayout OpticalFlowSobelProgram::descriptor_set_layout() const
+VkDescriptorSetLayout SobelProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout OpticalFlowSobelProgram::pipeline_layout() const
+VkPipelineLayout SobelProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-VkPipeline OpticalFlowSobelProgram::pipeline() const
+VkPipeline SobelProgram::pipeline() const
 {
         ASSERT(m_pipeline != VK_NULL_HANDLE);
         return m_pipeline;
 }
 
-void OpticalFlowSobelProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y)
+void SobelProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y)
 {
         m_constant.set(local_size_x, local_size_y);
 
@@ -213,7 +208,7 @@ void OpticalFlowSobelProgram::create_pipeline(uint32_t local_size_x, uint32_t lo
         m_pipeline = create_compute_pipeline(info);
 }
 
-void OpticalFlowSobelProgram::delete_pipeline()
+void SobelProgram::delete_pipeline()
 {
         m_pipeline = vulkan::Pipeline();
 }

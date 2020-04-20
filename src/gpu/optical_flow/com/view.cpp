@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 
-namespace gpu
+namespace gpu::optical_flow
 {
 namespace
 {
@@ -28,7 +28,7 @@ namespace
 constexpr double DISTANCE_BETWEEN_POINTS = 2;
 }
 
-void create_top_level_optical_flow_points(
+void create_top_level_points(
         int width,
         int height,
         int ppi,

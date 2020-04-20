@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_flow.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-namespace gpu
+namespace gpu::optical_flow
 {
-std::vector<VkDescriptorSetLayoutBinding> OpticalFlowFlowMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> FlowMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -112,7 +112,7 @@ std::vector<VkDescriptorSetLayoutBinding> OpticalFlowFlowMemory::descriptor_set_
         return bindings;
 }
 
-OpticalFlowFlowMemory::OpticalFlowFlowMemory(
+FlowMemory::FlowMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const std::unordered_set<uint32_t>& family_indices)
@@ -142,18 +142,18 @@ OpticalFlowFlowMemory::OpticalFlowFlowMemory(
         }
 }
 
-unsigned OpticalFlowFlowMemory::set_number()
+unsigned FlowMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& OpticalFlowFlowMemory::descriptor_set(int index) const
+const VkDescriptorSet& FlowMemory::descriptor_set(int index) const
 {
         ASSERT(index == 0 || index == 1);
         return m_descriptors.descriptor_set(index);
 }
 
-void OpticalFlowFlowMemory::set_data(const Data& data) const
+void FlowMemory::set_data(const Data& data) const
 {
         BufferData buffer_data;
         buffer_data.point_count_x = data.point_count_x;
@@ -166,7 +166,7 @@ void OpticalFlowFlowMemory::set_data(const Data& data) const
         vulkan::map_and_write_to_buffer(m_uniform_buffers[0], buffer_data);
 }
 
-void OpticalFlowFlowMemory::set_dx(const vulkan::ImageWithMemory& image) const
+void FlowMemory::set_dx(const vulkan::ImageWithMemory& image) const
 {
         ASSERT(image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
         ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
@@ -181,7 +181,7 @@ void OpticalFlowFlowMemory::set_dx(const vulkan::ImageWithMemory& image) const
         }
 }
 
-void OpticalFlowFlowMemory::set_dy(const vulkan::ImageWithMemory& image) const
+void FlowMemory::set_dy(const vulkan::ImageWithMemory& image) const
 {
         ASSERT(image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
         ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
@@ -196,7 +196,7 @@ void OpticalFlowFlowMemory::set_dy(const vulkan::ImageWithMemory& image) const
         }
 }
 
-void OpticalFlowFlowMemory::set_i(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const
+void FlowMemory::set_i(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const
 {
         ASSERT(&image_0 != &image_1);
         ASSERT(image_0.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
@@ -213,7 +213,7 @@ void OpticalFlowFlowMemory::set_i(const vulkan::ImageWithMemory& image_0, const 
         m_descriptors.update_descriptor_set(1, I_BINDING, image_info);
 }
 
-void OpticalFlowFlowMemory::set_j(
+void FlowMemory::set_j(
         VkSampler sampler,
         const vulkan::ImageWithMemory& image_0,
         const vulkan::ImageWithMemory& image_1) const
@@ -232,7 +232,7 @@ void OpticalFlowFlowMemory::set_j(
         m_descriptors.update_descriptor_set(1, J_BINDING, image_info);
 }
 
-void OpticalFlowFlowMemory::set_top_points(const vulkan::BufferWithMemory& buffer) const
+void FlowMemory::set_top_points(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
         VkDescriptorBufferInfo buffer_info = {};
@@ -246,7 +246,7 @@ void OpticalFlowFlowMemory::set_top_points(const vulkan::BufferWithMemory& buffe
         }
 }
 
-void OpticalFlowFlowMemory::set_flow(const vulkan::BufferWithMemory& buffer) const
+void FlowMemory::set_flow(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
         VkDescriptorBufferInfo buffer_info = {};
@@ -260,7 +260,7 @@ void OpticalFlowFlowMemory::set_flow(const vulkan::BufferWithMemory& buffer) con
         }
 }
 
-void OpticalFlowFlowMemory::set_flow_guess(const vulkan::BufferWithMemory& buffer) const
+void FlowMemory::set_flow_guess(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
         VkDescriptorBufferInfo buffer_info = {};
@@ -276,7 +276,7 @@ void OpticalFlowFlowMemory::set_flow_guess(const vulkan::BufferWithMemory& buffe
 
 //
 
-OpticalFlowFlowConstant::OpticalFlowFlowConstant()
+FlowConstant::FlowConstant()
 {
         {
                 VkSpecializationMapEntry entry = {};
@@ -322,7 +322,7 @@ OpticalFlowFlowConstant::OpticalFlowFlowConstant()
         }
 }
 
-void OpticalFlowFlowConstant::set(
+void FlowConstant::set(
         uint32_t local_size_x,
         uint32_t local_size_y,
         int32_t radius,
@@ -344,53 +344,50 @@ void OpticalFlowFlowConstant::set(
         m_data.min_determinant = min_determinant;
 }
 
-const std::vector<VkSpecializationMapEntry>& OpticalFlowFlowConstant::entries() const
+const std::vector<VkSpecializationMapEntry>& FlowConstant::entries() const
 {
         return m_entries;
 }
 
-const void* OpticalFlowFlowConstant::data() const
+const void* FlowConstant::data() const
 {
         return &m_data;
 }
 
-size_t OpticalFlowFlowConstant::size() const
+size_t FlowConstant::size() const
 {
         return sizeof(m_data);
 }
 
 //
 
-OpticalFlowFlowProgram::OpticalFlowFlowProgram(const vulkan::Device& device)
+FlowProgram::FlowProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                  device,
-                  OpticalFlowFlowMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
-                  device,
-                  {OpticalFlowFlowMemory::set_number()},
-                  {m_descriptor_set_layout})),
-          m_shader(device, optical_flow_flow_comp(), "main")
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, FlowMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {FlowMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, code_flow_comp(), "main")
 {
 }
 
-VkDescriptorSetLayout OpticalFlowFlowProgram::descriptor_set_layout() const
+VkDescriptorSetLayout FlowProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout OpticalFlowFlowProgram::pipeline_layout() const
+VkPipelineLayout FlowProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-VkPipeline OpticalFlowFlowProgram::pipeline() const
+VkPipeline FlowProgram::pipeline() const
 {
         ASSERT(m_pipeline != VK_NULL_HANDLE);
         return m_pipeline;
 }
 
-void OpticalFlowFlowProgram::create_pipeline(
+void FlowProgram::create_pipeline(
         uint32_t local_size_x,
         uint32_t local_size_y,
         int32_t radius,
@@ -408,7 +405,7 @@ void OpticalFlowFlowProgram::create_pipeline(
         m_pipeline = create_compute_pipeline(info);
 }
 
-void OpticalFlowFlowProgram::delete_pipeline()
+void FlowProgram::delete_pipeline()
 {
         m_pipeline = vulkan::Pipeline();
 }

@@ -21,29 +21,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::optical_flow
 {
 // Размеры групп потоков вычислительных шейдеров
-constexpr vec2i OPTICAL_FLOW_GROUP_SIZE(16, 16);
+constexpr vec2i GROUP_SIZE(16, 16);
 // Минимальный размер изображения для пирамиды изображений
-constexpr int OPTICAL_FLOW_BOTTOM_IMAGE_SIZE = 16;
+constexpr int BOTTOM_IMAGE_SIZE = 16;
 
 // Параметры алгоритма для передачи в вычислительный шейдер
 // Радиус окрестности точки
-constexpr int OPTICAL_FLOW_RADIUS = 6;
+constexpr int RADIUS = 6;
 // Максимальное количество итераций
-constexpr int OPTICAL_FLOW_ITERATION_COUNT = 10;
+constexpr int ITERATION_COUNT = 10;
 // Если на итерации квадрат потока меньше этого значения, то выход из цикла
-constexpr float OPTICAL_FLOW_STOP_MOVE_SQUARE = square(1e-3f);
+constexpr float STOP_MOVE_SQUARE = square(1e-3f);
 // Если определитель матрицы G меньше этого значения, то считается, что нет потока
-constexpr float OPTICAL_FLOW_MIN_DETERMINANT = 1;
+constexpr float MIN_DETERMINANT = 1;
 
-std::vector<vec2i> optical_flow_pyramid_sizes(int width, int height, int min_size);
+std::vector<vec2i> pyramid_sizes(int width, int height, int min_size);
 
-vec2i optical_flow_grayscale_groups(const vec2i& group_size, const std::vector<vec2i>& sizes);
-std::vector<vec2i> optical_flow_downsample_groups(const vec2i& group_size, const std::vector<vec2i>& sizes);
-std::vector<vec2i> optical_flow_sobel_groups(const vec2i& group_size, const std::vector<vec2i>& sizes);
-std::vector<vec2i> optical_flow_flow_groups(
+vec2i grayscale_groups(const vec2i& group_size, const std::vector<vec2i>& sizes);
+std::vector<vec2i> downsample_groups(const vec2i& group_size, const std::vector<vec2i>& sizes);
+std::vector<vec2i> sobel_groups(const vec2i& group_size, const std::vector<vec2i>& sizes);
+std::vector<vec2i> flow_groups(
         const vec2i& group_size,
         const std::vector<vec2i>& sizes,
         int top_point_count_x,

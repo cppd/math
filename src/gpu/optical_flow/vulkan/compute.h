@@ -24,13 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
-namespace gpu
+namespace gpu::optical_flow
 {
-struct OpticalFlowCompute
+struct Compute
 {
         static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
 
-        virtual ~OpticalFlowCompute() = default;
+        virtual ~Compute() = default;
 
         virtual VkSemaphore compute(const vulkan::Queue& queue, VkSemaphore wait_semaphore) = 0;
         virtual void create_buffers(
@@ -46,7 +46,7 @@ struct OpticalFlowCompute
         virtual void reset() = 0;
 };
 
-std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(
+std::unique_ptr<Compute> create_compute(
         const vulkan::VulkanInstance& instance,
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,

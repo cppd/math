@@ -26,13 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
-namespace gpu
+namespace gpu::optical_flow
 {
-struct OpticalFlowView
+struct View
 {
         static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
 
-        virtual ~OpticalFlowView() = default;
+        virtual ~View() = default;
 
         virtual void create_buffers(
                 RenderBuffers2D* render_buffers,
@@ -50,7 +50,7 @@ struct OpticalFlowView
         virtual void reset() = 0;
 };
 
-std::unique_ptr<OpticalFlowView> create_optical_flow_view(
+std::unique_ptr<View> create_view(
         const vulkan::VulkanInstance& instance,
         const vulkan::CommandPool& graphics_command_pool,
         const vulkan::Queue& graphics_queue,

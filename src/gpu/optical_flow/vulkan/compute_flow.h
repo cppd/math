@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::optical_flow
 {
-class OpticalFlowFlowMemory final
+class FlowMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -58,17 +58,17 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        OpticalFlowFlowMemory(
+        FlowMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::unordered_set<uint32_t>& family_indices);
 
-        OpticalFlowFlowMemory(const OpticalFlowFlowMemory&) = delete;
-        OpticalFlowFlowMemory& operator=(const OpticalFlowFlowMemory&) = delete;
-        OpticalFlowFlowMemory& operator=(OpticalFlowFlowMemory&&) = delete;
+        FlowMemory(const FlowMemory&) = delete;
+        FlowMemory& operator=(const FlowMemory&) = delete;
+        FlowMemory& operator=(FlowMemory&&) = delete;
 
-        OpticalFlowFlowMemory(OpticalFlowFlowMemory&&) = default;
-        ~OpticalFlowFlowMemory() = default;
+        FlowMemory(FlowMemory&&) = default;
+        ~FlowMemory() = default;
 
         //
 
@@ -100,7 +100,7 @@ public:
         void set_flow_guess(const vulkan::BufferWithMemory& buffer) const;
 };
 
-class OpticalFlowFlowConstant final : public vulkan::SpecializationConstant
+class FlowConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -119,7 +119,7 @@ class OpticalFlowFlowConstant final : public vulkan::SpecializationConstant
         size_t size() const override;
 
 public:
-        OpticalFlowFlowConstant();
+        FlowConstant();
 
         void set(
                 uint32_t local_size_x,
@@ -130,25 +130,25 @@ public:
                 float min_determinant);
 };
 
-class OpticalFlowFlowProgram final
+class FlowProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        OpticalFlowFlowConstant m_constant;
+        FlowConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::Pipeline m_pipeline;
 
 public:
-        explicit OpticalFlowFlowProgram(const vulkan::Device& device);
+        explicit FlowProgram(const vulkan::Device& device);
 
-        OpticalFlowFlowProgram(const OpticalFlowFlowProgram&) = delete;
-        OpticalFlowFlowProgram& operator=(const OpticalFlowFlowProgram&) = delete;
-        OpticalFlowFlowProgram& operator=(OpticalFlowFlowProgram&&) = delete;
+        FlowProgram(const FlowProgram&) = delete;
+        FlowProgram& operator=(const FlowProgram&) = delete;
+        FlowProgram& operator=(FlowProgram&&) = delete;
 
-        OpticalFlowFlowProgram(OpticalFlowFlowProgram&&) = default;
-        ~OpticalFlowFlowProgram() = default;
+        FlowProgram(FlowProgram&&) = default;
+        ~FlowProgram() = default;
 
         void create_pipeline(
                 uint32_t local_size_x,

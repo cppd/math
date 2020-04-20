@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::optical_flow
 {
-class OpticalFlowDownsampleMemory final
+class DownsampleMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -40,14 +40,14 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        OpticalFlowDownsampleMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        DownsampleMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        OpticalFlowDownsampleMemory(const OpticalFlowDownsampleMemory&) = delete;
-        OpticalFlowDownsampleMemory& operator=(const OpticalFlowDownsampleMemory&) = delete;
-        OpticalFlowDownsampleMemory& operator=(OpticalFlowDownsampleMemory&&) = delete;
+        DownsampleMemory(const DownsampleMemory&) = delete;
+        DownsampleMemory& operator=(const DownsampleMemory&) = delete;
+        DownsampleMemory& operator=(DownsampleMemory&&) = delete;
 
-        OpticalFlowDownsampleMemory(OpticalFlowDownsampleMemory&&) = default;
-        ~OpticalFlowDownsampleMemory() = default;
+        DownsampleMemory(DownsampleMemory&&) = default;
+        ~DownsampleMemory() = default;
 
         //
 
@@ -59,7 +59,7 @@ public:
         void set_small(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const;
 };
 
-class OpticalFlowDownsampleConstant final : public vulkan::SpecializationConstant
+class DownsampleConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -74,30 +74,30 @@ class OpticalFlowDownsampleConstant final : public vulkan::SpecializationConstan
         size_t size() const override;
 
 public:
-        OpticalFlowDownsampleConstant();
+        DownsampleConstant();
 
         void set(uint32_t local_size_x, uint32_t local_size_y);
 };
 
-class OpticalFlowDownsampleProgram final
+class DownsampleProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
-        OpticalFlowDownsampleConstant m_constant;
+        DownsampleConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::Pipeline m_pipeline;
 
 public:
-        explicit OpticalFlowDownsampleProgram(const vulkan::Device& device);
+        explicit DownsampleProgram(const vulkan::Device& device);
 
-        OpticalFlowDownsampleProgram(const OpticalFlowDownsampleProgram&) = delete;
-        OpticalFlowDownsampleProgram& operator=(const OpticalFlowDownsampleProgram&) = delete;
-        OpticalFlowDownsampleProgram& operator=(OpticalFlowDownsampleProgram&&) = delete;
+        DownsampleProgram(const DownsampleProgram&) = delete;
+        DownsampleProgram& operator=(const DownsampleProgram&) = delete;
+        DownsampleProgram& operator=(DownsampleProgram&&) = delete;
 
-        OpticalFlowDownsampleProgram(OpticalFlowDownsampleProgram&&) = default;
-        ~OpticalFlowDownsampleProgram() = default;
+        DownsampleProgram(DownsampleProgram&&) = default;
+        ~DownsampleProgram() = default;
 
         void create_pipeline(uint32_t local_size_x, uint32_t local_size_y);
         void delete_pipeline();

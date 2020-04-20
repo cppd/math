@@ -28,9 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace gpu
+namespace gpu::optical_flow
 {
-class OpticalFlowViewMemory final
+class ViewMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -50,17 +50,17 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        OpticalFlowViewMemory(
+        ViewMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::unordered_set<uint32_t>& family_indices);
 
-        OpticalFlowViewMemory(const OpticalFlowViewMemory&) = delete;
-        OpticalFlowViewMemory& operator=(const OpticalFlowViewMemory&) = delete;
-        OpticalFlowViewMemory& operator=(OpticalFlowViewMemory&&) = delete;
+        ViewMemory(const ViewMemory&) = delete;
+        ViewMemory& operator=(const ViewMemory&) = delete;
+        ViewMemory& operator=(ViewMemory&&) = delete;
 
-        OpticalFlowViewMemory(OpticalFlowViewMemory&&) = default;
-        ~OpticalFlowViewMemory() = default;
+        ViewMemory(ViewMemory&&) = default;
+        ~ViewMemory() = default;
 
         //
 
@@ -73,7 +73,7 @@ public:
         void set_matrix(const mat4& matrix) const;
 };
 
-class OpticalFlowViewProgram final
+class ViewProgram final
 {
         const vulkan::Device& m_device;
 
@@ -83,14 +83,14 @@ class OpticalFlowViewProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        explicit OpticalFlowViewProgram(const vulkan::Device& device);
+        explicit ViewProgram(const vulkan::Device& device);
 
-        OpticalFlowViewProgram(const OpticalFlowViewProgram&) = delete;
-        OpticalFlowViewProgram& operator=(const OpticalFlowViewProgram&) = delete;
-        OpticalFlowViewProgram& operator=(OpticalFlowViewProgram&&) = delete;
+        ViewProgram(const ViewProgram&) = delete;
+        ViewProgram& operator=(const ViewProgram&) = delete;
+        ViewProgram& operator=(ViewProgram&&) = delete;
 
-        OpticalFlowViewProgram(OpticalFlowViewProgram&&) = default;
-        ~OpticalFlowViewProgram() = default;
+        ViewProgram(ViewProgram&&) = default;
+        ~ViewProgram() = default;
 
         vulkan::Pipeline create_pipeline(
                 VkRenderPass render_pass,

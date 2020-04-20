@@ -21,9 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu
+namespace gpu::optical_flow
 {
-void create_top_level_optical_flow_points(
+void create_top_level_points(
         int width,
         int height,
         int ppi,
