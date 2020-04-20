@@ -15,11 +15,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "code.h"
 
-#include <src/vulkan/objects.h>
-
-namespace gpu
+namespace gpu::text_writer
 {
-vulkan::Sampler create_text_sampler(VkDevice device);
+namespace
+{
+constexpr uint32_t vert[]{
+#include "text_writer.vert.spr"
+};
+constexpr uint32_t frag[]{
+#include "text_writer.frag.spr"
+};
+}
+
+Span<const uint32_t> code_vert()
+{
+        return vert;
+}
+
+Span<const uint32_t> code_frag()
+{
+        return frag;
+}
 }

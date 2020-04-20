@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <vector>
 
-namespace gpu
+namespace gpu::text_writer
 {
 namespace
 {
@@ -88,7 +88,7 @@ public:
         }
 };
 
-class Impl final : public TextView
+class Impl final : public View
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -103,8 +103,8 @@ class Impl final : public TextView
 
         vulkan::Semaphore m_semaphore;
         vulkan::Sampler m_sampler;
-        TextProgram m_program;
-        TextMemory m_memory;
+        Program m_program;
+        Memory m_memory;
         std::optional<vulkan::BufferWithMemory> m_vertex_buffer;
         vulkan::BufferWithMemory m_indirect_buffer;
         RenderBuffers2D* m_render_buffers = nullptr;
@@ -128,7 +128,7 @@ class Impl final : public TextView
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
-                        TextMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
+                        Memory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
 
                 std::array<VkBuffer, 1> buffers = {*m_vertex_buffer};
                 std::array<VkDeviceSize, 1> offsets = {0};
@@ -205,11 +205,11 @@ class Impl final : public TextView
 
                 text_vertices(m_glyphs, text_data, &vertices);
 
-                static_assert(sizeof(text::TextVertex) == sizeof(TextVertex));
-                static_assert(offsetof(text::TextVertex, v) == offsetof(TextVertex, window_coordinates));
-                static_assert(offsetof(text::TextVertex, t) == offsetof(TextVertex, texture_coordinates));
-                static_assert(std::is_same_v<decltype(text::TextVertex::v), decltype(TextVertex::window_coordinates)>);
-                static_assert(std::is_same_v<decltype(text::TextVertex::t), decltype(TextVertex::texture_coordinates)>);
+                static_assert(sizeof(text::TextVertex) == sizeof(Vertex));
+                static_assert(offsetof(text::TextVertex, v) == offsetof(Vertex, window_coordinates));
+                static_assert(offsetof(text::TextVertex, t) == offsetof(Vertex, texture_coordinates));
+                static_assert(std::is_same_v<decltype(text::TextVertex::v), decltype(Vertex::window_coordinates)>);
+                static_assert(std::is_same_v<decltype(text::TextVertex::t), decltype(Vertex::texture_coordinates)>);
 
                 const size_t data_size = storage_size(vertices);
 
@@ -276,7 +276,7 @@ class Impl final : public TextView
                           false /*storage*/),
                   m_glyphs(std::move(glyphs.glyphs())),
                   m_semaphore(m_device),
-                  m_sampler(create_text_sampler(m_device)),
+                  m_sampler(create_sampler(m_device)),
                   m_program(m_device),
                   m_memory(
                           m_device,
@@ -336,13 +336,13 @@ public:
 };
 }
 
-std::vector<vulkan::PhysicalDeviceFeatures> TextView::required_device_features()
+std::vector<vulkan::PhysicalDeviceFeatures> View::required_device_features()
 {
         return merge<vulkan::PhysicalDeviceFeatures>(
                 std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES));
 }
 
-std::unique_ptr<TextView> create_text_view(
+std::unique_ptr<View> create_view(
         const vulkan::VulkanInstance& instance,
         const vulkan::CommandPool& graphics_command_pool,
         const vulkan::Queue& graphics_queue,

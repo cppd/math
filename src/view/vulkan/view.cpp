@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/optical_flow/vulkan/view.h>
 #include <src/gpu/pencil_sketch/vulkan/view.h>
 #include <src/gpu/renderer/vulkan/renderer.h>
-#include <src/gpu/text/vulkan/view.h>
+#include <src/gpu/text_writer/vulkan/view.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>
@@ -135,7 +135,7 @@ class Impl final : public View
         std::unique_ptr<vulkan::Semaphore> m_resolve_semaphore;
         std::unique_ptr<vulkan::ImageWithMemory> m_object_image;
         std::unique_ptr<gpu::renderer::Renderer> m_renderer;
-        std::unique_ptr<gpu::TextView> m_text;
+        std::unique_ptr<gpu::text_writer::View> m_text;
         std::unique_ptr<gpu::ConvexHullView> m_convex_hull;
         std::unique_ptr<gpu::PencilSketchView> m_pencil_sketch;
         std::unique_ptr<gpu::DftView> m_dft;
@@ -735,7 +735,7 @@ public:
                                         gpu::OpticalFlowView::required_device_features(),
                                         gpu::PencilSketchView::required_device_features(),
                                         gpu::renderer::Renderer::required_device_features(),
-                                        gpu::TextView::required_device_features(),
+                                        gpu::text_writer::View::required_device_features(),
                                         device_features_sample_shading(
                                                 VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING),
                                         device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY));
@@ -771,7 +771,7 @@ public:
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
                         transfer_queue, VULKAN_SAMPLE_SHADING, VULKAN_SAMPLER_ANISOTROPY);
 
-                m_text = gpu::create_text_view(
+                m_text = gpu::text_writer::create_view(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
                         transfer_queue, VULKAN_SAMPLE_SHADING, m_frame_rate.text_size(), text_color);
 

@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/span.h>
 
-namespace gpu
+namespace gpu::text_writer
 {
-Span<const uint32_t> text_vert();
-Span<const uint32_t> text_frag();
+Span<const uint32_t> code_vert();
+Span<const uint32_t> code_frag();
 }

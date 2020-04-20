@@ -28,9 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace gpu
+namespace gpu::text_writer
 {
-class TextMemory final
+class Memory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -63,19 +63,18 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        TextMemory(
-                const vulkan::Device& device,
-                VkDescriptorSetLayout descriptor_set_layout,
-                const std::unordered_set<uint32_t>& family_indices,
-                VkSampler sampler,
-                const vulkan::ImageWithMemory* texture);
+        Memory(const vulkan::Device& device,
+               VkDescriptorSetLayout descriptor_set_layout,
+               const std::unordered_set<uint32_t>& family_indices,
+               VkSampler sampler,
+               const vulkan::ImageWithMemory* texture);
 
-        TextMemory(const TextMemory&) = delete;
-        TextMemory& operator=(const TextMemory&) = delete;
-        TextMemory& operator=(TextMemory&&) = delete;
+        Memory(const Memory&) = delete;
+        Memory& operator=(const Memory&) = delete;
+        Memory& operator=(Memory&&) = delete;
 
-        TextMemory(TextMemory&&) = default;
-        ~TextMemory() = default;
+        Memory(Memory&&) = default;
+        ~Memory() = default;
 
         //
 
@@ -87,7 +86,7 @@ public:
         void set_color(const Color& color) const;
 };
 
-struct TextVertex
+struct Vertex
 {
         Vector<2, int32_t> window_coordinates;
         Vector<2, float> texture_coordinates;
@@ -96,7 +95,7 @@ struct TextVertex
         static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
 };
 
-class TextProgram final
+class Program final
 {
         const vulkan::Device& m_device;
 
@@ -106,14 +105,14 @@ class TextProgram final
         vulkan::FragmentShader m_fragment_shader;
 
 public:
-        explicit TextProgram(const vulkan::Device& device);
+        explicit Program(const vulkan::Device& device);
 
-        TextProgram(const TextProgram&) = delete;
-        TextProgram& operator=(const TextProgram&) = delete;
-        TextProgram& operator=(TextProgram&&) = delete;
+        Program(const Program&) = delete;
+        Program& operator=(const Program&) = delete;
+        Program& operator=(Program&&) = delete;
 
-        TextProgram(TextProgram&&) = default;
-        ~TextProgram() = default;
+        Program(Program&&) = default;
+        ~Program() = default;
 
         vulkan::Pipeline create_pipeline(
                 VkRenderPass render_pass,

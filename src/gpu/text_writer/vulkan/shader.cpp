@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader.h"
 
-#include "../shaders/source.h"
+#include "../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-namespace gpu
+namespace gpu::text_writer
 {
-std::vector<VkDescriptorSetLayoutBinding> TextMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> Memory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -59,7 +59,7 @@ std::vector<VkDescriptorSetLayoutBinding> TextMemory::descriptor_set_layout_bind
         return bindings;
 }
 
-TextMemory::TextMemory(
+Memory::Memory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const std::unordered_set<uint32_t>& family_indices,
@@ -114,34 +114,34 @@ TextMemory::TextMemory(
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned TextMemory::set_number()
+unsigned Memory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& TextMemory::descriptor_set() const
+const VkDescriptorSet& Memory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
 template <typename T>
-void TextMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
+void Memory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_matrices_buffer_index], offset, data);
 }
 template <typename T>
-void TextMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
+void Memory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
 {
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
 }
 
-void TextMemory::set_matrix(const mat4& matrix) const
+void Memory::set_matrix(const mat4& matrix) const
 {
         decltype(Matrices().matrix) m = to_matrix<float>(matrix).transpose();
         copy_to_matrices_buffer(offsetof(Matrices, matrix), m);
 }
 
-void TextMemory::set_color(const Color& color) const
+void Memory::set_color(const Color& color) const
 {
         decltype(Drawing().color) c = color.to_rgb_vector<float>();
         copy_to_drawing_buffer(offsetof(Drawing, color), c);
@@ -149,14 +149,14 @@ void TextMemory::set_color(const Color& color) const
 
 //
 
-std::vector<VkVertexInputBindingDescription> TextVertex::binding_descriptions()
+std::vector<VkVertexInputBindingDescription> Vertex::binding_descriptions()
 {
         std::vector<VkVertexInputBindingDescription> descriptions;
 
         {
                 VkVertexInputBindingDescription d = {};
                 d.binding = 0;
-                d.stride = sizeof(TextVertex);
+                d.stride = sizeof(Vertex);
                 d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
                 descriptions.push_back(d);
@@ -165,7 +165,7 @@ std::vector<VkVertexInputBindingDescription> TextVertex::binding_descriptions()
         return descriptions;
 }
 
-std::vector<VkVertexInputAttributeDescription> TextVertex::attribute_descriptions()
+std::vector<VkVertexInputAttributeDescription> Vertex::attribute_descriptions()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
 
@@ -174,7 +174,7 @@ std::vector<VkVertexInputAttributeDescription> TextVertex::attribute_description
                 d.binding = 0;
                 d.location = 0;
                 d.format = VK_FORMAT_R32G32_SINT;
-                d.offset = offsetof(TextVertex, window_coordinates);
+                d.offset = offsetof(Vertex, window_coordinates);
 
                 descriptions.push_back(d);
         }
@@ -183,7 +183,7 @@ std::vector<VkVertexInputAttributeDescription> TextVertex::attribute_description
                 d.binding = 0;
                 d.location = 1;
                 d.format = VK_FORMAT_R32G32_SFLOAT;
-                d.offset = offsetof(TextVertex, texture_coordinates);
+                d.offset = offsetof(Vertex, texture_coordinates);
 
                 descriptions.push_back(d);
         }
@@ -193,28 +193,27 @@ std::vector<VkVertexInputAttributeDescription> TextVertex::attribute_description
 
 //
 
-TextProgram::TextProgram(const vulkan::Device& device)
+Program::Program(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, TextMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {TextMemory::set_number()}, {m_descriptor_set_layout})),
-          m_vertex_shader(m_device, text_vert(), "main"),
-          m_fragment_shader(m_device, text_frag(), "main")
+                  vulkan::create_descriptor_set_layout(device, Memory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(device, {Memory::set_number()}, {m_descriptor_set_layout})),
+          m_vertex_shader(m_device, code_vert(), "main"),
+          m_fragment_shader(m_device, code_frag(), "main")
 {
 }
 
-VkDescriptorSetLayout TextProgram::descriptor_set_layout() const
+VkDescriptorSetLayout Program::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-VkPipelineLayout TextProgram::pipeline_layout() const
+VkPipelineLayout Program::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline TextProgram::create_pipeline(
+vulkan::Pipeline Program::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         bool sample_shading,
@@ -239,11 +238,10 @@ vulkan::Pipeline TextProgram::create_pipeline(
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
         info.constants = &constants;
 
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions = TextVertex::binding_descriptions();
+        const std::vector<VkVertexInputBindingDescription> binding_descriptions = Vertex::binding_descriptions();
         info.binding_descriptions = &binding_descriptions;
 
-        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
-                TextVertex::attribute_descriptions();
+        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions = Vertex::attribute_descriptions();
         info.attribute_descriptions = &attribute_descriptions;
 
         return vulkan::create_graphics_pipeline(info);
