@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "source.h"
+#include "code.h"
 
-namespace gpu
+namespace gpu::renderer
 {
 namespace
 {
@@ -62,67 +62,67 @@ constexpr uint32_t normals_frag[]{
 };
 }
 
-Span<const uint32_t> renderer_triangles_vert()
+Span<const uint32_t> code_triangles_vert()
 {
         return Span<const uint32_t>(triangles_vert);
 }
 
-Span<const uint32_t> renderer_triangles_geom()
+Span<const uint32_t> code_triangles_geom()
 {
         return Span<const uint32_t>(triangles_geom);
 }
 
-Span<const uint32_t> renderer_triangles_frag()
+Span<const uint32_t> code_triangles_frag()
 {
         return Span<const uint32_t>(triangles_frag);
 }
 
-Span<const uint32_t> renderer_triangles_depth_vert()
+Span<const uint32_t> code_triangles_depth_vert()
 {
         return Span<const uint32_t>(triangles_depth_vert);
 }
 
-Span<const uint32_t> renderer_triangle_lines_vert()
+Span<const uint32_t> code_triangle_lines_vert()
 {
         return Span<const uint32_t>(triangle_lines_vert);
 }
 
-Span<const uint32_t> renderer_triangle_lines_geom()
+Span<const uint32_t> code_triangle_lines_geom()
 {
         return Span<const uint32_t>(triangle_lines_geom);
 }
 
-Span<const uint32_t> renderer_triangle_lines_frag()
+Span<const uint32_t> code_triangle_lines_frag()
 {
         return Span<const uint32_t>(triangle_lines_frag);
 }
 
-Span<const uint32_t> renderer_points_0d_vert()
+Span<const uint32_t> code_points_0d_vert()
 {
         return Span<const uint32_t>(points_0d_vert);
 }
 
-Span<const uint32_t> renderer_points_1d_vert()
+Span<const uint32_t> code_points_1d_vert()
 {
         return Span<const uint32_t>(points_1d_vert);
 }
 
-Span<const uint32_t> renderer_points_frag()
+Span<const uint32_t> code_points_frag()
 {
         return Span<const uint32_t>(points_frag);
 }
 
-Span<const uint32_t> renderer_normals_vert()
+Span<const uint32_t> code_normals_vert()
 {
         return Span<const uint32_t>(normals_vert);
 }
 
-Span<const uint32_t> renderer_normals_geom()
+Span<const uint32_t> code_normals_geom()
 {
         return Span<const uint32_t>(normals_geom);
 }
 
-Span<const uint32_t> renderer_normals_frag()
+Span<const uint32_t> code_normals_frag()
 {
         return Span<const uint32_t>(normals_frag);
 }

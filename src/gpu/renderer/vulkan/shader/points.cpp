@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vertex_points.h"
 
-#include "../../shaders/source.h"
+#include "../../shaders/code.h"
 
 #include <src/com/error.h>
 #include <src/vulkan/create.h>
@@ -127,9 +127,9 @@ PointsProgram::PointsProgram(const vulkan::Device& device)
                   vulkan::create_descriptor_set_layout(device, PointsMemory::descriptor_set_layout_bindings())),
           m_pipeline_layout(
                   vulkan::create_pipeline_layout(device, {PointsMemory::set_number()}, {m_descriptor_set_layout})),
-          m_vertex_shader_0d(m_device, renderer_points_0d_vert(), "main"),
-          m_vertex_shader_1d(m_device, renderer_points_1d_vert(), "main"),
-          m_fragment_shader(m_device, renderer_points_frag(), "main")
+          m_vertex_shader_0d(m_device, code_points_0d_vert(), "main"),
+          m_vertex_shader_1d(m_device, code_points_1d_vert(), "main"),
+          m_fragment_shader(m_device, code_points_frag(), "main")
 {
 }
 

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vertex_triangles.h"
 
-#include "../../shaders/source.h"
+#include "../../shaders/code.h"
 
 #include <src/com/error.h>
 #include <src/vulkan/create.h>
@@ -299,9 +299,9 @@ TrianglesProgram::TrianglesProgram(const vulkan::Device& device)
                   device,
                   {TrianglesMemory::set_number(), TrianglesMaterialMemory::set_number()},
                   {m_descriptor_set_layout, m_descriptor_set_layout_material})),
-          m_vertex_shader(m_device, renderer_triangles_vert(), "main"),
-          m_geometry_shader(m_device, renderer_triangles_geom(), "main"),
-          m_fragment_shader(m_device, renderer_triangles_frag(), "main")
+          m_vertex_shader(m_device, code_triangles_vert(), "main"),
+          m_geometry_shader(m_device, code_triangles_geom(), "main"),
+          m_fragment_shader(m_device, code_triangles_frag(), "main")
 {
 }
 

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vertex_triangles.h"
 
-#include "../../shaders/source.h"
+#include "../../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
@@ -107,7 +107,7 @@ TrianglesDepthProgram::TrianglesDepthProgram(const vulkan::Device& device)
                   device,
                   {TrianglesDepthMemory::set_number()},
                   {m_descriptor_set_layout})),
-          m_vertex_shader(m_device, renderer_triangles_depth_vert(), "main")
+          m_vertex_shader(m_device, code_triangles_depth_vert(), "main")
 {
 }
 

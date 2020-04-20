@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vertex_triangles.h"
 
-#include "../../shaders/source.h"
+#include "../../shaders/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
@@ -106,9 +106,9 @@ TriangleLinesProgram::TriangleLinesProgram(const vulkan::Device& device)
                   device,
                   {TriangleLinesMemory::set_number()},
                   {m_descriptor_set_layout})),
-          m_vertex_shader(m_device, renderer_triangle_lines_vert(), "main"),
-          m_geometry_shader(m_device, renderer_triangle_lines_geom(), "main"),
-          m_fragment_shader(m_device, renderer_triangle_lines_frag(), "main")
+          m_vertex_shader(m_device, code_triangle_lines_vert(), "main"),
+          m_geometry_shader(m_device, code_triangle_lines_geom(), "main"),
+          m_fragment_shader(m_device, code_triangle_lines_frag(), "main")
 {
 }
 
