@@ -23,18 +23,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "query.h"
 
 #include <src/com/print.h>
+#include <src/com/string_tree.h>
 #include <src/window/manage.h>
 
 #include <algorithm>
-#include <stack>
-#include <string_view>
-#include <tuple>
 #include <vector>
 
 namespace vulkan
 {
 namespace
 {
+constexpr unsigned TREE_LEVEL_INDENT = 2;
+
 template <typename T>
 std::vector<std::string> sorted(const T& s)
 {
@@ -43,84 +43,19 @@ std::vector<std::string> sorted(const T& s)
         return res;
 }
 
-class Tree
-{
-        struct Node
-        {
-                std::string name;
-                std::vector<size_t> children;
-                explicit Node(const std::string_view& s) : name(s)
-                {
-                }
-        };
-
-        static constexpr size_t ROOT_NODE = 0;
-        static constexpr unsigned TEXT_INDENT = 4;
-
-        std::vector<Node> m_nodes;
-
-public:
-        Tree()
-        {
-                m_nodes.emplace_back("");
-        }
-
-        size_t add(const std::string& s)
-        {
-                m_nodes.emplace_back(s);
-                m_nodes[ROOT_NODE].children.push_back(m_nodes.size() - 1);
-                return m_nodes.size() - 1;
-        }
-
-        size_t add(size_t parent, const std::string& s)
-        {
-                m_nodes.emplace_back(s);
-                m_nodes[parent].children.push_back(m_nodes.size() - 1);
-                return m_nodes.size() - 1;
-        }
-
-        std::string text()
-        {
-                std::string s;
-
-                std::stack<std::tuple<size_t, unsigned>> stack({{ROOT_NODE, 0}});
-                while (!stack.empty())
-                {
-                        auto index = std::get<0>(stack.top());
-                        auto level = std::get<1>(stack.top());
-                        stack.pop();
-
-                        if (level > 0)
-                        {
-                                s += '\n';
-                                s += std::string((level - 1) * TEXT_INDENT, ' ');
-                                s += m_nodes[index].name;
-                        }
-
-                        for (auto iter = m_nodes[index].children.crbegin(); iter != m_nodes[index].children.crend();
-                             ++iter)
-                        {
-                                stack.push({*iter, level + 1});
-                        }
-                }
-
-                return s;
-        }
-};
-
-void device_type(const PhysicalDevice& device, size_t device_node, Tree* tree)
+void device_type(const PhysicalDevice& device, size_t device_node, StringTree* tree)
 {
         size_t type_node = tree->add(device_node, "Device Type");
         tree->add(type_node, physical_device_type_to_string(device.properties().deviceType));
 }
 
-void api_version(const PhysicalDevice& device, size_t device_node, Tree* tree)
+void api_version(const PhysicalDevice& device, size_t device_node, StringTree* tree)
 {
         size_t api_node = tree->add(device_node, "API Version");
         tree->add(api_node, api_version_to_string(device.properties().apiVersion));
 }
 
-void extensions(const PhysicalDevice& device, size_t device_node, Tree* tree)
+void extensions(const PhysicalDevice& device, size_t device_node, StringTree* tree)
 {
         size_t extensions_node = tree->add(device_node, "Extensions");
 
@@ -161,7 +96,7 @@ std::string as_string(T (&array)[N])
 
 #define ADD_LIMIT(v) add(#v, device.properties().limits.v)
 
-void limits(const PhysicalDevice& device, size_t device_node, Tree* tree)
+void limits(const PhysicalDevice& device, size_t device_node, StringTree* tree)
 {
         size_t limits_node = tree->add(device_node, "Limits");
 
@@ -192,7 +127,7 @@ void queues(
         const std::vector<VkQueueFamilyProperties>& families,
         size_t family_index,
         size_t queue_families_node,
-        Tree* tree)
+        StringTree* tree)
 {
         const VkQueueFamilyProperties& p = families[family_index];
 
@@ -239,7 +174,7 @@ void queues(
         }
 }
 
-void queue_families(const PhysicalDevice& device, size_t device_node, Tree* tree)
+void queue_families(const PhysicalDevice& device, size_t device_node, StringTree* tree)
 {
         size_t queue_families_node = tree->add(device_node, "QueueFamilies");
 
@@ -261,7 +196,7 @@ void queue_families(const PhysicalDevice& device, size_t device_node, Tree* tree
 
 std::string overview()
 {
-        Tree tree;
+        StringTree tree;
 
         size_t api_node = tree.add("API Version");
         try
@@ -312,12 +247,12 @@ std::string overview()
                 tree.add(required_surface_extensions_node, e.what());
         }
 
-        return tree.text();
+        return tree.text(TREE_LEVEL_INDENT);
 }
 
 std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
 {
-        Tree tree;
+        StringTree tree;
 
         size_t physical_devices_node = tree.add("Physical Devices");
 
@@ -334,6 +269,6 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
                 queue_families(device, device_node, &tree);
         }
 
-        return tree.text();
+        return tree.text(TREE_LEVEL_INDENT);
 }
 }
