@@ -66,31 +66,31 @@ std::vector<T> value(const T (&data)[N])
 std::vector<unsigned> samples(VkSampleCountFlags flags)
 {
         std::vector<unsigned> samples;
-        if (flags & VK_SAMPLE_COUNT_1_BIT)
+        if ((flags & VK_SAMPLE_COUNT_1_BIT) == VK_SAMPLE_COUNT_1_BIT)
         {
                 samples.push_back(1);
         }
-        if (flags & VK_SAMPLE_COUNT_2_BIT)
+        if ((flags & VK_SAMPLE_COUNT_2_BIT) == VK_SAMPLE_COUNT_2_BIT)
         {
                 samples.push_back(2);
         }
-        if (flags & VK_SAMPLE_COUNT_4_BIT)
+        if ((flags & VK_SAMPLE_COUNT_4_BIT) == VK_SAMPLE_COUNT_4_BIT)
         {
                 samples.push_back(4);
         }
-        if (flags & VK_SAMPLE_COUNT_8_BIT)
+        if ((flags & VK_SAMPLE_COUNT_8_BIT) == VK_SAMPLE_COUNT_8_BIT)
         {
                 samples.push_back(8);
         }
-        if (flags & VK_SAMPLE_COUNT_16_BIT)
+        if ((flags & VK_SAMPLE_COUNT_16_BIT) == VK_SAMPLE_COUNT_16_BIT)
         {
                 samples.push_back(16);
         }
-        if (flags & VK_SAMPLE_COUNT_32_BIT)
+        if ((flags & VK_SAMPLE_COUNT_32_BIT) == VK_SAMPLE_COUNT_32_BIT)
         {
                 samples.push_back(32);
         }
-        if (flags & VK_SAMPLE_COUNT_64_BIT)
+        if ((flags & VK_SAMPLE_COUNT_64_BIT) == VK_SAMPLE_COUNT_64_BIT)
         {
                 samples.push_back(64);
         }
