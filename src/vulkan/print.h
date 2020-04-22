@@ -29,4 +29,5 @@ std::string physical_device_type_to_string(VkPhysicalDeviceType type);
 std::string format_to_string(VkFormat format);
 std::string color_space_to_string(VkColorSpaceKHR color_space);
 std::string image_type_to_string(VkImageType image_type);
+std::string image_layout_to_string(VkImageLayout image_layout);
 }
