@@ -231,10 +231,8 @@ class ImageWithMemory final
 public:
         ImageWithMemory(
                 const Device& device,
-                const CommandPool& graphics_command_pool,
-                const Queue& graphics_queue,
-                const CommandPool& transfer_command_pool,
-                const Queue& transfer_queue,
+                const CommandPool& command_pool,
+                const Queue& queue,
                 const std::unordered_set<uint32_t>& family_indices,
                 const std::vector<VkFormat>& format_candidates,
                 VkImageType type,
@@ -245,8 +243,8 @@ public:
 
         ImageWithMemory(
                 const Device& device,
-                const CommandPool& graphics_command_pool,
-                const Queue& graphics_queue,
+                const CommandPool& command_pool,
+                const Queue& queue,
                 const std::unordered_set<uint32_t>& family_indices,
                 const std::vector<VkFormat>& format_candidates,
                 VkSampleCountFlagBits sample_count,

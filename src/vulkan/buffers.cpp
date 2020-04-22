@@ -391,10 +391,10 @@ void cmd_transition_texture_layout(
                 && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
         {
                 barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-                barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                barrier.dstAccessMask = 0;
 
                 source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+                destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
         }
         else if (
                 old_layout == VK_IMAGE_LAYOUT_UNDEFINED
@@ -474,10 +474,8 @@ void staging_buffer_copy(
 template <typename T>
 void staging_image_copy(
         const Device& device,
-        const CommandPool& graphics_command_pool,
-        const Queue& graphics_queue,
-        const CommandPool& transfer_command_pool,
-        const Queue& transfer_queue,
+        const CommandPool& command_pool,
+        const Queue& queue,
         VkImage image,
         VkImageLayout old_image_layout,
         VkImageLayout new_image_layout,
@@ -490,13 +488,12 @@ void staging_image_copy(
                         uint8_t> || std::is_same_v<typename T::value_type, uint16_t> || std::is_same_v<typename T::value_type, float>);
         static_assert(std::is_same_v<typename T::value_type, std::remove_cvref_t<decltype(pixels[0])>>);
 
-        ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
-        ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
+        ASSERT(command_pool.family_index() == queue.family_index());
 
         VkDeviceSize data_size = storage_size(pixels);
 
         Buffer staging_buffer(
-                create_buffer(device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {transfer_queue.family_index()}));
+                create_buffer(device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {queue.family_index()}));
 
         DeviceMemory staging_device_memory(create_device_memory(
                 device, staging_buffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
@@ -506,14 +503,12 @@ void staging_image_copy(
         copy_host_to_device(staging_device_memory, 0, pixels.data(), data_size);
 
         transition_texture_layout_color(
-                device, graphics_command_pool, graphics_queue, image, old_image_layout,
-                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+                device, command_pool, queue, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-        copy_buffer_to_image(device, transfer_command_pool, transfer_queue, image, staging_buffer, extent);
+        copy_buffer_to_image(device, command_pool, queue, image, staging_buffer, extent);
 
         transition_texture_layout_color(
-                device, graphics_command_pool, graphics_queue, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                new_image_layout);
+                device, command_pool, queue, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, new_image_layout);
 }
 
 ImageView create_image_view(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect_flags)
@@ -565,10 +560,8 @@ void load_pixels_to_image(
         VkImageLayout old_image_layout,
         VkImageLayout new_image_layout,
         const Device& device,
-        const CommandPool& graphics_command_pool,
-        const Queue& graphics_queue,
-        const CommandPool& transfer_command_pool,
-        const Queue& transfer_queue,
+        const CommandPool& command_pool,
+        const Queue& queue,
         const Span<const std::uint_least8_t>& srgb_pixels)
 {
         const VkImage image = image_with_memory.image();
@@ -585,8 +578,7 @@ void load_pixels_to_image(
                 const std::vector<uint16_t> buffer =
                         color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(srgb_pixels);
                 staging_image_copy(
-                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                        old_image_layout, new_image_layout, extent, buffer);
+                        device, command_pool, queue, image, old_image_layout, new_image_layout, extent, buffer);
                 break;
         }
         case VK_FORMAT_R32G32B32A32_SFLOAT:
@@ -595,16 +587,14 @@ void load_pixels_to_image(
                 const std::vector<float> buffer =
                         color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
                 staging_image_copy(
-                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                        old_image_layout, new_image_layout, extent, buffer);
+                        device, command_pool, queue, image, old_image_layout, new_image_layout, extent, buffer);
                 break;
         }
         case VK_FORMAT_R8G8B8A8_SRGB:
         {
                 check_color_buffer_size(srgb_pixels, extent);
                 staging_image_copy(
-                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                        old_image_layout, new_image_layout, extent, srgb_pixels);
+                        device, command_pool, queue, image, old_image_layout, new_image_layout, extent, srgb_pixels);
                 break;
         }
         case VK_FORMAT_R16_UNORM:
@@ -613,8 +603,7 @@ void load_pixels_to_image(
                 const std::vector<uint16_t> buffer =
                         color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_uint16(srgb_pixels);
                 staging_image_copy(
-                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                        old_image_layout, new_image_layout, extent, buffer);
+                        device, command_pool, queue, image, old_image_layout, new_image_layout, extent, buffer);
                 break;
         }
         case VK_FORMAT_R32_SFLOAT:
@@ -623,16 +612,14 @@ void load_pixels_to_image(
                 const std::vector<float> buffer =
                         color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
                 staging_image_copy(
-                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                        old_image_layout, new_image_layout, extent, buffer);
+                        device, command_pool, queue, image, old_image_layout, new_image_layout, extent, buffer);
                 break;
         }
         case VK_FORMAT_R8_SRGB:
         {
                 check_grayscale_buffer_size(srgb_pixels, extent);
                 staging_image_copy(
-                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                        old_image_layout, new_image_layout, extent, srgb_pixels);
+                        device, command_pool, queue, image, old_image_layout, new_image_layout, extent, srgb_pixels);
                 break;
         }
         default:
@@ -785,10 +772,8 @@ void ImageWithMemory::init(
 // {VK_FORMAT_R8_SRGB, VK_FORMAT_R16_UNORM, VK_FORMAT_R32_SFLOAT}
 ImageWithMemory::ImageWithMemory(
         const Device& device,
-        const CommandPool& graphics_command_pool,
-        const Queue& graphics_queue,
-        const CommandPool& transfer_command_pool,
-        const Queue& transfer_queue,
+        const CommandPool& command_pool,
+        const Queue& queue,
         const std::unordered_set<uint32_t>& family_indices,
         const std::vector<VkFormat>& format_candidates,
         VkImageType type,
@@ -797,29 +782,22 @@ ImageWithMemory::ImageWithMemory(
         const Span<const std::uint_least8_t>& srgb_pixels,
         bool storage)
 {
-        ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
-        ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
+        ASSERT(command_pool.family_index() == queue.family_index());
 
-        if (family_indices.count(graphics_queue.family_index()) == 0)
+        if (family_indices.count(queue.family_index()) == 0)
         {
-                error("Graphics family index is not found in the texture family indices");
-        }
-        if (family_indices.count(transfer_queue.family_index()) == 0)
-        {
-                error("Transfer family index is not found in the texture family indices");
+                error("Queue family index is not found in the texture family indices");
         }
 
         init(device, family_indices, format_candidates, type, extent, storage, VK_SAMPLE_COUNT_1_BIT);
 
-        load_pixels_to_image(
-                *this, VK_IMAGE_LAYOUT_UNDEFINED, image_layout, device, graphics_command_pool, graphics_queue,
-                transfer_command_pool, transfer_queue, srgb_pixels);
+        load_pixels_to_image(*this, VK_IMAGE_LAYOUT_UNDEFINED, image_layout, device, command_pool, queue, srgb_pixels);
 }
 
 ImageWithMemory::ImageWithMemory(
         const Device& device,
-        const CommandPool& graphics_command_pool,
-        const Queue& graphics_queue,
+        const CommandPool& command_pool,
+        const Queue& queue,
         const std::unordered_set<uint32_t>& family_indices,
         const std::vector<VkFormat>& format_candidates,
         VkSampleCountFlagBits sample_count,
@@ -828,17 +806,16 @@ ImageWithMemory::ImageWithMemory(
         VkImageLayout image_layout,
         bool storage)
 {
-        ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
+        ASSERT(command_pool.family_index() == queue.family_index());
 
-        if (family_indices.count(graphics_queue.family_index()) == 0)
+        if (family_indices.count(queue.family_index()) == 0)
         {
-                error("Graphics family index is not found in the texture family indices");
+                error("Queue family index is not found in the texture family indices");
         }
 
         init(device, family_indices, format_candidates, type, extent, storage, sample_count);
 
-        transition_texture_layout_color(
-                device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED, image_layout);
+        transition_texture_layout_color(device, command_pool, queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED, image_layout);
 }
 
 VkImage ImageWithMemory::image() const

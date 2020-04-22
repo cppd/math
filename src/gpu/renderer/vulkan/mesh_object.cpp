@@ -324,10 +324,8 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(
 
 std::vector<vulkan::ImageWithMemory> load_textures(
         const vulkan::Device& device,
-        const vulkan::CommandPool& graphics_command_pool,
-        const vulkan::Queue& graphics_queue,
-        const vulkan::CommandPool& transfer_command_pool,
-        const vulkan::Queue& transfer_queue,
+        const vulkan::CommandPool& command_pool,
+        const vulkan::Queue& queue,
         const std::unordered_set<uint32_t>& family_indices,
         const mesh::Mesh<3>& mesh)
 {
@@ -338,8 +336,7 @@ std::vector<vulkan::ImageWithMemory> load_textures(
         for (const typename mesh::Mesh<3>::Image& image : mesh.images)
         {
                 textures.emplace_back(
-                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                        family_indices, COLOR_IMAGE_FORMATS, VK_IMAGE_TYPE_2D,
+                        device, command_pool, queue, family_indices, COLOR_IMAGE_FORMATS, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(image.size[0], image.size[1]), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                         image.srgba_pixels, storage);
                 ASSERT(textures.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
@@ -351,9 +348,8 @@ std::vector<vulkan::ImageWithMemory> load_textures(
         constexpr unsigned h = 1;
         const std::vector<std::uint_least8_t> srgba_pixels(w * h * 4, 0);
         textures.emplace_back(
-                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, family_indices,
-                COLOR_IMAGE_FORMATS, VK_IMAGE_TYPE_2D, vulkan::make_extent(w, h),
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, srgba_pixels, storage);
+                device, command_pool, queue, family_indices, COLOR_IMAGE_FORMATS, VK_IMAGE_TYPE_2D,
+                vulkan::make_extent(w, h), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, srgba_pixels, storage);
         ASSERT(textures.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
         ASSERT(!(textures.back().usage() & VK_IMAGE_USAGE_STORAGE_BIT));
 
@@ -448,8 +444,8 @@ public:
                 const vulkan::Device& device,
                 const vulkan::CommandPool& graphics_command_pool,
                 const vulkan::Queue& graphics_queue,
-                const vulkan::CommandPool& transfer_command_pool,
-                const vulkan::Queue& transfer_queue,
+                const vulkan::CommandPool& /*transfer_command_pool*/,
+                const vulkan::Queue& /*transfer_queue*/,
                 const mesh::Mesh<3>& mesh)
         {
                 ASSERT(!mesh.facets.empty());
@@ -463,14 +459,12 @@ public:
                 ASSERT(material_face_offset.size() == material_face_count.size());
 
                 load_vertices(
-                        device, transfer_command_pool, transfer_queue,
-                        {graphics_queue.family_index(), transfer_queue.family_index()}, mesh, sorted_face_indices,
-                        &m_vertex_buffer, &m_index_buffer, &m_vertex_count, &m_index_count);
+                        device, graphics_command_pool, graphics_queue, {graphics_queue.family_index()}, mesh,
+                        sorted_face_indices, &m_vertex_buffer, &m_index_buffer, &m_vertex_count, &m_index_count);
                 ASSERT(m_index_count == 3 * mesh.facets.size());
 
                 m_textures = load_textures(
-                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                        {graphics_queue.family_index(), transfer_queue.family_index()}, mesh);
+                        device, graphics_command_pool, graphics_queue, {graphics_queue.family_index()}, mesh);
 
                 load_materials(
                         device, {graphics_queue.family_index()}, mesh, m_textures, m_material_buffers, m_material_info);
