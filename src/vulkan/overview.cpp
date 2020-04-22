@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/window/manage.h>
 
 #include <algorithm>
+#include <unordered_set>
 #include <vector>
 
 namespace vulkan
@@ -43,16 +44,89 @@ std::vector<std::string> sorted(const T& s)
         return res;
 }
 
+template <class T>
+T value(const T& v)
+{
+        return v;
+}
+
+template <class T, std::size_t N>
+std::vector<T> value(const T (&data)[N])
+{
+        static_assert(N > 0);
+        std::vector<T> r;
+        r.reserve(N);
+        for (size_t i = 0; i < N; ++i)
+        {
+                r.push_back(data[i]);
+        }
+        return r;
+}
+
+std::vector<unsigned> samples(VkSampleCountFlags flags)
+{
+        std::vector<unsigned> samples;
+        if (flags & VK_SAMPLE_COUNT_1_BIT)
+        {
+                samples.push_back(1);
+        }
+        if (flags & VK_SAMPLE_COUNT_2_BIT)
+        {
+                samples.push_back(2);
+        }
+        if (flags & VK_SAMPLE_COUNT_4_BIT)
+        {
+                samples.push_back(4);
+        }
+        if (flags & VK_SAMPLE_COUNT_8_BIT)
+        {
+                samples.push_back(8);
+        }
+        if (flags & VK_SAMPLE_COUNT_16_BIT)
+        {
+                samples.push_back(16);
+        }
+        if (flags & VK_SAMPLE_COUNT_32_BIT)
+        {
+                samples.push_back(32);
+        }
+        if (flags & VK_SAMPLE_COUNT_64_BIT)
+        {
+                samples.push_back(64);
+        }
+        return samples;
+}
+
+void device_name(const PhysicalDevice& device, size_t device_node, StringTree* tree)
+{
+        size_t type_node = tree->add(device_node, "Device Name");
+        tree->add(type_node, device.properties().deviceName);
+}
+
 void device_type(const PhysicalDevice& device, size_t device_node, StringTree* tree)
 {
         size_t type_node = tree->add(device_node, "Device Type");
-        tree->add(type_node, physical_device_type_to_string(device.properties().deviceType));
+        try
+        {
+                tree->add(type_node, physical_device_type_to_string(device.properties().deviceType));
+        }
+        catch (const std::exception& e)
+        {
+                tree->add(type_node, e.what());
+        }
 }
 
 void api_version(const PhysicalDevice& device, size_t device_node, StringTree* tree)
 {
         size_t api_node = tree->add(device_node, "API Version");
-        tree->add(api_node, api_version_to_string(device.properties().apiVersion));
+        try
+        {
+                tree->add(api_node, api_version_to_string(device.properties().apiVersion));
+        }
+        catch (const std::exception& e)
+        {
+                tree->add(api_node, e.what());
+        }
 }
 
 void extensions(const PhysicalDevice& device, size_t device_node, StringTree* tree)
@@ -72,29 +146,8 @@ void extensions(const PhysicalDevice& device, size_t device_node, StringTree* tr
         }
 }
 
-template <class T>
-std::string as_string(const T& v)
-{
-        return to_string(v);
-}
-
-template <class T, std::size_t N>
-std::string as_string(T (&array)[N])
-{
-        static_assert(N > 0);
-        std::string s;
-        s += "(";
-        s += to_string(array[0]);
-        for (size_t i = 1; i < N; ++i)
-        {
-                s += ", ";
-                s += to_string(array[i]);
-        }
-        s += ")";
-        return s;
-}
-
-#define ADD_LIMIT(v) add(#v, device.properties().limits.v)
+#define ADD_VALUE(v) limits.emplace_back(#v, to_string(value(device.properties().limits.v)))
+#define ADD_SAMPLE(v) limits.emplace_back(#v, to_string(samples(device.properties().limits.v)))
 
 void limits(const PhysicalDevice& device, size_t device_node, StringTree* tree)
 {
@@ -102,19 +155,121 @@ void limits(const PhysicalDevice& device, size_t device_node, StringTree* tree)
 
         try
         {
-                auto add = [&](const std::string& s, const auto& v) {
-                        tree->add(limits_node, s + " = " + as_string(v));
-                };
+                std::vector<std::tuple<std::string, std::string>> limits;
 
-                ADD_LIMIT(maxImageDimension1D);
-                ADD_LIMIT(maxImageDimension2D);
-                ADD_LIMIT(maxImageDimension3D);
-                ADD_LIMIT(maxPushConstantsSize);
-                ADD_LIMIT(maxComputeSharedMemorySize);
-                ADD_LIMIT(maxComputeWorkGroupCount);
-                ADD_LIMIT(maxComputeWorkGroupInvocations);
-                ADD_LIMIT(maxComputeWorkGroupSize);
-                ADD_LIMIT(maxClipDistances);
+                ADD_VALUE(maxImageDimension1D);
+                ADD_VALUE(maxImageDimension2D);
+                ADD_VALUE(maxImageDimension3D);
+                ADD_VALUE(maxImageDimensionCube);
+                ADD_VALUE(maxImageArrayLayers);
+                ADD_VALUE(maxTexelBufferElements);
+                ADD_VALUE(maxUniformBufferRange);
+                ADD_VALUE(maxStorageBufferRange);
+                ADD_VALUE(maxPushConstantsSize);
+                ADD_VALUE(maxMemoryAllocationCount);
+                ADD_VALUE(maxSamplerAllocationCount);
+                ADD_VALUE(bufferImageGranularity);
+                ADD_VALUE(sparseAddressSpaceSize);
+                ADD_VALUE(maxBoundDescriptorSets);
+                ADD_VALUE(maxPerStageDescriptorSamplers);
+                ADD_VALUE(maxPerStageDescriptorUniformBuffers);
+                ADD_VALUE(maxPerStageDescriptorStorageBuffers);
+                ADD_VALUE(maxPerStageDescriptorSampledImages);
+                ADD_VALUE(maxPerStageDescriptorStorageImages);
+                ADD_VALUE(maxPerStageDescriptorInputAttachments);
+                ADD_VALUE(maxPerStageResources);
+                ADD_VALUE(maxDescriptorSetSamplers);
+                ADD_VALUE(maxDescriptorSetUniformBuffers);
+                ADD_VALUE(maxDescriptorSetUniformBuffersDynamic);
+                ADD_VALUE(maxDescriptorSetStorageBuffers);
+                ADD_VALUE(maxDescriptorSetStorageBuffersDynamic);
+                ADD_VALUE(maxDescriptorSetSampledImages);
+                ADD_VALUE(maxDescriptorSetStorageImages);
+                ADD_VALUE(maxDescriptorSetInputAttachments);
+                ADD_VALUE(maxVertexInputAttributes);
+                ADD_VALUE(maxVertexInputBindings);
+                ADD_VALUE(maxVertexInputAttributeOffset);
+                ADD_VALUE(maxVertexInputBindingStride);
+                ADD_VALUE(maxVertexOutputComponents);
+                ADD_VALUE(maxTessellationGenerationLevel);
+                ADD_VALUE(maxTessellationPatchSize);
+                ADD_VALUE(maxTessellationControlPerVertexInputComponents);
+                ADD_VALUE(maxTessellationControlPerVertexOutputComponents);
+                ADD_VALUE(maxTessellationControlPerPatchOutputComponents);
+                ADD_VALUE(maxTessellationControlTotalOutputComponents);
+                ADD_VALUE(maxTessellationEvaluationInputComponents);
+                ADD_VALUE(maxTessellationEvaluationOutputComponents);
+                ADD_VALUE(maxGeometryShaderInvocations);
+                ADD_VALUE(maxGeometryInputComponents);
+                ADD_VALUE(maxGeometryOutputComponents);
+                ADD_VALUE(maxGeometryOutputVertices);
+                ADD_VALUE(maxGeometryTotalOutputComponents);
+                ADD_VALUE(maxFragmentInputComponents);
+                ADD_VALUE(maxFragmentOutputAttachments);
+                ADD_VALUE(maxFragmentDualSrcAttachments);
+                ADD_VALUE(maxFragmentCombinedOutputResources);
+                ADD_VALUE(maxComputeSharedMemorySize);
+                ADD_VALUE(maxComputeWorkGroupCount);
+                ADD_VALUE(maxComputeWorkGroupInvocations);
+                ADD_VALUE(maxComputeWorkGroupSize);
+                ADD_VALUE(subPixelPrecisionBits);
+                ADD_VALUE(subTexelPrecisionBits);
+                ADD_VALUE(mipmapPrecisionBits);
+                ADD_VALUE(maxDrawIndexedIndexValue);
+                ADD_VALUE(maxDrawIndirectCount);
+                ADD_VALUE(maxSamplerLodBias);
+                ADD_VALUE(maxSamplerAnisotropy);
+                ADD_VALUE(maxViewports);
+                ADD_VALUE(maxViewportDimensions);
+                ADD_VALUE(viewportBoundsRange);
+                ADD_VALUE(viewportSubPixelBits);
+                ADD_VALUE(minMemoryMapAlignment);
+                ADD_VALUE(minTexelBufferOffsetAlignment);
+                ADD_VALUE(minUniformBufferOffsetAlignment);
+                ADD_VALUE(minStorageBufferOffsetAlignment);
+                ADD_VALUE(minTexelOffset);
+                ADD_VALUE(maxTexelOffset);
+                ADD_VALUE(minTexelGatherOffset);
+                ADD_VALUE(maxTexelGatherOffset);
+                ADD_VALUE(minInterpolationOffset);
+                ADD_VALUE(maxInterpolationOffset);
+                ADD_VALUE(subPixelInterpolationOffsetBits);
+                ADD_VALUE(maxFramebufferWidth);
+                ADD_VALUE(maxFramebufferHeight);
+                ADD_VALUE(maxFramebufferLayers);
+                ADD_SAMPLE(framebufferColorSampleCounts);
+                ADD_SAMPLE(framebufferDepthSampleCounts);
+                ADD_SAMPLE(framebufferStencilSampleCounts);
+                ADD_SAMPLE(framebufferNoAttachmentsSampleCounts);
+                ADD_VALUE(maxColorAttachments);
+                ADD_SAMPLE(sampledImageColorSampleCounts);
+                ADD_SAMPLE(sampledImageIntegerSampleCounts);
+                ADD_SAMPLE(sampledImageDepthSampleCounts);
+                ADD_SAMPLE(sampledImageStencilSampleCounts);
+                ADD_SAMPLE(storageImageSampleCounts);
+                ADD_VALUE(maxSampleMaskWords);
+                ADD_VALUE(maxClipDistances);
+                ADD_VALUE(maxCullDistances);
+                ADD_VALUE(maxCombinedClipAndCullDistances);
+                ADD_VALUE(discreteQueuePriorities);
+                ADD_VALUE(pointSizeRange);
+                ADD_VALUE(lineWidthRange);
+                ADD_VALUE(pointSizeGranularity);
+                ADD_VALUE(lineWidthGranularity);
+                ADD_VALUE(strictLines);
+                ADD_VALUE(standardSampleLocations);
+                ADD_VALUE(optimalBufferCopyOffsetAlignment);
+                ADD_VALUE(optimalBufferCopyRowPitchAlignment);
+                ADD_VALUE(nonCoherentAtomSize);
+
+                std::sort(limits.begin(), limits.end(), [](const auto& v1, const auto& v2) {
+                        return std::get<0>(v1) < std::get<0>(v2);
+                });
+
+                for (const auto& [name, value] : limits)
+                {
+                        tree->add(limits_node, name + " = " + value);
+                }
         }
         catch (const std::exception& e)
         {
@@ -192,60 +347,78 @@ void queue_families(const PhysicalDevice& device, size_t device_node, StringTree
                 tree->add(queue_families_node, e.what());
         }
 }
+
+//
+
+void api_version(StringTree* tree)
+{
+        size_t api_node = tree->add("API Version");
+        try
+        {
+                tree->add(api_node, api_version_to_string(supported_instance_api_version()));
+        }
+        catch (const std::exception& e)
+        {
+                tree->add(api_node, e.what());
+        }
+}
+void extensions(StringTree* tree)
+{
+        size_t extensions_node = tree->add("Extensions");
+        try
+        {
+                for (const std::string& extension : sorted(supported_instance_extensions()))
+                {
+                        tree->add(extensions_node, extension);
+                }
+        }
+        catch (const std::exception& e)
+        {
+                tree->add(extensions_node, e.what());
+        }
+}
+
+void validation_layers(StringTree* tree)
+{
+        size_t validation_layers_node = tree->add("Validation Layers");
+        try
+        {
+                for (const std::string& layer : sorted(supported_validation_layers()))
+                {
+                        tree->add(validation_layers_node, layer);
+                }
+        }
+        catch (const std::exception& e)
+        {
+                tree->add(validation_layers_node, e.what());
+        }
+}
+
+void required_surface_extensions(StringTree* tree)
+{
+        size_t required_surface_extensions_node = tree->add("Required Surface Extensions");
+        try
+        {
+                for (const std::string& extension : sorted(vulkan_create_surface_extensions()))
+                {
+                        tree->add(required_surface_extensions_node, extension);
+                }
+        }
+        catch (const std::exception& e)
+        {
+                tree->add(required_surface_extensions_node, e.what());
+        }
+}
 }
 
 std::string overview()
 {
         StringTree tree;
 
-        size_t api_node = tree.add("API Version");
-        try
-        {
-                tree.add(api_node, api_version_to_string(supported_instance_api_version()));
-        }
-        catch (const std::exception& e)
-        {
-                tree.add(api_node, e.what());
-        }
-
-        size_t extensions_node = tree.add("Extensions");
-        try
-        {
-                for (const std::string& extension : sorted(supported_instance_extensions()))
-                {
-                        tree.add(extensions_node, extension);
-                }
-        }
-        catch (const std::exception& e)
-        {
-                tree.add(extensions_node, e.what());
-        }
-
-        size_t validation_layers_node = tree.add("Validation Layers");
-        try
-        {
-                for (const std::string& layer : sorted(supported_validation_layers()))
-                {
-                        tree.add(validation_layers_node, layer);
-                }
-        }
-        catch (const std::exception& e)
-        {
-                tree.add(validation_layers_node, e.what());
-        }
-
-        size_t required_surface_extensions_node = tree.add("Required Surface Extensions");
-        try
-        {
-                for (const std::string& extension : sorted(vulkan_create_surface_extensions()))
-                {
-                        tree.add(required_surface_extensions_node, extension);
-                }
-        }
-        catch (const std::exception& e)
-        {
-                tree.add(required_surface_extensions_node, e.what());
-        }
+        api_version(&tree);
+        extensions(&tree);
+        validation_layers(&tree);
+        required_surface_extensions(&tree);
 
         return tree.text(TREE_LEVEL_INDENT);
 }
@@ -254,19 +427,25 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
 {
         StringTree tree;
 
-        size_t physical_devices_node = tree.add("Physical Devices");
+        std::unordered_set<std::string> uuids;
 
         for (const VkPhysicalDevice& d : physical_devices(instance))
         {
                 PhysicalDevice device(d, surface);
 
-                size_t device_node = tree.add(physical_devices_node, device.properties().deviceName);
+                if (!uuids.emplace(to_string(value(device.properties().pipelineCacheUUID))).second)
+                {
+                        continue;
+                }
 
-                device_type(device, device_node, &tree);
-                api_version(device, device_node, &tree);
-                extensions(device, device_node, &tree);
-                limits(device, device_node, &tree);
-                queue_families(device, device_node, &tree);
+                size_t node = tree.add("Physical Device");
+
+                device_name(device, node, &tree);
+                device_type(device, node, &tree);
+                api_version(device, node, &tree);
+                extensions(device, node, &tree);
+                limits(device, node, &tree);
+                queue_families(device, node, &tree);
         }
 
         return tree.text(TREE_LEVEL_INDENT);
