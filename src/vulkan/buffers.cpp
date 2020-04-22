@@ -321,7 +321,7 @@ void cmd_transition_texture_layout(
         VkPipelineStageFlags source_stage;
         VkPipelineStageFlags destination_stage;
 
-        if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+        if (old_layout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
         {
                 barrier.srcAccessMask = 0;
                 barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -331,7 +331,7 @@ void cmd_transition_texture_layout(
         }
         else if (
                 old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-                && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                && new_layout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
         {
                 barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
                 barrier.dstAccessMask = 0;
@@ -340,8 +340,9 @@ void cmd_transition_texture_layout(
                 destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
         }
         else if (
-                old_layout == VK_IMAGE_LAYOUT_UNDEFINED
-                && (new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL || new_layout == VK_IMAGE_LAYOUT_GENERAL))
+                old_layout != VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && old_layout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+                && new_layout != VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
+                && new_layout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && old_layout != new_layout)
         {
                 barrier.srcAccessMask = 0;
                 barrier.dstAccessMask = 0;
@@ -351,7 +352,8 @@ void cmd_transition_texture_layout(
         }
         else
         {
-                error("Unsupported texture layout transition");
+                error("Unsupported texture layout transition, old = " + image_layout_to_string(old_layout)
+                      + ", new = " + image_layout_to_string(new_layout));
         }
 
         vkCmdPipelineBarrier(command_buffer, source_stage, destination_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
