@@ -261,74 +261,21 @@ void copy_host_to_device(
 //        // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
 //}
 
-void begin_commands(VkCommandBuffer command_buffer)
-{
-        VkResult result;
-
-        VkCommandBufferBeginInfo command_buffer_info = {};
-        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkBeginCommandBuffer", result);
-        }
-}
-
-void end_commands(VkQueue queue, VkCommandBuffer command_buffer)
-{
-        VkResult result;
-
-        result = vkEndCommandBuffer(command_buffer);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEndCommandBuffer", result);
-        }
-
-        queue_submit(command_buffer, queue);
-        queue_wait_idle(queue);
-}
-
-void copy_buffer_to_buffer(
-        VkDevice device,
-        VkCommandPool command_pool,
-        VkQueue queue,
+void cmd_copy_buffer_to_buffer(
+        VkCommandBuffer command_buffer,
         VkBuffer dst_buffer,
         VkBuffer src_buffer,
         VkDeviceSize size)
 {
-        CommandBuffer command_buffer(device, command_pool);
-
-        begin_commands(command_buffer);
-
-        //
-
         VkBufferCopy copy = {};
         // copy.srcOffset = 0;
         // copy.dstOffset = 0;
         copy.size = size;
         vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy);
-
-        //
-
-        end_commands(queue, command_buffer);
 }
 
-void copy_buffer_to_image(
-        VkDevice device,
-        VkCommandPool command_pool,
-        VkQueue queue,
-        VkImage image,
-        VkBuffer buffer,
-        VkExtent3D extent)
+void cmd_copy_buffer_to_image(VkCommandBuffer command_buffer, VkImage image, VkBuffer buffer, VkExtent3D extent)
 {
-        CommandBuffer command_buffer(device, command_pool);
-
-        begin_commands(command_buffer);
-
-        //
-
         VkBufferImageCopy region = {};
 
         region.bufferOffset = 0;
@@ -344,10 +291,6 @@ void copy_buffer_to_image(
         region.imageExtent = extent;
 
         vkCmdCopyBufferToImage(command_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-
-        //
-
-        end_commands(queue, command_buffer);
 }
 
 void cmd_transition_texture_layout(
@@ -414,38 +357,33 @@ void cmd_transition_texture_layout(
         vkCmdPipelineBarrier(command_buffer, source_stage, destination_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
-void transition_texture_layout_color(
-        VkDevice device,
-        VkCommandPool command_pool,
-        VkQueue queue,
-        VkImage image,
-        VkImageLayout old_layout,
-        VkImageLayout new_layout)
+void begin_commands(VkCommandBuffer command_buffer)
 {
-        CommandBuffer command_buffer(device, command_pool);
+        VkResult result;
 
-        begin_commands(command_buffer);
+        VkCommandBufferBeginInfo command_buffer_info = {};
+        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-        cmd_transition_texture_layout(VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, old_layout, new_layout);
-
-        end_commands(queue, command_buffer);
+        result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkBeginCommandBuffer", result);
+        }
 }
 
-void transition_texture_layout_depth(
-        VkDevice device,
-        VkCommandPool command_pool,
-        VkQueue queue,
-        VkImage image,
-        VkImageLayout old_layout,
-        VkImageLayout new_layout)
+void end_commands(VkQueue queue, VkCommandBuffer command_buffer)
 {
-        CommandBuffer command_buffer(device, command_pool);
+        VkResult result;
 
-        begin_commands(command_buffer);
+        result = vkEndCommandBuffer(command_buffer);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEndCommandBuffer", result);
+        }
 
-        cmd_transition_texture_layout(VK_IMAGE_ASPECT_DEPTH_BIT, command_buffer, image, old_layout, new_layout);
-
-        end_commands(queue, command_buffer);
+        queue_submit(command_buffer, queue);
+        queue_wait_idle(queue);
 }
 
 void staging_buffer_copy(
@@ -468,7 +406,12 @@ void staging_buffer_copy(
 
         copy_host_to_device(staging_device_memory, 0, src_data, src_data_size);
 
-        copy_buffer_to_buffer(device, command_pool, queue, dst_buffer, staging_buffer, src_data_size);
+        CommandBuffer command_buffer(device, command_pool);
+        begin_commands(command_buffer);
+
+        cmd_copy_buffer_to_buffer(command_buffer, dst_buffer, staging_buffer, src_data_size);
+
+        end_commands(queue, command_buffer);
 }
 
 template <typename T>
@@ -502,13 +445,52 @@ void staging_image_copy(
 
         copy_host_to_device(staging_device_memory, 0, pixels.data(), data_size);
 
-        transition_texture_layout_color(
-                device, command_pool, queue, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        CommandBuffer command_buffer(device, command_pool);
+        begin_commands(command_buffer);
 
-        copy_buffer_to_image(device, command_pool, queue, image, staging_buffer, extent);
+        cmd_transition_texture_layout(
+                VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, old_image_layout,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-        transition_texture_layout_color(
-                device, command_pool, queue, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, new_image_layout);
+        cmd_copy_buffer_to_image(command_buffer, image, staging_buffer, extent);
+
+        cmd_transition_texture_layout(
+                VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                new_image_layout);
+
+        end_commands(queue, command_buffer);
+}
+
+void transition_texture_layout_color(
+        VkDevice device,
+        VkCommandPool command_pool,
+        VkQueue queue,
+        VkImage image,
+        VkImageLayout old_layout,
+        VkImageLayout new_layout)
+{
+        CommandBuffer command_buffer(device, command_pool);
+        begin_commands(command_buffer);
+
+        cmd_transition_texture_layout(VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, old_layout, new_layout);
+
+        end_commands(queue, command_buffer);
+}
+
+void transition_texture_layout_depth(
+        VkDevice device,
+        VkCommandPool command_pool,
+        VkQueue queue,
+        VkImage image,
+        VkImageLayout old_layout,
+        VkImageLayout new_layout)
+{
+        CommandBuffer command_buffer(device, command_pool);
+        begin_commands(command_buffer);
+
+        cmd_transition_texture_layout(VK_IMAGE_ASPECT_DEPTH_BIT, command_buffer, image, old_layout, new_layout);
+
+        end_commands(queue, command_buffer);
 }
 
 ImageView create_image_view(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect_flags)
