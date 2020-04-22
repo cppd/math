@@ -217,6 +217,7 @@ class ImageWithMemory final
         ImageView m_image_view;
         VkExtent3D m_extent;
         VkImageUsageFlags m_usage;
+        VkSampleCountFlagBits m_sample_count;
 
         void init(
                 const Device& device,
@@ -225,7 +226,7 @@ class ImageWithMemory final
                 VkImageType type,
                 VkExtent3D extent,
                 bool storage,
-                VkSampleCountFlagBits samples);
+                VkSampleCountFlagBits sample_count);
 
 public:
         ImageWithMemory(
@@ -248,18 +249,7 @@ public:
                 const Queue& graphics_queue,
                 const std::unordered_set<uint32_t>& family_indices,
                 const std::vector<VkFormat>& format_candidates,
-                VkImageType type,
-                VkExtent3D extent,
-                VkImageLayout image_layout,
-                bool storage);
-
-        ImageWithMemory(
-                const Device& device,
-                const CommandPool& graphics_command_pool,
-                const Queue& graphics_queue,
-                const std::unordered_set<uint32_t>& family_indices,
-                const std::vector<VkFormat>& format_candidates,
-                VkSampleCountFlagBits samples,
+                VkSampleCountFlagBits sample_count,
                 VkImageType type,
                 VkExtent3D extent,
                 VkImageLayout image_layout,
@@ -279,6 +269,7 @@ public:
         VkFormat format() const;
         VkImageView image_view() const;
         VkImageUsageFlags usage() const;
+        VkSampleCountFlagBits sample_count() const;
 
         unsigned width() const;
         unsigned height() const;

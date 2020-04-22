@@ -760,7 +760,7 @@ void ImageWithMemory::init(
         VkImageType type,
         VkExtent3D extent,
         bool storage,
-        VkSampleCountFlagBits samples)
+        VkSampleCountFlagBits sample_count)
 {
         correct_image_extent(type, &extent);
 
@@ -770,10 +770,11 @@ void ImageWithMemory::init(
         m_usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
                   | (storage ? VK_IMAGE_USAGE_STORAGE_BIT : 0);
 
+        m_sample_count = sample_count;
         m_type = type;
         m_format = find_supported_image_format(
-                device.physical_device(), format_candidates, type, tiling, features, m_usage, samples);
-        m_image = create_image(device, type, extent, m_format, family_indices, samples, tiling, m_usage);
+                device.physical_device(), format_candidates, type, tiling, features, m_usage, m_sample_count);
+        m_image = create_image(device, type, extent, m_format, family_indices, m_sample_count, tiling, m_usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
         m_extent = extent;
@@ -808,8 +809,7 @@ ImageWithMemory::ImageWithMemory(
                 error("Transfer family index is not found in the texture family indices");
         }
 
-        constexpr VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
-        init(device, family_indices, format_candidates, type, extent, storage, samples);
+        init(device, family_indices, format_candidates, type, extent, storage, VK_SAMPLE_COUNT_1_BIT);
 
         load_pixels_to_image(
                 *this, VK_IMAGE_LAYOUT_UNDEFINED, image_layout, device, graphics_command_pool, graphics_queue,
@@ -822,7 +822,7 @@ ImageWithMemory::ImageWithMemory(
         const Queue& graphics_queue,
         const std::unordered_set<uint32_t>& family_indices,
         const std::vector<VkFormat>& format_candidates,
-        VkSampleCountFlagBits samples,
+        VkSampleCountFlagBits sample_count,
         VkImageType type,
         VkExtent3D extent,
         VkImageLayout image_layout,
@@ -835,34 +835,10 @@ ImageWithMemory::ImageWithMemory(
                 error("Graphics family index is not found in the texture family indices");
         }
 
-        init(device, family_indices, format_candidates, type, extent, storage, samples);
+        init(device, family_indices, format_candidates, type, extent, storage, sample_count);
 
         transition_texture_layout_color(
                 device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED, image_layout);
-}
-
-ImageWithMemory::ImageWithMemory(
-        const Device& device,
-        const CommandPool& graphics_command_pool,
-        const Queue& graphics_queue,
-        const std::unordered_set<uint32_t>& family_indices,
-        const std::vector<VkFormat>& format_candidates,
-        VkImageType type,
-        VkExtent3D extent,
-        VkImageLayout image_layout,
-        bool storage)
-        : ImageWithMemory(
-                device,
-                graphics_command_pool,
-                graphics_queue,
-                family_indices,
-                format_candidates,
-                VK_SAMPLE_COUNT_1_BIT,
-                type,
-                extent,
-                image_layout,
-                storage)
-{
 }
 
 VkImage ImageWithMemory::image() const
@@ -888,6 +864,11 @@ VkImageView ImageWithMemory::image_view() const
 VkImageUsageFlags ImageWithMemory::usage() const
 {
         return m_usage;
+}
+
+VkSampleCountFlagBits ImageWithMemory::sample_count() const
+{
+        return m_sample_count;
 }
 
 unsigned ImageWithMemory::width() const

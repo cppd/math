@@ -552,7 +552,7 @@ class Impl final : public View
                         m_instance->device(), m_instance->graphics_compute_command_pool(),
                         m_instance->graphics_compute_queues()[0],
                         std::unordered_set({m_instance->graphics_compute_command_pool().family_index()}),
-                        std::vector<VkFormat>({m_swapchain->format()}), VK_IMAGE_TYPE_2D,
+                        std::vector<VkFormat>({m_swapchain->format()}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(m_swapchain->width(), m_swapchain->height()), RESOLVE_TEXTURE_IMAGE_LAYOUT,
                         false /*storage*/);
 
@@ -566,7 +566,7 @@ class Impl final : public View
                         m_instance->device(), m_instance->graphics_compute_command_pool(),
                         m_instance->graphics_compute_queues()[0],
                         std::unordered_set({m_instance->graphics_compute_queues()[0].family_index()}),
-                        std::vector<VkFormat>({VULKAN_OBJECT_IMAGE_FORMAT}), VK_IMAGE_TYPE_2D,
+                        std::vector<VkFormat>({VULKAN_OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(m_swapchain->width(), m_swapchain->height()), VK_IMAGE_LAYOUT_GENERAL,
                         true /*storage*/);
 

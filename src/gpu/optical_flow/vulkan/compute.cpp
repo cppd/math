@@ -184,7 +184,8 @@ class Impl final : public Compute
                 {
                         images.emplace_back(
                                 m_device, m_compute_command_pool, m_compute_queue, family_indices, formats,
-                                VK_IMAGE_TYPE_2D, vulkan::make_extent(s[0], s[1]), VK_IMAGE_LAYOUT_GENERAL, storage);
+                                VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D, vulkan::make_extent(s[0], s[1]),
+                                VK_IMAGE_LAYOUT_GENERAL, storage);
                 }
 
                 return images;
