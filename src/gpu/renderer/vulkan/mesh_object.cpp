@@ -339,8 +339,9 @@ std::vector<vulkan::ImageWithMemory> load_textures(
         {
                 textures.emplace_back(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                        family_indices, COLOR_IMAGE_FORMATS, image.size[0], image.size[1],
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image.srgba_pixels, storage);
+                        family_indices, COLOR_IMAGE_FORMATS, VK_IMAGE_TYPE_2D,
+                        vulkan::make_extent(image.size[0], image.size[1]), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                        image.srgba_pixels, storage);
                 ASSERT(textures.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
                 ASSERT(!(textures.back().usage() & VK_IMAGE_USAGE_STORAGE_BIT));
         }
@@ -351,7 +352,8 @@ std::vector<vulkan::ImageWithMemory> load_textures(
         const std::vector<std::uint_least8_t> srgba_pixels(w * h * 4, 0);
         textures.emplace_back(
                 device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, family_indices,
-                COLOR_IMAGE_FORMATS, w, h, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, srgba_pixels, storage);
+                COLOR_IMAGE_FORMATS, VK_IMAGE_TYPE_2D, vulkan::make_extent(w, h),
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, srgba_pixels, storage);
         ASSERT(textures.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
         ASSERT(!(textures.back().usage() & VK_IMAGE_USAGE_STORAGE_BIT));
 

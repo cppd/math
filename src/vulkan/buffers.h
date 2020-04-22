@@ -199,21 +199,31 @@ void map_and_read_from_buffer(const BufferWithMemory& buffer, T* data)
         map.read(data);
 }
 
+inline VkExtent3D make_extent(unsigned width, unsigned height = 1, unsigned depth = 1)
+{
+        VkExtent3D extent;
+        extent.width = width;
+        extent.height = height;
+        extent.depth = depth;
+        return extent;
+}
+
 class ImageWithMemory final
 {
+        VkImageType m_type;
         VkFormat m_format;
         Image m_image;
         DeviceMemory m_device_memory;
         ImageView m_image_view;
-        unsigned m_width, m_height;
+        VkExtent3D m_extent;
         VkImageUsageFlags m_usage;
 
         void init(
                 const Device& device,
                 const std::unordered_set<uint32_t>& family_indices,
                 const std::vector<VkFormat>& format_candidates,
-                uint32_t width,
-                uint32_t height,
+                VkImageType type,
+                VkExtent3D extent,
                 bool storage,
                 VkSampleCountFlagBits samples);
 
@@ -226,8 +236,8 @@ public:
                 const Queue& transfer_queue,
                 const std::unordered_set<uint32_t>& family_indices,
                 const std::vector<VkFormat>& format_candidates,
-                uint32_t width,
-                uint32_t height,
+                VkImageType type,
+                VkExtent3D extent,
                 VkImageLayout image_layout,
                 const Span<const std::uint_least8_t>& srgb_pixels,
                 bool storage);
@@ -238,8 +248,8 @@ public:
                 const Queue& graphics_queue,
                 const std::unordered_set<uint32_t>& family_indices,
                 const std::vector<VkFormat>& format_candidates,
-                uint32_t width,
-                uint32_t height,
+                VkImageType type,
+                VkExtent3D extent,
                 VkImageLayout image_layout,
                 bool storage);
 
@@ -250,8 +260,8 @@ public:
                 const std::unordered_set<uint32_t>& family_indices,
                 const std::vector<VkFormat>& format_candidates,
                 VkSampleCountFlagBits samples,
-                uint32_t width,
-                uint32_t height,
+                VkImageType type,
+                VkExtent3D extent,
                 VkImageLayout image_layout,
                 bool storage);
 
@@ -265,12 +275,15 @@ public:
         //
 
         VkImage image() const;
+        VkImageType type() const;
         VkFormat format() const;
         VkImageView image_view() const;
         VkImageUsageFlags usage() const;
 
         unsigned width() const;
         unsigned height() const;
+        unsigned depth() const;
+        VkExtent3D extent() const;
 
         void clear_commands(VkCommandBuffer command_buffer, VkImageLayout image_layout) const;
 };
@@ -282,7 +295,8 @@ class DepthAttachment final
         DeviceMemory m_device_memory;
         ImageView m_image_view;
         VkSampleCountFlagBits m_sample_count;
-        unsigned m_width, m_height;
+        unsigned m_width;
+        unsigned m_height;
         VkImageUsageFlags m_usage;
 
 public:

@@ -321,8 +321,7 @@ void copy_buffer_to_image(
         VkQueue queue,
         VkImage image,
         VkBuffer buffer,
-        uint32_t width,
-        uint32_t height)
+        VkExtent3D extent)
 {
         CommandBuffer command_buffer(device, command_pool);
 
@@ -342,7 +341,7 @@ void copy_buffer_to_image(
         region.imageSubresource.layerCount = 1;
 
         region.imageOffset = {0, 0, 0};
-        region.imageExtent = {width, height, 1};
+        region.imageExtent = extent;
 
         vkCmdCopyBufferToImage(command_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
@@ -482,8 +481,7 @@ void staging_image_copy(
         VkImage image,
         VkImageLayout old_image_layout,
         VkImageLayout new_image_layout,
-        uint32_t width,
-        uint32_t height,
+        VkExtent3D extent,
         const T& pixels)
 {
         static_assert(
@@ -511,7 +509,7 @@ void staging_image_copy(
                 device, graphics_command_pool, graphics_queue, image, old_image_layout,
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-        copy_buffer_to_image(device, transfer_command_pool, transfer_queue, image, staging_buffer, width, height);
+        copy_buffer_to_image(device, transfer_command_pool, transfer_queue, image, staging_buffer, extent);
 
         transition_texture_layout_color(
                 device, graphics_command_pool, graphics_queue, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -542,21 +540,23 @@ ImageView create_image_view(VkDevice device, VkImage image, VkFormat format, VkI
 }
 
 template <typename T>
-void check_color_buffer_size(const T& pixels, unsigned width, unsigned height)
+void check_color_buffer_size(const T& pixels, VkExtent3D extent)
 {
-        if (pixels.size() != 4ull * width * height)
+        if (pixels.size() != 4ull * extent.width * extent.height * extent.depth)
         {
-                error("Wrong RGBA pixel component count " + to_string(pixels.size()) + " for image dimensions width "
-                      + to_string(width) + " and height " + to_string(height));
+                error("Wrong RGBA pixel component count " + to_string(pixels.size()) + " for image extent ("
+                      + to_string(extent.width) + ", " + to_string(extent.height) + ", " + to_string(extent.depth)
+                      + ")");
         }
 }
 template <typename T>
-void check_grayscale_buffer_size(const T& pixels, unsigned width, unsigned height)
+void check_grayscale_buffer_size(const T& pixels, VkExtent3D extent)
 {
-        if (pixels.size() != 1ull * width * height)
+        if (pixels.size() != 1ull * extent.width * extent.height * extent.depth)
         {
-                error("Wrong grayscale pixel component count " + to_string(pixels.size())
-                      + " for image dimensions width " + to_string(width) + " and height " + to_string(height));
+                error("Wrong grayscale pixel component count " + to_string(pixels.size()) + " for image extent ("
+                      + to_string(extent.width) + ", " + to_string(extent.height) + ", " + to_string(extent.depth)
+                      + ")");
         }
 }
 
@@ -573,8 +573,7 @@ void load_pixels_to_image(
 {
         const VkImage image = image_with_memory.image();
         const VkFormat format = image_with_memory.format();
-        const unsigned width = image_with_memory.width();
-        const unsigned height = image_with_memory.height();
+        const VkExtent3D extent = image_with_memory.extent();
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
@@ -582,58 +581,58 @@ void load_pixels_to_image(
         {
         case VK_FORMAT_R16G16B16A16_UNORM:
         {
-                check_color_buffer_size(srgb_pixels, width, height);
+                check_color_buffer_size(srgb_pixels, extent);
                 const std::vector<uint16_t> buffer =
                         color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(srgb_pixels);
                 staging_image_copy(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                        old_image_layout, new_image_layout, width, height, buffer);
+                        old_image_layout, new_image_layout, extent, buffer);
                 break;
         }
         case VK_FORMAT_R32G32B32A32_SFLOAT:
         {
-                check_color_buffer_size(srgb_pixels, width, height);
+                check_color_buffer_size(srgb_pixels, extent);
                 const std::vector<float> buffer =
                         color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
                 staging_image_copy(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                        old_image_layout, new_image_layout, width, height, buffer);
+                        old_image_layout, new_image_layout, extent, buffer);
                 break;
         }
         case VK_FORMAT_R8G8B8A8_SRGB:
         {
-                check_color_buffer_size(srgb_pixels, width, height);
+                check_color_buffer_size(srgb_pixels, extent);
                 staging_image_copy(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                        old_image_layout, new_image_layout, width, height, srgb_pixels);
+                        old_image_layout, new_image_layout, extent, srgb_pixels);
                 break;
         }
         case VK_FORMAT_R16_UNORM:
         {
-                check_grayscale_buffer_size(srgb_pixels, width, height);
+                check_grayscale_buffer_size(srgb_pixels, extent);
                 const std::vector<uint16_t> buffer =
                         color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_uint16(srgb_pixels);
                 staging_image_copy(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                        old_image_layout, new_image_layout, width, height, buffer);
+                        old_image_layout, new_image_layout, extent, buffer);
                 break;
         }
         case VK_FORMAT_R32_SFLOAT:
         {
-                check_grayscale_buffer_size(srgb_pixels, width, height);
+                check_grayscale_buffer_size(srgb_pixels, extent);
                 const std::vector<float> buffer =
                         color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
                 staging_image_copy(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                        old_image_layout, new_image_layout, width, height, buffer);
+                        old_image_layout, new_image_layout, extent, buffer);
                 break;
         }
         case VK_FORMAT_R8_SRGB:
         {
-                check_grayscale_buffer_size(srgb_pixels, width, height);
+                check_grayscale_buffer_size(srgb_pixels, extent);
                 staging_image_copy(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image,
-                        old_image_layout, new_image_layout, width, height, srgb_pixels);
+                        old_image_layout, new_image_layout, extent, srgb_pixels);
                 break;
         }
         default:
@@ -758,28 +757,26 @@ void ImageWithMemory::init(
         const Device& device,
         const std::unordered_set<uint32_t>& family_indices,
         const std::vector<VkFormat>& format_candidates,
-        uint32_t width,
-        uint32_t height,
+        VkImageType type,
+        VkExtent3D extent,
         bool storage,
         VkSampleCountFlagBits samples)
 {
+        correct_image_extent(type, &extent);
+
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
         VkFormatFeatureFlags features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
                                         | (storage ? VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT : 0);
         m_usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
                   | (storage ? VK_IMAGE_USAGE_STORAGE_BIT : 0);
 
+        m_type = type;
         m_format = find_supported_image_format(
-                device.physical_device(), format_candidates, VK_IMAGE_TYPE_2D, tiling, features, m_usage, samples);
-        VkExtent3D extent;
-        extent.width = width;
-        extent.height = height;
-        m_image = create_image(device, VK_IMAGE_TYPE_2D, extent, m_format, family_indices, samples, tiling, m_usage);
+                device.physical_device(), format_candidates, type, tiling, features, m_usage, samples);
+        m_image = create_image(device, type, extent, m_format, family_indices, samples, tiling, m_usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
-
-        m_width = width;
-        m_height = height;
+        m_extent = extent;
 }
 
 // VkFormat
@@ -793,8 +790,8 @@ ImageWithMemory::ImageWithMemory(
         const Queue& transfer_queue,
         const std::unordered_set<uint32_t>& family_indices,
         const std::vector<VkFormat>& format_candidates,
-        uint32_t width,
-        uint32_t height,
+        VkImageType type,
+        VkExtent3D extent,
         VkImageLayout image_layout,
         const Span<const std::uint_least8_t>& srgb_pixels,
         bool storage)
@@ -812,7 +809,7 @@ ImageWithMemory::ImageWithMemory(
         }
 
         constexpr VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
-        init(device, family_indices, format_candidates, width, height, storage, samples);
+        init(device, family_indices, format_candidates, type, extent, storage, samples);
 
         load_pixels_to_image(
                 *this, VK_IMAGE_LAYOUT_UNDEFINED, image_layout, device, graphics_command_pool, graphics_queue,
@@ -826,8 +823,8 @@ ImageWithMemory::ImageWithMemory(
         const std::unordered_set<uint32_t>& family_indices,
         const std::vector<VkFormat>& format_candidates,
         VkSampleCountFlagBits samples,
-        uint32_t width,
-        uint32_t height,
+        VkImageType type,
+        VkExtent3D extent,
         VkImageLayout image_layout,
         bool storage)
 {
@@ -838,7 +835,7 @@ ImageWithMemory::ImageWithMemory(
                 error("Graphics family index is not found in the texture family indices");
         }
 
-        init(device, family_indices, format_candidates, width, height, storage, samples);
+        init(device, family_indices, format_candidates, type, extent, storage, samples);
 
         transition_texture_layout_color(
                 device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED, image_layout);
@@ -850,8 +847,8 @@ ImageWithMemory::ImageWithMemory(
         const Queue& graphics_queue,
         const std::unordered_set<uint32_t>& family_indices,
         const std::vector<VkFormat>& format_candidates,
-        uint32_t width,
-        uint32_t height,
+        VkImageType type,
+        VkExtent3D extent,
         VkImageLayout image_layout,
         bool storage)
         : ImageWithMemory(
@@ -861,8 +858,8 @@ ImageWithMemory::ImageWithMemory(
                 family_indices,
                 format_candidates,
                 VK_SAMPLE_COUNT_1_BIT,
-                width,
-                height,
+                type,
+                extent,
                 image_layout,
                 storage)
 {
@@ -871,6 +868,11 @@ ImageWithMemory::ImageWithMemory(
 VkImage ImageWithMemory::image() const
 {
         return m_image;
+}
+
+VkImageType ImageWithMemory::type() const
+{
+        return m_type;
 }
 
 VkFormat ImageWithMemory::format() const
@@ -890,12 +892,30 @@ VkImageUsageFlags ImageWithMemory::usage() const
 
 unsigned ImageWithMemory::width() const
 {
-        return m_width;
+        return m_extent.width;
 }
 
 unsigned ImageWithMemory::height() const
 {
-        return m_height;
+        if (m_type == VK_IMAGE_TYPE_1D)
+        {
+                error("Image 1D has no height");
+        }
+        return m_extent.height;
+}
+
+unsigned ImageWithMemory::depth() const
+{
+        if (m_type != VK_IMAGE_TYPE_3D)
+        {
+                error("Only image 3D has depth");
+        }
+        return m_extent.depth;
+}
+
+VkExtent3D ImageWithMemory::extent() const
+{
+        return m_extent;
 }
 
 void ImageWithMemory::clear_commands(VkCommandBuffer command_buffer, VkImageLayout image_layout) const
@@ -973,10 +993,9 @@ DepthAttachment::DepthAttachment(
         VkExtent3D max_extent = max_image_extent(device.physical_device(), m_format, VK_IMAGE_TYPE_2D, tiling, m_usage);
         m_width = std::min(width, max_extent.width);
         m_height = std::min(height, max_extent.height);
-        VkExtent3D extent;
-        extent.width = m_width;
-        extent.height = m_height;
-        m_image = create_image(device, VK_IMAGE_TYPE_2D, extent, m_format, family_indices, samples, tiling, m_usage);
+        m_image = create_image(
+                device, VK_IMAGE_TYPE_2D, make_extent(m_width, m_height), m_format, family_indices, samples, tiling,
+                m_usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
         m_sample_count = samples;
@@ -1055,10 +1074,8 @@ ColorAttachment::ColorAttachment(
 
         m_format = find_supported_image_format(
                 device.physical_device(), candidates, VK_IMAGE_TYPE_2D, tiling, features, usage, samples);
-        VkExtent3D extent;
-        extent.width = width;
-        extent.height = height;
-        m_image = create_image(device, VK_IMAGE_TYPE_2D, extent, m_format, family_indices, samples, tiling, usage);
+        m_image = create_image(
+                device, VK_IMAGE_TYPE_2D, make_extent(width, height), m_format, family_indices, samples, tiling, usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
         m_sample_count = samples;
