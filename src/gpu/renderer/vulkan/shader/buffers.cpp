@@ -242,10 +242,18 @@ void ShaderBuffers::set_direction_to_camera(const vec3f& direction) const
 
 MaterialBuffer::MaterialBuffer(
         const vulkan::Device& device,
+        const vulkan::CommandPool& command_pool,
+        const vulkan::Queue& queue,
         const std::unordered_set<uint32_t>& family_indices,
         const Material& material)
-        : m_uniform_buffer(device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Material), material)
+        : m_uniform_buffer(
+                vulkan::BufferMemoryType::DeviceLocal,
+                device,
+                family_indices,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                sizeof(Material))
 {
+        m_uniform_buffer.write(command_pool, queue, data_size(material), data_pointer(material));
 }
 
 VkBuffer MaterialBuffer::buffer() const

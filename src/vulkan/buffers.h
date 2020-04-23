@@ -41,18 +41,12 @@ class BufferWithMemory final
 {
         friend BufferMapper;
 
+        VkDevice m_device;
+        VkPhysicalDevice m_physical_device;
+        std::unordered_set<uint32_t> m_family_indices;
         Buffer m_buffer;
         VkMemoryPropertyFlags m_memory_properties;
         DeviceMemory m_device_memory;
-
-        void write(VkDeviceSize size, const void* data) const;
-        void write(
-                const Device& device,
-                const CommandPool& transfer_command_pool,
-                const Queue& transfer_queue,
-                const std::unordered_set<uint32_t>& family_indices,
-                VkDeviceSize size,
-                const void* data) const;
 
 public:
         BufferWithMemory(
@@ -62,45 +56,6 @@ public:
                 VkBufferUsageFlags usage,
                 VkDeviceSize size);
 
-        template <typename T>
-        BufferWithMemory(
-                const Device& device,
-                const std::unordered_set<uint32_t>& family_indices,
-                VkBufferUsageFlags usage,
-                VkDeviceSize size,
-                const T& data)
-                : BufferWithMemory(BufferMemoryType::HostVisible, device, family_indices, usage, size)
-        {
-                if (size != data_size(data))
-                {
-                        error("Buffer size and data size are not equal");
-                }
-                write(size, data_pointer(data));
-        }
-
-        template <typename T>
-        BufferWithMemory(
-                const Device& device,
-                const CommandPool& transfer_command_pool,
-                const Queue& transfer_queue,
-                const std::unordered_set<uint32_t>& family_indices,
-                VkBufferUsageFlags usage,
-                VkDeviceSize size,
-                const T& data)
-                : BufferWithMemory(
-                        BufferMemoryType::DeviceLocal,
-                        device,
-                        family_indices,
-                        usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                        size)
-        {
-                if (size != data_size(data))
-                {
-                        error("Buffer size and data size are not equal");
-                }
-                write(device, transfer_command_pool, transfer_queue, family_indices, size, data_pointer(data));
-        }
-
         BufferWithMemory(const BufferWithMemory&) = delete;
         BufferWithMemory& operator=(const BufferWithMemory&) = delete;
         BufferWithMemory& operator=(BufferWithMemory&&) = delete;
@@ -109,6 +64,12 @@ public:
         ~BufferWithMemory() = default;
 
         //
+
+        void write(
+                const CommandPool& command_pool,
+                const Queue& queue,
+                VkDeviceSize data_size,
+                const void* data_pointer) const;
 
         operator VkBuffer() const&;
         operator VkBuffer() const&& = delete;
@@ -210,37 +171,21 @@ inline VkExtent3D make_extent(unsigned width, unsigned height = 1, unsigned dept
 
 class ImageWithMemory final
 {
+        VkExtent3D m_extent;
+        VkDevice m_device;
+        VkPhysicalDevice m_physical_device;
+        std::unordered_set<uint32_t> m_family_indices;
         VkImageType m_type;
+        VkSampleCountFlagBits m_sample_count;
+        VkImageUsageFlags m_usage;
         VkFormat m_format;
         Image m_image;
         DeviceMemory m_device_memory;
         ImageView m_image_view;
-        VkExtent3D m_extent;
-        VkImageUsageFlags m_usage;
-        VkSampleCountFlagBits m_sample_count;
 
-        void init(
-                const Device& device,
-                const std::unordered_set<uint32_t>& family_indices,
-                const std::vector<VkFormat>& format_candidates,
-                VkImageType type,
-                VkExtent3D extent,
-                bool storage,
-                VkSampleCountFlagBits sample_count);
+        void check_family_index(const CommandPool& command_pool, const Queue& queue) const;
 
 public:
-        ImageWithMemory(
-                const Device& device,
-                const CommandPool& command_pool,
-                const Queue& queue,
-                const std::unordered_set<uint32_t>& family_indices,
-                const std::vector<VkFormat>& format_candidates,
-                VkImageType type,
-                VkExtent3D extent,
-                VkImageLayout image_layout,
-                const Span<const std::uint_least8_t>& srgb_pixels,
-                bool storage);
-
         ImageWithMemory(
                 const Device& device,
                 const CommandPool& command_pool,
@@ -262,19 +207,25 @@ public:
 
         //
 
+        void write_srgb_pixels(
+                const CommandPool& command_pool,
+                const Queue& queue,
+                VkImageLayout old_layout,
+                VkImageLayout new_layout,
+                const Span<const std::uint_least8_t>& srgb_pixels) const;
+
+        void clear_commands(VkCommandBuffer command_buffer, VkImageLayout image_layout) const;
+
         VkImage image() const;
         VkImageType type() const;
         VkFormat format() const;
         VkImageView image_view() const;
         VkImageUsageFlags usage() const;
         VkSampleCountFlagBits sample_count() const;
-
         unsigned width() const;
         unsigned height() const;
         unsigned depth() const;
         VkExtent3D extent() const;
-
-        void clear_commands(VkCommandBuffer command_buffer, VkImageLayout image_layout) const;
 };
 
 class DepthAttachment final

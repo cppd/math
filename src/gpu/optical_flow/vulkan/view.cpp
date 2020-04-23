@@ -53,11 +53,11 @@ class Impl final : public View
         const vulkan::VulkanInstance& m_instance;
         const vulkan::Device& m_device;
         const vulkan::CommandPool& m_graphics_command_pool;
-        // const vulkan::Queue& m_graphics_queue;
+        const vulkan::Queue& m_graphics_queue;
         const vulkan::CommandPool& m_compute_command_pool;
         // const vulkan::Queue& m_compute_queue;
-        const vulkan::CommandPool& m_transfer_command_pool;
-        const vulkan::Queue& m_transfer_queue;
+        //const vulkan::CommandPool& m_transfer_command_pool;
+        //const vulkan::Queue& m_transfer_queue;
 
         vulkan::Semaphore m_signal_semaphore;
         ViewProgram m_program;
@@ -119,11 +119,12 @@ class Impl final : public View
                 }
 
                 m_top_points.emplace(
-                        m_device, m_transfer_command_pool, m_transfer_queue,
+                        vulkan::BufferMemoryType::DeviceLocal, m_device,
                         std::unordered_set<uint32_t>(
-                                {m_graphics_command_pool.family_index(), m_compute_command_pool.family_index(),
-                                 m_transfer_command_pool.family_index()}),
-                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, data_size(points), points);
+                                {m_graphics_command_pool.family_index(), m_compute_command_pool.family_index()}),
+                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, data_size(points));
+                m_top_points->write(m_graphics_command_pool, m_graphics_queue, data_size(points), data_pointer(points));
+
                 m_top_flow.emplace(
                         vulkan::BufferMemoryType::DeviceLocal, m_device,
                         std::unordered_set<uint32_t>(
@@ -231,28 +232,23 @@ public:
              const vulkan::Queue& graphics_queue,
              const vulkan::CommandPool& compute_command_pool,
              const vulkan::Queue& compute_queue,
-             const vulkan::CommandPool& transfer_command_pool,
-             const vulkan::Queue& transfer_queue,
+             const vulkan::CommandPool& /*transfer_command_pool*/,
+             const vulkan::Queue& /*transfer_queue*/,
              bool /*sample_shading*/)
                 : // m_sample_shading(sample_shading),
                   m_instance(instance),
                   m_device(instance.device()),
                   m_graphics_command_pool(graphics_command_pool),
-                  // m_graphics_queue(graphics_queue),
+                  m_graphics_queue(graphics_queue),
                   m_compute_command_pool(compute_command_pool),
                   // m_compute_queue(compute_queue),
-                  m_transfer_command_pool(transfer_command_pool),
-                  m_transfer_queue(transfer_queue),
+                  //m_transfer_command_pool(transfer_command_pool),
+                  //m_transfer_queue(transfer_queue),
                   m_signal_semaphore(instance.device()),
                   m_program(instance.device()),
                   m_memory(instance.device(), m_program.descriptor_set_layout(), {graphics_queue.family_index()}),
                   m_sampler(create_sampler(instance.device())),
-                  m_compute(create_compute(
-                          instance,
-                          compute_command_pool,
-                          compute_queue,
-                          transfer_command_pool,
-                          transfer_queue))
+                  m_compute(create_compute(instance, compute_command_pool, compute_queue))
         {
         }
 

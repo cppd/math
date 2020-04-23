@@ -59,8 +59,8 @@ class Impl final : public View
         const vulkan::Device& m_device;
         const vulkan::CommandPool& m_graphics_command_pool;
         const vulkan::Queue& m_graphics_queue;
-        const vulkan::CommandPool& m_transfer_command_pool;
-        const vulkan::Queue& m_transfer_queue;
+        //const vulkan::CommandPool& m_transfer_command_pool;
+        //const vulkan::Queue& m_transfer_queue;
         uint32_t m_graphics_family_index;
 
         vulkan::Semaphore m_signal_semaphore;
@@ -195,10 +195,11 @@ class Impl final : public View
 
                 m_vertices.reset();
                 m_vertices = std::make_unique<vulkan::BufferWithMemory>(
-                        m_device, m_transfer_command_pool, m_transfer_queue,
-                        std::unordered_set<uint32_t>(
-                                {m_graphics_queue.family_index(), m_transfer_queue.family_index()}),
-                        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, data_size(vertices), vertices);
+                        vulkan::BufferMemoryType::DeviceLocal, m_device,
+                        std::unordered_set<uint32_t>({m_graphics_queue.family_index()}),
+                        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, data_size(vertices));
+                m_vertices->write(
+                        m_graphics_command_pool, m_graphics_queue, data_size(vertices), data_pointer(vertices));
 
                 ASSERT(m_vertices->usage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT));
         }
@@ -215,8 +216,8 @@ public:
                   m_device(instance.device()),
                   m_graphics_command_pool(graphics_command_pool),
                   m_graphics_queue(graphics_queue),
-                  m_transfer_command_pool(transfer_command_pool),
-                  m_transfer_queue(transfer_queue),
+                  //m_transfer_command_pool(transfer_command_pool),
+                  //m_transfer_queue(transfer_queue),
                   m_graphics_family_index(graphics_queue.family_index()),
                   m_signal_semaphore(instance.device()),
                   m_program(instance.device()),

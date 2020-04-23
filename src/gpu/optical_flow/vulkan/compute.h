@@ -49,7 +49,5 @@ struct Compute
 std::unique_ptr<Compute> create_compute(
         const vulkan::VulkanInstance& instance,
         const vulkan::CommandPool& compute_command_pool,
-        const vulkan::Queue& compute_queue,
-        const vulkan::CommandPool& transfer_command_pool,
-        const vulkan::Queue& transfer_queue);
+        const vulkan::Queue& compute_queue);
 }

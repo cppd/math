@@ -139,6 +139,8 @@ public:
 
         MaterialBuffer(
                 const vulkan::Device& device,
+                const vulkan::CommandPool& command_pool,
+                const vulkan::Queue& queue,
                 const std::unordered_set<uint32_t>& family_indices,
                 const Material& material);
 

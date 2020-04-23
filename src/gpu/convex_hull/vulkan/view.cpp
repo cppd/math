@@ -185,24 +185,27 @@ class Impl final : public View
 
 public:
         Impl(const vulkan::VulkanInstance& instance,
-             VkCommandPool graphics_command_pool,
-             uint32_t family_index,
+             const vulkan::CommandPool& graphics_command_pool,
+             const vulkan::Queue& graphics_queue,
              bool sample_shading)
                 : m_sample_shading(sample_shading),
-                  m_family_index(family_index),
+                  m_family_index(graphics_command_pool.family_index()),
                   m_instance(instance),
                   m_graphics_command_pool(graphics_command_pool),
                   m_semaphore(instance.device()),
                   m_program(instance.device()),
                   m_memory(instance.device(), m_program.descriptor_set_layout(), {m_family_index}),
                   m_indirect_buffer(
+                          vulkan::BufferMemoryType::DeviceLocal,
                           m_instance.device(),
                           {m_family_index},
                           VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
-                          sizeof(VkDrawIndirectCommand),
-                          draw_indirect_command_data()),
+                          sizeof(VkDrawIndirectCommand)),
                   m_compute(create_compute(instance))
         {
+                ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
+                const VkDrawIndirectCommand data = draw_indirect_command_data();
+                m_indirect_buffer.write(graphics_command_pool, graphics_queue, data_size(data), data_pointer(data));
         }
 
         ~Impl() override
@@ -225,10 +228,10 @@ std::vector<vulkan::PhysicalDeviceFeatures> View::required_device_features()
 
 std::unique_ptr<View> create_view(
         const vulkan::VulkanInstance& instance,
-        VkCommandPool graphics_command_pool,
-        uint32_t family_index,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue,
         bool sample_shading)
 {
-        return std::make_unique<Impl>(instance, graphics_command_pool, family_index, sample_shading);
+        return std::make_unique<Impl>(instance, graphics_command_pool, graphics_queue, sample_shading);
 }
 }

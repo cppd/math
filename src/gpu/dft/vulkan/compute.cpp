@@ -149,14 +149,14 @@ public:
                 const std::vector<std::complex<double>>& data)
                 : m_size(data.size()),
                   m_buffer(
+                          vulkan::BufferMemoryType::DeviceLocal,
                           device,
-                          transfer_command_pool,
-                          transfer_queue,
                           family_indices,
                           VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                          data.size() * COMPLEX_SIZE,
-                          conv<float>(data))
+                          data.size() * COMPLEX_SIZE)
         {
+                const std::vector<std::complex<float>>& float_data = conv<float>(data);
+                m_buffer.write(transfer_command_pool, transfer_queue, data_size(float_data), data_pointer(float_data));
         }
 
         unsigned size() const

@@ -267,10 +267,10 @@ class Impl final : public View
                           graphics_queue,
                           std::unordered_set({graphics_queue.family_index()}),
                           GRAYSCALE_IMAGE_FORMATS,
+                          VK_SAMPLE_COUNT_1_BIT,
                           VK_IMAGE_TYPE_2D,
                           vulkan::make_extent(glyphs.width(), glyphs.height()),
-                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                          std::move(glyphs.pixels()),
+                          VK_IMAGE_LAYOUT_UNDEFINED,
                           false /*storage*/),
                   m_glyphs(std::move(glyphs.glyphs())),
                   m_semaphore(m_device),
@@ -299,6 +299,10 @@ class Impl final : public View
         {
                 ASSERT(m_glyph_texture.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
                 ASSERT(!(m_glyph_texture.usage() & VK_IMAGE_USAGE_STORAGE_BIT));
+
+                m_glyph_texture.write_srgb_pixels(
+                        graphics_command_pool, graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, glyphs.pixels());
 
                 set_color(color);
         }

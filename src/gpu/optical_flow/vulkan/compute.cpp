@@ -139,8 +139,6 @@ class Impl final : public Compute
 
         const vulkan::CommandPool& m_compute_command_pool;
         const vulkan::Queue& m_compute_queue;
-        // const vulkan::CommandPool& m_transfer_command_pool;
-        // const vulkan::Queue& m_transfer_queue;
 
         vulkan::Semaphore m_semaphore_first_pyramid;
         vulkan::Semaphore m_semaphore;
@@ -655,15 +653,11 @@ class Impl final : public Compute
 public:
         Impl(const vulkan::VulkanInstance& instance,
              const vulkan::CommandPool& compute_command_pool,
-             const vulkan::Queue& compute_queue,
-             const vulkan::CommandPool& /*transfer_command_pool*/,
-             const vulkan::Queue& /*transfer_queue*/)
+             const vulkan::Queue& compute_queue)
                 : m_instance(instance),
                   m_device(instance.device()),
                   m_compute_command_pool(compute_command_pool),
                   m_compute_queue(compute_queue),
-                  // m_transfer_command_pool(transfer_command_pool),
-                  // m_transfer_queue(transfer_queue),
                   m_semaphore_first_pyramid(instance.device()),
                   m_semaphore(instance.device()),
                   m_grayscale_program(instance.device()),
@@ -673,7 +667,6 @@ public:
                   m_flow_program(instance.device())
         {
                 ASSERT(compute_command_pool.family_index() == compute_queue.family_index());
-                // ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
         }
 
         ~Impl() override
@@ -695,11 +688,8 @@ std::vector<vulkan::PhysicalDeviceFeatures> Compute::required_device_features()
 std::unique_ptr<Compute> create_compute(
         const vulkan::VulkanInstance& instance,
         const vulkan::CommandPool& compute_command_pool,
-        const vulkan::Queue& compute_queue,
-        const vulkan::CommandPool& transfer_command_pool,
-        const vulkan::Queue& transfer_queue)
+        const vulkan::Queue& compute_queue)
 {
-        return std::make_unique<Impl>(
-                instance, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue);
+        return std::make_unique<Impl>(instance, compute_command_pool, compute_queue);
 }
 }

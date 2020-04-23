@@ -47,7 +47,7 @@ struct View
 
 std::unique_ptr<View> create_view(
         const vulkan::VulkanInstance& instance,
-        VkCommandPool graphics_command_pool,
-        uint32_t family_index,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue,
         bool sample_shading);
 }
