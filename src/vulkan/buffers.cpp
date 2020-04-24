@@ -555,7 +555,7 @@ void check_grayscale_buffer_size(const T& pixels, VkExtent3D extent)
         }
 }
 
-void write_srgb_pixels_to_image(
+void write_srgb_color_pixels_to_image(
         VkImage image,
         VkFormat format,
         VkExtent3D extent,
@@ -567,13 +567,14 @@ void write_srgb_pixels_to_image(
         const Queue& queue,
         const Span<const std::uint8_t>& srgb_pixels)
 {
+        check_color_buffer_size(srgb_pixels, extent);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
         switch (format)
         {
         case VK_FORMAT_R16G16B16A16_UNORM:
         {
-                check_color_buffer_size(srgb_pixels, extent);
                 const std::vector<uint16_t> buffer =
                         color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(srgb_pixels);
                 staging_image_write(
@@ -583,7 +584,6 @@ void write_srgb_pixels_to_image(
         }
         case VK_FORMAT_R32G32B32A32_SFLOAT:
         {
-                check_color_buffer_size(srgb_pixels, extent);
                 const std::vector<float> buffer =
                         color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
                 staging_image_write(
@@ -593,15 +593,37 @@ void write_srgb_pixels_to_image(
         }
         case VK_FORMAT_R8G8B8A8_SRGB:
         {
-                check_color_buffer_size(srgb_pixels, extent);
                 staging_image_write(
                         device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
                         srgb_pixels);
                 break;
         }
+        default:
+                error("Unsupported image format " + format_to_string(format) + " for sRGB color pixels");
+        }
+#pragma GCC diagnostic pop
+}
+
+void write_srgb_grayscale_pixels_to_image(
+        VkImage image,
+        VkFormat format,
+        VkExtent3D extent,
+        VkImageLayout old_image_layout,
+        VkImageLayout new_image_layout,
+        VkDevice device,
+        VkPhysicalDevice physical_device,
+        const CommandPool& command_pool,
+        const Queue& queue,
+        const Span<const std::uint8_t>& srgb_pixels)
+{
+        check_grayscale_buffer_size(srgb_pixels, extent);
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+        switch (format)
+        {
         case VK_FORMAT_R16_UNORM:
         {
-                check_grayscale_buffer_size(srgb_pixels, extent);
                 const std::vector<uint16_t> buffer =
                         color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_uint16(srgb_pixels);
                 staging_image_write(
@@ -611,7 +633,6 @@ void write_srgb_pixels_to_image(
         }
         case VK_FORMAT_R32_SFLOAT:
         {
-                check_grayscale_buffer_size(srgb_pixels, extent);
                 const std::vector<float> buffer =
                         color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
                 staging_image_write(
@@ -621,14 +642,13 @@ void write_srgb_pixels_to_image(
         }
         case VK_FORMAT_R8_SRGB:
         {
-                check_grayscale_buffer_size(srgb_pixels, extent);
                 staging_image_write(
                         device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
                         srgb_pixels);
                 break;
         }
         default:
-                error("Unsupported image format " + format_to_string(format) + " for srgb pixels");
+                error("Unsupported image format " + format_to_string(format) + " for sRGB grayscale pixels");
         }
 #pragma GCC diagnostic pop
 }
@@ -813,7 +833,7 @@ void ImageWithMemory::check_family_index(const CommandPool& command_pool, const 
         }
 }
 
-void ImageWithMemory::write_srgb_pixels(
+void ImageWithMemory::write_srgb_color_pixels(
         const CommandPool& command_pool,
         const Queue& queue,
         VkImageLayout old_layout,
@@ -822,7 +842,21 @@ void ImageWithMemory::write_srgb_pixels(
 {
         check_family_index(command_pool, queue);
 
-        write_srgb_pixels_to_image(
+        write_srgb_color_pixels_to_image(
+                m_image, m_format, m_extent, old_layout, new_layout, m_device, m_physical_device, command_pool, queue,
+                srgb_pixels);
+}
+
+void ImageWithMemory::write_srgb_grayscale_pixels(
+        const CommandPool& command_pool,
+        const Queue& queue,
+        VkImageLayout old_layout,
+        VkImageLayout new_layout,
+        const Span<const std::uint_least8_t>& srgb_pixels) const
+{
+        check_family_index(command_pool, queue);
+
+        write_srgb_grayscale_pixels_to_image(
                 m_image, m_format, m_extent, old_layout, new_layout, m_device, m_physical_device, command_pool, queue,
                 srgb_pixels);
 }

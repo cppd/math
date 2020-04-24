@@ -300,7 +300,7 @@ class Impl final : public View
                 ASSERT(m_glyph_texture.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
                 ASSERT(!(m_glyph_texture.usage() & VK_IMAGE_USAGE_STORAGE_BIT));
 
-                m_glyph_texture.write_srgb_pixels(
+                m_glyph_texture.write_srgb_grayscale_pixels(
                         graphics_command_pool, graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, glyphs.pixels());
 

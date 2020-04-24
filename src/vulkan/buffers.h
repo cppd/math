@@ -207,7 +207,14 @@ public:
 
         //
 
-        void write_srgb_pixels(
+        void write_srgb_color_pixels(
+                const CommandPool& command_pool,
+                const Queue& queue,
+                VkImageLayout old_layout,
+                VkImageLayout new_layout,
+                const Span<const std::uint_least8_t>& srgb_pixels) const;
+
+        void write_srgb_grayscale_pixels(
                 const CommandPool& command_pool,
                 const Queue& queue,
                 VkImageLayout old_layout,
