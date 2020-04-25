@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "depth_buffer.h"
 #include "mesh_object.h"
 #include "mesh_renderer.h"
+#include "volume_object.h"
 
 #include <src/numerical/transform.h>
 #include <src/numerical/vec.h>
@@ -94,6 +95,7 @@ class Impl final : public Renderer
         ShaderBuffers m_shader_buffers;
 
         std::unordered_map<ObjectId, std::unique_ptr<MeshObject>> m_mesh_storage;
+        std::unordered_map<ObjectId, std::unique_ptr<VolumeObject>> m_volume_storage;
         std::optional<ObjectId> m_current_object_id;
 
         std::unique_ptr<DepthBuffers> m_mesh_renderer_depth_render_buffers;
@@ -281,23 +283,46 @@ class Impl final : public Renderer
                         set_matrices();
                 }
         }
-        void object_add(const volume::VolumeObject<3>& /*object*/) override
+        void object_add(const volume::VolumeObject<3>& object) override
         {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                std::unique_ptr draw_object = std::make_unique<VolumeObject>(
+                        m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
+                        object.volume(), object.matrix());
+
+                m_volume_storage.insert_or_assign(object.id(), std::move(draw_object));
         }
         void object_delete(ObjectId id) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                if (find_object(m_mesh_storage, id) == nullptr)
+                const MeshObject* mesh = find_object(m_mesh_storage, id);
+                const VolumeObject* volume = find_object(m_volume_storage, id);
+                if (!mesh && !volume)
                 {
                         return;
                 }
+                if (mesh && volume)
+                {
+                        error("Mesh and volume with the same id");
+                }
+
                 bool delete_and_create_command_buffers = (m_current_object_id == id);
                 if (delete_and_create_command_buffers)
                 {
                         delete_command_buffers();
                 }
-                m_mesh_storage.erase(id);
+
+                if (mesh)
+                {
+                        m_mesh_storage.erase(id);
+                }
+                if (volume)
+                {
+                        m_volume_storage.erase(id);
+                }
+
                 if (delete_and_create_command_buffers)
                 {
                         create_command_buffers();
@@ -308,12 +333,13 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                if (m_mesh_storage.empty())
+                if (m_mesh_storage.empty() && m_volume_storage.empty())
                 {
                         return;
                 }
                 delete_command_buffers();
                 m_mesh_storage.clear();
+                m_volume_storage.clear();
                 m_current_object_id.reset();
                 create_command_buffers();
                 set_matrices();
