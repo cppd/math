@@ -63,6 +63,8 @@ class ShaderBuffers
                 uint32_t clip_plane_enabled;
                 alignas(sizeof(vec4f)) vec3f direction_to_light;
                 alignas(sizeof(vec4f)) vec3f direction_to_camera;
+                alignas(sizeof(vec2f)) vec2f viewport_center;
+                alignas(sizeof(vec2f)) vec2f viewport_factor;
         };
 
         size_t m_matrices_buffer_index;
@@ -92,6 +94,7 @@ public:
                 const mat4& shadow_mvp_texture_matrix) const;
 
         void set_clip_plane(const vec4& equation, bool enabled) const;
+        void set_viewport(const vec2& center, const vec2& factor) const;
         void set_default_color(const Color& color) const;
         void set_wireframe_color(const Color& color) const;
         void set_background_color(const Color& color) const;

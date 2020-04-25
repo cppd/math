@@ -50,6 +50,8 @@ layout(std140, binding = 1) uniform Drawing
         bool clip_plane_enabled;
         vec3 direction_to_light;
         vec3 direction_to_camera;
+        vec2 viewport_center;
+        vec2 viewport_factor;
 }
 drawing;
 

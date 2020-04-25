@@ -114,6 +114,24 @@ void ShaderBuffers::set_clip_plane(const vec4& equation, bool enabled) const
         map.write(sizeof(clip_plane_equation), clip_plane_enabled);
 }
 
+void ShaderBuffers::set_viewport(const vec2& center, const vec2& factor) const
+{
+        static_assert(
+                offsetof(Drawing, viewport_center) + sizeof(Drawing::viewport_factor)
+                == offsetof(Drawing, viewport_factor));
+
+        constexpr size_t offset = offsetof(Drawing, viewport_center);
+        constexpr size_t size = sizeof(Drawing::viewport_center) + sizeof(Drawing::viewport_factor);
+
+        vulkan::BufferMapper map(m_uniform_buffers[m_drawing_buffer_index], offset, size);
+
+        decltype(Drawing().viewport_center) viewport_center = to_vector<float>(center);
+        decltype(Drawing().viewport_factor) viewport_factor = to_vector<float>(factor);
+
+        map.write(0, viewport_center);
+        map.write(sizeof(viewport_center), viewport_factor);
+}
+
 void ShaderBuffers::set_default_color(const Color& color) const
 {
         decltype(Drawing().default_color) c = color.to_rgb_vector<float>();

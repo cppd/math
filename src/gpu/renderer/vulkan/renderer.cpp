@@ -62,6 +62,22 @@ std::enable_if_t<std::is_same_v<OptionalId, std::optional<ObjectId>>, const T*> 
         return id ? find_object(map, *id) : nullptr;
 }
 
+struct ViewportTransform
+{
+        // device_coordinates = (framebuffer_coordinates - center) * factor
+        vec2 center;
+        vec2 factor;
+};
+ViewportTransform viewport_transform(const Region<2, int>& viewport)
+{
+        const vec2 offset = to_vector<double>(viewport.from());
+        const vec2 extent = to_vector<double>(viewport.extent());
+        ViewportTransform t;
+        t.center = offset + 0.5 * extent;
+        t.factor = vec2(2.0 / extent[0], 2.0 / extent[1]);
+        return t;
+}
+
 class Impl final : public Renderer
 {
         // Для получения текстуры для тени результат рисования находится в интервалах x(-1, 1) y(-1, 1) z(0, 1).
@@ -414,6 +430,9 @@ class Impl final : public Renderer
                 m_render_buffers = render_buffers;
                 m_object_image = objects;
                 m_viewport = viewport;
+
+                ViewportTransform t = viewport_transform(m_viewport);
+                m_shader_buffers.set_viewport(t.center, t.factor);
 
                 create_mesh_buffers();
 
