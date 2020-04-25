@@ -221,6 +221,13 @@ public:
                 VkImageLayout new_layout,
                 const Span<const std::uint_least8_t>& srgb_pixels) const;
 
+        void write_linear_grayscale_pixels(
+                const CommandPool& command_pool,
+                const Queue& queue,
+                VkImageLayout old_layout,
+                VkImageLayout new_layout,
+                const Span<const std::uint_least16_t>& pixels) const;
+
         void clear_commands(VkCommandBuffer command_buffer, VkImageLayout image_layout) const;
 
         VkImage image() const;

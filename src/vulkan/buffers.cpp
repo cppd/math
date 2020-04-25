@@ -652,6 +652,50 @@ void write_srgb_grayscale_pixels_to_image(
         }
 #pragma GCC diagnostic pop
 }
+
+void write_linear_grayscale_pixels_to_image(
+        VkImage image,
+        VkFormat format,
+        VkExtent3D extent,
+        VkImageLayout old_image_layout,
+        VkImageLayout new_image_layout,
+        VkDevice device,
+        VkPhysicalDevice physical_device,
+        const CommandPool& command_pool,
+        const Queue& queue,
+        const Span<const std::uint16_t>& pixels)
+{
+        check_grayscale_buffer_size(pixels, extent);
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+        switch (format)
+        {
+        case VK_FORMAT_R16_UNORM:
+        {
+                staging_image_write(
+                        device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
+                        pixels);
+                break;
+        }
+        case VK_FORMAT_R32_SFLOAT:
+        {
+                std::vector<float> buffer(pixels.size());
+                constexpr float divisor = limits<std::uint16_t>::max();
+                for (size_t i = 0; i < pixels.size(); ++i)
+                {
+                        buffer[i] = pixels[i] / divisor;
+                }
+                staging_image_write(
+                        device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
+                        buffer);
+                break;
+        }
+        default:
+                error("Unsupported image format " + format_to_string(format) + " for uint16 linear grayscale pixels");
+        }
+#pragma GCC diagnostic pop
+}
 }
 
 BufferWithMemory::BufferWithMemory(
@@ -859,6 +903,20 @@ void ImageWithMemory::write_srgb_grayscale_pixels(
         write_srgb_grayscale_pixels_to_image(
                 m_image, m_format, m_extent, old_layout, new_layout, m_device, m_physical_device, command_pool, queue,
                 srgb_pixels);
+}
+
+void ImageWithMemory::write_linear_grayscale_pixels(
+        const CommandPool& command_pool,
+        const Queue& queue,
+        VkImageLayout old_layout,
+        VkImageLayout new_layout,
+        const Span<const std::uint_least16_t>& pixels) const
+{
+        check_family_index(command_pool, queue);
+
+        write_linear_grayscale_pixels_to_image(
+                m_image, m_format, m_extent, old_layout, new_layout, m_device, m_physical_device, command_pool, queue,
+                pixels);
 }
 
 void ImageWithMemory::clear_commands(VkCommandBuffer command_buffer, VkImageLayout image_layout) const
