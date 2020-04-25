@@ -33,11 +33,6 @@ ShaderBuffers::ShaderBuffers(const vulkan::Device& device, const std::unordered_
 
         m_uniform_buffers.emplace_back(
                 vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                sizeof(Lighting));
-        m_lighting_buffer_index = m_uniform_buffers.size() - 1;
-
-        m_uniform_buffers.emplace_back(
-                vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 sizeof(Drawing));
         m_drawing_buffer_index = m_uniform_buffers.size() - 1;
 }
@@ -50,11 +45,6 @@ const vulkan::Buffer& ShaderBuffers::matrices_buffer() const
 const vulkan::Buffer& ShaderBuffers::shadow_matrices_buffer() const
 {
         return m_uniform_buffers[m_shadow_matrices_buffer_index].buffer();
-}
-
-const vulkan::Buffer& ShaderBuffers::lighting_buffer() const
-{
-        return m_uniform_buffers[m_lighting_buffer_index].buffer();
 }
 
 const vulkan::Buffer& ShaderBuffers::drawing_buffer() const
@@ -72,12 +62,6 @@ template <typename T>
 void ShaderBuffers::copy_to_shadow_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_shadow_matrices_buffer_index], offset, data);
-}
-
-template <typename T>
-void ShaderBuffers::copy_to_lighting_buffer(VkDeviceSize offset, const T& data) const
-{
-        vulkan::map_and_write_to_buffer(m_uniform_buffers[m_lighting_buffer_index], offset, data);
 }
 
 template <typename T>
@@ -228,14 +212,14 @@ void ShaderBuffers::set_show_smooth(bool show) const
 
 void ShaderBuffers::set_direction_to_light(const vec3f& direction) const
 {
-        decltype(Lighting().direction_to_light) d = direction;
-        copy_to_lighting_buffer(offsetof(Lighting, direction_to_light), d);
+        decltype(Drawing().direction_to_light) d = direction;
+        copy_to_drawing_buffer(offsetof(Drawing, direction_to_light), d);
 }
 
 void ShaderBuffers::set_direction_to_camera(const vec3f& direction) const
 {
-        decltype(Lighting().direction_to_camera) d = direction;
-        copy_to_lighting_buffer(offsetof(Lighting, direction_to_camera), d);
+        decltype(Drawing().direction_to_camera) d = direction;
+        copy_to_drawing_buffer(offsetof(Drawing, direction_to_camera), d);
 }
 
 //

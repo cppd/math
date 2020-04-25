@@ -41,12 +41,6 @@ class ShaderBuffers
                 mat4f shadow_mvp_texture_matrix;
         };
 
-        struct Lighting
-        {
-                alignas(sizeof(vec4f)) vec3f direction_to_light;
-                alignas(sizeof(vec4f)) vec3f direction_to_camera;
-        };
-
         struct Drawing
         {
                 alignas(sizeof(vec4f)) vec3f default_color;
@@ -67,19 +61,18 @@ class ShaderBuffers
                 alignas(sizeof(vec4f)) vec3f clip_plane_color;
                 alignas(sizeof(vec4f)) vec4f clip_plane_equation;
                 uint32_t clip_plane_enabled;
+                alignas(sizeof(vec4f)) vec3f direction_to_light;
+                alignas(sizeof(vec4f)) vec3f direction_to_camera;
         };
 
         size_t m_matrices_buffer_index;
         size_t m_shadow_matrices_buffer_index;
-        size_t m_lighting_buffer_index;
         size_t m_drawing_buffer_index;
 
         template <typename T>
         void copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const;
         template <typename T>
         void copy_to_shadow_matrices_buffer(VkDeviceSize offset, const T& data) const;
-        template <typename T>
-        void copy_to_lighting_buffer(VkDeviceSize offset, const T& data) const;
         template <typename T>
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
@@ -88,7 +81,6 @@ public:
 
         const vulkan::Buffer& matrices_buffer() const;
         const vulkan::Buffer& shadow_matrices_buffer() const;
-        const vulkan::Buffer& lighting_buffer() const;
         const vulkan::Buffer& drawing_buffer() const;
 
         void set_matrices(

@@ -42,15 +42,6 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesMemory::descriptor_set_layout
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = LIGHTING_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
                 b.binding = DRAWING_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
@@ -86,7 +77,6 @@ TrianglesMemory::TrianglesMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const vulkan::Buffer& matrices,
-        const vulkan::Buffer& lighting,
         const vulkan::Buffer& drawing)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
@@ -102,16 +92,6 @@ TrianglesMemory::TrianglesMemory(
                 infos.emplace_back(buffer_info);
 
                 bindings.push_back(MATRICES_BINDING);
-        }
-        {
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = lighting;
-                buffer_info.offset = 0;
-                buffer_info.range = lighting.size();
-
-                infos.emplace_back(buffer_info);
-
-                bindings.push_back(LIGHTING_BINDING);
         }
         {
                 VkDescriptorBufferInfo buffer_info = {};

@@ -20,13 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(early_fragment_tests) in;
 
 // Общие данные для всех треугольников всех объектов
-layout(std140, binding = 1) uniform Lighting
-{
-        vec3 direction_to_light;
-        vec3 direction_to_camera;
-}
-lighting;
-layout(std140, binding = 2) uniform Drawing
+layout(std140, binding = 1) uniform Drawing
 {
         vec3 default_color;
         vec3 wireframe_color;
@@ -46,11 +40,13 @@ layout(std140, binding = 2) uniform Drawing
         vec3 clip_plane_color;
         vec4 clip_plane_equation;
         bool clip_plane_enabled;
+        vec3 direction_to_light;
+        vec3 direction_to_camera;
 }
 drawing;
 
-layout(binding = 3) uniform sampler2D shadow_texture;
-layout(binding = 4, r32ui) writeonly uniform uimage2D object_image;
+layout(binding = 2) uniform sampler2D shadow_texture;
+layout(binding = 3, r32ui) writeonly uniform uimage2D object_image;
 
 // Для каждой группы треугольников с одним материалом отдельно задаётся этот материал и его текстуры
 layout(std140, set = 1, binding = 0) uniform Material
@@ -141,8 +137,8 @@ vec3 shade()
         //
 
         vec3 N = normalize(gs.world_normal);
-        vec3 L = lighting.direction_to_light;
-        vec3 V = lighting.direction_to_camera;
+        vec3 L = drawing.direction_to_light;
+        vec3 V = drawing.direction_to_camera;
 
         float dot_NL = dot(N, L);
         if (dot_NL >= 0.0)

@@ -20,14 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
 
-layout(std140, binding = 1) uniform Lighting
-{
-        vec3 direction_to_light;
-        vec3 direction_to_camera;
-}
-lighting;
-
-layout(std140, binding = 2) uniform Drawing
+layout(std140, binding = 1) uniform Drawing
 {
         vec3 default_color;
         vec3 wireframe_color;
@@ -47,6 +40,8 @@ layout(std140, binding = 2) uniform Drawing
         vec3 clip_plane_color;
         vec4 clip_plane_equation;
         bool clip_plane_enabled;
+        vec3 direction_to_light;
+        vec3 direction_to_camera;
 }
 drawing;
 
@@ -102,7 +97,7 @@ vec3[3] compute_normals()
         {
                 // в направлении от камеры
                 geometric_world_normal =
-                        faceforward(geometric_world_normal, lighting.direction_to_camera, geometric_world_normal);
+                        faceforward(geometric_world_normal, drawing.direction_to_camera, geometric_world_normal);
 
                 // Повернуть векторы вершин в противоположном вектору geometric_normal направлении
                 normals[0] = faceforward(vs[0].world_normal, geometric_world_normal, vs[0].world_normal);
@@ -113,7 +108,7 @@ vec3[3] compute_normals()
         {
                 // в направлении на камеру
                 geometric_world_normal =
-                        faceforward(geometric_world_normal, -lighting.direction_to_camera, geometric_world_normal);
+                        faceforward(geometric_world_normal, -drawing.direction_to_camera, geometric_world_normal);
 
                 normals[0] = geometric_world_normal;
                 normals[1] = geometric_world_normal;

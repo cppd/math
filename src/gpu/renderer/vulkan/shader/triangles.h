@@ -36,10 +36,9 @@ class TrianglesMemory final
         static constexpr int SET_NUMBER = 0;
 
         static constexpr int MATRICES_BINDING = 0;
-        static constexpr int LIGHTING_BINDING = 1;
-        static constexpr int DRAWING_BINDING = 2;
-        static constexpr int SHADOW_BINDING = 3;
-        static constexpr int OBJECTS_BINDING = 4;
+        static constexpr int DRAWING_BINDING = 1;
+        static constexpr int SHADOW_BINDING = 2;
+        static constexpr int OBJECTS_BINDING = 3;
 
         vulkan::Descriptors m_descriptors;
 
@@ -51,7 +50,6 @@ public:
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const vulkan::Buffer& matrices,
-                const vulkan::Buffer& lighting,
                 const vulkan::Buffer& drawing);
 
         TrianglesMemory(const TrianglesMemory&) = delete;

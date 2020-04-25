@@ -37,7 +37,6 @@ MeshRenderer::MeshRenderer(
                   device,
                   m_triangles_program.descriptor_set_layout(),
                   buffers.matrices_buffer(),
-                  buffers.lighting_buffer(),
                   buffers.drawing_buffer()),
           //
           m_triangle_lines_program(device),

@@ -30,7 +30,7 @@ layout(std140, binding = 0) uniform Matrices
 }
 matrices;
 
-layout(std140, binding = 2) uniform Drawing
+layout(std140, binding = 1) uniform Drawing
 {
         vec3 default_color;
         vec3 wireframe_color;
@@ -50,6 +50,8 @@ layout(std140, binding = 2) uniform Drawing
         vec3 clip_plane_color;
         vec4 clip_plane_equation;
         bool clip_plane_enabled;
+        vec3 direction_to_light;
+        vec3 direction_to_camera;
 }
 drawing;
 

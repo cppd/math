@@ -48,6 +48,8 @@ layout(std140, set = 0, binding = 1) uniform Drawing
         vec3 clip_plane_color;
         vec4 clip_plane_equation;
         bool clip_plane_enabled;
+        vec3 direction_to_light;
+        vec3 direction_to_camera;
 }
 drawing;
 
