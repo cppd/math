@@ -41,6 +41,11 @@ class ShaderBuffers
                 mat4f shadow_mvp_texture_matrix;
         };
 
+        struct Volume
+        {
+                mat4f inverse_mvp_matrix;
+        };
+
         struct Drawing
         {
                 alignas(sizeof(vec4f)) vec3f default_color;
@@ -68,6 +73,7 @@ class ShaderBuffers
         };
 
         size_t m_matrices_buffer_index;
+        size_t m_volume_buffer_index;
         size_t m_shadow_matrices_buffer_index;
         size_t m_drawing_buffer_index;
 
@@ -76,6 +82,8 @@ class ShaderBuffers
         template <typename T>
         void copy_to_shadow_matrices_buffer(VkDeviceSize offset, const T& data) const;
         template <typename T>
+        void copy_to_volume_buffer(VkDeviceSize offset, const T& data) const;
+        template <typename T>
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
@@ -83,6 +91,7 @@ public:
 
         const vulkan::Buffer& matrices_buffer() const;
         const vulkan::Buffer& shadow_matrices_buffer() const;
+        const vulkan::Buffer& volume_buffer() const;
         const vulkan::Buffer& drawing_buffer() const;
 
         void set_matrices(
@@ -92,6 +101,8 @@ public:
                 const mat4& shadow_mvp_matrix,
                 const mat4& shadow_vp_matrix,
                 const mat4& shadow_mvp_texture_matrix) const;
+
+        void set_volume(const mat4& inverse_mvp_matrix) const;
 
         void set_clip_plane(const vec4& equation, bool enabled) const;
         void set_viewport(const vec2& center, const vec2& factor) const;

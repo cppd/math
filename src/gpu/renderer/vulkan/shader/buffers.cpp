@@ -33,6 +33,11 @@ ShaderBuffers::ShaderBuffers(const vulkan::Device& device, const std::unordered_
 
         m_uniform_buffers.emplace_back(
                 vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                sizeof(Volume));
+        m_volume_buffer_index = m_uniform_buffers.size() - 1;
+
+        m_uniform_buffers.emplace_back(
+                vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 sizeof(Drawing));
         m_drawing_buffer_index = m_uniform_buffers.size() - 1;
 }
@@ -45,6 +50,11 @@ const vulkan::Buffer& ShaderBuffers::matrices_buffer() const
 const vulkan::Buffer& ShaderBuffers::shadow_matrices_buffer() const
 {
         return m_uniform_buffers[m_shadow_matrices_buffer_index].buffer();
+}
+
+const vulkan::Buffer& ShaderBuffers::volume_buffer() const
+{
+        return m_uniform_buffers[m_volume_buffer_index].buffer();
 }
 
 const vulkan::Buffer& ShaderBuffers::drawing_buffer() const
@@ -62,6 +72,12 @@ template <typename T>
 void ShaderBuffers::copy_to_shadow_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_shadow_matrices_buffer_index], offset, data);
+}
+
+template <typename T>
+void ShaderBuffers::copy_to_volume_buffer(VkDeviceSize offset, const T& data) const
+{
+        vulkan::map_and_write_to_buffer(m_uniform_buffers[m_volume_buffer_index], offset, data);
 }
 
 template <typename T>
@@ -94,6 +110,13 @@ void ShaderBuffers::set_matrices(
                 matrices.shadow_mvp_texture_matrix = to_matrix<float>(shadow_mvp_texture_matrix).transpose();
                 copy_to_shadow_matrices_buffer(0, matrices);
         }
+}
+
+void ShaderBuffers::set_volume(const mat4& inverse_mvp_matrix) const
+{
+        Volume volume;
+        volume.inverse_mvp_matrix = to_matrix<float>(inverse_mvp_matrix).transpose();
+        copy_to_volume_buffer(0, volume);
 }
 
 void ShaderBuffers::set_clip_plane(const vec4& equation, bool enabled) const
