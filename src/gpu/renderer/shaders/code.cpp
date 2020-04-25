@@ -60,6 +60,12 @@ constexpr uint32_t normals_geom[]{
 constexpr uint32_t normals_frag[]{
 #include "renderer_normals.frag.spr"
 };
+constexpr uint32_t volume_vert[]{
+#include "renderer_volume.vert.spr"
+};
+constexpr uint32_t volume_frag[]{
+#include "renderer_volume.frag.spr"
+};
 }
 
 Span<const uint32_t> code_triangles_vert()
@@ -125,5 +131,15 @@ Span<const uint32_t> code_normals_geom()
 Span<const uint32_t> code_normals_frag()
 {
         return Span<const uint32_t>(normals_frag);
+}
+
+Span<const uint32_t> code_volume_vert()
+{
+        return Span<const uint32_t>(volume_vert);
+}
+
+Span<const uint32_t> code_volume_frag()
+{
+        return Span<const uint32_t>(volume_frag);
 }
 }

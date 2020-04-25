@@ -36,4 +36,6 @@ Span<const uint32_t> code_points_frag();
 Span<const uint32_t> code_normals_vert();
 Span<const uint32_t> code_normals_geom();
 Span<const uint32_t> code_normals_frag();
+Span<const uint32_t> code_volume_vert();
+Span<const uint32_t> code_volume_frag();
 }
