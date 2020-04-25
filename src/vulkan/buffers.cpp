@@ -511,13 +511,36 @@ void transition_texture_layout_depth(
         end_commands(queue, command_buffer);
 }
 
-ImageView create_image_view(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect_flags)
+ImageView create_image_view(
+        VkDevice device,
+        VkImage image,
+        VkImageType type,
+        VkFormat format,
+        VkImageAspectFlags aspect_flags)
 {
         VkImageViewCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+
         create_info.image = image;
 
-        create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+        switch (type)
+        {
+        case VK_IMAGE_TYPE_1D:
+                create_info.viewType = VK_IMAGE_VIEW_TYPE_1D;
+                break;
+        case VK_IMAGE_TYPE_2D:
+                create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+                break;
+        case VK_IMAGE_TYPE_3D:
+                create_info.viewType = VK_IMAGE_VIEW_TYPE_3D;
+                break;
+        default:
+                error("Unknown image type " + image_type_to_string(type));
+        }
+#pragma GCC diagnostic pop
+
         create_info.format = format;
 
         create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -854,7 +877,7 @@ ImageWithMemory::ImageWithMemory(
                   m_usage)),
           m_device_memory(
                   create_device_memory(m_device, m_physical_device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
-          m_image_view(create_image_view(m_device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT))
+          m_image_view(create_image_view(m_device, m_image, m_type, m_format, VK_IMAGE_ASPECT_COLOR_BIT))
 {
         check_family_index(command_pool, queue);
 
@@ -1057,7 +1080,7 @@ DepthAttachment::DepthAttachment(
                 family_indices, samples, tiling, m_usage);
         m_device_memory =
                 create_device_memory(device, device.physical_device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
+        m_image_view = create_image_view(device, m_image, VK_IMAGE_TYPE_2D, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
         m_sample_count = samples;
 }
 
@@ -1139,7 +1162,7 @@ ColorAttachment::ColorAttachment(
                 family_indices, samples, tiling, usage);
         m_device_memory =
                 create_device_memory(device, device.physical_device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+        m_image_view = create_image_view(device, m_image, VK_IMAGE_TYPE_2D, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
         m_sample_count = samples;
 
         ASSERT(m_format == format);
