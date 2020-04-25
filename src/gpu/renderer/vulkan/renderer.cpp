@@ -94,14 +94,14 @@ class Impl final : public Renderer
 
         ShaderBuffers m_shader_buffers;
 
-        std::unordered_map<ObjectId, std::unique_ptr<MeshObject>> m_mesh_storage;
-        std::unordered_map<ObjectId, std::unique_ptr<VolumeObject>> m_volume_storage;
-        std::optional<ObjectId> m_current_object_id;
-
         std::unique_ptr<DepthBuffers> m_mesh_renderer_depth_render_buffers;
         vulkan::Semaphore m_mesh_renderer_signal_semaphore;
         vulkan::Semaphore m_mesh_renderer_depth_signal_semaphore;
         MeshRenderer m_mesh_renderer;
+
+        std::unordered_map<ObjectId, std::unique_ptr<MeshObject>> m_mesh_storage;
+        std::unordered_map<ObjectId, std::unique_ptr<VolumeObject>> m_volume_storage;
+        std::optional<ObjectId> m_current_object_id;
 
         void set_light_a(const Color& light) override
         {

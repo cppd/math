@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/model/mesh.h>
 #include <src/numerical/matrix.h>
-#include <src/numerical/vec.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
 
@@ -52,10 +51,10 @@ public:
                 const mesh::Mesh<3>& mesh,
                 const mat4& model_matrix);
 
+        ~MeshObject();
+
         void create_descriptor_sets(
                 const std::function<vulkan::Descriptors(const std::vector<MaterialInfo>& materials)>& create);
-
-        ~MeshObject();
 
         const mat4& model_matrix() const;
 
