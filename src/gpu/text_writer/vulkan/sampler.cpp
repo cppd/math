@@ -27,19 +27,15 @@ vulkan::Sampler create_sampler(VkDevice device)
         create_info.magFilter = VK_FILTER_NEAREST;
         create_info.minFilter = VK_FILTER_NEAREST;
 
-        create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-        create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-        create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 
         create_info.anisotropyEnable = VK_FALSE;
-        create_info.maxAnisotropy = 1;
-
-        create_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 
         create_info.unnormalizedCoordinates = VK_FALSE;
 
         create_info.compareEnable = VK_FALSE;
-        create_info.compareOp = VK_COMPARE_OP_ALWAYS;
 
         create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
         create_info.mipLodBias = 0.0f;

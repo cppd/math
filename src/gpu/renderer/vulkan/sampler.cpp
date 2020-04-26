@@ -49,12 +49,9 @@ vulkan::Sampler create_texture_sampler(const vulkan::Device& device, bool anisot
                 create_info.anisotropyEnable = VK_FALSE;
         }
 
-        create_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-
         create_info.unnormalizedCoordinates = VK_FALSE;
 
         create_info.compareEnable = VK_FALSE;
-        create_info.compareOp = VK_COMPARE_OP_ALWAYS;
 
         create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
         create_info.mipLodBias = 0.0f;
@@ -103,14 +100,10 @@ vulkan::Sampler create_shadow_sampler(VkDevice device)
         create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 
         create_info.anisotropyEnable = VK_FALSE;
-        create_info.maxAnisotropy = 1;
-
-        create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 
         create_info.unnormalizedCoordinates = VK_FALSE;
 
         create_info.compareEnable = VK_FALSE;
-        create_info.compareOp = VK_COMPARE_OP_ALWAYS;
 
         create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
         create_info.mipLodBias = 0.0f;
