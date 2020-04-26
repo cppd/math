@@ -136,6 +136,8 @@ vulkan::Pipeline VolumeProgram::create_pipeline(
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         info.depth_bias = false;
         info.color_blend = false;
+        info.depth_test = false;
+        info.depth_write = false;
 
         std::vector<const vulkan::Shader*> shaders{&m_vertex_shader, &m_fragment_shader};
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
