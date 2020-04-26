@@ -44,6 +44,8 @@ struct GraphicsPipelineCreateInfo
         std::optional<const std::vector<VkVertexInputAttributeDescription>*> attribute_descriptions;
         std::optional<bool> depth_bias;
         std::optional<bool> color_blend;
+        std::optional<bool> depth_test;
+        std::optional<bool> depth_write;
 };
 
 Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info);
