@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_object.h"
 #include "mesh_renderer.h"
 #include "volume_object.h"
+#include "volume_renderer.h"
 
 #include <src/numerical/transform.h>
 #include <src/numerical/vec.h>
@@ -114,6 +115,9 @@ class Impl final : public Renderer
         vulkan::Semaphore m_mesh_renderer_signal_semaphore;
         vulkan::Semaphore m_mesh_renderer_depth_signal_semaphore;
         MeshRenderer m_mesh_renderer;
+
+        vulkan::Semaphore m_volume_renderer_signal_semaphore;
+        VolumeRenderer m_volume_renderer;
 
         std::unordered_map<ObjectId, std::unique_ptr<MeshObject>> m_mesh_storage;
         std::unordered_map<ObjectId, std::unique_ptr<VolumeObject>> m_volume_storage;
@@ -514,19 +518,23 @@ class Impl final : public Renderer
         void set_matrices()
         {
                 const MeshObject* mesh = find_object(m_mesh_storage, m_current_object_id);
-
-                if (!mesh)
+                if (mesh)
                 {
-                        return;
+                        const mat4& model = mesh->model_matrix();
+                        const mat4& main_mvp = m_main_vp_matrix * model;
+                        const mat4& shadow_mvp_texture = m_shadow_vp_texture_matrix * model;
+                        const mat4& shadow_mvp = m_shadow_vp_matrix * model;
+
+                        m_shader_buffers.set_matrices(
+                                model, main_mvp, m_main_vp_matrix, shadow_mvp, m_shadow_vp_matrix, shadow_mvp_texture);
                 }
-
-                const mat4& model = mesh->model_matrix();
-                const mat4& main_mvp = m_main_vp_matrix * model;
-                const mat4& shadow_mvp_texture = m_shadow_vp_texture_matrix * model;
-                const mat4& shadow_mvp = m_shadow_vp_matrix * model;
-
-                m_shader_buffers.set_matrices(
-                        model, main_mvp, m_main_vp_matrix, shadow_mvp, m_shadow_vp_matrix, shadow_mvp_texture);
+                const VolumeObject* volume = find_object(m_volume_storage, m_current_object_id);
+                if (volume)
+                {
+                        const mat4& model = volume->model_matrix();
+                        const mat4& mvp = m_main_vp_matrix * model;
+                        m_shader_buffers.set_volume(mvp.inverse());
+                }
         }
 
 public:
@@ -546,7 +554,9 @@ public:
                   m_shader_buffers(m_device, {m_graphics_queue.family_index()}),
                   m_mesh_renderer_signal_semaphore(m_device),
                   m_mesh_renderer_depth_signal_semaphore(m_device),
-                  m_mesh_renderer(m_device, sample_shading, sampler_anisotropy, m_shader_buffers)
+                  m_mesh_renderer(m_device, sample_shading, sampler_anisotropy, m_shader_buffers),
+                  m_volume_renderer_signal_semaphore(m_device),
+                  m_volume_renderer(m_device, sample_shading, m_shader_buffers)
         {
         }
 
