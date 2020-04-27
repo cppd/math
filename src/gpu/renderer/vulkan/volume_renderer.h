@@ -52,9 +52,13 @@ public:
         void create_buffers(const RenderBuffers3D* render_buffers, const Region<2, int>& viewport);
         void delete_buffers();
 
-        void create_command_buffers(const VolumeObject* volume, VkCommandPool graphics_command_pool);
+        void create_command_buffers(
+                const VolumeObject* volume,
+                VkCommandPool graphics_command_pool,
+                const Color& clear_color,
+                const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands);
         void delete_command_buffers();
 
-        VkCommandBuffer command_buffer(unsigned index) const;
+        std::optional<VkCommandBuffer> command_buffer(unsigned index) const;
 };
 }

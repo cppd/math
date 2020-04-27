@@ -111,7 +111,7 @@ public:
                 bool normals);
         void delete_depth_command_buffers();
 
-        VkCommandBuffer render_command_buffer(unsigned index) const;
-        VkCommandBuffer depth_command_buffer(unsigned index) const;
+        std::optional<VkCommandBuffer> render_command_buffer(unsigned index) const;
+        std::optional<VkCommandBuffer> depth_command_buffer(unsigned index) const;
 };
 }

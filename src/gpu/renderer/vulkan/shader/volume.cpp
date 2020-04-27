@@ -129,7 +129,7 @@ vulkan::Pipeline VolumeProgram::create_pipeline(
         info.device = &m_device;
         info.render_pass = render_pass;
         info.sub_pass = 0;
-        info.sample_count = sample_shading ? sample_count : VK_SAMPLE_COUNT_1_BIT;
+        info.sample_count = sample_count;
         info.sample_shading = sample_shading;
         info.pipeline_layout = m_pipeline_layout;
         info.viewport = viewport;

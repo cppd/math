@@ -44,8 +44,7 @@ void VolumeRenderer::create_buffers(const RenderBuffers3D* render_buffers, const
         m_render_buffers = render_buffers;
 
         m_pipeline = m_program.create_pipeline(
-                render_buffers->render_pass(), VK_SAMPLE_COUNT_1_BIT /*render_buffers->sample_count()*/,
-                m_sample_shading, viewport);
+                render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport);
 }
 
 void VolumeRenderer::delete_buffers()
@@ -56,16 +55,11 @@ void VolumeRenderer::delete_buffers()
         m_pipeline.reset();
 }
 
-void VolumeRenderer::draw_commands(const VolumeObject* volume, VkCommandBuffer command_buffer) const
+void VolumeRenderer::draw_commands(const VolumeObject* /*volume*/, VkCommandBuffer command_buffer) const
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
 
         //
-
-        if (!volume)
-        {
-                return;
-        }
 
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
 
@@ -76,13 +70,18 @@ void VolumeRenderer::draw_commands(const VolumeObject* volume, VkCommandBuffer c
         vkCmdDraw(command_buffer, 3, 1, 0, 0);
 }
 
-void VolumeRenderer::create_command_buffers(const VolumeObject* volume, VkCommandPool graphics_command_pool)
+void VolumeRenderer::create_command_buffers(
+        const VolumeObject* volume,
+        VkCommandPool graphics_command_pool,
+        const Color& clear_color,
+        const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands)
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
 
         //
 
         ASSERT(m_render_buffers);
+        ASSERT(volume);
 
         m_command_buffers.reset();
 
@@ -97,6 +96,9 @@ void VolumeRenderer::create_command_buffers(const VolumeObject* volume, VkComman
         info.render_pass = m_render_buffers->render_pass();
         info.framebuffers = &m_render_buffers->framebuffers();
         info.command_pool = graphics_command_pool;
+        const std::vector<VkClearValue> clear_values = m_render_buffers->clear_values(clear_color);
+        info.clear_values = &clear_values;
+        info.before_render_pass_commands = before_render_pass_commands;
         info.render_pass_commands = [&](VkCommandBuffer command_buffer) { draw_commands(volume, command_buffer); };
 
         m_command_buffers = vulkan::create_command_buffers(info);
@@ -107,9 +109,13 @@ void VolumeRenderer::delete_command_buffers()
         m_command_buffers.reset();
 }
 
-VkCommandBuffer VolumeRenderer::command_buffer(unsigned index) const
+std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(unsigned index) const
 {
-        index = m_command_buffers->count() == 1 ? 0 : index;
-        return (*m_command_buffers)[index];
+        if (m_command_buffers)
+        {
+                index = m_command_buffers->count() == 1 ? 0 : index;
+                return (*m_command_buffers)[index];
+        }
+        return std::nullopt;
 }
 }

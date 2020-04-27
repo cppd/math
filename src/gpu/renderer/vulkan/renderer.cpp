@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/transform.h>
 #include <src/numerical/vec.h>
+#include <src/vulkan/commands.h>
 #include <src/vulkan/device.h>
 #include <src/vulkan/query.h>
 #include <src/vulkan/queue.h>
@@ -110,9 +111,9 @@ class Impl final : public Renderer
         const vulkan::ImageWithMemory* m_object_image = nullptr;
 
         ShaderBuffers m_shader_buffers;
+        vulkan::Semaphore m_renderer_signal_semaphore;
 
         std::unique_ptr<DepthBuffers> m_mesh_renderer_depth_render_buffers;
-        vulkan::Semaphore m_mesh_renderer_signal_semaphore;
         vulkan::Semaphore m_mesh_renderer_depth_signal_semaphore;
         MeshRenderer m_mesh_renderer;
 
@@ -122,6 +123,8 @@ class Impl final : public Renderer
         std::unordered_map<ObjectId, std::unique_ptr<MeshObject>> m_mesh_storage;
         std::unordered_map<ObjectId, std::unique_ptr<VolumeObject>> m_volume_storage;
         std::optional<ObjectId> m_current_object_id;
+
+        std::optional<vulkan::CommandBuffers> m_default_command_buffers;
 
         void set_light_a(const Color& light) override
         {
@@ -148,7 +151,7 @@ class Impl final : public Renderer
                 m_clear_color = color;
                 m_shader_buffers.set_background_color(color);
 
-                create_mesh_render_command_buffers();
+                create_command_buffers();
         }
         void set_default_color(const Color& color) override
         {
@@ -284,6 +287,10 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
+                //
+
+                ASSERT(find_object(m_volume_storage, object.id()) == nullptr);
+
                 std::unique_ptr draw_object = std::make_unique<MeshObject>(
                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
                         object.mesh(), object.matrix());
@@ -307,15 +314,31 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
+                //
+
+                ASSERT(find_object(m_mesh_storage, object.id()) == nullptr);
+
                 std::unique_ptr draw_object = std::make_unique<VolumeObject>(
                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
                         object.volume(), object.matrix());
 
+                bool delete_and_create_command_buffers = (m_current_object_id == object.id());
+                if (delete_and_create_command_buffers)
+                {
+                        delete_command_buffers();
+                }
                 m_volume_storage.insert_or_assign(object.id(), std::move(draw_object));
+                if (delete_and_create_command_buffers)
+                {
+                        create_command_buffers();
+                        set_matrices();
+                }
         }
         void object_delete(ObjectId id) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                //
 
                 const MeshObject* mesh = find_object(m_mesh_storage, id);
                 const VolumeObject* volume = find_object(m_volume_storage, id);
@@ -323,17 +346,13 @@ class Impl final : public Renderer
                 {
                         return;
                 }
-                if (mesh && volume)
-                {
-                        error("Mesh and volume with the same id");
-                }
+                ASSERT(!mesh || !volume);
 
                 bool delete_and_create_command_buffers = (m_current_object_id == id);
                 if (delete_and_create_command_buffers)
                 {
                         delete_command_buffers();
                 }
-
                 if (mesh)
                 {
                         m_mesh_storage.erase(id);
@@ -342,7 +361,6 @@ class Impl final : public Renderer
                 {
                         m_volume_storage.erase(id);
                 }
-
                 if (delete_and_create_command_buffers)
                 {
                         create_command_buffers();
@@ -352,6 +370,8 @@ class Impl final : public Renderer
         void object_delete_all() override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                //
 
                 if (m_mesh_storage.empty() && m_volume_storage.empty())
                 {
@@ -367,6 +387,8 @@ class Impl final : public Renderer
         void object_show(ObjectId id) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                //
 
                 if (!(m_current_object_id == id))
                 {
@@ -386,25 +408,42 @@ class Impl final : public Renderer
 
                 ASSERT(image_index < m_swapchain->image_views().size());
 
-                if (!m_show_shadow)
+                if (m_mesh_renderer.render_command_buffer(image_index))
+                {
+                        if (!m_show_shadow)
+                        {
+                                vulkan::queue_submit(
+                                        *m_mesh_renderer.render_command_buffer(image_index),
+                                        m_renderer_signal_semaphore, graphics_queue);
+                        }
+                        else
+                        {
+                                ASSERT(m_mesh_renderer.depth_command_buffer(image_index));
+                                vulkan::queue_submit(
+                                        *m_mesh_renderer.depth_command_buffer(image_index),
+                                        m_mesh_renderer_depth_signal_semaphore, graphics_queue);
+
+                                vulkan::queue_submit(
+                                        m_mesh_renderer_depth_signal_semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                        *m_mesh_renderer.render_command_buffer(image_index),
+                                        m_renderer_signal_semaphore, graphics_queue);
+                        }
+                }
+                else if (m_volume_renderer.command_buffer(image_index))
                 {
                         vulkan::queue_submit(
-                                m_mesh_renderer.render_command_buffer(image_index), m_mesh_renderer_signal_semaphore,
+                                *m_volume_renderer.command_buffer(image_index), m_renderer_signal_semaphore,
                                 graphics_queue);
                 }
                 else
                 {
+                        ASSERT(m_default_command_buffers);
+                        unsigned index = m_default_command_buffers->count() == 1 ? 0 : image_index;
                         vulkan::queue_submit(
-                                m_mesh_renderer.depth_command_buffer(image_index),
-                                m_mesh_renderer_depth_signal_semaphore, graphics_queue);
-
-                        vulkan::queue_submit(
-                                m_mesh_renderer_depth_signal_semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                m_mesh_renderer.render_command_buffer(image_index), m_mesh_renderer_signal_semaphore,
-                                graphics_queue);
+                                (*m_default_command_buffers)[index], m_renderer_signal_semaphore, graphics_queue);
                 }
 
-                return m_mesh_renderer_signal_semaphore;
+                return m_renderer_signal_semaphore;
         }
 
         bool empty() const override
@@ -413,7 +452,7 @@ class Impl final : public Renderer
 
                 //
 
-                return find_object(m_mesh_storage, m_current_object_id) == nullptr;
+                return m_default_command_buffers.has_value();
         }
 
         void create_buffers(
@@ -438,7 +477,9 @@ class Impl final : public Renderer
                 ViewportTransform t = viewport_transform(m_viewport);
                 m_shader_buffers.set_viewport(t.center, t.factor);
 
-                create_mesh_buffers();
+                m_mesh_renderer.create_render_buffers(m_render_buffers, m_object_image, m_viewport);
+                create_mesh_depth_buffers();
+                m_volume_renderer.create_buffers(m_render_buffers, m_viewport);
 
                 create_command_buffers();
         }
@@ -449,19 +490,9 @@ class Impl final : public Renderer
 
                 //
 
-                delete_mesh_buffers();
-        }
-
-        void delete_mesh_buffers()
-        {
+                m_volume_renderer.delete_buffers();
                 delete_mesh_depth_buffers();
                 m_mesh_renderer.delete_render_buffers();
-        }
-
-        void create_mesh_buffers()
-        {
-                m_mesh_renderer.create_render_buffers(m_render_buffers, m_object_image, m_viewport);
-                create_mesh_depth_buffers();
         }
 
         void delete_mesh_depth_buffers()
@@ -486,31 +517,84 @@ class Impl final : public Renderer
 
         void create_mesh_render_command_buffers()
         {
-                const MeshObject* mesh = find_object(m_mesh_storage, m_current_object_id);
+                m_mesh_renderer.delete_render_command_buffers();
 
-                m_mesh_renderer.create_render_command_buffers(
-                        mesh, m_graphics_command_pool, m_clip_plane.has_value(), m_show_normals, m_clear_color,
-                        [this](VkCommandBuffer command_buffer) {
-                                m_object_image->clear_commands(command_buffer, VK_IMAGE_LAYOUT_GENERAL);
-                        });
+                const MeshObject* mesh = find_object(m_mesh_storage, m_current_object_id);
+                if (mesh)
+                {
+                        m_mesh_renderer.create_render_command_buffers(
+                                mesh, m_graphics_command_pool, m_clip_plane.has_value(), m_show_normals, m_clear_color,
+                                [this](VkCommandBuffer command_buffer) {
+                                        m_object_image->clear_commands(command_buffer, VK_IMAGE_LAYOUT_GENERAL);
+                                });
+                }
         }
 
         void create_mesh_depth_command_buffers()
         {
-                const MeshObject* mesh = find_object(m_mesh_storage, m_current_object_id);
+                m_mesh_renderer.delete_depth_command_buffers();
 
-                m_mesh_renderer.create_depth_command_buffers(
-                        mesh, m_graphics_command_pool, m_clip_plane.has_value(), m_show_normals);
+                const MeshObject* mesh = find_object(m_mesh_storage, m_current_object_id);
+                if (mesh)
+                {
+                        m_mesh_renderer.create_depth_command_buffers(
+                                mesh, m_graphics_command_pool, m_clip_plane.has_value(), m_show_normals);
+                }
+        }
+
+        void create_volume_command_buffers()
+        {
+                m_volume_renderer.delete_command_buffers();
+
+                const VolumeObject* volume = find_object(m_volume_storage, m_current_object_id);
+                if (volume)
+                {
+                        m_volume_renderer.create_command_buffers(
+                                volume, m_graphics_command_pool, m_clear_color, [this](VkCommandBuffer command_buffer) {
+                                        m_object_image->clear_commands(command_buffer, VK_IMAGE_LAYOUT_GENERAL);
+                                });
+                }
+        }
+
+        void create_default_command_buffers()
+        {
+                m_default_command_buffers.reset();
+
+                if (find_object(m_mesh_storage, m_current_object_id)
+                    || find_object(m_volume_storage, m_current_object_id))
+                {
+                        return;
+                }
+
+                vulkan::CommandBufferCreateInfo info;
+
+                info.device = m_device;
+                info.render_area.emplace();
+                info.render_area->offset.x = 0;
+                info.render_area->offset.y = 0;
+                info.render_area->extent.width = m_render_buffers->width();
+                info.render_area->extent.height = m_render_buffers->height();
+                info.render_pass = m_render_buffers->render_pass();
+                info.framebuffers = &m_render_buffers->framebuffers();
+                info.command_pool = m_graphics_command_pool;
+                const std::vector<VkClearValue> clear_values = m_render_buffers->clear_values(m_clear_color);
+                info.clear_values = &clear_values;
+
+                m_default_command_buffers = vulkan::create_command_buffers(info);
         }
 
         void create_command_buffers()
         {
                 create_mesh_render_command_buffers();
                 create_mesh_depth_command_buffers();
+                create_volume_command_buffers();
+                create_default_command_buffers();
         }
 
         void delete_command_buffers()
         {
+                m_default_command_buffers.reset();
+                m_volume_renderer.delete_command_buffers();
                 m_mesh_renderer.delete_render_command_buffers();
                 m_mesh_renderer.delete_depth_command_buffers();
         }
@@ -552,7 +636,7 @@ public:
                   m_transfer_command_pool(transfer_command_pool),
                   m_transfer_queue(transfer_queue),
                   m_shader_buffers(m_device, {m_graphics_queue.family_index()}),
-                  m_mesh_renderer_signal_semaphore(m_device),
+                  m_renderer_signal_semaphore(m_device),
                   m_mesh_renderer_depth_signal_semaphore(m_device),
                   m_mesh_renderer(m_device, sample_shading, sampler_anisotropy, m_shader_buffers),
                   m_volume_renderer_signal_semaphore(m_device),

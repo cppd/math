@@ -154,11 +154,6 @@ void MeshRenderer::draw_commands(
 
         //
 
-        if (!mesh)
-        {
-                return;
-        }
-
         if (depth)
         {
                 vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
@@ -254,6 +249,7 @@ void MeshRenderer::create_render_command_buffers(
         //
 
         ASSERT(m_render_buffers);
+        ASSERT(mesh);
 
         m_render_command_buffers.reset();
 
@@ -294,6 +290,7 @@ void MeshRenderer::create_depth_command_buffers(
         //
 
         ASSERT(m_depth_buffers);
+        ASSERT(mesh);
 
         m_render_depth_command_buffers.reset();
 
@@ -321,15 +318,23 @@ void MeshRenderer::delete_depth_command_buffers()
         m_render_depth_command_buffers.reset();
 }
 
-VkCommandBuffer MeshRenderer::render_command_buffer(unsigned index) const
+std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer(unsigned index) const
 {
-        index = m_render_command_buffers->count() == 1 ? 0 : index;
-        return (*m_render_command_buffers)[index];
+        if (m_render_command_buffers)
+        {
+                index = m_render_command_buffers->count() == 1 ? 0 : index;
+                return (*m_render_command_buffers)[index];
+        }
+        return std::nullopt;
 }
 
-VkCommandBuffer MeshRenderer::depth_command_buffer(unsigned index) const
+std::optional<VkCommandBuffer> MeshRenderer::depth_command_buffer(unsigned index) const
 {
-        index = m_render_depth_command_buffers->count() == 1 ? 0 : index;
-        return (*m_render_depth_command_buffers)[index];
+        if (m_render_depth_command_buffers)
+        {
+                index = m_render_depth_command_buffers->count() == 1 ? 0 : index;
+                return (*m_render_depth_command_buffers)[index];
+        }
+        return std::nullopt;
 }
 }
