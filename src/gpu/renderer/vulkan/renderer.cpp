@@ -80,6 +80,17 @@ ViewportTransform viewport_transform(const Region<2, int>& viewport)
         return t;
 }
 
+vec4 clip_plane_for_volume(const vec4& clip_plane, const mat4& model)
+{
+        vec4 p = clip_plane * model;
+
+        // из уравнения n * x + d с нормалью внутрь
+        // в уравнение n * x - d с нормалью наружу
+        p[3] = -p[3];
+        vec3 n = vec3(p[0], p[1], p[2]);
+        return p / -n.norm();
+}
+
 class Impl final : public Renderer
 {
         // Для получения текстуры для тени результат рисования находится в интервалах x(-1, 1) y(-1, 1) z(0, 1).
@@ -275,6 +286,13 @@ class Impl final : public Renderer
                 if (m_clip_plane)
                 {
                         m_shader_buffers.set_clip_plane(*m_clip_plane, true);
+
+                        const VolumeObject* volume = find_object(m_volume_storage, m_current_object_id);
+                        if (volume)
+                        {
+                                m_shader_buffers.set_volume_clip_plane(
+                                        clip_plane_for_volume(*m_clip_plane, volume->model_matrix()));
+                        }
                 }
                 else
                 {
@@ -617,7 +635,8 @@ class Impl final : public Renderer
                 {
                         const mat4& model = volume->model_matrix();
                         const mat4& mvp = m_main_vp_matrix * model;
-                        m_shader_buffers.set_volume(mvp.inverse());
+                        const vec4& clip_plane = m_clip_plane ? clip_plane_for_volume(*m_clip_plane, model) : vec4(0);
+                        m_shader_buffers.set_volume(mvp.inverse(), clip_plane);
                 }
         }
 

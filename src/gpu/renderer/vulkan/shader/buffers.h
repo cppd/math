@@ -44,6 +44,7 @@ class ShaderBuffers
         struct Volume
         {
                 mat4f inverse_mvp_matrix;
+                alignas(sizeof(vec4f)) vec4f clip_plane_equation;
         };
 
         struct Drawing
@@ -102,7 +103,8 @@ public:
                 const mat4& shadow_vp_matrix,
                 const mat4& shadow_mvp_texture_matrix) const;
 
-        void set_volume(const mat4& inverse_mvp_matrix) const;
+        void set_volume(const mat4& inverse_mvp_matrix, const vec4& clip_plane_equation) const;
+        void set_volume_clip_plane(const vec4& clip_plane_equation) const;
 
         void set_clip_plane(const vec4& equation, bool enabled) const;
         void set_viewport(const vec2& center, const vec2& factor) const;

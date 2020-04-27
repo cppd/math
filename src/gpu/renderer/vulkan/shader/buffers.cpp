@@ -112,11 +112,18 @@ void ShaderBuffers::set_matrices(
         }
 }
 
-void ShaderBuffers::set_volume(const mat4& inverse_mvp_matrix) const
+void ShaderBuffers::set_volume(const mat4& inverse_mvp_matrix, const vec4& clip_plane_equation) const
 {
         Volume volume;
         volume.inverse_mvp_matrix = to_matrix<float>(inverse_mvp_matrix).transpose();
+        volume.clip_plane_equation = to_vector<float>(clip_plane_equation);
         copy_to_volume_buffer(0, volume);
+}
+
+void ShaderBuffers::set_volume_clip_plane(const vec4& clip_plane_equation) const
+{
+        decltype(Volume().clip_plane_equation) v = to_vector<float>(clip_plane_equation);
+        copy_to_volume_buffer(offsetof(Volume, clip_plane_equation), v);
 }
 
 void ShaderBuffers::set_clip_plane(const vec4& equation, bool enabled) const

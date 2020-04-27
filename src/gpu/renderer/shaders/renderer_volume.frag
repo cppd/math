@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(std140, binding = 0) uniform Volume
 {
         mat4 inverse_mvp_matrix;
+        vec4 clip_plane_equation;
 }
 volume;
 
@@ -57,7 +58,7 @@ bool intersect(vec3 ray_org, vec3 ray_dir, out float first, out float second)
         float f_max = -1e38;
         float b_min = 1e38;
 
-        // На основе ParallelotopeOrtho для случая единичного куба текстурных координат
+        // На основе функции из ParallelotopeOrtho для случая единичного куба текстурных координат
         for (int i = 0; i < 3; ++i)
         {
                 float s = ray_dir[i]; // dot(ray_dir, planes[i].n);
@@ -97,6 +98,46 @@ bool intersect(vec3 ray_org, vec3 ray_dir, out float first, out float second)
                 {
                         return false;
                 }
+        }
+
+        // На основе функции из Parallelotope для случая одной плоскости
+        if (drawing.clip_plane_enabled)
+        {
+                do
+                {
+                        vec3 n = volume.clip_plane_equation.xyz;
+                        float d = volume.clip_plane_equation.w;
+
+                        float s = dot(ray_dir, n);
+                        if (s == 0)
+                        {
+                                if (dot(ray_org, n) > d)
+                                {
+                                        // параллельно плоскости и снаружи
+                                        return false;
+                                }
+                                // внутри плоскости
+                                continue;
+                        }
+
+                        float alpha = (d - dot(ray_org, n)) / s;
+
+                        if (s < 0)
+                        {
+                                // пересечение снаружи
+                                f_max = max(alpha, f_max);
+                        }
+                        else
+                        {
+                                // пересечение внутри
+                                b_min = min(alpha, b_min);
+                        }
+
+                        if (b_min <= 0 || b_min < f_max)
+                        {
+                                return false;
+                        }
+                } while (false);
         }
 
         first = f_max;
