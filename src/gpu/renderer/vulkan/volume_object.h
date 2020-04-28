@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "shader/volume.h"
+
 #include <src/model/volume.h>
 #include <src/numerical/matrix.h>
 #include <src/vulkan/descriptor.h>
@@ -44,8 +46,8 @@ public:
 
         ~VolumeObject();
 
-        void create_descriptor_set(const std::function<vulkan::Descriptors(VkImageView)>& create);
-        const vulkan::Descriptors& descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const;
+        void create_descriptor_set(const std::function<VolumeImageMemory(VkImageView)>& create);
+        const VkDescriptorSet& descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const;
 
         const mat4& model_matrix() const;
 };

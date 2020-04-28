@@ -49,6 +49,8 @@ class VolumeRenderer
 public:
         VolumeRenderer(const vulkan::Device& device, bool sample_shading, const ShaderBuffers& buffers);
 
+        VolumeImageMemory create_image_memory(VkImageView image_view);
+
         void create_buffers(const RenderBuffers3D* render_buffers, const Region<2, int>& viewport);
         void delete_buffers();
 

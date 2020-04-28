@@ -60,11 +60,43 @@ public:
         const VkDescriptorSet& descriptor_set() const;
 };
 
+class VolumeImageMemory final
+{
+        static constexpr int SET_NUMBER = 1;
+
+        static constexpr int IMAGE_BINDING = 0;
+
+        vulkan::Descriptors m_descriptors;
+
+public:
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        VolumeImageMemory(
+                VkDevice device,
+                VkSampler sampler,
+                VkDescriptorSetLayout descriptor_set_layout,
+                VkImageView image_view);
+
+        VolumeImageMemory(const VolumeImageMemory&) = delete;
+        VolumeImageMemory& operator=(const VolumeImageMemory&) = delete;
+        VolumeImageMemory& operator=(VolumeImageMemory&&) = delete;
+
+        VolumeImageMemory(VolumeImageMemory&&) = default;
+        ~VolumeImageMemory() = default;
+
+        //
+
+        const VkDescriptorSet& descriptor_set() const;
+        VkDescriptorSetLayout descriptor_set_layout() const;
+};
+
 class VolumeProgram final
 {
         const vulkan::Device& m_device;
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout_image;
         vulkan::PipelineLayout m_pipeline_layout;
         vulkan::VertexShader m_vertex_shader;
         vulkan::FragmentShader m_fragment_shader;
@@ -86,6 +118,7 @@ public:
                 const Region<2, int>& viewport) const;
 
         VkDescriptorSetLayout descriptor_set_layout() const;
+        VkDescriptorSetLayout descriptor_set_layout_image() const;
         VkPipelineLayout pipeline_layout() const;
 };
 }

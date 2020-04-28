@@ -40,7 +40,7 @@ class VolumeObject::Volume
 
         vulkan::ImageWithMemory m_texture;
 
-        std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_descriptor_sets;
+        std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> m_memory;
 
 public:
         Volume(const vulkan::Device& device,
@@ -70,27 +70,23 @@ public:
                 ASSERT((m_texture.usage() & VK_IMAGE_USAGE_STORAGE_BIT) == 0);
         }
 
-        void create_descriptor_set(const std::function<vulkan::Descriptors(VkImageView)>& create)
+        void create_descriptor_set(const std::function<VolumeImageMemory(VkImageView)>& create)
         {
-                vulkan::Descriptors descriptor_sets = create(m_texture.image_view());
+                VolumeImageMemory memory = create(m_texture.image_view());
 
-                ASSERT(descriptor_sets.descriptor_set_count() == 1);
-
-                m_descriptor_sets.erase(descriptor_sets.descriptor_set_layout());
-                m_descriptor_sets.emplace(descriptor_sets.descriptor_set_layout(), std::move(descriptor_sets));
+                m_memory.erase(memory.descriptor_set_layout());
+                m_memory.emplace(memory.descriptor_set_layout(), std::move(memory));
         }
 
-        const vulkan::Descriptors& descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const
+        const VkDescriptorSet& descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const
         {
-                auto iter = m_descriptor_sets.find(descriptor_set_layout);
-                if (iter == m_descriptor_sets.cend())
+                auto iter = m_memory.find(descriptor_set_layout);
+                if (iter == m_memory.cend())
                 {
                         error("Failed to find volume descriptor set for descriptor set layout");
                 }
 
-                ASSERT(iter->second.descriptor_set_count() == 1);
-
-                return iter->second;
+                return iter->second.descriptor_set();
         }
 
         const mat4& model_matrix() const
@@ -115,12 +111,12 @@ VolumeObject::VolumeObject(
 
 VolumeObject::~VolumeObject() = default;
 
-void VolumeObject::create_descriptor_set(const std::function<vulkan::Descriptors(VkImageView)>& create)
+void VolumeObject::create_descriptor_set(const std::function<VolumeImageMemory(VkImageView)>& create)
 {
-        return m_volume->create_descriptor_set(create);
+        m_volume->create_descriptor_set(create);
 }
 
-const vulkan::Descriptors& VolumeObject::descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const
+const VkDescriptorSet& VolumeObject::descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const
 {
         return m_volume->descriptor_set(descriptor_set_layout);
 }

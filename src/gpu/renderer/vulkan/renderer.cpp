@@ -339,6 +339,8 @@ class Impl final : public Renderer
                 std::unique_ptr draw_object = std::make_unique<VolumeObject>(
                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
                         object.volume(), object.matrix());
+                draw_object->create_descriptor_set(
+                        [this](VkImageView image_view) { return m_volume_renderer.create_image_memory(image_view); });
 
                 bool delete_and_create_command_buffers = (m_current_object_id == object.id());
                 if (delete_and_create_command_buffers)

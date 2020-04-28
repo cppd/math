@@ -97,12 +97,75 @@ const VkDescriptorSet& VolumeMemory::descriptor_set() const
 
 //
 
+std::vector<VkDescriptorSetLayoutBinding> VolumeImageMemory::descriptor_set_layout_bindings()
+{
+        std::vector<VkDescriptorSetLayoutBinding> bindings;
+
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = IMAGE_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
+
+        return bindings;
+}
+
+VolumeImageMemory::VolumeImageMemory(
+        VkDevice device,
+        VkSampler sampler,
+        VkDescriptorSetLayout descriptor_set_layout,
+        VkImageView image_view)
+        : m_descriptors(vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings()))
+{
+        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<uint32_t> bindings;
+
+        {
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                image_info.imageView = image_view;
+                image_info.sampler = sampler;
+
+                infos.emplace_back(image_info);
+
+                bindings.push_back(IMAGE_BINDING);
+        }
+
+        m_descriptors.update_descriptor_set(0, bindings, infos);
+}
+
+unsigned VolumeImageMemory::set_number()
+{
+        return SET_NUMBER;
+}
+
+const VkDescriptorSet& VolumeImageMemory::descriptor_set() const
+{
+        return m_descriptors.descriptor_set(0);
+}
+
+VkDescriptorSetLayout VolumeImageMemory::descriptor_set_layout() const
+{
+        return m_descriptors.descriptor_set_layout();
+}
+
+//
+
 VolumeProgram::VolumeProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout(
                   vulkan::create_descriptor_set_layout(device, VolumeMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {VolumeMemory::set_number()}, {m_descriptor_set_layout})),
+          m_descriptor_set_layout_image(
+                  vulkan::create_descriptor_set_layout(device, VolumeImageMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device,
+                  {VolumeMemory::set_number(), VolumeImageMemory::set_number()},
+                  {m_descriptor_set_layout, m_descriptor_set_layout_image})),
           m_vertex_shader(m_device, code_volume_vert(), "main"),
           m_fragment_shader(m_device, code_volume_frag(), "main")
 {
@@ -111,6 +174,11 @@ VolumeProgram::VolumeProgram(const vulkan::Device& device)
 VkDescriptorSetLayout VolumeProgram::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
+}
+
+VkDescriptorSetLayout VolumeProgram::descriptor_set_layout_image() const
+{
+        return m_descriptor_set_layout_image;
 }
 
 VkPipelineLayout VolumeProgram::pipeline_layout() const

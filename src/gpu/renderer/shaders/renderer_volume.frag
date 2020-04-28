@@ -51,6 +51,8 @@ layout(std140, binding = 1) uniform Drawing
 }
 drawing;
 
+layout(set = 1, binding = 0) uniform sampler3D image;
+
 layout(location = 0) out vec4 color;
 
 bool intersect(vec3 ray_org, vec3 ray_dir, out float first, out float second)

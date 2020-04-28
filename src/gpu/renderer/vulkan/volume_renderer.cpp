@@ -35,6 +35,11 @@ VolumeRenderer::VolumeRenderer(const vulkan::Device& device, bool sample_shading
 {
 }
 
+VolumeImageMemory VolumeRenderer::create_image_memory(VkImageView image_view)
+{
+        return VolumeImageMemory(m_device, m_volume_sampler, m_program.descriptor_set_layout_image(), image_view);
+}
+
 void VolumeRenderer::create_buffers(const RenderBuffers3D* render_buffers, const Region<2, int>& viewport)
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
@@ -55,7 +60,7 @@ void VolumeRenderer::delete_buffers()
         m_pipeline.reset();
 }
 
-void VolumeRenderer::draw_commands(const VolumeObject* /*volume*/, VkCommandBuffer command_buffer) const
+void VolumeRenderer::draw_commands(const VolumeObject* volume, VkCommandBuffer command_buffer) const
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -66,6 +71,11 @@ void VolumeRenderer::draw_commands(const VolumeObject* /*volume*/, VkCommandBuff
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
                 VolumeMemory::set_number(), 1 /*set count*/, &m_memory.descriptor_set(), 0, nullptr);
+
+        vkCmdBindDescriptorSets(
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
+                VolumeImageMemory::set_number(), 1 /*set count*/,
+                &volume->descriptor_set(m_program.descriptor_set_layout_image()), 0, nullptr);
 
         vkCmdDraw(command_buffer, 3, 1, 0, 0);
 }
