@@ -205,6 +205,17 @@ vulkan::Pipeline VolumeProgram::create_pipeline(
         info.depth_test = false;
         info.depth_write = false;
 
+        info.color_blend.emplace();
+        info.color_blend->colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
+                                           | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        info.color_blend->blendEnable = VK_TRUE;
+        info.color_blend->srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+        info.color_blend->dstColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        info.color_blend->colorBlendOp = VK_BLEND_OP_ADD;
+        info.color_blend->srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        info.color_blend->dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        info.color_blend->alphaBlendOp = VK_BLEND_OP_ADD;
+
         std::vector<const vulkan::Shader*> shaders{&m_vertex_shader, &m_fragment_shader};
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions;

@@ -15,6 +15,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// Mike Bailey, Steve Cunningham.
+// Graphics Shaders. Theory and Practice. Second Edition.
+// CRC Press, 2012.
+// 15. Using Shaders for Scientific Visualization.
+
+// Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
+// Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
+// Real-Time Rendering. Fourth Edition.
+// CRC Press, 2018.
+// 5. Shading Basics.
+// 14. Volumetric and Translucency Rendering.
+
+// Klaus Engel, Markus Hadwiger, Joe M. Kniss,
+// Christof Rezk-Salama, Daniel Weiskopf.
+// Real-Time Volume Graphics.
+// A K Peters, Ltd, 2006.
+
 #version 450
 
 layout(std140, binding = 0) uniform Volume
@@ -53,7 +70,17 @@ drawing;
 
 layout(set = 1, binding = 0) uniform sampler3D image;
 
-layout(location = 0) out vec4 color;
+//
+
+layout(location = 0) out vec4 out_color;
+
+//
+
+vec4 image_color(vec3 c)
+{
+        float v = texture(image, c).r;
+        return vec4(v, v, v, v);
+}
 
 bool intersect(vec3 ray_org, vec3 ray_dir, out float first, out float second)
 {
@@ -162,5 +189,26 @@ void main(void)
                 discard;
         }
 
-        color = vec4(0, 0.5, 0, 1);
+        vec3 direction = ray_dir * (second - first);
+        float direction_length_in_texels = length(textureSize(image, 0) * direction);
+        vec3 direction_step = direction / direction_length_in_texels;
+        int samples = int(trunc(direction_length_in_texels));
+
+        float transparency = 1; // transparency = 1 - α
+        vec3 color = vec3(0);
+        vec3 pos = ray_org;
+        for (int s = 0; s < samples; ++s, pos += direction_step)
+        {
+                vec4 c = image_color(pos);
+                color += transparency * c.rgb; // цвет уже умножен на α
+                transparency *= 1.0 - c.a;
+                if (transparency < 0.01)
+                {
+                        break;
+                }
+        }
+
+        // srcColorBlendFactor = VK_BLEND_FACTOR_ONE
+        // dstColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA
+        out_color = vec4(color, transparency);
 }
