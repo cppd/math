@@ -21,7 +21,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-vulkan::Sampler create_texture_sampler(const vulkan::Device& device, bool anisotropy);
 vulkan::Sampler create_volume_sampler(const vulkan::Device& device);
-vulkan::Sampler create_shadow_sampler(VkDevice device);
 }

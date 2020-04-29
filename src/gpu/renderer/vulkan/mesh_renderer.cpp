@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_renderer.h"
 
-#include "sampler.h"
+#include "mesh_sampler.h"
 
 #include <src/com/error.h>
 #include <src/vulkan/commands.h>
@@ -67,8 +67,8 @@ MeshRenderer::MeshRenderer(
                   buffers.matrices_buffer(),
                   buffers.drawing_buffer()),
           //
-          m_texture_sampler(create_texture_sampler(m_device, sampler_anisotropy)),
-          m_shadow_sampler(create_shadow_sampler(m_device))
+          m_texture_sampler(create_mesh_texture_sampler(m_device, sampler_anisotropy)),
+          m_shadow_sampler(create_mesh_shadow_sampler(m_device))
 {
 }
 
