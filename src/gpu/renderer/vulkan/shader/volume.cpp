@@ -202,7 +202,6 @@ vulkan::Pipeline VolumeProgram::create_pipeline(
         info.pipeline_layout = m_pipeline_layout;
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-        info.depth_bias = false;
         info.depth_test = false;
         info.depth_write = false;
 

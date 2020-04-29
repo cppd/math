@@ -120,7 +120,7 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
         rasterization_state_info.cullMode = VK_CULL_MODE_NONE;
         rasterization_state_info.frontFace = VK_FRONT_FACE_CLOCKWISE;
 
-        rasterization_state_info.depthBiasEnable = info.depth_bias.value() ? VK_TRUE : VK_FALSE;
+        rasterization_state_info.depthBiasEnable = info.depth_bias ? VK_TRUE : VK_FALSE;
         // rasterization_state_info.depthBiasConstantFactor = 0.0f;
         // rasterization_state_info.depthBiasClamp = 0.0f;
         // rasterization_state_info.depthBiasSlopeFactor = 0.0f;
@@ -172,7 +172,7 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
         // VK_DYNAMIC_STATE_VIEWPORT
         // VK_DYNAMIC_STATE_LINE_WIDTH
         std::vector<VkDynamicState> dynamic_states;
-        if (info.depth_bias.value())
+        if (info.depth_bias)
         {
                 dynamic_states.push_back(VK_DYNAMIC_STATE_DEPTH_BIAS);
         }
@@ -183,8 +183,8 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
 
         VkPipelineDepthStencilStateCreateInfo depth_stencil_state_info = {};
         depth_stencil_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        depth_stencil_state_info.depthTestEnable = info.depth_test.value_or(true) ? VK_TRUE : VK_FALSE;
-        depth_stencil_state_info.depthWriteEnable = info.depth_write.value_or(true) ? VK_TRUE : VK_FALSE;
+        depth_stencil_state_info.depthTestEnable = info.depth_test ? VK_TRUE : VK_FALSE;
+        depth_stencil_state_info.depthWriteEnable = info.depth_write ? VK_TRUE : VK_FALSE;
 
         depth_stencil_state_info.depthCompareOp = VK_COMPARE_OP_LESS;
 

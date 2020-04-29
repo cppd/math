@@ -229,7 +229,6 @@ vulkan::Pipeline Program::create_pipeline(
         info.pipeline_layout = m_pipeline_layout;
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-        info.depth_bias = false;
 
         info.color_blend.emplace();
         info.color_blend->colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT

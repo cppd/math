@@ -30,6 +30,7 @@ namespace vulkan
 {
 struct GraphicsPipelineCreateInfo
 {
+        // std::optional для проверки, что значения заданы
         std::optional<const Device*> device;
         std::optional<VkRenderPass> render_pass;
         std::optional<uint32_t> sub_pass;
@@ -42,9 +43,12 @@ struct GraphicsPipelineCreateInfo
         std::optional<const std::vector<const SpecializationConstant*>*> constants;
         std::optional<const std::vector<VkVertexInputBindingDescription>*> binding_descriptions;
         std::optional<const std::vector<VkVertexInputAttributeDescription>*> attribute_descriptions;
-        std::optional<bool> depth_bias;
-        std::optional<bool> depth_test;
-        std::optional<bool> depth_write;
+
+        bool depth_bias = false;
+        bool depth_test = true;
+        bool depth_write = true;
+
+        // Это значение может быть не задано
         std::optional<VkPipelineColorBlendAttachmentState> color_blend;
 };
 
