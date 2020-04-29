@@ -277,6 +277,102 @@ void limits(const PhysicalDevice& device, size_t device_node, StringTree* tree)
         }
 }
 
+#define ADD_FEATURE(v)                                  \
+        do                                              \
+        {                                               \
+                if (device.features().v == VK_TRUE)     \
+                {                                       \
+                        supported.emplace_back(#v);     \
+                }                                       \
+                else                                    \
+                {                                       \
+                        not_supported.emplace_back(#v); \
+                }                                       \
+        } while (false)
+
+void features(const PhysicalDevice& device, size_t device_node, StringTree* tree)
+{
+        size_t features_node = tree->add(device_node, "Features");
+        size_t supported_node = tree->add(features_node, "Supported");
+        size_t not_supported_node = tree->add(features_node, "Not Supported");
+
+        try
+        {
+                std::vector<std::string> supported;
+                std::vector<std::string> not_supported;
+
+                ADD_FEATURE(robustBufferAccess);
+                ADD_FEATURE(fullDrawIndexUint32);
+                ADD_FEATURE(imageCubeArray);
+                ADD_FEATURE(independentBlend);
+                ADD_FEATURE(geometryShader);
+                ADD_FEATURE(tessellationShader);
+                ADD_FEATURE(sampleRateShading);
+                ADD_FEATURE(dualSrcBlend);
+                ADD_FEATURE(logicOp);
+                ADD_FEATURE(multiDrawIndirect);
+                ADD_FEATURE(drawIndirectFirstInstance);
+                ADD_FEATURE(depthClamp);
+                ADD_FEATURE(depthBiasClamp);
+                ADD_FEATURE(fillModeNonSolid);
+                ADD_FEATURE(depthBounds);
+                ADD_FEATURE(wideLines);
+                ADD_FEATURE(largePoints);
+                ADD_FEATURE(alphaToOne);
+                ADD_FEATURE(multiViewport);
+                ADD_FEATURE(samplerAnisotropy);
+                ADD_FEATURE(textureCompressionETC2);
+                ADD_FEATURE(textureCompressionASTC_LDR);
+                ADD_FEATURE(textureCompressionBC);
+                ADD_FEATURE(occlusionQueryPrecise);
+                ADD_FEATURE(pipelineStatisticsQuery);
+                ADD_FEATURE(vertexPipelineStoresAndAtomics);
+                ADD_FEATURE(fragmentStoresAndAtomics);
+                ADD_FEATURE(shaderTessellationAndGeometryPointSize);
+                ADD_FEATURE(shaderImageGatherExtended);
+                ADD_FEATURE(shaderStorageImageExtendedFormats);
+                ADD_FEATURE(shaderStorageImageMultisample);
+                ADD_FEATURE(shaderStorageImageReadWithoutFormat);
+                ADD_FEATURE(shaderStorageImageWriteWithoutFormat);
+                ADD_FEATURE(shaderUniformBufferArrayDynamicIndexing);
+                ADD_FEATURE(shaderSampledImageArrayDynamicIndexing);
+                ADD_FEATURE(shaderStorageBufferArrayDynamicIndexing);
+                ADD_FEATURE(shaderStorageImageArrayDynamicIndexing);
+                ADD_FEATURE(shaderClipDistance);
+                ADD_FEATURE(shaderCullDistance);
+                ADD_FEATURE(shaderFloat64);
+                ADD_FEATURE(shaderInt64);
+                ADD_FEATURE(shaderInt16);
+                ADD_FEATURE(shaderResourceResidency);
+                ADD_FEATURE(shaderResourceMinLod);
+                ADD_FEATURE(sparseBinding);
+                ADD_FEATURE(sparseResidencyBuffer);
+                ADD_FEATURE(sparseResidencyImage2D);
+                ADD_FEATURE(sparseResidencyImage3D);
+                ADD_FEATURE(sparseResidency2Samples);
+                ADD_FEATURE(sparseResidency4Samples);
+                ADD_FEATURE(sparseResidency8Samples);
+                ADD_FEATURE(sparseResidency16Samples);
+                ADD_FEATURE(sparseResidencyAliased);
+                ADD_FEATURE(variableMultisampleRate);
+                ADD_FEATURE(inheritedQueries);
+
+                for (const std::string& name : sorted(supported))
+                {
+                        tree->add(supported_node, name);
+                }
+
+                for (const std::string& name : sorted(not_supported))
+                {
+                        tree->add(not_supported_node, name);
+                }
+        }
+        catch (const std::exception& e)
+        {
+                tree->add(features_node, e.what());
+        }
+}
+
 void queues(
         const PhysicalDevice& device,
         const std::vector<VkQueueFamilyProperties>& families,
@@ -444,6 +540,7 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
                 device_type(device, node, &tree);
                 api_version(device, node, &tree);
                 extensions(device, node, &tree);
+                features(device, node, &tree);
                 limits(device, node, &tree);
                 queue_families(device, node, &tree);
         }
