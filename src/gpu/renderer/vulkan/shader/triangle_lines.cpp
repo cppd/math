@@ -139,7 +139,6 @@ vulkan::Pipeline TriangleLinesProgram::create_pipeline(
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         info.depth_bias = false;
-        info.color_blend = false;
 
         const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader, &m_geometry_shader, &m_fragment_shader};
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr, nullptr};

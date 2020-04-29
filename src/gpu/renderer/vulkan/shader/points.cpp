@@ -160,7 +160,6 @@ vulkan::Pipeline PointsProgram::create_pipeline(
         info.viewport = viewport;
         info.primitive_topology = primitive_topology;
         info.depth_bias = false;
-        info.color_blend = false;
 
         std::vector<const vulkan::Shader*> shaders;
         if (primitive_topology == VK_PRIMITIVE_TOPOLOGY_POINT_LIST)

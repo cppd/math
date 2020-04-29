@@ -140,7 +140,6 @@ vulkan::Pipeline TrianglesDepthProgram::create_pipeline(
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         info.depth_bias = true;
-        info.color_blend = false;
 
         const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader};
         info.shaders = &shaders;
