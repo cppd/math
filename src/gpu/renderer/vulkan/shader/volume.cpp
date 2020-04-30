@@ -31,15 +31,6 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeMemory::descriptor_set_layout_bi
 
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = VOLUME_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
                 b.binding = DRAWING_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
@@ -54,23 +45,12 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeMemory::descriptor_set_layout_bi
 VolumeMemory::VolumeMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
-        const vulkan::Buffer& volume,
         const vulkan::Buffer& drawing)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
-        {
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = volume;
-                buffer_info.offset = 0;
-                buffer_info.range = volume.size();
-
-                infos.emplace_back(buffer_info);
-
-                bindings.push_back(VOLUME_BINDING);
-        }
         {
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = drawing;
@@ -103,7 +83,37 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeImageMemory::descriptor_set_layo
 
         {
                 VkDescriptorSetLayoutBinding b = {};
+                b.binding = BUFFER_COORDINATES_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = BUFFER_VOLUME_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
+        {
+                VkDescriptorSetLayoutBinding b = {};
                 b.binding = IMAGE_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = TRANSFER_FUNCTION_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -117,23 +127,54 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeImageMemory::descriptor_set_layo
 
 VolumeImageMemory::VolumeImageMemory(
         VkDevice device,
-        VkSampler sampler,
+        VkSampler image_sampler,
+        VkSampler transfer_function_sampler,
         VkDescriptorSetLayout descriptor_set_layout,
-        VkImageView image_view)
+        const VolumeInfo& volume_info)
         : m_descriptors(vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings()))
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = volume_info.buffer_coordinates;
+                buffer_info.offset = 0;
+                buffer_info.range = volume_info.buffer_coordinates_size;
+
+                infos.emplace_back(buffer_info);
+
+                bindings.push_back(BUFFER_COORDINATES_BINDING);
+        }
+        {
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = volume_info.buffer_volume;
+                buffer_info.offset = 0;
+                buffer_info.range = volume_info.buffer_volume_size;
+
+                infos.emplace_back(buffer_info);
+
+                bindings.push_back(BUFFER_VOLUME_BINDING);
+        }
+        {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = image_view;
-                image_info.sampler = sampler;
+                image_info.imageView = volume_info.image;
+                image_info.sampler = image_sampler;
 
                 infos.emplace_back(image_info);
 
                 bindings.push_back(IMAGE_BINDING);
+        }
+        {
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                image_info.imageView = volume_info.transfer_function;
+                image_info.sampler = transfer_function_sampler;
+
+                infos.emplace_back(image_info);
+
+                bindings.push_back(TRANSFER_FUNCTION_BINDING);
         }
 
         m_descriptors.update_descriptor_set(0, bindings, infos);

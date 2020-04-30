@@ -34,14 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
-layout(std140, binding = 0) uniform Volume
-{
-        mat4 inverse_mvp_matrix;
-        vec4 clip_plane_equation;
-}
-volume;
-
-layout(std140, binding = 1) uniform Drawing
+layout(set = 0, std140, binding = 0) uniform Drawing
 {
         vec3 default_color;
         vec3 wireframe_color;
@@ -68,7 +61,24 @@ layout(std140, binding = 1) uniform Drawing
 }
 drawing;
 
-layout(set = 1, binding = 0) uniform sampler3D image;
+//
+
+layout(set = 1, std140, binding = 0) uniform Coordinates
+{
+        mat4 inverse_mvp_matrix;
+        vec4 clip_plane_equation;
+}
+coordinates;
+
+layout(set = 1, std140, binding = 1) uniform Volume
+{
+        float window_offset;
+        float window_scale;
+}
+volume;
+
+layout(set = 1, binding = 2) uniform sampler3D image;
+layout(set = 1, binding = 3) uniform sampler1D transfer_function;
 
 //
 
@@ -79,7 +89,8 @@ layout(location = 0) out vec4 out_color;
 vec4 image_color(vec3 c)
 {
         float v = texture(image, c).r;
-        return vec4(v, v, v, v);
+        v = (v - volume.window_offset) * volume.window_scale;
+        return texture(transfer_function, clamp(v, 0, 1));
 }
 
 bool intersect(vec3 ray_org, vec3 ray_dir, out float first, out float second)
@@ -134,8 +145,8 @@ bool intersect(vec3 ray_org, vec3 ray_dir, out float first, out float second)
         {
                 do
                 {
-                        vec3 n = volume.clip_plane_equation.xyz;
-                        float d = volume.clip_plane_equation.w;
+                        vec3 n = coordinates.clip_plane_equation.xyz;
+                        float d = coordinates.clip_plane_equation.w;
 
                         float s = dot(ray_dir, n);
                         if (s == 0)
@@ -179,8 +190,8 @@ void main(void)
 {
         vec2 device_coordinates = (gl_FragCoord.xy - drawing.viewport_center) * drawing.viewport_factor;
 
-        vec3 ray_org = (volume.inverse_mvp_matrix * vec4(device_coordinates, 0, 1)).xyz;
-        vec3 ray_dir = normalize(mat3(volume.inverse_mvp_matrix) * vec3(0, 0, 1));
+        vec3 ray_org = (coordinates.inverse_mvp_matrix * vec4(device_coordinates, 0, 1)).xyz;
+        vec3 ray_dir = normalize(mat3(coordinates.inverse_mvp_matrix) * vec3(0, 0, 1));
 
         float first;
         float second;

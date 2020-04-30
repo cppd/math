@@ -29,15 +29,16 @@ VolumeRenderer::VolumeRenderer(const vulkan::Device& device, bool sample_shading
           m_sample_shading(sample_shading),
           //
           m_program(device),
-          m_memory(device, m_program.descriptor_set_layout(), buffers.volume_buffer(), buffers.drawing_buffer()),
+          m_memory(device, m_program.descriptor_set_layout(), buffers.drawing_buffer()),
           //
           m_volume_sampler(create_volume_sampler(m_device))
 {
 }
 
-VolumeImageMemory VolumeRenderer::create_image_memory(VkImageView image_view)
+VolumeImageMemory VolumeRenderer::create_volume_memory(const VolumeInfo& volume_info)
 {
-        return VolumeImageMemory(m_device, m_volume_sampler, m_program.descriptor_set_layout_image(), image_view);
+        return VolumeImageMemory(
+                m_device, m_volume_sampler, m_volume_sampler, m_program.descriptor_set_layout_image(), volume_info);
 }
 
 void VolumeRenderer::create_buffers(const RenderBuffers3D* render_buffers, const Region<2, int>& viewport)

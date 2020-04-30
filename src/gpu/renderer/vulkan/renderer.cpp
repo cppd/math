@@ -80,17 +80,6 @@ ViewportTransform viewport_transform(const Region<2, int>& viewport)
         return t;
 }
 
-vec4 clip_plane_for_volume(const vec4& clip_plane, const mat4& model)
-{
-        vec4 p = clip_plane * model;
-
-        // из уравнения n * x + d с нормалью внутрь
-        // в уравнение n * x - d с нормалью наружу
-        p[3] = -p[3];
-        vec3 n = vec3(p[0], p[1], p[2]);
-        return p / -n.norm();
-}
-
 class Impl final : public Renderer
 {
         // Для получения текстуры для тени результат рисования находится в интервалах x(-1, 1) y(-1, 1) z(0, 1).
@@ -290,8 +279,7 @@ class Impl final : public Renderer
                         const VolumeObject* volume = find_object(m_volume_storage, m_current_object_id);
                         if (volume)
                         {
-                                m_shader_buffers.set_volume_clip_plane(
-                                        clip_plane_for_volume(*m_clip_plane, volume->model_matrix()));
+                                volume->set_clip_plane(*m_clip_plane);
                         }
                 }
                 else
@@ -339,8 +327,9 @@ class Impl final : public Renderer
                 std::unique_ptr draw_object = std::make_unique<VolumeObject>(
                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
                         object.volume(), object.matrix());
-                draw_object->create_descriptor_set(
-                        [this](VkImageView image_view) { return m_volume_renderer.create_image_memory(image_view); });
+                draw_object->create_descriptor_set([this](const VolumeInfo& volume_info) {
+                        return m_volume_renderer.create_volume_memory(volume_info);
+                });
 
                 bool delete_and_create_command_buffers = (m_current_object_id == object.id());
                 if (delete_and_create_command_buffers)
@@ -635,10 +624,7 @@ class Impl final : public Renderer
                 const VolumeObject* volume = find_object(m_volume_storage, m_current_object_id);
                 if (volume)
                 {
-                        const mat4& model = volume->model_matrix();
-                        const mat4& mvp = m_main_vp_matrix * model;
-                        const vec4& clip_plane = m_clip_plane ? clip_plane_for_volume(*m_clip_plane, model) : vec4(0);
-                        m_shader_buffers.set_volume(mvp.inverse(), clip_plane);
+                        volume->set_coordinates(m_main_vp_matrix, m_clip_plane);
                 }
         }
 

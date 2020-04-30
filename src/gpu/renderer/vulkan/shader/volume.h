@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "buffers.h"
+
 #include <src/color/color.h>
 #include <src/numerical/region.h>
 #include <src/numerical/vec.h>
@@ -33,8 +35,7 @@ class VolumeMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
-        static constexpr int VOLUME_BINDING = 0;
-        static constexpr int DRAWING_BINDING = 1;
+        static constexpr int DRAWING_BINDING = 0;
 
         vulkan::Descriptors m_descriptors;
 
@@ -45,7 +46,6 @@ public:
         VolumeMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const vulkan::Buffer& volume,
                 const vulkan::Buffer& drawing);
 
         VolumeMemory(const VolumeMemory&) = delete;
@@ -64,7 +64,10 @@ class VolumeImageMemory final
 {
         static constexpr int SET_NUMBER = 1;
 
-        static constexpr int IMAGE_BINDING = 0;
+        static constexpr int BUFFER_COORDINATES_BINDING = 0;
+        static constexpr int BUFFER_VOLUME_BINDING = 1;
+        static constexpr int IMAGE_BINDING = 2;
+        static constexpr int TRANSFER_FUNCTION_BINDING = 3;
 
         vulkan::Descriptors m_descriptors;
 
@@ -74,9 +77,10 @@ public:
 
         VolumeImageMemory(
                 VkDevice device,
-                VkSampler sampler,
+                VkSampler image_sampler,
+                VkSampler transfer_function_sampler,
                 VkDescriptorSetLayout descriptor_set_layout,
-                VkImageView image_view);
+                const VolumeInfo& volume_info);
 
         VolumeImageMemory(const VolumeImageMemory&) = delete;
         VolumeImageMemory& operator=(const VolumeImageMemory&) = delete;

@@ -46,9 +46,10 @@ public:
 
         ~VolumeObject();
 
-        void create_descriptor_set(const std::function<VolumeImageMemory(VkImageView)>& create);
+        void create_descriptor_set(const std::function<VolumeImageMemory(const VolumeInfo&)>& create);
         const VkDescriptorSet& descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const;
 
-        const mat4& model_matrix() const;
+        void set_coordinates(const mat4& vp_matrix, const std::optional<vec4>& world_clip_plane_equation) const;
+        void set_clip_plane(const vec4& world_clip_plane_equation) const;
 };
 }

@@ -33,11 +33,6 @@ ShaderBuffers::ShaderBuffers(const vulkan::Device& device, const std::unordered_
 
         m_uniform_buffers.emplace_back(
                 vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                sizeof(Volume));
-        m_volume_buffer_index = m_uniform_buffers.size() - 1;
-
-        m_uniform_buffers.emplace_back(
-                vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 sizeof(Drawing));
         m_drawing_buffer_index = m_uniform_buffers.size() - 1;
 }
@@ -50,11 +45,6 @@ const vulkan::Buffer& ShaderBuffers::matrices_buffer() const
 const vulkan::Buffer& ShaderBuffers::shadow_matrices_buffer() const
 {
         return m_uniform_buffers[m_shadow_matrices_buffer_index].buffer();
-}
-
-const vulkan::Buffer& ShaderBuffers::volume_buffer() const
-{
-        return m_uniform_buffers[m_volume_buffer_index].buffer();
 }
 
 const vulkan::Buffer& ShaderBuffers::drawing_buffer() const
@@ -72,12 +62,6 @@ template <typename T>
 void ShaderBuffers::copy_to_shadow_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_shadow_matrices_buffer_index], offset, data);
-}
-
-template <typename T>
-void ShaderBuffers::copy_to_volume_buffer(VkDeviceSize offset, const T& data) const
-{
-        vulkan::map_and_write_to_buffer(m_uniform_buffers[m_volume_buffer_index], offset, data);
 }
 
 template <typename T>
@@ -110,20 +94,6 @@ void ShaderBuffers::set_matrices(
                 matrices.shadow_mvp_texture_matrix = to_matrix<float>(shadow_mvp_texture_matrix).transpose();
                 copy_to_shadow_matrices_buffer(0, matrices);
         }
-}
-
-void ShaderBuffers::set_volume(const mat4& inverse_mvp_matrix, const vec4& clip_plane_equation) const
-{
-        Volume volume;
-        volume.inverse_mvp_matrix = to_matrix<float>(inverse_mvp_matrix).transpose();
-        volume.clip_plane_equation = to_vector<float>(clip_plane_equation);
-        copy_to_volume_buffer(0, volume);
-}
-
-void ShaderBuffers::set_volume_clip_plane(const vec4& clip_plane_equation) const
-{
-        decltype(Volume().clip_plane_equation) v = to_vector<float>(clip_plane_equation);
-        copy_to_volume_buffer(offsetof(Volume, clip_plane_equation), v);
 }
 
 void ShaderBuffers::set_clip_plane(const vec4& equation, bool enabled) const
@@ -296,5 +266,72 @@ VkBuffer MaterialBuffer::buffer() const
 VkDeviceSize MaterialBuffer::buffer_size() const
 {
         return m_uniform_buffer.size();
+}
+
+//
+
+VolumeBuffer::VolumeBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
+        : m_uniform_buffer_coordinates(
+                vulkan::BufferMemoryType::HostVisible,
+                device,
+                family_indices,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                sizeof(Coordinates)),
+          m_uniform_buffer_volume(
+                  vulkan::BufferMemoryType::DeviceLocal,
+                  device,
+                  family_indices,
+                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                  sizeof(Volume))
+{
+}
+
+VkBuffer VolumeBuffer::buffer_coordinates() const
+{
+        return m_uniform_buffer_coordinates;
+}
+
+VkDeviceSize VolumeBuffer::buffer_coordinates_size() const
+{
+        return m_uniform_buffer_coordinates.size();
+}
+
+VkBuffer VolumeBuffer::buffer_volume() const
+{
+        return m_uniform_buffer_volume;
+}
+
+VkDeviceSize VolumeBuffer::buffer_volume_size() const
+{
+        return m_uniform_buffer_volume.size();
+}
+
+void VolumeBuffer::set_matrix_and_clip_plane(const mat4& inverse_mvp_matrix, const vec4& clip_plane_equation) const
+{
+        Coordinates coordinates;
+        coordinates.inverse_mvp_matrix = to_matrix<float>(inverse_mvp_matrix).transpose();
+        coordinates.clip_plane_equation = to_vector<float>(clip_plane_equation);
+        vulkan::map_and_write_to_buffer(m_uniform_buffer_coordinates, 0, coordinates);
+}
+
+void VolumeBuffer::set_clip_plane(const vec4& clip_plane_equation) const
+{
+        decltype(Coordinates().clip_plane_equation) clip_plane = to_vector<float>(clip_plane_equation);
+        vulkan::map_and_write_to_buffer(
+                m_uniform_buffer_coordinates, offsetof(Coordinates, clip_plane_equation), clip_plane);
+}
+
+void VolumeBuffer::set_window(
+        const vulkan::CommandPool& command_pool,
+        const vulkan::Queue& queue,
+        float window_offset,
+        float window_scale) const
+{
+        ASSERT(window_offset >= 0);
+        ASSERT(window_scale > 0);
+        Volume volume;
+        volume.window_offset = window_offset;
+        volume.window_scale = window_scale;
+        m_uniform_buffer_volume.write(command_pool, queue, data_size(volume), data_pointer(volume));
 }
 }

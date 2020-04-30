@@ -41,12 +41,6 @@ class ShaderBuffers
                 mat4f shadow_mvp_texture_matrix;
         };
 
-        struct Volume
-        {
-                mat4f inverse_mvp_matrix;
-                alignas(sizeof(vec4f)) vec4f clip_plane_equation;
-        };
-
         struct Drawing
         {
                 alignas(sizeof(vec4f)) vec3f default_color;
@@ -74,7 +68,6 @@ class ShaderBuffers
         };
 
         size_t m_matrices_buffer_index;
-        size_t m_volume_buffer_index;
         size_t m_shadow_matrices_buffer_index;
         size_t m_drawing_buffer_index;
 
@@ -83,8 +76,6 @@ class ShaderBuffers
         template <typename T>
         void copy_to_shadow_matrices_buffer(VkDeviceSize offset, const T& data) const;
         template <typename T>
-        void copy_to_volume_buffer(VkDeviceSize offset, const T& data) const;
-        template <typename T>
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
@@ -92,7 +83,6 @@ public:
 
         const vulkan::Buffer& matrices_buffer() const;
         const vulkan::Buffer& shadow_matrices_buffer() const;
-        const vulkan::Buffer& volume_buffer() const;
         const vulkan::Buffer& drawing_buffer() const;
 
         void set_matrices(
@@ -102,9 +92,6 @@ public:
                 const mat4& shadow_mvp_matrix,
                 const mat4& shadow_vp_matrix,
                 const mat4& shadow_mvp_texture_matrix) const;
-
-        void set_volume(const mat4& inverse_mvp_matrix, const vec4& clip_plane_equation) const;
-        void set_volume_clip_plane(const vec4& clip_plane_equation) const;
 
         void set_clip_plane(const vec4& equation, bool enabled) const;
         void set_viewport(const vec2& center, const vec2& factor) const;
@@ -163,5 +150,51 @@ struct MaterialInfo final
         VkImageView texture_Ka;
         VkImageView texture_Kd;
         VkImageView texture_Ks;
+};
+
+class VolumeBuffer final
+{
+        vulkan::BufferWithMemory m_uniform_buffer_coordinates;
+        vulkan::BufferWithMemory m_uniform_buffer_volume;
+
+        struct Coordinates
+        {
+                alignas(sizeof(vec4f)) mat4f inverse_mvp_matrix;
+                alignas(sizeof(vec4f)) vec4f clip_plane_equation;
+        };
+
+        struct Volume
+        {
+                float window_offset;
+                float window_scale;
+        };
+
+public:
+        VolumeBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+
+        VkBuffer buffer_coordinates() const;
+        VkDeviceSize buffer_coordinates_size() const;
+
+        VkBuffer buffer_volume() const;
+        VkDeviceSize buffer_volume_size() const;
+
+        void set_matrix_and_clip_plane(const mat4& inverse_mvp_matrix, const vec4& clip_plane_equation) const;
+        void set_clip_plane(const vec4& clip_plane_equation) const;
+
+        void set_window(
+                const vulkan::CommandPool& command_pool,
+                const vulkan::Queue& queue,
+                float window_offset,
+                float window_scale) const;
+};
+
+struct VolumeInfo final
+{
+        VkBuffer buffer_coordinates;
+        VkDeviceSize buffer_coordinates_size;
+        VkBuffer buffer_volume;
+        VkDeviceSize buffer_volume_size;
+        VkImageView image;
+        VkImageView transfer_function;
 };
 }
