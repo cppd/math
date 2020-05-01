@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader/buffers.h"
 
-#include <src/model/mesh.h>
+#include <src/model/mesh_object.h>
 #include <src/numerical/matrix.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
@@ -48,8 +48,7 @@ public:
                 const vulkan::Queue& graphics_queue,
                 const vulkan::CommandPool& transfer_command_pool,
                 const vulkan::Queue& transfer_queue,
-                const mesh::Mesh<3>& mesh,
-                const mat4& model_matrix);
+                const mesh::MeshObject<3>& mesh_object);
 
         ~MeshObject();
 

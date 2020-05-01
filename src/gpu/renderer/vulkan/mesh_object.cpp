@@ -639,26 +639,28 @@ MeshObject::MeshObject(
         const vulkan::Queue& graphics_queue,
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
-        const mesh::Mesh<3>& mesh,
-        const mat4& model_matrix)
-        : m_model_matrix(model_matrix)
+        const mesh::MeshObject<3>& mesh_object)
+        : m_model_matrix(mesh_object.matrix())
 {
-        if (!mesh.facets.empty())
+        if (!mesh_object.mesh().facets.empty())
         {
                 m_triangles = std::make_unique<MeshObject::Triangles>(
-                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, mesh);
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                        mesh_object.mesh());
         }
 
-        if (!mesh.lines.empty())
+        if (!mesh_object.mesh().lines.empty())
         {
                 m_lines = std::make_unique<MeshObject::Lines>(
-                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, mesh);
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                        mesh_object.mesh());
         }
 
-        if (!mesh.points.empty())
+        if (!mesh_object.mesh().points.empty())
         {
                 m_points = std::make_unique<MeshObject::Points>(
-                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, mesh);
+                        device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                        mesh_object.mesh());
         }
 }
 

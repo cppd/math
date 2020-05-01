@@ -299,7 +299,7 @@ class Impl final : public Renderer
 
                 std::unique_ptr draw_object = std::make_unique<MeshObject>(
                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
-                        object.mesh(), object.matrix());
+                        object);
                 draw_object->create_descriptor_sets([this](const std::vector<MaterialInfo>& materials) {
                         return m_mesh_renderer.create_material_descriptors_sets(materials);
                 });
