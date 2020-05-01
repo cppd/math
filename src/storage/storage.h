@@ -40,14 +40,14 @@ class Storage
 
         struct MeshData
         {
-                std::shared_ptr<const mesh::MeshObject<N>> mesh_object;
+                std::shared_ptr<mesh::MeshObject<N>> mesh_object;
                 std::shared_ptr<const painter::MeshObject<N, MeshFloat>> painter_mesh_object;
                 std::shared_ptr<const geometry::ManifoldConstructor<N>> manifold_constructor;
         };
 
         struct VolumeData
         {
-                std::shared_ptr<const volume::VolumeObject<N>> volume_object;
+                std::shared_ptr<volume::VolumeObject<N>> volume_object;
         };
 
         mutable std::shared_mutex m_mesh_mutex;
@@ -68,7 +68,7 @@ public:
         template <typename T>
         void set_mesh_object(T&& object)
         {
-                std::shared_ptr<const mesh::MeshObject<N>> tmp;
+                std::shared_ptr<mesh::MeshObject<N>> tmp;
                 std::unique_lock lock(m_mesh_mutex);
                 MeshData& v = m_mesh_map.try_emplace(object->id()).first->second;
                 tmp = std::move(v.mesh_object);
@@ -101,7 +101,7 @@ public:
         template <typename T>
         void set_volume_object(T&& object)
         {
-                std::shared_ptr<const volume::VolumeObject<N>> tmp;
+                std::shared_ptr<volume::VolumeObject<N>> tmp;
                 std::unique_lock lock(m_volume_mutex);
                 VolumeData& v = m_volume_map.try_emplace(object->id()).first->second;
                 tmp = std::move(v.volume_object);
@@ -111,7 +111,7 @@ public:
 
         //
 
-        std::shared_ptr<const mesh::MeshObject<N>> mesh_object(ObjectId id) const
+        std::shared_ptr<mesh::MeshObject<N>> mesh_object(ObjectId id) const
         {
                 std::shared_lock lock(m_mesh_mutex);
                 auto iter = m_mesh_map.find(id);
@@ -132,7 +132,7 @@ public:
                 return (iter != m_mesh_map.cend()) ? iter->second.manifold_constructor : nullptr;
         }
 
-        std::shared_ptr<const volume::VolumeObject<N>> volume_object(ObjectId id) const
+        std::shared_ptr<volume::VolumeObject<N>> volume_object(ObjectId id) const
         {
                 std::shared_lock lock(m_volume_mutex);
                 auto iter = m_volume_map.find(id);

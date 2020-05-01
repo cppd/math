@@ -109,7 +109,7 @@ std::shared_ptr<const painter::MeshObject<N, MeshFloat>> build_painter_mesh_obje
 template <size_t N, typename MeshFloat>
 void add_meshes(
         ProgressRatioList* progress_list,
-        const std::shared_ptr<const mesh::MeshObject<N>>& object,
+        const std::shared_ptr<mesh::MeshObject<N>>& object,
         int mesh_threads,
         Storage<N, MeshFloat>* storage)
 {
@@ -137,7 +137,7 @@ void convex_hull(
                 return;
         }
 
-        const std::shared_ptr<const mesh::MeshObject<N>> obj =
+        const std::shared_ptr<mesh::MeshObject<N>> obj =
                 std::make_shared<mesh::MeshObject<N>>(std::move(ch_mesh), object.matrix(), "Convex Hull");
 
         add_meshes(progress_list, obj, mesh_threads, storage);
@@ -173,7 +173,7 @@ void cocone(
                 return;
         }
 
-        const std::shared_ptr<const mesh::MeshObject<N>> obj =
+        const std::shared_ptr<mesh::MeshObject<N>> obj =
                 std::make_shared<mesh::MeshObject<N>>(std::move(cocone_mesh), object.matrix(), "Cocone");
 
         add_meshes(progress_list, obj, mesh_threads, storage);
@@ -212,7 +212,7 @@ void bound_cocone(
         }
 
         std::string name = "Bound Cocone (" + bound_cocone_text_rho_alpha(rho, alpha) + ")";
-        const std::shared_ptr<const mesh::MeshObject<N>> obj =
+        const std::shared_ptr<mesh::MeshObject<N>> obj =
                 std::make_shared<mesh::MeshObject<N>>(std::move(bound_cocone_mesh), object.matrix(), name);
 
         add_meshes(progress_list, obj, mesh_threads, storage);
@@ -239,7 +239,7 @@ void mst(
                 return;
         }
 
-        const std::shared_ptr<const mesh::MeshObject<N>> obj =
+        const std::shared_ptr<mesh::MeshObject<N>> obj =
                 std::make_shared<mesh::MeshObject<N>>(std::move(mst_mesh), object.matrix(), "MST");
 
         add_meshes(progress_list, obj, mesh_threads, storage);
@@ -335,7 +335,7 @@ void compute_bound_cocone(
         int mesh_threads)
 {
         namespace impl = processor_implementation;
-        const std::shared_ptr<const mesh::MeshObject<N>> obj = storage->mesh_object(id);
+        const std::shared_ptr<mesh::MeshObject<N>> obj = storage->mesh_object(id);
         if (!obj)
         {
                 error("No object found to compute BoundCocone");
@@ -386,8 +386,8 @@ void compute(
                 matrix = Matrix<N + 1, N + 1, double>(1);
         }
 
-        const std::shared_ptr<const mesh::MeshObject<N>> model_object =
-                std::make_shared<const mesh::MeshObject<N>>(std::move(mesh), matrix, name);
+        const std::shared_ptr<mesh::MeshObject<N>> model_object =
+                std::make_shared<mesh::MeshObject<N>>(std::move(mesh), matrix, name);
 
         ThreadsWithCatch threads(3);
         try

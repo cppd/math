@@ -46,8 +46,8 @@ void compute(
                 matrix = Matrix<N + 1, N + 1, double>(1);
         }
 
-        std::shared_ptr<const volume::VolumeObject<N>> model_object =
-                std::make_shared<const volume::VolumeObject<N>>(std::move(volume), matrix, name);
+        std::shared_ptr<volume::VolumeObject<N>> model_object =
+                std::make_shared<volume::VolumeObject<N>>(std::move(volume), matrix, name);
 
         storage->set_volume_object(std::move(model_object));
 }
