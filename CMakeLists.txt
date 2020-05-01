@@ -133,15 +133,18 @@ function(AddSourceFiles TARGET_TYPE)
 
         target_compile_definitions(${PROJECT_NAME} PRIVATE -DNDEBUG)
 
-        #-pedantic -pedantic-errors
-        #-fopt-info-missed -fopt-info-vec-missed -O3 -ffast-math -mavx -mfma -pg
+        #-fopt-info-missed -fopt-info-vec-missed
 
         target_link_libraries(${PROJECT_NAME} -pthread)
         target_compile_options(${PROJECT_NAME} PRIVATE -pthread)
 
-        target_compile_options(${PROJECT_NAME} PRIVATE -O3 -march=native)
-        target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>: -fno-rtti -fstrict-enums >)
+        if (DEBUG_BUILD)
+                target_compile_options(${PROJECT_NAME} PRIVATE -Og -ggdb -march=native)
+        else()
+                target_compile_options(${PROJECT_NAME} PRIVATE -O3 -march=native)
+        endif()
 
+        target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>: -fno-rtti -fstrict-enums >)
         target_compile_options(${PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:Clang>: -mllvm -inline-threshold=10000 >)
 
         SetCompilerWarnings("${all_files}")
@@ -306,13 +309,7 @@ endfunction()
 
 project(create_str C CXX)
 
-AddSourceFiles(EXECUTABLE DIRECTORIES src_str EXTENSIONS ${extensions_all})
-
-##################################################
-
-#project(create_gl C CXX)
-#
-#AddSourceFiles(EXECUTABLE DIRECTORIES src_gl EXTENSIONS ${extensions_all})
+AddSourceFiles(EXECUTABLE DIRECTORIES "src_str" EXTENSIONS ${extensions_all})
 
 ##################################################
 
