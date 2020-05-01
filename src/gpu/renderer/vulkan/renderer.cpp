@@ -326,7 +326,7 @@ class Impl final : public Renderer
 
                 std::unique_ptr draw_object = std::make_unique<VolumeObject>(
                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
-                        object.volume(), object.matrix());
+                        object);
                 draw_object->create_descriptor_set([this](const VolumeInfo& volume_info) {
                         return m_volume_renderer.create_volume_memory(volume_info);
                 });

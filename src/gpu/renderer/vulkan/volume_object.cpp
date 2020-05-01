@@ -101,11 +101,10 @@ public:
                const vulkan::Queue& graphics_queue,
                const vulkan::CommandPool& /*transfer_command_pool*/,
                const vulkan::Queue& /*transfer_queue*/,
-               const volume::Volume<3>& volume,
-               const mat4& model_matrix)
+               const volume::VolumeObject<3>& volume_object)
                 : m_graphics_command_pool(graphics_command_pool),
                   m_graphics_queue(graphics_queue),
-                  m_model_volume_matrix(model_matrix * volume.matrix),
+                  m_model_volume_matrix(volume_object.matrix() * volume_object.volume().matrix),
                   m_buffer(device, {graphics_queue.family_index()}),
                   m_image(device,
                           graphics_command_pool,
@@ -114,20 +113,21 @@ public:
                           IMAGE_FORMATS,
                           VK_SAMPLE_COUNT_1_BIT,
                           VK_IMAGE_TYPE_3D,
-                          vulkan::make_extent(volume.image.size[0], volume.image.size[1], volume.image.size[2]),
+                          vulkan::make_extent(
+                                  volume_object.volume().image.size[0],
+                                  volume_object.volume().image.size[1],
+                                  volume_object.volume().image.size[2]),
                           VK_IMAGE_LAYOUT_UNDEFINED,
                           false /*storage*/)
         {
                 m_image.write_linear_grayscale_pixels(
                         graphics_command_pool, graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, volume.image.pixels);
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, volume_object.volume().image.pixels);
 
                 ASSERT((m_image.usage() & VK_IMAGE_USAGE_SAMPLED_BIT) == VK_IMAGE_USAGE_SAMPLED_BIT);
                 ASSERT((m_image.usage() & VK_IMAGE_USAGE_STORAGE_BIT) == 0);
 
-                constexpr float window_min = 0;
-                constexpr float window_max = 1;
-                set_window(window_min, window_max);
+                set_window(volume_object.level_min(), volume_object.level_max());
 
                 std::vector<uint8_t> transfer_function_pixels = transfer_function();
                 m_transfer_function = std::make_unique<vulkan::ImageWithMemory>(
@@ -188,12 +188,10 @@ VolumeObject::VolumeObject(
         const vulkan::Queue& graphics_queue,
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
-        const volume::Volume<3>& volume,
-        const mat4& model_matrix)
+        const volume::VolumeObject<3>& volume_object)
 {
         m_volume = std::make_unique<Volume>(
-                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, volume,
-                model_matrix);
+                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, volume_object);
 }
 
 VolumeObject::~VolumeObject() = default;

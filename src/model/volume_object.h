@@ -35,6 +35,8 @@ class VolumeObject final
         Matrix<N + 1, N + 1, double> m_matrix;
         std::string m_name;
         ObjectId m_id;
+        float m_level_min = 0;
+        float m_level_max = 1;
 
 public:
         VolumeObject(
@@ -64,6 +66,22 @@ public:
         const ObjectId& id() const
         {
                 return m_id;
+        }
+
+        float level_min() const
+        {
+                return m_level_min;
+        }
+
+        float level_max() const
+        {
+                return m_level_max;
+        }
+
+        void set_levels(float min, float max)
+        {
+                m_level_min = min;
+                m_level_max = max;
         }
 };
 }
