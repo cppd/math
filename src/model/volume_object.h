@@ -58,6 +58,11 @@ public:
                 return m_matrix;
         }
 
+        void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
+        {
+                m_matrix = matrix;
+        }
+
         const std::string& name() const
         {
                 return m_name;
