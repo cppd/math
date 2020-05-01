@@ -241,56 +241,39 @@ DeviceMemory create_device_memory(
         return device_memory;
 }
 
-void copy_host_to_device(
-        const DeviceMemory& device_memory,
-        VkDeviceSize offset,
-        const void* data,
-        VkDeviceSize data_size)
+void copy_host_to_device(const DeviceMemory& device_memory, VkDeviceSize offset, VkDeviceSize size, const void* data)
 {
         void* map_memory_data;
 
-        VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, data_size, 0, &map_memory_data);
+        VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkMapMemory", result);
         }
 
-        std::memcpy(map_memory_data, data, data_size);
+        std::memcpy(map_memory_data, data, size);
 
         vkUnmapMemory(device_memory.device(), device_memory);
 
         // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
 }
 
-// void copy_device_to_host(const DeviceMemory& device_memory, VkDeviceSize offset, void* data, VkDeviceSize data_size)
+//void copy_device_to_host(const DeviceMemory& device_memory, VkDeviceSize offset, VkDeviceSize size, void* data)
 //{
 //        void* map_memory_data;
 
-//        VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, data_size, 0, &map_memory_data);
+//        VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data);
 //        if (result != VK_SUCCESS)
 //        {
 //                vulkan_function_error("vkMapMemory", result);
 //        }
 
-//        std::memcpy(data, map_memory_data, data_size);
+//        std::memcpy(data, map_memory_data, size);
 
 //        vkUnmapMemory(device_memory.device(), device_memory);
 
 //        // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
 //}
-
-void cmd_copy_buffer_to_buffer(
-        VkCommandBuffer command_buffer,
-        VkBuffer dst_buffer,
-        VkBuffer src_buffer,
-        VkDeviceSize size)
-{
-        VkBufferCopy copy = {};
-        // copy.srcOffset = 0;
-        // copy.dstOffset = 0;
-        copy.size = size;
-        vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy);
-}
 
 void cmd_copy_buffer_to_image(VkCommandBuffer command_buffer, VkImage image, VkBuffer buffer, VkExtent3D extent)
 {
@@ -412,13 +395,13 @@ void staging_buffer_write(
         const CommandPool& command_pool,
         const Queue& queue,
         VkBuffer buffer,
-        VkDeviceSize data_size,
+        VkDeviceSize offset,
+        VkDeviceSize size,
         const void* data)
 {
         ASSERT(command_pool.family_index() == queue.family_index());
 
-        Buffer staging_buffer(
-                create_buffer(device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {queue.family_index()}));
+        Buffer staging_buffer(create_buffer(device, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {queue.family_index()}));
 
         DeviceMemory staging_device_memory(create_device_memory(
                 device, physical_device, staging_buffer,
@@ -426,12 +409,16 @@ void staging_buffer_write(
 
         //
 
-        copy_host_to_device(staging_device_memory, 0, data, data_size);
+        copy_host_to_device(staging_device_memory, 0, size, data);
 
         CommandBuffer command_buffer(device, command_pool);
         begin_commands(command_buffer);
 
-        cmd_copy_buffer_to_buffer(command_buffer, buffer, staging_buffer, data_size);
+        VkBufferCopy copy = {};
+        copy.srcOffset = 0;
+        copy.dstOffset = offset;
+        copy.size = size;
+        vkCmdCopyBuffer(command_buffer, staging_buffer, buffer, 1, &copy);
 
         end_commands(queue, command_buffer);
 }
@@ -451,7 +438,6 @@ void staging_image_write(
         ASSERT(command_pool.family_index() == queue.family_index());
 
         const VkDeviceSize size = data_size(data);
-        const void* const pointer = data_pointer(data);
 
         Buffer staging_buffer(create_buffer(device, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {queue.family_index()}));
 
@@ -461,7 +447,7 @@ void staging_image_write(
 
         //
 
-        copy_host_to_device(staging_device_memory, 0, pointer, size);
+        copy_host_to_device(staging_device_memory, 0, size, data_pointer(data));
 
         CommandBuffer command_buffer(device, command_pool);
         begin_commands(command_buffer);
@@ -747,15 +733,16 @@ BufferWithMemory::BufferWithMemory(
 void BufferWithMemory::write(
         const CommandPool& command_pool,
         const Queue& queue,
-        VkDeviceSize data_size,
-        const void* data_pointer) const
+        VkDeviceSize offset,
+        VkDeviceSize size,
+        const void* data) const
 {
-        if (m_buffer.size() != data_size)
+        if (offset + size > m_buffer.size())
         {
-                error("Buffer size and data size are not equal");
+                error("Offset and data size is greater than buffer size");
         }
 
-        ASSERT(data_pointer && !host_visible() && usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT));
+        ASSERT(data && !host_visible() && usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
         if (command_pool.family_index() != queue.family_index())
         {
@@ -766,7 +753,18 @@ void BufferWithMemory::write(
                 error("Queue family index not found in buffer family indices");
         }
 
-        staging_buffer_write(m_device, m_physical_device, command_pool, queue, m_buffer, data_size, data_pointer);
+        staging_buffer_write(m_device, m_physical_device, command_pool, queue, m_buffer, offset, size, data);
+}
+
+void BufferWithMemory::write(const CommandPool& command_pool, const Queue& queue, VkDeviceSize size, const void* data)
+        const
+{
+        if (m_buffer.size() != size)
+        {
+                error("Buffer size and data size are not equal");
+        }
+
+        write(command_pool, queue, 0, size, data);
 }
 
 BufferWithMemory::operator VkBuffer() const&
@@ -801,13 +799,13 @@ bool BufferWithMemory::host_visible() const
 
 //
 
-BufferMapper::BufferMapper(const BufferWithMemory& buffer, unsigned long long offset, unsigned long long length)
-        : m_device(buffer.m_device_memory.device()), m_device_memory(buffer.m_device_memory), m_length(length)
+BufferMapper::BufferMapper(const BufferWithMemory& buffer, unsigned long long offset, unsigned long long size)
+        : m_device(buffer.m_device_memory.device()), m_device_memory(buffer.m_device_memory), m_size(size)
 {
         ASSERT(buffer.host_visible());
-        ASSERT(length > 0 && offset + length <= buffer.size());
+        ASSERT(m_size > 0 && offset + m_size <= buffer.size());
 
-        VkResult result = vkMapMemory(m_device, m_device_memory, offset, m_length, 0, &m_pointer);
+        VkResult result = vkMapMemory(m_device, m_device_memory, offset, m_size, 0, &m_pointer);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkMapMemory", result);
@@ -815,7 +813,7 @@ BufferMapper::BufferMapper(const BufferWithMemory& buffer, unsigned long long of
 }
 
 BufferMapper::BufferMapper(const BufferWithMemory& buffer)
-        : m_device(buffer.m_device_memory.device()), m_device_memory(buffer.m_device_memory), m_length(buffer.size())
+        : m_device(buffer.m_device_memory.device()), m_device_memory(buffer.m_device_memory), m_size(buffer.size())
 {
         ASSERT(buffer.host_visible());
 

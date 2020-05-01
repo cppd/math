@@ -68,8 +68,11 @@ public:
         void write(
                 const CommandPool& command_pool,
                 const Queue& queue,
-                VkDeviceSize data_size,
-                const void* data_pointer) const;
+                VkDeviceSize offset,
+                VkDeviceSize size,
+                const void* data) const;
+
+        void write(const CommandPool& command_pool, const Queue& queue, VkDeviceSize size, const void* data) const;
 
         operator VkBuffer() const&;
         operator VkBuffer() const&& = delete;
@@ -84,11 +87,11 @@ class BufferMapper final
 {
         VkDevice m_device;
         VkDeviceMemory m_device_memory;
-        unsigned long long m_length;
+        unsigned long long m_size;
         void* m_pointer;
 
 public:
-        BufferMapper(const BufferWithMemory& buffer, unsigned long long offset, unsigned long long length);
+        BufferMapper(const BufferWithMemory& buffer, unsigned long long offset, unsigned long long size);
         explicit BufferMapper(const BufferWithMemory& buffer);
         ~BufferMapper();
 
@@ -100,34 +103,34 @@ public:
         template <typename T>
         void write(const T& data) const
         {
-                ASSERT(data_size(data) <= m_length);
+                ASSERT(data_size(data) <= m_size);
                 std::memcpy(m_pointer, data_pointer(data), data_size(data));
         }
 
         template <typename T>
         void write(unsigned long long offset, const T& data) const
         {
-                ASSERT(offset + data_size(data) <= m_length);
+                ASSERT(offset + data_size(data) <= m_size);
                 std::memcpy(static_cast<char*>(m_pointer) + offset, data_pointer(data), data_size(data));
         }
 
-        void write(unsigned long long offset, const void* data, unsigned long long length) const
+        void write(unsigned long long offset, unsigned long long size, const void* data) const
         {
-                ASSERT(offset + length <= m_length);
-                std::memcpy(static_cast<char*>(m_pointer) + offset, data, length);
+                ASSERT(offset + size <= m_size);
+                std::memcpy(static_cast<char*>(m_pointer) + offset, data, size);
         }
 
         template <typename T>
         void read(T* data) const
         {
-                ASSERT(data_size(*data) <= m_length);
+                ASSERT(data_size(*data) <= m_size);
                 std::memcpy(data_pointer(*data), m_pointer, data_size(*data));
         }
 
         template <typename T>
         void read(unsigned long long offset, T* data) const
         {
-                ASSERT(offset + data_size(*data) <= m_length);
+                ASSERT(offset + data_size(*data) <= m_size);
                 std::memcpy(data_pointer(*data), static_cast<const char*>(m_pointer) + offset, data_size(*data));
         }
 };
