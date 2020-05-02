@@ -84,7 +84,6 @@ public:
                 MeshData& v = m_mesh_map.try_emplace(id).first->second;
                 tmp = std::move(v.painter_mesh_object);
                 v.painter_mesh_object = std::forward<T>(mesh);
-                m_events(Event::LoadedPainterMeshObject(id, N));
         }
 
         void set_manifold_constructor(

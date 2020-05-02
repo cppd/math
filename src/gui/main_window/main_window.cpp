@@ -1139,17 +1139,6 @@ void MainWindow::event_from_storage(const storage::Event& event)
                                 },
                                 *object);
                 },
-                [this](const storage::Event::LoadedPainterMeshObject& d) {
-                        std::optional<storage::MultiStorage::MeshObject> object = m_storage->mesh_object(d.id);
-                        if (!object)
-                        {
-                                m_events(WindowEvent::MessageWarning("No loaded painter mesh object for mesh object"));
-                                return;
-                        }
-                        std::string object_name;
-                        std::visit([&](const auto& v) { object_name = v->name(); }, *object);
-                        ui.model_tree->add_item(d.id, object_name);
-                },
                 [this](const storage::Event::LoadedVolumeObject& d) {
                         std::optional<storage::MultiStorage::VolumeObject> object = m_storage->volume_object(d.id);
                         if (!object)
