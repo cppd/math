@@ -130,22 +130,23 @@ void write_formatted_log_messages_to_stderr(const std::vector<std::string>& line
                 try
                 {
                         // Вывод всех строк одним вызовом функции std::fprintf для работы при многопоточности
-                        std::string m;
-                        for (const std::string& s : lines)
+                        std::string s;
+                        for (const std::string& line : lines)
                         {
-                                m += s + "\n";
+                                s += line;
+                                s += '\n';
                         }
-                        std::fprintf(stderr, "%s", m.c_str());
+                        std::fprintf(stderr, "%s", s.c_str());
                         std::fflush(stderr);
                 }
                 catch (const std::exception& e)
                 {
-                        error_fatal(std::string("error log write message: ") + e.what());
+                        error_fatal(std::string("error writing log message to stderr: ") + e.what());
                 }
         }
         catch (...)
         {
-                error_fatal("error log write message to stderr");
+                error_fatal("error writing log message to stderr");
         }
 }
 
