@@ -184,10 +184,8 @@ std::string time_string(double start_time)
         return to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms";
 }
 
-void compute_vulkan(bool inverse, int n1, int n2, std::vector<complex>* data)
+void compute_vulkan(ComputeVector* dft, bool inverse, int n1, int n2, std::vector<complex>* data)
 {
-        std::unique_ptr<ComputeVector> dft = create_compute_vector();
-
         {
                 RandomEngineWithSeed<std::mt19937_64> engine;
                 std::uniform_int_distribution<int> uid(1, 3000);
@@ -251,6 +249,7 @@ void compute_fftw(bool inverse, int n1, int n2, std::vector<complex>* data)
 #endif
 
 void dft_test(
+        ComputeVector* dft,
         const int n1,
         const int n2,
         const std::vector<complex>& source_data,
@@ -277,13 +276,13 @@ void dft_test(
         //
 
         std::vector<complex> data_vulkan(source_data);
-        compute_vulkan(false, n1, n2, &data_vulkan);
+        compute_vulkan(dft, false, n1, n2, &data_vulkan);
         save_data(output_vulkan_file_name, data_vulkan);
 
         progress->set(++computation, computation_count);
 
         std::vector<complex> data_vulkan_inverse(data_vulkan);
-        compute_vulkan(true, n1, n2, &data_vulkan_inverse);
+        compute_vulkan(dft, true, n1, n2, &data_vulkan_inverse);
         save_data(output_inverse_vulkan_file_name, data_vulkan_inverse);
 
         progress->set(++computation, computation_count);
@@ -327,7 +326,7 @@ void dft_test(
 #endif
 }
 
-void constant_data_test(ProgressRatio* progress)
+void constant_data_test(ComputeVector* dft, ProgressRatio* progress)
 {
         // Fourier[{1, 2, 30}, FourierParameters -> {1, -1}]
         // 1 2 30 -> 33. + 0. I, -15. + 24.2487 I, -15. - 24.2487 I
@@ -343,12 +342,12 @@ void constant_data_test(ProgressRatio* progress)
 
         LOG("--- Source Data ---\n" + to_string(source_data));
 
-        dft_test(N, K, source_data, progress, "", "", "", "", "", "");
+        dft_test(dft, N, K, source_data, progress, "", "", "", "", "", "");
 
         LOG("---\nDFT check passed");
 }
 
-void random_data_test(const std::array<int, 2>& dimensions, ProgressRatio* progress)
+void random_data_test(ComputeVector* dft, const std::array<int, 2>& dimensions, ProgressRatio* progress)
 {
         LOG("\n----- Random Data DFT Tests -----");
 
@@ -379,7 +378,7 @@ void random_data_test(const std::array<int, 2>& dimensions, ProgressRatio* progr
         }
 
         dft_test(
-                n1, n2, source_data, progress, vulkan_file_name, inverse_vulkan_file_name, cuda_file_name,
+                dft, n1, n2, source_data, progress, vulkan_file_name, inverse_vulkan_file_name, cuda_file_name,
                 inverse_cuda_file_name, fftw_file_name, inverse_fftw_file_name);
 
         LOG("---\nDFT check passed");
@@ -423,12 +422,14 @@ void test(ProgressRatio* progress)
 {
         ASSERT(progress);
 
+        std::unique_ptr<ComputeVector> dft = create_compute_vector();
+
         // progress два раза проходит от начала до конца для двух типов данных
 
-        constant_data_test(progress);
+        constant_data_test(dft.get(), progress);
 
         const TestSize test_size = find_test_size();
         const std::array<int, 2> dimensions = find_dimensions(test_size);
-        random_data_test(dimensions, progress);
+        random_data_test(dft.get(), dimensions, progress);
 }
 }
