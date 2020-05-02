@@ -33,7 +33,8 @@ void compute(
         std::unique_ptr<const volume::Volume<N>>&& volume,
         const std::string& name,
         double object_size,
-        const vec3& object_position)
+        const vec3& object_position,
+        const std::function<void(volume::VolumeEvent<N>&&)>& event_function)
 {
         Matrix<N + 1, N + 1, double> matrix;
         if constexpr (N == 3)
@@ -47,7 +48,9 @@ void compute(
         }
 
         std::shared_ptr<volume::VolumeObject<N>> model_object =
-                std::make_shared<volume::VolumeObject<N>>(std::move(volume), matrix, name);
+                std::make_shared<volume::VolumeObject<N>>(std::move(volume), matrix, name, event_function);
+
+        model_object->created();
 
         storage->set_volume_object(std::move(model_object));
 }

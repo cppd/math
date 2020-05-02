@@ -84,5 +84,9 @@ void add_from_volume_repository(
         const vec3& object_position,
         int image_size,
         const MultiRepository& repository,
-        MultiStorage* storage);
+        MultiStorage* storage,
+        const std::tuple<
+                std::function<void(volume::VolumeEvent<3>&&)>,
+                std::function<void(volume::VolumeEvent<4>&&)>,
+                std::function<void(volume::VolumeEvent<5>&&)>>& event_functions);
 }

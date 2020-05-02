@@ -268,6 +268,17 @@ void MainWindow::constructor_objects_and_repository()
                 run_in_window_thread([&, event = std::move(event)]() { event_from_storage(event); });
         });
 
+        m_volume_event_functions = std::make_tuple(
+                [this](volume::VolumeEvent<3>&& event) {
+                        run_in_window_thread([&, event = std::move(event)]() { event_from_volume(event); });
+                },
+                [this](volume::VolumeEvent<4>&& event) {
+                        run_in_window_thread([&, event = std::move(event)]() { event_from_volume(event); });
+                },
+                [this](volume::VolumeEvent<5>&& event) {
+                        run_in_window_thread([&, event = std::move(event)]() { event_from_volume(event); });
+                });
+
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
 
@@ -319,6 +330,32 @@ void MainWindow::constructor_objects_and_repository()
                         }
                 }
         }
+}
+
+template <size_t N>
+void MainWindow::event_from_volume(const volume::VolumeEvent<N>& event)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        const auto visitors = Visitors{
+                [this](const typename volume::VolumeEvent<N>::Create& v) {
+                        if constexpr (N == 3)
+                        {
+                                ASSERT(m_view);
+                                m_view->send(view::command::AddVolumeObject(v.object));
+                        }
+                        ui.model_tree->add_item(v.object->id(), v.object->name());
+                },
+                [this](const typename volume::VolumeEvent<N>::Delete& v) {
+                        if constexpr (N == 3)
+                        {
+                                ASSERT(m_view);
+                                m_view->send(view::command::DeleteObject(v.id));
+                        }
+                        ui.model_tree->delete_item(v.id);
+                }};
+
+        std::visit(visitors, event.data());
 }
 
 void MainWindow::set_window_title_file(const std::string& file_name)
@@ -383,6 +420,7 @@ void MainWindow::terminate_all_threads()
 
         m_worker_threads->terminate_all();
 
+        m_storage.reset();
         m_view.reset();
 
         set_log_events(nullptr);
@@ -692,7 +730,7 @@ void MainWindow::thread_load_from_volume_repository(int dimension, const std::st
 
                         storage::add_from_volume_repository(
                                 dimension, object_name, object_size.value, object_position.value, image_size,
-                                *m_repository, m_storage.get());
+                                *m_repository, m_storage.get(), m_volume_event_functions);
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -1133,29 +1171,6 @@ void MainWindow::event_from_storage(const storage::Event& event)
                                                 if (m_view)
                                                 {
                                                         m_view->send(view::command::AddMeshObject(v));
-                                                }
-                                        }
-                                        ui.model_tree->add_item(v->id(), v->name());
-                                },
-                                *object);
-                },
-                [this](const storage::Event::LoadedVolumeObject& d) {
-                        std::optional<storage::MultiStorage::VolumeObject> object = m_storage->volume_object(d.id);
-                        if (!object)
-                        {
-                                m_events(WindowEvent::MessageWarning("No loaded object"));
-                                return;
-                        }
-                        std::visit(
-                                [&](const auto& v) {
-                                        using VolumeType =
-                                                std::decay_t<typename std::decay_t<decltype(v)>::element_type>;
-                                        if constexpr (std::is_same_v<VolumeType, volume::VolumeObject<3>>)
-                                        {
-                                                ASSERT(d.dimension == 3);
-                                                if (m_view)
-                                                {
-                                                        m_view->send(view::command::AddVolumeObject(v));
                                                 }
                                         }
                                         ui.model_tree->add_item(v->id(), v->name());

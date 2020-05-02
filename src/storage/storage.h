@@ -105,7 +105,6 @@ public:
                 VolumeData& v = m_volume_map.try_emplace(object->id()).first->second;
                 tmp = std::move(v.volume_object);
                 v.volume_object = std::forward<T>(object);
-                m_events(Event::LoadedVolumeObject(v.volume_object->id(), N));
         }
 
         //

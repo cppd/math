@@ -212,7 +212,11 @@ void add_from_volume_repository(
         const vec3& object_position,
         int image_size,
         const MultiRepository& repository,
-        MultiStorage* storage)
+        MultiStorage* storage,
+        const std::tuple<
+                std::function<void(volume::VolumeEvent<3>&&)>,
+                std::function<void(volume::VolumeEvent<4>&&)>,
+                std::function<void(volume::VolumeEvent<5>&&)>>& event_functions)
 {
         bool found = std::apply(
                 [&](auto&... v) {
@@ -227,7 +231,9 @@ void add_from_volume_repository(
                                 std::unique_ptr<const volume::Volume<N>> volume =
                                         repository.repository<N>().volumes().object(object_name, image_size);
 
-                                processor::compute(&v, std::move(volume), object_name, object_size, object_position);
+                                processor::compute(
+                                        &v, std::move(volume), object_name, object_size, object_position,
+                                        std::get<N - 3>(event_functions));
 
                                 return true;
                         }() || ...);

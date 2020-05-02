@@ -188,6 +188,9 @@ private:
         void event_from_view(const view::Event& event);
         void event_from_storage(const storage::Event& event);
 
+        template <size_t N>
+        void event_from_volume(const volume::VolumeEvent<N>& event);
+
         Ui::MainWindow ui;
 
         const std::thread::id m_window_thread_id;
@@ -207,6 +210,12 @@ private:
 
         std::unique_ptr<storage::MultiRepository> m_repository;
         std::unique_ptr<storage::MultiStorage> m_storage;
+
+        std::tuple<
+                std::function<void(volume::VolumeEvent<3>&&)>,
+                std::function<void(volume::VolumeEvent<4>&&)>,
+                std::function<void(volume::VolumeEvent<5>&&)>>
+                m_volume_event_functions;
 
         QColor m_background_color;
         QColor m_default_color;

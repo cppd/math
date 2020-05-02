@@ -34,15 +34,6 @@ struct Event
                 }
         };
 
-        struct LoadedVolumeObject final
-        {
-                ObjectId id;
-                size_t dimension;
-                LoadedVolumeObject(ObjectId id, size_t dimension) : id(id), dimension(dimension)
-                {
-                }
-        };
-
         struct DeletedObject final
         {
                 ObjectId id;
@@ -60,7 +51,7 @@ struct Event
                 }
         };
 
-        using T = std::variant<DeletedAll, DeletedObject, LoadedMeshObject, LoadedVolumeObject>;
+        using T = std::variant<DeletedAll, DeletedObject, LoadedMeshObject>;
 
         template <typename Type, typename = std::enable_if_t<!std::is_same_v<Event, std::remove_cvref_t<Type>>>>
         Event(Type&& arg) : m_data(std::forward<Type>(arg))
