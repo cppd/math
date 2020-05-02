@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "event.h"
-
 #include <src/geometry/reconstruction/cocone.h>
 #include <src/model/mesh_object.h>
 #include <src/model/volume_object.h>
@@ -35,8 +33,6 @@ template <size_t N, typename MeshFloat>
 class Storage
 {
         static_assert(N >= 3);
-
-        const std::function<void(Event&&)> m_events;
 
         struct MeshData
         {
@@ -59,10 +55,6 @@ class Storage
 public:
         static constexpr size_t DIMENSION = N;
 
-        explicit Storage(const std::function<void(Event&&)> events) : m_events(events)
-        {
-        }
-
         //
 
         template <typename T>
@@ -73,7 +65,6 @@ public:
                 MeshData& v = m_mesh_map.try_emplace(object->id()).first->second;
                 tmp = std::move(v.mesh_object);
                 v.mesh_object = std::forward<T>(object);
-                m_events(Event::LoadedMeshObject(v.mesh_object->id(), N));
         }
 
         template <typename T>
@@ -150,7 +141,6 @@ public:
                 tmp_volume = std::move(m_volume_map);
                 m_mesh_map.clear();
                 m_volume_map.clear();
-                m_events(Event::DeletedAll(N));
         }
 };
 }

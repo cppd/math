@@ -39,12 +39,6 @@ class MultiStorage final
 
         Tuple m_data;
 
-        template <size_t... I>
-        MultiStorage(const std::function<void(Event&&)>& events, std::integer_sequence<size_t, I...>&&)
-                : m_data((static_cast<void>(I), events)...)
-        {
-        }
-
 public:
         using Data = Tuple;
 
@@ -70,6 +64,8 @@ public:
                 std::shared_ptr,
                 volume::VolumeObject>;
 
+        //
+
         static std::set<unsigned> supported_dimensions()
         {
                 std::set<unsigned> v;
@@ -80,10 +76,7 @@ public:
                 return v;
         }
 
-        explicit MultiStorage(const std::function<void(Event&&)>& events)
-                : MultiStorage(events, std::make_integer_sequence<size_t, COUNT>())
-        {
-        }
+        //
 
         Data& data()
         {

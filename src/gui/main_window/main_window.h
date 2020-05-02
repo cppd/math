@@ -186,10 +186,14 @@ private:
         void event_from_window(const WindowEvent& event);
         void event_from_log(const LogEvent& event);
         void event_from_view(const view::Event& event);
-        void event_from_storage(const storage::Event& event);
-
         template <size_t N>
-        void event_from_volume(const volume::VolumeEvent<N>& event);
+        void event_from_mesh([[maybe_unused]] const mesh::MeshEvent<N>& event);
+        template <size_t N>
+        void event_from_mesh_window_thread(const mesh::MeshEvent<N>& event);
+        template <size_t N>
+        void event_from_volume([[maybe_unused]] const volume::VolumeEvent<N>& event);
+        template <size_t N>
+        void event_from_volume_window_thread(const volume::VolumeEvent<N>& event);
 
         Ui::MainWindow ui;
 
@@ -210,6 +214,12 @@ private:
 
         std::unique_ptr<storage::MultiRepository> m_repository;
         std::unique_ptr<storage::MultiStorage> m_storage;
+
+        std::tuple<
+                std::function<void(mesh::MeshEvent<3>&&)>,
+                std::function<void(mesh::MeshEvent<4>&&)>,
+                std::function<void(mesh::MeshEvent<5>&&)>>
+                m_mesh_event_functions;
 
         std::tuple<
                 std::function<void(volume::VolumeEvent<3>&&)>,

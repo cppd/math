@@ -34,7 +34,11 @@ void compute_bound_cocone(
         double rho,
         double alpha,
         int mesh_threads,
-        MultiStorage* storage);
+        MultiStorage* storage,
+        const std::tuple<
+                std::function<void(mesh::MeshEvent<3>&&)>,
+                std::function<void(mesh::MeshEvent<4>&&)>,
+                std::function<void(mesh::MeshEvent<5>&&)>>& event_functions);
 
 void save_to_obj(ObjectId id, const std::string& file_name, const std::string& comment, const MultiStorage& storage);
 void save_to_stl(
@@ -57,7 +61,11 @@ void load_from_file(
         double alpha,
         int mesh_threads,
         const std::function<void(size_t dimension)>& load_event,
-        MultiStorage* storage);
+        MultiStorage* storage,
+        const std::tuple<
+                std::function<void(mesh::MeshEvent<3>&&)>,
+                std::function<void(mesh::MeshEvent<4>&&)>,
+                std::function<void(mesh::MeshEvent<5>&&)>>& event_functions);
 
 void load_from_point_repository(
         bool build_convex_hull,
@@ -75,7 +83,11 @@ void load_from_point_repository(
         int point_count,
         const std::function<void()>& load_event,
         const MultiRepository& repository,
-        MultiStorage* storage);
+        MultiStorage* storage,
+        const std::tuple<
+                std::function<void(mesh::MeshEvent<3>&&)>,
+                std::function<void(mesh::MeshEvent<4>&&)>,
+                std::function<void(mesh::MeshEvent<5>&&)>>& event_functions);
 
 void add_from_volume_repository(
         int dimension,

@@ -264,19 +264,37 @@ void MainWindow::constructor_objects_and_repository()
 
         m_repository = std::make_unique<storage::MultiRepository>();
 
-        m_storage = std::make_unique<storage::MultiStorage>([this](storage::Event&& event) {
-                run_in_window_thread([&, event = std::move(event)]() { event_from_storage(event); });
-        });
+        m_storage = std::make_unique<storage::MultiStorage>();
+
+        m_mesh_event_functions = std::make_tuple(
+                [this](mesh::MeshEvent<3>&& event) {
+                        event_from_mesh(event);
+                        run_in_window_thread([&, event = std::move(event)]() { event_from_mesh_window_thread(event); });
+                },
+                [this](mesh::MeshEvent<4>&& event) {
+                        event_from_mesh(event);
+                        run_in_window_thread([&, event = std::move(event)]() { event_from_mesh_window_thread(event); });
+                },
+                [this](mesh::MeshEvent<5>&& event) {
+                        event_from_mesh(event);
+                        run_in_window_thread([&, event = std::move(event)]() { event_from_mesh_window_thread(event); });
+                });
 
         m_volume_event_functions = std::make_tuple(
                 [this](volume::VolumeEvent<3>&& event) {
-                        run_in_window_thread([&, event = std::move(event)]() { event_from_volume(event); });
+                        event_from_volume(event);
+                        run_in_window_thread(
+                                [&, event = std::move(event)]() { event_from_volume_window_thread(event); });
                 },
                 [this](volume::VolumeEvent<4>&& event) {
-                        run_in_window_thread([&, event = std::move(event)]() { event_from_volume(event); });
+                        event_from_volume(event);
+                        run_in_window_thread(
+                                [&, event = std::move(event)]() { event_from_volume_window_thread(event); });
                 },
                 [this](volume::VolumeEvent<5>&& event) {
-                        run_in_window_thread([&, event = std::move(event)]() { event_from_volume(event); });
+                        event_from_volume(event);
+                        run_in_window_thread(
+                                [&, event = std::move(event)]() { event_from_volume_window_thread(event); });
                 });
 
         // QMenu* menuCreate = new QMenu("Create", this);
@@ -330,32 +348,6 @@ void MainWindow::constructor_objects_and_repository()
                         }
                 }
         }
-}
-
-template <size_t N>
-void MainWindow::event_from_volume(const volume::VolumeEvent<N>& event)
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        const auto visitors = Visitors{
-                [this](const typename volume::VolumeEvent<N>::Create& v) {
-                        if constexpr (N == 3)
-                        {
-                                ASSERT(m_view);
-                                m_view->send(view::command::AddVolumeObject(v.object));
-                        }
-                        ui.model_tree->add_item(v.object->id(), v.object->name());
-                },
-                [this](const typename volume::VolumeEvent<N>::Delete& v) {
-                        if constexpr (N == 3)
-                        {
-                                ASSERT(m_view);
-                                m_view->send(view::command::DeleteObject(v.id));
-                        }
-                        ui.model_tree->delete_item(v.id);
-                }};
-
-        std::visit(visitors, event.data());
 }
 
 void MainWindow::set_window_title_file(const std::string& file_name)
@@ -610,8 +602,11 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         load_from_file(
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
                                 file_name, object_size.value, object_position.value, rho, alpha, m_mesh_threads,
-                                [&](size_t dimension) { m_events(WindowEvent::FileLoaded(file_name, dimension)); },
-                                m_storage.get());
+                                [&](size_t dimension) {
+                                        m_view->send(view::command::ResetView());
+                                        m_events(WindowEvent::FileLoaded(file_name, dimension));
+                                },
+                                m_storage.get(), m_mesh_event_functions);
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -677,8 +672,11 @@ void MainWindow::thread_load_from_mesh_repository(int dimension, const std::stri
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
                                 dimension, object_name, object_size.value, object_position.value, rho, alpha,
                                 m_mesh_threads, point_count,
-                                [&]() { m_events(WindowEvent::FileLoaded(object_name, dimension)); }, *m_repository,
-                                m_storage.get());
+                                [&]() {
+                                        m_view->send(view::command::ResetView());
+                                        m_events(WindowEvent::FileLoaded(object_name, dimension));
+                                },
+                                *m_repository, m_storage.get(), m_mesh_event_functions);
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -851,7 +849,8 @@ void MainWindow::thread_bound_cocone(ObjectId id)
 
                 auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
                         *message = "BoundCocone Reconstruction";
-                        compute_bound_cocone(progress_list, id, rho, alpha, m_mesh_threads, m_storage.get());
+                        compute_bound_cocone(
+                                progress_list, id, rho, alpha, m_mesh_threads, m_storage.get(), m_mesh_event_functions);
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -1150,51 +1149,6 @@ void MainWindow::event_from_window(const WindowEvent& event)
         }
 }
 
-void MainWindow::event_from_storage(const storage::Event& event)
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        const auto visitors = Visitors{
-                [this](const storage::Event::LoadedMeshObject& d) {
-                        std::optional<storage::MultiStorage::MeshObject> object = m_storage->mesh_object(d.id);
-                        if (!object)
-                        {
-                                m_events(WindowEvent::MessageWarning("No loaded object"));
-                                return;
-                        }
-                        std::visit(
-                                [&](const auto& v) {
-                                        using MeshType = std::decay_t<typename std::decay_t<decltype(v)>::element_type>;
-                                        if constexpr (std::is_same_v<MeshType, mesh::MeshObject<3>>)
-                                        {
-                                                ASSERT(d.dimension == 3);
-                                                if (m_view)
-                                                {
-                                                        m_view->send(view::command::AddMeshObject(v));
-                                                }
-                                        }
-                                        ui.model_tree->add_item(v->id(), v->name());
-                                },
-                                *object);
-                },
-                [this](const storage::Event::DeletedObject& d) {
-                        if (m_view && d.dimension == 3)
-                        {
-                                m_view->send(view::command::DeleteObject(d.id));
-                        }
-                        ui.model_tree->delete_item(d.id);
-                },
-                [this](const storage::Event::DeletedAll& d) {
-                        if (m_view && d.dimension == 3)
-                        {
-                                m_view->send(view::command::DeleteAllObjects());
-                        }
-                        ui.model_tree->delete_all();
-                }};
-
-        std::visit(visitors, event.data());
-}
-
 void MainWindow::event_from_log(const LogEvent& event)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
@@ -1213,6 +1167,72 @@ void MainWindow::event_from_view(const view::Event& event)
 
         const auto visitors = Visitors{
                 [this](const view::event::ErrorFatal& d) { m_events(WindowEvent::MessageErrorFatal(d.text)); }};
+
+        std::visit(visitors, event.data());
+}
+
+template <size_t N>
+void MainWindow::event_from_mesh(const mesh::MeshEvent<N>& event)
+{
+        if constexpr (N == 3)
+        {
+                const auto visitors = Visitors{
+                        [this](const typename mesh::MeshEvent<N>::Create& v) {
+                                ASSERT(m_view);
+                                m_view->send(view::command::AddMeshObject(v.object));
+                        },
+                        [this](const typename mesh::MeshEvent<N>::Delete& v) {
+                                ASSERT(m_view);
+                                m_view->send(view::command::DeleteObject(v.id));
+                        }};
+
+                std::visit(visitors, event.data());
+        }
+}
+
+template <size_t N>
+void MainWindow::event_from_mesh_window_thread(const mesh::MeshEvent<N>& event)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        const auto visitors = Visitors{
+                [this](const typename mesh::MeshEvent<N>::Create& v) {
+                        ui.model_tree->add_item(v.object->id(), v.object->name());
+                },
+                [this](const typename mesh::MeshEvent<N>::Delete& v) { ui.model_tree->delete_item(v.id); }};
+
+        std::visit(visitors, event.data());
+}
+
+template <size_t N>
+void MainWindow::event_from_volume(const volume::VolumeEvent<N>& event)
+{
+        if constexpr (N == 3)
+        {
+                const auto visitors = Visitors{
+                        [this](const typename volume::VolumeEvent<N>::Create& v) {
+                                ASSERT(m_view);
+                                m_view->send(view::command::AddVolumeObject(v.object));
+                        },
+                        [this](const typename volume::VolumeEvent<N>::Delete& v) {
+                                ASSERT(m_view);
+                                m_view->send(view::command::DeleteObject(v.id));
+                        }};
+
+                std::visit(visitors, event.data());
+        }
+}
+
+template <size_t N>
+void MainWindow::event_from_volume_window_thread(const volume::VolumeEvent<N>& event)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        const auto visitors = Visitors{
+                [this](const typename volume::VolumeEvent<N>::Create& v) {
+                        ui.model_tree->add_item(v.object->id(), v.object->name());
+                },
+                [this](const typename volume::VolumeEvent<N>::Delete& v) { ui.model_tree->delete_item(v.id); }};
 
         std::visit(visitors, event.data());
 }
