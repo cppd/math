@@ -25,10 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QLayout>
 #include <QMainWindow>
+#include <QPlainTextEdit>
 #include <QPointer>
 #include <QRadioButton>
 #include <QSlider>
-#include <QTextEdit>
 #include <iterator>
 #include <memory>
 #include <string>
@@ -81,7 +81,7 @@ void button_strike_out(QRadioButton* button, bool strike_out);
 void set_slider_to_middle(QSlider* slider);
 
 void add_to_text_edit_and_to_stderr(
-        QTextEdit* text_edit,
+        QPlainTextEdit* text_edit,
         const std::vector<std::string>& lines,
         TextEditMessageType type) noexcept;
 

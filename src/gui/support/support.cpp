@@ -49,38 +49,80 @@ bool is_child_widget_of_any_layout(QLayout* layout, QWidget* widget)
         return false;
 }
 
-void write_to_text_edit(QTextEdit* text_edit, const std::vector<std::string>& lines, TextEditMessageType type)
+void append_plain_text(QPlainTextEdit* text_edit, const std::vector<std::string>& lines)
+{
+        if (lines.empty())
+        {
+                return;
+        }
+        QString s;
+        s += QString::fromStdString(lines.front());
+        for (auto iter = std::next(lines.cbegin()); iter != lines.cend(); ++iter)
+        {
+                s += '\n';
+                s += QString::fromStdString(*iter);
+        }
+        text_edit->appendPlainText(s);
+}
+
+void append_html(
+        QPlainTextEdit* text_edit,
+        const QString& line_begin,
+        const QString& line_end,
+        const std::vector<std::string>& lines)
+{
+        if (lines.empty())
+        {
+                return;
+        }
+        QString s;
+        s += line_begin;
+        s += QString::fromStdString(lines.front()).toHtmlEscaped();
+        s += line_end;
+        for (auto iter = std::next(lines.cbegin()); iter != lines.cend(); ++iter)
+        {
+                s += '\n';
+                s += line_begin;
+                s += QString::fromStdString(*iter).toHtmlEscaped();
+                s += line_end;
+        }
+        text_edit->appendHtml(s);
+}
+
+void write_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string>& lines, TextEditMessageType type)
 {
         ASSERT(text_edit);
 
-        const char* line_begin;
-        const char* line_end;
+        // text_edit->moveCursor(QTextCursor::End);
 
         switch (type)
         {
         case TextEditMessageType::Normal:
-                line_begin = "<pre>";
-                line_end = "<br></pre>";
-                break;
-        case TextEditMessageType::Error:
-                line_begin = "<pre><font color=\"Red\">";
-                line_end = "</font><br></pre>";
-                break;
-        case TextEditMessageType::Warning:
-                line_begin = "<pre><font color=\"#d08000\">";
-                line_end = "</font><br></pre>";
-                break;
-        case TextEditMessageType::Information:
-                line_begin = "<pre><font color=\"Blue\">";
-                line_end = "</font><br></pre>";
+        {
+                append_plain_text(text_edit, lines);
                 break;
         }
-
-        text_edit->moveCursor(QTextCursor::End);
-
-        for (const std::string& s : lines)
+        case TextEditMessageType::Error:
         {
-                text_edit->insertHtml(line_begin + QString(s.c_str()).toHtmlEscaped() + line_end);
+                const QString& begin = QStringLiteral(R"(<pre><font color="Red">)");
+                const QString& end = QStringLiteral(R"(</font></pre>)");
+                append_html(text_edit, begin, end, lines);
+                break;
+        }
+        case TextEditMessageType::Warning:
+        {
+                const QString& begin = QStringLiteral(R"(<pre><font color="#d08000">)");
+                const QString& end = QStringLiteral(R"(</font></pre>)");
+                append_html(text_edit, begin, end, lines);
+                break;
+        }
+        case TextEditMessageType::Information:
+        {
+                const QString& begin = QStringLiteral(R"(<pre><font color="Blue">)");
+                const QString& end = QStringLiteral(R"(</font></pre>)");
+                append_html(text_edit, begin, end, lines);
+                break;
+        }
         }
 }
 }
@@ -126,7 +168,7 @@ void set_slider_to_middle(QSlider* slider)
 }
 
 void add_to_text_edit_and_to_stderr(
-        QTextEdit* text_edit,
+        QPlainTextEdit* text_edit,
         const std::vector<std::string>& lines,
         TextEditMessageType type) noexcept
 {
@@ -136,6 +178,11 @@ void add_to_text_edit_and_to_stderr(
 
                 try
                 {
+                        if (lines.empty())
+                        {
+                                return;
+                        }
+
                         write_formatted_log_messages_to_stderr(lines);
 
                         bool bottom =
@@ -156,12 +203,12 @@ void add_to_text_edit_and_to_stderr(
                 }
                 catch (const std::exception& e)
                 {
-                        error_fatal(std::string("error add message: ") + e.what());
+                        error_fatal(std::string("error adding log message: ") + e.what());
                 }
         }
         catch (...)
         {
-                error_fatal("error add message");
+                error_fatal("error adding log message");
         }
 }
 

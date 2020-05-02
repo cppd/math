@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1140</width>
-    <height>1066</height>
+    <width>1206</width>
+    <height>1116</height>
    </rect>
   </property>
   <widget class="QWidget" name="mainWidget">
@@ -1238,14 +1238,14 @@
         </property>
        </widget>
       </widget>
-      <widget class="QTextEdit" name="text_log">
+      <widget class="QPlainTextEdit" name="text_log">
        <property name="font">
         <font>
-         <family>Monospace</family>
+         <family>DejaVu Sans Mono</family>
         </font>
        </property>
        <property name="lineWrapMode">
-        <enum>QTextEdit::NoWrap</enum>
+        <enum>QPlainTextEdit::NoWrap</enum>
        </property>
        <property name="readOnly">
         <bool>true</bool>
@@ -1260,7 +1260,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1140</width>
+     <width>1206</width>
      <height>30</height>
     </rect>
    </property>
