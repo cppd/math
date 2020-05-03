@@ -85,6 +85,8 @@ class VolumeObject::Volume
 
         std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> m_memory;
 
+        std::function<VolumeImageMemory(const VolumeInfo&)> m_create_descriptor_sets;
+
         void set_window(float window_min, float window_max)
         {
                 constexpr float eps = 1e-10f;
@@ -95,13 +97,30 @@ class VolumeObject::Volume
                 m_buffer.set_window(m_graphics_command_pool, m_graphics_queue, window_offset, window_scale);
         }
 
+        void create_memory()
+        {
+                VolumeInfo info;
+                info.buffer_coordinates = m_buffer.buffer_coordinates();
+                info.buffer_coordinates_size = m_buffer.buffer_coordinates_size();
+                info.buffer_volume = m_buffer.buffer_volume();
+                info.buffer_volume_size = m_buffer.buffer_volume_size();
+                info.image = m_image.image_view();
+                info.transfer_function = m_transfer_function->image_view();
+
+                VolumeImageMemory memory = m_create_descriptor_sets(info);
+
+                m_memory.erase(memory.descriptor_set_layout());
+                m_memory.emplace(memory.descriptor_set_layout(), std::move(memory));
+        }
+
 public:
         Volume(const vulkan::Device& device,
                const vulkan::CommandPool& graphics_command_pool,
                const vulkan::Queue& graphics_queue,
                const vulkan::CommandPool& /*transfer_command_pool*/,
                const vulkan::Queue& /*transfer_queue*/,
-               const volume::VolumeObject<3>& volume_object)
+               const volume::VolumeObject<3>& volume_object,
+               const std::function<VolumeImageMemory(const VolumeInfo&)>& create_descriptor_sets)
                 : m_graphics_command_pool(graphics_command_pool),
                   m_graphics_queue(graphics_queue),
                   m_model_volume_matrix(volume_object.matrix() * volume_object.volume().matrix),
@@ -118,7 +137,8 @@ public:
                                   volume_object.volume().image.size[1],
                                   volume_object.volume().image.size[2]),
                           VK_IMAGE_LAYOUT_UNDEFINED,
-                          false /*storage*/)
+                          false /*storage*/),
+                  m_create_descriptor_sets(create_descriptor_sets)
         {
                 m_image.write_linear_grayscale_pixels(
                         graphics_command_pool, graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
@@ -139,21 +159,8 @@ public:
                 m_transfer_function->write_srgb_color_pixels(
                         graphics_command_pool, graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, transfer_function_pixels);
-        }
 
-        void create_descriptor_set(const std::function<VolumeImageMemory(const VolumeInfo&)>& create)
-        {
-                VolumeInfo info;
-                info.buffer_coordinates = m_buffer.buffer_coordinates();
-                info.buffer_coordinates_size = m_buffer.buffer_coordinates_size();
-                info.buffer_volume = m_buffer.buffer_volume();
-                info.buffer_volume_size = m_buffer.buffer_volume_size();
-                info.image = m_image.image_view();
-                info.transfer_function = m_transfer_function->image_view();
-                VolumeImageMemory memory = create(info);
-
-                m_memory.erase(memory.descriptor_set_layout());
-                m_memory.emplace(memory.descriptor_set_layout(), std::move(memory));
+                create_memory();
         }
 
         const VkDescriptorSet& descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const
@@ -188,18 +195,15 @@ VolumeObject::VolumeObject(
         const vulkan::Queue& graphics_queue,
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
-        const volume::VolumeObject<3>& volume_object)
+        const volume::VolumeObject<3>& volume_object,
+        const std::function<VolumeImageMemory(const VolumeInfo&)>& create_descriptor_sets)
 {
         m_volume = std::make_unique<Volume>(
-                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, volume_object);
+                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, volume_object,
+                create_descriptor_sets);
 }
 
 VolumeObject::~VolumeObject() = default;
-
-void VolumeObject::create_descriptor_set(const std::function<VolumeImageMemory(const VolumeInfo&)>& create)
-{
-        m_volume->create_descriptor_set(create);
-}
 
 const VkDescriptorSet& VolumeObject::descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const
 {

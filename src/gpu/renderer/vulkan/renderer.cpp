@@ -297,19 +297,21 @@ class Impl final : public Renderer
 
                 ASSERT(find_object(m_volume_storage, object.id()) == nullptr);
 
-                std::unique_ptr draw_object = std::make_unique<MeshObject>(
-                        m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
-                        object);
-                draw_object->create_descriptor_sets([this](const std::vector<MaterialInfo>& materials) {
-                        return m_mesh_renderer.create_material_descriptors_sets(materials);
-                });
-
                 bool delete_and_create_command_buffers = (m_current_object_id == object.id());
                 if (delete_and_create_command_buffers)
                 {
                         delete_command_buffers();
                 }
-                m_mesh_storage.insert_or_assign(object.id(), std::move(draw_object));
+
+                m_mesh_storage.erase(object.id());
+                m_mesh_storage.emplace(
+                        object.id(),
+                        std::make_unique<MeshObject>(
+                                m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
+                                m_transfer_queue, object, [this](const std::vector<MaterialInfo>& materials) {
+                                        return m_mesh_renderer.create_material_descriptors_sets(materials);
+                                }));
+
                 if (delete_and_create_command_buffers)
                 {
                         create_command_buffers();
@@ -342,13 +344,13 @@ class Impl final : public Renderer
                         }
 
                         m_volume_storage.erase(object.id());
-                        std::unique_ptr draw_object = std::make_unique<VolumeObject>(
-                                m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
-                                m_transfer_queue, object);
-                        draw_object->create_descriptor_set([this](const VolumeInfo& volume_info) {
-                                return m_volume_renderer.create_volume_memory(volume_info);
-                        });
-                        m_volume_storage.emplace(object.id(), std::move(draw_object));
+                        m_volume_storage.emplace(
+                                object.id(),
+                                std::make_unique<VolumeObject>(
+                                        m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
+                                        m_transfer_queue, object, [this](const VolumeInfo& volume_info) {
+                                                return m_volume_renderer.create_volume_memory(volume_info);
+                                        }));
 
                         if (delete_and_create_command_buffers)
                         {

@@ -41,11 +41,11 @@ public:
                 const vulkan::Queue& graphics_queue,
                 const vulkan::CommandPool& transfer_command_pool,
                 const vulkan::Queue& transfer_queue,
-                const volume::VolumeObject<3>& volume_object);
+                const volume::VolumeObject<3>& volume_object,
+                const std::function<VolumeImageMemory(const VolumeInfo&)>& create_descriptor_sets);
 
         ~VolumeObject();
 
-        void create_descriptor_set(const std::function<VolumeImageMemory(const VolumeInfo&)>& create);
         const VkDescriptorSet& descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const;
 
         void set_coordinates(const mat4& vp_matrix, const std::optional<vec4>& world_clip_plane_equation) const;
