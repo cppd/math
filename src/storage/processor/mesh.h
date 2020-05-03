@@ -123,8 +123,7 @@ void convex_hull(
         ProgressRatioList* progress_list,
         const mesh::MeshObject<N>& object,
         int mesh_threads,
-        Storage<N, MeshFloat>* storage,
-        const std::function<void(mesh::MeshEvent<N>&&)>& event_function)
+        Storage<N, MeshFloat>* storage)
 {
         std::unique_ptr<const mesh::Mesh<N>> ch_mesh;
         {
@@ -138,8 +137,8 @@ void convex_hull(
                 return;
         }
 
-        const std::shared_ptr<mesh::MeshObject<N>> obj = std::make_shared<mesh::MeshObject<N>>(
-                std::move(ch_mesh), object.matrix(), "Convex Hull", event_function);
+        const std::shared_ptr<mesh::MeshObject<N>> obj =
+                std::make_shared<mesh::MeshObject<N>>(std::move(ch_mesh), object.matrix(), "Convex Hull");
 
         obj->created();
 
@@ -153,8 +152,7 @@ void cocone(
         const std::vector<Vector<N, float>>& points,
         const mesh::MeshObject<N>& object,
         int mesh_threads,
-        Storage<N, MeshFloat>* storage,
-        const std::function<void(mesh::MeshEvent<N>&&)>& event_function)
+        Storage<N, MeshFloat>* storage)
 {
         std::unique_ptr<const mesh::Mesh<N>> cocone_mesh;
         {
@@ -177,8 +175,8 @@ void cocone(
                 return;
         }
 
-        const std::shared_ptr<mesh::MeshObject<N>> obj = std::make_shared<mesh::MeshObject<N>>(
-                std::move(cocone_mesh), object.matrix(), "Cocone", event_function);
+        const std::shared_ptr<mesh::MeshObject<N>> obj =
+                std::make_shared<mesh::MeshObject<N>>(std::move(cocone_mesh), object.matrix(), "Cocone");
 
         obj->created();
 
@@ -194,8 +192,7 @@ void bound_cocone(
         double rho,
         double alpha,
         int mesh_threads,
-        Storage<N, MeshFloat>* storage,
-        const std::function<void(mesh::MeshEvent<N>&&)>& event_function)
+        Storage<N, MeshFloat>* storage)
 {
         std::unique_ptr<const mesh::Mesh<N>> bound_cocone_mesh;
         {
@@ -219,8 +216,8 @@ void bound_cocone(
         }
 
         std::string name = "Bound Cocone (" + bound_cocone_text_rho_alpha(rho, alpha) + ")";
-        const std::shared_ptr<mesh::MeshObject<N>> obj = std::make_shared<mesh::MeshObject<N>>(
-                std::move(bound_cocone_mesh), object.matrix(), name, event_function);
+        const std::shared_ptr<mesh::MeshObject<N>> obj =
+                std::make_shared<mesh::MeshObject<N>>(std::move(bound_cocone_mesh), object.matrix(), name);
 
         obj->created();
 
@@ -234,8 +231,7 @@ void mst(
         const std::vector<Vector<N, float>>& points,
         const mesh::MeshObject<N>& object,
         int mesh_threads,
-        Storage<N, MeshFloat>* storage,
-        const std::function<void(mesh::MeshEvent<N>&&)>& event_function)
+        Storage<N, MeshFloat>* storage)
 {
         std::vector<std::array<int, 2>> mst_lines;
         {
@@ -250,7 +246,7 @@ void mst(
         }
 
         const std::shared_ptr<mesh::MeshObject<N>> obj =
-                std::make_shared<mesh::MeshObject<N>>(std::move(mst_mesh), object.matrix(), "MST", event_function);
+                std::make_shared<mesh::MeshObject<N>>(std::move(mst_mesh), object.matrix(), "MST");
 
         obj->created();
 
@@ -267,8 +263,7 @@ void manifold_constructor(
         double rho,
         double alpha,
         int mesh_threads,
-        Storage<N, MeshFloat>* storage,
-        const std::function<void(mesh::MeshEvent<N>&&)>& event_function)
+        Storage<N, MeshFloat>* storage)
 {
         if (!build_cocone && !build_bound_cocone && !build_mst)
         {
@@ -307,8 +302,7 @@ void manifold_constructor(
                 if (build_cocone)
                 {
                         threads.add([&]() {
-                                cocone(progress_list, *manifold_constructor_ptr, points, object, mesh_threads, storage,
-                                       event_function);
+                                cocone(progress_list, *manifold_constructor_ptr, points, object, mesh_threads, storage);
                         });
                 }
 
@@ -317,15 +311,14 @@ void manifold_constructor(
                         threads.add([&]() {
                                 bound_cocone(
                                         progress_list, *manifold_constructor_ptr, points, object, rho, alpha,
-                                        mesh_threads, storage, event_function);
+                                        mesh_threads, storage);
                         });
                 }
 
                 if (build_mst)
                 {
                         threads.add([&]() {
-                                mst(progress_list, *manifold_constructor_ptr, points, object, mesh_threads, storage,
-                                    event_function);
+                                mst(progress_list, *manifold_constructor_ptr, points, object, mesh_threads, storage);
                         });
                 }
         }
@@ -347,8 +340,7 @@ void compute_bound_cocone(
         ObjectId id,
         double rho,
         double alpha,
-        int mesh_threads,
-        const std::function<void(mesh::MeshEvent<N>&&)>& event_function)
+        int mesh_threads)
 {
         namespace impl = processor_implementation;
         const std::shared_ptr<mesh::MeshObject<N>> obj = storage->mesh_object(id);
@@ -360,8 +352,7 @@ void compute_bound_cocone(
         constexpr bool build_bound_cocone = true;
         constexpr bool build_mst = false;
         impl::manifold_constructor(
-                progress_list, build_cocone, build_bound_cocone, build_mst, *obj, rho, alpha, mesh_threads, storage,
-                event_function);
+                progress_list, build_cocone, build_bound_cocone, build_mst, *obj, rho, alpha, mesh_threads, storage);
 }
 
 template <size_t N, typename MeshFloat>
@@ -378,8 +369,7 @@ void compute(
         const vec3& object_position,
         double rho,
         double alpha,
-        int mesh_threads,
-        const std::function<void(mesh::MeshEvent<N>&&)>& event_function)
+        int mesh_threads)
 {
         namespace impl = processor_implementation;
 
@@ -405,7 +395,7 @@ void compute(
         }
 
         const std::shared_ptr<mesh::MeshObject<N>> model_object =
-                std::make_shared<mesh::MeshObject<N>>(std::move(mesh), matrix, name, event_function);
+                std::make_shared<mesh::MeshObject<N>>(std::move(mesh), matrix, name);
 
         model_object->created();
 
@@ -416,9 +406,7 @@ void compute(
 
                 if (build_convex_hull)
                 {
-                        threads.add([&]() {
-                                impl::convex_hull(progress_list, *model_object, mesh_threads, storage, event_function);
-                        });
+                        threads.add([&]() { impl::convex_hull(progress_list, *model_object, mesh_threads, storage); });
                 }
 
                 if (build_cocone || build_bound_cocone || build_mst)
@@ -426,7 +414,7 @@ void compute(
                         threads.add([&]() {
                                 impl::manifold_constructor(
                                         progress_list, build_cocone, build_bound_cocone, build_mst, *model_object, rho,
-                                        alpha, mesh_threads, storage, event_function);
+                                        alpha, mesh_threads, storage);
                         });
                 }
         }

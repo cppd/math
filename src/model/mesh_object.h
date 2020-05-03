@@ -74,27 +74,32 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
         Matrix<N + 1, N + 1, double> m_matrix;
         std::string m_name;
         ObjectId m_id;
-        std::function<void(MeshEvent<N>&&)> m_events;
+
+        inline static const std::function<void(MeshEvent<N>&&)>* m_events = nullptr;
 
 public:
+        static void set_events(const std::function<void(MeshEvent<N>&&)>* events)
+        {
+                m_events = events;
+        }
+
         MeshObject(
                 std::unique_ptr<const Mesh<N>>&& mesh,
                 const Matrix<N + 1, N + 1, double>& matrix,
-                const std::string& name,
-                const std::function<void(MeshEvent<N>&&)>& events)
-                : m_mesh(std::move(mesh)), m_matrix(matrix), m_name(name), m_events(events)
+                const std::string& name)
+                : m_mesh(std::move(mesh)), m_matrix(matrix), m_name(name)
         {
                 ASSERT(m_mesh);
         }
 
         void created()
         {
-                m_events(typename MeshEvent<N>::Create(this->shared_from_this()));
+                (*m_events)(typename MeshEvent<N>::Create(this->shared_from_this()));
         }
 
         ~MeshObject()
         {
-                m_events(typename MeshEvent<N>::Delete(m_id));
+                (*m_events)(typename MeshEvent<N>::Delete(m_id));
         }
 
         const Mesh<N>& mesh() const

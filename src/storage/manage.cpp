@@ -31,25 +31,17 @@ void compute_bound_cocone(
         double rho,
         double alpha,
         int mesh_threads,
-        MultiStorage* storage,
-        const std::tuple<
-                std::function<void(mesh::MeshEvent<3>&&)>,
-                std::function<void(mesh::MeshEvent<4>&&)>,
-                std::function<void(mesh::MeshEvent<5>&&)>>& event_functions)
+        MultiStorage* storage)
 {
         bool found = std::apply(
                 [&](auto&... v) {
                         return ([&]() {
-                                constexpr unsigned N = std::remove_reference_t<decltype(v)>::DIMENSION;
-
                                 if (!v.mesh_object(id))
                                 {
                                         return false;
                                 }
 
-                                processor::compute_bound_cocone(
-                                        progress_list, &v, id, rho, alpha, mesh_threads,
-                                        std::get<N - 3>(event_functions));
+                                processor::compute_bound_cocone(progress_list, &v, id, rho, alpha, mesh_threads);
 
                                 return true;
                         }() || ...);
@@ -126,11 +118,7 @@ void load_from_file(
         double alpha,
         int mesh_threads,
         const std::function<void(size_t dimension)>& load_event,
-        MultiStorage* storage,
-        const std::tuple<
-                std::function<void(mesh::MeshEvent<3>&&)>,
-                std::function<void(mesh::MeshEvent<4>&&)>,
-                std::function<void(mesh::MeshEvent<5>&&)>>& event_functions)
+        MultiStorage* storage)
 {
         unsigned dimension = mesh::file_dimension(file_name);
 
@@ -152,7 +140,7 @@ void load_from_file(
                                 processor::compute(
                                         progress_list, &v, build_convex_hull, build_cocone, build_bound_cocone,
                                         build_mst, std::move(mesh), "Model", object_size, object_position, rho, alpha,
-                                        mesh_threads, std::get<N - 3>(event_functions));
+                                        mesh_threads);
 
                                 return true;
                         }() || ...);
@@ -182,11 +170,7 @@ void load_from_point_repository(
         int point_count,
         const std::function<void()>& load_event,
         const MultiRepository& repository,
-        MultiStorage* storage,
-        const std::tuple<
-                std::function<void(mesh::MeshEvent<3>&&)>,
-                std::function<void(mesh::MeshEvent<4>&&)>,
-                std::function<void(mesh::MeshEvent<5>&&)>>& event_functions)
+        MultiStorage* storage)
 {
         bool found = std::apply(
                 [&](auto&... v) {
@@ -207,7 +191,7 @@ void load_from_point_repository(
                                 processor::compute(
                                         progress_list, &v, build_convex_hull, build_cocone, build_bound_cocone,
                                         build_mst, std::move(mesh), object_name, object_size, object_position, rho,
-                                        alpha, mesh_threads, std::get<N - 3>(event_functions));
+                                        alpha, mesh_threads);
 
                                 return true;
                         }() || ...);

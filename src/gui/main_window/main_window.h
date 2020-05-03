@@ -117,6 +117,10 @@ private:
         void constructor_connect();
         void constructor_interface();
         void constructor_objects_and_repository();
+        template <unsigned... I>
+        void constructor_model_events(std::integer_sequence<unsigned, I...>&&);
+        template <unsigned... I>
+        void delete_model_events(std::integer_sequence<unsigned, I...>&&);
 
         enum class ComputationType
         {

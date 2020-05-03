@@ -140,6 +140,7 @@ MainWindow::MainWindow(QWidget* parent)
         constructor_connect();
         constructor_interface();
         constructor_objects_and_repository();
+        constructor_model_events(std::make_integer_sequence<unsigned, 3>());
 
         m_events = [this](WindowEvent&& event) {
                 run_in_window_thread([&, event = std::move(event)]() { event_from_window(event); });
@@ -266,37 +267,6 @@ void MainWindow::constructor_objects_and_repository()
 
         m_storage = std::make_unique<storage::MultiStorage>();
 
-        m_mesh_event_functions = std::make_tuple(
-                [this](mesh::MeshEvent<3>&& event) {
-                        event_from_mesh(event);
-                        run_in_window_thread([&, event = std::move(event)]() { event_from_mesh_window_thread(event); });
-                },
-                [this](mesh::MeshEvent<4>&& event) {
-                        event_from_mesh(event);
-                        run_in_window_thread([&, event = std::move(event)]() { event_from_mesh_window_thread(event); });
-                },
-                [this](mesh::MeshEvent<5>&& event) {
-                        event_from_mesh(event);
-                        run_in_window_thread([&, event = std::move(event)]() { event_from_mesh_window_thread(event); });
-                });
-
-        m_volume_event_functions = std::make_tuple(
-                [this](volume::VolumeEvent<3>&& event) {
-                        event_from_volume(event);
-                        run_in_window_thread(
-                                [&, event = std::move(event)]() { event_from_volume_window_thread(event); });
-                },
-                [this](volume::VolumeEvent<4>&& event) {
-                        event_from_volume(event);
-                        run_in_window_thread(
-                                [&, event = std::move(event)]() { event_from_volume_window_thread(event); });
-                },
-                [this](volume::VolumeEvent<5>&& event) {
-                        event_from_volume(event);
-                        run_in_window_thread(
-                                [&, event = std::move(event)]() { event_from_volume_window_thread(event); });
-                });
-
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
 
@@ -348,6 +318,32 @@ void MainWindow::constructor_objects_and_repository()
                         }
                 }
         }
+}
+
+template <unsigned... I>
+void MainWindow::constructor_model_events(std::integer_sequence<unsigned, I...>&&)
+{
+        static_assert(sizeof...(I) == 3);
+
+        m_mesh_event_functions = std::make_tuple([this](mesh::MeshEvent<3 + I>&& event) {
+                event_from_mesh(event);
+                run_in_window_thread([&, event = std::move(event)]() { event_from_mesh_window_thread(event); });
+        }...);
+
+        m_volume_event_functions = std::make_tuple([this](volume::VolumeEvent<3 + I>&& event) {
+                event_from_volume(event);
+                run_in_window_thread([&, event = std::move(event)]() { event_from_volume_window_thread(event); });
+        }...);
+
+        (mesh::MeshObject<3 + I>::set_events(&std::get<I>(m_mesh_event_functions)), ...);
+}
+
+template <unsigned... I>
+void MainWindow::delete_model_events(std::integer_sequence<unsigned, I...>&&)
+{
+        static_assert(sizeof...(I) == 3);
+
+        (mesh::MeshObject<3 + I>::set_events(nullptr), ...);
 }
 
 void MainWindow::set_window_title_file(const std::string& file_name)
@@ -413,6 +409,8 @@ void MainWindow::terminate_all_threads()
         m_worker_threads->terminate_all();
 
         m_storage.reset();
+        delete_model_events(std::make_integer_sequence<unsigned, 3>());
+
         m_view.reset();
 
         set_log_events(nullptr);
@@ -606,7 +604,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                                         m_view->send(view::command::ResetView());
                                         m_events(WindowEvent::FileLoaded(file_name, dimension));
                                 },
-                                m_storage.get(), m_mesh_event_functions);
+                                m_storage.get());
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -676,7 +674,7 @@ void MainWindow::thread_load_from_mesh_repository(int dimension, const std::stri
                                         m_view->send(view::command::ResetView());
                                         m_events(WindowEvent::FileLoaded(object_name, dimension));
                                 },
-                                *m_repository, m_storage.get(), m_mesh_event_functions);
+                                *m_repository, m_storage.get());
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -849,8 +847,7 @@ void MainWindow::thread_bound_cocone(ObjectId id)
 
                 auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
                         *message = "BoundCocone Reconstruction";
-                        compute_bound_cocone(
-                                progress_list, id, rho, alpha, m_mesh_threads, m_storage.get(), m_mesh_event_functions);
+                        compute_bound_cocone(progress_list, id, rho, alpha, m_mesh_threads, m_storage.get());
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
