@@ -336,6 +336,7 @@ void MainWindow::constructor_model_events(std::integer_sequence<unsigned, I...>&
         }...);
 
         (mesh::MeshObject<3 + I>::set_events(&std::get<I>(m_mesh_event_functions)), ...);
+        (volume::VolumeObject<3 + I>::set_events(&std::get<I>(m_volume_event_functions)), ...);
 }
 
 template <unsigned... I>
@@ -344,6 +345,7 @@ void MainWindow::delete_model_events(std::integer_sequence<unsigned, I...>&&)
         static_assert(sizeof...(I) == 3);
 
         (mesh::MeshObject<3 + I>::set_events(nullptr), ...);
+        (volume::VolumeObject<3 + I>::set_events(nullptr), ...);
 }
 
 void MainWindow::set_window_title_file(const std::string& file_name)
@@ -726,7 +728,7 @@ void MainWindow::thread_load_from_volume_repository(int dimension, const std::st
 
                         storage::add_from_volume_repository(
                                 dimension, object_name, object_size.value, object_position.value, image_size,
-                                *m_repository, m_storage.get(), m_volume_event_functions);
+                                *m_repository, m_storage.get());
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));

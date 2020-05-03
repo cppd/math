@@ -76,27 +76,32 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         ObjectId m_id;
         float m_level_min = 0;
         float m_level_max = 1;
-        std::function<void(VolumeEvent<N>&&)> m_events;
+
+        inline static const std::function<void(VolumeEvent<N>&&)>* m_events = nullptr;
 
 public:
+        static void set_events(const std::function<void(VolumeEvent<N>&&)>* events)
+        {
+                m_events = events;
+        }
+
         VolumeObject(
                 std::unique_ptr<const Volume<N>>&& volume,
                 const Matrix<N + 1, N + 1, double>& matrix,
-                const std::string& name,
-                const std::function<void(VolumeEvent<N>&&)>& events)
-                : m_volume(std::move(volume)), m_matrix(matrix), m_name(name), m_events(events)
+                const std::string& name)
+                : m_volume(std::move(volume)), m_matrix(matrix), m_name(name)
         {
                 ASSERT(m_volume);
         }
 
         void created()
         {
-                m_events(typename VolumeEvent<N>::Create(this->shared_from_this()));
+                (*m_events)(typename VolumeEvent<N>::Create(this->shared_from_this()));
         }
 
         ~VolumeObject()
         {
-                m_events(typename VolumeEvent<N>::Delete(m_id));
+                (*m_events)(typename VolumeEvent<N>::Delete(m_id));
         }
 
         const Volume<N>& volume() const
