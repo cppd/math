@@ -50,5 +50,10 @@ public:
 
         void set_coordinates(const mat4& vp_matrix, const std::optional<vec4>& world_clip_plane_equation) const;
         void set_clip_plane(const vec4& world_clip_plane_equation) const;
+
+        void update(
+                const std::unordered_set<volume::Update>& updates,
+                const volume::VolumeObject<3>& volume_object,
+                bool* update_command_buffers);
 };
 }

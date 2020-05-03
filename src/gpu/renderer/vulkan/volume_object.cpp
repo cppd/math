@@ -187,6 +187,19 @@ public:
         {
                 m_buffer.set_clip_plane(image_clip_plane(world_clip_plane_equation, m_model_volume_matrix));
         }
+
+        void update(
+                const std::unordered_set<volume::Update>& updates,
+                const volume::VolumeObject<3>& /*volume_object*/,
+                bool* update_command_buffers)
+        {
+                if (updates.empty())
+                {
+                        *update_command_buffers = false;
+                        return;
+                }
+                error("Updates are not implemented");
+        }
 };
 
 VolumeObject::VolumeObject(
@@ -218,5 +231,13 @@ void VolumeObject::set_coordinates(const mat4& vp_matrix, const std::optional<ve
 void VolumeObject::set_clip_plane(const vec4& world_clip_plane_equation) const
 {
         m_volume->set_clip_plane(world_clip_plane_equation);
+}
+
+void VolumeObject::update(
+        const std::unordered_set<volume::Update>& updates,
+        const volume::VolumeObject<3>& volume_object,
+        bool* update_command_buffers)
+{
+        m_volume->update(updates, volume_object, update_command_buffers);
 }
 }

@@ -49,7 +49,7 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 // clang-format on
 
 template <typename T, typename Id>
-std::enable_if_t<std::is_same_v<Id, ObjectId>, const T*> find_object(
+std::enable_if_t<std::is_same_v<Id, ObjectId>, T*> find_object(
         const std::unordered_map<ObjectId, std::unique_ptr<T>>& map,
         const Id& id)
 {
@@ -57,7 +57,7 @@ std::enable_if_t<std::is_same_v<Id, ObjectId>, const T*> find_object(
         return (iter != map.cend()) ? iter->second.get() : nullptr;
 }
 template <typename T, typename OptionalId>
-std::enable_if_t<std::is_same_v<OptionalId, std::optional<ObjectId>>, const T*> find_object(
+std::enable_if_t<std::is_same_v<OptionalId, std::optional<ObjectId>>, T*> find_object(
         const std::unordered_map<ObjectId, std::unique_ptr<T>>& map,
         const OptionalId& id)
 {
@@ -330,20 +330,9 @@ class Impl final : public Renderer
 
                 ASSERT(find_object(m_mesh_storage, object.id()) == nullptr);
 
-                if (reading.updates().empty())
+                VolumeObject* ptr = find_object(m_volume_storage, object.id());
+                if (!ptr)
                 {
-                        return;
-                }
-
-                if (reading.updates().count(volume::Update::All) > 0)
-                {
-                        bool delete_and_create_command_buffers = (m_current_object_id == object.id());
-                        if (delete_and_create_command_buffers)
-                        {
-                                delete_command_buffers();
-                        }
-
-                        m_volume_storage.erase(object.id());
                         m_volume_storage.emplace(
                                 object.id(),
                                 std::make_unique<VolumeObject>(
@@ -352,7 +341,7 @@ class Impl final : public Renderer
                                                 return m_volume_renderer.create_volume_memory(volume_info);
                                         }));
 
-                        if (delete_and_create_command_buffers)
+                        if (m_current_object_id == object.id())
                         {
                                 create_command_buffers();
                                 set_matrices();
@@ -360,7 +349,12 @@ class Impl final : public Renderer
                 }
                 else
                 {
-                        error("Unsupported volume update type");
+                        bool update_command_buffers;
+                        ptr->update(reading.updates(), object, &update_command_buffers);
+                        if (update_command_buffers && m_current_object_id == object.id())
+                        {
+                                create_command_buffers();
+                        }
                 }
         }
         void object_delete(ObjectId id) override
