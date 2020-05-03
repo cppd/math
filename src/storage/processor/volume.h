@@ -49,7 +49,7 @@ void compute(
         std::shared_ptr<volume::VolumeObject<N>> model_object =
                 std::make_shared<volume::VolumeObject<N>>(std::move(volume), matrix, name);
 
-        model_object->created();
+        model_object->update_all();
 
         storage->set_volume_object(std::move(model_object));
 }

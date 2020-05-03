@@ -322,25 +322,43 @@ class Impl final : public Renderer
 
                 //
 
+                volume::ReadingUpdates reading(object);
+
+                //
+
                 ASSERT(find_object(m_mesh_storage, object.id()) == nullptr);
 
-                std::unique_ptr draw_object = std::make_unique<VolumeObject>(
-                        m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
-                        object);
-                draw_object->create_descriptor_set([this](const VolumeInfo& volume_info) {
-                        return m_volume_renderer.create_volume_memory(volume_info);
-                });
-
-                bool delete_and_create_command_buffers = (m_current_object_id == object.id());
-                if (delete_and_create_command_buffers)
+                if (reading.updates().empty())
                 {
-                        delete_command_buffers();
+                        return;
                 }
-                m_volume_storage.insert_or_assign(object.id(), std::move(draw_object));
-                if (delete_and_create_command_buffers)
+
+                if (reading.updates().count(volume::Update::All) > 0)
                 {
-                        create_command_buffers();
-                        set_matrices();
+                        bool delete_and_create_command_buffers = (m_current_object_id == object.id());
+                        if (delete_and_create_command_buffers)
+                        {
+                                delete_command_buffers();
+                        }
+
+                        m_volume_storage.erase(object.id());
+                        std::unique_ptr draw_object = std::make_unique<VolumeObject>(
+                                m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
+                                m_transfer_queue, object);
+                        draw_object->create_descriptor_set([this](const VolumeInfo& volume_info) {
+                                return m_volume_renderer.create_volume_memory(volume_info);
+                        });
+                        m_volume_storage.emplace(object.id(), std::move(draw_object));
+
+                        if (delete_and_create_command_buffers)
+                        {
+                                create_command_buffers();
+                                set_matrices();
+                        }
+                }
+                else
+                {
+                        error("Unsupported volume update type");
                 }
         }
         void object_delete(ObjectId id) override
