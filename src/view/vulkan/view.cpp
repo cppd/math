@@ -257,21 +257,20 @@ class Impl final : public View
                 const auto visitors =
                 Visitors
                 {
-                [this](const command::AddMeshObject& d)
+                [this](const command::UpdateMeshObject& d)
                 {
-                        if (!d.object)
+                        if (auto ptr = d.object.lock(); ptr)
                         {
-                                error("Null mesh object received");
+                                m_renderer->object_update(*ptr);
                         }
-                        m_renderer->object_add(*d.object);
+
                 },
-                [this](const command::AddVolumeObject& d)
+                [this](const command::UpdateVolumeObject& d)
                 {
-                        if (!d.object)
+                        if (auto ptr = d.object.lock(); ptr)
                         {
-                                error("Null volume object received");
+                                m_renderer->object_update(*ptr);
                         }
-                        m_renderer->object_add(*d.object);
                 },
                 [this](const command::DeleteObject& d)
                 {

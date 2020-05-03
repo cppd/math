@@ -35,10 +35,10 @@ class MeshObject;
 template <size_t N>
 struct MeshEvent final
 {
-        struct Create final
+        struct Update final
         {
-                std::shared_ptr<MeshObject<N>> object;
-                Create(std::shared_ptr<MeshObject<N>>&& object) : object(std::move(object))
+                std::weak_ptr<MeshObject<N>> object;
+                Update(std::weak_ptr<MeshObject<N>>&& object) : object(std::move(object))
                 {
                 }
         };
@@ -51,7 +51,7 @@ struct MeshEvent final
                 }
         };
 
-        using T = std::variant<Create, Delete>;
+        using T = std::variant<Update, Delete>;
 
         template <typename Type, typename = std::enable_if_t<!std::is_same_v<MeshEvent, std::remove_cvref_t<Type>>>>
         MeshEvent(Type&& arg) : m_data(std::forward<Type>(arg))
@@ -94,7 +94,7 @@ public:
 
         void created()
         {
-                (*m_events)(typename MeshEvent<N>::Create(this->shared_from_this()));
+                (*m_events)(typename MeshEvent<N>::Update(this->weak_from_this()));
         }
 
         ~MeshObject()

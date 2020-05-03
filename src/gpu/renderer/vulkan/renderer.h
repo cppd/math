@@ -64,8 +64,8 @@ struct Renderer
         virtual void set_camera(const CameraInfo& c) = 0;
         virtual void set_clip_plane(const std::optional<vec4>& plane) = 0;
 
-        virtual void object_add(const mesh::MeshObject<3>& object) = 0;
-        virtual void object_add(const volume::VolumeObject<3>& object) = 0;
+        virtual void object_update(const mesh::MeshObject<3>& object) = 0;
+        virtual void object_update(const volume::VolumeObject<3>& object) = 0;
         virtual void object_delete(ObjectId id) = 0;
         virtual void object_show(ObjectId id) = 0;
         virtual void object_delete_all() = 0;

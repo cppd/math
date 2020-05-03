@@ -37,10 +37,10 @@ class VolumeObject;
 template <size_t N>
 struct VolumeEvent final
 {
-        struct Create final
+        struct Update final
         {
-                std::shared_ptr<VolumeObject<N>> object;
-                Create(std::shared_ptr<VolumeObject<N>>&& object) : object(std::move(object))
+                std::weak_ptr<VolumeObject<N>> object;
+                Update(std::weak_ptr<VolumeObject<N>>&& object) : object(std::move(object))
                 {
                 }
         };
@@ -53,7 +53,7 @@ struct VolumeEvent final
                 }
         };
 
-        using T = std::variant<Create, Delete>;
+        using T = std::variant<Update, Delete>;
 
         template <typename Type, typename = std::enable_if_t<!std::is_same_v<VolumeEvent, std::remove_cvref_t<Type>>>>
         VolumeEvent(Type&& arg) : m_data(std::forward<Type>(arg))
@@ -125,7 +125,7 @@ public:
         {
                 std::unique_lock m_lock(m_mutex);
                 m_updates = {Update::All};
-                (*m_events)(typename VolumeEvent<N>::Create(this->shared_from_this()));
+                (*m_events)(typename VolumeEvent<N>::Update(this->weak_from_this()));
         }
 
         ~VolumeObject()
@@ -192,7 +192,7 @@ public:
 
         ~WritingUpdates()
         {
-                (*m_object->m_events)(typename VolumeEvent<N>::Create(m_object->shared_from_this()));
+                (*m_object->m_events)(typename VolumeEvent<N>::Update(m_object->weak_from_this()));
         }
 };
 

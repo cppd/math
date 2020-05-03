@@ -1183,9 +1183,9 @@ void MainWindow::event_from_mesh(const mesh::MeshEvent<N>& event)
         if constexpr (N == 3)
         {
                 const auto visitors = Visitors{
-                        [this](const typename mesh::MeshEvent<N>::Create& v) {
+                        [this](const typename mesh::MeshEvent<N>::Update& v) {
                                 ASSERT(m_view);
-                                m_view->send(view::command::AddMeshObject(v.object));
+                                m_view->send(view::command::UpdateMeshObject(v.object));
                         },
                         [this](const typename mesh::MeshEvent<N>::Delete& v) {
                                 ASSERT(m_view);
@@ -1202,8 +1202,11 @@ void MainWindow::event_from_mesh_window_thread(const mesh::MeshEvent<N>& event)
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
         const auto visitors = Visitors{
-                [this](const typename mesh::MeshEvent<N>::Create& v) {
-                        ui.model_tree->add_item(v.object->id(), v.object->name());
+                [this](const typename mesh::MeshEvent<N>::Update& v) {
+                        if (auto ptr = v.object.lock(); ptr)
+                        {
+                                ui.model_tree->add_item(ptr->id(), ptr->name());
+                        }
                 },
                 [this](const typename mesh::MeshEvent<N>::Delete& v) { ui.model_tree->delete_item(v.id); }};
 
@@ -1216,9 +1219,9 @@ void MainWindow::event_from_volume(const volume::VolumeEvent<N>& event)
         if constexpr (N == 3)
         {
                 const auto visitors = Visitors{
-                        [this](const typename volume::VolumeEvent<N>::Create& v) {
+                        [this](const typename volume::VolumeEvent<N>::Update& v) {
                                 ASSERT(m_view);
-                                m_view->send(view::command::AddVolumeObject(v.object));
+                                m_view->send(view::command::UpdateVolumeObject(v.object));
                         },
                         [this](const typename volume::VolumeEvent<N>::Delete& v) {
                                 ASSERT(m_view);
@@ -1235,8 +1238,11 @@ void MainWindow::event_from_volume_window_thread(const volume::VolumeEvent<N>& e
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
         const auto visitors = Visitors{
-                [this](const typename volume::VolumeEvent<N>::Create& v) {
-                        ui.model_tree->add_item(v.object->id(), v.object->name());
+                [this](const typename volume::VolumeEvent<N>::Update& v) {
+                        if (auto ptr = v.object.lock(); ptr)
+                        {
+                                ui.model_tree->add_item(ptr->id(), ptr->name());
+                        }
                 },
                 [this](const typename volume::VolumeEvent<N>::Delete& v) { ui.model_tree->delete_item(v.id); }};
 

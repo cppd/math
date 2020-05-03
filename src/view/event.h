@@ -36,18 +36,18 @@ enum class MouseButton
         Right
 };
 
-struct AddMeshObject final
+struct UpdateMeshObject final
 {
-        std::shared_ptr<const mesh::MeshObject<3>> object;
-        explicit AddMeshObject(const std::shared_ptr<const mesh::MeshObject<3>>& object) : object(object)
+        std::weak_ptr<const mesh::MeshObject<3>> object;
+        explicit UpdateMeshObject(const std::weak_ptr<const mesh::MeshObject<3>>& object) : object(object)
         {
         }
 };
 
-struct AddVolumeObject final
+struct UpdateVolumeObject final
 {
-        std::shared_ptr<const volume::VolumeObject<3>> object;
-        explicit AddVolumeObject(const std::shared_ptr<const volume::VolumeObject<3>>& object) : object(object)
+        std::weak_ptr<const volume::VolumeObject<3>> object;
+        explicit UpdateVolumeObject(const std::weak_ptr<const volume::VolumeObject<3>>& object) : object(object)
         {
         }
 };
@@ -359,8 +359,8 @@ struct WindowResize final
 struct Command final
 {
         using T = std::variant<
-                command::AddMeshObject,
-                command::AddVolumeObject,
+                command::UpdateMeshObject,
+                command::UpdateVolumeObject,
                 command::ClipPlaneHide,
                 command::ClipPlanePosition,
                 command::ClipPlaneShow,

@@ -289,7 +289,7 @@ class Impl final : public Renderer
                 create_mesh_render_command_buffers();
         }
 
-        void object_add(const mesh::MeshObject<3>& object) override
+        void object_update(const mesh::MeshObject<3>& object) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -318,7 +318,7 @@ class Impl final : public Renderer
                         set_matrices();
                 }
         }
-        void object_add(const volume::VolumeObject<3>& object) override
+        void object_update(const volume::VolumeObject<3>& object) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
