@@ -140,9 +140,9 @@ MainWindow::MainWindow(QWidget* parent)
         constructor_connect();
         constructor_interface();
         constructor_objects_and_repository();
-        constructor_model_events(std::make_integer_sequence<unsigned, 3>());
+        constructor_model_events();
 
-        m_events = [this](WindowEvent&& event) {
+        m_window_events = [this](WindowEvent&& event) {
                 run_in_window_thread([&, event = std::move(event)]() { event_from_window(event); });
         };
 
@@ -320,32 +320,37 @@ void MainWindow::constructor_objects_and_repository()
         }
 }
 
-template <unsigned... I>
-void MainWindow::constructor_model_events(std::integer_sequence<unsigned, I...>&&)
+void MainWindow::constructor_model_events()
 {
-        static_assert(sizeof...(I) == 3);
+        const auto f = [this](auto& v) {
+                constexpr unsigned N = std::remove_reference_t<decltype(v)>::DIMENSION;
 
-        m_mesh_event_functions = std::make_tuple([this](mesh::MeshEvent<3 + I>&& event) {
-                event_from_mesh(event);
-                run_in_window_thread([&, event = std::move(event)]() { event_from_mesh_window_thread(event); });
-        }...);
+                v.mesh_events = [this](mesh::MeshEvent<N>&& event) {
+                        event_from_mesh(event);
+                        run_in_window_thread([&, event = std::move(event)]() { event_from_mesh_window_thread(event); });
+                };
+                v.volume_events = [this](volume::VolumeEvent<N>&& event) {
+                        event_from_volume(event);
+                        run_in_window_thread(
+                                [&, event = std::move(event)]() { event_from_volume_window_thread(event); });
+                };
+                mesh::MeshObject<N>::set_events(&v.mesh_events);
+                volume::VolumeObject<N>::set_events(&v.volume_events);
+        };
 
-        m_volume_event_functions = std::make_tuple([this](volume::VolumeEvent<3 + I>&& event) {
-                event_from_volume(event);
-                run_in_window_thread([&, event = std::move(event)]() { event_from_volume_window_thread(event); });
-        }...);
-
-        (mesh::MeshObject<3 + I>::set_events(&std::get<I>(m_mesh_event_functions)), ...);
-        (volume::VolumeObject<3 + I>::set_events(&std::get<I>(m_volume_event_functions)), ...);
+        std::apply([&f](auto&... v) { (f(v), ...); }, m_model_events);
 }
 
-template <unsigned... I>
-void MainWindow::delete_model_events(std::integer_sequence<unsigned, I...>&&)
+void MainWindow::delete_model_events()
 {
-        static_assert(sizeof...(I) == 3);
+        const auto f = [](const auto& v) {
+                constexpr unsigned N = std::remove_reference_t<decltype(v)>::DIMENSION;
 
-        (mesh::MeshObject<3 + I>::set_events(nullptr), ...);
-        (volume::VolumeObject<3 + I>::set_events(nullptr), ...);
+                mesh::MeshObject<N>::set_events(nullptr);
+                volume::VolumeObject<N>::set_events(nullptr);
+        };
+
+        std::apply([&f](const auto&... v) { (f(v), ...); }, m_model_events);
 }
 
 void MainWindow::set_window_title_file(const std::string& file_name)
@@ -411,7 +416,7 @@ void MainWindow::terminate_all_threads()
         m_worker_threads->terminate_all();
 
         m_storage.reset();
-        delete_model_events(std::make_integer_sequence<unsigned, 3>());
+        delete_model_events();
 
         m_view.reset();
 
@@ -438,7 +443,7 @@ void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::str
 
                         if (window_exists)
                         {
-                                m_events(WindowEvent::MessageError(s + e.what()));
+                                m_window_events(WindowEvent::MessageError(s + e.what()));
                         }
                         else
                         {
@@ -451,7 +456,7 @@ void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::str
 
                         if (window_exists)
                         {
-                                m_events(WindowEvent::MessageError(s + "Unknown error"));
+                                m_window_events(WindowEvent::MessageError(s + "Unknown error"));
                         }
                         else
                         {
@@ -604,7 +609,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                                 file_name, object_size.value, object_position.value, rho, alpha, m_mesh_threads,
                                 [&](size_t dimension) {
                                         m_view->send(view::command::ResetView());
-                                        m_events(WindowEvent::FileLoaded(file_name, dimension));
+                                        m_window_events(WindowEvent::FileLoaded(file_name, dimension));
                                 },
                                 m_storage.get());
                 };
@@ -624,7 +629,7 @@ void MainWindow::thread_load_from_mesh_repository(int dimension, const std::stri
 
                 if (object_name.empty())
                 {
-                        m_events(WindowEvent::MessageError("Empty mesh repository object name"));
+                        m_window_events(WindowEvent::MessageError("Empty mesh repository object name"));
                         return;
                 }
 
@@ -674,7 +679,7 @@ void MainWindow::thread_load_from_mesh_repository(int dimension, const std::stri
                                 m_mesh_threads, point_count,
                                 [&]() {
                                         m_view->send(view::command::ResetView());
-                                        m_events(WindowEvent::FileLoaded(object_name, dimension));
+                                        m_window_events(WindowEvent::FileLoaded(object_name, dimension));
                                 },
                                 *m_repository, m_storage.get());
                 };
@@ -694,7 +699,7 @@ void MainWindow::thread_load_from_volume_repository(int dimension, const std::st
 
                 if (object_name.empty())
                 {
-                        m_events(WindowEvent::MessageError("Empty volume repository object name"));
+                        m_window_events(WindowEvent::MessageError("Empty volume repository object name"));
                         return;
                 }
 
@@ -752,13 +757,13 @@ void MainWindow::thread_export(ObjectId id)
                 std::optional<storage::MultiStorage::MeshObject> object = m_storage->mesh_object(id);
                 if (!object)
                 {
-                        m_events(WindowEvent::MessageWarning("No object to export"));
+                        m_window_events(WindowEvent::MessageWarning("No object to export"));
                         return;
                 }
 
                 if (m_dimension < 3)
                 {
-                        m_events(WindowEvent::MessageError("No dimension information"));
+                        m_window_events(WindowEvent::MessageError("No dimension information"));
                         return;
                 }
 
@@ -796,11 +801,13 @@ void MainWindow::thread_export(ObjectId id)
                         {
                         case mesh::FileType::Obj:
                                 save_to_obj(id, file_name, name, *m_storage);
-                                m_events(WindowEvent::MessageInformation(name + " exported to OBJ file " + file_name));
+                                m_window_events(
+                                        WindowEvent::MessageInformation(name + " exported to OBJ file " + file_name));
                                 return;
                         case mesh::FileType::Stl:
                                 save_to_stl(id, file_name, name, *m_storage, STL_EXPORT_FORMAT_ASCII);
-                                m_events(WindowEvent::MessageInformation(name + " exported to STL file " + file_name));
+                                m_window_events(
+                                        WindowEvent::MessageInformation(name + " exported to STL file " + file_name));
                                 return;
                         }
                         error_fatal("Unknown file type for export");
@@ -826,7 +833,7 @@ void MainWindow::thread_bound_cocone(ObjectId id)
 
                 if (!m_storage->mesh_object(id))
                 {
-                        m_events(WindowEvent::MessageWarning("No object to compute BoundCocone"));
+                        m_window_events(WindowEvent::MessageWarning("No object to compute BoundCocone"));
                         return;
                 }
 
@@ -1165,7 +1172,7 @@ void MainWindow::event_from_view(const view::Event& event)
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
         const auto visitors = Visitors{
-                [this](const view::event::ErrorFatal& d) { m_events(WindowEvent::MessageErrorFatal(d.text)); }};
+                [this](const view::event::ErrorFatal& d) { m_window_events(WindowEvent::MessageErrorFatal(d.text)); }};
 
         std::visit(visitors, event.data());
 }
@@ -1317,11 +1324,11 @@ void MainWindow::slot_window_first_shown()
         }
         catch (const std::exception& e)
         {
-                m_events(WindowEvent::MessageErrorFatal(e.what()));
+                m_window_events(WindowEvent::MessageErrorFatal(e.what()));
         }
         catch (...)
         {
-                m_events(WindowEvent::MessageErrorFatal("Error first show"));
+                m_window_events(WindowEvent::MessageErrorFatal("Error first show"));
         }
 }
 
@@ -1335,7 +1342,7 @@ void MainWindow::slot_mesh_object_repository()
         auto iter = m_repository_actions.find(sender());
         if (iter == m_repository_actions.cend())
         {
-                m_events(WindowEvent::MessageError("Failed to find sender in action map"));
+                m_window_events(WindowEvent::MessageError("Failed to find sender in action map"));
                 return;
         }
 
@@ -1347,7 +1354,7 @@ void MainWindow::slot_volume_object_repository()
         auto iter = m_repository_actions.find(sender());
         if (iter == m_repository_actions.cend())
         {
-                m_events(WindowEvent::MessageError("Failed to find sender in action map"));
+                m_window_events(WindowEvent::MessageError("Failed to find sender in action map"));
                 return;
         }
 
@@ -1359,7 +1366,7 @@ void MainWindow::on_actionExport_triggered()
         std::optional<ObjectId> item = ui.model_tree->current_item();
         if (!item)
         {
-                m_events(WindowEvent::MessageWarning("No item selected to export"));
+                m_window_events(WindowEvent::MessageWarning("No item selected to export"));
                 return;
         }
         thread_export(*item);
@@ -1370,7 +1377,7 @@ void MainWindow::on_actionBoundCocone_triggered()
         std::optional<ObjectId> item = ui.model_tree->current_item();
         if (!item)
         {
-                m_events(WindowEvent::MessageWarning("No item selected to export"));
+                m_window_events(WindowEvent::MessageWarning("No item selected to export"));
                 return;
         }
         thread_bound_cocone(*item);
@@ -1775,7 +1782,7 @@ void MainWindow::on_actionPainter_triggered()
         std::optional<ObjectId> item = ui.model_tree->current_item();
         if (!item)
         {
-                m_events(WindowEvent::MessageWarning("No item selected to paint"));
+                m_window_events(WindowEvent::MessageWarning("No item selected to paint"));
                 return;
         }
 
@@ -1784,14 +1791,14 @@ void MainWindow::on_actionPainter_triggered()
         std::optional<storage::MultiStorage::MeshObject> object = m_storage->mesh_object(object_id);
         if (!object)
         {
-                m_events(WindowEvent::MessageWarning("No object to paint"));
+                m_window_events(WindowEvent::MessageWarning("No object to paint"));
                 return;
         }
 
         std::optional<storage::MultiStorage::PainterMeshObject> mesh = m_storage->painter_mesh_object(object_id);
         if (!mesh)
         {
-                m_events(WindowEvent::MessageWarning("No object to paint"));
+                m_window_events(WindowEvent::MessageWarning("No object to paint"));
                 return;
         }
 

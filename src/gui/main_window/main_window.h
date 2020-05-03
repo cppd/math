@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_main_window.h"
 
+#include <src/com/sequence.h>
 #include <src/progress/progress_list.h>
 #include <src/storage/multi_repository.h>
 #include <src/storage/multi_storage.h>
@@ -117,10 +118,8 @@ private:
         void constructor_connect();
         void constructor_interface();
         void constructor_objects_and_repository();
-        template <unsigned... I>
-        void constructor_model_events(std::integer_sequence<unsigned, I...>&&);
-        template <unsigned... I>
-        void delete_model_events(std::integer_sequence<unsigned, I...>&&);
+        void constructor_model_events();
+        void delete_model_events();
 
         enum class ComputationType
         {
@@ -203,7 +202,7 @@ private:
 
         const std::thread::id m_window_thread_id;
 
-        std::function<void(WindowEvent&&)> m_events;
+        std::function<void(WindowEvent&&)> m_window_events;
 
         std::unique_ptr<WorkerThreads> m_worker_threads;
 
@@ -219,17 +218,14 @@ private:
         std::unique_ptr<storage::MultiRepository> m_repository;
         std::unique_ptr<storage::MultiStorage> m_storage;
 
-        std::tuple<
-                std::function<void(mesh::MeshEvent<3>&&)>,
-                std::function<void(mesh::MeshEvent<4>&&)>,
-                std::function<void(mesh::MeshEvent<5>&&)>>
-                m_mesh_event_functions;
-
-        std::tuple<
-                std::function<void(volume::VolumeEvent<3>&&)>,
-                std::function<void(volume::VolumeEvent<4>&&)>,
-                std::function<void(volume::VolumeEvent<5>&&)>>
-                m_volume_event_functions;
+        template <size_t N>
+        struct ModelEvents
+        {
+                static constexpr unsigned DIMENSION = N;
+                std::function<void(mesh::MeshEvent<N>&&)> mesh_events;
+                std::function<void(volume::VolumeEvent<N>&&)> volume_events;
+        };
+        SequenceType1<std::tuple, storage::MINIMUM_DIMENSION, storage::MAXIMUM_DIMENSION, ModelEvents> m_model_events;
 
         QColor m_background_color;
         QColor m_default_color;
