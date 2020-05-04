@@ -754,7 +754,7 @@ void MainWindow::thread_export(ObjectId id)
                         return;
                 }
 
-                std::optional<storage::MultiStorage::MeshObject> object = m_storage->mesh_object(id);
+                std::optional<storage::MultiStorage::MeshObjectConst> object = m_storage->mesh_object_const(id);
                 if (!object)
                 {
                         m_window_events(WindowEvent::MessageWarning("No object to export"));
@@ -1737,10 +1737,12 @@ void MainWindow::on_slider_volume_levels_range_changed(double /*min*/, double /*
 {
 }
 
-template <template <size_t, typename> typename SpatialMeshModel, size_t N, typename T>
-void MainWindow::paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh, const std::string& object_name)
+template <size_t N, typename T>
+void MainWindow::paint(
+        const std::shared_ptr<const painter::MeshObject<N, T>>& mesh_object,
+        const std::string& object_name)
 {
-        ASSERT(mesh);
+        ASSERT(mesh_object);
 
         PaintingInformationAll info_all;
 
@@ -1773,7 +1775,7 @@ void MainWindow::paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh
                 info.object_size = object_size.value;
                 info.max_screen_size = PAINTER_3D_MAX_SCREEN_SIZE;
 
-                painting(mesh, info, info_all);
+                painting(mesh_object, info, info_all);
         }
         else
         {
@@ -1783,7 +1785,7 @@ void MainWindow::paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh
                 info.minimum_screen_size = PAINTER_MINIMUM_SCREEN_SIZE;
                 info.maximum_screen_size = PAINTER_MAXIMUM_SCREEN_SIZE;
 
-                painting(mesh, info, info_all);
+                painting(mesh_object, info, info_all);
         }
 }
 
@@ -1798,26 +1800,27 @@ void MainWindow::on_actionPainter_triggered()
 
         ObjectId object_id = *item;
 
-        std::optional<storage::MultiStorage::MeshObject> object = m_storage->mesh_object(object_id);
-        if (!object)
+        std::optional<storage::MultiStorage::MeshObjectConst> mesh_object = m_storage->mesh_object_const(object_id);
+        if (!mesh_object)
         {
                 m_window_events(WindowEvent::MessageWarning("No object to paint"));
                 return;
         }
 
-        std::optional<storage::MultiStorage::PainterMeshObject> mesh = m_storage->painter_mesh_object(object_id);
-        if (!mesh)
+        std::optional<storage::MultiStorage::PainterMeshObjectConst> painter_mesh_object =
+                m_storage->painter_mesh_object_const(object_id);
+        if (!painter_mesh_object)
         {
                 m_window_events(WindowEvent::MessageWarning("No object to paint"));
                 return;
         }
 
         std::string object_name;
-        std::visit([&](const auto& v) { object_name = v->name(); }, *object);
+        std::visit([&](const auto& v) { object_name = v->name(); }, *mesh_object);
 
         catch_all([&](std::string* message) {
                 *message = "Painter";
 
-                std::visit([&](const auto& v) { paint(v, object_name); }, *mesh);
+                std::visit([&](const auto& v) { paint(v, object_name); }, *painter_mesh_object);
         });
 }

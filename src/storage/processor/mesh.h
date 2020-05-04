@@ -89,7 +89,7 @@ std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh,
 }
 
 template <typename MeshFloat, size_t N>
-std::shared_ptr<const painter::MeshObject<N, MeshFloat>> build_painter_mesh_object(
+std::shared_ptr<painter::MeshObject<N, MeshFloat>> build_painter_mesh_object(
         ProgressRatioList* progress_list,
         const mesh::MeshObject<N>& object,
         int mesh_threads)
@@ -102,7 +102,7 @@ std::shared_ptr<const painter::MeshObject<N, MeshFloat>> build_painter_mesh_obje
         std::lock_guard lg(global_mesh_sequential_mutex);
 
         ProgressRatio progress(progress_list);
-        return std::make_shared<const painter::MeshObject<N, MeshFloat>>(
+        return std::make_shared<painter::MeshObject<N, MeshFloat>>(
                 object.mesh(), to_matrix<MeshFloat>(object.matrix()), mesh_threads, &progress);
 }
 
@@ -281,7 +281,7 @@ void manifold_constructor(
                 points = unique_point_vertices(object.mesh());
         }
 
-        std::shared_ptr<const geometry::ManifoldConstructor<N>> manifold_constructor_ptr =
+        std::shared_ptr<geometry::ManifoldConstructor<N>> manifold_constructor_ptr =
                 storage->manifold_constructor(object.id());
         if (!manifold_constructor_ptr)
         {

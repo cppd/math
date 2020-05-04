@@ -42,14 +42,19 @@ class MultiStorage final
 public:
         using Data = Tuple;
 
-        using MeshObject = SequenceType2ConstType2<
+        using MeshObject =
+                SequenceType2<std::variant, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, std::shared_ptr, mesh::MeshObject>;
+
+        using MeshObjectConst = SequenceType2Const2<
                 std::variant,
                 MINIMUM_DIMENSION,
                 MAXIMUM_DIMENSION,
                 std::shared_ptr,
                 mesh::MeshObject>;
 
-        using PainterMeshObject = SequenceType2ConstType2<
+        //
+
+        using PainterMeshObject = SequenceType2<
                 std::variant,
                 MINIMUM_DIMENSION,
                 MAXIMUM_DIMENSION,
@@ -57,7 +62,20 @@ public:
                 painter::MeshObject,
                 PainterFloatingPoint>;
 
-        using VolumeObject = SequenceType2ConstType2<
+        using PainterMeshObjectConst = SequenceType2Const2<
+                std::variant,
+                MINIMUM_DIMENSION,
+                MAXIMUM_DIMENSION,
+                std::shared_ptr,
+                painter::MeshObject,
+                PainterFloatingPoint>;
+
+        //
+
+        using VolumeObject =
+                SequenceType2<std::variant, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, std::shared_ptr, volume::VolumeObject>;
+
+        using VolumeObjectConst = SequenceType2Const2<
                 std::variant,
                 MINIMUM_DIMENSION,
                 MAXIMUM_DIMENSION,
@@ -115,6 +133,28 @@ public:
                 return opt;
         }
 
+        std::optional<MeshObjectConst> mesh_object_const(ObjectId id) const
+        {
+                std::optional<MeshObjectConst> opt;
+
+                std::apply(
+                        [&](const auto&... v) {
+                                ([&]() {
+                                        auto ptr = v.mesh_object(id);
+                                        if (ptr)
+                                        {
+                                                opt = std::move(ptr);
+                                                return true;
+                                        }
+                                        return false;
+                                }()
+                                 || ...);
+                        },
+                        m_data);
+
+                return opt;
+        }
+
         std::optional<PainterMeshObject> painter_mesh_object(ObjectId id) const
         {
                 std::optional<PainterMeshObject> opt;
@@ -137,9 +177,53 @@ public:
                 return opt;
         }
 
+        std::optional<PainterMeshObjectConst> painter_mesh_object_const(ObjectId id) const
+        {
+                std::optional<PainterMeshObjectConst> opt;
+
+                std::apply(
+                        [&](const auto&... v) {
+                                ([&]() {
+                                        auto ptr = v.painter_mesh_object(id);
+                                        if (ptr)
+                                        {
+                                                opt = std::move(ptr);
+                                                return true;
+                                        }
+                                        return false;
+                                }()
+                                 || ...);
+                        },
+                        m_data);
+
+                return opt;
+        }
+
         std::optional<VolumeObject> volume_object(ObjectId id) const
         {
                 std::optional<VolumeObject> opt;
+
+                std::apply(
+                        [&](const auto&... v) {
+                                ([&]() {
+                                        auto ptr = v.volume_object(id);
+                                        if (ptr)
+                                        {
+                                                opt = std::move(ptr);
+                                                return true;
+                                        }
+                                        return false;
+                                }()
+                                 || ...);
+                        },
+                        m_data);
+
+                return opt;
+        }
+
+        std::optional<VolumeObjectConst> volume_object_const(ObjectId id) const
+        {
+                std::optional<VolumeObjectConst> opt;
 
                 std::apply(
                         [&](const auto&... v) {

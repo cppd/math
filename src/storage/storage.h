@@ -37,8 +37,8 @@ class Storage
         struct MeshData
         {
                 std::shared_ptr<mesh::MeshObject<N>> mesh_object;
-                std::shared_ptr<const painter::MeshObject<N, MeshFloat>> painter_mesh_object;
-                std::shared_ptr<const geometry::ManifoldConstructor<N>> manifold_constructor;
+                std::shared_ptr<painter::MeshObject<N, MeshFloat>> painter_mesh_object;
+                std::shared_ptr<geometry::ManifoldConstructor<N>> manifold_constructor;
         };
 
         struct VolumeData
@@ -70,22 +70,21 @@ public:
         template <typename T>
         void set_painter_mesh_object(ObjectId id, T&& mesh)
         {
-                std::shared_ptr<const painter::MeshObject<N, MeshFloat>> tmp;
+                std::shared_ptr<painter::MeshObject<N, MeshFloat>> tmp;
                 std::unique_lock lock(m_mesh_mutex);
                 MeshData& v = m_mesh_map.try_emplace(id).first->second;
                 tmp = std::move(v.painter_mesh_object);
                 v.painter_mesh_object = std::forward<T>(mesh);
         }
 
-        void set_manifold_constructor(
-                ObjectId id,
-                const std::shared_ptr<const geometry::ManifoldConstructor<N>>& manifold_constructor)
+        template <typename T>
+        void set_manifold_constructor(ObjectId id, T&& manifold_constructor)
         {
-                std::shared_ptr<const geometry::ManifoldConstructor<N>> tmp;
+                std::shared_ptr<geometry::ManifoldConstructor<N>> tmp;
                 std::unique_lock lock(m_mesh_mutex);
                 MeshData& v = m_mesh_map.try_emplace(id).first->second;
                 tmp = std::move(v.manifold_constructor);
-                v.manifold_constructor = manifold_constructor;
+                v.manifold_constructor = std::forward<T>(manifold_constructor);
         }
 
         template <typename T>
@@ -107,14 +106,14 @@ public:
                 return (iter != m_mesh_map.cend()) ? iter->second.mesh_object : nullptr;
         }
 
-        std::shared_ptr<const painter::MeshObject<N, MeshFloat>> painter_mesh_object(ObjectId id) const
+        std::shared_ptr<painter::MeshObject<N, MeshFloat>> painter_mesh_object(ObjectId id) const
         {
                 std::shared_lock lock(m_mesh_mutex);
                 auto iter = m_mesh_map.find(id);
                 return (iter != m_mesh_map.cend()) ? iter->second.painter_mesh_object : nullptr;
         }
 
-        std::shared_ptr<const geometry::ManifoldConstructor<N>> manifold_constructor(ObjectId id) const
+        std::shared_ptr<geometry::ManifoldConstructor<N>> manifold_constructor(ObjectId id) const
         {
                 std::shared_lock lock(m_mesh_mutex);
                 auto iter = m_mesh_map.find(id);

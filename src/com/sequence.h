@@ -81,8 +81,6 @@ using SequenceType1 =
         typename sequence_implementation::Sequence1<SequenceType, T, Ts...>::template S<From, To - From + 1>::V;
 
 // Тип SequenceType<T1<T2<From, ...>>, T1<T2<From + 1, ...>>, T1<T2<From + 2, ...>>, ...>
-// GCC 9 не работает для задания типа как const передачу шаблона template ... using ... = const T,
-// поэтому используется параметр для const. Clang 9 работает.
 template <
         template <typename...>
         typename SequenceType,
@@ -93,7 +91,19 @@ template <
         template <size_t, typename...>
         typename T2,
         typename... Ts>
-using SequenceType2ConstType2 = typename sequence_implementation::Sequence2<SequenceType, true, T1, T2, Ts...>::
+using SequenceType2 = typename sequence_implementation::Sequence2<SequenceType, false, T1, T2, Ts...>::
         template S<From, To - From + 1>::V;
 
-//
+// Тип SequenceType<T1<const T2<From, ...>>, T1<const T2<From + 1, ...>>, T1<const T2<From + 2, ...>>, ...>
+template <
+        template <typename...>
+        typename SequenceType,
+        int From,
+        int To,
+        template <typename>
+        typename T1,
+        template <size_t, typename...>
+        typename T2,
+        typename... Ts>
+using SequenceType2Const2 = typename sequence_implementation::Sequence2<SequenceType, true, T1, T2, Ts...>::
+        template S<From, To - From + 1>::V;

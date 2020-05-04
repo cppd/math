@@ -149,8 +149,8 @@ private:
         void thread_bound_cocone(ObjectId id);
         void thread_self_test(SelfTestType test_type, bool with_confirmation);
 
-        template <template <size_t, typename> typename SpatialMeshModel, size_t N, typename T>
-        void paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh, const std::string& object_name);
+        template <size_t N, typename T>
+        void paint(const std::shared_ptr<const painter::MeshObject<N, T>>& mesh_object, const std::string& object_name);
 
         void set_dependent_interface();
 
