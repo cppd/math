@@ -71,9 +71,10 @@ private:
 
 enum class Update
 {
-        Data,
+        All,
         Image,
-        All
+        Levels,
+        Matrices
 };
 
 template <size_t N>

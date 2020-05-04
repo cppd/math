@@ -276,7 +276,7 @@ class Impl final : public Renderer
                 {
                         m_shader_buffers.set_clip_plane(*m_clip_plane, true);
 
-                        const VolumeObject* volume = find_object(m_volume_storage, m_current_object_id);
+                        VolumeObject* volume = find_object(m_volume_storage, m_current_object_id);
                         if (volume)
                         {
                                 volume->set_clip_plane(*m_clip_plane);
@@ -318,6 +318,7 @@ class Impl final : public Renderer
                         set_matrices();
                 }
         }
+
         void object_update(const volume::VolumeObject<3>& object) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
@@ -330,33 +331,34 @@ class Impl final : public Renderer
 
                 ASSERT(find_object(m_mesh_storage, object.id()) == nullptr);
 
+                bool create_commands = false;
                 VolumeObject* ptr = find_object(m_volume_storage, object.id());
                 if (!ptr)
                 {
-                        m_volume_storage.emplace(
+                        ASSERT(reading.updates().contains(volume::Update::All));
+
+                        const auto pair = m_volume_storage.emplace(
                                 object.id(),
                                 std::make_unique<VolumeObject>(
                                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
-                                        m_transfer_queue, object, [this](const VolumeInfo& volume_info) {
+                                        m_transfer_queue, [this](const VolumeInfo& volume_info) {
                                                 return m_volume_renderer.create_volume_memory(volume_info);
                                         }));
+                        ASSERT(pair.second);
 
-                        if (m_current_object_id == object.id())
-                        {
-                                create_command_buffers();
-                                set_matrices();
-                        }
+                        ptr = pair.first->second.get();
+                        create_commands = true;
                 }
-                else
+
+                bool update_commands;
+                ptr->update(reading.updates(), object, &update_commands);
+
+                if ((create_commands || update_commands) && (m_current_object_id == object.id()))
                 {
-                        bool update_command_buffers;
-                        ptr->update(reading.updates(), object, &update_command_buffers);
-                        if (update_command_buffers && m_current_object_id == object.id())
-                        {
-                                create_command_buffers();
-                        }
+                        create_command_buffers();
                 }
         }
+
         void object_delete(ObjectId id) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
@@ -390,6 +392,7 @@ class Impl final : public Renderer
                         set_matrices();
                 }
         }
+
         void object_delete_all() override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
@@ -407,6 +410,7 @@ class Impl final : public Renderer
                 create_command_buffers();
                 set_matrices();
         }
+
         void object_show(ObjectId id) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
@@ -635,10 +639,10 @@ class Impl final : public Renderer
                         m_shader_buffers.set_matrices(
                                 model, main_mvp, m_main_vp_matrix, shadow_mvp, m_shadow_vp_matrix, shadow_mvp_texture);
                 }
-                const VolumeObject* volume = find_object(m_volume_storage, m_current_object_id);
+                VolumeObject* volume = find_object(m_volume_storage, m_current_object_id);
                 if (volume)
                 {
-                        volume->set_coordinates(m_main_vp_matrix, m_clip_plane);
+                        volume->set_matrix_and_clip_plane(m_main_vp_matrix, m_clip_plane);
                 }
         }
 
