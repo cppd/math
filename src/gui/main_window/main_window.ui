@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1206</width>
-    <height>1116</height>
+    <width>1280</width>
+    <height>1269</height>
    </rect>
   </property>
   <widget class="QWidget" name="mainWidget">
@@ -30,9 +30,6 @@
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
          <number>0</number>
-        </property>
-        <property name="usesScrollButtons">
-         <bool>false</bool>
         </property>
         <widget class="QWidget" name="tabModels">
          <attribute name="title">
@@ -298,6 +295,43 @@
              <size>
               <width>20</width>
               <height>350</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tabVolume">
+         <attribute name="title">
+          <string>Volume</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Levels</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="RangeSlider" name="slider_volume_levels" native="true">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>10</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>875</height>
              </size>
             </property>
            </spacer>
@@ -1260,7 +1294,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1206</width>
+     <width>1280</width>
      <height>30</height>
     </rect>
    </property>
@@ -1373,6 +1407,12 @@
    <class>ModelTree</class>
    <extends>QWidget</extends>
    <header>src/gui/widgets/model_tree.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>RangeSlider</class>
+   <extends>QWidget</extends>
+   <header>src/gui/widgets/range_slider.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

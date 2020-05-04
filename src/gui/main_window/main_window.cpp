@@ -1733,6 +1733,10 @@ void MainWindow::on_actionFullScreen_triggered()
 {
 }
 
+void MainWindow::on_slider_volume_levels_range_changed(double /*min*/, double /*max*/)
+{
+}
+
 template <template <size_t, typename> typename SpatialMeshModel, size_t N, typename T>
 void MainWindow::paint(const std::shared_ptr<const SpatialMeshModel<N, T>>& mesh, const std::string& object_name)
 {
