@@ -68,6 +68,8 @@ void RangeSlider::set_range(double min, double max)
         set_max_value(std::lround(std::lerp(MIN, MAX, max)));
 
         ASSERT(min_value() <= max_value());
+
+        emit_range_changed();
 }
 
 int RangeSlider::min_value() const
