@@ -41,7 +41,7 @@ private:
         void set_min_value(int);
         void set_max_value(int);
 
-        void emit_range_changed();
+        void range_changed();
 
         double m_last_min;
         double m_last_max;

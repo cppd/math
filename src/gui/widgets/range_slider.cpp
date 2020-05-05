@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <numeric>
 
 constexpr int MIN = 0;
-constexpr int MAX = 100;
+constexpr int MAX = 500;
 
 static_assert(MIN >= 0 && MIN < MAX);
 
@@ -69,7 +69,7 @@ void RangeSlider::set_range(double min, double max)
 
         ASSERT(min_value() <= max_value());
 
-        emit_range_changed();
+        range_changed();
 }
 
 int RangeSlider::min_value() const
@@ -98,7 +98,7 @@ void RangeSlider::min_value_changed(int)
         {
                 set_min_value(max_value());
         }
-        emit_range_changed();
+        range_changed();
 }
 
 void RangeSlider::max_value_changed(int)
@@ -107,10 +107,10 @@ void RangeSlider::max_value_changed(int)
         {
                 set_max_value(min_value());
         }
-        emit_range_changed();
+        range_changed();
 }
 
-void RangeSlider::emit_range_changed()
+void RangeSlider::range_changed()
 {
         constexpr double d = MAX - MIN;
         const double min = (min_value() - MIN) / d;
@@ -120,8 +120,8 @@ void RangeSlider::emit_range_changed()
 
         if (m_last_min != min || m_last_max != max)
         {
-                emit range_changed(min, max);
                 m_last_min = min;
                 m_last_max = max;
+                emit range_changed(min, max);
         }
 }
