@@ -31,6 +31,8 @@ struct ManifoldConstructorCocone
 {
         virtual ~ManifoldConstructorCocone() = default;
 
+        virtual const std::vector<Vector<N, float>>& points() const = 0;
+
         virtual std::vector<std::array<int, N + 1>> delaunay_objects() const = 0;
 
         virtual void cocone(
@@ -43,6 +45,8 @@ template <size_t N>
 struct ManifoldConstructor
 {
         virtual ~ManifoldConstructor() = default;
+
+        virtual const std::vector<Vector<N, float>>& points() const = 0;
 
         virtual std::vector<std::array<int, N + 1>> delaunay_objects() const = 0;
 

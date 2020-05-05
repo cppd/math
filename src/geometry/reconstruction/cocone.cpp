@@ -299,6 +299,7 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
 {
         const bool m_cocone_only;
 
+        std::vector<Vector<N, float>> m_source_points;
         std::vector<vec<N>> m_points;
         std::vector<DelaunayObject<N>> m_delaunay_objects;
         std::vector<DelaunayFacet<N>> m_delaunay_facets;
@@ -411,12 +412,17 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 return objects;
         }
 
+        const std::vector<Vector<N, float>>& points() const override
+        {
+                return m_source_points;
+        }
+
 public:
         ManifoldConstructorImpl(
                 const std::vector<Vector<N, float>>& source_points,
                 bool cocone_only,
                 ProgressRatio* progress)
-                : m_cocone_only(cocone_only)
+                : m_cocone_only(cocone_only), m_source_points(source_points)
         {
                 // Проверить на самый минимум по количеству точек
                 if (source_points.size() < N + 2)
