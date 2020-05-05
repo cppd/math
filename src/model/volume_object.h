@@ -191,8 +191,11 @@ public:
                 m_object->m_updates.merge(std::move(updates));
         }
 
-        ~WritingUpdates()
+        ~WritingUpdates() noexcept(false)
         {
+                // Нужно снять блокировку до вызова функции событий, так как
+                // обработчики событий могут читать изменения в этом же потоке.
+                m_lock.unlock();
                 (*m_object->m_events)(typename VolumeEvent<N>::Update(m_object->weak_from_this()));
         }
 };
