@@ -39,8 +39,8 @@ struct VolumeEvent final
 {
         struct Update final
         {
-                std::weak_ptr<VolumeObject<N>> object;
-                Update(std::weak_ptr<VolumeObject<N>>&& object) : object(std::move(object))
+                std::shared_ptr<VolumeObject<N>> object;
+                Update(std::shared_ptr<VolumeObject<N>>&& object) : object(std::move(object))
                 {
                 }
         };
@@ -126,7 +126,7 @@ public:
         {
                 std::unique_lock m_lock(m_mutex);
                 m_updates = {Update::All};
-                (*m_events)(typename VolumeEvent<N>::Update(this->weak_from_this()));
+                (*m_events)(typename VolumeEvent<N>::Update(this->shared_from_this()));
         }
 
         ~VolumeObject()
@@ -196,7 +196,7 @@ public:
                 // Нужно снять блокировку до вызова функции событий, так как
                 // обработчики событий могут читать изменения в этом же потоке.
                 m_lock.unlock();
-                (*m_object->m_events)(typename VolumeEvent<N>::Update(m_object->weak_from_this()));
+                (*m_object->m_events)(typename VolumeEvent<N>::Update(m_object->shared_from_this()));
         }
 };
 

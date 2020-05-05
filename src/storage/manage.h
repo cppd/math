@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "multi_repository.h"
-#include "multi_storage.h"
 
 #include <src/progress/progress_list.h>
 
@@ -28,13 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace storage
 {
-void compute_bound_cocone(
-        ProgressRatioList* progress_list,
-        ObjectId id,
-        double rho,
-        double alpha,
-        MultiStorage* storage);
-
 void load_from_file(
         bool build_convex_hull,
         bool build_cocone,
@@ -46,8 +38,7 @@ void load_from_file(
         const vec3& object_position,
         double rho,
         double alpha,
-        const std::function<void(size_t dimension)>& load_event,
-        MultiStorage* storage);
+        const std::function<void(size_t dimension)>& load_event);
 
 void load_from_point_repository(
         bool build_convex_hull,
@@ -63,8 +54,7 @@ void load_from_point_repository(
         double alpha,
         int point_count,
         const std::function<void()>& load_event,
-        const MultiRepository& repository,
-        MultiStorage* storage);
+        const MultiRepository& repository);
 
 void add_from_volume_repository(
         int dimension,
@@ -72,6 +62,5 @@ void add_from_volume_repository(
         double object_size,
         const vec3& object_position,
         int image_size,
-        const MultiRepository& repository,
-        MultiStorage* storage);
+        const MultiRepository& repository);
 }

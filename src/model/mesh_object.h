@@ -37,8 +37,8 @@ struct MeshEvent final
 {
         struct Update final
         {
-                std::weak_ptr<MeshObject<N>> object;
-                Update(std::weak_ptr<MeshObject<N>>&& object) : object(std::move(object))
+                std::shared_ptr<MeshObject<N>> object;
+                Update(std::shared_ptr<MeshObject<N>>&& object) : object(std::move(object))
                 {
                 }
         };
@@ -94,7 +94,7 @@ public:
 
         void created()
         {
-                (*m_events)(typename MeshEvent<N>::Update(this->weak_from_this()));
+                (*m_events)(typename MeshEvent<N>::Update(this->shared_from_this()));
         }
 
         ~MeshObject()

@@ -25,32 +25,134 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace storage
 {
-void compute_bound_cocone(
+namespace
+{
+constexpr auto make_dimension_sequence()
+{
+        return std::make_integer_sequence<unsigned, MAXIMUM_DIMENSION - MINIMUM_DIMENSION + 1>();
+}
+
+template <unsigned... I>
+void load_from_file(
+        bool build_convex_hull,
+        bool build_cocone,
+        bool build_bound_cocone,
+        bool build_mst,
         ProgressRatioList* progress_list,
-        ObjectId id,
+        const std::string& file_name,
+        double object_size,
+        const vec3& object_position,
         double rho,
         double alpha,
-        MultiStorage* storage)
+        const std::function<void(size_t dimension)>& load_event,
+        unsigned dimension,
+        std::integer_sequence<unsigned, I...>&&)
 {
-        bool found = std::apply(
-                [&](auto&... v) {
-                        return ([&]() {
-                                if (!v.mesh_object(id))
-                                {
-                                        return false;
-                                }
+        bool found = ([&]() {
+                constexpr unsigned N = I + MINIMUM_DIMENSION;
 
-                                processor::compute_bound_cocone(progress_list, &v, id, rho, alpha);
+                if (N != dimension)
+                {
+                        return false;
+                }
 
-                                return true;
-                        }() || ...);
-                },
-                storage->data());
+                std::unique_ptr<const mesh::Mesh<N>> mesh;
+                {
+                        ProgressRatio progress(progress_list);
+                        progress.set_text("Loading file: %p%");
+                        mesh = mesh::load<N>(file_name, &progress);
+                }
+
+                load_event(dimension);
+
+                processor::compute(
+                        progress_list, build_convex_hull, build_cocone, build_bound_cocone, build_mst, std::move(mesh),
+                        "Model", object_size, object_position, rho, alpha);
+
+                return true;
+        }() || ...);
 
         if (!found)
         {
-                error("No object found");
+                error("Dimension " + to_string(dimension) + " is not supported");
         }
+}
+
+template <unsigned... I>
+void load_from_point_repository(
+        bool build_convex_hull,
+        bool build_cocone,
+        bool build_bound_cocone,
+        bool build_mst,
+        ProgressRatioList* progress_list,
+        int dimension,
+        const std::string& object_name,
+        double object_size,
+        const vec3& object_position,
+        double rho,
+        double alpha,
+        int point_count,
+        const std::function<void()>& load_event,
+        const MultiRepository& repository,
+        std::integer_sequence<unsigned, I...>&&)
+{
+        bool found = ([&]() {
+                constexpr unsigned N = I + MINIMUM_DIMENSION;
+
+                if (N != dimension)
+                {
+                        return false;
+                }
+
+                std::unique_ptr<const mesh::Mesh<N>> mesh =
+                        repository.repository<N>().meshes().object(object_name, point_count);
+
+                load_event();
+
+                processor::compute(
+                        progress_list, build_convex_hull, build_cocone, build_bound_cocone, build_mst, std::move(mesh),
+                        object_name, object_size, object_position, rho, alpha);
+
+                return true;
+        }() || ...);
+
+        if (!found)
+        {
+                error("Dimension " + to_string(dimension) + " is not supported");
+        }
+}
+
+template <unsigned... I>
+void add_from_volume_repository(
+        int dimension,
+        const std::string& object_name,
+        double object_size,
+        const vec3& object_position,
+        int image_size,
+        const MultiRepository& repository,
+        std::integer_sequence<unsigned, I...>&&)
+{
+        bool found = ([&]() {
+                constexpr unsigned N = I + MINIMUM_DIMENSION;
+
+                if (N != dimension)
+                {
+                        return false;
+                }
+
+                std::unique_ptr<const volume::Volume<N>> volume =
+                        repository.repository<N>().volumes().object(object_name, image_size);
+
+                processor::compute(std::move(volume), object_name, object_size, object_position);
+
+                return true;
+        }() || ...);
+
+        if (!found)
+        {
+                error("Dimension " + to_string(dimension) + " is not supported");
+        }
+}
 }
 
 void load_from_file(
@@ -64,45 +166,13 @@ void load_from_file(
         const vec3& object_position,
         double rho,
         double alpha,
-        const std::function<void(size_t dimension)>& load_event,
-        MultiStorage* storage)
+        const std::function<void(size_t dimension)>& load_event)
 {
         unsigned dimension = mesh::file_dimension(file_name);
 
-        bool found = std::apply(
-                [&](auto&... v) {
-                        return ([&]() {
-                                constexpr unsigned N = std::remove_reference_t<decltype(v)>::DIMENSION;
-
-                                if (N != dimension)
-                                {
-                                        return false;
-                                }
-
-                                std::unique_ptr<const mesh::Mesh<N>> mesh;
-                                {
-                                        ProgressRatio progress(progress_list);
-                                        progress.set_text("Loading file: %p%");
-                                        mesh = mesh::load<N>(file_name, &progress);
-                                }
-
-                                storage->clear();
-                                load_event(dimension);
-
-                                processor::compute(
-                                        progress_list, &v, build_convex_hull, build_cocone, build_bound_cocone,
-                                        build_mst, std::move(mesh), "Model", object_size, object_position, rho, alpha);
-
-                                return true;
-                        }() || ...);
-                },
-                storage->data());
-
-        if (!found)
-        {
-                error("Dimension " + to_string(dimension) + " is not supported, supported dimensions "
-                      + to_string(MultiStorage::supported_dimensions()));
-        }
+        load_from_file(
+                build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list, file_name, object_size,
+                object_position, rho, alpha, load_event, dimension, make_dimension_sequence());
 }
 
 void load_from_point_repository(
@@ -119,40 +189,12 @@ void load_from_point_repository(
         double alpha,
         int point_count,
         const std::function<void()>& load_event,
-        const MultiRepository& repository,
-        MultiStorage* storage)
+        const MultiRepository& repository)
 {
-        bool found = std::apply(
-                [&](auto&... v) {
-                        return ([&]() {
-                                constexpr unsigned N = std::remove_reference_t<decltype(v)>::DIMENSION;
-
-                                if (N != dimension)
-                                {
-                                        return false;
-                                }
-
-                                std::unique_ptr<const mesh::Mesh<N>> mesh =
-                                        repository.repository<N>().meshes().object(object_name, point_count);
-
-                                storage->clear();
-                                load_event();
-
-                                processor::compute(
-                                        progress_list, &v, build_convex_hull, build_cocone, build_bound_cocone,
-                                        build_mst, std::move(mesh), object_name, object_size, object_position, rho,
-                                        alpha);
-
-                                return true;
-                        }() || ...);
-                },
-                storage->data());
-
-        if (!found)
-        {
-                error("Dimension " + to_string(dimension) + " is not supported, supported dimensions "
-                      + to_string(MultiStorage::supported_dimensions()));
-        }
+        load_from_point_repository(
+                build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list, dimension, object_name,
+                object_size, object_position, rho, alpha, point_count, load_event, repository,
+                make_dimension_sequence());
 }
 
 void add_from_volume_repository(
@@ -161,33 +203,10 @@ void add_from_volume_repository(
         double object_size,
         const vec3& object_position,
         int image_size,
-        const MultiRepository& repository,
-        MultiStorage* storage)
+        const MultiRepository& repository)
 {
-        bool found = std::apply(
-                [&](auto&... v) {
-                        return ([&]() {
-                                constexpr unsigned N = std::remove_reference_t<decltype(v)>::DIMENSION;
-
-                                if (N != dimension)
-                                {
-                                        return false;
-                                }
-
-                                std::unique_ptr<const volume::Volume<N>> volume =
-                                        repository.repository<N>().volumes().object(object_name, image_size);
-
-                                processor::compute(&v, std::move(volume), object_name, object_size, object_position);
-
-                                return true;
-                        }() || ...);
-                },
-                storage->data());
-
-        if (!found)
-        {
-                error("Dimension " + to_string(dimension) + " is not supported, supported dimensions "
-                      + to_string(MultiStorage::supported_dimensions()));
-        }
+        add_from_volume_repository(
+                dimension, object_name, object_size, object_position, image_size, repository,
+                make_dimension_sequence());
 }
 }

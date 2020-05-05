@@ -42,6 +42,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/variant.h>
 #include <src/model/mesh_utility.h>
 #include <src/storage/manage.h>
+#include <src/storage/processor/mesh.h>
 #include <src/utility/file/sys.h>
 #include <src/view/create.h>
 
@@ -614,14 +615,13 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         view::info::ObjectPosition object_position;
                         m_view->receive({&object_size, &object_position});
 
-                        load_from_file(
+                        storage::load_from_file(
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
-                                file_name, object_size.value, object_position.value, rho, alpha,
-                                [&](size_t dimension) {
+                                file_name, object_size.value, object_position.value, rho, alpha, [&](size_t dimension) {
+                                        m_storage->clear();
                                         m_view->send(view::command::ResetView());
                                         m_window_events(WindowEvent::FileLoaded(file_name, dimension));
-                                },
-                                m_storage.get());
+                                });
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -688,10 +688,11 @@ void MainWindow::thread_load_from_mesh_repository(int dimension, const std::stri
                                 dimension, object_name, object_size.value, object_position.value, rho, alpha,
                                 point_count,
                                 [&]() {
+                                        m_storage->clear();
                                         m_view->send(view::command::ResetView());
                                         m_window_events(WindowEvent::FileLoaded(object_name, dimension));
                                 },
-                                *m_repository, m_storage.get());
+                                *m_repository);
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -743,7 +744,7 @@ void MainWindow::thread_load_from_volume_repository(int dimension, const std::st
 
                         storage::add_from_volume_repository(
                                 dimension, object_name, object_size.value, object_position.value, image_size,
-                                *m_repository, m_storage.get());
+                                *m_repository);
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -846,7 +847,8 @@ void MainWindow::thread_bound_cocone(ObjectId id)
                         return;
                 }
 
-                if (!m_storage->mesh_object(id))
+                std::optional<storage::MultiStorage::MeshObjectConst> object = m_storage->mesh_object_const(id);
+                if (!object)
                 {
                         m_window_events(WindowEvent::MessageWarning("No object to compute BoundCocone"));
                         return;
@@ -869,12 +871,16 @@ void MainWindow::thread_bound_cocone(ObjectId id)
                 m_bound_cocone_rho = rho;
                 m_bound_cocone_alpha = alpha;
 
-                auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
-                        *message = "BoundCocone Reconstruction";
-                        compute_bound_cocone(progress_list, id, rho, alpha, m_storage.get());
-                };
+                std::visit(
+                        [=, this](const auto& v) {
+                                auto f = [=](ProgressRatioList* progress_list, std::string* message) {
+                                        *message = "BoundCocone Reconstruction";
 
-                m_worker_threads->start(ACTION, std::move(f));
+                                        storage::processor::compute_bound_cocone(progress_list, v, rho, alpha);
+                                };
+                                m_worker_threads->start(ACTION, std::move(f));
+                        },
+                        *object);
         });
 }
 
@@ -1217,9 +1223,10 @@ void MainWindow::event_from_mesh_window_thread(const mesh::MeshEvent<N>& event)
 
         const auto visitors = Visitors{
                 [this](const typename mesh::MeshEvent<N>::Update& v) {
-                        if (std::shared_ptr<mesh::MeshObject<N>> ptr = v.object.lock(); ptr)
+                        if (v.object)
                         {
-                                ui.model_tree->add_item(ptr->id(), ptr->name());
+                                m_storage->set_mesh_objects(v.object);
+                                ui.model_tree->add_item(v.object->id(), v.object->name());
                         }
                 },
                 [this](const typename mesh::MeshEvent<N>::Delete& v) { ui.model_tree->delete_item(v.id); }};
@@ -1253,10 +1260,11 @@ void MainWindow::event_from_volume_window_thread(const volume::VolumeEvent<N>& e
 
         const auto visitors = Visitors{
                 [this](const typename volume::VolumeEvent<N>::Update& v) {
-                        if (std::shared_ptr<volume::VolumeObject<N>> ptr = v.object.lock(); ptr)
+                        if (v.object)
                         {
-                                ui.model_tree->add_item(ptr->id(), ptr->name());
-                                update_volume_ui(ptr->id());
+                                m_storage->set_volume_objects(v.object);
+                                ui.model_tree->add_item(v.object->id(), v.object->name());
+                                update_volume_ui(v.object->id());
                         }
                 },
                 [this](const typename volume::VolumeEvent<N>::Delete& v) { ui.model_tree->delete_item(v.id); }};

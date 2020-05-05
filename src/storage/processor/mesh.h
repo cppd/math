@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../storage.h"
-
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/thread.h>
@@ -26,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/core/convex_hull.h>
 #include <src/geometry/graph/mst.h>
 #include <src/geometry/reconstruction/cocone.h>
+#include <src/model/mesh_object.h>
 #include <src/model/mesh_utility.h>
 #include <src/numerical/vec.h>
 #include <src/progress/progress_list.h>
@@ -88,7 +87,7 @@ std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh,
 }
 
 template <size_t N>
-void convex_hull(ProgressRatioList* progress_list, const mesh::MeshObject<N>& object, Storage<N>* storage)
+void convex_hull(ProgressRatioList* progress_list, const mesh::MeshObject<N>& object)
 {
         std::unique_ptr<const mesh::Mesh<N>> ch_mesh;
         {
@@ -106,15 +105,13 @@ void convex_hull(ProgressRatioList* progress_list, const mesh::MeshObject<N>& ob
                 std::make_shared<mesh::MeshObject<N>>(std::move(ch_mesh), object.matrix(), "Convex Hull");
 
         obj->created();
-        storage->set_mesh_object(obj);
 }
 
 template <size_t N>
 void cocone(
         ProgressRatioList* progress_list,
         const geometry::ManifoldConstructor<N>& constructor,
-        const Matrix<N + 1, N + 1, double>& model_matrix,
-        Storage<N>* storage)
+        const Matrix<N + 1, N + 1, double>& model_matrix)
 {
         std::unique_ptr<const mesh::Mesh<N>> cocone_mesh;
         {
@@ -141,7 +138,6 @@ void cocone(
                 std::make_shared<mesh::MeshObject<N>>(std::move(cocone_mesh), model_matrix, "Cocone");
 
         obj->created();
-        storage->set_mesh_object(obj);
 }
 
 template <size_t N>
@@ -150,8 +146,7 @@ void bound_cocone(
         const geometry::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix,
         double rho,
-        double alpha,
-        Storage<N>* storage)
+        double alpha)
 {
         std::unique_ptr<const mesh::Mesh<N>> bound_cocone_mesh;
         {
@@ -179,15 +174,13 @@ void bound_cocone(
                 std::make_shared<mesh::MeshObject<N>>(std::move(bound_cocone_mesh), model_matrix, name);
 
         obj->created();
-        storage->set_mesh_object(obj);
 }
 
 template <size_t N>
 void mst(
         ProgressRatioList* progress_list,
         const geometry::ManifoldConstructor<N>& constructor,
-        const Matrix<N + 1, N + 1, double>& model_matrix,
-        Storage<N>* storage)
+        const Matrix<N + 1, N + 1, double>& model_matrix)
 {
         std::vector<std::array<int, 2>> mst_lines;
         {
@@ -206,7 +199,6 @@ void mst(
                 std::make_shared<mesh::MeshObject<N>>(std::move(mst_mesh), model_matrix, "MST");
 
         obj->created();
-        storage->set_mesh_object(obj);
 }
 
 template <size_t N>
@@ -236,8 +228,7 @@ void manifold_constructor(
         bool build_mst,
         const mesh::MeshObject<N>& object,
         double rho,
-        double alpha,
-        Storage<N>* storage)
+        double alpha)
 {
         if (!build_cocone && !build_bound_cocone && !build_mst)
         {
@@ -252,20 +243,19 @@ void manifold_constructor(
         {
                 if (build_cocone)
                 {
-                        threads.add([&]() { cocone(progress_list, *manifold_constructor, object.matrix(), storage); });
+                        threads.add([&]() { cocone(progress_list, *manifold_constructor, object.matrix()); });
                 }
 
                 if (build_bound_cocone)
                 {
                         threads.add([&]() {
-                                bound_cocone(
-                                        progress_list, *manifold_constructor, object.matrix(), rho, alpha, storage);
+                                bound_cocone(progress_list, *manifold_constructor, object.matrix(), rho, alpha);
                         });
                 }
 
                 if (build_mst)
                 {
-                        threads.add([&]() { mst(progress_list, *manifold_constructor, object.matrix(), storage); });
+                        threads.add([&]() { mst(progress_list, *manifold_constructor, object.matrix()); });
                 }
         }
         catch (...)
@@ -280,25 +270,22 @@ void manifold_constructor(
 namespace processor
 {
 template <size_t N>
-void compute_bound_cocone(ProgressRatioList* progress_list, Storage<N>* storage, ObjectId id, double rho, double alpha)
+void compute_bound_cocone(
+        ProgressRatioList* progress_list,
+        const std::shared_ptr<const mesh::MeshObject<N>>& obj,
+        double rho,
+        double alpha)
 {
         namespace impl = processor_implementation;
-        const std::shared_ptr<mesh::MeshObject<N>> obj = storage->mesh_object(id);
-        if (!obj)
-        {
-                error("No object found to compute BoundCocone");
-        }
         constexpr bool build_cocone = false;
         constexpr bool build_bound_cocone = true;
         constexpr bool build_mst = false;
-        impl::manifold_constructor(
-                progress_list, build_cocone, build_bound_cocone, build_mst, *obj, rho, alpha, storage);
+        impl::manifold_constructor(progress_list, build_cocone, build_bound_cocone, build_mst, *obj, rho, alpha);
 }
 
 template <size_t N>
 void compute(
         ProgressRatioList* progress_list,
-        Storage<N>* storage,
         bool build_convex_hull,
         bool build_cocone,
         bool build_bound_cocone,
@@ -337,14 +324,13 @@ void compute(
                 std::make_shared<mesh::MeshObject<N>>(std::move(mesh), matrix, name);
 
         model_object->created();
-        storage->set_mesh_object(model_object);
 
         ThreadsWithCatch threads(2);
         try
         {
                 if (build_convex_hull)
                 {
-                        threads.add([&]() { impl::convex_hull(progress_list, *model_object, storage); });
+                        threads.add([&]() { impl::convex_hull(progress_list, *model_object); });
                 }
 
                 if (build_cocone || build_bound_cocone || build_mst)
@@ -352,7 +338,7 @@ void compute(
                         threads.add([&]() {
                                 impl::manifold_constructor(
                                         progress_list, build_cocone, build_bound_cocone, build_mst, *model_object, rho,
-                                        alpha, storage);
+                                        alpha);
                         });
                 }
         }

@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../storage.h"
-
+#include <src/model/volume_object.h>
 #include <src/model/volume_utility.h>
 #include <src/numerical/vec.h>
 
@@ -29,7 +28,6 @@ namespace storage::processor
 {
 template <size_t N>
 void compute(
-        Storage<N>* storage,
         std::unique_ptr<const volume::Volume<N>>&& volume,
         const std::string& name,
         double object_size,
@@ -50,7 +48,5 @@ void compute(
                 std::make_shared<volume::VolumeObject<N>>(std::move(volume), matrix, name);
 
         model_object->update_all();
-
-        storage->set_volume_object(std::move(model_object));
 }
 }
