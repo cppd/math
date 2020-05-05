@@ -44,7 +44,7 @@ constexpr std::initializer_list<VkFormat> TRANSFER_FUNCTION_FORMATS =
 std::vector<std::uint8_t> transfer_function()
 {
         std::vector<std::uint8_t> pixels;
-        const int size = 1024;
+        const int size = 256;
         const int max = size - 1;
         const float max_r = 1.0f / max;
         for (int i = 0; i <= max; ++i)
