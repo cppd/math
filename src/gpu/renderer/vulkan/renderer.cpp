@@ -417,7 +417,7 @@ class Impl final : public Renderer
 
                 //
 
-                if (!(m_current_object_id == id))
+                if (m_current_object_id != id)
                 {
                         m_current_object_id = id;
                         create_command_buffers();

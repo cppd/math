@@ -1486,7 +1486,7 @@ void MainWindow::update_volume_ui(ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (!(id == ui.model_tree->current_item()))
+        if (id != ui.model_tree->current_item())
         {
                 return;
         }
