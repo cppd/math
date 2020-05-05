@@ -199,6 +199,8 @@ private:
         template <size_t N>
         void event_from_volume_window_thread(const volume::VolumeEvent<N>& event);
 
+        void update_volume_ui(ObjectId id);
+
         Ui::MainWindow ui;
 
         const std::thread::id m_window_thread_id;

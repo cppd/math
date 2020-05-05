@@ -415,7 +415,16 @@ void MainWindow::terminate_all_threads()
 
         m_worker_threads->terminate_all();
 
+        {
+                // При удалении объектов при удалении m_storage будут вызываться
+                // удаления их вершин из дерева, а это означает переключение вершин
+                // и поиск их объектов в m_storage, который в это время удаляется.
+                // Поэтому перед удалением m_storage нужно удалить всё из дерева.
+                QSignalBlocker blocker(ui.model_tree);
+                ui.model_tree->delete_all();
+        }
         m_storage.reset();
+
         delete_model_events();
 
         m_view.reset();
@@ -1242,6 +1251,7 @@ void MainWindow::event_from_volume_window_thread(const volume::VolumeEvent<N>& e
                         if (auto ptr = v.object.lock(); ptr)
                         {
                                 ui.model_tree->add_item(ptr->id(), ptr->name());
+                                update_volume_ui(ptr->id());
                         }
                 },
                 [this](const typename volume::VolumeEvent<N>::Delete& v) { ui.model_tree->delete_item(v.id); }};
@@ -1472,13 +1482,52 @@ void MainWindow::graphics_widget_resize(QResizeEvent* e)
         }
 }
 
+void MainWindow::update_volume_ui(ObjectId id)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        if (!(id == ui.model_tree->current_item()))
+        {
+                return;
+        }
+
+        std::optional<storage::MultiStorage::VolumeObjectConst> volume_object = m_storage->volume_object_const(id);
+        if (!volume_object)
+        {
+                return;
+        }
+
+        std::visit(
+                [&](const auto& v) {
+                        double min;
+                        double max;
+                        {
+                                volume::Reading reading(*v);
+                                min = v->level_min();
+                                max = v->level_max();
+                        }
+                        QSignalBlocker blocker(ui.slider_volume_levels);
+                        ui.slider_volume_levels->set_range(min, max);
+                },
+                *volume_object);
+}
+
 void MainWindow::model_tree_item_changed()
 {
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
         std::optional<ObjectId> id = ui.model_tree->current_item();
-        if (id && m_dimension == 3)
+        if (!id)
+        {
+                return;
+        }
+
+        if (m_dimension == 3)
         {
                 m_view->send(view::command::ShowObject(*id));
         }
+
+        update_volume_ui(*id);
 }
 
 double MainWindow::lighting_slider_value(const QSlider* slider)
@@ -1733,8 +1782,27 @@ void MainWindow::on_actionFullScreen_triggered()
 {
 }
 
-void MainWindow::on_slider_volume_levels_range_changed(double /*min*/, double /*max*/)
+void MainWindow::on_slider_volume_levels_range_changed(double min, double max)
 {
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        std::optional<ObjectId> id = ui.model_tree->current_item();
+        if (!id)
+        {
+                return;
+        }
+        std::optional<storage::MultiStorage::VolumeObject> object = m_storage->volume_object(*id);
+        if (!object)
+        {
+                return;
+        }
+
+        std::visit(
+                [&](const auto& v) {
+                        volume::WritingUpdates updates(v.get(), {volume::Update::Levels});
+                        v->set_levels(min, max);
+                },
+                *object);
 }
 
 template <size_t N, typename T>
