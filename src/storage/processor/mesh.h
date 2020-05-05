@@ -149,8 +149,7 @@ template <size_t N, typename MeshFloat>
 void cocone(
         ProgressRatioList* progress_list,
         const geometry::ManifoldConstructor<N>& constructor,
-        const std::vector<Vector<N, float>>& points,
-        const mesh::MeshObject<N>& object,
+        const Matrix<N + 1, N + 1, double>& model_matrix,
         int mesh_threads,
         Storage<N, MeshFloat>* storage)
 {
@@ -165,7 +164,7 @@ void cocone(
 
                 constructor.cocone(&normals, &facets, &progress);
 
-                cocone_mesh = mesh::create_mesh_for_facets(points, normals, facets);
+                cocone_mesh = mesh::create_mesh_for_facets(constructor.points(), normals, facets);
 
                 LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5)
                     + " s");
@@ -176,7 +175,7 @@ void cocone(
         }
 
         const std::shared_ptr<mesh::MeshObject<N>> obj =
-                std::make_shared<mesh::MeshObject<N>>(std::move(cocone_mesh), object.matrix(), "Cocone");
+                std::make_shared<mesh::MeshObject<N>>(std::move(cocone_mesh), model_matrix, "Cocone");
 
         obj->created();
 
@@ -187,8 +186,7 @@ template <size_t N, typename MeshFloat>
 void bound_cocone(
         ProgressRatioList* progress_list,
         const geometry::ManifoldConstructor<N>& constructor,
-        const std::vector<Vector<N, float>>& points,
-        const mesh::MeshObject<N>& object,
+        const Matrix<N + 1, N + 1, double>& model_matrix,
         double rho,
         double alpha,
         int mesh_threads,
@@ -205,7 +203,7 @@ void bound_cocone(
 
                 constructor.bound_cocone(rho, alpha, &normals, &facets, &progress);
 
-                bound_cocone_mesh = mesh::create_mesh_for_facets(points, normals, facets);
+                bound_cocone_mesh = mesh::create_mesh_for_facets(constructor.points(), normals, facets);
 
                 LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5)
                     + " s");
@@ -217,7 +215,7 @@ void bound_cocone(
 
         std::string name = "Bound Cocone (" + bound_cocone_text_rho_alpha(rho, alpha) + ")";
         const std::shared_ptr<mesh::MeshObject<N>> obj =
-                std::make_shared<mesh::MeshObject<N>>(std::move(bound_cocone_mesh), object.matrix(), name);
+                std::make_shared<mesh::MeshObject<N>>(std::move(bound_cocone_mesh), model_matrix, name);
 
         obj->created();
 
@@ -228,8 +226,7 @@ template <size_t N, typename MeshFloat>
 void mst(
         ProgressRatioList* progress_list,
         const geometry::ManifoldConstructor<N>& constructor,
-        const std::vector<Vector<N, float>>& points,
-        const mesh::MeshObject<N>& object,
+        const Matrix<N + 1, N + 1, double>& model_matrix,
         int mesh_threads,
         Storage<N, MeshFloat>* storage)
 {
@@ -237,16 +234,17 @@ void mst(
         {
                 ProgressRatio progress(progress_list);
 
-                mst_lines = geometry::minimum_spanning_tree(points, constructor.delaunay_objects(), &progress);
+                mst_lines = geometry::minimum_spanning_tree(
+                        constructor.points(), constructor.delaunay_objects(), &progress);
         }
-        std::unique_ptr<const mesh::Mesh<N>> mst_mesh = mesh::create_mesh_for_lines(points, mst_lines);
+        std::unique_ptr<const mesh::Mesh<N>> mst_mesh = mesh::create_mesh_for_lines(constructor.points(), mst_lines);
         if (mst_mesh->lines.empty())
         {
                 return;
         }
 
         const std::shared_ptr<mesh::MeshObject<N>> obj =
-                std::make_shared<mesh::MeshObject<N>>(std::move(mst_mesh), object.matrix(), "MST");
+                std::make_shared<mesh::MeshObject<N>>(std::move(mst_mesh), model_matrix, "MST");
 
         obj->created();
 
@@ -270,30 +268,18 @@ void manifold_constructor(
                 return;
         }
 
-        std::vector<Vector<N, float>> points;
-
-        if (!object.mesh().facets.empty())
-        {
-                points = unique_facet_vertices(object.mesh());
-        }
-        else
-        {
-                points = unique_point_vertices(object.mesh());
-        }
-
         std::shared_ptr<geometry::ManifoldConstructor<N>> manifold_constructor_ptr =
                 storage->manifold_constructor(object.id());
         if (!manifold_constructor_ptr)
         {
+                std::vector<Vector<N, float>> points = !object.mesh().facets.empty()
+                                                               ? unique_facet_vertices(object.mesh())
+                                                               : unique_point_vertices(object.mesh());
                 ProgressRatio progress(progress_list);
-
                 double start_time = time_in_seconds();
-
                 manifold_constructor_ptr = geometry::create_manifold_constructor(points, &progress);
                 storage->set_manifold_constructor(object.id(), manifold_constructor_ptr);
-
-                LOG("Manifold reconstruction first phase, " + to_string_fixed(time_in_seconds() - start_time, 5)
-                    + " s");
+                LOG("Manifold constructor, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         }
 
         ThreadsWithCatch threads(3);
@@ -302,7 +288,8 @@ void manifold_constructor(
                 if (build_cocone)
                 {
                         threads.add([&]() {
-                                cocone(progress_list, *manifold_constructor_ptr, points, object, mesh_threads, storage);
+                                cocone(progress_list, *manifold_constructor_ptr, object.matrix(), mesh_threads,
+                                       storage);
                         });
                 }
 
@@ -310,7 +297,7 @@ void manifold_constructor(
                 {
                         threads.add([&]() {
                                 bound_cocone(
-                                        progress_list, *manifold_constructor_ptr, points, object, rho, alpha,
+                                        progress_list, *manifold_constructor_ptr, object.matrix(), rho, alpha,
                                         mesh_threads, storage);
                         });
                 }
@@ -318,7 +305,7 @@ void manifold_constructor(
                 if (build_mst)
                 {
                         threads.add([&]() {
-                                mst(progress_list, *manifold_constructor_ptr, points, object, mesh_threads, storage);
+                                mst(progress_list, *manifold_constructor_ptr, object.matrix(), mesh_threads, storage);
                         });
                 }
         }
