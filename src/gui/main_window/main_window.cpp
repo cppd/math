@@ -119,6 +119,8 @@ constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(50, 150, 50);
 
 constexpr bool STL_EXPORT_FORMAT_ASCII = true;
 
+using PainterFloatingPoint = double;
+
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
           m_window_thread_id(std::this_thread::get_id()),
@@ -614,7 +616,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
 
                         load_from_file(
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
-                                file_name, object_size.value, object_position.value, rho, alpha, m_mesh_threads,
+                                file_name, object_size.value, object_position.value, rho, alpha,
                                 [&](size_t dimension) {
                                         m_view->send(view::command::ResetView());
                                         m_window_events(WindowEvent::FileLoaded(file_name, dimension));
@@ -684,7 +686,7 @@ void MainWindow::thread_load_from_mesh_repository(int dimension, const std::stri
                         storage::load_from_point_repository(
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
                                 dimension, object_name, object_size.value, object_position.value, rho, alpha,
-                                m_mesh_threads, point_count,
+                                point_count,
                                 [&]() {
                                         m_view->send(view::command::ResetView());
                                         m_window_events(WindowEvent::FileLoaded(object_name, dimension));
@@ -869,7 +871,7 @@ void MainWindow::thread_bound_cocone(ObjectId id)
 
                 auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
                         *message = "BoundCocone Reconstruction";
-                        compute_bound_cocone(progress_list, id, rho, alpha, m_mesh_threads, m_storage.get());
+                        compute_bound_cocone(progress_list, id, rho, alpha, m_storage.get());
                 };
 
                 m_worker_threads->start(ACTION, std::move(f));
@@ -1857,38 +1859,73 @@ void MainWindow::paint(
         }
 }
 
-void MainWindow::on_actionPainter_triggered()
+template <size_t N>
+void MainWindow::painter_thread_function(
+        ProgressRatioList* progress_list,
+        const std::shared_ptr<const mesh::MeshObject<N>>& object)
 {
-        std::optional<ObjectId> item = ui.model_tree->current_item();
-        if (!item)
+        std::shared_ptr<const painter::MeshObject<N, PainterFloatingPoint>> painter_mesh_object;
+
         {
-                m_window_events(WindowEvent::MessageWarning("No item selected to paint"));
-                return;
+                ProgressRatio progress(progress_list);
+                painter_mesh_object = std::make_shared<painter::MeshObject<N, PainterFloatingPoint>>(
+                        object->mesh(), to_matrix<PainterFloatingPoint>(object->matrix()), m_mesh_threads, &progress);
         }
 
-        ObjectId object_id = *item;
-
-        std::optional<storage::MultiStorage::MeshObjectConst> mesh_object = m_storage->mesh_object_const(object_id);
-        if (!mesh_object)
-        {
-                m_window_events(WindowEvent::MessageWarning("No object to paint"));
-                return;
-        }
-
-        std::optional<storage::MultiStorage::PainterMeshObjectConst> painter_mesh_object =
-                m_storage->painter_mesh_object_const(object_id);
         if (!painter_mesh_object)
         {
                 m_window_events(WindowEvent::MessageWarning("No object to paint"));
                 return;
         }
 
-        std::string object_name;
-        std::visit([&](const auto& v) { object_name = v->name(); }, *mesh_object);
+        std::string name = object->name();
+        run_in_window_thread([=, this]() { paint(painter_mesh_object, name); });
+}
 
-        catch_all([&](std::string* message) {
-                *message = "Painter";
+void MainWindow::on_actionPainter_triggered()
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-                std::visit([&](const auto& v) { paint(v, object_name); }, *painter_mesh_object);
+        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
+
+        catch_all([&](std::string* msg) {
+                *msg = "Painter";
+
+                std::optional<ObjectId> id = ui.model_tree->current_item();
+                if (!id)
+                {
+                        m_window_events(WindowEvent::MessageWarning("No item selected to paint"));
+                        return;
+                }
+
+                if (!stop_action(ACTION))
+                {
+                        return;
+                }
+
+                std::optional<storage::MultiStorage::MeshObjectConst> object = m_storage->mesh_object_const(*id);
+                if (!object)
+                {
+                        m_window_events(WindowEvent::MessageWarning("No object to paint"));
+                        return;
+                }
+
+                std::visit(
+                        [this](const auto& v) {
+                                if (v->mesh().facets.empty())
+                                {
+                                        m_window_events(WindowEvent::MessageWarning("No object to paint"));
+                                        return;
+                                }
+
+                                auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
+                                        *message = "Painter thread";
+
+                                        painter_thread_function(progress_list, v);
+                                };
+
+                                m_worker_threads->start(ACTION, std::move(f));
+                        },
+                        *object);
         });
 }

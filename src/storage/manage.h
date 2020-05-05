@@ -33,7 +33,6 @@ void compute_bound_cocone(
         ObjectId id,
         double rho,
         double alpha,
-        int mesh_threads,
         MultiStorage* storage);
 
 void load_from_file(
@@ -47,7 +46,6 @@ void load_from_file(
         const vec3& object_position,
         double rho,
         double alpha,
-        int mesh_threads,
         const std::function<void(size_t dimension)>& load_event,
         MultiStorage* storage);
 
@@ -63,7 +61,6 @@ void load_from_point_repository(
         const vec3& object_position,
         double rho,
         double alpha,
-        int mesh_threads,
         int point_count,
         const std::function<void()>& load_event,
         const MultiRepository& repository,

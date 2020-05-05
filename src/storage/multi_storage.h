@@ -35,7 +35,7 @@ class MultiStorage final
         static_assert(COUNT > 0);
 
         // std::tuple<T<MIN>, ..., T<MAX>>.
-        using Tuple = SequenceType1<std::tuple, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, Storage, PainterFloatingPoint>;
+        using Tuple = SequenceType1<std::tuple, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, Storage>;
 
         Tuple m_data;
 
@@ -51,24 +51,6 @@ public:
                 MAXIMUM_DIMENSION,
                 std::shared_ptr,
                 mesh::MeshObject>;
-
-        //
-
-        using PainterMeshObject = SequenceType2<
-                std::variant,
-                MINIMUM_DIMENSION,
-                MAXIMUM_DIMENSION,
-                std::shared_ptr,
-                painter::MeshObject,
-                PainterFloatingPoint>;
-
-        using PainterMeshObjectConst = SequenceType2Const2<
-                std::variant,
-                MINIMUM_DIMENSION,
-                MAXIMUM_DIMENSION,
-                std::shared_ptr,
-                painter::MeshObject,
-                PainterFloatingPoint>;
 
         //
 
@@ -141,50 +123,6 @@ public:
                         [&](const auto&... v) {
                                 ([&]() {
                                         auto ptr = v.mesh_object(id);
-                                        if (ptr)
-                                        {
-                                                opt = std::move(ptr);
-                                                return true;
-                                        }
-                                        return false;
-                                }()
-                                 || ...);
-                        },
-                        m_data);
-
-                return opt;
-        }
-
-        std::optional<PainterMeshObject> painter_mesh_object(ObjectId id) const
-        {
-                std::optional<PainterMeshObject> opt;
-
-                std::apply(
-                        [&](const auto&... v) {
-                                ([&]() {
-                                        auto ptr = v.painter_mesh_object(id);
-                                        if (ptr)
-                                        {
-                                                opt = std::move(ptr);
-                                                return true;
-                                        }
-                                        return false;
-                                }()
-                                 || ...);
-                        },
-                        m_data);
-
-                return opt;
-        }
-
-        std::optional<PainterMeshObjectConst> painter_mesh_object_const(ObjectId id) const
-        {
-                std::optional<PainterMeshObjectConst> opt;
-
-                std::apply(
-                        [&](const auto&... v) {
-                                ([&]() {
-                                        auto ptr = v.painter_mesh_object(id);
                                         if (ptr)
                                         {
                                                 opt = std::move(ptr);

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_main_window.h"
 
 #include <src/com/sequence.h>
+#include <src/painter/shapes/mesh.h>
 #include <src/progress/progress_list.h>
 #include <src/storage/multi_repository.h>
 #include <src/storage/multi_storage.h>
@@ -151,6 +152,11 @@ private:
         void thread_export(ObjectId id);
         void thread_bound_cocone(ObjectId id);
         void thread_self_test(SelfTestType test_type, bool with_confirmation);
+
+        template <size_t N>
+        void painter_thread_function(
+                ProgressRatioList* progress_list,
+                const std::shared_ptr<const mesh::MeshObject<N>>& object);
 
         template <size_t N, typename T>
         void paint(const std::shared_ptr<const painter::MeshObject<N, T>>& mesh_object, const std::string& object_name);

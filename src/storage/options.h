@@ -21,6 +21,4 @@ namespace storage
 {
 constexpr int MINIMUM_DIMENSION = 3;
 constexpr int MAXIMUM_DIMENSION = 5;
-
-using PainterFloatingPoint = double;
 }

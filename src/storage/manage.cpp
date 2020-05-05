@@ -30,7 +30,6 @@ void compute_bound_cocone(
         ObjectId id,
         double rho,
         double alpha,
-        int mesh_threads,
         MultiStorage* storage)
 {
         bool found = std::apply(
@@ -41,7 +40,7 @@ void compute_bound_cocone(
                                         return false;
                                 }
 
-                                processor::compute_bound_cocone(progress_list, &v, id, rho, alpha, mesh_threads);
+                                processor::compute_bound_cocone(progress_list, &v, id, rho, alpha);
 
                                 return true;
                         }() || ...);
@@ -65,7 +64,6 @@ void load_from_file(
         const vec3& object_position,
         double rho,
         double alpha,
-        int mesh_threads,
         const std::function<void(size_t dimension)>& load_event,
         MultiStorage* storage)
 {
@@ -93,8 +91,7 @@ void load_from_file(
 
                                 processor::compute(
                                         progress_list, &v, build_convex_hull, build_cocone, build_bound_cocone,
-                                        build_mst, std::move(mesh), "Model", object_size, object_position, rho, alpha,
-                                        mesh_threads);
+                                        build_mst, std::move(mesh), "Model", object_size, object_position, rho, alpha);
 
                                 return true;
                         }() || ...);
@@ -120,7 +117,6 @@ void load_from_point_repository(
         const vec3& object_position,
         double rho,
         double alpha,
-        int mesh_threads,
         int point_count,
         const std::function<void()>& load_event,
         const MultiRepository& repository,
@@ -145,7 +141,7 @@ void load_from_point_repository(
                                 processor::compute(
                                         progress_list, &v, build_convex_hull, build_cocone, build_bound_cocone,
                                         build_mst, std::move(mesh), object_name, object_size, object_position, rho,
-                                        alpha, mesh_threads);
+                                        alpha);
 
                                 return true;
                         }() || ...);

@@ -17,10 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "options.h"
 
-#include <type_traits>
-
 namespace storage
 {
 static_assert(MINIMUM_DIMENSION >= 3 && MINIMUM_DIMENSION <= MAXIMUM_DIMENSION);
-static_assert(std::is_floating_point_v<PainterFloatingPoint>);
 }

@@ -19,16 +19,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/model/mesh_object.h>
 #include <src/model/volume_object.h>
-#include <src/painter/shapes/mesh.h>
 
 #include <memory>
+#include <mutex>
 #include <shared_mutex>
 #include <unordered_map>
-#include <vector>
 
 namespace storage
 {
-template <size_t N, typename MeshFloat>
+template <size_t N>
 class Storage
 {
         static_assert(N >= 3);
@@ -36,7 +35,6 @@ class Storage
         struct MeshData
         {
                 std::shared_ptr<mesh::MeshObject<N>> mesh_object;
-                std::shared_ptr<painter::MeshObject<N, MeshFloat>> painter_mesh_object;
         };
 
         struct VolumeData
@@ -66,16 +64,6 @@ public:
         }
 
         template <typename T>
-        void set_painter_mesh_object(ObjectId id, T&& mesh)
-        {
-                std::shared_ptr<painter::MeshObject<N, MeshFloat>> tmp;
-                std::unique_lock lock(m_mesh_mutex);
-                MeshData& v = m_mesh_map.try_emplace(id).first->second;
-                tmp = std::move(v.painter_mesh_object);
-                v.painter_mesh_object = std::forward<T>(mesh);
-        }
-
-        template <typename T>
         void set_volume_object(T&& object)
         {
                 std::shared_ptr<volume::VolumeObject<N>> tmp;
@@ -92,13 +80,6 @@ public:
                 std::shared_lock lock(m_mesh_mutex);
                 auto iter = m_mesh_map.find(id);
                 return (iter != m_mesh_map.cend()) ? iter->second.mesh_object : nullptr;
-        }
-
-        std::shared_ptr<painter::MeshObject<N, MeshFloat>> painter_mesh_object(ObjectId id) const
-        {
-                std::shared_lock lock(m_mesh_mutex);
-                auto iter = m_mesh_map.find(id);
-                return (iter != m_mesh_map.cend()) ? iter->second.painter_mesh_object : nullptr;
         }
 
         std::shared_ptr<volume::VolumeObject<N>> volume_object(ObjectId id) const

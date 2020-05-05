@@ -27,9 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace storage::processor
 {
-template <size_t N, typename MeshFloat>
+template <size_t N>
 void compute(
-        Storage<N, MeshFloat>* storage,
+        Storage<N>* storage,
         std::unique_ptr<const volume::Volume<N>>&& volume,
         const std::string& name,
         double object_size,
