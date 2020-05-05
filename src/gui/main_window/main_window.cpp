@@ -125,7 +125,6 @@ MainWindow::MainWindow(QWidget* parent)
           m_first_show(true),
           m_bound_cocone_rho(BOUND_COCONE_DEFAULT_RHO),
           m_bound_cocone_alpha(BOUND_COCONE_DEFAULT_ALPHA),
-          m_dimension(0),
           m_close_without_confirmation(false),
           m_mesh_threads(std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT))
 {
@@ -1152,7 +1151,6 @@ void MainWindow::event_from_window(const WindowEvent& event)
                 [this](const WindowEvent::FileLoaded& d) {
                         std::string base_name = file_base_name(d.file_name);
                         set_window_title_file(base_name + " [" + space_name(d.dimension) + "]");
-                        m_dimension = d.dimension;
                 }};
 
         try
@@ -1527,10 +1525,7 @@ void MainWindow::model_tree_item_changed()
                 return;
         }
 
-        if (m_dimension == 3)
-        {
-                m_view->send(view::command::ShowObject(*id));
-        }
+        m_view->send(view::command::ShowObject(*id));
 
         update_volume_ui(*id);
 }
