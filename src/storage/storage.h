@@ -59,8 +59,11 @@ public:
                 std::shared_ptr<mesh::MeshObject<N>> tmp;
                 std::unique_lock lock(m_mesh_mutex);
                 MeshData& v = m_mesh_map.try_emplace(object->id()).first->second;
-                tmp = std::move(v.mesh_object);
-                v.mesh_object = std::forward<T>(object);
+                if (v.mesh_object != object)
+                {
+                        tmp = std::move(v.mesh_object);
+                        v.mesh_object = std::forward<T>(object);
+                }
         }
 
         template <typename T>
@@ -69,8 +72,11 @@ public:
                 std::shared_ptr<volume::VolumeObject<N>> tmp;
                 std::unique_lock lock(m_volume_mutex);
                 VolumeData& v = m_volume_map.try_emplace(object->id()).first->second;
-                tmp = std::move(v.volume_object);
-                v.volume_object = std::forward<T>(object);
+                if (v.volume_object != object)
+                {
+                        tmp = std::move(v.volume_object);
+                        v.volume_object = std::forward<T>(object);
+                }
         }
 
         //

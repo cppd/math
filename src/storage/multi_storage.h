@@ -39,6 +39,38 @@ class MultiStorage final
 
         Tuple m_data;
 
+        template <size_t N1, size_t N2>
+        bool set_storage_object(
+                const std::shared_ptr<mesh::MeshObject<N1>>& mesh_object,
+                [[maybe_unused]] Storage<N2>* storage)
+        {
+                if constexpr (N1 == N2)
+                {
+                        storage->set_mesh_object(mesh_object);
+                        return true;
+                }
+                return false;
+        }
+
+        template <size_t N1, size_t N2>
+        bool set_storage_object(
+                const std::shared_ptr<volume::VolumeObject<N1>>& volume_object,
+                [[maybe_unused]] Storage<N2>* storage)
+        {
+                if constexpr (N1 == N2)
+                {
+                        storage->set_volume_object(volume_object);
+                        return true;
+                }
+                return false;
+        }
+
+        template <typename T>
+        void set_object(const T& object)
+        {
+                std::apply([&](auto&... storage) { (set_storage_object(object, &storage) || ...); }, m_data);
+        }
+
 public:
         using Data = Tuple;
 
@@ -91,6 +123,16 @@ public:
         void clear()
         {
                 std::apply([](auto&... v) { (v.clear(), ...); }, m_data);
+        }
+
+        void set_mesh_objects(const MeshObject& mesh_object)
+        {
+                std::visit([&](const auto& v) { set_object(v); }, mesh_object);
+        }
+
+        void set_volume_objects(const VolumeObject& volume_object)
+        {
+                std::visit([&](const auto& v) { set_object(v); }, volume_object);
         }
 
         std::optional<MeshObject> mesh_object(ObjectId id) const
