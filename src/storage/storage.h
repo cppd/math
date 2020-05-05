@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/geometry/reconstruction/cocone.h>
 #include <src/model/mesh_object.h>
 #include <src/model/volume_object.h>
 #include <src/painter/shapes/mesh.h>
@@ -38,7 +37,6 @@ class Storage
         {
                 std::shared_ptr<mesh::MeshObject<N>> mesh_object;
                 std::shared_ptr<painter::MeshObject<N, MeshFloat>> painter_mesh_object;
-                std::shared_ptr<geometry::ManifoldConstructor<N>> manifold_constructor;
         };
 
         struct VolumeData
@@ -78,16 +76,6 @@ public:
         }
 
         template <typename T>
-        void set_manifold_constructor(ObjectId id, T&& manifold_constructor)
-        {
-                std::shared_ptr<geometry::ManifoldConstructor<N>> tmp;
-                std::unique_lock lock(m_mesh_mutex);
-                MeshData& v = m_mesh_map.try_emplace(id).first->second;
-                tmp = std::move(v.manifold_constructor);
-                v.manifold_constructor = std::forward<T>(manifold_constructor);
-        }
-
-        template <typename T>
         void set_volume_object(T&& object)
         {
                 std::shared_ptr<volume::VolumeObject<N>> tmp;
@@ -111,13 +99,6 @@ public:
                 std::shared_lock lock(m_mesh_mutex);
                 auto iter = m_mesh_map.find(id);
                 return (iter != m_mesh_map.cend()) ? iter->second.painter_mesh_object : nullptr;
-        }
-
-        std::shared_ptr<geometry::ManifoldConstructor<N>> manifold_constructor(ObjectId id) const
-        {
-                std::shared_lock lock(m_mesh_mutex);
-                auto iter = m_mesh_map.find(id);
-                return (iter != m_mesh_map.cend()) ? iter->second.manifold_constructor : nullptr;
         }
 
         std::shared_ptr<volume::VolumeObject<N>> volume_object(ObjectId id) const
