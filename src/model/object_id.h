@@ -35,6 +35,11 @@ public:
                 return m_id == id.m_id;
         }
 
+        bool operator!=(const ObjectId& id) const noexcept
+        {
+                return m_id != id.m_id;
+        }
+
         size_t hash() const noexcept
         {
                 return std::hash<Type>()(m_id);
