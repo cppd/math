@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/geometry/core/convex_hull.h>
 #include <src/geometry/graph/mst.h>
+#include <src/geometry/reconstruction/cocone.h>
 #include <src/model/mesh_utility.h>
 #include <src/numerical/vec.h>
 #include <src/progress/progress_list.h>
@@ -251,6 +252,25 @@ void mst(
         add_meshes(progress_list, obj, mesh_threads, storage);
 }
 
+template <size_t N>
+std::unique_ptr<geometry::ManifoldConstructor<N>> create_manifold_constructor(
+        ProgressRatioList* progress_list,
+        const mesh::MeshObject<N>& object)
+{
+        std::vector<Vector<N, float>> points = !object.mesh().facets.empty() ? unique_facet_vertices(object.mesh())
+                                                                             : unique_point_vertices(object.mesh());
+
+        ProgressRatio progress(progress_list);
+        double start_time = time_in_seconds();
+
+        std::unique_ptr<geometry::ManifoldConstructor<N>> manifold_constructor =
+                geometry::create_manifold_constructor(points, &progress);
+
+        LOG("Manifold constructor created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+
+        return manifold_constructor;
+}
+
 template <size_t N, typename MeshFloat>
 void manifold_constructor(
         ProgressRatioList* progress_list,
@@ -268,19 +288,8 @@ void manifold_constructor(
                 return;
         }
 
-        std::shared_ptr<geometry::ManifoldConstructor<N>> manifold_constructor_ptr =
-                storage->manifold_constructor(object.id());
-        if (!manifold_constructor_ptr)
-        {
-                std::vector<Vector<N, float>> points = !object.mesh().facets.empty()
-                                                               ? unique_facet_vertices(object.mesh())
-                                                               : unique_point_vertices(object.mesh());
-                ProgressRatio progress(progress_list);
-                double start_time = time_in_seconds();
-                manifold_constructor_ptr = geometry::create_manifold_constructor(points, &progress);
-                storage->set_manifold_constructor(object.id(), manifold_constructor_ptr);
-                LOG("Manifold constructor, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
-        }
+        std::unique_ptr<const geometry::ManifoldConstructor<N>> manifold_constructor =
+                create_manifold_constructor(progress_list, object);
 
         ThreadsWithCatch threads(3);
         try
@@ -288,8 +297,7 @@ void manifold_constructor(
                 if (build_cocone)
                 {
                         threads.add([&]() {
-                                cocone(progress_list, *manifold_constructor_ptr, object.matrix(), mesh_threads,
-                                       storage);
+                                cocone(progress_list, *manifold_constructor, object.matrix(), mesh_threads, storage);
                         });
                 }
 
@@ -297,15 +305,15 @@ void manifold_constructor(
                 {
                         threads.add([&]() {
                                 bound_cocone(
-                                        progress_list, *manifold_constructor_ptr, object.matrix(), rho, alpha,
-                                        mesh_threads, storage);
+                                        progress_list, *manifold_constructor, object.matrix(), rho, alpha, mesh_threads,
+                                        storage);
                         });
                 }
 
                 if (build_mst)
                 {
                         threads.add([&]() {
-                                mst(progress_list, *manifold_constructor_ptr, object.matrix(), mesh_threads, storage);
+                                mst(progress_list, *manifold_constructor, object.matrix(), mesh_threads, storage);
                         });
                 }
         }
