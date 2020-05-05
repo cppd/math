@@ -36,14 +36,6 @@ void compute_bound_cocone(
         int mesh_threads,
         MultiStorage* storage);
 
-void save_to_obj(ObjectId id, const std::string& file_name, const std::string& comment, const MultiStorage& storage);
-void save_to_stl(
-        ObjectId id,
-        const std::string& file_name,
-        const std::string& comment,
-        const MultiStorage& storage,
-        bool ascii_format);
-
 void load_from_file(
         bool build_convex_hull,
         bool build_cocone,

@@ -41,13 +41,15 @@ struct WorkerThreads
                 std::list<QProgressBar>* progress_bars;
         };
 
+        using Function = std::function<void(ProgressRatioList*, std::string*)>;
+
         virtual ~WorkerThreads() = default;
 
         virtual bool is_working(Action action) const = 0;
         virtual void terminate_quietly(Action action) = 0;
         virtual void terminate_with_message(Action action) = 0;
         virtual void terminate_all() = 0;
-        virtual void start(Action action, std::function<void(ProgressRatioList*, std::string*)>&& function) = 0;
+        virtual void start(Action action, Function&& function) = 0;
         virtual const std::vector<Progress>& progresses() const = 0;
 };
 

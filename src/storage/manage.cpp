@@ -54,57 +54,6 @@ void compute_bound_cocone(
         }
 }
 
-void save_to_obj(ObjectId id, const std::string& file_name, const std::string& comment, const MultiStorage& storage)
-{
-        bool found = std::apply(
-                [&](const auto&... v) {
-                        return ([&]() {
-                                if (!v.mesh_object(id))
-                                {
-                                        return false;
-                                }
-
-                                processor::save_to_obj(v, id, file_name, comment);
-
-                                return true;
-                        }() || ...);
-                },
-                storage.data());
-
-        if (!found)
-        {
-                error("No object found");
-        }
-}
-
-void save_to_stl(
-        ObjectId id,
-        const std::string& file_name,
-        const std::string& comment,
-        const MultiStorage& storage,
-        bool ascii_format)
-{
-        bool found = std::apply(
-                [&](const auto&... v) {
-                        return ([&]() {
-                                if (!v.mesh_object(id))
-                                {
-                                        return false;
-                                }
-
-                                processor::save_to_stl(v, id, file_name, comment, ascii_format);
-
-                                return true;
-                        }() || ...);
-                },
-                storage.data());
-
-        if (!found)
-        {
-                error("No object found");
-        }
-}
-
 void load_from_file(
         bool build_convex_hull,
         bool build_cocone,
@@ -132,7 +81,12 @@ void load_from_file(
                                         return false;
                                 }
 
-                                auto mesh = processor::load_from_file<N>(progress_list, file_name);
+                                std::unique_ptr<const mesh::Mesh<N>> mesh;
+                                {
+                                        ProgressRatio progress(progress_list);
+                                        progress.set_text("Loading file: %p%");
+                                        mesh = mesh::load<N>(file_name, &progress);
+                                }
 
                                 storage->clear();
                                 load_event(dimension);

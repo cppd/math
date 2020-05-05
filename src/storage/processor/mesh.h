@@ -425,48 +425,5 @@ void compute(
         }
         threads.join();
 }
-
-template <size_t N>
-std::unique_ptr<const mesh::Mesh<N>> load_from_file(ProgressRatioList* progress_list, const std::string& file_name)
-{
-        ProgressRatio progress(progress_list);
-        progress.set_text("Loading file: %p%");
-        return mesh::load<N>(file_name, &progress);
-}
-
-template <size_t N, typename MeshFloat>
-void save_to_obj(
-        const Storage<N, MeshFloat>& storage,
-        ObjectId id,
-        const std::string& file_name,
-        const std::string& comment)
-{
-        const std::shared_ptr<const mesh::MeshObject<N>> object = storage.mesh_object(id);
-
-        if (!object)
-        {
-                error("No object to export");
-        }
-
-        mesh::save_to_obj(object->mesh(), file_name, comment);
-}
-
-template <size_t N, typename MeshFloat>
-void save_to_stl(
-        const Storage<N, MeshFloat>& storage,
-        ObjectId id,
-        const std::string& file_name,
-        const std::string& comment,
-        bool ascii_format)
-{
-        const std::shared_ptr<const mesh::MeshObject<N>> object = storage.mesh_object(id);
-
-        if (!object)
-        {
-                error("No object to export");
-        }
-
-        mesh::save_to_stl(object->mesh(), file_name, comment, ascii_format);
-}
 }
 }

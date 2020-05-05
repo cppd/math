@@ -145,6 +145,9 @@ private:
         void thread_load_from_file(std::string file_name, bool use_object_selection_dialog);
         void thread_load_from_mesh_repository(int dimension, const std::string& object_name);
         void thread_load_from_volume_repository(int dimension, const std::string& object_name);
+        template <size_t N>
+        std::optional<WorkerThreads::Function> export_function(
+                const std::shared_ptr<const mesh::MeshObject<N>>& object);
         void thread_export(ObjectId id);
         void thread_bound_cocone(ObjectId id);
         void thread_self_test(SelfTestType test_type, bool with_confirmation);

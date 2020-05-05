@@ -749,6 +749,54 @@ void MainWindow::thread_load_from_volume_repository(int dimension, const std::st
         });
 }
 
+template <size_t N>
+std::optional<WorkerThreads::Function> MainWindow::export_function(
+        const std::shared_ptr<const mesh::MeshObject<N>>& object)
+{
+        std::string file_name;
+
+        std::string name = object->name();
+
+        std::string caption = "Export " + name + " to file";
+        bool read_only = true;
+
+        std::vector<dialog::FileFilter> filters;
+        for (const mesh::FileFormat& v : mesh::save_formats(N))
+        {
+                dialog::FileFilter& f = filters.emplace_back();
+                f.name = v.format_name;
+                f.file_extensions = v.file_name_extensions;
+        }
+
+        QPointer ptr(this);
+        if (!dialog::save_file(this, caption, filters, read_only, &file_name))
+        {
+                return std::nullopt;
+        }
+        if (ptr.isNull())
+        {
+                return std::nullopt;
+        }
+
+        mesh::FileType file_type = mesh::file_type_by_extension(file_name);
+
+        return [=, this](ProgressRatioList*, std::string* message) {
+                *message = "Export " + name + " to " + file_name;
+                switch (file_type)
+                {
+                case mesh::FileType::Obj:
+                        mesh::save_to_obj(object->mesh(), file_name, name);
+                        m_window_events(WindowEvent::MessageInformation(name + " exported to OBJ file " + file_name));
+                        return;
+                case mesh::FileType::Stl:
+                        save_to_stl(object->mesh(), file_name, name, STL_EXPORT_FORMAT_ASCII);
+                        m_window_events(WindowEvent::MessageInformation(name + " exported to STL file " + file_name));
+                        return;
+                }
+                error_fatal("Unknown file type for export");
+        };
+}
+
 void MainWindow::thread_export(ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
@@ -770,59 +818,16 @@ void MainWindow::thread_export(ObjectId id)
                         return;
                 }
 
-                if (m_dimension < 3)
-                {
-                        m_window_events(WindowEvent::MessageError("No dimension information"));
-                        return;
-                }
-
-                std::string file_name;
-
-                std::string name;
-                std::visit([&](const auto& v) { name = v->name(); }, *object);
-
-                std::string caption = "Export " + name + " to file";
-                bool read_only = true;
-
-                std::vector<dialog::FileFilter> filters;
-                for (const mesh::FileFormat& v : mesh::save_formats(m_dimension))
-                {
-                        dialog::FileFilter& f = filters.emplace_back();
-                        f.name = v.format_name;
-                        f.file_extensions = v.file_name_extensions;
-                }
-
-                QPointer ptr(this);
-                if (!dialog::save_file(this, caption, filters, read_only, &file_name))
-                {
-                        return;
-                }
-                if (ptr.isNull())
-                {
-                        return;
-                }
-
-                mesh::FileType file_type = mesh::file_type_by_extension(file_name);
-
-                auto f = [=, this](ProgressRatioList*, std::string* message) {
-                        *message = "Export " + name + " to " + file_name;
-                        switch (file_type)
-                        {
-                        case mesh::FileType::Obj:
-                                save_to_obj(id, file_name, name, *m_storage);
-                                m_window_events(
-                                        WindowEvent::MessageInformation(name + " exported to OBJ file " + file_name));
-                                return;
-                        case mesh::FileType::Stl:
-                                save_to_stl(id, file_name, name, *m_storage, STL_EXPORT_FORMAT_ASCII);
-                                m_window_events(
-                                        WindowEvent::MessageInformation(name + " exported to STL file " + file_name));
-                                return;
-                        }
-                        error_fatal("Unknown file type for export");
-                };
-
-                m_worker_threads->start(ACTION, std::move(f));
+                std::visit(
+                        [this](const auto& v) {
+                                std::optional<WorkerThreads::Function> function = export_function(v);
+                                if (!function)
+                                {
+                                        return;
+                                }
+                                m_worker_threads->start(ACTION, std::move(*function));
+                        },
+                        *object);
         });
 }
 
