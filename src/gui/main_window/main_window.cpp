@@ -1217,7 +1217,7 @@ void MainWindow::event_from_mesh_window_thread(const mesh::MeshEvent<N>& event)
 
         const auto visitors = Visitors{
                 [this](const typename mesh::MeshEvent<N>::Update& v) {
-                        if (auto ptr = v.object.lock(); ptr)
+                        if (std::shared_ptr<mesh::MeshObject<N>> ptr = v.object.lock(); ptr)
                         {
                                 ui.model_tree->add_item(ptr->id(), ptr->name());
                         }
@@ -1253,7 +1253,7 @@ void MainWindow::event_from_volume_window_thread(const volume::VolumeEvent<N>& e
 
         const auto visitors = Visitors{
                 [this](const typename volume::VolumeEvent<N>::Update& v) {
-                        if (auto ptr = v.object.lock(); ptr)
+                        if (std::shared_ptr<volume::VolumeObject<N>> ptr = v.object.lock(); ptr)
                         {
                                 ui.model_tree->add_item(ptr->id(), ptr->name());
                                 update_volume_ui(ptr->id());
