@@ -615,10 +615,10 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
 
                         storage::load_from_file(
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
-                                file_name, object_size.value, object_position.value, rho, alpha, [&](size_t dimension) {
+                                file_name, object_size.value, object_position.value, rho, alpha, [&]() {
                                         m_storage->clear();
                                         m_view->send(view::command::ResetView());
-                                        m_window_events(WindowEvent::FileLoaded(file_name, dimension));
+                                        m_window_events(WindowEvent::FileLoaded(file_name));
                                 });
                 };
 
@@ -688,7 +688,7 @@ void MainWindow::thread_load_from_mesh_repository(int dimension, const std::stri
                                 [&]() {
                                         m_storage->clear();
                                         m_view->send(view::command::ResetView());
-                                        m_window_events(WindowEvent::FileLoaded(object_name, dimension));
+                                        m_window_events(WindowEvent::FileLoaded(object_name));
                                 },
                                 *m_repository);
                 };
@@ -1157,7 +1157,7 @@ void MainWindow::event_from_window(const WindowEvent& event)
                 },
                 [this](const WindowEvent::FileLoaded& d) {
                         std::string base_name = file_base_name(d.file_name);
-                        set_window_title_file(base_name + " [" + space_name(d.dimension) + "]");
+                        set_window_title_file(base_name);
                 }};
 
         try
@@ -1225,7 +1225,7 @@ void MainWindow::event_from_mesh_window_thread(const mesh::MeshEvent<N>& event)
                         if (v.object)
                         {
                                 m_storage->set_mesh_object(v.object);
-                                ui.model_tree->add_item(v.object->id(), v.object->name());
+                                ui.model_tree->add_item(v.object->id(), N, v.object->name());
                         }
                 },
                 [this](const typename mesh::MeshEvent<N>::Delete& v) { ui.model_tree->delete_item(v.id); }};
@@ -1262,7 +1262,7 @@ void MainWindow::event_from_volume_window_thread(const volume::VolumeEvent<N>& e
                         if (v.object)
                         {
                                 m_storage->set_volume_object(v.object);
-                                ui.model_tree->add_item(v.object->id(), v.object->name());
+                                ui.model_tree->add_item(v.object->id(), N, v.object->name());
                                 update_volume_ui(v.object->id());
                         }
                 },

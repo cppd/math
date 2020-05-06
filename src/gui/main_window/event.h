@@ -57,8 +57,7 @@ struct WindowEvent
         struct FileLoaded final
         {
                 std::string file_name;
-                size_t dimension;
-                FileLoaded(const std::string& file_name, size_t dimension) : file_name(file_name), dimension(dimension)
+                FileLoaded(const std::string& file_name) : file_name(file_name)
                 {
                 }
         };

@@ -38,7 +38,7 @@ void load_from_file(
         const vec3& object_position,
         double rho,
         double alpha,
-        const std::function<void(size_t dimension)>& load_event);
+        const std::function<void()>& load_event);
 
 void load_from_point_repository(
         bool build_convex_hull,

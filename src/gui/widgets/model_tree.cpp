@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "model_tree.h"
 
 #include <src/com/error.h>
-#include <src/com/log.h>
 
 #include <memory>
 
@@ -30,7 +29,7 @@ ModelTree::ModelTree(QWidget* parent) : QWidget(parent)
                 SLOT(current_item_changed(QTreeWidgetItem*, QTreeWidgetItem*)));
 }
 
-void ModelTree::add_item(ObjectId id, const std::string& name)
+void ModelTree::add_item(ObjectId id, unsigned dimension, const std::string& name)
 {
         auto iter = m_map_id_item.find(id);
         if (iter != m_map_id_item.cend())
@@ -38,7 +37,7 @@ void ModelTree::add_item(ObjectId id, const std::string& name)
                 return;
         }
         std::unique_ptr<QTreeWidgetItem> item = std::make_unique<QTreeWidgetItem>();
-        QString s = QString::fromStdString(name);
+        QString s = QString("(%1D) %2").arg(dimension).arg(QString::fromStdString(name));
         item->setText(0, s);
         item->setToolTip(0, s);
         QTreeWidgetItem* ptr = item.get();

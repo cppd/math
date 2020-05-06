@@ -79,7 +79,7 @@ void load_from_file(
         const vec3& object_position,
         double rho,
         double alpha,
-        const std::function<void(size_t dimension)>& load_event)
+        const std::function<void()>& load_event)
 {
         unsigned dimension = mesh::file_dimension(file_name);
 
@@ -92,7 +92,7 @@ void load_from_file(
                         mesh = mesh::load<N>(file_name, &progress);
                 }
 
-                load_event(N);
+                load_event();
 
                 processor::compute(
                         progress_list, build_convex_hull, build_cocone, build_bound_cocone, build_mst, std::move(mesh),

@@ -31,7 +31,7 @@ class ModelTree final : public QWidget
 public:
         explicit ModelTree(QWidget* parent = nullptr);
 
-        void add_item(ObjectId id, const std::string& name);
+        void add_item(ObjectId id, unsigned dimension, const std::string& name);
         void delete_item(ObjectId id);
         void delete_all();
         std::optional<ObjectId> current_item() const;
