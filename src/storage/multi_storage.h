@@ -35,7 +35,7 @@ class MultiStorage final
         static_assert(COUNT > 0);
 
         // std::tuple<T<MIN>, ..., T<MAX>>.
-        using Tuple = SequenceType1<std::tuple, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, Storage>;
+        using Tuple = Sequence<std::tuple, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, Storage>;
 
         Tuple m_data;
 
@@ -65,28 +65,24 @@ class MultiStorage final
                 return false;
         }
 
+        template <size_t N>
+        using MeshObjectPtr = std::shared_ptr<mesh::MeshObject<N>>;
+
+        template <size_t N>
+        using MeshObjectConstPtr = std::shared_ptr<const mesh::MeshObject<N>>;
+
+        template <size_t N>
+        using VolumeObjectPtr = std::shared_ptr<volume::VolumeObject<N>>;
+
+        template <size_t N>
+        using VolumeObjectConstPtr = std::shared_ptr<const volume::VolumeObject<N>>;
+
 public:
-        using MeshObject =
-                SequenceType2<std::variant, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, std::shared_ptr, mesh::MeshObject>;
+        using MeshObject = Sequence<std::variant, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, MeshObjectPtr>;
+        using MeshObjectConst = Sequence<std::variant, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, MeshObjectConstPtr>;
 
-        using MeshObjectConst = SequenceType2Const2<
-                std::variant,
-                MINIMUM_DIMENSION,
-                MAXIMUM_DIMENSION,
-                std::shared_ptr,
-                mesh::MeshObject>;
-
-        //
-
-        using VolumeObject =
-                SequenceType2<std::variant, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, std::shared_ptr, volume::VolumeObject>;
-
-        using VolumeObjectConst = SequenceType2Const2<
-                std::variant,
-                MINIMUM_DIMENSION,
-                MAXIMUM_DIMENSION,
-                std::shared_ptr,
-                volume::VolumeObject>;
+        using VolumeObject = Sequence<std::variant, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, VolumeObjectPtr>;
+        using VolumeObjectConst = Sequence<std::variant, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, VolumeObjectConstPtr>;
 
         //
 

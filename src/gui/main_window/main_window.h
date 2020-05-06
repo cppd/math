@@ -236,7 +236,7 @@ private:
                 std::function<void(mesh::MeshEvent<N>&&)> mesh_events;
                 std::function<void(volume::VolumeEvent<N>&&)> volume_events;
         };
-        SequenceType1<std::tuple, storage::MINIMUM_DIMENSION, storage::MAXIMUM_DIMENSION, ModelEvents> m_model_events;
+        Sequence<std::tuple, storage::MINIMUM_DIMENSION, storage::MAXIMUM_DIMENSION, ModelEvents> m_model_events;
 
         QColor m_background_color;
         QColor m_default_color;

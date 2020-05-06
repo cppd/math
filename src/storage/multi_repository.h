@@ -31,7 +31,7 @@ namespace storage
 class MultiRepository final
 {
         // std::tuple<T<MIN>, ..., T<MAX>>.
-        using Tuple = SequenceType1<std::tuple, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, Repository>;
+        using Tuple = Sequence<std::tuple, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, Repository>;
 
         Tuple m_data;
 
@@ -47,7 +47,6 @@ public:
         template <size_t N>
         const Repository<N>& repository() const
         {
-                static_assert(N >= MINIMUM_DIMENSION && N <= MAXIMUM_DIMENSION);
                 return std::get<Repository<N>>(m_data);
         }
 

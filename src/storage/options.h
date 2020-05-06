@@ -31,5 +31,5 @@ struct Dimension
 {
         static constexpr unsigned DIMENSION = N;
 };
-inline constexpr auto DIMENSIONS = SequenceType1<std::tuple, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, Dimension>();
+inline constexpr auto DIMENSIONS = Sequence<std::tuple, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, Dimension>();
 }
