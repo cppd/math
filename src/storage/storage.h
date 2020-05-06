@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/volume_object.h>
 
 #include <memory>
-#include <mutex>
 #include <shared_mutex>
 #include <unordered_map>
 
@@ -32,82 +31,97 @@ class Storage
 {
         static_assert(N >= 3);
 
-        struct MeshData
-        {
-                std::shared_ptr<mesh::MeshObject<N>> mesh_object;
-        };
+        using MeshData = std::shared_ptr<mesh::MeshObject<N>>;
+        using VolumeData = std::shared_ptr<volume::VolumeObject<N>>;
 
-        struct VolumeData
-        {
-                std::shared_ptr<volume::VolumeObject<N>> volume_object;
-        };
-
-        mutable std::shared_mutex m_mesh_mutex;
-        std::unordered_map<ObjectId, MeshData> m_mesh_map;
-
-        mutable std::shared_mutex m_volume_mutex;
-        std::unordered_map<ObjectId, VolumeData> m_volume_map;
+        mutable std::shared_mutex m_mutex;
+        std::unordered_map<ObjectId, std::variant<MeshData, VolumeData>> m_map;
 
 public:
-        static constexpr size_t DIMENSION = N;
-
-        //
-
         template <typename T>
         void set_mesh_object(T&& object)
         {
-                std::shared_ptr<mesh::MeshObject<N>> tmp;
-                std::unique_lock lock(m_mesh_mutex);
-                MeshData& v = m_mesh_map.try_emplace(object->id()).first->second;
-                if (v.mesh_object != object)
+                std::unique_lock lock(m_mutex);
+                auto iter = m_map.find(object->id());
+                if (iter == m_map.cend())
                 {
-                        tmp = std::move(v.mesh_object);
-                        v.mesh_object = std::forward<T>(object);
+                        m_map.emplace(object->id(), std::forward<T>(object));
+                        return;
                 }
+                ASSERT(std::holds_alternative<MeshData>(iter->second));
+                ASSERT(std::get<MeshData>(iter->second) == object);
         }
 
         template <typename T>
         void set_volume_object(T&& object)
         {
-                std::shared_ptr<volume::VolumeObject<N>> tmp;
-                std::unique_lock lock(m_volume_mutex);
-                VolumeData& v = m_volume_map.try_emplace(object->id()).first->second;
-                if (v.volume_object != object)
+                std::unique_lock lock(m_mutex);
+                auto iter = m_map.find(object->id());
+                if (iter == m_map.cend())
                 {
-                        tmp = std::move(v.volume_object);
-                        v.volume_object = std::forward<T>(object);
+                        m_map.emplace(object->id(), std::forward<T>(object));
+                        return;
                 }
+                ASSERT(std::holds_alternative<VolumeData>(iter->second));
+                ASSERT(std::get<VolumeData>(iter->second) == object);
         }
 
         //
 
         std::shared_ptr<mesh::MeshObject<N>> mesh_object(ObjectId id) const
         {
-                std::shared_lock lock(m_mesh_mutex);
-                auto iter = m_mesh_map.find(id);
-                return (iter != m_mesh_map.cend()) ? iter->second.mesh_object : nullptr;
+                std::shared_lock lock(m_mutex);
+                auto iter = m_map.find(id);
+                if (iter != m_map.cend())
+                {
+                        try
+                        {
+                                return std::get<MeshData>(iter->second);
+                        }
+                        catch (const std::bad_variant_access&)
+                        {
+                        }
+                }
+                return nullptr;
         }
 
         std::shared_ptr<volume::VolumeObject<N>> volume_object(ObjectId id) const
         {
-                std::shared_lock lock(m_volume_mutex);
-                auto iter = m_volume_map.find(id);
-                return (iter != m_volume_map.cend()) ? iter->second.volume_object : nullptr;
+                std::shared_lock lock(m_mutex);
+                auto iter = m_map.find(id);
+                if (iter != m_map.cend())
+                {
+                        try
+                        {
+                                return std::get<VolumeData>(iter->second);
+                        }
+                        catch (const std::bad_variant_access&)
+                        {
+                        }
+                }
+                return nullptr;
         }
 
         //
 
+        void delete_object(ObjectId id)
+        {
+                typename decltype(m_map)::mapped_type tmp;
+                std::unique_lock lock(m_mutex);
+                auto iter = m_map.find(id);
+                if (iter != m_map.cend())
+                {
+                        tmp = std::move(iter->second);
+                        m_map.erase(iter);
+                }
+        }
+
         void clear()
         {
-                std::unordered_map<ObjectId, MeshData> tmp_mesh;
-                std::unordered_map<ObjectId, VolumeData> tmp_volume;
-                std::unique_lock lock_mesh(m_mesh_mutex, std::defer_lock);
-                std::unique_lock lock_volume(m_volume_mutex, std::defer_lock);
-                std::lock(lock_mesh, lock_volume);
-                tmp_mesh = std::move(m_mesh_map);
-                tmp_volume = std::move(m_volume_map);
-                m_mesh_map.clear();
-                m_volume_map.clear();
+                decltype(m_map) tmp;
+                std::unique_lock lock(m_mutex);
+                tmp = std::move(m_map);
+                m_map.clear();
         }
 };
 }

@@ -27,130 +27,43 @@ namespace storage
 {
 namespace
 {
-constexpr auto make_dimension_sequence()
+[[noreturn]] void dimension_error(unsigned dimension)
 {
-        return std::make_integer_sequence<unsigned, MAXIMUM_DIMENSION - MINIMUM_DIMENSION + 1>();
+        std::string s;
+        std::apply(
+                [&]<size_t... N>(const Dimension<N>...) {
+                        (([&]() {
+                                 if (!s.empty())
+                                 {
+                                         s += ", ";
+                                 }
+                                 s += to_string(N);
+                         }()),
+                         ...);
+                },
+                DIMENSIONS);
+        error("Dimension " + to_string(dimension) + " is not supported, supported dimensions are " + s + ".");
 }
 
-template <unsigned... I>
-void load_from_file(
-        bool build_convex_hull,
-        bool build_cocone,
-        bool build_bound_cocone,
-        bool build_mst,
-        ProgressRatioList* progress_list,
-        const std::string& file_name,
-        double object_size,
-        const vec3& object_position,
-        double rho,
-        double alpha,
-        const std::function<void(size_t dimension)>& load_event,
-        unsigned dimension,
-        std::integer_sequence<unsigned, I...>&&)
+template <typename T>
+void apply_for_dimension(size_t dimension, const T& f)
 {
-        bool found = ([&]() {
-                constexpr unsigned N = I + MINIMUM_DIMENSION;
-
-                if (N != dimension)
-                {
-                        return false;
-                }
-
-                std::unique_ptr<const mesh::Mesh<N>> mesh;
-                {
-                        ProgressRatio progress(progress_list);
-                        progress.set_text("Loading file: %p%");
-                        mesh = mesh::load<N>(file_name, &progress);
-                }
-
-                load_event(dimension);
-
-                processor::compute(
-                        progress_list, build_convex_hull, build_cocone, build_bound_cocone, build_mst, std::move(mesh),
-                        "Model", object_size, object_position, rho, alpha);
-
-                return true;
-        }() || ...);
+        bool found = std::apply(
+                [&]<size_t... N>(const Dimension<N>&...) {
+                        return ([&]() {
+                                if (N == dimension)
+                                {
+                                        f(Dimension<N>());
+                                        return true;
+                                }
+                                return false;
+                        }() || ...);
+                },
+                DIMENSIONS);
 
         if (!found)
         {
-                error("Dimension " + to_string(dimension) + " is not supported");
-        }
-}
-
-template <unsigned... I>
-void load_from_point_repository(
-        bool build_convex_hull,
-        bool build_cocone,
-        bool build_bound_cocone,
-        bool build_mst,
-        ProgressRatioList* progress_list,
-        int dimension,
-        const std::string& object_name,
-        double object_size,
-        const vec3& object_position,
-        double rho,
-        double alpha,
-        int point_count,
-        const std::function<void()>& load_event,
-        const MultiRepository& repository,
-        std::integer_sequence<unsigned, I...>&&)
-{
-        bool found = ([&]() {
-                constexpr unsigned N = I + MINIMUM_DIMENSION;
-
-                if (N != dimension)
-                {
-                        return false;
-                }
-
-                std::unique_ptr<const mesh::Mesh<N>> mesh =
-                        repository.repository<N>().meshes().object(object_name, point_count);
-
-                load_event();
-
-                processor::compute(
-                        progress_list, build_convex_hull, build_cocone, build_bound_cocone, build_mst, std::move(mesh),
-                        object_name, object_size, object_position, rho, alpha);
-
-                return true;
-        }() || ...);
-
-        if (!found)
-        {
-                error("Dimension " + to_string(dimension) + " is not supported");
-        }
-}
-
-template <unsigned... I>
-void add_from_volume_repository(
-        int dimension,
-        const std::string& object_name,
-        double object_size,
-        const vec3& object_position,
-        int image_size,
-        const MultiRepository& repository,
-        std::integer_sequence<unsigned, I...>&&)
-{
-        bool found = ([&]() {
-                constexpr unsigned N = I + MINIMUM_DIMENSION;
-
-                if (N != dimension)
-                {
-                        return false;
-                }
-
-                std::unique_ptr<const volume::Volume<N>> volume =
-                        repository.repository<N>().volumes().object(object_name, image_size);
-
-                processor::compute(std::move(volume), object_name, object_size, object_position);
-
-                return true;
-        }() || ...);
-
-        if (!found)
-        {
-                error("Dimension " + to_string(dimension) + " is not supported");
+                dimension_error(dimension);
         }
 }
 }
@@ -170,9 +83,21 @@ void load_from_file(
 {
         unsigned dimension = mesh::file_dimension(file_name);
 
-        load_from_file(
-                build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list, file_name, object_size,
-                object_position, rho, alpha, load_event, dimension, make_dimension_sequence());
+        apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
+                std::unique_ptr<const mesh::Mesh<N>> mesh;
+
+                {
+                        ProgressRatio progress(progress_list);
+                        progress.set_text("Loading file: %p%");
+                        mesh = mesh::load<N>(file_name, &progress);
+                }
+
+                load_event(N);
+
+                processor::compute(
+                        progress_list, build_convex_hull, build_cocone, build_bound_cocone, build_mst, std::move(mesh),
+                        "Model", object_size, object_position, rho, alpha);
+        });
 }
 
 void load_from_point_repository(
@@ -191,10 +116,16 @@ void load_from_point_repository(
         const std::function<void()>& load_event,
         const MultiRepository& repository)
 {
-        load_from_point_repository(
-                build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list, dimension, object_name,
-                object_size, object_position, rho, alpha, point_count, load_event, repository,
-                make_dimension_sequence());
+        apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
+                std::unique_ptr<const mesh::Mesh<N>> mesh =
+                        repository.repository<N>().meshes().object(object_name, point_count);
+
+                load_event();
+
+                processor::compute(
+                        progress_list, build_convex_hull, build_cocone, build_bound_cocone, build_mst, std::move(mesh),
+                        object_name, object_size, object_position, rho, alpha);
+        });
 }
 
 void add_from_volume_repository(
@@ -205,8 +136,11 @@ void add_from_volume_repository(
         int image_size,
         const MultiRepository& repository)
 {
-        add_from_volume_repository(
-                dimension, object_name, object_size, object_position, image_size, repository,
-                make_dimension_sequence());
+        apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
+                std::unique_ptr<const volume::Volume<N>> volume =
+                        repository.repository<N>().volumes().object(object_name, image_size);
+
+                processor::compute(std::move(volume), object_name, object_size, object_position);
+        });
 }
 }

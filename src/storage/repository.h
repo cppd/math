@@ -29,8 +29,6 @@ class Repository final
         std::unique_ptr<const VolumeObjectRepository<N>> m_volume_object_repository;
 
 public:
-        static constexpr size_t DIMENSION = N;
-
         Repository()
                 : m_mesh_object_repository(create_mesh_object_repository<N>()),
                   m_volume_object_repository(create_volume_object_repository<N>())

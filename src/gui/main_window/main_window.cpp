@@ -324,35 +324,33 @@ void MainWindow::constructor_objects_and_repository()
 
 void MainWindow::constructor_model_events()
 {
-        const auto f = [this](auto& v) {
-                constexpr unsigned N = std::remove_reference_t<decltype(v)>::DIMENSION;
-
-                v.mesh_events = [this](mesh::MeshEvent<N>&& event) {
+        const auto f = [this]<size_t N>(ModelEvents<N>& model_events) {
+                model_events.mesh_events = [this](mesh::MeshEvent<N>&& event) {
                         event_from_mesh(event);
                         run_in_window_thread([&, event = std::move(event)]() { event_from_mesh_window_thread(event); });
                 };
-                v.volume_events = [this](volume::VolumeEvent<N>&& event) {
+                model_events.volume_events = [this](volume::VolumeEvent<N>&& event) {
                         event_from_volume(event);
                         run_in_window_thread(
                                 [&, event = std::move(event)]() { event_from_volume_window_thread(event); });
                 };
-                mesh::MeshObject<N>::set_events(&v.mesh_events);
-                volume::VolumeObject<N>::set_events(&v.volume_events);
+                mesh::MeshObject<N>::set_events(&model_events.mesh_events);
+                volume::VolumeObject<N>::set_events(&model_events.volume_events);
         };
 
-        std::apply([&f](auto&... v) { (f(v), ...); }, m_model_events);
+        std::apply(
+                [&f]<size_t... N>(ModelEvents<N> & ... model_events) { (f(model_events), ...); }, m_model_events);
 }
 
 void MainWindow::delete_model_events()
 {
-        const auto f = [](const auto& v) {
-                constexpr unsigned N = std::remove_reference_t<decltype(v)>::DIMENSION;
-
+        const auto f = []<size_t N>(const ModelEvents<N>&) {
                 mesh::MeshObject<N>::set_events(nullptr);
                 volume::VolumeObject<N>::set_events(nullptr);
         };
 
-        std::apply([&f](const auto&... v) { (f(v), ...); }, m_model_events);
+        std::apply(
+                [&f]<size_t... N>(const ModelEvents<N>&... model_events) { (f(model_events), ...); }, m_model_events);
 }
 
 void MainWindow::set_window_title_file(const std::string& file_name)
@@ -821,8 +819,8 @@ void MainWindow::thread_export(ObjectId id)
                 }
 
                 std::visit(
-                        [this](const auto& v) {
-                                std::optional<WorkerThreads::Function> function = export_function(v);
+                        [this]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object) {
+                                std::optional<WorkerThreads::Function> function = export_function(mesh_object);
                                 if (!function)
                                 {
                                         return;
@@ -872,11 +870,12 @@ void MainWindow::thread_bound_cocone(ObjectId id)
                 m_bound_cocone_alpha = alpha;
 
                 std::visit(
-                        [=, this](const auto& v) {
+                        [=, this]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object) {
                                 auto f = [=](ProgressRatioList* progress_list, std::string* message) {
                                         *message = "BoundCocone Reconstruction";
 
-                                        storage::processor::compute_bound_cocone(progress_list, v, rho, alpha);
+                                        storage::processor::compute_bound_cocone(
+                                                progress_list, mesh_object, rho, alpha);
                                 };
                                 m_worker_threads->start(ACTION, std::move(f));
                         },
@@ -1225,7 +1224,7 @@ void MainWindow::event_from_mesh_window_thread(const mesh::MeshEvent<N>& event)
                 [this](const typename mesh::MeshEvent<N>::Update& v) {
                         if (v.object)
                         {
-                                m_storage->set_mesh_objects(v.object);
+                                m_storage->set_mesh_object(v.object);
                                 ui.model_tree->add_item(v.object->id(), v.object->name());
                         }
                 },
@@ -1262,7 +1261,7 @@ void MainWindow::event_from_volume_window_thread(const volume::VolumeEvent<N>& e
                 [this](const typename volume::VolumeEvent<N>::Update& v) {
                         if (v.object)
                         {
-                                m_storage->set_volume_objects(v.object);
+                                m_storage->set_volume_object(v.object);
                                 ui.model_tree->add_item(v.object->id(), v.object->name());
                                 update_volume_ui(v.object->id());
                         }
@@ -1504,25 +1503,25 @@ void MainWindow::update_volume_ui(ObjectId id)
                 return;
         }
 
-        std::optional<storage::MultiStorage::VolumeObjectConst> volume_object = m_storage->volume_object_const(id);
-        if (!volume_object)
+        std::optional<storage::MultiStorage::VolumeObjectConst> volume_object_opt = m_storage->volume_object_const(id);
+        if (!volume_object_opt)
         {
                 return;
         }
 
         std::visit(
-                [&](const auto& v) {
+                [&]<size_t N>(const std::shared_ptr<const volume::VolumeObject<N>>& volume_object) {
                         double min;
                         double max;
                         {
-                                volume::Reading reading(*v);
-                                min = v->level_min();
-                                max = v->level_max();
+                                volume::Reading reading(*volume_object);
+                                min = volume_object->level_min();
+                                max = volume_object->level_max();
                         }
                         QSignalBlocker blocker(ui.slider_volume_levels);
                         ui.slider_volume_levels->set_range(min, max);
                 },
-                *volume_object);
+                *volume_object_opt);
 }
 
 void MainWindow::model_tree_item_changed()
@@ -1801,18 +1800,18 @@ void MainWindow::on_slider_volume_levels_range_changed(double min, double max)
         {
                 return;
         }
-        std::optional<storage::MultiStorage::VolumeObject> object = m_storage->volume_object(*id);
-        if (!object)
+        std::optional<storage::MultiStorage::VolumeObject> volume_object_opt = m_storage->volume_object(*id);
+        if (!volume_object_opt)
         {
                 return;
         }
 
         std::visit(
-                [&](const auto& v) {
-                        volume::WritingUpdates updates(v.get(), {volume::Update::Levels});
-                        v->set_levels(min, max);
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
+                        volume::WritingUpdates updates(volume_object.get(), {volume::Update::Levels});
+                        volume_object->set_levels(min, max);
                 },
-                *object);
+                *volume_object_opt);
 }
 
 template <size_t N, typename T>
@@ -1919,8 +1918,8 @@ void MainWindow::on_actionPainter_triggered()
                 }
 
                 std::visit(
-                        [this](const auto& v) {
-                                if (v->mesh().facets.empty())
+                        [this]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object) {
+                                if (mesh_object->mesh().facets.empty())
                                 {
                                         m_window_events(WindowEvent::MessageWarning("No object to paint"));
                                         return;
@@ -1929,7 +1928,7 @@ void MainWindow::on_actionPainter_triggered()
                                 auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
                                         *message = "Painter thread";
 
-                                        painter_thread_function(progress_list, v);
+                                        painter_thread_function(progress_list, mesh_object);
                                 };
 
                                 m_worker_threads->start(ACTION, std::move(f));

@@ -36,13 +36,11 @@ class MultiRepository final
         Tuple m_data;
 
 public:
-        std::set<unsigned> supported_dimensions()
+        static std::set<unsigned> supported_dimensions()
         {
                 std::set<unsigned> v;
-                for (int d = MINIMUM_DIMENSION; d <= MAXIMUM_DIMENSION; ++d)
-                {
-                        v.insert(d);
-                }
+                std::apply(
+                        [&]<size_t... N>(const Dimension<N>&...) { (v.insert(N), ...); }, DIMENSIONS);
                 return v;
         }
 
@@ -65,11 +63,11 @@ public:
                 std::vector<ObjectNames> names;
 
                 std::apply(
-                        [&](const auto&... v) {
+                        [&]<size_t... N>(const Repository<N>&... v) {
                                 (
                                         [&]() {
                                                 names.resize(names.size() + 1);
-                                                names.back().dimension = v.DIMENSION;
+                                                names.back().dimension = N;
                                                 names.back().mesh_names = v.meshes().object_names();
                                                 names.back().volume_names = v.volumes().object_names();
                                         }(),

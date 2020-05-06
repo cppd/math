@@ -233,7 +233,6 @@ private:
         template <size_t N>
         struct ModelEvents
         {
-                static constexpr unsigned DIMENSION = N;
                 std::function<void(mesh::MeshEvent<N>&&)> mesh_events;
                 std::function<void(volume::VolumeEvent<N>&&)> volume_events;
         };

@@ -65,15 +65,7 @@ class MultiStorage final
                 return false;
         }
 
-        template <typename T>
-        void set_object(const T& object)
-        {
-                std::apply([&](auto&... storage) { (set_storage_object(object, &storage) || ...); }, m_data);
-        }
-
 public:
-        using Data = Tuple;
-
         using MeshObject =
                 SequenceType2<std::variant, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, std::shared_ptr, mesh::MeshObject>;
 
@@ -101,23 +93,17 @@ public:
         static std::set<unsigned> supported_dimensions()
         {
                 std::set<unsigned> v;
-                for (int d = MINIMUM_DIMENSION; d <= MAXIMUM_DIMENSION; ++d)
-                {
-                        v.insert(d);
-                }
+                std::apply(
+                        [&]<size_t... N>(const Dimension<N>&...) { (v.insert(N), ...); }, DIMENSIONS);
                 return v;
         }
 
         //
 
-        Data& data()
+        void delete_object(ObjectId id)
         {
-                return m_data;
-        }
-
-        const Data& data() const
-        {
-                return m_data;
+                std::apply(
+                        [&]<size_t... N>(Storage<N> & ... storage) { (storage.delete_object(id), ...); }, m_data);
         }
 
         void clear()
@@ -125,14 +111,30 @@ public:
                 std::apply([](auto&... v) { (v.clear(), ...); }, m_data);
         }
 
-        void set_mesh_objects(const MeshObject& mesh_object)
+        void set_mesh_object(const MeshObject& mesh_object)
         {
-                std::visit([&](const auto& v) { set_object(v); }, mesh_object);
+                std::visit(
+                        [&]<size_t N1>(const std::shared_ptr<mesh::MeshObject<N1>>& mesh) {
+                                std::apply(
+                                        [&]<size_t... N2>(Storage<N2> & ... storage) {
+                                                (set_storage_object(mesh, &storage) || ...);
+                                        },
+                                        m_data);
+                        },
+                        mesh_object);
         }
 
-        void set_volume_objects(const VolumeObject& volume_object)
+        void set_volume_object(const VolumeObject& volume_object)
         {
-                std::visit([&](const auto& v) { set_object(v); }, volume_object);
+                std::visit(
+                        [&]<size_t N1>(const std::shared_ptr<volume::VolumeObject<N1>>& volume) {
+                                std::apply(
+                                        [&]<size_t... N2>(Storage<N2> & ... storage) {
+                                                (set_storage_object(volume, &storage) || ...);
+                                        },
+                                        m_data);
+                        },
+                        volume_object);
         }
 
         std::optional<MeshObject> mesh_object(ObjectId id) const
@@ -140,9 +142,9 @@ public:
                 std::optional<MeshObject> opt;
 
                 std::apply(
-                        [&](const auto&... v) {
+                        [&]<size_t... N>(const Storage<N>&... storage) {
                                 ([&]() {
-                                        auto ptr = v.mesh_object(id);
+                                        auto ptr = storage.mesh_object(id);
                                         if (ptr)
                                         {
                                                 opt = std::move(ptr);
@@ -162,9 +164,9 @@ public:
                 std::optional<MeshObjectConst> opt;
 
                 std::apply(
-                        [&](const auto&... v) {
+                        [&]<size_t... N>(const Storage<N>&... storage) {
                                 ([&]() {
-                                        auto ptr = v.mesh_object(id);
+                                        auto ptr = storage.mesh_object(id);
                                         if (ptr)
                                         {
                                                 opt = std::move(ptr);
@@ -184,9 +186,9 @@ public:
                 std::optional<VolumeObject> opt;
 
                 std::apply(
-                        [&](const auto&... v) {
+                        [&]<size_t... N>(const Storage<N>&... storage) {
                                 ([&]() {
-                                        auto ptr = v.volume_object(id);
+                                        auto ptr = storage.volume_object(id);
                                         if (ptr)
                                         {
                                                 opt = std::move(ptr);
@@ -206,9 +208,9 @@ public:
                 std::optional<VolumeObjectConst> opt;
 
                 std::apply(
-                        [&](const auto&... v) {
+                        [&]<size_t... N>(const Storage<N>&... storage) {
                                 ([&]() {
-                                        auto ptr = v.volume_object(id);
+                                        auto ptr = storage.volume_object(id);
                                         if (ptr)
                                         {
                                                 opt = std::move(ptr);

@@ -17,8 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/sequence.h>
+
+#include <tuple>
+
 namespace storage
 {
 constexpr int MINIMUM_DIMENSION = 3;
 constexpr int MAXIMUM_DIMENSION = 5;
+
+template <size_t N>
+struct Dimension
+{
+        static constexpr unsigned DIMENSION = N;
+};
+inline constexpr auto DIMENSIONS = SequenceType1<std::tuple, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, Dimension>();
 }
