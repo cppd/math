@@ -41,8 +41,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/com/variant.h>
 #include <src/model/mesh_utility.h>
-#include <src/storage/manage.h>
-#include <src/storage/processor/mesh.h>
+#include <src/process/load.h>
+#include <src/process/mesh.h>
 #include <src/utility/file/sys.h>
 #include <src/view/create.h>
 
@@ -613,7 +613,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         view::info::ObjectPosition object_position;
                         m_view->receive({&object_size, &object_position});
 
-                        storage::load_from_file(
+                        process::load_from_file(
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
                                 file_name, object_size.value, object_position.value, rho, alpha, [&]() {
                                         m_storage->clear();
@@ -681,7 +681,7 @@ void MainWindow::thread_load_from_mesh_repository(int dimension, const std::stri
                         view::info::ObjectPosition object_position;
                         m_view->receive({&object_size, &object_position});
 
-                        storage::load_from_point_repository(
+                        process::load_from_mesh_repository(
                                 build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list,
                                 dimension, object_name, object_size.value, object_position.value, rho, alpha,
                                 point_count,
@@ -740,7 +740,7 @@ void MainWindow::thread_load_from_volume_repository(int dimension, const std::st
                         view::info::ObjectPosition object_position;
                         m_view->receive({&object_size, &object_position});
 
-                        storage::add_from_volume_repository(
+                        process::load_from_volume_repository(
                                 dimension, object_name, object_size.value, object_position.value, image_size,
                                 *m_repository);
                 };
@@ -874,8 +874,7 @@ void MainWindow::thread_bound_cocone(ObjectId id)
                                 auto f = [=](ProgressRatioList* progress_list, std::string* message) {
                                         *message = "BoundCocone Reconstruction";
 
-                                        storage::processor::compute_bound_cocone(
-                                                progress_list, mesh_object, rho, alpha);
+                                        process::compute_bound_cocone(progress_list, mesh_object, rho, alpha);
                                 };
                                 m_worker_threads->start(ACTION, std::move(f));
                         },

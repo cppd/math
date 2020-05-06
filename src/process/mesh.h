@@ -35,9 +35,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace storage
+namespace process
 {
-namespace processor_implementation
+namespace process_implementation
 {
 template <typename T>
 std::string bound_cocone_text_rho_alpha(T rho, T alpha)
@@ -267,8 +267,6 @@ void manifold_constructor(
 }
 }
 
-namespace processor
-{
 template <size_t N>
 void compute_bound_cocone(
         ProgressRatioList* progress_list,
@@ -276,7 +274,7 @@ void compute_bound_cocone(
         double rho,
         double alpha)
 {
-        namespace impl = processor_implementation;
+        namespace impl = process_implementation;
         constexpr bool build_cocone = false;
         constexpr bool build_bound_cocone = true;
         constexpr bool build_mst = false;
@@ -297,7 +295,7 @@ void compute(
         double rho,
         double alpha)
 {
-        namespace impl = processor_implementation;
+        namespace impl = process_implementation;
 
         if (mesh->facets.empty() && mesh->points.empty())
         {
@@ -348,6 +346,5 @@ void compute(
                 throw;
         }
         threads.join();
-}
 }
 }

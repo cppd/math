@@ -17,15 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "multi_repository.h"
-
+#include <src/numerical/vec.h>
 #include <src/progress/progress_list.h>
+#include <src/storage/multi_repository.h>
 
 #include <functional>
 #include <string>
 #include <vector>
 
-namespace storage
+namespace process
 {
 void load_from_file(
         bool build_convex_hull,
@@ -40,7 +40,7 @@ void load_from_file(
         double alpha,
         const std::function<void()>& load_event);
 
-void load_from_point_repository(
+void load_from_mesh_repository(
         bool build_convex_hull,
         bool build_cocone,
         bool build_bound_cocone,
@@ -54,13 +54,13 @@ void load_from_point_repository(
         double alpha,
         int point_count,
         const std::function<void()>& load_event,
-        const MultiRepository& repository);
+        const storage::MultiRepository& repository);
 
-void add_from_volume_repository(
+void load_from_volume_repository(
         int dimension,
         const std::string& object_name,
         double object_size,
         const vec3& object_position,
         int image_size,
-        const MultiRepository& repository);
+        const storage::MultiRepository& repository);
 }
