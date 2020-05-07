@@ -43,6 +43,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/process/load.h>
 #include <src/process/mesh.h>
 #include <src/settings/name.h>
+#include <src/settings/painter.h>
 #include <src/settings/utility.h>
 #include <src/utility/file/sys.h>
 #include <src/view/create.h>
@@ -93,20 +94,6 @@ constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 // увеличение текстуры тени по сравнению с размером окна.
 constexpr int SHADOW_ZOOM = 2;
 
-// Количество лучей на один пиксель на одно измерение в одном проходе.
-// Тогда для количества измерений D в пространстве экрана количество
-// лучей равно std::pow(эта_величина, D).
-constexpr int PAINTER_DEFAULT_SAMPLES_PER_DIMENSION = 5;
-constexpr int PAINTER_MAX_SAMPLES_PER_DIMENSION = 10;
-
-// Максимальный размер экрана в пикселях для 3 измерений
-constexpr int PAINTER_3D_MAX_SCREEN_SIZE = 10000;
-
-// Размеры экрана в пикселях для 4 и более измерений
-constexpr int PAINTER_DEFAULT_SCREEN_SIZE = 500;
-constexpr int PAINTER_MINIMUM_SCREEN_SIZE = 50;
-constexpr int PAINTER_MAXIMUM_SCREEN_SIZE = 5000;
-
 // Сколько потоков не надо использовать от максимума для создания октадеревьев.
 constexpr int MESH_OBJECT_NOT_USED_THREAD_COUNT = 2;
 
@@ -120,8 +107,6 @@ constexpr QRgb NORMAL_COLOR_POSITIVE = qRgb(200, 200, 0);
 constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(50, 150, 50);
 
 constexpr bool STL_EXPORT_FORMAT_ASCII = true;
-
-using PainterFloatingPoint = double;
 
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
@@ -1825,8 +1810,8 @@ void MainWindow::paint(
         info_all.parent_window = this;
         info_all.window_title = QMainWindow::windowTitle().toStdString();
         info_all.object_name = object_name;
-        info_all.default_samples_per_dimension = PAINTER_DEFAULT_SAMPLES_PER_DIMENSION;
-        info_all.max_samples_per_dimension = PAINTER_MAX_SAMPLES_PER_DIMENSION;
+        info_all.default_samples_per_dimension = settings::painter::DEFAULT_SAMPLES_PER_DIMENSION;
+        info_all.max_samples_per_dimension = settings::painter::MAXIMUM_SAMPLES_PER_DIMENSION;
         info_all.background_color = qcolor_to_rgb(m_background_color);
         info_all.default_color = qcolor_to_rgb(m_default_color);
         info_all.diffuse = diffuse_light();
@@ -1849,7 +1834,7 @@ void MainWindow::paint(
                 info.paint_height = camera.height;
                 info.object_position = to_vector<T>(object_position.value);
                 info.object_size = object_size.value;
-                info.max_screen_size = PAINTER_3D_MAX_SCREEN_SIZE;
+                info.max_screen_size = settings::painter::MAXIMUM_SCREEN_SIZE_3D;
 
                 painting(mesh_object, info, info_all);
         }
@@ -1857,9 +1842,9 @@ void MainWindow::paint(
         {
                 PaintingInformationNd info;
 
-                info.default_screen_size = PAINTER_DEFAULT_SCREEN_SIZE;
-                info.minimum_screen_size = PAINTER_MINIMUM_SCREEN_SIZE;
-                info.maximum_screen_size = PAINTER_MAXIMUM_SCREEN_SIZE;
+                info.default_screen_size = settings::painter::DEFAULT_SCREEN_SIZE;
+                info.minimum_screen_size = settings::painter::MINIMUM_SCREEN_SIZE;
+                info.maximum_screen_size = settings::painter::MAXIMUM_SCREEN_SIZE;
 
                 painting(mesh_object, info, info_all);
         }
@@ -1870,12 +1855,13 @@ void MainWindow::painter_thread_function(
         ProgressRatioList* progress_list,
         const std::shared_ptr<const mesh::MeshObject<N>>& object)
 {
-        std::shared_ptr<const painter::MeshObject<N, PainterFloatingPoint>> painter_mesh_object;
+        std::shared_ptr<const painter::MeshObject<N, settings::painter::FloatingPoint>> painter_mesh_object;
 
         {
                 ProgressRatio progress(progress_list);
-                painter_mesh_object = std::make_shared<painter::MeshObject<N, PainterFloatingPoint>>(
-                        object->mesh(), to_matrix<PainterFloatingPoint>(object->matrix()), m_mesh_threads, &progress);
+                painter_mesh_object = std::make_shared<painter::MeshObject<N, settings::painter::FloatingPoint>>(
+                        object->mesh(), to_matrix<settings::painter::FloatingPoint>(object->matrix()), m_mesh_threads,
+                        &progress);
         }
 
         if (!painter_mesh_object)
