@@ -17,47 +17,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/sequence.h>
 #include <src/settings/dimensions.h>
-
-#include <tuple>
 
 namespace process
 {
-template <size_t N>
+namespace implementation
+{
+[[noreturn]] void dimension_not_supported_error(unsigned dimension);
+}
+
+template <std::size_t N>
 struct Dimension
 {
 };
 
-inline constexpr auto DIMENSIONS = Sequence<settings::Dimensions, std::tuple, Dimension>();
-
-//
-
-[[noreturn]] void dimension_not_supported_error(unsigned dimension);
-
-//
-
 template <typename T>
-void apply_for_dimension(size_t dimension, const T& f)
+void apply_for_dimension(std::size_t dimension, const T& f)
 {
-        bool found = std::apply(
-                [&]<size_t... N>(const Dimension<N>&...) {
-                        return ([&]() {
-                                if (N == dimension)
-                                {
-                                        f(Dimension<N>());
-                                        return true;
-                                }
-                                return false;
-                        }() || ...);
-                },
-                DIMENSIONS);
+        bool found = [&]<std::size_t... N>(std::index_sequence<N...> &&)
+        {
+                return ((N == dimension ? (f(Dimension<N>()), true) : false) || ...);
+        }
+        (settings::Dimensions());
 
         if (found)
         {
                 return;
         }
 
-        dimension_not_supported_error(dimension);
+        implementation::dimension_not_supported_error(dimension);
 }
 }

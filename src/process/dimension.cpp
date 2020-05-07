@@ -21,9 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/settings/utility.h>
 
-#include <string>
-
-namespace process
+namespace process::implementation
 {
 [[noreturn]] void dimension_not_supported_error(unsigned dimension)
 {
