@@ -20,18 +20,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace settings::painter
 {
 using FloatingPoint = double;
-
-// Количество лучей на один пиксель на одно измерение в одном проходе.
-// Тогда для количества измерений D в пространстве экрана количество
-// лучей равно std::pow(эта_величина, D).
-constexpr int DEFAULT_SAMPLES_PER_DIMENSION = 5;
-constexpr int MAXIMUM_SAMPLES_PER_DIMENSION = 10;
-
-// Максимальный размер экрана в пикселях для 3 измерений
-constexpr int MAXIMUM_SCREEN_SIZE_3D = 10000;
-
-// Размеры экрана в пикселях для 4 и более измерений
-constexpr int DEFAULT_SCREEN_SIZE = 500;
-constexpr int MINIMUM_SCREEN_SIZE = 50;
-constexpr int MAXIMUM_SCREEN_SIZE = 5000;
 }
