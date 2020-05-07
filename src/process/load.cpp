@@ -17,58 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "load.h"
 
+#include "dimension.h"
 #include "mesh.h"
 #include "volume.h"
 
 #include <src/com/error.h>
 #include <src/model/mesh_utility.h>
-#include <src/storage/options.h>
 
 namespace process
 {
-namespace
-{
-[[noreturn]] void dimension_error(unsigned dimension)
-{
-        std::string s;
-        std::apply(
-                [&]<size_t... N>(const storage::Dimension<N>...) {
-                        (([&]() {
-                                 if (!s.empty())
-                                 {
-                                         s += ", ";
-                                 }
-                                 s += to_string(N);
-                         }()),
-                         ...);
-                },
-                storage::DIMENSIONS);
-        error("Dimension " + to_string(dimension) + " is not supported, supported dimensions are " + s + ".");
-}
-
-template <typename T>
-void apply_for_dimension(size_t dimension, const T& f)
-{
-        bool found = std::apply(
-                [&]<size_t... N>(const storage::Dimension<N>&...) {
-                        return ([&]() {
-                                if (N == dimension)
-                                {
-                                        f(storage::Dimension<N>());
-                                        return true;
-                                }
-                                return false;
-                        }() || ...);
-                },
-                storage::DIMENSIONS);
-
-        if (!found)
-        {
-                dimension_error(dimension);
-        }
-}
-}
-
 void load_from_file(
         bool build_convex_hull,
         bool build_cocone,
@@ -84,7 +41,7 @@ void load_from_file(
 {
         unsigned dimension = mesh::file_dimension(file_name);
 
-        apply_for_dimension(dimension, [&]<size_t N>(const storage::Dimension<N>&) {
+        apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
                 std::unique_ptr<const mesh::Mesh<N>> mesh;
 
                 {
@@ -116,7 +73,7 @@ void load_from_mesh_repository(
         const std::function<void()>& load_event,
         const storage::MultiRepository& repository)
 {
-        apply_for_dimension(dimension, [&]<size_t N>(const storage::Dimension<N>&) {
+        apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
                 std::unique_ptr<const mesh::Mesh<N>> mesh =
                         repository.repository<N>().meshes().object(object_name, point_count);
 
@@ -135,7 +92,7 @@ void load_from_volume_repository(
         int image_size,
         const storage::MultiRepository& repository)
 {
-        apply_for_dimension(dimension, [&]<size_t N>(const storage::Dimension<N>&) {
+        apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
                 std::unique_ptr<const volume::Volume<N>> volume =
                         repository.repository<N>().volumes().object(object_name, image_size);
 

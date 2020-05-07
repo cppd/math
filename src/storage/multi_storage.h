@@ -31,11 +31,7 @@ namespace storage
 {
 class MultiStorage final
 {
-        static constexpr int COUNT = MAXIMUM_DIMENSION - MINIMUM_DIMENSION + 1;
-        static_assert(COUNT > 0);
-
-        // std::tuple<T<MIN>, ..., T<MAX>>.
-        using Tuple = Sequence<std::tuple, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, Storage>;
+        using Tuple = Sequence<Dimensions, std::tuple, Storage>;
 
         Tuple m_data;
 
@@ -78,21 +74,11 @@ class MultiStorage final
         using VolumeObjectConstPtr = std::shared_ptr<const volume::VolumeObject<N>>;
 
 public:
-        using MeshObject = Sequence<std::variant, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, MeshObjectPtr>;
-        using MeshObjectConst = Sequence<std::variant, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, MeshObjectConstPtr>;
+        using MeshObject = Sequence<Dimensions, std::variant, MeshObjectPtr>;
+        using MeshObjectConst = Sequence<Dimensions, std::variant, MeshObjectConstPtr>;
 
-        using VolumeObject = Sequence<std::variant, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, VolumeObjectPtr>;
-        using VolumeObjectConst = Sequence<std::variant, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, VolumeObjectConstPtr>;
-
-        //
-
-        static std::set<unsigned> supported_dimensions()
-        {
-                std::set<unsigned> v;
-                std::apply(
-                        [&]<size_t... N>(const Dimension<N>&...) { (v.insert(N), ...); }, DIMENSIONS);
-                return v;
-        }
+        using VolumeObject = Sequence<Dimensions, std::variant, VolumeObjectPtr>;
+        using VolumeObjectConst = Sequence<Dimensions, std::variant, VolumeObjectConstPtr>;
 
         //
 

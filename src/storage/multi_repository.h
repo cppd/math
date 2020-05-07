@@ -30,20 +30,11 @@ namespace storage
 {
 class MultiRepository final
 {
-        // std::tuple<T<MIN>, ..., T<MAX>>.
-        using Tuple = Sequence<std::tuple, MINIMUM_DIMENSION, MAXIMUM_DIMENSION, Repository>;
+        using Tuple = Sequence<Dimensions, std::tuple, Repository>;
 
         Tuple m_data;
 
 public:
-        static std::set<unsigned> supported_dimensions()
-        {
-                std::set<unsigned> v;
-                std::apply(
-                        [&]<size_t... N>(const Dimension<N>&...) { (v.insert(N), ...); }, DIMENSIONS);
-                return v;
-        }
-
         template <size_t N>
         const Repository<N>& repository() const
         {

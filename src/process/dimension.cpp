@@ -15,14 +15,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "dimension.h"
 
-#include <set>
-#include <utility>
+#include <src/com/error.h>
+#include <src/com/print.h>
 
-namespace storage
+#include <string>
+
+namespace process
 {
-using Dimensions = std::index_sequence<3, 4, 5>;
-
-std::set<unsigned> supported_dimensions();
+[[noreturn]] void dimension_not_supported_error(unsigned dimension)
+{
+        error("Dimension " + to_string(dimension) + " is not supported, supported dimensions are "
+              + to_string(storage::supported_dimensions()) + ".");
+}
 }

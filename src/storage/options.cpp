@@ -17,7 +17,52 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "options.h"
 
+#include <tuple>
+
 namespace storage
 {
-static_assert(MINIMUM_DIMENSION >= 3 && MINIMUM_DIMENSION <= MAXIMUM_DIMENSION);
+namespace
+{
+template <std::size_t Index, typename... T>
+constexpr bool compare_two_elements(const std::tuple<T...>& t)
+{
+        if constexpr (Index + 1 == sizeof...(T))
+        {
+                return true;
+        }
+        else
+        {
+                return std::get<Index>(t) < std::get<Index + 1>(t);
+        }
+}
+
+template <typename... T, std::size_t... I>
+constexpr bool compare(std::tuple<T...>&& t, std::index_sequence<I...>&&)
+{
+        static_assert(sizeof...(T) > 0 && sizeof...(T) == sizeof...(I));
+
+        return ((std::get<I>(t) >= 3) && ...) && (compare_two_elements<I>(t) && ...);
+}
+
+template <template <typename T, T...> typename Sequence, typename T, T... I>
+constexpr bool check(const Sequence<T, I...>&)
+{
+        return compare(std::make_tuple(I...), std::make_index_sequence<sizeof...(I)>());
+}
+
+static_assert(check(Dimensions()));
+}
+
+std::set<unsigned> supported_dimensions()
+{
+        std::set<unsigned> v;
+
+        [&]<size_t... N>(const std::index_sequence<N...>&)
+        {
+                (v.insert(N), ...);
+        }
+        (Dimensions());
+
+        return v;
+}
 }

@@ -21,31 +21,64 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace sequence_implementation
 {
-template <template <typename...> typename SequenceType, template <size_t, typename...> typename Type, typename... Ts>
+template <
+        template <typename...>
+        typename Type,
+        template <size_t, typename...>
+        typename SequenceType,
+        typename... SequenceTypeParameters>
 struct Sequence
 {
         template <int first, int N, size_t... I>
         struct S
         {
                 static_assert(N > 0);
-                using V = typename S<first, N - 1, N - 1, I...>::V;
+                using T = typename S<first, N - 1, N - 1, I...>::T;
         };
         template <int first, size_t... I>
         struct S<first, 0, I...>
         {
                 static_assert(sizeof...(I) > 0);
-                using V = SequenceType<Type<first + I, Ts...>...>;
+                using T = Type<SequenceType<first + I, SequenceTypeParameters...>...>;
         };
 };
-}
 
-// Тип SequenceType<T<from, ...>, T<From + 1, ...>, T<From + 2, ...>, ...>
 template <
         template <typename...>
+        typename Type,
+        template <size_t, typename...>
         typename SequenceType,
+        typename... SequenceTypeParameters,
+        template <typename, size_t...>
+        typename IntegerSequence,
+        typename IntegerType,
+        size_t... I>
+auto sequence(IntegerSequence<IntegerType, I...>&&)
+{
+        return Type<SequenceType<I, SequenceTypeParameters...>...>();
+}
+}
+
+// Тип Type<SequenceType<From, ...>, SequenceType<From + 1, ...>, SequenceType<From + 2, ...>, ...>
+template <
+        template <typename...>
+        typename Type,
         int From,
         int To,
         template <size_t, typename...>
-        typename T,
-        typename... Ts>
-using Sequence = typename sequence_implementation::Sequence<SequenceType, T, Ts...>::template S<From, To - From + 1>::V;
+        typename SequenceType,
+        typename... SequenceTypeParameters>
+using SequenceRange = typename sequence_implementation::Sequence<Type, SequenceType, SequenceTypeParameters...>::
+        template S<From, To - From + 1>::T;
+
+// Тип Type<SequenceType<Index0, ...>, SequenceType<index1, ...>, SequenceType<index2, ...>, ...>
+// где i берутся из IndexSequence (std::integer_sequence)
+template <
+        typename IntegerSequence,
+        template <typename...>
+        typename Type,
+        template <size_t, typename...>
+        typename SequenceType,
+        typename... SequenceTypeParameters>
+using Sequence =
+        decltype(sequence_implementation::sequence<Type, SequenceType, SequenceTypeParameters...>(IntegerSequence()));

@@ -572,8 +572,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         bool read_only = true;
 
                         std::vector<dialog::FileFilter> filters;
-                        for (const mesh::FileFormat& v :
-                             mesh::load_formats(storage::MultiStorage::supported_dimensions()))
+                        for (const mesh::FileFormat& v : mesh::load_formats(storage::supported_dimensions()))
                         {
                                 dialog::FileFilter& f = filters.emplace_back();
                                 f.name = v.format_name;
