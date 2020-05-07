@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/sequence.h>
 #include <src/painter/shapes/mesh.h>
 #include <src/progress/progress_list.h>
+#include <src/settings/dimensions.h>
 #include <src/storage/multi_repository.h>
 #include <src/storage/multi_storage.h>
 #include <src/test/self_test.h>
@@ -236,7 +237,7 @@ private:
                 std::function<void(mesh::MeshEvent<N>&&)> mesh_events;
                 std::function<void(volume::VolumeEvent<N>&&)> volume_events;
         };
-        Sequence<storage::Dimensions, std::tuple, ModelEvents> m_model_events;
+        Sequence<settings::Dimensions, std::tuple, ModelEvents> m_model_events;
 
         QColor m_background_color;
         QColor m_default_color;

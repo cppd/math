@@ -15,11 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "options.h"
+#include "dimensions.h"
 
 #include <tuple>
 
-namespace storage
+namespace settings
 {
 namespace
 {
@@ -51,18 +51,5 @@ constexpr bool check(const Sequence<T, I...>&)
 }
 
 static_assert(check(Dimensions()));
-}
-
-std::set<unsigned> supported_dimensions()
-{
-        std::set<unsigned> v;
-
-        [&]<size_t... N>(const std::index_sequence<N...>&)
-        {
-                (v.insert(N), ...);
-        }
-        (Dimensions());
-
-        return v;
 }
 }

@@ -17,12 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <set>
 #include <utility>
 
-namespace storage
+namespace settings
 {
 using Dimensions = std::index_sequence<3, 4, 5>;
-
-std::set<unsigned> supported_dimensions();
 }

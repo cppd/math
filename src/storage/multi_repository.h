@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "options.h"
 #include "repository.h"
 
 #include <src/com/sequence.h>
+#include <src/settings/dimensions.h>
 
 #include <set>
 #include <string>
@@ -30,7 +30,7 @@ namespace storage
 {
 class MultiRepository final
 {
-        using Tuple = Sequence<Dimensions, std::tuple, Repository>;
+        using Tuple = Sequence<settings::Dimensions, std::tuple, Repository>;
 
         Tuple m_data;
 

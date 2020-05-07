@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../support/support.h"
 
-#include <src/application/name.h>
+#include <src/settings/name.h>
 #include <src/vulkan/settings.h>
 
 #include <QMessageBox>
@@ -32,7 +32,7 @@ std::string message()
 {
         std::ostringstream oss;
 
-        oss << APPLICATION_NAME;
+        oss << settings::APPLICATION_NAME;
 
         oss << "\n\n";
 #if defined(__clang__)
@@ -59,7 +59,7 @@ std::string message()
 
 std::string title()
 {
-        return std::string("About ") + APPLICATION_NAME;
+        return std::string("About ") + settings::APPLICATION_NAME;
 }
 }
 

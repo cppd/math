@@ -15,19 +15,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "dimension.h"
+#include "utility.h"
 
-#include <src/com/error.h>
-#include <src/com/print.h>
-#include <src/settings/utility.h>
+#include "dimensions.h"
 
-#include <string>
-
-namespace process
+namespace settings
 {
-[[noreturn]] void dimension_not_supported_error(unsigned dimension)
+std::set<unsigned> supported_dimensions()
 {
-        error("Dimension " + to_string(dimension) + " is not supported, supported dimensions are "
-              + to_string(settings::supported_dimensions()) + ".");
+        std::set<unsigned> v;
+
+        [&]<size_t... N>(const std::index_sequence<N...>&)
+        {
+                (v.insert(N), ...);
+        }
+        (Dimensions());
+
+        return v;
 }
 }

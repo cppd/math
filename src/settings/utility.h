@@ -17,4 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-inline constexpr const char* APPLICATION_NAME = "Math Viewer";
+#include <set>
+
+namespace settings
+{
+std::set<unsigned> supported_dimensions();
+}

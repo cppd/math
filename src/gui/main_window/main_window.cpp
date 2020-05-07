@@ -31,7 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../painter_window/painting.h"
 #include "../support/support.h"
 
-#include <src/application/name.h>
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -43,6 +42,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/mesh_utility.h>
 #include <src/process/load.h>
 #include <src/process/mesh.h>
+#include <src/settings/name.h>
+#include <src/settings/utility.h>
 #include <src/utility/file/sys.h>
 #include <src/view/create.h>
 
@@ -244,8 +245,8 @@ void MainWindow::constructor_interface()
 
         ui.tabWidget->setCurrentIndex(0);
 
-        ui.actionHelp->setText(QString(APPLICATION_NAME) + " Help");
-        ui.actionAbout->setText("About " + QString(APPLICATION_NAME));
+        ui.actionHelp->setText(QString(settings::APPLICATION_NAME) + " Help");
+        ui.actionAbout->setText("About " + QString(settings::APPLICATION_NAME));
 
         ui.slider_shadow_quality->setSliderPosition(SHADOW_ZOOM);
 
@@ -355,7 +356,7 @@ void MainWindow::delete_model_events()
 
 void MainWindow::set_window_title_file(const std::string& file_name)
 {
-        std::string title = APPLICATION_NAME;
+        std::string title = settings::APPLICATION_NAME;
 
         if (!file_name.empty())
         {
@@ -572,7 +573,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         bool read_only = true;
 
                         std::vector<dialog::FileFilter> filters;
-                        for (const mesh::FileFormat& v : mesh::load_formats(storage::supported_dimensions()))
+                        for (const mesh::FileFormat& v : mesh::load_formats(settings::supported_dimensions()))
                         {
                                 dialog::FileFilter& f = filters.emplace_back();
                                 f.name = v.format_name;

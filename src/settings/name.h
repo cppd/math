@@ -15,19 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "dimension.h"
+#pragma once
 
-#include <src/com/error.h>
-#include <src/com/print.h>
-#include <src/settings/utility.h>
-
-#include <string>
-
-namespace process
+namespace settings
 {
-[[noreturn]] void dimension_not_supported_error(unsigned dimension)
-{
-        error("Dimension " + to_string(dimension) + " is not supported, supported dimensions are "
-              + to_string(settings::supported_dimensions()) + ".");
-}
+inline constexpr const char* APPLICATION_NAME = "Math Viewer";
 }

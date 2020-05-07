@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "options.h"
 #include "storage.h"
 
 #include <src/com/sequence.h>
+#include <src/settings/dimensions.h>
 
 #include <set>
 #include <string>
@@ -31,7 +31,7 @@ namespace storage
 {
 class MultiStorage final
 {
-        using Tuple = Sequence<Dimensions, std::tuple, Storage>;
+        using Tuple = Sequence<settings::Dimensions, std::tuple, Storage>;
 
         Tuple m_data;
 
@@ -74,11 +74,11 @@ class MultiStorage final
         using VolumeObjectConstPtr = std::shared_ptr<const volume::VolumeObject<N>>;
 
 public:
-        using MeshObject = Sequence<Dimensions, std::variant, MeshObjectPtr>;
-        using MeshObjectConst = Sequence<Dimensions, std::variant, MeshObjectConstPtr>;
+        using MeshObject = Sequence<settings::Dimensions, std::variant, MeshObjectPtr>;
+        using MeshObjectConst = Sequence<settings::Dimensions, std::variant, MeshObjectConstPtr>;
 
-        using VolumeObject = Sequence<Dimensions, std::variant, VolumeObjectPtr>;
-        using VolumeObjectConst = Sequence<Dimensions, std::variant, VolumeObjectConstPtr>;
+        using VolumeObject = Sequence<settings::Dimensions, std::variant, VolumeObjectPtr>;
+        using VolumeObjectConst = Sequence<settings::Dimensions, std::variant, VolumeObjectConstPtr>;
 
         //
 

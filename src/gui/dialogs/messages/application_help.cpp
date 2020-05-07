@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../support/support.h"
 
-#include <src/application/name.h>
+#include <src/settings/name.h>
 
 #include <QMessageBox>
 #include <string>
@@ -35,7 +35,7 @@ std::string message()
 
 std::string title()
 {
-        return std::string(APPLICATION_NAME) + " Help";
+        return std::string(settings::APPLICATION_NAME) + " Help";
 }
 }
 
