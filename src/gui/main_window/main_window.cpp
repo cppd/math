@@ -26,9 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dialogs/messages/source_error.h"
 #include "../dialogs/parameters/bound_cocone.h"
 #include "../dialogs/parameters/object_selection.h"
+#include "../dialogs/parameters/painter_3d.h"
+#include "../dialogs/parameters/painter_nd.h"
 #include "../dialogs/parameters/point_object.h"
 #include "../dialogs/parameters/volume_object.h"
-#include "../painter_window/painting.h"
+#include "../painter_window/painter_scene.h"
+#include "../painter_window/painter_window.h"
 #include "../support/support.h"
 
 #include <src/com/alg.h>
@@ -1819,16 +1822,19 @@ void MainWindow::paint(
 {
         ASSERT(mesh_object);
 
-        PaintingInformationAll info_all;
+        const unsigned default_samples = power<N - 1>(static_cast<unsigned>(PAINTER_DEFAULT_SAMPLES_PER_DIMENSION));
+        const unsigned max_samples = power<N - 1>(static_cast<unsigned>(PAINTER_MAXIMUM_SAMPLES_PER_DIMENSION));
 
-        info_all.parent_window = this;
-        info_all.window_title = QMainWindow::windowTitle().toStdString();
-        info_all.object_name = object_name;
-        info_all.default_samples_per_dimension = PAINTER_DEFAULT_SAMPLES_PER_DIMENSION;
-        info_all.max_samples_per_dimension = PAINTER_MAXIMUM_SAMPLES_PER_DIMENSION;
+        PaintingInformationAll info_all;
         info_all.background_color = qcolor_to_rgb(m_background_color);
         info_all.default_color = qcolor_to_rgb(m_default_color);
         info_all.diffuse = diffuse_light();
+
+        int thread_count;
+        int samples_per_pixel;
+        bool flat_facets;
+
+        std::unique_ptr<const painter::PaintObjects<N, T>> scene;
 
         if constexpr (N == 3)
         {
@@ -1837,31 +1843,56 @@ void MainWindow::paint(
                 view::info::ObjectPosition object_position;
                 m_view->receive({&camera, &object_size, &object_position});
 
-                PaintingInformation3d<T> info;
+                PaintingInformation<3, T> info;
 
                 info.camera_up = to_vector<T>(camera.up);
                 info.camera_direction = to_vector<T>(camera.forward);
                 info.light_direction = to_vector<T>(camera.lighting);
                 info.view_center = to_vector<T>(camera.view_center);
                 info.view_width = camera.view_width;
-                info.paint_width = camera.width;
-                info.paint_height = camera.height;
                 info.object_position = to_vector<T>(object_position.value);
                 info.object_size = object_size.value;
-                info.max_screen_size = PAINTER_MAXIMUM_SCREEN_SIZE_3D;
 
-                painting(mesh_object, info, info_all);
+                QPointer ptr(this);
+                if (!dialog::painter_parameters_for_3d(
+                            this, hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
+                            default_samples, max_samples, &thread_count, &info.width, &info.height, &samples_per_pixel,
+                            &flat_facets, &info.cornell_box))
+                {
+                        return;
+                }
+                if (ptr.isNull())
+                {
+                        return;
+                }
+
+                scene = create_painter_scene(mesh_object, info, info_all);
         }
         else
         {
-                PaintingInformationNd info;
+                PaintingInformation<N, T> info;
 
-                info.default_screen_size = PAINTER_DEFAULT_SCREEN_SIZE_ND;
-                info.minimum_screen_size = PAINTER_MINIMUM_SCREEN_SIZE_ND;
-                info.maximum_screen_size = PAINTER_MAXIMUM_SCREEN_SIZE_ND;
+                QPointer ptr(this);
+                if (!dialog::painter_parameters_for_nd(
+                            this, N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND,
+                            PAINTER_MINIMUM_SCREEN_SIZE_ND, PAINTER_MAXIMUM_SCREEN_SIZE_ND, default_samples,
+                            max_samples, &thread_count, &info.min_screen_size, &info.max_screen_size,
+                            &samples_per_pixel, &flat_facets))
+                {
+                        return;
+                }
+                if (ptr.isNull())
+                {
+                        return;
+                }
 
-                painting(mesh_object, info, info_all);
+                scene = create_painter_scene(mesh_object, info, info_all);
         }
+
+        std::string window_title = QMainWindow::windowTitle().toStdString() + " (" + object_name + ")";
+
+        create_and_show_delete_on_close_window<PainterWindow<N, T>>(
+                window_title, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
 }
 
 template <size_t N>
