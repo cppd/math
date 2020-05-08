@@ -144,23 +144,26 @@ private:
         template <typename F>
         void catch_all(const F& function) const noexcept;
 
+        //
+
         void thread_load_from_file(std::string file_name, bool use_object_selection_dialog);
-        void thread_load_from_mesh_repository(int dimension, const std::string& object_name);
-        void thread_load_from_volume_repository(int dimension, const std::string& object_name);
+        void thread_load_from_mesh_repository();
+        void thread_load_from_volume_repository();
+
         template <size_t N>
         std::optional<WorkerThreads::Function> export_function(
-                const std::shared_ptr<const mesh::MeshObject<N>>& object);
-        void thread_export(ObjectId id);
-        void thread_bound_cocone(ObjectId id);
+                const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object);
+        void thread_export();
+
+        void thread_bound_cocone();
         void thread_self_test(SelfTestType test_type, bool with_confirmation);
 
         template <size_t N>
-        void painter_thread_function(
-                ProgressRatioList* progress_list,
-                const std::shared_ptr<const mesh::MeshObject<N>>& object);
+        std::optional<WorkerThreads::Function> painter_function(
+                const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object);
+        void thread_painter();
 
-        template <size_t N, typename T>
-        void paint(const std::shared_ptr<const painter::MeshObject<N, T>>& mesh_object, const std::string& object_name);
+        //
 
         void set_dependent_interface();
 
