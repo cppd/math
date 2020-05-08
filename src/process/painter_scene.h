@@ -28,15 +28,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
+namespace process
+{
 template <size_t N, typename T>
-struct PaintingInformation
+struct PainterSceneInfo
 {
         int min_screen_size;
         int max_screen_size;
 };
 
 template <typename T>
-struct PaintingInformation<3, T>
+struct PainterSceneInfo<3, T>
 {
         Vector<3, T> camera_up;
         Vector<3, T> camera_direction;
@@ -50,7 +52,7 @@ struct PaintingInformation<3, T>
         bool cornell_box;
 };
 
-struct PaintingInformationAll
+struct PainterSceneCommonInfo
 {
         Color background_color;
         Color default_color;
@@ -60,7 +62,7 @@ struct PaintingInformationAll
 namespace painter_scene_implementation
 {
 template <typename T>
-std::unique_ptr<const painter::Projector<3, T>> create_projector(const PaintingInformation<3, T>& info)
+std::unique_ptr<const painter::Projector<3, T>> create_projector(const PainterSceneInfo<3, T>& info)
 {
         Vector<3, T> camera_position = info.view_center - info.camera_direction * T(2) * info.object_size;
         Vector<3, T> camera_right = cross(info.camera_direction, info.camera_up);
@@ -75,7 +77,7 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(const PaintingI
 }
 
 template <typename T>
-std::unique_ptr<const painter::LightSource<3, T>> create_light_source(const PaintingInformation<3, T>& info)
+std::unique_ptr<const painter::LightSource<3, T>> create_light_source(const PainterSceneInfo<3, T>& info)
 {
         Vector<3, T> light_position = info.object_position - info.light_direction * info.object_size * T(1000);
 
@@ -86,8 +88,8 @@ std::unique_ptr<const painter::LightSource<3, T>> create_light_source(const Pain
 template <size_t N, typename T>
 std::unique_ptr<const painter::PaintObjects<N, T>> create_painter_scene(
         const std::shared_ptr<const painter::MeshObject<N, T>>& mesh,
-        const PaintingInformation<N, T>& info,
-        const PaintingInformationAll& info_all)
+        const PainterSceneInfo<N, T>& info,
+        const PainterSceneCommonInfo& info_all)
 {
         if constexpr (N == 3)
         {
@@ -112,4 +114,5 @@ std::unique_ptr<const painter::PaintObjects<N, T>> create_painter_scene(
                         info_all.background_color, info_all.default_color, info_all.diffuse, info.min_screen_size,
                         info.max_screen_size, mesh);
         }
+}
 }
