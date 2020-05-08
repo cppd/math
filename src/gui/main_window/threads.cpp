@@ -231,6 +231,11 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
+                if (!function)
+                {
+                        return;
+                }
+
                 thread_data(action).start(std::move(function));
         }
 
