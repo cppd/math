@@ -893,7 +893,7 @@ void MainWindow::thread_bound_cocone()
                         f = [=](ProgressRatioList* progress_list, std::string* message) {
                                 *message = "BoundCocone Reconstruction";
 
-                                process::compute_bound_cocone(progress_list, mesh_object, rho, alpha);
+                                process::compute_bound_cocone(progress_list, *mesh_object, rho, alpha);
                         };
                 },
                 *object);
