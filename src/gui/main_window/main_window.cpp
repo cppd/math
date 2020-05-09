@@ -42,6 +42,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/com/variant.h>
 #include <src/model/mesh_utility.h>
+#include <src/process/dimension.h>
 #include <src/process/load.h>
 #include <src/process/mesh.h>
 #include <src/process/painter_scene.h>
@@ -124,6 +125,22 @@ constexpr QRgb NORMAL_COLOR_POSITIVE = qRgb(200, 200, 0);
 constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(50, 150, 50);
 
 constexpr bool STL_EXPORT_FORMAT_ASCII = true;
+
+namespace
+{
+template <size_t N>
+Vector<N, double> dimension_position(const vec3& position)
+{
+        if constexpr (N == 3)
+        {
+                return position;
+        }
+        else
+        {
+                return Vector<N, double>(0);
+        }
+}
+}
 
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
@@ -612,13 +629,21 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                 view::info::ObjectPosition object_position;
                 m_view->receive({&object_size, &object_position});
 
-                process::load_from_file(
-                        build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list, file_name,
-                        object_size.value, object_position.value, rho, alpha, [&]() {
-                                m_storage->clear();
-                                m_view->send(view::command::ResetView());
-                                m_window_events(WindowEvent::FileLoaded(file_name));
-                        });
+                unsigned dimension = mesh::file_dimension(file_name);
+
+                process::apply_for_dimension(dimension, [&]<size_t N>(const process::Dimension<N>&) {
+                        std::shared_ptr<mesh::MeshObject<N>> mesh = process::load_from_file(
+                                "Model", progress_list, file_name, object_size.value,
+                                dimension_position<N>(object_position.value), [&]() {
+                                        m_storage->clear();
+                                        m_view->send(view::command::ResetView());
+                                        m_window_events(WindowEvent::FileLoaded(file_name));
+                                });
+
+                        process::compute<N>(
+                                progress_list, build_convex_hull, build_cocone, build_bound_cocone, build_mst, *mesh,
+                                rho, alpha);
+                });
         };
 
         m_worker_threads->start(ACTION, std::move(f));
@@ -686,15 +711,21 @@ void MainWindow::thread_load_from_mesh_repository()
                 view::info::ObjectPosition object_position;
                 m_view->receive({&object_size, &object_position});
 
-                process::load_from_mesh_repository(
-                        build_convex_hull, build_cocone, build_bound_cocone, build_mst, progress_list, dimension,
-                        object_name, object_size.value, object_position.value, rho, alpha, point_count,
-                        [&]() {
-                                m_storage->clear();
-                                m_view->send(view::command::ResetView());
-                                m_window_events(WindowEvent::FileLoaded(object_name));
-                        },
-                        *m_repository);
+                process::apply_for_dimension(dimension, [&]<size_t N>(const process::Dimension<N>&) {
+                        std::shared_ptr<mesh::MeshObject<N>> mesh = process::load_from_mesh_repository(
+                                object_name, object_size.value, dimension_position<N>(object_position.value),
+                                point_count,
+                                [&]() {
+                                        m_storage->clear();
+                                        m_view->send(view::command::ResetView());
+                                        m_window_events(WindowEvent::FileLoaded(object_name));
+                                },
+                                *m_repository);
+
+                        process::compute<N>(
+                                progress_list, build_convex_hull, build_cocone, build_bound_cocone, build_mst, *mesh,
+                                rho, alpha);
+                });
         };
 
         m_worker_threads->start(ACTION, std::move(f));
@@ -750,8 +781,11 @@ void MainWindow::thread_load_from_volume_repository()
                 view::info::ObjectPosition object_position;
                 m_view->receive({&object_size, &object_position});
 
-                process::load_from_volume_repository(
-                        dimension, object_name, object_size.value, object_position.value, image_size, *m_repository);
+                process::apply_for_dimension(dimension, [&]<size_t N>(const process::Dimension<N>&) {
+                        process::load_from_volume_repository(
+                                object_name, object_size.value, dimension_position<N>(object_position.value),
+                                image_size, *m_repository);
+                });
         };
 
         m_worker_threads->start(ACTION, std::move(f));
