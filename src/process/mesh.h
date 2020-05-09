@@ -288,54 +288,25 @@ void compute(
         bool build_cocone,
         bool build_bound_cocone,
         bool build_mst,
-        std::unique_ptr<const mesh::Mesh<N>>&& mesh,
-        const std::string& name,
-        double object_size,
-        const vec3& object_position,
+        const mesh::MeshObject<N>& mesh_object,
         double rho,
         double alpha)
 {
         namespace impl = process_implementation;
-
-        if (mesh->facets.empty() && mesh->points.empty())
-        {
-                error("Facets or points not found");
-        }
-
-        if (!mesh->facets.empty() && !mesh->points.empty())
-        {
-                error("Facets and points together in one object are not supported");
-        }
-
-        Matrix<N + 1, N + 1, double> matrix;
-        if constexpr (N == 3)
-        {
-                ASSERT(object_size != 0);
-                matrix = mesh::model_matrix_for_size_and_position(*mesh, object_size, object_position);
-        }
-        else
-        {
-                matrix = Matrix<N + 1, N + 1, double>(1);
-        }
-
-        const std::shared_ptr<mesh::MeshObject<N>> model_object =
-                std::make_shared<mesh::MeshObject<N>>(std::move(mesh), matrix, name);
-
-        model_object->created();
 
         ThreadsWithCatch threads(2);
         try
         {
                 if (build_convex_hull)
                 {
-                        threads.add([&]() { impl::convex_hull(progress_list, *model_object); });
+                        threads.add([&]() { impl::convex_hull(progress_list, mesh_object); });
                 }
 
                 if (build_cocone || build_bound_cocone || build_mst)
                 {
                         threads.add([&]() {
                                 impl::manifold_constructor(
-                                        progress_list, build_cocone, build_bound_cocone, build_mst, *model_object, rho,
+                                        progress_list, build_cocone, build_bound_cocone, build_mst, mesh_object, rho,
                                         alpha);
                         });
                 }
