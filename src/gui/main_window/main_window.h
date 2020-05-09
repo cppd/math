@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/painter/shapes/mesh.h>
 #include <src/progress/progress_list.h>
 #include <src/settings/dimensions.h>
-#include <src/storage/multi_repository.h>
+#include <src/storage/repository.h>
 #include <src/storage/storage.h>
 #include <src/test/self_test.h>
 #include <src/view/interface.h>
@@ -231,7 +231,7 @@ private:
 
         std::unique_ptr<view::View> m_view;
 
-        std::unique_ptr<storage::MultiRepository> m_repository;
+        std::unique_ptr<storage::Repository> m_repository;
         std::unique_ptr<storage::Storage> m_storage;
 
         template <size_t N>

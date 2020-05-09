@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vec.h>
 #include <src/progress/progress_list.h>
-#include <src/storage/multi_repository.h>
+#include <src/storage/repository.h>
 
 #include <functional>
 #include <string>
@@ -54,7 +54,7 @@ void load_from_mesh_repository(
         double alpha,
         int point_count,
         const std::function<void()>& load_event,
-        const storage::MultiRepository& repository);
+        const storage::Repository& repository);
 
 void load_from_volume_repository(
         int dimension,
@@ -62,5 +62,5 @@ void load_from_volume_repository(
         double object_size,
         const vec3& object_position,
         int image_size,
-        const storage::MultiRepository& repository);
+        const storage::Repository& repository);
 }

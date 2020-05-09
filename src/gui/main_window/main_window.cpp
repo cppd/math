@@ -268,20 +268,20 @@ void MainWindow::constructor_objects_and_repository()
         m_objects_to_load.insert(ComputationType::Cocone);
         m_objects_to_load.insert(ComputationType::BoundCocone);
 
-        m_repository = std::make_unique<storage::MultiRepository>();
+        m_repository = std::make_unique<storage::Repository>();
 
         m_storage = std::make_unique<storage::Storage>();
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
 
-        std::vector<storage::MultiRepository::ObjectNames> repository_objects = m_repository->object_names();
+        std::vector<storage::Repository::ObjectNames> repository_objects = m_repository->object_names();
 
         std::sort(repository_objects.begin(), repository_objects.end(), [](const auto& a, const auto& b) {
                 return a.dimension < b.dimension;
         });
 
-        for (storage::MultiRepository::ObjectNames& objects : repository_objects)
+        for (storage::Repository::ObjectNames& objects : repository_objects)
         {
                 ASSERT(objects.dimension > 0);
                 QMenu* sub_menu = ui.menuCreate->addMenu(space_name(objects.dimension).c_str());

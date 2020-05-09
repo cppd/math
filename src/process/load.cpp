@@ -146,11 +146,10 @@ void load_from_mesh_repository(
         double alpha,
         int point_count,
         const std::function<void()>& load_event,
-        const storage::MultiRepository& repository)
+        const storage::Repository& repository)
 {
         apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
-                std::unique_ptr<mesh::Mesh<N>> mesh =
-                        repository.repository<N>().meshes().object(object_name, point_count);
+                std::unique_ptr<mesh::Mesh<N>> mesh = repository.mesh<N>(object_name, point_count);
 
                 load_event();
 
@@ -169,11 +168,10 @@ void load_from_volume_repository(
         double object_size,
         const vec3& object_position,
         int image_size,
-        const storage::MultiRepository& repository)
+        const storage::Repository& repository)
 {
         apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
-                std::unique_ptr<volume::Volume<N>> volume =
-                        repository.repository<N>().volumes().object(object_name, image_size);
+                std::unique_ptr<volume::Volume<N>> volume = repository.volume<N>(object_name, image_size);
 
                 create_volume_object(object_name, object_size, object_position, std::move(volume));
         });
