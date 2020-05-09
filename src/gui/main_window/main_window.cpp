@@ -270,7 +270,7 @@ void MainWindow::constructor_objects_and_repository()
 
         m_repository = std::make_unique<storage::MultiRepository>();
 
-        m_storage = std::make_unique<storage::MultiStorage>();
+        m_storage = std::make_unique<storage::Storage>();
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
@@ -823,7 +823,7 @@ void MainWindow::thread_export()
                 return;
         }
 
-        std::optional<storage::MultiStorage::MeshObjectConst> object = m_storage->mesh_object_const(*id);
+        std::optional<storage::MeshObjectConst> object = m_storage->mesh_object_const(*id);
         if (!object)
         {
                 m_window_events(WindowEvent::MessageWarning("No object to export"));
@@ -862,7 +862,7 @@ void MainWindow::thread_bound_cocone()
                 return;
         }
 
-        std::optional<storage::MultiStorage::MeshObjectConst> object = m_storage->mesh_object_const(*id);
+        std::optional<storage::MeshObjectConst> object = m_storage->mesh_object_const(*id);
         if (!object)
         {
                 m_window_events(WindowEvent::MessageWarning("No object to compute BoundCocone"));
@@ -1054,7 +1054,7 @@ void MainWindow::thread_painter()
                 return;
         }
 
-        std::optional<storage::MultiStorage::MeshObjectConst> object = m_storage->mesh_object_const(*id);
+        std::optional<storage::MeshObjectConst> object = m_storage->mesh_object_const(*id);
         if (!object)
         {
                 m_window_events(WindowEvent::MessageWarning("No object to paint"));
@@ -1664,7 +1664,7 @@ void MainWindow::update_volume_ui(ObjectId id)
                 return;
         }
 
-        std::optional<storage::MultiStorage::VolumeObjectConst> volume_object_opt = m_storage->volume_object_const(id);
+        std::optional<storage::VolumeObjectConst> volume_object_opt = m_storage->volume_object_const(id);
         if (!volume_object_opt)
         {
                 return;
@@ -1961,7 +1961,7 @@ void MainWindow::on_slider_volume_levels_range_changed(double min, double max)
         {
                 return;
         }
-        std::optional<storage::MultiStorage::VolumeObject> volume_object_opt = m_storage->volume_object(*id);
+        std::optional<storage::VolumeObject> volume_object_opt = m_storage->volume_object(*id);
         if (!volume_object_opt)
         {
                 return;
