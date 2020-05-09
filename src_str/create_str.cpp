@@ -56,8 +56,8 @@ std::string usage()
 {
         std::string s;
         s += "Usage:\n";
-        s += "program " + std::string(COMMAND_STR) + "|" + std::string(COMMAND_BIN) + "|" + std::string(COMMAND_SPR) +
-             " file_in file_out\n";
+        s += "program " + std::string(COMMAND_STR) + "|" + std::string(COMMAND_BIN) + "|" + std::string(COMMAND_SPR)
+             + " file_in file_out\n";
         s += "program " + std::string(COMMAND_CAT) + " files_in file_out";
         return s;
 }
