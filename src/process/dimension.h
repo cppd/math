@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/settings/dimensions.h>
 
+#include <optional>
+
 namespace process
 {
 namespace implementation
@@ -32,19 +34,30 @@ struct Dimension
 };
 
 template <typename T>
-void apply_for_dimension(std::size_t dimension, const T& f)
+auto apply_for_dimension(std::size_t dimension, const T& f)
 {
-        bool found = [&]<std::size_t... N>(std::index_sequence<N...> &&)
+        return [&]<std::size_t... N>(std::index_sequence<N...> &&)
         {
-                return ((N == dimension ? (f(Dimension<N>()), true) : false) || ...);
+                using ReturnType = std::common_type_t<decltype(f(Dimension<N>()))...>;
+
+                if constexpr (std::is_same_v<void, ReturnType>)
+                {
+                        if (((N == dimension ? (static_cast<void>(f(Dimension<N>())), true) : false) || ...))
+                        {
+                                return;
+                        }
+                }
+                else
+                {
+                        std::optional<ReturnType> r;
+                        if (((N == dimension ? (static_cast<void>(r.emplace(f(Dimension<N>()))), true) : false) || ...))
+                        {
+                                return std::move(*r);
+                        }
+                }
+
+                implementation::dimension_not_supported_error(dimension);
         }
         (settings::Dimensions());
-
-        if (found)
-        {
-                return;
-        }
-
-        implementation::dimension_not_supported_error(dimension);
 }
 }
