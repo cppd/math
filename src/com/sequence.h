@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <cstddef>
+#include <utility>
 
 namespace sequence_implementation
 {
@@ -55,7 +56,7 @@ template <
         size_t... I>
 auto sequence(IntegerSequence<IntegerType, I...>&&)
 {
-        return Type<SequenceType<I, SequenceTypeParameters...>...>();
+        return std::add_pointer_t<Type<SequenceType<I, SequenceTypeParameters...>...>>();
 }
 }
 
@@ -80,5 +81,5 @@ template <
         template <size_t, typename...>
         typename SequenceType,
         typename... SequenceTypeParameters>
-using Sequence =
-        decltype(sequence_implementation::sequence<Type, SequenceType, SequenceTypeParameters...>(IntegerSequence()));
+using Sequence = std::remove_pointer_t<decltype(
+        sequence_implementation::sequence<Type, SequenceType, SequenceTypeParameters...>(IntegerSequence()))>;
