@@ -268,16 +268,6 @@ void manifold_constructor(
 }
 
 template <size_t N>
-void compute_bound_cocone(ProgressRatioList* progress_list, const mesh::MeshObject<N>& obj, double rho, double alpha)
-{
-        namespace impl = process_implementation;
-        constexpr bool build_cocone = false;
-        constexpr bool build_bound_cocone = true;
-        constexpr bool build_mst = false;
-        impl::manifold_constructor(progress_list, build_cocone, build_bound_cocone, build_mst, obj, rho, alpha);
-}
-
-template <size_t N>
 void compute(
         ProgressRatioList* progress_list,
         bool build_convex_hull,
