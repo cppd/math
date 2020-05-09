@@ -42,8 +42,7 @@ std::shared_ptr<mesh::MeshObject<N>> load_from_file(
         ProgressRatioList* progress_list,
         const std::string& file_name,
         double object_size,
-        const Vector<N, double>& object_position,
-        const std::function<void()>& load_event)
+        const Vector<N, double>& object_position)
 {
         std::unique_ptr<mesh::Mesh<N>> mesh;
 
@@ -52,8 +51,6 @@ std::shared_ptr<mesh::MeshObject<N>> load_from_file(
                 progress.set_text("Loading file: %p%");
                 mesh = mesh::load<N>(file_name, &progress);
         }
-
-        load_event();
 
         std::shared_ptr<mesh::MeshObject<N>> mesh_object = std::make_shared<mesh::MeshObject<N>>(
                 std::move(mesh), mesh::model_matrix_for_size_and_position(*mesh, object_size, object_position),
@@ -70,12 +67,9 @@ std::shared_ptr<mesh::MeshObject<N>> load_from_mesh_repository(
         double object_size,
         const Vector<N, double>& object_position,
         int point_count,
-        const std::function<void()>& load_event,
         const storage::Repository& repository)
 {
         std::unique_ptr<mesh::Mesh<N>> mesh = repository.mesh<N>(object_name, point_count);
-
-        load_event();
 
         std::shared_ptr<mesh::MeshObject<N>> mesh_object = std::make_shared<mesh::MeshObject<N>>(
                 std::move(mesh), mesh::model_matrix_for_size_and_position(*mesh, object_size, object_position),

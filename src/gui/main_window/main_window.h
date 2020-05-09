@@ -132,7 +132,7 @@ private:
                 BoundCocone
         };
 
-        void set_window_title_file(const std::string& file_name);
+        void set_window_title(const std::string& text);
 
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;

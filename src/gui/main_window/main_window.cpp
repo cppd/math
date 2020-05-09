@@ -220,7 +220,7 @@ void MainWindow::run_in_window_thread(const std::function<void()>& f) const
 
 void MainWindow::constructor_interface()
 {
-        set_window_title_file("");
+        set_window_title("");
 
         QMainWindow::addAction(ui.actionFullScreen);
 
@@ -373,13 +373,13 @@ void MainWindow::delete_model_events()
                 [&f]<size_t... N>(const ModelEvents<N>&... model_events) { (f(model_events), ...); }, m_model_events);
 }
 
-void MainWindow::set_window_title_file(const std::string& file_name)
+void MainWindow::set_window_title(const std::string& text)
 {
         std::string title = settings::APPLICATION_NAME;
 
-        if (!file_name.empty())
+        if (!text.empty())
         {
-                title += " - " + file_name;
+                title += " - " + text;
         }
 
         QMainWindow::setWindowTitle(title.c_str());
@@ -631,14 +631,14 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
 
                 unsigned dimension = mesh::file_dimension(file_name);
 
+                m_storage->clear();
+                m_view->send(view::command::ResetView());
+                m_window_events(WindowEvent::SetWindowTitle(file_base_name(file_name)));
+
                 process::apply_for_dimension(dimension, [&]<size_t N>(const process::Dimension<N>&) {
                         std::shared_ptr<mesh::MeshObject<N>> mesh = process::load_from_file(
                                 "Model", progress_list, file_name, object_size.value,
-                                dimension_position<N>(object_position.value), [&]() {
-                                        m_storage->clear();
-                                        m_view->send(view::command::ResetView());
-                                        m_window_events(WindowEvent::FileLoaded(file_name));
-                                });
+                                dimension_position<N>(object_position.value));
 
                         process::compute<N>(
                                 progress_list, build_convex_hull, build_cocone, build_bound_cocone, build_mst, *mesh,
@@ -711,16 +711,14 @@ void MainWindow::thread_load_from_mesh_repository()
                 view::info::ObjectPosition object_position;
                 m_view->receive({&object_size, &object_position});
 
+                m_storage->clear();
+                m_view->send(view::command::ResetView());
+                m_window_events(WindowEvent::SetWindowTitle(object_name));
+
                 process::apply_for_dimension(dimension, [&]<size_t N>(const process::Dimension<N>&) {
                         std::shared_ptr<mesh::MeshObject<N>> mesh = process::load_from_mesh_repository(
                                 object_name, object_size.value, dimension_position<N>(object_position.value),
-                                point_count,
-                                [&]() {
-                                        m_storage->clear();
-                                        m_view->send(view::command::ResetView());
-                                        m_window_events(WindowEvent::FileLoaded(object_name));
-                                },
-                                *m_repository);
+                                point_count, *m_repository);
 
                         process::compute<N>(
                                 progress_list, build_convex_hull, build_cocone, build_bound_cocone, build_mst, *mesh,
@@ -1345,10 +1343,7 @@ void MainWindow::event_from_window(const WindowEvent& event)
                                 ui.text_log, format_log_message(d.text), TextEditMessageType::Warning);
                         dialog::message_warning(this, d.text);
                 },
-                [this](const WindowEvent::FileLoaded& d) {
-                        std::string base_name = file_base_name(d.file_name);
-                        set_window_title_file(base_name);
-                }};
+                [this](const WindowEvent::SetWindowTitle& d) { set_window_title(d.text); }};
 
         try
         {
