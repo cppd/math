@@ -17,8 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "model_events.h"
 
+#include "../com/thread_ui.h"
+
 #include <src/com/variant.h>
-#include <src/gui/thread/thread_ui.h>
 
 ModelEvents::ModelEvents(
         ModelTree* model_tree,

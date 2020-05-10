@@ -27,8 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/names.h>
 #include <src/com/time.h>
+#include <src/gui/com/support.h>
 #include <src/gui/painter_window/painter_window.h>
-#include <src/gui/support/support.h>
 #include <src/image/image.h>
 #include <src/model/mesh_utility.h>
 #include <src/utility/file/sys.h>

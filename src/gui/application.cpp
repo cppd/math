@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "application.h"
 
-#include "dialogs/messages/message_box.h"
+#include "com/support.h"
+#include "com/thread_ui_impl.h"
+#include "dialogs/message.h"
 #include "main_window/main_window.h"
-#include "support/support.h"
-#include "thread/thread_ui_impl.h"
 
 #include <src/com/error.h>
 

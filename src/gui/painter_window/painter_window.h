@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter_window_2d.h"
 
-#include "../support/support.h"
-#include "../thread/thread_ui.h"
+#include "../com/support.h"
+#include "../com/thread_ui.h"
 
 #include <src/color/conversion.h>
 #include <src/com/alg.h>

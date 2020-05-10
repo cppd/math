@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "color_dialog.h"
 
-#include "../../support/support.h"
+#include "../com/support.h"
 
 #include <QColorDialog>
 
