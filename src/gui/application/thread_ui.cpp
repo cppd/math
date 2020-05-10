@@ -15,13 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "thread_ui_impl.h"
-
 #include "thread_ui.h"
 
 #include <src/com/error.h>
 
-namespace thread_ui_impl
+namespace application
 {
 namespace
 {

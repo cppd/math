@@ -17,8 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "application.h"
 
+#include "application/messages.h"
+#include "application/thread_ui.h"
 #include "com/support.h"
-#include "com/thread_ui_impl.h"
 #include "dialogs/message.h"
 #include "main_window/main_window.h"
 
@@ -64,13 +65,16 @@ public:
 };
 }
 
-int application(int argc, char* argv[])
+int run_application(int argc, char* argv[])
 {
         Application a(argc, argv);
 
-        thread_ui_impl::ThreadUI thread_ui_object;
+        application::ThreadUI thread_ui;
+        application::Messages messages;
 
         create_and_show_delete_on_close_window<MainWindow>();
 
-        return Application::exec();
+        int r = Application::exec();
+
+        return r;
 }

@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "event.h"
 #include "model_events.h"
 #include "repository_actions.h"
 #include "threads.h"
@@ -179,7 +178,6 @@ private:
 
         bool stop_action(WorkerThreads::Action action);
 
-        void event_from_window(const WindowEvent& event);
         void event_from_log(const LogEvent& event);
         void event_from_view(const view::Event& event);
 
@@ -188,8 +186,6 @@ private:
         const std::thread::id m_thread_id;
 
         Ui::MainWindow ui;
-
-        std::function<void(WindowEvent&&)> m_window_events;
 
         std::unique_ptr<WorkerThreads> m_worker_threads;
 

@@ -17,30 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <QObject>
-#include <functional>
-
-namespace thread_ui_impl
+namespace application
 {
-class ThreadUI final : public QObject
+class Messages
 {
-        Q_OBJECT
-
-        void run(const std::function<void()>& f) const;
-
 public:
-        ThreadUI();
-        ~ThreadUI();
-
-        ThreadUI(const ThreadUI&) = delete;
-        ThreadUI& operator=(const ThreadUI&) = delete;
-
-        static void run_in_ui_thread(const std::function<void()>& f);
-
-signals:
-        void object_signal(const std::function<void()>&) const;
-
-private slots:
-        void object_slot(const std::function<void()>&) const;
+        Messages();
+        ~Messages();
 };
 }

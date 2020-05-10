@@ -28,13 +28,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace
 {
 std::atomic_int global_call_counter = 0;
-SpinLock* global_lock = nullptr;
+SpinLock* global_log_lock = nullptr;
+SpinLock* global_message_lock = nullptr;
 
 // В момент закрытия главного окна разные потоки могут что-нибудь записывать
 // в лог, поэтому с этой переменной нужна последовательная работа.
 // Использование единственной блокировки означает, что и сообщения будут
 // последовательные, но это не является проблемой.
 std::function<void(LogEvent&&)>* global_log_events = nullptr;
+
+std::function<void(MessageEvent&&)>* global_message_events = nullptr;
 }
 
 void log_init()
@@ -43,13 +46,16 @@ void log_init()
         {
                 error_fatal("Error log init");
         }
-        global_lock = new SpinLock;
+        global_log_lock = new SpinLock;
+        global_message_lock = new SpinLock;
 }
 
 void log_exit()
 {
-        delete global_lock;
-        global_lock = nullptr;
+        delete global_log_lock;
+        global_log_lock = nullptr;
+        delete global_message_lock;
+        global_message_lock = nullptr;
         --global_call_counter;
 }
 
@@ -57,7 +63,7 @@ void log_exit()
 
 void set_log_events(const std::function<void(LogEvent&&)>& events)
 {
-        std::lock_guard lg(*global_lock);
+        std::lock_guard lg(*global_log_lock);
 
         if (events)
         {
@@ -67,6 +73,21 @@ void set_log_events(const std::function<void(LogEvent&&)>& events)
         {
                 delete global_log_events;
                 global_log_events = nullptr;
+        }
+}
+
+void set_message_events(const std::function<void(MessageEvent&&)>& events)
+{
+        std::lock_guard lg(*global_message_lock);
+
+        if (events)
+        {
+                global_message_events = new std::function<void(MessageEvent &&)>(events);
+        }
+        else
+        {
+                delete global_message_events;
+                global_message_events = nullptr;
         }
 }
 
@@ -159,7 +180,7 @@ void log(const std::string& msg, LogMessageType type) noexcept
                 try
                 {
                         {
-                                std::lock_guard lg(*global_lock);
+                                std::lock_guard lg(*global_log_lock);
 
                                 if (global_log_events)
                                 {
@@ -178,12 +199,40 @@ void log(const std::string& msg, LogMessageType type) noexcept
                 }
                 catch (const std::exception& e)
                 {
-                        error_fatal(std::string("error log write message: ") + e.what());
+                        error_fatal(std::string("error writing log message: ") + e.what());
                 }
         }
         catch (...)
         {
-                error_fatal("error log write message");
+                error_fatal("error writing log message");
+        }
+}
+
+void message(const std::string& msg, MessageType type) noexcept
+{
+        try
+        {
+                try
+                {
+                        std::lock_guard lg(*global_message_lock);
+
+                        if (global_message_events)
+                        {
+                                (*global_message_events)(MessageEvent::Message(msg, type));
+                        }
+                        else
+                        {
+                                write_formatted_log_messages_to_stderr(format_log_message(msg));
+                        }
+                }
+                catch (const std::exception& e)
+                {
+                        error_fatal(std::string("error writing message: ") + e.what());
+                }
+        }
+        catch (...)
+        {
+                error_fatal("error writing message");
         }
 }
 }
@@ -206,4 +255,24 @@ void LOG_WARNING(const std::string& msg) noexcept
 void LOG_INFORMATION(const std::string& msg) noexcept
 {
         log(msg, LogMessageType::Information);
+}
+
+void MESSAGE_ERROR(const std::string& msg) noexcept
+{
+        message(msg, MessageType::Error);
+}
+
+void MESSAGE_ERROR_FATAL(const std::string& msg) noexcept
+{
+        message(msg, MessageType::ErrorFatal);
+}
+
+void MESSAGE_WARNING(const std::string& msg) noexcept
+{
+        message(msg, MessageType::Warning);
+}
+
+void MESSAGE_INFORMATION(const std::string& msg) noexcept
+{
+        message(msg, MessageType::Information);
 }

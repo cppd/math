@@ -140,24 +140,20 @@ MainWindow::MainWindow(QWidget* parent)
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
         static_assert(std::is_same_v<decltype(ui.model_tree), ModelTree*>);
 
+        ui.setupUi(this);
+
         this->setWindowTitle(settings::APPLICATION_NAME);
 
-        LOG(command_line_description() + "\n");
+        set_log_events([this](LogEvent&& event) {
+                run_in_ui_thread([&, event = std::move(event)]() { event_from_log(event); });
+        });
 
-        ui.setupUi(this);
+        LOG(command_line_description());
 
         constructor_threads();
         constructor_connect();
         constructor_interface();
         constructor_objects();
-
-        m_window_events = [this](WindowEvent&& event) {
-                run_in_ui_thread([&, event = std::move(event)]() { event_from_window(event); });
-        };
-
-        set_log_events([this](LogEvent&& event) {
-                run_in_ui_thread([&, event = std::move(event)]() { event_from_log(event); });
-        });
 }
 
 void MainWindow::constructor_threads()
@@ -334,7 +330,7 @@ void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::str
 
                         if (window_exists)
                         {
-                                m_window_events(WindowEvent::MessageError(s + e.what()));
+                                MESSAGE_ERROR(s + e.what());
                         }
                         else
                         {
@@ -347,7 +343,7 @@ void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::str
 
                         if (window_exists)
                         {
-                                m_window_events(WindowEvent::MessageError(s + "Unknown error"));
+                                MESSAGE_ERROR(s + "Unknown error");
                         }
                         else
                         {
@@ -494,7 +490,7 @@ void MainWindow::thread_load_from_mesh_repository(int dimension, const std::stri
 
         if (object_name.empty())
         {
-                m_window_events(WindowEvent::MessageError("Empty mesh repository object name"));
+                MESSAGE_ERROR("Empty mesh repository object name");
                 return;
         }
 
@@ -558,7 +554,7 @@ void MainWindow::thread_load_from_volume_repository(int dimension, const std::st
 
         if (object_name.empty())
         {
-                m_window_events(WindowEvent::MessageError("Empty volume repository object name"));
+                MESSAGE_ERROR("Empty volume repository object name");
                 return;
         }
 
@@ -614,17 +610,17 @@ std::optional<WorkerThreads::Function> MainWindow::export_function(
 
         mesh::FileType file_type = mesh::file_type_by_extension(file_name);
 
-        return [=, this](ProgressRatioList*, std::string* message) {
+        return [=](ProgressRatioList*, std::string* message) {
                 *message = "Export " + name + " to " + file_name;
                 switch (file_type)
                 {
                 case mesh::FileType::Obj:
                         mesh::save_to_obj(mesh_object->mesh(), file_name, name);
-                        m_window_events(WindowEvent::MessageInformation(name + " exported to OBJ file " + file_name));
+                        MESSAGE_INFORMATION(name + " exported to OBJ file " + file_name);
                         return;
                 case mesh::FileType::Stl:
                         save_to_stl(mesh_object->mesh(), file_name, name, STL_EXPORT_FORMAT_ASCII);
-                        m_window_events(WindowEvent::MessageInformation(name + " exported to STL file " + file_name));
+                        MESSAGE_INFORMATION(name + " exported to STL file " + file_name);
                         return;
                 }
                 error_fatal("Unknown file type for export");
@@ -645,14 +641,14 @@ void MainWindow::thread_export()
         std::optional<ObjectId> id = ui.model_tree->current_item();
         if (!id)
         {
-                m_window_events(WindowEvent::MessageWarning("No item selected to export"));
+                MESSAGE_WARNING("No item selected to export");
                 return;
         }
 
         std::optional<storage::MeshObjectConst> object = m_storage->mesh_object_const(*id);
         if (!object)
         {
-                m_window_events(WindowEvent::MessageWarning("No object to export"));
+                MESSAGE_WARNING("No object to export");
                 return;
         }
 
@@ -684,14 +680,14 @@ void MainWindow::thread_bound_cocone()
         std::optional<ObjectId> id = ui.model_tree->current_item();
         if (!id)
         {
-                m_window_events(WindowEvent::MessageWarning("No item selected to export"));
+                MESSAGE_WARNING("No item selected to export");
                 return;
         }
 
         std::optional<storage::MeshObjectConst> object = m_storage->mesh_object_const(*id);
         if (!object)
         {
-                m_window_events(WindowEvent::MessageWarning("No object to compute BoundCocone"));
+                MESSAGE_WARNING("No object to compute BoundCocone");
                 return;
         }
 
@@ -758,7 +754,7 @@ std::optional<WorkerThreads::Function> MainWindow::painter_function(
 
         if (mesh_object->mesh().facets.empty())
         {
-                m_window_events(WindowEvent::MessageWarning("No object to paint"));
+                MESSAGE_WARNING("No object to paint");
                 return std::nullopt;
         }
 
@@ -824,7 +820,7 @@ std::optional<WorkerThreads::Function> MainWindow::painter_function(
 
                 if (!painter_mesh_object)
                 {
-                        m_window_events(WindowEvent::MessageWarning("No object to paint"));
+                        MESSAGE_WARNING("No object to paint");
                         return;
                 }
 
@@ -851,14 +847,14 @@ void MainWindow::thread_painter()
         std::optional<ObjectId> id = ui.model_tree->current_item();
         if (!id)
         {
-                m_window_events(WindowEvent::MessageWarning("No item selected to paint"));
+                MESSAGE_WARNING("No item selected to paint");
                 return;
         }
 
         std::optional<storage::MeshObjectConst> object = m_storage->mesh_object_const(*id);
         if (!object)
         {
-                m_window_events(WindowEvent::MessageWarning("No object to paint"));
+                MESSAGE_WARNING("No object to paint");
                 return;
         }
 
@@ -1073,43 +1069,6 @@ void MainWindow::set_dependent_interface()
         }
 }
 
-void MainWindow::event_from_window(const WindowEvent& event)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        const auto visitors = Visitors{
-                [](const WindowEvent::MessageError& d) {
-                        LOG_ERROR(d.text);
-                        dialog::message_critical(d.text);
-                },
-                [](const WindowEvent::MessageErrorFatal& d) {
-                        std::string message = !d.text.empty() ? d.text : "Unknown Error. Exit Failure.";
-                        LOG_ERROR(message);
-                        dialog::message_critical(message, false /*with_parent*/);
-                        std::_Exit(EXIT_FAILURE);
-                },
-                [](const WindowEvent::MessageInformation& d) {
-                        LOG_INFORMATION(d.text);
-                        dialog::message_information(d.text);
-                },
-                [](const WindowEvent::MessageWarning& d) {
-                        LOG_WARNING(d.text);
-                        dialog::message_warning(d.text);
-                }};
-        try
-        {
-                std::visit(visitors, event.data());
-        }
-        catch (const std::exception& e)
-        {
-                error_fatal(std::string("Error in the event from window: ") + e.what());
-        }
-        catch (...)
-        {
-                error_fatal("Unknown error in the event from window.");
-        }
-}
-
 void MainWindow::event_from_log(const LogEvent& event)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -1126,8 +1085,7 @@ void MainWindow::event_from_view(const view::Event& event)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        const auto visitors = Visitors{
-                [this](const view::event::ErrorFatal& d) { m_window_events(WindowEvent::MessageErrorFatal(d.text)); }};
+        const auto visitors = Visitors{[](const view::event::ErrorFatal& d) { MESSAGE_ERROR_FATAL(d.text); }};
 
         std::visit(visitors, event.data());
 }
@@ -1213,11 +1171,11 @@ void MainWindow::slot_window_first_shown()
         }
         catch (const std::exception& e)
         {
-                m_window_events(WindowEvent::MessageErrorFatal(e.what()));
+                MESSAGE_ERROR_FATAL(e.what());
         }
         catch (...)
         {
-                m_window_events(WindowEvent::MessageErrorFatal("Error first show"));
+                MESSAGE_ERROR_FATAL("Error first show");
         }
 }
 

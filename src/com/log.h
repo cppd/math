@@ -61,7 +61,44 @@ private:
         T m_data;
 };
 
+enum class MessageType
+{
+        Error,
+        ErrorFatal,
+        Warning,
+        Information
+};
+
+struct MessageEvent final
+{
+        struct Message final
+        {
+                std::string text;
+                MessageType type;
+                template <typename T>
+                Message(T&& text, MessageType type) : text(std::forward<T>(text)), type(type)
+                {
+                }
+        };
+
+        using T = std::variant<Message>;
+
+        template <typename Type, typename = std::enable_if_t<!std::is_same_v<MessageEvent, std::remove_cvref_t<Type>>>>
+        MessageEvent(Type&& arg) : m_data(std::forward<Type>(arg))
+        {
+        }
+
+        const T& data() const
+        {
+                return m_data;
+        }
+
+private:
+        T m_data;
+};
+
 void set_log_events(const std::function<void(LogEvent&&)>& events);
+void set_message_events(const std::function<void(MessageEvent&&)>& events);
 
 std::vector<std::string> format_log_message(const std::string& msg) noexcept;
 void write_formatted_log_messages_to_stderr(const std::vector<std::string>& lines) noexcept;
@@ -70,3 +107,8 @@ void LOG(const std::string& msg) noexcept;
 void LOG_ERROR(const std::string& msg) noexcept;
 void LOG_WARNING(const std::string& msg) noexcept;
 void LOG_INFORMATION(const std::string& msg) noexcept;
+
+void MESSAGE_ERROR(const std::string& msg) noexcept;
+void MESSAGE_ERROR_FATAL(const std::string& msg) noexcept;
+void MESSAGE_WARNING(const std::string& msg) noexcept;
+void MESSAGE_INFORMATION(const std::string& msg) noexcept;

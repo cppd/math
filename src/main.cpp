@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
                 {
                         Initialization init;
 
-                        return application(argc, argv);
+                        return run_application(argc, argv);
                 }
                 catch (const std::exception& e)
                 {

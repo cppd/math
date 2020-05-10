@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "thread_ui.h"
 
-#include "thread_ui_impl.h"
+#include "../application/thread_ui.h"
 
 void run_in_ui_thread(const std::function<void()>& f)
 {
-        thread_ui_impl::ThreadUI::run_in_ui_thread(f);
+        application::ThreadUI::run_in_ui_thread(f);
 }
