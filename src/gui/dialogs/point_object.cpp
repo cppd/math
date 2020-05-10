@@ -113,7 +113,7 @@ bool point_object_parameters(
 
         QtObjectInDynamicMemory<impl::PointObjectParameters> w(parent_for_dialog());
 
-        return w->show(
-                dimension, point_object_name, default_point_count, min_point_count, max_point_count, point_count);
+        return w->show(dimension, point_object_name, default_point_count, min_point_count, max_point_count, point_count)
+               && !w.isNull();
 }
 }

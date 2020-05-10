@@ -215,8 +215,9 @@ bool painter_parameters_for_3d(
 
         QtObjectInDynamicMemory<impl::PainterParametersFor3d> w(parent_for_dialog());
 
-        return w->show(
-                max_thread_count, width, height, max_screen_size, default_samples_per_pixel, max_samples_per_pixel,
-                thread_count, paint_width, paint_height, samples_per_pixel, flat_facets, cornell_box);
+        return w->show(max_thread_count, width, height, max_screen_size, default_samples_per_pixel,
+                       max_samples_per_pixel, thread_count, paint_width, paint_height, samples_per_pixel, flat_facets,
+                       cornell_box)
+               && !w.isNull();
 }
 }

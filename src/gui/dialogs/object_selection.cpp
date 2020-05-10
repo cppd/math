@@ -89,7 +89,7 @@ bool object_selection(std::unordered_set<ComputationType>* objects_to_load)
 
         QtObjectInDynamicMemory<impl::ObjectSelection> w(parent_for_dialog());
 
-        if (!w->show(&impl::g_bound_cocone, &impl::g_cocone, &impl::g_convex_hull, &impl::g_mst))
+        if (!w->show(&impl::g_bound_cocone, &impl::g_cocone, &impl::g_convex_hull, &impl::g_mst) || w.isNull())
         {
                 return false;
         }

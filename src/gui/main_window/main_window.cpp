@@ -276,16 +276,13 @@ void MainWindow::closeEvent(QCloseEvent* event)
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         QPointer ptr(this);
-        if (!dialog::message_question_default_no("Do you want to close the main window?"))
+        bool yes;
+        if (!dialog::message_question_default_no("Do you want to close the main window?", &yes) || ptr.isNull() || !yes)
         {
                 if (!ptr.isNull())
                 {
                         event->ignore();
                 }
-                return;
-        }
-        if (ptr.isNull())
-        {
                 return;
         }
 
@@ -392,12 +389,9 @@ bool MainWindow::stop_action(WorkerThreads::Action action)
 {
         if (m_worker_threads->is_working(action))
         {
-                QPointer ptr(this);
-                if (!dialog::message_question_default_no("There is work in progress.\nDo you want to continue?"))
-                {
-                        return false;
-                }
-                if (ptr.isNull())
+                bool yes;
+                if (!dialog::message_question_default_no("There is work in progress.\nDo you want to continue?", &yes)
+                    || !yes)
                 {
                         return false;
                 }
@@ -434,12 +428,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         f.file_extensions = v.file_name_extensions;
                 }
 
-                QPointer ptr(this);
                 if (!dialog::open_file(caption, filters, read_only, &file_name))
-                {
-                        return;
-                }
-                if (ptr.isNull())
                 {
                         return;
                 }
@@ -449,12 +438,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
 
         if (use_object_selection_dialog)
         {
-                QPointer ptr(this);
                 if (!dialog::object_selection(&objects_to_load))
-                {
-                        return;
-                }
-                if (ptr.isNull())
                 {
                         return;
                 }
@@ -517,32 +501,18 @@ void MainWindow::thread_load_from_mesh_repository(int dimension, const std::stri
 
         int point_count;
 
+        if (!dialog::point_object_parameters(
+                    dimension, object_name, POINT_COUNT_DEFAULT, POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM,
+                    &point_count))
         {
-                QPointer ptr(this);
-                if (!dialog::point_object_parameters(
-                            dimension, object_name, POINT_COUNT_DEFAULT, POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM,
-                            &point_count))
-                {
-                        return;
-                }
-                if (ptr.isNull())
-                {
-                        return;
-                }
+                return;
         }
 
         std::unordered_set<dialog::ComputationType> objects_to_load;
 
+        if (!dialog::object_selection(&objects_to_load))
         {
-                QPointer ptr(this);
-                if (!dialog::object_selection(&objects_to_load))
-                {
-                        return;
-                }
-                if (ptr.isNull())
-                {
-                        return;
-                }
+                return;
         }
 
         double rho;
@@ -596,18 +566,11 @@ void MainWindow::thread_load_from_volume_repository(int dimension, const std::st
 
         int image_size;
 
+        if (!dialog::volume_object_parameters(
+                    dimension, object_name, VOLUME_IMAGE_SIZE_DEFAULT, VOLUME_IMAGE_SIZE_MINIMUM,
+                    VOLUME_IMAGE_SIZE_MAXIMUM, &image_size))
         {
-                QPointer ptr(this);
-                if (!dialog::volume_object_parameters(
-                            dimension, object_name, VOLUME_IMAGE_SIZE_DEFAULT, VOLUME_IMAGE_SIZE_MINIMUM,
-                            VOLUME_IMAGE_SIZE_MAXIMUM, &image_size))
-                {
-                        return;
-                }
-                if (ptr.isNull())
-                {
-                        return;
-                }
+                return;
         }
 
         auto f = [=, this](ProgressRatioList* /*progress_list*/, std::string* message) {
@@ -646,12 +609,7 @@ std::optional<WorkerThreads::Function> MainWindow::export_function(
 
         std::string file_name;
 
-        QPointer ptr(this);
         if (!dialog::save_file(caption, filters, read_only, &file_name))
-        {
-                return std::nullopt;
-        }
-        if (ptr.isNull())
         {
                 return std::nullopt;
         }
@@ -742,12 +700,7 @@ void MainWindow::thread_bound_cocone()
         double rho;
         double alpha;
 
-        QPointer ptr(this);
         if (!dialog::bound_cocone_parameters(&rho, &alpha))
-        {
-                return;
-        }
-        if (ptr.isNull())
         {
                 return;
         }
@@ -782,12 +735,8 @@ void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation
 
         if (with_confirmation)
         {
-                QPointer ptr(this);
-                if (!dialog::message_question_default_yes("Run the Self-Test?"))
-                {
-                        return;
-                }
-                if (ptr.isNull())
+                bool yes;
+                if (!dialog::message_question_default_yes("Run the Self-Test?", &yes) || !yes)
                 {
                         return;
                 }
@@ -846,7 +795,6 @@ std::optional<WorkerThreads::Function> MainWindow::painter_function(
                 scene_info.object_position = to_vector<T>(object_position.value);
                 scene_info.object_size = object_size.value;
 
-                QPointer ptr(this);
                 if (!dialog::painter_parameters_for_3d(
                             hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
                             default_samples, max_samples, &thread_count, &scene_info.width, &scene_info.height,
@@ -854,22 +802,13 @@ std::optional<WorkerThreads::Function> MainWindow::painter_function(
                 {
                         return std::nullopt;
                 }
-                if (ptr.isNull())
-                {
-                        return std::nullopt;
-                }
         }
         else
         {
-                QPointer ptr(this);
                 if (!dialog::painter_parameters_for_nd(
                             N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND, PAINTER_MINIMUM_SCREEN_SIZE_ND,
                             PAINTER_MAXIMUM_SCREEN_SIZE_ND, default_samples, max_samples, &thread_count,
                             &scene_info.min_screen_size, &scene_info.max_screen_size, &samples_per_pixel, &flat_facets))
-                {
-                        return std::nullopt;
-                }
-                if (ptr.isNull())
                 {
                         return std::nullopt;
                 }
@@ -962,12 +901,7 @@ void MainWindow::progress_bars(
                                 QtObjectInDynamicMemory<QMenu> menu(&bar);
                                 menu->addAction("Terminate");
 
-                                if (!menu->exec(QCursor::pos()) || menu.isNull())
-                                {
-                                        return;
-                                }
-
-                                if (ptr_this.isNull())
+                                if (!menu->exec(QCursor::pos()) || menu.isNull() || ptr_this.isNull())
                                 {
                                         return;
                                 }
@@ -1517,12 +1451,8 @@ double MainWindow::default_ns() const
 
 void MainWindow::on_pushButton_reset_lighting_clicked()
 {
-        QPointer ptr(this);
-        if (!dialog::message_question_default_yes("Reset lighting?"))
-        {
-                return;
-        }
-        if (ptr.isNull())
+        bool yes;
+        if (!dialog::message_question_default_yes("Reset lighting?", &yes) || !yes)
         {
                 return;
         }

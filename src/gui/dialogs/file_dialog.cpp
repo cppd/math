@@ -33,12 +33,7 @@ bool exec_dialog_for_single_file(QtObjectInDynamicMemory<QFileDialog>* w, std::s
         ASSERT(!w->isNull());
         ASSERT(name);
 
-        if (!(*w)->exec())
-        {
-                return false;
-        }
-
-        if (w->isNull())
+        if (!(*w)->exec() || w->isNull())
         {
                 return false;
         }

@@ -141,7 +141,8 @@ bool bound_cocone_parameters(double* rho, double* alpha)
 
         QtObjectInDynamicMemory<impl::BoundCoconeParameters> w(parent_for_dialog());
 
-        if (!w->show(impl::MINIMUM_RHO_EXPONENT, impl::MINIMUM_ALPHA_EXPONENT, &impl::g_rho, &impl::g_alpha))
+        if (!w->show(impl::MINIMUM_RHO_EXPONENT, impl::MINIMUM_ALPHA_EXPONENT, &impl::g_rho, &impl::g_alpha)
+            || w.isNull())
         {
                 return false;
         }

@@ -203,9 +203,9 @@ bool painter_parameters_for_nd(
 
         QtObjectInDynamicMemory<impl::PainterParametersForNd> w(parent_for_dialog());
 
-        return w->show(
-                dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
-                default_samples_per_pixel, max_samples_per_pixel, thread_count, min_size, max_size, samples_per_pixel,
-                flat_facets);
+        return w->show(dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
+                       default_samples_per_pixel, max_samples_per_pixel, thread_count, min_size, max_size,
+                       samples_per_pixel, flat_facets)
+               && !w.isNull();
 }
 }

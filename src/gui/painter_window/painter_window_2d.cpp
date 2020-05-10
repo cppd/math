@@ -171,7 +171,9 @@ void PainterWindow2d::catch_all(const F& function) const noexcept
 void PainterWindow2d::closeEvent(QCloseEvent* event)
 {
         QPointer ptr(this);
-        if (!dialog::message_question_default_no("Do you want to close the painter window?"))
+        bool yes;
+        if (!dialog::message_question_default_no("Do you want to close the painter window?", &yes) || ptr.isNull()
+            || !yes)
         {
                 if (!ptr.isNull())
                 {
@@ -373,12 +375,7 @@ void PainterWindow2d::on_pushButton_save_to_file_clicked()
                 filter.file_extensions = {SAVE_IMAGE_FILE_FORMAT};
                 const bool read_only = true;
                 std::string file_name;
-                QPointer ptr(this);
                 if (!dialog::save_file(caption, {filter}, read_only, &file_name))
-                {
-                        return;
-                }
-                if (ptr.isNull())
                 {
                         return;
                 }

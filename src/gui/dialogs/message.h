@@ -25,6 +25,6 @@ namespace dialog
 void message_critical(const std::string& message, bool with_parent = true);
 void message_information(const std::string& message);
 void message_warning(const std::string& message);
-[[nodiscard]] bool message_question_default_yes(const std::string& message);
-[[nodiscard]] bool message_question_default_no(const std::string& message);
+[[nodiscard]] bool message_question_default_yes(const std::string& message, bool* yes);
+[[nodiscard]] bool message_question_default_no(const std::string& message, bool* yes);
 }

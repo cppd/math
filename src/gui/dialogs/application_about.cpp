@@ -69,6 +69,7 @@ void application_about()
 {
         QtObjectInDynamicMemory<QMessageBox> w(
                 QMessageBox::NoIcon, title(), message(), QMessageBox::Ok, parent_for_dialog());
+
         w->exec();
 }
 }

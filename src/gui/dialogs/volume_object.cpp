@@ -113,6 +113,7 @@ bool volume_object_parameters(
 
         QtObjectInDynamicMemory<impl::VolumeObjectParameters> w(parent_for_dialog());
 
-        return w->show(dimension, volume_object_name, default_image_size, min_image_size, max_image_size, image_size);
+        return w->show(dimension, volume_object_name, default_image_size, min_image_size, max_image_size, image_size)
+               && !w.isNull();
 }
 }
