@@ -24,29 +24,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMessageBox>
 #include <string>
 
+namespace dialog
+{
 namespace
 {
-std::string message()
+QString message()
 {
         return "Move: left mouse button.\n\n"
                "Rotate: right mouse button.\n\n"
                "Zoom: mouse wheel.";
 }
 
-std::string title()
+QString title()
 {
-        return std::string(settings::APPLICATION_NAME) + " Help";
+        return QString(settings::APPLICATION_NAME) + " Help";
 }
 }
 
-namespace dialog
-{
 void application_help(QWidget* parent)
 {
-        static const QString t = title().c_str();
-        static const QString m = message().c_str();
-
-        QtObjectInDynamicMemory<QMessageBox> w(QMessageBox::NoIcon, t, m, QMessageBox::Ok, parent);
+        QtObjectInDynamicMemory<QMessageBox> w(QMessageBox::NoIcon, title(), message(), QMessageBox::Ok, parent);
         w->exec();
 }
 }

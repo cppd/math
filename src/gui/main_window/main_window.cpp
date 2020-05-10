@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dialogs/messages/color_dialog.h"
 #include "../dialogs/messages/file_dialog.h"
 #include "../dialogs/messages/message_box.h"
-#include "../dialogs/messages/source_error.h"
 #include "../dialogs/parameters/bound_cocone.h"
 #include "../dialogs/parameters/object_selection.h"
 #include "../dialogs/parameters/painter_3d.h"

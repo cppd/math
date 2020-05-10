@@ -26,9 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <string>
 
+namespace dialog
+{
 namespace
 {
-std::string message()
+QString message()
 {
         std::ostringstream oss;
 
@@ -54,23 +56,18 @@ std::string message()
         oss << "\n";
         oss << "Vulkan " << vulkan::API_VERSION_MAJOR << "." << vulkan::API_VERSION_MINOR;
 
-        return oss.str();
+        return QString::fromStdString(oss.str());
 }
 
-std::string title()
+QString title()
 {
-        return std::string("About ") + settings::APPLICATION_NAME;
+        return QString("About ") + settings::APPLICATION_NAME;
 }
 }
 
-namespace dialog
-{
 void application_about(QWidget* parent)
 {
-        static const QString t = title().c_str();
-        static const QString m = message().c_str();
-
-        QtObjectInDynamicMemory<QMessageBox> w(QMessageBox::NoIcon, t, m, QMessageBox::Ok, parent);
+        QtObjectInDynamicMemory<QMessageBox> w(QMessageBox::NoIcon, title(), message(), QMessageBox::Ok, parent);
         w->exec();
 }
 }
