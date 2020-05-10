@@ -52,7 +52,6 @@ private:
 }
 
 [[nodiscard]] bool volume_object_parameters(
-        QWidget* parent,
         int dimension,
         const std::string& volume_object_name,
         int default_image_size,

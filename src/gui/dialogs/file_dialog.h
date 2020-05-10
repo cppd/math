@@ -30,14 +30,12 @@ struct FileFilter
 };
 
 [[nodiscard]] bool save_file(
-        QWidget* parent,
         const std::string& caption,
         const std::vector<FileFilter>& filters,
         bool read_only,
         std::string* name);
 
 [[nodiscard]] bool open_file(
-        QWidget* parent,
         const std::string& caption,
         const std::vector<FileFilter>& filters,
         bool read_only,

@@ -73,7 +73,6 @@ private:
 }
 
 [[nodiscard]] bool painter_parameters_for_3d(
-        QWidget* parent,
         int max_thread_count,
         int width,
         int height,

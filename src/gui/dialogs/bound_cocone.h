@@ -47,6 +47,6 @@ private:
 };
 }
 
-[[nodiscard]] bool bound_cocone_parameters(QWidget* parent, double* rho, double* alpha);
+[[nodiscard]] bool bound_cocone_parameters(double* rho, double* alpha);
 void bound_cocone_parameters_current(double* rho, double* alpha);
 }

@@ -55,6 +55,6 @@ enum class ComputationType
         Mst
 };
 
-[[nodiscard]] bool object_selection(QWidget* parent, std::unordered_set<ComputationType>* objects_to_load);
+[[nodiscard]] bool object_selection(std::unordered_set<ComputationType>* objects_to_load);
 [[nodiscard]] std::unordered_set<ComputationType> object_selection_current();
 }

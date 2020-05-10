@@ -22,9 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace dialog
 {
-void message_critical(QWidget* parent, const std::string& message);
-void message_information(QWidget* parent, const std::string& message);
-void message_warning(QWidget* parent, const std::string& message);
-[[nodiscard]] bool message_question_default_yes(QWidget* parent, const std::string& message);
-[[nodiscard]] bool message_question_default_no(QWidget* parent, const std::string& message);
+void message_critical(const std::string& message, bool with_parent = true);
+void message_information(const std::string& message);
+void message_warning(const std::string& message);
+[[nodiscard]] bool message_question_default_yes(const std::string& message);
+[[nodiscard]] bool message_question_default_no(const std::string& message);
 }

@@ -72,6 +72,8 @@ enum class TextEditMessageType
         Information
 };
 
+QWidget* parent_for_dialog();
+
 void set_widgets_enabled(QLayout* layout, bool v);
 
 Color qcolor_to_rgb(const QColor& c);

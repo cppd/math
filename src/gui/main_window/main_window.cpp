@@ -276,7 +276,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         QPointer ptr(this);
-        if (!dialog::message_question_default_no(this, "Do you want to close the main window?"))
+        if (!dialog::message_question_default_no("Do you want to close the main window?"))
         {
                 if (!ptr.isNull())
                 {
@@ -393,7 +393,7 @@ bool MainWindow::stop_action(WorkerThreads::Action action)
         if (m_worker_threads->is_working(action))
         {
                 QPointer ptr(this);
-                if (!dialog::message_question_default_no(this, "There is work in progress.\nDo you want to continue?"))
+                if (!dialog::message_question_default_no("There is work in progress.\nDo you want to continue?"))
                 {
                         return false;
                 }
@@ -435,7 +435,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                 }
 
                 QPointer ptr(this);
-                if (!dialog::open_file(this, caption, filters, read_only, &file_name))
+                if (!dialog::open_file(caption, filters, read_only, &file_name))
                 {
                         return;
                 }
@@ -450,7 +450,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
         if (use_object_selection_dialog)
         {
                 QPointer ptr(this);
-                if (!dialog::object_selection(this, &objects_to_load))
+                if (!dialog::object_selection(&objects_to_load))
                 {
                         return;
                 }
@@ -520,7 +520,7 @@ void MainWindow::thread_load_from_mesh_repository(int dimension, const std::stri
         {
                 QPointer ptr(this);
                 if (!dialog::point_object_parameters(
-                            this, dimension, object_name, POINT_COUNT_DEFAULT, POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM,
+                            dimension, object_name, POINT_COUNT_DEFAULT, POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM,
                             &point_count))
                 {
                         return;
@@ -535,7 +535,7 @@ void MainWindow::thread_load_from_mesh_repository(int dimension, const std::stri
 
         {
                 QPointer ptr(this);
-                if (!dialog::object_selection(this, &objects_to_load))
+                if (!dialog::object_selection(&objects_to_load))
                 {
                         return;
                 }
@@ -599,7 +599,7 @@ void MainWindow::thread_load_from_volume_repository(int dimension, const std::st
         {
                 QPointer ptr(this);
                 if (!dialog::volume_object_parameters(
-                            this, dimension, object_name, VOLUME_IMAGE_SIZE_DEFAULT, VOLUME_IMAGE_SIZE_MINIMUM,
+                            dimension, object_name, VOLUME_IMAGE_SIZE_DEFAULT, VOLUME_IMAGE_SIZE_MINIMUM,
                             VOLUME_IMAGE_SIZE_MAXIMUM, &image_size))
                 {
                         return;
@@ -647,7 +647,7 @@ std::optional<WorkerThreads::Function> MainWindow::export_function(
         std::string file_name;
 
         QPointer ptr(this);
-        if (!dialog::save_file(this, caption, filters, read_only, &file_name))
+        if (!dialog::save_file(caption, filters, read_only, &file_name))
         {
                 return std::nullopt;
         }
@@ -743,7 +743,7 @@ void MainWindow::thread_bound_cocone()
         double alpha;
 
         QPointer ptr(this);
-        if (!dialog::bound_cocone_parameters(this, &rho, &alpha))
+        if (!dialog::bound_cocone_parameters(&rho, &alpha))
         {
                 return;
         }
@@ -783,7 +783,7 @@ void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation
         if (with_confirmation)
         {
                 QPointer ptr(this);
-                if (!dialog::message_question_default_yes(this, "Run the Self-Test?"))
+                if (!dialog::message_question_default_yes("Run the Self-Test?"))
                 {
                         return;
                 }
@@ -848,7 +848,7 @@ std::optional<WorkerThreads::Function> MainWindow::painter_function(
 
                 QPointer ptr(this);
                 if (!dialog::painter_parameters_for_3d(
-                            this, hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
+                            hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
                             default_samples, max_samples, &thread_count, &scene_info.width, &scene_info.height,
                             &samples_per_pixel, &flat_facets, &scene_info.cornell_box))
                 {
@@ -863,10 +863,9 @@ std::optional<WorkerThreads::Function> MainWindow::painter_function(
         {
                 QPointer ptr(this);
                 if (!dialog::painter_parameters_for_nd(
-                            this, N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND,
-                            PAINTER_MINIMUM_SCREEN_SIZE_ND, PAINTER_MAXIMUM_SCREEN_SIZE_ND, default_samples,
-                            max_samples, &thread_count, &scene_info.min_screen_size, &scene_info.max_screen_size,
-                            &samples_per_pixel, &flat_facets))
+                            N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND, PAINTER_MINIMUM_SCREEN_SIZE_ND,
+                            PAINTER_MAXIMUM_SCREEN_SIZE_ND, default_samples, max_samples, &thread_count,
+                            &scene_info.min_screen_size, &scene_info.max_screen_size, &samples_per_pixel, &flat_facets))
                 {
                         return std::nullopt;
                 }
@@ -1150,29 +1149,24 @@ void MainWindow::event_from_window(const WindowEvent& event)
                 [this](const WindowEvent::MessageError& d) {
                         add_to_text_edit_and_to_stderr(
                                 ui.text_log, format_log_message(d.text), TextEditMessageType::Error);
-                        dialog::message_critical(this, d.text);
+                        dialog::message_critical(d.text);
                 },
                 [this](const WindowEvent::MessageErrorFatal& d) {
                         std::string message = !d.text.empty() ? d.text : "Unknown Error. Exit failure.";
                         add_to_text_edit_and_to_stderr(
                                 ui.text_log, format_log_message(message), TextEditMessageType::Error);
-                        QPointer ptr(this);
-                        dialog::message_critical(this, message);
-                        if (ptr.isNull())
-                        {
-                                return;
-                        }
+                        dialog::message_critical(message, false /*with_parent*/);
                         std::_Exit(EXIT_FAILURE);
                 },
                 [this](const WindowEvent::MessageInformation& d) {
                         add_to_text_edit_and_to_stderr(
                                 ui.text_log, format_log_message(d.text), TextEditMessageType::Information);
-                        dialog::message_information(this, d.text);
+                        dialog::message_information(d.text);
                 },
                 [this](const WindowEvent::MessageWarning& d) {
                         add_to_text_edit_and_to_stderr(
                                 ui.text_log, format_log_message(d.text), TextEditMessageType::Warning);
-                        dialog::message_warning(this, d.text);
+                        dialog::message_warning(d.text);
                 },
                 [this](const WindowEvent::SetWindowTitle& d) {
                         std::string title = settings::APPLICATION_NAME;
@@ -1360,7 +1354,7 @@ void MainWindow::on_actionExit_triggered()
 
 void MainWindow::on_actionHelp_triggered()
 {
-        dialog::application_help(this);
+        dialog::application_help();
 }
 
 void MainWindow::on_actionSelfTest_triggered()
@@ -1383,7 +1377,7 @@ void MainWindow::on_actionPainter_triggered()
 
 void MainWindow::on_actionAbout_triggered()
 {
-        dialog::application_about(this);
+        dialog::application_about();
 }
 
 void MainWindow::on_pushButton_reset_view_clicked()
@@ -1524,7 +1518,7 @@ double MainWindow::default_ns() const
 void MainWindow::on_pushButton_reset_lighting_clicked()
 {
         QPointer ptr(this);
-        if (!dialog::message_question_default_yes(this, "Reset lighting?"))
+        if (!dialog::message_question_default_yes("Reset lighting?"))
         {
                 return;
         }
@@ -1602,51 +1596,90 @@ void MainWindow::on_slider_normals_valueChanged(int)
 
 void MainWindow::on_toolButton_background_color_clicked()
 {
-        dialog::color_dialog(
-                this, "Background Color", m_background_color, [this](const QColor& c) { set_background_color(c); });
+        QPointer ptr(this);
+        dialog::color_dialog("Background Color", m_background_color, [&](const QColor& c) {
+                if (!ptr.isNull())
+                {
+                        ptr->set_background_color(c);
+                }
+        });
 }
 
 void MainWindow::on_toolButton_default_color_clicked()
 {
-        dialog::color_dialog(this, "Default Color", m_default_color, [this](const QColor& c) { set_default_color(c); });
+        QPointer ptr(this);
+        dialog::color_dialog("Default Color", m_default_color, [&](const QColor& c) {
+                if (!ptr.isNull())
+                {
+                        ptr->set_default_color(c);
+                }
+        });
 }
 
 void MainWindow::on_toolButton_wireframe_color_clicked()
 {
-        dialog::color_dialog(
-                this, "Wireframe Color", m_wireframe_color, [this](const QColor& c) { set_wireframe_color(c); });
+        QPointer ptr(this);
+        dialog::color_dialog("Wireframe Color", m_wireframe_color, [&](const QColor& c) {
+                if (!ptr.isNull())
+                {
+                        set_wireframe_color(c);
+                }
+        });
 }
 
 void MainWindow::on_toolButton_clip_plane_color_clicked()
 {
-        dialog::color_dialog(
-                this, "Clip Plane Color", m_clip_plane_color, [this](const QColor& c) { set_clip_plane_color(c); });
+        QPointer ptr(this);
+        dialog::color_dialog("Clip Plane Color", m_clip_plane_color, [&](const QColor& c) {
+                if (!ptr.isNull())
+                {
+                        set_clip_plane_color(c);
+                }
+        });
 }
 
 void MainWindow::on_toolButton_normal_color_positive_clicked()
 {
-        dialog::color_dialog(this, "Positive Normal Color", m_normal_color_positive, [this](const QColor& c) {
-                set_normal_color_positive(c);
+        QPointer ptr(this);
+        dialog::color_dialog("Positive Normal Color", m_normal_color_positive, [&](const QColor& c) {
+                if (!ptr.isNull())
+                {
+                        set_normal_color_positive(c);
+                }
         });
 }
 
 void MainWindow::on_toolButton_normal_color_negative_clicked()
 {
-        dialog::color_dialog(this, "Negative Normal Color", m_normal_color_negative, [this](const QColor& c) {
-                set_normal_color_negative(c);
+        QPointer ptr(this);
+        dialog::color_dialog("Negative Normal Color", m_normal_color_negative, [&](const QColor& c) {
+                if (!ptr.isNull())
+                {
+                        set_normal_color_negative(c);
+                }
         });
 }
 
 void MainWindow::on_toolButton_dft_background_color_clicked()
 {
-        dialog::color_dialog(this, "DFT Background Color", m_dft_background_color, [this](const QColor& c) {
-                set_dft_background_color(c);
+        QPointer ptr(this);
+        dialog::color_dialog("DFT Background Color", m_dft_background_color, [&](const QColor& c) {
+                if (!ptr.isNull())
+                {
+                        set_dft_background_color(c);
+                }
         });
 }
 
 void MainWindow::on_toolButton_dft_color_clicked()
 {
-        dialog::color_dialog(this, "DFT Color", m_dft_color, [this](const QColor& c) { set_dft_color(c); });
+        QPointer ptr(this);
+        dialog::color_dialog("DFT Color", m_dft_color, [&](const QColor& c) {
+                if (!ptr.isNull())
+                {
+                        set_dft_color(c);
+                }
+        });
 }
 
 void MainWindow::on_checkBox_shadow_clicked()

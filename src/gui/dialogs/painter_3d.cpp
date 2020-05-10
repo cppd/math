@@ -139,7 +139,7 @@ void PainterParametersFor3d::done(int r)
         {
                 std::string msg =
                         "Error thread count. Must be in the range [1, " + to_string(m_max_thread_count) + "].";
-                dialog::message_critical(this, msg);
+                dialog::message_critical(msg);
                 return;
         }
 
@@ -148,7 +148,7 @@ void PainterParametersFor3d::done(int r)
         {
                 std::string msg = "Error samples per pixel. Must be in the range [1, "
                                   + to_string(m_max_samples_per_pixel) + "].";
-                dialog::message_critical(this, msg);
+                dialog::message_critical(msg);
                 return;
         }
 
@@ -157,7 +157,7 @@ void PainterParametersFor3d::done(int r)
         {
                 std::string msg = "Error width " + to_string(m_width) + ", min = " + to_string(m_min_width)
                                   + ", max = " + to_string(m_max_width);
-                dialog::message_critical(this, msg);
+                dialog::message_critical(msg);
                 return;
         }
 
@@ -166,7 +166,7 @@ void PainterParametersFor3d::done(int r)
         {
                 std::string msg = "Error height " + to_string(m_height) + ", min = " + to_string(m_min_height)
                                   + ", max = " + to_string(m_max_height);
-                dialog::message_critical(this, msg);
+                dialog::message_critical(msg);
                 return;
         }
 
@@ -198,7 +198,6 @@ void PainterParametersFor3d::height_value_changed(int)
 }
 
 bool painter_parameters_for_3d(
-        QWidget* parent,
         int max_thread_count,
         int width,
         int height,
@@ -212,7 +211,10 @@ bool painter_parameters_for_3d(
         bool* flat_facets,
         bool* cornell_box)
 {
-        QtObjectInDynamicMemory<painter_parameters_for_3d_implementation::PainterParametersFor3d> w(parent);
+        namespace impl = painter_parameters_for_3d_implementation;
+
+        QtObjectInDynamicMemory<impl::PainterParametersFor3d> w(parent_for_dialog());
+
         return w->show(
                 max_thread_count, width, height, max_screen_size, default_samples_per_pixel, max_samples_per_pixel,
                 thread_count, paint_width, paint_height, samples_per_pixel, flat_facets, cornell_box);

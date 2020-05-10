@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 
+#include <QApplication>
 #include <QButtonGroup>
 #include <QDesktopWidget>
 #include <QScrollBar>
@@ -125,6 +126,11 @@ void write_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string
         }
         }
 }
+}
+
+QWidget* parent_for_dialog()
+{
+        return qApp->activeWindow();
 }
 
 void set_widgets_enabled(QLayout* layout, bool v)

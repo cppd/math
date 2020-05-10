@@ -52,7 +52,6 @@ private:
 }
 
 [[nodiscard]] bool point_object_parameters(
-        QWidget* parent,
         int dimension,
         const std::string& point_object_name,
         int default_point_count,

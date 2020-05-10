@@ -171,7 +171,7 @@ void PainterWindow2d::catch_all(const F& function) const noexcept
 void PainterWindow2d::closeEvent(QCloseEvent* event)
 {
         QPointer ptr(this);
-        if (!dialog::message_question_default_no(this, "Do you want to close the painter window?"))
+        if (!dialog::message_question_default_no("Do you want to close the painter window?"))
         {
                 if (!ptr.isNull())
                 {
@@ -278,7 +278,7 @@ void PainterWindow2d::error_message_slot(const QString& msg)
 {
         LOG("Painter error\n" + msg.toStdString());
 
-        dialog::message_critical(this, msg.toStdString());
+        dialog::message_critical(msg.toStdString());
 }
 
 void PainterWindow2d::showEvent(QShowEvent* e)
@@ -374,7 +374,7 @@ void PainterWindow2d::on_pushButton_save_to_file_clicked()
                 const bool read_only = true;
                 std::string file_name;
                 QPointer ptr(this);
-                if (!dialog::save_file(this, caption, {filter}, read_only, &file_name))
+                if (!dialog::save_file(caption, {filter}, read_only, &file_name))
                 {
                         return;
                 }

@@ -81,13 +81,13 @@ void ObjectSelection::on_pushButton_clear_all_clicked()
 }
 }
 
-bool object_selection(QWidget* parent, std::unordered_set<ComputationType>* objects_to_load)
+bool object_selection(std::unordered_set<ComputationType>* objects_to_load)
 {
         ASSERT(objects_to_load);
 
         namespace impl = object_selection_implementation;
 
-        QtObjectInDynamicMemory<impl::ObjectSelection> w(parent);
+        QtObjectInDynamicMemory<impl::ObjectSelection> w(parent_for_dialog());
 
         if (!w->show(&impl::g_bound_cocone, &impl::g_cocone, &impl::g_convex_hull, &impl::g_mst))
         {

@@ -41,13 +41,13 @@ class Application final : public QApplication
                                 std::string msg;
                                 msg += "Error in an event receiver:\n";
                                 msg += e.what();
-                                dialog::message_critical(nullptr, msg);
+                                dialog::message_critical(msg, false /*with_parent*/);
                                 error_fatal(msg);
                         }
                         catch (...)
                         {
                                 const char* msg = "Error in an event receiver";
-                                dialog::message_critical(nullptr, msg);
+                                dialog::message_critical(msg, false /*with_parent*/);
                                 error_fatal(msg);
                         }
                 }

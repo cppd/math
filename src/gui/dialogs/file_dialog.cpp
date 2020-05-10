@@ -162,12 +162,7 @@ void check_filter(const FileFilter& filter)
 }
 }
 
-bool save_file(
-        QWidget* parent,
-        const std::string& caption,
-        const std::vector<FileFilter>& filters,
-        bool read_only,
-        std::string* name)
+bool save_file(const std::string& caption, const std::vector<FileFilter>& filters, bool read_only, std::string* name)
 {
         std::map<QString, QString> map;
         std::vector<QString> dialog_filters;
@@ -180,7 +175,7 @@ bool save_file(
         }
 
         QtObjectInDynamicMemory<QFileDialog> w(
-                parent, QString::fromStdString(caption), QString(), join_filters(dialog_filters));
+                parent_for_dialog(), QString::fromStdString(caption), QString(), join_filters(dialog_filters));
 
         QObject::connect(w.data(), &QFileDialog::filterSelected, [&](const QString& filter) {
                 ASSERT(map.count(filter) == 1);
@@ -199,12 +194,7 @@ bool save_file(
         return exec_dialog_for_single_file(&w, name);
 }
 
-bool open_file(
-        QWidget* parent,
-        const std::string& caption,
-        const std::vector<FileFilter>& filters,
-        bool read_only,
-        std::string* name)
+bool open_file(const std::string& caption, const std::vector<FileFilter>& filters, bool read_only, std::string* name)
 {
         std::vector<QString> dialog_filters;
         for (const FileFilter& v : filters)
@@ -214,7 +204,7 @@ bool open_file(
         }
 
         QtObjectInDynamicMemory<QFileDialog> w(
-                parent, QString::fromStdString(caption), QString(), join_filters(dialog_filters));
+                parent_for_dialog(), QString::fromStdString(caption), QString(), join_filters(dialog_filters));
 
         w->setOptions(make_options(read_only));
         w->setAcceptMode(QFileDialog::AcceptOpen);

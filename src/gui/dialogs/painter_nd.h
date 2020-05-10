@@ -69,7 +69,6 @@ private:
 }
 
 [[nodiscard]] bool painter_parameters_for_nd(
-        QWidget* parent,
         int dimension,
         int max_thread_count,
         int default_screen_size,

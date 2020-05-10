@@ -118,7 +118,7 @@ void BoundCoconeParameters::done(int r)
         {
                 std::string msg = reinterpret_cast<const char*>(u8"ρ range error (") + to_string(m_min_rho) + ", "
                                   + to_string(m_max_rho) + ")";
-                dialog::message_critical(this, msg);
+                dialog::message_critical(msg);
                 return;
         }
 
@@ -127,7 +127,7 @@ void BoundCoconeParameters::done(int r)
         {
                 std::string msg = reinterpret_cast<const char*>(u8"α range error (") + to_string(m_min_alpha) + ", "
                                   + to_string(m_max_alpha) + ")";
-                dialog::message_critical(this, msg);
+                dialog::message_critical(msg);
                 return;
         }
 
@@ -135,11 +135,11 @@ void BoundCoconeParameters::done(int r)
 }
 }
 
-bool bound_cocone_parameters(QWidget* parent, double* rho, double* alpha)
+bool bound_cocone_parameters(double* rho, double* alpha)
 {
         namespace impl = bound_cocone_parameters_implementation;
 
-        QtObjectInDynamicMemory<impl::BoundCoconeParameters> w(parent);
+        QtObjectInDynamicMemory<impl::BoundCoconeParameters> w(parent_for_dialog());
 
         if (!w->show(impl::MINIMUM_RHO_EXPONENT, impl::MINIMUM_ALPHA_EXPONENT, &impl::g_rho, &impl::g_alpha))
         {

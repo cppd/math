@@ -140,7 +140,7 @@ void PainterParametersForNd::done(int r)
         {
                 std::string msg =
                         "Error thread count. Must be in the range [1, " + to_string(m_max_thread_count) + "].";
-                dialog::message_critical(this, msg);
+                dialog::message_critical(msg);
                 return;
         }
 
@@ -149,7 +149,7 @@ void PainterParametersForNd::done(int r)
         {
                 std::string msg = "Error samples per pixel. Must be in the range [1, "
                                   + to_string(m_max_samples_per_pixel) + "].";
-                dialog::message_critical(this, msg);
+                dialog::message_critical(msg);
                 return;
         }
 
@@ -158,7 +158,7 @@ void PainterParametersForNd::done(int r)
         {
                 std::string msg = "Error min size. Must be in the range [" + to_string(m_min_screen_size) + ", "
                                   + to_string(m_max_screen_size) + "].";
-                dialog::message_critical(this, msg);
+                dialog::message_critical(msg);
                 return;
         }
 
@@ -167,7 +167,7 @@ void PainterParametersForNd::done(int r)
         {
                 std::string msg = "Error max size. Must be in the range [" + to_string(m_min_screen_size) + ", "
                                   + to_string(m_max_screen_size) + "].";
-                dialog::message_critical(this, msg);
+                dialog::message_critical(msg);
                 return;
         }
 
@@ -175,7 +175,7 @@ void PainterParametersForNd::done(int r)
         {
                 std::string msg =
                         "Error min and max sizes. The min size must be less than the max size or equal to the max size";
-                dialog::message_critical(this, msg);
+                dialog::message_critical(msg);
                 return;
         }
 
@@ -186,7 +186,6 @@ void PainterParametersForNd::done(int r)
 }
 
 bool painter_parameters_for_nd(
-        QWidget* parent,
         int dimension,
         int max_thread_count,
         int default_screen_size,
@@ -200,7 +199,10 @@ bool painter_parameters_for_nd(
         int* samples_per_pixel,
         bool* flat_facets)
 {
-        QtObjectInDynamicMemory<painter_parameters_for_nd_implementation::PainterParametersForNd> w(parent);
+        namespace impl = painter_parameters_for_nd_implementation;
+
+        QtObjectInDynamicMemory<impl::PainterParametersForNd> w(parent_for_dialog());
+
         return w->show(
                 dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
                 default_samples_per_pixel, max_samples_per_pixel, thread_count, min_size, max_size, samples_per_pixel,

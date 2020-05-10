@@ -21,5 +21,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace dialog
 {
-void application_help(QWidget* parent);
+void application_help();
 }

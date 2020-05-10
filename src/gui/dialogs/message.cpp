@@ -25,41 +25,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace dialog
 {
-void message_critical(QWidget* parent, const std::string& message)
+void message_critical(const std::string& message, bool with_parent)
 {
         QtObjectInDynamicMemory<QMessageBox> w(
-                QMessageBox::Critical, settings::APPLICATION_NAME, message.c_str(), QMessageBox::Ok, parent);
+                QMessageBox::Critical, settings::APPLICATION_NAME, message.c_str(), QMessageBox::Ok,
+                with_parent ? parent_for_dialog() : nullptr);
         w->exec();
 }
 
-void message_information(QWidget* parent, const std::string& message)
+void message_information(const std::string& message)
 {
         QtObjectInDynamicMemory<QMessageBox> w(
-                QMessageBox::Information, settings::APPLICATION_NAME, message.c_str(), QMessageBox::Ok, parent);
+                QMessageBox::Information, settings::APPLICATION_NAME, message.c_str(), QMessageBox::Ok,
+                parent_for_dialog());
         w->exec();
 }
 
-void message_warning(QWidget* parent, const std::string& message)
+void message_warning(const std::string& message)
 {
         QtObjectInDynamicMemory<QMessageBox> w(
-                QMessageBox::Warning, settings::APPLICATION_NAME, message.c_str(), QMessageBox::Ok, parent);
+                QMessageBox::Warning, settings::APPLICATION_NAME, message.c_str(), QMessageBox::Ok,
+                parent_for_dialog());
         w->exec();
 }
 
-bool message_question_default_yes(QWidget* parent, const std::string& message)
+bool message_question_default_yes(const std::string& message)
 {
         QtObjectInDynamicMemory<QMessageBox> w(
                 QMessageBox::Question, settings::APPLICATION_NAME, message.c_str(), QMessageBox::Yes | QMessageBox::No,
-                parent);
+                parent_for_dialog());
         w->setDefaultButton(QMessageBox::Yes);
         return w->exec() == QMessageBox::Yes;
 }
 
-bool message_question_default_no(QWidget* parent, const std::string& message)
+bool message_question_default_no(const std::string& message)
 {
         QtObjectInDynamicMemory<QMessageBox> w(
                 QMessageBox::Question, settings::APPLICATION_NAME, message.c_str(), QMessageBox::Yes | QMessageBox::No,
-                parent);
+                parent_for_dialog());
         w->setDefaultButton(QMessageBox::No);
         return w->exec() == QMessageBox::Yes;
 }

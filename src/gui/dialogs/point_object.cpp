@@ -93,7 +93,7 @@ void PointObjectParameters::done(int r)
         {
                 std::string msg =
                         "Error point count. It must be in the range [1, " + to_string(m_max_point_count) + "].";
-                dialog::message_critical(this, msg);
+                dialog::message_critical(msg);
                 return;
         }
 
@@ -102,7 +102,6 @@ void PointObjectParameters::done(int r)
 }
 
 bool point_object_parameters(
-        QWidget* parent,
         int dimension,
         const std::string& point_object_name,
         int default_point_count,
@@ -110,7 +109,10 @@ bool point_object_parameters(
         int max_point_count,
         int* point_count)
 {
-        QtObjectInDynamicMemory<point_object_parameters_implementation::PointObjectParameters> w(parent);
+        namespace impl = point_object_parameters_implementation;
+
+        QtObjectInDynamicMemory<impl::PointObjectParameters> w(parent_for_dialog());
+
         return w->show(
                 dimension, point_object_name, default_point_count, min_point_count, max_point_count, point_count);
 }

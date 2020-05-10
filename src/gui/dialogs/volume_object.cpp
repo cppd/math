@@ -93,7 +93,7 @@ void VolumeObjectParameters::done(int r)
         {
                 std::string msg = "Error image size. It must be in the range [" + to_string(m_min_image_size) + ", "
                                   + to_string(m_max_image_size) + "].";
-                dialog::message_critical(this, msg);
+                dialog::message_critical(msg);
                 return;
         }
 
@@ -102,7 +102,6 @@ void VolumeObjectParameters::done(int r)
 }
 
 bool volume_object_parameters(
-        QWidget* parent,
         int dimension,
         const std::string& volume_object_name,
         int default_image_size,
@@ -110,7 +109,10 @@ bool volume_object_parameters(
         int max_image_size,
         int* image_size)
 {
-        QtObjectInDynamicMemory<volume_object_parameters_implementation::VolumeObjectParameters> w(parent);
+        namespace impl = volume_object_parameters_implementation;
+
+        QtObjectInDynamicMemory<impl::VolumeObjectParameters> w(parent_for_dialog());
+
         return w->show(dimension, volume_object_name, default_image_size, min_image_size, max_image_size, image_size);
 }
 }
