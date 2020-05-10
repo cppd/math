@@ -54,15 +54,7 @@ struct WindowEvent
                 }
         };
 
-        struct SetWindowTitle final
-        {
-                std::string text;
-                SetWindowTitle(const std::string& text) : text(text)
-                {
-                }
-        };
-
-        using T = std::variant<SetWindowTitle, MessageError, MessageErrorFatal, MessageInformation, MessageWarning>;
+        using T = std::variant<MessageError, MessageErrorFatal, MessageInformation, MessageWarning>;
 
         template <typename Type, typename = std::enable_if_t<!std::is_same_v<WindowEvent, std::remove_cvref_t<Type>>>>
         WindowEvent(Type&& arg) : m_data(std::forward<Type>(arg))

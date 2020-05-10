@@ -140,6 +140,8 @@ MainWindow::MainWindow(QWidget* parent)
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
         static_assert(std::is_same_v<decltype(ui.model_tree), ModelTree*>);
 
+        this->setWindowTitle(settings::APPLICATION_NAME);
+
         LOG(command_line_description() + "\n");
 
         ui.setupUi(this);
@@ -156,8 +158,6 @@ MainWindow::MainWindow(QWidget* parent)
         set_log_events([this](LogEvent&& event) {
                 run_in_ui_thread([&, event = std::move(event)]() { event_from_log(event); });
         });
-
-        m_window_events(WindowEvent::SetWindowTitle(""));
 }
 
 void MainWindow::constructor_threads()
@@ -468,11 +468,10 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
 
                 m_storage->clear();
                 m_view->send(view::command::ResetView());
-                m_window_events(WindowEvent::SetWindowTitle(file_base_name(file_name)));
 
                 process::apply_for_dimension(dimension, [&]<size_t N>(const process::Dimension<N>&) {
                         std::shared_ptr<mesh::MeshObject<N>> mesh = process::load_from_file(
-                                "Model", progress_list, file_name, object_size.value,
+                                file_base_name(file_name), progress_list, file_name, object_size.value,
                                 dimension_position<N>(object_position.value));
 
                         process::compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
@@ -533,7 +532,6 @@ void MainWindow::thread_load_from_mesh_repository(int dimension, const std::stri
 
                 m_storage->clear();
                 m_view->send(view::command::ResetView());
-                m_window_events(WindowEvent::SetWindowTitle(object_name));
 
                 process::apply_for_dimension(dimension, [&]<size_t N>(const process::Dimension<N>&) {
                         std::shared_ptr<mesh::MeshObject<N>> mesh = process::load_from_mesh_repository(
@@ -1097,16 +1095,7 @@ void MainWindow::event_from_window(const WindowEvent& event)
                 [](const WindowEvent::MessageWarning& d) {
                         LOG_WARNING(d.text);
                         dialog::message_warning(d.text);
-                },
-                [this](const WindowEvent::SetWindowTitle& d) {
-                        std::string title = settings::APPLICATION_NAME;
-                        if (!d.text.empty())
-                        {
-                                title += " - " + d.text;
-                        }
-                        this->setWindowTitle(title.c_str());
                 }};
-
         try
         {
                 std::visit(visitors, event.data());
