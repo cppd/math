@@ -32,16 +32,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstring>
 
+namespace painter_window_implementation
+{
+namespace
+{
 constexpr int UPDATE_INTERVAL_MILLISECONDS = 100;
 // Этот интервал должен быть больше интервала UPDATE_INTERVAL_MILLISECONDS
 constexpr int DIFFERENCE_INTERVAL_MILLISECONDS = 10 * UPDATE_INTERVAL_MILLISECONDS;
-
 constexpr bool SHOW_THREADS = true;
+constexpr const char* SAVE_IMAGE_FILE_FORMAT = "png";
 
-constexpr const char SAVE_IMAGE_FILE_FORMAT[] = "png";
+//
 
-namespace
-{
 void set_label_minimum_width_for_text(QLabel* label, const std::string& text)
 {
         label->setMinimumWidth(label->fontMetrics().width(text.c_str()));
@@ -397,4 +399,5 @@ void PainterWindow2d::slider_changed_slot(int)
                 }
         }
         error_fatal("Failed to find sender in sliders");
+}
 }

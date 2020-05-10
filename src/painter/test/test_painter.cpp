@@ -180,8 +180,7 @@ void test_painter_window(
 
         std::string window_title = "Path Tracing In " + to_upper_first_letters(space_name(N));
 
-        create_and_show_delete_on_close_window<PainterWindow<N, T>>(
-                window_title, thread_count, samples_per_pixel, smooth_normal, std::move(paint_objects));
+        create_painter_window(window_title, thread_count, samples_per_pixel, smooth_normal, std::move(paint_objects));
 }
 
 enum class PainterTestOutputType

@@ -37,6 +37,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <vector>
 
+namespace painter_window_implementation
+{
 template <size_t N, typename T>
 class PainterWindow final : public PainterWindow2d, public painter::PainterNotifier<N - 1>
 {
@@ -231,6 +233,7 @@ public:
         PainterWindow& operator=(const PainterWindow&) = delete;
         PainterWindow& operator=(PainterWindow&&) = delete;
 };
+}
 
 template <size_t N, typename T>
 void create_painter_window(
@@ -240,9 +243,10 @@ void create_painter_window(
         bool smooth_normal,
         std::unique_ptr<const painter::PaintObjects<N, T>>&& paint_objects)
 {
+        namespace impl = painter_window_implementation;
         std::shared_ptr<const painter::PaintObjects<N, T>> objects = std::move(paint_objects);
         run_in_ui_thread([=]() {
-                create_and_show_delete_on_close_window<PainterWindow<N, T>>(
+                create_and_show_delete_on_close_window<impl::PainterWindow<N, T>>(
                         title, thread_count, samples_per_pixel, smooth_normal, objects);
         });
 }
