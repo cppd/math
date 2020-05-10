@@ -150,7 +150,9 @@ void write_formatted_log_messages_to_stderr(const std::vector<std::string>& line
         }
 }
 
-void LOG(const std::string& msg) noexcept
+namespace
+{
+void log(const std::string& msg, LogMessageType type) noexcept
 {
         try
         {
@@ -161,7 +163,7 @@ void LOG(const std::string& msg) noexcept
 
                                 if (global_log_events)
                                 {
-                                        (*global_log_events)(LogEvent::Message(msg));
+                                        (*global_log_events)(LogEvent::Message(msg, type));
                                         return;
                                 }
                         }
@@ -183,4 +185,25 @@ void LOG(const std::string& msg) noexcept
         {
                 error_fatal("error log write message");
         }
+}
+}
+
+void LOG(const std::string& msg) noexcept
+{
+        log(msg, LogMessageType::Normal);
+}
+
+void LOG_ERROR(const std::string& msg) noexcept
+{
+        log(msg, LogMessageType::Error);
+}
+
+void LOG_WARNING(const std::string& msg) noexcept
+{
+        log(msg, LogMessageType::Warning);
+}
+
+void LOG_INFORMATION(const std::string& msg) noexcept
+{
+        log(msg, LogMessageType::Information);
 }

@@ -25,13 +25,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 void log_init();
 void log_exit();
 
+enum class LogMessageType
+{
+        Normal,
+        Error,
+        Warning,
+        Information
+};
+
 struct LogEvent final
 {
         struct Message final
         {
                 std::string text;
+                LogMessageType type;
                 template <typename T>
-                explicit Message(T&& text) : text(std::forward<T>(text))
+                Message(T&& text, LogMessageType type) : text(std::forward<T>(text)), type(type)
                 {
                 }
         };
@@ -58,3 +67,6 @@ std::vector<std::string> format_log_message(const std::string& msg) noexcept;
 void write_formatted_log_messages_to_stderr(const std::vector<std::string>& lines) noexcept;
 
 void LOG(const std::string& msg) noexcept;
+void LOG_ERROR(const std::string& msg) noexcept;
+void LOG_WARNING(const std::string& msg) noexcept;
+void LOG_INFORMATION(const std::string& msg) noexcept;

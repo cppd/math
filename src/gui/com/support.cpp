@@ -90,7 +90,7 @@ void append_html(
         text_edit->appendHtml(s);
 }
 
-void write_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string>& lines, TextEditMessageType type)
+void write_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string>& lines, LogMessageType type)
 {
         ASSERT(text_edit);
 
@@ -98,26 +98,26 @@ void write_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string
 
         switch (type)
         {
-        case TextEditMessageType::Normal:
+        case LogMessageType::Normal:
         {
                 append_plain_text(text_edit, lines);
                 break;
         }
-        case TextEditMessageType::Error:
+        case LogMessageType::Error:
         {
                 const QString& begin = QStringLiteral(R"(<pre><font color="Red">)");
                 const QString& end = QStringLiteral(R"(</font></pre>)");
                 append_html(text_edit, begin, end, lines);
                 break;
         }
-        case TextEditMessageType::Warning:
+        case LogMessageType::Warning:
         {
                 const QString& begin = QStringLiteral(R"(<pre><font color="#d08000">)");
                 const QString& end = QStringLiteral(R"(</font></pre>)");
                 append_html(text_edit, begin, end, lines);
                 break;
         }
-        case TextEditMessageType::Information:
+        case LogMessageType::Information:
         {
                 const QString& begin = QStringLiteral(R"(<pre><font color="Blue">)");
                 const QString& end = QStringLiteral(R"(</font></pre>)");
@@ -176,7 +176,7 @@ void set_slider_to_middle(QSlider* slider)
 void add_to_text_edit_and_to_stderr(
         QPlainTextEdit* text_edit,
         const std::vector<std::string>& lines,
-        TextEditMessageType type) noexcept
+        LogMessageType type) noexcept
 {
         try
         {

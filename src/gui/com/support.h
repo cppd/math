@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/error.h>
+#include <src/com/log.h>
 #include <src/com/type/detect.h>
 #include <src/numerical/vec.h>
 #include <src/window/handle.h>
@@ -64,14 +65,6 @@ public:
         }
 };
 
-enum class TextEditMessageType
-{
-        Normal,
-        Error,
-        Warning,
-        Information
-};
-
 QWidget* parent_for_dialog();
 
 void set_widgets_enabled(QLayout* layout, bool v);
@@ -85,7 +78,7 @@ void set_slider_to_middle(QSlider* slider);
 void add_to_text_edit_and_to_stderr(
         QPlainTextEdit* text_edit,
         const std::vector<std::string>& lines,
-        TextEditMessageType type) noexcept;
+        LogMessageType type) noexcept;
 
 WindowID widget_window_id(const QWidget* widget);
 double widget_pixels_per_inch(const QWidget* widget);

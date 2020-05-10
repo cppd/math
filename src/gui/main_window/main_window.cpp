@@ -1080,26 +1080,22 @@ void MainWindow::event_from_window(const WindowEvent& event)
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         const auto visitors = Visitors{
-                [this](const WindowEvent::MessageError& d) {
-                        add_to_text_edit_and_to_stderr(
-                                ui.text_log, format_log_message(d.text), TextEditMessageType::Error);
+                [](const WindowEvent::MessageError& d) {
+                        LOG_ERROR(d.text);
                         dialog::message_critical(d.text);
                 },
-                [this](const WindowEvent::MessageErrorFatal& d) {
-                        std::string message = !d.text.empty() ? d.text : "Unknown Error. Exit failure.";
-                        add_to_text_edit_and_to_stderr(
-                                ui.text_log, format_log_message(message), TextEditMessageType::Error);
+                [](const WindowEvent::MessageErrorFatal& d) {
+                        std::string message = !d.text.empty() ? d.text : "Unknown Error. Exit Failure.";
+                        LOG_ERROR(message);
                         dialog::message_critical(message, false /*with_parent*/);
                         std::_Exit(EXIT_FAILURE);
                 },
-                [this](const WindowEvent::MessageInformation& d) {
-                        add_to_text_edit_and_to_stderr(
-                                ui.text_log, format_log_message(d.text), TextEditMessageType::Information);
+                [](const WindowEvent::MessageInformation& d) {
+                        LOG_INFORMATION(d.text);
                         dialog::message_information(d.text);
                 },
-                [this](const WindowEvent::MessageWarning& d) {
-                        add_to_text_edit_and_to_stderr(
-                                ui.text_log, format_log_message(d.text), TextEditMessageType::Warning);
+                [](const WindowEvent::MessageWarning& d) {
+                        LOG_WARNING(d.text);
                         dialog::message_warning(d.text);
                 },
                 [this](const WindowEvent::SetWindowTitle& d) {
@@ -1131,7 +1127,7 @@ void MainWindow::event_from_log(const LogEvent& event)
 
         const auto visitors = Visitors{[this](const LogEvent::Message& d) {
                 // Здесь без вызовов функции LOG, так как начнёт вызывать сама себя
-                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(d.text), TextEditMessageType::Normal);
+                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(d.text), d.type);
         }};
 
         std::visit(visitors, event.data());
