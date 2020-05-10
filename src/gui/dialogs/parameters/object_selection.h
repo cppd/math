@@ -19,8 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_object_selection.h"
 
+#include <unordered_set>
 #include <vector>
 
+namespace dialog
+{
 namespace object_selection_implementation
 {
 class ObjectSelection final : public QDialog
@@ -30,11 +33,7 @@ class ObjectSelection final : public QDialog
 public:
         explicit ObjectSelection(QWidget* parent = nullptr);
 
-        [[nodiscard]] bool show(
-                bool* model_convex_hull,
-                bool* model_minumum_spanning_tree,
-                bool* cocone,
-                bool* bound_cocone);
+        [[nodiscard]] bool show(bool* bound_cocone, bool* cocone, bool* convex_hull, bool* mst);
 
 private slots:
 
@@ -48,12 +47,14 @@ private:
 };
 }
 
-namespace dialog
+enum class ComputationType
 {
-[[nodiscard]] bool object_selection(
-        QWidget* parent,
-        bool* model_convex_hull,
-        bool* model_minumum_spanning_tree,
-        bool* cocone,
-        bool* bound_cocone);
+        BoundCocone,
+        Cocone,
+        ConvexHull,
+        Mst
+};
+
+[[nodiscard]] bool object_selection(QWidget* parent, std::unordered_set<ComputationType>* objects_to_load);
+[[nodiscard]] std::unordered_set<ComputationType> object_selection_current();
 }

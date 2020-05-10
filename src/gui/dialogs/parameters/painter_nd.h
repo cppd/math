@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
+namespace dialog
+{
 namespace painter_parameters_for_nd_implementation
 {
 class PainterParametersForNd final : public QDialog
@@ -66,8 +68,6 @@ private:
 };
 }
 
-namespace dialog
-{
 [[nodiscard]] bool painter_parameters_for_nd(
         QWidget* parent,
         int dimension,

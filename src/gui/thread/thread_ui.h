@@ -17,14 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../mesh.h"
+#include <functional>
 
-#include <src/progress/progress.h>
-
-#include <memory>
-
-namespace painter
-{
-template <size_t N, typename T>
-std::unique_ptr<const MeshObject<N, T>> simplex_mesh_of_random_sphere(int point_count, ProgressRatio* progress);
-}
+void run_in_ui_thread(const std::function<void()>& f);

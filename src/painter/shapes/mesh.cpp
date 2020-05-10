@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../space/ray_intersection.h"
 
 #include <src/com/log.h>
+#include <src/com/thread.h>
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/transform.h>
@@ -62,12 +63,10 @@ int tree_max_depth()
 }
 
 template <size_t N, typename T>
-void MeshObject<N, T>::create(
-        const mesh::Mesh<N>& mesh,
-        const Matrix<N + 1, N + 1, T>& matrix,
-        unsigned thread_count,
-        ProgressRatio* progress)
+void MeshObject<N, T>::create(const mesh::Mesh<N>& mesh, const Matrix<N + 1, N + 1, T>& matrix, ProgressRatio* progress)
 {
+        const unsigned thread_count = hardware_concurrency();
+
         if (mesh.vertices.empty())
         {
                 error("No vertices found in mesh");
@@ -134,15 +133,11 @@ void MeshObject<N, T>::create(
 }
 
 template <size_t N, typename T>
-MeshObject<N, T>::MeshObject(
-        const mesh::Mesh<N>& mesh,
-        const Matrix<N + 1, N + 1, T>& matrix,
-        unsigned thread_count,
-        ProgressRatio* progress)
+MeshObject<N, T>::MeshObject(const mesh::Mesh<N>& mesh, const Matrix<N + 1, N + 1, T>& matrix, ProgressRatio* progress)
 {
         double start_time = time_in_seconds();
 
-        create(mesh, matrix, thread_count, progress);
+        create(mesh, matrix, progress);
 
         LOG("Mesh object created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 }

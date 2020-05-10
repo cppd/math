@@ -15,16 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "thread_ui.h"
 
-#include "../mesh.h"
+#include "thread_ui_impl.h"
 
-#include <src/progress/progress.h>
-
-#include <memory>
-
-namespace painter
+void run_in_ui_thread(const std::function<void()>& f)
 {
-template <size_t N, typename T>
-std::unique_ptr<const MeshObject<N, T>> simplex_mesh_of_random_sphere(int point_count, ProgressRatio* progress);
+        thread_ui_impl::ThreadUI::run_in_ui_thread(f);
 }

@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QPointer>
 
+namespace dialog
+{
 namespace point_object_parameters_implementation
 {
 PointObjectParameters::PointObjectParameters(QWidget* parent) : QDialog(parent)
@@ -98,8 +100,6 @@ void PointObjectParameters::done(int r)
 }
 }
 
-namespace dialog
-{
 bool point_object_parameters(
         QWidget* parent,
         int dimension,

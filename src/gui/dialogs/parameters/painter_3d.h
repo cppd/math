@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_painter_3d.h"
 
+namespace dialog
+{
 namespace painter_parameters_for_3d_implementation
 {
 class PainterParametersFor3d final : public QDialog
@@ -70,8 +72,6 @@ private:
 };
 }
 
-namespace dialog
-{
 [[nodiscard]] bool painter_parameters_for_3d(
         QWidget* parent,
         int max_thread_count,

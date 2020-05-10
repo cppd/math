@@ -21,8 +21,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QPointer>
 
+namespace dialog
+{
 namespace object_selection_implementation
 {
+namespace
+{
+bool g_bound_cocone = true;
+bool g_cocone = true;
+bool g_convex_hull = true;
+bool g_mst = true;
+}
+
 ObjectSelection::ObjectSelection(QWidget* parent) : QDialog(parent)
 {
         ui.setupUi(this);
@@ -34,22 +44,22 @@ ObjectSelection::ObjectSelection(QWidget* parent) : QDialog(parent)
         m_boxes.push_back(ui.checkBox_bound_cocone);
 }
 
-bool ObjectSelection::show(bool* model_convex_hull, bool* model_minumum_spanning_tree, bool* cocone, bool* bound_cocone)
+bool ObjectSelection::show(bool* bound_cocone, bool* cocone, bool* convex_hull, bool* mst)
 {
-        ui.checkBox_model_convex_hull->setChecked(*model_convex_hull);
-        ui.checkBox_model_minumum_spanning_tree->setChecked(*model_minumum_spanning_tree);
-        ui.checkBox_cocone->setChecked(*cocone);
         ui.checkBox_bound_cocone->setChecked(*bound_cocone);
+        ui.checkBox_cocone->setChecked(*cocone);
+        ui.checkBox_model_convex_hull->setChecked(*convex_hull);
+        ui.checkBox_model_minumum_spanning_tree->setChecked(*mst);
 
         if (QPointer ptr(this); !this->exec() || ptr.isNull())
         {
                 return false;
         }
 
-        *model_convex_hull = ui.checkBox_model_convex_hull->isChecked();
-        *model_minumum_spanning_tree = ui.checkBox_model_minumum_spanning_tree->isChecked();
-        *cocone = ui.checkBox_cocone->isChecked();
         *bound_cocone = ui.checkBox_bound_cocone->isChecked();
+        *cocone = ui.checkBox_cocone->isChecked();
+        *convex_hull = ui.checkBox_model_convex_hull->isChecked();
+        *mst = ui.checkBox_model_minumum_spanning_tree->isChecked();
 
         return true;
 }
@@ -71,16 +81,53 @@ void ObjectSelection::on_pushButton_clear_all_clicked()
 }
 }
 
-namespace dialog
+bool object_selection(QWidget* parent, std::unordered_set<ComputationType>* objects_to_load)
 {
-bool object_selection(
-        QWidget* parent,
-        bool* model_convex_hull,
-        bool* model_minumum_spanning_tree,
-        bool* cocone,
-        bool* bound_cocone)
+        ASSERT(objects_to_load);
+
+        namespace impl = object_selection_implementation;
+
+        QtObjectInDynamicMemory<impl::ObjectSelection> w(parent);
+
+        if (!w->show(&impl::g_bound_cocone, &impl::g_cocone, &impl::g_convex_hull, &impl::g_mst))
+        {
+                return false;
+        }
+
+        objects_to_load->clear();
+
+        if (impl::g_bound_cocone)
+        {
+                objects_to_load->insert(ComputationType::BoundCocone);
+        }
+
+        if (impl::g_cocone)
+        {
+                objects_to_load->insert(ComputationType::Cocone);
+        }
+
+        if (impl::g_convex_hull)
+        {
+                objects_to_load->insert(ComputationType::ConvexHull);
+        }
+
+        if (impl::g_mst)
+        {
+                objects_to_load->insert(ComputationType::Mst);
+        }
+
+        return true;
+}
+
+std::unordered_set<ComputationType> object_selection_current()
 {
-        QtObjectInDynamicMemory<object_selection_implementation::ObjectSelection> w(parent);
-        return w->show(model_convex_hull, model_minumum_spanning_tree, cocone, bound_cocone);
+        std::unordered_set<ComputationType> objects_to_load;
+
+        objects_to_load.insert(ComputationType::BoundCocone);
+        objects_to_load.insert(ComputationType::Cocone);
+        objects_to_load.insert(ComputationType::ConvexHull);
+        objects_to_load.insert(ComputationType::Mst);
+
+        return objects_to_load;
 }
 }

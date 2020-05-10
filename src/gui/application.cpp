@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dialogs/messages/message_box.h"
 #include "main_window/main_window.h"
 #include "support/support.h"
+#include "thread/thread_ui_impl.h"
 
 #include <src/com/error.h>
 
@@ -66,6 +67,8 @@ public:
 int application(int argc, char* argv[])
 {
         Application a(argc, argv);
+
+        thread_ui_impl::ThreadUI thread_ui_object;
 
         create_and_show_delete_on_close_window<MainWindow>();
 

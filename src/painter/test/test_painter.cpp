@@ -116,20 +116,16 @@ void check_application_instance()
 }
 
 template <size_t N, typename T>
-std::shared_ptr<const MeshObject<N, T>> sphere_mesh(int point_count, int thread_count, ProgressRatio* progress)
+std::shared_ptr<const MeshObject<N, T>> sphere_mesh(int point_count, ProgressRatio* progress)
 {
         LOG("Creating mesh...");
-        std::shared_ptr<const MeshObject<N, T>> mesh =
-                simplex_mesh_of_random_sphere<N, T>(point_count, thread_count, progress);
+        std::shared_ptr<const MeshObject<N, T>> mesh = simplex_mesh_of_random_sphere<N, T>(point_count, progress);
 
         return mesh;
 }
 
 template <size_t N, typename T>
-std::shared_ptr<const MeshObject<N, T>> file_mesh(
-        const std::string& file_name,
-        int thread_count,
-        ProgressRatio* progress)
+std::shared_ptr<const MeshObject<N, T>> file_mesh(const std::string& file_name, ProgressRatio* progress)
 {
         constexpr Matrix<N + 1, N + 1, T> matrix(1);
 
@@ -138,7 +134,7 @@ std::shared_ptr<const MeshObject<N, T>> file_mesh(
 
         LOG("Creating mesh...");
         std::shared_ptr<const MeshObject<N, T>> spatial_mesh =
-                std::make_shared<const MeshObject<N, T>>(*mesh, matrix, thread_count, progress);
+                std::make_shared<const MeshObject<N, T>>(*mesh, matrix, progress);
 
         return spatial_mesh;
 }
@@ -226,7 +222,7 @@ void test_painter(int samples_per_pixel, int point_count, int min_screen_size, i
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
 
-        std::shared_ptr<const MeshObject<N, T>> mesh = sphere_mesh<N, T>(point_count, thread_count, &progress);
+        std::shared_ptr<const MeshObject<N, T>> mesh = sphere_mesh<N, T>(point_count, &progress);
 
         test_painter<type>(mesh, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
 }
@@ -237,7 +233,7 @@ void test_painter(int samples_per_pixel, const std::string& file_name, int min_s
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
 
-        std::shared_ptr<const MeshObject<N, T>> mesh = file_mesh<N, T>(file_name, thread_count, &progress);
+        std::shared_ptr<const MeshObject<N, T>> mesh = file_mesh<N, T>(file_name, &progress);
 
         test_painter<type>(mesh, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
 }

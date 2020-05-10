@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "event.h"
+#include "model_events.h"
+#include "repository_actions.h"
 #include "threads.h"
 
 #include "ui_main_window.h"
@@ -49,14 +51,6 @@ class MainWindow final : public QMainWindow
 public:
         explicit MainWindow(QWidget* parent = nullptr);
         ~MainWindow() override;
-
-signals:
-        void window_signal(const std::function<void()>&) const;
-private slots:
-        void window_slot(const std::function<void()>&) const;
-
-private:
-        void run_in_window_thread(const std::function<void()>&) const;
 
 public slots:
 
@@ -111,8 +105,9 @@ private slots:
 
         void model_tree_item_changed();
 
-        void slot_mesh_object_repository();
-        void slot_volume_object_repository();
+        void slot_mesh_object_repository(int dimension, std::string object_name);
+        void slot_volume_object_repository(int dimension, std::string object_name);
+
         void slot_timer_progress_bar();
         void slot_window_first_shown();
 
@@ -120,24 +115,10 @@ private:
         void constructor_threads();
         void constructor_connect();
         void constructor_interface();
-        void constructor_objects_and_repository();
-        void constructor_model_events();
-        void delete_model_events();
-
-        enum class ComputationType
-        {
-                Mst,
-                ConvexHull,
-                Cocone,
-                BoundCocone
-        };
-
-        void set_window_title(const std::string& text);
+        void constructor_objects();
 
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;
-
-        void close_without_confirmation();
 
         void terminate_all_threads();
 
@@ -147,8 +128,8 @@ private:
         //
 
         void thread_load_from_file(std::string file_name, bool use_object_selection_dialog);
-        void thread_load_from_mesh_repository();
-        void thread_load_from_volume_repository();
+        void thread_load_from_mesh_repository(int dimension, const std::string& object_name);
+        void thread_load_from_volume_repository(int dimension, const std::string& object_name);
 
         template <size_t N>
         std::optional<WorkerThreads::Function> export_function(
@@ -196,51 +177,27 @@ private:
         void exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists)
                 const noexcept;
 
-        bool dialog_object_selection(std::unordered_set<ComputationType>* objects_to_load);
-
         bool stop_action(WorkerThreads::Action action);
 
         void event_from_window(const WindowEvent& event);
         void event_from_log(const LogEvent& event);
         void event_from_view(const view::Event& event);
-        template <size_t N>
-        void event_from_mesh([[maybe_unused]] const mesh::MeshEvent<N>& event);
-        template <size_t N>
-        void event_from_mesh_window_thread(const mesh::MeshEvent<N>& event);
-        template <size_t N>
-        void event_from_volume([[maybe_unused]] const volume::VolumeEvent<N>& event);
-        template <size_t N>
-        void event_from_volume_window_thread(const volume::VolumeEvent<N>& event);
 
         void update_volume_ui(ObjectId id);
 
-        Ui::MainWindow ui;
+        const std::thread::id m_thread_id;
 
-        const std::thread::id m_window_thread_id;
+        Ui::MainWindow ui;
 
         std::function<void(WindowEvent&&)> m_window_events;
 
         std::unique_ptr<WorkerThreads> m_worker_threads;
 
-        struct RepositoryActionDescription final
-        {
-                int dimension;
-                std::string object_name;
-        };
-        std::unordered_map<QObject*, RepositoryActionDescription> m_repository_actions;
-
         std::unique_ptr<view::View> m_view;
-
         std::unique_ptr<storage::Repository> m_repository;
+        std::unique_ptr<RepositoryActions> m_repository_actions;
         std::unique_ptr<storage::Storage> m_storage;
-
-        template <size_t N>
-        struct ModelEvents
-        {
-                std::function<void(mesh::MeshEvent<N>&&)> mesh_events;
-                std::function<void(volume::VolumeEvent<N>&&)> volume_events;
-        };
-        Sequence<settings::Dimensions, std::tuple, ModelEvents> m_model_events;
+        std::unique_ptr<ModelEvents> m_mesh_and_volume_events;
 
         QColor m_background_color;
         QColor m_default_color;
@@ -248,20 +205,10 @@ private:
         QColor m_clip_plane_color;
         QColor m_normal_color_positive;
         QColor m_normal_color_negative;
-
         QColor m_dft_background_color;
         QColor m_dft_color;
 
         bool m_first_show;
 
         QTimer m_timer_progress_bar;
-
-        double m_bound_cocone_rho;
-        double m_bound_cocone_alpha;
-
-        bool m_close_without_confirmation;
-
-        std::unordered_set<ComputationType> m_objects_to_load;
-
-        const int m_mesh_threads;
 };

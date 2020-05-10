@@ -26,8 +26,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QPointer>
 #include <cmath>
 
+namespace dialog
+{
 namespace bound_cocone_parameters_implementation
 {
+namespace
+{
+constexpr int MINIMUM_RHO_EXPONENT = -3;
+constexpr int MINIMUM_ALPHA_EXPONENT = -3;
+constexpr double DEFAULT_RHO = 0.3;
+constexpr double DEFAULT_ALPHA = 0.14;
+
+double g_rho = DEFAULT_RHO;
+double g_alpha = DEFAULT_ALPHA;
+}
+
 BoundCoconeParameters::BoundCoconeParameters(QWidget* parent) : QDialog(parent)
 {
         ui.setupUi(this);
@@ -121,16 +134,28 @@ void BoundCoconeParameters::done(int r)
 }
 }
 
-namespace dialog
+bool bound_cocone_parameters(QWidget* parent, double* rho, double* alpha)
 {
-bool bound_cocone_parameters(
-        QWidget* parent,
-        int minimum_rho_exponent,
-        int minimum_alpha_exponent,
-        double* rho,
-        double* alpha)
+        namespace impl = bound_cocone_parameters_implementation;
+
+        QtObjectInDynamicMemory<impl::BoundCoconeParameters> w(parent);
+
+        if (!w->show(impl::MINIMUM_RHO_EXPONENT, impl::MINIMUM_ALPHA_EXPONENT, &impl::g_rho, &impl::g_alpha))
+        {
+                return false;
+        }
+
+        *rho = impl::g_rho;
+        *alpha = impl::g_alpha;
+
+        return true;
+}
+
+void bound_cocone_parameters_current(double* rho, double* alpha)
 {
-        QtObjectInDynamicMemory<bound_cocone_parameters_implementation::BoundCoconeParameters> w(parent);
-        return w->show(minimum_rho_exponent, minimum_alpha_exponent, rho, alpha);
+        namespace impl = bound_cocone_parameters_implementation;
+
+        *rho = impl::g_rho;
+        *alpha = impl::g_alpha;
 }
 }

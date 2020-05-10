@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
+namespace dialog
+{
 namespace point_object_parameters_implementation
 {
 class PointObjectParameters final : public QDialog
@@ -49,8 +51,6 @@ private:
 };
 }
 
-namespace dialog
-{
 [[nodiscard]] bool point_object_parameters(
         QWidget* parent,
         int dimension,

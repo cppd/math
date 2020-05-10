@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dialogs/parameters/volume_object.h"
 #include "../painter_window/painter_window.h"
 #include "../support/support.h"
+#include "../thread/thread_ui.h"
 
 #include <src/com/alg.h>
 #include <src/com/error.h>
@@ -64,11 +65,6 @@ constexpr bool WINDOW_SIZE_GRAPHICS = true;
 
 constexpr double DFT_MAX_BRIGHTNESS = 50000;
 constexpr double DFT_GAMMA = 0.5;
-
-constexpr int BOUND_COCONE_MINIMUM_RHO_EXPONENT = -3;
-constexpr int BOUND_COCONE_MINIMUM_ALPHA_EXPONENT = -3;
-constexpr double BOUND_COCONE_DEFAULT_RHO = 0.3;
-constexpr double BOUND_COCONE_DEFAULT_ALPHA = 0.14;
 
 // Таймер отображения хода расчётов. Величина в миллисекундах.
 constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
@@ -112,9 +108,6 @@ constexpr int PAINTER_DEFAULT_SCREEN_SIZE_ND = 500;
 constexpr int PAINTER_MINIMUM_SCREEN_SIZE_ND = 50;
 constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_ND = 5000;
 
-// Сколько потоков не надо использовать от максимума для создания октадеревьев.
-constexpr int MESH_OBJECT_NOT_USED_THREAD_COUNT = 2;
-
 // Максимальное увеличение для освещений ambient, diffuse, specular.
 constexpr double MAXIMUM_COLOR_AMPLIFICATION = 3;
 
@@ -143,13 +136,7 @@ Vector<N, double> dimension_position(const vec3& position)
 }
 
 MainWindow::MainWindow(QWidget* parent)
-        : QMainWindow(parent),
-          m_window_thread_id(std::this_thread::get_id()),
-          m_first_show(true),
-          m_bound_cocone_rho(BOUND_COCONE_DEFAULT_RHO),
-          m_bound_cocone_alpha(BOUND_COCONE_DEFAULT_ALPHA),
-          m_close_without_confirmation(false),
-          m_mesh_threads(std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT))
+        : QMainWindow(parent), m_thread_id(std::this_thread::get_id()), m_first_show(true)
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
         static_assert(std::is_same_v<decltype(ui.model_tree), ModelTree*>);
@@ -161,16 +148,17 @@ MainWindow::MainWindow(QWidget* parent)
         constructor_threads();
         constructor_connect();
         constructor_interface();
-        constructor_objects_and_repository();
-        constructor_model_events();
+        constructor_objects();
 
         m_window_events = [this](WindowEvent&& event) {
-                run_in_window_thread([&, event = std::move(event)]() { event_from_window(event); });
+                run_in_ui_thread([&, event = std::move(event)]() { event_from_window(event); });
         };
 
         set_log_events([this](LogEvent&& event) {
-                run_in_window_thread([&, event = std::move(event)]() { event_from_log(event); });
+                run_in_ui_thread([&, event = std::move(event)]() { event_from_log(event); });
         });
+
+        m_window_events(WindowEvent::SetWindowTitle(""));
 }
 
 void MainWindow::constructor_threads()
@@ -197,31 +185,10 @@ void MainWindow::constructor_connect()
         connect(ui.model_tree, SIGNAL(item_changed()), this, SLOT(model_tree_item_changed()));
 
         connect(&m_timer_progress_bar, SIGNAL(timeout()), this, SLOT(slot_timer_progress_bar()));
-
-        //
-
-        qRegisterMetaType<std::function<void()>>("std::function<void()>");
-        connect(this, SIGNAL(window_signal(const std::function<void()>&)), this,
-                SLOT(window_slot(const std::function<void()>&)));
-}
-
-void MainWindow::window_slot(const std::function<void()>& f) const
-{
-        catch_all([&](std::string* msg) {
-                *msg = "Running in the window thread";
-                f();
-        });
-}
-
-void MainWindow::run_in_window_thread(const std::function<void()>& f) const
-{
-        emit window_signal(f);
 }
 
 void MainWindow::constructor_interface()
 {
-        set_window_title("");
-
         QMainWindow::addAction(ui.actionFullScreen);
 
         {
@@ -278,141 +245,49 @@ void MainWindow::constructor_interface()
         ASSERT(((ui.slider_specular->maximum() - ui.slider_specular->minimum()) & 1) == 0);
 }
 
-void MainWindow::constructor_objects_and_repository()
+void MainWindow::constructor_objects()
 {
-        m_objects_to_load.insert(ComputationType::Mst);
-        m_objects_to_load.insert(ComputationType::ConvexHull);
-        m_objects_to_load.insert(ComputationType::Cocone);
-        m_objects_to_load.insert(ComputationType::BoundCocone);
-
         m_repository = std::make_unique<storage::Repository>();
-
-        m_storage = std::make_unique<storage::Storage>();
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
 
-        std::vector<storage::Repository::ObjectNames> repository_objects = m_repository->object_names();
+        m_repository_actions = std::make_unique<RepositoryActions>(ui.menuCreate, *m_repository);
 
-        std::sort(repository_objects.begin(), repository_objects.end(), [](const auto& a, const auto& b) {
-                return a.dimension < b.dimension;
-        });
+        connect(m_repository_actions.get(), SIGNAL(mesh(int, std::string)), this,
+                SLOT(slot_mesh_object_repository(int, std::string)));
+        connect(m_repository_actions.get(), SIGNAL(volume(int, std::string)), this,
+                SLOT(slot_volume_object_repository(int, std::string)));
 
-        for (storage::Repository::ObjectNames& objects : repository_objects)
-        {
-                ASSERT(objects.dimension > 0);
-                QMenu* sub_menu = ui.menuCreate->addMenu(space_name(objects.dimension).c_str());
+        m_storage = std::make_unique<storage::Storage>();
 
-                std::sort(objects.mesh_names.begin(), objects.mesh_names.end());
-                for (const std::string& object_name : objects.mesh_names)
-                {
-                        ASSERT(!object_name.empty());
-
-                        std::string action_text = object_name + "...";
-                        QAction* action = sub_menu->addAction(action_text.c_str());
-
-                        RepositoryActionDescription action_description;
-                        action_description.dimension = objects.dimension;
-                        action_description.object_name = object_name;
-
-                        m_repository_actions.try_emplace(action, action_description);
-                        connect(action, SIGNAL(triggered()), this, SLOT(slot_mesh_object_repository()));
-                }
-
-                if (objects.dimension == 3)
-                {
-                        sub_menu->addSeparator();
-
-                        std::sort(objects.volume_names.begin(), objects.volume_names.end());
-                        for (const std::string& object_name : objects.volume_names)
-                        {
-                                ASSERT(!object_name.empty());
-
-                                std::string action_text = object_name + "...";
-                                QAction* action = sub_menu->addAction(action_text.c_str());
-
-                                RepositoryActionDescription action_description;
-                                action_description.dimension = objects.dimension;
-                                action_description.object_name = object_name;
-
-                                m_repository_actions.try_emplace(action, action_description);
-                                connect(action, SIGNAL(triggered()), this, SLOT(slot_volume_object_repository()));
-                        }
-                }
-        }
-}
-
-void MainWindow::constructor_model_events()
-{
-        const auto f = [this]<size_t N>(ModelEvents<N>& model_events) {
-                model_events.mesh_events = [this](mesh::MeshEvent<N>&& event) {
-                        event_from_mesh(event);
-                        run_in_window_thread([&, event = std::move(event)]() { event_from_mesh_window_thread(event); });
-                };
-                model_events.volume_events = [this](volume::VolumeEvent<N>&& event) {
-                        event_from_volume(event);
-                        run_in_window_thread(
-                                [&, event = std::move(event)]() { event_from_volume_window_thread(event); });
-                };
-                mesh::MeshObject<N>::set_events(&model_events.mesh_events);
-                volume::VolumeObject<N>::set_events(&model_events.volume_events);
-        };
-
-        std::apply(
-                [&f]<size_t... N>(ModelEvents<N> & ... model_events) { (f(model_events), ...); }, m_model_events);
-}
-
-void MainWindow::delete_model_events()
-{
-        const auto f = []<size_t N>(const ModelEvents<N>&) {
-                mesh::MeshObject<N>::set_events(nullptr);
-                volume::VolumeObject<N>::set_events(nullptr);
-        };
-
-        std::apply(
-                [&f]<size_t... N>(const ModelEvents<N>&... model_events) { (f(model_events), ...); }, m_model_events);
-}
-
-void MainWindow::set_window_title(const std::string& text)
-{
-        std::string title = settings::APPLICATION_NAME;
-
-        if (!text.empty())
-        {
-                title += " - " + text;
-        }
-
-        QMainWindow::setWindowTitle(title.c_str());
+        m_mesh_and_volume_events = std::make_unique<ModelEvents>(
+                ui.model_tree, m_storage.get(), &m_view, [this](ObjectId id) { update_volume_ui(id); });
 }
 
 MainWindow::~MainWindow()
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         terminate_all_threads();
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        if (!m_close_without_confirmation)
+        QPointer ptr(this);
+        if (!dialog::message_question_default_no(this, "Do you want to close the main window?"))
         {
-                QPointer ptr(this);
-
-                if (!dialog::message_question_default_no(this, "Do you want to close the main window?"))
+                if (!ptr.isNull())
                 {
-                        if (!ptr.isNull())
-                        {
-                                event->ignore();
-                        }
-                        return;
+                        event->ignore();
                 }
-
-                if (ptr.isNull())
-                {
-                        return;
-                }
+                return;
+        }
+        if (ptr.isNull())
+        {
+                return;
         }
 
         terminate_all_threads();
@@ -420,18 +295,9 @@ void MainWindow::closeEvent(QCloseEvent* event)
         event->accept();
 }
 
-void MainWindow::close_without_confirmation()
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        m_close_without_confirmation = true;
-
-        close();
-}
-
 void MainWindow::terminate_all_threads()
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         m_worker_threads->terminate_all();
 
@@ -443,11 +309,11 @@ void MainWindow::terminate_all_threads()
                 QSignalBlocker blocker(ui.model_tree);
                 ui.model_tree->delete_all();
         }
+
         m_storage.reset();
-
-        delete_model_events();
-
         m_view.reset();
+
+        m_mesh_and_volume_events.reset();
 
         set_log_events(nullptr);
 }
@@ -457,7 +323,7 @@ void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::str
 {
         try
         {
-                ASSERT(window_exists || std::this_thread::get_id() == m_window_thread_id);
+                ASSERT(window_exists || std::this_thread::get_id() == m_thread_id);
 
                 try
                 {
@@ -504,7 +370,7 @@ void MainWindow::catch_all(const F& function) const noexcept
 {
         try
         {
-                ASSERT(std::this_thread::get_id() == m_window_thread_id);
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 std::string message;
                 QPointer ptr(this);
@@ -521,33 +387,6 @@ void MainWindow::catch_all(const F& function) const noexcept
         {
                 error_fatal("Exception in the main window catch all");
         }
-}
-
-bool MainWindow::dialog_object_selection(std::unordered_set<ComputationType>* objects_to_load)
-{
-        ASSERT(objects_to_load);
-
-        bool model_convex_hull = objects_to_load->count(ComputationType::ConvexHull) != 0u;
-        bool model_minumum_spanning_tree = objects_to_load->count(ComputationType::Mst) != 0u;
-        bool cocone = objects_to_load->count(ComputationType::Cocone) != 0u;
-        bool bound_cocone = objects_to_load->count(ComputationType::BoundCocone) != 0u;
-
-        QPointer ptr(this);
-        if (!dialog::object_selection(this, &model_convex_hull, &model_minumum_spanning_tree, &cocone, &bound_cocone))
-        {
-                return false;
-        }
-        if (ptr.isNull())
-        {
-                return false;
-        }
-
-        insert_or_erase(model_convex_hull, ComputationType::ConvexHull, objects_to_load);
-        insert_or_erase(model_minumum_spanning_tree, ComputationType::Mst, objects_to_load);
-        insert_or_erase(cocone, ComputationType::Cocone, objects_to_load);
-        insert_or_erase(bound_cocone, ComputationType::BoundCocone, objects_to_load);
-
-        return true;
 }
 
 bool MainWindow::stop_action(WorkerThreads::Action action)
@@ -572,7 +411,7 @@ bool MainWindow::stop_action(WorkerThreads::Action action)
 
 void MainWindow::thread_load_from_file(std::string file_name, bool use_object_selection_dialog)
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
 
@@ -607,20 +446,33 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                 }
         }
 
+        std::unordered_set<dialog::ComputationType> objects_to_load;
+
         if (use_object_selection_dialog)
         {
-                if (!dialog_object_selection(&m_objects_to_load))
+                QPointer ptr(this);
+                if (!dialog::object_selection(this, &objects_to_load))
+                {
+                        return;
+                }
+                if (ptr.isNull())
                 {
                         return;
                 }
         }
+        else
+        {
+                objects_to_load = dialog::object_selection_current();
+        }
 
-        double rho = m_bound_cocone_rho;
-        double alpha = m_bound_cocone_alpha;
-        bool build_convex_hull = m_objects_to_load.count(ComputationType::ConvexHull) > 0;
-        bool build_cocone = m_objects_to_load.count(ComputationType::Cocone) > 0;
-        bool build_bound_cocone = m_objects_to_load.count(ComputationType::BoundCocone) > 0;
-        bool build_mst = m_objects_to_load.count(ComputationType::Mst) > 0;
+        double rho;
+        double alpha;
+        dialog::bound_cocone_parameters_current(&rho, &alpha);
+
+        bool bound_cocone = objects_to_load.count(dialog::ComputationType::BoundCocone);
+        bool cocone = objects_to_load.count(dialog::ComputationType::Cocone);
+        bool convex_hull = objects_to_load.count(dialog::ComputationType::ConvexHull);
+        bool mst = objects_to_load.count(dialog::ComputationType::Mst);
 
         auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
                 *message = "Load " + file_name;
@@ -640,18 +492,16 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                                 "Model", progress_list, file_name, object_size.value,
                                 dimension_position<N>(object_position.value));
 
-                        process::compute<N>(
-                                progress_list, build_convex_hull, build_cocone, build_bound_cocone, build_mst, *mesh,
-                                rho, alpha);
+                        process::compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
                 });
         };
 
         m_worker_threads->start(ACTION, std::move(f));
 }
 
-void MainWindow::thread_load_from_mesh_repository()
+void MainWindow::thread_load_from_mesh_repository(int dimension, const std::string& object_name)
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
 
@@ -659,16 +509,6 @@ void MainWindow::thread_load_from_mesh_repository()
         {
                 return;
         }
-
-        auto iter = m_repository_actions.find(sender());
-        if (iter == m_repository_actions.cend())
-        {
-                m_window_events(WindowEvent::MessageError("Failed to find sender in action map"));
-                return;
-        }
-
-        int dimension = iter->second.dimension;
-        std::string object_name = iter->second.object_name;
 
         if (object_name.empty())
         {
@@ -692,17 +532,28 @@ void MainWindow::thread_load_from_mesh_repository()
                 }
         }
 
-        if (!dialog_object_selection(&m_objects_to_load))
+        std::unordered_set<dialog::ComputationType> objects_to_load;
+
         {
-                return;
+                QPointer ptr(this);
+                if (!dialog::object_selection(this, &objects_to_load))
+                {
+                        return;
+                }
+                if (ptr.isNull())
+                {
+                        return;
+                }
         }
 
-        double rho = m_bound_cocone_rho;
-        double alpha = m_bound_cocone_alpha;
-        bool build_convex_hull = m_objects_to_load.count(ComputationType::ConvexHull) > 0;
-        bool build_cocone = m_objects_to_load.count(ComputationType::Cocone) > 0;
-        bool build_bound_cocone = m_objects_to_load.count(ComputationType::BoundCocone) > 0;
-        bool build_mst = m_objects_to_load.count(ComputationType::Mst) > 0;
+        double rho;
+        double alpha;
+        dialog::bound_cocone_parameters_current(&rho, &alpha);
+
+        bool bound_cocone = objects_to_load.count(dialog::ComputationType::BoundCocone);
+        bool cocone = objects_to_load.count(dialog::ComputationType::Cocone);
+        bool convex_hull = objects_to_load.count(dialog::ComputationType::ConvexHull);
+        bool mst = objects_to_load.count(dialog::ComputationType::Mst);
 
         auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
                 *message = "Load " + space_name(dimension) + " " + object_name;
@@ -720,18 +571,16 @@ void MainWindow::thread_load_from_mesh_repository()
                                 object_name, object_size.value, dimension_position<N>(object_position.value),
                                 point_count, *m_repository);
 
-                        process::compute<N>(
-                                progress_list, build_convex_hull, build_cocone, build_bound_cocone, build_mst, *mesh,
-                                rho, alpha);
+                        process::compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
                 });
         };
 
         m_worker_threads->start(ACTION, std::move(f));
 }
 
-void MainWindow::thread_load_from_volume_repository()
+void MainWindow::thread_load_from_volume_repository(int dimension, const std::string& object_name)
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
 
@@ -739,16 +588,6 @@ void MainWindow::thread_load_from_volume_repository()
         {
                 return;
         }
-
-        auto iter = m_repository_actions.find(sender());
-        if (iter == m_repository_actions.cend())
-        {
-                m_window_events(WindowEvent::MessageError("Failed to find sender in action map"));
-                return;
-        }
-
-        int dimension = iter->second.dimension;
-        std::string object_name = iter->second.object_name;
 
         if (object_name.empty())
         {
@@ -839,7 +678,7 @@ std::optional<WorkerThreads::Function> MainWindow::export_function(
 
 void MainWindow::thread_export()
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
 
@@ -878,7 +717,7 @@ void MainWindow::thread_export()
 
 void MainWindow::thread_bound_cocone()
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
 
@@ -901,12 +740,11 @@ void MainWindow::thread_bound_cocone()
                 return;
         }
 
-        double rho = m_bound_cocone_rho;
-        double alpha = m_bound_cocone_alpha;
+        double rho;
+        double alpha;
 
         QPointer ptr(this);
-        if (!dialog::bound_cocone_parameters(
-                    this, BOUND_COCONE_MINIMUM_RHO_EXPONENT, BOUND_COCONE_MINIMUM_ALPHA_EXPONENT, &rho, &alpha))
+        if (!dialog::bound_cocone_parameters(this, &rho, &alpha))
         {
                 return;
         }
@@ -914,9 +752,6 @@ void MainWindow::thread_bound_cocone()
         {
                 return;
         }
-
-        m_bound_cocone_rho = rho;
-        m_bound_cocone_alpha = alpha;
 
         WorkerThreads::Function f;
 
@@ -937,7 +772,7 @@ void MainWindow::thread_bound_cocone()
 
 void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation)
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::SelfTest;
 
@@ -1049,7 +884,7 @@ std::optional<WorkerThreads::Function> MainWindow::painter_function(
                 {
                         ProgressRatio progress(progress_list);
                         painter_mesh_object = std::make_shared<painter::MeshObject<N, T>>(
-                                mesh_object->mesh(), to_matrix<T>(mesh_object->matrix()), m_mesh_threads, &progress);
+                                mesh_object->mesh(), to_matrix<T>(mesh_object->matrix()), &progress);
                 }
 
                 if (!painter_mesh_object)
@@ -1060,7 +895,7 @@ std::optional<WorkerThreads::Function> MainWindow::painter_function(
 
                 std::string window_title = QMainWindow::windowTitle().toStdString() + " (" + mesh_object->name() + ")";
 
-                run_in_window_thread([=]() {
+                run_in_ui_thread([=]() {
                         std::unique_ptr<const painter::PaintObjects<N, T>> scene =
                                 process::create_painter_scene(painter_mesh_object, scene_info, scene_common_info);
 
@@ -1072,7 +907,7 @@ std::optional<WorkerThreads::Function> MainWindow::painter_function(
 
 void MainWindow::thread_painter()
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
 
@@ -1313,7 +1148,7 @@ void MainWindow::set_dependent_interface()
 
 void MainWindow::event_from_window(const WindowEvent& event)
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         const auto visitors = Visitors{
                 [this](const WindowEvent::MessageError& d) {
@@ -1331,7 +1166,7 @@ void MainWindow::event_from_window(const WindowEvent& event)
                         {
                                 return;
                         }
-                        close_without_confirmation();
+                        std::_Exit(EXIT_FAILURE);
                 },
                 [this](const WindowEvent::MessageInformation& d) {
                         add_to_text_edit_and_to_stderr(
@@ -1343,7 +1178,14 @@ void MainWindow::event_from_window(const WindowEvent& event)
                                 ui.text_log, format_log_message(d.text), TextEditMessageType::Warning);
                         dialog::message_warning(this, d.text);
                 },
-                [this](const WindowEvent::SetWindowTitle& d) { set_window_title(d.text); }};
+                [this](const WindowEvent::SetWindowTitle& d) {
+                        std::string title = settings::APPLICATION_NAME;
+                        if (!d.text.empty())
+                        {
+                                title += " - " + d.text;
+                        }
+                        this->setWindowTitle(title.c_str());
+                }};
 
         try
         {
@@ -1361,7 +1203,7 @@ void MainWindow::event_from_window(const WindowEvent& event)
 
 void MainWindow::event_from_log(const LogEvent& event)
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         const auto visitors = Visitors{[this](const LogEvent::Message& d) {
                 // Здесь без вызовов функции LOG, так как начнёт вызывать сама себя
@@ -1373,85 +1215,10 @@ void MainWindow::event_from_log(const LogEvent& event)
 
 void MainWindow::event_from_view(const view::Event& event)
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         const auto visitors = Visitors{
                 [this](const view::event::ErrorFatal& d) { m_window_events(WindowEvent::MessageErrorFatal(d.text)); }};
-
-        std::visit(visitors, event.data());
-}
-
-template <size_t N>
-void MainWindow::event_from_mesh(const mesh::MeshEvent<N>& event)
-{
-        if constexpr (N == 3)
-        {
-                const auto visitors = Visitors{
-                        [this](const typename mesh::MeshEvent<N>::Update& v) {
-                                ASSERT(m_view);
-                                m_view->send(view::command::UpdateMeshObject(v.object));
-                        },
-                        [this](const typename mesh::MeshEvent<N>::Delete& v) {
-                                ASSERT(m_view);
-                                m_view->send(view::command::DeleteObject(v.id));
-                        }};
-
-                std::visit(visitors, event.data());
-        }
-}
-
-template <size_t N>
-void MainWindow::event_from_mesh_window_thread(const mesh::MeshEvent<N>& event)
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        const auto visitors = Visitors{
-                [this](const typename mesh::MeshEvent<N>::Update& v) {
-                        if (v.object)
-                        {
-                                m_storage->set_mesh_object(v.object);
-                                ui.model_tree->add_item(v.object->id(), N, v.object->name());
-                        }
-                },
-                [this](const typename mesh::MeshEvent<N>::Delete& v) { ui.model_tree->delete_item(v.id); }};
-
-        std::visit(visitors, event.data());
-}
-
-template <size_t N>
-void MainWindow::event_from_volume(const volume::VolumeEvent<N>& event)
-{
-        if constexpr (N == 3)
-        {
-                const auto visitors = Visitors{
-                        [this](const typename volume::VolumeEvent<N>::Update& v) {
-                                ASSERT(m_view);
-                                m_view->send(view::command::UpdateVolumeObject(v.object));
-                        },
-                        [this](const typename volume::VolumeEvent<N>::Delete& v) {
-                                ASSERT(m_view);
-                                m_view->send(view::command::DeleteObject(v.id));
-                        }};
-
-                std::visit(visitors, event.data());
-        }
-}
-
-template <size_t N>
-void MainWindow::event_from_volume_window_thread(const volume::VolumeEvent<N>& event)
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        const auto visitors = Visitors{
-                [this](const typename volume::VolumeEvent<N>::Update& v) {
-                        if (v.object)
-                        {
-                                m_storage->set_volume_object(v.object);
-                                ui.model_tree->add_item(v.object->id(), N, v.object->name());
-                                update_volume_ui(v.object->id());
-                        }
-                },
-                [this](const typename volume::VolumeEvent<N>::Delete& v) { ui.model_tree->delete_item(v.id); }};
 
         std::visit(visitors, event.data());
 }
@@ -1497,7 +1264,7 @@ void MainWindow::slot_window_first_shown()
 
                 m_view = view::create_view(
                         [this](view::Event&& event) {
-                                run_in_window_thread([&, event = std::move(event)]() { event_from_view(event); });
+                                run_in_ui_thread([&, event = std::move(event)]() { event_from_view(event); });
                         },
                         widget_window_id(ui.graphics_widget), widget_pixels_per_inch(ui.graphics_widget),
                         {view::command::SetBackgroundColor(qcolor_to_rgb(m_background_color)),
@@ -1554,21 +1321,21 @@ void MainWindow::on_actionLoad_triggered()
         });
 }
 
-void MainWindow::slot_mesh_object_repository()
+void MainWindow::slot_mesh_object_repository(int dimension, std::string object_name)
 {
         catch_all([&](std::string* msg) {
                 *msg = "Load from mesh repository";
 
-                thread_load_from_mesh_repository();
+                thread_load_from_mesh_repository(dimension, object_name);
         });
 }
 
-void MainWindow::slot_volume_object_repository()
+void MainWindow::slot_volume_object_repository(int dimension, std::string object_name)
 {
         catch_all([&](std::string* msg) {
                 *msg = "Load from volume repository";
 
-                thread_load_from_volume_repository();
+                thread_load_from_volume_repository(dimension, object_name);
         });
 }
 
@@ -1688,7 +1455,7 @@ void MainWindow::graphics_widget_resize(QResizeEvent* e)
 
 void MainWindow::update_volume_ui(ObjectId id)
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         if (id != ui.model_tree->current_item())
         {
@@ -1718,7 +1485,7 @@ void MainWindow::update_volume_ui(ObjectId id)
 
 void MainWindow::model_tree_item_changed()
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         std::optional<ObjectId> id = ui.model_tree->current_item();
         if (!id)
@@ -1985,7 +1752,7 @@ void MainWindow::on_actionFullScreen_triggered()
 
 void MainWindow::on_slider_volume_levels_range_changed(double min, double max)
 {
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         std::optional<ObjectId> id = ui.model_tree->current_item();
         if (!id)

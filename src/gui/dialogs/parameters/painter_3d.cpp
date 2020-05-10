@@ -26,11 +26,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QPointer>
 
-// Это диалоговое окно предназначено только для 3 измерений
-constexpr int DIMENSION = 3;
-
+namespace dialog
+{
 namespace painter_parameters_for_3d_implementation
 {
+namespace
+{
+// Это диалоговое окно предназначено только для 3 измерений
+constexpr int DIMENSION = 3;
+}
+
 PainterParametersFor3d::PainterParametersFor3d(QWidget* parent) : QDialog(parent)
 {
         ui.setupUi(this);
@@ -191,8 +196,6 @@ void PainterParametersFor3d::height_value_changed(int)
 }
 }
 
-namespace dialog
-{
 bool painter_parameters_for_3d(
         QWidget* parent,
         int max_thread_count,

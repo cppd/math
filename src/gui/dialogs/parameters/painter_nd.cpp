@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QPointer>
 
+namespace dialog
+{
 namespace painter_parameters_for_nd_implementation
 {
 PainterParametersForNd::PainterParametersForNd(QWidget* parent) : QDialog(parent)
@@ -182,8 +184,6 @@ void PainterParametersForNd::done(int r)
 }
 }
 
-namespace dialog
-{
 bool painter_parameters_for_nd(
         QWidget* parent,
         int dimension,

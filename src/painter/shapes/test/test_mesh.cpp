@@ -249,7 +249,6 @@ void test_mesh(
         int point_high,
         int ray_low,
         int ray_high,
-        int thread_count,
         bool with_ray_log,
         bool with_error_log,
         ProgressRatio* progress)
@@ -265,7 +264,7 @@ void test_mesh(
                 ray_count = random_integer(random_engine, ray_low, ray_high);
         }
 
-        std::unique_ptr mesh = simplex_mesh_of_random_sphere<N, T>(point_count, thread_count, progress);
+        std::unique_ptr mesh = simplex_mesh_of_random_sphere<N, T>(point_count, progress);
 
         test_sphere_mesh(*mesh, ray_count, with_ray_log, with_error_log, progress);
 }
@@ -275,28 +274,26 @@ void test_mesh(int number_of_dimensions, ProgressRatio* progress)
 {
         ASSERT(progress);
 
-        int thread_count = hardware_concurrency();
-
         bool with_ray_log = false;
         bool with_error_log = false;
 
         switch (number_of_dimensions)
         {
         case 3:
-                test_mesh<3, float>(500, 1000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
-                test_mesh<3, double>(500, 1000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
+                test_mesh<3, float>(500, 1000, 90'000, 110'000, with_ray_log, with_error_log, progress);
+                test_mesh<3, double>(500, 1000, 90'000, 110'000, with_ray_log, with_error_log, progress);
                 break;
         case 4:
-                test_mesh<4, float>(500, 1000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
-                test_mesh<4, double>(500, 1000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
+                test_mesh<4, float>(500, 1000, 90'000, 110'000, with_ray_log, with_error_log, progress);
+                test_mesh<4, double>(500, 1000, 90'000, 110'000, with_ray_log, with_error_log, progress);
                 break;
         case 5:
-                test_mesh<5, float>(1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
-                test_mesh<5, double>(1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
+                test_mesh<5, float>(1000, 2000, 90'000, 110'000, with_ray_log, with_error_log, progress);
+                test_mesh<5, double>(1000, 2000, 90'000, 110'000, with_ray_log, with_error_log, progress);
                 break;
         case 6:
-                test_mesh<6, float>(1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
-                test_mesh<6, double>(1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
+                test_mesh<6, float>(1000, 2000, 90'000, 110'000, with_ray_log, with_error_log, progress);
+                test_mesh<6, double>(1000, 2000, 90'000, 110'000, with_ray_log, with_error_log, progress);
                 break;
         default:
                 error("Error mesh test number of dimensions " + to_string(number_of_dimensions));

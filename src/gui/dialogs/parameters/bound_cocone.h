@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_bound_cocone.h"
 
+namespace dialog
+{
 namespace bound_cocone_parameters_implementation
 {
 class BoundCoconeParameters final : public QDialog
@@ -45,12 +47,6 @@ private:
 };
 }
 
-namespace dialog
-{
-[[nodiscard]] bool bound_cocone_parameters(
-        QWidget* parent,
-        int minimum_rho_exponent,
-        int minimum_alpha_exponent,
-        double* rho,
-        double* alpha);
+[[nodiscard]] bool bound_cocone_parameters(QWidget* parent, double* rho, double* alpha);
+void bound_cocone_parameters_current(double* rho, double* alpha);
 }

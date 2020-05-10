@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QPointer>
 
+namespace dialog
+{
 namespace volume_object_parameters_implementation
 {
 VolumeObjectParameters::VolumeObjectParameters(QWidget* parent) : QDialog(parent)
@@ -98,8 +100,6 @@ void VolumeObjectParameters::done(int r)
 }
 }
 
-namespace dialog
-{
 bool volume_object_parameters(
         QWidget* parent,
         int dimension,

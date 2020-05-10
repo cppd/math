@@ -17,14 +17,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../mesh.h"
+#include <QObject>
+#include <functional>
 
-#include <src/progress/progress.h>
-
-#include <memory>
-
-namespace painter
+namespace thread_ui_impl
 {
-template <size_t N, typename T>
-std::unique_ptr<const MeshObject<N, T>> simplex_mesh_of_random_sphere(int point_count, ProgressRatio* progress);
+class ThreadUI final : public QObject
+{
+        Q_OBJECT
+
+        void run(const std::function<void()>& f) const;
+
+public:
+        ThreadUI();
+        ~ThreadUI();
+
+        ThreadUI(const ThreadUI&) = delete;
+        ThreadUI& operator=(const ThreadUI&) = delete;
+
+        static void run_in_ui_thread(const std::function<void()>& f);
+
+signals:
+        void object_signal(const std::function<void()>&) const;
+
+private slots:
+        void object_slot(const std::function<void()>&) const;
+};
 }

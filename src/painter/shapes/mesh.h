@@ -62,18 +62,10 @@ class MeshObject
 
         Vector<N, T> m_min, m_max;
 
-        void create(
-                const mesh::Mesh<N>& mesh,
-                const Matrix<N + 1, N + 1, T>& vertex_matrix,
-                unsigned thread_count,
-                ProgressRatio* progress);
+        void create(const mesh::Mesh<N>& mesh, const Matrix<N + 1, N + 1, T>& vertex_matrix, ProgressRatio* progress);
 
 public:
-        MeshObject(
-                const mesh::Mesh<N>& mesh,
-                const Matrix<N + 1, N + 1, T>& matrix,
-                unsigned thread_count,
-                ProgressRatio* progress);
+        MeshObject(const mesh::Mesh<N>& mesh, const Matrix<N + 1, N + 1, T>& matrix, ProgressRatio* progress);
 
         ~MeshObject() = default;
 

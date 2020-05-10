@@ -127,8 +127,8 @@ CornellBoxScene<T>::CornellBoxScene(
 
         mat4 vertex_matrix = model_matrix_for_size_and_position(*mesh, size, vec3(0));
 
-        std::shared_ptr spatial_mesh = std::make_shared<MeshObject<3, T>>(
-                *mesh, to_matrix<T>(vertex_matrix), hardware_concurrency(), &progress);
+        std::shared_ptr spatial_mesh =
+                std::make_shared<MeshObject<3, T>>(*mesh, to_matrix<T>(vertex_matrix), &progress);
 
         m_mesh = std::make_unique<VisibleSharedMesh<3, T>>(spatial_mesh);
 

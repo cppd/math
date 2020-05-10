@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
+namespace dialog
+{
 namespace volume_object_parameters_implementation
 {
 class VolumeObjectParameters final : public QDialog
@@ -49,8 +51,6 @@ private:
 };
 }
 
-namespace dialog
-{
 [[nodiscard]] bool volume_object_parameters(
         QWidget* parent,
         int dimension,
