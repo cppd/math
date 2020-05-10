@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter_window_2d.h"
 
+#include "../support/support.h"
+#include "../thread/thread_ui.h"
+
 #include <src/color/conversion.h>
 #include <src/com/alg.h>
 #include <src/com/error.h>
@@ -45,10 +48,10 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
 
         static constexpr size_t N_IMAGE = N - 1;
 
-        const std::unique_ptr<const painter::PaintObjects<N, T>> m_paint_objects;
+        const std::thread::id m_thread_id;
+        const std::shared_ptr<const painter::PaintObjects<N, T>> m_paint_objects;
         const GlobalIndex<N_IMAGE, long long> m_global_index;
         const int m_height;
-        const std::thread::id m_window_thread_id;
         long long m_slice_offset;
         std::vector<std::uint_least32_t> m_pixels_bgr;
         painter::VisibleBarPaintbrush<N_IMAGE> m_paintbrush;
@@ -191,15 +194,15 @@ public:
                 unsigned thread_count,
                 int samples_per_pixel,
                 bool smooth_normal,
-                std::unique_ptr<const painter::PaintObjects<N, T>>&& paint_objects)
+                const std::shared_ptr<const painter::PaintObjects<N, T>>& paint_objects)
                 : PainterWindow2d(
                         title,
                         array_to_vector(paint_objects->projector().screen_size()),
                         initial_slider_positions()),
-                  m_paint_objects(std::move(paint_objects)),
+                  m_thread_id(std::this_thread::get_id()),
+                  m_paint_objects(paint_objects),
                   m_global_index(m_paint_objects->projector().screen_size()),
                   m_height(m_paint_objects->projector().screen_size()[1]),
-                  m_window_thread_id(std::this_thread::get_id()),
                   m_slice_offset(slice_offset_for_slider_positions(initial_slider_positions())),
                   m_pixels_bgr(make_bgr_images(m_paint_objects->projector().screen_size())),
                   m_paintbrush(m_paint_objects->projector().screen_size(), PANTBRUSH_WIDTH, -1),
@@ -214,7 +217,7 @@ public:
 
         ~PainterWindow() override
         {
-                ASSERT(std::this_thread::get_id() == m_window_thread_id);
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_stop = true;
                 if (m_thread.joinable())
@@ -228,3 +231,18 @@ public:
         PainterWindow& operator=(const PainterWindow&) = delete;
         PainterWindow& operator=(PainterWindow&&) = delete;
 };
+
+template <size_t N, typename T>
+void create_painter_window(
+        const std::string& title,
+        unsigned thread_count,
+        int samples_per_pixel,
+        bool smooth_normal,
+        std::unique_ptr<const painter::PaintObjects<N, T>>&& paint_objects)
+{
+        std::shared_ptr<const painter::PaintObjects<N, T>> objects = std::move(paint_objects);
+        run_in_ui_thread([=]() {
+                create_and_show_delete_on_close_window<PainterWindow<N, T>>(
+                        title, thread_count, samples_per_pixel, smooth_normal, objects);
+        });
+}

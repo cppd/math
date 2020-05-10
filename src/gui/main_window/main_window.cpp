@@ -895,13 +895,10 @@ std::optional<WorkerThreads::Function> MainWindow::painter_function(
 
                 std::string window_title = QMainWindow::windowTitle().toStdString() + " (" + mesh_object->name() + ")";
 
-                run_in_ui_thread([=]() {
-                        std::unique_ptr<const painter::PaintObjects<N, T>> scene =
-                                process::create_painter_scene(painter_mesh_object, scene_info, scene_common_info);
+                std::unique_ptr<const painter::PaintObjects<N, T>> scene =
+                        process::create_painter_scene(painter_mesh_object, scene_info, scene_common_info);
 
-                        create_and_show_delete_on_close_window<PainterWindow<N, T>>(
-                                window_title, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
-                });
+                create_painter_window(window_title, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
         };
 }
 
