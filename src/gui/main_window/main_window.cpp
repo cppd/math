@@ -91,6 +91,7 @@ MainWindow::MainWindow(QWidget* parent)
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
         static_assert(std::is_same_v<decltype(ui.model_tree), ModelTree*>);
+        static_assert(std::is_same_v<decltype(ui.slider_volume_levels), RangeSlider*>);
 
         ui.setupUi(this);
 
@@ -504,35 +505,38 @@ void MainWindow::slot_window_first_shown()
 
                 //
 
+                std::vector<view::Command> view_initial_commands{
+                        view::command::SetBackgroundColor(qcolor_to_rgb(m_background_color)),
+                        view::command::SetDefaultColor(qcolor_to_rgb(m_default_color)),
+                        view::command::SetWireframeColor(qcolor_to_rgb(m_wireframe_color)),
+                        view::command::SetClipPlaneColor(qcolor_to_rgb(m_clip_plane_color)),
+                        view::command::SetNormalLength(normal_length()),
+                        view::command::SetNormalColorPositive(qcolor_to_rgb(m_normal_color_positive)),
+                        view::command::SetNormalColorNegative(qcolor_to_rgb(m_normal_color_negative)),
+                        view::command::ShowSmooth(ui.checkBox_smooth->isChecked()),
+                        view::command::ShowWireframe(ui.checkBox_wireframe->isChecked()),
+                        view::command::ShowShadow(ui.checkBox_shadow->isChecked()),
+                        view::command::ShowFog(ui.checkBox_fog->isChecked()),
+                        view::command::ShowMaterials(ui.checkBox_materials->isChecked()),
+                        view::command::ShowFps(ui.checkBox_fps->isChecked()),
+                        view::command::ShowPencilSketch(ui.checkBox_pencil_sketch->isChecked()),
+                        view::command::ShowDft(ui.checkBox_dft->isChecked()),
+                        view::command::ShowConvexHull2D(ui.checkBox_convex_hull_2d->isChecked()),
+                        view::command::ShowOpticalFlow(ui.checkBox_optical_flow->isChecked()),
+                        view::command::ShowNormals(ui.checkBox_normals->isChecked()),
+                        view::command::SetAmbient(ambient_light()),
+                        view::command::SetDiffuse(diffuse_light()),
+                        view::command::SetSpecular(specular_light()),
+                        view::command::SetDftBrightness(dft_brightness()),
+                        view::command::SetDftBackgroundColor(qcolor_to_rgb(m_dft_background_color)),
+                        view::command::SetDftColor(qcolor_to_rgb(m_dft_color)),
+                        view::command::SetDefaultNs(default_ns()),
+                        view::command::SetVerticalSync(ui.checkBox_vertical_sync->isChecked()),
+                        view::command::SetShadowZoom(shadow_zoom())};
+
                 m_view = view::create_view(
                         widget_window_id(ui.graphics_widget), widget_pixels_per_inch(ui.graphics_widget),
-                        {view::command::SetBackgroundColor(qcolor_to_rgb(m_background_color)),
-                         view::command::SetDefaultColor(qcolor_to_rgb(m_default_color)),
-                         view::command::SetWireframeColor(qcolor_to_rgb(m_wireframe_color)),
-                         view::command::SetClipPlaneColor(qcolor_to_rgb(m_clip_plane_color)),
-                         view::command::SetNormalLength(normal_length()),
-                         view::command::SetNormalColorPositive(qcolor_to_rgb(m_normal_color_positive)),
-                         view::command::SetNormalColorNegative(qcolor_to_rgb(m_normal_color_negative)),
-                         view::command::ShowSmooth(ui.checkBox_smooth->isChecked()),
-                         view::command::ShowWireframe(ui.checkBox_wireframe->isChecked()),
-                         view::command::ShowShadow(ui.checkBox_shadow->isChecked()),
-                         view::command::ShowFog(ui.checkBox_fog->isChecked()),
-                         view::command::ShowMaterials(ui.checkBox_materials->isChecked()),
-                         view::command::ShowFps(ui.checkBox_fps->isChecked()),
-                         view::command::ShowPencilSketch(ui.checkBox_pencil_sketch->isChecked()),
-                         view::command::ShowDft(ui.checkBox_dft->isChecked()),
-                         view::command::ShowConvexHull2D(ui.checkBox_convex_hull_2d->isChecked()),
-                         view::command::ShowOpticalFlow(ui.checkBox_optical_flow->isChecked()),
-                         view::command::ShowNormals(ui.checkBox_normals->isChecked()),
-                         view::command::SetAmbient(ambient_light()),
-                         view::command::SetDiffuse(diffuse_light()),
-                         view::command::SetSpecular(specular_light()),
-                         view::command::SetDftBrightness(dft_brightness()),
-                         view::command::SetDftBackgroundColor(qcolor_to_rgb(m_dft_background_color)),
-                         view::command::SetDftColor(qcolor_to_rgb(m_dft_color)),
-                         view::command::SetDefaultNs(default_ns()),
-                         view::command::SetVerticalSync(ui.checkBox_vertical_sync->isChecked()),
-                         view::command::SetShadowZoom(shadow_zoom())});
+                        std::move(view_initial_commands));
 
                 view::info::ObjectSize view_object_size;
                 view::info::ObjectPosition view_object_position;
