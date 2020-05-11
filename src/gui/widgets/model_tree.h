@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <unordered_map>
 
+namespace gui
+{
 class ModelTree final : public QWidget
 {
         Q_OBJECT
@@ -48,3 +50,4 @@ private:
         std::unordered_map<ObjectId, QTreeWidgetItem*> m_map_id_item;
         Ui::ModelTree ui;
 };
+}

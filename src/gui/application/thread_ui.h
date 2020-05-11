@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QObject>
 #include <functional>
 
-namespace application
+namespace gui::application
 {
 class ThreadUI final : public QObject
 {

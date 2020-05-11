@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
+namespace gui
+{
 ModelTree::ModelTree(QWidget* parent) : QWidget(parent)
 {
         ui.setupUi(this);
@@ -102,4 +104,5 @@ void ModelTree::set_current(ObjectId id)
 void ModelTree::current_item_changed(QTreeWidgetItem* /*current*/, QTreeWidgetItem* /*previous*/)
 {
         emit item_changed();
+}
 }

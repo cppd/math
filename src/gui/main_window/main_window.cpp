@@ -46,6 +46,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QPointer>
 #include <QSignalBlocker>
 
+namespace gui
+{
+namespace
+{
 // Размер окна по сравнению с экраном.
 constexpr double WINDOW_SIZE_COEF = 0.7;
 // Если true, то размер для графики, если false, то размер всего окна.
@@ -80,6 +84,7 @@ constexpr float NORMAL_LENGTH_DEFAULT = 0.05;
 constexpr float NORMAL_LENGTH_MAXIMUM = 0.2;
 constexpr QRgb NORMAL_COLOR_POSITIVE = qRgb(200, 200, 0);
 constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(50, 150, 50);
+}
 
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent), m_thread_id(std::this_thread::get_id()), m_first_show(true)
@@ -1156,4 +1161,5 @@ std::optional<storage::MeshObjectConst> MainWindow::current_mesh_object_const() 
         }
 
         return object;
+}
 }

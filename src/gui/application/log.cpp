@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/variant.h>
 
-namespace application
+namespace gui::application
 {
 Log::Log(std::function<void(const std::vector<std::string>&, LogMessageType)> window_log)
 {

@@ -37,17 +37,17 @@ std::function<void(ProgressRatioList*)> action_export_function(
         std::string caption = "Export " + name + " to file";
         bool read_only = true;
 
-        std::vector<dialog::FileFilter> filters;
+        std::vector<gui::dialog::FileFilter> filters;
         for (const mesh::FileFormat& v : mesh::save_formats(N))
         {
-                dialog::FileFilter& filter = filters.emplace_back();
+                gui::dialog::FileFilter& filter = filters.emplace_back();
                 filter.name = v.format_name;
                 filter.file_extensions = v.file_name_extensions;
         }
 
         std::string file_name;
 
-        if (!dialog::save_file(caption, filters, read_only, &file_name))
+        if (!gui::dialog::save_file(caption, filters, read_only, &file_name))
         {
                 return nullptr;
         }

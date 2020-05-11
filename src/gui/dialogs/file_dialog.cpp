@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QFileDialog>
 #include <map>
 
-namespace dialog
+namespace gui::dialog
 {
 namespace
 {

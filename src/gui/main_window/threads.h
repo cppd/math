@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <list>
 #include <memory>
 
+namespace gui
+{
 struct WorkerThreads
 {
         enum class Action
@@ -54,3 +56,4 @@ struct WorkerThreads
 };
 
 std::unique_ptr<WorkerThreads> create_worker_threads();
+}

@@ -88,7 +88,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                 scene_info.object_position = to_vector<T>(object_position);
                 scene_info.object_size = object_size;
 
-                if (!dialog::painter_parameters_for_3d(
+                if (!gui::dialog::painter_parameters_for_3d(
                             hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
                             default_samples, max_samples, &thread_count, &scene_info.width, &scene_info.height,
                             &samples_per_pixel, &flat_facets, &scene_info.cornell_box))
@@ -98,7 +98,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         }
         else
         {
-                if (!dialog::painter_parameters_for_nd(
+                if (!gui::dialog::painter_parameters_for_nd(
                             N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND, PAINTER_MINIMUM_SCREEN_SIZE_ND,
                             PAINTER_MAXIMUM_SCREEN_SIZE_ND, default_samples, max_samples, &thread_count,
                             &scene_info.min_screen_size, &scene_info.max_screen_size, &samples_per_pixel, &flat_facets))
@@ -126,7 +126,8 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                 std::unique_ptr<const painter::PaintObjects<N, T>> scene =
                         create_painter_scene(painter_mesh_object, scene_info, scene_common_info);
 
-                create_painter_window(window_title, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
+                gui::create_painter_window(
+                        window_title, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
         };
 }
 }

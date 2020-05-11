@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
                 {
                         Initialization init;
 
-                        return run_application(argc, argv);
+                        return gui::run_application(argc, argv);
                 }
                 catch (const std::exception& e)
                 {

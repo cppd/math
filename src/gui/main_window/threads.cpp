@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <unordered_map>
 
+namespace gui
+{
 namespace
 {
 class ThreadData
@@ -232,4 +234,5 @@ public:
 std::unique_ptr<WorkerThreads> create_worker_threads()
 {
         return std::make_unique<Impl>();
+}
 }

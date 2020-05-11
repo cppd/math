@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/variant.h>
 
+namespace gui
+{
 ModelEvents::ModelEvents(
         ModelTree* model_tree,
         storage::Storage* storage,
@@ -137,4 +139,5 @@ void ModelEvents::event_from_volume_ui_thread(const volume::VolumeEvent<N>& even
                 [this](const typename volume::VolumeEvent<N>::Delete& v) { m_model_tree->delete_item(v.id); }};
 
         std::visit(visitors, event.data());
+}
 }

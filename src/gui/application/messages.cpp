@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/variant.h>
 
-namespace application
+namespace gui::application
 {
 namespace
 {

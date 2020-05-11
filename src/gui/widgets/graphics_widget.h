@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QWheelEvent>
 #include <QWidget>
 
+namespace gui
+{
 class GraphicsWidget : public QWidget
 {
         Q_OBJECT
@@ -65,3 +67,4 @@ protected:
                 emit resize(e);
         }
 };
+}

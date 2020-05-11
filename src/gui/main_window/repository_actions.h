@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <unordered_map>
 
+namespace gui
+{
 class RepositoryActions final : public QObject
 {
         Q_OBJECT
@@ -46,3 +48,4 @@ private:
         };
         std::unordered_map<QObject*, RepositoryActionDescription> m_repository_actions;
 };
+}

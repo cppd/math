@@ -72,42 +72,42 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
                 std::string caption = "Open";
                 bool read_only = true;
 
-                std::vector<dialog::FileFilter> filters;
+                std::vector<gui::dialog::FileFilter> filters;
                 for (const mesh::FileFormat& v : mesh::load_formats(settings::supported_dimensions()))
                 {
-                        dialog::FileFilter& f = filters.emplace_back();
+                        gui::dialog::FileFilter& f = filters.emplace_back();
                         f.name = v.format_name;
                         f.file_extensions = v.file_name_extensions;
                 }
 
-                if (!dialog::open_file(caption, filters, read_only, &file_name))
+                if (!gui::dialog::open_file(caption, filters, read_only, &file_name))
                 {
                         return nullptr;
                 }
         }
 
-        std::unordered_set<dialog::ComputationType> objects_to_load;
+        std::unordered_set<gui::dialog::ComputationType> objects_to_load;
 
         if (use_object_selection_dialog)
         {
-                if (!dialog::object_selection(&objects_to_load))
+                if (!gui::dialog::object_selection(&objects_to_load))
                 {
                         return nullptr;
                 }
         }
         else
         {
-                objects_to_load = dialog::object_selection_current();
+                objects_to_load = gui::dialog::object_selection_current();
         }
 
         double rho;
         double alpha;
-        dialog::bound_cocone_parameters_current(&rho, &alpha);
+        gui::dialog::bound_cocone_parameters_current(&rho, &alpha);
 
-        bool bound_cocone = objects_to_load.count(dialog::ComputationType::BoundCocone);
-        bool cocone = objects_to_load.count(dialog::ComputationType::Cocone);
-        bool convex_hull = objects_to_load.count(dialog::ComputationType::ConvexHull);
-        bool mst = objects_to_load.count(dialog::ComputationType::Mst);
+        bool bound_cocone = objects_to_load.count(gui::dialog::ComputationType::BoundCocone);
+        bool cocone = objects_to_load.count(gui::dialog::ComputationType::Cocone);
+        bool convex_hull = objects_to_load.count(gui::dialog::ComputationType::ConvexHull);
+        bool mst = objects_to_load.count(gui::dialog::ComputationType::Mst);
 
         return [=](ProgressRatioList* progress_list) {
                 unsigned dimension = mesh::file_dimension(file_name);
@@ -140,28 +140,28 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
 
         int point_count;
 
-        if (!dialog::point_object_parameters(
+        if (!gui::dialog::point_object_parameters(
                     dimension, object_name, POINT_COUNT_DEFAULT, POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM,
                     &point_count))
         {
                 return nullptr;
         }
 
-        std::unordered_set<dialog::ComputationType> objects_to_load;
+        std::unordered_set<gui::dialog::ComputationType> objects_to_load;
 
-        if (!dialog::object_selection(&objects_to_load))
+        if (!gui::dialog::object_selection(&objects_to_load))
         {
                 return nullptr;
         }
 
         double rho;
         double alpha;
-        dialog::bound_cocone_parameters_current(&rho, &alpha);
+        gui::dialog::bound_cocone_parameters_current(&rho, &alpha);
 
-        bool bound_cocone = objects_to_load.count(dialog::ComputationType::BoundCocone);
-        bool cocone = objects_to_load.count(dialog::ComputationType::Cocone);
-        bool convex_hull = objects_to_load.count(dialog::ComputationType::ConvexHull);
-        bool mst = objects_to_load.count(dialog::ComputationType::Mst);
+        bool bound_cocone = objects_to_load.count(gui::dialog::ComputationType::BoundCocone);
+        bool cocone = objects_to_load.count(gui::dialog::ComputationType::Cocone);
+        bool convex_hull = objects_to_load.count(gui::dialog::ComputationType::ConvexHull);
+        bool mst = objects_to_load.count(gui::dialog::ComputationType::Mst);
 
         return [=](ProgressRatioList* progress_list) {
                 clear_all();
@@ -191,7 +191,7 @@ std::function<void(ProgressRatioList*)> action_load_from_volume_repository(
 
         int image_size;
 
-        if (!dialog::volume_object_parameters(
+        if (!gui::dialog::volume_object_parameters(
                     dimension, object_name, VOLUME_IMAGE_SIZE_DEFAULT, VOLUME_IMAGE_SIZE_MINIMUM,
                     VOLUME_IMAGE_SIZE_MAXIMUM, &image_size))
         {

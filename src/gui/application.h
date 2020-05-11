@@ -17,4 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+namespace gui
+{
 int run_application(int argc, char* argv[]);
+}

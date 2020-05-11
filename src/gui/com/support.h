@@ -36,6 +36,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <vector>
 
+namespace gui
+{
 template <typename Window, typename... Args>
 void create_and_show_delete_on_close_window(Args&&... args)
 {
@@ -95,3 +97,4 @@ void resize_window_widget(QMainWindow* window, QWidget* widget, const QSize& wid
 
 double slider_position(const QSlider* slider);
 void set_slider_position(QSlider* slider, double v);
+}

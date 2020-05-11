@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace dialog
+namespace gui::dialog
 {
 namespace painter_parameters_for_nd_implementation
 {

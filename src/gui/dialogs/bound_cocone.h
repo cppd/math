@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_bound_cocone.h"
 
-namespace dialog
+namespace gui::dialog
 {
 namespace bound_cocone_parameters_implementation
 {

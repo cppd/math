@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <utility>
 
+namespace gui
+{
 namespace
 {
 bool is_child_widget_of_any_layout(QLayout* layout, QWidget* widget)
@@ -303,4 +305,5 @@ void set_slider_position(QSlider* slider, double v)
         double max = slider->maximum();
         ASSERT(max > min);
         slider->setValue(std::lround(std::lerp(min, max, std::clamp(v, 0.0, 1.0))));
+}
 }

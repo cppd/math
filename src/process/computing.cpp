@@ -28,7 +28,7 @@ std::function<void(ProgressRatioList*)> action_bound_cocone(const storage::MeshO
         double rho;
         double alpha;
 
-        if (!dialog::bound_cocone_parameters(&rho, &alpha))
+        if (!gui::dialog::bound_cocone_parameters(&rho, &alpha))
         {
                 return nullptr;
         }

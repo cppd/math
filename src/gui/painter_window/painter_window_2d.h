@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <vector>
 
+namespace gui
+{
 namespace painter_window_implementation
 {
 class PainterWindow2d : public QWidget
@@ -90,4 +92,5 @@ private:
 
         Ui::PainterWindow ui;
 };
+}
 }

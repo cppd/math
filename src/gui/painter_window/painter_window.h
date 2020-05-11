@@ -37,6 +37,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <vector>
 
+namespace gui
+{
 namespace painter_window_implementation
 {
 template <size_t N, typename T>
@@ -249,4 +251,5 @@ void create_painter_window(
                 create_and_show_delete_on_close_window<impl::PainterWindow<N, T>>(
                         title, thread_count, samples_per_pixel, smooth_normal, objects);
         });
+}
 }

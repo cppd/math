@@ -23,10 +23,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <limits>
 #include <numeric>
 
+namespace gui
+{
+namespace
+{
 constexpr int MIN = 0;
 constexpr int MAX = 500;
 
 static_assert(MIN >= 0 && MIN < MAX);
+}
 
 RangeSlider::RangeSlider(QWidget* parent) : QWidget(parent)
 {
@@ -124,4 +129,5 @@ void RangeSlider::range_changed()
                 m_last_max = max;
                 emit range_changed(min, max);
         }
+}
 }

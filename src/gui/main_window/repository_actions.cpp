@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/names.h>
 
+namespace gui
+{
 RepositoryActions::RepositoryActions(QMenu* menu, const storage::Repository& repository)
 {
         std::vector<storage::Repository::ObjectNames> repository_objects = repository.object_names();
@@ -99,4 +101,5 @@ void RepositoryActions::slot_volume()
         std::string object_name = iter->second.object_name;
 
         emit volume(dimension, object_name);
+}
 }

@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <tuple>
 
+namespace gui
+{
 class ModelEvents final
 {
         const std::thread::id m_thread_id;
@@ -66,3 +68,4 @@ public:
         ModelEvents(const ModelEvents&) = delete;
         ModelEvents& operator=(const ModelEvents&) = delete;
 };
+}

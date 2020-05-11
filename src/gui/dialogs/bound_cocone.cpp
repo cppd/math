@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QPointer>
 #include <cmath>
 
-namespace dialog
+namespace gui::dialog
 {
 namespace bound_cocone_parameters_implementation
 {

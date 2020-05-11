@@ -27,6 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+namespace gui
+{
 namespace
 {
 class Application final : public QApplication
@@ -86,4 +88,5 @@ int run_application(int argc, char* argv[])
         int r = Application::exec();
 
         return r;
+}
 }

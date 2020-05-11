@@ -19,4 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <functional>
 
+namespace gui
+{
 void run_in_ui_thread(const std::function<void()>& f);
+}

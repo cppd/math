@@ -33,6 +33,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstring>
 
+namespace gui
+{
 namespace painter_window_implementation
 {
 namespace
@@ -332,5 +334,6 @@ void PainterWindow2d::slider_changed_slot(int)
                 }
         }
         error_fatal("Failed to find sender in sliders");
+}
 }
 }

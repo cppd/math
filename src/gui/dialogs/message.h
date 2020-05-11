@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QWidget>
 #include <string>
 
-namespace dialog
+namespace gui::dialog
 {
 void message_critical(const std::string& message, bool with_parent = true);
 void message_information(const std::string& message);

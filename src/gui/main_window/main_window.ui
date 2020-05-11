@@ -37,7 +37,7 @@
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
-           <widget class="ModelTree" name="model_tree" native="true"/>
+           <widget class="gui::ModelTree" name="model_tree" native="true"/>
           </item>
          </layout>
         </widget>
@@ -314,7 +314,7 @@
            </widget>
           </item>
           <item>
-           <widget class="RangeSlider" name="slider_volume_levels" native="true">
+           <widget class="gui::RangeSlider" name="slider_volume_levels" native="true">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -1257,7 +1257,7 @@
          </layout>
         </widget>
        </widget>
-       <widget class="GraphicsWidget" name="graphics_widget" native="true">
+       <widget class="gui::GraphicsWidget" name="graphics_widget" native="true">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>1</horstretch>
@@ -1398,19 +1398,19 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>GraphicsWidget</class>
+   <class>gui::GraphicsWidget</class>
    <extends>QWidget</extends>
    <header>src/gui/widgets/graphics_widget.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>ModelTree</class>
+   <class>gui::ModelTree</class>
    <extends>QWidget</extends>
    <header>src/gui/widgets/model_tree.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>RangeSlider</class>
+   <class>gui::RangeSlider</class>
    <extends>QWidget</extends>
    <header>src/gui/widgets/range_slider.h</header>
    <container>1</container>

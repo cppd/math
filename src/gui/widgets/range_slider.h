@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_range_slider.h"
 
+namespace gui
+{
 class RangeSlider final : public QWidget
 {
         Q_OBJECT
@@ -48,3 +50,4 @@ private:
 
         Ui::RangeSlider ui;
 };
+}

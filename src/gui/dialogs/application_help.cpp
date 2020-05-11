@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMessageBox>
 #include <string>
 
-namespace dialog
+namespace gui::dialog
 {
 namespace
 {

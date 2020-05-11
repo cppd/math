@@ -21,10 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QCommandLineParser>
 
-constexpr const char* NO_OBJECT_SELECTION_OPTION = "n";
-
+namespace gui
+{
 namespace
 {
+constexpr const char* NO_OBJECT_SELECTION_OPTION = "n";
+
 std::string command_line_description_string()
 {
         std::string s;
@@ -103,4 +105,5 @@ CommandLineOptions command_line_options()
         }
 
         return options;
+}
 }

@@ -37,6 +37,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <vector>
 
+namespace gui
+{
 class MainWindow final : public QMainWindow
 {
         Q_OBJECT
@@ -186,3 +188,4 @@ private:
         double m_view_object_size;
         vec3 m_view_object_position;
 };
+}
