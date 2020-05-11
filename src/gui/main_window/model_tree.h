@@ -17,27 +17,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "ui_model_tree.h"
-
 #include <src/model/object_id.h>
 
+#include <QTreeWidget>
 #include <optional>
 #include <unordered_map>
 
 namespace gui
 {
-class ModelTree final : public QWidget
+class ModelTree final : public QObject
 {
         Q_OBJECT
 
 public:
-        explicit ModelTree(QWidget* parent = nullptr);
+        explicit ModelTree(QTreeWidget* tree);
+        ~ModelTree();
 
         void add_item(ObjectId id, unsigned dimension, const std::string& name);
         void delete_item(ObjectId id);
-        void delete_all();
         std::optional<ObjectId> current_item() const;
         void set_current(ObjectId id);
+        void clear_all();
 
 signals:
         void item_changed();
@@ -48,6 +48,6 @@ private slots:
 private:
         std::unordered_map<QTreeWidgetItem*, ObjectId> m_map_item_id;
         std::unordered_map<ObjectId, QTreeWidgetItem*> m_map_id_item;
-        Ui::ModelTree ui;
+        QTreeWidget* m_tree;
 };
 }

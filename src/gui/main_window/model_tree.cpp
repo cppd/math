@@ -23,12 +23,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui
 {
-ModelTree::ModelTree(QWidget* parent) : QWidget(parent)
+ModelTree::ModelTree(QTreeWidget* tree) : m_tree(tree)
 {
-        ui.setupUi(this);
+        ASSERT(m_tree);
 
-        connect(ui.tree_widget, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)), this,
+        connect(m_tree, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)), this,
                 SLOT(current_item_changed(QTreeWidgetItem*, QTreeWidgetItem*)));
+}
+
+ModelTree::~ModelTree()
+{
+        clear_all();
+}
+
+void ModelTree::clear_all()
+{
+        QSignalBlocker blocker(m_tree);
+        m_tree->clear();
+        m_map_item_id.clear();
+        m_map_id_item.clear();
 }
 
 void ModelTree::add_item(ObjectId id, unsigned dimension, const std::string& name)
@@ -43,7 +56,7 @@ void ModelTree::add_item(ObjectId id, unsigned dimension, const std::string& nam
         item->setText(0, s);
         item->setToolTip(0, s);
         QTreeWidgetItem* ptr = item.get();
-        ui.tree_widget->addTopLevelItem(item.release());
+        m_tree->addTopLevelItem(item.release());
         m_map_item_id[ptr] = id;
         m_map_id_item[id] = ptr;
 }
@@ -55,35 +68,19 @@ void ModelTree::delete_item(ObjectId id)
         {
                 return;
         }
-        int index = ui.tree_widget->indexOfTopLevelItem(iter->second);
+        int index = m_tree->indexOfTopLevelItem(iter->second);
         ASSERT(index >= 0);
         if (index >= 0)
         {
-                delete ui.tree_widget->takeTopLevelItem(index);
+                delete m_tree->takeTopLevelItem(index);
         }
         m_map_id_item.erase(iter->first);
         m_map_item_id.erase(iter->second);
 }
 
-void ModelTree::delete_all()
-{
-        for (const auto& [id, item] : m_map_id_item)
-        {
-                int index = ui.tree_widget->indexOfTopLevelItem(item);
-                ASSERT(index >= 0);
-                if (index >= 0)
-                {
-                        delete ui.tree_widget->takeTopLevelItem(index);
-                }
-        }
-        ASSERT(ui.tree_widget->topLevelItemCount() == 0);
-        m_map_item_id.clear();
-        m_map_id_item.clear();
-}
-
 std::optional<ObjectId> ModelTree::current_item() const
 {
-        auto iter = m_map_item_id.find(ui.tree_widget->currentItem());
+        auto iter = m_map_item_id.find(m_tree->currentItem());
         if (iter != m_map_item_id.cend())
         {
                 return iter->second;
@@ -98,7 +95,7 @@ void ModelTree::set_current(ObjectId id)
         {
                 return;
         }
-        ui.tree_widget->setCurrentItem(iter->second);
+        m_tree->setCurrentItem(iter->second);
 }
 
 void ModelTree::current_item_changed(QTreeWidgetItem* /*current*/, QTreeWidgetItem* /*previous*/)

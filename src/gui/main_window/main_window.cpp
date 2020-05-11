@@ -90,7 +90,6 @@ MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent), m_thread_id(std::this_thread::get_id()), m_first_show(true)
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
-        static_assert(std::is_same_v<decltype(ui.model_tree), ModelTree*>);
         static_assert(std::is_same_v<decltype(ui.slider_volume_levels), RangeSlider*>);
 
         ui.setupUi(this);
@@ -119,8 +118,6 @@ void MainWindow::constructor_connect()
         connect(ui.graphics_widget, SIGNAL(mouse_release(QMouseEvent*)), this,
                 SLOT(graphics_widget_mouse_release(QMouseEvent*)));
         connect(ui.graphics_widget, SIGNAL(resize(QResizeEvent*)), this, SLOT(graphics_widget_resize(QResizeEvent*)));
-
-        connect(ui.model_tree, SIGNAL(item_changed()), this, SLOT(model_tree_item_changed()));
 
         connect(&m_timer_progress_bar, SIGNAL(timeout()), this, SLOT(slot_timer_progress_bar()));
 }
@@ -199,8 +196,11 @@ void MainWindow::constructor_objects()
 
         m_storage = std::make_unique<storage::Storage>();
 
+        m_model_tree = std::make_unique<ModelTree>(ui.model_tree);
+        connect(m_model_tree.get(), SIGNAL(item_changed()), this, SLOT(model_tree_item_changed()));
+
         m_mesh_and_volume_events = std::make_unique<ModelEvents>(
-                ui.model_tree, m_storage.get(), &m_view, [this](ObjectId id) { update_volume_ui(id); });
+                m_model_tree.get(), m_storage.get(), &m_view, [this](ObjectId id) { update_volume_ui(id); });
 }
 
 MainWindow::~MainWindow()
@@ -241,14 +241,11 @@ void MainWindow::terminate_all_threads()
 
         m_worker_threads->terminate_all();
 
-        {
-                // При удалении объектов при удалении m_storage будут вызываться
-                // удаления их вершин из дерева, а это означает переключение вершин
-                // и поиск их объектов в m_storage, который в это время удаляется.
-                // Поэтому перед удалением m_storage нужно удалить всё из дерева.
-                QSignalBlocker blocker(ui.model_tree);
-                ui.model_tree->delete_all();
-        }
+        // При удалении объектов при удалении m_storage будут вызываться
+        // удаления их вершин из дерева, а это означает переключение вершин
+        // и поиск их объектов в m_storage, который в это время удаляется.
+        // Поэтому перед удалением m_storage нужно удалить всё из дерева.
+        m_model_tree->clear_all();
 
         m_storage.reset();
         m_view.reset();
@@ -799,7 +796,7 @@ void MainWindow::update_volume_ui(ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        if (id != ui.model_tree->current_item())
+        if (id != m_model_tree->current_item())
         {
                 return;
         }
@@ -829,7 +826,7 @@ void MainWindow::model_tree_item_changed()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        std::optional<ObjectId> id = ui.model_tree->current_item();
+        std::optional<ObjectId> id = m_model_tree->current_item();
         if (!id)
         {
                 return;
@@ -1131,7 +1128,7 @@ void MainWindow::on_slider_volume_levels_range_changed(double min, double max)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        std::optional<ObjectId> id = ui.model_tree->current_item();
+        std::optional<ObjectId> id = m_model_tree->current_item();
         if (!id)
         {
                 return;
@@ -1152,7 +1149,7 @@ void MainWindow::on_slider_volume_levels_range_changed(double min, double max)
 
 std::optional<storage::MeshObjectConst> MainWindow::current_mesh_object_const() const
 {
-        std::optional<ObjectId> id = ui.model_tree->current_item();
+        std::optional<ObjectId> id = m_model_tree->current_item();
         if (!id)
         {
                 return std::nullopt;

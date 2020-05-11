@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "model_events.h"
+#include "model_tree.h"
 #include "repository_actions.h"
 #include "threads.h"
 
@@ -170,6 +171,7 @@ private:
         std::unique_ptr<storage::Repository> m_repository;
         std::unique_ptr<RepositoryActions> m_repository_actions;
         std::unique_ptr<storage::Storage> m_storage;
+        std::unique_ptr<ModelTree> m_model_tree;
         std::unique_ptr<ModelEvents> m_mesh_and_volume_events;
 
         QColor m_background_color;
