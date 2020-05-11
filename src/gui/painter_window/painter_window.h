@@ -187,7 +187,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
 
         void painter_error_message(const std::string& msg) override
         {
-                PainterWindow2d::error_message(msg);
+                MESSAGE_ERROR(msg);
         }
 
 public:

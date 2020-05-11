@@ -17,8 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "application.h"
 
+#include "application/log.h"
 #include "application/messages.h"
 #include "application/thread_ui.h"
+#include "com/command_line.h"
 #include "com/support.h"
 #include "dialogs/message.h"
 #include "main_window/main_window.h"
@@ -67,12 +69,19 @@ public:
 
 int run_application(int argc, char* argv[])
 {
+        LOG(command_line_description());
+
         Application a(argc, argv);
 
         application::ThreadUI thread_ui;
         application::Messages messages;
 
-        create_and_show_delete_on_close_window<MainWindow>();
+        MainWindow* w = create_delete_on_close_window<MainWindow>();
+
+        application::Log log(
+                [&](const std::vector<std::string>& lines, LogMessageType type) { w->insert_to_log(lines, type); });
+
+        w->show();
 
         int r = Application::exec();
 

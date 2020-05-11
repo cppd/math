@@ -35,13 +35,9 @@ class PainterWindow2d : public QWidget
 {
         Q_OBJECT
 
-signals:
-        void error_message_signal(const QString&) const;
-
 private slots:
         void timer_slot();
         void first_shown();
-        void error_message_slot(const QString&);
         void slider_changed_slot(int);
 
         void on_pushButton_save_to_file_clicked();
@@ -53,18 +49,12 @@ public:
                 const std::vector<int>& initial_slider_positions);
         ~PainterWindow2d() override;
 
-protected:
-        void error_message(const std::string& msg) const noexcept;
-
 private:
         struct DimensionSlider
         {
                 QLabel label;
                 QSlider slider;
         };
-
-        template <typename F>
-        void catch_all(const F& function) const noexcept;
 
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;

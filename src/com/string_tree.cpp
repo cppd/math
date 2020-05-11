@@ -61,7 +61,10 @@ std::string StringTree::text(unsigned indent) const
 
                 if (level > 0)
                 {
-                        s += '\n';
+                        if (!s.empty())
+                        {
+                                s += '\n';
+                        }
                         s += std::string((level - 1) * indent, ' ');
                         s += m_nodes[index].name;
                 }

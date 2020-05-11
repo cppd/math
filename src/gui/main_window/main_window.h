@@ -23,14 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_main_window.h"
 
-#include <src/com/sequence.h>
-#include <src/painter/shapes/mesh.h>
+#include <src/com/log.h>
 #include <src/progress/progress_list.h>
-#include <src/settings/dimensions.h>
 #include <src/storage/repository.h>
 #include <src/storage/storage.h>
 #include <src/test/self_test.h>
-#include <src/view/interface.h>
 
 #include <QColor>
 #include <QTimer>
@@ -38,9 +35,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 #include <thread>
-#include <tuple>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 class MainWindow final : public QMainWindow
@@ -50,6 +44,8 @@ class MainWindow final : public QMainWindow
 public:
         explicit MainWindow(QWidget* parent = nullptr);
         ~MainWindow() override;
+
+        void insert_to_log(const std::vector<std::string>& lines, LogMessageType type);
 
 public slots:
 
@@ -121,27 +117,10 @@ private:
 
         void terminate_all_threads();
 
-        template <typename F>
-        void catch_all(const F& function) const noexcept;
-
         //
 
-        void thread_load_from_file(std::string file_name, bool use_object_selection_dialog);
-        void thread_load_from_mesh_repository(int dimension, const std::string& object_name);
-        void thread_load_from_volume_repository(int dimension, const std::string& object_name);
-
-        template <size_t N>
-        std::optional<WorkerThreads::Function> export_function(
-                const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object);
-        void thread_export();
-
-        void thread_bound_cocone();
-        void thread_self_test(SelfTestType test_type, bool with_confirmation);
-
-        template <size_t N>
-        std::optional<WorkerThreads::Function> painter_function(
-                const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object);
-        void thread_painter();
+        void load_from_file(std::string file_name, bool use_object_selection_dialog);
+        void self_test(test::SelfTestType test_type, bool with_confirmation);
 
         //
 
@@ -173,15 +152,11 @@ private:
         void set_dft_background_color(const QColor& c);
         void set_dft_color(const QColor& c);
 
-        void exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists)
-                const noexcept;
-
         bool stop_action(WorkerThreads::Action action);
 
-        void event_from_log(const LogEvent& event);
-        void event_from_view(const view::Event& event);
-
         void update_volume_ui(ObjectId id);
+
+        std::optional<storage::MeshObjectConst> current_mesh_object_const() const;
 
         const std::thread::id m_thread_id;
 
@@ -207,4 +182,7 @@ private:
         bool m_first_show;
 
         QTimer m_timer_progress_bar;
+
+        double m_view_object_size;
+        vec3 m_view_object_position;
 };

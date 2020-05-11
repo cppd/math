@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "self_test.h"
 
+#include <src/com/exception.h>
 #include <src/com/names.h>
 #include <src/geometry/core/test/test_convex_hull.h>
 #include <src/geometry/reconstruction/test/test_reconstruction.h>
@@ -25,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/painter/space/test/test_parallelotope.h>
 #include <src/utility/string/str.h>
 
+namespace test
+{
 namespace
 {
 std::string space_name_upper(int d)
@@ -32,148 +35,121 @@ std::string space_name_upper(int d)
         return to_upper_first_letters(space_name(d));
 }
 
-template <typename T>
-void self_test_essential(ProgressRatios* progress_ratios, const T& catch_all)
+void self_test_essential(ProgressRatios* progress_ratios)
 {
-        catch_all([&](std::string* test_name) {
-                *test_name = "Self-Test, DFT in " + space_name_upper(2);
+        std::string s;
 
-                ProgressRatio progress(progress_ratios, *test_name);
+        s = "Self-Test, DFT in " + space_name_upper(2);
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
                 gpu::dft::test(&progress);
         });
 
-        catch_all([&](std::string* test_name) {
-                *test_name = "Self-Test, Parallelotope in " + space_name_upper(2);
-
-                ProgressRatio progress(progress_ratios, *test_name);
+        s = "Self-Test, Parallelotope in " + space_name_upper(2);
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
                 progress.set(0);
                 painter::test_parallelotope(2);
         });
 
-        catch_all([&](std::string* test_name) {
-                *test_name = "Self-Test, Parallelotope in " + space_name_upper(3);
-
-                ProgressRatio progress(progress_ratios, *test_name);
+        s = "Self-Test, Parallelotope in " + space_name_upper(3);
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
                 progress.set(0);
                 painter::test_parallelotope(3);
         });
 
-        catch_all([&](std::string* test_name) {
-                *test_name = "Self-Test, Parallelotope in " + space_name_upper(4);
-
-                ProgressRatio progress(progress_ratios, *test_name);
+        s = "Self-Test, Parallelotope in " + space_name_upper(4);
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
                 progress.set(0);
                 painter::test_parallelotope(4);
         });
 
-        catch_all([&](std::string* test_name) {
-                *test_name = "Self-Test, Mesh in " + space_name_upper(3);
-
-                ProgressRatio progress(progress_ratios, *test_name);
+        s = "Self-Test, Parallelotope in " + space_name_upper(4);
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
                 painter::test_mesh(3, &progress);
         });
 
-        catch_all([&](std::string* test_name) {
-                *test_name = "Self-Test, Mesh in " + space_name_upper(4);
-
-                ProgressRatio progress(progress_ratios, *test_name);
+        s = "Self-Test, Mesh in " + space_name_upper(4);
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
                 painter::test_mesh(4, &progress);
         });
 
-        catch_all([&](std::string* test_name) {
-                *test_name = "Self-Test, Convex Hull in " + space_name_upper(2);
-
-                ProgressRatio progress(progress_ratios, *test_name);
+        s = "Self-Test, Convex Hull in " + space_name_upper(2);
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
                 geometry::test_convex_hull(2, &progress);
         });
 
-        catch_all([&](std::string* test_name) {
-                *test_name = "Self-Test, Convex Hull in " + space_name_upper(3);
-
-                ProgressRatio progress(progress_ratios, *test_name);
+        s = "Self-Test, Convex Hull in " + space_name_upper(3);
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
                 geometry::test_convex_hull(3, &progress);
         });
 
-        catch_all([&](std::string* test_name) {
-                *test_name = "Self-Test, Convex Hull in " + space_name_upper(4);
-
-                ProgressRatio progress(progress_ratios, *test_name);
+        s = "Self-Test, Convex Hull in " + space_name_upper(4);
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
                 geometry::test_convex_hull(4, &progress);
         });
 
-        catch_all([&](std::string* test_name) {
-                *test_name = "Self-Test, 1-Manifold Reconstruction in " + space_name_upper(2);
-
-                ProgressRatio progress(progress_ratios, *test_name);
+        s = "Self-Test, 1-Manifold Reconstruction in " + space_name_upper(2);
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
                 geometry::test_reconstruction(2, &progress);
         });
 
-        catch_all([&](std::string* test_name) {
-                *test_name = "Self-Test, 2-Manifold Reconstruction in " + space_name_upper(3);
-
-                ProgressRatio progress(progress_ratios, *test_name);
+        s = "Self-Test, 2-Manifold Reconstruction in " + space_name_upper(3);
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
                 geometry::test_reconstruction(3, &progress);
         });
 }
 
-template <typename T>
-void self_test_extended(ProgressRatios* progress_ratios, const T& catch_all)
+void self_test_extended(ProgressRatios* progress_ratios)
 {
-        catch_all([&](std::string* test_name) {
-                *test_name = "Self-Test, Convex Hull in " + space_name_upper(5);
+        std::string s;
 
-                ProgressRatio progress(progress_ratios, *test_name);
+        s = "Self-Test, Convex Hull in " + space_name_upper(5);
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
                 geometry::test_convex_hull(5, &progress);
         });
 
-        catch_all([&](std::string* test_name) {
-                *test_name = "Self-Test, Mesh in " + space_name_upper(5);
-
-                ProgressRatio progress(progress_ratios, *test_name);
+        s = "Self-Test, Mesh in " + space_name_upper(5);
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
                 painter::test_mesh(5, &progress);
         });
 
-        catch_all([&](std::string* test_name) {
-                *test_name = "Self-Test, Mesh in " + space_name_upper(6);
-
-                ProgressRatio progress(progress_ratios, *test_name);
+        s = "Self-Test, Mesh in " + space_name_upper(6);
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
                 painter::test_mesh(6, &progress);
         });
 
-        catch_all([&](std::string* test_name) {
-                *test_name = "Self-Test, 3-Manifold Reconstruction in " + space_name_upper(4);
-
-                ProgressRatio progress(progress_ratios, *test_name);
+        s = "Self-Test, 3-Manifold Reconstruction in " + space_name_upper(4);
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
                 geometry::test_reconstruction(4, &progress);
         });
 }
 }
 
-void self_test(
-        SelfTestType test_type,
-        ProgressRatios* progress_ratios,
-        std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler)
+void self_test(SelfTestType test_type, ProgressRatios* progress_ratios)
 {
-        auto catch_all = [&](const auto& function) {
-                std::string message = "Self-Test";
-                try
-                {
-                        function(&message);
-                }
-                catch (...)
-                {
-                        exception_handler(std::current_exception(), message);
-                }
-        };
-
         switch (test_type)
         {
         case SelfTestType::Essential:
-                self_test_essential(progress_ratios, catch_all);
+                self_test_essential(progress_ratios);
                 break;
         case SelfTestType::Extended:
-                self_test_essential(progress_ratios, catch_all);
-                self_test_extended(progress_ratios, catch_all);
+                self_test_essential(progress_ratios);
+                self_test_extended(progress_ratios);
                 break;
         }
+}
 }

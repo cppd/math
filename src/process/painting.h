@@ -15,17 +15,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "create.h"
+#pragma once
 
-#include "vulkan/view.h"
+#include <src/progress/progress_list.h>
+#include <src/storage/storage.h>
+#include <src/view/interface.h>
 
-namespace view
+#include <functional>
+
+namespace process
 {
-std::unique_ptr<View> create_view(
-        WindowID parent_window,
-        double parent_window_ppi,
-        std::vector<Command>&& initial_commands)
-{
-        return create_view_impl(parent_window, parent_window_ppi, std::move(initial_commands));
-}
+std::function<void(ProgressRatioList*)> action_painter(
+        const storage::MeshObjectConst& object,
+        const view::info::Camera& camera,
+        double object_size,
+        const vec3& object_position,
+        const std::string& title,
+        const Color& background_color,
+        const Color& default_color,
+        const Color::DataType& diffuse);
 }

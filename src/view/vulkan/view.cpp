@@ -103,7 +103,6 @@ std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(b
 
 class Impl final : public View
 {
-        const std::function<void(Event&&)> m_events;
         const double m_window_ppi;
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -710,8 +709,7 @@ class Impl final : public View
         }
 
 public:
-        Impl(const std::function<void(Event&&)>& events, const WindowID& window, double window_ppi)
-                : m_events(events), m_window_ppi(window_ppi)
+        Impl(const WindowID& window, double window_ppi) : m_window_ppi(window_ppi)
         {
                 if (window_ppi <= 0)
                 {
@@ -842,12 +840,10 @@ public:
 }
 
 std::unique_ptr<View> create_view_impl(
-        const std::function<void(Event&&)>& events,
         WindowID parent_window,
         double parent_window_ppi,
         std::vector<Command>&& initial_commands)
 {
-        return std::make_unique<ViewThread<Impl>>(
-                events, parent_window, parent_window_ppi, std::move(initial_commands));
+        return std::make_unique<ViewThread<Impl>>(parent_window, parent_window_ppi, std::move(initial_commands));
 }
 }

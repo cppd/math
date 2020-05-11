@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "threads.h"
 
+#include <src/com/exception.h>
+
 #include <atomic>
 #include <thread>
 #include <unordered_map>
@@ -29,7 +31,6 @@ class ThreadData
         std::list<QProgressBar> m_progress_bars;
         std::thread m_thread;
         std::atomic_bool m_working = false;
-        const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& m_exception_handler;
 
         enum class TerminateType
         {
@@ -71,34 +72,18 @@ class ThreadData
         }
 
 public:
-        explicit ThreadData(
-                const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
-                : m_exception_handler(exception_handler)
-        {
-        }
-
         template <typename F>
-        void start(F&& function)
+        void start(const std::string& description, F&& function)
         {
                 terminate_quietly();
 
                 ASSERT(!m_working);
 
                 m_working = true;
-                m_thread = std::thread([this, func = std::forward<F>(function)]() noexcept {
+                m_thread = std::thread([this, func = std::forward<F>(function), description]() noexcept {
                         try
                         {
-                                std::string message;
-                                try
-                                {
-                                        static_assert(!noexcept(func(&m_progress_list, &message)));
-
-                                        func(&m_progress_list, &message);
-                                }
-                                catch (...)
-                                {
-                                        m_exception_handler(std::current_exception(), message);
-                                }
+                                catch_all(description, [&]() { func(&m_progress_list); });
                                 m_working = false;
                         }
                         catch (...)
@@ -144,7 +129,6 @@ public:
 class Impl final : public WorkerThreads
 {
         const std::thread::id m_thread_id;
-        const std::function<void(const std::exception_ptr& ptr, const std::string& msg)> m_exception_handler;
 
         std::unordered_map<Action, ThreadData> m_threads;
         std::vector<Progress> m_progress;
@@ -164,12 +148,10 @@ class Impl final : public WorkerThreads
         }
 
 public:
-        explicit Impl(
-                const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
-                : m_thread_id(std::this_thread::get_id()), m_exception_handler(exception_handler)
+        Impl() : m_thread_id(std::this_thread::get_id())
         {
-                m_threads.try_emplace(Action::Work, m_exception_handler);
-                m_threads.try_emplace(Action::SelfTest, m_exception_handler);
+                m_threads.try_emplace(Action::Work);
+                m_threads.try_emplace(Action::SelfTest);
 
                 for (auto& t : m_threads)
                 {
@@ -227,7 +209,8 @@ public:
                 }
         }
 
-        void start(Action action, std::function<void(ProgressRatioList*, std::string*)>&& function) override
+        void start(Action action, const std::string& description, std::function<void(ProgressRatioList*)>&& function)
+                override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -236,7 +219,7 @@ public:
                         return;
                 }
 
-                thread_data(action).start(std::move(function));
+                thread_data(action).start(description, std::move(function));
         }
 
         const std::vector<Progress>& progresses() const override
@@ -246,8 +229,7 @@ public:
 };
 }
 
-std::unique_ptr<WorkerThreads> create_worker_threads(
-        const std::function<void(const std::exception_ptr& ptr, const std::string& msg)>& exception_handler)
+std::unique_ptr<WorkerThreads> create_worker_threads()
 {
-        return std::make_unique<Impl>(exception_handler);
+        return std::make_unique<Impl>();
 }

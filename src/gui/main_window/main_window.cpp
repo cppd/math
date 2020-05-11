@@ -22,33 +22,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/thread_ui.h"
 #include "../dialogs/application_about.h"
 #include "../dialogs/application_help.h"
-#include "../dialogs/bound_cocone.h"
 #include "../dialogs/color_dialog.h"
-#include "../dialogs/file_dialog.h"
 #include "../dialogs/message.h"
-#include "../dialogs/object_selection.h"
-#include "../dialogs/painter_3d.h"
-#include "../dialogs/painter_nd.h"
-#include "../dialogs/point_object.h"
-#include "../dialogs/volume_object.h"
-#include "../painter_window/painter_window.h"
 
-#include <src/com/alg.h>
 #include <src/com/error.h>
+#include <src/com/exception.h>
 #include <src/com/log.h>
 #include <src/com/math.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
-#include <src/com/variant.h>
-#include <src/model/mesh_utility.h>
-#include <src/process/dimension.h>
-#include <src/process/load.h>
-#include <src/process/mesh.h>
-#include <src/process/painter_scene.h>
+#include <src/process/computing.h>
+#include <src/process/exporting.h>
+#include <src/process/loading.h>
+#include <src/process/painting.h>
+#include <src/process/testing.h>
 #include <src/settings/name.h>
-#include <src/settings/painter.h>
-#include <src/settings/utility.h>
 #include <src/utility/file/sys.h>
 #include <src/view/create.h>
 
@@ -68,16 +57,6 @@ constexpr double DFT_GAMMA = 0.5;
 // Таймер отображения хода расчётов. Величина в миллисекундах.
 constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
 
-// Количество точек для готовых объектов.
-constexpr int POINT_COUNT_MINIMUM = 100;
-constexpr int POINT_COUNT_DEFAULT = 10000;
-constexpr int POINT_COUNT_MAXIMUM = 1000000;
-
-// Размер изображений по одному измерению для готовых объёмов.
-constexpr int VOLUME_IMAGE_SIZE_MINIMUM = 10;
-constexpr int VOLUME_IMAGE_SIZE_DEFAULT = 500;
-constexpr int VOLUME_IMAGE_SIZE_MAXIMUM = 1000;
-
 // Цвета по умолчанию
 constexpr QRgb BACKGROUND_COLOR = qRgb(50, 100, 150);
 constexpr QRgb DEFAULT_COLOR = qRgb(150, 170, 150);
@@ -93,20 +72,6 @@ constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 // увеличение текстуры тени по сравнению с размером окна.
 constexpr int SHADOW_ZOOM = 2;
 
-// Количество лучей на один пиксель на одно измерение в одном проходе.
-// Тогда для количества измерений D в пространстве экрана количество
-// лучей равно std::pow(эта_величина, D).
-constexpr int PAINTER_DEFAULT_SAMPLES_PER_DIMENSION = 5;
-constexpr int PAINTER_MAXIMUM_SAMPLES_PER_DIMENSION = 10;
-
-// Максимальный размер экрана в пикселях для 3 измерений
-constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_3D = 10000;
-
-// Размеры экрана в пикселях для 4 и более измерений
-constexpr int PAINTER_DEFAULT_SCREEN_SIZE_ND = 500;
-constexpr int PAINTER_MINIMUM_SCREEN_SIZE_ND = 50;
-constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_ND = 5000;
-
 // Максимальное увеличение для освещений ambient, diffuse, specular.
 constexpr double MAXIMUM_COLOR_AMPLIFICATION = 3;
 
@@ -115,24 +80,6 @@ constexpr float NORMAL_LENGTH_DEFAULT = 0.05;
 constexpr float NORMAL_LENGTH_MAXIMUM = 0.2;
 constexpr QRgb NORMAL_COLOR_POSITIVE = qRgb(200, 200, 0);
 constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(50, 150, 50);
-
-constexpr bool STL_EXPORT_FORMAT_ASCII = true;
-
-namespace
-{
-template <size_t N>
-Vector<N, double> dimension_position(const vec3& position)
-{
-        if constexpr (N == 3)
-        {
-                return position;
-        }
-        else
-        {
-                return Vector<N, double>(0);
-        }
-}
-}
 
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent), m_thread_id(std::this_thread::get_id()), m_first_show(true)
@@ -144,12 +91,6 @@ MainWindow::MainWindow(QWidget* parent)
 
         this->setWindowTitle(settings::APPLICATION_NAME);
 
-        set_log_events([this](LogEvent&& event) {
-                run_in_ui_thread([&, event = std::move(event)]() { event_from_log(event); });
-        });
-
-        LOG(command_line_description());
-
         constructor_threads();
         constructor_connect();
         constructor_interface();
@@ -158,11 +99,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 void MainWindow::constructor_threads()
 {
-        auto handler = [this](const std::exception_ptr& ptr, const std::string& msg) {
-                exception_handler(ptr, msg, true);
-        };
-
-        m_worker_threads = create_worker_threads(handler);
+        m_worker_threads = create_worker_threads();
 }
 
 void MainWindow::constructor_connect()
@@ -267,6 +204,11 @@ MainWindow::~MainWindow()
         terminate_all_threads();
 }
 
+void MainWindow::insert_to_log(const std::vector<std::string>& lines, LogMessageType type)
+{
+        add_to_text_edit(ui.text_log, lines, type);
+}
+
 void MainWindow::closeEvent(QCloseEvent* event)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -306,79 +248,6 @@ void MainWindow::terminate_all_threads()
         m_view.reset();
 
         m_mesh_and_volume_events.reset();
-
-        set_log_events(nullptr);
-}
-
-void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists)
-        const noexcept
-{
-        try
-        {
-                ASSERT(window_exists || std::this_thread::get_id() == m_thread_id);
-
-                try
-                {
-                        std::rethrow_exception(ptr);
-                }
-                catch (TerminateRequestException&)
-                {
-                }
-                catch (const std::exception& e)
-                {
-                        std::string s = !msg.empty() ? (msg + ":\n") : std::string();
-
-                        if (window_exists)
-                        {
-                                MESSAGE_ERROR(s + e.what());
-                        }
-                        else
-                        {
-                                LOG("Exception caught.\n" + s + e.what());
-                        }
-                }
-                catch (...)
-                {
-                        std::string s = !msg.empty() ? (msg + ":\n") : std::string();
-
-                        if (window_exists)
-                        {
-                                MESSAGE_ERROR(s + "Unknown error");
-                        }
-                        else
-                        {
-                                LOG("Exception caught.\n" + s + "Unknown error");
-                        }
-                }
-        }
-        catch (...)
-        {
-                error_fatal("Exception in the main window exception handler");
-        }
-}
-
-template <typename F>
-void MainWindow::catch_all(const F& function) const noexcept
-{
-        try
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                std::string message;
-                QPointer ptr(this);
-                try
-                {
-                        function(&message);
-                }
-                catch (...)
-                {
-                        exception_handler(std::current_exception(), message, !ptr.isNull());
-                }
-        }
-        catch (...)
-        {
-                error_fatal("Exception in the main window catch all");
-        }
 }
 
 bool MainWindow::stop_action(WorkerThreads::Action action)
@@ -396,480 +265,6 @@ bool MainWindow::stop_action(WorkerThreads::Action action)
         m_worker_threads->terminate_quietly(action);
 
         return true;
-}
-
-void MainWindow::thread_load_from_file(std::string file_name, bool use_object_selection_dialog)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
-
-        if (!stop_action(ACTION))
-        {
-                return;
-        }
-
-        if (file_name.empty())
-        {
-                ASSERT(use_object_selection_dialog);
-
-                std::string caption = "Open";
-                bool read_only = true;
-
-                std::vector<dialog::FileFilter> filters;
-                for (const mesh::FileFormat& v : mesh::load_formats(settings::supported_dimensions()))
-                {
-                        dialog::FileFilter& f = filters.emplace_back();
-                        f.name = v.format_name;
-                        f.file_extensions = v.file_name_extensions;
-                }
-
-                if (!dialog::open_file(caption, filters, read_only, &file_name))
-                {
-                        return;
-                }
-        }
-
-        std::unordered_set<dialog::ComputationType> objects_to_load;
-
-        if (use_object_selection_dialog)
-        {
-                if (!dialog::object_selection(&objects_to_load))
-                {
-                        return;
-                }
-        }
-        else
-        {
-                objects_to_load = dialog::object_selection_current();
-        }
-
-        double rho;
-        double alpha;
-        dialog::bound_cocone_parameters_current(&rho, &alpha);
-
-        bool bound_cocone = objects_to_load.count(dialog::ComputationType::BoundCocone);
-        bool cocone = objects_to_load.count(dialog::ComputationType::Cocone);
-        bool convex_hull = objects_to_load.count(dialog::ComputationType::ConvexHull);
-        bool mst = objects_to_load.count(dialog::ComputationType::Mst);
-
-        auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
-                *message = "Load " + file_name;
-
-                view::info::ObjectSize object_size;
-                view::info::ObjectPosition object_position;
-                m_view->receive({&object_size, &object_position});
-
-                unsigned dimension = mesh::file_dimension(file_name);
-
-                m_storage->clear();
-                m_view->send(view::command::ResetView());
-
-                process::apply_for_dimension(dimension, [&]<size_t N>(const process::Dimension<N>&) {
-                        std::shared_ptr<mesh::MeshObject<N>> mesh = process::load_from_file(
-                                file_base_name(file_name), progress_list, file_name, object_size.value,
-                                dimension_position<N>(object_position.value));
-
-                        process::compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
-                });
-        };
-
-        m_worker_threads->start(ACTION, std::move(f));
-}
-
-void MainWindow::thread_load_from_mesh_repository(int dimension, const std::string& object_name)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
-
-        if (!stop_action(ACTION))
-        {
-                return;
-        }
-
-        if (object_name.empty())
-        {
-                MESSAGE_ERROR("Empty mesh repository object name");
-                return;
-        }
-
-        int point_count;
-
-        if (!dialog::point_object_parameters(
-                    dimension, object_name, POINT_COUNT_DEFAULT, POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM,
-                    &point_count))
-        {
-                return;
-        }
-
-        std::unordered_set<dialog::ComputationType> objects_to_load;
-
-        if (!dialog::object_selection(&objects_to_load))
-        {
-                return;
-        }
-
-        double rho;
-        double alpha;
-        dialog::bound_cocone_parameters_current(&rho, &alpha);
-
-        bool bound_cocone = objects_to_load.count(dialog::ComputationType::BoundCocone);
-        bool cocone = objects_to_load.count(dialog::ComputationType::Cocone);
-        bool convex_hull = objects_to_load.count(dialog::ComputationType::ConvexHull);
-        bool mst = objects_to_load.count(dialog::ComputationType::Mst);
-
-        auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
-                *message = "Load " + space_name(dimension) + " " + object_name;
-
-                view::info::ObjectSize object_size;
-                view::info::ObjectPosition object_position;
-                m_view->receive({&object_size, &object_position});
-
-                m_storage->clear();
-                m_view->send(view::command::ResetView());
-
-                process::apply_for_dimension(dimension, [&]<size_t N>(const process::Dimension<N>&) {
-                        std::shared_ptr<mesh::MeshObject<N>> mesh = process::load_from_mesh_repository(
-                                object_name, object_size.value, dimension_position<N>(object_position.value),
-                                point_count, *m_repository);
-
-                        process::compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
-                });
-        };
-
-        m_worker_threads->start(ACTION, std::move(f));
-}
-
-void MainWindow::thread_load_from_volume_repository(int dimension, const std::string& object_name)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
-
-        if (!stop_action(ACTION))
-        {
-                return;
-        }
-
-        if (object_name.empty())
-        {
-                MESSAGE_ERROR("Empty volume repository object name");
-                return;
-        }
-
-        int image_size;
-
-        if (!dialog::volume_object_parameters(
-                    dimension, object_name, VOLUME_IMAGE_SIZE_DEFAULT, VOLUME_IMAGE_SIZE_MINIMUM,
-                    VOLUME_IMAGE_SIZE_MAXIMUM, &image_size))
-        {
-                return;
-        }
-
-        auto f = [=, this](ProgressRatioList* /*progress_list*/, std::string* message) {
-                *message = "Load " + space_name(dimension) + " " + object_name;
-
-                view::info::ObjectSize object_size;
-                view::info::ObjectPosition object_position;
-                m_view->receive({&object_size, &object_position});
-
-                process::apply_for_dimension(dimension, [&]<size_t N>(const process::Dimension<N>&) {
-                        process::load_from_volume_repository(
-                                object_name, object_size.value, dimension_position<N>(object_position.value),
-                                image_size, *m_repository);
-                });
-        };
-
-        m_worker_threads->start(ACTION, std::move(f));
-}
-
-template <size_t N>
-std::optional<WorkerThreads::Function> MainWindow::export_function(
-        const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
-{
-        std::string name = mesh_object->name();
-
-        std::string caption = "Export " + name + " to file";
-        bool read_only = true;
-
-        std::vector<dialog::FileFilter> filters;
-        for (const mesh::FileFormat& v : mesh::save_formats(N))
-        {
-                dialog::FileFilter& filter = filters.emplace_back();
-                filter.name = v.format_name;
-                filter.file_extensions = v.file_name_extensions;
-        }
-
-        std::string file_name;
-
-        if (!dialog::save_file(caption, filters, read_only, &file_name))
-        {
-                return std::nullopt;
-        }
-
-        mesh::FileType file_type = mesh::file_type_by_extension(file_name);
-
-        return [=](ProgressRatioList*, std::string* message) {
-                *message = "Export " + name + " to " + file_name;
-                switch (file_type)
-                {
-                case mesh::FileType::Obj:
-                        mesh::save_to_obj(mesh_object->mesh(), file_name, name);
-                        MESSAGE_INFORMATION(name + " exported to OBJ file " + file_name);
-                        return;
-                case mesh::FileType::Stl:
-                        save_to_stl(mesh_object->mesh(), file_name, name, STL_EXPORT_FORMAT_ASCII);
-                        MESSAGE_INFORMATION(name + " exported to STL file " + file_name);
-                        return;
-                }
-                error_fatal("Unknown file type for export");
-        };
-}
-
-void MainWindow::thread_export()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
-
-        if (!stop_action(ACTION))
-        {
-                return;
-        }
-
-        std::optional<ObjectId> id = ui.model_tree->current_item();
-        if (!id)
-        {
-                MESSAGE_WARNING("No item selected to export");
-                return;
-        }
-
-        std::optional<storage::MeshObjectConst> object = m_storage->mesh_object_const(*id);
-        if (!object)
-        {
-                MESSAGE_WARNING("No object to export");
-                return;
-        }
-
-        std::optional<WorkerThreads::Function> f;
-
-        std::visit(
-                [&, this]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object) {
-                        f = export_function(mesh_object);
-                },
-                *object);
-
-        if (f)
-        {
-                m_worker_threads->start(ACTION, std::move(*f));
-        }
-}
-
-void MainWindow::thread_bound_cocone()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
-
-        if (!stop_action(ACTION))
-        {
-                return;
-        }
-
-        std::optional<ObjectId> id = ui.model_tree->current_item();
-        if (!id)
-        {
-                MESSAGE_WARNING("No item selected to export");
-                return;
-        }
-
-        std::optional<storage::MeshObjectConst> object = m_storage->mesh_object_const(*id);
-        if (!object)
-        {
-                MESSAGE_WARNING("No object to compute BoundCocone");
-                return;
-        }
-
-        double rho;
-        double alpha;
-
-        if (!dialog::bound_cocone_parameters(&rho, &alpha))
-        {
-                return;
-        }
-
-        WorkerThreads::Function f;
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object) {
-                        f = [=](ProgressRatioList* progress_list, std::string* message) {
-                                *message = "BoundCocone Reconstruction";
-
-                                process::compute(
-                                        progress_list, false /*convex hull*/, false /*cocone*/, true /*bound cocone*/,
-                                        false /*mst*/, *mesh_object, rho, alpha);
-                        };
-                },
-                *object);
-
-        m_worker_threads->start(ACTION, std::move(f));
-}
-
-void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::SelfTest;
-
-        if (!stop_action(ACTION))
-        {
-                return;
-        }
-
-        if (with_confirmation)
-        {
-                bool yes;
-                if (!dialog::message_question_default_yes("Run the Self-Test?", &yes) || !yes)
-                {
-                        return;
-                }
-        }
-
-        auto f = [=, this](ProgressRatioList* progress_list, std::string* message) {
-                *message = "Self-Test";
-                self_test(test_type, progress_list, [&](const std::exception_ptr& ptr, const std::string& m) {
-                        exception_handler(ptr, m, true);
-                });
-        };
-
-        m_worker_threads->start(ACTION, std::move(f));
-}
-
-template <size_t N>
-std::optional<WorkerThreads::Function> MainWindow::painter_function(
-        const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
-{
-        ASSERT(mesh_object);
-
-        if (mesh_object->mesh().facets.empty())
-        {
-                MESSAGE_WARNING("No object to paint");
-                return std::nullopt;
-        }
-
-        const unsigned default_samples = power<N - 1>(static_cast<unsigned>(PAINTER_DEFAULT_SAMPLES_PER_DIMENSION));
-        const unsigned max_samples = power<N - 1>(static_cast<unsigned>(PAINTER_MAXIMUM_SAMPLES_PER_DIMENSION));
-
-        process::PainterSceneCommonInfo scene_common_info;
-        scene_common_info.background_color = qcolor_to_rgb(m_background_color);
-        scene_common_info.default_color = qcolor_to_rgb(m_default_color);
-        scene_common_info.diffuse = diffuse_light();
-
-        int thread_count;
-        int samples_per_pixel;
-        bool flat_facets;
-
-        using T = settings::painter::FloatingPoint;
-
-        process::PainterSceneInfo<N, T> scene_info;
-
-        if constexpr (N == 3)
-        {
-                view::info::Camera camera;
-                view::info::ObjectSize object_size;
-                view::info::ObjectPosition object_position;
-                m_view->receive({&camera, &object_size, &object_position});
-
-                scene_info.camera_up = to_vector<T>(camera.up);
-                scene_info.camera_direction = to_vector<T>(camera.forward);
-                scene_info.light_direction = to_vector<T>(camera.lighting);
-                scene_info.view_center = to_vector<T>(camera.view_center);
-                scene_info.view_width = camera.view_width;
-                scene_info.object_position = to_vector<T>(object_position.value);
-                scene_info.object_size = object_size.value;
-
-                if (!dialog::painter_parameters_for_3d(
-                            hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
-                            default_samples, max_samples, &thread_count, &scene_info.width, &scene_info.height,
-                            &samples_per_pixel, &flat_facets, &scene_info.cornell_box))
-                {
-                        return std::nullopt;
-                }
-        }
-        else
-        {
-                if (!dialog::painter_parameters_for_nd(
-                            N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND, PAINTER_MINIMUM_SCREEN_SIZE_ND,
-                            PAINTER_MAXIMUM_SCREEN_SIZE_ND, default_samples, max_samples, &thread_count,
-                            &scene_info.min_screen_size, &scene_info.max_screen_size, &samples_per_pixel, &flat_facets))
-                {
-                        return std::nullopt;
-                }
-        }
-
-        return [=, this](ProgressRatioList* progress_list, std::string* message) {
-                *message = "Painter thread";
-
-                std::shared_ptr<const painter::MeshObject<N, T>> painter_mesh_object;
-                {
-                        ProgressRatio progress(progress_list);
-                        painter_mesh_object = std::make_shared<painter::MeshObject<N, T>>(
-                                mesh_object->mesh(), to_matrix<T>(mesh_object->matrix()), &progress);
-                }
-
-                if (!painter_mesh_object)
-                {
-                        MESSAGE_WARNING("No object to paint");
-                        return;
-                }
-
-                std::string window_title = QMainWindow::windowTitle().toStdString() + " (" + mesh_object->name() + ")";
-
-                std::unique_ptr<const painter::PaintObjects<N, T>> scene =
-                        process::create_painter_scene(painter_mesh_object, scene_info, scene_common_info);
-
-                create_painter_window(window_title, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
-        };
-}
-
-void MainWindow::thread_painter()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
-
-        if (!stop_action(ACTION))
-        {
-                return;
-        }
-
-        std::optional<ObjectId> id = ui.model_tree->current_item();
-        if (!id)
-        {
-                MESSAGE_WARNING("No item selected to paint");
-                return;
-        }
-
-        std::optional<storage::MeshObjectConst> object = m_storage->mesh_object_const(*id);
-        if (!object)
-        {
-                MESSAGE_WARNING("No object to paint");
-                return;
-        }
-
-        std::optional<WorkerThreads::Function> f;
-
-        std::visit(
-                [&, this]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object) {
-                        f = painter_function(mesh_object);
-                },
-                *object);
-
-        if (f)
-        {
-                m_worker_threads->start(ACTION, std::move(*f));
-        }
 }
 
 void MainWindow::progress_bars(
@@ -1069,27 +464,6 @@ void MainWindow::set_dependent_interface()
         }
 }
 
-void MainWindow::event_from_log(const LogEvent& event)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        const auto visitors = Visitors{[this](const LogEvent::Message& d) {
-                // Здесь без вызовов функции LOG, так как начнёт вызывать сама себя
-                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(d.text), d.type);
-        }};
-
-        std::visit(visitors, event.data());
-}
-
-void MainWindow::event_from_view(const view::Event& event)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        const auto visitors = Visitors{[](const view::event::ErrorFatal& d) { MESSAGE_ERROR_FATAL(d.text); }};
-
-        std::visit(visitors, event.data());
-}
-
 void MainWindow::showEvent(QShowEvent* /*event*/)
 {
         if (!m_first_show)
@@ -1125,14 +499,7 @@ void MainWindow::slot_window_first_shown()
 
                 //
 
-                thread_self_test(SelfTestType::Essential, false);
-
-                //
-
                 m_view = view::create_view(
-                        [this](view::Event&& event) {
-                                run_in_ui_thread([&, event = std::move(event)]() { event_from_view(event); });
-                        },
                         widget_window_id(ui.graphics_widget), widget_pixels_per_inch(ui.graphics_widget),
                         {view::command::SetBackgroundColor(qcolor_to_rgb(m_background_color)),
                          view::command::SetDefaultColor(qcolor_to_rgb(m_default_color)),
@@ -1162,11 +529,19 @@ void MainWindow::slot_window_first_shown()
                          view::command::SetVerticalSync(ui.checkBox_vertical_sync->isChecked()),
                          view::command::SetShadowZoom(shadow_zoom())});
 
+                view::info::ObjectSize view_object_size;
+                view::info::ObjectPosition view_object_position;
+                m_view->receive({&view_object_size, &view_object_position});
+                m_view_object_size = view_object_size.value;
+                m_view_object_position = view_object_position.value;
+
                 //
+
+                self_test(test::SelfTestType::Essential, false);
 
                 if (!options.file_name.empty())
                 {
-                        thread_load_from_file(options.file_name, !options.no_object_selection_dialog);
+                        load_from_file(options.file_name, !options.no_object_selection_dialog);
                 }
         }
         catch (const std::exception& e)
@@ -1179,48 +554,107 @@ void MainWindow::slot_window_first_shown()
         }
 }
 
+void MainWindow::load_from_file(std::string file_name, bool use_object_selection_dialog)
+{
+        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
+        static constexpr const char* DESCRIPTION = "Loading from file";
+
+        catch_all(DESCRIPTION, [&]() {
+                if (!stop_action(ACTION))
+                {
+                        return;
+                }
+                auto clear_all = [this]() {
+                        m_storage->clear();
+                        m_view->send(view::command::ResetView());
+                };
+                WorkerThreads::Function f = process::action_load_from_file(
+                        file_name, use_object_selection_dialog, m_view_object_size, m_view_object_position, clear_all);
+                m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
+        });
+}
+
 void MainWindow::on_actionLoad_triggered()
 {
-        catch_all([&](std::string* msg) {
-                *msg = "Load from file";
-
-                thread_load_from_file("", true);
-        });
+        load_from_file("", true);
 }
 
 void MainWindow::slot_mesh_object_repository(int dimension, std::string object_name)
 {
-        catch_all([&](std::string* msg) {
-                *msg = "Load from mesh repository";
+        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
+        static constexpr const char* DESCRIPTION = "Load from mesh repository";
 
-                thread_load_from_mesh_repository(dimension, object_name);
+        catch_all(DESCRIPTION, [&]() {
+                if (!stop_action(ACTION))
+                {
+                        return;
+                }
+                auto clear_all = [this]() {
+                        m_storage->clear();
+                        m_view->send(view::command::ResetView());
+                };
+                WorkerThreads::Function f = process::action_load_from_mesh_repository(
+                        m_repository.get(), dimension, object_name, m_view_object_size, m_view_object_position,
+                        clear_all);
+                m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
         });
 }
 
 void MainWindow::slot_volume_object_repository(int dimension, std::string object_name)
 {
-        catch_all([&](std::string* msg) {
-                *msg = "Load from volume repository";
+        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
+        static constexpr const char* DESCRIPTION = "Load from volume repository";
 
-                thread_load_from_volume_repository(dimension, object_name);
+        catch_all(DESCRIPTION, [&]() {
+                if (!stop_action(ACTION))
+                {
+                        return;
+                }
+                WorkerThreads::Function f = process::action_load_from_volume_repository(
+                        m_repository.get(), dimension, object_name, m_view_object_size, m_view_object_position);
+                m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
         });
 }
 
 void MainWindow::on_actionExport_triggered()
 {
-        catch_all([&](std::string* msg) {
-                *msg = "Export";
+        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
+        static constexpr const char* DESCRIPTION = "Export";
 
-                thread_export();
+        catch_all(DESCRIPTION, [&]() {
+                if (!stop_action(ACTION))
+                {
+                        return;
+                }
+                std::optional<storage::MeshObjectConst> object = current_mesh_object_const();
+                if (!object)
+                {
+                        MESSAGE_WARNING("No object to export");
+                        return;
+                }
+                WorkerThreads::Function f = process::action_export(*object);
+                m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
         });
 }
 
 void MainWindow::on_actionBoundCocone_triggered()
 {
-        catch_all([&](std::string* msg) {
-                *msg = "Reload BoundCocone";
+        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
+        static constexpr const char* DESCRIPTION = "BoundCocone";
 
-                thread_bound_cocone();
+        catch_all(DESCRIPTION, [&]() {
+                if (!stop_action(ACTION))
+                {
+                        return;
+                }
+                std::optional<storage::MeshObjectConst> object = current_mesh_object_const();
+                if (!object)
+                {
+                        MESSAGE_WARNING("No object to compute BoundCocone");
+                        return;
+                }
+                WorkerThreads::Function f = process::action_bound_cocone(*object);
+                m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
         });
 }
 
@@ -1234,21 +668,53 @@ void MainWindow::on_actionHelp_triggered()
         dialog::application_help();
 }
 
+void MainWindow::self_test(test::SelfTestType test_type, bool with_confirmation)
+{
+        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::SelfTest;
+        static constexpr const char* DESCRIPTION = "Self-Test";
+
+        catch_all(DESCRIPTION, [&]() {
+                if (!stop_action(ACTION))
+                {
+                        return;
+                }
+                WorkerThreads::Function f = process::action_self_test(test_type, with_confirmation);
+                m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
+        });
+}
+
 void MainWindow::on_actionSelfTest_triggered()
 {
-        catch_all([&](std::string* msg) {
-                *msg = "Self-Test";
-
-                thread_self_test(SelfTestType::Extended, true);
-        });
+        self_test(test::SelfTestType::Extended, true);
 }
 
 void MainWindow::on_actionPainter_triggered()
 {
-        catch_all([&](std::string* msg) {
-                *msg = "Painter";
+        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
+        static constexpr const char* DESCRIPTION = "Painter";
 
-                thread_painter();
+        catch_all(DESCRIPTION, [&]() {
+                if (!stop_action(ACTION))
+                {
+                        return;
+                }
+
+                std::optional<storage::MeshObjectConst> object = current_mesh_object_const();
+                if (!object)
+                {
+                        MESSAGE_WARNING("No object to paint");
+                        return;
+                }
+
+                view::info::Camera camera;
+                m_view->receive({&camera});
+
+                WorkerThreads::Function f = process::action_painter(
+                        *object, camera, m_view_object_size, m_view_object_position,
+                        QMainWindow::windowTitle().toStdString(), qcolor_to_rgb(m_background_color),
+                        qcolor_to_rgb(m_default_color), diffuse_light());
+
+                m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
         });
 }
 
@@ -1673,4 +1139,21 @@ void MainWindow::on_slider_volume_levels_range_changed(double min, double max)
                         volume_object->set_levels(min, max);
                 },
                 *volume_object_opt);
+}
+
+std::optional<storage::MeshObjectConst> MainWindow::current_mesh_object_const() const
+{
+        std::optional<ObjectId> id = ui.model_tree->current_item();
+        if (!id)
+        {
+                return std::nullopt;
+        }
+
+        std::optional<storage::MeshObjectConst> object = m_storage->mesh_object_const(*id);
+        if (!object)
+        {
+                return std::nullopt;
+        }
+
+        return object;
 }

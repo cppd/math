@@ -15,17 +15,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "create.h"
+#pragma once
 
-#include "vulkan/view.h"
+#include <src/com/log.h>
 
-namespace view
+#include <functional>
+
+namespace application
 {
-std::unique_ptr<View> create_view(
-        WindowID parent_window,
-        double parent_window_ppi,
-        std::vector<Command>&& initial_commands)
+class Log
 {
-        return create_view_impl(parent_window, parent_window_ppi, std::move(initial_commands));
-}
+public:
+        Log(std::function<void(const std::vector<std::string>&, LogMessageType)>);
+        ~Log();
+};
 }

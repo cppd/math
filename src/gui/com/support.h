@@ -45,6 +45,14 @@ void create_and_show_delete_on_close_window(Args&&... args)
         static_cast<void>(window.release());
 }
 
+template <typename Window, typename... Args>
+Window* create_delete_on_close_window(Args&&... args)
+{
+        std::unique_ptr<Window> window = std::make_unique<Window>(std::forward<Args>(args)...);
+        window->setAttribute(Qt::WA_DeleteOnClose);
+        return window.release();
+}
+
 // Чтобы объект Qt, имеющий родителя, не удалялся два и более раз, нужно использовать
 // динамическую память и класс QPointer.
 // Такие возможные многократные удаления могут происходить, например, когда родительское
@@ -75,10 +83,7 @@ void button_strike_out(QRadioButton* button, bool strike_out);
 
 void set_slider_to_middle(QSlider* slider);
 
-void add_to_text_edit_and_to_stderr(
-        QPlainTextEdit* text_edit,
-        const std::vector<std::string>& lines,
-        LogMessageType type) noexcept;
+void add_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string>& lines, LogMessageType type) noexcept;
 
 WindowID widget_window_id(const QWidget* widget);
 double widget_pixels_per_inch(const QWidget* widget);

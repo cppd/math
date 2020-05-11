@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../interface.h"
 
 #include <src/com/error.h>
+#include <src/com/log.h>
 #include <src/com/thread.h>
 
 #include <atomic>
@@ -112,16 +113,13 @@ class ViewThread final : public View
                 m_event_queues.receive(info);
         }
 
-        void thread_function(
-                const std::function<void(Event&&)>& events,
-                WindowID parent_window,
-                double parent_window_ppi)
+        void thread_function(WindowID parent_window, double parent_window_ppi)
         {
                 try
                 {
                         try
                         {
-                                T view(events, parent_window, parent_window_ppi);
+                                T view(parent_window, parent_window_ppi);
 
                                 m_started = true;
 
@@ -140,11 +138,11 @@ class ViewThread final : public View
                 }
                 catch (const std::exception& e)
                 {
-                        events(event::ErrorFatal(e.what()));
+                        MESSAGE_ERROR_FATAL(std::string("View error: ") + e.what());
                 }
                 catch (...)
                 {
-                        events(event::ErrorFatal("Unknown Error. Thread ended."));
+                        MESSAGE_ERROR_FATAL("Unknown view error. Thread ended.");
                 }
         }
 
@@ -160,11 +158,7 @@ class ViewThread final : public View
         }
 
 public:
-        ViewThread(
-                const std::function<void(Event&&)>& events,
-                WindowID parent_window,
-                double parent_window_ppi,
-                std::vector<Command>&& initial_commands)
+        ViewThread(WindowID parent_window, double parent_window_ppi, std::vector<Command>&& initial_commands)
                 : m_event_queues(std::move(initial_commands))
         {
                 try
@@ -172,7 +166,7 @@ public:
                         m_thread = std::thread([=, this]() {
                                 try
                                 {
-                                        thread_function(events, parent_window, parent_window_ppi);
+                                        thread_function(parent_window, parent_window_ppi);
                                 }
                                 catch (...)
                                 {

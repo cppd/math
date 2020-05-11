@@ -15,17 +15,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "create.h"
+#include "testing.h"
 
-#include "vulkan/view.h"
+#include <src/gui/dialogs/message.h>
 
-namespace view
+namespace process
 {
-std::unique_ptr<View> create_view(
-        WindowID parent_window,
-        double parent_window_ppi,
-        std::vector<Command>&& initial_commands)
+std::function<void(ProgressRatioList*)> action_self_test(test::SelfTestType test_type, bool with_confirmation)
 {
-        return create_view_impl(parent_window, parent_window_ppi, std::move(initial_commands));
+        if (with_confirmation)
+        {
+                bool yes;
+                if (!dialog::message_question_default_yes("Run the Self-Test?", &yes) || !yes)
+                {
+                        return nullptr;
+                }
+        }
+
+        return [=](ProgressRatioList* progress_list) { test::self_test(test_type, progress_list); };
 }
 }

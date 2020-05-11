@@ -173,10 +173,7 @@ void set_slider_to_middle(QSlider* slider)
         slider->setValue(slider->minimum() + (slider->maximum() - slider->minimum()) / 2);
 }
 
-void add_to_text_edit_and_to_stderr(
-        QPlainTextEdit* text_edit,
-        const std::vector<std::string>& lines,
-        LogMessageType type) noexcept
+void add_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string>& lines, LogMessageType type) noexcept
 {
         try
         {
@@ -188,8 +185,6 @@ void add_to_text_edit_and_to_stderr(
                         {
                                 return;
                         }
-
-                        write_formatted_log_messages_to_stderr(lines);
 
                         bool bottom =
                                 text_edit->verticalScrollBar()->value() == text_edit->verticalScrollBar()->maximum()

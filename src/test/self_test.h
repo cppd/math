@@ -19,16 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress_interfaces.h>
 
-#include <exception>
-#include <functional>
-
+namespace test
+{
 enum class SelfTestType
 {
         Essential,
         Extended
 };
 
-void self_test(
-        SelfTestType test_type,
-        ProgressRatios* progress_ratios,
-        std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler);
+void self_test(SelfTestType test_type, ProgressRatios* progress_ratios);
+}

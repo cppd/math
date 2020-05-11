@@ -415,35 +415,6 @@ private:
         T m_data;
 };
 
-namespace event
-{
-struct ErrorFatal final
-{
-        std::string text;
-        explicit ErrorFatal(const std::string& text) : text(text)
-        {
-        }
-};
-}
-
-struct Event final
-{
-        using T = std::variant<event::ErrorFatal>;
-
-        template <typename Type, typename = std::enable_if_t<!std::is_same_v<Event, std::remove_cvref_t<Type>>>>
-        Event(Type&& arg) : m_data(std::forward<Type>(arg))
-        {
-        }
-
-        const T& data() const
-        {
-                return m_data;
-        }
-
-private:
-        T m_data;
-};
-
 namespace info
 {
 struct Camera final

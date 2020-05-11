@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dialogs/message.h"
 
 #include <src/com/error.h>
+#include <src/com/exception.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/time.h>
@@ -124,50 +125,6 @@ PainterWindow2d::PainterWindow2d(
 
 PainterWindow2d::~PainterWindow2d() = default;
 
-template <typename F>
-void PainterWindow2d::catch_all(const F& function) const noexcept
-{
-        try
-        {
-                ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-                std::string msg;
-                QPointer ptr(this);
-                try
-                {
-                        function(&msg);
-                }
-                catch (const std::exception& e)
-                {
-                        std::string s = !msg.empty() ? (msg + ":\n") : std::string();
-                        if (!ptr.isNull())
-                        {
-                                error_message(s + e.what());
-                        }
-                        else
-                        {
-                                LOG("Exception caught.\n" + s + e.what());
-                        }
-                }
-                catch (...)
-                {
-                        std::string s = !msg.empty() ? (msg + ":\n") : std::string();
-                        if (!ptr.isNull())
-                        {
-                                error_message(s + "Unknown error");
-                        }
-                        else
-                        {
-                                LOG("Exception caught.\n" + s + "Unknow Error");
-                        }
-                }
-        }
-        catch (...)
-        {
-                error_fatal("Exception in the painter window 2d catch all");
-        }
-}
-
 void PainterWindow2d::closeEvent(QCloseEvent* event)
 {
         QPointer ptr(this);
@@ -264,25 +221,6 @@ std::vector<int> PainterWindow2d::slider_positions() const
         return positions;
 }
 
-void PainterWindow2d::error_message(const std::string& msg) const noexcept
-{
-        try
-        {
-                emit error_message_signal(msg.c_str());
-        }
-        catch (...)
-        {
-                error_fatal("Error painter message emit signal");
-        }
-}
-
-void PainterWindow2d::error_message_slot(const QString& msg)
-{
-        LOG("Painter error\n" + msg.toStdString());
-
-        dialog::message_critical(msg.toStdString());
-}
-
 void PainterWindow2d::showEvent(QShowEvent* e)
 {
         QWidget::showEvent(e);
@@ -363,9 +301,7 @@ void PainterWindow2d::timer_slot()
 
 void PainterWindow2d::on_pushButton_save_to_file_clicked()
 {
-        catch_all([&](std::string* msg) {
-                *msg = "Save to file";
-
+        catch_all("Save to file", [&]() {
                 std::vector<std::uint_least32_t> pixels(1ull * m_image.width() * m_image.height());
                 std::memcpy(pixels.data(), &pixels_bgr()[pixels_offset()], m_image_byte_count);
 
