@@ -23,12 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui
 {
-ModelTree::ModelTree(QTreeWidget* tree) : m_tree(tree)
+ModelTree::ModelTree(QTreeWidget* tree, const std::function<void()>& item_changed) : m_tree(tree)
 {
         ASSERT(m_tree);
 
-        connect(m_tree, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)), this,
-                SLOT(current_item_changed(QTreeWidgetItem*, QTreeWidgetItem*)));
+        m_connections.emplace_back(QObject::connect(
+                m_tree, &QTreeWidget::currentItemChanged, [=](QTreeWidgetItem*, QTreeWidgetItem*) { item_changed(); }));
 }
 
 ModelTree::~ModelTree()
@@ -96,10 +96,5 @@ void ModelTree::set_current(ObjectId id)
                 return;
         }
         m_tree->setCurrentItem(iter->second);
-}
-
-void ModelTree::current_item_changed(QTreeWidgetItem* /*current*/, QTreeWidgetItem* /*previous*/)
-{
-        emit item_changed();
 }
 }

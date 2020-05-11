@@ -196,8 +196,7 @@ void MainWindow::constructor_objects()
 
         m_storage = std::make_unique<storage::Storage>();
 
-        m_model_tree = std::make_unique<ModelTree>(ui.model_tree);
-        connect(m_model_tree.get(), SIGNAL(item_changed()), this, SLOT(model_tree_item_changed()));
+        m_model_tree = std::make_unique<ModelTree>(ui.model_tree, [this]() { model_tree_item_changed(); });
 
         m_mesh_and_volume_events = std::make_unique<ModelEvents>(
                 m_model_tree.get(), m_storage.get(), &m_view, [this](ObjectId id) { update_volume_ui(id); });

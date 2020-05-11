@@ -17,20 +17,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../com/connection.h"
+
 #include <src/model/object_id.h>
 
 #include <QTreeWidget>
-#include <optional>
 #include <unordered_map>
 
 namespace gui
 {
-class ModelTree final : public QObject
+class ModelTree final
 {
-        Q_OBJECT
-
 public:
-        explicit ModelTree(QTreeWidget* tree);
+        explicit ModelTree(QTreeWidget* tree, const std::function<void()>& item_changed);
+
         ~ModelTree();
 
         void add_item(ObjectId id, unsigned dimension, const std::string& name);
@@ -39,15 +39,12 @@ public:
         void set_current(ObjectId id);
         void clear_all();
 
-signals:
-        void item_changed();
-
-private slots:
-        void current_item_changed(QTreeWidgetItem* current, QTreeWidgetItem* previous);
-
 private:
         std::unordered_map<QTreeWidgetItem*, ObjectId> m_map_item_id;
         std::unordered_map<ObjectId, QTreeWidgetItem*> m_map_id_item;
-        QTreeWidget* m_tree;
+
+        QTreeWidget* m_tree = nullptr;
+
+        std::vector<Connection> m_connections;
 };
 }
