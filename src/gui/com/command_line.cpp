@@ -26,8 +26,9 @@ namespace gui
 namespace
 {
 constexpr const char* NO_OBJECT_SELECTION_OPTION = "n";
+}
 
-std::string command_line_description_string()
+std::string command_line_description()
 {
         std::string s;
 
@@ -45,13 +46,6 @@ std::string command_line_description_string()
         s += "    -" + std::string(NO_OBJECT_SELECTION_OPTION) + "\n";
         s += "        do not open object selection dialog\n";
 
-        return s;
-}
-}
-
-const std::string& command_line_description()
-{
-        static const std::string s = command_line_description_string();
         return s;
 }
 
