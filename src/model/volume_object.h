@@ -37,6 +37,14 @@ class VolumeObject;
 template <size_t N>
 struct VolumeEvent final
 {
+        struct Insert final
+        {
+                std::shared_ptr<VolumeObject<N>> object;
+                Insert(std::shared_ptr<VolumeObject<N>>&& object) : object(std::move(object))
+                {
+                }
+        };
+
         struct Update final
         {
                 std::shared_ptr<VolumeObject<N>> object;
@@ -53,7 +61,7 @@ struct VolumeEvent final
                 }
         };
 
-        using T = std::variant<Update, Delete>;
+        using T = std::variant<Insert, Update, Delete>;
 
         template <typename Type, typename = std::enable_if_t<!std::is_same_v<VolumeEvent, std::remove_cvref_t<Type>>>>
         VolumeEvent(Type&& arg) : m_data(std::forward<Type>(arg))
@@ -102,6 +110,8 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         template <size_t>
         friend class Reading;
 
+        bool m_inserted = false;
+
         mutable std::shared_mutex m_mutex;
         mutable std::unordered_set<Update> m_updates{Update::All};
 
@@ -122,16 +132,23 @@ public:
                 ASSERT(m_volume);
         }
 
-        void update_all()
+        void insert()
         {
                 std::unique_lock m_lock(m_mutex);
-                m_updates = {Update::All};
-                (*m_events)(typename VolumeEvent<N>::Update(this->shared_from_this()));
+                if (!m_inserted)
+                {
+                        m_updates = {Update::All};
+                        m_inserted = true;
+                        (*m_events)(typename VolumeEvent<N>::Insert(this->shared_from_this()));
+                }
         }
 
         ~VolumeObject()
         {
-                (*m_events)(typename VolumeEvent<N>::Delete(m_id));
+                if (m_inserted)
+                {
+                        (*m_events)(typename VolumeEvent<N>::Delete(m_id));
+                }
         }
 
         const Volume<N>& volume() const
@@ -193,10 +210,14 @@ public:
 
         ~WritingUpdates() noexcept(false)
         {
+                bool inserted = m_object->m_inserted;
                 // Нужно снять блокировку до вызова функции событий, так как
                 // обработчики событий могут читать изменения в этом же потоке.
                 m_lock.unlock();
-                (*m_object->m_events)(typename VolumeEvent<N>::Update(m_object->shared_from_this()));
+                if (inserted)
+                {
+                        (*m_object->m_events)(typename VolumeEvent<N>::Update(m_object->shared_from_this()));
+                }
         }
 };
 

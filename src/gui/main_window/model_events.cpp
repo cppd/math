@@ -70,6 +70,10 @@ void ModelEvents::event_from_mesh(const mesh::MeshEvent<N>& event)
         if constexpr (N == 3)
         {
                 const auto visitors = Visitors{
+                        [this](const typename mesh::MeshEvent<N>::Insert& v) {
+                                ASSERT(m_view);
+                                m_view->send(view::command::UpdateMeshObject(v.object));
+                        },
                         [this](const typename mesh::MeshEvent<N>::Update& v) {
                                 ASSERT(m_view);
                                 m_view->send(view::command::UpdateMeshObject(v.object));
@@ -89,13 +93,15 @@ void ModelEvents::event_from_mesh_ui_thread(const mesh::MeshEvent<N>& event)
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         const auto visitors = Visitors{
-                [this](const typename mesh::MeshEvent<N>::Update& v) {
+                [this](const typename mesh::MeshEvent<N>::Insert& v) {
                         if (v.object)
                         {
                                 m_model_tree->insert(v.object);
                         }
                 },
-                [](const typename mesh::MeshEvent<N>::Delete&) {}};
+                [](const typename mesh::MeshEvent<N>::Update&) {}, [](const typename mesh::MeshEvent<N>::Delete&) {}
+
+        };
 
         std::visit(visitors, event.data());
 }
@@ -106,6 +112,10 @@ void ModelEvents::event_from_volume(const volume::VolumeEvent<N>& event)
         if constexpr (N == 3)
         {
                 const auto visitors = Visitors{
+                        [this](const typename volume::VolumeEvent<N>::Insert& v) {
+                                ASSERT(m_view);
+                                m_view->send(view::command::UpdateVolumeObject(v.object));
+                        },
                         [this](const typename volume::VolumeEvent<N>::Update& v) {
                                 ASSERT(m_view);
                                 m_view->send(view::command::UpdateVolumeObject(v.object));
@@ -125,10 +135,15 @@ void ModelEvents::event_from_volume_ui_thread(const volume::VolumeEvent<N>& even
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         const auto visitors = Visitors{
-                [this](const typename volume::VolumeEvent<N>::Update& v) {
+                [this](const typename volume::VolumeEvent<N>::Insert& v) {
                         if (v.object)
                         {
                                 m_model_tree->insert(v.object);
+                        }
+                },
+                [this](const typename volume::VolumeEvent<N>::Update& v) {
+                        if (v.object)
+                        {
                                 m_on_volume_update(v.object->id());
                         }
                 },

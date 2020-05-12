@@ -56,7 +56,7 @@ std::shared_ptr<mesh::MeshObject<N>> load_from_file(
                 std::move(mesh), mesh::model_matrix_for_size_and_position(*mesh, object_size, object_position),
                 object_name);
 
-        mesh_object->created();
+        mesh_object->insert();
 
         return mesh_object;
 }
@@ -75,7 +75,7 @@ std::shared_ptr<mesh::MeshObject<N>> load_from_mesh_repository(
                 std::move(mesh), mesh::model_matrix_for_size_and_position(*mesh, object_size, object_position),
                 object_name);
 
-        mesh_object->created();
+        mesh_object->insert();
 
         return mesh_object;
 }
@@ -94,7 +94,7 @@ std::shared_ptr<volume::VolumeObject<N>> load_from_volume_repository(
                 std::move(volume), volume::model_matrix_for_size_and_position(*volume, object_size, object_position),
                 object_name);
 
-        volume_object->update_all();
+        volume_object->insert();
 
         return volume_object;
 }

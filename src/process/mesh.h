@@ -104,7 +104,7 @@ void convex_hull(ProgressRatioList* progress_list, const mesh::MeshObject<N>& ob
         const std::shared_ptr<mesh::MeshObject<N>> obj =
                 std::make_shared<mesh::MeshObject<N>>(std::move(ch_mesh), object.matrix(), "Convex Hull");
 
-        obj->created();
+        obj->insert();
 }
 
 template <size_t N>
@@ -137,7 +137,7 @@ void cocone(
         const std::shared_ptr<mesh::MeshObject<N>> obj =
                 std::make_shared<mesh::MeshObject<N>>(std::move(cocone_mesh), model_matrix, "Cocone");
 
-        obj->created();
+        obj->insert();
 }
 
 template <size_t N>
@@ -173,7 +173,7 @@ void bound_cocone(
         const std::shared_ptr<mesh::MeshObject<N>> obj =
                 std::make_shared<mesh::MeshObject<N>>(std::move(bound_cocone_mesh), model_matrix, name);
 
-        obj->created();
+        obj->insert();
 }
 
 template <size_t N>
@@ -198,7 +198,7 @@ void mst(
         const std::shared_ptr<mesh::MeshObject<N>> obj =
                 std::make_shared<mesh::MeshObject<N>>(std::move(mst_mesh), model_matrix, "MST");
 
-        obj->created();
+        obj->insert();
 }
 
 template <size_t N>
