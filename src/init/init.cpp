@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "init.h"
 
 #include <src/com/error.h>
-#include <src/com/log.h>
+#include <src/com/log_impl.h>
 #include <src/com/time.h>
 #include <src/window/vulkan/window.h>
 

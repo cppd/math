@@ -17,262 +17,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "log.h"
 
-#include "error.h"
-#include "thread.h"
-#include "time.h"
-
-#include <algorithm>
-#include <array>
-#include <cstdio>
-
-namespace
-{
-std::atomic_int global_call_counter = 0;
-SpinLock* global_log_lock = nullptr;
-SpinLock* global_message_lock = nullptr;
-
-// В момент закрытия главного окна разные потоки могут что-нибудь записывать
-// в лог, поэтому с этой переменной нужна последовательная работа.
-// Использование единственной блокировки означает, что и сообщения будут
-// последовательные, но это не является проблемой.
-std::function<void(LogEvent&&)>* global_log_events = nullptr;
-
-std::function<void(MessageEvent&&)>* global_message_events = nullptr;
-}
-
-void log_init()
-{
-        if (++global_call_counter != 1)
-        {
-                error_fatal("Error log init");
-        }
-        global_log_lock = new SpinLock;
-        global_message_lock = new SpinLock;
-}
-
-void log_exit()
-{
-        delete global_log_lock;
-        global_log_lock = nullptr;
-        delete global_message_lock;
-        global_message_lock = nullptr;
-        --global_call_counter;
-}
-
-//
-
-void set_log_events(const std::function<void(LogEvent&&)>& events)
-{
-        std::lock_guard lg(*global_log_lock);
-
-        if (events)
-        {
-                global_log_events = new std::function<void(LogEvent &&)>(events);
-        }
-        else
-        {
-                delete global_log_events;
-                global_log_events = nullptr;
-        }
-}
-
-void set_message_events(const std::function<void(MessageEvent&&)>& events)
-{
-        std::lock_guard lg(*global_message_lock);
-
-        if (events)
-        {
-                global_message_events = new std::function<void(MessageEvent &&)>(events);
-        }
-        else
-        {
-                delete global_message_events;
-                global_message_events = nullptr;
-        }
-}
-
-std::vector<std::string> format_log_message(const std::string& msg) noexcept
-{
-        try
-        {
-                try
-                {
-                        constexpr int BUF_SIZE = 100;
-                        std::array<char, BUF_SIZE> buffer;
-                        int char_count = std::snprintf(buffer.data(), BUF_SIZE, "[%011.6f]: ", time_in_seconds());
-                        if (char_count < 0 || char_count >= BUF_SIZE)
-                        {
-                                error("message begin length out of range");
-                        }
-
-                        std::string msg_begin = buffer.data();
-                        std::vector<std::string> res;
-
-                        if (std::count(msg.begin(), msg.end(), '\n') == 0)
-                        {
-                                res.push_back(msg_begin + msg);
-                                return res;
-                        }
-
-                        std::string message = msg_begin;
-
-                        for (char c : msg)
-                        {
-                                if (c != '\n')
-                                {
-                                        message += c;
-                                }
-                                else
-                                {
-                                        res.push_back(message);
-                                        message = msg_begin;
-                                }
-                        }
-
-                        res.push_back(message);
-
-                        return res;
-                }
-                catch (const std::exception& e)
-                {
-                        error_fatal(std::string("error format log message: ") + e.what());
-                }
-        }
-        catch (...)
-        {
-                error_fatal("error format log message");
-        }
-}
-
-void write_formatted_log_messages_to_stderr(const std::vector<std::string>& lines) noexcept
-{
-        try
-        {
-                try
-                {
-                        // Вывод всех строк одним вызовом функции std::fprintf для работы при многопоточности
-                        std::string s;
-                        for (const std::string& line : lines)
-                        {
-                                s += line;
-                                s += '\n';
-                        }
-                        std::fprintf(stderr, "%s", s.c_str());
-                        std::fflush(stderr);
-                }
-                catch (const std::exception& e)
-                {
-                        error_fatal(std::string("error writing log message to stderr: ") + e.what());
-                }
-        }
-        catch (...)
-        {
-                error_fatal("error writing log message to stderr");
-        }
-}
-
-namespace
-{
-void log(const std::string& msg, LogMessageType type) noexcept
-{
-        try
-        {
-                try
-                {
-                        {
-                                std::lock_guard lg(*global_log_lock);
-
-                                if (global_log_events)
-                                {
-                                        (*global_log_events)(LogEvent::Message(msg, type));
-                                        return;
-                                }
-                        }
-
-                        // Здесь переменная global_log_events теоретически уже может быть
-                        // установлена в не nullptr, но по имеющейся логике программы установка
-                        // этой переменной в не nullptr происходит только в начале программы
-                        // и только один раз. Зато так будет больше параллельности в сообщениях
-                        // с установленной в nullptr переменной global_log_events.
-
-                        write_formatted_log_messages_to_stderr(format_log_message(msg));
-                }
-                catch (const std::exception& e)
-                {
-                        error_fatal(std::string("error writing log message: ") + e.what());
-                }
-        }
-        catch (...)
-        {
-                error_fatal("error writing log message");
-        }
-}
-
-void message(const std::string& msg, MessageType type) noexcept
-{
-        try
-        {
-                try
-                {
-                        std::lock_guard lg(*global_message_lock);
-
-                        if (global_message_events)
-                        {
-                                (*global_message_events)(MessageEvent::Message(msg, type));
-                        }
-                        else
-                        {
-                                write_formatted_log_messages_to_stderr(format_log_message(msg));
-                        }
-                }
-                catch (const std::exception& e)
-                {
-                        error_fatal(std::string("error writing message: ") + e.what());
-                }
-        }
-        catch (...)
-        {
-                error_fatal("error writing message");
-        }
-}
-}
+#include "log_impl.h"
 
 void LOG(const std::string& msg) noexcept
 {
-        log(msg, LogMessageType::Normal);
+        log_impl(msg, LogMessageType::Normal);
 }
 
 void LOG_ERROR(const std::string& msg) noexcept
 {
-        log(msg, LogMessageType::Error);
+        log_impl(msg, LogMessageType::Error);
 }
 
 void LOG_WARNING(const std::string& msg) noexcept
 {
-        log(msg, LogMessageType::Warning);
+        log_impl(msg, LogMessageType::Warning);
 }
 
 void LOG_INFORMATION(const std::string& msg) noexcept
 {
-        log(msg, LogMessageType::Information);
+        log_impl(msg, LogMessageType::Information);
 }
 
 void MESSAGE_ERROR(const std::string& msg) noexcept
 {
-        message(msg, MessageType::Error);
+        message_impl(msg, MessageType::Error);
 }
 
 void MESSAGE_ERROR_FATAL(const std::string& msg) noexcept
 {
-        message(msg, MessageType::ErrorFatal);
+        message_impl(msg, MessageType::ErrorFatal);
 }
 
 void MESSAGE_WARNING(const std::string& msg) noexcept
 {
-        message(msg, MessageType::Warning);
+        message_impl(msg, MessageType::Warning);
 }
 
 void MESSAGE_INFORMATION(const std::string& msg) noexcept
 {
-        message(msg, MessageType::Information);
+        message_impl(msg, MessageType::Information);
 }

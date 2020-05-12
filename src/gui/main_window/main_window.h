@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_main_window.h"
 
-#include <src/com/log.h>
+#include <src/com/log_impl.h>
 #include <src/progress/progress_list.h>
 #include <src/storage/repository.h>
 #include <src/test/self_test.h>
