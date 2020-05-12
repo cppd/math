@@ -45,7 +45,6 @@ class ModelEvents final
         Sequence<settings::Dimensions, std::tuple, Events> m_events;
 
         ModelTree* m_model_tree;
-        storage::Storage* m_storage;
         std::unique_ptr<view::View>& m_view;
         std::function<void(ObjectId)> m_on_volume_update;
 
@@ -61,7 +60,6 @@ class ModelEvents final
 public:
         ModelEvents(
                 ModelTree* model_tree,
-                storage::Storage* storage,
                 std::unique_ptr<view::View>* view,
                 std::function<void(ObjectId)>&& on_volume_update);
         ~ModelEvents();

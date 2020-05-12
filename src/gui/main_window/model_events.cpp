@@ -25,12 +25,10 @@ namespace gui
 {
 ModelEvents::ModelEvents(
         ModelTree* model_tree,
-        storage::Storage* storage,
         std::unique_ptr<view::View>* view,
         std::function<void(ObjectId)>&& on_volume_update)
         : m_thread_id(std::this_thread::get_id()),
           m_model_tree(model_tree),
-          m_storage(storage),
           m_view(*view),
           m_on_volume_update(std::move(on_volume_update))
 {
@@ -94,11 +92,10 @@ void ModelEvents::event_from_mesh_ui_thread(const mesh::MeshEvent<N>& event)
                 [this](const typename mesh::MeshEvent<N>::Update& v) {
                         if (v.object)
                         {
-                                m_storage->set_mesh_object(v.object);
-                                m_model_tree->add_item(v.object->id(), N, v.object->name());
+                                m_model_tree->insert(v.object);
                         }
                 },
-                [this](const typename mesh::MeshEvent<N>::Delete& v) { m_model_tree->delete_item(v.id); }};
+                [](const typename mesh::MeshEvent<N>::Delete&) {}};
 
         std::visit(visitors, event.data());
 }
@@ -131,12 +128,11 @@ void ModelEvents::event_from_volume_ui_thread(const volume::VolumeEvent<N>& even
                 [this](const typename volume::VolumeEvent<N>::Update& v) {
                         if (v.object)
                         {
-                                m_storage->set_volume_object(v.object);
-                                m_model_tree->add_item(v.object->id(), N, v.object->name());
+                                m_model_tree->insert(v.object);
                                 m_on_volume_update(v.object->id());
                         }
                 },
-                [this](const typename volume::VolumeEvent<N>::Delete& v) { m_model_tree->delete_item(v.id); }};
+                [](const typename volume::VolumeEvent<N>::Delete&) {}};
 
         std::visit(visitors, event.data());
 }

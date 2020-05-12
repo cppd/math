@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/progress/progress_list.h>
 #include <src/storage/repository.h>
-#include <src/storage/storage.h>
 #include <src/test/self_test.h>
 
 #include <QColor>
@@ -159,8 +158,6 @@ private:
 
         void update_volume_ui(ObjectId id);
 
-        std::optional<storage::MeshObjectConst> current_mesh_object_const() const;
-
         const std::thread::id m_thread_id;
 
         Ui::MainWindow ui;
@@ -170,7 +167,6 @@ private:
         std::unique_ptr<view::View> m_view;
         std::unique_ptr<storage::Repository> m_repository;
         std::unique_ptr<RepositoryActions> m_repository_actions;
-        std::unique_ptr<storage::Storage> m_storage;
         std::unique_ptr<ModelTree> m_model_tree;
         std::unique_ptr<ModelEvents> m_mesh_and_volume_events;
 

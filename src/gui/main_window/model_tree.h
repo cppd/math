@@ -20,31 +20,59 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/connection.h"
 
 #include <src/model/object_id.h>
+#include <src/storage/storage.h>
 
 #include <QTreeWidget>
+#include <thread>
 #include <unordered_map>
 
 namespace gui
 {
 class ModelTree final
 {
-public:
-        explicit ModelTree(QTreeWidget* tree, const std::function<void()>& item_changed);
+        friend class ModelEvents;
 
-        ~ModelTree();
+        const std::thread::id m_thread_id;
 
-        void add_item(ObjectId id, unsigned dimension, const std::string& name);
-        void delete_item(ObjectId id);
-        std::optional<ObjectId> current_item() const;
-        void set_current(ObjectId id);
-        void clear_all();
+        storage::Storage m_storage;
 
-private:
         std::unordered_map<QTreeWidgetItem*, ObjectId> m_map_item_id;
         std::unordered_map<ObjectId, QTreeWidgetItem*> m_map_id_item;
 
         QTreeWidget* m_tree = nullptr;
 
         std::vector<Connection> m_connections;
+
+        // Для использования в ModelEvents
+        void insert(const storage::MeshObject& object);
+        void insert(const storage::VolumeObject& object);
+
+        void insert_into_tree(ObjectId id, unsigned dimension, const std::string& name);
+
+        //void set_current(ObjectId id);
+
+        void make_menu(const QPoint& pos);
+
+public:
+        ModelTree(QTreeWidget* tree, const std::function<void()>& item_changed);
+
+        ~ModelTree();
+
+        void erase(ObjectId id);
+        void clear();
+
+        std::optional<ObjectId> current_item() const;
+
+        std::optional<storage::MeshObject> current_mesh() const;
+        std::optional<storage::MeshObjectConst> current_mesh_const() const;
+        std::optional<storage::MeshObject> mesh_if_current(ObjectId id) const;
+        std::optional<storage::MeshObjectConst> mesh_const_if_current(ObjectId id) const;
+
+        std::optional<storage::VolumeObject> current_volume() const;
+        std::optional<storage::VolumeObjectConst> current_volume_const() const;
+        std::optional<storage::VolumeObject> volume_if_current(ObjectId id) const;
+        std::optional<storage::VolumeObjectConst> volume_const_if_current(ObjectId id) const;
+
+private:
 };
 }

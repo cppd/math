@@ -194,12 +194,10 @@ void MainWindow::constructor_objects()
         connect(m_repository_actions.get(), SIGNAL(volume(int, std::string)), this,
                 SLOT(slot_volume_object_repository(int, std::string)));
 
-        m_storage = std::make_unique<storage::Storage>();
-
         m_model_tree = std::make_unique<ModelTree>(ui.model_tree, [this]() { model_tree_item_changed(); });
 
         m_mesh_and_volume_events = std::make_unique<ModelEvents>(
-                m_model_tree.get(), m_storage.get(), &m_view, [this](ObjectId id) { update_volume_ui(id); });
+                m_model_tree.get(), &m_view, [this](ObjectId id) { update_volume_ui(id); });
 }
 
 MainWindow::~MainWindow()
@@ -240,13 +238,7 @@ void MainWindow::terminate_all_threads()
 
         m_worker_threads->terminate_all();
 
-        // При удалении объектов при удалении m_storage будут вызываться
-        // удаления их вершин из дерева, а это означает переключение вершин
-        // и поиск их объектов в m_storage, который в это время удаляется.
-        // Поэтому перед удалением m_storage нужно удалить всё из дерева.
-        m_model_tree->clear_all();
-
-        m_storage.reset();
+        m_model_tree.reset();
         m_view.reset();
 
         m_mesh_and_volume_events.reset();
@@ -570,7 +562,7 @@ void MainWindow::load_from_file(std::string file_name, bool use_object_selection
                         return;
                 }
                 auto clear_all = [this]() {
-                        m_storage->clear();
+                        m_model_tree->clear();
                         m_view->send(view::command::ResetView());
                 };
                 WorkerThreads::Function f = process::action_load_from_file(
@@ -595,7 +587,7 @@ void MainWindow::slot_mesh_object_repository(int dimension, std::string object_n
                         return;
                 }
                 auto clear_all = [this]() {
-                        m_storage->clear();
+                        m_model_tree->clear();
                         m_view->send(view::command::ResetView());
                 };
                 WorkerThreads::Function f = process::action_load_from_mesh_repository(
@@ -631,7 +623,7 @@ void MainWindow::on_actionExport_triggered()
                 {
                         return;
                 }
-                std::optional<storage::MeshObjectConst> object = current_mesh_object_const();
+                std::optional<storage::MeshObjectConst> object = m_model_tree->current_mesh_const();
                 if (!object)
                 {
                         MESSAGE_WARNING("No object to export");
@@ -652,7 +644,7 @@ void MainWindow::on_actionBoundCocone_triggered()
                 {
                         return;
                 }
-                std::optional<storage::MeshObjectConst> object = current_mesh_object_const();
+                std::optional<storage::MeshObjectConst> object = m_model_tree->current_mesh_const();
                 if (!object)
                 {
                         MESSAGE_WARNING("No object to compute BoundCocone");
@@ -704,7 +696,7 @@ void MainWindow::on_actionPainter_triggered()
                         return;
                 }
 
-                std::optional<storage::MeshObjectConst> object = current_mesh_object_const();
+                std::optional<storage::MeshObjectConst> object = m_model_tree->current_mesh_const();
                 if (!object)
                 {
                         MESSAGE_WARNING("No object to paint");
@@ -795,12 +787,7 @@ void MainWindow::update_volume_ui(ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        if (id != m_model_tree->current_item())
-        {
-                return;
-        }
-
-        std::optional<storage::VolumeObjectConst> volume_object_opt = m_storage->volume_object_const(id);
+        std::optional<storage::VolumeObjectConst> volume_object_opt = m_model_tree->volume_const_if_current(id);
         if (!volume_object_opt)
         {
                 return;
@@ -1127,12 +1114,7 @@ void MainWindow::on_slider_volume_levels_range_changed(double min, double max)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        std::optional<ObjectId> id = m_model_tree->current_item();
-        if (!id)
-        {
-                return;
-        }
-        std::optional<storage::VolumeObject> volume_object_opt = m_storage->volume_object(*id);
+        std::optional<storage::VolumeObject> volume_object_opt = m_model_tree->current_volume();
         if (!volume_object_opt)
         {
                 return;
@@ -1144,22 +1126,5 @@ void MainWindow::on_slider_volume_levels_range_changed(double min, double max)
                         volume_object->set_levels(min, max);
                 },
                 *volume_object_opt);
-}
-
-std::optional<storage::MeshObjectConst> MainWindow::current_mesh_object_const() const
-{
-        std::optional<ObjectId> id = m_model_tree->current_item();
-        if (!id)
-        {
-                return std::nullopt;
-        }
-
-        std::optional<storage::MeshObjectConst> object = m_storage->mesh_object_const(*id);
-        if (!object)
-        {
-                return std::nullopt;
-        }
-
-        return object;
 }
 }

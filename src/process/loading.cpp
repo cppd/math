@@ -109,10 +109,10 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
         bool convex_hull = objects_to_load.count(gui::dialog::ComputationType::ConvexHull);
         bool mst = objects_to_load.count(gui::dialog::ComputationType::Mst);
 
+        clear_all();
+
         return [=](ProgressRatioList* progress_list) {
                 unsigned dimension = mesh::file_dimension(file_name);
-
-                clear_all();
 
                 apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
                         std::shared_ptr<mesh::MeshObject<N>> mesh = load_from_file(
@@ -163,9 +163,9 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
         bool convex_hull = objects_to_load.count(gui::dialog::ComputationType::ConvexHull);
         bool mst = objects_to_load.count(gui::dialog::ComputationType::Mst);
 
-        return [=](ProgressRatioList* progress_list) {
-                clear_all();
+        clear_all();
 
+        return [=](ProgressRatioList* progress_list) {
                 apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
                         std::shared_ptr<mesh::MeshObject<N>> mesh = load_from_mesh_repository(
                                 object_name, object_size, dimension_position<N>(object_position), point_count,
