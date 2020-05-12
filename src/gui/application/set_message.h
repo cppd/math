@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui::application
 {
-class Messages
+class SetMessage
 {
 public:
-        Messages();
-        ~Messages();
+        SetMessage();
+        ~SetMessage();
 };
 }

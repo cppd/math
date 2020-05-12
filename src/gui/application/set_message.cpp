@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "messages.h"
+#include "set_message.h"
 
 #include "thread_ui.h"
 
@@ -65,14 +65,14 @@ void message_event(const MessageEvent& event)
 }
 }
 
-Messages::Messages()
+SetMessage::SetMessage()
 {
         set_message_events([=](MessageEvent&& event) {
                 ThreadUI::run_in_ui_thread([&, event = std::move(event)]() { message_event(event); });
         });
 }
 
-Messages::~Messages()
+SetMessage::~SetMessage()
 {
         set_message_events(nullptr);
 }

@@ -23,10 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui::application
 {
-class Log
+class SetLog
 {
 public:
-        Log(std::function<void(const std::vector<std::string>&, LogMessageType)>);
-        ~Log();
+        SetLog(std::function<void(const std::vector<std::string>&, LogMessageType)>);
+        ~SetLog();
 };
 }

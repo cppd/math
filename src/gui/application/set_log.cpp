@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "log.h"
+#include "set_log.h"
 
 #include "thread_ui.h"
 
@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui::application
 {
-Log::Log(std::function<void(const std::vector<std::string>&, LogMessageType)> window_log)
+SetLog::SetLog(std::function<void(const std::vector<std::string>&, LogMessageType)> window_log)
 {
         set_log_events([window_log](LogEvent&& event) {
                 ThreadUI::run_in_ui_thread([&, event = std::move(event)]() {
@@ -39,7 +39,7 @@ Log::Log(std::function<void(const std::vector<std::string>&, LogMessageType)> wi
         });
 }
 
-Log::~Log()
+SetLog::~SetLog()
 {
         set_log_events(nullptr);
 }
