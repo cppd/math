@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <sstream>
 #include <string>
 
 void LOG(const std::string& msg) noexcept;
@@ -28,3 +29,48 @@ void MESSAGE_ERROR(const std::string& msg) noexcept;
 void MESSAGE_ERROR_FATAL(const std::string& msg) noexcept;
 void MESSAGE_WARNING(const std::string& msg) noexcept;
 void MESSAGE_INFORMATION(const std::string& msg) noexcept;
+
+class LogStringStream
+{
+        std::ostringstream m_stream;
+
+protected:
+        LogStringStream() = default;
+        ~LogStringStream() = default;
+
+        std::string str() const noexcept
+        {
+                return m_stream.str();
+        }
+
+public:
+        template <typename T>
+        LogStringStream& operator<<(T&& s)
+        {
+                m_stream << std::forward<T>(s);
+                return *this;
+        }
+};
+
+template <typename T>
+class Log final
+{
+public:
+        Log(const T& v)
+        {
+                LOG(v);
+        }
+};
+
+template <>
+class Log<void> final : public LogStringStream
+{
+public:
+        ~Log()
+        {
+                LOG(str());
+        }
+};
+
+template <typename = void>
+Log() -> Log<void>;
