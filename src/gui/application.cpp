@@ -82,10 +82,10 @@ int run_application(int argc, char* argv[])
 
         QPointer main_window = create_delete_on_close_window<MainWindow>();
 
-        log_events.set_window_log([&](const std::vector<std::string>& lines, const Srgb8& color) {
+        log_events.set_window_log([&](const std::string& text, const Srgb8& color) {
                 if (main_window)
                 {
-                        main_window->insert_to_log(lines, color);
+                        main_window->append_to_log(text, color);
                 }
         });
 

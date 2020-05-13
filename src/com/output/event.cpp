@@ -51,7 +51,7 @@ void log_impl(const std::string& msg, LogEvent::Type type) noexcept
                         }
                         else
                         {
-                                write_formatted_log_messages_to_stderr(format_log_message(msg));
+                                write_formatted_log_message(format_log_message(msg));
                         }
                 }
                 catch (const std::exception& e)
@@ -77,7 +77,7 @@ void message_impl(const std::string& msg, MessageEvent::Type type) noexcept
                         }
                         else
                         {
-                                write_formatted_log_messages_to_stderr(format_log_message(msg));
+                                write_formatted_log_message(format_log_message(msg));
                         }
                 }
                 catch (const std::exception& e)

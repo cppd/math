@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <string>
-#include <vector>
 
-std::vector<std::string> format_log_message(const std::string& msg) noexcept;
-void write_formatted_log_messages_to_stderr(const std::vector<std::string>& lines) noexcept;
+std::string format_log_message(const std::string& msg) noexcept;
+void write_formatted_log_message(const std::string& msg) noexcept;

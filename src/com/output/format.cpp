@@ -20,51 +20,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../error.h"
 #include "../time.h"
 
-#include <algorithm>
 #include <array>
 #include <cstdio>
+#include <iostream>
 
-std::vector<std::string> format_log_message(const std::string& msg) noexcept
+std::string format_log_message(const std::string& msg) noexcept
 {
         try
         {
                 try
                 {
-                        constexpr int BUF_SIZE = 100;
-                        std::array<char, BUF_SIZE> buffer;
-                        int char_count = std::snprintf(buffer.data(), BUF_SIZE, "[%011.6f]: ", time_in_seconds());
-                        if (char_count < 0 || char_count >= BUF_SIZE)
+                        constexpr int BUFFER_SIZE = 100;
+                        std::array<char, BUFFER_SIZE> buffer;
+                        int char_count = std::snprintf(buffer.data(), buffer.size(), "[%011.6f]: ", time_in_seconds());
+                        if (char_count < 0 || static_cast<size_t>(char_count) >= buffer.size())
                         {
-                                error("message begin length out of range");
+                                error_fatal("message beginning length out of range");
                         }
 
-                        std::string msg_begin = buffer.data();
-                        std::vector<std::string> res;
+                        const std::string_view msg_begin = buffer.data();
 
-                        if (std::count(msg.begin(), msg.end(), '\n') == 0)
-                        {
-                                res.push_back(msg_begin + msg);
-                                return res;
-                        }
-
-                        std::string message = msg_begin;
-
+                        std::string result;
+                        result.reserve(msg_begin.size() + msg.size());
+                        result += msg_begin;
                         for (char c : msg)
                         {
-                                if (c != '\n')
+                                result += c;
+                                if (c == '\n')
                                 {
-                                        message += c;
-                                }
-                                else
-                                {
-                                        res.push_back(message);
-                                        message = msg_begin;
+                                        result += msg_begin;
                                 }
                         }
-
-                        res.push_back(message);
-
-                        return res;
+                        return result;
                 }
                 catch (const std::exception& e)
                 {
@@ -77,21 +64,13 @@ std::vector<std::string> format_log_message(const std::string& msg) noexcept
         }
 }
 
-void write_formatted_log_messages_to_stderr(const std::vector<std::string>& lines) noexcept
+void write_formatted_log_message(const std::string& msg) noexcept
 {
         try
         {
                 try
                 {
-                        // Вывод всех строк одним вызовом функции std::fprintf для работы при многопоточности
-                        std::string s;
-                        for (const std::string& line : lines)
-                        {
-                                s += line;
-                                s += '\n';
-                        }
-                        std::fprintf(stderr, "%s", s.c_str());
-                        std::fflush(stderr);
+                        std::cerr << msg << '\n';
                 }
                 catch (const std::exception& e)
                 {

@@ -46,7 +46,7 @@ public:
         explicit MainWindow(QWidget* parent = nullptr);
         ~MainWindow() override;
 
-        void insert_to_log(const std::vector<std::string>& lines, const Srgb8& color);
+        void append_to_log(const std::string& text, const Srgb8& color);
 
 public slots:
 

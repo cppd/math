@@ -26,31 +26,29 @@ namespace gui::application
 {
 namespace
 {
-void log_event(
-        const LogEvent& event,
-        const std::function<void(const std::vector<std::string>&, const Srgb8&)>& window_log)
+void log_event(const LogEvent& event, const std::function<void(const std::string&, const Srgb8&)>& window_log)
 {
         // Здесь без вызовов функции LOG, так как начнёт вызывать сама себя
 
-        std::vector<std::string> lines = format_log_message(event.text);
+        std::string text = format_log_message(event.text);
 
-        write_formatted_log_messages_to_stderr(lines);
+        write_formatted_log_message(text);
 
         if (window_log)
         {
                 switch (event.type)
                 {
                 case LogEvent::Type::Normal:
-                        window_log(lines, Srgb8(0, 0, 0));
+                        window_log(text, Srgb8(0, 0, 0));
                         break;
                 case LogEvent::Type::Error:
-                        window_log(lines, Srgb8(255, 0, 0));
+                        window_log(text, Srgb8(255, 0, 0));
                         break;
                 case LogEvent::Type::Warning:
-                        window_log(lines, Srgb8(200, 150, 0));
+                        window_log(text, Srgb8(200, 150, 0));
                         break;
                 case LogEvent::Type::Information:
-                        window_log(lines, Srgb8(0, 0, 255));
+                        window_log(text, Srgb8(0, 0, 255));
                         break;
                 }
         }
@@ -71,7 +69,7 @@ LogEvents::~LogEvents()
         set_log_events(nullptr);
 }
 
-void LogEvents::set_window_log(const std::function<void(const std::vector<std::string>&, const Srgb8&)>& window_log)
+void LogEvents::set_window_log(const std::function<void(const std::string&, const Srgb8&)>& window_log)
 {
         m_window_log = window_log;
 }

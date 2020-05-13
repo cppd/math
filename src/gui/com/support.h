@@ -84,7 +84,7 @@ void button_strike_out(QRadioButton* button, bool strike_out);
 
 void set_slider_to_middle(QSlider* slider);
 
-void add_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string>& lines, const Srgb8& color) noexcept;
+void append_to_text_edit(QPlainTextEdit* text_edit, const std::string& text, const Srgb8& color) noexcept;
 
 WindowID widget_window_id(const QWidget* widget);
 double widget_pixels_per_inch(const QWidget* widget);

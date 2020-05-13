@@ -52,64 +52,23 @@ bool is_child_widget_of_any_layout(QLayout* layout, QWidget* widget)
         return false;
 }
 
-void append_plain_text(QPlainTextEdit* text_edit, const std::vector<std::string>& lines)
+void append_text(QPlainTextEdit* text_edit, const std::string& text, const Srgb8& color)
 {
-        if (lines.empty())
-        {
-                return;
-        }
-        QString s;
-        s += QString::fromStdString(lines.front());
-        for (auto iter = std::next(lines.cbegin()); iter != lines.cend(); ++iter)
-        {
-                s += '\n';
-                s += QString::fromStdString(*iter);
-        }
-        text_edit->appendPlainText(s);
-}
-
-void append_html(
-        QPlainTextEdit* text_edit,
-        const QString& line_begin,
-        const QString& line_end,
-        const std::vector<std::string>& lines)
-{
-        if (lines.empty())
-        {
-                return;
-        }
-        QString s;
-        s += line_begin;
-        s += QString::fromStdString(lines.front()).toHtmlEscaped();
-        s += line_end;
-        for (auto iter = std::next(lines.cbegin()); iter != lines.cend(); ++iter)
-        {
-                s += '\n';
-                s += line_begin;
-                s += QString::fromStdString(*iter).toHtmlEscaped();
-                s += line_end;
-        }
-        text_edit->appendHtml(s);
-}
-
-void write_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string>& lines, const Srgb8& color)
-{
-        ASSERT(text_edit);
-
         // text_edit->moveCursor(QTextCursor::End);
 
         if (color == Srgb8(0, 0, 0))
         {
-                append_plain_text(text_edit, lines);
+                text_edit->appendPlainText(QString::fromStdString(text));
         }
         else
         {
-                QString begin;
-                begin += QStringLiteral("<pre><font color=\"");
-                begin += QColor(color.red, color.green, color.blue).name();
-                begin += QStringLiteral("\">");
-                const QString& end = QStringLiteral(R"(</font></pre>)");
-                append_html(text_edit, begin, end, lines);
+                QString s;
+                s += QStringLiteral("<pre><font color=\"");
+                s += QColor(color.red, color.green, color.blue).name();
+                s += QStringLiteral("\">");
+                s += QString::fromStdString(text).toHtmlEscaped();
+                s += QStringLiteral(R"(</font></pre>)");
+                text_edit->appendHtml(s);
         }
 }
 }
@@ -159,7 +118,7 @@ void set_slider_to_middle(QSlider* slider)
         slider->setValue(slider->minimum() + (slider->maximum() - slider->minimum()) / 2);
 }
 
-void add_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string>& lines, const Srgb8& color) noexcept
+void append_to_text_edit(QPlainTextEdit* text_edit, const std::string& text, const Srgb8& color) noexcept
 {
         try
         {
@@ -167,7 +126,7 @@ void add_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string>&
 
                 try
                 {
-                        if (lines.empty())
+                        if (text.empty())
                         {
                                 return;
                         }
@@ -178,24 +137,24 @@ void add_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string>&
 
                         if (bottom)
                         {
-                                write_to_text_edit(text_edit, lines, color);
+                                append_text(text_edit, text, color);
                                 text_edit->verticalScrollBar()->setValue(text_edit->verticalScrollBar()->maximum());
                         }
                         else
                         {
                                 int v = text_edit->verticalScrollBar()->value();
-                                write_to_text_edit(text_edit, lines, color);
+                                append_text(text_edit, text, color);
                                 text_edit->verticalScrollBar()->setValue(v);
                         }
                 }
                 catch (const std::exception& e)
                 {
-                        error_fatal(std::string("error adding log message: ") + e.what());
+                        error_fatal(std::string("error adding to text edit: ") + e.what());
                 }
         }
         catch (...)
         {
-                error_fatal("error adding log message");
+                error_fatal("error adding to text edit");
         }
 }
 

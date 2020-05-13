@@ -29,12 +29,12 @@ namespace gui::application
 class LogEvents
 {
         std::function<void(LogEvent&&)> m_events;
-        std::function<void(const std::vector<std::string>&, const Srgb8&)> m_window_log;
+        std::function<void(const std::string&, const Srgb8&)> m_window_log;
 
 public:
         LogEvents();
         ~LogEvents();
 
-        void set_window_log(const std::function<void(const std::vector<std::string>&, const Srgb8&)>& window_log);
+        void set_window_log(const std::function<void(const std::string&, const Srgb8&)>& window_log);
 };
 }
