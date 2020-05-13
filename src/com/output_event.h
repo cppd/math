@@ -63,8 +63,5 @@ struct MessageEvent final
 void set_log_events(const std::function<void(LogEvent&&)>* events);
 void set_message_events(const std::function<void(MessageEvent&&)>* events);
 
-std::vector<std::string> format_log_message(const std::string& msg) noexcept;
-void write_formatted_log_messages_to_stderr(const std::vector<std::string>& lines) noexcept;
-
 void log_impl(const std::string& msg, LogEvent::Type type) noexcept;
 void message_impl(const std::string& msg, MessageEvent::Type type) noexcept;

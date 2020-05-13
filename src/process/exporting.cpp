@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "exporting.h"
 
 #include <src/com/error.h>
-#include <src/com/log.h>
+#include <src/com/message.h>
 #include <src/gui/dialogs/file_dialog.h>
 #include <src/model/mesh_utility.h>
 

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/log_impl.h>
+#include <src/com/output_event.h>
 
 namespace gui::application
 {

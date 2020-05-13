@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/global_index.h>
+#include <src/com/message.h>
 #include <src/painter/painter.h>
 #include <src/painter/visible_paintbrush.h>
 

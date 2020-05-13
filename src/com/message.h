@@ -17,24 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/color/color.h>
-#include <src/com/output_event.h>
-
-#include <functional>
 #include <string>
-#include <vector>
 
-namespace gui::application
-{
-class LogEvents
-{
-        std::function<void(LogEvent&&)> m_events;
-        std::function<void(const std::vector<std::string>&, const Srgb8&)> m_window_log;
-
-public:
-        LogEvents();
-        ~LogEvents();
-
-        void set_window_log(const std::function<void(const std::vector<std::string>&, const Srgb8&)>& window_log);
-};
-}
+void MESSAGE_ERROR(const std::string& msg) noexcept;
+void MESSAGE_ERROR_FATAL(const std::string& msg) noexcept;
+void MESSAGE_WARNING(const std::string& msg) noexcept;
+void MESSAGE_INFORMATION(const std::string& msg) noexcept;

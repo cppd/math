@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "log.h"
 
-#include "log_impl.h"
+#include "output_event.h"
 
 void LOG(const std::string& msg) noexcept
 {
@@ -37,24 +37,4 @@ void LOG_WARNING(const std::string& msg) noexcept
 void LOG_INFORMATION(const std::string& msg) noexcept
 {
         log_impl(msg, LogEvent::Type::Information);
-}
-
-void MESSAGE_ERROR(const std::string& msg) noexcept
-{
-        message_impl(msg, MessageEvent::Type::Error);
-}
-
-void MESSAGE_ERROR_FATAL(const std::string& msg) noexcept
-{
-        message_impl(msg, MessageEvent::Type::ErrorFatal);
-}
-
-void MESSAGE_WARNING(const std::string& msg) noexcept
-{
-        message_impl(msg, MessageEvent::Type::Warning);
-}
-
-void MESSAGE_INFORMATION(const std::string& msg) noexcept
-{
-        message_impl(msg, MessageEvent::Type::Information);
 }

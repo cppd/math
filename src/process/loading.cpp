@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dimension.h"
 #include "load.h"
 
-#include <src/com/log.h>
+#include <src/com/message.h>
 #include <src/gui/dialogs/bound_cocone.h>
 #include <src/gui/dialogs/file_dialog.h>
 #include <src/gui/dialogs/object_selection.h>
