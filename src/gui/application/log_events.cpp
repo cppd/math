@@ -30,9 +30,9 @@ void log_event(const LogEvent& event, const std::function<void(const std::string
 {
         // Здесь без вызовов функции LOG, так как начнёт вызывать сама себя
 
-        std::string text = format_log_message(event.text);
+        std::string text = format_log_text(event.text);
 
-        write_formatted_log_message(text);
+        write_formatted_log_text(text);
 
         if (window_log)
         {

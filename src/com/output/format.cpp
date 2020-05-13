@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdio>
 #include <iostream>
 
-std::string format_log_message(const std::string& msg) noexcept
+std::string format_log_text(const std::string& text) noexcept
 {
         try
         {
@@ -38,47 +38,47 @@ std::string format_log_message(const std::string& msg) noexcept
                                 error_fatal("message beginning length out of range");
                         }
 
-                        const std::string_view msg_begin = buffer.data();
+                        const std::string_view line_beginning = buffer.data();
 
                         std::string result;
-                        result.reserve(msg_begin.size() + msg.size());
-                        result += msg_begin;
-                        for (char c : msg)
+                        result.reserve(line_beginning.size() + text.size());
+                        result += line_beginning;
+                        for (char c : text)
                         {
                                 result += c;
                                 if (c == '\n')
                                 {
-                                        result += msg_begin;
+                                        result += line_beginning;
                                 }
                         }
                         return result;
                 }
                 catch (const std::exception& e)
                 {
-                        error_fatal(std::string("error format log message: ") + e.what());
+                        error_fatal(std::string("error format log text: ") + e.what());
                 }
         }
         catch (...)
         {
-                error_fatal("error format log message");
+                error_fatal("error format log text");
         }
 }
 
-void write_formatted_log_message(const std::string& msg) noexcept
+void write_formatted_log_text(const std::string& text) noexcept
 {
         try
         {
                 try
                 {
-                        std::cerr << msg << '\n';
+                        std::cerr << text << '\n';
                 }
                 catch (const std::exception& e)
                 {
-                        error_fatal(std::string("error writing log message to stderr: ") + e.what());
+                        error_fatal(std::string("error writing log text to stderr: ") + e.what());
                 }
         }
         catch (...)
         {
-                error_fatal("error writing log message to stderr");
+                error_fatal("error writing log text to stderr");
         }
 }
