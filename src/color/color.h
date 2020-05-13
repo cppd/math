@@ -40,6 +40,11 @@ struct Srgb8
         {
                 return blue | (green << 8u) | (red << 16u);
         }
+
+        bool operator==(const Srgb8& v) const
+        {
+                return red == v.red && green == v.green && blue == v.blue;
+        }
 };
 
 class Color
