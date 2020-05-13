@@ -15,10 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "output_event.h"
+#include "event.h"
 
-#include "error.h"
-#include "output_format.h"
+#include "format.h"
+
+#include "../error.h"
 
 namespace
 {

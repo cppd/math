@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "message.h"
 
-#include "output_event.h"
+#include "output/event.h"
 
 void MESSAGE_ERROR(const std::string& msg) noexcept
 {

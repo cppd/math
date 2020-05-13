@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "thread_ui.h"
 
-#include <src/com/output_format.h>
+#include <src/com/output/format.h>
 #include <src/com/variant.h>
 
 namespace gui::application
