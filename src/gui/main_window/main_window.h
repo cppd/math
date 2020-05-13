@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_main_window.h"
 
-#include <src/com/log_impl.h>
 #include <src/progress/progress_list.h>
 #include <src/storage/repository.h>
 #include <src/test/self_test.h>
@@ -47,7 +46,7 @@ public:
         explicit MainWindow(QWidget* parent = nullptr);
         ~MainWindow() override;
 
-        void insert_to_log(const std::vector<std::string>& lines, LogMessageType type);
+        void insert_to_log(const std::vector<std::string>& lines, const Srgb8& color);
 
 public slots:
 

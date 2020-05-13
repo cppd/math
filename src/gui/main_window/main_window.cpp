@@ -207,9 +207,11 @@ MainWindow::~MainWindow()
         terminate_all_threads();
 }
 
-void MainWindow::insert_to_log(const std::vector<std::string>& lines, LogMessageType type)
+void MainWindow::insert_to_log(const std::vector<std::string>& lines, const Srgb8& color)
 {
-        add_to_text_edit(ui.text_log, lines, type);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        add_to_text_edit(ui.text_log, lines, color);
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)

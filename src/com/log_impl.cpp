@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "log_impl.h"
 
 #include "error.h"
-#include "thread.h"
 #include "time.h"
 
 #include <algorithm>
@@ -27,68 +26,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-std::atomic_int global_call_counter = 0;
-SpinLock* global_log_lock = nullptr;
-SpinLock* global_message_lock = nullptr;
-
-// В момент закрытия главного окна разные потоки могут что-нибудь записывать
-// в лог, поэтому с этой переменной нужна последовательная работа.
-// Использование единственной блокировки означает, что и сообщения будут
-// последовательные, но это не является проблемой.
-std::function<void(LogEvent&&)>* global_log_events = nullptr;
-
-std::function<void(MessageEvent&&)>* global_message_events = nullptr;
+// Установка этих переменных происходит в основном потоке при отсутствии
+// работы других потоков, поэтому с ними можно работать без блокировок.
+const std::function<void(LogEvent&&)>* global_log_events = nullptr;
+const std::function<void(MessageEvent&&)>* global_message_events = nullptr;
 }
 
-void log_init()
+void set_log_events(const std::function<void(LogEvent&&)>* events)
 {
-        if (++global_call_counter != 1)
-        {
-                error_fatal("Error log init");
-        }
-        global_log_lock = new SpinLock;
-        global_message_lock = new SpinLock;
+        global_log_events = events;
 }
 
-void log_exit()
+void set_message_events(const std::function<void(MessageEvent&&)>* events)
 {
-        delete global_log_lock;
-        global_log_lock = nullptr;
-        delete global_message_lock;
-        global_message_lock = nullptr;
-        --global_call_counter;
-}
-
-//
-
-void set_log_events(const std::function<void(LogEvent&&)>& events)
-{
-        std::lock_guard lg(*global_log_lock);
-
-        if (events)
-        {
-                global_log_events = new std::function<void(LogEvent &&)>(events);
-        }
-        else
-        {
-                delete global_log_events;
-                global_log_events = nullptr;
-        }
-}
-
-void set_message_events(const std::function<void(MessageEvent&&)>& events)
-{
-        std::lock_guard lg(*global_message_lock);
-
-        if (events)
-        {
-                global_message_events = new std::function<void(MessageEvent &&)>(events);
-        }
-        else
-        {
-                delete global_message_events;
-                global_message_events = nullptr;
-        }
+        global_message_events = events;
 }
 
 std::vector<std::string> format_log_message(const std::string& msg) noexcept
@@ -171,29 +122,20 @@ void write_formatted_log_messages_to_stderr(const std::vector<std::string>& line
         }
 }
 
-void log_impl(const std::string& msg, LogMessageType type) noexcept
+void log_impl(const std::string& msg, LogEvent::Type type) noexcept
 {
         try
         {
                 try
                 {
+                        if (global_log_events)
                         {
-                                std::lock_guard lg(*global_log_lock);
-
-                                if (global_log_events)
-                                {
-                                        (*global_log_events)(LogEvent::Message(msg, type));
-                                        return;
-                                }
+                                (*global_log_events)(LogEvent(msg, type));
                         }
-
-                        // Здесь переменная global_log_events теоретически уже может быть
-                        // установлена в не nullptr, но по имеющейся логике программы установка
-                        // этой переменной в не nullptr происходит только в начале программы
-                        // и только один раз. Зато так будет больше параллельности в сообщениях
-                        // с установленной в nullptr переменной global_log_events.
-
-                        write_formatted_log_messages_to_stderr(format_log_message(msg));
+                        else
+                        {
+                                write_formatted_log_messages_to_stderr(format_log_message(msg));
+                        }
                 }
                 catch (const std::exception& e)
                 {
@@ -206,17 +148,15 @@ void log_impl(const std::string& msg, LogMessageType type) noexcept
         }
 }
 
-void message_impl(const std::string& msg, MessageType type) noexcept
+void message_impl(const std::string& msg, MessageEvent::Type type) noexcept
 {
         try
         {
                 try
                 {
-                        std::lock_guard lg(*global_message_lock);
-
                         if (global_message_events)
                         {
-                                (*global_message_events)(MessageEvent::Message(msg, type));
+                                (*global_message_events)(MessageEvent(msg, type));
                         }
                         else
                         {

@@ -17,12 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/log_impl.h>
+
 namespace gui::application
 {
-class SetMessage
+class MessageEvents
 {
+        std::function<void(MessageEvent&&)> m_events;
+
 public:
-        SetMessage();
-        ~SetMessage();
+        MessageEvents();
+        ~MessageEvents();
 };
 }

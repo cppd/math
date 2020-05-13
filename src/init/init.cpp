@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "init.h"
 
 #include <src/com/error.h>
-#include <src/com/log_impl.h>
 #include <src/com/time.h>
 #include <src/window/vulkan/window.h>
 
@@ -40,13 +39,10 @@ Initialization::Initialization()
                 error_fatal("Initialization must be called once");
         }
 
-        log_init();
         time_init();
 
 #if defined(__linux__)
-
         xlib_init();
-
 #endif
 
 #if 0
@@ -65,5 +61,4 @@ Initialization::~Initialization()
 #endif
 
         time_exit();
-        log_exit();
 }

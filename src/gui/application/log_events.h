@@ -17,16 +17,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/color/color.h>
 #include <src/com/log_impl.h>
 
 #include <functional>
+#include <string>
+#include <vector>
 
 namespace gui::application
 {
-class SetLog
+class LogEvents
 {
+        std::function<void(LogEvent&&)> m_events;
+        std::function<void(const std::vector<std::string>&, const Srgb8&)> m_window_log;
+
 public:
-        SetLog(std::function<void(const std::vector<std::string>&, LogMessageType)>);
-        ~SetLog();
+        LogEvents();
+        ~LogEvents();
+
+        void set_window_log(const std::function<void(const std::vector<std::string>&, const Srgb8&)>& window_log);
 };
 }

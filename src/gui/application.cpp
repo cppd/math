@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "application.h"
 
-#include "application/set_log.h"
-#include "application/set_message.h"
+#include "application/log_events.h"
+#include "application/message_events.h"
 #include "application/thread_ui.h"
 #include "com/command_line.h"
 #include "com/support.h"
@@ -77,14 +77,19 @@ int run_application(int argc, char* argv[])
         Application a(argc, argv);
 
         application::ThreadUI thread_ui;
-        application::SetMessage set_message;
+        application::LogEvents log_events;
+        application::MessageEvents message_events;
 
-        MainWindow* w = create_delete_on_close_window<MainWindow>();
+        QPointer main_window = create_delete_on_close_window<MainWindow>();
 
-        application::SetLog set_log(
-                [&](const std::vector<std::string>& lines, LogMessageType type) { w->insert_to_log(lines, type); });
+        log_events.set_window_log([&](const std::vector<std::string>& lines, const Srgb8& color) {
+                if (main_window)
+                {
+                        main_window->insert_to_log(lines, color);
+                }
+        });
 
-        w->show();
+        main_window->show();
 
         int r = Application::exec();
 

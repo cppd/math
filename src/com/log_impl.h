@@ -22,86 +22,49 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <variant>
 #include <vector>
 
-void log_init();
-void log_exit();
-
-enum class LogMessageType
-{
-        Normal,
-        Error,
-        Warning,
-        Information
-};
-
 struct LogEvent final
 {
-        struct Message final
+        enum class Type
         {
-                std::string text;
-                LogMessageType type;
-                template <typename T>
-                Message(T&& text, LogMessageType type) : text(std::forward<T>(text)), type(type)
-                {
-                }
+                Normal,
+                Error,
+                Warning,
+                Information
         };
 
-        using T = std::variant<Message>;
+        std::string text;
+        Type type;
 
-        template <typename Type, typename = std::enable_if_t<!std::is_same_v<LogEvent, std::remove_cvref_t<Type>>>>
-        LogEvent(Type&& arg) : m_data(std::forward<Type>(arg))
+        template <typename T>
+        LogEvent(T&& text, Type type) : text(std::forward<T>(text)), type(type)
         {
         }
-
-        const T& data() const
-        {
-                return m_data;
-        }
-
-private:
-        T m_data;
-};
-
-enum class MessageType
-{
-        Error,
-        ErrorFatal,
-        Warning,
-        Information
 };
 
 struct MessageEvent final
 {
-        struct Message final
+        enum class Type
         {
-                std::string text;
-                MessageType type;
-                template <typename T>
-                Message(T&& text, MessageType type) : text(std::forward<T>(text)), type(type)
-                {
-                }
+                Error,
+                ErrorFatal,
+                Warning,
+                Information
         };
 
-        using T = std::variant<Message>;
+        std::string text;
+        Type type;
 
-        template <typename Type, typename = std::enable_if_t<!std::is_same_v<MessageEvent, std::remove_cvref_t<Type>>>>
-        MessageEvent(Type&& arg) : m_data(std::forward<Type>(arg))
+        template <typename T>
+        MessageEvent(T&& text, Type type) : text(std::forward<T>(text)), type(type)
         {
         }
-
-        const T& data() const
-        {
-                return m_data;
-        }
-
-private:
-        T m_data;
 };
 
-void set_log_events(const std::function<void(LogEvent&&)>& events);
-void set_message_events(const std::function<void(MessageEvent&&)>& events);
+void set_log_events(const std::function<void(LogEvent&&)>* events);
+void set_message_events(const std::function<void(MessageEvent&&)>* events);
 
 std::vector<std::string> format_log_message(const std::string& msg) noexcept;
 void write_formatted_log_messages_to_stderr(const std::vector<std::string>& lines) noexcept;
 
-void log_impl(const std::string& msg, LogMessageType type) noexcept;
-void message_impl(const std::string& msg, MessageType type) noexcept;
+void log_impl(const std::string& msg, LogEvent::Type type) noexcept;
+void message_impl(const std::string& msg, MessageEvent::Type type) noexcept;

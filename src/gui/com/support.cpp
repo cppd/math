@@ -92,40 +92,24 @@ void append_html(
         text_edit->appendHtml(s);
 }
 
-void write_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string>& lines, LogMessageType type)
+void write_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string>& lines, const Srgb8& color)
 {
         ASSERT(text_edit);
 
         // text_edit->moveCursor(QTextCursor::End);
 
-        switch (type)
-        {
-        case LogMessageType::Normal:
+        if (color == Srgb8(0, 0, 0))
         {
                 append_plain_text(text_edit, lines);
-                break;
         }
-        case LogMessageType::Error:
+        else
         {
-                const QString& begin = QStringLiteral(R"(<pre><font color="Red">)");
+                QString begin;
+                begin += QStringLiteral("<pre><font color=\"");
+                begin += QColor(color.red, color.green, color.blue).name();
+                begin += QStringLiteral("\">");
                 const QString& end = QStringLiteral(R"(</font></pre>)");
                 append_html(text_edit, begin, end, lines);
-                break;
-        }
-        case LogMessageType::Warning:
-        {
-                const QString& begin = QStringLiteral(R"(<pre><font color="#d08000">)");
-                const QString& end = QStringLiteral(R"(</font></pre>)");
-                append_html(text_edit, begin, end, lines);
-                break;
-        }
-        case LogMessageType::Information:
-        {
-                const QString& begin = QStringLiteral(R"(<pre><font color="Blue">)");
-                const QString& end = QStringLiteral(R"(</font></pre>)");
-                append_html(text_edit, begin, end, lines);
-                break;
-        }
         }
 }
 }
@@ -175,7 +159,7 @@ void set_slider_to_middle(QSlider* slider)
         slider->setValue(slider->minimum() + (slider->maximum() - slider->minimum()) / 2);
 }
 
-void add_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string>& lines, LogMessageType type) noexcept
+void add_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string>& lines, const Srgb8& color) noexcept
 {
         try
         {
@@ -194,13 +178,13 @@ void add_to_text_edit(QPlainTextEdit* text_edit, const std::vector<std::string>&
 
                         if (bottom)
                         {
-                                write_to_text_edit(text_edit, lines, type);
+                                write_to_text_edit(text_edit, lines, color);
                                 text_edit->verticalScrollBar()->setValue(text_edit->verticalScrollBar()->maximum());
                         }
                         else
                         {
                                 int v = text_edit->verticalScrollBar()->value();
-                                write_to_text_edit(text_edit, lines, type);
+                                write_to_text_edit(text_edit, lines, color);
                                 text_edit->verticalScrollBar()->setValue(v);
                         }
                 }
