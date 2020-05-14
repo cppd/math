@@ -215,14 +215,21 @@ public:
                 const Queue& queue,
                 VkImageLayout old_layout,
                 VkImageLayout new_layout,
-                const Span<const std::uint_least8_t>& srgb_pixels) const;
+                const Span<const std::uint_least8_t>& pixels) const;
+
+        void write_linear_rgb_pixels(
+                const CommandPool& command_pool,
+                const Queue& queue,
+                VkImageLayout old_layout,
+                VkImageLayout new_layout,
+                const Span<const float>& pixels) const;
 
         void write_srgb_grayscale_pixels(
                 const CommandPool& command_pool,
                 const Queue& queue,
                 VkImageLayout old_layout,
                 VkImageLayout new_layout,
-                const Span<const std::uint_least8_t>& srgb_pixels) const;
+                const Span<const std::uint_least8_t>& pixels) const;
 
         void write_linear_grayscale_pixels(
                 const CommandPool& command_pool,
