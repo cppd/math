@@ -165,7 +165,7 @@ constexpr std::array<std::uint_least16_t, 256> SRGB_UINT8_TO_RGB_UINT16_LOOKUP_T
 #else
 
 template <typename T>
-T srgb_to_rgb(T c)
+T srgb_to_linear(T c)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -187,7 +187,7 @@ T srgb_to_rgb(T c)
 #endif
 
 template <typename T>
-T rgb_to_srgb(T c)
+T linear_to_srgb(T c)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -207,7 +207,7 @@ T rgb_to_srgb(T c)
 }
 
 template <typename T>
-T rgb_luminance(T red, T green, T blue)
+T linear_luminance(T red, T green, T blue)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -220,7 +220,7 @@ namespace color_conversion
 #if defined(USE_COLOR_LOOKUP_TABLES)
 
 template <typename T, typename UInt8>
-T srgb_uint8_to_rgb_float(UInt8 c)
+T srgb_uint8_to_linear_float(UInt8 c)
 {
         static_assert(std::is_same_v<UInt8, unsigned char>);
         static_assert(std::is_floating_point_v<T>);
@@ -236,7 +236,7 @@ T srgb_uint8_to_rgb_float(UInt8 c)
 }
 
 template <typename UInt8>
-std::uint_least16_t srgb_uint8_to_rgb_uint16(UInt8 c)
+std::uint_least16_t srgb_uint8_to_linear_uint16(UInt8 c)
 {
         static_assert(std::is_same_v<UInt8, unsigned char>);
 
@@ -253,23 +253,21 @@ std::uint_least16_t srgb_uint8_to_rgb_uint16(UInt8 c)
 #else
 
 template <typename T, typename UInt8>
-T srgb_uint8_to_rgb_float(UInt8 c)
+T srgb_uint8_to_linear_float(UInt8 c)
 {
-        return srgb_to_rgb(uint8_to_float<T>(c));
+        return srgb_to_linear(uint8_to_float<T>(c));
 }
 
 template <typename UInt8>
-std::uint_least16_t srgb_uint8_to_rgb_uint16(UInt8 c)
+std::uint_least16_t srgb_uint8_to_linear_uint16(UInt8 c)
 {
-        return float_to_uint16(srgb_to_rgb(uint8_to_float<float>(c)));
+        return float_to_uint16(srgb_to_linear(uint8_to_float<float>(c)));
 }
 
 #endif
 
-//
-
 template <typename T, typename UInt8>
-T alpha_uint8_to_float(UInt8 c)
+T linear_uint8_to_linear_float(UInt8 c)
 {
         static_assert(std::is_same_v<UInt8, unsigned char>);
         if constexpr (limits<unsigned char>::max() != MAX8)
@@ -280,7 +278,7 @@ T alpha_uint8_to_float(UInt8 c)
 }
 
 template <typename UInt8>
-std::uint_least16_t alpha_uint8_to_uint16(UInt8 c)
+std::uint_least16_t linear_uint8_to_linear_uint16(UInt8 c)
 {
         static_assert(std::is_same_v<UInt8, unsigned char>);
         if constexpr (limits<unsigned char>::max() != MAX8)
@@ -293,56 +291,78 @@ std::uint_least16_t alpha_uint8_to_uint16(UInt8 c)
 //
 
 template <typename T>
-T rgb_float_to_srgb_float(T c)
+T linear_float_to_srgb_float(T c)
 {
-        return rgb_to_srgb<T>(c);
-}
-
-template <typename T>
-unsigned char rgb_float_to_srgb_uint8(T c)
-{
-        return float_to_uint8(rgb_to_srgb(c));
+        return linear_to_srgb<T>(c);
 }
 
 //
 
 template <typename T>
-T rgb_float_to_rgb_luminance(T red, T green, T blue)
+unsigned char linear_float_to_srgb_uint8(T c)
 {
-        return rgb_luminance(red, green, blue);
+        return float_to_uint8(linear_to_srgb(c));
+}
+
+template <typename T>
+unsigned char linear_float_to_linear_uint8(T c)
+{
+        return float_to_uint8(c);
+}
+
+template <typename T>
+std::uint_least16_t linear_float_to_linear_uint16(T c)
+{
+        return float_to_uint16(c);
 }
 
 //
 
-template float srgb_uint8_to_rgb_float(unsigned char c);
-template double srgb_uint8_to_rgb_float(unsigned char c);
-template long double srgb_uint8_to_rgb_float(unsigned char c);
-
-template std::uint_least16_t srgb_uint8_to_rgb_uint16(unsigned char c);
-
-//
-
-template float alpha_uint8_to_float(unsigned char c);
-template double alpha_uint8_to_float(unsigned char c);
-template long double alpha_uint8_to_float(unsigned char c);
-
-template std::uint_least16_t alpha_uint8_to_uint16(unsigned char c);
+template <typename T>
+T linear_float_to_linear_luminance(T red, T green, T blue)
+{
+        return linear_luminance(red, green, blue);
+}
 
 //
 
-template float rgb_float_to_srgb_float(float c);
-template double rgb_float_to_srgb_float(double c);
-template long double rgb_float_to_srgb_float(long double c);
+template float srgb_uint8_to_linear_float(unsigned char c);
+template double srgb_uint8_to_linear_float(unsigned char c);
+template long double srgb_uint8_to_linear_float(unsigned char c);
 
-template unsigned char rgb_float_to_srgb_uint8(float c);
-template unsigned char rgb_float_to_srgb_uint8(double c);
-template unsigned char rgb_float_to_srgb_uint8(long double c);
+template std::uint_least16_t srgb_uint8_to_linear_uint16(unsigned char c);
+
+template float linear_uint8_to_linear_float(unsigned char c);
+template double linear_uint8_to_linear_float(unsigned char c);
+template long double linear_uint8_to_linear_float(unsigned char c);
+
+template std::uint_least16_t linear_uint8_to_linear_uint16(unsigned char c);
 
 //
 
-template float rgb_float_to_rgb_luminance(float red, float green, float blue);
-template double rgb_float_to_rgb_luminance(double red, double green, double blue);
-template long double rgb_float_to_rgb_luminance(long double red, long double green, long double blue);
+template float linear_float_to_srgb_float(float c);
+template double linear_float_to_srgb_float(double c);
+template long double linear_float_to_srgb_float(long double c);
+
+//
+
+template unsigned char linear_float_to_srgb_uint8(float c);
+template unsigned char linear_float_to_srgb_uint8(double c);
+template unsigned char linear_float_to_srgb_uint8(long double c);
+
+template unsigned char linear_float_to_linear_uint8(float c);
+template unsigned char linear_float_to_linear_uint8(double c);
+template unsigned char linear_float_to_linear_uint8(long double c);
+
+template std::uint_least16_t linear_float_to_linear_uint16(float c);
+template std::uint_least16_t linear_float_to_linear_uint16(double c);
+template std::uint_least16_t linear_float_to_linear_uint16(long double c);
+
+//
+
+template float linear_float_to_linear_luminance(float red, float green, float blue);
+template double linear_float_to_linear_luminance(double red, double green, double blue);
+template long double linear_float_to_linear_luminance(long double red, long double green, long double blue);
 }
 
 #if !defined(USE_COLOR_LOOKUP_TABLES)
@@ -369,7 +389,7 @@ std::string lookup_table_float()
         {
                 oss << ((i != 0) ? "," : "");
                 oss << (((i & 0b11) != 0) ? " " : "\n" + std::string(8, ' '));
-                oss << srgb_uint8_to_rgb_float<T>(static_cast<unsigned char>(i)) << suffix;
+                oss << srgb_uint8_to_linear_float<T>(static_cast<unsigned char>(i)) << suffix;
         }
         oss << "\n};\n";
         oss << "// clang-format on\n";
@@ -386,7 +406,8 @@ std::string lookup_table_uint16()
         {
                 oss << ((i != 0) ? "," : "");
                 oss << (((i % 16) != 0) ? " " : "\n" + std::string(8, ' '));
-                oss << std::setw(5) << static_cast<unsigned>(srgb_uint8_to_rgb_uint16(static_cast<unsigned char>(i)));
+                oss << std::setw(5)
+                    << static_cast<unsigned>(srgb_uint8_to_linear_uint16(static_cast<unsigned char>(i)));
         }
         oss << "\n};\n";
         oss << "// clang-format on\n";

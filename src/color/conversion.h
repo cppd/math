@@ -22,29 +22,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace color_conversion
 {
 template <typename T, typename UInt8>
-T srgb_uint8_to_rgb_float(UInt8 c);
+T srgb_uint8_to_linear_float(UInt8 c);
 
 template <typename UInt8>
-std::uint_least16_t srgb_uint8_to_rgb_uint16(UInt8 c);
-
-//
+std::uint_least16_t srgb_uint8_to_linear_uint16(UInt8 c);
 
 template <typename T, typename UInt8>
-T alpha_uint8_to_float(UInt8 c);
+T linear_uint8_to_linear_float(UInt8 c);
 
 template <typename UInt8>
-std::uint_least16_t alpha_uint8_to_uint16(UInt8 c);
+std::uint_least16_t linear_uint8_to_linear_uint16(UInt8 c);
 
 //
 
 template <typename T>
-T rgb_float_to_srgb_float(T c);
-
-template <typename T>
-unsigned char rgb_float_to_srgb_uint8(T c);
+T linear_float_to_srgb_float(T c);
 
 //
 
 template <typename T>
-T rgb_float_to_rgb_luminance(T red, T green, T blue);
+unsigned char linear_float_to_srgb_uint8(T c);
+
+template <typename T>
+unsigned char linear_float_to_linear_uint8(T c);
+
+template <typename T>
+std::uint_least16_t linear_float_to_linear_uint16(T c);
+
+//
+
+template <typename T>
+T linear_float_to_linear_luminance(T red, T green, T blue);
 }

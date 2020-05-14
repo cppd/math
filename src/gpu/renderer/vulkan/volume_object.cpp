@@ -50,7 +50,7 @@ std::vector<std::uint8_t> transfer_function()
         for (int i = 0; i <= max; ++i)
         {
                 float v = i * max_r;
-                uint8_t c = color_conversion::rgb_float_to_srgb_uint8(v);
+                uint8_t c = color_conversion::linear_float_to_srgb_uint8(v);
                 uint8_t a = std::round(v * 255);
                 pixels.push_back(c);
                 pixels.push_back(c);
@@ -149,7 +149,7 @@ class VolumeObject::Volume
                         vulkan::make_extent(transfer_function_pixels.size() / 4), VK_IMAGE_LAYOUT_UNDEFINED,
                         false /*storage*/);
 
-                m_transfer_function->write_srgb_color_pixels(
+                m_transfer_function->write_srgb_rgba_pixels(
                         m_graphics_command_pool, m_graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, transfer_function_pixels);
 

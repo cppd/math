@@ -23,11 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace color_conversion
 {
-std::vector<float> rgba_pixels_from_srgb_uint8_to_rgb_float(const Span<const std::uint_least8_t>& pixels)
+std::vector<float> rgba_pixels_from_srgb_uint8_to_linear_float(const Span<const std::uint_least8_t>& pixels)
 {
         if (pixels.size() % 4 != 0)
         {
-                error("sRGB pixel buffer size is not a multiple of 4");
+                error("RGBA pixel buffer size is not a multiple of 4");
         }
 
         std::vector<float> buffer(pixels.size());
@@ -35,19 +35,20 @@ std::vector<float> rgba_pixels_from_srgb_uint8_to_rgb_float(const Span<const std
         size_t p_i = 0;
         while (p_i < buffer.size())
         {
-                buffer[b_i++] = srgb_uint8_to_rgb_float<float>(pixels[p_i++]);
-                buffer[b_i++] = srgb_uint8_to_rgb_float<float>(pixels[p_i++]);
-                buffer[b_i++] = srgb_uint8_to_rgb_float<float>(pixels[p_i++]);
-                buffer[b_i++] = alpha_uint8_to_float<float>(pixels[p_i++]);
+                buffer[b_i++] = srgb_uint8_to_linear_float<float>(pixels[p_i++]);
+                buffer[b_i++] = srgb_uint8_to_linear_float<float>(pixels[p_i++]);
+                buffer[b_i++] = srgb_uint8_to_linear_float<float>(pixels[p_i++]);
+                buffer[b_i++] = linear_uint8_to_linear_float<float>(pixels[p_i++]);
         }
         return buffer;
 }
 
-std::vector<std::uint_least16_t> rgba_pixels_from_srgb_uint8_to_rgb_uint16(const Span<const std::uint_least8_t>& pixels)
+std::vector<std::uint_least16_t> rgba_pixels_from_srgb_uint8_to_linear_uint16(
+        const Span<const std::uint_least8_t>& pixels)
 {
         if (pixels.size() % 4 != 0)
         {
-                error("sRGB pixel buffer size is not a multiple of 4");
+                error("RGBA pixel buffer size is not a multiple of 4");
         }
 
         std::vector<std::uint_least16_t> buffer(pixels.size());
@@ -55,31 +56,69 @@ std::vector<std::uint_least16_t> rgba_pixels_from_srgb_uint8_to_rgb_uint16(const
         size_t p_i = 0;
         while (p_i < buffer.size())
         {
-                buffer[b_i++] = srgb_uint8_to_rgb_uint16(pixels[p_i++]);
-                buffer[b_i++] = srgb_uint8_to_rgb_uint16(pixels[p_i++]);
-                buffer[b_i++] = srgb_uint8_to_rgb_uint16(pixels[p_i++]);
-                buffer[b_i++] = alpha_uint8_to_uint16(pixels[p_i++]);
+                buffer[b_i++] = srgb_uint8_to_linear_uint16(pixels[p_i++]);
+                buffer[b_i++] = srgb_uint8_to_linear_uint16(pixels[p_i++]);
+                buffer[b_i++] = srgb_uint8_to_linear_uint16(pixels[p_i++]);
+                buffer[b_i++] = linear_uint8_to_linear_uint16(pixels[p_i++]);
         }
         return buffer;
 }
 
-std::vector<float> grayscale_pixels_from_srgb_uint8_to_rgb_float(const Span<const std::uint_least8_t>& pixels)
+std::vector<float> grayscale_pixels_from_srgb_uint8_to_linear_float(const Span<const std::uint_least8_t>& pixels)
 {
         std::vector<float> buffer(pixels.size());
         for (size_t i = 0; i < buffer.size(); ++i)
         {
-                buffer[i] = srgb_uint8_to_rgb_float<float>(pixels[i]);
+                buffer[i] = srgb_uint8_to_linear_float<float>(pixels[i]);
         }
         return buffer;
 }
 
-std::vector<std::uint_least16_t> grayscale_pixels_from_srgb_uint8_to_rgb_uint16(
+std::vector<std::uint_least16_t> grayscale_pixels_from_srgb_uint8_to_linear_uint16(
         const Span<const std::uint_least8_t>& pixels)
 {
         std::vector<std::uint_least16_t> buffer(pixels.size());
         for (size_t i = 0; i < buffer.size(); ++i)
         {
-                buffer[i] = srgb_uint8_to_rgb_uint16(pixels[i]);
+                buffer[i] = srgb_uint8_to_linear_uint16(pixels[i]);
+        }
+        return buffer;
+}
+
+std::vector<std::uint_least8_t> rgb_pixels_from_linear_float_to_srgb_uint8(const Span<const float>& pixels)
+{
+        if (pixels.size() % 3 != 0)
+        {
+                error("RGB pixel buffer size is not a multiple of 3");
+        }
+
+        std::vector<std::uint_least8_t> buffer(pixels.size());
+        size_t b_i = 0;
+        size_t p_i = 0;
+        while (p_i < buffer.size())
+        {
+                buffer[b_i++] = linear_float_to_srgb_uint8(pixels[p_i++]);
+                buffer[b_i++] = linear_float_to_srgb_uint8(pixels[p_i++]);
+                buffer[b_i++] = linear_float_to_srgb_uint8(pixels[p_i++]);
+        }
+        return buffer;
+}
+
+std::vector<std::uint_least16_t> rgb_pixels_from_linear_float_to_linear_uint16(const Span<const float>& pixels)
+{
+        if (pixels.size() % 3 != 0)
+        {
+                error("RGB pixel buffer size is not a multiple of 3");
+        }
+
+        std::vector<std::uint_least16_t> buffer(pixels.size());
+        size_t b_i = 0;
+        size_t p_i = 0;
+        while (p_i < buffer.size())
+        {
+                buffer[b_i++] = linear_float_to_linear_uint16(pixels[p_i++]);
+                buffer[b_i++] = linear_float_to_linear_uint16(pixels[p_i++]);
+                buffer[b_i++] = linear_float_to_linear_uint16(pixels[p_i++]);
         }
         return buffer;
 }

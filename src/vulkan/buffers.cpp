@@ -544,7 +544,7 @@ ImageView create_image_view(
 }
 
 template <typename T>
-void check_color_buffer_size(const T& pixels, VkExtent3D extent)
+void check_rgba_buffer_size(const T& pixels, VkExtent3D extent)
 {
         if (pixels.size() != 4ull * extent.width * extent.height * extent.depth)
         {
@@ -564,7 +564,7 @@ void check_grayscale_buffer_size(const T& pixels, VkExtent3D extent)
         }
 }
 
-void write_srgb_color_pixels_to_image(
+void write_srgb_rgba_pixels_to_image(
         VkImage image,
         VkFormat format,
         VkExtent3D extent,
@@ -576,7 +576,7 @@ void write_srgb_color_pixels_to_image(
         const Queue& queue,
         const Span<const std::uint8_t>& srgb_pixels)
 {
-        check_color_buffer_size(srgb_pixels, extent);
+        check_rgba_buffer_size(srgb_pixels, extent);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
@@ -585,7 +585,7 @@ void write_srgb_color_pixels_to_image(
         case VK_FORMAT_R16G16B16A16_UNORM:
         {
                 const std::vector<uint16_t> buffer =
-                        color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(srgb_pixels);
+                        color_conversion::rgba_pixels_from_srgb_uint8_to_linear_uint16(srgb_pixels);
                 staging_image_write(
                         device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
                         buffer);
@@ -594,7 +594,7 @@ void write_srgb_color_pixels_to_image(
         case VK_FORMAT_R32G32B32A32_SFLOAT:
         {
                 const std::vector<float> buffer =
-                        color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
+                        color_conversion::rgba_pixels_from_srgb_uint8_to_linear_float(srgb_pixels);
                 staging_image_write(
                         device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
                         buffer);
@@ -634,7 +634,7 @@ void write_srgb_grayscale_pixels_to_image(
         case VK_FORMAT_R16_UNORM:
         {
                 const std::vector<uint16_t> buffer =
-                        color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_uint16(srgb_pixels);
+                        color_conversion::grayscale_pixels_from_srgb_uint8_to_linear_uint16(srgb_pixels);
                 staging_image_write(
                         device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
                         buffer);
@@ -643,7 +643,7 @@ void write_srgb_grayscale_pixels_to_image(
         case VK_FORMAT_R32_SFLOAT:
         {
                 const std::vector<float> buffer =
-                        color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
+                        color_conversion::grayscale_pixels_from_srgb_uint8_to_linear_float(srgb_pixels);
                 staging_image_write(
                         device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
                         buffer);
@@ -898,7 +898,7 @@ void ImageWithMemory::check_family_index(const CommandPool& command_pool, const 
         }
 }
 
-void ImageWithMemory::write_srgb_color_pixels(
+void ImageWithMemory::write_srgb_rgba_pixels(
         const CommandPool& command_pool,
         const Queue& queue,
         VkImageLayout old_layout,
@@ -907,7 +907,7 @@ void ImageWithMemory::write_srgb_color_pixels(
 {
         check_family_index(command_pool, queue);
 
-        write_srgb_color_pixels_to_image(
+        write_srgb_rgba_pixels_to_image(
                 m_image, m_format, m_extent, old_layout, new_layout, m_device, m_physical_device, command_pool, queue,
                 srgb_pixels);
 }

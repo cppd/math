@@ -68,9 +68,9 @@ public:
 
         Color(const Srgb8& c)
                 : m_data(
-                        color_conversion::srgb_uint8_to_rgb_float<T>(c.red),
-                        color_conversion::srgb_uint8_to_rgb_float<T>(c.green),
-                        color_conversion::srgb_uint8_to_rgb_float<T>(c.blue))
+                        color_conversion::srgb_uint8_to_linear_float<T>(c.red),
+                        color_conversion::srgb_uint8_to_linear_float<T>(c.green),
+                        color_conversion::srgb_uint8_to_linear_float<T>(c.blue))
         {
         }
 
@@ -89,7 +89,7 @@ public:
 
         T luminance() const
         {
-                return color_conversion::rgb_float_to_rgb_luminance(m_data[0], m_data[1], m_data[2]);
+                return color_conversion::linear_float_to_linear_luminance(m_data[0], m_data[1], m_data[2]);
         }
 
         T max_element() const

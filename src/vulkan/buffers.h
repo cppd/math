@@ -210,7 +210,7 @@ public:
 
         //
 
-        void write_srgb_color_pixels(
+        void write_srgb_rgba_pixels(
                 const CommandPool& command_pool,
                 const Queue& queue,
                 VkImageLayout old_layout,
