@@ -332,7 +332,7 @@ AddSourceFiles(EXECUTABLE
 
 AddIncludeFiles(BINARY_FILES
                         OUTPUT_EXTENSION "bin"
-                        SOURCE "extern/resources"
+                        SOURCE "font"
                         EXTENSIONS ${extensions_binary})
 
 # CMake при использовании target_include_directories вставляет -I
