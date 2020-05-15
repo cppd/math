@@ -64,9 +64,8 @@ struct Mesh final
         struct Image
         {
                 std::array<int, N - 1> size;
-                // Цветовое пространство sRGB, последовательность red, green, blue, alpha.
-                // Каждый цветовой компонент в интервале [0, 255].
-                std::vector<unsigned char> srgba_pixels;
+                ColorFormat color_format;
+                std::vector<std::byte> pixels;
         };
 
         std::vector<Vector<N, float>> vertices;

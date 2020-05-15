@@ -61,14 +61,16 @@ class Glyphs
         int m_width;
         int m_height;
         std::unordered_map<char32_t, text::FontGlyph> m_glyphs;
-        std::vector<std::uint_least8_t> m_pixels;
+        ColorFormat m_color_format;
+        std::vector<std::byte> m_pixels;
 
 public:
         Glyphs(int size, unsigned max_image_dimension)
         {
                 text::Font font(size);
                 create_font_glyphs(
-                        font, max_image_dimension, max_image_dimension, &m_glyphs, &m_width, &m_height, &m_pixels);
+                        font, max_image_dimension, max_image_dimension, &m_glyphs, &m_width, &m_height, &m_color_format,
+                        &m_pixels);
         }
         int width() const
         {
@@ -82,7 +84,11 @@ public:
         {
                 return m_glyphs;
         }
-        std::vector<std::uint_least8_t>& pixels()
+        ColorFormat color_format() const
+        {
+                return m_color_format;
+        }
+        std::vector<std::byte>& pixels()
         {
                 return m_pixels;
         }
@@ -300,9 +306,9 @@ class Impl final : public View
                 ASSERT(m_glyph_texture.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
                 ASSERT(!(m_glyph_texture.usage() & VK_IMAGE_USAGE_STORAGE_BIT));
 
-                m_glyph_texture.write_srgb_grayscale_pixels(
+                m_glyph_texture.write_pixels(
                         graphics_command_pool, graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, glyphs.pixels());
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, glyphs.color_format(), glyphs.pixels());
 
                 set_color(color);
         }

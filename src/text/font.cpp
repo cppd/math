@@ -153,8 +153,8 @@ void save_to_file(char32_t code_point, const std::optional<Font::Char>& data)
         oss << ".png";
 
         save_grayscale_image_to_file(
-                oss.str(), data->width, data->height,
-                Span<const std::uint_least8_t>(data->image, 1ull * data->width * data->height));
+                oss.str(), data->width, data->height, ColorFormat::R8_SRGB,
+                Span<const std::byte>(data->image, 1ull * data->width * data->height));
 }
 }
 
@@ -203,7 +203,7 @@ public:
                 Char res;
 
                 res.code_point = code_point;
-                res.image = m_face->glyph->bitmap.buffer;
+                res.image = reinterpret_cast<const std::byte*>(m_face->glyph->bitmap.buffer);
                 res.size = m_size;
                 res.width = m_face->glyph->bitmap.width;
                 res.height = m_face->glyph->bitmap.rows;

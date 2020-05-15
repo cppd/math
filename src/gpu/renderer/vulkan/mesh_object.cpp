@@ -350,9 +350,9 @@ std::vector<vulkan::ImageWithMemory> load_textures(
                         device, command_pool, queue, family_indices, COLOR_IMAGE_FORMATS, VK_SAMPLE_COUNT_1_BIT,
                         VK_IMAGE_TYPE_2D, vulkan::make_extent(image.size[0], image.size[1]), VK_IMAGE_LAYOUT_UNDEFINED,
                         storage);
-                textures.back().write_srgb_rgba_pixels(
+                textures.back().write_pixels(
                         command_pool, queue, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                        image.srgba_pixels);
+                        image.color_format, image.pixels);
                 ASSERT(textures.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
                 ASSERT(!(textures.back().usage() & VK_IMAGE_USAGE_STORAGE_BIT));
         }
@@ -360,12 +360,14 @@ std::vector<vulkan::ImageWithMemory> load_textures(
         // На одну текстуру больше для её указания, но не использования в тех материалах, где нет текстуры
         constexpr unsigned w = 1;
         constexpr unsigned h = 1;
-        const std::vector<std::uint_least8_t> srgba_pixels(w * h * 4, 0);
+        constexpr ColorFormat color_format = ColorFormat::R8G8B8A8_SRGB;
+        const std::vector<std::byte> pixels(w * h * 4);
         textures.emplace_back(
                 device, command_pool, queue, family_indices, COLOR_IMAGE_FORMATS, VK_SAMPLE_COUNT_1_BIT,
                 VK_IMAGE_TYPE_2D, vulkan::make_extent(w, h), VK_IMAGE_LAYOUT_UNDEFINED, storage);
-        textures.back().write_srgb_rgba_pixels(
-                command_pool, queue, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, srgba_pixels);
+        textures.back().write_pixels(
+                command_pool, queue, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, color_format,
+                pixels);
         ASSERT(textures.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
         ASSERT(!(textures.back().usage() & VK_IMAGE_USAGE_STORAGE_BIT));
 

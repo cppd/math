@@ -40,7 +40,10 @@ class Image
 
         long long pixel_index(const std::array<int, N>& p) const;
 
-        void load_from_srgba_pixels(const std::array<int, N>& size, const std::vector<unsigned char>& srgba_pixels);
+        void load_from_pixels(
+                const std::array<int, N>& size,
+                ColorFormat color_format,
+                const std::vector<std::byte>& pixels);
 
         void resize(const std::array<int, N>& size);
 
@@ -49,7 +52,7 @@ class Image
 public:
         explicit Image(const std::array<int, N>& size);
 
-        Image(const std::array<int, N>& size, const std::vector<unsigned char>& srgba_pixels);
+        Image(const std::array<int, N>& size, ColorFormat, const std::vector<std::byte>& pixels);
 
         template <size_t X = N>
         explicit Image(std::enable_if_t<X == 2, const std::string&> file_name);

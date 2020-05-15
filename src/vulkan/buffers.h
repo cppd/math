@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "instance.h"
 #include "objects.h"
 
+#include <src/color/color.h>
 #include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/type/detect.h>
@@ -210,33 +211,13 @@ public:
 
         //
 
-        void write_srgb_rgba_pixels(
+        void write_pixels(
                 const CommandPool& command_pool,
                 const Queue& queue,
                 VkImageLayout old_layout,
                 VkImageLayout new_layout,
-                const Span<const std::uint_least8_t>& pixels) const;
-
-        void write_linear_rgb_pixels(
-                const CommandPool& command_pool,
-                const Queue& queue,
-                VkImageLayout old_layout,
-                VkImageLayout new_layout,
-                const Span<const float>& pixels) const;
-
-        void write_srgb_grayscale_pixels(
-                const CommandPool& command_pool,
-                const Queue& queue,
-                VkImageLayout old_layout,
-                VkImageLayout new_layout,
-                const Span<const std::uint_least8_t>& pixels) const;
-
-        void write_linear_grayscale_pixels(
-                const CommandPool& command_pool,
-                const Queue& queue,
-                VkImageLayout old_layout,
-                VkImageLayout new_layout,
-                const Span<const std::uint_least16_t>& pixels) const;
+                ColorFormat color_format,
+                const Span<const std::byte>& pixels) const;
 
         void clear_commands(VkCommandBuffer command_buffer, VkImageLayout image_layout) const;
 

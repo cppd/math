@@ -149,9 +149,13 @@ class VolumeObject::Volume
                         vulkan::make_extent(transfer_function_pixels.size() / 4), VK_IMAGE_LAYOUT_UNDEFINED,
                         false /*storage*/);
 
-                m_transfer_function->write_srgb_rgba_pixels(
+                Span<const std::byte> pixels_span(
+                        reinterpret_cast<const std::byte*>(data_pointer(transfer_function_pixels)),
+                        data_size(transfer_function_pixels));
+
+                m_transfer_function->write_pixels(
                         m_graphics_command_pool, m_graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, transfer_function_pixels);
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, ColorFormat::R8G8B8A8_SRGB, pixels_span);
 
                 if (with_memory_creation == Memory::Yes)
                 {
@@ -190,9 +194,9 @@ class VolumeObject::Volume
                         image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 }
 
-                m_image->write_linear_grayscale_pixels(
+                m_image->write_pixels(
                         m_graphics_command_pool, m_graphics_queue, image_layout,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image.pixels);
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image.color_format, image.pixels);
         }
 
 public:

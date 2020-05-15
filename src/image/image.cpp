@@ -73,9 +73,9 @@ Image<N>::Image(const std::array<int, N>& size)
 }
 
 template <size_t N>
-Image<N>::Image(const std::array<int, N>& size, const std::vector<unsigned char>& srgba_pixels)
+Image<N>::Image(const std::array<int, N>& size, ColorFormat color_format, const std::vector<std::byte>& pixels)
 {
-        load_from_srgba_pixels(size, srgba_pixels);
+        load_from_pixels(size, color_format, pixels);
 }
 
 template <size_t N>
@@ -184,18 +184,28 @@ Color Image<N>::texture(const Vector<N, T>& p) const
 }
 
 template <size_t N>
-void Image<N>::load_from_srgba_pixels(const std::array<int, N>& size, const std::vector<unsigned char>& srgba_pixels)
+void Image<N>::load_from_pixels(
+        const std::array<int, N>& size,
+        ColorFormat color_format,
+        const std::vector<std::byte>& pixels)
 {
-        if (4ull * mul(size) != srgba_pixels.size())
+        if (color_format != ColorFormat::R8G8B8A8_SRGB)
         {
-                error("Image size error for sRGBA pixels");
+                error("Image format is not supported");
+        }
+
+        if (4ull * mul(size) != pixels.size())
+        {
+                error("Image size error for RGBA pixels");
         }
 
         resize(size);
 
         for (size_t i = 0, p = 0; i < m_data.size(); p += 4, ++i)
         {
-                m_data[i] = Srgb8(srgba_pixels[p], srgba_pixels[p + 1], srgba_pixels[p + 2]);
+                std::array<uint8_t, 3> rgb;
+                std::memcpy(rgb.data(), &pixels[p], rgb.size());
+                m_data[i] = Srgb8(rgb[0], rgb[1], rgb[2]);
         }
 }
 
@@ -212,10 +222,12 @@ std::enable_if_t<X == 2> Image<N>::read_from_file(const std::string& file_name)
         static_assert(N == X);
 
         std::array<int, N> size;
-        std::vector<unsigned char> srgba_pixels;
 
-        load_srgba_image_from_file(file_name, &size[0], &size[1], &srgba_pixels);
-        load_from_srgba_pixels(size, srgba_pixels);
+        ColorFormat color_format;
+        std::vector<std::byte> pixels;
+
+        load_image_from_file(file_name, &size[0], &size[1], &color_format, &pixels);
+        load_from_pixels(size, color_format, pixels);
 }
 
 template <size_t N>

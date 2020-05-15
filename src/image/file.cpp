@@ -79,8 +79,14 @@ void save_grayscale_image_to_file(
         const std::string& file_name,
         int width,
         int height,
-        Span<const std::uint_least8_t> pixels)
+        ColorFormat color_format,
+        Span<const std::byte> pixels)
 {
+        if (color_format != ColorFormat::R8_SRGB)
+        {
+                error("Image format is not supported for saving grayscale image to file");
+        }
+
         if (1ull * width * height != pixels.size())
         {
                 error("Error image size");
@@ -93,7 +99,8 @@ void save_grayscale_image_to_file(
                 QRgb* image_line = reinterpret_cast<QRgb*>(image.scanLine(row));
                 for (int col = 0; col < width; ++col)
                 {
-                        std::uint_least8_t c = pixels[pixel++];
+                        std::uint8_t c;
+                        std::memcpy(&c, &pixels[pixel++], 1);
                         image_line[col] = qRgb(c, c, c);
                 }
         }
@@ -165,11 +172,12 @@ void save_srgb_image_to_file_bgr(
         }
 }
 
-void load_srgba_image_from_file(
+void load_image_from_file(
         const std::string& file_name,
         int* width,
         int* height,
-        std::vector<std::uint_least8_t>* pixels)
+        ColorFormat* color_format,
+        std::vector<std::byte>* pixels)
 {
         QImage image;
         if (!image.load(file_name.c_str()) || image.width() < 1 || image.height() < 1)
@@ -194,16 +202,27 @@ void load_srgba_image_from_file(
                 for (int col = 0; col < *width; ++col)
                 {
                         const QRgb& c = image_line[col];
-                        (*pixels)[pixel++] = qRed(c);
-                        (*pixels)[pixel++] = qGreen(c);
-                        (*pixels)[pixel++] = qBlue(c);
-                        (*pixels)[pixel++] = qAlpha(c);
+                        uint8_t r = qRed(c);
+                        uint8_t g = qGreen(c);
+                        uint8_t b = qBlue(c);
+                        uint8_t a = qAlpha(c);
+                        std::memcpy(&(*pixels)[pixel++], &r, 1);
+                        std::memcpy(&(*pixels)[pixel++], &g, 1);
+                        std::memcpy(&(*pixels)[pixel++], &b, 1);
+                        std::memcpy(&(*pixels)[pixel++], &a, 1);
                 }
         }
+
+        *color_format = ColorFormat::R8G8B8A8_SRGB;
 }
 
-void flip_srgba_image_vertically(int width, int height, std::vector<std::uint_least8_t>* pixels)
+void flip_image_vertically(int width, int height, ColorFormat color_format, std::vector<std::byte>* pixels)
 {
+        if (color_format != ColorFormat::R8G8B8A8_SRGB)
+        {
+                error("Image format is not supported for image flipping");
+        }
+
         if (4ull * width * height != pixels->size())
         {
                 error("Error image size");

@@ -40,7 +40,8 @@ double volume_size(unsigned size)
 template <size_t N>
 std::unique_ptr<volume::Volume<N>> cube(unsigned size)
 {
-        constexpr unsigned PIXEL_VALUE = 1000;
+        constexpr ColorFormat COLOR_FORMAT = ColorFormat::R16;
+        constexpr std::uint16_t PIXEL_VALUE = 1000;
 
         if (size < 2)
         {
@@ -61,7 +62,15 @@ std::unique_ptr<volume::Volume<N>> cube(unsigned size)
         {
                 volume.image.size[i] = size;
         }
-        volume.image.pixels.resize(multiply_all<long long>(volume.image.size), PIXEL_VALUE);
+        volume.image.color_format = COLOR_FORMAT;
+        volume.image.pixels.resize(sizeof(PIXEL_VALUE) * multiply_all<long long>(volume.image.size));
+
+        auto iter = volume.image.pixels.begin();
+        while (iter != volume.image.pixels.end())
+        {
+                std::memcpy(&(*iter), &PIXEL_VALUE, sizeof(PIXEL_VALUE));
+                std::advance(iter, sizeof(PIXEL_VALUE));
+        }
 
         return std::make_unique<volume::Volume<N>>(std::move(volume));
 }

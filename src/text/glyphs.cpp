@@ -97,7 +97,7 @@ void render_glyphs(
         const std::vector<char32_t>& code_points,
         const Font& font,
         std::unordered_map<char32_t, FontGlyph>* font_glyphs,
-        std::unordered_map<char32_t, std::vector<std::uint_least8_t>>* glyph_pixels)
+        std::unordered_map<char32_t, std::vector<std::byte>>* glyph_pixels)
 {
         font_glyphs->clear();
         glyph_pixels->clear();
@@ -131,7 +131,7 @@ void render_glyphs(
                 font_glyph.height = rc->height;
                 font_glyph.advance_x = rc->advance_x;
 
-                std::vector<std::uint_least8_t>& pixels = glyph_pixels->try_emplace(code_point).first->second;
+                std::vector<std::byte>& pixels = glyph_pixels->try_emplace(code_point).first->second;
 
                 pixels.resize(1ull * rc->width * rc->height);
                 for (size_t i = 0; i < pixels.size(); ++i)
@@ -195,13 +195,14 @@ void place_rectangles_on_rectangle(
 void fill_texture_pixels_and_texture_coordinates(
         int texture_width,
         int texture_height,
-        const std::unordered_map<char32_t, std::vector<std::uint_least8_t>>& glyph_pixels,
+        const std::unordered_map<char32_t, std::vector<std::byte>>& glyph_pixels,
         const std::unordered_map<char32_t, std::array<int, 2>>& glyph_coordinates,
         std::unordered_map<char32_t, FontGlyph>* font_glyphs,
-        std::vector<std::uint_least8_t>* texture_pixels)
+        std::vector<std::byte>* texture_pixels)
 {
         texture_pixels->clear();
-        texture_pixels->resize(1ull * texture_width * texture_height, 0);
+        texture_pixels->resize(1ull * texture_width * texture_height);
+        std::memset(texture_pixels->data(), 0, texture_pixels->size());
 
         float r_width = 1.0f / texture_width;
         float r_height = 1.0f / texture_height;
@@ -211,7 +212,7 @@ void fill_texture_pixels_and_texture_coordinates(
                 ASSERT(glyph_pixels.count(cp) == 1);
                 ASSERT(glyph_coordinates.count(cp) == 1);
 
-                const std::vector<std::uint_least8_t>& pixels = glyph_pixels.find(cp)->second;
+                const std::vector<std::byte>& pixels = glyph_pixels.find(cp)->second;
                 const std::array<int, 2>& coordinates = glyph_coordinates.find(cp)->second;
 
                 copy_image(
@@ -234,9 +235,10 @@ void create_font_glyphs(
         std::unordered_map<char32_t, FontGlyph>* font_glyphs,
         int* texture_width,
         int* texture_height,
-        std::vector<std::uint_least8_t>* texture_pixels)
+        ColorFormat* color_format,
+        std::vector<std::byte>* pixels)
 {
-        std::unordered_map<char32_t, std::vector<std::uint_least8_t>> glyph_pixels;
+        std::unordered_map<char32_t, std::vector<std::byte>> glyph_pixels;
 
         render_glyphs(supported_code_points(), font, font_glyphs, &glyph_pixels);
 
@@ -246,11 +248,14 @@ void create_font_glyphs(
                 *font_glyphs, max_width, max_height, texture_width, texture_height, &glyph_coordinates);
 
         fill_texture_pixels_and_texture_coordinates(
-                *texture_width, *texture_height, glyph_pixels, glyph_coordinates, font_glyphs, texture_pixels);
+                *texture_width, *texture_height, glyph_pixels, glyph_coordinates, font_glyphs, pixels);
+
+        *color_format = ColorFormat::R8_SRGB;
 
         if ((false))
         {
-                save_grayscale_image_to_file("font_texture.png", *texture_width, *texture_height, *texture_pixels);
+                save_grayscale_image_to_file(
+                        "font_texture.png", *texture_width, *texture_height, *color_format, *pixels);
         }
 }
 }

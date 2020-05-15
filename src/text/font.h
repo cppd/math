@@ -36,7 +36,7 @@ public:
 
         struct Char
         {
-                const unsigned char* image;
+                const std::byte* image;
                 int size, width, height, left, top, advance_x;
                 char32_t code_point;
         };
