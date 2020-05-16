@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "conversion.h"
 
+#include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
@@ -233,17 +234,17 @@ void conv_r16g16b16a16_to_r32g32b32a32(const Span<const std::byte>& bytes, std::
         }
 }
 
-void conv_r32_to_r8_srgb(const std::vector<float>& floats, std::vector<std::byte>* bytes)
+void conv_r32_to_r8_srgb(const std::vector<float>& floats, const Span<std::byte>& bytes)
 {
         using To = uint8_t;
 
         unsigned component_count = floats.size();
-        bytes->resize(component_count * sizeof(To));
+        ASSERT(bytes.size() == component_count * sizeof(To));
         ASSERT((component_count % 1) == 0);
 
         const float* from = floats.data();
         const float* end = from + floats.size();
-        std::byte* to = bytes->data();
+        std::byte* to = bytes.data();
 
         while (from != end)
         {
@@ -253,17 +254,17 @@ void conv_r32_to_r8_srgb(const std::vector<float>& floats, std::vector<std::byte
         }
 }
 
-void conv_r32_to_r16(const std::vector<float>& floats, std::vector<std::byte>* bytes)
+void conv_r32_to_r16(const std::vector<float>& floats, const Span<std::byte>& bytes)
 {
         using To = uint16_t;
 
         unsigned component_count = floats.size();
-        bytes->resize(component_count * sizeof(To));
+        ASSERT(bytes.size() == component_count * sizeof(To));
         ASSERT((component_count % 1) == 0);
 
         const float* from = floats.data();
         const float* end = from + floats.size();
-        std::byte* to = bytes->data();
+        std::byte* to = bytes.data();
 
         while (from != end)
         {
@@ -273,17 +274,17 @@ void conv_r32_to_r16(const std::vector<float>& floats, std::vector<std::byte>* b
         }
 }
 
-void conv_r32g32b32_to_r8g8b8_srgb(const std::vector<float>& floats, std::vector<std::byte>* bytes)
+void conv_r32g32b32_to_r8g8b8_srgb(const std::vector<float>& floats, const Span<std::byte>& bytes)
 {
         using To = uint8_t;
 
         unsigned component_count = floats.size();
-        bytes->resize(component_count * sizeof(To));
+        ASSERT(bytes.size() == component_count * sizeof(To));
         ASSERT((component_count % 3) == 0);
 
         const float* from = floats.data();
         const float* end = from + floats.size();
-        std::byte* to = bytes->data();
+        std::byte* to = bytes.data();
 
         while (from != end)
         {
@@ -301,17 +302,17 @@ void conv_r32g32b32_to_r8g8b8_srgb(const std::vector<float>& floats, std::vector
         }
 }
 
-void conv_r32g32b32_to_r16g16b16(const std::vector<float>& floats, std::vector<std::byte>* bytes)
+void conv_r32g32b32_to_r16g16b16(const std::vector<float>& floats, const Span<std::byte>& bytes)
 {
         using To = uint16_t;
 
         unsigned component_count = floats.size();
-        bytes->resize(component_count * sizeof(To));
+        ASSERT(bytes.size() == component_count * sizeof(To));
         ASSERT((component_count % 3) == 0);
 
         const float* from = floats.data();
         const float* end = from + floats.size();
-        std::byte* to = bytes->data();
+        std::byte* to = bytes.data();
 
         while (from != end)
         {
@@ -329,17 +330,17 @@ void conv_r32g32b32_to_r16g16b16(const std::vector<float>& floats, std::vector<s
         }
 }
 
-void conv_r32g32b32a32_to_r8g8b8a8_srgb(const std::vector<float>& floats, std::vector<std::byte>* bytes)
+void conv_r32g32b32a32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const Span<std::byte>& bytes)
 {
         using To = uint8_t;
 
         unsigned component_count = floats.size();
-        bytes->resize(component_count * sizeof(To));
+        ASSERT(bytes.size() == component_count * sizeof(To));
         ASSERT((component_count % 4) == 0);
 
         const float* from = floats.data();
         const float* end = from + floats.size();
-        std::byte* to = bytes->data();
+        std::byte* to = bytes.data();
 
         while (from != end)
         {
@@ -361,17 +362,17 @@ void conv_r32g32b32a32_to_r8g8b8a8_srgb(const std::vector<float>& floats, std::v
         }
 }
 
-void conv_r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, std::vector<std::byte>* bytes)
+void conv_r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, const Span<std::byte>& bytes)
 {
         using To = uint16_t;
 
         unsigned component_count = floats.size();
-        bytes->resize(component_count * sizeof(To));
+        ASSERT(bytes.size() == component_count * sizeof(To));
         ASSERT((component_count % 4) == 0);
 
         const float* from = floats.data();
         const float* end = from + floats.size();
-        std::byte* to = bytes->data();
+        std::byte* to = bytes.data();
 
         while (from != end)
         {
@@ -393,7 +394,7 @@ void conv_r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, std::ve
         }
 }
 
-void conv(ColorFormat from_format, const Span<const std::byte>& from, ColorFormat to_format, std::vector<std::byte>* to)
+void conv(ColorFormat from_format, const Span<const std::byte>& from, ColorFormat to_format, const Span<std::byte>& to)
 {
         std::vector<float> pixels;
 
@@ -421,7 +422,7 @@ void conv(ColorFormat from_format, const Span<const std::byte>& from, ColorForma
         case ColorFormat::R32G32B32:
         case ColorFormat::R32G32B32A32:
                 pixels.resize(from.size() / sizeof(float));
-                ASSERT(pixels.size() * sizeof(float) == from.size());
+                ASSERT(data_size(pixels) == from.size());
                 std::memcpy(pixels.data(), from.data(), from.size());
                 break;
         }
@@ -451,9 +452,8 @@ void conv(ColorFormat from_format, const Span<const std::byte>& from, ColorForma
         case ColorFormat::R32:
         case ColorFormat::R32G32B32:
         case ColorFormat::R32G32B32A32:
-                to->resize(pixels.size() * sizeof(float));
-                ASSERT(to->size() / sizeof(float) == pixels.size());
-                std::memcpy(to->data(), pixels.data(), to->size());
+                ASSERT(to.size() == data_size(pixels.size()));
+                std::memcpy(to.data(), pixels.data(), to.size());
                 break;
         }
 }
@@ -541,29 +541,54 @@ void format_conversion(
         ColorFormat from_format,
         const Span<const std::byte>& from,
         ColorFormat to_format,
-        std::vector<std::byte>* to)
+        const Span<std::byte>& to)
 {
-        ASSERT(to);
-
-        if (from_format == to_format)
-        {
-                to->resize(from.size());
-                std::memcpy(to->data(), from.data(), from.size());
-                return;
-        }
-
-        unsigned one_pixel_size = pixel_size_in_bytes(from_format);
-
-        if (from.size() % one_pixel_size)
-        {
-                error("Error size " + to_string(from.size()) + " for color format " + format_to_string(from_format));
-        }
+        ASSERT(from.data());
+        ASSERT(to.data());
 
         if (component_count(from_format) != component_count(to_format))
         {
                 error("Conversion between color types with different component count are not supported");
         }
 
+        const std::lldiv_t pixel_count = std::lldiv(from.size(), pixel_size_in_bytes(from_format));
+
+        if (pixel_count.rem != 0)
+        {
+                error("Error input color data size " + to_string(from.size()) + " for color format "
+                      + format_to_string(from_format));
+        }
+
+        if (pixel_count.quot * pixel_size_in_bytes(to_format) != static_cast<long long>(to.size()))
+        {
+                error("Error output color data size " + to_string(to.size()) + " for color format "
+                      + format_to_string(to_format));
+        }
+
+        if (pixel_count.quot == 0)
+        {
+                return;
+        }
+
+        if (from_format == to_format)
+        {
+                ASSERT(from.size() == to.size());
+                std::memcpy(to.data(), from.data(), from.size());
+                return;
+        }
+
         conv(from_format, from, to_format, to);
+}
+
+void format_conversion(
+        ColorFormat from_format,
+        const Span<const std::byte>& from,
+        ColorFormat to_format,
+        std::vector<std::byte>* to)
+{
+        ASSERT(to);
+        to->resize((from.size() / pixel_size_in_bytes(from_format)) * pixel_size_in_bytes(to_format));
+
+        conv(from_format, from, to_format, Span<std::byte>(data_pointer(*to), data_size(*to)));
 }
 }

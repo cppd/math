@@ -35,5 +35,11 @@ void format_conversion(
         ColorFormat from_format,
         const Span<const std::byte>& from,
         ColorFormat to_format,
+        const Span<std::byte>& to);
+
+void format_conversion(
+        ColorFormat from_format,
+        const Span<const std::byte>& from,
+        ColorFormat to_format,
         std::vector<std::byte>* to);
 }
