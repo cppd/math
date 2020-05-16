@@ -17,10 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/span.h>
+#include <cstdint>
+#include <vector>
 
 namespace gpu::text_writer
 {
-Span<const uint32_t> code_vert();
-Span<const uint32_t> code_frag();
+std::vector<uint32_t> code_vert();
+std::vector<uint32_t> code_frag();
 }

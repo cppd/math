@@ -19,23 +19,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::text_writer
 {
-namespace
+std::vector<uint32_t> code_vert()
 {
-constexpr uint32_t vert[]{
+        return {
 #include "text_writer.vert.spr"
-};
-constexpr uint32_t frag[]{
+        };
+}
+
+std::vector<uint32_t> code_frag()
+{
+        return {
 #include "text_writer.frag.spr"
-};
-}
-
-Span<const uint32_t> code_vert()
-{
-        return vert;
-}
-
-Span<const uint32_t> code_frag()
-{
-        return frag;
+        };
 }
 }
