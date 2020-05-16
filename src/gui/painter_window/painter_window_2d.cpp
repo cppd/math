@@ -115,9 +115,6 @@ PainterWindow2d::PainterWindow2d(
 
         this->setWindowTitle(title.c_str());
 
-        connect(this, SIGNAL(error_message_signal(QString)), this, SLOT(error_message_slot(QString)),
-                Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
-
         connect(&m_timer, SIGNAL(timeout()), this, SLOT(timer_slot()));
 
         ASSERT(m_image.byteCount() == m_image_byte_count);
