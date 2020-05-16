@@ -19,127 +19,108 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-namespace
+std::vector<uint32_t> code_triangles_vert()
 {
-constexpr uint32_t triangles_vert[]{
+        return {
 #include "renderer_triangles.vert.spr"
-};
-constexpr uint32_t triangles_geom[]{
+        };
+}
+
+std::vector<uint32_t> code_triangles_geom()
+{
+        return {
 #include "renderer_triangles.geom.spr"
-};
-constexpr uint32_t triangles_frag[]{
+        };
+}
+
+std::vector<uint32_t> code_triangles_frag()
+{
+        return {
 #include "renderer_triangles.frag.spr"
-};
-constexpr uint32_t triangles_depth_vert[]{
+        };
+}
+
+std::vector<uint32_t> code_triangles_depth_vert()
+{
+        return {
 #include "renderer_triangles_depth.vert.spr"
-};
-constexpr uint32_t triangle_lines_vert[]{
+        };
+}
+
+std::vector<uint32_t> code_triangle_lines_vert()
+{
+        return {
 #include "renderer_triangle_lines.vert.spr"
-};
-constexpr uint32_t triangle_lines_geom[]{
+        };
+}
+
+std::vector<uint32_t> code_triangle_lines_geom()
+{
+        return {
 #include "renderer_triangle_lines.geom.spr"
-};
-constexpr uint32_t triangle_lines_frag[]{
+        };
+}
+
+std::vector<uint32_t> code_triangle_lines_frag()
+{
+        return {
 #include "renderer_triangle_lines.frag.spr"
-};
-constexpr uint32_t points_0d_vert[]{
+        };
+}
+
+std::vector<uint32_t> code_points_0d_vert()
+{
+        return {
 #include "renderer_points_0d.vert.spr"
-};
-constexpr uint32_t points_1d_vert[]{
+        };
+}
+
+std::vector<uint32_t> code_points_1d_vert()
+{
+        return {
 #include "renderer_points_1d.vert.spr"
-};
-constexpr uint32_t points_frag[]{
+        };
+}
+
+std::vector<uint32_t> code_points_frag()
+{
+        return {
 #include "renderer_points.frag.spr"
-};
-constexpr uint32_t normals_vert[]{
+        };
+}
+
+std::vector<uint32_t> code_normals_vert()
+{
+        return {
 #include "renderer_normals.vert.spr"
-};
-constexpr uint32_t normals_geom[]{
+        };
+}
+
+std::vector<uint32_t> code_normals_geom()
+{
+        return {
 #include "renderer_normals.geom.spr"
-};
-constexpr uint32_t normals_frag[]{
+        };
+}
+
+std::vector<uint32_t> code_normals_frag()
+{
+        return {
 #include "renderer_normals.frag.spr"
-};
-constexpr uint32_t volume_vert[]{
+        };
+}
+
+std::vector<uint32_t> code_volume_vert()
+{
+        return {
 #include "renderer_volume.vert.spr"
-};
-constexpr uint32_t volume_frag[]{
+        };
+}
+
+std::vector<uint32_t> code_volume_frag()
+{
+        return {
 #include "renderer_volume.frag.spr"
-};
-}
-
-Span<const uint32_t> code_triangles_vert()
-{
-        return Span<const uint32_t>(triangles_vert);
-}
-
-Span<const uint32_t> code_triangles_geom()
-{
-        return Span<const uint32_t>(triangles_geom);
-}
-
-Span<const uint32_t> code_triangles_frag()
-{
-        return Span<const uint32_t>(triangles_frag);
-}
-
-Span<const uint32_t> code_triangles_depth_vert()
-{
-        return Span<const uint32_t>(triangles_depth_vert);
-}
-
-Span<const uint32_t> code_triangle_lines_vert()
-{
-        return Span<const uint32_t>(triangle_lines_vert);
-}
-
-Span<const uint32_t> code_triangle_lines_geom()
-{
-        return Span<const uint32_t>(triangle_lines_geom);
-}
-
-Span<const uint32_t> code_triangle_lines_frag()
-{
-        return Span<const uint32_t>(triangle_lines_frag);
-}
-
-Span<const uint32_t> code_points_0d_vert()
-{
-        return Span<const uint32_t>(points_0d_vert);
-}
-
-Span<const uint32_t> code_points_1d_vert()
-{
-        return Span<const uint32_t>(points_1d_vert);
-}
-
-Span<const uint32_t> code_points_frag()
-{
-        return Span<const uint32_t>(points_frag);
-}
-
-Span<const uint32_t> code_normals_vert()
-{
-        return Span<const uint32_t>(normals_vert);
-}
-
-Span<const uint32_t> code_normals_geom()
-{
-        return Span<const uint32_t>(normals_geom);
-}
-
-Span<const uint32_t> code_normals_frag()
-{
-        return Span<const uint32_t>(normals_frag);
-}
-
-Span<const uint32_t> code_volume_vert()
-{
-        return Span<const uint32_t>(volume_vert);
-}
-
-Span<const uint32_t> code_volume_frag()
-{
-        return Span<const uint32_t>(volume_frag);
+        };
 }
 }

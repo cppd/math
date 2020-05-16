@@ -17,25 +17,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/span.h>
-
 #include <cstdint>
+#include <vector>
 
 namespace gpu::renderer
 {
-Span<const uint32_t> code_triangles_vert();
-Span<const uint32_t> code_triangles_geom();
-Span<const uint32_t> code_triangles_frag();
-Span<const uint32_t> code_triangles_depth_vert();
-Span<const uint32_t> code_triangle_lines_vert();
-Span<const uint32_t> code_triangle_lines_geom();
-Span<const uint32_t> code_triangle_lines_frag();
-Span<const uint32_t> code_points_0d_vert();
-Span<const uint32_t> code_points_1d_vert();
-Span<const uint32_t> code_points_frag();
-Span<const uint32_t> code_normals_vert();
-Span<const uint32_t> code_normals_geom();
-Span<const uint32_t> code_normals_frag();
-Span<const uint32_t> code_volume_vert();
-Span<const uint32_t> code_volume_frag();
+std::vector<uint32_t> code_triangles_vert();
+std::vector<uint32_t> code_triangles_geom();
+std::vector<uint32_t> code_triangles_frag();
+std::vector<uint32_t> code_triangles_depth_vert();
+std::vector<uint32_t> code_triangle_lines_vert();
+std::vector<uint32_t> code_triangle_lines_geom();
+std::vector<uint32_t> code_triangle_lines_frag();
+std::vector<uint32_t> code_points_0d_vert();
+std::vector<uint32_t> code_points_1d_vert();
+std::vector<uint32_t> code_points_frag();
+std::vector<uint32_t> code_normals_vert();
+std::vector<uint32_t> code_normals_geom();
+std::vector<uint32_t> code_normals_frag();
+std::vector<uint32_t> code_volume_vert();
+std::vector<uint32_t> code_volume_frag();
 }
