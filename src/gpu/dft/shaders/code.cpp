@@ -19,79 +19,66 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::dft
 {
-namespace
+std::vector<uint32_t> code_fft_global_comp()
 {
-constexpr uint32_t fft_global_comp[]{
+        return {
 #include "dft_fft_global.comp.spr"
-};
-constexpr uint32_t fft_shared_comp[]{
+        };
+}
+
+std::vector<uint32_t> code_fft_shared_comp()
+{
+        return {
 #include "dft_fft_shared.comp.spr"
-};
-constexpr uint32_t bit_reverse_comp[]{
+        };
+}
+
+std::vector<uint32_t> code_bit_reverse_comp()
+{
+        return {
 #include "dft_bit_reverse.comp.spr"
-};
-constexpr uint32_t copy_input_comp[]{
+        };
+}
+
+std::vector<uint32_t> code_copy_input_comp()
+{
+        return {
 #include "dft_copy_input.comp.spr"
-};
-constexpr uint32_t copy_output_comp[]{
+        };
+}
+
+std::vector<uint32_t> code_copy_output_comp()
+{
+        return {
 #include "dft_copy_output.comp.spr"
-};
-constexpr uint32_t mul_comp[]{
+        };
+}
+
+std::vector<uint32_t> code_mul_comp()
+{
+        return {
 #include "dft_mul.comp.spr"
-};
-constexpr uint32_t mul_d_comp[]{
+        };
+}
+
+std::vector<uint32_t> code_mul_d_comp()
+{
+        return {
 #include "dft_mul_d.comp.spr"
-};
-constexpr uint32_t view_vert[]{
+        };
+}
+
+std::vector<uint32_t> code_view_vert()
+{
+        return {
 #include "dft_view.vert.spr"
-};
-constexpr uint32_t view_frag[]{
+        };
+}
+
+std::vector<uint32_t> code_view_frag()
+{
+        return {
 #include "dft_view.frag.spr"
-};
-}
-
-Span<const uint32_t> code_fft_global_comp()
-{
-        return fft_global_comp;
-}
-
-Span<const uint32_t> code_fft_shared_comp()
-{
-        return fft_shared_comp;
-}
-
-Span<const uint32_t> code_bit_reverse_comp()
-{
-        return bit_reverse_comp;
-}
-
-Span<const uint32_t> code_copy_input_comp()
-{
-        return copy_input_comp;
-}
-
-Span<const uint32_t> code_copy_output_comp()
-{
-        return copy_output_comp;
-}
-
-Span<const uint32_t> code_mul_comp()
-{
-        return mul_comp;
-}
-
-Span<const uint32_t> code_mul_d_comp()
-{
-        return mul_d_comp;
-}
-
-Span<const uint32_t> code_view_vert()
-{
-        return view_vert;
-}
-
-Span<const uint32_t> code_view_frag()
-{
-        return view_frag;
+        };
 }
 }
