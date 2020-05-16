@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "code_points.h"
 
+#include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/image/file.h>
 
@@ -131,13 +132,11 @@ void render_glyphs(
                 font_glyph.height = rc->height;
                 font_glyph.advance_x = rc->advance_x;
 
-                std::vector<std::byte>& pixels = glyph_pixels->try_emplace(code_point).first->second;
+                static_assert(std::is_same_v<const unsigned char*, decltype(rc->image)>);
 
+                std::vector<std::byte>& pixels = glyph_pixels->try_emplace(code_point).first->second;
                 pixels.resize(1ull * rc->width * rc->height);
-                for (size_t i = 0; i < pixels.size(); ++i)
-                {
-                        pixels[i] = rc->image[i];
-                }
+                std::memcpy(data_pointer(pixels), rc->image, data_size(pixels));
         }
 }
 

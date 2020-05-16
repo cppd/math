@@ -17,9 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/span.h>
+
 #include <memory>
 #include <optional>
-#include <vector>
 
 namespace text
 {
@@ -29,14 +30,14 @@ class Font final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        explicit Font(int size_in_pixels);
+        Font(int size_in_pixels, const Span<const unsigned char>& font_data);
         ~Font();
 
         void set_size(int size_in_pixels);
 
         struct Char
         {
-                const std::byte* image;
+                const unsigned char* image;
                 int size, width, height, left, top, advance_x;
                 char32_t code_point;
         };

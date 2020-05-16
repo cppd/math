@@ -35,10 +35,6 @@ namespace text
 {
 namespace
 {
-constexpr const FT_Byte font_bytes[]{
-#include "DejaVuSans.ttf.bin"
-};
-
 class Library final
 {
         FT_Library m_library;
@@ -154,7 +150,8 @@ void save_to_file(char32_t code_point, const std::optional<Font::Char>& data)
 
         save_image_to_file(
                 oss.str(), data->width, data->height, ColorFormat::R8_SRGB,
-                Span<const std::byte>(data->image, 1ull * data->width * data->height));
+                Span<const std::byte>(
+                        reinterpret_cast<const std::byte*>(data->image), 1ull * data->width * data->height));
 }
 }
 
@@ -168,8 +165,8 @@ class Font::Impl final
         int m_size;
 
 public:
-        explicit Impl(int size_in_pixels)
-                : m_thread_id(std::this_thread::get_id()), m_face(m_library, font_bytes, sizeof(font_bytes))
+        Impl(int size_in_pixels, const Span<const unsigned char>& font_data)
+                : m_thread_id(std::this_thread::get_id()), m_face(m_library, font_data.data(), font_data.size())
         {
                 set_size(size_in_pixels);
         }
@@ -203,7 +200,7 @@ public:
                 Char res;
 
                 res.code_point = code_point;
-                res.image = reinterpret_cast<const std::byte*>(m_face->glyph->bitmap.buffer);
+                res.image = m_face->glyph->bitmap.buffer;
                 res.size = m_size;
                 res.width = m_face->glyph->bitmap.width;
                 res.height = m_face->glyph->bitmap.rows;
@@ -223,7 +220,8 @@ public:
         }
 };
 
-Font::Font(int size_in_pixels) : m_impl(std::make_unique<Impl>(size_in_pixels))
+Font::Font(int size_in_pixels, const Span<const unsigned char>& font_data)
+        : m_impl(std::make_unique<Impl>(size_in_pixels, font_data))
 {
 }
 

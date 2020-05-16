@@ -44,6 +44,10 @@ namespace
 {
 constexpr int VERTEX_BUFFER_FIRST_SIZE = 10;
 
+constexpr const unsigned char FONT_DATA[]{
+#include "DejaVuSans.ttf.bin"
+};
+
 // clang-format off
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
@@ -67,7 +71,8 @@ class Glyphs
 public:
         Glyphs(int size, unsigned max_image_dimension)
         {
-                text::Font font(size);
+                text::Font font(size, Span(FONT_DATA, sizeof(FONT_DATA)));
+
                 create_font_glyphs(
                         font, max_image_dimension, max_image_dimension, &m_glyphs, &m_width, &m_height, &m_color_format,
                         &m_pixels);
