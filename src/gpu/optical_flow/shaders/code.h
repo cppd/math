@@ -17,16 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/span.h>
+#include <cstdint>
+#include <vector>
 
 namespace gpu::optical_flow
 {
-Span<const uint32_t> code_sobel_comp();
-Span<const uint32_t> code_flow_comp();
-Span<const uint32_t> code_downsample_comp();
-Span<const uint32_t> code_grayscale_comp();
-Span<const uint32_t> code_view_vert();
-Span<const uint32_t> code_view_frag();
-Span<const uint32_t> code_view_debug_vert();
-Span<const uint32_t> code_view_debug_frag();
+std::vector<uint32_t> code_sobel_comp();
+std::vector<uint32_t> code_flow_comp();
+std::vector<uint32_t> code_downsample_comp();
+std::vector<uint32_t> code_grayscale_comp();
+std::vector<uint32_t> code_view_vert();
+std::vector<uint32_t> code_view_frag();
+std::vector<uint32_t> code_view_debug_vert();
+std::vector<uint32_t> code_view_debug_frag();
 }
