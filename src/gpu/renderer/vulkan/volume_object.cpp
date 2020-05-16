@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "volume_object.h"
 
-#include <src/color/conversion.h>
+#include <src/color/format.h>
 #include <src/vulkan/buffers.h>
 
 #include <unordered_map>
@@ -40,24 +40,26 @@ constexpr std::initializer_list<VkFormat> TRANSFER_FUNCTION_FORMATS =
 };
 // clang-format on
 
-// цвет RGBA, умноженный на α, в пространстве sRGB
-std::vector<std::uint8_t> transfer_function()
+// цвет RGBA, умноженный на α
+void transfer_function(ColorFormat* color_format, std::vector<std::byte>* bytes)
 {
-        std::vector<std::uint8_t> pixels;
         const int size = 256;
-        const int max = size - 1;
-        const float max_r = 1.0f / max;
-        for (int i = 0; i <= max; ++i)
+        const Color color(Srgb8(230, 255, 230));
+
+        std::vector<float> pixels;
+        const float max = size - 1;
+        for (int i = 0; i < size; ++i)
         {
-                float v = i * max_r;
-                uint8_t c = color_conversion::linear_float_to_srgb_uint8(v);
-                uint8_t a = std::round(v * 255);
-                pixels.push_back(c);
-                pixels.push_back(c);
-                pixels.push_back(c);
-                pixels.push_back(a);
+                float alpha = i / max;
+                pixels.push_back(alpha * color.red());
+                pixels.push_back(alpha * color.green());
+                pixels.push_back(alpha * color.blue());
+                pixels.push_back(alpha);
         }
-        return pixels;
+
+        bytes->resize(data_size(pixels));
+        std::memcpy(bytes->data(), data_pointer(pixels), data_size(pixels));
+        *color_format = ColorFormat::R32G32B32A32;
 }
 
 vec4 image_clip_plane(const vec4& world_clip_plane, const mat4& model)
@@ -138,24 +140,22 @@ class VolumeObject::Volume
 
         void set_transfer_function(Memory with_memory_creation)
         {
-                std::vector<uint8_t> transfer_function_pixels = transfer_function();
+                ColorFormat color_format;
+                std::vector<std::byte> color_bytes;
+                transfer_function(&color_format, &color_bytes);
+                unsigned pixel_count = color_bytes.size() / color::pixel_size_in_bytes(color_format);
 
                 m_transfer_function.reset();
 
                 m_transfer_function = std::make_unique<vulkan::ImageWithMemory>(
                         m_device, m_graphics_command_pool, m_graphics_queue,
                         std::unordered_set<uint32_t>{m_graphics_queue.family_index()}, TRANSFER_FUNCTION_FORMATS,
-                        VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_1D,
-                        vulkan::make_extent(transfer_function_pixels.size() / 4), VK_IMAGE_LAYOUT_UNDEFINED,
-                        false /*storage*/);
-
-                Span<const std::byte> pixels_span(
-                        reinterpret_cast<const std::byte*>(data_pointer(transfer_function_pixels)),
-                        data_size(transfer_function_pixels));
+                        VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_1D, vulkan::make_extent(pixel_count),
+                        VK_IMAGE_LAYOUT_UNDEFINED, false /*storage*/);
 
                 m_transfer_function->write_pixels(
                         m_graphics_command_pool, m_graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, ColorFormat::R8G8B8A8_SRGB, pixels_span);
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, color_format, color_bytes);
 
                 if (with_memory_creation == Memory::Yes)
                 {
