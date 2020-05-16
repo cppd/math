@@ -17,11 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/span.h>
+#include <cstdint>
+#include <vector>
 
 namespace gpu::pencil_sketch
 {
-Span<const uint32_t> code_compute_comp();
-Span<const uint32_t> code_view_vert();
-Span<const uint32_t> code_view_frag();
+std::vector<uint32_t> code_compute_comp();
+std::vector<uint32_t> code_view_vert();
+std::vector<uint32_t> code_view_frag();
 }

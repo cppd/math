@@ -19,31 +19,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::pencil_sketch
 {
-namespace
+std::vector<uint32_t> code_compute_comp()
 {
-constexpr uint32_t compute_comp[]{
+        return {
 #include "pencil_sketch_compute.comp.spr"
-};
-constexpr uint32_t view_vert[]{
+        };
+}
+
+std::vector<uint32_t> code_view_vert()
+{
+        return {
 #include "pencil_sketch_view.vert.spr"
-};
-constexpr uint32_t view_frag[]{
+        };
+}
+
+std::vector<uint32_t> code_view_frag()
+{
+        return {
 #include "pencil_sketch_view.frag.spr"
-};
-}
-
-Span<const uint32_t> code_compute_comp()
-{
-        return compute_comp;
-}
-
-Span<const uint32_t> code_view_vert()
-{
-        return view_vert;
-}
-
-Span<const uint32_t> code_view_frag()
-{
-        return view_frag;
+        };
 }
 }
