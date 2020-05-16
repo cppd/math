@@ -138,7 +138,7 @@ typename Mesh<N>::Image read_image_from_file(const std::string& file_name)
         else
         {
                 Mesh<3>::Image obj_image;
-                load_image_from_file(
+                load_image_from_file_rgba(
                         file_name, &obj_image.size[0], &obj_image.size[1], &obj_image.color_format, &obj_image.pixels);
                 flip_image_vertically(obj_image.size[0], obj_image.size[1], obj_image.color_format, &obj_image.pixels);
                 return obj_image;

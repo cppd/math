@@ -301,8 +301,20 @@ void PainterWindow2d::timer_slot()
 void PainterWindow2d::on_pushButton_save_to_file_clicked()
 {
         catch_all("Save to file", [&]() {
-                std::vector<std::uint_least32_t> pixels(1ull * m_image.width() * m_image.height());
+                std::vector<std::uint32_t> pixels(1ull * m_image.width() * m_image.height());
                 std::memcpy(pixels.data(), &pixels_bgr()[pixels_offset()], m_image_byte_count);
+
+                std::vector<std::byte> bytes(3ull * m_image.width() * m_image.height());
+                std::byte* ptr = bytes.data();
+                for (std::uint_least32_t c : pixels)
+                {
+                        unsigned char b = c & 0xff;
+                        unsigned char g = (c >> 8) & 0xff;
+                        unsigned char r = (c >> 16) & 0xff;
+                        std::memcpy(ptr++, &r, 1);
+                        std::memcpy(ptr++, &g, 1);
+                        std::memcpy(ptr++, &b, 1);
+                }
 
                 const std::string caption = "Save";
                 dialog::FileFilter filter;
@@ -314,7 +326,7 @@ void PainterWindow2d::on_pushButton_save_to_file_clicked()
                 {
                         return;
                 }
-                save_srgb_image_to_file_bgr(file_name, m_image.width(), m_image.height(), pixels);
+                save_image_to_file(file_name, m_image.width(), m_image.height(), ColorFormat::R8G8B8_SRGB, bytes);
         });
 }
 

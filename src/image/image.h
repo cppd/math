@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/global_index.h>
+#include <src/com/type/limit.h>
 #include <src/numerical/vec.h>
 
 #include <array>
@@ -29,11 +30,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 template <size_t N>
 class Image
 {
+        static std::array<int, N> initial_value();
+
         std::vector<Color> m_data;
 
-        std::array<int, N> m_size;
-        std::array<int, N> m_max;
-        std::array<int, N> m_max_0;
+        std::array<int, N> m_size = initial_value();
+        std::array<int, N> m_max = initial_value();
+        std::array<int, N> m_max_0 = initial_value();
 
         GlobalIndex<N, long long> m_global_index;
         std::array<long long, 1 << N> m_pixel_offsets;
@@ -52,7 +55,7 @@ class Image
 public:
         explicit Image(const std::array<int, N>& size);
 
-        Image(const std::array<int, N>& size, ColorFormat, const std::vector<std::byte>& pixels);
+        Image(const std::array<int, N>& size, ColorFormat color_format, const std::vector<std::byte>& pixels);
 
         template <size_t X = N>
         explicit Image(std::enable_if_t<X == 2, const std::string&> file_name);

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "file.h"
 
+#include <src/color/format.h>
 #include <src/com/error.h>
 #include <src/utility/file/sys.h>
 #include <src/utility/string/str.h>
@@ -73,106 +74,171 @@ std::string file_name_with_extension(const std::string& file_name)
         // Если имя заканчивается на точку, то пусть будет 2 точки подряд
         return file_name + "." + DEFAULT_WRITE_FORMAT;
 }
-}
 
-void save_grayscale_image_to_file(
-        const std::string& file_name,
-        int width,
-        int height,
-        ColorFormat color_format,
-        Span<const std::byte> pixels)
+void save_1(const std::string& file_name, int width, int height, ColorFormat color_format, Span<const std::byte> pixels)
 {
-        if (color_format != ColorFormat::R8_SRGB)
-        {
-                error("Image format is not supported for saving grayscale image to file");
-        }
-
-        if (1ull * width * height != pixels.size())
-        {
-                error("Error image size");
-        }
-
         QImage image(width, height, QImage::Format_RGB32);
-        size_t pixel = 0;
+
+        std::vector<std::byte> bytes;
+        color::format_conversion(color_format, pixels, ColorFormat::R8_SRGB, &bytes);
+
+        ASSERT(1ull * width * height == pixels.size());
+
+        const std::byte* ptr = bytes.data();
         for (int row = 0; row < height; ++row)
         {
                 QRgb* image_line = reinterpret_cast<QRgb*>(image.scanLine(row));
                 for (int col = 0; col < width; ++col)
                 {
                         std::uint8_t c;
-                        std::memcpy(&c, &pixels[pixel++], 1);
+                        std::memcpy(&c, ptr++, 1);
                         image_line[col] = qRgb(c, c, c);
                 }
         }
-
-        std::string f = file_name_with_extension(file_name);
-        if (!image.save(f.c_str()))
+        if (!image.save(file_name.c_str()))
         {
-                error("Error saving pixels to the file " + f);
+                error("Error saving pixels to the file " + file_name);
         }
 }
 
-void save_srgb_image_to_file(
-        const std::string& file_name,
-        int width,
-        int height,
-        const std::vector<std::uint_least8_t>& pixels)
+void save_3(const std::string& file_name, int width, int height, ColorFormat color_format, Span<const std::byte> pixels)
 {
-        if (3ull * width * height != pixels.size())
-        {
-                error("Error image size");
-        }
-
         QImage image(width, height, QImage::Format_RGB32);
-        size_t pixel = 0;
+
+        std::vector<std::byte> bytes;
+        color::format_conversion(color_format, pixels, ColorFormat::R8G8B8_SRGB, &bytes);
+
+        ASSERT(3ull * width * height == pixels.size());
+
+        const std::byte* ptr = pixels.data();
         for (int row = 0; row < height; ++row)
         {
                 QRgb* image_line = reinterpret_cast<QRgb*>(image.scanLine(row));
                 for (int col = 0; col < width; ++col)
                 {
-                        std::uint_least8_t r = pixels[pixel++];
-                        std::uint_least8_t g = pixels[pixel++];
-                        std::uint_least8_t b = pixels[pixel++];
+                        std::uint8_t r;
+                        std::uint8_t g;
+                        std::uint8_t b;
+                        std::memcpy(&r, ptr++, 1);
+                        std::memcpy(&g, ptr++, 1);
+                        std::memcpy(&b, ptr++, 1);
                         image_line[col] = qRgb(r, g, b);
                 }
         }
-
-        std::string f = file_name_with_extension(file_name);
-        if (!image.save(f.c_str()))
+        if (!image.save(file_name.c_str()))
         {
-                error("Error saving pixels to the file " + f);
+                error("Error saving pixels to the file " + file_name);
         }
 }
 
-void save_srgb_image_to_file_bgr(
+void save_4(const std::string& file_name, int width, int height, ColorFormat color_format, Span<const std::byte> pixels)
+{
+        QImage image(width, height, QImage::Format_ARGB32);
+
+        std::vector<std::byte> bytes;
+        color::format_conversion(color_format, pixels, ColorFormat::R8G8B8A8_SRGB, &bytes);
+
+        ASSERT(4ull * width * height == pixels.size());
+
+        const std::byte* ptr = pixels.data();
+        for (int row = 0; row < height; ++row)
+        {
+                QRgb* image_line = reinterpret_cast<QRgb*>(image.scanLine(row));
+                for (int col = 0; col < width; ++col)
+                {
+                        std::uint8_t r;
+                        std::uint8_t g;
+                        std::uint8_t b;
+                        std::uint8_t a;
+                        std::memcpy(&r, ptr++, 1);
+                        std::memcpy(&g, ptr++, 1);
+                        std::memcpy(&b, ptr++, 1);
+                        std::memcpy(&a, ptr++, 1);
+                        image_line[col] = qRgba(r, g, b, a);
+                }
+        }
+        if (!image.save(file_name.c_str()))
+        {
+                error("Error saving pixels to the file " + file_name);
+        }
+}
+}
+
+void save_image_to_file(
         const std::string& file_name,
         int width,
         int height,
-        const std::vector<std::uint_least32_t>& pixels)
+        ColorFormat color_format,
+        Span<const std::byte> pixels)
 {
-        if (1ull * width * height != pixels.size())
-        {
-                error("Error image size");
-        }
-
-        static_assert(std::is_same_v<quint32, std::uint_least32_t>);
-        const size_t bytes_in_row = sizeof(std::uint_least32_t) * width;
-        QImage image(width, height, QImage::Format_RGB32);
-        const std::uint_least32_t* pixels_line = pixels.data();
-        for (int row = 0; row < height; ++row, pixels_line += width)
-        {
-                QRgb* image_line = reinterpret_cast<QRgb*>(image.scanLine(row));
-                std::memcpy(image_line, pixels_line, bytes_in_row);
-        }
-
         std::string f = file_name_with_extension(file_name);
-        if (!image.save(f.c_str()))
+
+        if (pixels.size() != 1ull * width * height * color::pixel_size_in_bytes(color_format))
         {
-                error("Error saving pixels to the file " + f);
+                error("Error image data size");
+        }
+
+        if (color::component_count(color_format) == 1)
+        {
+                save_1(f, width, height, color_format, pixels);
+        }
+        else if (color::component_count(color_format) == 3)
+        {
+                save_3(f, width, height, color_format, pixels);
+        }
+        else if (color::component_count(color_format) == 4)
+        {
+                save_4(f, width, height, color_format, pixels);
+        }
+        else
+        {
+                error("Image format " + color::format_to_string(color_format) + " is not supported for saving to file");
         }
 }
 
-void load_image_from_file(
+void load_image_from_file_rgb(
+        const std::string& file_name,
+        int* width,
+        int* height,
+        ColorFormat* color_format,
+        std::vector<std::byte>* pixels)
+{
+        QImage image;
+        if (!image.load(file_name.c_str()) || image.width() < 1 || image.height() < 1)
+        {
+                error("Error loading image from the file " + file_name);
+        }
+
+        if (image.format() != QImage::Format_ARGB32)
+        {
+                image = image.convertToFormat(QImage::Format_ARGB32);
+        }
+
+        *width = image.width();
+        *height = image.height();
+
+        pixels->resize(3ull * (*width) * (*height));
+
+        size_t pixel = 0;
+        for (int row = 0; row < *height; ++row)
+        {
+                const QRgb* image_line = reinterpret_cast<const QRgb*>(image.constScanLine(row));
+                for (int col = 0; col < *width; ++col)
+                {
+                        const QRgb& c = image_line[col];
+                        uint8_t r = qRed(c);
+                        uint8_t g = qGreen(c);
+                        uint8_t b = qBlue(c);
+                        std::memcpy(&(*pixels)[pixel++], &r, 1);
+                        std::memcpy(&(*pixels)[pixel++], &g, 1);
+                        std::memcpy(&(*pixels)[pixel++], &b, 1);
+                }
+        }
+
+        *color_format = ColorFormat::R8G8B8_SRGB;
+}
+
+void load_image_from_file_rgba(
         const std::string& file_name,
         int* width,
         int* height,
@@ -218,17 +284,14 @@ void load_image_from_file(
 
 void flip_image_vertically(int width, int height, ColorFormat color_format, std::vector<std::byte>* pixels)
 {
-        if (color_format != ColorFormat::R8G8B8A8_SRGB)
-        {
-                error("Image format is not supported for image flipping");
-        }
+        size_t pixel_size = color::pixel_size_in_bytes(color_format);
 
-        if (4ull * width * height != pixels->size())
+        if (pixels->size() != pixel_size * width * height)
         {
                 error("Error image size");
         }
 
-        size_t row_size = 4ull * width;
+        size_t row_size = pixel_size * width;
         size_t row_end = (height / 2) * row_size;
         for (size_t row1 = 0, row2 = (height - 1) * row_size; row1 < row_end; row1 += row_size, row2 -= row_size)
         {

@@ -254,8 +254,7 @@ void create_font_glyphs(
 
         if ((false))
         {
-                save_grayscale_image_to_file(
-                        "font_texture.png", *texture_width, *texture_height, *color_format, *pixels);
+                save_image_to_file("font_texture.png", *texture_width, *texture_height, *color_format, *pixels);
         }
 }
 }

@@ -19,7 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "file.h"
 
-#include <src/color/conversion.h>
+#include <src/color/format.h>
+#include <src/com/alg.h>
+#include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/interpolation.h>
 #include <src/utility/string/str.h>
@@ -28,18 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-template <size_t N>
-long long mul(const std::array<int, N>& size)
-{
-        static_assert(N >= 1);
-        long long res = size[0];
-        for (size_t i = 1; i < N; ++i)
-        {
-                res *= size[i];
-        }
-        return res;
-}
-
 #if 0
 // В зависимости от типа данных и настроек компилятора, работает как в разы
 // быстрее варианта value - std::floor(value), так и в разы медленнее.
@@ -67,6 +57,14 @@ T wrap_coordinate_clamp_to_edge(T value)
 }
 
 template <size_t N>
+std::array<int, N> Image<N>::initial_value()
+{
+        std::array<int, N> v;
+        v.fill(limits<int>::lowest());
+        return v;
+}
+
+template <size_t N>
 Image<N>::Image(const std::array<int, N>& size)
 {
         resize(size);
@@ -90,6 +88,8 @@ Image<N>::Image(std::enable_if_t<X == 2, const std::string&> file_name)
 template <size_t N>
 void Image<N>::resize(const std::array<int, N>& size)
 {
+        ASSERT(std::all_of(size.cbegin(), size.cend(), [](int v) { return v > 0; }));
+
         if (m_size == size)
         {
                 return;
@@ -191,10 +191,11 @@ void Image<N>::load_from_pixels(
 {
         if (color_format != ColorFormat::R8G8B8A8_SRGB)
         {
-                error("Image format is not supported");
+                error("Image format " + color::format_to_string(color_format)
+                      + " is not supported for loading image from pixels");
         }
 
-        if (4ull * mul(size) != pixels.size())
+        if (4ull * multiply_all<long long>(size) != pixels.size())
         {
                 error("Image size error for RGBA pixels");
         }
@@ -226,8 +227,13 @@ std::enable_if_t<X == 2> Image<N>::read_from_file(const std::string& file_name)
         ColorFormat color_format;
         std::vector<std::byte> pixels;
 
-        load_image_from_file(file_name, &size[0], &size[1], &color_format, &pixels);
-        load_from_pixels(size, color_format, pixels);
+        load_image_from_file_rgb(file_name, &size[0], &size[1], &color_format, &pixels);
+
+        resize(size);
+
+        color::format_conversion(
+                color_format, pixels, ColorFormat::R32G32B32,
+                Span<std::byte>(reinterpret_cast<std::byte*>(data_pointer(m_data)), data_size(m_data)));
 }
 
 template <size_t N>
@@ -241,16 +247,9 @@ std::enable_if_t<X == 2> Image<N>::write_to_file(const std::string& file_name) c
                 error("No data to write the image to the file " + file_name);
         }
 
-        std::vector<unsigned char> buffer(m_data.size() * 3);
-
-        for (size_t i = 0, buf = 0; i < m_data.size(); ++i)
-        {
-                buffer[buf++] = color_conversion::linear_float_to_srgb_uint8(m_data[i].red());
-                buffer[buf++] = color_conversion::linear_float_to_srgb_uint8(m_data[i].green());
-                buffer[buf++] = color_conversion::linear_float_to_srgb_uint8(m_data[i].blue());
-        }
-
-        save_srgb_image_to_file(file_name, m_size[0], m_size[1], buffer);
+        save_image_to_file(
+                file_name, m_size[0], m_size[1], ColorFormat::R32G32B32,
+                Span<const std::byte>(reinterpret_cast<const std::byte*>(data_pointer(m_data)), data_size(m_data)));
 }
 
 // Текстурные координаты могут отсчитываться снизу, поэтому нужна эта функция

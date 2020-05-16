@@ -23,27 +23,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-void save_grayscale_image_to_file(
+void save_image_to_file(
         const std::string& file_name,
         int width,
         int height,
         ColorFormat color_format,
         Span<const std::byte> pixels);
-void save_srgb_image_to_file(
-        const std::string& file_name,
-        int width,
-        int height,
-        const std::vector<std::uint_least8_t>& pixels);
-void save_srgb_image_to_file_bgr(
-        const std::string& file_name,
-        int width,
-        int height,
-        const std::vector<std::uint_least32_t>& pixels);
 
-void load_image_from_file(
+void load_image_from_file_rgb(
         const std::string& file_name,
         int* width,
         int* height,
         ColorFormat* color_format,
         std::vector<std::byte>* pixels);
+
+void load_image_from_file_rgba(
+        const std::string& file_name,
+        int* width,
+        int* height,
+        ColorFormat* color_format,
+        std::vector<std::byte>* pixels);
+
 void flip_image_vertically(int width, int height, ColorFormat color_format, std::vector<std::byte>* pixels);
