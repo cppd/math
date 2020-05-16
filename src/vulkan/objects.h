@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/span.h>
 #include <src/com/type/limit.h>
 
 #include <functional>
@@ -248,7 +247,7 @@ class ShaderModule final
 
 public:
         ShaderModule();
-        ShaderModule(VkDevice device, const Span<const uint32_t>& code);
+        ShaderModule(VkDevice device, const std::vector<uint32_t>& code);
         ~ShaderModule();
 
         ShaderModule(const ShaderModule&) = delete;
