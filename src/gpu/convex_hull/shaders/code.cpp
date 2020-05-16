@@ -19,47 +19,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::convex_hull
 {
-namespace
+std::vector<uint32_t> code_prepare_comp()
 {
-constexpr uint32_t prepare_comp[]{
+        return {
 #include "convex_hull_prepare.comp.spr"
-};
-constexpr uint32_t merge_comp[]{
+        };
+}
+
+std::vector<uint32_t> code_merge_comp()
+{
+        return {
 #include "convex_hull_merge.comp.spr"
-};
-constexpr uint32_t filter_comp[]{
+        };
+}
+
+std::vector<uint32_t> code_filter_comp()
+{
+        return {
 #include "convex_hull_filter.comp.spr"
-};
-constexpr uint32_t view_vert[]{
-#include "convex_hull_view.vert.spr"
-};
-constexpr uint32_t view_frag[]{
+        };
+}
+
+std::vector<uint32_t> code_view_frag()
+{
+        return {
 #include "convex_hull_view.frag.spr"
-};
+        };
 }
 
-Span<const uint32_t> code_prepare_comp()
+std::vector<uint32_t> code_view_vert()
 {
-        return prepare_comp;
-}
-
-Span<const uint32_t> code_merge_comp()
-{
-        return merge_comp;
-}
-
-Span<const uint32_t> code_filter_comp()
-{
-        return filter_comp;
-}
-
-Span<const uint32_t> code_view_frag()
-{
-        return view_frag;
-}
-
-Span<const uint32_t> code_view_vert()
-{
-        return view_vert;
+        return {
+#include "convex_hull_view.vert.spr"
+        };
 }
 }

@@ -17,13 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/span.h>
+#include <cstdint>
+#include <vector>
 
 namespace gpu::convex_hull
 {
-Span<const uint32_t> code_prepare_comp();
-Span<const uint32_t> code_merge_comp();
-Span<const uint32_t> code_filter_comp();
-Span<const uint32_t> code_view_frag();
-Span<const uint32_t> code_view_vert();
+std::vector<uint32_t> code_prepare_comp();
+std::vector<uint32_t> code_merge_comp();
+std::vector<uint32_t> code_filter_comp();
+std::vector<uint32_t> code_view_frag();
+std::vector<uint32_t> code_view_vert();
 }
