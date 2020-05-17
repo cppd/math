@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/merge.h>
 #include <src/numerical/transform.h>
 #include <src/text/font.h>
+#include <src/text/fonts.h>
 #include <src/text/glyphs.h>
 #include <src/text/vertices.h>
 #include <src/vulkan/buffers.h>
@@ -44,10 +45,6 @@ namespace
 {
 constexpr int VERTEX_BUFFER_FIRST_SIZE = 10;
 
-constexpr const unsigned char FONT_DATA[]{
-#include "DejaVuSans.ttf.bin"
-};
-
 // clang-format off
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
@@ -60,6 +57,19 @@ constexpr std::initializer_list<VkFormat> GRAYSCALE_IMAGE_FORMATS =
 };
 // clang-format on
 
+std::vector<unsigned char> font_data()
+{
+        const text::Fonts& fonts = text::Fonts::instance();
+
+        std::vector<std::string> font_names = fonts.names();
+        if (font_names.empty())
+        {
+                error("Fonts not found");
+        }
+
+        return fonts.data(font_names.front());
+}
+
 class Glyphs
 {
         int m_width;
@@ -71,7 +81,7 @@ class Glyphs
 public:
         Glyphs(int size, unsigned max_image_dimension)
         {
-                text::Font font(size, Span(FONT_DATA, sizeof(FONT_DATA)));
+                text::Font font(size, font_data());
 
                 create_font_glyphs(
                         font, max_image_dimension, max_image_dimension, &m_glyphs, &m_width, &m_height, &m_color_format,

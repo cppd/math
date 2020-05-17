@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "unicode.h"
 
+#include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/image/file.h>
 
@@ -66,6 +67,7 @@ public:
 
 class Face final
 {
+        std::vector<unsigned char> m_font_data;
         FT_Face m_face;
 
 public:
@@ -78,13 +80,15 @@ public:
                 }
         }
 #endif
-        Face(FT_Library library, const FT_Byte* memory_font, FT_Long memory_font_size)
+        template <typename T>
+        Face(FT_Library library, T&& font_data) : m_font_data(std::forward<T>(font_data))
         {
-                if (FT_New_Memory_Face(library, memory_font, memory_font_size, 0, &m_face))
+                if (FT_New_Memory_Face(library, data_pointer(m_font_data), data_size(m_font_data), 0, &m_face))
                 {
                         error("Error FreeType new memory face");
                 }
         }
+
         ~Face()
         {
                 FT_Done_Face(m_face);
@@ -165,8 +169,9 @@ class Font::Impl final
         int m_size;
 
 public:
-        Impl(int size_in_pixels, const Span<const unsigned char>& font_data)
-                : m_thread_id(std::this_thread::get_id()), m_face(m_library, font_data.data(), font_data.size())
+        template <typename T>
+        Impl(int size_in_pixels, T&& font_data)
+                : m_thread_id(std::this_thread::get_id()), m_face(m_library, std::forward<T>(font_data))
         {
                 set_size(size_in_pixels);
         }
@@ -220,8 +225,8 @@ public:
         }
 };
 
-Font::Font(int size_in_pixels, const Span<const unsigned char>& font_data)
-        : m_impl(std::make_unique<Impl>(size_in_pixels, font_data))
+Font::Font(int size_in_pixels, std::vector<unsigned char>&& font_data)
+        : m_impl(std::make_unique<Impl>(size_in_pixels, std::move(font_data)))
 {
 }
 
