@@ -20,41 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "file.h"
 
 #include <src/color/format.h>
-#include <src/com/alg.h>
 #include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/interpolation.h>
-#include <src/utility/string/str.h>
+#include <src/com/type/limit.h>
 
 #include <algorithm>
-
-namespace
-{
-#if 0
-// В зависимости от типа данных и настроек компилятора, работает как в разы
-// быстрее варианта value - std::floor(value), так и в разы медленнее.
-template <typename T>
-T wrap_coordinate_repeate(T value)
-{
-        T r = value - static_cast<int>(value);
-        return (r >= 0) ? r : 1 + r;
-}
-#else
-template <typename T>
-T wrap_coordinate_repeate(T value)
-{
-        return value - std::floor(value);
-}
-#endif
-
-#if 0
-template <typename T>
-T wrap_coordinate_clamp_to_edge(T value)
-{
-        return std::clamp(value, static_cast<T>(0), static_cast<T>(1));
-}
-#endif
-}
 
 template <size_t N>
 std::array<int, N> Image<N>::initial_value()
@@ -73,7 +44,11 @@ Image<N>::Image(const std::array<int, N>& size)
 template <size_t N>
 Image<N>::Image(const std::array<int, N>& size, ColorFormat color_format, const std::vector<std::byte>& pixels)
 {
-        load_from_pixels(size, color_format, pixels);
+        resize(size);
+
+        color::format_conversion(
+                color_format, pixels, ColorFormat::R32G32B32,
+                Span<std::byte>(reinterpret_cast<std::byte*>(data_pointer(m_data)), data_size(m_data)));
 }
 
 template <size_t N>
@@ -88,54 +63,27 @@ Image<N>::Image(std::enable_if_t<X == 2, const std::string&> file_name)
 template <size_t N>
 void Image<N>::resize(const std::array<int, N>& size)
 {
-        ASSERT(std::all_of(size.cbegin(), size.cend(), [](int v) { return v > 0; }));
+        if (!std::all_of(size.cbegin(), size.cend(), [](int v) { return v > 0; }))
+        {
+                error("Error image size " + to_string(size));
+        }
 
         if (m_size == size)
         {
                 return;
         }
 
-        for (int v : size)
-        {
-                if (v < 2)
-                {
-                        error("Image size is less than 2");
-                }
-        }
-
-        m_data.clear();
-        m_data.shrink_to_fit();
-
         m_size = size;
 
         for (unsigned i = 0; i < N; ++i)
         {
                 m_max[i] = m_size[i] - 1;
-                m_max_0[i] = m_size[i] - 2;
         }
 
         m_global_index = decltype(m_global_index)(m_size);
 
-        // Смещения для следующих элементов от заданного с сортировкой по возрастанию
-        // от измерения с максимальным номером к измерению с минимальным номером.
-        // Пример для двух измерений:
-        // (x    , y    ) = 0
-        // (x + 1, y    ) = 1
-        // (x    , y + 1) = width
-        // (x + 1, y + 1) = width + 1
-        for (unsigned i = 0; i < (1 << N); ++i)
-        {
-                long long offset_index = 0;
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        if ((1 << n) & i)
-                        {
-                                offset_index += m_global_index.stride(n);
-                        }
-                }
-                m_pixel_offsets[i] = offset_index;
-        }
-
+        m_data.clear();
+        m_data.shrink_to_fit();
         m_data.resize(m_global_index.count());
 }
 
@@ -155,59 +103,49 @@ template <size_t N>
 template <typename T>
 Color Image<N>::texture(const Vector<N, T>& p) const
 {
+        // Vulkan: Texel Coordinate Systems, Wrapping Operation.
+
         std::array<int, N> x0;
-        std::array<T, N> local_x;
+        std::array<int, N> x1;
+        std::array<T, N> x;
 
         for (unsigned i = 0; i < N; ++i)
         {
-                T x = wrap_coordinate_repeate(p[i]) * m_max[i];
+                T v = p[i] * m_size[i] - T(0.5);
+                T floor = std::floor(v);
 
-                x0[i] = static_cast<int>(x);
+                x[i] = v - floor;
+                x0[i] = floor;
+                x1[i] = x0[i] + 1;
 
-                // Если значение x[i] равно максимуму (это целое число), то x0[i] получится
-                // неправильным, поэтому требуется корректировка для этого случая
-                x0[i] = std::min(x0[i], m_max_0[i]);
-
-                local_x[i] = x - x0[i];
+                if ((true))
+                {
+                        // wrap: clamp to edge
+                        x0[i] = std::clamp(x0[i], 0, m_max[i]);
+                        x1[i] = std::clamp(x1[i], 0, m_max[i]);
+                }
+                else
+                {
+                        // wrap: repeate
+                        x0[i] = x0[i] % m_size[i];
+                        x1[i] = x1[i] % m_size[i];
+                }
         }
-
-        long long index = pixel_index(x0);
 
         std::array<Color, (1 << N)> pixels;
-        pixels[0] = m_data[index]; // в соответствии с равенством index + m_pixel_offsets[0] == index
-        for (unsigned i = 1; i < pixels.size(); ++i)
+
+        for (unsigned i = 0; i < pixels.size(); ++i)
         {
-                pixels[i] = m_data[index + m_pixel_offsets[i]];
+                long long index = 0;
+                for (unsigned n = 0; n < N; ++n)
+                {
+                        int coordinate = ((1 << n) & i) ? x1[n] : x0[n];
+                        index += m_global_index.stride(n) * coordinate;
+                }
+                pixels[i] = m_data[index];
         }
 
-        return interpolation(pixels, local_x);
-}
-
-template <size_t N>
-void Image<N>::load_from_pixels(
-        const std::array<int, N>& size,
-        ColorFormat color_format,
-        const std::vector<std::byte>& pixels)
-{
-        if (color_format != ColorFormat::R8G8B8A8_SRGB)
-        {
-                error("Image format " + color::format_to_string(color_format)
-                      + " is not supported for loading image from pixels");
-        }
-
-        if (4ull * multiply_all<long long>(size) != pixels.size())
-        {
-                error("Image size error for RGBA pixels");
-        }
-
-        resize(size);
-
-        for (size_t i = 0, p = 0; i < m_data.size(); p += 4, ++i)
-        {
-                std::array<uint8_t, 3> rgb;
-                std::memcpy(rgb.data(), &pixels[p], rgb.size());
-                m_data[i] = Srgb8(rgb[0], rgb[1], rgb[2]);
-        }
+        return interpolation(pixels, x);
 }
 
 template <size_t N>
@@ -223,7 +161,6 @@ std::enable_if_t<X == 2> Image<N>::read_from_file(const std::string& file_name)
         static_assert(N == X);
 
         std::array<int, N> size;
-
         ColorFormat color_format;
         std::vector<std::byte> pixels;
 
