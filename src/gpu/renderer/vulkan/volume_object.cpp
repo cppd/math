@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "volume_object.h"
 
-#include <src/color/format.h>
+#include <src/image/format.h>
 #include <src/vulkan/buffers.h>
 
 #include <unordered_map>
@@ -41,7 +41,7 @@ constexpr std::initializer_list<VkFormat> TRANSFER_FUNCTION_FORMATS =
 // clang-format on
 
 // цвет RGBA, умноженный на α
-void transfer_function(ColorFormat* color_format, std::vector<std::byte>* bytes)
+void transfer_function(image::ColorFormat* color_format, std::vector<std::byte>* bytes)
 {
         const int size = 256;
         const Color color(Srgb8(230, 255, 230));
@@ -59,7 +59,7 @@ void transfer_function(ColorFormat* color_format, std::vector<std::byte>* bytes)
 
         bytes->resize(data_size(pixels));
         std::memcpy(bytes->data(), data_pointer(pixels), data_size(pixels));
-        *color_format = ColorFormat::R32G32B32A32;
+        *color_format = image::ColorFormat::R32G32B32A32;
 }
 
 vec4 image_clip_plane(const vec4& world_clip_plane, const mat4& model)
@@ -140,10 +140,10 @@ class VolumeObject::Volume
 
         void set_transfer_function(Memory with_memory_creation)
         {
-                ColorFormat color_format;
+                image::ColorFormat color_format;
                 std::vector<std::byte> color_bytes;
                 transfer_function(&color_format, &color_bytes);
-                unsigned pixel_count = color_bytes.size() / color::pixel_size_in_bytes(color_format);
+                unsigned pixel_count = color_bytes.size() / image::pixel_size_in_bytes(color_format);
 
                 m_transfer_function.reset();
 

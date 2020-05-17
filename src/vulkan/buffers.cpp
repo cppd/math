@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "queue.h"
 #include "sync.h"
 
-#include <src/color/format.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/image/conversion.h>
 
 #include <cstring>
 
@@ -544,16 +544,16 @@ ImageView create_image_view(
 }
 
 template <typename T>
-void check_buffer_size(const T& pixels, ColorFormat color_format, VkExtent3D extent)
+void check_buffer_size(const T& pixels, image::ColorFormat color_format, VkExtent3D extent)
 {
-        if ((pixels.size() % color::pixel_size_in_bytes(color_format)) != 0)
+        if ((pixels.size() % image::pixel_size_in_bytes(color_format)) != 0)
         {
                 error("Error pixel buffer size");
         }
 
-        if (pixels.size() != color::pixel_size_in_bytes(color_format) * extent.width * extent.height * extent.depth)
+        if (pixels.size() != image::pixel_size_in_bytes(color_format) * extent.width * extent.height * extent.depth)
         {
-                error("Wrong pixel count " + to_string(pixels.size() / color::pixel_size_in_bytes(color_format))
+                error("Wrong pixel count " + to_string(pixels.size() / image::pixel_size_in_bytes(color_format))
                       + " for image extent (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
                       + to_string(extent.depth) + ")");
         }
@@ -569,10 +569,10 @@ void write_pixels_to_image(
         VkPhysicalDevice physical_device,
         const CommandPool& command_pool,
         const Queue& queue,
-        ColorFormat color_format,
+        image::ColorFormat color_format,
         const Span<const std::byte>& pixels)
 {
-        auto write = [&](ColorFormat required_format) {
+        auto write = [&](image::ColorFormat required_format) {
                 if (color_format == required_format)
                 {
                         check_buffer_size(pixels, color_format, extent);
@@ -584,7 +584,7 @@ void write_pixels_to_image(
                 else
                 {
                         std::vector<std::byte> buffer;
-                        color::format_conversion(color_format, pixels, required_format, &buffer);
+                        image::format_conversion(color_format, pixels, required_format, &buffer);
 
                         check_buffer_size(buffer, required_format, extent);
 
@@ -600,47 +600,47 @@ void write_pixels_to_image(
         {
         case VK_FORMAT_R8G8B8A8_SRGB:
         {
-                write(ColorFormat::R8G8B8A8_SRGB);
+                write(image::ColorFormat::R8G8B8A8_SRGB);
                 break;
         }
         case VK_FORMAT_R16G16B16A16_UNORM:
         {
-                write(ColorFormat::R16G16B16A16);
+                write(image::ColorFormat::R16G16B16A16);
                 break;
         }
         case VK_FORMAT_R32G32B32A32_SFLOAT:
         {
-                write(ColorFormat::R32G32B32A32);
+                write(image::ColorFormat::R32G32B32A32);
                 break;
         }
         case VK_FORMAT_R8G8B8_SRGB:
         {
-                write(ColorFormat::R8G8B8_SRGB);
+                write(image::ColorFormat::R8G8B8_SRGB);
                 break;
         }
         case VK_FORMAT_R16G16B16_UNORM:
         {
-                write(ColorFormat::R16G16B16);
+                write(image::ColorFormat::R16G16B16);
                 break;
         }
         case VK_FORMAT_R32G32B32_SFLOAT:
         {
-                write(ColorFormat::R32G32B32);
+                write(image::ColorFormat::R32G32B32);
                 break;
         }
         case VK_FORMAT_R8_SRGB:
         {
-                write(ColorFormat::R8_SRGB);
+                write(image::ColorFormat::R8_SRGB);
                 break;
         }
         case VK_FORMAT_R16_UNORM:
         {
-                write(ColorFormat::R16);
+                write(image::ColorFormat::R16);
                 break;
         }
         case VK_FORMAT_R32_SFLOAT:
         {
-                write(ColorFormat::R32);
+                write(image::ColorFormat::R32);
                 break;
         }
         default:
@@ -846,7 +846,7 @@ void ImageWithMemory::write_pixels(
         const Queue& queue,
         VkImageLayout old_layout,
         VkImageLayout new_layout,
-        ColorFormat color_format,
+        image::ColorFormat color_format,
         const Span<const std::byte>& pixels) const
 {
         check_family_index(command_pool, queue);

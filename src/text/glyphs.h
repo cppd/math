@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "font.h"
 
-#include <src/color/color.h>
+#include <src/image/format.h>
 
 #include <cstdint>
 #include <unordered_map>
@@ -44,6 +44,6 @@ void create_font_glyphs(
         std::unordered_map<char32_t, FontGlyph>* font_glyphs,
         int* texture_width,
         int* texture_height,
-        ColorFormat* color_format,
+        image::ColorFormat* color_format,
         std::vector<std::byte>* pixels);
 }

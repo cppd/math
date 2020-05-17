@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "file.h"
 
-#include <src/color/format.h>
+#include "conversion.h"
+
 #include <src/com/error.h>
 #include <src/utility/file/sys.h>
 #include <src/utility/string/str.h>
@@ -27,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstring>
 #include <set>
 
+namespace image
+{
 namespace
 {
 constexpr const char* DEFAULT_WRITE_FORMAT = "png";
@@ -80,7 +83,7 @@ void save_1(const std::string& file_name, int width, int height, ColorFormat col
         QImage image(width, height, QImage::Format_RGB32);
 
         std::vector<std::byte> bytes;
-        color::format_conversion(color_format, pixels, ColorFormat::R8_SRGB, &bytes);
+        format_conversion(color_format, pixels, ColorFormat::R8_SRGB, &bytes);
 
         ASSERT(1ull * width * height == pixels.size());
 
@@ -106,7 +109,7 @@ void save_3(const std::string& file_name, int width, int height, ColorFormat col
         QImage image(width, height, QImage::Format_RGB32);
 
         std::vector<std::byte> bytes;
-        color::format_conversion(color_format, pixels, ColorFormat::R8G8B8_SRGB, &bytes);
+        format_conversion(color_format, pixels, ColorFormat::R8G8B8_SRGB, &bytes);
 
         ASSERT(3ull * width * height == pixels.size());
 
@@ -136,7 +139,7 @@ void save_4(const std::string& file_name, int width, int height, ColorFormat col
         QImage image(width, height, QImage::Format_ARGB32);
 
         std::vector<std::byte> bytes;
-        color::format_conversion(color_format, pixels, ColorFormat::R8G8B8A8_SRGB, &bytes);
+        format_conversion(color_format, pixels, ColorFormat::R8G8B8A8_SRGB, &bytes);
 
         ASSERT(4ull * width * height == pixels.size());
 
@@ -173,26 +176,26 @@ void save_image_to_file(
 {
         std::string f = file_name_with_extension(file_name);
 
-        if (pixels.size() != 1ull * width * height * color::pixel_size_in_bytes(color_format))
+        if (pixels.size() != 1ull * width * height * pixel_size_in_bytes(color_format))
         {
                 error("Error image data size");
         }
 
-        if (color::component_count(color_format) == 1)
+        if (component_count(color_format) == 1)
         {
                 save_1(f, width, height, color_format, pixels);
         }
-        else if (color::component_count(color_format) == 3)
+        else if (component_count(color_format) == 3)
         {
                 save_3(f, width, height, color_format, pixels);
         }
-        else if (color::component_count(color_format) == 4)
+        else if (component_count(color_format) == 4)
         {
                 save_4(f, width, height, color_format, pixels);
         }
         else
         {
-                error("Image format " + color::format_to_string(color_format) + " is not supported for saving to file");
+                error("Image format " + format_to_string(color_format) + " is not supported for saving to file");
         }
 }
 
@@ -284,7 +287,7 @@ void load_image_from_file_rgba(
 
 void flip_image_vertically(int width, int height, ColorFormat color_format, std::vector<std::byte>* pixels)
 {
-        size_t pixel_size = color::pixel_size_in_bytes(color_format);
+        size_t pixel_size = pixel_size_in_bytes(color_format);
 
         if (pixels->size() != pixel_size * width * height)
         {
@@ -300,4 +303,5 @@ void flip_image_vertically(int width, int height, ColorFormat color_format, std:
                         std::swap((*pixels)[row1 + i], (*pixels)[row2 + i]);
                 }
         }
+}
 }

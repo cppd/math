@@ -54,7 +54,7 @@ class MeshObject
         };
         std::vector<Material> m_materials;
 
-        std::vector<ColorImage<N - 1>> m_images;
+        std::vector<image::ColorImage<N - 1>> m_images;
 
         std::vector<Facet> m_facets;
 

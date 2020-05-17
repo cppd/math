@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "conversion.h"
 #include "file.h"
 
 #include <src/color/color.h>
-#include <src/color/format.h>
 #include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/global_index.h>
@@ -32,6 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+namespace image
+{
 template <size_t N>
 class ColorImage
 {
@@ -87,7 +89,7 @@ public:
         {
                 resize(size);
 
-                color::format_conversion(
+                format_conversion(
                         color_format, pixels, ColorFormat::R32G32B32,
                         Span<std::byte>(reinterpret_cast<std::byte*>(data_pointer(m_data)), data_size(m_data)));
         }
@@ -166,7 +168,7 @@ public:
 
                 resize(size);
 
-                color::format_conversion(
+                format_conversion(
                         color_format, pixels, ColorFormat::R32G32B32,
                         Span<std::byte>(reinterpret_cast<std::byte*>(data_pointer(m_data)), data_size(m_data)));
         }
@@ -201,3 +203,4 @@ public:
                 }
         }
 };
+}

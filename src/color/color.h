@@ -21,21 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vec.h>
 
-#include <algorithm>
-
-enum class ColorFormat
-{
-        R8_SRGB,
-        R8G8B8_SRGB,
-        R8G8B8A8_SRGB,
-        R16,
-        R16G16B16,
-        R16G16B16A16,
-        R32,
-        R32G32B32,
-        R32G32B32A32,
-};
-
 struct Srgb8
 {
         unsigned char red, green, blue;

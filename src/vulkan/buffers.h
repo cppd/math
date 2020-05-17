@@ -20,11 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "instance.h"
 #include "objects.h"
 
-#include <src/color/color.h>
 #include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/span.h>
 #include <src/com/type/detect.h>
+#include <src/image/format.h>
 
 #include <cstring>
 #include <unordered_set>
@@ -217,7 +217,7 @@ public:
                 const Queue& queue,
                 VkImageLayout old_layout,
                 VkImageLayout new_layout,
-                ColorFormat color_format,
+                image::ColorFormat color_format,
                 const Span<const std::byte>& pixels) const;
 
         void clear_commands(VkCommandBuffer command_buffer, VkImageLayout image_layout) const;

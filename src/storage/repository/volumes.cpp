@@ -40,7 +40,7 @@ double volume_size(unsigned size)
 template <size_t N>
 std::unique_ptr<volume::Volume<N>> cube(unsigned size)
 {
-        constexpr ColorFormat COLOR_FORMAT = ColorFormat::R16;
+        constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R16;
         constexpr std::uint16_t PIXEL_VALUE = 1000;
 
         if (size < 2)

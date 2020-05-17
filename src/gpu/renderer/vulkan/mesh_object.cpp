@@ -360,7 +360,7 @@ std::vector<vulkan::ImageWithMemory> load_textures(
         // На одну текстуру больше для её указания, но не использования в тех материалах, где нет текстуры
         constexpr unsigned w = 1;
         constexpr unsigned h = 1;
-        constexpr ColorFormat color_format = ColorFormat::R8G8B8A8_SRGB;
+        constexpr image::ColorFormat color_format = image::ColorFormat::R8G8B8A8_SRGB;
         const std::vector<std::byte> pixels(w * h * 4);
         textures.emplace_back(
                 device, command_pool, queue, family_indices, COLOR_IMAGE_FORMATS, VK_SAMPLE_COUNT_1_BIT,

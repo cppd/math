@@ -45,7 +45,7 @@ class Images : public PainterNotifier<3>
 {
         static constexpr const char* BEGINNING_OF_FILE_NAME = "painter_";
 
-        std::vector<ColorImage<2>> m_images;
+        std::vector<image::ColorImage<2>> m_images;
         std::array<int, 3> m_size;
 
 public:

@@ -21,31 +21,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/span.h>
 
-#include <string>
+#include <cstddef>
 #include <vector>
 
 namespace image
 {
-void save_image_to_file(
-        const std::string& file_name,
-        int width,
-        int height,
-        ColorFormat color_format,
-        Span<const std::byte> pixels);
+void format_conversion(
+        ColorFormat from_format,
+        const Span<const std::byte>& from,
+        ColorFormat to_format,
+        const Span<std::byte>& to);
 
-void load_image_from_file_rgb(
-        const std::string& file_name,
-        int* width,
-        int* height,
-        ColorFormat* color_format,
-        std::vector<std::byte>* pixels);
-
-void load_image_from_file_rgba(
-        const std::string& file_name,
-        int* width,
-        int* height,
-        ColorFormat* color_format,
-        std::vector<std::byte>* pixels);
-
-void flip_image_vertically(int width, int height, ColorFormat color_format, std::vector<std::byte>* pixels);
+void format_conversion(
+        ColorFormat from_format,
+        const Span<const std::byte>& from,
+        ColorFormat to_format,
+        std::vector<std::byte>* to);
 }

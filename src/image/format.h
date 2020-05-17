@@ -17,29 +17,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "color.h"
-
-#include <src/com/span.h>
-
-#include <cstddef>
 #include <string>
-#include <vector>
 
-namespace color
+namespace image
 {
+enum class ColorFormat
+{
+        R8_SRGB,
+        R8G8B8_SRGB,
+        R8G8B8A8_SRGB,
+        R16,
+        R16G16B16,
+        R16G16B16A16,
+        R32,
+        R32G32B32,
+        R32G32B32A32,
+};
+
 std::string format_to_string(ColorFormat format);
 unsigned pixel_size_in_bytes(ColorFormat format);
 unsigned component_count(ColorFormat format);
-
-void format_conversion(
-        ColorFormat from_format,
-        const Span<const std::byte>& from,
-        ColorFormat to_format,
-        const Span<std::byte>& to);
-
-void format_conversion(
-        ColorFormat from_format,
-        const Span<const std::byte>& from,
-        ColorFormat to_format,
-        std::vector<std::byte>* to);
 }

@@ -75,7 +75,7 @@ class Glyphs
         int m_width;
         int m_height;
         std::unordered_map<char32_t, text::FontGlyph> m_glyphs;
-        ColorFormat m_color_format;
+        image::ColorFormat m_color_format;
         std::vector<std::byte> m_pixels;
 
 public:
@@ -99,7 +99,7 @@ public:
         {
                 return m_glyphs;
         }
-        ColorFormat color_format() const
+        image::ColorFormat color_format() const
         {
                 return m_color_format;
         }
