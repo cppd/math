@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 template <size_t N>
-class Image
+class ColorImage
 {
         std::vector<Color> m_data;
 
@@ -78,12 +78,12 @@ class Image
         }
 
 public:
-        explicit Image(const std::array<int, N>& size)
+        explicit ColorImage(const std::array<int, N>& size)
         {
                 resize(size);
         }
 
-        Image(const std::array<int, N>& size, ColorFormat color_format, const std::vector<std::byte>& pixels)
+        ColorImage(const std::array<int, N>& size, ColorFormat color_format, const std::vector<std::byte>& pixels)
         {
                 resize(size);
 
@@ -93,7 +93,7 @@ public:
         }
 
         template <size_t X = N>
-        explicit Image(std::enable_if_t<X == 2, const std::string&> file_name)
+        explicit ColorImage(std::enable_if_t<X == 2, const std::string&> file_name)
         {
                 static_assert(N == X);
 

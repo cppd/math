@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../space/tree.h"
 
 #include <src/color/color.h>
-#include <src/image/image.h>
+#include <src/image/color_image.h>
 #include <src/model/mesh.h>
 #include <src/numerical/matrix.h>
 #include <src/progress/progress.h>
@@ -54,7 +54,7 @@ class MeshObject
         };
         std::vector<Material> m_materials;
 
-        std::vector<Image<N - 1>> m_images;
+        std::vector<ColorImage<N - 1>> m_images;
 
         std::vector<Facet> m_facets;
 

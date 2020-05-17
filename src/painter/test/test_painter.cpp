@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/gui/com/support.h>
 #include <src/gui/painter_window/painter_window.h>
-#include <src/image/image.h>
+#include <src/image/color_image.h>
 #include <src/model/mesh_utility.h>
 #include <src/utility/file/sys.h>
 #include <src/utility/string/str.h>
@@ -45,7 +45,7 @@ class Images : public PainterNotifier<3>
 {
         static constexpr const char* BEGINNING_OF_FILE_NAME = "painter_";
 
-        std::vector<Image<2>> m_images;
+        std::vector<ColorImage<2>> m_images;
         std::array<int, 3> m_size;
 
 public:
