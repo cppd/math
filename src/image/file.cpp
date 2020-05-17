@@ -176,20 +176,20 @@ void save_image_to_file(
 {
         std::string f = file_name_with_extension(file_name);
 
-        if (pixels.size() != 1ull * width * height * pixel_size_in_bytes(color_format))
+        if (pixels.size() != 1ull * width * height * format_pixel_size_in_bytes(color_format))
         {
                 error("Error image data size");
         }
 
-        if (component_count(color_format) == 1)
+        if (format_component_count(color_format) == 1)
         {
                 save_1(f, width, height, color_format, pixels);
         }
-        else if (component_count(color_format) == 3)
+        else if (format_component_count(color_format) == 3)
         {
                 save_3(f, width, height, color_format, pixels);
         }
-        else if (component_count(color_format) == 4)
+        else if (format_component_count(color_format) == 4)
         {
                 save_4(f, width, height, color_format, pixels);
         }
@@ -287,7 +287,7 @@ void load_image_from_file_rgba(
 
 void flip_image_vertically(int width, int height, ColorFormat color_format, std::vector<std::byte>* pixels)
 {
-        size_t pixel_size = pixel_size_in_bytes(color_format);
+        size_t pixel_size = format_pixel_size_in_bytes(color_format);
 
         if (pixels->size() != pixel_size * width * height)
         {

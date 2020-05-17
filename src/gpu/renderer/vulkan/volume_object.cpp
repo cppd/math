@@ -143,7 +143,7 @@ class VolumeObject::Volume
                 image::ColorFormat color_format;
                 std::vector<std::byte> color_bytes;
                 transfer_function(&color_format, &color_bytes);
-                unsigned pixel_count = color_bytes.size() / image::pixel_size_in_bytes(color_format);
+                unsigned pixel_count = color_bytes.size() / image::format_pixel_size_in_bytes(color_format);
 
                 m_transfer_function.reset();
 

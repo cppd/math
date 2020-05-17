@@ -621,7 +621,7 @@ void conv_copy(const std::vector<float>& floats, const Span<std::byte>& bytes)
 
 void check_equal_component_count(ColorFormat from_format, ColorFormat to_format)
 {
-        if (component_count(from_format) != component_count(to_format))
+        if (format_component_count(from_format) != format_component_count(to_format))
         {
                 component_count_error(from_format, to_format);
         }
@@ -644,7 +644,7 @@ void conv_src_to_floats(
                 conv_r8g8b8_srgb_to_r32g32b32(from, pixels);
                 return;
         case ColorFormat::R8G8B8A8_SRGB:
-                switch (component_count(to_format))
+                switch (format_component_count(to_format))
                 {
                 case 4:
                         conv_r8g8b8a8_srgb_to_r32g32b32a32(from, pixels);
@@ -664,7 +664,7 @@ void conv_src_to_floats(
                 conv_r16g16b16_to_r32g32b32(from, pixels);
                 return;
         case ColorFormat::R16G16B16A16:
-                switch (component_count(to_format))
+                switch (format_component_count(to_format))
                 {
                 case 4:
                         conv_r16g16b16a16_to_r32g32b32a32(from, pixels);
@@ -684,7 +684,7 @@ void conv_src_to_floats(
                 conv_copy(from, pixels);
                 return;
         case ColorFormat::R32G32B32A32:
-                switch (component_count(to_format))
+                switch (format_component_count(to_format))
                 {
                 case 4:
                         conv_copy(from, pixels);
@@ -716,7 +716,7 @@ void conv_floats_to_dst(
                 conv_r32g32b32_to_r8g8b8_srgb(pixels, to);
                 return;
         case ColorFormat::R8G8B8A8_SRGB:
-                switch (component_count(from_format))
+                switch (format_component_count(from_format))
                 {
                 case 4:
                         conv_r32g32b32a32_to_r8g8b8a8_srgb(pixels, to);
@@ -734,7 +734,7 @@ void conv_floats_to_dst(
                 conv_r32g32b32_to_r16g16b16(pixels, to);
                 return;
         case ColorFormat::R16G16B16A16:
-                switch (component_count(from_format))
+                switch (format_component_count(from_format))
                 {
                 case 4:
                         conv_r32g32b32a32_to_r16g16b16a16(pixels, to);
@@ -752,7 +752,7 @@ void conv_floats_to_dst(
                 conv_copy(pixels, to);
                 return;
         case ColorFormat::R32G32B32A32:
-                switch (component_count(from_format))
+                switch (format_component_count(from_format))
                 {
                 case 4:
                         conv_copy(pixels, to);
@@ -784,7 +784,7 @@ void format_conversion(
         ASSERT(from.data());
         ASSERT(to.data());
 
-        const std::lldiv_t pixel_count = std::lldiv(from.size(), pixel_size_in_bytes(from_format));
+        const std::lldiv_t pixel_count = std::lldiv(from.size(), format_pixel_size_in_bytes(from_format));
 
         if (pixel_count.rem != 0)
         {
@@ -792,7 +792,7 @@ void format_conversion(
                       + format_to_string(from_format));
         }
 
-        if (pixel_count.quot * pixel_size_in_bytes(to_format) != static_cast<long long>(to.size()))
+        if (pixel_count.quot * format_pixel_size_in_bytes(to_format) != static_cast<long long>(to.size()))
         {
                 error("Error output color data size " + to_string(to.size()) + " for color format "
                       + format_to_string(to_format));
@@ -820,7 +820,7 @@ void format_conversion(
         std::vector<std::byte>* to)
 {
         ASSERT(to);
-        to->resize((from.size() / pixel_size_in_bytes(from_format)) * pixel_size_in_bytes(to_format));
+        to->resize((from.size() / format_pixel_size_in_bytes(from_format)) * format_pixel_size_in_bytes(to_format));
 
         conv(from_format, from, to_format, Span<std::byte>(data_pointer(*to), data_size(*to)));
 }

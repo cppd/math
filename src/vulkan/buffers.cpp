@@ -546,14 +546,15 @@ ImageView create_image_view(
 template <typename T>
 void check_buffer_size(const T& pixels, image::ColorFormat color_format, VkExtent3D extent)
 {
-        if ((pixels.size() % image::pixel_size_in_bytes(color_format)) != 0)
+        if ((pixels.size() % image::format_pixel_size_in_bytes(color_format)) != 0)
         {
                 error("Error pixel buffer size");
         }
 
-        if (pixels.size() != image::pixel_size_in_bytes(color_format) * extent.width * extent.height * extent.depth)
+        if (pixels.size()
+            != image::format_pixel_size_in_bytes(color_format) * extent.width * extent.height * extent.depth)
         {
-                error("Wrong pixel count " + to_string(pixels.size() / image::pixel_size_in_bytes(color_format))
+                error("Wrong pixel count " + to_string(pixels.size() / image::format_pixel_size_in_bytes(color_format))
                       + " for image extent (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
                       + to_string(extent.depth) + ")");
         }

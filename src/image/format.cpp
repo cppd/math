@@ -64,7 +64,7 @@ std::string format_to_string(ColorFormat format)
         unknown_color_format_error(format);
 }
 
-unsigned pixel_size_in_bytes(ColorFormat format)
+unsigned format_pixel_size_in_bytes(ColorFormat format)
 {
         switch (format)
         {
@@ -90,7 +90,7 @@ unsigned pixel_size_in_bytes(ColorFormat format)
         unknown_color_format_error(format);
 }
 
-unsigned component_count(ColorFormat format)
+unsigned format_component_count(ColorFormat format)
 {
         switch (format)
         {

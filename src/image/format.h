@@ -35,6 +35,6 @@ enum class ColorFormat
 };
 
 std::string format_to_string(ColorFormat format);
-unsigned pixel_size_in_bytes(ColorFormat format);
-unsigned component_count(ColorFormat format);
+unsigned format_pixel_size_in_bytes(ColorFormat format);
+unsigned format_component_count(ColorFormat format);
 }
