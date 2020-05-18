@@ -154,9 +154,11 @@ public:
                 static_assert(N == X);
 
                 save_image_to_file(
-                        file_name, m_size[0], m_size[1], ColorFormat::R32G32B32,
-                        Span<const std::byte>(
-                                reinterpret_cast<const std::byte*>(data_pointer(m_data)), data_size(m_data)));
+                        file_name,
+                        ImageView<2>(
+                                {m_size[0], m_size[1]}, ColorFormat::R32G32B32,
+                                Span<const std::byte>(
+                                        reinterpret_cast<const std::byte*>(data_pointer(m_data)), data_size(m_data))));
         }
 
         //template <size_t X = N>

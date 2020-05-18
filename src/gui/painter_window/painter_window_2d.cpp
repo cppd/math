@@ -326,8 +326,11 @@ void PainterWindow2d::on_pushButton_save_to_file_clicked()
                 {
                         return;
                 }
+
                 save_image_to_file(
-                        file_name, m_image.width(), m_image.height(), image::ColorFormat::R8G8B8_SRGB, bytes);
+                        file_name,
+                        image::ImageView<2>(
+                                {m_image.width(), m_image.height()}, image::ColorFormat::R8G8B8_SRGB, bytes));
         });
 }
 

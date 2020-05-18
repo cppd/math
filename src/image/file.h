@@ -26,12 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace image
 {
-void save_image_to_file(
-        const std::string& file_name,
-        int width,
-        int height,
-        ColorFormat color_format,
-        Span<const std::byte> pixels);
+void save_image_to_file(const std::string& file_name, const ImageView<2>& image_view);
 
 void load_image_from_file_rgba(const std::string& file_name, Image<2>* image);
 

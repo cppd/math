@@ -167,35 +167,34 @@ void save_4(const std::string& file_name, int width, int height, ColorFormat col
 }
 }
 
-void save_image_to_file(
-        const std::string& file_name,
-        int width,
-        int height,
-        ColorFormat color_format,
-        Span<const std::byte> pixels)
+void save_image_to_file(const std::string& file_name, const ImageView<2>& image_view)
 {
         std::string f = file_name_with_extension(file_name);
 
-        if (pixels.size() != 1ull * width * height * format_pixel_size_in_bytes(color_format))
+        int width = image_view.size[0];
+        int height = image_view.size[1];
+
+        if (image_view.pixels.size() != 1ull * width * height * format_pixel_size_in_bytes(image_view.color_format))
         {
                 error("Error image data size");
         }
 
-        if (format_component_count(color_format) == 1)
+        if (format_component_count(image_view.color_format) == 1)
         {
-                save_1(f, width, height, color_format, pixels);
+                save_1(f, width, height, image_view.color_format, image_view.pixels);
         }
-        else if (format_component_count(color_format) == 3)
+        else if (format_component_count(image_view.color_format) == 3)
         {
-                save_3(f, width, height, color_format, pixels);
+                save_3(f, width, height, image_view.color_format, image_view.pixels);
         }
-        else if (format_component_count(color_format) == 4)
+        else if (format_component_count(image_view.color_format) == 4)
         {
-                save_4(f, width, height, color_format, pixels);
+                save_4(f, width, height, image_view.color_format, image_view.pixels);
         }
         else
         {
-                error("Image format " + format_to_string(color_format) + " is not supported for saving to file");
+                error("Image format " + format_to_string(image_view.color_format)
+                      + " is not supported for saving to file");
         }
 }
 

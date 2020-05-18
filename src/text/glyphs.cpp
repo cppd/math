@@ -251,8 +251,7 @@ void create_font_glyphs(
 
         if ((false))
         {
-                save_image_to_file(
-                        "font_texture.png", image->size[0], image->size[1], image->color_format, image->pixels);
+                save_image_to_file("font_texture.png", image::ImageView<2>(*image));
         }
 }
 }
