@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/color/color.h>
-#include <src/image/format.h>
+#include <src/image/image.h>
 #include <src/numerical/vec.h>
 
 #include <array>
@@ -62,13 +62,6 @@ struct Mesh final
                 int map_Ks{-1}; // -1 если нет текстуры
         };
 
-        struct Image
-        {
-                std::array<int, N - 1> size;
-                image::ColorFormat color_format;
-                std::vector<std::byte> pixels;
-        };
-
         std::vector<Vector<N, float>> vertices;
         std::vector<Vector<N, float>> normals;
         std::vector<Vector<N - 1, float>> texcoords;
@@ -76,7 +69,7 @@ struct Mesh final
         std::vector<Point> points;
         std::vector<Line> lines;
         std::vector<Material> materials;
-        std::vector<Image> images;
+        std::vector<image::Image<N - 1>> images;
         Vector<N, float> center{0};
         float length{0};
 

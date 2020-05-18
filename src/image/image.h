@@ -17,25 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/image/image.h>
-#include <src/numerical/matrix.h>
+#include "format.h"
 
 #include <array>
+#include <cstddef>
 #include <vector>
 
-namespace volume
+namespace image
 {
 template <size_t N>
-struct Volume final
+struct Image
 {
-        image::Image<N> image;
-        Matrix<N + 1, N + 1, double> matrix;
-
-        Volume() = default;
-        Volume(const Volume&) = delete;
-        Volume& operator=(const Volume&) = delete;
-        Volume(Volume&&) = default;
-        Volume& operator=(Volume&&) = default;
-        ~Volume() = default;
+        std::array<int, N> size;
+        ColorFormat color_format;
+        std::vector<std::byte> pixels;
 };
 }

@@ -128,16 +128,16 @@ bool check_color(const Color& v)
 }
 
 template <size_t N>
-typename Mesh<N>::Image read_image_from_file(const std::string& file_name)
+image::Image<N> read_image_from_file(const std::string& file_name)
 {
-        if constexpr (N != 3)
+        if constexpr (N != 2)
         {
                 error("Reading " + to_string(N - 1) + "-dimensional images for " + obj_type_name(N)
                       + " is not supported");
         }
         else
         {
-                Mesh<3>::Image obj_image;
+                image::Image<2> obj_image;
                 load_image_from_file_rgba(
                         file_name, &obj_image.size[0], &obj_image.size[1], &obj_image.color_format, &obj_image.pixels);
                 flip_image_vertically(obj_image.size[0], obj_image.size[1], obj_image.color_format, &obj_image.pixels);
@@ -150,7 +150,7 @@ void load_image(
         const std::string& dir_name,
         const std::string& image_name,
         std::map<std::string, int>* image_index,
-        std::vector<typename Mesh<N>::Image>* images,
+        std::vector<image::Image<N - 1>>* images,
         int* index)
 {
         std::string file_name = trim(image_name);
@@ -173,7 +173,7 @@ void load_image(
                 return;
         }
 
-        images->push_back(read_image_from_file<N>(file_name));
+        images->push_back(read_image_from_file<N - 1>(file_name));
         *index = images->size() - 1;
         image_index->emplace(file_name, *index);
 }

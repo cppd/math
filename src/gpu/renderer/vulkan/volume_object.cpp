@@ -163,7 +163,7 @@ class VolumeObject::Volume
                 }
         }
 
-        void set_image(const volume::Volume<3>::Image& image, Memory with_memory_creation)
+        void set_image(const image::Image<3>& image, Memory with_memory_creation)
         {
                 VkImageLayout image_layout;
                 if (!m_image || m_image->width() != static_cast<unsigned>(image.size[0])

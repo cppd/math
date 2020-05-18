@@ -344,7 +344,7 @@ std::vector<vulkan::ImageWithMemory> load_textures(
 
         std::vector<vulkan::ImageWithMemory> textures;
 
-        for (const typename mesh::Mesh<3>::Image& image : mesh.images)
+        for (const image::Image<2>& image : mesh.images)
         {
                 textures.emplace_back(
                         device, command_pool, queue, family_indices, COLOR_IMAGE_FORMATS, VK_SAMPLE_COUNT_1_BIT,

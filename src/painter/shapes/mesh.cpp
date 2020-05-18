@@ -111,7 +111,7 @@ void MeshObject<N, T>::create(const mesh::Mesh<N>& mesh, const Matrix<N + 1, N +
         }
 
         m_images.reserve(mesh.images.size());
-        for (const typename mesh::Mesh<N>::Image& image : mesh.images)
+        for (const image::Image<N - 1>& image : mesh.images)
         {
                 m_images.emplace_back(image.size, image.color_format, image.pixels);
         }
