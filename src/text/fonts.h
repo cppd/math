@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/span.h>
-
+#include <functional>
 #include <map>
 #include <string>
 #include <vector>
@@ -27,7 +26,7 @@ namespace text
 {
 class Fonts
 {
-        std::map<std::string, Span<const unsigned char>> m_fonts;
+        std::map<std::string, std::function<std::vector<unsigned char>()>> m_fonts;
 
         Fonts();
 

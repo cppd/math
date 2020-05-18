@@ -50,7 +50,7 @@ const Fonts& Fonts::instance()
 
 Fonts::Fonts()
 {
-        m_fonts.emplace("DejaVuSans", DEJA_VU_SANS);
+        m_fonts.emplace("DejaVuSans", []() { return std::vector(std::cbegin(DEJA_VU_SANS), std::cend(DEJA_VU_SANS)); });
 }
 
 std::vector<std::string> Fonts::names() const
@@ -63,7 +63,7 @@ std::vector<unsigned char> Fonts::data(const std::string& name) const
         auto iter = m_fonts.find(name);
         if (iter != m_fonts.cend())
         {
-                return std::vector(iter->second.data(), iter->second.data() + iter->second.size());
+                return iter->second();
         }
         error("Font not found: " + name);
 }
