@@ -165,6 +165,11 @@ class VolumeObject::Volume
 
         void set_image(const image::Image<3>& image, Memory with_memory_creation)
         {
+                if (image.color_format != image::ColorFormat::R16 && image.color_format != image::ColorFormat::R32)
+                {
+                        error("Unsupported volume image format: " + image::format_to_string(image.color_format));
+                }
+
                 VkImageLayout image_layout;
                 if (!m_image || m_image->width() != static_cast<unsigned>(image.size[0])
                     || m_image->height() != static_cast<unsigned>(image.size[1])

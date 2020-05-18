@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "volume_object.h"
 #include "volume_renderer.h"
 
+#include <src/com/log.h>
 #include <src/numerical/transform.h>
 #include <src/numerical/vec.h>
 #include <src/vulkan/commands.h>
@@ -333,10 +334,12 @@ class Impl final : public Renderer
 
                 bool create_commands = false;
                 VolumeObject* ptr = find_object(m_volume_storage, object.id());
+                if (!ptr && !reading.updates().contains(volume::Update::All))
+                {
+                        return;
+                }
                 if (!ptr)
                 {
-                        ASSERT(reading.updates().contains(volume::Update::All));
-
                         const auto pair = m_volume_storage.emplace(
                                 object.id(),
                                 std::make_unique<VolumeObject>(
@@ -351,7 +354,22 @@ class Impl final : public Renderer
                 }
 
                 bool update_commands;
-                ptr->update(reading.updates(), object, &update_commands);
+                try
+                {
+                        ptr->update(reading.updates(), object, &update_commands);
+                }
+                catch (const std::exception& e)
+                {
+                        m_volume_storage.erase(object.id());
+                        update_commands = true;
+                        LOG(std::string("Error updating volume object. ") + e.what());
+                }
+                catch (...)
+                {
+                        m_volume_storage.erase(object.id());
+                        update_commands = true;
+                        LOG("Unknown error creating mesh object");
+                }
 
                 if ((create_commands || update_commands) && (m_current_object_id == object.id()))
                 {
