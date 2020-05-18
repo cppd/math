@@ -113,7 +113,7 @@ void MeshObject<N, T>::create(const mesh::Mesh<N>& mesh, const Matrix<N + 1, N +
         m_images.reserve(mesh.images.size());
         for (const image::Image<N - 1>& image : mesh.images)
         {
-                m_images.emplace_back(image.size, image.color_format, image.pixels);
+                m_images.emplace_back(image);
         }
 
         progress->set_text(to_string(1 << N) + "-tree: %v of %m");

@@ -72,40 +72,23 @@ std::vector<unsigned char> font_data()
 
 class Glyphs
 {
-        int m_width;
-        int m_height;
+        image::Image<2> m_image;
         std::unordered_map<char32_t, text::FontGlyph> m_glyphs;
-        image::ColorFormat m_color_format;
-        std::vector<std::byte> m_pixels;
 
 public:
         Glyphs(int size, unsigned max_image_dimension)
         {
                 text::Font font(size, font_data());
 
-                create_font_glyphs(
-                        font, max_image_dimension, max_image_dimension, &m_glyphs, &m_width, &m_height, &m_color_format,
-                        &m_pixels);
-        }
-        int width() const
-        {
-                return m_width;
-        }
-        int height() const
-        {
-                return m_height;
+                create_font_glyphs(font, max_image_dimension, max_image_dimension, &m_glyphs, &m_image);
         }
         std::unordered_map<char32_t, text::FontGlyph>& glyphs()
         {
                 return m_glyphs;
         }
-        image::ColorFormat color_format() const
+        const image::Image<2>& image() const
         {
-                return m_color_format;
-        }
-        std::vector<std::byte>& pixels()
-        {
-                return m_pixels;
+                return m_image;
         }
 };
 
@@ -290,7 +273,7 @@ class Impl final : public View
                           GRAYSCALE_IMAGE_FORMATS,
                           VK_SAMPLE_COUNT_1_BIT,
                           VK_IMAGE_TYPE_2D,
-                          vulkan::make_extent(glyphs.width(), glyphs.height()),
+                          vulkan::make_extent(glyphs.image().size[0], glyphs.image().size[1]),
                           VK_IMAGE_LAYOUT_UNDEFINED,
                           false /*storage*/),
                   m_glyphs(std::move(glyphs.glyphs())),
@@ -323,7 +306,7 @@ class Impl final : public View
 
                 m_glyph_texture.write_pixels(
                         graphics_command_pool, graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, glyphs.color_format(), glyphs.pixels());
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, glyphs.image().color_format, glyphs.image().pixels);
 
                 set_color(color);
         }

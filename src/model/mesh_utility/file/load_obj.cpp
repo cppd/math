@@ -138,9 +138,8 @@ image::Image<N> read_image_from_file(const std::string& file_name)
         else
         {
                 image::Image<2> obj_image;
-                load_image_from_file_rgba(
-                        file_name, &obj_image.size[0], &obj_image.size[1], &obj_image.color_format, &obj_image.pixels);
-                flip_image_vertically(obj_image.size[0], obj_image.size[1], obj_image.color_format, &obj_image.pixels);
+                load_image_from_file_rgba(file_name, &obj_image);
+                flip_image_vertically(&obj_image);
                 return obj_image;
         }
 }

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "format.h"
+#include "image.h"
 
 #include <src/com/span.h>
 
@@ -33,19 +33,7 @@ void save_image_to_file(
         ColorFormat color_format,
         Span<const std::byte> pixels);
 
-void load_image_from_file_rgb(
-        const std::string& file_name,
-        int* width,
-        int* height,
-        ColorFormat* color_format,
-        std::vector<std::byte>* pixels);
+void load_image_from_file_rgba(const std::string& file_name, Image<2>* image);
 
-void load_image_from_file_rgba(
-        const std::string& file_name,
-        int* width,
-        int* height,
-        ColorFormat* color_format,
-        std::vector<std::byte>* pixels);
-
-void flip_image_vertically(int width, int height, ColorFormat color_format, std::vector<std::byte>* pixels);
+void flip_image_vertically(Image<2>* image);
 }

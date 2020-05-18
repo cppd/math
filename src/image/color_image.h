@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "conversion.h"
 #include "file.h"
+#include "image.h"
 
 #include <src/color/color.h>
 #include <src/com/container.h>
@@ -85,21 +86,13 @@ public:
                 resize(size);
         }
 
-        ColorImage(const std::array<int, N>& size, ColorFormat color_format, const std::vector<std::byte>& pixels)
+        ColorImage(const Image<N>& image)
         {
-                resize(size);
+                resize(image.size);
 
                 format_conversion(
-                        color_format, pixels, ColorFormat::R32G32B32,
+                        image.color_format, image.pixels, ColorFormat::R32G32B32,
                         Span<std::byte>(reinterpret_cast<std::byte*>(data_pointer(m_data)), data_size(m_data)));
-        }
-
-        template <size_t X = N>
-        explicit ColorImage(std::enable_if_t<X == 2, const std::string&> file_name)
-        {
-                static_assert(N == X);
-
-                read_from_file(file_name);
         }
 
         template <typename T>
@@ -156,24 +149,6 @@ public:
         }
 
         template <size_t X = N>
-        std::enable_if_t<X == 2> read_from_file(const std::string& file_name)
-        {
-                static_assert(N == X);
-
-                std::array<int, N> size;
-                ColorFormat color_format;
-                std::vector<std::byte> pixels;
-
-                load_image_from_file_rgb(file_name, &size[0], &size[1], &color_format, &pixels);
-
-                resize(size);
-
-                format_conversion(
-                        color_format, pixels, ColorFormat::R32G32B32,
-                        Span<std::byte>(reinterpret_cast<std::byte*>(data_pointer(m_data)), data_size(m_data)));
-        }
-
-        template <size_t X = N>
         std::enable_if_t<X == 2> write_to_file(const std::string& file_name) const
         {
                 static_assert(N == X);
@@ -184,23 +159,23 @@ public:
                                 reinterpret_cast<const std::byte*>(data_pointer(m_data)), data_size(m_data)));
         }
 
-        template <size_t X = N>
-        std::enable_if_t<X == 2> flip_vertically()
-        {
-                static_assert(N == X);
-
-                int width = m_size[0];
-                int height = m_size[1];
-
-                for (int y1 = 0, y2 = height - 1; y1 < height / 2; ++y1, --y2)
-                {
-                        for (int x = 0; x < width; ++x)
-                        {
-                                std::array<int, 2> p1{x, y1};
-                                std::array<int, 2> p2{x, y2};
-                                std::swap(m_data[pixel_index(p1)], m_data[pixel_index(p2)]);
-                        }
-                }
-        }
+        //template <size_t X = N>
+        //std::enable_if_t<X == 2> flip_vertically()
+        //{
+        //       static_assert(N == X);
+        //
+        //        int width = m_size[0];
+        //        int height = m_size[1];
+        //
+        //        for (int y1 = 0, y2 = height - 1; y1 < height / 2; ++y1, --y2)
+        //        {
+        //                for (int x = 0; x < width; ++x)
+        //                {
+        //                        std::array<int, 2> p1{x, y1};
+        //                        std::array<int, 2> p2{x, y2};
+        //                        std::swap(m_data[pixel_index(p1)], m_data[pixel_index(p2)]);
+        //                }
+        //        }
+        //}
 };
 }

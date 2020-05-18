@@ -233,10 +233,7 @@ void create_font_glyphs(
         int max_width,
         int max_height,
         std::unordered_map<char32_t, FontGlyph>* font_glyphs,
-        int* texture_width,
-        int* texture_height,
-        image::ColorFormat* color_format,
-        std::vector<std::byte>* pixels)
+        image::Image<2>* image)
 {
         std::unordered_map<char32_t, std::vector<std::byte>> glyph_pixels;
 
@@ -245,16 +242,17 @@ void create_font_glyphs(
         std::unordered_map<char32_t, std::array<int, 2>> glyph_coordinates;
 
         place_rectangles_on_rectangle(
-                *font_glyphs, max_width, max_height, texture_width, texture_height, &glyph_coordinates);
+                *font_glyphs, max_width, max_height, &image->size[0], &image->size[1], &glyph_coordinates);
 
         fill_texture_pixels_and_texture_coordinates(
-                *texture_width, *texture_height, glyph_pixels, glyph_coordinates, font_glyphs, pixels);
+                image->size[0], image->size[1], glyph_pixels, glyph_coordinates, font_glyphs, &image->pixels);
 
-        *color_format = image::ColorFormat::R8_SRGB;
+        image->color_format = image::ColorFormat::R8_SRGB;
 
         if ((false))
         {
-                save_image_to_file("font_texture.png", *texture_width, *texture_height, *color_format, *pixels);
+                save_image_to_file(
+                        "font_texture.png", image->size[0], image->size[1], image->color_format, image->pixels);
         }
 }
 }
