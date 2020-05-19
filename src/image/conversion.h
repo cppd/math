@@ -19,22 +19,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "format.h"
 
-#include <src/com/span.h>
-
 #include <cstddef>
+#include <span>
 #include <vector>
 
 namespace image
 {
 void format_conversion(
         ColorFormat from_format,
-        const Span<const std::byte>& from,
+        const std::span<const std::byte>& from,
         ColorFormat to_format,
-        const Span<std::byte>& to);
+        const std::span<std::byte>& to);
 
 void format_conversion(
         ColorFormat from_format,
-        const Span<const std::byte>& from,
+        const std::span<const std::byte>& from,
         ColorFormat to_format,
         std::vector<std::byte>* to);
 }

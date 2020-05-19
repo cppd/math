@@ -62,7 +62,7 @@ float uint16_to_float(T c)
         return float(c) / float(limits<uint16_t>::max());
 }
 
-void conv_r8_srgb_to_r32(const Span<const std::byte>& bytes, std::vector<float>* floats)
+void conv_r8_srgb_to_r32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
 {
         using From = uint8_t;
 
@@ -85,7 +85,7 @@ void conv_r8_srgb_to_r32(const Span<const std::byte>& bytes, std::vector<float>*
         }
 }
 
-void conv_r16_to_r32(const Span<const std::byte>& bytes, std::vector<float>* floats)
+void conv_r16_to_r32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
 {
         using From = uint16_t;
 
@@ -108,7 +108,7 @@ void conv_r16_to_r32(const Span<const std::byte>& bytes, std::vector<float>* flo
         }
 }
 
-void conv_r8g8b8_srgb_to_r32g32b32(const Span<const std::byte>& bytes, std::vector<float>* floats)
+void conv_r8g8b8_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
 {
         using From = uint8_t;
 
@@ -141,7 +141,7 @@ void conv_r8g8b8_srgb_to_r32g32b32(const Span<const std::byte>& bytes, std::vect
         }
 }
 
-void conv_r16g16b16_to_r32g32b32(const Span<const std::byte>& bytes, std::vector<float>* floats)
+void conv_r16g16b16_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
 {
         using From = uint16_t;
 
@@ -174,7 +174,7 @@ void conv_r16g16b16_to_r32g32b32(const Span<const std::byte>& bytes, std::vector
         }
 }
 
-void conv_r8g8b8a8_srgb_to_r32g32b32a32(const Span<const std::byte>& bytes, std::vector<float>* floats)
+void conv_r8g8b8a8_srgb_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
 {
         using From = uint8_t;
 
@@ -212,7 +212,7 @@ void conv_r8g8b8a8_srgb_to_r32g32b32a32(const Span<const std::byte>& bytes, std:
         }
 }
 
-void conv_r8g8b8a8_srgb_to_r32g32b32(const Span<const std::byte>& bytes, std::vector<float>* floats)
+void conv_r8g8b8a8_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
 {
         using From = uint8_t;
 
@@ -247,7 +247,7 @@ void conv_r8g8b8a8_srgb_to_r32g32b32(const Span<const std::byte>& bytes, std::ve
         }
 }
 
-void conv_r16g16b16a16_to_r32g32b32a32(const Span<const std::byte>& bytes, std::vector<float>* floats)
+void conv_r16g16b16a16_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
 {
         using From = uint16_t;
 
@@ -285,7 +285,7 @@ void conv_r16g16b16a16_to_r32g32b32a32(const Span<const std::byte>& bytes, std::
         }
 }
 
-void conv_r16g16b16a16_to_r32g32b32(const Span<const std::byte>& bytes, std::vector<float>* floats)
+void conv_r16g16b16a16_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
 {
         using From = uint16_t;
 
@@ -320,7 +320,7 @@ void conv_r16g16b16a16_to_r32g32b32(const Span<const std::byte>& bytes, std::vec
         }
 }
 
-void conv_r32g32b32a32_to_r32g32b32(const Span<const std::byte>& bytes, std::vector<float>* floats)
+void conv_r32g32b32a32_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
 {
         using From = float;
 
@@ -342,7 +342,7 @@ void conv_r32g32b32a32_to_r32g32b32(const Span<const std::byte>& bytes, std::vec
         }
 }
 
-void conv_copy(const Span<const std::byte>& bytes, std::vector<float>* floats)
+void conv_copy(const std::span<const std::byte>& bytes, std::vector<float>* floats)
 {
         unsigned component_count = bytes.size() / sizeof(float);
         ASSERT(bytes.size() == (component_count * sizeof(float)));
@@ -353,7 +353,7 @@ void conv_copy(const Span<const std::byte>& bytes, std::vector<float>* floats)
         std::memcpy(floats->data(), bytes.data(), bytes.size());
 }
 
-void conv_r32_to_r8_srgb(const std::vector<float>& floats, const Span<std::byte>& bytes)
+void conv_r32_to_r8_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
         using To = uint8_t;
 
@@ -374,7 +374,7 @@ void conv_r32_to_r8_srgb(const std::vector<float>& floats, const Span<std::byte>
         }
 }
 
-void conv_r32_to_r16(const std::vector<float>& floats, const Span<std::byte>& bytes)
+void conv_r32_to_r16(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
         using To = uint16_t;
 
@@ -395,7 +395,7 @@ void conv_r32_to_r16(const std::vector<float>& floats, const Span<std::byte>& by
         }
 }
 
-void conv_r32g32b32_to_r8g8b8_srgb(const std::vector<float>& floats, const Span<std::byte>& bytes)
+void conv_r32g32b32_to_r8g8b8_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
         using To = uint8_t;
 
@@ -424,7 +424,7 @@ void conv_r32g32b32_to_r8g8b8_srgb(const std::vector<float>& floats, const Span<
         }
 }
 
-void conv_r32g32b32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const Span<std::byte>& bytes)
+void conv_r32g32b32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
         using To = uint8_t;
 
@@ -457,7 +457,7 @@ void conv_r32g32b32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const Spa
         }
 }
 
-void conv_r32g32b32_to_r16g16b16(const std::vector<float>& floats, const Span<std::byte>& bytes)
+void conv_r32g32b32_to_r16g16b16(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
         using To = uint16_t;
 
@@ -486,7 +486,7 @@ void conv_r32g32b32_to_r16g16b16(const std::vector<float>& floats, const Span<st
         }
 }
 
-void conv_r32g32b32_to_r16g16b16a16(const std::vector<float>& floats, const Span<std::byte>& bytes)
+void conv_r32g32b32_to_r16g16b16a16(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
         using To = uint16_t;
 
@@ -519,7 +519,7 @@ void conv_r32g32b32_to_r16g16b16a16(const std::vector<float>& floats, const Span
         }
 }
 
-void conv_r32g32b32_to_r32g32b32a32(const std::vector<float>& floats, const Span<std::byte>& bytes)
+void conv_r32g32b32_to_r32g32b32a32(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
         using To = float;
 
@@ -544,7 +544,7 @@ void conv_r32g32b32_to_r32g32b32a32(const std::vector<float>& floats, const Span
         }
 }
 
-void conv_r32g32b32a32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const Span<std::byte>& bytes)
+void conv_r32g32b32a32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
         using To = uint8_t;
 
@@ -577,7 +577,7 @@ void conv_r32g32b32a32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const 
         }
 }
 
-void conv_r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, const Span<std::byte>& bytes)
+void conv_r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
         using To = uint16_t;
 
@@ -610,7 +610,7 @@ void conv_r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, const S
         }
 }
 
-void conv_copy(const std::vector<float>& floats, const Span<std::byte>& bytes)
+void conv_copy(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
         unsigned component_count = floats.size();
         ASSERT(bytes.size() == (component_count * sizeof(float)));
@@ -629,7 +629,7 @@ void check_equal_component_count(ColorFormat from_format, ColorFormat to_format)
 
 void conv_src_to_floats(
         ColorFormat from_format,
-        const Span<const std::byte>& from,
+        const std::span<const std::byte>& from,
         ColorFormat to_format,
         std::vector<float>* pixels)
 {
@@ -703,7 +703,7 @@ void conv_floats_to_dst(
         ColorFormat from_format,
         const std::vector<float>& pixels,
         ColorFormat to_format,
-        const Span<std::byte>& to)
+        const std::span<std::byte>& to)
 {
         switch (to_format)
         {
@@ -767,7 +767,11 @@ void conv_floats_to_dst(
         unknown_color_format_error(to_format);
 }
 
-void conv(ColorFormat from_format, const Span<const std::byte>& from, ColorFormat to_format, const Span<std::byte>& to)
+void conv(
+        ColorFormat from_format,
+        const std::span<const std::byte>& from,
+        ColorFormat to_format,
+        const std::span<std::byte>& to)
 {
         std::vector<float> pixels;
         conv_src_to_floats(from_format, from, to_format, &pixels);
@@ -777,9 +781,9 @@ void conv(ColorFormat from_format, const Span<const std::byte>& from, ColorForma
 
 void format_conversion(
         ColorFormat from_format,
-        const Span<const std::byte>& from,
+        const std::span<const std::byte>& from,
         ColorFormat to_format,
-        const Span<std::byte>& to)
+        const std::span<std::byte>& to)
 {
         ASSERT(from.data());
         ASSERT(to.data());
@@ -815,13 +819,14 @@ void format_conversion(
 
 void format_conversion(
         ColorFormat from_format,
-        const Span<const std::byte>& from,
+        const std::span<const std::byte>& from,
         ColorFormat to_format,
         std::vector<std::byte>* to)
 {
         ASSERT(to);
+
         to->resize((from.size() / format_pixel_size_in_bytes(from_format)) * format_pixel_size_in_bytes(to_format));
 
-        conv(from_format, from, to_format, Span<std::byte>(data_pointer(*to), data_size(*to)));
+        conv(from_format, from, to_format, std::span(to->data(), to->size()));
 }
 }

@@ -153,11 +153,9 @@ void save_to_file(char32_t code_point, const std::optional<Font::Char>& data)
         oss << ".png";
 
         save_image_to_file(
-                oss.str(),
-                image::ImageView<2>(
-                        {data->width, data->height}, image::ColorFormat::R8_SRGB,
-                        Span<const std::byte>(
-                                reinterpret_cast<const std::byte*>(data->image), 1ull * data->width * data->height)));
+                oss.str(), image::ImageView<2>(
+                                   {data->width, data->height}, image::ColorFormat::R8_SRGB,
+                                   std::as_bytes(std::span(data->image, 1ull * data->width * data->height))));
 }
 }
 

@@ -19,10 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "format.h"
 
-#include <src/com/span.h>
-
 #include <array>
 #include <cstddef>
+#include <span>
 #include <vector>
 
 namespace image
@@ -40,14 +39,14 @@ struct ImageView
 {
         std::array<int, N> size;
         ColorFormat color_format;
-        Span<const std::byte> pixels;
+        std::span<const std::byte> pixels;
 
         explicit ImageView(const Image<N>& image)
                 : size(image.size), color_format(image.color_format), pixels(image.pixels)
         {
         }
 
-        ImageView(const std::array<int, N>& size, ColorFormat color_format, const Span<const std::byte>& pixels)
+        ImageView(const std::array<int, N>& size, ColorFormat color_format, const std::span<const std::byte>& pixels)
                 : size(size), color_format(color_format), pixels(pixels)
         {
         }

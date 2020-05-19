@@ -571,7 +571,7 @@ void write_pixels_to_image(
         const CommandPool& command_pool,
         const Queue& queue,
         image::ColorFormat color_format,
-        const Span<const std::byte>& pixels)
+        const std::span<const std::byte>& pixels)
 {
         auto write = [&](image::ColorFormat required_format) {
                 if (color_format == required_format)
@@ -848,7 +848,7 @@ void ImageWithMemory::write_pixels(
         VkImageLayout old_layout,
         VkImageLayout new_layout,
         image::ColorFormat color_format,
-        const Span<const std::byte>& pixels) const
+        const std::span<const std::byte>& pixels) const
 {
         check_family_index(command_pool, queue);
 
