@@ -84,6 +84,7 @@ private slots:
         void on_slider_shadow_quality_valueChanged(int value);
         void on_slider_specular_valueChanged(int value);
         void on_slider_volume_levels_range_changed(double, double);
+        void on_slider_volume_transparency_valueChanged(int value);
         void on_toolButton_background_color_clicked();
         void on_toolButton_clip_plane_color_clicked();
         void on_toolButton_default_color_clicked();

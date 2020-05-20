@@ -80,6 +80,9 @@ constexpr int SHADOW_ZOOM = 2;
 // Максимальное увеличение для освещений ambient, diffuse, specular.
 constexpr double MAXIMUM_COLOR_AMPLIFICATION = 3;
 
+// Максимальный коэффициент для умножения α на него.
+constexpr double VOLUME_TRANSPARENCY_COEFFICIENT = 10;
+
 constexpr float NORMAL_LENGTH_MINIMUM = 0.001;
 constexpr float NORMAL_LENGTH_DEFAULT = 0.05;
 constexpr float NORMAL_LENGTH_MAXIMUM = 0.2;
@@ -147,6 +150,10 @@ void MainWindow::constructor_interface()
                 constexpr float p = v / d;
                 static_assert(v >= 0 && v <= d && d > 0);
                 set_slider_position(ui.slider_normals, p);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_volume_transparency);
+                set_slider_to_middle(ui.slider_volume_transparency);
         }
 
         set_widgets_enabled(QMainWindow::layout(), true);
@@ -800,13 +807,21 @@ void MainWindow::update_volume_ui(ObjectId id)
                 [&]<size_t N>(const std::shared_ptr<const volume::VolumeObject<N>>& volume_object) {
                         double min;
                         double max;
+                        double transparency;
                         {
                                 volume::Reading reading(*volume_object);
                                 min = volume_object->level_min();
                                 max = volume_object->level_max();
+                                transparency = volume_object->transparency() / VOLUME_TRANSPARENCY_COEFFICIENT;
                         }
-                        QSignalBlocker blocker(ui.slider_volume_levels);
-                        ui.slider_volume_levels->set_range(min, max);
+                        {
+                                QSignalBlocker blocker(ui.slider_volume_levels);
+                                ui.slider_volume_levels->set_range(min, max);
+                        }
+                        {
+                                QSignalBlocker blocker(ui.slider_volume_transparency);
+                                set_slider_position(ui.slider_volume_transparency, 0.5 * (1.0 + transparency));
+                        }
                 },
                 *volume_object_opt);
 }
@@ -1127,6 +1142,27 @@ void MainWindow::on_slider_volume_levels_range_changed(double min, double max)
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
                         volume::WritingUpdates updates(volume_object.get(), {volume::Update::Parameters});
                         volume_object->set_levels(min, max);
+                },
+                *volume_object_opt);
+}
+
+void MainWindow::on_slider_volume_transparency_valueChanged(int)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::VolumeObject> volume_object_opt = m_model_tree->current_volume();
+        if (!volume_object_opt)
+        {
+                return;
+        }
+
+        double pos = std::clamp(2.0 * slider_position(ui.slider_volume_transparency) - 1.0, 0.0, 1.0);
+        double transparency = VOLUME_TRANSPARENCY_COEFFICIENT * pos;
+
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
+                        volume::WritingUpdates updates(volume_object.get(), {volume::Update::Parameters});
+                        volume_object->set_transparency(transparency);
                 },
                 *volume_object_opt);
 }
