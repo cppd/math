@@ -74,6 +74,7 @@ layout(set = 1, std140, binding = 1) uniform Volume
 {
         float window_offset;
         float window_scale;
+        bool color_volume;
 }
 volume;
 
@@ -86,11 +87,18 @@ layout(location = 0) out vec4 out_color;
 
 //
 
-vec4 image_color(vec3 c)
+vec4 scalar_volume_premultiplied_alphas(vec3 c)
 {
         float v = texture(image, c).r;
         v = (v - volume.window_offset) * volume.window_scale;
         return texture(transfer_function, clamp(v, 0, 1));
+}
+
+vec4 color_volume_premultiplied_alphas(vec3 c)
+{
+        vec4 v = texture(image, c);
+        v.rgb *= v.a;
+        return v;
 }
 
 bool intersect(vec3 ray_org, vec3 ray_dir, out float first, out float second)
@@ -205,17 +213,35 @@ void main(void)
         vec3 direction_step = direction / direction_length_in_texels;
         int samples = int(trunc(direction_length_in_texels));
 
+        const float MIN_TRANSPARENCY = 1.0 / 256;
         float transparency = 1; // transparency = 1 - α
         vec3 color = vec3(0);
-        vec3 pos = ray_org;
-        for (int s = 0; s < samples; ++s, pos += direction_step)
+        vec3 pos = ray_org + ray_dir * first;
+
+        if (volume.color_volume)
         {
-                vec4 c = image_color(pos);
-                color += transparency * c.rgb; // цвет уже умножен на α
-                transparency *= 1.0 - c.a;
-                if (transparency < 0.01)
+                for (int s = 0; s < samples; ++s, pos += direction_step)
                 {
-                        break;
+                        vec4 c = color_volume_premultiplied_alphas(pos);
+                        color += transparency * c.rgb;
+                        transparency *= 1.0 - c.a;
+                        if (transparency < MIN_TRANSPARENCY)
+                        {
+                                break;
+                        }
+                }
+        }
+        else
+        {
+                for (int s = 0; s < samples; ++s, pos += direction_step)
+                {
+                        vec4 c = scalar_volume_premultiplied_alphas(pos);
+                        color += transparency * c.rgb;
+                        transparency *= 1.0 - c.a;
+                        if (transparency < MIN_TRANSPARENCY)
+                        {
+                                break;
+                        }
                 }
         }
 

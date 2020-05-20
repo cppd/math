@@ -27,12 +27,12 @@ namespace gpu::renderer
 namespace
 {
 // clang-format off
-constexpr std::initializer_list<VkFormat> IMAGE_FORMATS =
+constexpr std::initializer_list<VkFormat> SCALAR_FORMATS =
 {
         VK_FORMAT_R16_UNORM,
         VK_FORMAT_R32_SFLOAT
 };
-constexpr std::initializer_list<VkFormat> TRANSFER_FUNCTION_FORMATS =
+constexpr std::initializer_list<VkFormat> COLOR_FORMATS =
 {
         VK_FORMAT_R8G8B8A8_SRGB,
         VK_FORMAT_R16G16B16A16_UNORM,
@@ -78,6 +78,33 @@ enum class Memory
         Yes,
         No
 };
+
+void find_image_formats_and_volume_type(
+        image::ColorFormat color_format,
+        std::vector<VkFormat>* formats,
+        bool* color_volume)
+{
+        switch (color_format)
+        {
+        case image::ColorFormat::R16:
+        case image::ColorFormat::R32:
+                *formats = SCALAR_FORMATS;
+                *color_volume = false;
+                return;
+        case image::ColorFormat::R8G8B8A8_SRGB:
+        case image::ColorFormat::R16G16B16A16:
+        case image::ColorFormat::R32G32B32A32:
+                *formats = COLOR_FORMATS;
+                *color_volume = true;
+                return;
+        case image::ColorFormat::R8_SRGB:
+        case image::ColorFormat::R8G8B8_SRGB:
+        case image::ColorFormat::R16G16B16:
+        case image::ColorFormat::R32G32B32:
+                error("Unsupported volume image format: " + image::format_to_string(color_format));
+        }
+        error_fatal("Unknown color format " + image::format_to_string(color_format));
+}
 }
 
 class VolumeObject::Volume
@@ -93,6 +120,7 @@ class VolumeObject::Volume
 
         VolumeBuffer m_buffer;
         std::unique_ptr<vulkan::ImageWithMemory> m_image;
+        image::ColorFormat m_image_color_format;
         std::unique_ptr<vulkan::ImageWithMemory> m_transfer_function;
         std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> m_memory;
         std::function<VolumeImageMemory(const VolumeInfo&)> m_create_descriptor_sets;
@@ -122,6 +150,11 @@ class VolumeObject::Volume
                 m_buffer.set_clip_plane(image_clip_plane(*m_world_clip_plane_equation, m_model_matrix));
         }
 
+        void buffer_set_color_volume(bool color_volume) const
+        {
+                m_buffer.set_color_volume(m_graphics_command_pool, m_graphics_queue, color_volume);
+        }
+
         void create_memory()
         {
                 VolumeInfo info;
@@ -149,7 +182,7 @@ class VolumeObject::Volume
 
                 m_transfer_function = std::make_unique<vulkan::ImageWithMemory>(
                         m_device, m_graphics_command_pool, m_graphics_queue,
-                        std::unordered_set<uint32_t>{m_graphics_queue.family_index()}, TRANSFER_FUNCTION_FORMATS,
+                        std::unordered_set<uint32_t>{m_graphics_queue.family_index()}, COLOR_FORMATS,
                         VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_1D, vulkan::make_extent(pixel_count),
                         VK_IMAGE_LAYOUT_UNDEFINED, false /*storage*/);
 
@@ -165,21 +198,25 @@ class VolumeObject::Volume
 
         void set_image(const image::Image<3>& image, Memory with_memory_creation)
         {
-                if (image.color_format != image::ColorFormat::R16 && image.color_format != image::ColorFormat::R32)
-                {
-                        error("Unsupported volume image format: " + image::format_to_string(image.color_format));
-                }
-
                 VkImageLayout image_layout;
-                if (!m_image || m_image->width() != static_cast<unsigned>(image.size[0])
+                if (!m_image || m_image_color_format != image.color_format
+                    || m_image->width() != static_cast<unsigned>(image.size[0])
                     || m_image->height() != static_cast<unsigned>(image.size[1])
                     || m_image->depth() != static_cast<unsigned>(image.size[2]))
                 {
-                        m_image.reset();
+                        std::vector<VkFormat> formats;
+                        bool color_volume;
 
+                        find_image_formats_and_volume_type(image.color_format, &formats, &color_volume);
+
+                        buffer_set_color_volume(color_volume);
+
+                        m_image_color_format = image.color_format;
+
+                        m_image.reset();
                         m_image = std::make_unique<vulkan::ImageWithMemory>(
                                 m_device, m_graphics_command_pool, m_graphics_queue,
-                                std::unordered_set<uint32_t>({m_graphics_queue.family_index()}), IMAGE_FORMATS,
+                                std::unordered_set<uint32_t>({m_graphics_queue.family_index()}), formats,
                                 VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_3D,
                                 vulkan::make_extent(image.size[0], image.size[1], image.size[2]),
                                 VK_IMAGE_LAYOUT_UNDEFINED, false /*storage*/);

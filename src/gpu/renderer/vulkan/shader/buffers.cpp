@@ -329,9 +329,20 @@ void VolumeBuffer::set_window(
 {
         ASSERT(window_offset >= 0);
         ASSERT(window_scale > 0);
-        Volume volume;
-        volume.window_offset = window_offset;
-        volume.window_scale = window_scale;
-        m_uniform_buffer_volume.write(command_pool, queue, data_size(volume), data_pointer(volume));
+        Volume::Window window;
+        window.offset = window_offset;
+        window.scale = window_scale;
+        m_uniform_buffer_volume.write(
+                command_pool, queue, offsetof(Volume, window), data_size(window), data_pointer(window));
+}
+
+void VolumeBuffer::set_color_volume(
+        const vulkan::CommandPool& command_pool,
+        const vulkan::Queue& queue,
+        bool color_volume) const
+{
+        decltype(Volume().color_volume) v = color_volume ? 1 : 0;
+        m_uniform_buffer_volume.write(
+                command_pool, queue, offsetof(Volume, color_volume), data_size(v), data_pointer(v));
 }
 }

@@ -165,8 +165,13 @@ class VolumeBuffer final
 
         struct Volume
         {
-                float window_offset;
-                float window_scale;
+                struct Window
+                {
+                        float offset;
+                        float scale;
+                };
+                Window window;
+                uint32_t color_volume;
         };
 
 public:
@@ -186,6 +191,9 @@ public:
                 const vulkan::Queue& queue,
                 float window_offset,
                 float window_scale) const;
+
+        void set_color_volume(const vulkan::CommandPool& command_pool, const vulkan::Queue& queue, bool color_volume)
+                const;
 };
 
 struct VolumeInfo final
