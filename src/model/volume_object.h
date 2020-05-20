@@ -81,7 +81,7 @@ enum class Update
 {
         All,
         Image,
-        Levels,
+        Parameters,
         Matrices
 };
 
@@ -98,6 +98,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         ObjectId m_id;
         float m_level_min = 0;
         float m_level_max = 1;
+        float m_transparency = 1;
 
         //
 
@@ -190,6 +191,16 @@ public:
         {
                 m_level_min = min;
                 m_level_max = max;
+        }
+
+        float transparency() const
+        {
+                return m_transparency;
+        }
+
+        void set_transparency(float transparency)
+        {
+                m_transparency = transparency;
         }
 };
 

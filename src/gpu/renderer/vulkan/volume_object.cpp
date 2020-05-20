@@ -125,14 +125,16 @@ class VolumeObject::Volume
         std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> m_memory;
         std::function<VolumeImageMemory(const VolumeInfo&)> m_create_descriptor_sets;
 
-        void buffer_set_window(float window_min, float window_max) const
+        void buffer_set_parameters(float window_min, float window_max, float transparency) const
         {
                 constexpr float eps = 1e-10f;
                 window_min = std::min(std::max(0.0f, window_min), 1 - eps);
                 window_max = std::max(std::min(1.0f, window_max), window_min + eps);
                 float window_offset = window_min;
                 float window_scale = 1 / (window_max - window_min);
-                m_buffer.set_window(m_graphics_command_pool, m_graphics_queue, window_offset, window_scale);
+
+                m_buffer.set_parameters(
+                        m_graphics_command_pool, m_graphics_queue, window_offset, window_scale, transparency);
         }
 
         void buffer_set_matrix_and_clip_plane() const
@@ -297,7 +299,8 @@ public:
                         m_model_matrix = volume_object.matrix() * volume_object.volume().matrix;
                         buffer_set_matrix_and_clip_plane();
 
-                        buffer_set_window(volume_object.level_min(), volume_object.level_max());
+                        buffer_set_parameters(
+                                volume_object.level_min(), volume_object.level_max(), volume_object.transparency());
 
                         set_transfer_function(Memory::No);
                         set_image(volume_object.volume().image, Memory::No);
@@ -314,9 +317,11 @@ public:
                                 *update_command_buffers = true;
                         }
 
-                        if (updates.contains(volume::Update::Levels))
+                        if (updates.contains(volume::Update::Parameters))
                         {
-                                buffer_set_window(volume_object.level_min(), volume_object.level_max());
+                                buffer_set_parameters(
+                                        volume_object.level_min(), volume_object.level_max(),
+                                        volume_object.transparency());
                         }
 
                         if (updates.contains(volume::Update::Matrices))
@@ -330,7 +335,7 @@ public:
                         std::unordered_set<volume::Update> s = updates;
                         s.erase(volume::Update::All);
                         s.erase(volume::Update::Image);
-                        s.erase(volume::Update::Levels);
+                        s.erase(volume::Update::Parameters);
                         s.erase(volume::Update::Matrices);
                         return s.empty();
                 }());

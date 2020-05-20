@@ -74,6 +74,7 @@ layout(set = 1, std140, binding = 1) uniform Volume
 {
         float window_offset;
         float window_scale;
+        float transparency;
         bool color_volume;
 }
 volume;
@@ -97,6 +98,7 @@ vec4 scalar_volume_premultiplied_alphas(vec3 c)
 vec4 color_volume_premultiplied_alphas(vec3 c)
 {
         vec4 v = texture(image, c);
+        v.a = clamp(v.a * volume.transparency, 0, 1);
         v.rgb *= v.a;
         return v;
 }

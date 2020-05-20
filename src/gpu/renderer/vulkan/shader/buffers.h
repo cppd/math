@@ -165,12 +165,13 @@ class VolumeBuffer final
 
         struct Volume
         {
-                struct Window
+                struct Parameters
                 {
-                        float offset;
-                        float scale;
+                        float window_offset;
+                        float window_scale;
+                        float transparency;
                 };
-                Window window;
+                Parameters parameters;
                 uint32_t color_volume;
         };
 
@@ -186,11 +187,12 @@ public:
         void set_matrix_and_clip_plane(const mat4& inverse_mvp_matrix, const vec4& clip_plane_equation) const;
         void set_clip_plane(const vec4& clip_plane_equation) const;
 
-        void set_window(
+        void set_parameters(
                 const vulkan::CommandPool& command_pool,
                 const vulkan::Queue& queue,
                 float window_offset,
-                float window_scale) const;
+                float window_scale,
+                float transparency) const;
 
         void set_color_volume(const vulkan::CommandPool& command_pool, const vulkan::Queue& queue, bool color_volume)
                 const;

@@ -1125,7 +1125,7 @@ void MainWindow::on_slider_volume_levels_range_changed(double min, double max)
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
-                        volume::WritingUpdates updates(volume_object.get(), {volume::Update::Levels});
+                        volume::WritingUpdates updates(volume_object.get(), {volume::Update::Parameters});
                         volume_object->set_levels(min, max);
                 },
                 *volume_object_opt);

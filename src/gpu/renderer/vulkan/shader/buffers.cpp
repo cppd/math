@@ -321,19 +321,25 @@ void VolumeBuffer::set_clip_plane(const vec4& clip_plane_equation) const
                 m_uniform_buffer_coordinates, offsetof(Coordinates, clip_plane_equation), clip_plane);
 }
 
-void VolumeBuffer::set_window(
+void VolumeBuffer::set_parameters(
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
         float window_offset,
-        float window_scale) const
+        float window_scale,
+        float transparency) const
 {
         ASSERT(window_offset >= 0);
         ASSERT(window_scale > 0);
-        Volume::Window window;
-        window.offset = window_offset;
-        window.scale = window_scale;
+        ASSERT(transparency >= 0);
+
+        Volume::Parameters parameters;
+
+        parameters.window_offset = window_offset;
+        parameters.window_scale = window_scale;
+        parameters.transparency = transparency;
+
         m_uniform_buffer_volume.write(
-                command_pool, queue, offsetof(Volume, window), data_size(window), data_pointer(window));
+                command_pool, queue, offsetof(Volume, parameters), data_size(parameters), data_pointer(parameters));
 }
 
 void VolumeBuffer::set_color_volume(
