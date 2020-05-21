@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dimension.h"
 #include "load.h"
-#include "options.h"
 
 #include <src/com/message.h>
 #include <src/gui/dialogs/bound_cocone.h>
@@ -101,9 +100,8 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
                 unsigned dimension = mesh::file_dimension(file_name);
 
                 apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
-                        std::shared_ptr<mesh::MeshObject<N>> mesh = load_from_file(
-                                file_base_name(file_name), progress_list, file_name, SCENE_SIZE,
-                                SCENE_CENTER<N, double>);
+                        std::shared_ptr<mesh::MeshObject<N>> mesh =
+                                load_from_file<N>(file_base_name(file_name), progress_list, file_name);
 
                         compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
                 });
@@ -151,8 +149,8 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
 
         return [=](ProgressRatioList* progress_list) {
                 apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
-                        std::shared_ptr<mesh::MeshObject<N>> mesh = load_from_mesh_repository(
-                                object_name, SCENE_SIZE, SCENE_CENTER<N, double>, point_count, *repository);
+                        std::shared_ptr<mesh::MeshObject<N>> mesh =
+                                load_from_mesh_repository<N>(object_name, point_count, *repository);
 
                         compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
                 });
@@ -181,8 +179,7 @@ std::function<void(ProgressRatioList*)> action_load_from_volume_repository(
 
         return [=](ProgressRatioList* /*progress_list*/) {
                 apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
-                        load_from_volume_repository(
-                                object_name, SCENE_SIZE, SCENE_CENTER<N, double>, image_size, *repository);
+                        load_from_volume_repository<N>(object_name, image_size, *repository);
                 });
         };
 }

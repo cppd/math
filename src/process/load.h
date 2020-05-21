@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dimension.h"
 #include "mesh.h"
+#include "options.h"
 
 #include <src/com/error.h>
 #include <src/model/mesh_object.h>
@@ -40,9 +41,7 @@ template <size_t N>
 std::shared_ptr<mesh::MeshObject<N>> load_from_file(
         const std::string& object_name,
         ProgressRatioList* progress_list,
-        const std::string& file_name,
-        double object_size,
-        const Vector<N, double>& object_position)
+        const std::string& file_name)
 {
         std::unique_ptr<mesh::Mesh<N>> mesh;
 
@@ -53,7 +52,7 @@ std::shared_ptr<mesh::MeshObject<N>> load_from_file(
         }
 
         std::shared_ptr<mesh::MeshObject<N>> mesh_object = std::make_shared<mesh::MeshObject<N>>(
-                std::move(mesh), mesh::model_matrix_for_size_and_position(*mesh, object_size, object_position),
+                std::move(mesh), mesh::model_matrix_for_size_and_position(*mesh, SCENE_SIZE, SCENE_CENTER<N, double>),
                 object_name);
 
         mesh_object->insert();
@@ -64,15 +63,13 @@ std::shared_ptr<mesh::MeshObject<N>> load_from_file(
 template <size_t N>
 std::shared_ptr<mesh::MeshObject<N>> load_from_mesh_repository(
         const std::string& object_name,
-        double object_size,
-        const Vector<N, double>& object_position,
         int point_count,
         const storage::Repository& repository)
 {
         std::unique_ptr<mesh::Mesh<N>> mesh = repository.mesh<N>(object_name, point_count);
 
         std::shared_ptr<mesh::MeshObject<N>> mesh_object = std::make_shared<mesh::MeshObject<N>>(
-                std::move(mesh), mesh::model_matrix_for_size_and_position(*mesh, object_size, object_position),
+                std::move(mesh), mesh::model_matrix_for_size_and_position(*mesh, SCENE_SIZE, SCENE_CENTER<N, double>),
                 object_name);
 
         mesh_object->insert();
@@ -83,16 +80,31 @@ std::shared_ptr<mesh::MeshObject<N>> load_from_mesh_repository(
 template <size_t N>
 std::shared_ptr<volume::VolumeObject<N>> load_from_volume_repository(
         const std::string& object_name,
-        double object_size,
-        const Vector<N, double>& object_position,
         int image_size,
         const storage::Repository& repository)
 {
         std::unique_ptr<volume::Volume<N>> volume = repository.volume<N>(object_name, image_size);
 
         std::shared_ptr<volume::VolumeObject<N>> volume_object = std::make_shared<volume::VolumeObject<N>>(
-                std::move(volume), volume::model_matrix_for_size_and_position(*volume, object_size, object_position),
-                object_name);
+                std::move(volume),
+                volume::model_matrix_for_size_and_position(*volume, SCENE_SIZE, SCENE_CENTER<N, double>), object_name);
+
+        volume_object->insert();
+
+        return volume_object;
+}
+
+template <size_t N, typename Image>
+std::shared_ptr<volume::VolumeObject<N>> load_from_volume_image(const std::string& object_name, Image&& image)
+{
+        std::unique_ptr<volume::Volume<N>> volume = std::make_unique<volume::Volume<N>>();
+
+        volume->image = std::forward<Image>(image);
+        volume->matrix = Matrix<N + 1, N + 1, double>(1);
+
+        std::shared_ptr<volume::VolumeObject<N>> volume_object = std::make_shared<volume::VolumeObject<N>>(
+                std::move(volume),
+                volume::model_matrix_for_size_and_position(*volume, SCENE_SIZE, SCENE_CENTER<N, double>), object_name);
 
         volume_object->insert();
 
