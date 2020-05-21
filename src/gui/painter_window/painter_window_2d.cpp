@@ -144,6 +144,8 @@ void PainterWindow2d::closeEvent(QCloseEvent* event)
 
 void PainterWindow2d::init_interface(const std::vector<int>& initial_slider_positions)
 {
+        ui.pushButton_add_volume->setVisible(m_screen_size.size() == 3);
+
         ui.label_points->setText("");
         ui.label_points->resize(m_width, m_height);
 
@@ -298,6 +300,11 @@ void PainterWindow2d::timer_slot()
 void PainterWindow2d::on_pushButton_save_to_file_clicked()
 {
         catch_all("Save to file", [&]() { save_to_file(); });
+}
+
+void PainterWindow2d::on_pushButton_add_volume_clicked()
+{
+        catch_all("Volume", [&]() { add_volume(); });
 }
 
 void PainterWindow2d::slider_changed_slot(int)

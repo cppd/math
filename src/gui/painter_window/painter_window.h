@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/file.h>
 #include <src/painter/painter.h>
 #include <src/painter/visible_paintbrush.h>
+#include <src/process/load.h>
 
 #include <algorithm>
 #include <array>
@@ -203,6 +204,37 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
 
                 image::save_image_to_file(
                         file_name, image::ImageView<2>({width, height}, image::ColorFormat::R8G8B8_SRGB, bytes));
+        }
+
+        void add_volume() const override
+        {
+                if (m_screen_size.size() != 3)
+                {
+                        return;
+                }
+
+                ASSERT(multiply_all<long long>(m_screen_size) == static_cast<long long>(m_pixels_bgr.size()));
+
+                image::Image<N_IMAGE> image;
+
+                image.size = m_screen_size;
+                image.color_format = image::ColorFormat::R8G8B8A8_SRGB;
+                image.pixels.resize(4 * multiply_all<long long>(m_screen_size));
+
+                std::byte* ptr = image.pixels.data();
+                for (std::uint_least32_t c : m_pixels_bgr)
+                {
+                        unsigned char b = c & 0xff;
+                        unsigned char g = (c >> 8) & 0xff;
+                        unsigned char r = (c >> 16) & 0xff;
+                        unsigned char a = 1;
+                        std::memcpy(ptr++, &r, 1);
+                        std::memcpy(ptr++, &g, 1);
+                        std::memcpy(ptr++, &b, 1);
+                        std::memcpy(ptr++, &a, 1);
+                }
+
+                process::load_from_volume_image<N_IMAGE>("Painter Volume", std::move(image));
         }
 
         // IPainterNotifier

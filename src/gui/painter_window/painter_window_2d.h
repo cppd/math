@@ -43,6 +43,7 @@ private slots:
         void slider_changed_slot(int);
 
         void on_pushButton_save_to_file_clicked();
+        void on_pushButton_add_volume_clicked();
 
 public:
         PainterWindow2d(
@@ -77,6 +78,7 @@ private:
         virtual long long pixels_offset() const = 0;
         virtual const std::vector<long long>& pixels_busy() const = 0;
         virtual void save_to_file() const = 0;
+        virtual void add_volume() const = 0;
 
         const std::thread::id m_window_thread_id;
         const std::vector<int> m_screen_size;
