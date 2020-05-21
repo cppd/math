@@ -52,12 +52,6 @@ namespace
 {
 constexpr double IDLE_MODE_FRAME_DURATION_IN_SECONDS = 0.1;
 
-// Камера и тени рассчитаны на размер объекта 2 и на положение в точке (0, 0, 0).
-constexpr double OBJECT_SIZE = 2;
-constexpr vec3 OBJECT_POSITION = vec3(0);
-
-//
-
 // 2 - double buffering, 3 - triple buffering
 constexpr int VULKAN_PREFERRED_IMAGE_COUNT = 2;
 // Шейдеры пишут результат в цветовом пространстве RGB, поэтому _SRGB (для результата в sRGB нужен _UNORM).
@@ -467,14 +461,6 @@ class Impl final : public View
                 [this](info::Camera* d)
                 {
                         *d = m_camera.view_info();
-                },
-                [](info::ObjectSize* d)
-                {
-                        d->value = OBJECT_SIZE;
-                },
-                [](info::ObjectPosition* d)
-                {
-                        d->value = OBJECT_POSITION;
                 }
                 };
                 // clang-format on

@@ -43,8 +43,7 @@ struct PainterSceneInfo<3, T>
         Vector<3, T> camera_up;
         Vector<3, T> camera_direction;
         Vector<3, T> light_direction;
-        Vector<3, T> object_position;
-        T object_size;
+        T scene_size;
         Vector<3, T> view_center;
         T view_width;
         int width;
@@ -64,7 +63,7 @@ namespace painter_scene_implementation
 template <typename T>
 std::unique_ptr<const painter::Projector<3, T>> create_projector(const PainterSceneInfo<3, T>& info)
 {
-        Vector<3, T> camera_position = info.view_center - info.camera_direction * T(2) * info.object_size;
+        Vector<3, T> camera_position = info.view_center - info.camera_direction * T(2) * info.scene_size;
         Vector<3, T> camera_right = cross(info.camera_direction, info.camera_up);
 
         std::array<Vector<3, T>, 2> screen_axes{camera_right, info.camera_up};
@@ -79,7 +78,7 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(const PainterSc
 template <typename T>
 std::unique_ptr<const painter::LightSource<3, T>> create_light_source(const PainterSceneInfo<3, T>& info)
 {
-        Vector<3, T> light_position = info.object_position - info.light_direction * info.object_size * T(1000);
+        Vector<3, T> light_position = info.view_center - info.light_direction * info.scene_size * T(1000);
 
         return std::make_unique<const painter::VisibleConstantLight<3, T>>(light_position, Color(1));
 }
@@ -104,7 +103,7 @@ std::unique_ptr<const painter::PaintObjects<N, T>> create_painter_scene(
                 else
                 {
                         return cornell_box_scene(
-                                info.width, info.height, mesh, info.object_size, info_all.default_color,
+                                info.width, info.height, mesh, info.scene_size, info_all.default_color,
                                 info_all.diffuse, info.camera_direction, info.camera_up);
                 }
         }

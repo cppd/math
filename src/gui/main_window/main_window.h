@@ -182,8 +182,5 @@ private:
         bool m_first_show;
 
         QTimer m_timer_progress_bar;
-
-        double m_view_object_size;
-        vec3 m_view_object_position;
 };
 }

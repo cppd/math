@@ -536,12 +536,6 @@ void MainWindow::slot_window_first_shown()
                         widget_window_id(ui.graphics_widget), widget_pixels_per_inch(ui.graphics_widget),
                         std::move(view_initial_commands));
 
-                view::info::ObjectSize view_object_size;
-                view::info::ObjectPosition view_object_position;
-                m_view->receive({&view_object_size, &view_object_position});
-                m_view_object_size = view_object_size.value;
-                m_view_object_position = view_object_position.value;
-
                 //
 
                 self_test(test::SelfTestType::Essential, false);
@@ -575,8 +569,8 @@ void MainWindow::load_from_file(std::string file_name, bool use_object_selection
                         m_model_tree->clear();
                         m_view->send(view::command::ResetView());
                 };
-                WorkerThreads::Function f = process::action_load_from_file(
-                        file_name, use_object_selection_dialog, m_view_object_size, m_view_object_position, clear_all);
+                WorkerThreads::Function f =
+                        process::action_load_from_file(file_name, use_object_selection_dialog, clear_all);
                 m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
         });
 }
@@ -601,8 +595,7 @@ void MainWindow::slot_mesh_object_repository(int dimension, std::string object_n
                         m_view->send(view::command::ResetView());
                 };
                 WorkerThreads::Function f = process::action_load_from_mesh_repository(
-                        m_repository.get(), dimension, object_name, m_view_object_size, m_view_object_position,
-                        clear_all);
+                        m_repository.get(), dimension, object_name, clear_all);
                 m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
         });
 }
@@ -617,8 +610,8 @@ void MainWindow::slot_volume_object_repository(int dimension, std::string object
                 {
                         return;
                 }
-                WorkerThreads::Function f = process::action_load_from_volume_repository(
-                        m_repository.get(), dimension, object_name, m_view_object_size, m_view_object_position);
+                WorkerThreads::Function f =
+                        process::action_load_from_volume_repository(m_repository.get(), dimension, object_name);
                 m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
         });
 }
@@ -717,8 +710,7 @@ void MainWindow::on_actionPainter_triggered()
                 m_view->receive({&camera});
 
                 WorkerThreads::Function f = process::action_painter(
-                        *object, camera, m_view_object_size, m_view_object_position,
-                        QMainWindow::windowTitle().toStdString(), qcolor_to_rgb(m_background_color),
+                        *object, camera, QMainWindow::windowTitle().toStdString(), qcolor_to_rgb(m_background_color),
                         qcolor_to_rgb(m_default_color), diffuse_light());
 
                 m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));

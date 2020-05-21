@@ -427,21 +427,11 @@ struct Camera final
         int width;
         int height;
 };
-
-struct ObjectSize final
-{
-        double value;
-};
-
-struct ObjectPosition final
-{
-        vec3 value;
-};
 }
 
 struct Info final
 {
-        using T = std::variant<info::Camera*, info::ObjectPosition*, info::ObjectSize*>;
+        using T = std::variant<info::Camera*>;
 
         template <typename Type, typename = std::enable_if_t<!std::is_same_v<Info, std::remove_cvref_t<Type>>>>
         Info(Type&& arg) : m_data(std::forward<Type>(arg))

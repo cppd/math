@@ -28,8 +28,6 @@ namespace process
 std::function<void(ProgressRatioList*)> action_painter(
         const storage::MeshObjectConst& object,
         const view::info::Camera& camera,
-        double object_size,
-        const vec3& object_position,
         const std::string& title,
         const Color& background_color,
         const Color& default_color,

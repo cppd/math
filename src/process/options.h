@@ -18,27 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/numerical/vec.h>
-#include <src/progress/progress_list.h>
-#include <src/storage/repository.h>
-
-#include <functional>
-#include <string>
 
 namespace process
 {
-std::function<void(ProgressRatioList*)> action_load_from_file(
-        std::string file_name,
-        bool use_object_selection_dialog,
-        const std::function<void()>& clear_all);
+constexpr double SCENE_SIZE = 2;
 
-std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
-        const storage::Repository* repository,
-        int dimension,
-        const std::string& object_name,
-        const std::function<void()>& clear_all);
-
-std::function<void(ProgressRatioList*)> action_load_from_volume_repository(
-        const storage::Repository* repository,
-        int dimension,
-        const std::string& object_name);
+template <size_t N, typename T>
+constexpr Vector<N, T> SCENE_CENTER = Vector<N, T>(0);
 }

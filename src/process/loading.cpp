@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dimension.h"
 #include "load.h"
+#include "options.h"
 
 #include <src/com/message.h>
 #include <src/gui/dialogs/bound_cocone.h>
@@ -43,26 +44,11 @@ constexpr int POINT_COUNT_MAXIMUM = 1000000;
 constexpr int VOLUME_IMAGE_SIZE_MINIMUM = 10;
 constexpr int VOLUME_IMAGE_SIZE_DEFAULT = 500;
 constexpr int VOLUME_IMAGE_SIZE_MAXIMUM = 1000;
-
-template <size_t N>
-Vector<N, double> dimension_position(const vec3& position)
-{
-        if constexpr (N == 3)
-        {
-                return position;
-        }
-        else
-        {
-                return Vector<N, double>(0);
-        }
-}
 }
 
 std::function<void(ProgressRatioList*)> action_load_from_file(
         std::string file_name,
         bool use_object_selection_dialog,
-        double object_size,
-        const vec3& object_position,
         const std::function<void()>& clear_all)
 {
         if (file_name.empty())
@@ -116,8 +102,8 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
 
                 apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
                         std::shared_ptr<mesh::MeshObject<N>> mesh = load_from_file(
-                                file_base_name(file_name), progress_list, file_name, object_size,
-                                dimension_position<N>(object_position));
+                                file_base_name(file_name), progress_list, file_name, SCENE_SIZE,
+                                SCENE_CENTER<N, double>);
 
                         compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
                 });
@@ -128,8 +114,6 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
         const storage::Repository* repository,
         int dimension,
         const std::string& object_name,
-        double object_size,
-        const vec3& object_position,
         const std::function<void()>& clear_all)
 {
         if (object_name.empty())
@@ -168,8 +152,7 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
         return [=](ProgressRatioList* progress_list) {
                 apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
                         std::shared_ptr<mesh::MeshObject<N>> mesh = load_from_mesh_repository(
-                                object_name, object_size, dimension_position<N>(object_position), point_count,
-                                *repository);
+                                object_name, SCENE_SIZE, SCENE_CENTER<N, double>, point_count, *repository);
 
                         compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
                 });
@@ -179,9 +162,7 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
 std::function<void(ProgressRatioList*)> action_load_from_volume_repository(
         const storage::Repository* repository,
         int dimension,
-        const std::string& object_name,
-        double object_size,
-        const vec3& object_position)
+        const std::string& object_name)
 {
         if (object_name.empty())
         {
@@ -201,8 +182,7 @@ std::function<void(ProgressRatioList*)> action_load_from_volume_repository(
         return [=](ProgressRatioList* /*progress_list*/) {
                 apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
                         load_from_volume_repository(
-                                object_name, object_size, dimension_position<N>(object_position), image_size,
-                                *repository);
+                                object_name, SCENE_SIZE, SCENE_CENTER<N, double>, image_size, *repository);
                 });
         };
 }

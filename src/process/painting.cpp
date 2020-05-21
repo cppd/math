@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painting.h"
 
+#include "options.h"
 #include "painter_scene.h"
 
 #include <src/com/log.h>
@@ -47,8 +48,6 @@ template <size_t N>
 std::function<void(ProgressRatioList*)> action_painter_function(
         const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object,
         const view::info::Camera& camera,
-        [[maybe_unused]] double object_size,
-        const vec3& object_position,
         const std::string& title,
         const Color& background_color,
         const Color& default_color,
@@ -85,8 +84,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                 scene_info.light_direction = to_vector<T>(camera.lighting);
                 scene_info.view_center = to_vector<T>(camera.view_center);
                 scene_info.view_width = camera.view_width;
-                scene_info.object_position = to_vector<T>(object_position);
-                scene_info.object_size = object_size;
+                scene_info.scene_size = SCENE_SIZE;
 
                 if (!gui::dialog::painter_parameters_for_3d(
                             hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
@@ -135,8 +133,6 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 std::function<void(ProgressRatioList*)> action_painter(
         const storage::MeshObjectConst& object,
         const view::info::Camera& camera,
-        double object_size,
-        const vec3& object_position,
         const std::string& title,
         const Color& background_color,
         const Color& default_color,
@@ -145,8 +141,7 @@ std::function<void(ProgressRatioList*)> action_painter(
         return std::visit(
                 [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object) {
                         return action_painter_function(
-                                mesh_object, camera, object_size, object_position, title, background_color,
-                                default_color, diffuse);
+                                mesh_object, camera, title, background_color, default_color, diffuse);
                 },
                 object);
 }
