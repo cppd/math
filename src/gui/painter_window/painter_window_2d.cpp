@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter_window_2d.h"
 
-#include "../dialogs/file_dialog.h"
 #include "../dialogs/message.h"
 
 #include <src/com/error.h>
@@ -25,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/time.h>
-#include <src/image/file.h>
 
 #include <QCloseEvent>
 #include <QPointer>
@@ -43,7 +41,6 @@ constexpr int UPDATE_INTERVAL_MILLISECONDS = 100;
 // Этот интервал должен быть больше интервала UPDATE_INTERVAL_MILLISECONDS
 constexpr int DIFFERENCE_INTERVAL_MILLISECONDS = 10 * UPDATE_INTERVAL_MILLISECONDS;
 constexpr bool SHOW_THREADS = true;
-constexpr const char* SAVE_IMAGE_FILE_FORMAT = "png";
 
 //
 
@@ -300,38 +297,7 @@ void PainterWindow2d::timer_slot()
 
 void PainterWindow2d::on_pushButton_save_to_file_clicked()
 {
-        catch_all("Save to file", [&]() {
-                std::vector<std::uint32_t> pixels(1ull * m_image.width() * m_image.height());
-                std::memcpy(pixels.data(), &pixels_bgr()[pixels_offset()], m_image_byte_count);
-
-                std::vector<std::byte> bytes(3ull * m_image.width() * m_image.height());
-                std::byte* ptr = bytes.data();
-                for (std::uint_least32_t c : pixels)
-                {
-                        unsigned char b = c & 0xff;
-                        unsigned char g = (c >> 8) & 0xff;
-                        unsigned char r = (c >> 16) & 0xff;
-                        std::memcpy(ptr++, &r, 1);
-                        std::memcpy(ptr++, &g, 1);
-                        std::memcpy(ptr++, &b, 1);
-                }
-
-                const std::string caption = "Save";
-                dialog::FileFilter filter;
-                filter.name = "Images";
-                filter.file_extensions = {SAVE_IMAGE_FILE_FORMAT};
-                const bool read_only = true;
-                std::string file_name;
-                if (!dialog::save_file(caption, {filter}, read_only, &file_name))
-                {
-                        return;
-                }
-
-                save_image_to_file(
-                        file_name,
-                        image::ImageView<2>(
-                                {m_image.width(), m_image.height()}, image::ColorFormat::R8G8B8_SRGB, bytes));
-        });
+        catch_all("Save to file", [&]() { save_to_file(); });
 }
 
 void PainterWindow2d::slider_changed_slot(int)

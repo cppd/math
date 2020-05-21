@@ -21,12 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/support.h"
 #include "../com/thread_ui.h"
+#include "../dialogs/file_dialog.h"
 
 #include <src/color/conversion.h>
 #include <src/com/alg.h>
+#include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/global_index.h>
 #include <src/com/message.h>
+#include <src/image/file.h>
 #include <src/painter/painter.h>
 #include <src/painter/visible_paintbrush.h>
 
@@ -47,6 +50,8 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
 {
         static_assert(N >= 3);
 
+        static constexpr const char* SAVE_IMAGE_FILE_FORMAT = "png";
+
         static constexpr int PANTBRUSH_WIDTH = 20;
         static constexpr std::uint_least32_t COLOR_LIGHT = Srgb8(100, 150, 200).to_uint_bgr();
         static constexpr std::uint_least32_t COLOR_DARK = Srgb8(0, 0, 0).to_uint_bgr();
@@ -56,6 +61,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
         const std::thread::id m_thread_id;
         const std::shared_ptr<const painter::PaintObjects<N, T>> m_paint_objects;
         const GlobalIndex<N_IMAGE, long long> m_global_index;
+        const std::array<int, N - 1> m_screen_size;
         const int m_height;
         long long m_slice_offset;
         std::vector<std::uint_least32_t> m_pixels_bgr;
@@ -164,6 +170,41 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 return m_busy_pixels;
         }
 
+        void save_to_file() const override
+        {
+                int width = m_screen_size[0];
+                int height = m_screen_size[1];
+
+                std::vector<std::uint_least32_t> pixels(1ull * width * height);
+                std::memcpy(pixels.data(), &m_pixels_bgr[m_slice_offset], data_size(pixels));
+
+                std::vector<std::byte> bytes(3ull * width * height);
+                std::byte* ptr = bytes.data();
+                for (std::uint_least32_t c : pixels)
+                {
+                        unsigned char b = c & 0xff;
+                        unsigned char g = (c >> 8) & 0xff;
+                        unsigned char r = (c >> 16) & 0xff;
+                        std::memcpy(ptr++, &r, 1);
+                        std::memcpy(ptr++, &g, 1);
+                        std::memcpy(ptr++, &b, 1);
+                }
+
+                const std::string caption = "Save";
+                dialog::FileFilter filter;
+                filter.name = "Images";
+                filter.file_extensions = {SAVE_IMAGE_FILE_FORMAT};
+                const bool read_only = true;
+                std::string file_name;
+                if (!dialog::save_file(caption, {filter}, read_only, &file_name))
+                {
+                        return;
+                }
+
+                image::save_image_to_file(
+                        file_name, image::ImageView<2>({width, height}, image::ColorFormat::R8G8B8_SRGB, bytes));
+        }
+
         // IPainterNotifier
         void painter_pixel_before(unsigned thread_number, const std::array<int_least16_t, N_IMAGE>& pixel) override
         {
@@ -207,6 +248,7 @@ public:
                   m_thread_id(std::this_thread::get_id()),
                   m_paint_objects(paint_objects),
                   m_global_index(m_paint_objects->projector().screen_size()),
+                  m_screen_size(m_paint_objects->projector().screen_size()),
                   m_height(m_paint_objects->projector().screen_size()[1]),
                   m_slice_offset(slice_offset_for_slider_positions(initial_slider_positions())),
                   m_pixels_bgr(make_bgr_images(m_paint_objects->projector().screen_size())),
