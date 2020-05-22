@@ -40,7 +40,7 @@ constexpr std::initializer_list<VkFormat> COLOR_FORMATS =
 };
 // clang-format on
 
-// цвет RGBA, умноженный на α
+// цвет RGBA
 void transfer_function(image::ColorFormat* color_format, std::vector<std::byte>* bytes)
 {
         const int size = 256;
@@ -51,9 +51,9 @@ void transfer_function(image::ColorFormat* color_format, std::vector<std::byte>*
         for (int i = 0; i < size; ++i)
         {
                 float alpha = i / max;
-                pixels.push_back(alpha * color.red());
-                pixels.push_back(alpha * color.green());
-                pixels.push_back(alpha * color.blue());
+                pixels.push_back(color.red());
+                pixels.push_back(color.green());
+                pixels.push_back(color.blue());
                 pixels.push_back(alpha);
         }
 

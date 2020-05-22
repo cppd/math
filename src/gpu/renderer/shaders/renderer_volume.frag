@@ -88,19 +88,22 @@ layout(location = 0) out vec4 out_color;
 
 //
 
-vec4 scalar_volume_premultiplied_alphas(vec3 c)
+vec4 scalar_volume_premultiplied_alphas(vec3 coordinates)
 {
-        float v = texture(image, c).r;
-        v = (v - volume.window_offset) * volume.window_scale;
-        return texture(transfer_function, clamp(v, 0, 1));
+        float value = texture(image, coordinates).r;
+        value = (value - volume.window_offset) * volume.window_scale;
+        vec4 color = texture(transfer_function, clamp(value, 0, 1));
+        color.a = clamp(color.a * volume.transparency, 0, 1);
+        color.rgb *= color.a;
+        return color;
 }
 
-vec4 color_volume_premultiplied_alphas(vec3 c)
+vec4 color_volume_premultiplied_alphas(vec3 coordinates)
 {
-        vec4 v = texture(image, c);
-        v.a = clamp(v.a * volume.transparency, 0, 1);
-        v.rgb *= v.a;
-        return v;
+        vec4 color = texture(image, coordinates);
+        color.a = clamp(color.a * volume.transparency, 0, 1);
+        color.rgb *= color.a;
+        return color;
 }
 
 bool intersect(vec3 ray_org, vec3 ray_dir, out float first, out float second)
