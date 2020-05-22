@@ -94,7 +94,15 @@ void init_cube_volume(unsigned size, image::ColorFormat color_format, volume::Vo
 template <typename T>
 uint8_t float_to_uint8(T v)
 {
-        return v * T(255) + T(0.5);
+        static_assert(std::is_floating_point_v<T>);
+        return v * T(limits<uint8_t>::max()) + T(0.5);
+}
+
+template <typename T>
+uint16_t float_to_uint16(T v)
+{
+        static_assert(std::is_floating_point_v<T>);
+        return v * T(limits<uint16_t>::max()) + T(0.5);
 }
 
 template <size_t N>
@@ -115,6 +123,34 @@ std::unique_ptr<volume::Volume<N>> scalar_cube(unsigned size)
                 std::memcpy(&(*iter), &VALUE, sizeof(VALUE));
                 std::advance(iter, sizeof(VALUE));
         }
+
+        return std::make_unique<volume::Volume<N>>(std::move(volume));
+}
+
+template <size_t N>
+std::unique_ptr<volume::Volume<N>> scalar_ellipsoid(unsigned size)
+{
+        constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R16;
+
+        check_volume_size<N>(size);
+
+        volume::Volume<N> volume;
+
+        init_cube_volume(size, COLOR_FORMAT, &volume);
+
+        std::byte* ptr = volume.image.pixels.data();
+
+        const Vector<N, float> center(0.5f);
+        cube_pixels<N>(size, [&](const Vector<N, float>& coordinates) {
+                Vector<N, float> p = coordinates - center;
+                p[0] *= 0.5f;
+                float distance = 4.0 * p.norm();
+                uint16_t value = float_to_uint16(1.0f - std::clamp(distance, 0.0f, 1.0f));
+                std::memcpy(ptr, &value, sizeof(value));
+                ptr += sizeof(value);
+        });
+
+        ASSERT(ptr = volume.image.pixels.data() + volume.image.pixels.size());
 
         return std::make_unique<volume::Volume<N>>(std::move(volume));
 }
@@ -191,6 +227,7 @@ public:
         Impl()
         {
                 m_map.emplace("Scalar Cube", scalar_cube<N>);
+                m_map.emplace("Scalar Ellipsoid", scalar_ellipsoid<N>);
                 m_map.emplace("Color Cube", color_cube<N>);
         }
 };
