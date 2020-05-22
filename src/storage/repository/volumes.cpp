@@ -33,9 +33,62 @@ namespace
 constexpr unsigned MAXIMUM_VOLUME_SIZE = 1'000'000'000;
 
 template <size_t N>
-double volume_size(unsigned size)
+void check_volume_size(unsigned size)
 {
-        return std::pow(size, N);
+        if (size < 2)
+        {
+                error("Volume size is too small");
+        }
+
+        double volume_size = std::pow(size, N);
+
+        if (volume_size > MAXIMUM_VOLUME_SIZE)
+        {
+                error("Volume size is too large (" + to_string(volume_size) + "), maximum volume size is "
+                      + to_string(MAXIMUM_VOLUME_SIZE));
+        }
+}
+
+template <size_t N, size_t Level, typename F>
+void cube_pixels(float size, float max_i_reciprocal, Vector<N, float>* coordinates, const F& f)
+{
+        static_assert(Level < N);
+
+        for (float i = 0; i < size; ++i)
+        {
+                (*coordinates)[N - Level - 1] = i * max_i_reciprocal;
+
+                if constexpr (Level + 1 < N)
+                {
+                        cube_pixels<N, Level + 1>(size, max_i_reciprocal, coordinates, f);
+                }
+                else
+                {
+                        f(*coordinates);
+                }
+        }
+}
+
+template <size_t N, typename F>
+void cube_pixels(unsigned size, const F& f)
+{
+        Vector<N, float> coordinates;
+        cube_pixels<N, 0>(size, 1.0f / (size - 1), &coordinates, f);
+}
+
+template <size_t N>
+void init_cube_volume(unsigned size, image::ColorFormat color_format, volume::Volume<N>* volume)
+{
+        volume->matrix = Matrix<N + 1, N + 1, double>(1);
+
+        for (unsigned i = 0; i < N; ++i)
+        {
+                volume->image.size[i] = size;
+        }
+
+        volume->image.color_format = color_format;
+        volume->image.pixels.resize(
+                image::format_pixel_size_in_bytes(color_format) * multiply_all<long long>(volume->image.size));
 }
 
 template <typename T>
@@ -50,27 +103,11 @@ std::unique_ptr<volume::Volume<N>> scalar_cube(unsigned size)
         constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R16;
         constexpr std::uint16_t VALUE = 1000;
 
-        if (size < 2)
-        {
-                error("Volume size is too small");
-        }
-
-        if (volume_size<N>(size) > MAXIMUM_VOLUME_SIZE)
-        {
-                error("Volume size is too large (" + to_string(volume_size<N>(size)) + "), maximum volume size is "
-                      + to_string(MAXIMUM_VOLUME_SIZE));
-        }
+        check_volume_size<N>(size);
 
         volume::Volume<N> volume;
 
-        volume.matrix = Matrix<N + 1, N + 1, double>(1);
-
-        for (unsigned i = 0; i < N; ++i)
-        {
-                volume.image.size[i] = size;
-        }
-        volume.image.color_format = COLOR_FORMAT;
-        volume.image.pixels.resize(sizeof(VALUE) * multiply_all<long long>(volume.image.size));
+        init_cube_volume(size, COLOR_FORMAT, &volume);
 
         auto iter = volume.image.pixels.begin();
         while (iter != volume.image.pixels.end())
@@ -82,68 +119,34 @@ std::unique_ptr<volume::Volume<N>> scalar_cube(unsigned size)
         return std::make_unique<volume::Volume<N>>(std::move(volume));
 }
 
-template <size_t N, size_t Level>
-void cube_pixels(uint8_t alpha, float size, float max_i_reciprocal, Vector<N, float>* coordinates, std::byte** pixels)
-{
-        static_assert(Level < N);
-
-        for (float i = 0; i < size; ++i)
-        {
-                (*coordinates)[Level] = i * max_i_reciprocal;
-
-                if constexpr (Level + 1 < N)
-                {
-                        cube_pixels<N, Level + 1>(alpha, size, max_i_reciprocal, coordinates, pixels);
-                }
-                else
-                {
-                        std::array<std::uint8_t, 4> color;
-                        for (size_t n = 0; n < N; ++n)
-                        {
-                                float c = (*coordinates)[n] / (1 << (n / 3));
-                                color[n % 3] = float_to_uint8(c);
-                        }
-                        color[3] = alpha;
-                        std::memcpy(*pixels, color.data(), 4);
-                        *pixels += 4;
-                }
-        }
-}
-
 template <size_t N>
 std::unique_ptr<volume::Volume<N>> color_cube(unsigned size)
 {
+        static_assert(N >= 3);
+
         constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R8G8B8A8_SRGB;
 
-        if (size < 2)
-        {
-                error("Volume size is too small");
-        }
-
-        if (volume_size<N>(size) > MAXIMUM_VOLUME_SIZE)
-        {
-                error("Volume size is too large (" + to_string(volume_size<3>(size)) + "), maximum volume size is "
-                      + to_string(MAXIMUM_VOLUME_SIZE));
-        }
+        check_volume_size<N>(size);
 
         volume::Volume<N> volume;
 
-        volume.matrix = Matrix<N + 1, N + 1, double>(1);
+        init_cube_volume(size, COLOR_FORMAT, &volume);
 
-        for (unsigned i = 0; i < N; ++i)
-        {
-                volume.image.size[i] = size;
-        }
-
-        volume.image.color_format = COLOR_FORMAT;
-        volume.image.pixels.resize(
-                image::format_pixel_size_in_bytes(COLOR_FORMAT) * multiply_all<long long>(volume.image.size));
-
+        std::array<std::uint8_t, 4> color;
         uint8_t alpha = std::max(uint8_t(1), float_to_uint8(1.0f / size));
-        Vector<N, float> point_coordinates;
+        color[3] = alpha;
+
         std::byte* ptr = volume.image.pixels.data();
 
-        cube_pixels<N, 0>(alpha, size, 1.0f / (size - 1), &point_coordinates, &ptr);
+        cube_pixels<N>(size, [&](const Vector<N, float>& coordinates) {
+                for (size_t n = 0; n < N; ++n)
+                {
+                        float c = coordinates[n] / (1 << (n / 3));
+                        color[n % 3] = float_to_uint8(c);
+                }
+                std::memcpy(ptr, color.data(), color.size());
+                ptr += color.size();
+        });
 
         ASSERT(ptr = volume.image.pixels.data() + volume.image.pixels.size());
 
