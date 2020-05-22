@@ -804,13 +804,14 @@ void MainWindow::update_volume_ui(ObjectId id)
                                 volume::Reading reading(*volume_object);
                                 min = volume_object->level_min();
                                 max = volume_object->level_max();
-                                transparency = volume_object->transparency() / VOLUME_TRANSPARENCY_COEFFICIENT;
+                                transparency = volume_object->transparency();
                         }
                         {
                                 QSignalBlocker blocker(ui.slider_volume_levels);
                                 ui.slider_volume_levels->set_range(min, max);
                         }
                         {
+                                transparency = std::log(transparency) / std::log(VOLUME_TRANSPARENCY_COEFFICIENT);
                                 QSignalBlocker blocker(ui.slider_volume_transparency);
                                 set_slider_position(ui.slider_volume_transparency, 0.5 * (1.0 + transparency));
                         }
@@ -1148,8 +1149,8 @@ void MainWindow::on_slider_volume_transparency_valueChanged(int)
                 return;
         }
 
-        double pos = std::clamp(2.0 * slider_position(ui.slider_volume_transparency) - 1.0, 0.0, 1.0);
-        double transparency = VOLUME_TRANSPARENCY_COEFFICIENT * pos;
+        double pos = 2.0 * slider_position(ui.slider_volume_transparency) - 1.0;
+        double transparency = std::pow(VOLUME_TRANSPARENCY_COEFFICIENT, pos);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
