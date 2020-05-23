@@ -158,6 +158,7 @@ private:
 
         bool stop_action(WorkerThreads::Action action);
 
+        void disable_volume_parameters();
         void update_volume_ui(ObjectId id);
 
         const std::thread::id m_thread_id;

@@ -152,19 +152,7 @@ void MainWindow::constructor_interface()
                 set_slider_position(ui.slider_normals, p);
         }
 
-        {
-                QSignalBlocker blocker(ui.slider_volume_transparency);
-                set_slider_to_middle(ui.slider_volume_transparency);
-        }
-        {
-                QSignalBlocker blocker_check_box(ui.checkBox_isosurface);
-                QSignalBlocker blocker_slider(ui.slider_isovalue);
-                ui.checkBox_isosurface->setChecked(false);
-                ui.slider_isovalue->setEnabled(false);
-                set_slider_to_middle(ui.slider_isovalue);
-                // Должно быть точное среднее положение
-                ASSERT(((ui.slider_isovalue->maximum() - ui.slider_isovalue->minimum()) & 1) == 0);
-        }
+        disable_volume_parameters();
 
         set_widgets_enabled(QMainWindow::layout(), true);
         set_dependent_interface();
@@ -216,6 +204,29 @@ void MainWindow::constructor_objects()
 
         m_mesh_and_volume_events = std::make_unique<ModelEvents>(
                 m_model_tree.get(), &m_view, [this](ObjectId id) { update_volume_ui(id); });
+}
+
+void MainWindow::disable_volume_parameters()
+{
+        ui.tabVolume->setEnabled(false);
+
+        {
+                QSignalBlocker blocker(ui.slider_volume_levels);
+                ui.slider_volume_levels->set_range(0, 1);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_volume_transparency);
+                set_slider_to_middle(ui.slider_volume_transparency);
+        }
+        {
+                QSignalBlocker blocker_check_box(ui.checkBox_isosurface);
+                QSignalBlocker blocker_slider(ui.slider_isovalue);
+                ui.checkBox_isosurface->setChecked(false);
+                ui.slider_isovalue->setEnabled(false);
+                set_slider_to_middle(ui.slider_isovalue);
+                // Должно быть точное среднее положение
+                ASSERT(((ui.slider_isovalue->maximum() - ui.slider_isovalue->minimum()) & 1) == 0);
+        }
 }
 
 MainWindow::~MainWindow()
@@ -1104,8 +1115,11 @@ void MainWindow::update_volume_ui(ObjectId id)
         std::optional<storage::VolumeObjectConst> volume_object_opt = m_model_tree->volume_const_if_current(id);
         if (!volume_object_opt)
         {
+                disable_volume_parameters();
                 return;
         }
+
+        ui.tabVolume->setEnabled(true);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<const volume::VolumeObject<N>>& volume_object) {
