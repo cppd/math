@@ -100,6 +100,9 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         float m_level_max = 1;
         float m_transparency = 1;
 
+        bool m_isosurface = false;
+        float m_isovalue = 0.5f;
+
         //
 
         template <size_t>
@@ -201,6 +204,26 @@ public:
         void set_transparency(float transparency)
         {
                 m_transparency = transparency;
+        }
+
+        bool isosurface() const
+        {
+                return m_isosurface;
+        }
+
+        void set_isosurface(bool enabled)
+        {
+                m_isosurface = enabled;
+        }
+
+        float isovalue() const
+        {
+                return m_isovalue;
+        }
+
+        void set_isovalue(float value)
+        {
+                m_isovalue = value;
         }
 };
 
