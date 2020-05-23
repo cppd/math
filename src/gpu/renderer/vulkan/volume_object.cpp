@@ -73,12 +73,6 @@ vec4 image_clip_plane(const vec4& world_clip_plane, const mat4& model)
         return p / -n.norm();
 }
 
-enum class Memory
-{
-        Yes,
-        No
-};
-
 void find_image_formats_and_volume_type(
         image::ColorFormat color_format,
         std::vector<VkFormat>* formats,
@@ -165,7 +159,7 @@ class VolumeObject::Volume
                 m_buffer.set_color_volume(m_graphics_command_pool, m_graphics_queue, color_volume);
         }
 
-        void create_memory()
+        void create_descriptor_sets()
         {
                 VolumeInfo info;
                 info.buffer_coordinates = m_buffer.buffer_coordinates();
@@ -181,8 +175,13 @@ class VolumeObject::Volume
                 m_memory.emplace(memory.descriptor_set_layout(), std::move(memory));
         }
 
-        void set_transfer_function(Memory with_memory_creation)
+        void set_transfer_function()
         {
+                if (m_transfer_function)
+                {
+                        return;
+                }
+
                 image::ColorFormat color_format;
                 std::vector<std::byte> color_bytes;
                 transfer_function(&color_format, &color_bytes);
@@ -199,14 +198,9 @@ class VolumeObject::Volume
                 m_transfer_function->write_pixels(
                         m_graphics_command_pool, m_graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, color_format, color_bytes);
-
-                if (with_memory_creation == Memory::Yes)
-                {
-                        create_memory();
-                }
         }
 
-        void set_image(const image::Image<3>& image, Memory with_memory_creation)
+        void set_image(const image::Image<3>& image)
         {
                 VkImageLayout image_layout;
                 if (!m_image || m_image_color_format != image.color_format
@@ -235,11 +229,6 @@ class VolumeObject::Volume
                         ASSERT((m_image->usage() & VK_IMAGE_USAGE_STORAGE_BIT) == 0);
 
                         image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
-
-                        if (with_memory_creation == Memory::Yes)
-                        {
-                                create_memory();
-                        }
                 }
                 else
                 {
@@ -302,43 +291,29 @@ public:
                         return;
                 }
 
-                if (updates.contains(volume::Update::All))
+                bool update_all = updates.contains(volume::Update::All);
+
+                if (update_all || updates.contains(volume::Update::Image))
                 {
-                        m_model_matrix = volume_object.matrix() * volume_object.volume().matrix;
-                        buffer_set_matrix_and_clip_plane();
+                        set_transfer_function();
+                        set_image(volume_object.volume().image);
 
-                        buffer_set_parameters(
-                                volume_object.level_min(), volume_object.level_max(), volume_object.transparency(),
-                                volume_object.isosurface(), volume_object.isovalue());
-
-                        set_transfer_function(Memory::No);
-                        set_image(volume_object.volume().image, Memory::No);
-
-                        create_memory();
+                        create_descriptor_sets();
 
                         *update_command_buffers = true;
                 }
-                else
+
+                if (update_all || updates.contains(volume::Update::Parameters))
                 {
-                        if (updates.contains(volume::Update::Image))
-                        {
-                                set_image(volume_object.volume().image, Memory::Yes);
-                                *update_command_buffers = true;
-                        }
+                        buffer_set_parameters(
+                                volume_object.level_min(), volume_object.level_max(), volume_object.transparency(),
+                                volume_object.isosurface(), volume_object.isovalue());
+                }
 
-                        if (updates.contains(volume::Update::Parameters))
-                        {
-                                buffer_set_parameters(
-                                        volume_object.level_min(), volume_object.level_max(),
-                                        volume_object.transparency(), volume_object.isosurface(),
-                                        volume_object.isovalue());
-                        }
-
-                        if (updates.contains(volume::Update::Matrices))
-                        {
-                                m_model_matrix = volume_object.matrix() * volume_object.volume().matrix;
-                                buffer_set_matrix_and_clip_plane();
-                        }
+                if (update_all || updates.contains(volume::Update::Matrices))
+                {
+                        m_model_matrix = volume_object.matrix() * volume_object.volume().matrix;
+                        buffer_set_matrix_and_clip_plane();
                 }
 
                 ASSERT([&updates]() {
