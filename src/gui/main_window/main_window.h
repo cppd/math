@@ -65,6 +65,7 @@ private slots:
         void on_checkBox_dft_clicked();
         void on_checkBox_fog_clicked();
         void on_checkBox_fps_clicked();
+        void on_checkBox_isosurface_clicked();
         void on_checkBox_materials_clicked();
         void on_checkBox_normals_clicked();
         void on_checkBox_optical_flow_clicked();
@@ -80,6 +81,7 @@ private slots:
         void on_slider_default_ns_valueChanged(int value);
         void on_slider_dft_brightness_valueChanged(int value);
         void on_slider_diffuse_valueChanged(int value);
+        void on_slider_isovalue_valueChanged(int value);
         void on_slider_normals_valueChanged(int value);
         void on_slider_shadow_quality_valueChanged(int value);
         void on_slider_specular_valueChanged(int value);

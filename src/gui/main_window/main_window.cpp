@@ -151,9 +151,19 @@ void MainWindow::constructor_interface()
                 static_assert(v >= 0 && v <= d && d > 0);
                 set_slider_position(ui.slider_normals, p);
         }
+
         {
                 QSignalBlocker blocker(ui.slider_volume_transparency);
                 set_slider_to_middle(ui.slider_volume_transparency);
+        }
+        {
+                QSignalBlocker blocker_check_box(ui.checkBox_isosurface);
+                QSignalBlocker blocker_slider(ui.slider_isovalue);
+                ui.checkBox_isosurface->setChecked(false);
+                ui.slider_isovalue->setEnabled(false);
+                set_slider_to_middle(ui.slider_isovalue);
+                // Должно быть точное среднее положение
+                ASSERT(((ui.slider_isovalue->maximum() - ui.slider_isovalue->minimum()) & 1) == 0);
         }
 
         set_widgets_enabled(QMainWindow::layout(), true);
@@ -785,40 +795,6 @@ void MainWindow::graphics_widget_resize(QResizeEvent* e)
         }
 }
 
-void MainWindow::update_volume_ui(ObjectId id)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::VolumeObjectConst> volume_object_opt = m_model_tree->volume_const_if_current(id);
-        if (!volume_object_opt)
-        {
-                return;
-        }
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<const volume::VolumeObject<N>>& volume_object) {
-                        double min;
-                        double max;
-                        double transparency;
-                        {
-                                volume::Reading reading(*volume_object);
-                                min = volume_object->level_min();
-                                max = volume_object->level_max();
-                                transparency = volume_object->transparency();
-                        }
-                        {
-                                QSignalBlocker blocker(ui.slider_volume_levels);
-                                ui.slider_volume_levels->set_range(min, max);
-                        }
-                        {
-                                transparency = std::log(transparency) / std::log(VOLUME_TRANSPARENCY_COEFFICIENT);
-                                QSignalBlocker blocker(ui.slider_volume_transparency);
-                                set_slider_position(ui.slider_volume_transparency, 0.5 * (1.0 + transparency));
-                        }
-                },
-                *volume_object_opt);
-}
-
 void MainWindow::model_tree_item_changed()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -1121,6 +1097,51 @@ void MainWindow::on_actionFullScreen_triggered()
 {
 }
 
+void MainWindow::update_volume_ui(ObjectId id)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::VolumeObjectConst> volume_object_opt = m_model_tree->volume_const_if_current(id);
+        if (!volume_object_opt)
+        {
+                return;
+        }
+
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<const volume::VolumeObject<N>>& volume_object) {
+                        double min;
+                        double max;
+                        double transparency;
+                        bool isosurface;
+                        float isovalue;
+                        {
+                                volume::Reading reading(*volume_object);
+                                min = volume_object->level_min();
+                                max = volume_object->level_max();
+                                transparency = volume_object->transparency();
+                                isosurface = volume_object->isosurface();
+                                isovalue = volume_object->isovalue();
+                        }
+                        {
+                                QSignalBlocker blocker(ui.slider_volume_levels);
+                                ui.slider_volume_levels->set_range(min, max);
+                        }
+                        {
+                                transparency = std::log(transparency) / std::log(VOLUME_TRANSPARENCY_COEFFICIENT);
+                                QSignalBlocker blocker(ui.slider_volume_transparency);
+                                set_slider_position(ui.slider_volume_transparency, 0.5 * (1.0 + transparency));
+                        }
+                        {
+                                QSignalBlocker blocker_check_box(ui.checkBox_isosurface);
+                                QSignalBlocker blocker_slider(ui.slider_isovalue);
+                                ui.checkBox_isosurface->setChecked(isosurface);
+                                ui.slider_isovalue->setEnabled(isosurface);
+                                set_slider_position(ui.slider_isovalue, isovalue);
+                        }
+                },
+                *volume_object_opt);
+}
+
 void MainWindow::on_slider_volume_levels_range_changed(double min, double max)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -1156,6 +1177,47 @@ void MainWindow::on_slider_volume_transparency_valueChanged(int)
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
                         volume::WritingUpdates updates(volume_object.get(), {volume::Update::Parameters});
                         volume_object->set_transparency(transparency);
+                },
+                *volume_object_opt);
+}
+
+void MainWindow::on_checkBox_isosurface_clicked()
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        bool checked = ui.checkBox_isosurface->isChecked();
+        ui.slider_isovalue->setEnabled(checked);
+
+        std::optional<storage::VolumeObject> volume_object_opt = m_model_tree->current_volume();
+        if (!volume_object_opt)
+        {
+                return;
+        }
+
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
+                        volume::WritingUpdates updates(volume_object.get(), {volume::Update::Parameters});
+                        volume_object->set_isosurface(checked);
+                },
+                *volume_object_opt);
+}
+
+void MainWindow::on_slider_isovalue_valueChanged(int)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::VolumeObject> volume_object_opt = m_model_tree->current_volume();
+        if (!volume_object_opt)
+        {
+                return;
+        }
+
+        float isovalue = slider_position(ui.slider_isovalue);
+
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
+                        volume::WritingUpdates updates(volume_object.get(), {volume::Update::Parameters});
+                        volume_object->set_isovalue(isovalue);
                 },
                 *volume_object_opt);
 }

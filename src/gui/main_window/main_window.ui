@@ -368,6 +368,23 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="checkBox_isosurface">
+            <property name="text">
+             <string>Isosurface</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="slider_isovalue">
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="verticalSpacer">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
