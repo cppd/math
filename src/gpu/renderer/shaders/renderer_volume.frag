@@ -75,6 +75,8 @@ layout(set = 1, std140, binding = 1) uniform Volume
         float window_offset;
         float window_scale;
         float transparency;
+        bool isosurface;
+        float isovalue;
         bool color_volume;
 }
 volume;

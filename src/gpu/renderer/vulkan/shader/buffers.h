@@ -170,6 +170,8 @@ class VolumeBuffer final
                         float window_offset;
                         float window_scale;
                         float transparency;
+                        uint32_t isosurface;
+                        float isovalue;
                 };
                 Parameters parameters;
                 uint32_t color_volume;
@@ -192,7 +194,9 @@ public:
                 const vulkan::Queue& queue,
                 float window_offset,
                 float window_scale,
-                float transparency) const;
+                float transparency,
+                bool isosurface,
+                float isovalue) const;
 
         void set_color_volume(const vulkan::CommandPool& command_pool, const vulkan::Queue& queue, bool color_volume)
                 const;

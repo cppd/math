@@ -326,17 +326,22 @@ void VolumeBuffer::set_parameters(
         const vulkan::Queue& queue,
         float window_offset,
         float window_scale,
-        float transparency) const
+        float transparency,
+        bool isosurface,
+        float isovalue) const
 {
         ASSERT(window_offset >= 0);
         ASSERT(window_scale > 0);
         ASSERT(transparency >= 0);
+        ASSERT(isovalue >= 0 && isovalue <= 1);
 
         Volume::Parameters parameters;
 
         parameters.window_offset = window_offset;
         parameters.window_scale = window_scale;
         parameters.transparency = transparency;
+        parameters.isosurface = isosurface ? 1 : 0;
+        parameters.isovalue = isovalue;
 
         m_uniform_buffer_volume.write(
                 command_pool, queue, offsetof(Volume, parameters), data_size(parameters), data_pointer(parameters));

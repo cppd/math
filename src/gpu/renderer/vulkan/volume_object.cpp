@@ -125,7 +125,12 @@ class VolumeObject::Volume
         std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> m_memory;
         std::function<VolumeImageMemory(const VolumeInfo&)> m_create_descriptor_sets;
 
-        void buffer_set_parameters(float window_min, float window_max, float transparency) const
+        void buffer_set_parameters(
+                float window_min,
+                float window_max,
+                float transparency,
+                bool isosurface,
+                float isovalue) const
         {
                 constexpr float eps = 1e-10f;
                 window_min = std::min(std::max(0.0f, window_min), 1 - eps);
@@ -133,8 +138,11 @@ class VolumeObject::Volume
                 float window_offset = window_min;
                 float window_scale = 1 / (window_max - window_min);
 
+                isovalue = std::clamp(isovalue, 0.0f, 1.0f);
+
                 m_buffer.set_parameters(
-                        m_graphics_command_pool, m_graphics_queue, window_offset, window_scale, transparency);
+                        m_graphics_command_pool, m_graphics_queue, window_offset, window_scale, transparency,
+                        isosurface, isovalue);
         }
 
         void buffer_set_matrix_and_clip_plane() const
@@ -300,7 +308,8 @@ public:
                         buffer_set_matrix_and_clip_plane();
 
                         buffer_set_parameters(
-                                volume_object.level_min(), volume_object.level_max(), volume_object.transparency());
+                                volume_object.level_min(), volume_object.level_max(), volume_object.transparency(),
+                                volume_object.isosurface(), volume_object.isovalue());
 
                         set_transfer_function(Memory::No);
                         set_image(volume_object.volume().image, Memory::No);
@@ -321,7 +330,8 @@ public:
                         {
                                 buffer_set_parameters(
                                         volume_object.level_min(), volume_object.level_max(),
-                                        volume_object.transparency());
+                                        volume_object.transparency(), volume_object.isosurface(),
+                                        volume_object.isovalue());
                         }
 
                         if (updates.contains(volume::Update::Matrices))
