@@ -111,18 +111,18 @@ void ShaderBuffers::set_matrices(
 {
         {
                 Matrices matrices;
-                matrices.main_mvp_matrix = to_matrix<float>(main_mvp_matrix).transpose();
-                matrices.main_model_matrix = to_matrix<float>(main_model_matrix).transpose();
-                matrices.main_vp_matrix = to_matrix<float>(main_vp_matrix).transpose();
-                matrices.shadow_mvp_texture_matrix = to_matrix<float>(shadow_mvp_texture_matrix).transpose();
+                matrices.main_mvp_matrix = mat4_std140<float>(main_mvp_matrix);
+                matrices.main_model_matrix = mat4_std140<float>(main_model_matrix);
+                matrices.main_vp_matrix = mat4_std140<float>(main_vp_matrix);
+                matrices.shadow_mvp_texture_matrix = mat4_std140<float>(shadow_mvp_texture_matrix);
                 copy_to_matrices_buffer(0, matrices);
         }
         {
                 Matrices matrices;
-                matrices.main_mvp_matrix = to_matrix<float>(shadow_mvp_matrix).transpose();
-                matrices.main_model_matrix = to_matrix<float>(main_model_matrix).transpose();
-                matrices.main_vp_matrix = to_matrix<float>(shadow_vp_matrix).transpose();
-                matrices.shadow_mvp_texture_matrix = to_matrix<float>(shadow_mvp_texture_matrix).transpose();
+                matrices.main_mvp_matrix = mat4_std140<float>(shadow_mvp_matrix);
+                matrices.main_model_matrix = mat4_std140<float>(main_model_matrix);
+                matrices.main_vp_matrix = mat4_std140<float>(shadow_vp_matrix);
+                matrices.shadow_mvp_texture_matrix = mat4_std140<float>(shadow_mvp_texture_matrix);
                 copy_to_shadow_matrices_buffer(0, matrices);
         }
 }
