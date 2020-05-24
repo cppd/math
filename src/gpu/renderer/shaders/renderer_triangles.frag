@@ -153,9 +153,12 @@ vec3 shade()
                 vec3 V = drawing.direction_to_camera;
 
                 float diffuse = max(0, dot(N, L));
-                float specular = diffuse > 0 ? pow(max(0, dot(V, reflect(-L, N))), material_ns()) : 0;
-
-                color += diffuse * mtl_d * drawing.light_d + specular * mtl_s * drawing.light_s;
+                if (diffuse > 0)
+                {
+                        float specular = pow(max(0, dot(V, reflect(-L, N))), material_ns());
+                        color += diffuse * mtl_d * drawing.light_d;
+                        color += specular * mtl_s * drawing.light_s;
+                }
         }
 
         if (drawing.show_wireframe)
