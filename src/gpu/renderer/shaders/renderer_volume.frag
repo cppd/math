@@ -232,6 +232,26 @@ bool intersect(vec3 ray_org, vec3 ray_dir, out float first, out float second)
         return true;
 }
 
+vec3 shade(vec3 p)
+{
+        vec3 color = drawing.default_color * drawing.light_a;
+
+        vec3 N = world_normal(p);
+        N = faceforward(N, -drawing.direction_to_camera, N);
+        vec3 L = drawing.direction_to_light;
+        vec3 V = drawing.direction_to_camera;
+
+        float diffuse = max(0, dot(N, L));
+        if (diffuse > 0)
+        {
+                float specular = pow(max(0, dot(V, reflect(-L, N))), drawing.default_ns);
+                color += diffuse * drawing.default_color * drawing.light_d;
+                color += specular * drawing.default_specular_color * drawing.light_s;
+        }
+
+        return color;
+}
+
 void main(void)
 {
         vec2 device_coordinates = (gl_FragCoord.xy - drawing.viewport_center) * drawing.viewport_factor;
