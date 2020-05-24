@@ -68,6 +68,7 @@ layout(set = 1, std140, binding = 0) uniform Coordinates
         mat4 inverse_mvp_matrix;
         vec4 clip_plane_equation;
         vec3 gradient_h;
+        mat3 normal_matrix;
 }
 coordinates;
 

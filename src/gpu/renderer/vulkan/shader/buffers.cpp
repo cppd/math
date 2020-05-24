@@ -19,6 +19,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
+namespace
+{
+template <typename Dst, typename Src>
+Matrix<4, 4, Dst> mat4_std140(const Matrix<4, 4, Src>& m)
+{
+        Matrix<4, 4, Dst> res;
+        for (unsigned r = 0; r < 4; ++r)
+        {
+                for (unsigned c = 0; c < 4; ++c)
+                {
+                        res(c, r) = m(r, c);
+                }
+        }
+        return res;
+}
+
+template <typename Dst, typename Src>
+Matrix<3, 4, Dst> mat3_std140(const Matrix<3, 3, Src>& m)
+{
+        Matrix<3, 4, Dst> res;
+        for (unsigned r = 0; r < 3; ++r)
+        {
+                for (unsigned c = 0; c < 3; ++c)
+                {
+                        res(c, r) = m(r, c);
+                }
+        }
+        return res;
+}
+}
+
 ShaderBuffers::ShaderBuffers(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
 {
         m_uniform_buffers.emplace_back(
@@ -309,12 +340,14 @@ VkDeviceSize VolumeBuffer::buffer_volume_size() const
 void VolumeBuffer::set_coordinates(
         const mat4& inverse_mvp_matrix,
         const vec4& clip_plane_equation,
-        const vec3& gradient_h) const
+        const vec3& gradient_h,
+        const mat3& normal_matrix) const
 {
         Coordinates coordinates;
-        coordinates.inverse_mvp_matrix = to_matrix<float>(inverse_mvp_matrix).transpose();
+        coordinates.inverse_mvp_matrix = mat4_std140<float>(inverse_mvp_matrix);
         coordinates.clip_plane_equation = to_vector<float>(clip_plane_equation);
         coordinates.gradient_h = to_vector<float>(gradient_h);
+        coordinates.normal_matrix = mat3_std140<float>(normal_matrix);
         vulkan::map_and_write_to_buffer(m_uniform_buffer_coordinates, 0, coordinates);
 }
 

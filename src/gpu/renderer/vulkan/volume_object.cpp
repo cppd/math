@@ -184,7 +184,9 @@ class VolumeObject::Volume
                                                  ? image_clip_plane(*m_world_clip_plane_equation, m_model_matrix)
                                                  : vec4(0);
 
-                m_buffer.set_coordinates(mvp.inverse(), clip_plane, gradient_h(m_model_matrix, *m_image));
+                m_buffer.set_coordinates(
+                        mvp.inverse(), clip_plane, gradient_h(m_model_matrix, *m_image),
+                        m_model_matrix.top_left<3, 3>().inverse().transpose());
         }
 
         void buffer_set_clip_plane() const
