@@ -23,6 +23,7 @@ layout(early_fragment_tests) in;
 layout(std140, binding = 1) uniform Drawing
 {
         vec3 default_color;
+        vec3 default_specular_color;
         vec3 wireframe_color;
         vec3 background_color;
         float normal_length;
@@ -94,10 +95,10 @@ vec4 texture_Ks_color(vec2 c)
 {
         return texture(texture_Ks, c);
 }
-float shadow(vec4 shadow_position)
+bool shadow(vec4 shadow_position)
 {
         float dist = texture(shadow_texture, shadow_position.xy).r;
-        return dist > gs.shadow_position.z ? 1 : 0;
+        return dist <= gs.shadow_position.z;
 }
 
 bool has_texture_coordinates()
@@ -113,62 +114,48 @@ float edge_factor()
         return min(min(a.x, a.y), a.z);
 }
 
+float material_ns()
+{
+        return (mtl.use_material && drawing.show_materials) ? mtl.Ns : drawing.default_ns;
+}
+
 vec3 shade()
 {
-        vec3 color_a, color_d, color_s;
+        //
+
+        vec3 mtl_a, mtl_d, mtl_s;
 
         if (!mtl.use_material || !drawing.show_materials)
         {
-                color_a = drawing.default_color;
-                color_d = drawing.default_color;
-                color_s = drawing.default_color;
+                mtl_a = drawing.default_color;
+                mtl_d = drawing.default_color;
+                mtl_s = drawing.default_specular_color;
         }
         else if (!has_texture_coordinates())
         {
-                color_a = mtl.Ka;
-                color_d = mtl.Kd;
-                color_s = mtl.Ks;
+                mtl_a = mtl.Ka;
+                mtl_d = mtl.Kd;
+                mtl_s = mtl.Ks;
         }
         else
         {
-                color_a = mtl.use_texture_Ka ? texture_Ka_color(gs.texture_coordinates).rgb : mtl.Ka;
-                color_d = mtl.use_texture_Kd ? texture_Kd_color(gs.texture_coordinates).rgb : mtl.Kd;
-                color_s = mtl.use_texture_Ks ? texture_Ks_color(gs.texture_coordinates).rgb : mtl.Ks;
+                mtl_a = mtl.use_texture_Ka ? texture_Ka_color(gs.texture_coordinates).rgb : mtl.Ka;
+                mtl_d = mtl.use_texture_Kd ? texture_Kd_color(gs.texture_coordinates).rgb : mtl.Kd;
+                mtl_s = mtl.use_texture_Ks ? texture_Ks_color(gs.texture_coordinates).rgb : mtl.Ks;
         }
 
-        //
+        vec3 color = mtl_a * drawing.light_a;
 
-        vec3 N = normalize(gs.world_normal);
-        vec3 L = drawing.direction_to_light;
-        vec3 V = drawing.direction_to_camera;
-
-        float dot_NL = dot(N, L);
-        if (dot_NL >= 0.0)
+        if (!drawing.show_shadow || !shadow(gs.shadow_position))
         {
-                color_d *= dot_NL;
+                vec3 N = normalize(gs.world_normal);
+                vec3 L = drawing.direction_to_light;
+                vec3 V = drawing.direction_to_camera;
 
-                float light_reflection = max(0.0, dot(V, reflect(-L, N)));
-                color_s *= pow(
-                        light_reflection, (mtl.use_material && drawing.show_materials) ? mtl.Ns : drawing.default_ns);
-        }
-        else
-        {
-                color_d = vec3(0.0);
-                color_s = vec3(0.0);
-        }
+                float diffuse = max(0, dot(N, L));
+                float specular = diffuse > 0 ? pow(max(0, dot(V, reflect(-L, N))), material_ns()) : 0;
 
-        //
-
-        vec3 color;
-
-        if (drawing.show_shadow)
-        {
-                const float s = shadow(gs.shadow_position);
-                color = color_a * drawing.light_a + s * (color_d * drawing.light_d + color_s * drawing.light_s);
-        }
-        else
-        {
-                color = color_a * drawing.light_a + color_d * drawing.light_d + color_s * drawing.light_s;
+                color += diffuse * mtl_d * drawing.light_d + specular * mtl_s * drawing.light_s;
         }
 
         if (drawing.show_wireframe)

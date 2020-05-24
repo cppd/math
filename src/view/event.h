@@ -116,6 +116,14 @@ struct SetDefaultColor final
         }
 };
 
+struct SetDefaultSpecularColor final
+{
+        Color value;
+        explicit SetDefaultSpecularColor(const Color& value) : value(value)
+        {
+        }
+};
+
 struct SetWireframeColor final
 {
         Color value;
@@ -375,6 +383,7 @@ struct Command final
                 command::SetBackgroundColor,
                 command::SetClipPlaneColor,
                 command::SetDefaultColor,
+                command::SetDefaultSpecularColor,
                 command::SetDefaultNs,
                 command::SetDftBackgroundColor,
                 command::SetDftBrightness,

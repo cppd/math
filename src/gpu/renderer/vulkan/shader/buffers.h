@@ -44,6 +44,7 @@ class ShaderBuffers
         struct Drawing
         {
                 alignas(sizeof(vec4f)) vec3f default_color;
+                alignas(sizeof(vec4f)) vec3f default_specular_color;
                 alignas(sizeof(vec4f)) vec3f wireframe_color;
                 alignas(sizeof(vec4f)) vec3f background_color;
                 float normal_length;
@@ -96,6 +97,7 @@ public:
         void set_clip_plane(const vec4& equation, bool enabled) const;
         void set_viewport(const vec2& center, const vec2& factor) const;
         void set_default_color(const Color& color) const;
+        void set_default_specular_color(const Color& color) const;
         void set_wireframe_color(const Color& color) const;
         void set_background_color(const Color& color) const;
         void set_clip_plane_color(const Color& color) const;

@@ -307,6 +307,10 @@ class Impl final : public View
                 {
                         m_renderer->set_default_color(d.value);
                 },
+                [this](const command::SetDefaultSpecularColor& d)
+                {
+                        m_renderer->set_default_specular_color(d.value);
+                },
                 [this](const command::SetWireframeColor& d)
                 {
                         m_renderer->set_wireframe_color(d.value);

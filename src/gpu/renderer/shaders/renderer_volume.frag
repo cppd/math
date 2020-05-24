@@ -37,6 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(set = 0, std140, binding = 0) uniform Drawing
 {
         vec3 default_color;
+        vec3 default_specular_color;
         vec3 wireframe_color;
         vec3 background_color;
         float normal_length;

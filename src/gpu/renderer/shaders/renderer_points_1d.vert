@@ -31,6 +31,7 @@ matrices;
 layout(std140, set = 0, binding = 1) uniform Drawing
 {
         vec3 default_color;
+        vec3 default_specular_color;
         vec3 wireframe_color;
         vec3 background_color;
         float normal_length;

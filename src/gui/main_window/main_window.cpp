@@ -65,6 +65,7 @@ constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
 // Цвета по умолчанию
 constexpr QRgb BACKGROUND_COLOR = qRgb(50, 100, 150);
 constexpr QRgb DEFAULT_COLOR = qRgb(150, 170, 150);
+constexpr QRgb DEFAULT_SPECULAR_COLOR = qRgb(255, 255, 255);
 constexpr QRgb WIREFRAME_COLOR = qRgb(255, 255, 255);
 constexpr QRgb CLIP_PLANE_COLOR = qRgb(250, 230, 150);
 constexpr QRgb DFT_BACKGROUND_COLOR = qRgb(0, 0, 50);
@@ -159,6 +160,7 @@ void MainWindow::constructor_interface()
 
         set_background_color(BACKGROUND_COLOR);
         set_default_color(DEFAULT_COLOR);
+        set_default_specular_color(DEFAULT_SPECULAR_COLOR);
         set_wireframe_color(WIREFRAME_COLOR);
         set_clip_plane_color(CLIP_PLANE_COLOR);
         set_normal_color_positive(NORMAL_COLOR_POSITIVE);
@@ -400,6 +402,15 @@ void MainWindow::set_default_color(const QColor& c)
         ui.widget_default_color->setPalette(palette);
 }
 
+void MainWindow::set_default_specular_color(const QColor& c)
+{
+        m_default_specular_color = c;
+        if (m_view)
+        {
+                m_view->send(view::command::SetDefaultSpecularColor(qcolor_to_rgb(c)));
+        }
+}
+
 void MainWindow::set_wireframe_color(const QColor& c)
 {
         m_wireframe_color = c;
@@ -527,6 +538,7 @@ void MainWindow::slot_window_first_shown()
                 std::vector<view::Command> view_initial_commands{
                         view::command::SetBackgroundColor(qcolor_to_rgb(m_background_color)),
                         view::command::SetDefaultColor(qcolor_to_rgb(m_default_color)),
+                        view::command::SetDefaultSpecularColor(qcolor_to_rgb(m_default_specular_color)),
                         view::command::SetWireframeColor(qcolor_to_rgb(m_wireframe_color)),
                         view::command::SetClipPlaneColor(qcolor_to_rgb(m_clip_plane_color)),
                         view::command::SetNormalLength(normal_length()),

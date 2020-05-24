@@ -48,6 +48,7 @@ struct Renderer
         virtual void set_light_s(const Color& light) = 0;
         virtual void set_background_color(const Color& color) = 0;
         virtual void set_default_color(const Color& color) = 0;
+        virtual void set_default_specular_color(const Color& color) = 0;
         virtual void set_wireframe_color(const Color& color) = 0;
         virtual void set_clip_plane_color(const Color& color) = 0;
         virtual void set_normal_length(float length) = 0;

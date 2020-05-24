@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(std140, binding = 1) uniform Drawing
 {
         vec3 default_color;
+        vec3 default_specular_color;
         vec3 wireframe_color;
         vec3 background_color;
         float normal_length;
