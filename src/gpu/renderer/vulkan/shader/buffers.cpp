@@ -306,11 +306,15 @@ VkDeviceSize VolumeBuffer::buffer_volume_size() const
         return m_uniform_buffer_volume.size();
 }
 
-void VolumeBuffer::set_matrix_and_clip_plane(const mat4& inverse_mvp_matrix, const vec4& clip_plane_equation) const
+void VolumeBuffer::set_coordinates(
+        const mat4& inverse_mvp_matrix,
+        const vec4& clip_plane_equation,
+        const vec3& gradient_h) const
 {
         Coordinates coordinates;
         coordinates.inverse_mvp_matrix = to_matrix<float>(inverse_mvp_matrix).transpose();
         coordinates.clip_plane_equation = to_vector<float>(clip_plane_equation);
+        coordinates.gradient_h = to_vector<float>(gradient_h);
         vulkan::map_and_write_to_buffer(m_uniform_buffer_coordinates, 0, coordinates);
 }
 

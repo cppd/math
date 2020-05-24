@@ -161,6 +161,7 @@ class VolumeBuffer final
         {
                 alignas(sizeof(vec4f)) mat4f inverse_mvp_matrix;
                 alignas(sizeof(vec4f)) vec4f clip_plane_equation;
+                alignas(sizeof(vec4f)) vec3f gradient_h;
         };
 
         struct Volume
@@ -186,7 +187,9 @@ public:
         VkBuffer buffer_volume() const;
         VkDeviceSize buffer_volume_size() const;
 
-        void set_matrix_and_clip_plane(const mat4& inverse_mvp_matrix, const vec4& clip_plane_equation) const;
+        void set_coordinates(const mat4& inverse_mvp_matrix, const vec4& clip_plane_equation, const vec3& gradient_h)
+                const;
+
         void set_clip_plane(const vec4& clip_plane_equation) const;
 
         void set_parameters(

@@ -40,6 +40,8 @@ constexpr std::initializer_list<VkFormat> COLOR_FORMATS =
 };
 // clang-format on
 
+constexpr double GRADIENT_H_IN_PIXELS = 0.5;
+
 // цвет RGBA
 void transfer_function(image::ColorFormat* color_format, std::vector<std::byte>* bytes)
 {
@@ -99,6 +101,42 @@ void find_image_formats_and_volume_type(
         }
         error_fatal("Unknown color format " + image::format_to_string(color_format));
 }
+
+vec3 world_volume_size(const mat4& model_matrix)
+{
+        // Например, для x: m_model_matrix * vec4(1, 0, 0, 1) -> vec3 -> length
+        vec3 size;
+        for (unsigned i = 0; i < 3; ++i)
+        {
+                vec3 v(model_matrix(0, i), model_matrix(1, i), model_matrix(2, i));
+                size[i] = v.norm();
+        }
+        return size;
+}
+
+// В текстурных координатах
+vec3 gradient_h(const mat4& model_matrix, const vulkan::ImageWithMemory& image)
+{
+        vec3 texture_pixel_size(1.0 / image.width(), 1.0 / image.height(), 1.0 / image.depth());
+
+        vec3 world_pixel_size(texture_pixel_size * world_volume_size(model_matrix));
+
+        double min_world_pixel_size = world_pixel_size[0];
+        for (unsigned i = 1; i < 3; ++i)
+        {
+                min_world_pixel_size = std::min(min_world_pixel_size, world_pixel_size[i]);
+        }
+
+        min_world_pixel_size *= GRADIENT_H_IN_PIXELS;
+
+        vec3 h;
+        for (unsigned i = 0; i < 3; ++i)
+        {
+                h[i] = (min_world_pixel_size / world_pixel_size[i]) * texture_pixel_size[i];
+        }
+
+        return h;
+}
 }
 
 class VolumeObject::Volume
@@ -139,13 +177,14 @@ class VolumeObject::Volume
                         isosurface, isovalue);
         }
 
-        void buffer_set_matrix_and_clip_plane() const
+        void buffer_set_coordinates() const
         {
                 const mat4& mvp = m_vp_matrix * m_model_matrix;
                 const vec4& clip_plane = m_world_clip_plane_equation
                                                  ? image_clip_plane(*m_world_clip_plane_equation, m_model_matrix)
                                                  : vec4(0);
-                m_buffer.set_matrix_and_clip_plane(mvp.inverse(), clip_plane);
+
+                m_buffer.set_coordinates(mvp.inverse(), clip_plane, gradient_h(m_model_matrix, *m_image));
         }
 
         void buffer_set_clip_plane() const
@@ -200,14 +239,17 @@ class VolumeObject::Volume
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, color_format, color_bytes);
         }
 
-        void set_image(const image::Image<3>& image)
+        void set_image(const image::Image<3>& image, bool* size_changed)
         {
                 VkImageLayout image_layout;
+
                 if (!m_image || m_image_color_format != image.color_format
                     || m_image->width() != static_cast<unsigned>(image.size[0])
                     || m_image->height() != static_cast<unsigned>(image.size[1])
                     || m_image->depth() != static_cast<unsigned>(image.size[2]))
                 {
+                        *size_changed = true;
+
                         std::vector<VkFormat> formats;
                         bool color_volume;
 
@@ -232,6 +274,8 @@ class VolumeObject::Volume
                 }
                 else
                 {
+                        *size_changed = false;
+
                         image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 }
 
@@ -270,7 +314,7 @@ public:
         {
                 m_vp_matrix = vp_matrix;
                 m_world_clip_plane_equation = world_clip_plane_equation;
-                buffer_set_matrix_and_clip_plane();
+                buffer_set_coordinates();
         }
 
         void set_clip_plane(const vec4& world_clip_plane_equation)
@@ -292,29 +336,9 @@ public:
                 }
 
                 bool update_all = updates.contains(volume::Update::All);
-
-                if (update_all || updates.contains(volume::Update::Image))
-                {
-                        set_transfer_function();
-                        set_image(volume_object.volume().image);
-
-                        create_descriptor_sets();
-
-                        *update_command_buffers = true;
-                }
-
-                if (update_all || updates.contains(volume::Update::Parameters))
-                {
-                        buffer_set_parameters(
-                                volume_object.level_min(), volume_object.level_max(), volume_object.transparency(),
-                                volume_object.isosurface(), volume_object.isovalue());
-                }
-
-                if (update_all || updates.contains(volume::Update::Matrices))
-                {
-                        m_model_matrix = volume_object.matrix() * volume_object.volume().matrix;
-                        buffer_set_matrix_and_clip_plane();
-                }
+                bool update_image = update_all || updates.contains(volume::Update::Image);
+                bool update_parameters = update_all || updates.contains(volume::Update::Parameters);
+                bool update_matrices = update_all || updates.contains(volume::Update::Matrices);
 
                 ASSERT([&updates]() {
                         std::unordered_set<volume::Update> s = updates;
@@ -324,6 +348,32 @@ public:
                         s.erase(volume::Update::Matrices);
                         return s.empty();
                 }());
+
+                if (update_image)
+                {
+                        set_transfer_function();
+
+                        bool size_changed;
+                        set_image(volume_object.volume().image, &size_changed);
+                        update_matrices = update_matrices || size_changed;
+
+                        create_descriptor_sets();
+
+                        *update_command_buffers = true;
+                }
+
+                if (update_parameters)
+                {
+                        buffer_set_parameters(
+                                volume_object.level_min(), volume_object.level_max(), volume_object.transparency(),
+                                volume_object.isosurface(), volume_object.isovalue());
+                }
+
+                if (update_matrices)
+                {
+                        m_model_matrix = volume_object.matrix() * volume_object.volume().matrix;
+                        buffer_set_coordinates();
+                }
         }
 };
 
