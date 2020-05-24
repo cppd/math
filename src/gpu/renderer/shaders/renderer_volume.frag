@@ -92,22 +92,50 @@ layout(location = 0) out vec4 out_color;
 
 //
 
-vec4 scalar_volume_premultiplied_alphas(vec3 coordinates)
+float scalar_volume_value(vec3 p)
 {
-        float value = texture(image, coordinates).r;
+        float value = texture(image, p).r;
         value = (value - volume.window_offset) * volume.window_scale;
-        vec4 color = texture(transfer_function, clamp(value, 0, 1));
+        return clamp(value, 0, 1);
+}
+
+vec4 scalar_volume_premultiplied_alphas(vec3 p)
+{
+        float value = scalar_volume_value(p);
+        vec4 color = texture(transfer_function, value);
         color.a = clamp(color.a * volume.transparency, 0, 1);
         color.rgb *= color.a;
         return color;
 }
 
-vec4 color_volume_premultiplied_alphas(vec3 coordinates)
+vec4 color_volume_premultiplied_alphas(vec3 p)
 {
-        vec4 color = texture(image, coordinates);
+        vec4 color = texture(image, p);
         color.a = clamp(color.a * volume.transparency, 0, 1);
         color.rgb *= color.a;
         return color;
+}
+
+vec3 gradient(vec3 p)
+{
+        vec3 s1;
+        vec3 s2;
+
+        s1.x = scalar_volume_value(vec3(p.x - coordinates.gradient_h.x, p.y, p.z));
+        s2.x = scalar_volume_value(vec3(p.x + coordinates.gradient_h.x, p.y, p.z));
+
+        s1.y = scalar_volume_value(vec3(p.x, p.y - coordinates.gradient_h.y, p.z));
+        s2.y = scalar_volume_value(vec3(p.x, p.y + coordinates.gradient_h.y, p.z));
+
+        s1.z = scalar_volume_value(vec3(p.x, p.y, p.z - coordinates.gradient_h.z));
+        s2.z = scalar_volume_value(vec3(p.x, p.y, p.z + coordinates.gradient_h.z));
+
+        return s2 - s1;
+}
+
+vec3 world_normal(vec3 p)
+{
+        return normalize(coordinates.normal_matrix * gradient(p));
 }
 
 bool intersect(vec3 ray_org, vec3 ray_dir, out float first, out float second)
