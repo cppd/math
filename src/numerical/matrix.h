@@ -168,6 +168,21 @@ public:
 
                 return x;
         }
+
+        template <size_t R, size_t C>
+        Matrix<R, C, T> top_left() const
+        {
+                static_assert(R <= Rows && C <= Columns && (R < Rows || C < Columns));
+                Matrix<R, C, T> res;
+                for (unsigned r = 0; r < R; ++r)
+                {
+                        for (unsigned c = 0; c < C; ++c)
+                        {
+                                res(r, c) = m_data[r][c];
+                        }
+                }
+                return res;
+        }
 };
 
 template <size_t Rows, size_t Inner, size_t Columns, typename T>
@@ -260,5 +275,7 @@ std::string to_string(const Matrix<Rows, Columns, T>& m)
 }
 
 // Не менять эти типы.
+using mat3 = Matrix<3, 3, double>;
+using mat3f = Matrix<3, 3, float>;
 using mat4 = Matrix<4, 4, double>;
 using mat4f = Matrix<4, 4, float>;
