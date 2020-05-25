@@ -232,6 +232,23 @@ bool intersect(vec3 ray_org, vec3 ray_dir, out float first, out float second)
         return true;
 }
 
+vec3 find_isosurface(vec3 a, vec3 b, float sign_a)
+{
+        for (int i = 0; i < 5; ++i)
+        {
+                vec3 m = 0.5 * (a + b);
+                if (sign_a == sign(scalar_volume_value(m) - volume.isovalue))
+                {
+                        a = m;
+                }
+                else
+                {
+                        b = m;
+                }
+        }
+        return 0.5 * (a + b);
+}
+
 vec3 shade(vec3 p)
 {
         vec3 color = drawing.default_color * drawing.light_a;
@@ -289,7 +306,7 @@ void main(void)
                         }
                 }
         }
-        else
+        else if (!volume.isosurface)
         {
                 for (int s = 0; s < samples; ++s, pos += direction_step)
                 {
@@ -301,6 +318,23 @@ void main(void)
                                 break;
                         }
                 }
+        }
+        else
+        {
+                float first_sign = sign(scalar_volume_value(pos) - volume.isovalue);
+                int s = 0;
+                do
+                {
+                        pos += direction_step;
+                        ++s;
+                } while (s <= samples && first_sign == sign(scalar_volume_value(pos) - volume.isovalue));
+                if (s > samples)
+                {
+                        discard;
+                }
+                vec3 surface = find_isosurface(pos - direction_step, pos, first_sign);
+                transparency = 0;
+                color = shade(surface);
         }
 
         // srcColorBlendFactor = VK_BLEND_FACTOR_ONE
