@@ -6,10 +6,11 @@ Just for fun with mathematics and stuff
 
 ## Contents
 
-* [Description](#description)
+* [File types](#file-types)
+* [Real-time rendering](#real-time-rendering)
 * [Algorithms](#algorithms)
-  * [Algorithms in 2-space](#algorithms-in-2-space)
-  * [Algorithms in spaces with arbitrary number of dimensions](#algorithms-in-spaces-with-arbitrary-number-of-dimensions)
+  * [2-space](#2-space)
+  * [Spaces with arbitrary number of dimensions](#spaces-with-arbitrary-number-of-dimensions)
 * [Technical details](#technical-details)
 * [Images](#images)
   * [4-manifold reconstruction and path tracing in 5-space](#4-manifold-reconstruction-and-path-tracing-in-5-space)
@@ -18,58 +19,48 @@ Just for fun with mathematics and stuff
   * [2D discrete Fourier transform](#2d-discrete-fourier-transform)
   * [3D model](#3d-model)
 
-## Description
-
-External Input
+## File types
 
 * OBJ and STL files with objects in 3-space.
 * Extended OBJ and STL files with objects in n-space.
 * Text files with the coordinates of points in n-space, one point per line.
 
-Internal Input
+## Real-time rendering
 
-* Built-in objects.
-* Rendered 2D images.
-
-Algorithms
-
-* A variety of mathematical algorithms (section [“Algorithms”](#algorithms)).
-
-Output
-
-* 2D images with the output of
-  * real-time rendering of 3-space objects,
-  * non-real-time rendering of n-space objects on the internal (n-1)-dimensional screen,
-  * algorithms in 2-space.
-* OBJ and STL files with the output of algorithms in 3-space.
-* Extended OBJ and STL files with the output of algorithms in n-space.
+* Triangle meshes.
+* Volumes (ray marching).
+* Isosurfaces (ray marching).
 
 ## Algorithms
 
-These are some of the implemented algorithms. There are various other algorithms.
+Some of the implemented algorithms.
 
-### Algorithms in 2-space
+### 2-space
 
-Subject                                         | Algorithm                                                | Implementation | Language
-------------------------------------------------|----------------------------------------------------------|----------------|---------
-Discrete Fourier transform for arbitrary sizes  | Bluestein's algorithm and radix-2 fast Fourier transform | Parallel       | GLSL
-Optical flow                                    | Pyramidal Lucas-Kanade                                   | Parallel       | GLSL
-Convex hull                                     | Divide et impera                                         | Parallel       | GLSL
+#### C++, GLSL
 
-### Algorithms in spaces with arbitrary number of dimensions
+Subject                                        | Algorithm                                                | Implementation
+-----------------------------------------------|----------------------------------------------------------|----------------
+Discrete Fourier transform for arbitrary sizes | Bluestein's algorithm and radix-2 fast Fourier transform | Parallel
+Optical flow                                   | Pyramidal Lucas-Kanade                                   | Parallel
+Convex hull                                    | Divide et impera                                         | Parallel
 
-Subject                                         | Algorithm                                          | Implementation     | Language
-------------------------------------------------|----------------------------------------------------|--------------------|---------
-Convex hull                                     | Randomized incremental                             | Partially parallel | C++
-Delaunay triangulation                          | Convex hull of paraboloid                          | Sequential         | C++
-Voronoi diagram                                 | The Delaunay triangulation                         | Sequential         | C++
-Manifold reconstruction                         | Cocone                                             | Sequential         | C++
-Manifold reconstruction with boundary detection | BoundCocone                                        | Sequential         | C++
-Euclidean minimum spanning tree                 | Kruskal’s algorithm and the Delaunay triangulation | Sequential         | C++
-Intersection of hyperplanes                     | Gaussian elimination                               | Sequential         | C++
-Intersection of convex polytopes                | The simplex algorithm                              | Sequential         | C++
-Ray intersection acceleration                   | Spatial subdivision and 2<sup>d</sup>-trees        | Parallel           | C++
-Realistic visualization                         | Path tracing                                       | Parallel           | C++
+### Spaces with arbitrary number of dimensions
+
+#### C++
+
+Subject                                         | Algorithm                                          | Implementation
+------------------------------------------------|----------------------------------------------------|--------------------
+Convex hull                                     | Randomized incremental                             | Partially parallel
+Delaunay triangulation                          | Convex hull of paraboloid                          | Sequential
+Voronoi diagram                                 | The Delaunay triangulation                         | Sequential
+Manifold reconstruction                         | Cocone                                             | Sequential
+Manifold reconstruction with boundary detection | BoundCocone                                        | Sequential
+Euclidean minimum spanning tree                 | Kruskal’s algorithm and the Delaunay triangulation | Sequential
+Intersection of hyperplanes                     | Gaussian elimination                               | Sequential
+Intersection of convex polytopes                | The simplex algorithm                              | Sequential
+Ray intersection acceleration                   | Spatial subdivision and 2<sup>d</sup>-trees        | Parallel
+Realistic visualization                         | Path tracing                                       | Parallel
 
 ## Technical details
 
