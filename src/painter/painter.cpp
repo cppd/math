@@ -314,49 +314,30 @@ Color direct_diffuse_lighting(
 }
 
 template <size_t N, typename T>
-Color trace_path(
+bool diffuse_weighted_ray(
         const PaintData<N, T>& paint_data,
-        Counter* ray_count,
         PainterRandomEngine<T>& random_engine,
-        int recursion_level,
-        Color::DataType color_level,
-        const Ray<N, T>& ray,
-        bool diffuse_reflection);
-
-template <size_t N, typename T>
-Color diffuse_lighting(
-        const PaintData<N, T>& paint_data,
-        Counter* ray_count,
-        PainterRandomEngine<T>& random_engine,
-        int recursion_level,
-        Color::DataType color_level,
         const Vector<N, T>& point,
         const Vector<N, T>& shading_normal,
         const Vector<N, T>& geometric_normal,
-        bool mesh)
+        bool mesh,
+        Ray<N, T>* ray)
 {
-        if (recursion_level < MAX_RECURSION_LEVEL)
+        // Распределение случайного луча с вероятностью по косинусу угла между нормалью и случайным вектором.
+
+        // Случайный вектор диффузного освещения надо определять от видимой нормали.
+        *ray = Ray<N, T>(point, random_cosine_weighted_on_hemisphere(random_engine, shading_normal));
+
+        if (mesh && dot(ray->dir(), geometric_normal) <= DOT_PRODUCT_EPSILON<T>)
         {
-                // Распределение случайного луча с вероятностью по косинусу угла между нормалью и случайным вектором.
-
-                // Случайный вектор диффузного освещения надо определять от видимой нормали.
-                Ray<N, T> diffuse_ray =
-                        Ray<N, T>(point, random_cosine_weighted_on_hemisphere(random_engine, shading_normal));
-
-                if (mesh && dot(diffuse_ray.dir(), geometric_normal) <= DOT_PRODUCT_EPSILON<T>)
-                {
-                        // Если получившийся случайный вектор диффузного отражения показывает
-                        // в другую сторону от поверхности, то диффузного освещения нет.
-                        return Color(0);
-                }
-
-                diffuse_ray.move_along_dir(paint_data.ray_offset);
-
-                return trace_path(
-                        paint_data, ray_count, random_engine, recursion_level + 1, color_level, diffuse_ray, true);
+                // Если получившийся случайный вектор диффузного отражения показывает
+                // в другую сторону от поверхности, то диффузного освещения нет.
+                return false;
         }
 
-        return Color(0);
+        ray->move_along_dir(paint_data.ray_offset);
+
+        return true;
 }
 
 template <size_t N, typename T>
@@ -366,8 +347,7 @@ Color trace_path(
         PainterRandomEngine<T>& random_engine,
         int recursion_level,
         Color::DataType color_level,
-        const Ray<N, T>& ray,
-        bool diffuse_reflection)
+        const Ray<N, T>& ray)
 {
         ++(*ray_count);
 
@@ -377,20 +357,20 @@ Color trace_path(
 
         if (!ray_intersection(paint_data.objects, ray, &t, &surface, &intersection_data))
         {
-                return (paint_data.default_surface_properties.is_light_source() && diffuse_reflection)
-                               ? paint_data.default_surface_properties.light_source_color()
-                               : paint_data.default_surface_properties.color();
+                if (recursion_level > 0)
+                {
+                        return paint_data.default_surface_properties.is_light_source()
+                                       ? paint_data.default_surface_properties.light_source_color()
+                                       : Color(0);
+                }
+                return paint_data.default_surface_properties.color();
         }
 
         Vector<N, T> point = ray.point(t);
-
         const SurfaceProperties surface_properties = surface->properties(point, intersection_data);
-
         Vector<N, T> geometric_normal = surface_properties.geometric_normal();
 
         T dot_dir_and_geometric_normal = dot(ray.dir(), geometric_normal);
-
-        bool mesh = surface_properties.is_mesh();
 
         if (std::abs(dot_dir_and_geometric_normal) <= DOT_PRODUCT_EPSILON<T>)
         {
@@ -399,8 +379,10 @@ Color trace_path(
 
         if (surface_properties.is_light_source())
         {
-                return (diffuse_reflection) ? surface_properties.light_source_color() : surface_properties.color();
+                return recursion_level > 0 ? surface_properties.light_source_color() : surface_properties.color();
         }
+
+        bool mesh = surface_properties.is_mesh();
 
         Vector<N, T> shading_normal =
                 (mesh && paint_data.smooth_normal) ? surface_properties.shading_normal() : geometric_normal;
@@ -429,11 +411,22 @@ Color trace_path(
                                 ray_count, paint_data.objects, paint_data.light_sources, point, geometric_normal,
                                 shading_normal, mesh, paint_data.ray_offset, paint_data.smooth_normal);
 
-                        Color diffuse = diffuse_lighting(
-                                paint_data, ray_count, random_engine, recursion_level, new_color_level, point,
-                                shading_normal, geometric_normal, mesh);
+                        color += surface_color * direct;
 
-                        color += surface_color * (direct + diffuse);
+                        if (recursion_level <= MAX_RECURSION_LEVEL)
+                        {
+                                Ray<N, T> new_ray;
+                                if (diffuse_weighted_ray(
+                                            paint_data, random_engine, point, shading_normal, geometric_normal, mesh,
+                                            &new_ray))
+                                {
+                                        Color diffuse = trace_path(
+                                                paint_data, ray_count, random_engine, recursion_level + 1,
+                                                new_color_level, new_ray);
+
+                                        color += surface_color * diffuse;
+                                }
+                        }
                 }
         }
 
@@ -486,13 +479,10 @@ void paint_pixels(
                 {
                         constexpr int recursion_level = 0;
                         constexpr Color::DataType color_level = 1;
-                        constexpr bool diffuse_reflection = false;
 
                         Ray<N, T> ray = projector.ray(screen_point + sample_point);
 
-                        color += trace_path(
-                                paint_data, &ray_count, random_engine, recursion_level, color_level, ray,
-                                diffuse_reflection);
+                        color += trace_path(paint_data, &ray_count, random_engine, recursion_level, color_level, ray);
                 }
 
                 Color pixel_color = pixels->add_color_and_samples(pixel, color, samples->size());
