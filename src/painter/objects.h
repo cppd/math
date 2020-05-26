@@ -71,7 +71,7 @@ public:
         {
                 m_shading_normal = normal.normalized();
         }
-        const Vector<N, T>& get_shading_normal() const
+        const Vector<N, T>& shading_normal() const
         {
                 return m_shading_normal;
         }
@@ -80,7 +80,7 @@ public:
         {
                 m_geometric_normal = normal.normalized();
         }
-        const Vector<N, T>& get_geometric_normal() const
+        const Vector<N, T>& geometric_normal() const
         {
                 return m_geometric_normal;
         }
@@ -89,7 +89,7 @@ public:
         {
                 m_color = color;
         }
-        const Color& get_color() const
+        const Color& color() const
         {
                 return m_color;
         }
@@ -98,7 +98,7 @@ public:
         {
                 m_light_source_color = light_source_color;
         }
-        const Color& get_light_source_color() const
+        const Color& light_source_color() const
         {
                 return m_light_source_color;
         }
@@ -108,11 +108,11 @@ public:
                 m_diffuse = diffuse;
                 m_fresnel = fresnel;
         }
-        T get_diffuse() const
+        T diffuse() const
         {
                 return m_diffuse;
         }
-        T get_fresnel() const
+        T fresnel() const
         {
                 return m_fresnel;
         }
@@ -121,7 +121,7 @@ public:
         {
                 m_refraction = refraction;
         }
-        T get_refraction() const
+        T refraction() const
         {
                 return m_refraction;
         }

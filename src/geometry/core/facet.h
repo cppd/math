@@ -87,7 +87,7 @@ public:
         {
                 m_list_iter = iter;
         }
-        FacetIter<Derived> get_iter() const
+        FacetIter<Derived> iter() const
         {
                 return m_list_iter;
         }
@@ -97,7 +97,7 @@ public:
                 ASSERT(i < N);
                 m_links[i] = facet;
         }
-        Derived* get_link(unsigned i) const
+        Derived* link(unsigned i) const
         {
                 ASSERT(i < N);
                 return m_links[i];

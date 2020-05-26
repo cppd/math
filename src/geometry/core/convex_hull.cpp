@@ -535,7 +535,7 @@ void create_facets(
         {
                 for (unsigned r = 0; r < facet->vertices().size(); ++r)
                 {
-                        Facet* link_facet = facet->get_link(r);
+                        Facet* link_facet = facet->link(r);
 
                         if (link_facet->marked_as_visible())
                         {
@@ -654,7 +654,7 @@ void add_point_to_convex_hull(
         // Удаление видимых граней
         for (const Facet<N, S, C>* facet : (*point_conflicts)[point])
         {
-                facets->erase(facet->get_iter());
+                facets->erase(facet->iter());
         }
 
         // Для этой точки больше не нужен список видимых граней

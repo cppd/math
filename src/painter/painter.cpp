@@ -378,15 +378,15 @@ Color trace_path(
         if (!ray_intersection(paint_data.objects, ray, &t, &surface, &intersection_data))
         {
                 return (paint_data.default_surface_properties.is_light_source() && diffuse_reflection)
-                               ? paint_data.default_surface_properties.get_light_source_color()
-                               : paint_data.default_surface_properties.get_color();
+                               ? paint_data.default_surface_properties.light_source_color()
+                               : paint_data.default_surface_properties.color();
         }
 
         Vector<N, T> point = ray.point(t);
 
         const SurfaceProperties surface_properties = surface->properties(point, intersection_data);
 
-        Vector<N, T> geometric_normal = surface_properties.get_geometric_normal();
+        Vector<N, T> geometric_normal = surface_properties.geometric_normal();
 
         T dot_dir_and_geometric_normal = dot(ray.dir(), geometric_normal);
 
@@ -399,12 +399,11 @@ Color trace_path(
 
         if (surface_properties.is_light_source())
         {
-                return (diffuse_reflection) ? surface_properties.get_light_source_color()
-                                            : surface_properties.get_color();
+                return (diffuse_reflection) ? surface_properties.light_source_color() : surface_properties.color();
         }
 
         Vector<N, T> shading_normal =
-                (mesh && paint_data.smooth_normal) ? surface_properties.get_shading_normal() : geometric_normal;
+                (mesh && paint_data.smooth_normal) ? surface_properties.shading_normal() : geometric_normal;
 
         ASSERT(dot(geometric_normal, shading_normal) > DOT_PRODUCT_EPSILON<T>);
 
@@ -418,9 +417,9 @@ Color trace_path(
 
         Color color(0);
 
-        if (surface_properties.get_diffuse() > 0)
+        if (surface_properties.diffuse() > 0)
         {
-                Color surface_color = surface_properties.get_diffuse() * surface_properties.get_color();
+                Color surface_color = surface_properties.diffuse() * surface_properties.color();
 
                 Color::DataType new_color_level = color_level * surface_color.max_element();
 
