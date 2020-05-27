@@ -36,7 +36,8 @@ public:
         virtual void painter_pixel_after(
                 unsigned thread_number,
                 const std::array<int_least16_t, N>& pixel,
-                const Color& c) = 0;
+                const Color& c,
+                float coverage) = 0;
         virtual void painter_error_message(const std::string& msg) = 0;
 };
 

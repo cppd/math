@@ -515,13 +515,7 @@ void paint_pixels(
                 pixels->add_color_and_samples(
                         pixel, color, hit_sample_count, all_sample_count, &pixel_color, &coverage);
 
-                if (coverage < 1)
-                {
-                        pixel_color =
-                                interpolation(paint_data.default_surface_properties.color(), pixel_color, coverage);
-                }
-
-                painter_notifier->painter_pixel_after(thread_number, pixel, pixel_color);
+                painter_notifier->painter_pixel_after(thread_number, pixel, pixel_color, coverage);
         }
 }
 

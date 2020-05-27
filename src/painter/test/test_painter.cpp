@@ -47,9 +47,11 @@ class Images : public PainterNotifier<3>
 
         std::vector<image::ColorImage<2>> m_images;
         std::array<int, 3> m_size;
+        Color m_default_color;
 
 public:
-        explicit Images(const std::array<int, 3>& size) : m_size(size)
+        Images(const std::array<int, 3>& size, const Color& default_color)
+                : m_size(size), m_default_color(default_color)
         {
                 if (std::any_of(size.cbegin(), size.cend(), [](int v) { return v < 1; }))
                 {
@@ -66,11 +68,17 @@ public:
         {
         }
 
-        void painter_pixel_after(unsigned, const std::array<int_least16_t, 3>& pixel, const Color& color) override
+        void painter_pixel_after(
+                unsigned,
+                const std::array<int_least16_t, 3>& pixel,
+                const Color& color,
+                float coverage) override
         {
                 try
                 {
-                        m_images[pixel[2]].set_pixel(std::array<int, 2>{pixel[0], m_size[1] - 1 - pixel[1]}, color);
+                        m_images[pixel[2]].set_pixel(
+                                std::array<int, 2>{pixel[0], m_size[1] - 1 - pixel[1]},
+                                interpolation(m_default_color, color, coverage));
                 }
                 catch (...)
                 {
@@ -149,7 +157,7 @@ void test_painter_file(
         constexpr int max_pass_count = 1;
         constexpr bool smooth_normal = true;
 
-        Images images(paint_objects->projector().screen_size());
+        Images images(paint_objects->projector().screen_size(), paint_objects->default_surface_properties().color());
 
         VisibleBarPaintbrush<N - 1> paintbrush(paint_objects->projector().screen_size(), paint_height, max_pass_count);
 

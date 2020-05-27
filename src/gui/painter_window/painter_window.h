@@ -249,14 +249,20 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
         void painter_pixel_after(
                 unsigned /*thread_number*/,
                 const std::array<int_least16_t, N_IMAGE>& pixel,
-                const Color& color) override
+                const Color& color,
+                float coverage) override
         {
                 std::array<int_least16_t, N_IMAGE> p = pixel;
                 p[1] = m_height - 1 - pixel[1];
 
-                unsigned char r = color_conversion::linear_float_to_srgb_uint8(color.red());
-                unsigned char g = color_conversion::linear_float_to_srgb_uint8(color.green());
-                unsigned char b = color_conversion::linear_float_to_srgb_uint8(color.blue());
+                const Color& c =
+                        (coverage >= 1)
+                                ? color
+                                : interpolation(m_paint_objects->default_surface_properties().color(), color, coverage);
+
+                unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
+                unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
+                unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
 
                 m_pixels_bgr[pixel_index(p)] = Srgb8(r, g, b).to_uint_bgr();
         }
