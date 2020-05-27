@@ -56,11 +56,11 @@ public:
 
         Color() = default;
 
-        explicit Color(T grayscale) : m_data(grayscale)
+        constexpr explicit Color(T grayscale) : m_data(grayscale)
         {
         }
 
-        explicit Color(Vector<3, T>&& rgb) : m_data(std::move(rgb))
+        constexpr explicit Color(Vector<3, T>&& rgb) : m_data(std::move(rgb))
         {
         }
 
@@ -121,6 +121,16 @@ public:
         void operator+=(const Color& c)
         {
                 m_data += c.m_data;
+        }
+
+        bool operator==(const Color& c) const
+        {
+                return m_data == c.m_data;
+        }
+
+        bool operator!=(const Color& c) const
+        {
+                return m_data != c.m_data;
         }
 };
 
