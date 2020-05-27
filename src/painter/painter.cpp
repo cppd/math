@@ -60,21 +60,32 @@ using PainterSampler = StratifiedJitteredSampler<N, T>;
 
 static_assert(std::is_floating_point_v<Color::DataType>);
 
+constexpr Color EMPTY_COLOR(-1e38);
+
 template <size_t N>
 class Pixels
 {
+        using CounterType = std::uint_least16_t;
+
         class Pixel
         {
                 Color m_color_sum{0};
-                int m_sample_sum = 0;
+                CounterType m_hit_sample_sum = 0;
+                CounterType m_all_sample_sum = 0;
 
         public:
-                Color add_color_and_samples(const Color& color, int samples)
+                void add_color_and_samples(
+                        const Color& color,
+                        CounterType hit_samples,
+                        CounterType all_samples,
+                        Color* result_color,
+                        float* coverage)
                 {
+                        m_all_sample_sum += all_samples;
+                        m_hit_sample_sum += hit_samples;
+                        *coverage = static_cast<float>(m_hit_sample_sum) / m_all_sample_sum;
                         m_color_sum += color;
-                        m_sample_sum += samples;
-
-                        return m_color_sum / m_sample_sum;
+                        *result_color = m_hit_sample_sum > 0 ? m_color_sum / m_hit_sample_sum : m_color_sum;
                 }
         };
 
@@ -87,9 +98,16 @@ public:
                 m_pixels.resize(m_global_index.count());
         }
 
-        Color add_color_and_samples(const std::array<int_least16_t, N>& pixel, const Color& color, int samples)
+        void add_color_and_samples(
+                const std::array<int_least16_t, N>& pixel,
+                const Color& color,
+                CounterType hit_samples,
+                CounterType all_samples,
+                Color* result_color,
+                float* coverage)
         {
-                return m_pixels[m_global_index.compute(pixel)].add_color_and_samples(color, samples);
+                m_pixels[m_global_index.compute(pixel)].add_color_and_samples(
+                        color, hit_samples, all_samples, result_color, coverage);
         }
 };
 
@@ -363,7 +381,7 @@ Color trace_path(
                                        ? paint_data.default_surface_properties.light_source_color()
                                        : Color(0);
                 }
-                return paint_data.default_surface_properties.color();
+                return EMPTY_COLOR;
         }
 
         Vector<N, T> point = ray.point(t);
@@ -375,11 +393,6 @@ Color trace_path(
         if (std::abs(dot_dir_and_geometric_normal) <= DOT_PRODUCT_EPSILON<T>)
         {
                 return Color(0);
-        }
-
-        if (surface_properties.is_light_source())
-        {
-                return recursion_level > 0 ? surface_properties.light_source_color() : surface_properties.color();
         }
 
         bool mesh = surface_properties.is_mesh();
@@ -398,6 +411,11 @@ Color trace_path(
         }
 
         Color color(0);
+
+        if (surface_properties.is_light_source())
+        {
+                color += surface_properties.light_source_color();
+        }
 
         if (surface_properties.diffuse() > 0)
         {
@@ -460,9 +478,9 @@ void paint_pixels(
         std::array<int_least16_t, N - 1> pixel;
 
         Counter ray_count = 0;
-        Counter sample_count = 0;
+        Counter all_sample_count = 0;
 
-        while (!(*stop) && paintbrush->next_pixel(ray_count, sample_count, &pixel))
+        while (!(*stop) && paintbrush->next_pixel(ray_count, all_sample_count, &pixel))
         {
                 painter_notifier->painter_pixel_before(thread_number, pixel);
 
@@ -471,7 +489,8 @@ void paint_pixels(
                 sampler.generate(random_engine, samples);
 
                 ray_count = 0;
-                sample_count = samples->size();
+                all_sample_count = samples->size();
+                Counter hit_sample_count = 0;
 
                 Color color(0);
 
@@ -482,10 +501,25 @@ void paint_pixels(
 
                         Ray<N, T> ray = projector.ray(screen_point + sample_point);
 
-                        color += trace_path(paint_data, &ray_count, random_engine, recursion_level, color_level, ray);
+                        Color c = trace_path(paint_data, &ray_count, random_engine, recursion_level, color_level, ray);
+
+                        if (c != EMPTY_COLOR)
+                        {
+                                color += c;
+                                ++hit_sample_count;
+                        }
                 }
 
-                Color pixel_color = pixels->add_color_and_samples(pixel, color, samples->size());
+                Color pixel_color;
+                float coverage;
+                pixels->add_color_and_samples(
+                        pixel, color, hit_sample_count, all_sample_count, &pixel_color, &coverage);
+
+                if (coverage < 1)
+                {
+                        pixel_color =
+                                interpolation(paint_data.default_surface_properties.color(), pixel_color, coverage);
+                }
 
                 painter_notifier->painter_pixel_after(thread_number, pixel, pixel_color);
         }
