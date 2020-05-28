@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/model/volume_utility.h>
 
 #include <cmath>
 #include <cstring>
@@ -50,17 +51,25 @@ void check_volume_size(unsigned size)
 }
 
 template <size_t N, size_t Level, typename F>
-void cube_pixels(float size, float max_i_reciprocal, Vector<N, float>* coordinates, const F& f)
+void image_coordinates(const std::array<int, N>& size, Vector<N, float>* coordinates, const F& f)
 {
         static_assert(Level < N);
 
-        for (float i = 0; i < size; ++i)
+        constexpr size_t D = N - Level - 1;
+
+        ASSERT(size[D] > 0);
+        ASSERT(size[D] <= 1e6);
+
+        float max_i = size[D] - 1;
+        float max_i_reciprocal = 1.0f / max_i;
+
+        for (float i = 0; i <= max_i; ++i)
         {
-                (*coordinates)[N - Level - 1] = i * max_i_reciprocal;
+                (*coordinates)[D] = i * max_i_reciprocal;
 
                 if constexpr (Level + 1 < N)
                 {
-                        cube_pixels<N, Level + 1>(size, max_i_reciprocal, coordinates, f);
+                        image_coordinates<N, Level + 1>(size, coordinates, f);
                 }
                 else
                 {
@@ -70,59 +79,70 @@ void cube_pixels(float size, float max_i_reciprocal, Vector<N, float>* coordinat
 }
 
 template <size_t N, typename F>
-void cube_pixels(unsigned size, const F& f)
+void image_coordinates(const std::array<int, N>& size, const F& f)
 {
         Vector<N, float> coordinates;
-        cube_pixels<N, 0>(size, 1.0f / (size - 1), &coordinates, f);
+        image_coordinates<N, 0>(size, &coordinates, f);
 }
 
 template <size_t N>
-void init_cube_volume(unsigned size, image::ColorFormat color_format, volume::Volume<N>* volume)
+void init_volume(const std::array<int, N>& size, image::ColorFormat color_format, volume::Volume<N>* volume)
 {
-        volume->matrix = Matrix<N + 1, N + 1, double>(1);
-
-        for (unsigned i = 0; i < N; ++i)
-        {
-                volume->image.size[i] = size;
-        }
-
+        volume->image.size = size;
         volume->image.color_format = color_format;
         volume->image.pixels.resize(
                 image::format_pixel_size_in_bytes(color_format) * multiply_all<long long>(volume->image.size));
+        volume->matrix = volume::matrix_for_image_size(size);
 }
 
-template <typename T>
-uint8_t float_to_uint8(T v)
+template <typename I, typename F>
+I float_to_uint(F v)
 {
-        static_assert(std::is_floating_point_v<T>);
-        return v * T(limits<uint8_t>::max()) + T(0.5);
-}
-
-template <typename T>
-uint16_t float_to_uint16(T v)
-{
-        static_assert(std::is_floating_point_v<T>);
-        return v * T(limits<uint16_t>::max()) + T(0.5);
+        static_assert(std::is_same_v<F, float>);
+        static_assert(std::is_same_v<I, uint8_t> || std::is_same_v<I, uint16_t>);
+        return v * F(limits<I>::max()) + F(0.5);
 }
 
 template <size_t N>
 std::unique_ptr<volume::Volume<N>> scalar_cube(unsigned size)
 {
         constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R16;
-        constexpr std::uint16_t VALUE = 1000;
+        using DATA_TYPE = uint16_t;
+
+        constexpr DATA_TYPE VALUE = 10000;
+        constexpr DATA_TYPE MIN = 500;
 
         check_volume_size<N>(size);
 
         volume::Volume<N> volume;
 
-        init_cube_volume(size, COLOR_FORMAT, &volume);
-
-        auto iter = volume.image.pixels.begin();
-        while (iter != volume.image.pixels.end())
+        std::array<int, N> sizes;
+        for (unsigned i = 0; i < N; ++i)
         {
-                std::memcpy(&(*iter), &VALUE, sizeof(VALUE));
-                std::advance(iter, sizeof(VALUE));
+                sizes[i] = size;
         }
+        init_volume(sizes, COLOR_FORMAT, &volume);
+
+        std::byte* ptr = volume.image.pixels.data();
+
+        const Vector<N, float> center(0.5f);
+        image_coordinates<N>(volume.image.size, [&](const Vector<N, float>& coordinates) {
+                Vector<N, float> p = coordinates - center;
+                bool cube = true;
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        if (std::abs(p[i]) > 0.4f)
+                        {
+                                cube = false;
+                                break;
+                        }
+                }
+                DATA_TYPE value = cube ? VALUE : MIN;
+                std::memcpy(ptr, &value, sizeof(value));
+                ptr += sizeof(value);
+        });
+
+        ASSERT(ptr = volume.image.pixels.data() + volume.image.pixels.size());
 
         return std::make_unique<volume::Volume<N>>(std::move(volume));
 }
@@ -131,21 +151,34 @@ template <size_t N>
 std::unique_ptr<volume::Volume<N>> scalar_ellipsoid(unsigned size)
 {
         constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R16;
+        using DATA_TYPE = uint16_t;
+
+        constexpr DATA_TYPE MIN = 500;
 
         check_volume_size<N>(size);
 
+        if (size / 2 < 2)
+        {
+                error("Ellipsiod size is too small");
+        }
+
         volume::Volume<N> volume;
 
-        init_cube_volume(size, COLOR_FORMAT, &volume);
+        std::array<int, N> sizes;
+        sizes[0] = size;
+        for (unsigned i = 1; i < N; ++i)
+        {
+                sizes[i] = size / 2;
+        }
+        init_volume(sizes, COLOR_FORMAT, &volume);
 
         std::byte* ptr = volume.image.pixels.data();
 
         const Vector<N, float> center(0.5f);
-        cube_pixels<N>(size, [&](const Vector<N, float>& coordinates) {
+        image_coordinates<N>(volume.image.size, [&](const Vector<N, float>& coordinates) {
                 Vector<N, float> p = coordinates - center;
-                p[0] *= 0.5f;
-                float distance = 4.0 * p.norm();
-                uint16_t value = float_to_uint16(1.0f - std::clamp(distance, 0.0f, 1.0f));
+                float distance = 2 * p.norm();
+                DATA_TYPE value = std::max(MIN, float_to_uint<DATA_TYPE>(1.0f - std::clamp(distance, 0.0f, 1.0f)));
                 std::memcpy(ptr, &value, sizeof(value));
                 ptr += sizeof(value);
         });
@@ -166,19 +199,24 @@ std::unique_ptr<volume::Volume<N>> color_cube(unsigned size)
 
         volume::Volume<N> volume;
 
-        init_cube_volume(size, COLOR_FORMAT, &volume);
+        std::array<int, N> sizes;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                sizes[i] = size;
+        }
+        init_volume(sizes, COLOR_FORMAT, &volume);
 
         std::array<std::uint8_t, 4> color;
-        uint8_t alpha = std::max(uint8_t(1), float_to_uint8(1.0f / size));
+        uint8_t alpha = std::max(uint8_t(1), float_to_uint<uint8_t>(1.0f / size));
         color[3] = alpha;
 
         std::byte* ptr = volume.image.pixels.data();
 
-        cube_pixels<N>(size, [&](const Vector<N, float>& coordinates) {
+        image_coordinates<N>(volume.image.size, [&](const Vector<N, float>& coordinates) {
                 for (size_t n = 0; n < N; ++n)
                 {
                         float c = coordinates[n] / (1 << (n / 3));
-                        color[n % 3] = float_to_uint8(c);
+                        color[n % 3] = float_to_uint<uint8_t>(c);
                 }
                 std::memcpy(ptr, color.data(), color.size());
                 ptr += color.size();
