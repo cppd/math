@@ -100,7 +100,7 @@ float scalar_volume_value(vec3 p)
         return clamp(value, 0, 1);
 }
 
-vec4 scalar_volume_premultiplied_alphas(vec3 p)
+vec4 scalar_volume_multiplied_by_alpha(vec3 p)
 {
         float value = scalar_volume_value(p);
         vec4 color = texture(transfer_function, value);
@@ -109,7 +109,7 @@ vec4 scalar_volume_premultiplied_alphas(vec3 p)
         return color;
 }
 
-vec4 color_volume_premultiplied_alphas(vec3 p)
+vec4 color_volume_multiplied_by_alpha(vec3 p)
 {
         vec4 color = texture(image, p);
         color.a = clamp(color.a * volume.transparency, 0, 1);
@@ -297,7 +297,7 @@ void main(void)
         {
                 for (int s = 0; s < samples; ++s, pos += direction_step)
                 {
-                        vec4 c = color_volume_premultiplied_alphas(pos);
+                        vec4 c = color_volume_multiplied_by_alpha(pos);
                         color += transparency * c.rgb;
                         transparency *= 1.0 - c.a;
                         if (transparency < MIN_TRANSPARENCY)
@@ -310,7 +310,7 @@ void main(void)
         {
                 for (int s = 0; s < samples; ++s, pos += direction_step)
                 {
-                        vec4 c = scalar_volume_premultiplied_alphas(pos);
+                        vec4 c = scalar_volume_multiplied_by_alpha(pos);
                         color += transparency * c.rgb;
                         transparency *= 1.0 - c.a;
                         if (transparency < MIN_TRANSPARENCY)
