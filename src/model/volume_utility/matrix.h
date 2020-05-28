@@ -28,6 +28,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace volume
 {
 template <size_t N>
+Matrix<N + 1, N + 1, double> matrix_for_image_size(const std::array<int, N>& size)
+{
+        Matrix<N + 1, N + 1, double> matrix(1);
+        double max_size = *std::max_element(size.cbegin(), size.cend());
+        for (unsigned i = 0; i < N; ++i)
+        {
+                matrix(i, i) = size[i] / max_size;
+        }
+        return matrix;
+}
+
+template <size_t N>
 Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(
         const Volume<N>& volume,
         double size,
