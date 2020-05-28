@@ -66,6 +66,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
         const int m_height;
         long long m_slice_offset;
         std::vector<std::uint_least32_t> m_pixels_bgr;
+        std::vector<std::byte> m_pixels_bytes_rgba;
         painter::VisibleBarPaintbrush<N_IMAGE> m_paintbrush;
         std::vector<long long> m_busy_pixels;
         std::atomic_bool m_stop;
@@ -208,31 +209,21 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
 
         void add_volume() const override
         {
-                if (m_screen_size.size() != 3)
+                if (N_IMAGE != 3)
                 {
                         return;
                 }
 
-                ASSERT(multiply_all<long long>(m_screen_size) == static_cast<long long>(m_pixels_bgr.size()));
+                ASSERT(4 * multiply_all<long long>(m_screen_size)
+                       == static_cast<long long>(m_pixels_bytes_rgba.size()));
 
                 image::Image<N_IMAGE> image;
 
                 image.size = m_screen_size;
                 image.color_format = image::ColorFormat::R8G8B8A8_SRGB;
-                image.pixels.resize(4 * multiply_all<long long>(m_screen_size));
 
-                std::byte* ptr = image.pixels.data();
-                for (std::uint_least32_t c : m_pixels_bgr)
-                {
-                        unsigned char b = c & 0xff;
-                        unsigned char g = (c >> 8) & 0xff;
-                        unsigned char r = (c >> 16) & 0xff;
-                        unsigned char a = 1;
-                        std::memcpy(ptr++, &r, 1);
-                        std::memcpy(ptr++, &g, 1);
-                        std::memcpy(ptr++, &b, 1);
-                        std::memcpy(ptr++, &a, 1);
-                }
+                image.pixels.resize(m_pixels_bytes_rgba.size());
+                std::memcpy(image.pixels.data(), m_pixels_bytes_rgba.data(), image.pixels.size());
 
                 process::load_from_volume_image<N_IMAGE>("Painter Volume", std::move(image));
         }
@@ -246,6 +237,15 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 m_busy_pixels[thread_number] = pixel_index(p);
         }
 
+        void set_pixels_rgba(long long pixel_index, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+        {
+                std::byte* ptr = &m_pixels_bytes_rgba[4 * pixel_index];
+                std::memcpy(ptr++, &r, 1);
+                std::memcpy(ptr++, &g, 1);
+                std::memcpy(ptr++, &b, 1);
+                std::memcpy(ptr++, &a, 1);
+        }
+
         void painter_pixel_after(
                 unsigned /*thread_number*/,
                 const std::array<int_least16_t, N_IMAGE>& pixel,
@@ -255,16 +255,50 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 std::array<int_least16_t, N_IMAGE> p = pixel;
                 p[1] = m_height - 1 - pixel[1];
 
-                const Color& c =
-                        (coverage >= 1)
-                                ? color
-                                : interpolation(m_paint_objects->default_surface_properties().color(), color, coverage);
+                long long index = pixel_index(p);
 
-                unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
-                unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
-                unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
+                if (coverage >= 1)
+                {
+                        unsigned char r = color_conversion::linear_float_to_srgb_uint8(color.red());
+                        unsigned char g = color_conversion::linear_float_to_srgb_uint8(color.green());
+                        unsigned char b = color_conversion::linear_float_to_srgb_uint8(color.blue());
+                        m_pixels_bgr[index] = Srgb8(r, g, b).to_uint_bgr();
+                        if (N_IMAGE == 3)
+                        {
+                                set_pixels_rgba(index, r, g, b, 255);
+                        }
+                        return;
+                }
 
-                m_pixels_bgr[pixel_index(p)] = Srgb8(r, g, b).to_uint_bgr();
+                if (coverage <= 0)
+                {
+                        Color c = m_paint_objects->default_surface_properties().color();
+                        unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
+                        unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
+                        unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
+                        m_pixels_bgr[index] = Srgb8(r, g, b).to_uint_bgr();
+                        if (N_IMAGE == 3)
+                        {
+                                set_pixels_rgba(index, 0, 0, 0, 0);
+                        }
+                        return;
+                }
+
+                {
+                        Color c = interpolation(m_paint_objects->default_surface_properties().color(), color, coverage);
+                        unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
+                        unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
+                        unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
+                        m_pixels_bgr[index] = Srgb8(r, g, b).to_uint_bgr();
+                }
+                if (N_IMAGE == 3)
+                {
+                        unsigned char r = color_conversion::linear_float_to_srgb_uint8(color.red());
+                        unsigned char g = color_conversion::linear_float_to_srgb_uint8(color.green());
+                        unsigned char b = color_conversion::linear_float_to_srgb_uint8(color.blue());
+                        unsigned char a = color_conversion::linear_float_to_linear_uint8(coverage);
+                        set_pixels_rgba(index, r, g, b, a);
+                }
         }
 
         void painter_error_message(const std::string& msg) override
@@ -293,6 +327,12 @@ public:
                   m_paintbrush(m_paint_objects->projector().screen_size(), PANTBRUSH_WIDTH, -1),
                   m_busy_pixels(thread_count, -1)
         {
+                if (N_IMAGE == 3)
+                {
+                        m_pixels_bytes_rgba.resize(4 * m_pixels_bgr.size());
+                        std::memset(m_pixels_bytes_rgba.data(), 0, m_pixels_bytes_rgba.size());
+                }
+
                 m_stop = false;
                 m_thread = std::thread([=, this]() {
                         paint(this, samples_per_pixel, *m_paint_objects, &m_paintbrush, thread_count, &m_stop,
