@@ -100,7 +100,13 @@ std::shared_ptr<volume::VolumeObject<N>> load_from_volume_image(const std::strin
         std::unique_ptr<volume::Volume<N>> volume = std::make_unique<volume::Volume<N>>();
 
         volume->image = std::forward<Image>(image);
+
+        double max_size = *std::max_element(volume->image.size.cbegin(), volume->image.size.cend());
         volume->matrix = Matrix<N + 1, N + 1, double>(1);
+        for (unsigned i = 0; i < N; ++i)
+        {
+                volume->matrix(i, i) = volume->image.size[i] / max_size;
+        }
 
         std::shared_ptr<volume::VolumeObject<N>> volume_object = std::make_shared<volume::VolumeObject<N>>(
                 std::move(volume),
