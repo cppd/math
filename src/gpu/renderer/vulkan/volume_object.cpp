@@ -102,24 +102,24 @@ void find_image_formats_and_volume_type(
         error_fatal("Unknown color format " + image::format_to_string(color_format));
 }
 
-vec3 world_volume_size(const mat4& model_matrix)
+vec3 world_volume_size(const mat4& texture_to_world_matrix)
 {
-        // Например, для x: m_model_matrix * vec4(1, 0, 0, 1) -> vec3 -> length
+        // Например, для x: texture_to_world_matrix * vec4(1, 0, 0, 1) -> vec3 -> length
         vec3 size;
         for (unsigned i = 0; i < 3; ++i)
         {
-                vec3 v(model_matrix(0, i), model_matrix(1, i), model_matrix(2, i));
+                vec3 v(texture_to_world_matrix(0, i), texture_to_world_matrix(1, i), texture_to_world_matrix(2, i));
                 size[i] = v.norm();
         }
         return size;
 }
 
 // В текстурных координатах
-vec3 gradient_h(const mat4& model_matrix, const vulkan::ImageWithMemory& image)
+vec3 gradient_h(const mat4& texture_to_world_matrix, const vulkan::ImageWithMemory& image)
 {
         vec3 texture_pixel_size(1.0 / image.width(), 1.0 / image.height(), 1.0 / image.depth());
 
-        vec3 world_pixel_size(texture_pixel_size * world_volume_size(model_matrix));
+        vec3 world_pixel_size(texture_pixel_size * world_volume_size(texture_to_world_matrix));
 
         double min_world_pixel_size = world_pixel_size[0];
         for (unsigned i = 1; i < 3; ++i)
@@ -148,7 +148,9 @@ class VolumeObject::Volume
         mat4 m_vp_matrix = mat4(1);
         std::optional<vec4> m_world_clip_plane_equation;
 
-        mat4 m_model_matrix;
+        mat3 m_object_normal_to_world_normal_matrix;
+        mat4 m_texture_to_world_matrix;
+        vec3 m_gradient_h;
 
         VolumeBuffer m_buffer;
         std::unique_ptr<vulkan::ImageWithMemory> m_image;
@@ -179,20 +181,20 @@ class VolumeObject::Volume
 
         void buffer_set_coordinates() const
         {
-                const mat4& mvp = m_vp_matrix * m_model_matrix;
-                const vec4& clip_plane = m_world_clip_plane_equation
-                                                 ? image_clip_plane(*m_world_clip_plane_equation, m_model_matrix)
-                                                 : vec4(0);
+                const mat4& mvp = m_vp_matrix * m_texture_to_world_matrix;
+                const vec4& clip_plane =
+                        m_world_clip_plane_equation
+                                ? image_clip_plane(*m_world_clip_plane_equation, m_texture_to_world_matrix)
+                                : vec4(0);
 
                 m_buffer.set_coordinates(
-                        mvp.inverse(), clip_plane, gradient_h(m_model_matrix, *m_image),
-                        m_model_matrix.top_left<3, 3>().inverse().transpose());
+                        mvp.inverse(), clip_plane, m_gradient_h, m_object_normal_to_world_normal_matrix);
         }
 
         void buffer_set_clip_plane() const
         {
                 ASSERT(m_world_clip_plane_equation);
-                m_buffer.set_clip_plane(image_clip_plane(*m_world_clip_plane_equation, m_model_matrix));
+                m_buffer.set_clip_plane(image_clip_plane(*m_world_clip_plane_equation, m_texture_to_world_matrix));
         }
 
         void buffer_set_color_volume(bool color_volume) const
@@ -373,7 +375,11 @@ public:
 
                 if (update_matrices)
                 {
-                        m_model_matrix = volume_object.matrix() * volume_object.volume().matrix;
+                        m_object_normal_to_world_normal_matrix =
+                                volume_object.matrix().top_left<3, 3>().inverse().transpose();
+                        m_texture_to_world_matrix = volume_object.matrix() * volume_object.volume().matrix;
+                        m_gradient_h = gradient_h(m_texture_to_world_matrix, *m_image);
+
                         buffer_set_coordinates();
                 }
         }
