@@ -2,7 +2,7 @@
 
 Just for fun with mathematics and stuff
 
-![image](https://i.imgur.com/HjDmj4C.png)
+<img src="https://i.imgur.com/HjDmj4C.png" alt="image" width="50%"></img>
 
 ## Contents
 
@@ -91,12 +91,12 @@ Build systems             | CMake
   * Point light source.
   * Parallel projection onto 4D screen.
 
-![manifold](https://i.imgur.com/j1kUkGQ.png)
-![manifold](https://i.imgur.com/A8hpwM7.png)
-![manifold](https://i.imgur.com/rRXVL80.png)
-![manifold](https://i.imgur.com/bimmCBL.png)
-![manifold](https://i.imgur.com/7fEn0iy.png)
-![manifold](https://i.imgur.com/m5FVGza.png)
+<img src="https://i.imgur.com/j1kUkGQ.png" alt="image" width="15%"></img>
+<img src="https://i.imgur.com/A8hpwM7.png" alt="image" width="15%"></img>
+<img src="https://i.imgur.com/rRXVL80.png" alt="image" width="15%"></img>
+<img src="https://i.imgur.com/bimmCBL.png" alt="image" width="15%"></img>
+<img src="https://i.imgur.com/7fEn0iy.png" alt="image" width="15%"></img>
+<img src="https://i.imgur.com/m5FVGza.png" alt="image" width="15%"></img>
 
 ### 3-manifold reconstruction and path tracing in 4-space
 
@@ -112,19 +112,19 @@ Build systems             | CMake
   * Point light source.
   * Parallel projection onto 3D screen.
 
-![manifold](https://i.imgur.com/OujXP6E.png)
-![manifold](https://i.imgur.com/wYGS7Ny.png)
-![manifold](https://i.imgur.com/YBrlxnL.png)
-![manifold](https://i.imgur.com/p4uN0Rp.png)
-![manifold](https://i.imgur.com/v6m4qnj.png)
-![manifold](https://i.imgur.com/fet4mhg.png)
-![manifold](https://i.imgur.com/mudGwKv.png)
-![manifold](https://i.imgur.com/n5reerR.png)
-![manifold](https://i.imgur.com/OGVUbxe.png)
-![manifold](https://i.imgur.com/aDG9Qjv.png)
-![manifold](https://i.imgur.com/xC8iW26.png)
-![manifold](https://i.imgur.com/T1pdgZt.png)
-![manifold](https://i.imgur.com/XQ1UEz3.png)
+<img src="https://i.imgur.com/OujXP6E.png" alt="image" width="10%"></img>
+<img src="https://i.imgur.com/wYGS7Ny.png" alt="image" width="10%"></img>
+<img src="https://i.imgur.com/YBrlxnL.png" alt="image" width="10%"></img>
+<img src="https://i.imgur.com/p4uN0Rp.png" alt="image" width="10%"></img>
+<img src="https://i.imgur.com/v6m4qnj.png" alt="image" width="10%"></img>
+<img src="https://i.imgur.com/fet4mhg.png" alt="image" width="10%"></img>
+<img src="https://i.imgur.com/mudGwKv.png" alt="image" width="10%"></img>
+<img src="https://i.imgur.com/n5reerR.png" alt="image" width="10%"></img>
+<img src="https://i.imgur.com/OGVUbxe.png" alt="image" width="10%"></img>
+<img src="https://i.imgur.com/aDG9Qjv.png" alt="image" width="10%"></img>
+<img src="https://i.imgur.com/xC8iW26.png" alt="image" width="10%"></img>
+<img src="https://i.imgur.com/T1pdgZt.png" alt="image" width="10%"></img>
+<img src="https://i.imgur.com/XQ1UEz3.png" alt="image" width="10%"></img>
 
 ### 2-manifold reconstruction and path tracing in 3-space
 
@@ -140,28 +140,32 @@ Points on the (2,3)-torus knot, the Euclidean minimum spanning tree of the point
   * Point light source.
   * Parallel projection onto 2D screen.
 
-![points](https://i.imgur.com/h3yaTRd.png)
-![tree](https://i.imgur.com/oC4wcfw.png)
-![manifold](https://i.imgur.com/KfOxuOu.png)
-![manifold](https://i.imgur.com/kFCwTJM.png)
-![manifold](https://i.imgur.com/Vh5Lrcv.png)
-![manifold](https://i.imgur.com/8oyND91.png)
+<img src="https://i.imgur.com/h3yaTRd.png" alt="image" width="18%"></img>
+<img src="https://i.imgur.com/oC4wcfw.png" alt="image" width="18%"></img>
+<img src="https://i.imgur.com/KfOxuOu.png" alt="image" width="18%"></img>
+<img src="https://i.imgur.com/kFCwTJM.png" alt="image" width="18%"></img>
+<img src="https://i.imgur.com/Vh5Lrcv.png" alt="image" width="18%"></img>
+
+<img src="https://i.imgur.com/8oyND91.png" alt="image" width="18%"></img>
 
 ### 2D discrete Fourier transform
 
 Real-time computing on GPU.
 
-![dft](https://i.imgur.com/YnyQWd4.png)
-![dft](https://i.imgur.com/uvHQZmg.png)
-![dft](https://i.imgur.com/5dGkQR9.png)
+<img src="https://i.imgur.com/YnyQWd4.png" alt="image" width="20%"></img>
+
+<img src="https://i.imgur.com/uvHQZmg.png" alt="image" width="20%"></img>
+
+<img src="https://i.imgur.com/5dGkQR9.png" alt="image" width="20%"></img>
 
 ### 3D model
 
 Real-time rendering on GPU.
 
-![image](https://i.imgur.com/eqxSJpD.png)
+<img src="https://i.imgur.com/eqxSJpD.png" alt="image" width="30%"></img>
 
 Path tracing on CPU.
 
-![image](https://i.imgur.com/kumiuEr.png)
-![image](https://i.imgur.com/y9jdovk.png)
+<img src="https://i.imgur.com/kumiuEr.png" alt="image" width="30%"></img>
+
+<img src="https://i.imgur.com/y9jdovk.png" alt="image" width="30%"></img>
