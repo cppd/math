@@ -255,49 +255,32 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 std::array<int_least16_t, N_IMAGE> p = pixel;
                 p[1] = m_height - 1 - pixel[1];
 
-                long long index = pixel_index(p);
-
                 if (coverage >= 1)
                 {
                         unsigned char r = color_conversion::linear_float_to_srgb_uint8(color.red());
                         unsigned char g = color_conversion::linear_float_to_srgb_uint8(color.green());
                         unsigned char b = color_conversion::linear_float_to_srgb_uint8(color.blue());
-                        m_pixels_bgr[index] = Srgb8(r, g, b).to_uint_bgr();
+                        m_pixels_bgr[pixel_index(p)] = Srgb8(r, g, b).to_uint_bgr();
                         if (N_IMAGE == 3)
                         {
-                                set_pixels_rgba(index, r, g, b, 255);
+                                set_pixels_rgba(pixel_index(pixel), r, g, b, 1);
                         }
-                        return;
                 }
-
-                if (coverage <= 0)
+                else if (coverage <= 0)
                 {
                         Color c = m_paint_objects->default_surface_properties().color();
                         unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
                         unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
                         unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
-                        m_pixels_bgr[index] = Srgb8(r, g, b).to_uint_bgr();
-                        if (N_IMAGE == 3)
-                        {
-                                set_pixels_rgba(index, 0, 0, 0, 0);
-                        }
-                        return;
+                        m_pixels_bgr[pixel_index(p)] = Srgb8(r, g, b).to_uint_bgr();
                 }
-
+                else
                 {
                         Color c = interpolation(m_paint_objects->default_surface_properties().color(), color, coverage);
                         unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
                         unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
                         unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
-                        m_pixels_bgr[index] = Srgb8(r, g, b).to_uint_bgr();
-                }
-                if (N_IMAGE == 3)
-                {
-                        unsigned char r = color_conversion::linear_float_to_srgb_uint8(color.red());
-                        unsigned char g = color_conversion::linear_float_to_srgb_uint8(color.green());
-                        unsigned char b = color_conversion::linear_float_to_srgb_uint8(color.blue());
-                        unsigned char a = color_conversion::linear_float_to_linear_uint8(coverage);
-                        set_pixels_rgba(index, r, g, b, a);
+                        m_pixels_bgr[pixel_index(p)] = Srgb8(r, g, b).to_uint_bgr();
                 }
         }
 
