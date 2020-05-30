@@ -26,24 +26,54 @@ namespace gpu::renderer
 {
 namespace
 {
-// clang-format off
-constexpr std::initializer_list<VkFormat> SCALAR_FORMATS =
-{
-        VK_FORMAT_R16_UNORM,
-        VK_FORMAT_R32_SFLOAT
-};
-constexpr std::initializer_list<VkFormat> COLOR_FORMATS =
-{
-        VK_FORMAT_R8G8B8A8_SRGB,
-        VK_FORMAT_R16G16B16A16_UNORM,
-        VK_FORMAT_R32G32B32A32_SFLOAT
-};
-// clang-format on
-
 constexpr double GRADIENT_H_IN_PIXELS = 0.5;
 
-// цвет RGBA
-void transfer_function(image::ColorFormat* color_format, std::vector<std::byte>* bytes)
+std::vector<VkFormat> vulkan_transfer_function_formats(image::ColorFormat color_format)
+{
+        switch (color_format)
+        {
+        case image::ColorFormat::R8G8B8A8_SRGB:
+        case image::ColorFormat::R16G16B16A16:
+        case image::ColorFormat::R32G32B32A32:
+                return {VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R32G32B32A32_SFLOAT};
+        case image::ColorFormat::R16:
+        case image::ColorFormat::R32:
+        case image::ColorFormat::R8_SRGB:
+        case image::ColorFormat::R8G8B8_SRGB:
+        case image::ColorFormat::R16G16B16:
+        case image::ColorFormat::R32G32B32:
+                error("Unsupported transfer function format: " + image::format_to_string(color_format));
+        }
+        error_fatal("Unknown color format " + image::format_to_string(color_format));
+}
+
+std::vector<VkFormat> vulkan_image_formats(image::ColorFormat color_format)
+{
+        switch (color_format)
+        {
+        case image::ColorFormat::R16:
+        case image::ColorFormat::R32:
+                return {VK_FORMAT_R16_UNORM, VK_FORMAT_R32_SFLOAT};
+        case image::ColorFormat::R8G8B8A8_SRGB:
+                return {VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R32G32B32A32_SFLOAT};
+        case image::ColorFormat::R16G16B16A16:
+        case image::ColorFormat::R32G32B32A32:
+                return {VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R32G32B32A32_SFLOAT};
+        case image::ColorFormat::R8_SRGB:
+        case image::ColorFormat::R8G8B8_SRGB:
+        case image::ColorFormat::R16G16B16:
+        case image::ColorFormat::R32G32B32:
+                error("Unsupported volume image format: " + image::format_to_string(color_format));
+        }
+        error_fatal("Unknown color format " + image::format_to_string(color_format));
+}
+
+bool is_scalar_volume(image::ColorFormat color_format)
+{
+        return 1 == image::format_component_count(color_format);
+}
+
+image::Image<1> transfer_function()
 {
         const int size = 256;
         const Color color(Srgb8(230, 255, 230));
@@ -59,9 +89,14 @@ void transfer_function(image::ColorFormat* color_format, std::vector<std::byte>*
                 pixels.push_back(alpha);
         }
 
-        bytes->resize(data_size(pixels));
-        std::memcpy(bytes->data(), data_pointer(pixels), data_size(pixels));
-        *color_format = image::ColorFormat::R32G32B32A32;
+        image::Image<1> image;
+
+        image.pixels.resize(data_size(pixels));
+        std::memcpy(image.pixels.data(), data_pointer(pixels), data_size(pixels));
+        image.color_format = image::ColorFormat::R32G32B32A32;
+        image.size[0] = size;
+
+        return image;
 }
 
 vec4 image_clip_plane(const vec4& world_clip_plane, const mat4& model)
@@ -73,33 +108,6 @@ vec4 image_clip_plane(const vec4& world_clip_plane, const mat4& model)
         p[3] = -p[3];
         vec3 n = vec3(p[0], p[1], p[2]);
         return p / -n.norm();
-}
-
-void find_image_formats_and_volume_type(
-        image::ColorFormat color_format,
-        std::vector<VkFormat>* formats,
-        bool* color_volume)
-{
-        switch (color_format)
-        {
-        case image::ColorFormat::R16:
-        case image::ColorFormat::R32:
-                *formats = SCALAR_FORMATS;
-                *color_volume = false;
-                return;
-        case image::ColorFormat::R8G8B8A8_SRGB:
-        case image::ColorFormat::R16G16B16A16:
-        case image::ColorFormat::R32G32B32A32:
-                *formats = COLOR_FORMATS;
-                *color_volume = true;
-                return;
-        case image::ColorFormat::R8_SRGB:
-        case image::ColorFormat::R8G8B8_SRGB:
-        case image::ColorFormat::R16G16B16:
-        case image::ColorFormat::R32G32B32:
-                error("Unsupported volume image format: " + image::format_to_string(color_format));
-        }
-        error_fatal("Unknown color format " + image::format_to_string(color_format));
 }
 
 vec3 world_volume_size(const mat4& texture_to_world_matrix)
@@ -225,22 +233,19 @@ class VolumeObject::Volume
                         return;
                 }
 
-                image::ColorFormat color_format;
-                std::vector<std::byte> color_bytes;
-                transfer_function(&color_format, &color_bytes);
-                unsigned pixel_count = color_bytes.size() / image::format_pixel_size_in_bytes(color_format);
+                image::Image<1> image = transfer_function();
 
                 m_transfer_function.reset();
 
                 m_transfer_function = std::make_unique<vulkan::ImageWithMemory>(
                         m_device, m_graphics_command_pool, m_graphics_queue,
-                        std::unordered_set<uint32_t>{m_graphics_queue.family_index()}, COLOR_FORMATS,
-                        VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_1D, vulkan::make_extent(pixel_count),
-                        VK_IMAGE_LAYOUT_UNDEFINED, false /*storage*/);
+                        std::unordered_set<uint32_t>{m_graphics_queue.family_index()},
+                        vulkan_transfer_function_formats(image.color_format), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_1D,
+                        vulkan::make_extent(image.size[0]), VK_IMAGE_LAYOUT_UNDEFINED, false /*storage*/);
 
                 m_transfer_function->write_pixels(
                         m_graphics_command_pool, m_graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, color_format, color_bytes);
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image.color_format, image.pixels);
         }
 
         void set_image(const image::Image<3>& image, bool* size_changed)
@@ -254,20 +259,15 @@ class VolumeObject::Volume
                 {
                         *size_changed = true;
 
-                        std::vector<VkFormat> formats;
-                        bool color_volume;
-
-                        find_image_formats_and_volume_type(image.color_format, &formats, &color_volume);
-
-                        buffer_set_color_volume(color_volume);
+                        buffer_set_color_volume(!is_scalar_volume(image.color_format));
 
                         m_image_color_format = image.color_format;
 
                         m_image.reset();
                         m_image = std::make_unique<vulkan::ImageWithMemory>(
                                 m_device, m_graphics_command_pool, m_graphics_queue,
-                                std::unordered_set<uint32_t>({m_graphics_queue.family_index()}), formats,
-                                VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_3D,
+                                std::unordered_set<uint32_t>({m_graphics_queue.family_index()}),
+                                vulkan_image_formats(image.color_format), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_3D,
                                 vulkan::make_extent(image.size[0], image.size[1], image.size[2]),
                                 VK_IMAGE_LAYOUT_UNDEFINED, false /*storage*/);
 
