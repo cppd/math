@@ -7,7 +7,9 @@ Just for fun with mathematics and stuff
 ## Contents
 
 * [File types](#file-types)
-* [Real-time rendering](#real-time-rendering)
+* [Rendering](#rendering)
+  * [GPU](#gpu)
+  * [CPU](#cpu)
 * [Algorithms](#algorithms)
   * [2-space](#2-space)
   * [Spaces with arbitrary number of dimensions](#spaces-with-arbitrary-number-of-dimensions)
@@ -23,44 +25,47 @@ Just for fun with mathematics and stuff
 
 * OBJ and STL files with objects in 3-space.
 * Extended OBJ and STL files with objects in n-space.
-* Text files with the coordinates of points in n-space, one point per line.
+* Text files with the coordinates of points in n-space.
 
-## Real-time rendering
+## Rendering
+
+### GPU
 
 * Triangle meshes.
 * Volumes (ray marching).
 * Isosurfaces (ray marching).
 
-## Algorithms
+### CPU
 
-Some of the implemented algorithms.
+* (n-1)-simplex meshes in n-space on (n-1)-dimensional screen (path tracing).
+
+## Algorithms
 
 ### 2-space
 
-#### C++, GLSL
+C++ and GLSL
 
-Subject                                        | Algorithm                                                | Implementation
------------------------------------------------|----------------------------------------------------------|----------------
-Discrete Fourier transform for arbitrary sizes | Bluestein's algorithm and radix-2 fast Fourier transform | Parallel
-Optical flow                                   | Pyramidal Lucas-Kanade                                   | Parallel
-Convex hull                                    | Divide et impera                                         | Parallel
+Domain                                         | Algorithm
+-----------------------------------------------|----------------------------------------------------------
+Discrete Fourier transform for arbitrary sizes | Bluestein's algorithm and radix-2 fast Fourier transform
+Optical flow                                   | Pyramidal Lucas-Kanade
+Convex hull                                    | Divide et impera
 
 ### Spaces with arbitrary number of dimensions
 
-#### C++
+C++
 
-Subject                                         | Algorithm                                          | Implementation
-------------------------------------------------|----------------------------------------------------|--------------------
-Convex hull                                     | Randomized incremental                             | Partially parallel
-Delaunay triangulation                          | Convex hull of paraboloid                          | Sequential
-Voronoi diagram                                 | The Delaunay triangulation                         | Sequential
-Manifold reconstruction                         | Cocone                                             | Sequential
-Manifold reconstruction with boundary detection | BoundCocone                                        | Sequential
-Euclidean minimum spanning tree                 | Kruskal’s algorithm and the Delaunay triangulation | Sequential
-Intersection of hyperplanes                     | Gaussian elimination                               | Sequential
-Intersection of convex polytopes                | The simplex algorithm                              | Sequential
-Ray intersection acceleration                   | Spatial subdivision and 2<sup>d</sup>-trees        | Parallel
-Realistic visualization                         | Path tracing                                       | Parallel
+Domain                                          | Algorithm
+------------------------------------------------|----------------------------------------------------
+Convex hull                                     | Randomized incremental
+Delaunay triangulation                          | Convex hull of paraboloid
+Voronoi diagram                                 | The Delaunay triangulation
+Manifold reconstruction                         | Cocone
+Manifold reconstruction with boundary detection | BoundCocone
+Euclidean minimum spanning tree                 | Kruskal’s algorithm and the Delaunay triangulation
+Intersection of hyperplanes                     | Gaussian elimination
+Intersection of convex polytopes                | The simplex algorithm
+Ray intersection acceleration                   | Spatial subdivision and 2<sup>d</sup>-trees
 
 ## Technical details
 
