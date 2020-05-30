@@ -17,37 +17,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "ui_range_slider.h"
+#include "../com/connection.h"
+
+#include <QSlider>
+#include <vector>
 
 namespace gui
 {
-class RangeSlider final : public QWidget
+class RangeSlider final
 {
-        Q_OBJECT
+        QSlider* m_slider_min;
+        QSlider* m_slider_max;
 
-public:
-        explicit RangeSlider(QWidget* parent = nullptr);
+        double m_last_min;
+        double m_last_max;
 
-        void set_range(double min, double max);
+        std::function<void(double, double)> m_range_changed;
 
-signals:
-        void range_changed(double min, double max);
+        std::vector<Connection> m_connections;
 
-private slots:
-        void min_value_changed(int);
-        void max_value_changed(int);
-
-private:
         int min_value() const;
         int max_value() const;
         void set_min_value(int);
         void set_max_value(int);
 
+        void min_value_changed();
+        void max_value_changed();
         void range_changed();
 
-        double m_last_min;
-        double m_last_max;
+public:
+        RangeSlider(QSlider* slider_min, QSlider* slider_max, const std::function<void(double, double)>& range_changed);
 
-        Ui::RangeSlider ui;
+        void set_range(double min, double max);
 };
 }

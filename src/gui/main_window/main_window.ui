@@ -338,12 +338,16 @@
            </widget>
           </item>
           <item>
-           <widget class="gui::RangeSlider" name="slider_volume_levels" native="true">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>10</height>
-             </size>
+           <widget class="QSlider" name="slider_volume_level_min">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="slider_volume_level_max">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -1356,7 +1360,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>30</height>
+     <height>29</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -1462,12 +1466,6 @@
    <class>gui::GraphicsWidget</class>
    <extends>QWidget</extends>
    <header>src/gui/widgets/graphics_widget.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>gui::RangeSlider</class>
-   <extends>QWidget</extends>
-   <header>src/gui/widgets/range_slider.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

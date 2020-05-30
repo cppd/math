@@ -95,7 +95,6 @@ MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent), m_thread_id(std::this_thread::get_id()), m_first_show(true)
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
-        static_assert(std::is_same_v<decltype(ui.slider_volume_levels), RangeSlider*>);
 
         ui.setupUi(this);
 
@@ -103,8 +102,8 @@ MainWindow::MainWindow(QWidget* parent)
 
         constructor_threads();
         constructor_connect();
-        constructor_interface();
         constructor_objects();
+        constructor_interface();
 }
 
 void MainWindow::constructor_threads()
@@ -204,6 +203,10 @@ void MainWindow::constructor_objects()
 
         m_model_tree = std::make_unique<ModelTree>(ui.model_tree, [this]() { model_tree_item_changed(); });
 
+        m_slider_volume_levels = std::make_unique<RangeSlider>(
+                ui.slider_volume_level_min, ui.slider_volume_level_max,
+                [this](double min, double max) { slider_volume_levels_range_changed(min, max); });
+
         m_mesh_and_volume_events = std::make_unique<ModelEvents>(
                 m_model_tree.get(), &m_view, [this](ObjectId id) { update_volume_ui(id); });
 }
@@ -212,10 +215,8 @@ void MainWindow::disable_volume_parameters()
 {
         ui.tabVolume->setEnabled(false);
 
-        {
-                QSignalBlocker blocker(ui.slider_volume_levels);
-                ui.slider_volume_levels->set_range(0, 1);
-        }
+        m_slider_volume_levels->set_range(0, 1);
+
         {
                 QSignalBlocker blocker(ui.slider_volume_transparency);
                 set_slider_to_middle(ui.slider_volume_transparency);
@@ -1148,10 +1149,9 @@ void MainWindow::update_volume_ui(ObjectId id)
                                 isosurface = volume_object->isosurface();
                                 isovalue = volume_object->isovalue();
                         }
-                        {
-                                QSignalBlocker blocker(ui.slider_volume_levels);
-                                ui.slider_volume_levels->set_range(min, max);
-                        }
+
+                        m_slider_volume_levels->set_range(min, max);
+
                         {
                                 transparency = std::log(transparency) / std::log(VOLUME_TRANSPARENCY_COEFFICIENT);
                                 QSignalBlocker blocker(ui.slider_volume_transparency);
@@ -1168,7 +1168,7 @@ void MainWindow::update_volume_ui(ObjectId id)
                 *volume_object_opt);
 }
 
-void MainWindow::on_slider_volume_levels_range_changed(double min, double max)
+void MainWindow::slider_volume_levels_range_changed(double min, double max)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 

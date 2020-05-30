@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "model_events.h"
 #include "model_tree.h"
+#include "range_slider.h"
 #include "repository_actions.h"
 #include "threads.h"
 
@@ -85,7 +86,6 @@ private slots:
         void on_slider_normals_valueChanged(int value);
         void on_slider_shadow_quality_valueChanged(int value);
         void on_slider_specular_valueChanged(int value);
-        void on_slider_volume_levels_range_changed(double, double);
         void on_slider_volume_transparency_valueChanged(int value);
         void on_toolButton_background_color_clicked();
         void on_toolButton_clip_plane_color_clicked();
@@ -103,6 +103,7 @@ private slots:
         void graphics_widget_mouse_release(QMouseEvent*);
 
         void model_tree_item_changed();
+        void slider_volume_levels_range_changed(double, double);
 
         void slot_mesh_object_repository(int dimension, std::string object_name);
         void slot_volume_object_repository(int dimension, std::string object_name);
@@ -172,6 +173,7 @@ private:
         std::unique_ptr<storage::Repository> m_repository;
         std::unique_ptr<RepositoryActions> m_repository_actions;
         std::unique_ptr<ModelTree> m_model_tree;
+        std::unique_ptr<RangeSlider> m_slider_volume_levels;
         std::unique_ptr<ModelEvents> m_mesh_and_volume_events;
 
         QColor m_background_color;
