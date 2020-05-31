@@ -105,7 +105,7 @@ Build systems             | CMake
 
 ### 3-manifold reconstruction and path tracing in 4-space
 
-2D slices of a 3D image of the 3-manifold reconstructed from the points on the 3-torus T<sup>3</sup> (S<sup>1</sup>×S<sup>1</sup>×S<sup>1</sup>).
+A 3D image of the 3-manifold reconstructed from the points on the 3-torus T<sup>3</sup> (S<sup>1</sup>×S<sup>1</sup>×S<sup>1</sup>).
 
 * 5-space
   * The convex hull.
@@ -117,19 +117,41 @@ Build systems             | CMake
   * Point light source.
   * Parallel projection onto 3D screen.
 
-<img src="https://i.imgur.com/OujXP6E.png" alt="image" width="10%"></img>
-<img src="https://i.imgur.com/wYGS7Ny.png" alt="image" width="10%"></img>
-<img src="https://i.imgur.com/YBrlxnL.png" alt="image" width="10%"></img>
-<img src="https://i.imgur.com/p4uN0Rp.png" alt="image" width="10%"></img>
-<img src="https://i.imgur.com/v6m4qnj.png" alt="image" width="10%"></img>
-<img src="https://i.imgur.com/fet4mhg.png" alt="image" width="10%"></img>
-<img src="https://i.imgur.com/mudGwKv.png" alt="image" width="10%"></img>
-<img src="https://i.imgur.com/n5reerR.png" alt="image" width="10%"></img>
-<img src="https://i.imgur.com/OGVUbxe.png" alt="image" width="10%"></img>
-<img src="https://i.imgur.com/aDG9Qjv.png" alt="image" width="10%"></img>
-<img src="https://i.imgur.com/xC8iW26.png" alt="image" width="10%"></img>
-<img src="https://i.imgur.com/T1pdgZt.png" alt="image" width="10%"></img>
-<img src="https://i.imgur.com/XQ1UEz3.png" alt="image" width="10%"></img>
+Volumetric rendering
+
+<img src="https://i.imgur.com/XIgpWmQ.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/Qh7Sclb.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/89yvIiw.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/oMZFlmT.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/XNn1piP.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/I0z2Pf8.png" alt="image" width="11%"></img>
+
+Volumetric rendering using a clipping plane
+
+<img src="https://i.imgur.com/DyP0jEl.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/WQqYxj4.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/szEiQHX.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/Q3NK7Ee.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/HwdpgV3.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/dRZGL1A.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/0bNbyW6.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/9lEosOP.png" alt="image" width="11%"></img>
+
+2D slices
+
+<img src="https://i.imgur.com/OujXP6E.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/wYGS7Ny.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/YBrlxnL.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/p4uN0Rp.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/v6m4qnj.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/fet4mhg.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/mudGwKv.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/n5reerR.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/OGVUbxe.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/aDG9Qjv.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/xC8iW26.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/T1pdgZt.png" alt="image" width="11%"></img>
+<img src="https://i.imgur.com/XQ1UEz3.png" alt="image" width="11%"></img>
 
 ### 2-manifold reconstruction and path tracing in 3-space
 
