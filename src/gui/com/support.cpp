@@ -96,6 +96,30 @@ void set_widgets_enabled(QLayout* layout, bool v)
         }
 }
 
+QSplitter* find_widget_splitter(QObject* object, QWidget* widget)
+{
+        QSplitter* splitter = qobject_cast<QSplitter*>(object);
+        if (splitter && splitter->indexOf(widget) >= 0)
+        {
+                return splitter;
+        }
+        for (QObject* child : object->children())
+        {
+                if (QSplitter* s = find_widget_splitter(child, widget); s != nullptr)
+                {
+                        return s;
+                }
+        }
+        return nullptr;
+}
+
+void set_horizontal_stretch(QWidget* widget, int stretchFactor)
+{
+        QSizePolicy sp = widget->sizePolicy();
+        sp.setHorizontalStretch(stretchFactor);
+        widget->setSizePolicy(sp);
+}
+
 Color qcolor_to_rgb(const QColor& c)
 {
         unsigned char r = std::clamp(c.red(), 0, 255);

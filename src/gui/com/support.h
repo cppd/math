@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QPointer>
 #include <QRadioButton>
 #include <QSlider>
+#include <QSplitter>
 #include <iterator>
 #include <memory>
 #include <string>
@@ -77,6 +78,10 @@ public:
 QWidget* parent_for_dialog();
 
 void set_widgets_enabled(QLayout* layout, bool v);
+
+QSplitter* find_widget_splitter(QObject* object, QWidget* widget);
+
+void set_horizontal_stretch(QWidget* widget, int stretchFactor);
 
 Color qcolor_to_rgb(const QColor& c);
 
