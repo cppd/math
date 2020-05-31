@@ -94,40 +94,74 @@ constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(50, 150, 50);
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent), m_thread_id(std::this_thread::get_id()), m_first_show(true)
 {
-        static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
-
         ui.setupUi(this);
 
         this->setWindowTitle(settings::APPLICATION_NAME);
 
-        constructor_threads();
-        constructor_connect();
+        constructor_graphics_widget();
         constructor_objects();
         constructor_interface();
 }
 
-void MainWindow::constructor_threads()
+void MainWindow::constructor_graphics_widget()
 {
-        m_worker_threads = create_worker_threads();
+        QSplitter* splitter = find_widget_splitter(this, ui.graphics_widget);
+        ASSERT(splitter);
+
+        m_graphics_widget = new GraphicsWidget(this);
+
+        QWidget* w = splitter->replaceWidget(splitter->indexOf(ui.graphics_widget), m_graphics_widget);
+        ASSERT(w == ui.graphics_widget);
+        delete ui.graphics_widget;
+        ui.graphics_widget = nullptr;
+
+        set_horizontal_stretch(m_graphics_widget, 5);
+        m_graphics_widget->setMinimumSize(400, 400);
+        m_graphics_widget->setVisible(true);
+
+        for (QObject* object : splitter->children())
+        {
+                if (object != m_graphics_widget && qobject_cast<QWidget*>(object))
+                {
+                        set_horizontal_stretch(qobject_cast<QWidget*>(object), 1);
+                }
+        }
+
+        connect(m_graphics_widget, &GraphicsWidget::mouse_wheel, this, &MainWindow::graphics_widget_mouse_wheel);
+        connect(m_graphics_widget, &GraphicsWidget::mouse_move, this, &MainWindow::graphics_widget_mouse_move);
+        connect(m_graphics_widget, &GraphicsWidget::mouse_press, this, &MainWindow::graphics_widget_mouse_press);
+        connect(m_graphics_widget, &GraphicsWidget::mouse_release, this, &MainWindow::graphics_widget_mouse_release);
+        connect(m_graphics_widget, &GraphicsWidget::resize, this, &MainWindow::graphics_widget_resize);
 }
 
-void MainWindow::constructor_connect()
+void MainWindow::constructor_objects()
 {
-        connect(ui.graphics_widget, SIGNAL(mouse_wheel(QWheelEvent*)), this,
-                SLOT(graphics_widget_mouse_wheel(QWheelEvent*)));
-        connect(ui.graphics_widget, SIGNAL(mouse_move(QMouseEvent*)), this,
-                SLOT(graphics_widget_mouse_move(QMouseEvent*)));
-        connect(ui.graphics_widget, SIGNAL(mouse_press(QMouseEvent*)), this,
-                SLOT(graphics_widget_mouse_press(QMouseEvent*)));
-        connect(ui.graphics_widget, SIGNAL(mouse_release(QMouseEvent*)), this,
-                SLOT(graphics_widget_mouse_release(QMouseEvent*)));
-        connect(ui.graphics_widget, SIGNAL(resize(QResizeEvent*)), this, SLOT(graphics_widget_resize(QResizeEvent*)));
+        m_worker_threads = create_worker_threads();
 
-        connect(&m_timer_progress_bar, SIGNAL(timeout()), this, SLOT(slot_timer_progress_bar()));
+        m_repository = std::make_unique<storage::Repository>();
+
+        // QMenu* menuCreate = new QMenu("Create", this);
+        // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
+
+        m_repository_actions = std::make_unique<RepositoryActions>(ui.menuCreate, *m_repository);
+
+        connect(m_repository_actions.get(), &RepositoryActions::mesh, this, &MainWindow::action_mesh_repository);
+        connect(m_repository_actions.get(), &RepositoryActions::volume, this, &MainWindow::action_volume_repository);
+
+        m_model_tree = std::make_unique<ModelTree>(ui.model_tree, [this]() { model_tree_item_changed(); });
+
+        m_slider_volume_levels = std::make_unique<RangeSlider>(
+                ui.slider_volume_level_min, ui.slider_volume_level_max,
+                [this](double min, double max) { slider_volume_levels_range_changed(min, max); });
+
+        m_mesh_and_volume_events = std::make_unique<ModelEvents>(
+                m_model_tree.get(), &m_view, [this](ObjectId id) { update_volume_ui(id); });
 }
 
 void MainWindow::constructor_interface()
 {
+        connect(&m_timer_progress_bar, &QTimer::timeout, this, &MainWindow::timer_progress_bar);
+
         QMainWindow::addAction(ui.actionFullScreen);
 
         {
@@ -185,30 +219,6 @@ void MainWindow::constructor_interface()
         ASSERT(((ui.slider_ambient->maximum() - ui.slider_ambient->minimum()) & 1) == 0);
         ASSERT(((ui.slider_diffuse->maximum() - ui.slider_diffuse->minimum()) & 1) == 0);
         ASSERT(((ui.slider_specular->maximum() - ui.slider_specular->minimum()) & 1) == 0);
-}
-
-void MainWindow::constructor_objects()
-{
-        m_repository = std::make_unique<storage::Repository>();
-
-        // QMenu* menuCreate = new QMenu("Create", this);
-        // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
-
-        m_repository_actions = std::make_unique<RepositoryActions>(ui.menuCreate, *m_repository);
-
-        connect(m_repository_actions.get(), SIGNAL(mesh(int, std::string)), this,
-                SLOT(slot_mesh_object_repository(int, std::string)));
-        connect(m_repository_actions.get(), SIGNAL(volume(int, std::string)), this,
-                SLOT(slot_volume_object_repository(int, std::string)));
-
-        m_model_tree = std::make_unique<ModelTree>(ui.model_tree, [this]() { model_tree_item_changed(); });
-
-        m_slider_volume_levels = std::make_unique<RangeSlider>(
-                ui.slider_volume_level_min, ui.slider_volume_level_max,
-                [this](double min, double max) { slider_volume_levels_range_changed(min, max); });
-
-        m_mesh_and_volume_events = std::make_unique<ModelEvents>(
-                m_model_tree.get(), &m_view, [this](ObjectId id) { update_volume_ui(id); });
 }
 
 void MainWindow::disable_volume_parameters()
@@ -371,7 +381,7 @@ void MainWindow::progress_bars(
         }
 }
 
-void MainWindow::slot_timer_progress_bar()
+void MainWindow::timer_progress_bar()
 {
         for (const WorkerThreads::Progress& t : m_worker_threads->progresses())
         {
@@ -510,17 +520,17 @@ void MainWindow::showEvent(QShowEvent* /*event*/)
         m_first_show = false;
 
         // Окно ещё не видно, поэтому небольшая задержка, чтобы окно реально появилось.
-        QTimer::singleShot(WINDOW_SHOW_DELAY_MSEC, this, SLOT(slot_window_first_shown()));
+        QTimer::singleShot(WINDOW_SHOW_DELAY_MSEC, this, &MainWindow::first_shown);
 }
 
-void MainWindow::slot_window_first_shown()
+void MainWindow::first_shown()
 {
         m_timer_progress_bar.start(TIMER_PROGRESS_BAR_INTERVAL);
 
         if (WINDOW_SIZE_GRAPHICS)
         {
                 QSize size = QDesktopWidget().screenGeometry(this).size() * WINDOW_SIZE_COEF;
-                resize_window_widget(this, ui.graphics_widget, size);
+                resize_window_widget(this, m_graphics_widget, size);
         }
         else
         {
@@ -567,7 +577,7 @@ void MainWindow::slot_window_first_shown()
                         view::command::SetShadowZoom(shadow_zoom())};
 
                 m_view = view::create_view(
-                        widget_window_id(ui.graphics_widget), widget_pixels_per_inch(ui.graphics_widget),
+                        widget_window_id(m_graphics_widget), widget_pixels_per_inch(m_graphics_widget),
                         std::move(view_initial_commands));
 
                 //
@@ -614,7 +624,7 @@ void MainWindow::on_actionLoad_triggered()
         load_from_file("", true);
 }
 
-void MainWindow::slot_mesh_object_repository(int dimension, std::string object_name)
+void MainWindow::action_mesh_repository(int dimension, std::string object_name)
 {
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
         static constexpr const char* DESCRIPTION = "Load from mesh repository";
@@ -634,7 +644,7 @@ void MainWindow::slot_mesh_object_repository(int dimension, std::string object_n
         });
 }
 
-void MainWindow::slot_volume_object_repository(int dimension, std::string object_name)
+void MainWindow::action_volume_repository(int dimension, std::string object_name)
 {
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
         static constexpr const char* DESCRIPTION = "Load from volume repository";

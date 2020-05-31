@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui
 {
-class GraphicsWidget : public QWidget
+class GraphicsWidget final : public QWidget
 {
         Q_OBJECT
 

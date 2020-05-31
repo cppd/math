@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "graphics_widget.h"
 #include "model_events.h"
 #include "model_tree.h"
 #include "range_slider.h"
@@ -96,24 +97,24 @@ private slots:
         void on_toolButton_normal_color_positive_clicked();
         void on_toolButton_wireframe_color_clicked();
 
+private:
         void graphics_widget_resize(QResizeEvent*);
         void graphics_widget_mouse_wheel(QWheelEvent*);
         void graphics_widget_mouse_move(QMouseEvent*);
         void graphics_widget_mouse_press(QMouseEvent*);
         void graphics_widget_mouse_release(QMouseEvent*);
 
+        void action_mesh_repository(int dimension, std::string object_name);
+        void action_volume_repository(int dimension, std::string object_name);
+
         void model_tree_item_changed();
         void slider_volume_levels_range_changed(double, double);
+        void timer_progress_bar();
+        void first_shown();
 
-        void slot_mesh_object_repository(int dimension, std::string object_name);
-        void slot_volume_object_repository(int dimension, std::string object_name);
+        //
 
-        void slot_timer_progress_bar();
-        void slot_window_first_shown();
-
-private:
-        void constructor_threads();
-        void constructor_connect();
+        void constructor_graphics_widget();
         void constructor_interface();
         void constructor_objects();
 
@@ -169,6 +170,7 @@ private:
 
         std::unique_ptr<WorkerThreads> m_worker_threads;
 
+        GraphicsWidget* m_graphics_widget;
         std::unique_ptr<view::View> m_view;
         std::unique_ptr<storage::Repository> m_repository;
         std::unique_ptr<RepositoryActions> m_repository_actions;

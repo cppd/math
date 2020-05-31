@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1280</width>
-    <height>1269</height>
+    <width>1331</width>
+    <height>1078</height>
    </rect>
   </property>
   <widget class="QWidget" name="mainWidget">
@@ -28,6 +28,9 @@
         <enum>Qt::Horizontal</enum>
        </property>
        <widget class="QTabWidget" name="tabWidget">
+        <property name="tabPosition">
+         <enum>QTabWidget::West</enum>
+        </property>
         <property name="currentIndex">
          <number>0</number>
         </property>
@@ -1322,18 +1325,12 @@
          </layout>
         </widget>
        </widget>
-       <widget class="gui::GraphicsWidget" name="graphics_widget" native="true">
+       <widget class="QWidget" name="graphics_widget" native="true">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>1</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>400</width>
-          <height>400</height>
-         </size>
         </property>
        </widget>
       </widget>
@@ -1359,7 +1356,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1280</width>
+     <width>1331</width>
      <height>29</height>
     </rect>
    </property>
@@ -1461,14 +1458,6 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <customwidgets>
-  <customwidget>
-   <class>gui::GraphicsWidget</class>
-   <extends>QWidget</extends>
-   <header>src/gui/widgets/graphics_widget.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
