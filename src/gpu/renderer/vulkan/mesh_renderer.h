@@ -84,7 +84,7 @@ public:
                 bool sampler_anisotropy,
                 const ShaderBuffers& buffers);
 
-        vulkan::Descriptors create_material_descriptors_sets(const std::vector<MaterialInfo>& materials);
+        void create_descriptor_sets(MeshObject* mesh) const;
 
         void create_render_buffers(
                 const RenderBuffers3D* render_buffers,

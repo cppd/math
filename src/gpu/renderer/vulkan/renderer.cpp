@@ -311,13 +311,14 @@ class Impl final : public Renderer
                 }
 
                 m_mesh_storage.erase(object.id());
-                m_mesh_storage.emplace(
-                        object.id(),
-                        std::make_unique<MeshObject>(
-                                m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
-                                m_transfer_queue, object, [this](const std::vector<MaterialInfo>& materials) {
-                                        return m_mesh_renderer.create_material_descriptors_sets(materials);
-                                }));
+
+                const auto pair = m_mesh_storage.emplace(
+                        object.id(), std::make_unique<MeshObject>(
+                                             m_device, m_graphics_command_pool, m_graphics_queue,
+                                             m_transfer_command_pool, m_transfer_queue, object));
+                ASSERT(pair.second);
+                MeshObject* ptr = pair.first->second.get();
+                m_mesh_renderer.create_descriptor_sets(ptr);
 
                 if (delete_and_create_command_buffers)
                 {

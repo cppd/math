@@ -72,12 +72,6 @@ MeshRenderer::MeshRenderer(
 {
 }
 
-vulkan::Descriptors MeshRenderer::create_material_descriptors_sets(const std::vector<MaterialInfo>& materials)
-{
-        return TrianglesMaterialMemory::create(
-                m_device, m_texture_sampler, m_triangles_program.descriptor_set_layout_material(), materials);
-}
-
 void MeshRenderer::create_render_buffers(
         const RenderBuffers3D* render_buffers,
         const vulkan::ImageWithMemory* object_image,
@@ -141,6 +135,14 @@ void MeshRenderer::delete_depth_buffers()
         m_render_depth_command_buffers.reset();
 
         m_render_triangles_depth_pipeline.reset();
+}
+
+void MeshRenderer::create_descriptor_sets(MeshObject* mesh) const
+{
+        mesh->create_descriptor_sets([&](const std::vector<MaterialInfo>& materials) {
+                return TrianglesMaterialMemory::create(
+                        m_device, m_texture_sampler, m_triangles_program.descriptor_set_layout_material(), materials);
+        });
 }
 
 void MeshRenderer::draw_commands(
