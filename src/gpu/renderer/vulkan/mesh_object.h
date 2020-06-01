@@ -48,16 +48,12 @@ public:
                 const vulkan::Queue& graphics_queue,
                 const vulkan::CommandPool& transfer_command_pool,
                 const vulkan::Queue& transfer_queue,
-                const mesh::MeshObject<3>& mesh_object);
+                const mesh::MeshObject<3>& mesh_object,
+                const MaterialDescriptorSetsFunction& material_descriptor_sets_function);
 
         ~MeshObject();
 
         const mat4& model_matrix() const;
-
-        //
-
-        void create_descriptor_sets(
-                const std::function<vulkan::Descriptors(const std::vector<MaterialInfo>& materials)>& create);
 
         //
 

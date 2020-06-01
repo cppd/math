@@ -84,7 +84,7 @@ public:
                 bool sampler_anisotropy,
                 const ShaderBuffers& buffers);
 
-        void create_descriptor_sets(MeshObject* mesh) const;
+        MaterialDescriptorSetsFunction material_descriptor_sets_function() const;
 
         void create_render_buffers(
                 const RenderBuffers3D* render_buffers,

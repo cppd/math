@@ -307,6 +307,36 @@ VkDeviceSize MaterialBuffer::buffer_size() const
 
 //
 
+CoordinatesBuffer::CoordinatesBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
+        : m_uniform_buffer(
+                vulkan::BufferMemoryType::HostVisible,
+                device,
+                family_indices,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                sizeof(Coordinates))
+{
+}
+
+VkBuffer CoordinatesBuffer::buffer() const
+{
+        return m_uniform_buffer;
+}
+
+VkDeviceSize CoordinatesBuffer::buffer_size() const
+{
+        return m_uniform_buffer.size();
+}
+
+void CoordinatesBuffer::set_coordinates(const mat4& model_matrix, const mat3& normal_matrix) const
+{
+        Coordinates coordinates;
+        coordinates.model_matrix = mat4_std140<float>(model_matrix);
+        coordinates.normal_matrix = mat3_std140<float>(normal_matrix);
+        vulkan::map_and_write_to_buffer(m_uniform_buffer, 0, coordinates);
+}
+
+//
+
 VolumeBuffer::VolumeBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
         : m_uniform_buffer_coordinates(
                 vulkan::BufferMemoryType::HostVisible,

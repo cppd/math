@@ -453,9 +453,21 @@ class MeshObject::Triangles final
         unsigned m_index_count = 0;
 
         std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_material_descriptor_sets;
+        MaterialDescriptorSetsFunction m_material_descriptor_sets_function;
 
         std::array<VkBuffer, 1> m_buffers;
         std::array<VkDeviceSize, 1> m_offsets;
+
+        void create_memory()
+        {
+                m_material_descriptor_sets.clear();
+                for (vulkan::Descriptors& sets : m_material_descriptor_sets_function(m_material_info))
+                {
+                        ASSERT(sets.descriptor_set_count() == m_material_vertex_count.size());
+                        ASSERT(sets.descriptor_set_count() == m_material_vertex_offset.size());
+                        m_material_descriptor_sets.emplace(sets.descriptor_set_layout(), std::move(sets));
+                }
+        }
 
 public:
         Triangles(
@@ -464,7 +476,9 @@ public:
                 const vulkan::Queue& graphics_queue,
                 const vulkan::CommandPool& /*transfer_command_pool*/,
                 const vulkan::Queue& /*transfer_queue*/,
-                const mesh::Mesh<3>& mesh)
+                const mesh::Mesh<3>& mesh,
+                const MaterialDescriptorSetsFunction& material_descriptor_sets_function)
+                : m_material_descriptor_sets_function(material_descriptor_sets_function)
         {
                 ASSERT(!mesh.facets.empty());
 
@@ -499,18 +513,8 @@ public:
 
                 m_buffers[0] = *m_vertex_buffer;
                 m_offsets[0] = 0;
-        }
 
-        void create_descriptor_sets(
-                const std::function<vulkan::Descriptors(const std::vector<MaterialInfo>& materials)>& create)
-        {
-                vulkan::Descriptors descriptor_sets = create(m_material_info);
-
-                ASSERT(descriptor_sets.descriptor_set_count() == m_material_vertex_count.size());
-                ASSERT(descriptor_sets.descriptor_set_count() == m_material_vertex_offset.size());
-
-                m_material_descriptor_sets.erase(descriptor_sets.descriptor_set_layout());
-                m_material_descriptor_sets.emplace(descriptor_sets.descriptor_set_layout(), std::move(descriptor_sets));
+                create_memory();
         }
 
         const vulkan::Descriptors& find_descriptor_sets(VkDescriptorSetLayout material_descriptor_set_layout) const
@@ -641,14 +645,15 @@ MeshObject::MeshObject(
         const vulkan::Queue& graphics_queue,
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
-        const mesh::MeshObject<3>& mesh_object)
+        const mesh::MeshObject<3>& mesh_object,
+        const MaterialDescriptorSetsFunction& material_descriptor_sets_function)
         : m_model_matrix(mesh_object.matrix())
 {
         if (!mesh_object.mesh().facets.empty())
         {
                 m_triangles = std::make_unique<MeshObject::Triangles>(
                         device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                        mesh_object.mesh());
+                        mesh_object.mesh(), material_descriptor_sets_function);
         }
 
         if (!mesh_object.mesh().lines.empty())
@@ -671,15 +676,6 @@ MeshObject::~MeshObject() = default;
 const mat4& MeshObject::model_matrix() const
 {
         return m_model_matrix;
-}
-
-void MeshObject::create_descriptor_sets(
-        const std::function<vulkan::Descriptors(const std::vector<MaterialInfo>& materials)>& create)
-{
-        if (m_triangles)
-        {
-                m_triangles->create_descriptor_sets(create);
-        }
 }
 
 void MeshObject::commands_triangles(

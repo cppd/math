@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/numerical/matrix.h>
 #include <src/vulkan/buffers.h>
+#include <src/vulkan/descriptor.h>
 
 #include <unordered_set>
 #include <vector>
@@ -117,6 +118,8 @@ public:
         void set_show_fog(bool show) const;
 };
 
+//
+
 class MaterialBuffer final
 {
         vulkan::BufferWithMemory m_uniform_buffer;
@@ -153,6 +156,41 @@ struct MaterialInfo final
         VkImageView texture_Kd;
         VkImageView texture_Ks;
 };
+
+using MaterialDescriptorSetsFunction =
+        std::function<std::vector<vulkan::Descriptors>(const std::vector<MaterialInfo>& materials)>;
+
+//
+
+class CoordinatesBuffer final
+{
+        vulkan::BufferWithMemory m_uniform_buffer;
+
+        struct Coordinates
+        {
+                mat4f model_matrix;
+                alignas(sizeof(vec4f)) Matrix<3, 4, float> normal_matrix;
+        };
+
+public:
+        CoordinatesBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+
+        VkBuffer buffer() const;
+        VkDeviceSize buffer_size() const;
+
+        void set_coordinates(const mat4& model_matrix, const mat3& normal_matrix) const;
+};
+
+struct CoordinatesInfo final
+{
+        VkBuffer buffer;
+        VkDeviceSize buffer_size;
+};
+
+using CoordinatesDescriptorSetsFunction =
+        std::function<std::vector<vulkan::Descriptors>(const std::vector<CoordinatesInfo>& coordinates)>;
+
+//
 
 class VolumeBuffer final
 {
