@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/objects.h>
 
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace gpu::renderer
@@ -37,9 +38,16 @@ class MeshObject final
 
         mat4 m_model_matrix;
 
+        CoordinatesBuffer m_coordinates_buffer;
+        std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_mesh_descriptor_sets;
+        MeshDescriptorSetsFunction m_mesh_descriptor_sets_function;
+
         std::unique_ptr<Triangles> m_triangles;
         std::unique_ptr<Lines> m_lines;
         std::unique_ptr<Points> m_points;
+
+        void create_descriptor_sets();
+        VkDescriptorSet find_mesh_descriptor_set(VkDescriptorSetLayout mesh_descriptor_set_layout) const;
 
 public:
         MeshObject(
@@ -49,25 +57,38 @@ public:
                 const vulkan::CommandPool& transfer_command_pool,
                 const vulkan::Queue& transfer_queue,
                 const mesh::MeshObject<3>& mesh_object,
+                const MeshDescriptorSetsFunction& mesh_descriptor_sets_function,
                 const MaterialDescriptorSetsFunction& material_descriptor_sets_function);
 
         ~MeshObject();
-
-        const mat4& model_matrix() const;
 
         //
 
         void commands_triangles(
                 VkCommandBuffer buffer,
+                VkDescriptorSetLayout mesh_descriptor_set_layout,
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
                 VkDescriptorSetLayout material_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set) const;
 
-        void commands_plain_triangles(VkCommandBuffer buffer) const;
+        void commands_plain_triangles(
+                VkCommandBuffer buffer,
+                VkDescriptorSetLayout mesh_descriptor_set_layout,
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const;
 
-        void commands_triangle_vertices(VkCommandBuffer buffer) const;
+        void commands_triangle_vertices(
+                VkCommandBuffer buffer,
+                VkDescriptorSetLayout mesh_descriptor_set_layout,
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const;
 
-        void commands_lines(VkCommandBuffer buffer) const;
+        void commands_lines(
+                VkCommandBuffer buffer,
+                VkDescriptorSetLayout mesh_descriptor_set_layout,
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const;
 
-        void commands_points(VkCommandBuffer buffer) const;
+        void commands_points(
+                VkCommandBuffer buffer,
+                VkDescriptorSetLayout mesh_descriptor_set_layout,
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const;
 };
 }

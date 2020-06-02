@@ -19,14 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(location = 0) in vec3 position;
 
-layout(std140, binding = 0) uniform Matrices
+layout(std140, set = 1, binding = 0) uniform Coordinates
 {
-        mat4 main_mvp_matrix;
-        mat4 main_model_matrix;
-        mat4 main_vp_matrix;
-        mat4 shadow_mvp_texture_matrix;
+        mat4 model_matrix;
+        mat3 normal_matrix;
 }
-matrices;
+coordinates;
 
 layout(location = 0) out VS
 {
@@ -36,5 +34,5 @@ vs;
 
 void main()
 {
-        vs.world_position = matrices.main_model_matrix * vec4(position, 1.0);
+        vs.world_position = coordinates.model_matrix * vec4(position, 1.0);
 }

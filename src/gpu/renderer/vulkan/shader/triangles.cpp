@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> TrianglesMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> TrianglesSharedMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -73,7 +73,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesMemory::descriptor_set_layout
         return bindings;
 }
 
-TrianglesMemory::TrianglesMemory(
+TrianglesSharedMemory::TrianglesSharedMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const vulkan::Buffer& matrices,
@@ -107,17 +107,17 @@ TrianglesMemory::TrianglesMemory(
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned TrianglesMemory::set_number()
+unsigned TrianglesSharedMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& TrianglesMemory::descriptor_set() const
+const VkDescriptorSet& TrianglesSharedMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void TrianglesMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachment* shadow_texture) const
+void TrianglesSharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachment* shadow_texture) const
 {
         ASSERT(shadow_texture && (shadow_texture->usage() & VK_IMAGE_USAGE_SAMPLED_BIT));
         ASSERT(shadow_texture && (shadow_texture->sample_count() == VK_SAMPLE_COUNT_1_BIT));
@@ -130,7 +130,7 @@ void TrianglesMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthA
         m_descriptors.update_descriptor_set(0, SHADOW_BINDING, image_info);
 }
 
-void TrianglesMemory::set_object_image(const vulkan::ImageWithMemory* storage_image) const
+void TrianglesSharedMemory::set_object_image(const vulkan::ImageWithMemory* storage_image) const
 {
         ASSERT(storage_image && storage_image->format() == VK_FORMAT_R32_UINT);
         ASSERT(storage_image && (storage_image->usage() & VK_IMAGE_USAGE_STORAGE_BIT));
@@ -140,6 +140,68 @@ void TrianglesMemory::set_object_image(const vulkan::ImageWithMemory* storage_im
         image_info.imageView = storage_image->image_view();
 
         m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
+}
+
+//
+
+std::vector<VkDescriptorSetLayoutBinding> TrianglesMeshMemory::descriptor_set_layout_bindings()
+{
+        std::vector<VkDescriptorSetLayoutBinding> bindings;
+
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = BUFFER_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+                bindings.push_back(b);
+        }
+
+        return bindings;
+}
+
+vulkan::Descriptors TrianglesMeshMemory::create(
+        VkDevice device,
+        VkDescriptorSetLayout descriptor_set_layout,
+        const std::vector<CoordinatesInfo>& coordinates)
+{
+        ASSERT(!coordinates.empty());
+        ASSERT(std::all_of(coordinates.cbegin(), coordinates.cend(), [](const CoordinatesInfo& m) {
+                return m.buffer != VK_NULL_HANDLE;
+        }));
+
+        vulkan::Descriptors descriptors(vulkan::Descriptors(
+                device, coordinates.size(), descriptor_set_layout, descriptor_set_layout_bindings()));
+
+        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<uint32_t> bindings;
+
+        for (size_t i = 0; i < coordinates.size(); ++i)
+        {
+                const CoordinatesInfo& coordinates_info = coordinates[i];
+
+                infos.clear();
+                bindings.clear();
+                {
+                        VkDescriptorBufferInfo buffer_info = {};
+                        buffer_info.buffer = coordinates_info.buffer;
+                        buffer_info.offset = 0;
+                        buffer_info.range = coordinates_info.buffer_size;
+
+                        infos.emplace_back(buffer_info);
+
+                        bindings.push_back(BUFFER_BINDING);
+                }
+                descriptors.update_descriptor_set(i, bindings, infos);
+        }
+
+        return descriptors;
+}
+
+unsigned TrianglesMeshMemory::set_number()
+{
+        return SET_NUMBER;
 }
 
 //
@@ -270,24 +332,32 @@ unsigned TrianglesMaterialMemory::set_number()
 
 TrianglesProgram::TrianglesProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, TrianglesMemory::descriptor_set_layout_bindings())),
+          m_descriptor_set_layout_shared(vulkan::create_descriptor_set_layout(
+                  device,
+                  TrianglesSharedMemory::descriptor_set_layout_bindings())),
+          m_descriptor_set_layout_mesh(
+                  vulkan::create_descriptor_set_layout(device, TrianglesMeshMemory::descriptor_set_layout_bindings())),
           m_descriptor_set_layout_material(vulkan::create_descriptor_set_layout(
                   device,
                   TrianglesMaterialMemory::descriptor_set_layout_bindings())),
           m_pipeline_layout(vulkan::create_pipeline_layout(
                   device,
-                  {TrianglesMemory::set_number(), TrianglesMaterialMemory::set_number()},
-                  {m_descriptor_set_layout, m_descriptor_set_layout_material})),
+                  {TrianglesSharedMemory::set_number(), TrianglesMeshMemory::set_number(),
+                   TrianglesMaterialMemory::set_number()},
+                  {m_descriptor_set_layout_shared, m_descriptor_set_layout_mesh, m_descriptor_set_layout_material})),
           m_vertex_shader(m_device, code_triangles_vert(), "main"),
           m_geometry_shader(m_device, code_triangles_geom(), "main"),
           m_fragment_shader(m_device, code_triangles_frag(), "main")
 {
 }
 
-VkDescriptorSetLayout TrianglesProgram::descriptor_set_layout() const
+VkDescriptorSetLayout TrianglesProgram::descriptor_set_layout_shared() const
 {
-        return m_descriptor_set_layout;
+        return m_descriptor_set_layout_shared;
+}
+VkDescriptorSetLayout TrianglesProgram::descriptor_set_layout_mesh() const
+{
+        return m_descriptor_set_layout_mesh;
 }
 
 VkDescriptorSetLayout TrianglesProgram::descriptor_set_layout_material() const

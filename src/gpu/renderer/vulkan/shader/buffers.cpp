@@ -102,27 +102,20 @@ void ShaderBuffers::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) c
 }
 
 void ShaderBuffers::set_matrices(
-        const mat4& main_model_matrix,
-        const mat4& main_mvp_matrix,
         const mat4& main_vp_matrix,
-        const mat4& shadow_mvp_matrix,
         const mat4& shadow_vp_matrix,
-        const mat4& shadow_mvp_texture_matrix) const
+        const mat4& shadow_vp_texture_matrix) const
 {
         {
                 Matrices matrices;
-                matrices.main_mvp_matrix = mat4_std140<float>(main_mvp_matrix);
-                matrices.main_model_matrix = mat4_std140<float>(main_model_matrix);
-                matrices.main_vp_matrix = mat4_std140<float>(main_vp_matrix);
-                matrices.shadow_mvp_texture_matrix = mat4_std140<float>(shadow_mvp_texture_matrix);
+                matrices.vp_matrix = mat4_std140<float>(main_vp_matrix);
+                matrices.shadow_vp_texture_matrix = mat4_std140<float>(shadow_vp_texture_matrix);
                 copy_to_matrices_buffer(0, matrices);
         }
         {
                 Matrices matrices;
-                matrices.main_mvp_matrix = mat4_std140<float>(shadow_mvp_matrix);
-                matrices.main_model_matrix = mat4_std140<float>(main_model_matrix);
-                matrices.main_vp_matrix = mat4_std140<float>(shadow_vp_matrix);
-                matrices.shadow_mvp_texture_matrix = mat4_std140<float>(shadow_mvp_texture_matrix);
+                matrices.vp_matrix = mat4_std140<float>(shadow_vp_matrix);
+                matrices.shadow_vp_texture_matrix = mat4_std140<float>(shadow_vp_texture_matrix);
                 copy_to_shadow_matrices_buffer(0, matrices);
         }
 }

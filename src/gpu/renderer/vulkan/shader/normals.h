@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "buffers.h"
+
 #include <src/numerical/region.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
@@ -26,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class NormalsMemory final
+class NormalsSharedMemory final
 {
         static constexpr int SET_NUMBER = 0;
         static constexpr int MATRICES_BINDING = 0;
@@ -38,29 +40,45 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        NormalsMemory(
+        NormalsSharedMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const vulkan::Buffer& matrices,
                 const vulkan::Buffer& drawing);
 
-        NormalsMemory(const NormalsMemory&) = delete;
-        NormalsMemory& operator=(const NormalsMemory&) = delete;
-        NormalsMemory& operator=(NormalsMemory&&) = delete;
+        NormalsSharedMemory(const NormalsSharedMemory&) = delete;
+        NormalsSharedMemory& operator=(const NormalsSharedMemory&) = delete;
+        NormalsSharedMemory& operator=(NormalsSharedMemory&&) = delete;
 
-        NormalsMemory(NormalsMemory&&) = default;
-        ~NormalsMemory() = default;
+        NormalsSharedMemory(NormalsSharedMemory&&) = default;
+        ~NormalsSharedMemory() = default;
 
         //
 
         const VkDescriptorSet& descriptor_set() const;
 };
 
+class NormalsMeshMemory final
+{
+        static constexpr int SET_NUMBER = 1;
+        static constexpr int BUFFER_BINDING = 0;
+
+public:
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        static vulkan::Descriptors create(
+                VkDevice device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::vector<CoordinatesInfo>& coordinates);
+};
+
 class NormalsProgram final
 {
         const vulkan::Device& m_device;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout_shared;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout_mesh;
         vulkan::PipelineLayout m_pipeline_layout;
         vulkan::VertexShader m_vertex_shader;
         vulkan::GeometryShader m_geometry_shader;
@@ -82,7 +100,9 @@ public:
                 bool sample_shading,
                 const Region<2, int>& viewport) const;
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkDescriptorSetLayout descriptor_set_layout_shared() const;
+        VkDescriptorSetLayout descriptor_set_layout_mesh() const;
+
         VkPipelineLayout pipeline_layout() const;
 };
 }

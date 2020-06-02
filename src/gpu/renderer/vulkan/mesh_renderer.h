@@ -43,19 +43,19 @@ class MeshRenderer
         const DepthBuffers* m_depth_buffers = nullptr;
 
         TrianglesProgram m_triangles_program;
-        TrianglesMemory m_triangles_memory;
+        TrianglesSharedMemory m_triangles_memory;
 
         TriangleLinesProgram m_triangle_lines_program;
-        TriangleLinesMemory m_triangle_lines_memory;
+        TriangleLinesSharedMemory m_triangle_lines_memory;
 
         NormalsProgram m_normals_program;
-        NormalsMemory m_normals_memory;
+        NormalsSharedMemory m_normals_memory;
 
         TrianglesDepthProgram m_triangles_depth_program;
-        TrianglesDepthMemory m_triangles_depth_memory;
+        TrianglesDepthSharedMemory m_triangles_depth_memory;
 
         PointsProgram m_points_program;
-        PointsMemory m_points_memory;
+        PointsSharedMemory m_points_memory;
 
         std::optional<vulkan::Pipeline> m_render_triangles_pipeline;
         std::optional<vulkan::Pipeline> m_render_triangle_lines_pipeline;
@@ -84,6 +84,7 @@ public:
                 bool sampler_anisotropy,
                 const ShaderBuffers& buffers);
 
+        MeshDescriptorSetsFunction mesh_descriptor_sets_function() const;
         MaterialDescriptorSetsFunction material_descriptor_sets_function() const;
 
         void create_render_buffers(

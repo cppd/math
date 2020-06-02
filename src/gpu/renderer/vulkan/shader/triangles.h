@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class TrianglesMemory final
+class TrianglesSharedMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -46,18 +46,18 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        TrianglesMemory(
+        TrianglesSharedMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const vulkan::Buffer& matrices,
                 const vulkan::Buffer& drawing);
 
-        TrianglesMemory(const TrianglesMemory&) = delete;
-        TrianglesMemory& operator=(const TrianglesMemory&) = delete;
-        TrianglesMemory& operator=(TrianglesMemory&&) = delete;
+        TrianglesSharedMemory(const TrianglesSharedMemory&) = delete;
+        TrianglesSharedMemory& operator=(const TrianglesSharedMemory&) = delete;
+        TrianglesSharedMemory& operator=(TrianglesSharedMemory&&) = delete;
 
-        TrianglesMemory(TrianglesMemory&&) = default;
-        ~TrianglesMemory() = default;
+        TrianglesSharedMemory(TrianglesSharedMemory&&) = default;
+        ~TrianglesSharedMemory() = default;
 
         //
 
@@ -69,9 +69,24 @@ public:
         void set_object_image(const vulkan::ImageWithMemory* storage_image) const;
 };
 
-class TrianglesMaterialMemory final
+class TrianglesMeshMemory final
 {
         static constexpr int SET_NUMBER = 1;
+        static constexpr int BUFFER_BINDING = 0;
+
+public:
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        static vulkan::Descriptors create(
+                VkDevice device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::vector<CoordinatesInfo>& coordinates);
+};
+
+class TrianglesMaterialMemory final
+{
+        static constexpr int SET_NUMBER = 2;
 
         static constexpr int MATERIAL_BINDING = 0;
         static constexpr int TEXTURE_KA_BINDING = 1;
@@ -93,7 +108,8 @@ class TrianglesProgram final
 {
         const vulkan::Device& m_device;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout_shared;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout_mesh;
         vulkan::DescriptorSetLayout m_descriptor_set_layout_material;
         vulkan::PipelineLayout m_pipeline_layout;
         vulkan::VertexShader m_vertex_shader;
@@ -116,8 +132,10 @@ public:
                 bool sample_shading,
                 const Region<2, int>& viewport) const;
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkDescriptorSetLayout descriptor_set_layout_shared() const;
+        VkDescriptorSetLayout descriptor_set_layout_mesh() const;
         VkDescriptorSetLayout descriptor_set_layout_material() const;
+
         VkPipelineLayout pipeline_layout() const;
 };
 }

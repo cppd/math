@@ -52,7 +52,7 @@ layout(binding = 2) uniform sampler2D shadow_texture;
 layout(binding = 3, r32ui) writeonly uniform uimage2D object_image;
 
 // Для каждой группы треугольников с одним материалом отдельно задаётся этот материал и его текстуры
-layout(std140, set = 1, binding = 0) uniform Material
+layout(std140, set = 2, binding = 0) uniform Material
 {
         vec3 Ka;
         vec3 Kd;
@@ -64,9 +64,9 @@ layout(std140, set = 1, binding = 0) uniform Material
         bool use_material;
 }
 mtl;
-layout(set = 1, binding = 1) uniform sampler2D texture_Ka;
-layout(set = 1, binding = 2) uniform sampler2D texture_Kd;
-layout(set = 1, binding = 3) uniform sampler2D texture_Ks;
+layout(set = 2, binding = 1) uniform sampler2D texture_Ka;
+layout(set = 2, binding = 2) uniform sampler2D texture_Kd;
+layout(set = 2, binding = 3) uniform sampler2D texture_Ks;
 
 //
 

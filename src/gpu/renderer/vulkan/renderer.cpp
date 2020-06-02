@@ -315,12 +315,12 @@ class Impl final : public Renderer
                         object.id(),
                         std::make_unique<MeshObject>(
                                 m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
-                                m_transfer_queue, object, m_mesh_renderer.material_descriptor_sets_function()));
+                                m_transfer_queue, object, m_mesh_renderer.mesh_descriptor_sets_function(),
+                                m_mesh_renderer.material_descriptor_sets_function()));
 
                 if (delete_and_create_command_buffers)
                 {
                         create_command_buffers();
-                        set_matrices();
                 }
         }
 
@@ -378,6 +378,10 @@ class Impl final : public Renderer
                 if ((create_commands || update_commands) && (m_current_object_id == object.id()))
                 {
                         create_command_buffers();
+                        if (create_commands && m_current_object_id == object.id())
+                        {
+                                set_matrices();
+                        }
                 }
         }
 
@@ -411,7 +415,6 @@ class Impl final : public Renderer
                 if (delete_and_create_command_buffers)
                 {
                         create_command_buffers();
-                        set_matrices();
                 }
         }
 
@@ -430,7 +433,6 @@ class Impl final : public Renderer
                 m_volume_storage.clear();
                 m_current_object_id.reset();
                 create_command_buffers();
-                set_matrices();
         }
 
         void object_show(ObjectId id) override
@@ -650,17 +652,8 @@ class Impl final : public Renderer
 
         void set_matrices()
         {
-                const MeshObject* mesh = find_object(m_mesh_storage, m_current_object_id);
-                if (mesh)
-                {
-                        const mat4& model = mesh->model_matrix();
-                        const mat4& main_mvp = m_main_vp_matrix * model;
-                        const mat4& shadow_mvp_texture = m_shadow_vp_texture_matrix * model;
-                        const mat4& shadow_mvp = m_shadow_vp_matrix * model;
+                m_shader_buffers.set_matrices(m_main_vp_matrix, m_shadow_vp_matrix, m_shadow_vp_texture_matrix);
 
-                        m_shader_buffers.set_matrices(
-                                model, main_mvp, m_main_vp_matrix, shadow_mvp, m_shadow_vp_matrix, shadow_mvp_texture);
-                }
                 VolumeObject* volume = find_object(m_volume_storage, m_current_object_id);
                 if (volume)
                 {

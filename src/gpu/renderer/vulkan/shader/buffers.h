@@ -36,10 +36,8 @@ class ShaderBuffers
 
         struct Matrices
         {
-                mat4f main_mvp_matrix;
-                mat4f main_model_matrix;
-                mat4f main_vp_matrix;
-                mat4f shadow_mvp_texture_matrix;
+                mat4f vp_matrix;
+                mat4f shadow_vp_texture_matrix;
         };
 
         struct Drawing
@@ -88,12 +86,9 @@ public:
         const vulkan::Buffer& drawing_buffer() const;
 
         void set_matrices(
-                const mat4& main_model_matrix,
-                const mat4& main_mvp_matrix,
                 const mat4& main_vp_matrix,
-                const mat4& shadow_mvp_matrix,
                 const mat4& shadow_vp_matrix,
-                const mat4& shadow_mvp_texture_matrix) const;
+                const mat4& shadow_vp_texture_matrix) const;
 
         void set_clip_plane(const vec4& equation, bool enabled) const;
         void set_viewport(const vec2& center, const vec2& factor) const;
@@ -187,7 +182,7 @@ struct CoordinatesInfo final
         VkDeviceSize buffer_size;
 };
 
-using CoordinatesDescriptorSetsFunction =
+using MeshDescriptorSetsFunction =
         std::function<std::vector<vulkan::Descriptors>(const std::vector<CoordinatesInfo>& coordinates)>;
 
 //

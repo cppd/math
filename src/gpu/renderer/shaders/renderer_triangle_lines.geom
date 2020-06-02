@@ -24,10 +24,8 @@ layout(line_strip, max_vertices = 2) out;
 
 layout(std140, binding = 0) uniform Matrices
 {
-        mat4 main_mvp_matrix;
-        mat4 main_model_matrix;
-        mat4 main_vp_matrix;
-        mat4 shadow_mvp_texture_matrix;
+        mat4 vp_matrix;
+        mat4 shadow_vp_texture_matrix;
 }
 matrices;
 
@@ -75,11 +73,11 @@ out gl_PerVertex
 void line(int i0, int i1, int i2, float d0, float d1, float d2)
 {
         vec4 from = mix(vs[i0].world_position, vs[i1].world_position, d0 / (d0 - d1));
-        gl_Position = matrices.main_vp_matrix * from;
+        gl_Position = matrices.vp_matrix * from;
         EmitVertex();
 
         vec4 to = mix(vs[i0].world_position, vs[i2].world_position, d0 / (d0 - d2));
-        gl_Position = matrices.main_vp_matrix * to;
+        gl_Position = matrices.vp_matrix * to;
         EmitVertex();
 
         EndPrimitive();

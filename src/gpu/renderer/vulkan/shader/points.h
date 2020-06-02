@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "buffers.h"
+
 #include <src/color/color.h>
 #include <src/numerical/region.h>
 #include <src/numerical/vec.h>
@@ -29,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class PointsMemory final
+class PointsSharedMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -43,18 +45,18 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        PointsMemory(
+        PointsSharedMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const vulkan::Buffer& matrices,
                 const vulkan::Buffer& drawing);
 
-        PointsMemory(const PointsMemory&) = delete;
-        PointsMemory& operator=(const PointsMemory&) = delete;
-        PointsMemory& operator=(PointsMemory&&) = delete;
+        PointsSharedMemory(const PointsSharedMemory&) = delete;
+        PointsSharedMemory& operator=(const PointsSharedMemory&) = delete;
+        PointsSharedMemory& operator=(PointsSharedMemory&&) = delete;
 
-        PointsMemory(PointsMemory&&) = default;
-        ~PointsMemory() = default;
+        PointsSharedMemory(PointsSharedMemory&&) = default;
+        ~PointsSharedMemory() = default;
 
         //
 
@@ -65,11 +67,27 @@ public:
         void set_object_image(const vulkan::ImageWithMemory* storage_image) const;
 };
 
+class PointsMeshMemory final
+{
+        static constexpr int SET_NUMBER = 1;
+        static constexpr int BUFFER_BINDING = 0;
+
+public:
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        static vulkan::Descriptors create(
+                VkDevice device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::vector<CoordinatesInfo>& coordinates);
+};
+
 class PointsProgram final
 {
         const vulkan::Device& m_device;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout_shared;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout_mesh;
         vulkan::PipelineLayout m_pipeline_layout;
         vulkan::VertexShader m_vertex_shader_0d;
         vulkan::VertexShader m_vertex_shader_1d;
@@ -91,7 +109,9 @@ public:
                 VkPrimitiveTopology primitive_topology,
                 const Region<2, int>& viewport) const;
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkDescriptorSetLayout descriptor_set_layout_shared() const;
+        VkDescriptorSetLayout descriptor_set_layout_mesh() const;
+
         VkPipelineLayout pipeline_layout() const;
 };
 }

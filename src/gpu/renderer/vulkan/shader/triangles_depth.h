@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "buffers.h"
+
 #include <src/numerical/region.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
@@ -26,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class TrianglesDepthMemory final
+class TrianglesDepthSharedMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -39,29 +41,45 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        TrianglesDepthMemory(
+        TrianglesDepthSharedMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const vulkan::Buffer& matrices,
                 const vulkan::Buffer& drawing);
 
-        TrianglesDepthMemory(const TrianglesDepthMemory&) = delete;
-        TrianglesDepthMemory& operator=(const TrianglesDepthMemory&) = delete;
-        TrianglesDepthMemory& operator=(TrianglesDepthMemory&&) = delete;
+        TrianglesDepthSharedMemory(const TrianglesDepthSharedMemory&) = delete;
+        TrianglesDepthSharedMemory& operator=(const TrianglesDepthSharedMemory&) = delete;
+        TrianglesDepthSharedMemory& operator=(TrianglesDepthSharedMemory&&) = delete;
 
-        TrianglesDepthMemory(TrianglesDepthMemory&&) = default;
-        ~TrianglesDepthMemory() = default;
+        TrianglesDepthSharedMemory(TrianglesDepthSharedMemory&&) = default;
+        ~TrianglesDepthSharedMemory() = default;
 
         //
 
         const VkDescriptorSet& descriptor_set() const;
 };
 
+class TrianglesDepthMeshMemory final
+{
+        static constexpr int SET_NUMBER = 1;
+        static constexpr int BUFFER_BINDING = 0;
+
+public:
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        static vulkan::Descriptors create(
+                VkDevice device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::vector<CoordinatesInfo>& coordinates);
+};
+
 class TrianglesDepthProgram final
 {
         const vulkan::Device& m_device;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout_shared;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout_mesh;
         vulkan::PipelineLayout m_pipeline_layout;
         vulkan::VertexShader m_vertex_shader;
 
@@ -80,7 +98,9 @@ public:
                 VkSampleCountFlagBits sample_count,
                 const Region<2, int>& viewport) const;
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkDescriptorSetLayout descriptor_set_layout_shared() const;
+        VkDescriptorSetLayout descriptor_set_layout_mesh() const;
+
         VkPipelineLayout pipeline_layout() const;
 };
 }

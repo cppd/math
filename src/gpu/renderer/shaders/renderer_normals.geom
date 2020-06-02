@@ -24,10 +24,8 @@ layout(line_strip, max_vertices = 2) out;
 
 layout(std140, binding = 0) uniform Matrices
 {
-        mat4 main_mvp_matrix;
-        mat4 main_model_matrix;
-        mat4 main_vp_matrix;
-        mat4 shadow_mvp_texture_matrix;
+        mat4 vp_matrix;
+        mat4 shadow_vp_texture_matrix;
 }
 matrices;
 
@@ -59,6 +57,13 @@ layout(std140, binding = 1) uniform Drawing
 }
 drawing;
 
+layout(std140, set = 1, binding = 0) uniform Coordinates
+{
+        mat4 model_matrix;
+        mat3 normal_matrix;
+}
+coordinates;
+
 layout(location = 0) in VS
 {
         vec3 position;
@@ -82,13 +87,13 @@ gs;
 
 void line(vec3 world_from, vec3 world_to)
 {
-        const vec4 from = matrices.main_vp_matrix * vec4(world_from, 1.0);
+        const vec4 from = matrices.vp_matrix * vec4(world_from, 1.0);
         gl_Position = from;
         gl_ClipDistance[0] = drawing.clip_plane_enabled ? dot(drawing.clip_plane_equation, vec4(world_from, 1.0)) : 1;
         gs.color = drawing.normal_color_negative;
         EmitVertex();
 
-        const vec4 to = matrices.main_vp_matrix * vec4(world_to, 1.0);
+        const vec4 to = matrices.vp_matrix * vec4(world_to, 1.0);
         gl_Position = to;
         gl_ClipDistance[0] = drawing.clip_plane_enabled ? dot(drawing.clip_plane_equation, vec4(world_to, 1.0)) : 1;
         gs.color = drawing.normal_color_positive;
@@ -99,8 +104,8 @@ void line(vec3 world_from, vec3 world_to)
 
 void main()
 {
-        const vec3 world_from = (matrices.main_model_matrix * vec4(vs[0].position, 1.0)).xyz;
-        const vec3 world_normal = vs[0].normal;
+        const vec3 world_from = (coordinates.model_matrix * vec4(vs[0].position, 1.0)).xyz;
+        const vec3 world_normal = coordinates.normal_matrix * vs[0].normal;
         const vec3 world_normal_vector = drawing.normal_length * normalize(world_normal);
 
         line(world_from - world_normal_vector, world_from + world_normal_vector);

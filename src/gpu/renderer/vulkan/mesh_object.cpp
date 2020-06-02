@@ -32,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <sstream>
-#include <unordered_map>
 #include <unordered_set>
 
 namespace gpu::renderer
@@ -646,9 +645,15 @@ MeshObject::MeshObject(
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
         const mesh::MeshObject<3>& mesh_object,
+        const MeshDescriptorSetsFunction& mesh_descriptor_sets_function,
         const MaterialDescriptorSetsFunction& material_descriptor_sets_function)
-        : m_model_matrix(mesh_object.matrix())
+        : m_model_matrix(mesh_object.matrix()),
+          m_coordinates_buffer(device, {graphics_queue.family_index()}),
+          m_mesh_descriptor_sets_function(mesh_descriptor_sets_function)
 {
+        m_coordinates_buffer.set_coordinates(m_model_matrix, m_model_matrix.top_left<3, 3>().inverse().transpose());
+        create_descriptor_sets();
+
         if (!mesh_object.mesh().facets.empty())
         {
                 m_triangles = std::make_unique<MeshObject::Triangles>(
@@ -673,50 +678,88 @@ MeshObject::MeshObject(
 
 MeshObject::~MeshObject() = default;
 
-const mat4& MeshObject::model_matrix() const
+void MeshObject::create_descriptor_sets()
 {
-        return m_model_matrix;
+        CoordinatesInfo info;
+        info.buffer = m_coordinates_buffer.buffer();
+        info.buffer_size = m_coordinates_buffer.buffer_size();
+        m_mesh_descriptor_sets.clear();
+        for (vulkan::Descriptors& sets : m_mesh_descriptor_sets_function({info}))
+        {
+                ASSERT(sets.descriptor_set_count() == 1);
+                m_mesh_descriptor_sets.emplace(sets.descriptor_set_layout(), std::move(sets));
+        }
+}
+
+VkDescriptorSet MeshObject::find_mesh_descriptor_set(VkDescriptorSetLayout mesh_descriptor_set_layout) const
+{
+        auto iter = m_mesh_descriptor_sets.find(mesh_descriptor_set_layout);
+        if (iter == m_mesh_descriptor_sets.cend())
+        {
+                error("Failed to find mesh descriptor sets for mesh descriptor set layout");
+        }
+        ASSERT(iter->second.descriptor_set_count() == 1);
+        return iter->second.descriptor_set(0);
 }
 
 void MeshObject::commands_triangles(
         VkCommandBuffer buffer,
+        VkDescriptorSetLayout mesh_descriptor_set_layout,
+        const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
         VkDescriptorSetLayout material_descriptor_set_layout,
         const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set) const
 {
         if (m_triangles)
         {
+                bind_mesh_descriptor_set(find_mesh_descriptor_set(mesh_descriptor_set_layout));
                 m_triangles->draw_commands(buffer, material_descriptor_set_layout, bind_material_descriptor_set);
         }
 }
 
-void MeshObject::commands_plain_triangles(VkCommandBuffer buffer) const
+void MeshObject::commands_plain_triangles(
+        VkCommandBuffer buffer,
+        VkDescriptorSetLayout mesh_descriptor_set_layout,
+        const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const
 {
         if (m_triangles)
         {
+                bind_mesh_descriptor_set(find_mesh_descriptor_set(mesh_descriptor_set_layout));
                 m_triangles->draw_commands_plain(buffer);
         }
 }
 
-void MeshObject::commands_triangle_vertices(VkCommandBuffer buffer) const
+void MeshObject::commands_triangle_vertices(
+        VkCommandBuffer buffer,
+        VkDescriptorSetLayout mesh_descriptor_set_layout,
+        const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const
 {
         if (m_triangles)
         {
+                bind_mesh_descriptor_set(find_mesh_descriptor_set(mesh_descriptor_set_layout));
                 m_triangles->draw_commands_vertices(buffer);
         }
 }
 
-void MeshObject::commands_lines(VkCommandBuffer buffer) const
+void MeshObject::commands_lines(
+        VkCommandBuffer buffer,
+        VkDescriptorSetLayout mesh_descriptor_set_layout,
+        const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const
 {
         if (m_lines)
         {
+                bind_mesh_descriptor_set(find_mesh_descriptor_set(mesh_descriptor_set_layout));
                 m_lines->draw_commands(buffer);
         }
 }
 
-void MeshObject::commands_points(VkCommandBuffer buffer) const
+void MeshObject::commands_points(
+        VkCommandBuffer buffer,
+        VkDescriptorSetLayout mesh_descriptor_set_layout,
+        const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const
 {
         if (m_points)
         {
+                bind_mesh_descriptor_set(find_mesh_descriptor_set(mesh_descriptor_set_layout));
                 m_points->draw_commands(buffer);
         }
 }
