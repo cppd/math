@@ -336,12 +336,8 @@ class Impl final : public Renderer
 
                 ASSERT(find_object(m_mesh_storage, object.id()) == nullptr);
 
-                bool create_commands = false;
+                bool created = false;
                 VolumeObject* ptr = find_object(m_volume_storage, object.id());
-                if (!ptr && !reading.updates().contains(volume::Update::All))
-                {
-                        return;
-                }
                 if (!ptr)
                 {
                         const auto pair = m_volume_storage.emplace(
@@ -354,31 +350,40 @@ class Impl final : public Renderer
                         ASSERT(pair.second);
 
                         ptr = pair.first->second.get();
-                        create_commands = true;
+                        created = true;
                 }
 
-                bool update_commands;
+                bool update_command_buffers;
                 try
                 {
-                        ptr->update(reading.updates(), object, &update_commands);
+                        if (!created)
+                        {
+                                ptr->update(reading.updates(), object, &update_command_buffers);
+                        }
+                        else
+                        {
+                                ptr->update({volume::Update::All}, object, &update_command_buffers);
+                        }
                 }
                 catch (const std::exception& e)
                 {
                         m_volume_storage.erase(object.id());
-                        update_commands = true;
+                        update_command_buffers = true;
+                        created = false;
                         LOG(std::string("Error updating volume object. ") + e.what());
                 }
                 catch (...)
                 {
                         m_volume_storage.erase(object.id());
-                        update_commands = true;
-                        LOG("Unknown error creating mesh object");
+                        update_command_buffers = true;
+                        created = false;
+                        LOG("Unknown error updating volume object");
                 }
 
-                if ((create_commands || update_commands) && (m_current_object_id == object.id()))
+                if ((created || update_command_buffers) && (m_current_object_id == object.id()))
                 {
                         create_command_buffers();
-                        if (create_commands && m_current_object_id == object.id())
+                        if (created && m_current_object_id == object.id())
                         {
                                 set_matrices();
                         }
