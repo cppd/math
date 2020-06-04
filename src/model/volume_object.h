@@ -119,6 +119,22 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         mutable std::shared_mutex m_mutex;
         mutable std::unordered_set<Update> m_updates{Update::All};
 
+        void send_event(VolumeEvent<N>&& event) noexcept
+        {
+                try
+                {
+                        (*m_events)(std::move(event));
+                }
+                catch (const std::exception& e)
+                {
+                        error_fatal(std::string("Error sending volume event: ") + e.what());
+                }
+                catch (...)
+                {
+                        error_fatal("Error sending volume event");
+                }
+        }
+
 public:
         static void set_events(const std::function<void(VolumeEvent<N>&&)>* events)
         {
@@ -143,7 +159,7 @@ public:
                 {
                         m_updates = {Update::All};
                         m_inserted = true;
-                        (*m_events)(typename VolumeEvent<N>::Insert(this->shared_from_this()));
+                        send_event(typename VolumeEvent<N>::Insert(this->shared_from_this()));
                 }
         }
 
@@ -151,7 +167,7 @@ public:
         {
                 if (m_inserted)
                 {
-                        (*m_events)(typename VolumeEvent<N>::Delete(m_id));
+                        send_event(typename VolumeEvent<N>::Delete(m_id));
                 }
         }
 
@@ -242,15 +258,11 @@ public:
                 m_object->m_updates.merge(std::move(updates));
         }
 
-        ~WritingUpdates() noexcept(false)
+        ~WritingUpdates()
         {
-                bool inserted = m_object->m_inserted;
-                // Нужно снять блокировку до вызова функции событий, так как
-                // обработчики событий могут читать изменения в этом же потоке.
-                m_lock.unlock();
-                if (inserted)
+                if (m_object->m_inserted)
                 {
-                        (*m_object->m_events)(typename VolumeEvent<N>::Update(m_object->shared_from_this()));
+                        m_object->send_event(typename VolumeEvent<N>::Update(m_object->shared_from_this()));
                 }
         }
 };

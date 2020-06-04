@@ -30,8 +30,7 @@ ThreadUI::ThreadUI()
 {
         qRegisterMetaType<std::function<void()>>("std::function<void()>");
 
-        connect(this, SIGNAL(object_signal(const std::function<void()>&)), this,
-                SLOT(object_slot(const std::function<void()>&)));
+        connect(this, &ThreadUI::object_signal, this, &ThreadUI::object_slot, Qt::QueuedConnection);
 
         ASSERT(!g_thread_ui_object);
         g_thread_ui_object = this;

@@ -27,6 +27,7 @@ class ThreadUI final : public QObject
         Q_OBJECT
 
         void run(const std::function<void()>& f) const;
+        void object_slot(const std::function<void()>&) const;
 
 public:
         ThreadUI();
@@ -39,8 +40,5 @@ public:
 
 signals:
         void object_signal(const std::function<void()>&) const;
-
-private slots:
-        void object_slot(const std::function<void()>&) const;
 };
 }
