@@ -46,6 +46,7 @@ class ModelEvents final
 
         ModelTree* m_model_tree;
         std::unique_ptr<view::View>& m_view;
+        std::function<void(ObjectId)> m_on_mesh_update;
         std::function<void(ObjectId)> m_on_volume_update;
 
         template <size_t N>
@@ -61,6 +62,7 @@ public:
         ModelEvents(
                 ModelTree* model_tree,
                 std::unique_ptr<view::View>* view,
+                std::function<void(ObjectId)>&& on_mesh_update,
                 std::function<void(ObjectId)>&& on_volume_update);
         ~ModelEvents();
 

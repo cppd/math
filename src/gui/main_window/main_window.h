@@ -161,6 +161,8 @@ private:
 
         bool stop_action(WorkerThreads::Action action);
 
+        void update_mesh_ui(ObjectId id);
+
         void disable_volume_parameters();
         void update_volume_ui(ObjectId id);
 

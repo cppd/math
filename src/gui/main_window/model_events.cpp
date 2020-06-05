@@ -26,10 +26,12 @@ namespace gui
 ModelEvents::ModelEvents(
         ModelTree* model_tree,
         std::unique_ptr<view::View>* view,
+        std::function<void(ObjectId)>&& on_mesh_update,
         std::function<void(ObjectId)>&& on_volume_update)
         : m_thread_id(std::this_thread::get_id()),
           m_model_tree(model_tree),
           m_view(*view),
+          m_on_mesh_update(std::move(on_mesh_update)),
           m_on_volume_update(std::move(on_volume_update))
 {
         const auto f = [this]<size_t N>(Events<N>& model_events) {
@@ -99,7 +101,13 @@ void ModelEvents::event_from_mesh_ui_thread(const mesh::MeshEvent<N>& event)
                                 m_model_tree->insert(v.object);
                         }
                 },
-                [](const typename mesh::MeshEvent<N>::Update&) {}, [](const typename mesh::MeshEvent<N>::Delete&) {}
+                [this](const typename mesh::MeshEvent<N>::Update& v) {
+                        if (v.object)
+                        {
+                                m_on_mesh_update(v.object->id());
+                        }
+                },
+                [](const typename mesh::MeshEvent<N>::Delete&) {}
 
         };
 

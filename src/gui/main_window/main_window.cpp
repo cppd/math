@@ -155,7 +155,8 @@ void MainWindow::constructor_objects()
                 [this](double min, double max) { slider_volume_levels_range_changed(min, max); });
 
         m_mesh_and_volume_events = std::make_unique<ModelEvents>(
-                m_model_tree.get(), &m_view, [this](ObjectId id) { update_volume_ui(id); });
+                m_model_tree.get(), &m_view, [this](ObjectId id) { update_mesh_ui(id); },
+                [this](ObjectId id) { update_volume_ui(id); });
 }
 
 void MainWindow::constructor_interface()
@@ -1128,6 +1129,10 @@ void MainWindow::on_checkBox_vertical_sync_clicked()
 }
 
 void MainWindow::on_actionFullScreen_triggered()
+{
+}
+
+void MainWindow::update_mesh_ui(ObjectId /*id*/)
 {
 }
 

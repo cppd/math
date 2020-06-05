@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <shared_mutex>
 #include <string>
+#include <unordered_set>
 #include <variant>
 
 namespace mesh
@@ -76,6 +77,11 @@ private:
         T m_data;
 };
 
+enum class Update
+{
+        All
+};
+
 template <size_t N>
 class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
 {
@@ -90,9 +96,19 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
 
         //
 
+        template <size_t>
+        friend class WritingUpdates;
+
+        template <size_t>
+        friend class ReadingUpdates;
+
+        template <size_t>
+        friend class Reading;
+
         bool m_inserted = false;
 
         mutable std::shared_mutex m_mutex;
+        mutable std::unordered_set<Update> m_updates{Update::All};
 
 public:
         static void set_events(const std::function<void(MeshEvent<N>&&)>* events)
@@ -150,6 +166,63 @@ public:
         const ObjectId& id() const
         {
                 return m_id;
+        }
+};
+
+//
+
+template <size_t N>
+class WritingUpdates
+{
+        MeshObject<N>* m_object;
+        std::unique_lock<std::shared_mutex> m_lock;
+
+public:
+        WritingUpdates(MeshObject<N>* object, std::unordered_set<Update>&& updates)
+                : m_object(object), m_lock(m_object->m_mutex)
+        {
+                m_object->m_updates.merge(std::move(updates));
+        }
+
+        ~WritingUpdates()
+        {
+                if (m_object->m_inserted)
+                {
+                        m_object->send_event(typename MeshEvent<N>::Update(m_object->shared_from_this()));
+                }
+        }
+};
+
+template <size_t N>
+class ReadingUpdates
+{
+        const MeshObject<N>& m_object;
+        std::unique_lock<std::shared_mutex> m_lock;
+
+public:
+        ReadingUpdates(const MeshObject<N>& object) : m_object(object), m_lock(m_object.m_mutex)
+        {
+        }
+
+        ~ReadingUpdates()
+        {
+                m_object.m_updates.clear();
+        }
+
+        const std::unordered_set<Update>& updates() const
+        {
+                return m_object.m_updates;
+        }
+};
+
+template <size_t N>
+class Reading
+{
+        std::shared_lock<std::shared_mutex> m_lock;
+
+public:
+        Reading(const MeshObject<N>& object) : m_lock(object.m_mutex)
+        {
         }
 };
 }
