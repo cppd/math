@@ -344,9 +344,8 @@ class Impl final : public Renderer
                                 object.id(),
                                 std::make_unique<VolumeObject>(
                                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
-                                        m_transfer_queue, [this](const VolumeInfo& volume_info) {
-                                                return m_volume_renderer.create_volume_memory(volume_info);
-                                        }));
+                                        m_transfer_queue, m_volume_renderer.descriptor_sets_function()));
+
                         ASSERT(pair.second);
 
                         ptr = pair.first->second.get();

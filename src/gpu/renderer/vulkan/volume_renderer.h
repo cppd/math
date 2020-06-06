@@ -49,7 +49,7 @@ class VolumeRenderer
 public:
         VolumeRenderer(const vulkan::Device& device, bool sample_shading, const ShaderBuffers& buffers);
 
-        vulkan::Descriptors create_volume_memory(const VolumeInfo& volume_info);
+        VolumeDescriptorSetsFunction descriptor_sets_function() const;
 
         void create_buffers(const RenderBuffers3D* render_buffers, const Region<2, int>& viewport);
         void delete_buffers();

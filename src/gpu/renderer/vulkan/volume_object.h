@@ -41,7 +41,7 @@ public:
                 const vulkan::Queue& graphics_queue,
                 const vulkan::CommandPool& transfer_command_pool,
                 const vulkan::Queue& transfer_queue,
-                const std::function<vulkan::Descriptors(const VolumeInfo&)>& create_descriptor_sets);
+                const VolumeDescriptorSetsFunction& descriptor_sets_function);
 
         ~VolumeObject();
 

@@ -253,4 +253,6 @@ struct VolumeInfo final
         VkImageView image;
         VkImageView transfer_function;
 };
+
+using VolumeDescriptorSetsFunction = std::function<std::vector<vulkan::Descriptors>(const VolumeInfo& info)>;
 }

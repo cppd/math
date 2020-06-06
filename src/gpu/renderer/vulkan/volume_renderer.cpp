@@ -35,12 +35,6 @@ VolumeRenderer::VolumeRenderer(const vulkan::Device& device, bool sample_shading
 {
 }
 
-vulkan::Descriptors VolumeRenderer::create_volume_memory(const VolumeInfo& volume_info)
-{
-        return VolumeImageMemory::create(
-                m_device, m_volume_sampler, m_volume_sampler, m_program.descriptor_set_layout_image(), volume_info);
-}
-
 void VolumeRenderer::create_buffers(const RenderBuffers3D* render_buffers, const Region<2, int>& viewport)
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
@@ -59,6 +53,18 @@ void VolumeRenderer::delete_buffers()
 
         m_command_buffers.reset();
         m_pipeline.reset();
+}
+
+VolumeDescriptorSetsFunction VolumeRenderer::descriptor_sets_function() const
+{
+        return [this](const VolumeInfo& info) {
+                std::vector<vulkan::Descriptors> sets;
+
+                sets.push_back(VolumeImageMemory::create(
+                        m_device, m_volume_sampler, m_volume_sampler, m_program.descriptor_set_layout_image(), info));
+
+                return sets;
+        };
 }
 
 void VolumeRenderer::draw_commands(const VolumeObject* volume, VkCommandBuffer command_buffer) const

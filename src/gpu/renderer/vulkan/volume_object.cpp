@@ -164,8 +164,9 @@ class VolumeObject::Volume
         std::unique_ptr<vulkan::ImageWithMemory> m_image;
         image::ColorFormat m_image_color_format;
         std::unique_ptr<vulkan::ImageWithMemory> m_transfer_function;
+
         std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_descriptor_sets;
-        std::function<vulkan::Descriptors(const VolumeInfo&)> m_create_descriptor_sets;
+        VolumeDescriptorSetsFunction m_descriptor_sets_function;
 
         void buffer_set_parameters(
                 float window_min,
@@ -220,10 +221,13 @@ class VolumeObject::Volume
                 info.image = m_image->image_view();
                 info.transfer_function = m_transfer_function->image_view();
 
-                vulkan::Descriptors sets = m_create_descriptor_sets(info);
-
                 m_descriptor_sets.clear();
-                m_descriptor_sets.emplace(sets.descriptor_set_layout(), std::move(sets));
+
+                for (vulkan::Descriptors& sets : m_descriptor_sets_function(info))
+                {
+                        ASSERT(sets.descriptor_set_count() == 1);
+                        m_descriptor_sets.emplace(sets.descriptor_set_layout(), std::move(sets));
+                }
         }
 
         void set_transfer_function()
@@ -294,12 +298,12 @@ public:
                const vulkan::Queue& graphics_queue,
                const vulkan::CommandPool& /*transfer_command_pool*/,
                const vulkan::Queue& /*transfer_queue*/,
-               const std::function<vulkan::Descriptors(const VolumeInfo&)>& create_descriptor_sets)
+               const VolumeDescriptorSetsFunction& descriptor_sets_function)
                 : m_device(device),
                   m_graphics_command_pool(graphics_command_pool),
                   m_graphics_queue(graphics_queue),
                   m_buffer(m_device, {m_graphics_queue.family_index()}),
-                  m_create_descriptor_sets(create_descriptor_sets)
+                  m_descriptor_sets_function(descriptor_sets_function)
         {
         }
 
@@ -391,11 +395,11 @@ VolumeObject::VolumeObject(
         const vulkan::Queue& graphics_queue,
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
-        const std::function<vulkan::Descriptors(const VolumeInfo&)>& create_descriptor_sets)
+        const VolumeDescriptorSetsFunction& descriptor_sets_function)
 {
         m_volume = std::make_unique<Volume>(
                 device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                create_descriptor_sets);
+                descriptor_sets_function);
 }
 
 VolumeObject::~VolumeObject() = default;
