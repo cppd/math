@@ -35,9 +35,9 @@ VolumeRenderer::VolumeRenderer(const vulkan::Device& device, bool sample_shading
 {
 }
 
-VolumeImageMemory VolumeRenderer::create_volume_memory(const VolumeInfo& volume_info)
+vulkan::Descriptors VolumeRenderer::create_volume_memory(const VolumeInfo& volume_info)
 {
-        return VolumeImageMemory(
+        return VolumeImageMemory::create(
                 m_device, m_volume_sampler, m_volume_sampler, m_program.descriptor_set_layout_image(), volume_info);
 }
 

@@ -125,14 +125,16 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeImageMemory::descriptor_set_layo
         return bindings;
 }
 
-VolumeImageMemory::VolumeImageMemory(
+vulkan::Descriptors VolumeImageMemory::create(
         VkDevice device,
         VkSampler image_sampler,
         VkSampler transfer_function_sampler,
         VkDescriptorSetLayout descriptor_set_layout,
         const VolumeInfo& volume_info)
-        : m_descriptors(vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings()))
 {
+        vulkan::Descriptors descriptors(
+                vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings()));
+
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
@@ -177,22 +179,14 @@ VolumeImageMemory::VolumeImageMemory(
                 bindings.push_back(TRANSFER_FUNCTION_BINDING);
         }
 
-        m_descriptors.update_descriptor_set(0, bindings, infos);
+        descriptors.update_descriptor_set(0, bindings, infos);
+
+        return descriptors;
 }
 
 unsigned VolumeImageMemory::set_number()
 {
         return SET_NUMBER;
-}
-
-const VkDescriptorSet& VolumeImageMemory::descriptor_set() const
-{
-        return m_descriptors.descriptor_set(0);
-}
-
-VkDescriptorSetLayout VolumeImageMemory::descriptor_set_layout() const
-{
-        return m_descriptors.descriptor_set_layout();
 }
 
 //

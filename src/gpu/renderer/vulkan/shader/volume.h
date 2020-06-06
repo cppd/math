@@ -69,30 +69,16 @@ class VolumeImageMemory final
         static constexpr int IMAGE_BINDING = 2;
         static constexpr int TRANSFER_FUNCTION_BINDING = 3;
 
-        vulkan::Descriptors m_descriptors;
-
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        VolumeImageMemory(
+        static vulkan::Descriptors create(
                 VkDevice device,
                 VkSampler image_sampler,
                 VkSampler transfer_function_sampler,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const VolumeInfo& volume_info);
-
-        VolumeImageMemory(const VolumeImageMemory&) = delete;
-        VolumeImageMemory& operator=(const VolumeImageMemory&) = delete;
-        VolumeImageMemory& operator=(VolumeImageMemory&&) = delete;
-
-        VolumeImageMemory(VolumeImageMemory&&) = default;
-        ~VolumeImageMemory() = default;
-
-        //
-
-        const VkDescriptorSet& descriptor_set() const;
-        VkDescriptorSetLayout descriptor_set_layout() const;
 };
 
 class VolumeProgram final
