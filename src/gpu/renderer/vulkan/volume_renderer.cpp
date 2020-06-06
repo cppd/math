@@ -29,7 +29,7 @@ VolumeRenderer::VolumeRenderer(const vulkan::Device& device, bool sample_shading
           m_sample_shading(sample_shading),
           //
           m_program(device),
-          m_memory(device, m_program.descriptor_set_layout(), buffers.drawing_buffer()),
+          m_memory(device, m_program.descriptor_set_layout_shared(), buffers.drawing_buffer()),
           //
           m_volume_sampler(create_volume_sampler(m_device))
 {
@@ -77,7 +77,7 @@ void VolumeRenderer::draw_commands(const VolumeObject* volume, VkCommandBuffer c
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
-                VolumeMemory::set_number(), 1 /*set count*/, &m_memory.descriptor_set(), 0, nullptr);
+                VolumeSharedMemory::set_number(), 1 /*set count*/, &m_memory.descriptor_set(), 0, nullptr);
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),

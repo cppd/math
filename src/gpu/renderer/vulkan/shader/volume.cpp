@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> VolumeMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -42,7 +42,7 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeMemory::descriptor_set_layout_bi
         return bindings;
 }
 
-VolumeMemory::VolumeMemory(
+VolumeSharedMemory::VolumeSharedMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const vulkan::Buffer& drawing)
@@ -65,12 +65,12 @@ VolumeMemory::VolumeMemory(
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned VolumeMemory::set_number()
+unsigned VolumeSharedMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& VolumeMemory::descriptor_set() const
+const VkDescriptorSet& VolumeSharedMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
@@ -193,22 +193,22 @@ unsigned VolumeImageMemory::set_number()
 
 VolumeProgram::VolumeProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout(
-                  vulkan::create_descriptor_set_layout(device, VolumeMemory::descriptor_set_layout_bindings())),
+          m_descriptor_set_layout_shared(
+                  vulkan::create_descriptor_set_layout(device, VolumeSharedMemory::descriptor_set_layout_bindings())),
           m_descriptor_set_layout_image(
                   vulkan::create_descriptor_set_layout(device, VolumeImageMemory::descriptor_set_layout_bindings())),
           m_pipeline_layout(vulkan::create_pipeline_layout(
                   device,
-                  {VolumeMemory::set_number(), VolumeImageMemory::set_number()},
-                  {m_descriptor_set_layout, m_descriptor_set_layout_image})),
+                  {VolumeSharedMemory::set_number(), VolumeImageMemory::set_number()},
+                  {m_descriptor_set_layout_shared, m_descriptor_set_layout_image})),
           m_vertex_shader(m_device, code_volume_vert(), "main"),
           m_fragment_shader(m_device, code_volume_frag(), "main")
 {
 }
 
-VkDescriptorSetLayout VolumeProgram::descriptor_set_layout() const
+VkDescriptorSetLayout VolumeProgram::descriptor_set_layout_shared() const
 {
-        return m_descriptor_set_layout;
+        return m_descriptor_set_layout_shared;
 }
 
 VkDescriptorSetLayout VolumeProgram::descriptor_set_layout_image() const

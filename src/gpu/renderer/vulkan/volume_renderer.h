@@ -37,7 +37,7 @@ class VolumeRenderer
         const RenderBuffers3D* m_render_buffers = nullptr;
 
         VolumeProgram m_program;
-        VolumeMemory m_memory;
+        VolumeSharedMemory m_memory;
 
         std::optional<vulkan::Pipeline> m_pipeline;
         std::optional<vulkan::CommandBuffers> m_command_buffers;

@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class VolumeMemory final
+class VolumeSharedMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -43,17 +43,17 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        VolumeMemory(
+        VolumeSharedMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const vulkan::Buffer& drawing);
 
-        VolumeMemory(const VolumeMemory&) = delete;
-        VolumeMemory& operator=(const VolumeMemory&) = delete;
-        VolumeMemory& operator=(VolumeMemory&&) = delete;
+        VolumeSharedMemory(const VolumeSharedMemory&) = delete;
+        VolumeSharedMemory& operator=(const VolumeSharedMemory&) = delete;
+        VolumeSharedMemory& operator=(VolumeSharedMemory&&) = delete;
 
-        VolumeMemory(VolumeMemory&&) = default;
-        ~VolumeMemory() = default;
+        VolumeSharedMemory(VolumeSharedMemory&&) = default;
+        ~VolumeSharedMemory() = default;
 
         //
 
@@ -85,7 +85,7 @@ class VolumeProgram final
 {
         const vulkan::Device& m_device;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout_shared;
         vulkan::DescriptorSetLayout m_descriptor_set_layout_image;
         vulkan::PipelineLayout m_pipeline_layout;
         vulkan::VertexShader m_vertex_shader;
@@ -107,7 +107,7 @@ public:
                 bool sample_shading,
                 const Region<2, int>& viewport) const;
 
-        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkDescriptorSetLayout descriptor_set_layout_shared() const;
         VkDescriptorSetLayout descriptor_set_layout_image() const;
         VkPipelineLayout pipeline_layout() const;
 };
