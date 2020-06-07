@@ -45,16 +45,16 @@ Chapter 13: FFTs for Arbitrary N.
 
 #include "compute.h"
 
-#include "compute_bit_reverse.h"
-#include "compute_copy_input.h"
-#include "compute_copy_output.h"
-#include "compute_fft_global.h"
-#include "compute_fft_shared.h"
-#include "compute_mul.h"
-#include "compute_mul_d.h"
+#include "function.h"
 
-#include "../../com/groups.h"
-#include "../com/com.h"
+#include "../com/groups.h"
+#include "shaders/bit_reverse.h"
+#include "shaders/copy_input.h"
+#include "shaders/copy_output.h"
+#include "shaders/fft_global.h"
+#include "shaders/fft_shared.h"
+#include "shaders/mul.h"
+#include "shaders/mul_d.h"
 
 #include <src/com/bits.h>
 #include <src/com/constant.h>

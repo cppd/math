@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "compute_bit_reverse.h"
+#include "bit_reverse.h"
 
-#include "../shaders/code.h"
+#include "code/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
