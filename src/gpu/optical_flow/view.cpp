@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute.h"
 #include "sampler.h"
-#include "view_shader.h"
 
-#include "../com/view.h"
+#include "function/view.h"
+#include "shaders/view.h"
 
 #include <src/com/container.h>
 #include <src/com/error.h>

@@ -358,7 +358,7 @@ AddIncludeFiles(VULKAN_SHADERS
                         SOURCE
                                 "src/gpu/convex_hull/shaders/code"
                                 "src/gpu/dft/shaders/code"
-                                "src/gpu/optical_flow/shaders"
+                                "src/gpu/optical_flow/shaders/code"
                                 "src/gpu/pencil_sketch/shaders"
                                 "src/gpu/renderer/shaders/code"
                                 "src/gpu/text_writer/shaders"

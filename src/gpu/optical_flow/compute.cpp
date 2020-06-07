@@ -33,12 +33,11 @@ Chapter 5. Tracking Objects in Videos.
 
 #include "compute.h"
 
-#include "compute_downsample.h"
-#include "compute_flow.h"
-#include "compute_grayscale.h"
-#include "compute_sobel.h"
-
-#include "../com/compute.h"
+#include "function/compute.h"
+#include "shaders/downsample.h"
+#include "shaders/flow.h"
+#include "shaders/grayscale.h"
+#include "shaders/sobel.h"
 
 #include <src/vulkan/error.h>
 #include <src/vulkan/queue.h>

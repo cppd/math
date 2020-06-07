@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/variant.h>
 #include <src/gpu/convex_hull/view.h>
 #include <src/gpu/dft/view.h>
-#include <src/gpu/optical_flow/vulkan/view.h>
+#include <src/gpu/optical_flow/view.h>
 #include <src/gpu/pencil_sketch/vulkan/view.h>
 #include <src/gpu/renderer/renderer.h>
 #include <src/gpu/text_writer/vulkan/view.h>
