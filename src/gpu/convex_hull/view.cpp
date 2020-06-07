@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view.h"
 
 #include "compute.h"
-#include "view_shader.h"
+#include "size.h"
 
-#include "../com/com.h"
+#include "shaders/view.h"
 
 #include <src/com/container.h>
 #include <src/com/error.h>
@@ -40,6 +40,8 @@ namespace gpu::convex_hull
 {
 namespace
 {
+constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
+
 // clang-format off
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {

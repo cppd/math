@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/com/variant.h>
-#include <src/gpu/convex_hull/vulkan/view.h>
+#include <src/gpu/convex_hull/view.h>
 #include <src/gpu/dft/vulkan/view.h>
 #include <src/gpu/optical_flow/vulkan/view.h>
 #include <src/gpu/pencil_sketch/vulkan/view.h>

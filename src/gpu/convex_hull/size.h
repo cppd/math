@@ -21,9 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::convex_hull
 {
-// rad / ms
-constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
-
 int points_buffer_size(int height);
 
 int group_size_prepare(
@@ -31,10 +28,12 @@ int group_size_prepare(
         unsigned max_group_size_x,
         unsigned max_group_invocations,
         unsigned max_shared_memory_size);
+
 int group_size_merge(
         int height,
         unsigned max_group_size_x,
         unsigned max_group_invocations,
         unsigned max_shared_memory_size);
+
 int iteration_count_merge(int size);
 }

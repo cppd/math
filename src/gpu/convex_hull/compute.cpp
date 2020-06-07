@@ -27,11 +27,11 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 
 #include "compute.h"
 
-#include "compute_filter.h"
-#include "compute_merge.h"
-#include "compute_prepare.h"
+#include "size.h"
 
-#include "../com/com.h"
+#include "shaders/filter.h"
+#include "shaders/merge.h"
+#include "shaders/prepare.h"
 
 #include <src/com/error.h>
 

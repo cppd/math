@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "com.h"
+#include "size.h"
 
-#include "../../com/groups.h"
+#include "../com/groups.h"
 
 #include <src/com/bits.h>
 #include <src/com/error.h>
