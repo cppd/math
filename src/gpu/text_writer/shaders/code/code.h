@@ -15,21 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "code.h"
+#pragma once
+
+#include <cstdint>
+#include <vector>
 
 namespace gpu::text_writer
 {
-std::vector<uint32_t> code_vert()
-{
-        return {
-#include "text_writer.vert.spr"
-        };
-}
-
-std::vector<uint32_t> code_frag()
-{
-        return {
-#include "text_writer.frag.spr"
-        };
-}
+std::vector<uint32_t> code_view_vert();
+std::vector<uint32_t> code_view_frag();
 }

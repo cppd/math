@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view.h"
 
 #include "sampler.h"
-#include "shader.h"
+
+#include "shaders/view.h"
 
 #include <src/com/container.h>
 #include <src/com/merge.h>

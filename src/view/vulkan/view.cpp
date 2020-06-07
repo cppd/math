@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/optical_flow/view.h>
 #include <src/gpu/pencil_sketch/view.h>
 #include <src/gpu/renderer/renderer.h>
-#include <src/gpu/text_writer/vulkan/view.h>
+#include <src/gpu/text_writer/view.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>

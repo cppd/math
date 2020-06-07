@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "shader.h"
+#include "view.h"
 
-#include "../shaders/code.h"
+#include "code/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
@@ -198,8 +198,8 @@ Program::Program(const vulkan::Device& device)
           m_descriptor_set_layout(
                   vulkan::create_descriptor_set_layout(device, Memory::descriptor_set_layout_bindings())),
           m_pipeline_layout(vulkan::create_pipeline_layout(device, {Memory::set_number()}, {m_descriptor_set_layout})),
-          m_vertex_shader(m_device, code_vert(), "main"),
-          m_fragment_shader(m_device, code_frag(), "main")
+          m_vertex_shader(m_device, code_view_vert(), "main"),
+          m_fragment_shader(m_device, code_view_frag(), "main")
 {
 }
 
