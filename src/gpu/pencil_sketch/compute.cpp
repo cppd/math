@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute.h"
 
-#include "compute_shader.h"
-
-#include "../../com/groups.h"
+#include "../com/groups.h"
+#include "shaders/compute.h"
 
 #include <src/com/error.h>
 
