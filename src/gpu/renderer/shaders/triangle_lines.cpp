@@ -15,18 +15,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "normals.h"
+#include "triangle_lines.h"
 
 #include "vertex_triangles.h"
 
-#include "../../shaders/code.h"
+#include "code/code.h"
 
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
 namespace gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> NormalsSharedMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> TriangleLinesSharedMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -44,7 +44,7 @@ std::vector<VkDescriptorSetLayoutBinding> NormalsSharedMemory::descriptor_set_la
                 b.binding = DRAWING_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT;
+                b.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
                 bindings.push_back(b);
         }
@@ -52,7 +52,7 @@ std::vector<VkDescriptorSetLayoutBinding> NormalsSharedMemory::descriptor_set_la
         return bindings;
 }
 
-NormalsSharedMemory::NormalsSharedMemory(
+TriangleLinesSharedMemory::TriangleLinesSharedMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const vulkan::Buffer& matrices,
@@ -86,19 +86,19 @@ NormalsSharedMemory::NormalsSharedMemory(
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned NormalsSharedMemory::set_number()
+unsigned TriangleLinesSharedMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& NormalsSharedMemory::descriptor_set() const
+const VkDescriptorSet& TriangleLinesSharedMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
 //
 
-std::vector<VkDescriptorSetLayoutBinding> NormalsMeshMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> TriangleLinesMeshMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -107,7 +107,7 @@ std::vector<VkDescriptorSetLayoutBinding> NormalsMeshMemory::descriptor_set_layo
                 b.binding = BUFFER_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT;
+                b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
                 bindings.push_back(b);
         }
@@ -115,7 +115,7 @@ std::vector<VkDescriptorSetLayoutBinding> NormalsMeshMemory::descriptor_set_layo
         return bindings;
 }
 
-vulkan::Descriptors NormalsMeshMemory::create(
+vulkan::Descriptors TriangleLinesMeshMemory::create(
         VkDevice device,
         VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<CoordinatesInfo>& coordinates)
@@ -153,45 +153,47 @@ vulkan::Descriptors NormalsMeshMemory::create(
         return descriptors;
 }
 
-unsigned NormalsMeshMemory::set_number()
+unsigned TriangleLinesMeshMemory::set_number()
 {
         return SET_NUMBER;
 }
 
 //
 
-NormalsProgram::NormalsProgram(const vulkan::Device& device)
+TriangleLinesProgram::TriangleLinesProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout_shared(
-                  vulkan::create_descriptor_set_layout(device, NormalsSharedMemory::descriptor_set_layout_bindings())),
-          m_descriptor_set_layout_mesh(
-                  vulkan::create_descriptor_set_layout(device, NormalsMeshMemory::descriptor_set_layout_bindings())),
+          m_descriptor_set_layout_shared(vulkan::create_descriptor_set_layout(
+                  device,
+                  TriangleLinesSharedMemory::descriptor_set_layout_bindings())),
+          m_descriptor_set_layout_mesh(vulkan::create_descriptor_set_layout(
+                  device,
+                  TriangleLinesMeshMemory::descriptor_set_layout_bindings())),
           m_pipeline_layout(vulkan::create_pipeline_layout(
                   device,
-                  {NormalsSharedMemory::set_number(), NormalsMeshMemory::set_number()},
+                  {TriangleLinesSharedMemory::set_number(), TriangleLinesMeshMemory::set_number()},
                   {m_descriptor_set_layout_shared, m_descriptor_set_layout_mesh})),
-          m_vertex_shader(m_device, code_normals_vert(), "main"),
-          m_geometry_shader(m_device, code_normals_geom(), "main"),
-          m_fragment_shader(m_device, code_normals_frag(), "main")
+          m_vertex_shader(m_device, code_triangle_lines_vert(), "main"),
+          m_geometry_shader(m_device, code_triangle_lines_geom(), "main"),
+          m_fragment_shader(m_device, code_triangle_lines_frag(), "main")
 {
 }
 
-VkDescriptorSetLayout NormalsProgram::descriptor_set_layout_shared() const
+VkDescriptorSetLayout TriangleLinesProgram::descriptor_set_layout_shared() const
 {
         return m_descriptor_set_layout_shared;
 }
 
-VkDescriptorSetLayout NormalsProgram::descriptor_set_layout_mesh() const
+VkDescriptorSetLayout TriangleLinesProgram::descriptor_set_layout_mesh() const
 {
         return m_descriptor_set_layout_mesh;
 }
 
-VkPipelineLayout NormalsProgram::pipeline_layout() const
+VkPipelineLayout TriangleLinesProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline NormalsProgram::create_pipeline(
+vulkan::Pipeline TriangleLinesProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         bool sample_shading,
@@ -206,14 +208,14 @@ vulkan::Pipeline NormalsProgram::create_pipeline(
         info.sample_shading = sample_shading;
         info.pipeline_layout = m_pipeline_layout;
         info.viewport = viewport;
-        info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+        info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
         const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader, &m_geometry_shader, &m_fragment_shader};
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr, nullptr};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions =
                 TrianglesVertex::binding_descriptions();
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
-                TrianglesVertex::attribute_descriptions_normals();
+                TrianglesVertex::attribute_descriptions_triangle_lines();
 
         info.shaders = &shaders;
         info.constants = &constants;

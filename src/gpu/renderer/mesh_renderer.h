@@ -20,13 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "depth_buffer.h"
 #include "mesh_object.h"
 
-#include "../../vulkan_interfaces.h"
-#include "shader/buffers.h"
-#include "shader/normals.h"
-#include "shader/points.h"
-#include "shader/triangle_lines.h"
-#include "shader/triangles.h"
-#include "shader/triangles_depth.h"
+#include "../vulkan_interfaces.h"
+#include "shaders/buffers.h"
+#include "shaders/normals.h"
+#include "shaders/points.h"
+#include "shaders/triangle_lines.h"
+#include "shaders/triangles.h"
+#include "shaders/triangles_depth.h"
 
 #include <optional>
 #include <thread>

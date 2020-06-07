@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "volume_object.h"
 
-#include "../../vulkan_interfaces.h"
-#include "shader/buffers.h"
-#include "shader/volume.h"
+#include "../vulkan_interfaces.h"
+#include "shaders/buffers.h"
+#include "shaders/volume.h"
 
 #include <optional>
 #include <thread>

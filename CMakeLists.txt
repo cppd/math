@@ -360,7 +360,7 @@ AddIncludeFiles(VULKAN_SHADERS
                                 "src/gpu/dft/shaders"
                                 "src/gpu/optical_flow/shaders"
                                 "src/gpu/pencil_sketch/shaders"
-                                "src/gpu/renderer/shaders"
+                                "src/gpu/renderer/shaders/code"
                                 "src/gpu/text_writer/shaders"
                         EXTENSIONS ${extensions_shaders})
 

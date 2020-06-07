@@ -15,18 +15,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "triangle_lines.h"
+#include "points.h"
 
-#include "vertex_triangles.h"
+#include "vertex_points.h"
 
-#include "../../shaders/code.h"
+#include "code/code.h"
 
+#include <src/com/error.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
 namespace gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> TriangleLinesSharedMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> PointsSharedMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -35,7 +36,7 @@ std::vector<VkDescriptorSetLayoutBinding> TriangleLinesSharedMemory::descriptor_
                 b.binding = MATRICES_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT;
+                b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
                 bindings.push_back(b);
         }
@@ -44,7 +45,17 @@ std::vector<VkDescriptorSetLayoutBinding> TriangleLinesSharedMemory::descriptor_
                 b.binding = DRAWING_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                bindings.push_back(b);
+        }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = OBJECTS_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
 
                 bindings.push_back(b);
         }
@@ -52,7 +63,7 @@ std::vector<VkDescriptorSetLayoutBinding> TriangleLinesSharedMemory::descriptor_
         return bindings;
 }
 
-TriangleLinesSharedMemory::TriangleLinesSharedMemory(
+PointsSharedMemory::PointsSharedMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const vulkan::Buffer& matrices,
@@ -86,19 +97,31 @@ TriangleLinesSharedMemory::TriangleLinesSharedMemory(
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned TriangleLinesSharedMemory::set_number()
+unsigned PointsSharedMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& TriangleLinesSharedMemory::descriptor_set() const
+const VkDescriptorSet& PointsSharedMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
+void PointsSharedMemory::set_object_image(const vulkan::ImageWithMemory* storage_image) const
+{
+        ASSERT(storage_image && storage_image->format() == VK_FORMAT_R32_UINT);
+        ASSERT(storage_image && (storage_image->usage() & VK_IMAGE_USAGE_STORAGE_BIT));
+
+        VkDescriptorImageInfo image_info = {};
+        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+        image_info.imageView = storage_image->image_view();
+
+        m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
+}
+
 //
 
-std::vector<VkDescriptorSetLayoutBinding> TriangleLinesMeshMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> PointsMeshMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -115,7 +138,7 @@ std::vector<VkDescriptorSetLayoutBinding> TriangleLinesMeshMemory::descriptor_se
         return bindings;
 }
 
-vulkan::Descriptors TriangleLinesMeshMemory::create(
+vulkan::Descriptors PointsMeshMemory::create(
         VkDevice device,
         VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<CoordinatesInfo>& coordinates)
@@ -153,50 +176,48 @@ vulkan::Descriptors TriangleLinesMeshMemory::create(
         return descriptors;
 }
 
-unsigned TriangleLinesMeshMemory::set_number()
+unsigned PointsMeshMemory::set_number()
 {
         return SET_NUMBER;
 }
 
 //
 
-TriangleLinesProgram::TriangleLinesProgram(const vulkan::Device& device)
+PointsProgram::PointsProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout_shared(vulkan::create_descriptor_set_layout(
-                  device,
-                  TriangleLinesSharedMemory::descriptor_set_layout_bindings())),
-          m_descriptor_set_layout_mesh(vulkan::create_descriptor_set_layout(
-                  device,
-                  TriangleLinesMeshMemory::descriptor_set_layout_bindings())),
+          m_descriptor_set_layout_shared(
+                  vulkan::create_descriptor_set_layout(device, PointsSharedMemory::descriptor_set_layout_bindings())),
+          m_descriptor_set_layout_mesh(
+                  vulkan::create_descriptor_set_layout(device, PointsMeshMemory::descriptor_set_layout_bindings())),
           m_pipeline_layout(vulkan::create_pipeline_layout(
                   device,
-                  {TriangleLinesSharedMemory::set_number(), TriangleLinesMeshMemory::set_number()},
+                  {PointsSharedMemory::set_number(), PointsMeshMemory::set_number()},
                   {m_descriptor_set_layout_shared, m_descriptor_set_layout_mesh})),
-          m_vertex_shader(m_device, code_triangle_lines_vert(), "main"),
-          m_geometry_shader(m_device, code_triangle_lines_geom(), "main"),
-          m_fragment_shader(m_device, code_triangle_lines_frag(), "main")
+          m_vertex_shader_0d(m_device, code_points_0d_vert(), "main"),
+          m_vertex_shader_1d(m_device, code_points_1d_vert(), "main"),
+          m_fragment_shader(m_device, code_points_frag(), "main")
 {
 }
 
-VkDescriptorSetLayout TriangleLinesProgram::descriptor_set_layout_shared() const
+VkDescriptorSetLayout PointsProgram::descriptor_set_layout_shared() const
 {
         return m_descriptor_set_layout_shared;
 }
 
-VkDescriptorSetLayout TriangleLinesProgram::descriptor_set_layout_mesh() const
+VkDescriptorSetLayout PointsProgram::descriptor_set_layout_mesh() const
 {
         return m_descriptor_set_layout_mesh;
 }
 
-VkPipelineLayout TriangleLinesProgram::pipeline_layout() const
+VkPipelineLayout PointsProgram::pipeline_layout() const
 {
         return m_pipeline_layout;
 }
 
-vulkan::Pipeline TriangleLinesProgram::create_pipeline(
+vulkan::Pipeline PointsProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
-        bool sample_shading,
+        VkPrimitiveTopology primitive_topology,
         const Region<2, int>& viewport) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
@@ -205,17 +226,28 @@ vulkan::Pipeline TriangleLinesProgram::create_pipeline(
         info.render_pass = render_pass;
         info.sub_pass = 0;
         info.sample_count = sample_count;
-        info.sample_shading = sample_shading;
+        info.sample_shading = false;
         info.pipeline_layout = m_pipeline_layout;
         info.viewport = viewport;
-        info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        info.primitive_topology = primitive_topology;
 
-        const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader, &m_geometry_shader, &m_fragment_shader};
-        const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr, nullptr};
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions =
-                TrianglesVertex::binding_descriptions();
+        std::vector<const vulkan::Shader*> shaders;
+        if (primitive_topology == VK_PRIMITIVE_TOPOLOGY_POINT_LIST)
+        {
+                shaders = {&m_vertex_shader_0d, &m_fragment_shader};
+        }
+        else if (primitive_topology == VK_PRIMITIVE_TOPOLOGY_LINE_LIST)
+        {
+                shaders = {&m_vertex_shader_1d, &m_fragment_shader};
+        }
+        else
+        {
+                error_fatal("Unsupported primitive topology for renderer points program");
+        }
+        const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
+        const std::vector<VkVertexInputBindingDescription> binding_descriptions = PointsVertex::binding_descriptions();
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
-                TrianglesVertex::attribute_descriptions_triangle_lines();
+                PointsVertex::attribute_descriptions();
 
         info.shaders = &shaders;
         info.constants = &constants;

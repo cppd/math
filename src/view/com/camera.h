@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../interface.h"
 
 #include <src/com/thread.h>
-#include <src/gpu/renderer/camera_info.h>
+#include <src/gpu/camera_info.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vec.h>
 

@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../../vulkan_interfaces.h"
 #include "../camera_info.h"
+#include "../vulkan_interfaces.h"
 
 #include <src/color/color.h>
 #include <src/model/mesh_object.h>
