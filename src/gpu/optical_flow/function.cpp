@@ -15,12 +15,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "compute.h"
+#include "function.h"
 
 //#include <src/com/log.h>
 //#include <src/com/print.h>
 
-#include "../../com/groups.h"
+#include "../com/groups.h"
+
+#include <src/com/conversion.h>
+#include <src/com/error.h>
 
 namespace gpu::optical_flow
 {
@@ -109,5 +112,59 @@ std::vector<vec2i> flow_groups(
         }
 
         return groups;
+}
+
+void create_top_level_points(
+        int width,
+        int height,
+        double distance_between_points_in_mm,
+        int ppi,
+        int* point_count_x,
+        int* point_count_y,
+        std::vector<vec2i>* points)
+{
+        ASSERT(width >= 0 && height >= 0 && ppi >= 0);
+
+        points->clear();
+
+        int distance = millimeters_to_pixels(distance_between_points_in_mm, ppi);
+
+        if (width <= 0 || height <= 0 || distance < 0)
+        {
+                *point_count_x = 0;
+                *point_count_y = 0;
+                return;
+        }
+
+        int lw = width - 2 * distance;
+        int lh = height - 2 * distance;
+
+        if (lw <= 0 || lh <= 0)
+        {
+                *point_count_x = 0;
+                *point_count_y = 0;
+                return;
+        }
+
+        int size = distance + 1;
+        *point_count_x = (lw + size - 1) / size;
+        *point_count_y = (lh + size - 1) / size;
+
+        int point_count = *point_count_x * *point_count_y;
+
+        points->clear();
+        points->resize(point_count);
+
+        int index = 0;
+        for (int y = distance; y < height - distance; y += size)
+        {
+                for (int x = distance; x < width - distance; x += size)
+                {
+                        (*points)[index++] = vec2i(x, y);
+                }
+        }
+
+        ASSERT(index == point_count);
+        ASSERT(static_cast<size_t>(*point_count_x) * *point_count_y == points->size());
 }
 }

@@ -17,10 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../camera_info.h"
-#include "../vulkan_interfaces.h"
-
 #include <src/color/color.h>
+#include <src/gpu/buffers.h>
 #include <src/model/mesh_object.h>
 #include <src/model/volume_object.h>
 #include <src/numerical/matrix.h>
@@ -37,6 +35,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
+struct CameraInfo final
+{
+        struct Volume final
+        {
+                double left, right, bottom, top, near, far;
+        };
+
+        Volume main_volume;
+        Volume shadow_volume;
+        mat4 main_view_matrix;
+        mat4 shadow_view_matrix;
+        vec3 light_direction;
+        vec3 camera_direction;
+};
+
 struct Renderer
 {
         static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();

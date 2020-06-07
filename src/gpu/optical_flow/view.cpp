@@ -18,9 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view.h"
 
 #include "compute.h"
+#include "function.h"
+#include "option.h"
 #include "sampler.h"
 
-#include "function/view.h"
 #include "shaders/view.h"
 
 #include <src/com/container.h>
@@ -109,7 +110,8 @@ class Impl final : public View
                 int point_count_x;
                 int point_count_y;
                 create_top_level_points(
-                        rectangle.width(), rectangle.height(), window_ppi, &point_count_x, &point_count_y, &points);
+                        rectangle.width(), rectangle.height(), DISTANCE_BETWEEN_POINTS_IN_MM, window_ppi,
+                        &point_count_x, &point_count_y, &points);
 
                 m_top_point_count = points.size();
 

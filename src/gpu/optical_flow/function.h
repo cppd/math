@@ -23,9 +23,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::optical_flow
 {
+std::vector<vec2i> pyramid_sizes(int width, int height, int min_size);
+
+vec2i grayscale_groups(const vec2i& group_size, const std::vector<vec2i>& sizes);
+
+std::vector<vec2i> downsample_groups(const vec2i& group_size, const std::vector<vec2i>& sizes);
+
+std::vector<vec2i> sobel_groups(const vec2i& group_size, const std::vector<vec2i>& sizes);
+
+std::vector<vec2i> flow_groups(
+        const vec2i& group_size,
+        const std::vector<vec2i>& sizes,
+        int top_point_count_x,
+        int top_point_count_y);
+
 void create_top_level_points(
         int width,
         int height,
+        double distance_between_points_in_mm,
         int ppi,
         int* point_count_x,
         int* point_count_y,

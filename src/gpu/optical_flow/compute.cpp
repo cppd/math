@@ -33,7 +33,9 @@ Chapter 5. Tracking Objects in Videos.
 
 #include "compute.h"
 
-#include "function/compute.h"
+#include "function.h"
+#include "option.h"
+
 #include "shaders/downsample.h"
 #include "shaders/flow.h"
 #include "shaders/grayscale.h"
