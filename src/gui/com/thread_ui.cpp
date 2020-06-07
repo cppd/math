@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "thread_ui.h"
 
-#include "../application/thread_ui.h"
+#include "../application/thread_switch.h"
 
 namespace gui
 {
 void run_in_ui_thread(const std::function<void()>& f)
 {
-        application::ThreadUI::run_in_ui_thread(f);
+        application::GlobalThreadSwitch::run_in_global_thread(f);
 }
 }

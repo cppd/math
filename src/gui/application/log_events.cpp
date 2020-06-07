@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "log_events.h"
 
-#include "thread_ui.h"
+#include "thread_switch.h"
 
 #include <src/com/output/format.h>
 #include <src/com/variant.h>
@@ -58,7 +58,8 @@ void log_event(const LogEvent& event, const std::function<void(const std::string
 LogEvents::LogEvents()
 {
         m_events = [this](LogEvent&& event) {
-                ThreadUI::run_in_ui_thread([this, event = std::move(event)]() { log_event(event, m_window_log); });
+                GlobalThreadSwitch::run_in_global_thread(
+                        [this, event = std::move(event)]() { log_event(event, m_window_log); });
         };
 
         set_log_events(&m_events);

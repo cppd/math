@@ -138,6 +138,10 @@ void MainWindow::constructor_objects()
 {
         m_worker_threads = create_worker_threads();
 
+        m_mesh_and_volume_events = std::make_unique<ModelEvents>(
+                &m_model_tree, &m_view, [this](ObjectId id) { update_mesh_ui(id); },
+                [this](ObjectId id) { update_volume_ui(id); });
+
         m_repository = std::make_unique<storage::Repository>();
 
         // QMenu* menuCreate = new QMenu("Create", this);
@@ -153,10 +157,6 @@ void MainWindow::constructor_objects()
         m_slider_volume_levels = std::make_unique<RangeSlider>(
                 ui.slider_volume_level_min, ui.slider_volume_level_max,
                 [this](double min, double max) { slider_volume_levels_range_changed(min, max); });
-
-        m_mesh_and_volume_events = std::make_unique<ModelEvents>(
-                m_model_tree.get(), &m_view, [this](ObjectId id) { update_mesh_ui(id); },
-                [this](ObjectId id) { update_volume_ui(id); });
 }
 
 void MainWindow::constructor_interface()

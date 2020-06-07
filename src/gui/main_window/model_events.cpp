@@ -17,19 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "model_events.h"
 
-#include "../com/thread_ui.h"
-
 #include <src/com/variant.h>
 
 namespace gui
 {
 ModelEvents::ModelEvents(
-        ModelTree* model_tree,
+        std::unique_ptr<ModelTree>* model_tree,
         std::unique_ptr<view::View>* view,
         std::function<void(ObjectId)>&& on_mesh_update,
         std::function<void(ObjectId)>&& on_volume_update)
         : m_thread_id(std::this_thread::get_id()),
-          m_model_tree(model_tree),
+          m_model_tree(*model_tree),
           m_view(*view),
           m_on_mesh_update(std::move(on_mesh_update)),
           m_on_volume_update(std::move(on_volume_update))
@@ -37,12 +35,14 @@ ModelEvents::ModelEvents(
         const auto f = [this]<size_t N>(Events<N>& model_events) {
                 model_events.mesh_events = [this](mesh::MeshEvent<N>&& event) {
                         event_from_mesh(event);
-                        run_in_ui_thread([&, event = std::move(event)]() { event_from_mesh_ui_thread(event); });
+                        m_thread_switch.run_in_object_thread(
+                                [&, event = std::move(event)]() { event_from_mesh_ui_thread(event); });
                 };
 
                 model_events.volume_events = [this](volume::VolumeEvent<N>&& event) {
                         event_from_volume(event);
-                        run_in_ui_thread([&, event = std::move(event)]() { event_from_volume_ui_thread(event); });
+                        m_thread_switch.run_in_object_thread(
+                                [&, event = std::move(event)]() { event_from_volume_ui_thread(event); });
                 };
 
                 mesh::MeshObject<N>::set_events(&model_events.mesh_events);
@@ -56,6 +56,8 @@ ModelEvents::ModelEvents(
 
 ModelEvents::~ModelEvents()
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         const auto f = []<size_t N>(const Events<N>&) {
                 mesh::MeshObject<N>::set_events(nullptr);
 

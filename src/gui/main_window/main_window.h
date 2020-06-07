@@ -172,13 +172,16 @@ private:
 
         std::unique_ptr<WorkerThreads> m_worker_threads;
 
+        std::unique_ptr<ModelEvents> m_mesh_and_volume_events;
+
         GraphicsWidget* m_graphics_widget;
         std::unique_ptr<view::View> m_view;
+
         std::unique_ptr<storage::Repository> m_repository;
         std::unique_ptr<RepositoryActions> m_repository_actions;
+
         std::unique_ptr<ModelTree> m_model_tree;
         std::unique_ptr<RangeSlider> m_slider_volume_levels;
-        std::unique_ptr<ModelEvents> m_mesh_and_volume_events;
 
         QColor m_background_color;
         QColor m_default_color;

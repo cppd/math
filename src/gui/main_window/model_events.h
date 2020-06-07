@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "model_tree.h"
 
+#include "../application/thread_switch.h"
+
 #include <src/com/sequence.h>
 #include <src/model/mesh_object.h>
 #include <src/model/volume_object.h>
@@ -36,6 +38,8 @@ class ModelEvents final
 {
         const std::thread::id m_thread_id;
 
+        application::ThreadSwitch m_thread_switch;
+
         template <size_t N>
         struct Events
         {
@@ -44,7 +48,7 @@ class ModelEvents final
         };
         Sequence<settings::Dimensions, std::tuple, Events> m_events;
 
-        ModelTree* m_model_tree;
+        std::unique_ptr<ModelTree>& m_model_tree;
         std::unique_ptr<view::View>& m_view;
         std::function<void(ObjectId)> m_on_mesh_update;
         std::function<void(ObjectId)> m_on_volume_update;
@@ -60,7 +64,7 @@ class ModelEvents final
 
 public:
         ModelEvents(
-                ModelTree* model_tree,
+                std::unique_ptr<ModelTree>* model_tree,
                 std::unique_ptr<view::View>* view,
                 std::function<void(ObjectId)>&& on_mesh_update,
                 std::function<void(ObjectId)>&& on_volume_update);

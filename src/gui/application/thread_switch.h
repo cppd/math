@@ -22,23 +22,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui::application
 {
-class ThreadUI final : public QObject
+class ThreadSwitch final : public QObject
 {
         Q_OBJECT
 
-        void run(const std::function<void()>& f) const;
-        void object_slot(const std::function<void()>&) const;
+        void slot(const std::function<void()>&) const;
 
 public:
-        ThreadUI();
-        ~ThreadUI();
+        ThreadSwitch();
 
-        ThreadUI(const ThreadUI&) = delete;
-        ThreadUI& operator=(const ThreadUI&) = delete;
-
-        static void run_in_ui_thread(const std::function<void()>& f);
+        void run_in_object_thread(const std::function<void()>& f) const;
 
 signals:
-        void object_signal(const std::function<void()>&) const;
+        void signal(const std::function<void()>&) const;
+};
+
+//
+
+class GlobalThreadSwitch final
+{
+        static const ThreadSwitch* m_thread_switch_object;
+
+        ThreadSwitch m_thread_switch;
+
+public:
+        GlobalThreadSwitch();
+        ~GlobalThreadSwitch();
+
+        static void run_in_global_thread(const std::function<void()>& f);
+
+        GlobalThreadSwitch(const GlobalThreadSwitch&) = delete;
+        GlobalThreadSwitch& operator=(const GlobalThreadSwitch&) = delete;
 };
 }

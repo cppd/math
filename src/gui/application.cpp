@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "application/log_events.h"
 #include "application/message_events.h"
-#include "application/thread_ui.h"
+#include "application/thread_switch.h"
 #include "com/command_line.h"
 #include "com/support.h"
 #include "dialogs/message.h"
@@ -76,7 +76,7 @@ int run_application(int argc, char* argv[])
 
         Application a(argc, argv);
 
-        application::ThreadUI thread_ui;
+        application::GlobalThreadSwitch global_thread_switch;
         application::LogEvents log_events;
         application::MessageEvents message_events;
 
