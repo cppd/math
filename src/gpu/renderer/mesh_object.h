@@ -20,34 +20,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shaders/buffers.h"
 
 #include <src/model/mesh_object.h>
-#include <src/numerical/matrix.h>
-#include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
 
 #include <memory>
-#include <unordered_map>
-#include <vector>
 
 namespace gpu::renderer
 {
 class MeshObject final
 {
-        class Triangles;
-        class Lines;
-        class Points;
+        class Mesh;
 
-        mat4 m_model_matrix;
-
-        CoordinatesBuffer m_coordinates_buffer;
-        std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_mesh_descriptor_sets;
-        MeshDescriptorSetsFunction m_mesh_descriptor_sets_function;
-
-        std::unique_ptr<Triangles> m_triangles;
-        std::unique_ptr<Lines> m_lines;
-        std::unique_ptr<Points> m_points;
-
-        void create_descriptor_sets();
-        VkDescriptorSet find_mesh_descriptor_set(VkDescriptorSetLayout mesh_descriptor_set_layout) const;
+        std::unique_ptr<Mesh> m_mesh;
 
 public:
         MeshObject(
@@ -61,8 +44,6 @@ public:
                 const MaterialDescriptorSetsFunction& material_descriptor_sets_function);
 
         ~MeshObject();
-
-        //
 
         void commands_triangles(
                 VkCommandBuffer buffer,
