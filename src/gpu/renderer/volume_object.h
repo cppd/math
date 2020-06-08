@@ -17,42 +17,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "shaders/volume.h"
+#include "shaders/buffers.h"
 
 #include <src/model/volume_object.h>
-#include <src/numerical/matrix.h>
-#include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
 
 #include <memory>
 
 namespace gpu::renderer
 {
-class VolumeObject final
+struct VolumeObject
 {
-        class Volume;
+        virtual ~VolumeObject() = default;
 
-        std::unique_ptr<Volume> m_volume;
+        virtual const VkDescriptorSet& descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const = 0;
 
-public:
-        VolumeObject(
-                const vulkan::Device& device,
-                const vulkan::CommandPool& graphics_command_pool,
-                const vulkan::Queue& graphics_queue,
-                const vulkan::CommandPool& transfer_command_pool,
-                const vulkan::Queue& transfer_queue,
-                const VolumeDescriptorSetsFunction& descriptor_sets_function);
+        virtual void set_matrix_and_clip_plane(
+                const mat4& vp_matrix,
+                const std::optional<vec4>& world_clip_plane_equation) = 0;
 
-        ~VolumeObject();
+        virtual void set_clip_plane(const vec4& world_clip_plane_equation) = 0;
 
-        const VkDescriptorSet& descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const;
-
-        void set_matrix_and_clip_plane(const mat4& vp_matrix, const std::optional<vec4>& world_clip_plane_equation);
-        void set_clip_plane(const vec4& world_clip_plane_equation);
-
-        void update(
+        virtual void update(
                 const std::unordered_set<volume::Update>& updates,
                 const volume::VolumeObject<3>& volume_object,
-                bool* update_command_buffers);
+                bool* update_command_buffers) = 0;
 };
+
+std::unique_ptr<VolumeObject> create_volume_object(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue,
+        const VolumeDescriptorSetsFunction& descriptor_sets_function);
 }

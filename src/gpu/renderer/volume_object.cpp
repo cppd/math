@@ -145,9 +145,8 @@ vec3 gradient_h(const mat4& texture_to_world_matrix, const vulkan::ImageWithMemo
 
         return h;
 }
-}
 
-class VolumeObject::Volume
+class Impl final : public VolumeObject
 {
         const vulkan::Device& m_device;
         const vulkan::CommandPool& m_graphics_command_pool;
@@ -292,22 +291,7 @@ class VolumeObject::Volume
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image.color_format, image.pixels);
         }
 
-public:
-        Volume(const vulkan::Device& device,
-               const vulkan::CommandPool& graphics_command_pool,
-               const vulkan::Queue& graphics_queue,
-               const vulkan::CommandPool& /*transfer_command_pool*/,
-               const vulkan::Queue& /*transfer_queue*/,
-               const VolumeDescriptorSetsFunction& descriptor_sets_function)
-                : m_device(device),
-                  m_graphics_command_pool(graphics_command_pool),
-                  m_graphics_queue(graphics_queue),
-                  m_buffer(m_device, {m_graphics_queue.family_index()}),
-                  m_descriptor_sets_function(descriptor_sets_function)
-        {
-        }
-
-        const VkDescriptorSet& descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const
+        const VkDescriptorSet& descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const override
         {
                 auto iter = m_descriptor_sets.find(descriptor_set_layout);
                 if (iter == m_descriptor_sets.cend())
@@ -319,13 +303,14 @@ public:
         }
 
         void set_matrix_and_clip_plane(const mat4& vp_matrix, const std::optional<vec4>& world_clip_plane_equation)
+                override
         {
                 m_vp_matrix = vp_matrix;
                 m_world_clip_plane_equation = world_clip_plane_equation;
                 buffer_set_coordinates();
         }
 
-        void set_clip_plane(const vec4& world_clip_plane_equation)
+        void set_clip_plane(const vec4& world_clip_plane_equation) override
         {
                 m_world_clip_plane_equation = world_clip_plane_equation;
                 buffer_set_clip_plane();
@@ -334,7 +319,7 @@ public:
         void update(
                 const std::unordered_set<volume::Update>& updates,
                 const volume::VolumeObject<3>& volume_object,
-                bool* update_command_buffers)
+                bool* update_command_buffers) override
         {
                 *update_command_buffers = false;
 
@@ -387,9 +372,25 @@ public:
                         buffer_set_coordinates();
                 }
         }
-};
 
-VolumeObject::VolumeObject(
+public:
+        Impl(const vulkan::Device& device,
+             const vulkan::CommandPool& graphics_command_pool,
+             const vulkan::Queue& graphics_queue,
+             const vulkan::CommandPool& /*transfer_command_pool*/,
+             const vulkan::Queue& /*transfer_queue*/,
+             const VolumeDescriptorSetsFunction& descriptor_sets_function)
+                : m_device(device),
+                  m_graphics_command_pool(graphics_command_pool),
+                  m_graphics_queue(graphics_queue),
+                  m_buffer(m_device, {m_graphics_queue.family_index()}),
+                  m_descriptor_sets_function(descriptor_sets_function)
+        {
+        }
+};
+}
+
+std::unique_ptr<VolumeObject> create_volume_object(
         const vulkan::Device& device,
         const vulkan::CommandPool& graphics_command_pool,
         const vulkan::Queue& graphics_queue,
@@ -397,35 +398,8 @@ VolumeObject::VolumeObject(
         const vulkan::Queue& transfer_queue,
         const VolumeDescriptorSetsFunction& descriptor_sets_function)
 {
-        m_volume = std::make_unique<Volume>(
+        return std::make_unique<Impl>(
                 device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
                 descriptor_sets_function);
-}
-
-VolumeObject::~VolumeObject() = default;
-
-const VkDescriptorSet& VolumeObject::descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const
-{
-        return m_volume->descriptor_set(descriptor_set_layout);
-}
-
-void VolumeObject::set_matrix_and_clip_plane(
-        const mat4& vp_matrix,
-        const std::optional<vec4>& world_clip_plane_equation)
-{
-        m_volume->set_matrix_and_clip_plane(vp_matrix, world_clip_plane_equation);
-}
-
-void VolumeObject::set_clip_plane(const vec4& world_clip_plane_equation)
-{
-        m_volume->set_clip_plane(world_clip_plane_equation);
-}
-
-void VolumeObject::update(
-        const std::unordered_set<volume::Update>& updates,
-        const volume::VolumeObject<3>& volume_object,
-        bool* update_command_buffers)
-{
-        m_volume->update(updates, volume_object, update_command_buffers);
 }
 }

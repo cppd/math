@@ -342,7 +342,7 @@ class Impl final : public Renderer
                 {
                         const auto pair = m_volume_storage.emplace(
                                 object.id(),
-                                std::make_unique<VolumeObject>(
+                                create_volume_object(
                                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
                                         m_transfer_queue, m_volume_renderer.descriptor_sets_function()));
 
