@@ -313,7 +313,7 @@ class Impl final : public Renderer
                 m_mesh_storage.erase(object.id());
                 m_mesh_storage.emplace(
                         object.id(),
-                        std::make_unique<MeshObject>(
+                        create_mesh_object(
                                 m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
                                 m_transfer_queue, object, m_mesh_renderer.mesh_descriptor_sets_function(),
                                 m_mesh_renderer.material_descriptor_sets_function()));

@@ -26,50 +26,45 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class MeshObject final
+struct MeshObject
 {
-        class Mesh;
+        virtual ~MeshObject() = default;
 
-        std::unique_ptr<Mesh> m_mesh;
-
-public:
-        MeshObject(
-                const vulkan::Device& device,
-                const vulkan::CommandPool& graphics_command_pool,
-                const vulkan::Queue& graphics_queue,
-                const vulkan::CommandPool& transfer_command_pool,
-                const vulkan::Queue& transfer_queue,
-                const mesh::MeshObject<3>& mesh_object,
-                const MeshDescriptorSetsFunction& mesh_descriptor_sets_function,
-                const MaterialDescriptorSetsFunction& material_descriptor_sets_function);
-
-        ~MeshObject();
-
-        void commands_triangles(
+        virtual void commands_triangles(
                 VkCommandBuffer buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
                 VkDescriptorSetLayout material_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set) const;
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set) const = 0;
 
-        void commands_plain_triangles(
+        virtual void commands_plain_triangles(
                 VkCommandBuffer buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const;
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const = 0;
 
-        void commands_triangle_vertices(
+        virtual void commands_triangle_vertices(
                 VkCommandBuffer buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const;
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const = 0;
 
-        void commands_lines(
+        virtual void commands_lines(
                 VkCommandBuffer buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const;
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const = 0;
 
-        void commands_points(
+        virtual void commands_points(
                 VkCommandBuffer buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const;
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const = 0;
 };
+
+std::unique_ptr<MeshObject> create_mesh_object(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue,
+        const mesh::MeshObject<3>& mesh_object,
+        const MeshDescriptorSetsFunction& mesh_descriptor_sets_function,
+        const MaterialDescriptorSetsFunction& material_descriptor_sets_function);
 }
