@@ -45,10 +45,7 @@ constexpr int VOLUME_IMAGE_SIZE_DEFAULT = 500;
 constexpr int VOLUME_IMAGE_SIZE_MAXIMUM = 1000;
 }
 
-std::function<void(ProgressRatioList*)> action_load_from_file(
-        std::string file_name,
-        bool use_object_selection_dialog,
-        const std::function<void()>& clear_all)
+std::function<void(ProgressRatioList*)> action_load_from_file(std::string file_name, bool use_object_selection_dialog)
 {
         if (file_name.empty())
         {
@@ -94,8 +91,6 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
         bool convex_hull = objects_to_load.count(gui::dialog::ComputationType::ConvexHull);
         bool mst = objects_to_load.count(gui::dialog::ComputationType::Mst);
 
-        clear_all();
-
         return [=](ProgressRatioList* progress_list) {
                 unsigned dimension = mesh::file_dimension(file_name);
 
@@ -111,8 +106,7 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
 std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
         const storage::Repository* repository,
         int dimension,
-        const std::string& object_name,
-        const std::function<void()>& clear_all)
+        const std::string& object_name)
 {
         if (object_name.empty())
         {
@@ -144,8 +138,6 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
         bool cocone = objects_to_load.count(gui::dialog::ComputationType::Cocone);
         bool convex_hull = objects_to_load.count(gui::dialog::ComputationType::ConvexHull);
         bool mst = objects_to_load.count(gui::dialog::ComputationType::Mst);
-
-        clear_all();
 
         return [=](ProgressRatioList* progress_list) {
                 apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {

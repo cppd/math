@@ -610,12 +610,9 @@ void MainWindow::load_from_file(std::string file_name, bool use_object_selection
                 {
                         return;
                 }
-                auto clear_all = [this]() {
-                        m_model_tree->clear();
-                        m_view->send(view::command::ResetView());
-                };
-                WorkerThreads::Function f =
-                        process::action_load_from_file(file_name, use_object_selection_dialog, clear_all);
+                WorkerThreads::Function f = process::action_load_from_file(file_name, use_object_selection_dialog);
+                //m_model_tree->clear();
+                //m_view->send(view::command::ResetView());
                 m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
         });
 }
@@ -635,12 +632,10 @@ void MainWindow::action_mesh_repository(int dimension, std::string object_name)
                 {
                         return;
                 }
-                auto clear_all = [this]() {
-                        m_model_tree->clear();
-                        m_view->send(view::command::ResetView());
-                };
-                WorkerThreads::Function f = process::action_load_from_mesh_repository(
-                        m_repository.get(), dimension, object_name, clear_all);
+                WorkerThreads::Function f =
+                        process::action_load_from_mesh_repository(m_repository.get(), dimension, object_name);
+                //m_model_tree->clear();
+                //m_view->send(view::command::ResetView());
                 m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
         });
 }
