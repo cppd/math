@@ -56,6 +56,11 @@ struct MeshObject
                 VkCommandBuffer buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const = 0;
+
+        virtual void update(
+                const std::unordered_set<mesh::Update>& updates,
+                const mesh::MeshObject<3>& mesh_object,
+                bool* update_command_buffers) = 0;
 };
 
 std::unique_ptr<MeshObject> create_mesh_object(
@@ -64,7 +69,6 @@ std::unique_ptr<MeshObject> create_mesh_object(
         const vulkan::Queue& graphics_queue,
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
-        const mesh::MeshObject<3>& mesh_object,
         const MeshDescriptorSetsFunction& mesh_descriptor_sets_function,
         const MaterialDescriptorSetsFunction& material_descriptor_sets_function);
 }

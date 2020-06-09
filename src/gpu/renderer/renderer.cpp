@@ -302,23 +302,57 @@ class Impl final : public Renderer
 
                 //
 
+                mesh::ReadingUpdates reading(object);
+
+                //
+
                 ASSERT(find_object(m_volume_storage, object.id()) == nullptr);
 
-                bool delete_and_create_command_buffers = (m_current_object_id == object.id());
-                if (delete_and_create_command_buffers)
+                bool created = false;
+                MeshObject* ptr = find_object(m_mesh_storage, object.id());
+                if (!ptr)
                 {
-                        delete_command_buffers();
+                        const auto pair = m_mesh_storage.emplace(
+                                object.id(),
+                                create_mesh_object(
+                                        m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
+                                        m_transfer_queue, m_mesh_renderer.mesh_descriptor_sets_function(),
+                                        m_mesh_renderer.material_descriptor_sets_function()));
+
+                        ASSERT(pair.second);
+
+                        ptr = pair.first->second.get();
+                        created = true;
                 }
 
-                m_mesh_storage.erase(object.id());
-                m_mesh_storage.emplace(
-                        object.id(),
-                        create_mesh_object(
-                                m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
-                                m_transfer_queue, object, m_mesh_renderer.mesh_descriptor_sets_function(),
-                                m_mesh_renderer.material_descriptor_sets_function()));
+                bool update_command_buffers;
+                try
+                {
+                        if (!created)
+                        {
+                                ptr->update(reading.updates(), object, &update_command_buffers);
+                        }
+                        else
+                        {
+                                ptr->update({mesh::Update::All}, object, &update_command_buffers);
+                        }
+                }
+                catch (const std::exception& e)
+                {
+                        m_mesh_storage.erase(object.id());
+                        update_command_buffers = true;
+                        created = false;
+                        LOG(std::string("Error updating mesh object. ") + e.what());
+                }
+                catch (...)
+                {
+                        m_mesh_storage.erase(object.id());
+                        update_command_buffers = true;
+                        created = false;
+                        LOG("Unknown error updating mesh object");
+                }
 
-                if (delete_and_create_command_buffers)
+                if ((created || update_command_buffers) && (m_current_object_id == object.id()))
                 {
                         create_command_buffers();
                 }
