@@ -100,7 +100,7 @@ void ModelEvents::event_from_mesh_ui_thread(const mesh::MeshEvent<N>& event)
                 [this](const typename mesh::MeshEvent<N>::Insert& v) {
                         if (v.object)
                         {
-                                m_model_tree->insert(v.object);
+                                m_model_tree->insert(v.object, v.parent_object_id);
                         }
                 },
                 [this](const typename mesh::MeshEvent<N>::Update& v) {
@@ -148,7 +148,7 @@ void ModelEvents::event_from_volume_ui_thread(const volume::VolumeEvent<N>& even
                 [this](const typename volume::VolumeEvent<N>::Insert& v) {
                         if (v.object)
                         {
-                                m_model_tree->insert(v.object);
+                                m_model_tree->insert(v.object, v.parent_object_id);
                         }
                 },
                 [this](const typename volume::VolumeEvent<N>::Update& v) {

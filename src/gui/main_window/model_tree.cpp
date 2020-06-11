@@ -56,7 +56,7 @@ void ModelTree::clear()
         m_tree->clear();
 }
 
-void ModelTree::insert(const storage::MeshObject& object)
+void ModelTree::insert(const storage::MeshObject& object, const std::optional<ObjectId>& /*parent_object_id*/)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -68,7 +68,7 @@ void ModelTree::insert(const storage::MeshObject& object)
                 object);
 }
 
-void ModelTree::insert(const storage::VolumeObject& object)
+void ModelTree::insert(const storage::VolumeObject& object, const std::optional<ObjectId>& /*parent_object_id*/)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/storage/storage.h>
 
 #include <QTreeWidget>
+#include <optional>
 #include <thread>
 #include <unordered_map>
 
@@ -30,8 +31,6 @@ namespace gui
 {
 class ModelTree final
 {
-        friend class ModelEvents;
-
         const std::thread::id m_thread_id;
 
         storage::Storage m_storage;
@@ -43,10 +42,6 @@ class ModelTree final
 
         std::vector<Connection> m_connections;
 
-        // Для использования в ModelEvents
-        void insert(const storage::MeshObject& object);
-        void insert(const storage::VolumeObject& object);
-
         void insert_into_tree(ObjectId id, unsigned dimension, const std::string& name);
 
         //void set_current(ObjectId id);
@@ -57,6 +52,9 @@ public:
         ModelTree(QTreeWidget* tree, const std::function<void()>& item_changed);
 
         ~ModelTree();
+
+        void insert(const storage::MeshObject& object, const std::optional<ObjectId>& parent_object_id);
+        void insert(const storage::VolumeObject& object, const std::optional<ObjectId>& parent_object_id);
 
         void erase(ObjectId id);
         void clear();
@@ -72,7 +70,5 @@ public:
         std::optional<storage::VolumeObjectConst> current_volume_const() const;
         std::optional<storage::VolumeObject> volume_if_current(ObjectId id) const;
         std::optional<storage::VolumeObjectConst> volume_const_if_current(ObjectId id) const;
-
-private:
 };
 }

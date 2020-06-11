@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 
 #include <memory>
+#include <optional>
 #include <shared_mutex>
 #include <string>
 #include <unordered_set>
@@ -40,7 +41,9 @@ struct MeshEvent final
         struct Insert final
         {
                 std::shared_ptr<MeshObject<N>> object;
-                Insert(std::shared_ptr<MeshObject<N>>&& object) : object(std::move(object))
+                std::optional<ObjectId> parent_object_id;
+                Insert(std::shared_ptr<MeshObject<N>>&& object, const std::optional<ObjectId>& parent_object_id)
+                        : object(std::move(object)), parent_object_id(parent_object_id)
                 {
                 }
         };
@@ -125,13 +128,13 @@ public:
                 ASSERT(m_mesh);
         }
 
-        void insert()
+        void insert(const std::optional<ObjectId>& parent_object_id = std::nullopt)
         {
                 std::unique_lock m_lock(m_mutex);
                 if (!m_inserted)
                 {
                         m_inserted = true;
-                        (*m_events)(typename MeshEvent<N>::Insert(this->shared_from_this()));
+                        (*m_events)(typename MeshEvent<N>::Insert(this->shared_from_this(), parent_object_id));
                 }
         }
 
