@@ -28,7 +28,7 @@ constexpr int API_VERSION_MINOR = 1;
 // clang-format off
 constexpr std::initializer_list<const char*> VALIDATION_LAYERS
 {
-        "VK_LAYER_LUNARG_standard_validation"
+        "VK_LAYER_KHRONOS_validation"
 };
 // clang-format on
 }
