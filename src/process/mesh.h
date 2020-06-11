@@ -104,12 +104,13 @@ void convex_hull(ProgressRatioList* progress_list, const mesh::MeshObject<N>& ob
         const std::shared_ptr<mesh::MeshObject<N>> obj =
                 std::make_shared<mesh::MeshObject<N>>(std::move(ch_mesh), object.matrix(), "Convex Hull");
 
-        obj->insert();
+        obj->insert(object.id());
 }
 
 template <size_t N>
 void cocone(
         ProgressRatioList* progress_list,
+        ObjectId parent_id,
         const geometry::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix)
 {
@@ -137,12 +138,13 @@ void cocone(
         const std::shared_ptr<mesh::MeshObject<N>> obj =
                 std::make_shared<mesh::MeshObject<N>>(std::move(cocone_mesh), model_matrix, "Cocone");
 
-        obj->insert();
+        obj->insert(parent_id);
 }
 
 template <size_t N>
 void bound_cocone(
         ProgressRatioList* progress_list,
+        ObjectId parent_id,
         const geometry::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix,
         double rho,
@@ -173,12 +175,13 @@ void bound_cocone(
         const std::shared_ptr<mesh::MeshObject<N>> obj =
                 std::make_shared<mesh::MeshObject<N>>(std::move(bound_cocone_mesh), model_matrix, name);
 
-        obj->insert();
+        obj->insert(parent_id);
 }
 
 template <size_t N>
 void mst(
         ProgressRatioList* progress_list,
+        ObjectId parent_id,
         const geometry::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix)
 {
@@ -198,7 +201,7 @@ void mst(
         const std::shared_ptr<mesh::MeshObject<N>> obj =
                 std::make_shared<mesh::MeshObject<N>>(std::move(mst_mesh), model_matrix, "MST");
 
-        obj->insert();
+        obj->insert(parent_id);
 }
 
 template <size_t N>
@@ -243,19 +246,21 @@ void manifold_constructor(
         {
                 if (build_cocone)
                 {
-                        threads.add([&]() { cocone(progress_list, *manifold_constructor, object.matrix()); });
+                        threads.add(
+                                [&]() { cocone(progress_list, object.id(), *manifold_constructor, object.matrix()); });
                 }
 
                 if (build_bound_cocone)
                 {
                         threads.add([&]() {
-                                bound_cocone(progress_list, *manifold_constructor, object.matrix(), rho, alpha);
+                                bound_cocone(
+                                        progress_list, object.id(), *manifold_constructor, object.matrix(), rho, alpha);
                         });
                 }
 
                 if (build_mst)
                 {
-                        threads.add([&]() { mst(progress_list, *manifold_constructor, object.matrix()); });
+                        threads.add([&]() { mst(progress_list, object.id(), *manifold_constructor, object.matrix()); });
                 }
         }
         catch (...)
