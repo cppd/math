@@ -56,31 +56,35 @@ void ModelTree::clear()
         m_tree->clear();
 }
 
-void ModelTree::insert(const storage::MeshObject& object, const std::optional<ObjectId>& /*parent_object_id*/)
+void ModelTree::insert(const storage::MeshObject& object, const std::optional<ObjectId>& parent_object_id)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh) {
-                        insert_into_tree(mesh->id(), N, mesh->name());
+                        insert_into_tree(mesh->id(), N, mesh->name(), parent_object_id);
                         m_storage.set_mesh_object(mesh);
                 },
                 object);
 }
 
-void ModelTree::insert(const storage::VolumeObject& object, const std::optional<ObjectId>& /*parent_object_id*/)
+void ModelTree::insert(const storage::VolumeObject& object, const std::optional<ObjectId>& parent_object_id)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume) {
-                        insert_into_tree(volume->id(), N, volume->name());
+                        insert_into_tree(volume->id(), N, volume->name(), parent_object_id);
                         m_storage.set_volume_object(volume);
                 },
                 object);
 }
 
-void ModelTree::insert_into_tree(ObjectId id, unsigned dimension, const std::string& name)
+void ModelTree::insert_into_tree(
+        ObjectId id,
+        unsigned dimension,
+        const std::string& name,
+        const std::optional<ObjectId>& parent_object_id)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -89,14 +93,33 @@ void ModelTree::insert_into_tree(ObjectId id, unsigned dimension, const std::str
         {
                 return;
         }
-        std::unique_ptr<QTreeWidgetItem> item = std::make_unique<QTreeWidgetItem>();
+
+        QTreeWidgetItem* parent_item = nullptr;
+        if (parent_object_id)
+        {
+                auto parent_iter = m_map_id_item.find(*parent_object_id);
+                if (parent_iter != m_map_id_item.cend())
+                {
+                        parent_item = parent_iter->second;
+                }
+        }
+
+        QTreeWidgetItem* item;
+        if (parent_item)
+        {
+                item = new QTreeWidgetItem(parent_item);
+                parent_item->setExpanded(true);
+        }
+        else
+        {
+                item = new QTreeWidgetItem(m_tree);
+        }
+
         QString s = QString("(%1D) %2").arg(dimension).arg(QString::fromStdString(name));
         item->setText(0, s);
         item->setToolTip(0, s);
-        QTreeWidgetItem* ptr = item.get();
-        m_tree->addTopLevelItem(item.release());
-        m_map_item_id[ptr] = id;
-        m_map_id_item[id] = ptr;
+        m_map_item_id[item] = id;
+        m_map_id_item[id] = item;
 }
 
 void ModelTree::erase(ObjectId id)
@@ -111,13 +134,27 @@ void ModelTree::erase(ObjectId id)
                 return;
         }
         QTreeWidgetItem* item = iter->second;
+
         m_map_id_item.erase(id);
         m_map_item_id.erase(item);
-        int index = m_tree->indexOfTopLevelItem(item);
-        ASSERT(index >= 0);
-        if (index >= 0)
+
+        if (item->childCount() > 0)
         {
-                delete m_tree->takeTopLevelItem(index);
+                QFont font = item->font(0);
+                font.setStrikeOut(true);
+                item->setFont(0, font);
+        }
+        else
+        {
+                QTreeWidgetItem* parent = item->parent();
+                delete item;
+                while (parent && parent->childCount() == 0)
+                {
+                        item = parent;
+                        parent = item->parent();
+                        ASSERT(m_map_item_id.count(item) == 0);
+                        delete item;
+                }
         }
 }
 

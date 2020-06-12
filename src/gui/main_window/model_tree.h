@@ -42,7 +42,11 @@ class ModelTree final
 
         std::vector<Connection> m_connections;
 
-        void insert_into_tree(ObjectId id, unsigned dimension, const std::string& name);
+        void insert_into_tree(
+                ObjectId id,
+                unsigned dimension,
+                const std::string& name,
+                const std::optional<ObjectId>& parent_object_id);
 
         //void set_current(ObjectId id);
 
