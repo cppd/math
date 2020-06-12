@@ -473,7 +473,7 @@ class Impl final : public Renderer
                 create_command_buffers();
         }
 
-        void object_show(ObjectId id) override
+        void object_show(const std::optional<ObjectId>& id) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 

@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vec.h>
 #include <src/window/handle.h>
 
+#include <optional>
 #include <variant>
 
 namespace view
@@ -62,8 +63,8 @@ struct DeleteObject final
 
 struct ShowObject final
 {
-        ObjectId id;
-        explicit ShowObject(ObjectId id) : id(id)
+        std::optional<ObjectId> id;
+        explicit ShowObject(const std::optional<ObjectId>& id) : id(id)
         {
         }
 };

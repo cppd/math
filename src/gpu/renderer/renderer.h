@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -81,7 +82,7 @@ struct Renderer
         virtual void object_update(const mesh::MeshObject<3>& object) = 0;
         virtual void object_update(const volume::VolumeObject<3>& object) = 0;
         virtual void object_delete(ObjectId id) = 0;
-        virtual void object_show(ObjectId id) = 0;
+        virtual void object_show(const std::optional<ObjectId>& id) = 0;
         virtual void object_delete_all() = 0;
 
         virtual VkSemaphore draw(const vulkan::Queue& graphics_queue, unsigned image_index) const = 0;

@@ -830,14 +830,9 @@ void MainWindow::model_tree_item_changed()
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         std::optional<ObjectId> id = m_model_tree->current_item();
-        if (!id)
-        {
-                return;
-        }
 
-        m_view->send(view::command::ShowObject(*id));
-
-        update_volume_ui(*id);
+        m_view->send(view::command::ShowObject(id));
+        update_volume_ui(id);
 }
 
 double MainWindow::lighting_slider_value(const QSlider* slider)
@@ -1131,11 +1126,17 @@ void MainWindow::update_mesh_ui(ObjectId /*id*/)
 {
 }
 
-void MainWindow::update_volume_ui(ObjectId id)
+void MainWindow::update_volume_ui(const std::optional<ObjectId>& id)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        std::optional<storage::VolumeObjectConst> volume_object_opt = m_model_tree->volume_const_if_current(id);
+        if (!id)
+        {
+                disable_volume_parameters();
+                return;
+        }
+
+        std::optional<storage::VolumeObjectConst> volume_object_opt = m_model_tree->volume_const_if_current(*id);
         if (!volume_object_opt)
         {
                 disable_volume_parameters();
