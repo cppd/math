@@ -43,7 +43,7 @@ CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
 
                 if (info.before_render_pass_commands)
                 {
-                        (*info.before_render_pass_commands)(command_buffers[i]);
+                        info.before_render_pass_commands(command_buffers[i]);
                 }
 
                 VkRenderPassBeginInfo render_pass_info = {};
@@ -68,7 +68,7 @@ CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
 
                 if (info.render_pass_commands)
                 {
-                        (*info.render_pass_commands)(command_buffers[i]);
+                        info.render_pass_commands(command_buffers[i]);
                 }
 
                 //
