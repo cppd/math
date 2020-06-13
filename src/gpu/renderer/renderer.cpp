@@ -604,6 +604,14 @@ class Impl final : public Renderer
                 m_mesh_renderer.create_depth_buffers(m_mesh_renderer_depth_render_buffers.get());
         }
 
+        std::function<void(VkCommandBuffer)> before_render_pass_commands()
+        {
+                return [this](VkCommandBuffer command_buffer) {
+                        ASSERT(m_object_image->format() == VK_FORMAT_R32_UINT);
+                        m_object_image->clear_commands(command_buffer, VK_IMAGE_LAYOUT_GENERAL);
+                };
+        }
+
         void create_mesh_render_command_buffers()
         {
                 m_mesh_renderer.delete_render_command_buffers();
@@ -613,9 +621,7 @@ class Impl final : public Renderer
                 {
                         m_mesh_renderer.create_render_command_buffers(
                                 mesh, m_graphics_command_pool, m_clip_plane.has_value(), m_show_normals, m_clear_color,
-                                [this](VkCommandBuffer command_buffer) {
-                                        m_object_image->clear_commands(command_buffer, VK_IMAGE_LAYOUT_GENERAL);
-                                });
+                                before_render_pass_commands());
                 }
         }
 
@@ -639,9 +645,7 @@ class Impl final : public Renderer
                 if (volume)
                 {
                         m_volume_renderer.create_command_buffers(
-                                volume, m_graphics_command_pool, m_clear_color, [this](VkCommandBuffer command_buffer) {
-                                        m_object_image->clear_commands(command_buffer, VK_IMAGE_LAYOUT_GENERAL);
-                                });
+                                volume, m_graphics_command_pool, m_clear_color, before_render_pass_commands());
                 }
         }
 
