@@ -220,8 +220,6 @@ public:
                 image::ColorFormat color_format,
                 const std::span<const std::byte>& pixels) const;
 
-        void clear_commands(VkCommandBuffer command_buffer, VkImageLayout image_layout) const;
-
         VkImage image() const;
         VkImageType type() const;
         VkFormat format() const;

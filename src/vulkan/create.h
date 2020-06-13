@@ -55,6 +55,4 @@ Framebuffer create_framebuffer(
 
 VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, const Color& color);
 VkClearValue depth_stencil_clear_value();
-
-VkClearColorValue clear_color_image_value(VkFormat format);
 }
