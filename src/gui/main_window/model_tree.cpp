@@ -56,7 +56,9 @@ void ModelTree::clear()
         m_tree->clear();
 }
 
-void ModelTree::insert(const storage::MeshObject& object, const std::optional<ObjectId>& parent_object_id)
+void ModelTree::insert_into_tree_and_storage(
+        const storage::MeshObject& object,
+        const std::optional<ObjectId>& parent_object_id)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -68,7 +70,9 @@ void ModelTree::insert(const storage::MeshObject& object, const std::optional<Ob
                 object);
 }
 
-void ModelTree::insert(const storage::VolumeObject& object, const std::optional<ObjectId>& parent_object_id)
+void ModelTree::insert_into_tree_and_storage(
+        const storage::VolumeObject& object,
+        const std::optional<ObjectId>& parent_object_id)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -78,6 +82,14 @@ void ModelTree::insert(const storage::VolumeObject& object, const std::optional<
                         m_storage.set_volume_object(volume);
                 },
                 object);
+}
+
+void ModelTree::delete_from_tree_and_storage(ObjectId id)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        m_storage.delete_object(id);
+        erase_from_tree(id);
 }
 
 void ModelTree::insert_into_tree(
@@ -122,11 +134,9 @@ void ModelTree::insert_into_tree(
         m_map_id_item[id] = item;
 }
 
-void ModelTree::erase(ObjectId id)
+void ModelTree::erase_from_tree(ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        m_storage.delete_object(id);
 
         auto iter = m_map_id_item.find(id);
         if (iter == m_map_id_item.cend())
@@ -332,7 +342,7 @@ void ModelTree::make_menu(const QPoint& pos)
 
         std::unique_ptr<QMenu> menu = std::make_unique<QMenu>();
         QAction* action = menu->addAction("Delete");
-        QObject::connect(action, &QAction::triggered, [id, this]() { erase(id); });
+        QObject::connect(action, &QAction::triggered, [id, this]() { delete_from_tree_and_storage(id); });
         menu->exec(m_tree->mapToGlobal(pos));
 }
 }

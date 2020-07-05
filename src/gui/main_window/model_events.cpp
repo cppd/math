@@ -100,16 +100,21 @@ void ModelEvents::event_from_mesh_ui_thread(const mesh::MeshEvent<N>& event)
                 [this](const typename mesh::MeshEvent<N>::Insert& v) {
                         if (v.object)
                         {
-                                m_model_tree->insert(v.object, v.parent_object_id);
+                                ASSERT(m_model_tree);
+                                m_model_tree->insert_into_tree_and_storage(v.object, v.parent_object_id);
                         }
                 },
                 [this](const typename mesh::MeshEvent<N>::Update& v) {
                         if (v.object)
                         {
+                                ASSERT(m_on_mesh_update);
                                 m_on_mesh_update(v.object->id());
                         }
                 },
-                [](const typename mesh::MeshEvent<N>::Delete&) {}
+                [this](const typename mesh::MeshEvent<N>::Delete& v) {
+                        ASSERT(m_model_tree);
+                        m_model_tree->erase_from_tree(v.id);
+                }
 
         };
 
@@ -148,16 +153,21 @@ void ModelEvents::event_from_volume_ui_thread(const volume::VolumeEvent<N>& even
                 [this](const typename volume::VolumeEvent<N>::Insert& v) {
                         if (v.object)
                         {
-                                m_model_tree->insert(v.object, v.parent_object_id);
+                                ASSERT(m_model_tree);
+                                m_model_tree->insert_into_tree_and_storage(v.object, v.parent_object_id);
                         }
                 },
                 [this](const typename volume::VolumeEvent<N>::Update& v) {
                         if (v.object)
                         {
+                                ASSERT(m_on_volume_update);
                                 m_on_volume_update(v.object->id());
                         }
                 },
-                [](const typename volume::VolumeEvent<N>::Delete&) {}};
+                [this](const typename volume::VolumeEvent<N>::Delete& v) {
+                        ASSERT(m_model_tree);
+                        m_model_tree->erase_from_tree(v.id);
+                }};
 
         std::visit(visitors, event.data());
 }

@@ -31,6 +31,8 @@ namespace gui
 {
 class ModelTree final
 {
+        friend class ModelEvents;
+
         const std::thread::id m_thread_id;
 
         storage::Storage m_storage;
@@ -42,25 +44,30 @@ class ModelTree final
 
         std::vector<Connection> m_connections;
 
+        //void set_current(ObjectId id);
+
+        void make_menu(const QPoint& pos);
+
+        void insert_into_tree_and_storage(
+                const storage::MeshObject& object,
+                const std::optional<ObjectId>& parent_object_id);
+        void insert_into_tree_and_storage(
+                const storage::VolumeObject& object,
+                const std::optional<ObjectId>& parent_object_id);
+        void delete_from_tree_and_storage(ObjectId id);
+
         void insert_into_tree(
                 ObjectId id,
                 unsigned dimension,
                 const std::string& name,
                 const std::optional<ObjectId>& parent_object_id);
-
-        //void set_current(ObjectId id);
-
-        void make_menu(const QPoint& pos);
+        void erase_from_tree(ObjectId id);
 
 public:
         ModelTree(QTreeWidget* tree, const std::function<void()>& item_changed);
 
         ~ModelTree();
 
-        void insert(const storage::MeshObject& object, const std::optional<ObjectId>& parent_object_id);
-        void insert(const storage::VolumeObject& object, const std::optional<ObjectId>& parent_object_id);
-
-        void erase(ObjectId id);
         void clear();
 
         std::optional<ObjectId> current_item() const;
