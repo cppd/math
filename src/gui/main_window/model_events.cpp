@@ -138,6 +138,10 @@ void ModelEvents::event_from_volume(const volume::VolumeEvent<N>& event)
                         [this](const typename volume::VolumeEvent<N>::Delete& v) {
                                 ASSERT(m_view);
                                 m_view->send(view::command::DeleteObject(v.id));
+                        },
+                        [this](const typename volume::VolumeEvent<N>::Visibility& /*v*/) {
+                                ASSERT(m_view);
+                                // m_view->send(view::command::ShowObject(v.id));
                         }};
 
                 std::visit(visitors, event.data());
@@ -167,6 +171,10 @@ void ModelEvents::event_from_volume_ui_thread(const volume::VolumeEvent<N>& even
                 [this](const typename volume::VolumeEvent<N>::Delete& v) {
                         ASSERT(m_model_tree);
                         m_model_tree->erase_from_tree(v.id);
+                },
+                [this](const typename volume::VolumeEvent<N>::Visibility& /*v*/) {
+                        ASSERT(m_model_tree);
+                        // m_model_tree->set_visible(v.id, v.visible);
                 }};
 
         std::visit(visitors, event.data());

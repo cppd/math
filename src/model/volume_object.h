@@ -64,7 +64,16 @@ struct VolumeEvent final
                 }
         };
 
-        using T = std::variant<Insert, Update, Delete>;
+        struct Visibility final
+        {
+                ObjectId id;
+                bool visible;
+                Visibility(ObjectId id, bool visible) : id(id), visible(visible)
+                {
+                }
+        };
+
+        using T = std::variant<Insert, Update, Delete, Visibility>;
 
         template <typename Type, typename = std::enable_if_t<!std::is_same_v<VolumeEvent, std::remove_cvref_t<Type>>>>
         VolumeEvent(Type&& arg) : m_data(std::forward<Type>(arg))
@@ -105,6 +114,8 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
 
         bool m_isosurface = false;
         float m_isovalue = 0.5f;
+
+        bool m_visible = false;
 
         //
 
@@ -243,6 +254,23 @@ public:
         void set_isovalue(float value)
         {
                 m_isovalue = value;
+        }
+
+        bool visible() const
+        {
+                std::shared_lock lock(m_mutex);
+                return m_visible;
+        }
+
+        void set_visible(bool visible)
+        {
+                std::unique_lock lock(m_mutex);
+                if (m_visible == visible)
+                {
+                        return;
+                }
+                m_visible = visible;
+                send_event(typename VolumeEvent<N>::Visibility(m_id, visible));
         }
 };
 

@@ -168,6 +168,10 @@ void ModelTree::erase_from_tree(ObjectId id)
         }
 }
 
+void ModelTree::set_visible(ObjectId /*id*/, bool /*visible*/)
+{
+}
+
 std::optional<ObjectId> ModelTree::current_item() const
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
