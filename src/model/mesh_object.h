@@ -64,7 +64,16 @@ struct MeshEvent final
                 }
         };
 
-        using T = std::variant<Insert, Update, Delete>;
+        struct Visibility final
+        {
+                ObjectId id;
+                bool visible;
+                Visibility(ObjectId id, bool visible) : id(id), visible(visible)
+                {
+                }
+        };
+
+        using T = std::variant<Insert, Update, Delete, Visibility>;
 
         template <typename Type, typename = std::enable_if_t<!std::is_same_v<MeshEvent, std::remove_cvref_t<Type>>>>
         MeshEvent(Type&& arg) : m_data(std::forward<Type>(arg))
@@ -96,6 +105,8 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
         Matrix<N + 1, N + 1, double> m_matrix;
         std::string m_name;
         ObjectId m_id;
+
+        bool m_visible = false;
 
         //
 
@@ -169,6 +180,23 @@ public:
         const ObjectId& id() const
         {
                 return m_id;
+        }
+
+        bool visible() const
+        {
+                std::shared_lock lock(m_mutex);
+                return m_visible;
+        }
+
+        void set_visible(bool visible)
+        {
+                std::unique_lock lock(m_mutex);
+                if (m_visible == visible)
+                {
+                        return;
+                }
+                m_visible = visible;
+                send_event(typename MeshEvent<N>::Visibility(m_id, visible));
         }
 };
 

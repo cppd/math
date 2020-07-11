@@ -85,6 +85,10 @@ void ModelEvents::event_from_mesh(const mesh::MeshEvent<N>& event)
                         [this](const typename mesh::MeshEvent<N>::Delete& v) {
                                 ASSERT(m_view);
                                 m_view->send(view::command::DeleteObject(v.id));
+                        },
+                        [this](const typename mesh::MeshEvent<N>::Visibility& /*v*/) {
+                                ASSERT(m_view);
+                                // m_view->send(view::command::ShowObject(v.id));
                         }};
 
                 std::visit(visitors, event.data());
@@ -114,9 +118,11 @@ void ModelEvents::event_from_mesh_ui_thread(const mesh::MeshEvent<N>& event)
                 [this](const typename mesh::MeshEvent<N>::Delete& v) {
                         ASSERT(m_model_tree);
                         m_model_tree->erase_from_tree(v.id);
-                }
-
-        };
+                },
+                [this](const typename mesh::MeshEvent<N>::Visibility& /*v*/) {
+                        ASSERT(m_model_tree);
+                        // m_model_tree->set_visible(v.id, v.visible);
+                }};
 
         std::visit(visitors, event.data());
 }
