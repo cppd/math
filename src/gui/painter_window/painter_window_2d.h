@@ -82,9 +82,11 @@ private:
 
         const std::thread::id m_window_thread_id;
         const std::vector<int> m_screen_size;
-        const int m_width, m_height, m_pixel_count;
+        const int m_width;
+        const int m_height;
+        const long long m_image_pixel_count;
+        const long long m_image_byte_count;
         QImage m_image;
-        const int m_image_byte_count;
         QTimer m_timer;
         bool m_first_show;
 

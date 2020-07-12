@@ -40,19 +40,20 @@ namespace
 constexpr int UPDATE_INTERVAL_MILLISECONDS = 100;
 // Этот интервал должен быть больше интервала UPDATE_INTERVAL_MILLISECONDS
 constexpr int DIFFERENCE_INTERVAL_MILLISECONDS = 10 * UPDATE_INTERVAL_MILLISECONDS;
+static_assert(DIFFERENCE_INTERVAL_MILLISECONDS > UPDATE_INTERVAL_MILLISECONDS);
 constexpr bool SHOW_THREADS = true;
 
 //
 
 void set_label_minimum_width_for_text(QLabel* label, const std::string& text)
 {
-        label->setMinimumWidth(label->fontMetrics().width(text.c_str()));
+        label->setMinimumWidth(label->fontMetrics().boundingRect(text.c_str()).width());
 }
 
 void set_text_and_minimum_width(QLabel* label, const std::string& text)
 {
         label->setText(text.c_str());
-        label->setMinimumWidth(std::max(label->width(), label->fontMetrics().width(text.c_str())));
+        label->setMinimumWidth(std::max(label->width(), label->fontMetrics().boundingRect(text.c_str()).width()));
 }
 }
 
@@ -102,9 +103,9 @@ PainterWindow2d::PainterWindow2d(
           m_screen_size(std::move(screen_size)),
           m_width(m_screen_size[0]),
           m_height(m_screen_size[1]),
-          m_pixel_count(m_width * m_height),
+          m_image_pixel_count(static_cast<long long>(m_width) * m_height),
+          m_image_byte_count(static_cast<long long>(m_width) * m_height * sizeof(quint32)),
           m_image(m_width, m_height, QImage::Format_RGB32),
-          m_image_byte_count(m_width * m_height * sizeof(quint32)),
           m_first_show(true),
           m_difference(std::make_unique<Difference>(DIFFERENCE_INTERVAL_MILLISECONDS))
 {
@@ -114,7 +115,7 @@ PainterWindow2d::PainterWindow2d(
 
         connect(&m_timer, SIGNAL(timeout()), this, SLOT(timer_slot()));
 
-        ASSERT(m_image.byteCount() == m_image_byte_count);
+        ASSERT(m_image.sizeInBytes() == m_image_byte_count);
 
         init_interface(initial_slider_positions);
 }
@@ -281,7 +282,7 @@ void PainterWindow2d::update_points()
                 for (long long index : pixels_busy())
                 {
                         long long index_in_image = index - offset;
-                        if (index_in_image >= 0 && index_in_image < m_pixel_count)
+                        if (index_in_image >= 0 && index_in_image < m_image_pixel_count)
                         {
                                 reinterpret_cast<quint32*>(m_image.bits())[index_in_image] ^= 0x00ff'ffff;
                         }
