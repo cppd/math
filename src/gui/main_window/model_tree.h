@@ -64,7 +64,10 @@ class ModelTree final
                 const std::optional<ObjectId>& parent_object_id);
         void erase_from_tree(ObjectId id);
 
-        void set_visible(ObjectId id, bool visible);
+        void set_visible_in_tree(ObjectId id, bool visible);
+
+        void show_object(ObjectId id, bool show);
+        void show_only_this_object(ObjectId id);
 
 public:
         ModelTree(QTreeWidget* tree, const std::function<void()>& item_changed);

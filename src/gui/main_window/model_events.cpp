@@ -121,7 +121,7 @@ void ModelEvents::event_from_mesh_ui_thread(const mesh::MeshEvent<N>& event)
                 },
                 [this](const typename mesh::MeshEvent<N>::Visibility& v) {
                         ASSERT(m_model_tree);
-                        m_model_tree->set_visible(v.id, v.visible);
+                        m_model_tree->set_visible_in_tree(v.id, v.visible);
                 }};
 
         std::visit(visitors, event.data());
@@ -180,7 +180,7 @@ void ModelEvents::event_from_volume_ui_thread(const volume::VolumeEvent<N>& even
                 },
                 [this](const typename volume::VolumeEvent<N>::Visibility& v) {
                         ASSERT(m_model_tree);
-                        m_model_tree->set_visible(v.id, v.visible);
+                        m_model_tree->set_visible_in_tree(v.id, v.visible);
                 }};
 
         std::visit(visitors, event.data());

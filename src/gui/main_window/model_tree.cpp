@@ -184,7 +184,7 @@ void ModelTree::erase_from_tree(ObjectId id)
         }
 }
 
-void ModelTree::set_visible(ObjectId id, bool visible)
+void ModelTree::set_visible_in_tree(ObjectId id, bool visible)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -194,6 +194,50 @@ void ModelTree::set_visible(ObjectId id, bool visible)
                 return;
         }
         set_item_color(iter->second, visible);
+}
+
+void ModelTree::show_object(ObjectId id, bool show)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::MeshObject> m = m_storage.mesh_object(id);
+        std::optional<storage::VolumeObject> v = m_storage.volume_object(id);
+
+        if (m.has_value() && v.has_value())
+        {
+                error_fatal("Mesh and volume with the same id");
+        }
+
+        if (v)
+        {
+                std::visit(
+                        [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
+                                volume_object->set_visible(show);
+                        },
+                        *v);
+        }
+        else if (m)
+        {
+                std::visit(
+                        [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh_object) {
+                                mesh_object->set_visible(show);
+                        },
+                        *m);
+        }
+}
+
+void ModelTree::show_only_this_object(ObjectId id)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        for (const auto& v : m_map_id_item)
+        {
+                if (id != v.first)
+                {
+                        show_object(v.first, false);
+                }
+        }
+        show_object(id, true);
 }
 
 std::optional<ObjectId> ModelTree::current_item() const
@@ -370,6 +414,11 @@ void ModelTree::make_menu(const QPoint& pos)
 
         std::unique_ptr<QMenu> menu = std::make_unique<QMenu>();
 
+        {
+                QAction* action = menu->addAction("Show only it");
+                QObject::connect(action, &QAction::triggered, [id, this]() { show_only_this_object(id); });
+        }
+
         std::optional<storage::VolumeObject> v = ModelTree::current_volume();
         std::optional<storage::MeshObject> m = ModelTree::current_mesh();
         if (v.has_value() != m.has_value())
@@ -410,13 +459,12 @@ void ModelTree::make_menu(const QPoint& pos)
                 }
         }
 
-        if (!menu->actions().empty())
-        {
-                menu->addSeparator();
-        }
+        menu->addSeparator();
 
-        QAction* action = menu->addAction("Delete");
-        QObject::connect(action, &QAction::triggered, [id, this]() { delete_from_tree_and_storage(id); });
+        {
+                QAction* action = menu->addAction("Delete");
+                QObject::connect(action, &QAction::triggered, [id, this]() { delete_from_tree_and_storage(id); });
+        }
 
         menu->exec(m_tree->mapToGlobal(pos));
 }
