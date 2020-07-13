@@ -124,6 +124,22 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
         mutable std::shared_mutex m_mutex;
         mutable std::unordered_set<Update> m_updates{Update::All};
 
+        void send_event(MeshEvent<N>&& event) noexcept
+        {
+                try
+                {
+                        (*m_events)(std::move(event));
+                }
+                catch (const std::exception& e)
+                {
+                        error_fatal(std::string("Error sending mesh event: ") + e.what());
+                }
+                catch (...)
+                {
+                        error_fatal("Error sending mesh event");
+                }
+        }
+
 public:
         static void set_events(const std::function<void(MeshEvent<N>&&)>* events)
         {
@@ -145,7 +161,7 @@ public:
                 if (!m_inserted)
                 {
                         m_inserted = true;
-                        (*m_events)(typename MeshEvent<N>::Insert(this->shared_from_this(), parent_object_id));
+                        send_event(typename MeshEvent<N>::Insert(this->shared_from_this(), parent_object_id));
                 }
         }
 
@@ -153,7 +169,7 @@ public:
         {
                 if (m_inserted)
                 {
-                        (*m_events)(typename MeshEvent<N>::Delete(m_id));
+                        send_event(typename MeshEvent<N>::Delete(m_id));
                 }
         }
 
