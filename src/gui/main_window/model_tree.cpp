@@ -24,6 +24,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui
 {
+namespace
+{
+constexpr QColor COLOR_VISIBLE(0, 0, 0);
+constexpr QColor COLOR_HIDDEN(128, 128, 128);
+
+void set_item_color(QTreeWidgetItem* item, bool visible)
+{
+        item->setForeground(0, visible ? COLOR_VISIBLE : COLOR_HIDDEN);
+}
+}
+
 ModelTree::ModelTree(QTreeWidget* tree, const std::function<void()>& item_changed)
         : m_thread_id(std::this_thread::get_id()), m_tree(tree)
 {
@@ -64,7 +75,7 @@ void ModelTree::insert_into_tree_and_storage(
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh) {
-                        insert_into_tree(mesh->id(), N, mesh->name(), parent_object_id);
+                        insert_into_tree(mesh->id(), N, mesh->name(), mesh->visible(), parent_object_id);
                         m_storage.set_mesh_object(mesh);
                 },
                 object);
@@ -78,7 +89,7 @@ void ModelTree::insert_into_tree_and_storage(
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume) {
-                        insert_into_tree(volume->id(), N, volume->name(), parent_object_id);
+                        insert_into_tree(volume->id(), N, volume->name(), volume->visible(), parent_object_id);
                         m_storage.set_volume_object(volume);
                 },
                 object);
@@ -96,6 +107,7 @@ void ModelTree::insert_into_tree(
         ObjectId id,
         unsigned dimension,
         const std::string& name,
+        bool visible,
         const std::optional<ObjectId>& parent_object_id)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -130,6 +142,9 @@ void ModelTree::insert_into_tree(
         QString s = QString("(%1D) %2").arg(dimension).arg(QString::fromStdString(name));
         item->setText(0, s);
         item->setToolTip(0, s);
+
+        set_item_color(item, visible);
+
         m_map_item_id[item] = id;
         m_map_id_item[id] = item;
 }
@@ -153,6 +168,7 @@ void ModelTree::erase_from_tree(ObjectId id)
                 QFont font = item->font(0);
                 font.setStrikeOut(true);
                 item->setFont(0, font);
+                set_item_color(item, false);
         }
         else
         {
@@ -168,8 +184,16 @@ void ModelTree::erase_from_tree(ObjectId id)
         }
 }
 
-void ModelTree::set_visible(ObjectId /*id*/, bool /*visible*/)
+void ModelTree::set_visible(ObjectId id, bool visible)
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        auto iter = m_map_id_item.find(id);
+        if (iter == m_map_id_item.cend())
+        {
+                return;
+        }
+        set_item_color(iter->second, visible);
 }
 
 std::optional<ObjectId> ModelTree::current_item() const

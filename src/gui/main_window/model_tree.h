@@ -60,6 +60,7 @@ class ModelTree final
                 ObjectId id,
                 unsigned dimension,
                 const std::string& name,
+                bool visible,
                 const std::optional<ObjectId>& parent_object_id);
         void erase_from_tree(ObjectId id);
 
