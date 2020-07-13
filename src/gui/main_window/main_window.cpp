@@ -830,8 +830,6 @@ void MainWindow::model_tree_item_changed()
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         std::optional<ObjectId> id = m_model_tree->current_item();
-
-        m_view->send(view::command::ShowObject(id));
         update_volume_ui(id);
 }
 

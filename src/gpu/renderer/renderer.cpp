@@ -525,15 +525,20 @@ class Impl final : public Renderer
                 create_command_buffers();
         }
 
-        void object_show(const std::optional<ObjectId>& id) override
+        void object_show(ObjectId id, bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
-                if (m_current_object_id != id)
+                std::optional<ObjectId> opt_id;
+                if (show)
                 {
-                        m_current_object_id = id;
+                        opt_id = id;
+                }
+                if (m_current_object_id != opt_id)
+                {
+                        m_current_object_id = opt_id;
                         create_command_buffers();
                         set_matrices();
                 }

@@ -86,9 +86,9 @@ void ModelEvents::event_from_mesh(const mesh::MeshEvent<N>& event)
                                 ASSERT(m_view);
                                 m_view->send(view::command::DeleteObject(v.id));
                         },
-                        [this](const typename mesh::MeshEvent<N>::Visibility& /*v*/) {
+                        [this](const typename mesh::MeshEvent<N>::Visibility& v) {
                                 ASSERT(m_view);
-                                // m_view->send(view::command::ShowObject(v.id));
+                                m_view->send(view::command::ShowObject(v.id, v.visible));
                         }};
 
                 std::visit(visitors, event.data());
@@ -119,9 +119,9 @@ void ModelEvents::event_from_mesh_ui_thread(const mesh::MeshEvent<N>& event)
                         ASSERT(m_model_tree);
                         m_model_tree->erase_from_tree(v.id);
                 },
-                [this](const typename mesh::MeshEvent<N>::Visibility& /*v*/) {
+                [this](const typename mesh::MeshEvent<N>::Visibility& v) {
                         ASSERT(m_model_tree);
-                        // m_model_tree->set_visible(v.id, v.visible);
+                        m_model_tree->set_visible(v.id, v.visible);
                 }};
 
         std::visit(visitors, event.data());
@@ -145,9 +145,9 @@ void ModelEvents::event_from_volume(const volume::VolumeEvent<N>& event)
                                 ASSERT(m_view);
                                 m_view->send(view::command::DeleteObject(v.id));
                         },
-                        [this](const typename volume::VolumeEvent<N>::Visibility& /*v*/) {
+                        [this](const typename volume::VolumeEvent<N>::Visibility& v) {
                                 ASSERT(m_view);
-                                // m_view->send(view::command::ShowObject(v.id));
+                                m_view->send(view::command::ShowObject(v.id, v.visible));
                         }};
 
                 std::visit(visitors, event.data());
@@ -178,9 +178,9 @@ void ModelEvents::event_from_volume_ui_thread(const volume::VolumeEvent<N>& even
                         ASSERT(m_model_tree);
                         m_model_tree->erase_from_tree(v.id);
                 },
-                [this](const typename volume::VolumeEvent<N>::Visibility& /*v*/) {
+                [this](const typename volume::VolumeEvent<N>::Visibility& v) {
                         ASSERT(m_model_tree);
-                        // m_model_tree->set_visible(v.id, v.visible);
+                        m_model_tree->set_visible(v.id, v.visible);
                 }};
 
         std::visit(visitors, event.data());

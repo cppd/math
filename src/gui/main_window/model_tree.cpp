@@ -345,8 +345,55 @@ void ModelTree::make_menu(const QPoint& pos)
         ObjectId id = iter->second;
 
         std::unique_ptr<QMenu> menu = std::make_unique<QMenu>();
+
+        std::optional<storage::VolumeObject> v = ModelTree::current_volume();
+        std::optional<storage::MeshObject> m = ModelTree::current_mesh();
+        if (v.has_value() != m.has_value())
+        {
+                if (v)
+                {
+                        bool visible;
+                        std::visit(
+                                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
+                                        visible = volume_object->visible();
+                                },
+                                *v);
+                        QAction* action = visible ? menu->addAction("Hide") : menu->addAction("Show");
+                        QObject::connect(action, &QAction::triggered, [&, visible]() {
+                                std::visit(
+                                        [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
+                                                volume_object->set_visible(!visible);
+                                        },
+                                        *v);
+                        });
+                }
+                else if (m)
+                {
+                        bool visible;
+                        std::visit(
+                                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh_object) {
+                                        visible = mesh_object->visible();
+                                },
+                                *m);
+                        QAction* action = visible ? menu->addAction("Hide") : menu->addAction("Show");
+                        QObject::connect(action, &QAction::triggered, [&, visible]() {
+                                std::visit(
+                                        [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh_object) {
+                                                mesh_object->set_visible(!visible);
+                                        },
+                                        *m);
+                        });
+                }
+        }
+
+        if (!menu->actions().empty())
+        {
+                menu->addSeparator();
+        }
+
         QAction* action = menu->addAction("Delete");
         QObject::connect(action, &QAction::triggered, [id, this]() { delete_from_tree_and_storage(id); });
+
         menu->exec(m_tree->mapToGlobal(pos));
 }
 }

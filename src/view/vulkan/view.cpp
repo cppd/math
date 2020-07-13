@@ -271,7 +271,7 @@ class Impl final : public View
                 },
                 [this](const command::ShowObject& d)
                 {
-                        m_renderer->object_show(d.id);
+                        m_renderer->object_show(d.id, d.show);
                 },
                 [this](const command::DeleteAllObjects&)
                 {
