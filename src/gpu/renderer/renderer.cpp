@@ -49,21 +49,47 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 };
 // clang-format on
 
-template <typename T, typename Id>
-std::enable_if_t<std::is_same_v<Id, ObjectId>, T*> find_object(
-        const std::unordered_map<ObjectId, std::unique_ptr<T>>& map,
-        const Id& id)
+template <typename T>
+class ObjectStorage
 {
-        auto iter = map.find(id);
-        return (iter != map.cend()) ? iter->second.get() : nullptr;
-}
-template <typename T, typename OptionalId>
-std::enable_if_t<std::is_same_v<OptionalId, std::optional<ObjectId>>, T*> find_object(
-        const std::unordered_map<ObjectId, std::unique_ptr<T>>& map,
-        const OptionalId& id)
-{
-        return id ? find_object(map, *id) : nullptr;
-}
+        std::unordered_map<ObjectId, std::unique_ptr<T>> m_map;
+
+public:
+        T* insert(ObjectId id, std::unique_ptr<T>&& object)
+        {
+                const auto pair = m_map.emplace(id, std::move(object));
+                ASSERT(pair.second);
+                return pair.first->second.get();
+        }
+
+        void erase(ObjectId id)
+        {
+                m_map.erase(id);
+        }
+
+        bool empty() const
+        {
+                return m_map.empty();
+        }
+
+        void clear()
+        {
+                m_map.clear();
+        }
+
+        template <typename Id>
+        std::enable_if_t<std::is_same_v<Id, ObjectId>, T*> find(const Id& id) const
+        {
+                auto iter = m_map.find(id);
+                return (iter != m_map.cend()) ? iter->second.get() : nullptr;
+        }
+
+        template <typename OptionalId>
+        std::enable_if_t<std::is_same_v<OptionalId, std::optional<ObjectId>>, T*> find(const OptionalId& id) const
+        {
+                return id ? find(*id) : nullptr;
+        }
+};
 
 struct ViewportTransform
 {
@@ -173,8 +199,8 @@ class Impl final : public Renderer
         vulkan::Semaphore m_volume_renderer_signal_semaphore;
         VolumeRenderer m_volume_renderer;
 
-        std::unordered_map<ObjectId, std::unique_ptr<MeshObject>> m_mesh_storage;
-        std::unordered_map<ObjectId, std::unique_ptr<VolumeObject>> m_volume_storage;
+        ObjectStorage<MeshObject> m_mesh_storage;
+        ObjectStorage<VolumeObject> m_volume_storage;
         std::optional<ObjectId> m_current_object_id;
 
         std::optional<vulkan::CommandBuffers> m_default_command_buffers;
@@ -335,7 +361,7 @@ class Impl final : public Renderer
                 {
                         m_shader_buffers.set_clip_plane(*m_clip_plane, true);
 
-                        VolumeObject* volume = find_object(m_volume_storage, m_current_object_id);
+                        VolumeObject* volume = m_volume_storage.find(m_current_object_id);
                         if (volume)
                         {
                                 volume->set_clip_plane(*m_clip_plane);
@@ -358,22 +384,19 @@ class Impl final : public Renderer
 
                 //
 
-                ASSERT(find_object(m_volume_storage, object.id()) == nullptr);
+                ASSERT(m_volume_storage.find(object.id()) == nullptr);
 
                 bool created = false;
-                MeshObject* ptr = find_object(m_mesh_storage, object.id());
+                MeshObject* ptr = m_mesh_storage.find(object.id());
                 if (!ptr)
                 {
-                        const auto pair = m_mesh_storage.emplace(
+                        ptr = m_mesh_storage.insert(
                                 object.id(),
                                 create_mesh_object(
                                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
                                         m_transfer_queue, m_mesh_renderer.mesh_descriptor_sets_function(),
                                         m_mesh_renderer.material_descriptor_sets_function()));
 
-                        ASSERT(pair.second);
-
-                        ptr = pair.first->second.get();
                         created = true;
                 }
 
@@ -420,21 +443,18 @@ class Impl final : public Renderer
 
                 //
 
-                ASSERT(find_object(m_mesh_storage, object.id()) == nullptr);
+                ASSERT(m_mesh_storage.find(object.id()) == nullptr);
 
                 bool created = false;
-                VolumeObject* ptr = find_object(m_volume_storage, object.id());
+                VolumeObject* ptr = m_volume_storage.find(object.id());
                 if (!ptr)
                 {
-                        const auto pair = m_volume_storage.emplace(
+                        ptr = m_volume_storage.insert(
                                 object.id(),
                                 create_volume_object(
                                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
                                         m_transfer_queue, m_volume_renderer.descriptor_sets_function()));
 
-                        ASSERT(pair.second);
-
-                        ptr = pair.first->second.get();
                         created = true;
                 }
 
@@ -481,8 +501,8 @@ class Impl final : public Renderer
 
                 //
 
-                const MeshObject* mesh = find_object(m_mesh_storage, id);
-                const VolumeObject* volume = find_object(m_volume_storage, id);
+                const MeshObject* mesh = m_mesh_storage.find(id);
+                const VolumeObject* volume = m_volume_storage.find(id);
                 if (!mesh && !volume)
                 {
                         return;
@@ -673,7 +693,7 @@ class Impl final : public Renderer
         {
                 m_mesh_renderer.delete_render_command_buffers();
 
-                const MeshObject* mesh = find_object(m_mesh_storage, m_current_object_id);
+                const MeshObject* mesh = m_mesh_storage.find(m_current_object_id);
                 if (mesh)
                 {
                         m_mesh_renderer.create_render_command_buffers(
@@ -686,7 +706,7 @@ class Impl final : public Renderer
         {
                 m_mesh_renderer.delete_depth_command_buffers();
 
-                const MeshObject* mesh = find_object(m_mesh_storage, m_current_object_id);
+                const MeshObject* mesh = m_mesh_storage.find(m_current_object_id);
                 if (mesh)
                 {
                         m_mesh_renderer.create_depth_command_buffers(
@@ -698,7 +718,7 @@ class Impl final : public Renderer
         {
                 m_volume_renderer.delete_command_buffers();
 
-                const VolumeObject* volume = find_object(m_volume_storage, m_current_object_id);
+                const VolumeObject* volume = m_volume_storage.find(m_current_object_id);
                 if (volume)
                 {
                         m_volume_renderer.create_command_buffers(
@@ -710,8 +730,7 @@ class Impl final : public Renderer
         {
                 m_default_command_buffers.reset();
 
-                if (find_object(m_mesh_storage, m_current_object_id)
-                    || find_object(m_volume_storage, m_current_object_id))
+                if (m_mesh_storage.find(m_current_object_id) || m_volume_storage.find(m_current_object_id))
                 {
                         return;
                 }
@@ -753,7 +772,7 @@ class Impl final : public Renderer
         {
                 m_shader_buffers.set_matrices(m_main_vp_matrix, m_shadow_vp_matrix, m_shadow_vp_texture_matrix);
 
-                VolumeObject* volume = find_object(m_volume_storage, m_current_object_id);
+                VolumeObject* volume = m_volume_storage.find(m_current_object_id);
                 if (volume)
                 {
                         volume->set_matrix_and_clip_plane(m_main_vp_matrix, m_clip_plane);
