@@ -98,9 +98,13 @@ void VolumeRenderer::create_command_buffers(
         //
 
         ASSERT(m_render_buffers);
-        ASSERT(volume);
 
         m_command_buffers.reset();
+
+        if (!volume)
+        {
+                return;
+        }
 
         vulkan::CommandBufferCreateInfo info;
 

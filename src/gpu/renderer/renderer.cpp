@@ -52,9 +52,19 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 template <typename T>
 class ObjectStorage
 {
+        static_assert(std::is_same_v<T, MeshObject> || std::is_same_v<T, VolumeObject>);
+        static constexpr bool EXCLUSIVE_VISIBILITY = std::is_same_v<T, VolumeObject>;
+
         std::unordered_map<ObjectId, std::unique_ptr<T>> m_map;
+        std::unordered_set<const T*> m_visible_objects;
+        std::function<void()> m_visibility_changed;
 
 public:
+        ObjectStorage(std::function<void()>&& visibility_changed) : m_visibility_changed(std::move(visibility_changed))
+        {
+                ASSERT(m_visibility_changed);
+        }
+
         T* insert(ObjectId id, std::unique_ptr<T>&& object)
         {
                 const auto pair = m_map.emplace(id, std::move(object));
@@ -64,17 +74,34 @@ public:
 
         void erase(ObjectId id)
         {
-                m_map.erase(id);
+                auto iter = m_map.find(id);
+                if (iter == m_map.cend())
+                {
+                        return;
+                }
+                bool visibility_changed = m_visible_objects.erase(iter->second.get()) > 0;
+                m_map.erase(iter);
+                if (visibility_changed)
+                {
+                        m_visibility_changed();
+                }
         }
 
         bool empty() const
         {
+                ASSERT(!m_map.empty() || m_visible_objects.empty());
                 return m_map.empty();
         }
 
         void clear()
         {
+                bool visibility_changed = !m_visible_objects.empty();
+                m_visible_objects.clear();
                 m_map.clear();
+                if (visibility_changed)
+                {
+                        m_visibility_changed();
+                }
         }
 
         template <typename Id>
@@ -88,6 +115,41 @@ public:
         std::enable_if_t<std::is_same_v<OptionalId, std::optional<ObjectId>>, T*> find(const OptionalId& id) const
         {
                 return id ? find(*id) : nullptr;
+        }
+
+        bool set_visible(ObjectId id, bool visible)
+        {
+                auto iter = m_map.find(id);
+                if (iter == m_map.cend())
+                {
+                        return false;
+                }
+
+                const T* ptr = iter->second.get();
+                auto iter_v = m_visible_objects.find(ptr);
+                if (!visible)
+                {
+                        if (iter_v != m_visible_objects.cend())
+                        {
+                                m_visible_objects.erase(iter_v);
+                                m_visibility_changed();
+                        }
+                }
+                else if (iter_v == m_visible_objects.cend())
+                {
+                        if (EXCLUSIVE_VISIBILITY)
+                        {
+                                m_visible_objects.clear();
+                        }
+                        m_visible_objects.insert(ptr);
+                        m_visibility_changed();
+                }
+                return true;
+        }
+
+        const std::unordered_set<const T*>& visible_objects() const
+        {
+                return m_visible_objects;
         }
 };
 
@@ -562,6 +624,15 @@ class Impl final : public Renderer
                         create_command_buffers();
                         set_matrices();
                 }
+
+                if (m_mesh_storage.set_visible(id, show))
+                {
+                        return;
+                }
+                if (m_volume_storage.set_visible(id, show))
+                {
+                        return;
+                }
         }
 
         VkSemaphore draw(const vulkan::Queue& graphics_queue, unsigned image_index) const override
@@ -697,8 +768,8 @@ class Impl final : public Renderer
                 if (mesh)
                 {
                         m_mesh_renderer.create_render_command_buffers(
-                                mesh, m_graphics_command_pool, m_clip_plane.has_value(), m_show_normals, m_clear_color,
-                                before_render_pass_commands());
+                                {mesh}, m_graphics_command_pool, m_clip_plane.has_value(), m_show_normals,
+                                m_clear_color, before_render_pass_commands());
                 }
         }
 
@@ -710,7 +781,7 @@ class Impl final : public Renderer
                 if (mesh)
                 {
                         m_mesh_renderer.create_depth_command_buffers(
-                                mesh, m_graphics_command_pool, m_clip_plane.has_value(), m_show_normals);
+                                {mesh}, m_graphics_command_pool, m_clip_plane.has_value(), m_show_normals);
                 }
         }
 
@@ -779,6 +850,15 @@ class Impl final : public Renderer
                 }
         }
 
+        void mesh_visibility_changed()
+        {
+        }
+
+        void volume_visibility_changed()
+        {
+                ASSERT(m_volume_storage.visible_objects().size() < 2);
+        }
+
 public:
         Impl(const vulkan::VulkanInstance& instance,
              const vulkan::CommandPool& graphics_command_pool,
@@ -798,7 +878,9 @@ public:
                   m_mesh_renderer_depth_signal_semaphore(m_device),
                   m_mesh_renderer(m_device, sample_shading, sampler_anisotropy, m_shader_buffers),
                   m_volume_renderer_signal_semaphore(m_device),
-                  m_volume_renderer(m_device, sample_shading, m_shader_buffers)
+                  m_volume_renderer(m_device, sample_shading, m_shader_buffers),
+                  m_mesh_storage([this]() { mesh_visibility_changed(); }),
+                  m_volume_storage([this]() { volume_visibility_changed(); })
         {
         }
 

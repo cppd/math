@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 #include <thread>
+#include <unordered_set>
 
 namespace gpu::renderer
 {
@@ -72,7 +73,7 @@ class MeshRenderer
         vulkan::Sampler m_shadow_sampler;
 
         void draw_commands(
-                const MeshObject* mesh,
+                const std::unordered_set<const MeshObject*>& meshes,
                 VkCommandBuffer command_buffer,
                 bool clip_plane,
                 bool normals,
@@ -98,7 +99,7 @@ public:
         void delete_depth_buffers();
 
         void create_render_command_buffers(
-                const MeshObject* mesh,
+                const std::unordered_set<const MeshObject*>& meshes,
                 VkCommandPool graphics_command_pool,
                 bool clip_plane,
                 bool normals,
@@ -107,7 +108,7 @@ public:
         void delete_render_command_buffers();
 
         void create_depth_command_buffers(
-                const MeshObject* mesh,
+                const std::unordered_set<const MeshObject*>& meshes,
                 VkCommandPool graphics_command_pool,
                 bool clip_plane,
                 bool normals);

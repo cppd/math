@@ -174,7 +174,7 @@ MaterialDescriptorSetsFunction MeshRenderer::material_descriptor_sets_function()
 }
 
 void MeshRenderer::draw_commands(
-        const MeshObject* mesh,
+        const std::unordered_set<const MeshObject*>& meshes,
         VkCommandBuffer command_buffer,
         bool clip_plane,
         bool normals,
@@ -210,9 +210,13 @@ void MeshRenderer::draw_commands(
                                 TrianglesMaterialMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
-                mesh->commands_triangles(
-                        command_buffer, m_triangles_program.descriptor_set_layout_mesh(), bind_descriptor_set_mesh,
-                        m_triangles_program.descriptor_set_layout_material(), bind_descriptor_set_material);
+                for (const MeshObject* mesh : meshes)
+                {
+                        mesh->commands_triangles(
+                                command_buffer, m_triangles_program.descriptor_set_layout_mesh(),
+                                bind_descriptor_set_mesh, m_triangles_program.descriptor_set_layout_material(),
+                                bind_descriptor_set_material);
+                }
         }
         else
         {
@@ -230,9 +234,12 @@ void MeshRenderer::draw_commands(
                                 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
-                mesh->commands_plain_triangles(
-                        command_buffer, m_triangles_depth_program.descriptor_set_layout_mesh(),
-                        bind_descriptor_set_mesh);
+                for (const MeshObject* mesh : meshes)
+                {
+                        mesh->commands_plain_triangles(
+                                command_buffer, m_triangles_depth_program.descriptor_set_layout_mesh(),
+                                bind_descriptor_set_mesh);
+                }
         }
 
         if (!depth)
@@ -250,8 +257,12 @@ void MeshRenderer::draw_commands(
                                 PointsMeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
-                mesh->commands_lines(
-                        command_buffer, m_points_program.descriptor_set_layout_mesh(), bind_descriptor_set_mesh);
+                for (const MeshObject* mesh : meshes)
+                {
+                        mesh->commands_lines(
+                                command_buffer, m_points_program.descriptor_set_layout_mesh(),
+                                bind_descriptor_set_mesh);
+                }
         }
 
         if (!depth)
@@ -269,8 +280,12 @@ void MeshRenderer::draw_commands(
                                 PointsMeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
-                mesh->commands_points(
-                        command_buffer, m_points_program.descriptor_set_layout_mesh(), bind_descriptor_set_mesh);
+                for (const MeshObject* mesh : meshes)
+                {
+                        mesh->commands_points(
+                                command_buffer, m_points_program.descriptor_set_layout_mesh(),
+                                bind_descriptor_set_mesh);
+                }
         }
 
         if (!depth && clip_plane)
@@ -289,9 +304,12 @@ void MeshRenderer::draw_commands(
                                 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
-                mesh->commands_plain_triangles(
-                        command_buffer, m_triangle_lines_program.descriptor_set_layout_mesh(),
-                        bind_descriptor_set_mesh);
+                for (const MeshObject* mesh : meshes)
+                {
+                        mesh->commands_plain_triangles(
+                                command_buffer, m_triangle_lines_program.descriptor_set_layout_mesh(),
+                                bind_descriptor_set_mesh);
+                }
         }
 
         if (!depth && normals)
@@ -309,13 +327,17 @@ void MeshRenderer::draw_commands(
                                 NormalsMeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
-                mesh->commands_triangle_vertices(
-                        command_buffer, m_normals_program.descriptor_set_layout_mesh(), bind_descriptor_set_mesh);
+                for (const MeshObject* mesh : meshes)
+                {
+                        mesh->commands_triangle_vertices(
+                                command_buffer, m_normals_program.descriptor_set_layout_mesh(),
+                                bind_descriptor_set_mesh);
+                }
         }
 }
 
 void MeshRenderer::create_render_command_buffers(
-        const MeshObject* mesh,
+        const std::unordered_set<const MeshObject*>& meshes,
         VkCommandPool graphics_command_pool,
         bool clip_plane,
         bool normals,
@@ -327,9 +349,13 @@ void MeshRenderer::create_render_command_buffers(
         //
 
         ASSERT(m_render_buffers);
-        ASSERT(mesh);
 
         m_render_command_buffers.reset();
+
+        if (meshes.empty())
+        {
+                return;
+        }
 
         vulkan::CommandBufferCreateInfo info;
 
@@ -346,7 +372,7 @@ void MeshRenderer::create_render_command_buffers(
         info.clear_values = &clear_values;
         info.before_render_pass_commands = before_render_pass_commands;
         info.render_pass_commands = [&](VkCommandBuffer command_buffer) {
-                draw_commands(mesh, command_buffer, clip_plane, normals, false /*depth*/);
+                draw_commands(meshes, command_buffer, clip_plane, normals, false /*depth*/);
         };
 
         m_render_command_buffers = vulkan::create_command_buffers(info);
@@ -358,7 +384,7 @@ void MeshRenderer::delete_render_command_buffers()
 }
 
 void MeshRenderer::create_depth_command_buffers(
-        const MeshObject* mesh,
+        const std::unordered_set<const MeshObject*>& meshes,
         VkCommandPool graphics_command_pool,
         bool clip_plane,
         bool normals)
@@ -368,9 +394,13 @@ void MeshRenderer::create_depth_command_buffers(
         //
 
         ASSERT(m_depth_buffers);
-        ASSERT(mesh);
 
         m_render_depth_command_buffers.reset();
+
+        if (meshes.empty())
+        {
+                return;
+        }
 
         vulkan::CommandBufferCreateInfo info;
 
@@ -385,7 +415,7 @@ void MeshRenderer::create_depth_command_buffers(
         info.command_pool = graphics_command_pool;
         info.clear_values = &m_depth_buffers->clear_values();
         info.render_pass_commands = [&](VkCommandBuffer command_buffer) {
-                draw_commands(mesh, command_buffer, clip_plane, normals, true /*depth*/);
+                draw_commands(meshes, command_buffer, clip_plane, normals, true /*depth*/);
         };
 
         m_render_depth_command_buffers = vulkan::create_command_buffers(info);
