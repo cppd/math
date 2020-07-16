@@ -90,7 +90,6 @@ void VolumeRenderer::draw_commands(const VolumeObject* volume, VkCommandBuffer c
 void VolumeRenderer::create_command_buffers(
         const VolumeObject* volume,
         VkCommandPool graphics_command_pool,
-        const Color& clear_color,
         const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands)
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
@@ -117,8 +116,6 @@ void VolumeRenderer::create_command_buffers(
         info.render_pass = m_render_buffers->render_pass();
         info.framebuffers = &m_render_buffers->framebuffers();
         info.command_pool = graphics_command_pool;
-        const std::vector<VkClearValue> clear_values = m_render_buffers->clear_values(clear_color);
-        info.clear_values = &clear_values;
         info.before_render_pass_commands = before_render_pass_commands;
         info.render_pass_commands = [&](VkCommandBuffer command_buffer) { draw_commands(volume, command_buffer); };
 

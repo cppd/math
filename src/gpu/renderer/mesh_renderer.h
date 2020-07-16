@@ -103,7 +103,6 @@ public:
                 VkCommandPool graphics_command_pool,
                 bool clip_plane,
                 bool normals,
-                const Color& clear_color,
                 const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands);
         void delete_render_command_buffers();
 

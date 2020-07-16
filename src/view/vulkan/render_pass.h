@@ -39,7 +39,8 @@ vulkan::RenderPass render_pass_color_depth(
         VkDevice device,
         VkFormat color_format,
         VkFormat depth_format,
-        VkSampleCountFlagBits sample_count);
+        VkSampleCountFlagBits sample_count,
+        bool clear);
 
 vulkan::RenderPass render_pass_color(VkDevice device, VkFormat color_format, VkSampleCountFlagBits sample_count);
 }

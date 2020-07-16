@@ -149,9 +149,13 @@ class Impl3D : public gpu::RenderBuffers3D
 {
         virtual unsigned width_3d() const = 0;
         virtual unsigned height_3d() const = 0;
-        virtual VkRenderPass render_pass_3d() const = 0;
         virtual VkSampleCountFlagBits sample_count_3d() const = 0;
+
+        virtual VkRenderPass render_pass_3d() const = 0;
         virtual const std::vector<VkFramebuffer>& framebuffers_3d() const = 0;
+        virtual VkRenderPass render_pass_clear_3d() const = 0;
+        virtual const std::vector<VkFramebuffer>& framebuffers_clear_3d() const = 0;
+
         virtual std::vector<VkClearValue> clear_values_3d(const Color& clear_color) const = 0;
 
         //
@@ -160,22 +164,37 @@ class Impl3D : public gpu::RenderBuffers3D
         {
                 return width_3d();
         }
+
         unsigned height() const final
         {
                 return height_3d();
         }
-        VkRenderPass render_pass() const final
-        {
-                return render_pass_3d();
-        }
+
         VkSampleCountFlagBits sample_count() const final
         {
                 return sample_count_3d();
         }
+
+        VkRenderPass render_pass() const final
+        {
+                return render_pass_3d();
+        }
+
         const std::vector<VkFramebuffer>& framebuffers() const final
         {
                 return framebuffers_3d();
         }
+
+        VkRenderPass render_pass_clear() const final
+        {
+                return render_pass_clear_3d();
+        }
+
+        const std::vector<VkFramebuffer>& framebuffers_clear() const final
+        {
+                return framebuffers_clear_3d();
+        }
+
         std::vector<VkClearValue> clear_values(const Color& clear_color) const final
         {
                 return clear_values_3d(clear_color);
@@ -199,18 +218,22 @@ class Impl2D : public gpu::RenderBuffers2D
         {
                 return width_2d();
         }
+
         unsigned height() const final
         {
                 return height_2d();
         }
-        VkRenderPass render_pass() const final
-        {
-                return render_pass_2d();
-        }
+
         VkSampleCountFlagBits sample_count() const final
         {
                 return sample_count_2d();
         }
+
+        VkRenderPass render_pass() const final
+        {
+                return render_pass_2d();
+        }
+
         const std::vector<VkFramebuffer>& framebuffers() const final
         {
                 return framebuffers_2d();
@@ -234,11 +257,14 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
         std::vector<vulkan::DepthAttachment> m_depth_attachments;
         std::vector<vulkan::ColorAttachment> m_color_attachments;
 
-        std::vector<VkClearValue> m_clear_values;
+        //std::vector<VkClearValue> m_clear_values;
 
         vulkan::RenderPass m_3d_render_pass;
+        vulkan::RenderPass m_3d_render_pass_clear;
         std::vector<vulkan::Framebuffer> m_3d_framebuffers;
+        std::vector<vulkan::Framebuffer> m_3d_framebuffers_clear;
         std::vector<VkFramebuffer> m_3d_framebuffers_handles;
+        std::vector<VkFramebuffer> m_3d_framebuffers_handles_clear;
 
         vulkan::RenderPass m_2d_render_pass;
         std::vector<vulkan::Framebuffer> m_2d_framebuffers;
@@ -281,15 +307,23 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
 
         unsigned width_3d() const override;
         unsigned height_3d() const override;
-        VkRenderPass render_pass_3d() const override;
         VkSampleCountFlagBits sample_count_3d() const override;
+
+        VkRenderPass render_pass_3d() const override;
         const std::vector<VkFramebuffer>& framebuffers_3d() const override;
+
+        VkRenderPass render_pass_clear_3d() const override;
+        const std::vector<VkFramebuffer>& framebuffers_clear_3d() const override;
+
         std::vector<VkClearValue> clear_values_3d(const Color& clear_color) const override;
+
+        //
 
         unsigned width_2d() const override;
         unsigned height_2d() const override;
-        VkRenderPass render_pass_2d() const override;
         VkSampleCountFlagBits sample_count_2d() const override;
+
+        VkRenderPass render_pass_2d() const override;
         const std::vector<VkFramebuffer>& framebuffers_2d() const override;
 
 public:
@@ -393,7 +427,9 @@ void Impl::create_color_buffer_rendering(
 
         //
 
-        m_3d_render_pass = render_pass_color_depth(m_device, swapchain.format(), depth_format, sample_count);
+        m_3d_render_pass = render_pass_color_depth(m_device, swapchain.format(), depth_format, sample_count, false);
+        m_3d_render_pass_clear =
+                render_pass_color_depth(m_device, swapchain.format(), depth_format, sample_count, true);
 
         attachments.resize(2);
         for (unsigned i = 0; i < buffer_count; ++i)
@@ -404,6 +440,10 @@ void Impl::create_color_buffer_rendering(
                 m_3d_framebuffers.push_back(vulkan::create_framebuffer(
                         m_device, m_3d_render_pass, swapchain.width(), swapchain.height(), attachments));
                 m_3d_framebuffers_handles.push_back(m_3d_framebuffers.back());
+
+                m_3d_framebuffers_clear.push_back(vulkan::create_framebuffer(
+                        m_device, m_3d_render_pass_clear, swapchain.width(), swapchain.height(), attachments));
+                m_3d_framebuffers_handles_clear.push_back(m_3d_framebuffers_clear.back());
         }
 
         //
@@ -441,8 +481,8 @@ void Impl::create_color_buffer_rendering(
                 m_resolve_signal_semaphores.emplace_back(m_device);
         }
 
-        m_clear_values.resize(2);
-        m_clear_values[1] = vulkan::depth_stencil_clear_value();
+        //m_clear_values.resize(2);
+        //m_clear_values[1] = vulkan::depth_stencil_clear_value();
 }
 
 std::vector<VkImage> Impl::images() const
@@ -517,20 +557,32 @@ unsigned Impl::height_3d() const
         return m_depth_attachments[0].height();
 }
 
-VkRenderPass Impl::render_pass_3d() const
-{
-        return m_3d_render_pass;
-}
-
 VkSampleCountFlagBits Impl::sample_count_3d() const
 {
         return !m_color_attachments.empty() ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
+}
+
+VkRenderPass Impl::render_pass_3d() const
+{
+        return m_3d_render_pass;
 }
 
 const std::vector<VkFramebuffer>& Impl::framebuffers_3d() const
 {
         ASSERT(!m_3d_framebuffers.empty() && m_3d_framebuffers.size() == m_3d_framebuffers_handles.size());
         return m_3d_framebuffers_handles;
+}
+
+VkRenderPass Impl::render_pass_clear_3d() const
+{
+        return m_3d_render_pass_clear;
+}
+
+const std::vector<VkFramebuffer>& Impl::framebuffers_clear_3d() const
+{
+        ASSERT(!m_3d_framebuffers_clear.empty()
+               && m_3d_framebuffers_clear.size() == m_3d_framebuffers_handles_clear.size());
+        return m_3d_framebuffers_handles_clear;
 }
 
 std::vector<VkClearValue> Impl::clear_values_3d(const Color& clear_color) const
@@ -553,14 +605,14 @@ unsigned Impl::height_2d() const
         return m_depth_attachments[0].height();
 }
 
-VkRenderPass Impl::render_pass_2d() const
-{
-        return m_2d_render_pass;
-}
-
 VkSampleCountFlagBits Impl::sample_count_2d() const
 {
         return !m_color_attachments.empty() ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
+}
+
+VkRenderPass Impl::render_pass_2d() const
+{
+        return m_2d_render_pass;
 }
 
 const std::vector<VkFramebuffer>& Impl::framebuffers_2d() const

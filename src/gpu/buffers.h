@@ -32,9 +32,13 @@ protected:
 public:
         virtual unsigned width() const = 0;
         virtual unsigned height() const = 0;
-        virtual VkRenderPass render_pass() const = 0;
         virtual VkSampleCountFlagBits sample_count() const = 0;
+
+        virtual VkRenderPass render_pass() const = 0;
         virtual const std::vector<VkFramebuffer>& framebuffers() const = 0;
+        virtual VkRenderPass render_pass_clear() const = 0;
+        virtual const std::vector<VkFramebuffer>& framebuffers_clear() const = 0;
+
         virtual std::vector<VkClearValue> clear_values(const Color& clear_color) const = 0;
 };
 
@@ -46,8 +50,8 @@ protected:
 public:
         virtual unsigned width() const = 0;
         virtual unsigned height() const = 0;
-        virtual VkRenderPass render_pass() const = 0;
         virtual VkSampleCountFlagBits sample_count() const = 0;
+        virtual VkRenderPass render_pass() const = 0;
         virtual const std::vector<VkFramebuffer>& framebuffers() const = 0;
 };
 }

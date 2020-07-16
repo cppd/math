@@ -58,7 +58,6 @@ public:
         void create_command_buffers(
                 const VolumeObject* volume,
                 VkCommandPool graphics_command_pool,
-                const Color& clear_color,
                 const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands);
         void delete_command_buffers();
 

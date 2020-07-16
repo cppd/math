@@ -149,6 +149,8 @@ public:
 
         const std::unordered_set<const T*>& visible_objects() const
         {
+                ASSERT(!EXCLUSIVE_VISIBILITY || m_visible_objects.size() <= 1);
+
                 return m_visible_objects;
         }
 };
@@ -265,7 +267,8 @@ class Impl final : public Renderer
         ObjectStorage<VolumeObject> m_volume_storage;
         std::optional<ObjectId> m_current_object_id;
 
-        std::optional<vulkan::CommandBuffers> m_default_command_buffers;
+        std::optional<vulkan::CommandBuffers> m_clear_command_buffers;
+        vulkan::Semaphore m_clear_signal_semaphore;
 
         void set_light_a(const Color& light) override
         {
@@ -292,7 +295,7 @@ class Impl final : public Renderer
                 m_clear_color = color;
                 m_shader_buffers.set_background_color(color);
 
-                create_command_buffers();
+                create_clear_command_buffers();
         }
         void set_default_color(const Color& color) override
         {
@@ -645,13 +648,26 @@ class Impl final : public Renderer
 
                 ASSERT(image_index < m_swapchain->image_views().size());
 
+                VkSemaphore semaphore;
+
+                {
+                        ASSERT(m_clear_command_buffers);
+                        unsigned index = m_clear_command_buffers->count() == 1 ? 0 : image_index;
+                        vulkan::queue_submit(
+                                (*m_clear_command_buffers)[index], m_clear_signal_semaphore, graphics_queue);
+                        semaphore = m_clear_signal_semaphore;
+                }
+
                 if (m_mesh_renderer.render_command_buffer(image_index))
                 {
                         if (!m_show_shadow)
                         {
                                 vulkan::queue_submit(
+                                        semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                                         *m_mesh_renderer.render_command_buffer(image_index),
                                         m_renderer_signal_semaphore, graphics_queue);
+
+                                semaphore = m_renderer_signal_semaphore;
                         }
                         else
                         {
@@ -661,26 +677,27 @@ class Impl final : public Renderer
                                         m_mesh_renderer_depth_signal_semaphore, graphics_queue);
 
                                 vulkan::queue_submit(
-                                        m_mesh_renderer_depth_signal_semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                        std::array<VkSemaphore, 2>{semaphore, m_mesh_renderer_depth_signal_semaphore},
+                                        std::array<VkPipelineStageFlags, 2>{
+                                                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT},
                                         *m_mesh_renderer.render_command_buffer(image_index),
                                         m_renderer_signal_semaphore, graphics_queue);
+
+                                semaphore = m_renderer_signal_semaphore;
                         }
                 }
                 else if (m_volume_renderer.command_buffer(image_index))
                 {
                         vulkan::queue_submit(
+                                semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                                 *m_volume_renderer.command_buffer(image_index), m_renderer_signal_semaphore,
                                 graphics_queue);
-                }
-                else
-                {
-                        ASSERT(m_default_command_buffers);
-                        unsigned index = m_default_command_buffers->count() == 1 ? 0 : image_index;
-                        vulkan::queue_submit(
-                                (*m_default_command_buffers)[index], m_renderer_signal_semaphore, graphics_queue);
+
+                        semaphore = m_renderer_signal_semaphore;
                 }
 
-                return m_renderer_signal_semaphore;
+                return semaphore;
         }
 
         bool empty() const override
@@ -689,7 +706,8 @@ class Impl final : public Renderer
 
                 //
 
-                return m_default_command_buffers.has_value();
+                return !m_mesh_renderer.render_command_buffer(0).has_value()
+                       && !m_volume_renderer.command_buffer(0).has_value();
         }
 
         void create_buffers(
@@ -719,6 +737,7 @@ class Impl final : public Renderer
                 m_volume_renderer.create_buffers(m_render_buffers, m_viewport);
 
                 create_command_buffers();
+                create_clear_command_buffers();
         }
 
         void delete_buffers() override
@@ -727,6 +746,7 @@ class Impl final : public Renderer
 
                 //
 
+                m_clear_command_buffers.reset();
                 m_volume_renderer.delete_buffers();
                 delete_mesh_depth_buffers();
                 m_mesh_renderer.delete_render_buffers();
@@ -752,6 +772,27 @@ class Impl final : public Renderer
                 m_mesh_renderer.create_depth_buffers(m_mesh_renderer_depth_render_buffers.get());
         }
 
+        void create_clear_command_buffers()
+        {
+                m_clear_command_buffers.reset();
+
+                vulkan::CommandBufferCreateInfo info;
+
+                info.device = m_device;
+                info.render_area.emplace();
+                info.render_area->offset.x = 0;
+                info.render_area->offset.y = 0;
+                info.render_area->extent.width = m_render_buffers->width();
+                info.render_area->extent.height = m_render_buffers->height();
+                info.render_pass = m_render_buffers->render_pass_clear();
+                info.framebuffers = &m_render_buffers->framebuffers_clear();
+                info.command_pool = m_graphics_command_pool;
+                const std::vector<VkClearValue> clear_values = m_render_buffers->clear_values(m_clear_color);
+                info.clear_values = &clear_values;
+
+                m_clear_command_buffers = vulkan::create_command_buffers(info);
+        }
+
         std::function<void(VkCommandBuffer)> before_render_pass_commands()
         {
                 return [this](VkCommandBuffer command_buffer) {
@@ -769,7 +810,7 @@ class Impl final : public Renderer
                 {
                         m_mesh_renderer.create_render_command_buffers(
                                 {mesh}, m_graphics_command_pool, m_clip_plane.has_value(), m_show_normals,
-                                m_clear_color, before_render_pass_commands());
+                                before_render_pass_commands());
                 }
         }
 
@@ -793,34 +834,8 @@ class Impl final : public Renderer
                 if (volume)
                 {
                         m_volume_renderer.create_command_buffers(
-                                volume, m_graphics_command_pool, m_clear_color, before_render_pass_commands());
+                                volume, m_graphics_command_pool, before_render_pass_commands());
                 }
-        }
-
-        void create_default_command_buffers()
-        {
-                m_default_command_buffers.reset();
-
-                if (m_mesh_storage.find(m_current_object_id) || m_volume_storage.find(m_current_object_id))
-                {
-                        return;
-                }
-
-                vulkan::CommandBufferCreateInfo info;
-
-                info.device = m_device;
-                info.render_area.emplace();
-                info.render_area->offset.x = 0;
-                info.render_area->offset.y = 0;
-                info.render_area->extent.width = m_render_buffers->width();
-                info.render_area->extent.height = m_render_buffers->height();
-                info.render_pass = m_render_buffers->render_pass();
-                info.framebuffers = &m_render_buffers->framebuffers();
-                info.command_pool = m_graphics_command_pool;
-                const std::vector<VkClearValue> clear_values = m_render_buffers->clear_values(m_clear_color);
-                info.clear_values = &clear_values;
-
-                m_default_command_buffers = vulkan::create_command_buffers(info);
         }
 
         void create_command_buffers()
@@ -828,12 +843,10 @@ class Impl final : public Renderer
                 create_mesh_render_command_buffers();
                 create_mesh_depth_command_buffers();
                 create_volume_command_buffers();
-                create_default_command_buffers();
         }
 
         void delete_command_buffers()
         {
-                m_default_command_buffers.reset();
                 m_volume_renderer.delete_command_buffers();
                 m_mesh_renderer.delete_render_command_buffers();
                 m_mesh_renderer.delete_depth_command_buffers();
@@ -880,7 +893,8 @@ public:
                   m_volume_renderer_signal_semaphore(m_device),
                   m_volume_renderer(m_device, sample_shading, m_shader_buffers),
                   m_mesh_storage([this]() { mesh_visibility_changed(); }),
-                  m_volume_storage([this]() { volume_visibility_changed(); })
+                  m_volume_storage([this]() { volume_visibility_changed(); }),
+                  m_clear_signal_semaphore(m_device)
         {
         }
 
