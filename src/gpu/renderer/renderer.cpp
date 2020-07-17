@@ -53,10 +53,11 @@ template <typename T>
 class ObjectStorage
 {
         static_assert(std::is_same_v<T, MeshObject> || std::is_same_v<T, VolumeObject>);
-        static constexpr bool EXCLUSIVE_VISIBILITY = std::is_same_v<T, VolumeObject>;
+
+        using VisibleType = std::conditional_t<std::is_same_v<T, VolumeObject>, T, const T>;
 
         std::unordered_map<ObjectId, std::unique_ptr<T>> m_map;
-        std::unordered_set<const T*> m_visible_objects;
+        std::unordered_set<VisibleType*> m_visible_objects;
         std::function<void()> m_visibility_changed;
 
 public:
@@ -72,12 +73,12 @@ public:
                 return pair.first->second.get();
         }
 
-        void erase(ObjectId id)
+        bool erase(ObjectId id)
         {
                 auto iter = m_map.find(id);
                 if (iter == m_map.cend())
                 {
-                        return;
+                        return false;
                 }
                 bool visibility_changed = m_visible_objects.erase(iter->second.get()) > 0;
                 m_map.erase(iter);
@@ -85,6 +86,7 @@ public:
                 {
                         m_visibility_changed();
                 }
+                return true;
         }
 
         bool empty() const
@@ -104,17 +106,10 @@ public:
                 }
         }
 
-        template <typename Id>
-        std::enable_if_t<std::is_same_v<Id, ObjectId>, T*> find(const Id& id) const
+        T* find(ObjectId id) const
         {
                 auto iter = m_map.find(id);
                 return (iter != m_map.cend()) ? iter->second.get() : nullptr;
-        }
-
-        template <typename OptionalId>
-        std::enable_if_t<std::is_same_v<OptionalId, std::optional<ObjectId>>, T*> find(const OptionalId& id) const
-        {
-                return id ? find(*id) : nullptr;
         }
 
         bool set_visible(ObjectId id, bool visible)
@@ -125,7 +120,7 @@ public:
                         return false;
                 }
 
-                const T* ptr = iter->second.get();
+                VisibleType* ptr = iter->second.get();
                 auto iter_v = m_visible_objects.find(ptr);
                 if (!visible)
                 {
@@ -137,21 +132,25 @@ public:
                 }
                 else if (iter_v == m_visible_objects.cend())
                 {
-                        if (EXCLUSIVE_VISIBILITY)
-                        {
-                                m_visible_objects.clear();
-                        }
                         m_visible_objects.insert(ptr);
                         m_visibility_changed();
                 }
                 return true;
         }
 
-        const std::unordered_set<const T*>& visible_objects() const
+        const std::unordered_set<VisibleType*>& visible_objects() const
         {
-                ASSERT(!EXCLUSIVE_VISIBILITY || m_visible_objects.size() <= 1);
-
                 return m_visible_objects;
+        }
+
+        bool is_visible(ObjectId id) const
+        {
+                auto iter = m_map.find(id);
+                if (iter == m_map.cend())
+                {
+                        return false;
+                }
+                return m_visible_objects.count(iter->second.get()) > 0;
         }
 };
 
@@ -254,7 +253,8 @@ class Impl final : public Renderer
         const vulkan::ImageWithMemory* m_object_image = nullptr;
 
         ShaderBuffers m_shader_buffers;
-        vulkan::Semaphore m_renderer_signal_semaphore;
+        vulkan::Semaphore m_renderer_mesh_signal_semaphore;
+        vulkan::Semaphore m_renderer_volume_signal_semaphore;
 
         std::unique_ptr<DepthBuffers> m_mesh_renderer_depth_render_buffers;
         vulkan::Semaphore m_mesh_renderer_depth_signal_semaphore;
@@ -265,7 +265,6 @@ class Impl final : public Renderer
 
         ObjectStorage<MeshObject> m_mesh_storage;
         ObjectStorage<VolumeObject> m_volume_storage;
-        std::optional<ObjectId> m_current_object_id;
 
         std::optional<vulkan::CommandBuffers> m_clear_command_buffers;
         vulkan::Semaphore m_clear_signal_semaphore;
@@ -393,8 +392,7 @@ class Impl final : public Renderer
                 m_shadow_zoom = zoom;
 
                 create_mesh_depth_buffers();
-                create_mesh_render_command_buffers();
-                create_mesh_depth_command_buffers();
+                create_mesh_command_buffers();
         }
         void set_camera(const CameraInfo& c) override
         {
@@ -426,10 +424,9 @@ class Impl final : public Renderer
                 {
                         m_shader_buffers.set_clip_plane(*m_clip_plane, true);
 
-                        VolumeObject* volume = m_volume_storage.find(m_current_object_id);
-                        if (volume)
+                        for (VolumeObject* visible_volume : m_volume_storage.visible_objects())
                         {
-                                volume->set_clip_plane(*m_clip_plane);
+                                visible_volume->set_clip_plane(*m_clip_plane);
                         }
                 }
                 else
@@ -445,56 +442,63 @@ class Impl final : public Renderer
 
                 //
 
-                mesh::ReadingUpdates reading(object);
-
-                //
-
-                ASSERT(m_volume_storage.find(object.id()) == nullptr);
-
                 bool created = false;
-                MeshObject* ptr = m_mesh_storage.find(object.id());
-                if (!ptr)
-                {
-                        ptr = m_mesh_storage.insert(
-                                object.id(),
-                                create_mesh_object(
-                                        m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
-                                        m_transfer_queue, m_mesh_renderer.mesh_descriptor_sets_function(),
-                                        m_mesh_renderer.material_descriptor_sets_function()));
 
-                        created = true;
-                }
-
-                bool update_command_buffers;
-                try
                 {
-                        if (!created)
+                        mesh::ReadingUpdates reading(object);
+
+                        //
+
+                        ASSERT(m_volume_storage.find(object.id()) == nullptr);
+
+                        MeshObject* ptr = m_mesh_storage.find(object.id());
+                        if (!ptr)
                         {
-                                ptr->update(reading.updates(), object, &update_command_buffers);
+                                ptr = m_mesh_storage.insert(
+                                        object.id(), create_mesh_object(
+                                                             m_device, m_graphics_command_pool, m_graphics_queue,
+                                                             m_transfer_command_pool, m_transfer_queue,
+                                                             m_mesh_renderer.mesh_descriptor_sets_function(),
+                                                             m_mesh_renderer.material_descriptor_sets_function()));
+
+                                created = true;
                         }
-                        else
+
+                        bool update_command_buffers;
+                        try
                         {
-                                ptr->update({mesh::Update::All}, object, &update_command_buffers);
+                                if (!created)
+                                {
+                                        ptr->update(reading.updates(), object, &update_command_buffers);
+                                }
+                                else
+                                {
+                                        ptr->update({mesh::Update::All}, object, &update_command_buffers);
+                                }
                         }
-                }
-                catch (const std::exception& e)
-                {
-                        m_mesh_storage.erase(object.id());
-                        update_command_buffers = true;
-                        created = false;
-                        LOG(std::string("Error updating mesh object. ") + e.what());
-                }
-                catch (...)
-                {
-                        m_mesh_storage.erase(object.id());
-                        update_command_buffers = true;
-                        created = false;
-                        LOG("Unknown error updating mesh object");
+                        catch (const std::exception& e)
+                        {
+                                m_mesh_storage.erase(object.id());
+                                LOG(std::string("Error updating mesh object. ") + e.what());
+                                return;
+                        }
+                        catch (...)
+                        {
+                                m_mesh_storage.erase(object.id());
+                                LOG("Unknown error updating mesh object");
+                                return;
+                        }
+
+                        ASSERT(!(created && m_mesh_storage.is_visible(object.id())));
+                        if (update_command_buffers && m_mesh_storage.is_visible(object.id()))
+                        {
+                                create_mesh_command_buffers();
+                        }
                 }
 
-                if ((created || update_command_buffers) && (m_current_object_id == object.id()))
+                if (created)
                 {
-                        create_command_buffers();
+                        object_show(object.id(), object.visible());
                 }
         }
 
@@ -504,59 +508,62 @@ class Impl final : public Renderer
 
                 //
 
-                volume::ReadingUpdates reading(object);
-
-                //
-
-                ASSERT(m_mesh_storage.find(object.id()) == nullptr);
-
                 bool created = false;
-                VolumeObject* ptr = m_volume_storage.find(object.id());
-                if (!ptr)
-                {
-                        ptr = m_volume_storage.insert(
-                                object.id(),
-                                create_volume_object(
-                                        m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
-                                        m_transfer_queue, m_volume_renderer.descriptor_sets_function()));
 
-                        created = true;
+                {
+                        volume::ReadingUpdates reading(object);
+
+                        //
+
+                        ASSERT(m_mesh_storage.find(object.id()) == nullptr);
+
+                        VolumeObject* ptr = m_volume_storage.find(object.id());
+                        if (!ptr)
+                        {
+                                ptr = m_volume_storage.insert(
+                                        object.id(), create_volume_object(
+                                                             m_device, m_graphics_command_pool, m_graphics_queue,
+                                                             m_transfer_command_pool, m_transfer_queue,
+                                                             m_volume_renderer.descriptor_sets_function()));
+
+                                created = true;
+                        }
+
+                        bool update_command_buffers;
+                        try
+                        {
+                                if (!created)
+                                {
+                                        ptr->update(reading.updates(), object, &update_command_buffers);
+                                }
+                                else
+                                {
+                                        ptr->update({volume::Update::All}, object, &update_command_buffers);
+                                }
+                        }
+                        catch (const std::exception& e)
+                        {
+                                m_volume_storage.erase(object.id());
+                                LOG(std::string("Error updating volume object. ") + e.what());
+                                return;
+                        }
+                        catch (...)
+                        {
+                                m_volume_storage.erase(object.id());
+                                LOG("Unknown error updating volume object");
+                                return;
+                        }
+
+                        ASSERT(!(created && m_volume_storage.is_visible(object.id())));
+                        if (update_command_buffers && m_volume_storage.is_visible(object.id()))
+                        {
+                                create_volume_command_buffers();
+                        }
                 }
 
-                bool update_command_buffers;
-                try
+                if (created)
                 {
-                        if (!created)
-                        {
-                                ptr->update(reading.updates(), object, &update_command_buffers);
-                        }
-                        else
-                        {
-                                ptr->update({volume::Update::All}, object, &update_command_buffers);
-                        }
-                }
-                catch (const std::exception& e)
-                {
-                        m_volume_storage.erase(object.id());
-                        update_command_buffers = true;
-                        created = false;
-                        LOG(std::string("Error updating volume object. ") + e.what());
-                }
-                catch (...)
-                {
-                        m_volume_storage.erase(object.id());
-                        update_command_buffers = true;
-                        created = false;
-                        LOG("Unknown error updating volume object");
-                }
-
-                if ((created || update_command_buffers) && (m_current_object_id == object.id()))
-                {
-                        create_command_buffers();
-                        if (created && m_current_object_id == object.id())
-                        {
-                                set_matrices();
-                        }
+                        object_show(object.id(), object.visible());
                 }
         }
 
@@ -566,30 +573,13 @@ class Impl final : public Renderer
 
                 //
 
-                const MeshObject* mesh = m_mesh_storage.find(id);
-                const VolumeObject* volume = m_volume_storage.find(id);
-                if (!mesh && !volume)
+                if (m_mesh_storage.erase(id))
                 {
                         return;
                 }
-                ASSERT(!mesh || !volume);
-
-                bool delete_and_create_command_buffers = (m_current_object_id == id);
-                if (delete_and_create_command_buffers)
+                if (m_volume_storage.erase(id))
                 {
-                        delete_command_buffers();
-                }
-                if (mesh)
-                {
-                        m_mesh_storage.erase(id);
-                }
-                if (volume)
-                {
-                        m_volume_storage.erase(id);
-                }
-                if (delete_and_create_command_buffers)
-                {
-                        create_command_buffers();
+                        return;
                 }
         }
 
@@ -599,15 +589,8 @@ class Impl final : public Renderer
 
                 //
 
-                if (m_mesh_storage.empty() && m_volume_storage.empty())
-                {
-                        return;
-                }
-                delete_command_buffers();
                 m_mesh_storage.clear();
                 m_volume_storage.clear();
-                m_current_object_id.reset();
-                create_command_buffers();
         }
 
         void object_show(ObjectId id, bool show) override
@@ -615,18 +598,6 @@ class Impl final : public Renderer
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
-
-                std::optional<ObjectId> opt_id;
-                if (show)
-                {
-                        opt_id = id;
-                }
-                if (m_current_object_id != opt_id)
-                {
-                        m_current_object_id = opt_id;
-                        create_command_buffers();
-                        set_matrices();
-                }
 
                 if (m_mesh_storage.set_visible(id, show))
                 {
@@ -665,9 +636,9 @@ class Impl final : public Renderer
                                 vulkan::queue_submit(
                                         semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                                         *m_mesh_renderer.render_command_buffer(image_index),
-                                        m_renderer_signal_semaphore, graphics_queue);
+                                        m_renderer_mesh_signal_semaphore, graphics_queue);
 
-                                semaphore = m_renderer_signal_semaphore;
+                                semaphore = m_renderer_mesh_signal_semaphore;
                         }
                         else
                         {
@@ -682,19 +653,20 @@ class Impl final : public Renderer
                                                 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                                                 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT},
                                         *m_mesh_renderer.render_command_buffer(image_index),
-                                        m_renderer_signal_semaphore, graphics_queue);
+                                        m_renderer_mesh_signal_semaphore, graphics_queue);
 
-                                semaphore = m_renderer_signal_semaphore;
+                                semaphore = m_renderer_mesh_signal_semaphore;
                         }
                 }
-                else if (m_volume_renderer.command_buffer(image_index))
+
+                if (m_volume_renderer.command_buffer(image_index))
                 {
                         vulkan::queue_submit(
                                 semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                *m_volume_renderer.command_buffer(image_index), m_renderer_signal_semaphore,
+                                *m_volume_renderer.command_buffer(image_index), m_renderer_volume_signal_semaphore,
                                 graphics_queue);
 
-                        semaphore = m_renderer_signal_semaphore;
+                        semaphore = m_renderer_volume_signal_semaphore;
                 }
 
                 return semaphore;
@@ -736,7 +708,8 @@ class Impl final : public Renderer
                 create_mesh_depth_buffers();
                 m_volume_renderer.create_buffers(m_render_buffers, m_viewport);
 
-                create_command_buffers();
+                create_mesh_command_buffers();
+                create_volume_command_buffers();
                 create_clear_command_buffers();
         }
 
@@ -804,72 +777,62 @@ class Impl final : public Renderer
         void create_mesh_render_command_buffers()
         {
                 m_mesh_renderer.delete_render_command_buffers();
-
-                const MeshObject* mesh = m_mesh_storage.find(m_current_object_id);
-                if (mesh)
-                {
-                        m_mesh_renderer.create_render_command_buffers(
-                                {mesh}, m_graphics_command_pool, m_clip_plane.has_value(), m_show_normals,
-                                before_render_pass_commands());
-                }
+                m_mesh_renderer.create_render_command_buffers(
+                        m_mesh_storage.visible_objects(), m_graphics_command_pool, m_clip_plane.has_value(),
+                        m_show_normals, before_render_pass_commands());
         }
 
         void create_mesh_depth_command_buffers()
         {
                 m_mesh_renderer.delete_depth_command_buffers();
+                m_mesh_renderer.create_depth_command_buffers(
+                        m_mesh_storage.visible_objects(), m_graphics_command_pool, m_clip_plane.has_value(),
+                        m_show_normals);
+        }
 
-                const MeshObject* mesh = m_mesh_storage.find(m_current_object_id);
-                if (mesh)
-                {
-                        m_mesh_renderer.create_depth_command_buffers(
-                                {mesh}, m_graphics_command_pool, m_clip_plane.has_value(), m_show_normals);
-                }
+        void create_mesh_command_buffers()
+        {
+                create_mesh_render_command_buffers();
+                create_mesh_depth_command_buffers();
         }
 
         void create_volume_command_buffers()
         {
                 m_volume_renderer.delete_command_buffers();
-
-                const VolumeObject* volume = m_volume_storage.find(m_current_object_id);
-                if (volume)
+                if (m_volume_storage.visible_objects().size() != 1)
+                {
+                        return;
+                }
+                for (VolumeObject* visible_volume : m_volume_storage.visible_objects())
                 {
                         m_volume_renderer.create_command_buffers(
-                                volume, m_graphics_command_pool, before_render_pass_commands());
+                                visible_volume, m_graphics_command_pool, before_render_pass_commands());
                 }
         }
 
-        void create_command_buffers()
+        void set_volume_matrix()
         {
-                create_mesh_render_command_buffers();
-                create_mesh_depth_command_buffers();
-                create_volume_command_buffers();
-        }
-
-        void delete_command_buffers()
-        {
-                m_volume_renderer.delete_command_buffers();
-                m_mesh_renderer.delete_render_command_buffers();
-                m_mesh_renderer.delete_depth_command_buffers();
+                for (VolumeObject* visible_volume : m_volume_storage.visible_objects())
+                {
+                        visible_volume->set_matrix_and_clip_plane(m_main_vp_matrix, m_clip_plane);
+                }
         }
 
         void set_matrices()
         {
                 m_shader_buffers.set_matrices(m_main_vp_matrix, m_shadow_vp_matrix, m_shadow_vp_texture_matrix);
-
-                VolumeObject* volume = m_volume_storage.find(m_current_object_id);
-                if (volume)
-                {
-                        volume->set_matrix_and_clip_plane(m_main_vp_matrix, m_clip_plane);
-                }
+                set_volume_matrix();
         }
 
         void mesh_visibility_changed()
         {
+                create_mesh_command_buffers();
         }
 
         void volume_visibility_changed()
         {
-                ASSERT(m_volume_storage.visible_objects().size() < 2);
+                create_volume_command_buffers();
+                set_volume_matrix();
         }
 
 public:
@@ -887,7 +850,8 @@ public:
                   m_transfer_command_pool(transfer_command_pool),
                   m_transfer_queue(transfer_queue),
                   m_shader_buffers(m_device, {m_graphics_queue.family_index()}),
-                  m_renderer_signal_semaphore(m_device),
+                  m_renderer_mesh_signal_semaphore(m_device),
+                  m_renderer_volume_signal_semaphore(m_device),
                   m_mesh_renderer_depth_signal_semaphore(m_device),
                   m_mesh_renderer(m_device, sample_shading, sampler_anisotropy, m_shader_buffers),
                   m_volume_renderer_signal_semaphore(m_device),
