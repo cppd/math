@@ -609,13 +609,17 @@ class Impl final : public Renderer
                 }
         }
 
-        VkSemaphore draw(const vulkan::Queue& graphics_queue, unsigned image_index) const override
+        VkSemaphore draw(
+                const vulkan::Queue& graphics_queue_1,
+                const vulkan::Queue& graphics_queue_2,
+                unsigned image_index) const override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
-                ASSERT(graphics_queue.family_index() == m_graphics_queue.family_index());
+                ASSERT(graphics_queue_1.family_index() == m_graphics_queue.family_index());
+                ASSERT(graphics_queue_2.family_index() == m_graphics_queue.family_index());
 
                 ASSERT(image_index < m_swapchain->image_views().size());
 
@@ -625,7 +629,7 @@ class Impl final : public Renderer
                         ASSERT(m_clear_command_buffers);
                         unsigned index = m_clear_command_buffers->count() == 1 ? 0 : image_index;
                         vulkan::queue_submit(
-                                (*m_clear_command_buffers)[index], m_clear_signal_semaphore, graphics_queue);
+                                (*m_clear_command_buffers)[index], m_clear_signal_semaphore, graphics_queue_2);
                         semaphore = m_clear_signal_semaphore;
                 }
 
@@ -636,7 +640,7 @@ class Impl final : public Renderer
                                 vulkan::queue_submit(
                                         semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                                         *m_mesh_renderer.render_command_buffer(image_index),
-                                        m_renderer_mesh_signal_semaphore, graphics_queue);
+                                        m_renderer_mesh_signal_semaphore, graphics_queue_1);
 
                                 semaphore = m_renderer_mesh_signal_semaphore;
                         }
@@ -645,7 +649,7 @@ class Impl final : public Renderer
                                 ASSERT(m_mesh_renderer.depth_command_buffer(image_index));
                                 vulkan::queue_submit(
                                         *m_mesh_renderer.depth_command_buffer(image_index),
-                                        m_mesh_renderer_depth_signal_semaphore, graphics_queue);
+                                        m_mesh_renderer_depth_signal_semaphore, graphics_queue_1);
 
                                 vulkan::queue_submit(
                                         std::array<VkSemaphore, 2>{semaphore, m_mesh_renderer_depth_signal_semaphore},
@@ -653,7 +657,7 @@ class Impl final : public Renderer
                                                 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                                                 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT},
                                         *m_mesh_renderer.render_command_buffer(image_index),
-                                        m_renderer_mesh_signal_semaphore, graphics_queue);
+                                        m_renderer_mesh_signal_semaphore, graphics_queue_1);
 
                                 semaphore = m_renderer_mesh_signal_semaphore;
                         }
@@ -664,7 +668,7 @@ class Impl final : public Renderer
                         vulkan::queue_submit(
                                 semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                                 *m_volume_renderer.command_buffer(image_index), m_renderer_volume_signal_semaphore,
-                                graphics_queue);
+                                graphics_queue_1);
 
                         semaphore = m_renderer_volume_signal_semaphore;
                 }

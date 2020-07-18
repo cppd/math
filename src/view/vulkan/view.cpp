@@ -635,7 +635,7 @@ class Impl final : public View
 
         bool render() const
         {
-                static_assert(!std::remove_reference_t<decltype(m_instance->graphics_compute_queues())>().empty());
+                static_assert(std::remove_reference_t<decltype(m_instance->graphics_compute_queues())>().size() >= 2);
 
                 uint32_t image_index;
                 if (!vulkan::acquire_next_image(
@@ -646,10 +646,12 @@ class Impl final : public View
 
                 VkSemaphore wait_semaphore;
 
+                wait_semaphore = m_renderer->draw(
+                        m_instance->graphics_compute_queues()[0], m_instance->graphics_compute_queues()[1],
+                        image_index);
+
                 const vulkan::Queue& graphics_queue = m_instance->graphics_compute_queues()[0];
                 const vulkan::Queue& compute_queue = m_instance->compute_queue();
-
-                wait_semaphore = m_renderer->draw(graphics_queue, image_index);
 
                 if (m_pencil_sketch_active)
                 {
