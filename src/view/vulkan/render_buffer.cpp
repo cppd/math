@@ -39,9 +39,7 @@ namespace
 // clang-format off
 constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 {
-        VK_FORMAT_D32_SFLOAT,
-        VK_FORMAT_D32_SFLOAT_S8_UINT,
-        VK_FORMAT_D24_UNORM_S8_UINT
+        VK_FORMAT_D32_SFLOAT
 };
 // clang-format on
 
@@ -407,10 +405,11 @@ void Impl::create_color_buffer_rendering(
                 {
                         depth_formats = DEPTH_IMAGE_FORMATS;
                 }
-                constexpr bool sampled = false;
+                constexpr bool SAMPLED = false;
+                constexpr bool TRANSFER_SRC = true;
                 m_depth_attachments.emplace_back(
                         m_device, attachment_family_indices, depth_formats, sample_count, swapchain.width(),
-                        swapchain.height(), sampled);
+                        swapchain.height(), SAMPLED, TRANSFER_SRC);
                 ASSERT(!(m_depth_attachments.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT));
         }
 

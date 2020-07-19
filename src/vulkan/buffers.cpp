@@ -925,7 +925,8 @@ DepthAttachment::DepthAttachment(
         VkSampleCountFlagBits samples,
         uint32_t width,
         uint32_t height,
-        bool sampled)
+        bool sampled,
+        bool transfer_src)
 {
         if (width <= 0 || height <= 0)
         {
@@ -933,9 +934,11 @@ DepthAttachment::DepthAttachment(
         }
 
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-        VkFormatFeatureFlags features =
-                VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT | (sampled ? VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT : 0);
-        m_usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | (sampled ? VK_IMAGE_USAGE_SAMPLED_BIT : 0);
+        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+                                        | (sampled ? VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT : 0)
+                                        | (transfer_src ? VK_FORMAT_FEATURE_TRANSFER_SRC_BIT : 0);
+        m_usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | (sampled ? VK_IMAGE_USAGE_SAMPLED_BIT : 0)
+                  | (transfer_src ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0);
 
         m_format = find_supported_image_format(
                 device.physical_device(), formats, VK_IMAGE_TYPE_2D, tiling, features, m_usage, samples);
@@ -960,10 +963,11 @@ DepthAttachment::DepthAttachment(
         uint32_t width,
         uint32_t height,
         bool sampled,
+        bool transfer_src,
         VkCommandPool graphics_command_pool,
         VkQueue graphics_queue,
         VkImageLayout image_layout)
-        : DepthAttachment(device, family_indices, formats, samples, width, height, sampled)
+        : DepthAttachment(device, family_indices, formats, samples, width, height, sampled, transfer_src)
 {
         if (image_layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {
