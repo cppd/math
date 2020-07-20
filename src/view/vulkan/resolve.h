@@ -18,17 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/numerical/region.h>
-#include <src/vulkan/buffers.h>
 #include <src/vulkan/objects.h>
 
 namespace view
 {
-vulkan::CommandBuffers create_command_buffers_resolve(
-        VkDevice device,
-        VkCommandPool command_pool,
-        const std::vector<VkImage>& src_images,
+void commands_resolve(
+        VkCommandBuffer command_buffer,
+        VkImage src_image,
         VkImageLayout src_image_layout,
-        const std::vector<VkImage>& dst_images,
+        VkImage dst_image,
         VkImageLayout dst_image_layout,
         const Region<2, int>& rectangle);
 }

@@ -39,6 +39,8 @@ struct RenderBuffers
                 VkSemaphore wait_semaphore,
                 unsigned image_index) const = 0;
 
+        virtual unsigned image_count() const = 0;
+
         virtual std::vector<VkImage> images() const = 0;
         virtual VkImageLayout image_layout() const = 0;
 };

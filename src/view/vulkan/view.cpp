@@ -40,6 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/renderer/renderer.h>
 #include <src/gpu/text_writer/view.h>
 #include <src/numerical/region.h>
+#include <src/vulkan/error.h>
 #include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/queue.h>
@@ -93,6 +94,65 @@ std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(b
         }
 
         return {};
+}
+
+void create_resolve_texture_and_command_buffers(
+        const vulkan::VulkanInstance& instance,
+        const vulkan::Swapchain& swapchain,
+        const RenderBuffers& render_buffers,
+        const Region<2, int>& draw_rectangle,
+        std::unique_ptr<vulkan::ImageWithMemory>* texture,
+        std::unique_ptr<vulkan::CommandBuffers>* buffers)
+{
+        constexpr VkImageLayout RESOLVE_TEXTURE_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        ASSERT(render_buffers.images().size() == 1);
+
+        vulkan::ImageWithMemory resolve_texture(
+                instance.device(), instance.graphics_compute_command_pool(), instance.graphics_compute_queues()[0],
+                std::unordered_set({instance.graphics_compute_command_pool().family_index()}),
+                std::vector<VkFormat>({swapchain.format()}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
+                vulkan::make_extent(swapchain.width(), swapchain.height()), RESOLVE_TEXTURE_IMAGE_LAYOUT,
+                false /*storage*/);
+
+        ASSERT(resolve_texture.usage() & VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+        ASSERT(resolve_texture.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+        ASSERT(!(resolve_texture.usage() & VK_IMAGE_USAGE_STORAGE_BIT));
+
+        //
+
+        vulkan::CommandBuffers command_buffers = vulkan::CommandBuffers(
+                instance.device(), instance.graphics_compute_command_pool(), render_buffers.image_count());
+
+        VkCommandBufferBeginInfo command_buffer_info = {};
+        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+        VkResult result;
+
+        for (unsigned i = 0; i < command_buffers.count(); ++i)
+        {
+                const VkCommandBuffer command_buffer = command_buffers[i];
+
+                result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
+                if (result != VK_SUCCESS)
+                {
+                        vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
+                }
+
+                commands_resolve(
+                        command_buffer, render_buffers.images()[i], render_buffers.image_layout(),
+                        resolve_texture.image(), RESOLVE_TEXTURE_IMAGE_LAYOUT, draw_rectangle);
+
+                result = vkEndCommandBuffer(command_buffer);
+                if (result != VK_SUCCESS)
+                {
+                        vulkan::vulkan_function_error("vkEndCommandBuffer", result);
+                }
+        }
+
+        *texture = std::make_unique<vulkan::ImageWithMemory>(std::move(resolve_texture));
+        *buffers = std::make_unique<vulkan::CommandBuffers>(std::move(command_buffers));
 }
 
 class Impl final : public View
@@ -534,22 +594,6 @@ class Impl final : public View
 
                 //
 
-                constexpr VkImageLayout RESOLVE_TEXTURE_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-                m_resolve_texture = std::make_unique<vulkan::ImageWithMemory>(
-                        m_instance->device(), m_instance->graphics_compute_command_pool(),
-                        m_instance->graphics_compute_queues()[0],
-                        std::unordered_set({m_instance->graphics_compute_command_pool().family_index()}),
-                        std::vector<VkFormat>({m_swapchain->format()}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
-                        vulkan::make_extent(m_swapchain->width(), m_swapchain->height()), RESOLVE_TEXTURE_IMAGE_LAYOUT,
-                        false /*storage*/);
-
-                ASSERT(m_resolve_texture->usage() & VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-                ASSERT(m_resolve_texture->usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
-                ASSERT(!(m_resolve_texture->usage() & VK_IMAGE_USAGE_STORAGE_BIT));
-
-                //
-
                 m_object_image = std::make_unique<vulkan::ImageWithMemory>(
                         m_instance->device(), m_instance->graphics_compute_command_pool(),
                         m_instance->graphics_compute_queues()[0],
@@ -559,12 +603,6 @@ class Impl final : public View
                         true /*storage*/);
 
                 ASSERT(m_object_image->usage() & VK_IMAGE_USAGE_STORAGE_BIT);
-
-                //
-
-                m_text->create_buffers(
-                        &m_render_buffers->buffers_2d(),
-                        Region<2, int>(0, 0, m_swapchain->width(), m_swapchain->height()));
 
                 //
 
@@ -580,10 +618,9 @@ class Impl final : public View
 
                 //
 
-                m_resolve_command_buffers = std::make_unique<vulkan::CommandBuffers>(create_command_buffers_resolve(
-                        m_instance->device(), m_instance->graphics_compute_command_pool(), m_render_buffers->images(),
-                        m_render_buffers->image_layout(), std::vector<VkImage>({m_resolve_texture->image()}),
-                        RESOLVE_TEXTURE_IMAGE_LAYOUT, m_draw_rectangle));
+                create_resolve_texture_and_command_buffers(
+                        *m_instance, *m_swapchain, *m_render_buffers, m_draw_rectangle, &m_resolve_texture,
+                        &m_resolve_command_buffers);
 
                 //
 
@@ -591,6 +628,10 @@ class Impl final : public View
                         m_swapchain.get(), &m_render_buffers->buffers_3d(), m_object_image.get(), m_draw_rectangle);
 
                 //
+
+                m_text->create_buffers(
+                        &m_render_buffers->buffers_2d(),
+                        Region<2, int>(0, 0, m_swapchain->width(), m_swapchain->height()));
 
                 m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), *m_object_image, m_draw_rectangle);
 

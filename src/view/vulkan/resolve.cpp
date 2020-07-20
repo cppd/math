@@ -17,30 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "resolve.h"
 
-#include <src/vulkan/error.h>
+#include <src/com/error.h>
 
 namespace view
 {
-vulkan::CommandBuffers create_command_buffers_resolve(
-        VkDevice device,
-        VkCommandPool command_pool,
-        const std::vector<VkImage>& src_images,
+void commands_resolve(
+        VkCommandBuffer command_buffer,
+        VkImage src_image,
         VkImageLayout src_image_layout,
-        const std::vector<VkImage>& dst_images,
+        VkImage dst_image,
         VkImageLayout dst_image_layout,
         const Region<2, int>& rectangle)
 {
         ASSERT(rectangle.width() > 0 && rectangle.height() > 0);
-        ASSERT(src_images.size() == dst_images.size());
-        ASSERT(!src_images.empty());
-
-        const unsigned buffer_count = src_images.size();
-
-        vulkan::CommandBuffers command_buffers = vulkan::CommandBuffers(device, command_pool, buffer_count);
-
-        VkCommandBufferBeginInfo command_buffer_info = {};
-        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
         VkImageMemoryBarrier barrier = {};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -71,77 +60,54 @@ vulkan::CommandBuffers create_command_buffers_resolve(
         image_resolve.extent.height = rectangle.height();
         image_resolve.extent.depth = 1;
 
-        VkResult result;
+        //
 
-        for (unsigned i = 0; i < buffer_count; ++i)
-        {
-                const VkCommandBuffer command_buffer = command_buffers[i];
+        barrier.image = src_image;
+        barrier.oldLayout = src_image_layout;
+        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
-                result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
-                }
+        vkCmdPipelineBarrier(
+                command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
+                nullptr, 1, &barrier);
 
-                //
+        barrier.image = dst_image;
+        barrier.oldLayout = dst_image_layout;
+        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
-                barrier.image = src_images[i];
-                barrier.oldLayout = src_image_layout;
-                barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-                barrier.srcAccessMask = 0;
-                barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        vkCmdPipelineBarrier(
+                command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
+                nullptr, 1, &barrier);
 
-                vkCmdPipelineBarrier(
-                        command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0,
-                        nullptr, 0, nullptr, 1, &barrier);
+        //
 
-                barrier.image = dst_images[i];
-                barrier.oldLayout = dst_image_layout;
-                barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-                barrier.srcAccessMask = 0;
-                barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        vkCmdResolveImage(
+                command_buffer, src_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst_image,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &image_resolve);
 
-                vkCmdPipelineBarrier(
-                        command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0,
-                        nullptr, 0, nullptr, 1, &barrier);
+        //
 
-                //
+        barrier.image = src_image;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        barrier.newLayout = src_image_layout;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        barrier.dstAccessMask = 0;
 
-                vkCmdResolveImage(
-                        command_buffer, src_images[i], VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst_images[i],
-                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &image_resolve);
+        vkCmdPipelineBarrier(
+                command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0,
+                nullptr, 1, &barrier);
 
-                //
+        barrier.image = dst_image;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.newLayout = dst_image_layout;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = 0;
 
-                barrier.image = src_images[i];
-                barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-                barrier.newLayout = src_image_layout;
-                barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-                barrier.dstAccessMask = 0;
-
-                vkCmdPipelineBarrier(
-                        command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0,
-                        nullptr, 0, nullptr, 1, &barrier);
-
-                barrier.image = dst_images[i];
-                barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-                barrier.newLayout = dst_image_layout;
-                barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-                barrier.dstAccessMask = 0;
-
-                vkCmdPipelineBarrier(
-                        command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0,
-                        nullptr, 0, nullptr, 1, &barrier);
-
-                //
-
-                result = vkEndCommandBuffer(command_buffer);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan::vulkan_function_error("vkEndCommandBuffer", result);
-                }
-        }
-
-        return command_buffers;
+        vkCmdPipelineBarrier(
+                command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0,
+                nullptr, 1, &barrier);
 }
 }

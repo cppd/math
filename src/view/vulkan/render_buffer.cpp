@@ -298,6 +298,8 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
                 VkSemaphore wait_semaphore,
                 unsigned image_index) const override;
 
+        unsigned image_count() const override;
+
         std::vector<VkImage> images() const override;
         VkImageLayout image_layout() const override;
 
@@ -671,6 +673,11 @@ VkSemaphore Impl::resolve_to_swapchain(
                 m_resolve_signal_semaphores[semaphore_index], graphics_queue);
 
         return m_resolve_signal_semaphores[semaphore_index];
+}
+
+unsigned Impl::image_count() const
+{
+        return m_color_attachments.size();
 }
 }
 
