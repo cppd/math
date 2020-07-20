@@ -15,14 +15,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "resolve.h"
+#include "copy.h"
 
 #include <src/com/error.h>
 
-namespace view
+namespace vulkan
 {
 void commands_resolve(
         VkCommandBuffer command_buffer,
+        VkPipelineStageFlags src_stage,
+        VkPipelineStageFlags dst_stage,
         VkImage src_image,
         VkImageLayout src_image_layout,
         VkImage dst_image,
@@ -69,8 +71,7 @@ void commands_resolve(
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
         vkCmdPipelineBarrier(
-                command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
-                nullptr, 1, &barrier);
+                command_buffer, src_stage, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
         barrier.image = dst_image;
         barrier.oldLayout = dst_image_layout;
@@ -79,8 +80,7 @@ void commands_resolve(
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
         vkCmdPipelineBarrier(
-                command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
-                nullptr, 1, &barrier);
+                command_buffer, src_stage, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
         //
 
@@ -97,8 +97,7 @@ void commands_resolve(
         barrier.dstAccessMask = 0;
 
         vkCmdPipelineBarrier(
-                command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0,
-                nullptr, 1, &barrier);
+                command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
         barrier.image = dst_image;
         barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
@@ -107,7 +106,6 @@ void commands_resolve(
         barrier.dstAccessMask = 0;
 
         vkCmdPipelineBarrier(
-                command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0,
-                nullptr, 1, &barrier);
+                command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 }

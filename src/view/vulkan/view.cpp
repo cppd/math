@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view.h"
 
 #include "render_buffer.h"
-#include "resolve.h"
 
 #include "../com/camera.h"
 #include "../com/frame_rate.h"
@@ -40,6 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/renderer/renderer.h>
 #include <src/gpu/text_writer/view.h>
 #include <src/numerical/region.h>
+#include <src/vulkan/copy.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>
@@ -140,9 +140,10 @@ void create_resolve_texture_and_command_buffers(
                         vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
                 }
 
-                commands_resolve(
-                        command_buffer, render_buffers.images()[i], render_buffers.image_layout(),
-                        resolve_texture.image(), RESOLVE_TEXTURE_IMAGE_LAYOUT, draw_rectangle);
+                vulkan::commands_resolve(
+                        command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                        render_buffers.images()[i], render_buffers.image_layout(), resolve_texture.image(),
+                        RESOLVE_TEXTURE_IMAGE_LAYOUT, draw_rectangle);
 
                 result = vkEndCommandBuffer(command_buffer);
                 if (result != VK_SUCCESS)

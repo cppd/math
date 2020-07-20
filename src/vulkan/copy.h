@@ -20,10 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/region.h>
 #include <src/vulkan/objects.h>
 
-namespace view
+namespace vulkan
 {
 void commands_resolve(
         VkCommandBuffer command_buffer,
+        VkPipelineStageFlags src_stage,
+        VkPipelineStageFlags dst_stage,
         VkImage src_image,
         VkImageLayout src_image_layout,
         VkImage dst_image,
