@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/commands.h>
+#include <src/vulkan/copy.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/print.h>
@@ -36,6 +37,8 @@ namespace view
 {
 namespace
 {
+constexpr VkImageLayout COLOR_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
 // clang-format off
 constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 {
@@ -300,8 +303,14 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
 
         unsigned image_count() const override;
 
-        std::vector<VkImage> images() const override;
-        VkImageLayout image_layout() const override;
+        void commands_color_resolve(
+                VkCommandBuffer command_buffer,
+                const vulkan::ImageWithMemory& image,
+                VkImageLayout layout,
+                VkPipelineStageFlags src_stage,
+                VkPipelineStageFlags dst_stage,
+                const Region<2, int>& rectangle,
+                unsigned image_index) const override;
 
         //
 
@@ -486,22 +495,6 @@ void Impl::create_color_buffer_rendering(
         //m_clear_values[1] = vulkan::depth_stencil_clear_value();
 }
 
-std::vector<VkImage> Impl::images() const
-{
-        std::vector<VkImage> v;
-        v.reserve(m_color_attachments.size());
-        for (const vulkan::ColorAttachment& attachment : m_color_attachments)
-        {
-                v.push_back(attachment.image());
-        }
-        return v;
-}
-
-VkImageLayout Impl::image_layout() const
-{
-        return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-}
-
 #if 0
 void Impl::create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
                                       const std::unordered_set<uint32_t>& attachment_family_indices,
@@ -678,6 +671,24 @@ VkSemaphore Impl::resolve_to_swapchain(
 unsigned Impl::image_count() const
 {
         return m_color_attachments.size();
+}
+
+void Impl::commands_color_resolve(
+        VkCommandBuffer command_buffer,
+        const vulkan::ImageWithMemory& image,
+        VkImageLayout layout,
+        VkPipelineStageFlags src_stage,
+        VkPipelineStageFlags dst_stage,
+        const Region<2, int>& rectangle,
+        unsigned image_index) const
+{
+        ASSERT(image_index < m_color_attachments.size());
+        ASSERT(m_color_attachments[image_index].sample_count() != VK_SAMPLE_COUNT_1_BIT);
+        ASSERT(image.sample_count() == VK_SAMPLE_COUNT_1_BIT);
+
+        vulkan::commands_resolve(
+                command_buffer, src_stage, dst_stage, m_color_attachments[image_index].image(), COLOR_IMAGE_LAYOUT,
+                image.image(), layout, rectangle);
 }
 }
 

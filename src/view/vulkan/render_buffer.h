@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/gpu/buffers.h>
+#include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/swapchain.h>
@@ -41,8 +42,14 @@ struct RenderBuffers
 
         virtual unsigned image_count() const = 0;
 
-        virtual std::vector<VkImage> images() const = 0;
-        virtual VkImageLayout image_layout() const = 0;
+        virtual void commands_color_resolve(
+                VkCommandBuffer command_buffer,
+                const vulkan::ImageWithMemory& image,
+                VkImageLayout layout,
+                VkPipelineStageFlags src_stage,
+                VkPipelineStageFlags dst_stage,
+                const Region<2, int>& rectangle,
+                unsigned image_index) const = 0;
 };
 
 enum class RenderBufferCount
