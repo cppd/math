@@ -18,14 +18,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/numerical/region.h>
-#include <src/vulkan/objects.h>
+
+#include <vulkan/vulkan.h>
 
 namespace vulkan
 {
-void commands_resolve(
+void commands_image_resolve(
         VkCommandBuffer command_buffer,
-        VkPipelineStageFlags src_stage,
-        VkPipelineStageFlags dst_stage,
+        VkPipelineStageFlags src_pipeline_stage,
+        VkPipelineStageFlags dst_pipeline_stage,
+        VkAccessFlags src_image_access_flags_before,
+        VkAccessFlags src_image_access_flags_after,
+        VkAccessFlags dst_image_access_flags_before,
+        VkAccessFlags dst_image_access_flags_after,
+        VkImage src_image,
+        VkImageLayout src_image_layout,
+        VkImage dst_image,
+        VkImageLayout dst_image_layout,
+        const Region<2, int>& rectangle);
+
+void commands_image_copy(
+        VkCommandBuffer command_buffer,
+        VkPipelineStageFlags src_pipeline_stage,
+        VkPipelineStageFlags dst_pipeline_stage,
+        VkAccessFlags src_image_access_flags_before,
+        VkAccessFlags src_image_access_flags_after,
+        VkAccessFlags dst_image_access_flags_before,
+        VkAccessFlags dst_image_access_flags_after,
+        VkImageAspectFlags src_image_aspect_mask,
+        VkImageAspectFlags dst_image_aspect_mask,
         VkImage src_image,
         VkImageLayout src_image_layout,
         VkImage dst_image,

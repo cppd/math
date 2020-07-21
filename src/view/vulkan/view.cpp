@@ -39,7 +39,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/renderer/renderer.h>
 #include <src/gpu/text_writer/view.h>
 #include <src/numerical/region.h>
-#include <src/vulkan/error.h>
 #include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/queue.h>
@@ -107,49 +106,27 @@ void create_resolve_texture_and_command_buffers(
 
         constexpr VkImageLayout IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        vulkan::ImageWithMemory resolve_texture(
+        vulkan::ImageWithMemory image(
                 instance.device(), instance.graphics_compute_command_pool(), instance.graphics_compute_queues()[0],
                 std::unordered_set({instance.graphics_compute_command_pool().family_index()}),
                 std::vector<VkFormat>({swapchain.format()}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                 vulkan::make_extent(swapchain.width(), swapchain.height()), IMAGE_LAYOUT, false /*storage*/);
 
-        ASSERT(resolve_texture.usage() & VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-        ASSERT(resolve_texture.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
-        ASSERT(!(resolve_texture.usage() & VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image.usage() & VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+        ASSERT(image.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+        ASSERT(!(image.usage() & VK_IMAGE_USAGE_STORAGE_BIT));
 
         //
 
         vulkan::CommandBuffers command_buffers = vulkan::CommandBuffers(
                 instance.device(), instance.graphics_compute_command_pool(), render_buffers.image_count());
 
-        VkCommandBufferBeginInfo command_buffer_info = {};
-        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-
-        VkResult result;
-
         for (unsigned i = 0; i < command_buffers.count(); ++i)
         {
-                const VkCommandBuffer command_buffer = command_buffers[i];
-
-                result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
-                }
-
-                render_buffers.commands_color_resolve(
-                        command_buffer, resolve_texture, IMAGE_LAYOUT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                        VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, rectangle, i);
-
-                result = vkEndCommandBuffer(command_buffer);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan::vulkan_function_error("vkEndCommandBuffer", result);
-                }
+                render_buffers.commands_color_resolve(command_buffers[i], image, IMAGE_LAYOUT, rectangle, i);
         }
 
-        *texture = std::make_unique<vulkan::ImageWithMemory>(std::move(resolve_texture));
+        *texture = std::make_unique<vulkan::ImageWithMemory>(std::move(image));
         *buffers = std::make_unique<vulkan::CommandBuffers>(std::move(command_buffers));
 }
 

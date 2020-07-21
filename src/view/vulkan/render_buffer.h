@@ -46,8 +46,6 @@ struct RenderBuffers
                 VkCommandBuffer command_buffer,
                 const vulkan::ImageWithMemory& image,
                 VkImageLayout layout,
-                VkPipelineStageFlags src_stage,
-                VkPipelineStageFlags dst_stage,
                 const Region<2, int>& rectangle,
                 unsigned image_index) const = 0;
 };

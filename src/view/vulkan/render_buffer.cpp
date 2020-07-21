@@ -307,8 +307,6 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
                 VkCommandBuffer command_buffer,
                 const vulkan::ImageWithMemory& image,
                 VkImageLayout layout,
-                VkPipelineStageFlags src_stage,
-                VkPipelineStageFlags dst_stage,
                 const Region<2, int>& rectangle,
                 unsigned image_index) const override;
 
@@ -677,8 +675,6 @@ void Impl::commands_color_resolve(
         VkCommandBuffer command_buffer,
         const vulkan::ImageWithMemory& image,
         VkImageLayout layout,
-        VkPipelineStageFlags src_stage,
-        VkPipelineStageFlags dst_stage,
         const Region<2, int>& rectangle,
         unsigned image_index) const
 {
@@ -686,9 +682,27 @@ void Impl::commands_color_resolve(
         ASSERT(m_color_attachments[image_index].sample_count() != VK_SAMPLE_COUNT_1_BIT);
         ASSERT(image.sample_count() == VK_SAMPLE_COUNT_1_BIT);
 
-        vulkan::commands_resolve(
-                command_buffer, src_stage, dst_stage, m_color_attachments[image_index].image(), COLOR_IMAGE_LAYOUT,
-                image.image(), layout, rectangle);
+        VkCommandBufferBeginInfo command_buffer_info = {};
+        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+        VkResult result;
+
+        result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
+        }
+
+        vulkan::commands_image_resolve(
+                command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, 0, 0,
+                m_color_attachments[image_index].image(), COLOR_IMAGE_LAYOUT, image.image(), layout, rectangle);
+
+        result = vkEndCommandBuffer(command_buffer);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkEndCommandBuffer", result);
+        }
 }
 }
 
