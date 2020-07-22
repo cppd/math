@@ -38,6 +38,7 @@ namespace view
 namespace
 {
 constexpr VkImageLayout COLOR_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+constexpr VkImageLayout DEPTH_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 // clang-format off
 constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
@@ -306,6 +307,14 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
         void commands_color_resolve(
                 VkCommandBuffer command_buffer,
                 const vulkan::ImageWithMemory& image,
+                VkImageLayout layout,
+                const Region<2, int>& rectangle,
+                unsigned image_index) const override;
+
+        VkFormat depth_format() const override;
+        void commands_depth_copy(
+                VkCommandBuffer command_buffer,
+                VkImage image,
                 VkImageLayout layout,
                 const Region<2, int>& rectangle,
                 unsigned image_index) const override;
@@ -695,7 +704,8 @@ void Impl::commands_color_resolve(
         }
 
         vulkan::commands_image_resolve(
-                command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, 0, 0,
+                command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, 0, 0,
                 m_color_attachments[image_index].image(), COLOR_IMAGE_LAYOUT, image.image(), layout, rectangle);
 
         result = vkEndCommandBuffer(command_buffer);
@@ -703,6 +713,30 @@ void Impl::commands_color_resolve(
         {
                 vulkan::vulkan_function_error("vkEndCommandBuffer", result);
         }
+}
+
+VkFormat Impl::depth_format() const
+{
+        ASSERT(!m_depth_attachments.empty());
+        return m_depth_attachments[0].format();
+}
+
+void Impl::commands_depth_copy(
+        VkCommandBuffer command_buffer,
+        VkImage image,
+        VkImageLayout layout,
+        const Region<2, int>& rectangle,
+        unsigned image_index) const
+{
+        ASSERT(layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        ASSERT(image_index < m_depth_attachments.size());
+
+        vulkan::commands_image_copy(
+                command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+                VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, 0,
+                VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_ASPECT_DEPTH_BIT, m_depth_attachments[image_index].image(),
+                DEPTH_IMAGE_LAYOUT, image, layout, rectangle);
 }
 }
 
