@@ -117,7 +117,8 @@ const VkDescriptorSet& TrianglesSharedMemory::descriptor_set() const
         return m_descriptors.descriptor_set(0);
 }
 
-void TrianglesSharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachment* shadow_texture) const
+void TrianglesSharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthImageWithMemory* shadow_texture)
+        const
 {
         ASSERT(shadow_texture && (shadow_texture->usage() & VK_IMAGE_USAGE_SAMPLED_BIT));
         ASSERT(shadow_texture && (shadow_texture->sample_count() == VK_SAMPLE_COUNT_1_BIT));

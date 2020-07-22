@@ -985,7 +985,7 @@ VkExtent3D ImageWithMemory::extent() const
 
 //
 
-DepthAttachment::DepthAttachment(
+DepthImageWithMemory::DepthImageWithMemory(
         const Device& device,
         const std::unordered_set<uint32_t>& family_indices,
         const std::vector<VkFormat>& formats,
@@ -1022,7 +1022,7 @@ DepthAttachment::DepthAttachment(
         m_sample_count = samples;
 }
 
-DepthAttachment::DepthAttachment(
+DepthImageWithMemory::DepthImageWithMemory(
         const Device& device,
         const std::unordered_set<uint32_t>& family_indices,
         const std::vector<VkFormat>& formats,
@@ -1033,7 +1033,7 @@ DepthAttachment::DepthAttachment(
         VkCommandPool graphics_command_pool,
         VkQueue graphics_queue,
         VkImageLayout image_layout)
-        : DepthAttachment(device, family_indices, formats, samples, width, height, usage)
+        : DepthImageWithMemory(device, family_indices, formats, samples, width, height, usage)
 {
         if (image_layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {
@@ -1043,37 +1043,37 @@ DepthAttachment::DepthAttachment(
         }
 }
 
-VkImage DepthAttachment::image() const
+VkImage DepthImageWithMemory::image() const
 {
         return m_image;
 }
 
-VkFormat DepthAttachment::format() const
+VkFormat DepthImageWithMemory::format() const
 {
         return m_format;
 }
 
-VkImageView DepthAttachment::image_view() const
+VkImageView DepthImageWithMemory::image_view() const
 {
         return m_image_view;
 }
 
-VkImageUsageFlags DepthAttachment::usage() const
+VkImageUsageFlags DepthImageWithMemory::usage() const
 {
         return m_usage;
 }
 
-VkSampleCountFlagBits DepthAttachment::sample_count() const
+VkSampleCountFlagBits DepthImageWithMemory::sample_count() const
 {
         return m_sample_count;
 }
 
-unsigned DepthAttachment::width() const
+unsigned DepthImageWithMemory::width() const
 {
         return m_width;
 }
 
-unsigned DepthAttachment::height() const
+unsigned DepthImageWithMemory::height() const
 {
         return m_height;
 }

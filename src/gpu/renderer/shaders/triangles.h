@@ -65,7 +65,7 @@ public:
 
         //
 
-        void set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachment* shadow_texture) const;
+        void set_shadow_texture(VkSampler sampler, const vulkan::DepthImageWithMemory* shadow_texture) const;
         void set_object_image(const vulkan::ImageWithMemory* storage_image) const;
 };
 

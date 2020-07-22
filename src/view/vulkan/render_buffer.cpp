@@ -47,7 +47,9 @@ constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 };
 // clang-format on
 
-void check_buffers(const std::vector<vulkan::ColorAttachment>& color, const std::vector<vulkan::DepthAttachment>& depth)
+void check_buffers(
+        const std::vector<vulkan::ColorAttachment>& color,
+        const std::vector<vulkan::DepthImageWithMemory>& depth)
 {
         if (depth.empty())
         {
@@ -68,14 +70,14 @@ void check_buffers(const std::vector<vulkan::ColorAttachment>& color, const std:
                 error("Color attachments must have the same format");
         }
 
-        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthAttachment& d) {
+        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthImageWithMemory& d) {
                     return d.sample_count() == depth[0].sample_count();
             }))
         {
                 error("Depth attachments must have the same sample count");
         }
 
-        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthAttachment& d) {
+        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthImageWithMemory& d) {
                     return d.format() == depth[0].format();
             }))
         {
@@ -91,7 +93,7 @@ void check_buffers(const std::vector<vulkan::ColorAttachment>& color, const std:
 
         if (color.empty())
         {
-                if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthAttachment& d) {
+                if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthImageWithMemory& d) {
                             return d.sample_count() == VK_SAMPLE_COUNT_1_BIT;
                     }))
                 {
@@ -102,7 +104,7 @@ void check_buffers(const std::vector<vulkan::ColorAttachment>& color, const std:
 
 std::string buffer_info(
         const std::vector<vulkan::ColorAttachment>& color,
-        const std::vector<vulkan::DepthAttachment>& depth)
+        const std::vector<vulkan::DepthImageWithMemory>& depth)
 {
         check_buffers(color, depth);
 
@@ -256,7 +258,7 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
 
         //
 
-        std::vector<vulkan::DepthAttachment> m_depth_attachments;
+        std::vector<vulkan::DepthImageWithMemory> m_depth_attachments;
         std::vector<vulkan::ColorAttachment> m_color_attachments;
 
         //std::vector<VkClearValue> m_clear_values;
@@ -434,7 +436,7 @@ void Impl::create_color_buffer_rendering(
         ASSERT(m_depth_attachments.size() == 1
                || std::all_of(
                        m_depth_attachments.cbegin(), m_depth_attachments.cend(),
-                       [&](const vulkan::DepthAttachment& d) { return d.format() == depth_format; }));
+                       [&](const vulkan::DepthImageWithMemory& d) { return d.format() == depth_format; }));
 
         //
 

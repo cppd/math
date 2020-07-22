@@ -232,7 +232,7 @@ public:
         VkExtent3D extent() const;
 };
 
-class DepthAttachment final
+class DepthImageWithMemory final
 {
         VkFormat m_format;
         Image m_image;
@@ -244,7 +244,7 @@ class DepthAttachment final
         VkImageUsageFlags m_usage;
 
 public:
-        DepthAttachment(
+        DepthImageWithMemory(
                 const Device& device,
                 const std::unordered_set<uint32_t>& family_indices,
                 const std::vector<VkFormat>& formats,
@@ -252,7 +252,7 @@ public:
                 uint32_t width,
                 uint32_t height,
                 VkImageUsageFlags usage);
-        DepthAttachment(
+        DepthImageWithMemory(
                 const Device& device,
                 const std::unordered_set<uint32_t>& family_indices,
                 const std::vector<VkFormat>& formats,
@@ -264,12 +264,12 @@ public:
                 VkQueue graphics_queue,
                 VkImageLayout image_layout);
 
-        DepthAttachment(const DepthAttachment&) = delete;
-        DepthAttachment& operator=(const DepthAttachment&) = delete;
-        DepthAttachment& operator=(DepthAttachment&&) = delete;
+        DepthImageWithMemory(const DepthImageWithMemory&) = delete;
+        DepthImageWithMemory& operator=(const DepthImageWithMemory&) = delete;
+        DepthImageWithMemory& operator=(DepthImageWithMemory&&) = delete;
 
-        DepthAttachment(DepthAttachment&&) = default;
-        ~DepthAttachment() = default;
+        DepthImageWithMemory(DepthImageWithMemory&&) = default;
+        ~DepthImageWithMemory() = default;
 
         //
 

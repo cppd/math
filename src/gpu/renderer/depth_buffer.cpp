@@ -95,12 +95,12 @@ vulkan::RenderPass create_render_pass_depth(VkDevice device, VkFormat depth_form
         return vulkan::RenderPass(device, create_info);
 }
 
-void check_buffers(const std::vector<vulkan::DepthAttachment>& depth)
+void check_buffers(const std::vector<vulkan::DepthImageWithMemory>& depth)
 {
-        ASSERT(std::all_of(depth.cbegin(), depth.cend(), [](const vulkan::DepthAttachment& d) {
+        ASSERT(std::all_of(depth.cbegin(), depth.cend(), [](const vulkan::DepthImageWithMemory& d) {
                 return d.usage() & VK_IMAGE_USAGE_SAMPLED_BIT;
         }));
-        ASSERT(std::all_of(depth.cbegin(), depth.cend(), [](const vulkan::DepthAttachment& d) {
+        ASSERT(std::all_of(depth.cbegin(), depth.cend(), [](const vulkan::DepthImageWithMemory& d) {
                 return d.sample_count() == SAMPLE_COUNT;
         }));
 
@@ -109,14 +109,14 @@ void check_buffers(const std::vector<vulkan::DepthAttachment>& depth)
                 error("No depth attachment");
         }
 
-        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthAttachment& d) {
+        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthImageWithMemory& d) {
                     return d.format() == depth[0].format();
             }))
         {
                 error("Depth attachments must have the same format");
         }
 
-        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthAttachment& d) {
+        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthImageWithMemory& d) {
                     return d.width() == depth[0].width() && d.height() == depth[0].height();
             }))
         {
@@ -124,7 +124,11 @@ void check_buffers(const std::vector<vulkan::DepthAttachment>& depth)
         }
 }
 
-std::string buffer_info(const std::vector<vulkan::DepthAttachment>& depth, double zoom, unsigned width, unsigned height)
+std::string buffer_info(
+        const std::vector<vulkan::DepthImageWithMemory>& depth,
+        double zoom,
+        unsigned width,
+        unsigned height)
 {
         check_buffers(depth);
 
@@ -160,7 +164,7 @@ class Impl final : public DepthBuffers
 
         //
 
-        std::vector<vulkan::DepthAttachment> m_depth_attachments;
+        std::vector<vulkan::DepthImageWithMemory> m_depth_attachments;
         vulkan::RenderPass m_render_pass;
         std::vector<vulkan::Framebuffer> m_framebuffers;
         std::vector<VkFramebuffer> m_framebuffers_handles;
@@ -168,7 +172,7 @@ class Impl final : public DepthBuffers
 
         //
 
-        const vulkan::DepthAttachment* texture(unsigned index) const override;
+        const vulkan::DepthImageWithMemory* texture(unsigned index) const override;
         unsigned width() const override;
         unsigned height() const override;
         VkRenderPass render_pass() const override;
@@ -236,7 +240,7 @@ Impl::Impl(
         m_render_pass = create_render_pass_depth(m_device, depth_format);
 
         std::vector<VkImageView> attachments(1);
-        for (const vulkan::DepthAttachment& depth_attachment : m_depth_attachments)
+        for (const vulkan::DepthImageWithMemory& depth_attachment : m_depth_attachments)
         {
                 attachments[0] = depth_attachment.image_view();
 
@@ -252,7 +256,7 @@ Impl::Impl(
         LOG(buffer_info(m_depth_attachments, zoom, width, height));
 }
 
-const vulkan::DepthAttachment* Impl::texture(unsigned index) const
+const vulkan::DepthImageWithMemory* Impl::texture(unsigned index) const
 {
         ASSERT(index < m_depth_attachments.size());
 
