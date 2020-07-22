@@ -708,6 +708,9 @@ class Impl final : public Renderer
                 ViewportTransform t = viewport_transform(m_viewport);
                 m_shader_buffers.set_viewport(t.center, t.factor);
 
+                ASSERT(m_render_buffers->framebuffers().size() == m_render_buffers->framebuffers_clear().size());
+                ASSERT(m_render_buffers->framebuffers().size() == 1);
+
                 m_mesh_renderer.create_render_buffers(m_render_buffers, m_object_image, m_viewport);
                 create_mesh_depth_buffers();
                 m_volume_renderer.create_buffers(m_render_buffers, m_viewport);
@@ -764,18 +767,15 @@ class Impl final : public Renderer
                 info.render_pass = m_render_buffers->render_pass_clear();
                 info.framebuffers = &m_render_buffers->framebuffers_clear();
                 info.command_pool = m_graphics_command_pool;
+
+                info.before_render_pass_commands = [this](VkCommandBuffer command_buffer) {
+                        clear_uint32_image_commands(*m_object_image, command_buffer, 0 /*clear_value*/);
+                };
+
                 const std::vector<VkClearValue> clear_values = m_render_buffers->clear_values(m_clear_color);
                 info.clear_values = &clear_values;
 
                 m_clear_command_buffers = vulkan::create_command_buffers(info);
-        }
-
-        std::function<void(VkCommandBuffer)> before_render_pass_commands()
-        {
-                return [this](VkCommandBuffer command_buffer) {
-                        uint32_t clear_value = 0;
-                        clear_uint32_image_commands(*m_object_image, command_buffer, clear_value);
-                };
         }
 
         void create_mesh_render_command_buffers()
@@ -783,7 +783,7 @@ class Impl final : public Renderer
                 m_mesh_renderer.delete_render_command_buffers();
                 m_mesh_renderer.create_render_command_buffers(
                         m_mesh_storage.visible_objects(), m_graphics_command_pool, m_clip_plane.has_value(),
-                        m_show_normals, before_render_pass_commands());
+                        m_show_normals, nullptr);
         }
 
         void create_mesh_depth_command_buffers()
@@ -809,8 +809,7 @@ class Impl final : public Renderer
                 }
                 for (VolumeObject* visible_volume : m_volume_storage.visible_objects())
                 {
-                        m_volume_renderer.create_command_buffers(
-                                visible_volume, m_graphics_command_pool, before_render_pass_commands());
+                        m_volume_renderer.create_command_buffers(visible_volume, m_graphics_command_pool, nullptr);
                 }
         }
 
