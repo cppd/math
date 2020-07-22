@@ -223,11 +223,10 @@ Impl::Impl(
                 {
                         depth_formats = DEPTH_IMAGE_FORMATS;
                 }
-                constexpr bool SAMPLED = true;
-                constexpr bool TRANSFER_SRC = false;
                 m_depth_attachments.emplace_back(
-                        m_device, attachment_family_indices, depth_formats, SAMPLE_COUNT, width, height, SAMPLED,
-                        TRANSFER_SRC, graphics_command_pool, graphics_queue, IMAGE_LAYOUT);
+                        m_device, attachment_family_indices, depth_formats, SAMPLE_COUNT, width, height,
+                        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, graphics_command_pool,
+                        graphics_queue, IMAGE_LAYOUT);
         }
 
         VkFormat depth_format = m_depth_attachments[0].format();

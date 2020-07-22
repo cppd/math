@@ -423,12 +423,10 @@ void Impl::create_color_buffer_rendering(
                 {
                         depth_formats = DEPTH_IMAGE_FORMATS;
                 }
-                constexpr bool SAMPLED = false;
-                constexpr bool TRANSFER_SRC = true;
                 m_depth_attachments.emplace_back(
                         m_device, attachment_family_indices, depth_formats, sample_count, swapchain.width(),
-                        swapchain.height(), SAMPLED, TRANSFER_SRC);
-                ASSERT(!(m_depth_attachments.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT));
+                        swapchain.height(),
+                        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
         }
 
         const VkFormat depth_format = m_depth_attachments[0].format();

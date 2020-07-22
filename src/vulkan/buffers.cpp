@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/conversion.h>
 
 #include <cstring>
+#include <sstream>
 
 namespace vulkan
 {
@@ -648,6 +649,72 @@ void write_pixels_to_image(
         }
 #pragma GCC diagnostic pop
 }
+
+VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage, bool depth)
+{
+        VkFormatFeatureFlags features = 0;
+        if ((usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) == VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
+        {
+                features |= VK_FORMAT_FEATURE_TRANSFER_SRC_BIT;
+                usage &= ~VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+        }
+        if ((usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) == VK_IMAGE_USAGE_TRANSFER_DST_BIT)
+        {
+                features |= VK_FORMAT_FEATURE_TRANSFER_DST_BIT;
+                usage &= ~VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        }
+        if ((usage & VK_IMAGE_USAGE_SAMPLED_BIT) == VK_IMAGE_USAGE_SAMPLED_BIT)
+        {
+                features |= VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
+                usage &= ~VK_IMAGE_USAGE_SAMPLED_BIT;
+        }
+        if ((usage & VK_IMAGE_USAGE_STORAGE_BIT) == VK_IMAGE_USAGE_STORAGE_BIT)
+        {
+                features |= VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT;
+                usage &= ~VK_IMAGE_USAGE_STORAGE_BIT;
+        }
+        if ((usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) == VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+        {
+                if (depth)
+                {
+                        error("Usage VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT for depth image");
+                }
+                features |= VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT;
+                usage &= ~VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        }
+        if ((usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+        {
+                features |= VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+                usage &= ~VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        }
+        if (usage != 0)
+        {
+                std::ostringstream oss;
+                oss << "Unsupported image usage " << std::hex << usage;
+                error(oss.str());
+        }
+        return features;
+}
+
+VkFormatFeatureFlags format_features_for_depth_image_usage(VkImageUsageFlags usage)
+{
+        return format_features_for_image_usage(usage, true /*depth*/);
+}
+
+bool is_depth_formats(const std::vector<VkFormat>& formats)
+{
+        const std::unordered_set<VkFormat> depth_formats{
+                VK_FORMAT_D16_UNORM, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT,
+                VK_FORMAT_D32_SFLOAT_S8_UINT};
+        for (VkFormat format : formats)
+        {
+                if (depth_formats.count(format) == 0)
+                {
+                        return false;
+                }
+        }
+        return true;
+}
 }
 
 BufferWithMemory::BufferWithMemory(
@@ -925,30 +992,30 @@ DepthAttachment::DepthAttachment(
         VkSampleCountFlagBits samples,
         uint32_t width,
         uint32_t height,
-        bool sampled,
-        bool transfer_src)
+        VkImageUsageFlags usage)
 {
         if (width <= 0 || height <= 0)
         {
                 error("Depth attachment size error");
         }
 
-        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
-                                        | (sampled ? VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT : 0)
-                                        | (transfer_src ? VK_FORMAT_FEATURE_TRANSFER_SRC_BIT : 0);
-        m_usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | (sampled ? VK_IMAGE_USAGE_SAMPLED_BIT : 0)
-                  | (transfer_src ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0);
+        ASSERT(is_depth_formats(formats));
 
+        constexpr VkImageTiling TILING = VK_IMAGE_TILING_OPTIMAL;
+
+        m_usage = usage;
         m_format = find_supported_image_format(
-                device.physical_device(), formats, VK_IMAGE_TYPE_2D, tiling, features, m_usage, samples);
+                device.physical_device(), formats, VK_IMAGE_TYPE_2D, TILING,
+                format_features_for_depth_image_usage(m_usage), m_usage, samples);
 
-        VkExtent3D max_extent = max_image_extent(device.physical_device(), m_format, VK_IMAGE_TYPE_2D, tiling, m_usage);
+        const VkExtent3D max_extent =
+                max_image_extent(device.physical_device(), m_format, VK_IMAGE_TYPE_2D, TILING, m_usage);
         m_width = std::min(width, max_extent.width);
         m_height = std::min(height, max_extent.height);
+
         m_image = create_image(
                 device, device.physical_device(), VK_IMAGE_TYPE_2D, make_extent(m_width, m_height), m_format,
-                family_indices, samples, tiling, m_usage);
+                family_indices, samples, TILING, m_usage);
         m_device_memory =
                 create_device_memory(device, device.physical_device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, VK_IMAGE_TYPE_2D, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
@@ -962,12 +1029,11 @@ DepthAttachment::DepthAttachment(
         VkSampleCountFlagBits samples,
         uint32_t width,
         uint32_t height,
-        bool sampled,
-        bool transfer_src,
+        VkImageUsageFlags usage,
         VkCommandPool graphics_command_pool,
         VkQueue graphics_queue,
         VkImageLayout image_layout)
-        : DepthAttachment(device, family_indices, formats, samples, width, height, sampled, transfer_src)
+        : DepthAttachment(device, family_indices, formats, samples, width, height, usage)
 {
         if (image_layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {

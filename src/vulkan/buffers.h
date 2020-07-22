@@ -251,8 +251,7 @@ public:
                 VkSampleCountFlagBits samples,
                 uint32_t width,
                 uint32_t height,
-                bool sampled,
-                bool transfer_src);
+                VkImageUsageFlags usage);
         DepthAttachment(
                 const Device& device,
                 const std::unordered_set<uint32_t>& family_indices,
@@ -260,8 +259,7 @@ public:
                 VkSampleCountFlagBits samples,
                 uint32_t width,
                 uint32_t height,
-                bool sampled,
-                bool transfer_src,
+                VkImageUsageFlags usage,
                 VkCommandPool graphics_command_pool,
                 VkQueue graphics_queue,
                 VkImageLayout image_layout);
