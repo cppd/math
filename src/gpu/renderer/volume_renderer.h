@@ -44,16 +44,12 @@ class VolumeRenderer
         std::optional<vulkan::CommandBuffers> m_command_buffers;
 
         vulkan::Sampler m_volume_sampler;
-        VkSampler m_depth_sampler;
+        vulkan::Sampler m_depth_sampler;
 
         void draw_commands(const VolumeObject* volume, VkCommandBuffer command_buffer) const;
 
 public:
-        VolumeRenderer(
-                const vulkan::Device& device,
-                bool sample_shading,
-                const ShaderBuffers& buffers,
-                VkSampler depth_sampler);
+        VolumeRenderer(const vulkan::Device& device, bool sample_shading, const ShaderBuffers& buffers);
 
         VolumeDescriptorSetsFunction descriptor_sets_function() const;
 

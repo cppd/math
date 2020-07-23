@@ -24,11 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-VolumeRenderer::VolumeRenderer(
-        const vulkan::Device& device,
-        bool sample_shading,
-        const ShaderBuffers& buffers,
-        VkSampler depth_sampler)
+VolumeRenderer::VolumeRenderer(const vulkan::Device& device, bool sample_shading, const ShaderBuffers& buffers)
         : m_device(device),
           m_sample_shading(sample_shading),
           //
@@ -36,7 +32,7 @@ VolumeRenderer::VolumeRenderer(
           m_memory(device, m_program.descriptor_set_layout_shared(), buffers.drawing_buffer()),
           //
           m_volume_sampler(create_volume_sampler(m_device)),
-          m_depth_sampler(depth_sampler)
+          m_depth_sampler(create_volume_depth_image_sampler(m_device))
 {
 }
 

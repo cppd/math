@@ -224,32 +224,6 @@ void clear_uint32_image_commands(const vulkan::ImageWithMemory& image, VkCommand
                 nullptr, 1, &barrier);
 }
 
-vulkan::Sampler create_depth_copy_image_sampler(VkDevice device)
-{
-        VkSamplerCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-
-        create_info.magFilter = VK_FILTER_NEAREST;
-        create_info.minFilter = VK_FILTER_NEAREST;
-
-        create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-
-        create_info.anisotropyEnable = VK_FALSE;
-
-        create_info.unnormalizedCoordinates = VK_FALSE;
-
-        create_info.compareEnable = VK_FALSE;
-
-        create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
-        create_info.mipLodBias = 0.0f;
-        create_info.minLod = 0.0f;
-        create_info.maxLod = 0.0f;
-
-        return vulkan::Sampler(device, create_info);
-}
-
 class Impl final : public Renderer
 {
         // Для получения текстуры для тени результат рисования находится в интервалах x(-1, 1) y(-1, 1) z(0, 1).
@@ -285,7 +259,6 @@ class Impl final : public Renderer
         vulkan::Semaphore m_renderer_volume_signal_semaphore;
 
         std::unique_ptr<vulkan::DepthImageWithMemory> m_depth_copy_image;
-        vulkan::Sampler m_depth_copy_image_sampler;
 
         std::unique_ptr<DepthBuffers> m_mesh_renderer_depth_render_buffers;
         vulkan::Semaphore m_mesh_renderer_depth_signal_semaphore;
@@ -903,11 +876,10 @@ public:
                   m_shader_buffers(m_device, {m_graphics_queue.family_index()}),
                   m_renderer_mesh_signal_semaphore(m_device),
                   m_renderer_volume_signal_semaphore(m_device),
-                  m_depth_copy_image_sampler(create_depth_copy_image_sampler(m_device)),
                   m_mesh_renderer_depth_signal_semaphore(m_device),
                   m_mesh_renderer(m_device, sample_shading, sampler_anisotropy, m_shader_buffers),
                   m_volume_renderer_signal_semaphore(m_device),
-                  m_volume_renderer(m_device, sample_shading, m_shader_buffers, m_depth_copy_image_sampler),
+                  m_volume_renderer(m_device, sample_shading, m_shader_buffers),
                   m_mesh_storage([this]() { mesh_visibility_changed(); }),
                   m_volume_storage([this]() { volume_visibility_changed(); }),
                   m_clear_signal_semaphore(m_device)
