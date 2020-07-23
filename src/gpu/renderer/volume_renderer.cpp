@@ -24,24 +24,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-VolumeRenderer::VolumeRenderer(const vulkan::Device& device, bool sample_shading, const ShaderBuffers& buffers)
+VolumeRenderer::VolumeRenderer(
+        const vulkan::Device& device,
+        bool sample_shading,
+        const ShaderBuffers& buffers,
+        VkSampler depth_sampler)
         : m_device(device),
           m_sample_shading(sample_shading),
           //
           m_program(device),
           m_memory(device, m_program.descriptor_set_layout_shared(), buffers.drawing_buffer()),
           //
-          m_volume_sampler(create_volume_sampler(m_device))
+          m_volume_sampler(create_volume_sampler(m_device)),
+          m_depth_sampler(depth_sampler)
 {
 }
 
-void VolumeRenderer::create_buffers(const RenderBuffers3D* render_buffers, const Region<2, int>& viewport)
+void VolumeRenderer::create_buffers(
+        const RenderBuffers3D* render_buffers,
+        const Region<2, int>& viewport,
+        VkImageView depth_image)
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
 
         delete_buffers();
 
         m_render_buffers = render_buffers;
+
+        m_memory.set_depth_image(depth_image, m_depth_sampler);
 
         m_pipeline = m_program.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport);

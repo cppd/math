@@ -284,6 +284,9 @@ class Impl final : public Renderer
         vulkan::Semaphore m_renderer_mesh_signal_semaphore;
         vulkan::Semaphore m_renderer_volume_signal_semaphore;
 
+        std::unique_ptr<vulkan::DepthImageWithMemory> m_depth_copy_image;
+        vulkan::Sampler m_depth_copy_image_sampler;
+
         std::unique_ptr<DepthBuffers> m_mesh_renderer_depth_render_buffers;
         vulkan::Semaphore m_mesh_renderer_depth_signal_semaphore;
         MeshRenderer m_mesh_renderer;
@@ -296,9 +299,6 @@ class Impl final : public Renderer
 
         std::optional<vulkan::CommandBuffers> m_clear_command_buffers;
         vulkan::Semaphore m_clear_signal_semaphore;
-
-        std::unique_ptr<vulkan::DepthImageWithMemory> m_depth_copy_image;
-        vulkan::Sampler m_depth_copy_image_sampler;
 
         void set_light_a(const Color& light) override
         {
@@ -745,7 +745,7 @@ class Impl final : public Renderer
                 create_depth_image();
                 m_mesh_renderer.create_render_buffers(m_render_buffers, m_object_image, m_viewport);
                 create_mesh_depth_buffers();
-                m_volume_renderer.create_buffers(m_render_buffers, m_viewport);
+                m_volume_renderer.create_buffers(m_render_buffers, m_viewport, m_depth_copy_image->image_view());
 
                 create_mesh_command_buffers();
                 create_volume_command_buffers();
@@ -903,14 +903,14 @@ public:
                   m_shader_buffers(m_device, {m_graphics_queue.family_index()}),
                   m_renderer_mesh_signal_semaphore(m_device),
                   m_renderer_volume_signal_semaphore(m_device),
+                  m_depth_copy_image_sampler(create_depth_copy_image_sampler(m_device)),
                   m_mesh_renderer_depth_signal_semaphore(m_device),
                   m_mesh_renderer(m_device, sample_shading, sampler_anisotropy, m_shader_buffers),
                   m_volume_renderer_signal_semaphore(m_device),
-                  m_volume_renderer(m_device, sample_shading, m_shader_buffers),
+                  m_volume_renderer(m_device, sample_shading, m_shader_buffers, m_depth_copy_image_sampler),
                   m_mesh_storage([this]() { mesh_visibility_changed(); }),
                   m_volume_storage([this]() { volume_visibility_changed(); }),
-                  m_clear_signal_semaphore(m_device),
-                  m_depth_copy_image_sampler(create_depth_copy_image_sampler(m_device))
+                  m_clear_signal_semaphore(m_device)
         {
         }
 
