@@ -49,6 +49,8 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 };
 // clang-format on
 
+constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
 template <typename T>
 class ObjectStorage
 {
@@ -222,6 +224,32 @@ void clear_uint32_image_commands(const vulkan::ImageWithMemory& image, VkCommand
                 nullptr, 1, &barrier);
 }
 
+vulkan::Sampler create_depth_copy_image_sampler(VkDevice device)
+{
+        VkSamplerCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+
+        create_info.magFilter = VK_FILTER_NEAREST;
+        create_info.minFilter = VK_FILTER_NEAREST;
+
+        create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+        create_info.anisotropyEnable = VK_FALSE;
+
+        create_info.unnormalizedCoordinates = VK_FALSE;
+
+        create_info.compareEnable = VK_FALSE;
+
+        create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        create_info.mipLodBias = 0.0f;
+        create_info.minLod = 0.0f;
+        create_info.maxLod = 0.0f;
+
+        return vulkan::Sampler(device, create_info);
+}
+
 class Impl final : public Renderer
 {
         // Для получения текстуры для тени результат рисования находится в интервалах x(-1, 1) y(-1, 1) z(0, 1).
@@ -268,6 +296,9 @@ class Impl final : public Renderer
 
         std::optional<vulkan::CommandBuffers> m_clear_command_buffers;
         vulkan::Semaphore m_clear_signal_semaphore;
+
+        std::unique_ptr<vulkan::DepthImageWithMemory> m_depth_copy_image;
+        vulkan::Sampler m_depth_copy_image_sampler;
 
         void set_light_a(const Color& light) override
         {
@@ -711,6 +742,7 @@ class Impl final : public Renderer
                 ASSERT(m_render_buffers->framebuffers().size() == m_render_buffers->framebuffers_clear().size());
                 ASSERT(m_render_buffers->framebuffers().size() == 1);
 
+                create_depth_image();
                 m_mesh_renderer.create_render_buffers(m_render_buffers, m_object_image, m_viewport);
                 create_mesh_depth_buffers();
                 m_volume_renderer.create_buffers(m_render_buffers, m_viewport);
@@ -730,6 +762,17 @@ class Impl final : public Renderer
                 m_volume_renderer.delete_buffers();
                 delete_mesh_depth_buffers();
                 m_mesh_renderer.delete_render_buffers();
+                m_depth_copy_image.reset();
+        }
+
+        void create_depth_image()
+        {
+                m_depth_copy_image = std::make_unique<vulkan::DepthImageWithMemory>(
+                        m_device, std::unordered_set({m_graphics_queue.family_index()}),
+                        std::vector<VkFormat>({m_render_buffers->depth_format()}), m_render_buffers->sample_count(),
+                        m_swapchain->width(), m_swapchain->height(),
+                        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_graphics_command_pool,
+                        m_graphics_queue, DEPTH_COPY_IMAGE_LAYOUT);
         }
 
         void delete_mesh_depth_buffers()
@@ -807,9 +850,14 @@ class Impl final : public Renderer
                 {
                         return;
                 }
+                auto copy_depth = [this](VkCommandBuffer command_buffer) {
+                        m_render_buffers->commands_depth_copy(
+                                command_buffer, m_depth_copy_image->image(), DEPTH_COPY_IMAGE_LAYOUT, m_viewport,
+                                0 /*image_index*/);
+                };
                 for (VolumeObject* visible_volume : m_volume_storage.visible_objects())
                 {
-                        m_volume_renderer.create_command_buffers(visible_volume, m_graphics_command_pool, nullptr);
+                        m_volume_renderer.create_command_buffers(visible_volume, m_graphics_command_pool, copy_depth);
                 }
         }
 
@@ -861,7 +909,8 @@ public:
                   m_volume_renderer(m_device, sample_shading, m_shader_buffers),
                   m_mesh_storage([this]() { mesh_visibility_changed(); }),
                   m_volume_storage([this]() { volume_visibility_changed(); }),
-                  m_clear_signal_semaphore(m_device)
+                  m_clear_signal_semaphore(m_device),
+                  m_depth_copy_image_sampler(create_depth_copy_image_sampler(m_device))
         {
         }
 
