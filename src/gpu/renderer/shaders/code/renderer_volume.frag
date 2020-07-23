@@ -62,6 +62,8 @@ layout(set = 0, std140, binding = 0) uniform Drawing
 }
 drawing;
 
+layout(set = 0, binding = 1) uniform sampler2DMS depth_image;
+
 //
 
 layout(set = 1, std140, binding = 0) uniform Coordinates

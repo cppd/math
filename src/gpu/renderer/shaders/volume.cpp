@@ -38,6 +38,16 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_lay
 
                 bindings.push_back(b);
         }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = DEPTH_IMAGE_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
 
         return bindings;
 }
@@ -73,6 +83,16 @@ unsigned VolumeSharedMemory::set_number()
 const VkDescriptorSet& VolumeSharedMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
+}
+
+void VolumeSharedMemory::set_depth_image(VkImageView image_view, VkSampler sampler) const
+{
+        VkDescriptorImageInfo image_info = {};
+        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        image_info.imageView = image_view;
+        image_info.sampler = sampler;
+
+        m_descriptors.update_descriptor_set(0, DEPTH_IMAGE_BINDING, image_info);
 }
 
 //

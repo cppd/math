@@ -36,6 +36,7 @@ class VolumeSharedMemory final
         static constexpr int SET_NUMBER = 0;
 
         static constexpr int DRAWING_BINDING = 0;
+        static constexpr int DEPTH_IMAGE_BINDING = 1;
 
         vulkan::Descriptors m_descriptors;
 
@@ -58,6 +59,8 @@ public:
         //
 
         const VkDescriptorSet& descriptor_set() const;
+
+        void set_depth_image(VkImageView image_view, VkSampler sampler) const;
 };
 
 class VolumeImageMemory final
