@@ -195,6 +195,7 @@ class VolumeBuffer final
         struct Coordinates
         {
                 alignas(sizeof(vec4f)) mat4f inverse_mvp_matrix;
+                alignas(sizeof(vec4f)) vec4f third_row_of_mvp;
                 alignas(sizeof(vec4f)) vec4f clip_plane_equation;
                 alignas(sizeof(vec4f)) vec3f gradient_h;
                 alignas(sizeof(vec4f)) Matrix<3, 4, float> normal_matrix;
@@ -225,6 +226,7 @@ public:
 
         void set_coordinates(
                 const mat4& inverse_mvp_matrix,
+                const vec4& third_row_of_mvp,
                 const vec4& clip_plane_equation,
                 const vec3& gradient_h,
                 const mat3& normal_matrix) const;

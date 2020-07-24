@@ -196,7 +196,7 @@ class Impl final : public VolumeObject
                                 : vec4(0);
 
                 m_buffer.set_coordinates(
-                        mvp.inverse(), clip_plane, m_gradient_h, m_object_normal_to_world_normal_matrix);
+                        mvp.inverse(), mvp.row(2), clip_plane, m_gradient_h, m_object_normal_to_world_normal_matrix);
         }
 
         void buffer_set_clip_plane() const

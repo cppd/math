@@ -69,6 +69,7 @@ layout(set = 0, binding = 1) uniform sampler2DMS depth_image;
 layout(set = 1, std140, binding = 0) uniform Coordinates
 {
         mat4 inverse_mvp_matrix;
+        vec4 third_row_of_mvp;
         vec4 clip_plane_equation;
         vec3 gradient_h;
         mat3 normal_matrix;
@@ -285,22 +286,35 @@ void main(void)
         {
                 discard;
         }
+        first = max(0, first);
 
-        vec3 direction = ray_dir * (second - first);
-        float direction_length_in_texels = length(textureSize(image, 0) * direction);
-        vec3 direction_step = direction / direction_length_in_texels;
-        int samples = int(trunc(direction_length_in_texels));
+        vec3 image_direction = ray_dir * (second - first);
+        vec3 image_pos = ray_org + ray_dir * first;
+
+        float depth_pos = dot(coordinates.third_row_of_mvp, vec4(image_pos, 1));
+        float depth_direction_limit = texelFetch(depth_image, ivec2(gl_FragCoord.xy), gl_SampleID).r - depth_pos;
+        if (depth_direction_limit <= 0)
+        {
+                discard;
+        }
+        float depth_direction = dot(coordinates.third_row_of_mvp.xyz, image_direction);
+
+        float length_in_samples = length(textureSize(image, 0) * image_direction);
+        int sample_count =
+                int(trunc((min(depth_direction_limit, depth_direction) / depth_direction * length_in_samples)));
+        float length_in_samples_r = 1.0 / length_in_samples;
 
         const float MIN_TRANSPARENCY = 1.0 / 256;
         float transparency = 1; // transparency = 1 - α
         vec3 color = vec3(0);
-        vec3 pos = ray_org + ray_dir * first;
 
         if (volume.color_volume)
         {
-                for (int s = 0; s < samples; ++s, pos += direction_step)
+                for (int s = 0; s < sample_count; ++s)
                 {
-                        vec4 c = color_volume_multiplied_by_alpha(pos);
+                        float k = s * length_in_samples_r;
+                        vec3 p = image_pos + k * image_direction;
+                        vec4 c = color_volume_multiplied_by_alpha(p);
                         color += transparency * c.rgb;
                         transparency *= 1.0 - c.a;
                         if (transparency < MIN_TRANSPARENCY)
@@ -311,9 +325,11 @@ void main(void)
         }
         else if (!volume.isosurface)
         {
-                for (int s = 0; s < samples; ++s, pos += direction_step)
+                for (int s = 0; s < sample_count; ++s)
                 {
-                        vec4 c = scalar_volume_multiplied_by_alpha(pos);
+                        float k = s * length_in_samples_r;
+                        vec3 p = image_pos + k * image_direction;
+                        vec4 c = scalar_volume_multiplied_by_alpha(p);
                         color += transparency * c.rgb;
                         transparency *= 1.0 - c.a;
                         if (transparency < MIN_TRANSPARENCY)
@@ -324,18 +340,22 @@ void main(void)
         }
         else
         {
-                float first_sign = sign(scalar_volume_value(pos) - volume.isovalue);
+                float first_sign = sign(scalar_volume_value(image_pos) - volume.isovalue);
                 int s = 0;
+                vec3 p;
                 do
                 {
-                        pos += direction_step;
                         ++s;
-                } while (s <= samples && first_sign == sign(scalar_volume_value(pos) - volume.isovalue));
-                if (s > samples)
+                        float k = s * length_in_samples_r;
+                        p = image_pos + k * image_direction;
+                } while (s <= sample_count && first_sign == sign(scalar_volume_value(p) - volume.isovalue));
+                if (s > sample_count)
                 {
                         discard;
                 }
-                vec3 surface = find_isosurface(pos - direction_step, pos, first_sign);
+                float prev_k = (s - 1) * length_in_samples_r;
+                vec3 prev_p = image_pos + prev_k * image_direction;
+                vec3 surface = find_isosurface(prev_p, p, first_sign);
                 transparency = 0;
                 color = shade(surface);
         }
