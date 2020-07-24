@@ -21,106 +21,121 @@ namespace gpu::renderer
 {
 std::vector<uint32_t> code_triangles_vert()
 {
-        return {
+        static constexpr uint32_t code[]{
 #include "renderer_triangles.vert.spr"
         };
+        return {std::cbegin(code), std::cend(code)};
 }
 
 std::vector<uint32_t> code_triangles_geom()
 {
-        return {
+        static constexpr uint32_t code[]{
 #include "renderer_triangles.geom.spr"
         };
+        return {std::cbegin(code), std::cend(code)};
 }
 
 std::vector<uint32_t> code_triangles_frag()
 {
-        return {
+        static constexpr uint32_t code[]{
 #include "renderer_triangles.frag.spr"
         };
+        return {std::cbegin(code), std::cend(code)};
 }
 
 std::vector<uint32_t> code_triangles_depth_vert()
 {
-        return {
+        static constexpr uint32_t code[]{
 #include "renderer_triangles_depth.vert.spr"
         };
+        return {std::cbegin(code), std::cend(code)};
 }
 
 std::vector<uint32_t> code_triangle_lines_vert()
 {
-        return {
+        static constexpr uint32_t code[]{
 #include "renderer_triangle_lines.vert.spr"
         };
+        return {std::cbegin(code), std::cend(code)};
 }
 
 std::vector<uint32_t> code_triangle_lines_geom()
 {
-        return {
+        static constexpr uint32_t code[]{
 #include "renderer_triangle_lines.geom.spr"
         };
+        return {std::cbegin(code), std::cend(code)};
 }
 
 std::vector<uint32_t> code_triangle_lines_frag()
 {
-        return {
+        static constexpr uint32_t code[]{
 #include "renderer_triangle_lines.frag.spr"
         };
+        return {std::cbegin(code), std::cend(code)};
 }
 
 std::vector<uint32_t> code_points_0d_vert()
 {
-        return {
+        static constexpr uint32_t code[]{
 #include "renderer_points_0d.vert.spr"
         };
+        return {std::cbegin(code), std::cend(code)};
 }
 
 std::vector<uint32_t> code_points_1d_vert()
 {
-        return {
+        static constexpr uint32_t code[]{
 #include "renderer_points_1d.vert.spr"
         };
+        return {std::cbegin(code), std::cend(code)};
 }
 
 std::vector<uint32_t> code_points_frag()
 {
-        return {
+        static constexpr uint32_t code[]{
 #include "renderer_points.frag.spr"
         };
+        return {std::cbegin(code), std::cend(code)};
 }
 
 std::vector<uint32_t> code_normals_vert()
 {
-        return {
+        static constexpr uint32_t code[]{
 #include "renderer_normals.vert.spr"
         };
+        return {std::cbegin(code), std::cend(code)};
 }
 
 std::vector<uint32_t> code_normals_geom()
 {
-        return {
+        static constexpr uint32_t code[]{
 #include "renderer_normals.geom.spr"
         };
+        return {std::cbegin(code), std::cend(code)};
 }
 
 std::vector<uint32_t> code_normals_frag()
 {
-        return {
+        static constexpr uint32_t code[]{
 #include "renderer_normals.frag.spr"
         };
+        return {std::cbegin(code), std::cend(code)};
 }
 
 std::vector<uint32_t> code_volume_vert()
 {
-        return {
+        static constexpr uint32_t code[]{
 #include "renderer_volume.vert.spr"
         };
+        return {std::cbegin(code), std::cend(code)};
 }
 
 std::vector<uint32_t> code_volume_frag()
 {
-        return {
+        static constexpr uint32_t code[]{
 #include "renderer_volume.frag.spr"
         };
+        return {std::cbegin(code), std::cend(code)};
 }
 }
