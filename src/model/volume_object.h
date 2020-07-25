@@ -108,9 +108,12 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         Matrix<N + 1, N + 1, double> m_matrix;
         std::string m_name;
         ObjectId m_id;
+
         float m_level_min = 0;
         float m_level_max = 1;
-        float m_transparency = 1;
+
+        float m_volume_transparency = 1;
+        float m_isosurface_transparency = 0;
 
         bool m_isosurface = false;
         float m_isovalue = 0.5f;
@@ -226,14 +229,24 @@ public:
                 m_level_max = max;
         }
 
-        float transparency() const
+        float volume_transparency() const
         {
-                return m_transparency;
+                return m_volume_transparency;
         }
 
-        void set_transparency(float transparency)
+        void set_volume_transparency(float transparency)
         {
-                m_transparency = transparency;
+                m_volume_transparency = transparency;
+        }
+
+        float isosurface_transparency() const
+        {
+                return m_isosurface_transparency;
+        }
+
+        void set_isosurface_transparency(float transparency)
+        {
+                m_isosurface_transparency = transparency;
         }
 
         bool isosurface() const

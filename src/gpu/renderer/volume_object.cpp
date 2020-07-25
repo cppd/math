@@ -170,7 +170,8 @@ class Impl final : public VolumeObject
         void buffer_set_parameters(
                 float window_min,
                 float window_max,
-                float transparency,
+                float volume_transparency,
+                float isosurface_transparency,
                 bool isosurface,
                 float isovalue) const
         {
@@ -183,8 +184,8 @@ class Impl final : public VolumeObject
                 isovalue = std::clamp(isovalue, 0.0f, 1.0f);
 
                 m_buffer.set_parameters(
-                        m_graphics_command_pool, m_graphics_queue, window_offset, window_scale, transparency,
-                        isosurface, isovalue);
+                        m_graphics_command_pool, m_graphics_queue, window_offset, window_scale, volume_transparency,
+                        isosurface_transparency, isosurface, isovalue);
         }
 
         void buffer_set_coordinates() const
@@ -358,7 +359,8 @@ class Impl final : public VolumeObject
                 if (update_parameters)
                 {
                         buffer_set_parameters(
-                                volume_object.level_min(), volume_object.level_max(), volume_object.transparency(),
+                                volume_object.level_min(), volume_object.level_max(),
+                                volume_object.volume_transparency(), volume_object.isosurface_transparency(),
                                 volume_object.isosurface(), volume_object.isovalue());
                 }
 

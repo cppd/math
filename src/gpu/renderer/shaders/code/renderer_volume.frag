@@ -80,7 +80,8 @@ layout(set = 1, std140, binding = 1) uniform Volume
 {
         float window_offset;
         float window_scale;
-        float transparency;
+        float volume_transparency;
+        float isosurface_transparency;
         bool isosurface;
         float isovalue;
         bool color_volume;
@@ -108,7 +109,7 @@ vec4 scalar_volume_multiplied_by_alpha(vec3 p)
         float value = scalar_volume_value(p);
         // vec4 color = texture(transfer_function, value);
         vec4 color = vec4(drawing.default_color * (drawing.light_a + drawing.light_d), value);
-        color.a = clamp(color.a * volume.transparency, 0, 1);
+        color.a = clamp(color.a * volume.volume_transparency, 0, 1);
         color.rgb *= color.a;
         return color;
 }
@@ -116,7 +117,7 @@ vec4 scalar_volume_multiplied_by_alpha(vec3 p)
 vec4 color_volume_multiplied_by_alpha(vec3 p)
 {
         vec4 color = texture(image, p);
-        color.a = clamp(color.a * volume.transparency, 0, 1);
+        color.a = clamp(color.a * volume.volume_transparency, 0, 1);
         color.rgb *= color.a;
         return color;
 }

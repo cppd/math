@@ -229,12 +229,13 @@ void MainWindow::disable_volume_parameters()
         m_slider_volume_levels->set_range(0, 1);
 
         {
-                QSignalBlocker blocker(ui.slider_volume_transparency);
+                QSignalBlocker blocker_1(ui.slider_volume_transparency);
+                QSignalBlocker blocker_2(ui.slider_isosurface_transparency);
+                QSignalBlocker blocker_3(ui.checkBox_isosurface);
+                QSignalBlocker blocker_4(ui.slider_isovalue);
+
                 set_slider_to_middle(ui.slider_volume_transparency);
-        }
-        {
-                QSignalBlocker blocker_check_box(ui.checkBox_isosurface);
-                QSignalBlocker blocker_slider(ui.slider_isovalue);
+                set_slider_position(ui.slider_isosurface_transparency, 0);
                 ui.checkBox_isosurface->setChecked(false);
                 ui.slider_isovalue->setEnabled(false);
                 set_slider_to_middle(ui.slider_isovalue);
@@ -1147,31 +1148,39 @@ void MainWindow::update_volume_ui(const std::optional<ObjectId>& id)
                 [&]<size_t N>(const std::shared_ptr<const volume::VolumeObject<N>>& volume_object) {
                         double min;
                         double max;
-                        double transparency;
+                        double volume_transparency;
+                        double isosurface_transparency;
                         bool isosurface;
                         float isovalue;
                         {
                                 volume::Reading reading(*volume_object);
                                 min = volume_object->level_min();
                                 max = volume_object->level_max();
-                                transparency = volume_object->transparency();
+                                volume_transparency = volume_object->volume_transparency();
+                                isosurface_transparency = volume_object->isosurface_transparency();
                                 isosurface = volume_object->isosurface();
                                 isovalue = volume_object->isovalue();
                         }
 
                         m_slider_volume_levels->set_range(min, max);
 
+                        double volume_transparency_pos =
+                                std::log(volume_transparency) / std::log(VOLUME_TRANSPARENCY_COEFFICIENT);
+                        volume_transparency_pos = 0.5 * (1.0 - volume_transparency_pos);
+
                         {
-                                transparency = std::log(transparency) / std::log(VOLUME_TRANSPARENCY_COEFFICIENT);
-                                QSignalBlocker blocker(ui.slider_volume_transparency);
-                                set_slider_position(ui.slider_volume_transparency, 0.5 * (1.0 + transparency));
-                        }
-                        {
-                                QSignalBlocker blocker_check_box(ui.checkBox_isosurface);
-                                QSignalBlocker blocker_slider(ui.slider_isovalue);
+                                QSignalBlocker blocker_1(ui.checkBox_isosurface);
+                                QSignalBlocker blocker_2(ui.slider_volume_transparency);
+                                QSignalBlocker blocker_3(ui.slider_isosurface_transparency);
+                                QSignalBlocker blocker_4(ui.slider_isovalue);
+
                                 ui.checkBox_isosurface->setChecked(isosurface);
                                 ui.slider_isovalue->setEnabled(isosurface);
+                                ui.slider_isosurface_transparency->setEnabled(isosurface);
+                                ui.slider_volume_transparency->setEnabled(!isosurface);
                                 set_slider_position(ui.slider_isovalue, isovalue);
+                                set_slider_position(ui.slider_isosurface_transparency, isosurface_transparency);
+                                set_slider_position(ui.slider_volume_transparency, volume_transparency_pos);
                         }
                 },
                 *volume_object_opt);
@@ -1205,13 +1214,33 @@ void MainWindow::on_slider_volume_transparency_valueChanged(int)
                 return;
         }
 
-        double pos = 2.0 * slider_position(ui.slider_volume_transparency) - 1.0;
+        double pos = 1.0 - 2.0 * slider_position(ui.slider_volume_transparency);
         double transparency = std::pow(VOLUME_TRANSPARENCY_COEFFICIENT, pos);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
                         volume::WritingUpdates updates(volume_object.get(), {volume::Update::Parameters});
-                        volume_object->set_transparency(transparency);
+                        volume_object->set_volume_transparency(transparency);
+                },
+                *volume_object_opt);
+}
+
+void MainWindow::on_slider_isosurface_transparency_valueChanged(int)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::VolumeObject> volume_object_opt = m_model_tree->current_volume();
+        if (!volume_object_opt)
+        {
+                return;
+        }
+
+        double transparency = slider_position(ui.slider_isosurface_transparency);
+
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
+                        volume::WritingUpdates updates(volume_object.get(), {volume::Update::Parameters});
+                        volume_object->set_isosurface_transparency(transparency);
                 },
                 *volume_object_opt);
 }
