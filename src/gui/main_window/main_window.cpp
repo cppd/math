@@ -81,8 +81,8 @@ constexpr int SHADOW_ZOOM = 2;
 // Максимальное увеличение для освещений ambient, diffuse, specular.
 constexpr double MAXIMUM_COLOR_AMPLIFICATION = 3;
 
-// Максимальный коэффициент для умножения α на него.
-constexpr double VOLUME_TRANSPARENCY_COEFFICIENT = 10;
+// Максимальный коэффициент для умножения и деления α на него.
+constexpr double VOLUME_ALPHA_COEFFICIENT = 20;
 
 constexpr float NORMAL_LENGTH_MINIMUM = 0.001;
 constexpr float NORMAL_LENGTH_DEFAULT = 0.05;
@@ -1148,25 +1148,29 @@ void MainWindow::update_volume_ui(const std::optional<ObjectId>& id)
                 [&]<size_t N>(const std::shared_ptr<const volume::VolumeObject<N>>& volume_object) {
                         double min;
                         double max;
-                        double volume_transparency;
-                        double isosurface_transparency;
+                        double volume_alpha_coefficient;
+                        double isosurface_alpha;
                         bool isosurface;
                         float isovalue;
                         {
                                 volume::Reading reading(*volume_object);
                                 min = volume_object->level_min();
                                 max = volume_object->level_max();
-                                volume_transparency = volume_object->volume_transparency();
-                                isosurface_transparency = volume_object->isosurface_transparency();
+                                volume_alpha_coefficient = volume_object->volume_alpha_coefficient();
+                                isosurface_alpha = volume_object->isosurface_alpha();
                                 isosurface = volume_object->isosurface();
                                 isovalue = volume_object->isovalue();
                         }
 
                         m_slider_volume_levels->set_range(min, max);
 
-                        double volume_transparency_pos =
-                                std::log(volume_transparency) / std::log(VOLUME_TRANSPARENCY_COEFFICIENT);
-                        volume_transparency_pos = 0.5 * (1.0 - volume_transparency_pos);
+                        double isosurface_transparency_position = 1.0 - isosurface_alpha;
+
+                        volume_alpha_coefficient = std::clamp(
+                                volume_alpha_coefficient, 1.0 / VOLUME_ALPHA_COEFFICIENT, VOLUME_ALPHA_COEFFICIENT);
+                        double log_volume_alpha_coefficient =
+                                std::log(volume_alpha_coefficient) / std::log(VOLUME_ALPHA_COEFFICIENT);
+                        double volume_transparency_position = 0.5 * (1.0 - log_volume_alpha_coefficient);
 
                         {
                                 QSignalBlocker blocker_1(ui.checkBox_isosurface);
@@ -1179,8 +1183,9 @@ void MainWindow::update_volume_ui(const std::optional<ObjectId>& id)
                                 ui.slider_isosurface_transparency->setEnabled(isosurface);
                                 ui.slider_volume_transparency->setEnabled(!isosurface);
                                 set_slider_position(ui.slider_isovalue, isovalue);
-                                set_slider_position(ui.slider_isosurface_transparency, isosurface_transparency);
-                                set_slider_position(ui.slider_volume_transparency, volume_transparency_pos);
+                                set_slider_position(
+                                        ui.slider_isosurface_transparency, isosurface_transparency_position);
+                                set_slider_position(ui.slider_volume_transparency, volume_transparency_position);
                         }
                 },
                 *volume_object_opt);
@@ -1214,13 +1219,13 @@ void MainWindow::on_slider_volume_transparency_valueChanged(int)
                 return;
         }
 
-        double pos = 1.0 - 2.0 * slider_position(ui.slider_volume_transparency);
-        double transparency = std::pow(VOLUME_TRANSPARENCY_COEFFICIENT, pos);
+        double log_alpha_coefficient = 1.0 - 2.0 * slider_position(ui.slider_volume_transparency);
+        double alpha_coefficient = std::pow(VOLUME_ALPHA_COEFFICIENT, log_alpha_coefficient);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
                         volume::WritingUpdates updates(volume_object.get(), {volume::Update::Parameters});
-                        volume_object->set_volume_transparency(transparency);
+                        volume_object->set_volume_alpha_coefficient(alpha_coefficient);
                 },
                 *volume_object_opt);
 }
@@ -1235,12 +1240,12 @@ void MainWindow::on_slider_isosurface_transparency_valueChanged(int)
                 return;
         }
 
-        double transparency = slider_position(ui.slider_isosurface_transparency);
+        double alpha = 1.0 - slider_position(ui.slider_isosurface_transparency);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
                         volume::WritingUpdates updates(volume_object.get(), {volume::Update::Parameters});
-                        volume_object->set_isosurface_transparency(transparency);
+                        volume_object->set_isosurface_alpha(alpha);
                 },
                 *volume_object_opt);
 }

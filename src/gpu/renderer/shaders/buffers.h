@@ -207,8 +207,8 @@ class VolumeBuffer final
                 {
                         float window_offset;
                         float window_scale;
-                        float volume_transparency;
-                        float isosurface_transparency;
+                        float volume_alpha_coefficient;
+                        float isosurface_alpha;
                         uint32_t isosurface;
                         float isovalue;
                 };
@@ -239,8 +239,8 @@ public:
                 const vulkan::Queue& queue,
                 float window_offset,
                 float window_scale,
-                float volume_transparency,
-                float isosurface_transparency,
+                float volume_alpha_coefficient,
+                float isosurface_alpha,
                 bool isosurface,
                 float isovalue) const;
 

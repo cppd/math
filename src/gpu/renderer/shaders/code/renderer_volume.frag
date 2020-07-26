@@ -80,8 +80,8 @@ layout(set = 1, std140, binding = 1) uniform Volume
 {
         float window_offset;
         float window_scale;
-        float volume_transparency;
-        float isosurface_transparency;
+        float volume_alpha_coefficient;
+        float isosurface_alpha;
         bool isosurface;
         float isovalue;
         bool color_volume;
@@ -104,21 +104,19 @@ float scalar_volume_value(vec3 p)
         return clamp(value, 0, 1);
 }
 
-vec4 scalar_volume_multiplied_by_alpha(vec3 p)
+vec4 scalar_volume_color_value(vec3 p)
 {
         float value = scalar_volume_value(p);
         // vec4 color = texture(transfer_function, value);
         vec4 color = vec4(drawing.default_color * (drawing.light_a + drawing.light_d), value);
-        color.a = clamp(color.a * volume.volume_transparency, 0, 1);
-        color.rgb *= color.a;
+        color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
         return color;
 }
 
-vec4 color_volume_multiplied_by_alpha(vec3 p)
+vec4 color_volume_value(vec3 p)
 {
         vec4 color = texture(image, p);
-        color.a = clamp(color.a * volume.volume_transparency, 0, 1);
-        color.rgb *= color.a;
+        color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
         return color;
 }
 
@@ -315,8 +313,8 @@ void main(void)
                 {
                         float k = s * length_in_samples_r;
                         vec3 p = image_pos + k * image_direction;
-                        vec4 c = color_volume_multiplied_by_alpha(p);
-                        color += transparency * c.rgb;
+                        vec4 c = color_volume_value(p);
+                        color += (transparency * c.a) * c.rgb;
                         transparency *= 1.0 - c.a;
                         if (transparency < MIN_TRANSPARENCY)
                         {
@@ -330,8 +328,8 @@ void main(void)
                 {
                         float k = s * length_in_samples_r;
                         vec3 p = image_pos + k * image_direction;
-                        vec4 c = scalar_volume_multiplied_by_alpha(p);
-                        color += transparency * c.rgb;
+                        vec4 c = scalar_volume_color_value(p);
+                        color += (transparency * c.a) * c.rgb;
                         transparency *= 1.0 - c.a;
                         if (transparency < MIN_TRANSPARENCY)
                         {
@@ -357,9 +355,9 @@ void main(void)
                         vec3 prev_p = image_pos + prev_k * image_direction;
                         p = find_isosurface(prev_p, p, prev_sign);
 
-                        vec3 c = shade(p);
-                        color += transparency * c * (1.0 - volume.isosurface_transparency);
-                        transparency *= volume.isosurface_transparency;
+                        vec4 c = vec4(shade(p), volume.isosurface_alpha);
+                        color += (transparency * c.a) * c.rgb;
+                        transparency *= 1.0 - c.a;
                         if (transparency < MIN_TRANSPARENCY)
                         {
                                 break;

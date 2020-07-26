@@ -112,8 +112,8 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         float m_level_min = 0;
         float m_level_max = 1;
 
-        float m_volume_transparency = 1;
-        float m_isosurface_transparency = 0;
+        float m_volume_alpha_coefficient = 1;
+        float m_isosurface_alpha = 1;
 
         bool m_isosurface = false;
         float m_isovalue = 0.5f;
@@ -229,24 +229,24 @@ public:
                 m_level_max = max;
         }
 
-        float volume_transparency() const
+        float volume_alpha_coefficient() const
         {
-                return m_volume_transparency;
+                return m_volume_alpha_coefficient;
         }
 
-        void set_volume_transparency(float transparency)
+        void set_volume_alpha_coefficient(float coefficient)
         {
-                m_volume_transparency = transparency;
+                m_volume_alpha_coefficient = coefficient;
         }
 
-        float isosurface_transparency() const
+        float isosurface_alpha() const
         {
-                return m_isosurface_transparency;
+                return m_isosurface_alpha;
         }
 
-        void set_isosurface_transparency(float transparency)
+        void set_isosurface_alpha(float alpha)
         {
-                m_isosurface_transparency = transparency;
+                m_isosurface_alpha = alpha;
         }
 
         bool isosurface() const
