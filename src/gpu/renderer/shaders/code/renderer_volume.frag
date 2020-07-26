@@ -341,24 +341,32 @@ void main(void)
         }
         else
         {
-                float first_sign = sign(scalar_volume_value(image_pos) - volume.isovalue);
-                int s = 0;
-                vec3 p;
-                do
+                float prev_sign = sign(scalar_volume_value(image_pos) - volume.isovalue);
+                for (int s = 1; s < sample_count; ++s)
                 {
-                        ++s;
                         float k = s * length_in_samples_r;
-                        p = image_pos + k * image_direction;
-                } while (s <= sample_count && first_sign == sign(scalar_volume_value(p) - volume.isovalue));
-                if (s > sample_count)
-                {
-                        discard;
+                        vec3 p = image_pos + k * image_direction;
+
+                        float next_sign = sign(scalar_volume_value(p) - volume.isovalue);
+                        if (next_sign == prev_sign)
+                        {
+                                continue;
+                        }
+
+                        float prev_k = (s - 1) * length_in_samples_r;
+                        vec3 prev_p = image_pos + prev_k * image_direction;
+                        p = find_isosurface(prev_p, p, prev_sign);
+
+                        vec3 c = shade(p);
+                        color += transparency * c * (1.0 - volume.isosurface_transparency);
+                        transparency *= volume.isosurface_transparency;
+                        if (transparency < MIN_TRANSPARENCY)
+                        {
+                                break;
+                        }
+
+                        prev_sign = next_sign;
                 }
-                float prev_k = (s - 1) * length_in_samples_r;
-                vec3 prev_p = image_pos + prev_k * image_direction;
-                vec3 surface = find_isosurface(prev_p, p, first_sign);
-                transparency = 0;
-                color = shade(surface);
         }
 
         // srcColorBlendFactor = VK_BLEND_FACTOR_ONE
