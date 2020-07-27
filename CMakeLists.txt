@@ -27,7 +27,8 @@ set(compilers "GNU;Clang")
 set(gcc_minimal_version "10")
 set(clang_minimal_version "10")
 
-set(extensions_shaders "comp;frag;geom;vert;tesc;tese;glsl")
+set(extensions_shaders "comp;frag;geom;vert;tesc;tese")
+set(extensions_shaders_include "glsl")
 set(extensions_all "h;c;cpp;ui" ${extensions_shaders})
 set(extensions_binary "ttf")
 
@@ -153,7 +154,10 @@ endfunction()
 
 function(AddIncludeFiles FILE_TYPE)
 
-        cmake_parse_arguments(PARSE_ARGV 1 ARG "" "HEADER_FILE;OUTPUT_EXTENSION" "EXTENSIONS;SOURCE;MACROS")
+        cmake_parse_arguments(PARSE_ARGV 1 ARG
+                ""
+                "HEADER_FILE;OUTPUT_EXTENSION"
+                "EXTENSIONS;EXTENSIONS_INCLUDE;SOURCE;MACROS")
         if (NOT ARG_OUTPUT_EXTENSION)
                 message(FATAL_ERROR "No output extension")
         endif()
@@ -175,6 +179,9 @@ function(AddIncludeFiles FILE_TYPE)
                 endif()
                 if (ARG_MACROS)
                         message(FATAL_ERROR "Binary file macros are not supported")
+                endif()
+                if (ARG_EXTENSIONS_INCLUDE)
+                        message(FATAL_ERROR "Binary file include extensions are not supported")
                 endif()
                 set(BINARY_FILES TRUE)
                 set(custom_target_prefix "custom_target_binary_files")
@@ -231,41 +238,72 @@ function(AddIncludeFiles FILE_TYPE)
                         if (BINARY_FILES)
 
                                 add_custom_command(
-                                        OUTPUT  "${output_file}"
-                                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "bin"
-                                                        "${long_file_name}" "${output_file}"
-                                        DEPENDS "${long_file_name}" "${PROJECT_BINARY_DIR}/create_str"
-                                        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+                                        OUTPUT
+                                                "${output_file}"
+                                        COMMAND
+                                                "${PROJECT_BINARY_DIR}/create_str"
+                                                "bin" "${long_file_name}" "${output_file}"
+                                        DEPENDS
+                                                "${long_file_name}"
+                                                "${PROJECT_BINARY_DIR}/create_str"
+                                        WORKING_DIRECTORY
+                                                "${PROJECT_BINARY_DIR}"
                                         VERBATIM
                                 )
 
                         elseif (VULKAN_SHADERS)
 
-                                get_filename_component(file_ext "${long_file_name}" EXT)
-                                string(RANDOM LENGTH 10 random_string_glsl)
-                                set(output_glsl "${output_directory}/${file_name}_${random_string_glsl}${file_ext}")
+                                unset(include_directory)
+                                unset(include_files)
+                                if (ARG_EXTENSIONS_INCLUDE)
+                                        get_filename_component(include_directory "${long_file_name}" DIRECTORY)
+                                        unset(globbing_expressions_include)
+                                        foreach(ext ${ARG_EXTENSIONS_INCLUDE})
+                                                list(APPEND globbing_expressions_include "${include_directory}/*.${ext}")
+                                        endforeach()
+                                        file(GLOB_RECURSE include_files LIST_DIRECTORIES false ${globbing_expressions_include})
+                                endif()
 
+                                unset(header)
                                 if (ARG_HEADER_FILE)
                                         set(header "${PROJECT_SOURCE_DIR}/${ARG_HEADER_FILE}")
-                                else()
-                                        unset(header)
                                 endif()
 
                                 unset(macro_list)
                                 foreach(macro ${ARG_MACROS})
                                         list(APPEND macro_list "-D${macro}")
                                 endforeach()
+
+                                get_filename_component(file_ext "${long_file_name}" EXT)
+                                string(RANDOM LENGTH 10 random_string_glsl)
+                                set(output_glsl "${output_directory}/${file_name}_${random_string_glsl}${file_ext}")
+
                                 string(RANDOM LENGTH 10 random_string_sprv)
                                 set(output_sprv "${output_directory}/${file_name}_${random_string_sprv}.sprv")
+
                                 add_custom_command(
-                                        OUTPUT  "${output_file}"
-                                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "cat"
-                                                        ${header} "${long_file_name}" "${output_glsl}"
-                                        COMMAND "glslangValidator" "-V" ${macro_list} "${output_glsl}" "-o" "${output_sprv}"
-                                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "spr"
-                                                        "${output_sprv}" "${output_file}"
-                                        DEPENDS "${header}" "${long_file_name}" "${PROJECT_BINARY_DIR}/create_str"
-                                        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+                                        OUTPUT
+                                                "${output_file}"
+                                        COMMAND
+                                                "${PROJECT_BINARY_DIR}/create_str"
+                                                "cat" ${header} "${long_file_name}" "${output_glsl}"
+                                        COMMAND
+                                                "glslangValidator"
+                                                "-I${include_directory}"
+                                                "-V"
+                                                ${macro_list}
+                                                "${output_glsl}"
+                                                "-o" "${output_sprv}"
+                                        COMMAND
+                                                "${PROJECT_BINARY_DIR}/create_str"
+                                                "spr" "${output_sprv}" "${output_file}"
+                                        DEPENDS
+                                                "${header}"
+                                                "${long_file_name}"
+                                                "${PROJECT_BINARY_DIR}/create_str"
+                                                ${include_files}
+                                        WORKING_DIRECTORY
+                                                "${PROJECT_BINARY_DIR}"
                                         VERBATIM
                                 )
 
@@ -362,7 +400,8 @@ AddIncludeFiles(VULKAN_SHADERS
                                 "src/gpu/pencil_sketch/shaders/code"
                                 "src/gpu/renderer/shaders/code"
                                 "src/gpu/text_writer/shaders/code"
-                        EXTENSIONS ${extensions_shaders})
+                        EXTENSIONS ${extensions_shaders}
+                        EXTENSIONS_INCLUDE ${extensions_shaders_include})
 
 ##################################################
 
