@@ -29,7 +29,7 @@ set(clang_minimal_version "10")
 
 set(extensions_shaders "comp;frag;geom;vert;tesc;tese")
 set(extensions_shaders_include "glsl")
-set(extensions_all "h;c;cpp;ui" ${extensions_shaders})
+set(extensions_all "h;c;cpp;ui" ${extensions_shaders} ${extensions_shaders_include})
 set(extensions_binary "ttf")
 
 set(include_output_directory "include")
