@@ -22,8 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(early_fragment_tests) in;
 
-layout(set = 0, binding = 2, r32ui) writeonly uniform uimage2D object_image;
-
 layout(location = 0) out vec4 color;
 
 vec3 fog(vec3 fog_color, vec3 fragment_color)

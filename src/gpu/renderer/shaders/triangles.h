@@ -31,44 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class TrianglesSharedMemory final
-{
-        static constexpr int SET_NUMBER = 0;
-
-        static constexpr int MATRICES_BINDING = 0;
-        static constexpr int DRAWING_BINDING = 1;
-        static constexpr int SHADOW_BINDING = 2;
-        static constexpr int OBJECTS_BINDING = 3;
-
-        vulkan::Descriptors m_descriptors;
-
-public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
-
-        TrianglesSharedMemory(
-                const vulkan::Device& device,
-                VkDescriptorSetLayout descriptor_set_layout,
-                const vulkan::Buffer& matrices,
-                const vulkan::Buffer& drawing);
-
-        TrianglesSharedMemory(const TrianglesSharedMemory&) = delete;
-        TrianglesSharedMemory& operator=(const TrianglesSharedMemory&) = delete;
-        TrianglesSharedMemory& operator=(TrianglesSharedMemory&&) = delete;
-
-        TrianglesSharedMemory(TrianglesSharedMemory&&) = default;
-        ~TrianglesSharedMemory() = default;
-
-        //
-
-        const VkDescriptorSet& descriptor_set() const;
-
-        //
-
-        void set_shadow_texture(VkSampler sampler, const vulkan::DepthImageWithMemory* shadow_texture) const;
-        void set_object_image(const vulkan::ImageWithMemory* storage_image) const;
-};
-
 class TrianglesMeshMemory final
 {
         static constexpr int SET_NUMBER = 1;
@@ -133,6 +95,8 @@ public:
                 const Region<2, int>& viewport) const;
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings();
+
         VkDescriptorSetLayout descriptor_set_layout_mesh() const;
         VkDescriptorSetLayout descriptor_set_layout_material() const;
 

@@ -31,42 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class PointsSharedMemory final
-{
-        static constexpr int SET_NUMBER = 0;
-
-        static constexpr int MATRICES_BINDING = 0;
-        static constexpr int DRAWING_BINDING = 1;
-        static constexpr int OBJECTS_BINDING = 2;
-
-        vulkan::Descriptors m_descriptors;
-
-public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
-
-        PointsSharedMemory(
-                const vulkan::Device& device,
-                VkDescriptorSetLayout descriptor_set_layout,
-                const vulkan::Buffer& matrices,
-                const vulkan::Buffer& drawing);
-
-        PointsSharedMemory(const PointsSharedMemory&) = delete;
-        PointsSharedMemory& operator=(const PointsSharedMemory&) = delete;
-        PointsSharedMemory& operator=(PointsSharedMemory&&) = delete;
-
-        PointsSharedMemory(PointsSharedMemory&&) = default;
-        ~PointsSharedMemory() = default;
-
-        //
-
-        const VkDescriptorSet& descriptor_set() const;
-
-        //
-
-        void set_object_image(const vulkan::ImageWithMemory* storage_image) const;
-};
-
 class PointsMeshMemory final
 {
         static constexpr int SET_NUMBER = 1;
@@ -110,6 +74,8 @@ public:
                 const Region<2, int>& viewport) const;
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings();
+
         VkDescriptorSetLayout descriptor_set_layout_mesh() const;
 
         VkPipelineLayout pipeline_layout() const;

@@ -22,9 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(early_fragment_tests) in;
 
-layout(binding = 2) uniform sampler2D shadow_texture;
-layout(binding = 3, r32ui) writeonly uniform uimage2D object_image;
-
 // Для каждой группы треугольников с одним материалом отдельно задаётся этот материал и его текстуры
 layout(std140, set = 2, binding = 0) uniform Material
 {

@@ -28,37 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class TrianglesDepthSharedMemory final
-{
-        static constexpr int SET_NUMBER = 0;
-
-        static constexpr int MATRICES_BINDING = 0;
-        static constexpr int DRAWING_BINDING = 1;
-
-        vulkan::Descriptors m_descriptors;
-
-public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
-
-        TrianglesDepthSharedMemory(
-                const vulkan::Device& device,
-                VkDescriptorSetLayout descriptor_set_layout,
-                const vulkan::Buffer& matrices,
-                const vulkan::Buffer& drawing);
-
-        TrianglesDepthSharedMemory(const TrianglesDepthSharedMemory&) = delete;
-        TrianglesDepthSharedMemory& operator=(const TrianglesDepthSharedMemory&) = delete;
-        TrianglesDepthSharedMemory& operator=(TrianglesDepthSharedMemory&&) = delete;
-
-        TrianglesDepthSharedMemory(TrianglesDepthSharedMemory&&) = default;
-        ~TrianglesDepthSharedMemory() = default;
-
-        //
-
-        const VkDescriptorSet& descriptor_set() const;
-};
-
 class TrianglesDepthMeshMemory final
 {
         static constexpr int SET_NUMBER = 1;
@@ -99,6 +68,8 @@ public:
                 const Region<2, int>& viewport) const;
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings();
+
         VkDescriptorSetLayout descriptor_set_layout_mesh() const;
 
         VkPipelineLayout pipeline_layout() const;

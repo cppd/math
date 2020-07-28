@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "triangle_lines.h"
 
+#include "common.h"
 #include "vertex_triangles.h"
 
 #include "code/code.h"
@@ -26,78 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> TriangleLinesSharedMemory::descriptor_set_layout_bindings()
-{
-        std::vector<VkDescriptorSetLayoutBinding> bindings;
-
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = MATRICES_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT;
-
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = DRAWING_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                bindings.push_back(b);
-        }
-
-        return bindings;
-}
-
-TriangleLinesSharedMemory::TriangleLinesSharedMemory(
-        const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout,
-        const vulkan::Buffer& matrices,
-        const vulkan::Buffer& drawing)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
-{
-        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
-        std::vector<uint32_t> bindings;
-
-        {
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = matrices;
-                buffer_info.offset = 0;
-                buffer_info.range = matrices.size();
-
-                infos.emplace_back(buffer_info);
-
-                bindings.push_back(MATRICES_BINDING);
-        }
-        {
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = drawing;
-                buffer_info.offset = 0;
-                buffer_info.range = drawing.size();
-
-                infos.emplace_back(buffer_info);
-
-                bindings.push_back(DRAWING_BINDING);
-        }
-
-        m_descriptors.update_descriptor_set(0, bindings, infos);
-}
-
-unsigned TriangleLinesSharedMemory::set_number()
-{
-        return SET_NUMBER;
-}
-
-const VkDescriptorSet& TriangleLinesSharedMemory::descriptor_set() const
-{
-        return m_descriptors.descriptor_set(0);
-}
-
-//
-
 std::vector<VkDescriptorSetLayoutBinding> TriangleLinesMeshMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -160,17 +89,22 @@ unsigned TriangleLinesMeshMemory::set_number()
 
 //
 
+std::vector<VkDescriptorSetLayoutBinding> TriangleLinesProgram::descriptor_set_layout_shared_bindings()
+{
+        return CommonMemory::descriptor_set_layout_bindings(
+                VK_SHADER_STAGE_GEOMETRY_BIT, VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, 0);
+}
+
 TriangleLinesProgram::TriangleLinesProgram(const vulkan::Device& device)
         : m_device(device),
-          m_descriptor_set_layout_shared(vulkan::create_descriptor_set_layout(
-                  device,
-                  TriangleLinesSharedMemory::descriptor_set_layout_bindings())),
+          m_descriptor_set_layout_shared(
+                  vulkan::create_descriptor_set_layout(device, descriptor_set_layout_shared_bindings())),
           m_descriptor_set_layout_mesh(vulkan::create_descriptor_set_layout(
                   device,
                   TriangleLinesMeshMemory::descriptor_set_layout_bindings())),
           m_pipeline_layout(vulkan::create_pipeline_layout(
                   device,
-                  {TriangleLinesSharedMemory::set_number(), TriangleLinesMeshMemory::set_number()},
+                  {CommonMemory::set_number(), TriangleLinesMeshMemory::set_number()},
                   {m_descriptor_set_layout_shared, m_descriptor_set_layout_mesh})),
           m_vertex_shader(m_device, code_triangle_lines_vert(), "main"),
           m_geometry_shader(m_device, code_triangle_lines_geom(), "main"),

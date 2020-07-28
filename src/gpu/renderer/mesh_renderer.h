@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_object.h"
 
 #include "shaders/buffers.h"
+#include "shaders/common.h"
 #include "shaders/normals.h"
 #include "shaders/points.h"
 #include "shaders/triangle_lines.h"
@@ -45,19 +46,19 @@ class MeshRenderer
         const DepthBuffers* m_depth_buffers = nullptr;
 
         TrianglesProgram m_triangles_program;
-        TrianglesSharedMemory m_triangles_memory;
+        CommonMemory m_triangles_common_memory;
 
         TriangleLinesProgram m_triangle_lines_program;
-        TriangleLinesSharedMemory m_triangle_lines_memory;
+        CommonMemory m_triangle_lines_common_memory;
 
         NormalsProgram m_normals_program;
-        NormalsSharedMemory m_normals_memory;
+        CommonMemory m_normals_common_memory;
 
         TrianglesDepthProgram m_triangles_depth_program;
-        TrianglesDepthSharedMemory m_triangles_depth_memory;
+        CommonMemory m_triangles_depth_common_memory;
 
         PointsProgram m_points_program;
-        PointsSharedMemory m_points_memory;
+        CommonMemory m_points_common_memory;
 
         std::optional<vulkan::Pipeline> m_render_triangles_pipeline;
         std::optional<vulkan::Pipeline> m_render_triangle_lines_pipeline;

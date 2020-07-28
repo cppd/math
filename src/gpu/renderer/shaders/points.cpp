@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "points.h"
 
+#include "common.h"
 #include "vertex_points.h"
 
 #include "code/code.h"
@@ -27,100 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> PointsSharedMemory::descriptor_set_layout_bindings()
-{
-        std::vector<VkDescriptorSetLayoutBinding> bindings;
-
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = MATRICES_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = DRAWING_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = OBJECTS_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
-
-                bindings.push_back(b);
-        }
-
-        return bindings;
-}
-
-PointsSharedMemory::PointsSharedMemory(
-        const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout,
-        const vulkan::Buffer& matrices,
-        const vulkan::Buffer& drawing)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
-{
-        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
-        std::vector<uint32_t> bindings;
-
-        {
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = matrices;
-                buffer_info.offset = 0;
-                buffer_info.range = matrices.size();
-
-                infos.emplace_back(buffer_info);
-
-                bindings.push_back(MATRICES_BINDING);
-        }
-        {
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = drawing;
-                buffer_info.offset = 0;
-                buffer_info.range = drawing.size();
-
-                infos.emplace_back(buffer_info);
-
-                bindings.push_back(DRAWING_BINDING);
-        }
-
-        m_descriptors.update_descriptor_set(0, bindings, infos);
-}
-
-unsigned PointsSharedMemory::set_number()
-{
-        return SET_NUMBER;
-}
-
-const VkDescriptorSet& PointsSharedMemory::descriptor_set() const
-{
-        return m_descriptors.descriptor_set(0);
-}
-
-void PointsSharedMemory::set_object_image(const vulkan::ImageWithMemory* storage_image) const
-{
-        ASSERT(storage_image && storage_image->format() == VK_FORMAT_R32_UINT);
-        ASSERT(storage_image && (storage_image->usage() & VK_IMAGE_USAGE_STORAGE_BIT));
-
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = storage_image->image_view();
-
-        m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
-}
-
-//
-
 std::vector<VkDescriptorSetLayoutBinding> PointsMeshMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -183,15 +90,22 @@ unsigned PointsMeshMemory::set_number()
 
 //
 
+std::vector<VkDescriptorSetLayoutBinding> PointsProgram::descriptor_set_layout_shared_bindings()
+{
+        return CommonMemory::descriptor_set_layout_bindings(
+                VK_SHADER_STAGE_VERTEX_BIT, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+                VK_SHADER_STAGE_FRAGMENT_BIT);
+}
+
 PointsProgram::PointsProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout_shared(
-                  vulkan::create_descriptor_set_layout(device, PointsSharedMemory::descriptor_set_layout_bindings())),
+                  vulkan::create_descriptor_set_layout(device, descriptor_set_layout_shared_bindings())),
           m_descriptor_set_layout_mesh(
                   vulkan::create_descriptor_set_layout(device, PointsMeshMemory::descriptor_set_layout_bindings())),
           m_pipeline_layout(vulkan::create_pipeline_layout(
                   device,
-                  {PointsSharedMemory::set_number(), PointsMeshMemory::set_number()},
+                  {CommonMemory::set_number(), PointsMeshMemory::set_number()},
                   {m_descriptor_set_layout_shared, m_descriptor_set_layout_mesh})),
           m_vertex_shader_0d(m_device, code_points_0d_vert(), "main"),
           m_vertex_shader_1d(m_device, code_points_1d_vert(), "main"),

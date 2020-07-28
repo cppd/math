@@ -49,3 +49,6 @@ layout(set = 0, binding = 1, std140) uniform Drawing
         vec2 viewport_factor;
 }
 drawing;
+
+layout(set = 0, binding = 2) uniform sampler2D shadow_texture;
+layout(set = 0, binding = 3, r32ui) uniform writeonly uimage2D object_image;

@@ -28,36 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class TriangleLinesSharedMemory final
-{
-        static constexpr int SET_NUMBER = 0;
-        static constexpr int MATRICES_BINDING = 0;
-        static constexpr int DRAWING_BINDING = 1;
-
-        vulkan::Descriptors m_descriptors;
-
-public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
-
-        TriangleLinesSharedMemory(
-                const vulkan::Device& device,
-                VkDescriptorSetLayout descriptor_set_layout,
-                const vulkan::Buffer& matrices,
-                const vulkan::Buffer& drawing);
-
-        TriangleLinesSharedMemory(const TriangleLinesSharedMemory&) = delete;
-        TriangleLinesSharedMemory& operator=(const TriangleLinesSharedMemory&) = delete;
-        TriangleLinesSharedMemory& operator=(TriangleLinesSharedMemory&&) = delete;
-
-        TriangleLinesSharedMemory(TriangleLinesSharedMemory&&) = default;
-        ~TriangleLinesSharedMemory() = default;
-
-        //
-
-        const VkDescriptorSet& descriptor_set() const;
-};
-
 class TriangleLinesMeshMemory final
 {
         static constexpr int SET_NUMBER = 1;
@@ -101,6 +71,8 @@ public:
                 const Region<2, int>& viewport) const;
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings();
+
         VkDescriptorSetLayout descriptor_set_layout_mesh() const;
 
         VkPipelineLayout pipeline_layout() const;

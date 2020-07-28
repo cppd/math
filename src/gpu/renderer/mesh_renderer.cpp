@@ -33,37 +33,42 @@ MeshRenderer::MeshRenderer(
           m_sample_shading(sample_shading),
           //
           m_triangles_program(device),
-          m_triangles_memory(
+          m_triangles_common_memory(
                   device,
                   m_triangles_program.descriptor_set_layout_shared(),
+                  m_triangles_program.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
                   buffers.drawing_buffer()),
           //
           m_triangle_lines_program(device),
-          m_triangle_lines_memory(
+          m_triangle_lines_common_memory(
                   device,
                   m_triangle_lines_program.descriptor_set_layout_shared(),
+                  m_triangle_lines_program.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
                   buffers.drawing_buffer()),
           //
           m_normals_program(device),
-          m_normals_memory(
+          m_normals_common_memory(
                   device,
                   m_normals_program.descriptor_set_layout_shared(),
+                  m_normals_program.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
                   buffers.drawing_buffer()),
           //
           m_triangles_depth_program(device),
-          m_triangles_depth_memory(
+          m_triangles_depth_common_memory(
                   device,
                   m_triangles_depth_program.descriptor_set_layout_shared(),
+                  m_triangles_depth_program.descriptor_set_layout_shared_bindings(),
                   buffers.shadow_matrices_buffer(),
                   buffers.drawing_buffer()),
           //
           m_points_program(device),
-          m_points_memory(
+          m_points_common_memory(
                   device,
                   m_points_program.descriptor_set_layout_shared(),
+                  m_points_program.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
                   buffers.drawing_buffer()),
           //
@@ -83,8 +88,8 @@ void MeshRenderer::create_render_buffers(
 
         m_render_buffers = render_buffers;
 
-        m_triangles_memory.set_object_image(object_image);
-        m_points_memory.set_object_image(object_image);
+        m_triangles_common_memory.set_object_image(object_image);
+        m_points_common_memory.set_object_image(object_image);
 
         m_render_triangles_pipeline = m_triangles_program.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport);
@@ -121,7 +126,7 @@ void MeshRenderer::create_depth_buffers(const DepthBuffers* depth_buffers)
 
         m_depth_buffers = depth_buffers;
 
-        m_triangles_memory.set_shadow_texture(m_shadow_sampler, depth_buffers->texture(0));
+        m_triangles_common_memory.set_shadow_texture(m_shadow_sampler, depth_buffers->texture(0));
 
         m_render_triangles_depth_pipeline = m_triangles_depth_program.create_pipeline(
                 depth_buffers->render_pass(), depth_buffers->sample_count(),
@@ -195,7 +200,7 @@ void MeshRenderer::draw_commands(
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_program.pipeline_layout(),
-                        TrianglesSharedMemory::set_number(), 1 /*set count*/, &m_triangles_memory.descriptor_set(), 0,
+                        CommonMemory::set_number(), 1 /*set count*/, &m_triangles_common_memory.descriptor_set(), 0,
                         nullptr);
 
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
@@ -224,8 +229,8 @@ void MeshRenderer::draw_commands(
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_depth_program.pipeline_layout(),
-                        TrianglesDepthSharedMemory::set_number(), 1 /*set count*/,
-                        &m_triangles_depth_memory.descriptor_set(), 0, nullptr);
+                        CommonMemory::set_number(), 1 /*set count*/, &m_triangles_depth_common_memory.descriptor_set(),
+                        0, nullptr);
 
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
                         vkCmdBindDescriptorSets(
@@ -248,7 +253,7 @@ void MeshRenderer::draw_commands(
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_program.pipeline_layout(),
-                        PointsSharedMemory::set_number(), 1 /*set count*/, &m_points_memory.descriptor_set(), 0,
+                        CommonMemory::set_number(), 1 /*set count*/, &m_points_common_memory.descriptor_set(), 0,
                         nullptr);
 
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
@@ -271,7 +276,7 @@ void MeshRenderer::draw_commands(
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_program.pipeline_layout(),
-                        PointsSharedMemory::set_number(), 1 /*set count*/, &m_points_memory.descriptor_set(), 0,
+                        CommonMemory::set_number(), 1 /*set count*/, &m_points_common_memory.descriptor_set(), 0,
                         nullptr);
 
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
@@ -294,8 +299,8 @@ void MeshRenderer::draw_commands(
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangle_lines_program.pipeline_layout(),
-                        TriangleLinesSharedMemory::set_number(), 1 /*set count*/,
-                        &m_triangle_lines_memory.descriptor_set(), 0, nullptr);
+                        CommonMemory::set_number(), 1 /*set count*/, &m_triangle_lines_common_memory.descriptor_set(),
+                        0, nullptr);
 
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
                         vkCmdBindDescriptorSets(
@@ -318,7 +323,7 @@ void MeshRenderer::draw_commands(
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_normals_program.pipeline_layout(),
-                        NormalsSharedMemory::set_number(), 1 /*set count*/, &m_normals_memory.descriptor_set(), 0,
+                        CommonMemory::set_number(), 1 /*set count*/, &m_normals_common_memory.descriptor_set(), 0,
                         nullptr);
 
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
