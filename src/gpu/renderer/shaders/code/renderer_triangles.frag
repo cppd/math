@@ -17,36 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
-layout(early_fragment_tests) in;
+#extension GL_GOOGLE_include_directive : enable
+#include "common.glsl"
 
-// Общие данные для всех треугольников всех объектов
-layout(std140, binding = 1) uniform Drawing
-{
-        vec3 default_color;
-        vec3 default_specular_color;
-        vec3 wireframe_color;
-        vec3 background_color;
-        float normal_length;
-        vec3 normal_color_positive;
-        vec3 normal_color_negative;
-        float default_ns;
-        vec3 light_a;
-        vec3 light_d;
-        vec3 light_s;
-        bool show_materials;
-        bool show_wireframe;
-        bool show_shadow;
-        bool show_fog;
-        bool show_smooth;
-        vec3 clip_plane_color;
-        vec4 clip_plane_equation;
-        bool clip_plane_enabled;
-        vec3 direction_to_light;
-        vec3 direction_to_camera;
-        vec2 viewport_center;
-        vec2 viewport_factor;
-}
-drawing;
+layout(early_fragment_tests) in;
 
 layout(binding = 2) uniform sampler2D shadow_texture;
 layout(binding = 3, r32ui) writeonly uniform uimage2D object_image;

@@ -17,42 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
+#extension GL_GOOGLE_include_directive : enable
+#include "common.glsl"
+
 layout(location = 0) in vec3 position;
-
-layout(std140, set = 0, binding = 0) uniform Matrices
-{
-        mat4 vp_matrix;
-        mat4 shadow_vp_texture_matrix;
-}
-matrices;
-
-layout(std140, set = 0, binding = 1) uniform Drawing
-{
-        vec3 default_color;
-        vec3 default_specular_color;
-        vec3 wireframe_color;
-        vec3 background_color;
-        float normal_length;
-        vec3 normal_color_positive;
-        vec3 normal_color_negative;
-        float default_ns;
-        vec3 light_a;
-        vec3 light_d;
-        vec3 light_s;
-        bool show_materials;
-        bool show_wireframe;
-        bool show_shadow;
-        bool show_fog;
-        bool show_smooth;
-        vec3 clip_plane_color;
-        vec4 clip_plane_equation;
-        bool clip_plane_enabled;
-        vec3 direction_to_light;
-        vec3 direction_to_camera;
-        vec2 viewport_center;
-        vec2 viewport_factor;
-}
-drawing;
 
 layout(std140, set = 1, binding = 0) uniform Coordinates
 {
