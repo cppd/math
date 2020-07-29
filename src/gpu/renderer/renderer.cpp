@@ -459,11 +459,12 @@ class Impl final : public Renderer
                         if (!ptr)
                         {
                                 ptr = m_mesh_storage.insert(
-                                        object.id(), create_mesh_object(
-                                                             m_device, m_graphics_command_pool, m_graphics_queue,
-                                                             m_transfer_command_pool, m_transfer_queue,
-                                                             m_mesh_renderer.mesh_layouts(),
-                                                             m_mesh_renderer.material_descriptor_sets_function()));
+                                        object.id(),
+                                        create_mesh_object(
+                                                m_device, m_graphics_command_pool, m_graphics_queue,
+                                                m_transfer_command_pool, m_transfer_queue,
+                                                m_mesh_renderer.mesh_layouts(), m_mesh_renderer.material_layouts(),
+                                                m_mesh_renderer.texture_sampler()));
 
                                 created = true;
                         }

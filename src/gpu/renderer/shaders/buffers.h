@@ -139,21 +139,8 @@ public:
                 const std::unordered_set<uint32_t>& family_indices,
                 const Material& material);
 
-        VkBuffer buffer() const;
-        VkDeviceSize buffer_size() const;
+        const vulkan::Buffer& buffer() const;
 };
-
-struct MaterialInfo final
-{
-        VkBuffer buffer;
-        VkDeviceSize buffer_size;
-        VkImageView texture_Ka;
-        VkImageView texture_Kd;
-        VkImageView texture_Ks;
-};
-
-using MaterialDescriptorSetsFunction =
-        std::function<std::vector<vulkan::Descriptors>(const std::vector<MaterialInfo>& materials)>;
 
 //
 

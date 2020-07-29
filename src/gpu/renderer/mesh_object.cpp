@@ -17,7 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_object.h"
 
+#include "shaders/buffers.h"
 #include "shaders/common.h"
+#include "shaders/triangles.h"
 #include "shaders/vertex_points.h"
 #include "shaders/vertex_triangles.h"
 
@@ -419,7 +421,7 @@ std::vector<MaterialBuffer> load_materials(
         return buffers;
 }
 
-std::vector<MaterialInfo> materials_info(
+std::vector<TrianglesMaterialMemory::MaterialInfo> materials_info(
         const mesh::Mesh<3>& mesh,
         const std::vector<vulkan::ImageWithMemory>& textures,
         const std::vector<MaterialBuffer>& material_buffers)
@@ -432,7 +434,7 @@ std::vector<MaterialInfo> materials_info(
 
         const VkImageView no_texture = textures.back().image_view();
 
-        std::vector<MaterialInfo> materials;
+        std::vector<TrianglesMaterialMemory::MaterialInfo> materials;
         materials.reserve(mesh.materials.size() + 1);
 
         for (unsigned i = 0; i < mesh.materials.size(); ++i)
@@ -443,17 +445,17 @@ std::vector<MaterialInfo> materials_info(
                 ASSERT(mesh_material.map_Kd < static_cast<int>(textures.size()) - 1);
                 ASSERT(mesh_material.map_Ks < static_cast<int>(textures.size()) - 1);
 
-                MaterialInfo& m = materials.emplace_back();
+                TrianglesMaterialMemory::MaterialInfo& m = materials.emplace_back();
                 m.buffer = material_buffers[i].buffer();
-                m.buffer_size = material_buffers[i].buffer_size();
+                m.buffer_size = material_buffers[i].buffer().size();
                 m.texture_Ka = (mesh_material.map_Ka >= 0) ? textures[mesh_material.map_Ka].image_view() : no_texture;
                 m.texture_Kd = (mesh_material.map_Kd >= 0) ? textures[mesh_material.map_Kd].image_view() : no_texture;
                 m.texture_Ks = (mesh_material.map_Ks >= 0) ? textures[mesh_material.map_Ks].image_view() : no_texture;
         }
 
-        MaterialInfo& m = materials.emplace_back();
+        TrianglesMaterialMemory::MaterialInfo& m = materials.emplace_back();
         m.buffer = material_buffers.back().buffer();
-        m.buffer_size = material_buffers.back().buffer_size();
+        m.buffer_size = material_buffers.back().buffer().size();
         m.texture_Ka = no_texture;
         m.texture_Kd = no_texture;
         m.texture_Ks = no_texture;
@@ -486,7 +488,8 @@ class Impl final : public MeshObject
         std::vector<vulkan::ImageWithMemory> m_textures;
         std::vector<MaterialBuffer> m_material_buffers;
         std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_material_descriptor_sets;
-        MaterialDescriptorSetsFunction m_material_descriptor_sets_function;
+        std::vector<vulkan::DescriptorSetLayoutAndBindings> m_material_layouts;
+        VkSampler m_texture_sampler;
 
         std::unique_ptr<vulkan::BufferWithMemory> m_lines_vertex_buffer;
         unsigned m_lines_vertex_count = 0;
@@ -518,15 +521,18 @@ class Impl final : public MeshObject
                 return iter->second.descriptor_set(0);
         }
 
-        void create_material_descriptor_sets(const std::vector<MaterialInfo>& material_info)
+        void create_material_descriptor_sets(const std::vector<TrianglesMaterialMemory::MaterialInfo>& material_info)
         {
                 m_material_descriptor_sets.clear();
                 if (material_info.empty())
                 {
                         return;
                 }
-                for (vulkan::Descriptors& sets : m_material_descriptor_sets_function(material_info))
+                for (const vulkan::DescriptorSetLayoutAndBindings& layout : m_material_layouts)
                 {
+                        vulkan::Descriptors sets = TrianglesMaterialMemory::create(
+                                m_device, m_texture_sampler, layout.descriptor_set_layout,
+                                layout.descriptor_set_layout_bindings, material_info);
                         ASSERT(sets.descriptor_set_count() == material_info.size());
                         m_material_descriptor_sets.emplace(sets.descriptor_set_layout(), std::move(sets));
                 }
@@ -772,13 +778,15 @@ public:
              const vulkan::CommandPool& /*transfer_command_pool*/,
              const vulkan::Queue& /*transfer_queue*/,
              const std::vector<vulkan::DescriptorSetLayoutAndBindings>& mesh_layouts,
-             const MaterialDescriptorSetsFunction& material_descriptor_sets_function)
+             const std::vector<vulkan::DescriptorSetLayoutAndBindings>& material_layouts,
+             VkSampler texture_sampler)
                 : m_device(device),
                   m_graphics_command_pool(graphics_command_pool),
                   m_graphics_queue(graphics_queue),
                   m_coordinates_buffer(device, {m_graphics_queue.family_index()}),
                   m_mesh_layouts(mesh_layouts),
-                  m_material_descriptor_sets_function(material_descriptor_sets_function)
+                  m_material_layouts(material_layouts),
+                  m_texture_sampler(texture_sampler)
         {
                 create_mesh_descriptor_sets();
         }
@@ -792,10 +800,11 @@ std::unique_ptr<MeshObject> create_mesh_object(
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
         const std::vector<vulkan::DescriptorSetLayoutAndBindings>& mesh_layouts,
-        const MaterialDescriptorSetsFunction& material_descriptor_sets_function)
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& material_layouts,
+        VkSampler texture_sampler)
 {
         return std::make_unique<Impl>(
                 device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, mesh_layouts,
-                material_descriptor_sets_function);
+                material_layouts, texture_sampler);
 }
 }

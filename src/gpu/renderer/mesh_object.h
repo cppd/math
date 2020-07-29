@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "shaders/buffers.h"
-
 #include <src/model/mesh_object.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
@@ -71,5 +69,6 @@ std::unique_ptr<MeshObject> create_mesh_object(
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
         const std::vector<vulkan::DescriptorSetLayoutAndBindings>& mesh_layouts,
-        const MaterialDescriptorSetsFunction& material_descriptor_sets_function);
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& material_layouts,
+        VkSampler texture_sampler);
 }

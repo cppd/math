@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "depth_buffer.h"
 #include "mesh_object.h"
 
-#include "shaders/buffers.h"
 #include "shaders/common.h"
 #include "shaders/normals.h"
 #include "shaders/points.h"
@@ -88,7 +87,8 @@ public:
                 const ShaderBuffers& buffers);
 
         std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts() const;
-        MaterialDescriptorSetsFunction material_descriptor_sets_function() const;
+        std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts() const;
+        VkSampler texture_sampler() const;
 
         void create_render_buffers(
                 const RenderBuffers3D* render_buffers,

@@ -79,6 +79,7 @@ vulkan::Descriptors TrianglesMaterialMemory::create(
         VkDevice device,
         VkSampler sampler,
         VkDescriptorSetLayout descriptor_set_layout,
+        const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
         const std::vector<MaterialInfo>& materials)
 {
         ASSERT(!materials.empty());
@@ -88,7 +89,7 @@ vulkan::Descriptors TrianglesMaterialMemory::create(
         }));
 
         vulkan::Descriptors descriptors(
-                vulkan::Descriptors(device, materials.size(), descriptor_set_layout, descriptor_set_layout_bindings()));
+                vulkan::Descriptors(device, materials.size(), descriptor_set_layout, descriptor_set_layout_bindings));
 
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -165,15 +166,19 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesProgram::descriptor_set_layou
         return MeshMemory::descriptor_set_layout_bindings(VK_SHADER_STAGE_VERTEX_BIT);
 }
 
+std::vector<VkDescriptorSetLayoutBinding> TrianglesProgram::descriptor_set_layout_material_bindings()
+{
+        return TrianglesMaterialMemory::descriptor_set_layout_bindings();
+}
+
 TrianglesProgram::TrianglesProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout_shared(
                   vulkan::create_descriptor_set_layout(device, descriptor_set_layout_shared_bindings())),
           m_descriptor_set_layout_mesh(
                   vulkan::create_descriptor_set_layout(device, descriptor_set_layout_mesh_bindings())),
-          m_descriptor_set_layout_material(vulkan::create_descriptor_set_layout(
-                  device,
-                  TrianglesMaterialMemory::descriptor_set_layout_bindings())),
+          m_descriptor_set_layout_material(
+                  vulkan::create_descriptor_set_layout(device, descriptor_set_layout_material_bindings())),
           m_pipeline_layout(vulkan::create_pipeline_layout(
                   device,
                   {CommonMemory::set_number(), MeshMemory::set_number(), TrianglesMaterialMemory::set_number()},

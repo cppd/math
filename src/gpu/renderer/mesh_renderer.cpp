@@ -168,16 +168,20 @@ std::vector<vulkan::DescriptorSetLayoutAndBindings> MeshRenderer::mesh_layouts()
         return layouts;
 }
 
-MaterialDescriptorSetsFunction MeshRenderer::material_descriptor_sets_function() const
+std::vector<vulkan::DescriptorSetLayoutAndBindings> MeshRenderer::material_layouts() const
 {
-        return [this](const std::vector<MaterialInfo>& materials) {
-                std::vector<vulkan::Descriptors> sets;
+        std::vector<vulkan::DescriptorSetLayoutAndBindings> layouts;
 
-                sets.push_back(TrianglesMaterialMemory::create(
-                        m_device, m_texture_sampler, m_triangles_program.descriptor_set_layout_material(), materials));
+        layouts.emplace_back(
+                m_triangles_program.descriptor_set_layout_material(),
+                m_triangles_program.descriptor_set_layout_material_bindings());
 
-                return sets;
-        };
+        return layouts;
+}
+
+VkSampler MeshRenderer::texture_sampler() const
+{
+        return m_texture_sampler;
 }
 
 void MeshRenderer::draw_commands(

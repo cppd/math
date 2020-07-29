@@ -288,14 +288,9 @@ MaterialBuffer::MaterialBuffer(
         m_uniform_buffer.write(command_pool, queue, data_size(material), data_pointer(material));
 }
 
-VkBuffer MaterialBuffer::buffer() const
+const vulkan::Buffer& MaterialBuffer::buffer() const
 {
-        return m_uniform_buffer;
-}
-
-VkDeviceSize MaterialBuffer::buffer_size() const
-{
-        return m_uniform_buffer.size();
+        return m_uniform_buffer.buffer();
 }
 
 //

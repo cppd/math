@@ -44,10 +44,20 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
+        struct MaterialInfo final
+        {
+                VkBuffer buffer;
+                VkDeviceSize buffer_size;
+                VkImageView texture_Ka;
+                VkImageView texture_Kd;
+                VkImageView texture_Ks;
+        };
+
         static vulkan::Descriptors create(
                 VkDevice device,
                 VkSampler sampler,
                 VkDescriptorSetLayout descriptor_set_layout,
+                const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
                 const std::vector<MaterialInfo>& materials);
 };
 
@@ -86,6 +96,7 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_mesh_bindings();
 
         VkDescriptorSetLayout descriptor_set_layout_material() const;
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_material_bindings();
 
         VkPipelineLayout pipeline_layout() const;
 };
