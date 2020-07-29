@@ -495,11 +495,8 @@ class Impl final : public MeshObject
 
         void create_mesh_descriptor_sets()
         {
-                CoordinatesInfo info;
-                info.buffer = m_coordinates_buffer.buffer();
-                info.buffer_size = m_coordinates_buffer.buffer_size();
                 m_mesh_descriptor_sets.clear();
-                for (vulkan::Descriptors& sets : m_mesh_descriptor_sets_function({info}))
+                for (vulkan::Descriptors& sets : m_mesh_descriptor_sets_function({&m_coordinates_buffer.buffer()}))
                 {
                         ASSERT(sets.descriptor_set_count() == 1);
                         m_mesh_descriptor_sets.emplace(sets.descriptor_set_layout(), std::move(sets));

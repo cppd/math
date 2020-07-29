@@ -144,23 +144,28 @@ void MeshRenderer::delete_depth_buffers()
 
 MeshDescriptorSetsFunction MeshRenderer::mesh_descriptor_sets_function() const
 {
-        return [this](const std::vector<CoordinatesInfo>& coordinates) {
+        return [this](const std::vector<const vulkan::Buffer*>& coordinates) {
                 std::vector<vulkan::Descriptors> sets;
 
-                sets.push_back(NormalsMeshMemory::create(
-                        m_device, m_normals_program.descriptor_set_layout_mesh(), coordinates));
+                sets.push_back(MeshMemory::create(
+                        m_device, m_normals_program.descriptor_set_layout_mesh(),
+                        m_normals_program.descriptor_set_layout_mesh_bindings(), coordinates));
 
-                sets.push_back(
-                        PointsMeshMemory::create(m_device, m_points_program.descriptor_set_layout_mesh(), coordinates));
+                sets.push_back(MeshMemory::create(
+                        m_device, m_points_program.descriptor_set_layout_mesh(),
+                        m_points_program.descriptor_set_layout_mesh_bindings(), coordinates));
 
-                sets.push_back(TriangleLinesMeshMemory::create(
-                        m_device, m_triangle_lines_program.descriptor_set_layout_mesh(), coordinates));
+                sets.push_back(MeshMemory::create(
+                        m_device, m_triangle_lines_program.descriptor_set_layout_mesh(),
+                        m_triangle_lines_program.descriptor_set_layout_mesh_bindings(), coordinates));
 
-                sets.push_back(TrianglesMeshMemory::create(
-                        m_device, m_triangles_program.descriptor_set_layout_mesh(), coordinates));
+                sets.push_back(MeshMemory::create(
+                        m_device, m_triangles_program.descriptor_set_layout_mesh(),
+                        m_triangles_program.descriptor_set_layout_mesh_bindings(), coordinates));
 
-                sets.push_back(TrianglesDepthMeshMemory::create(
-                        m_device, m_triangles_depth_program.descriptor_set_layout_mesh(), coordinates));
+                sets.push_back(MeshMemory::create(
+                        m_device, m_triangles_depth_program.descriptor_set_layout_mesh(),
+                        m_triangles_depth_program.descriptor_set_layout_mesh_bindings(), coordinates));
 
                 return sets;
         };
@@ -206,7 +211,7 @@ void MeshRenderer::draw_commands(
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_program.pipeline_layout(),
-                                TrianglesMeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
+                                MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
                 auto bind_descriptor_set_material = [&](VkDescriptorSet descriptor_set) {
@@ -235,8 +240,8 @@ void MeshRenderer::draw_commands(
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                m_triangles_depth_program.pipeline_layout(), TrianglesDepthMeshMemory::set_number(),
-                                1 /*set count*/, &descriptor_set, 0, nullptr);
+                                m_triangles_depth_program.pipeline_layout(), MeshMemory::set_number(), 1 /*set count*/,
+                                &descriptor_set, 0, nullptr);
                 };
 
                 for (const MeshObject* mesh : meshes)
@@ -259,7 +264,7 @@ void MeshRenderer::draw_commands(
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_program.pipeline_layout(),
-                                PointsMeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
+                                MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
                 for (const MeshObject* mesh : meshes)
@@ -282,7 +287,7 @@ void MeshRenderer::draw_commands(
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_program.pipeline_layout(),
-                                PointsMeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
+                                MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
                 for (const MeshObject* mesh : meshes)
@@ -305,8 +310,8 @@ void MeshRenderer::draw_commands(
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                m_triangle_lines_program.pipeline_layout(), TriangleLinesMeshMemory::set_number(),
-                                1 /*set count*/, &descriptor_set, 0, nullptr);
+                                m_triangle_lines_program.pipeline_layout(), MeshMemory::set_number(), 1 /*set count*/,
+                                &descriptor_set, 0, nullptr);
                 };
 
                 for (const MeshObject* mesh : meshes)
@@ -329,7 +334,7 @@ void MeshRenderer::draw_commands(
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_normals_program.pipeline_layout(),
-                                NormalsMeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
+                                MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
                 for (const MeshObject* mesh : meshes)

@@ -24,13 +24,6 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texture_coordinates;
 
-layout(std140, set = 1, binding = 0) uniform Coordinates
-{
-        mat4 model_matrix;
-        mat3 normal_matrix;
-}
-coordinates;
-
 //
 
 layout(location = 0) out VS

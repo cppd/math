@@ -22,13 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(location = 0) in vec3 position;
 
-layout(std140, set = 1, binding = 0) uniform Coordinates
-{
-        mat4 model_matrix;
-        mat3 normal_matrix;
-}
-coordinates;
-
 out gl_PerVertex
 {
         vec4 gl_Position;

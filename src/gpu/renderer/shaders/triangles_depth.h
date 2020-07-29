@@ -28,21 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-class TrianglesDepthMeshMemory final
-{
-        static constexpr int SET_NUMBER = 1;
-        static constexpr int BUFFER_BINDING = 0;
-
-public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
-
-        static vulkan::Descriptors create(
-                VkDevice device,
-                VkDescriptorSetLayout descriptor_set_layout,
-                const std::vector<CoordinatesInfo>& coordinates);
-};
-
 class TrianglesDepthProgram final
 {
         const vulkan::Device& m_device;
@@ -71,6 +56,7 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings();
 
         VkDescriptorSetLayout descriptor_set_layout_mesh() const;
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_mesh_bindings();
 
         VkPipelineLayout pipeline_layout() const;
 };

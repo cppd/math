@@ -27,71 +27,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> NormalsMeshMemory::descriptor_set_layout_bindings()
-{
-        std::vector<VkDescriptorSetLayoutBinding> bindings;
-
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = BUFFER_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT;
-
-                bindings.push_back(b);
-        }
-
-        return bindings;
-}
-
-vulkan::Descriptors NormalsMeshMemory::create(
-        VkDevice device,
-        VkDescriptorSetLayout descriptor_set_layout,
-        const std::vector<CoordinatesInfo>& coordinates)
-{
-        ASSERT(!coordinates.empty());
-        ASSERT(std::all_of(coordinates.cbegin(), coordinates.cend(), [](const CoordinatesInfo& m) {
-                return m.buffer != VK_NULL_HANDLE;
-        }));
-
-        vulkan::Descriptors descriptors(vulkan::Descriptors(
-                device, coordinates.size(), descriptor_set_layout, descriptor_set_layout_bindings()));
-
-        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
-        std::vector<uint32_t> bindings;
-
-        for (size_t i = 0; i < coordinates.size(); ++i)
-        {
-                const CoordinatesInfo& coordinates_info = coordinates[i];
-
-                infos.clear();
-                bindings.clear();
-                {
-                        VkDescriptorBufferInfo buffer_info = {};
-                        buffer_info.buffer = coordinates_info.buffer;
-                        buffer_info.offset = 0;
-                        buffer_info.range = coordinates_info.buffer_size;
-
-                        infos.emplace_back(buffer_info);
-
-                        bindings.push_back(BUFFER_BINDING);
-                }
-                descriptors.update_descriptor_set(i, bindings, infos);
-        }
-
-        return descriptors;
-}
-
-unsigned NormalsMeshMemory::set_number()
-{
-        return SET_NUMBER;
-}
-
-//
 std::vector<VkDescriptorSetLayoutBinding> NormalsProgram::descriptor_set_layout_shared_bindings()
 {
         return CommonMemory::descriptor_set_layout_bindings(
                 VK_SHADER_STAGE_GEOMETRY_BIT, VK_SHADER_STAGE_GEOMETRY_BIT, 0, 0);
+}
+
+std::vector<VkDescriptorSetLayoutBinding> NormalsProgram::descriptor_set_layout_mesh_bindings()
+{
+        return MeshMemory::descriptor_set_layout_bindings(VK_SHADER_STAGE_GEOMETRY_BIT);
 }
 
 NormalsProgram::NormalsProgram(const vulkan::Device& device)
@@ -99,10 +43,10 @@ NormalsProgram::NormalsProgram(const vulkan::Device& device)
           m_descriptor_set_layout_shared(
                   vulkan::create_descriptor_set_layout(device, descriptor_set_layout_shared_bindings())),
           m_descriptor_set_layout_mesh(
-                  vulkan::create_descriptor_set_layout(device, NormalsMeshMemory::descriptor_set_layout_bindings())),
+                  vulkan::create_descriptor_set_layout(device, descriptor_set_layout_mesh_bindings())),
           m_pipeline_layout(vulkan::create_pipeline_layout(
                   device,
-                  {CommonMemory::set_number(), NormalsMeshMemory::set_number()},
+                  {CommonMemory::set_number(), MeshMemory::set_number()},
                   {m_descriptor_set_layout_shared, m_descriptor_set_layout_mesh})),
           m_vertex_shader(m_device, code_normals_vert(), "main"),
           m_geometry_shader(m_device, code_normals_geom(), "main"),

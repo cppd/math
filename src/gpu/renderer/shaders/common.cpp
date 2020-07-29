@@ -150,4 +150,68 @@ void CommonMemory::set_object_image(const vulkan::ImageWithMemory* storage_image
 
         m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }
+
+//
+
+std::vector<VkDescriptorSetLayoutBinding> MeshMemory::descriptor_set_layout_bindings(VkShaderStageFlags coordinates)
+{
+        std::vector<VkDescriptorSetLayoutBinding> bindings;
+
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = BUFFER_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                if (coordinates)
+                {
+                        b.descriptorCount = 1;
+                        b.stageFlags = coordinates;
+                }
+
+                bindings.push_back(b);
+        }
+
+        return bindings;
+}
+
+vulkan::Descriptors MeshMemory::create(
+        VkDevice device,
+        VkDescriptorSetLayout descriptor_set_layout,
+        const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+        const std::vector<const vulkan::Buffer*>& coordinates)
+{
+        ASSERT(!coordinates.empty());
+        ASSERT(std::all_of(coordinates.cbegin(), coordinates.cend(), [](const vulkan::Buffer* buffer) {
+                return buffer != nullptr;
+        }));
+
+        vulkan::Descriptors descriptors(
+                vulkan::Descriptors(device, coordinates.size(), descriptor_set_layout, descriptor_set_layout_bindings));
+
+        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<uint32_t> bindings;
+
+        for (size_t i = 0; i < coordinates.size(); ++i)
+        {
+                infos.clear();
+                bindings.clear();
+                {
+                        VkDescriptorBufferInfo buffer_info = {};
+                        buffer_info.buffer = *coordinates[i];
+                        buffer_info.offset = 0;
+                        buffer_info.range = coordinates[i]->size();
+
+                        infos.emplace_back(buffer_info);
+
+                        bindings.push_back(BUFFER_BINDING);
+                }
+                descriptors.update_descriptor_set(i, bindings, infos);
+        }
+
+        return descriptors;
+}
+
+unsigned MeshMemory::set_number()
+{
+        return SET_NUMBER;
+}
 }

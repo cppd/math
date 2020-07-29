@@ -170,20 +170,10 @@ class CoordinatesBuffer final
 public:
         CoordinatesBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
 
-        VkBuffer buffer() const;
-        VkDeviceSize buffer_size() const;
+        const vulkan::Buffer& buffer() const;
 
         void set_coordinates(const mat4& model_matrix, const mat3& normal_matrix) const;
 };
-
-struct CoordinatesInfo final
-{
-        VkBuffer buffer;
-        VkDeviceSize buffer_size;
-};
-
-using MeshDescriptorSetsFunction =
-        std::function<std::vector<vulkan::Descriptors>(const std::vector<CoordinatesInfo>& coordinates)>;
 
 //
 

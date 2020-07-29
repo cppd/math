@@ -52,3 +52,12 @@ drawing;
 
 layout(set = 0, binding = 2) uniform sampler2D shadow_texture;
 layout(set = 0, binding = 3, r32ui) uniform writeonly uimage2D object_image;
+
+//
+
+layout(set = 1, binding = 0, std140) uniform Coordinates
+{
+        mat4 model_matrix;
+        mat3 normal_matrix;
+}
+coordinates;

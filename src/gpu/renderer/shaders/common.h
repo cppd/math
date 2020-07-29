@@ -56,4 +56,20 @@ public:
         void set_shadow_texture(VkSampler sampler, const vulkan::DepthImageWithMemory* shadow_texture) const;
         void set_object_image(const vulkan::ImageWithMemory* storage_image) const;
 };
+
+class MeshMemory final
+{
+        static constexpr int SET_NUMBER = 1;
+        static constexpr int BUFFER_BINDING = 0;
+
+public:
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(VkShaderStageFlags coordinates);
+        static unsigned set_number();
+
+        static vulkan::Descriptors create(
+                VkDevice device,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+                const std::vector<const vulkan::Buffer*>& coordinates);
+};
 }

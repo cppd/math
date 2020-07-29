@@ -310,14 +310,9 @@ CoordinatesBuffer::CoordinatesBuffer(const vulkan::Device& device, const std::un
 {
 }
 
-VkBuffer CoordinatesBuffer::buffer() const
+const vulkan::Buffer& CoordinatesBuffer::buffer() const
 {
-        return m_uniform_buffer;
-}
-
-VkDeviceSize CoordinatesBuffer::buffer_size() const
-{
-        return m_uniform_buffer.size();
+        return m_uniform_buffer.buffer();
 }
 
 void CoordinatesBuffer::set_coordinates(const mat4& model_matrix, const mat3& normal_matrix) const

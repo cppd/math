@@ -25,13 +25,6 @@ layout(line_strip, max_vertices = 2) out;
 
 //
 
-layout(std140, set = 1, binding = 0) uniform Coordinates
-{
-        mat4 model_matrix;
-        mat3 normal_matrix;
-}
-coordinates;
-
 layout(location = 0) in VS
 {
         vec3 position;

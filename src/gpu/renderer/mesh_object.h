@@ -63,6 +63,9 @@ struct MeshObject
                 bool* update_command_buffers) = 0;
 };
 
+using MeshDescriptorSetsFunction =
+        std::function<std::vector<vulkan::Descriptors>(const std::vector<const vulkan::Buffer*>& coordinates)>;
+
 std::unique_ptr<MeshObject> create_mesh_object(
         const vulkan::Device& device,
         const vulkan::CommandPool& graphics_command_pool,

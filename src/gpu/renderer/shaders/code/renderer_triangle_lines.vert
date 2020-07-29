@@ -17,14 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
-layout(location = 0) in vec3 position;
+#extension GL_GOOGLE_include_directive : enable
+#include "common.glsl"
 
-layout(std140, set = 1, binding = 0) uniform Coordinates
-{
-        mat4 model_matrix;
-        mat3 normal_matrix;
-}
-coordinates;
+layout(location = 0) in vec3 position;
 
 layout(location = 0) out VS
 {
