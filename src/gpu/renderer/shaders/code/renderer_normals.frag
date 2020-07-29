@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
+layout(early_fragment_tests) in;
+
 layout(location = 0) in GS
 {
         vec3 color;

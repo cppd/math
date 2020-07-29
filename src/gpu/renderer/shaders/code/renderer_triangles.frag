@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(early_fragment_tests) in;
 
 // Для каждой группы треугольников с одним материалом отдельно задаётся этот материал и его текстуры
-layout(std140, set = 2, binding = 0) uniform Material
+layout(set = 2, binding = 0, std140) uniform Material
 {
         vec3 Ka;
         vec3 Kd;

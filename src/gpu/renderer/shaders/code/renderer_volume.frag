@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
-layout(set = 0, std140, binding = 0) uniform Drawing
+layout(set = 0, binding = 0, std140) uniform Drawing
 {
         vec3 default_color;
         vec3 default_specular_color;
@@ -66,7 +66,7 @@ layout(set = 0, binding = 1) uniform sampler2DMS depth_image;
 
 //
 
-layout(set = 1, std140, binding = 0) uniform Coordinates
+layout(set = 1, binding = 0, std140) uniform Coordinates
 {
         mat4 inverse_mvp_matrix;
         vec4 third_row_of_mvp;
@@ -76,7 +76,7 @@ layout(set = 1, std140, binding = 0) uniform Coordinates
 }
 coordinates;
 
-layout(set = 1, std140, binding = 1) uniform Volume
+layout(set = 1, binding = 1, std140) uniform Volume
 {
         float window_offset;
         float window_scale;
