@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_object.h"
 
+#include "shaders/common.h"
 #include "shaders/vertex_points.h"
 #include "shaders/vertex_triangles.h"
 
@@ -468,7 +469,7 @@ class Impl final : public MeshObject
 
         CoordinatesBuffer m_coordinates_buffer;
         std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_mesh_descriptor_sets;
-        MeshDescriptorSetsFunction m_mesh_descriptor_sets_function;
+        std::vector<vulkan::DescriptorSetLayoutAndBindings> m_mesh_layouts;
 
         struct MaterialVertices
         {
@@ -496,8 +497,11 @@ class Impl final : public MeshObject
         void create_mesh_descriptor_sets()
         {
                 m_mesh_descriptor_sets.clear();
-                for (vulkan::Descriptors& sets : m_mesh_descriptor_sets_function({&m_coordinates_buffer.buffer()}))
+                for (const vulkan::DescriptorSetLayoutAndBindings& layout : m_mesh_layouts)
                 {
+                        vulkan::Descriptors sets = MeshMemory::create(
+                                m_device, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings,
+                                {&m_coordinates_buffer.buffer()});
                         ASSERT(sets.descriptor_set_count() == 1);
                         m_mesh_descriptor_sets.emplace(sets.descriptor_set_layout(), std::move(sets));
                 }
@@ -767,13 +771,13 @@ public:
              const vulkan::Queue& graphics_queue,
              const vulkan::CommandPool& /*transfer_command_pool*/,
              const vulkan::Queue& /*transfer_queue*/,
-             const MeshDescriptorSetsFunction& mesh_descriptor_sets_function,
+             const std::vector<vulkan::DescriptorSetLayoutAndBindings>& mesh_layouts,
              const MaterialDescriptorSetsFunction& material_descriptor_sets_function)
                 : m_device(device),
                   m_graphics_command_pool(graphics_command_pool),
                   m_graphics_queue(graphics_queue),
                   m_coordinates_buffer(device, {m_graphics_queue.family_index()}),
-                  m_mesh_descriptor_sets_function(mesh_descriptor_sets_function),
+                  m_mesh_layouts(mesh_layouts),
                   m_material_descriptor_sets_function(material_descriptor_sets_function)
         {
                 create_mesh_descriptor_sets();
@@ -787,11 +791,11 @@ std::unique_ptr<MeshObject> create_mesh_object(
         const vulkan::Queue& graphics_queue,
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
-        const MeshDescriptorSetsFunction& mesh_descriptor_sets_function,
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& mesh_layouts,
         const MaterialDescriptorSetsFunction& material_descriptor_sets_function)
 {
         return std::make_unique<Impl>(
-                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                mesh_descriptor_sets_function, material_descriptor_sets_function);
+                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, mesh_layouts,
+                material_descriptor_sets_function);
 }
 }

@@ -142,33 +142,30 @@ void MeshRenderer::delete_depth_buffers()
         m_render_triangles_depth_pipeline.reset();
 }
 
-MeshDescriptorSetsFunction MeshRenderer::mesh_descriptor_sets_function() const
+std::vector<vulkan::DescriptorSetLayoutAndBindings> MeshRenderer::mesh_layouts() const
 {
-        return [this](const std::vector<const vulkan::Buffer*>& coordinates) {
-                std::vector<vulkan::Descriptors> sets;
+        std::vector<vulkan::DescriptorSetLayoutAndBindings> layouts;
 
-                sets.push_back(MeshMemory::create(
-                        m_device, m_normals_program.descriptor_set_layout_mesh(),
-                        m_normals_program.descriptor_set_layout_mesh_bindings(), coordinates));
+        layouts.emplace_back(
+                m_normals_program.descriptor_set_layout_mesh(),
+                m_normals_program.descriptor_set_layout_mesh_bindings());
 
-                sets.push_back(MeshMemory::create(
-                        m_device, m_points_program.descriptor_set_layout_mesh(),
-                        m_points_program.descriptor_set_layout_mesh_bindings(), coordinates));
+        layouts.emplace_back(
+                m_points_program.descriptor_set_layout_mesh(), m_points_program.descriptor_set_layout_mesh_bindings());
 
-                sets.push_back(MeshMemory::create(
-                        m_device, m_triangle_lines_program.descriptor_set_layout_mesh(),
-                        m_triangle_lines_program.descriptor_set_layout_mesh_bindings(), coordinates));
+        layouts.emplace_back(
+                m_triangle_lines_program.descriptor_set_layout_mesh(),
+                m_triangle_lines_program.descriptor_set_layout_mesh_bindings());
 
-                sets.push_back(MeshMemory::create(
-                        m_device, m_triangles_program.descriptor_set_layout_mesh(),
-                        m_triangles_program.descriptor_set_layout_mesh_bindings(), coordinates));
+        layouts.emplace_back(
+                m_triangles_program.descriptor_set_layout_mesh(),
+                m_triangles_program.descriptor_set_layout_mesh_bindings());
 
-                sets.push_back(MeshMemory::create(
-                        m_device, m_triangles_depth_program.descriptor_set_layout_mesh(),
-                        m_triangles_depth_program.descriptor_set_layout_mesh_bindings(), coordinates));
+        layouts.emplace_back(
+                m_triangles_depth_program.descriptor_set_layout_mesh(),
+                m_triangles_depth_program.descriptor_set_layout_mesh_bindings());
 
-                return sets;
-        };
+        return layouts;
 }
 
 MaterialDescriptorSetsFunction MeshRenderer::material_descriptor_sets_function() const

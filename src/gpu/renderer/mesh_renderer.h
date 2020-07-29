@@ -87,7 +87,7 @@ public:
                 bool sampler_anisotropy,
                 const ShaderBuffers& buffers);
 
-        MeshDescriptorSetsFunction mesh_descriptor_sets_function() const;
+        std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts() const;
         MaterialDescriptorSetsFunction material_descriptor_sets_function() const;
 
         void create_render_buffers(

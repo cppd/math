@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shaders/buffers.h"
 
 #include <src/model/mesh_object.h>
+#include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
 
 #include <memory>
@@ -63,15 +64,12 @@ struct MeshObject
                 bool* update_command_buffers) = 0;
 };
 
-using MeshDescriptorSetsFunction =
-        std::function<std::vector<vulkan::Descriptors>(const std::vector<const vulkan::Buffer*>& coordinates)>;
-
 std::unique_ptr<MeshObject> create_mesh_object(
         const vulkan::Device& device,
         const vulkan::CommandPool& graphics_command_pool,
         const vulkan::Queue& graphics_queue,
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
-        const MeshDescriptorSetsFunction& mesh_descriptor_sets_function,
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& mesh_layouts,
         const MaterialDescriptorSetsFunction& material_descriptor_sets_function);
 }
