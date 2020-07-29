@@ -113,8 +113,6 @@ public:
         void set_show_fog(bool show) const;
 };
 
-//
-
 class MaterialBuffer final
 {
         vulkan::BufferWithMemory m_uniform_buffer;
@@ -142,8 +140,6 @@ public:
         const vulkan::Buffer& buffer() const;
 };
 
-//
-
 class CoordinatesBuffer final
 {
         vulkan::BufferWithMemory m_uniform_buffer;
@@ -161,8 +157,6 @@ public:
 
         void set_coordinates(const mat4& model_matrix, const mat3& normal_matrix) const;
 };
-
-//
 
 class VolumeBuffer final
 {
@@ -224,16 +218,4 @@ public:
         void set_color_volume(const vulkan::CommandPool& command_pool, const vulkan::Queue& queue, bool color_volume)
                 const;
 };
-
-struct VolumeInfo final
-{
-        VkBuffer buffer_coordinates;
-        VkDeviceSize buffer_coordinates_size;
-        VkBuffer buffer_volume;
-        VkDeviceSize buffer_volume_size;
-        VkImageView image;
-        VkImageView transfer_function;
-};
-
-using VolumeDescriptorSetsFunction = std::function<std::vector<vulkan::Descriptors>(const VolumeInfo& info)>;
 }

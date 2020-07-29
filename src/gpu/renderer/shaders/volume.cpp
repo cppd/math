@@ -55,8 +55,9 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_lay
 VolumeSharedMemory::VolumeSharedMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
+        const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
         const vulkan::Buffer& drawing)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings)
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -150,19 +151,20 @@ vulkan::Descriptors VolumeImageMemory::create(
         VkSampler image_sampler,
         VkSampler transfer_function_sampler,
         VkDescriptorSetLayout descriptor_set_layout,
-        const VolumeInfo& volume_info)
+        const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+        const CreateInfo& create_info)
 {
         vulkan::Descriptors descriptors(
-                vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings()));
+                vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings));
 
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = volume_info.buffer_coordinates;
+                buffer_info.buffer = create_info.buffer_coordinates;
                 buffer_info.offset = 0;
-                buffer_info.range = volume_info.buffer_coordinates_size;
+                buffer_info.range = create_info.buffer_coordinates_size;
 
                 infos.emplace_back(buffer_info);
 
@@ -170,9 +172,9 @@ vulkan::Descriptors VolumeImageMemory::create(
         }
         {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = volume_info.buffer_volume;
+                buffer_info.buffer = create_info.buffer_volume;
                 buffer_info.offset = 0;
-                buffer_info.range = volume_info.buffer_volume_size;
+                buffer_info.range = create_info.buffer_volume_size;
 
                 infos.emplace_back(buffer_info);
 
@@ -181,7 +183,7 @@ vulkan::Descriptors VolumeImageMemory::create(
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = volume_info.image;
+                image_info.imageView = create_info.image;
                 image_info.sampler = image_sampler;
 
                 infos.emplace_back(image_info);
@@ -191,7 +193,7 @@ vulkan::Descriptors VolumeImageMemory::create(
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = volume_info.transfer_function;
+                image_info.imageView = create_info.transfer_function;
                 image_info.sampler = transfer_function_sampler;
 
                 infos.emplace_back(image_info);
@@ -211,12 +213,22 @@ unsigned VolumeImageMemory::set_number()
 
 //
 
+std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_shared_bindings()
+{
+        return VolumeSharedMemory::descriptor_set_layout_bindings();
+}
+
+std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_image_bindings()
+{
+        return VolumeImageMemory::descriptor_set_layout_bindings();
+}
+
 VolumeProgram::VolumeProgram(const vulkan::Device& device)
         : m_device(device),
           m_descriptor_set_layout_shared(
-                  vulkan::create_descriptor_set_layout(device, VolumeSharedMemory::descriptor_set_layout_bindings())),
+                  vulkan::create_descriptor_set_layout(device, descriptor_set_layout_shared_bindings())),
           m_descriptor_set_layout_image(
-                  vulkan::create_descriptor_set_layout(device, VolumeImageMemory::descriptor_set_layout_bindings())),
+                  vulkan::create_descriptor_set_layout(device, descriptor_set_layout_image_bindings())),
           m_pipeline_layout(vulkan::create_pipeline_layout(
                   device,
                   {VolumeSharedMemory::set_number(), VolumeImageMemory::set_number()},

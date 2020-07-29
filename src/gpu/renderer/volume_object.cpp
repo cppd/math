@@ -17,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "volume_object.h"
 
+#include "shaders/buffers.h"
+#include "shaders/volume.h"
+
 #include <src/image/format.h>
 #include <src/vulkan/buffers.h>
 
@@ -165,7 +168,8 @@ class Impl final : public VolumeObject
         std::unique_ptr<vulkan::ImageWithMemory> m_transfer_function;
 
         std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_descriptor_sets;
-        VolumeDescriptorSetsFunction m_descriptor_sets_function;
+        std::vector<vulkan::DescriptorSetLayoutAndBindings> m_image_layouts;
+        VkSampler m_image_sampler;
 
         void buffer_set_parameters(
                 float window_min,
@@ -214,7 +218,7 @@ class Impl final : public VolumeObject
 
         void create_descriptor_sets()
         {
-                VolumeInfo info;
+                VolumeImageMemory::CreateInfo info;
                 info.buffer_coordinates = m_buffer.buffer_coordinates();
                 info.buffer_coordinates_size = m_buffer.buffer_coordinates_size();
                 info.buffer_volume = m_buffer.buffer_volume();
@@ -223,9 +227,12 @@ class Impl final : public VolumeObject
                 info.transfer_function = m_transfer_function->image_view();
 
                 m_descriptor_sets.clear();
-
-                for (vulkan::Descriptors& sets : m_descriptor_sets_function(info))
+                for (const vulkan::DescriptorSetLayoutAndBindings& layout : m_image_layouts)
                 {
+                        vulkan::Descriptors sets = VolumeImageMemory::create(
+                                m_device, m_image_sampler, m_image_sampler, layout.descriptor_set_layout,
+                                layout.descriptor_set_layout_bindings, info);
+
                         ASSERT(sets.descriptor_set_count() == 1);
                         m_descriptor_sets.emplace(sets.descriptor_set_layout(), std::move(sets));
                 }
@@ -382,12 +389,14 @@ public:
              const vulkan::Queue& graphics_queue,
              const vulkan::CommandPool& /*transfer_command_pool*/,
              const vulkan::Queue& /*transfer_queue*/,
-             const VolumeDescriptorSetsFunction& descriptor_sets_function)
+             const std::vector<vulkan::DescriptorSetLayoutAndBindings>& image_layouts,
+             VkSampler image_sampler)
                 : m_device(device),
                   m_graphics_command_pool(graphics_command_pool),
                   m_graphics_queue(graphics_queue),
                   m_buffer(m_device, {m_graphics_queue.family_index()}),
-                  m_descriptor_sets_function(descriptor_sets_function)
+                  m_image_layouts(image_layouts),
+                  m_image_sampler(image_sampler)
         {
         }
 };
@@ -399,10 +408,11 @@ std::unique_ptr<VolumeObject> create_volume_object(
         const vulkan::Queue& graphics_queue,
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
-        const VolumeDescriptorSetsFunction& descriptor_sets_function)
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& image_layouts,
+        VkSampler image_sampler)
 {
         return std::make_unique<Impl>(
-                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                descriptor_sets_function);
+                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image_layouts,
+                image_sampler);
 }
 }

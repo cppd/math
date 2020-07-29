@@ -526,10 +526,11 @@ class Impl final : public Renderer
                         if (!ptr)
                         {
                                 ptr = m_volume_storage.insert(
-                                        object.id(), create_volume_object(
-                                                             m_device, m_graphics_command_pool, m_graphics_queue,
-                                                             m_transfer_command_pool, m_transfer_queue,
-                                                             m_volume_renderer.descriptor_sets_function()));
+                                        object.id(),
+                                        create_volume_object(
+                                                m_device, m_graphics_command_pool, m_graphics_queue,
+                                                m_transfer_command_pool, m_transfer_queue,
+                                                m_volume_renderer.image_layouts(), m_volume_renderer.image_sampler()));
 
                                 created = true;
                         }

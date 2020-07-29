@@ -29,7 +29,11 @@ VolumeRenderer::VolumeRenderer(const vulkan::Device& device, bool sample_shading
           m_sample_shading(sample_shading),
           //
           m_program(device),
-          m_memory(device, m_program.descriptor_set_layout_shared(), buffers.drawing_buffer()),
+          m_memory(
+                  device,
+                  m_program.descriptor_set_layout_shared(),
+                  m_program.descriptor_set_layout_shared_bindings(),
+                  buffers.drawing_buffer()),
           //
           m_volume_sampler(create_volume_sampler(m_device)),
           m_depth_sampler(create_volume_depth_image_sampler(m_device))
@@ -61,16 +65,18 @@ void VolumeRenderer::delete_buffers()
         m_pipeline.reset();
 }
 
-VolumeDescriptorSetsFunction VolumeRenderer::descriptor_sets_function() const
+std::vector<vulkan::DescriptorSetLayoutAndBindings> VolumeRenderer::image_layouts() const
 {
-        return [this](const VolumeInfo& info) {
-                std::vector<vulkan::Descriptors> sets;
+        std::vector<vulkan::DescriptorSetLayoutAndBindings> layouts;
 
-                sets.push_back(VolumeImageMemory::create(
-                        m_device, m_volume_sampler, m_volume_sampler, m_program.descriptor_set_layout_image(), info));
+        layouts.emplace_back(m_program.descriptor_set_layout_image(), m_program.descriptor_set_layout_image_bindings());
 
-                return sets;
-        };
+        return layouts;
+}
+
+VkSampler VolumeRenderer::image_sampler() const
+{
+        return m_volume_sampler;
 }
 
 void VolumeRenderer::draw_commands(const VolumeObject* volume, VkCommandBuffer command_buffer) const

@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "volume_object.h"
 
-#include "shaders/buffers.h"
 #include "shaders/volume.h"
 
 #include <src/gpu/buffers.h>
@@ -51,7 +50,8 @@ class VolumeRenderer
 public:
         VolumeRenderer(const vulkan::Device& device, bool sample_shading, const ShaderBuffers& buffers);
 
-        VolumeDescriptorSetsFunction descriptor_sets_function() const;
+        std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts() const;
+        VkSampler image_sampler() const;
 
         void create_buffers(
                 const RenderBuffers3D* render_buffers,

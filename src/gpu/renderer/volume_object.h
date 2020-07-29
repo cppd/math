@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "shaders/buffers.h"
-
 #include <src/model/volume_object.h>
+#include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
 
 #include <memory>
@@ -50,5 +49,6 @@ std::unique_ptr<VolumeObject> create_volume_object(
         const vulkan::Queue& graphics_queue,
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
-        const VolumeDescriptorSetsFunction& descriptor_sets_function);
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& image_layouts,
+        VkSampler image_sampler);
 }

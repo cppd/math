@@ -47,6 +47,7 @@ public:
         VolumeSharedMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
+                const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
                 const vulkan::Buffer& drawing);
 
         VolumeSharedMemory(const VolumeSharedMemory&) = delete;
@@ -76,12 +77,23 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
+        struct CreateInfo final
+        {
+                VkBuffer buffer_coordinates;
+                VkDeviceSize buffer_coordinates_size;
+                VkBuffer buffer_volume;
+                VkDeviceSize buffer_volume_size;
+                VkImageView image;
+                VkImageView transfer_function;
+        };
+
         static vulkan::Descriptors create(
                 VkDevice device,
                 VkSampler image_sampler,
                 VkSampler transfer_function_sampler,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const VolumeInfo& volume_info);
+                const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+                const CreateInfo& create_info);
 };
 
 class VolumeProgram final
@@ -111,7 +123,11 @@ public:
                 const Region<2, int>& viewport) const;
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings();
+
         VkDescriptorSetLayout descriptor_set_layout_image() const;
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_image_bindings();
+
         VkPipelineLayout pipeline_layout() const;
 };
 }
