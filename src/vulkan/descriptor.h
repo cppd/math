@@ -29,6 +29,22 @@ DescriptorSetLayout create_descriptor_set_layout(
         VkDevice device,
         const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
+struct DescriptorSetLayoutAndBindings final
+{
+        VkDescriptorSetLayout descriptor_set_layout;
+        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
+
+        template <typename DescriptorSetLayout, typename DescriptorSetLayoutBindings>
+        DescriptorSetLayoutAndBindings(
+                DescriptorSetLayout&& descriptor_set_layout,
+                DescriptorSetLayoutBindings&& descriptor_set_layout_bindings)
+                : descriptor_set_layout(std::forward<DescriptorSetLayout>(descriptor_set_layout)),
+                  descriptor_set_layout_bindings(
+                          std::forward<DescriptorSetLayoutBindings>(descriptor_set_layout_bindings))
+        {
+        }
+};
+
 class Descriptors final
 {
         VkDevice m_device;
