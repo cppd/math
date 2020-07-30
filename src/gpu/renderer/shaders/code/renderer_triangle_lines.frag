@@ -17,14 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
+#define FRAGMENT_SHADER
+
 #extension GL_GOOGLE_include_directive : enable
 #include "common.glsl"
 
-layout(early_fragment_tests) in;
-
-layout(location = 0) out vec4 color;
-
 void main(void)
 {
-        color = vec4(drawing.clip_plane_color, 1);
+        set_fragment_color(drawing.clip_plane_color);
 }

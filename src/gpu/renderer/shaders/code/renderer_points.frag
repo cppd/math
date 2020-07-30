@@ -17,12 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
+#define FRAGMENT_SHADER
+
 #extension GL_GOOGLE_include_directive : enable
 #include "common.glsl"
-
-layout(early_fragment_tests) in;
-
-layout(location = 0) out vec4 color;
 
 vec3 fog(vec3 fog_color, vec3 fragment_color)
 {
@@ -39,18 +37,16 @@ vec3 fog(vec3 fog_color, vec3 fragment_color)
 
 void main(void)
 {
-        vec3 color3;
+        vec3 color;
 
         if (drawing.show_fog)
         {
-                color3 = fog(drawing.background_color, drawing.default_color * drawing.light_a);
+                color = fog(drawing.background_color, drawing.default_color * drawing.light_a);
         }
         else
         {
-                color3 = drawing.default_color * drawing.light_a;
+                color = drawing.default_color * drawing.light_a;
         }
 
-        color = vec4(color3, 1);
-
-        imageStore(object_image, ivec2(gl_FragCoord.xy), uvec4(1));
+        set_fragment_color(color);
 }

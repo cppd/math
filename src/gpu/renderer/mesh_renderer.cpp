@@ -89,7 +89,9 @@ void MeshRenderer::create_render_buffers(
         m_render_buffers = render_buffers;
 
         m_triangles_common_memory.set_object_image(object_image);
+        m_triangle_lines_common_memory.set_object_image(object_image);
         m_points_common_memory.set_object_image(object_image);
+        m_normals_common_memory.set_object_image(object_image);
 
         m_render_triangles_pipeline = m_triangles_program.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport);

@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
+#define FRAGMENT_SHADER
+
 #extension GL_GOOGLE_include_directive : enable
 #include "common.glsl"
-
-layout(early_fragment_tests) in;
 
 // Для каждой группы треугольников с одним материалом отдельно задаётся этот материал и его текстуры
 layout(set = 2, binding = 0, std140) uniform Material
@@ -49,8 +49,6 @@ layout(location = 0) in GS
         vec3 baricentric;
 }
 gs;
-
-layout(location = 0) out vec4 color;
 
 //
 
@@ -142,7 +140,5 @@ vec3 shade()
 
 void main()
 {
-        color = vec4(shade(), 1);
-
-        imageStore(object_image, ivec2(gl_FragCoord.xy), uvec4(1));
+        set_fragment_color(shade());
 }
