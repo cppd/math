@@ -89,6 +89,7 @@ private slots:
         void on_slider_specular_valueChanged(int value);
         void on_slider_volume_transparency_valueChanged(int value);
         void on_slider_isosurface_transparency_valueChanged(int value);
+        void on_slider_mesh_transparency_valueChanged(int value);
         void on_toolButton_background_color_clicked();
         void on_toolButton_clip_plane_color_clicked();
         void on_toolButton_default_color_clicked();
@@ -162,10 +163,11 @@ private:
 
         bool stop_action(WorkerThreads::Action action);
 
+        void disable_mesh_parameters();
         void update_mesh_ui(ObjectId id);
 
         void disable_volume_parameters();
-        void update_volume_ui(const std::optional<ObjectId>& id);
+        void update_volume_ui(ObjectId id);
 
         const std::thread::id m_thread_id;
 

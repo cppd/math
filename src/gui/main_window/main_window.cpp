@@ -187,6 +187,7 @@ void MainWindow::constructor_interface()
                 set_slider_position(ui.slider_normals, p);
         }
 
+        disable_mesh_parameters();
         disable_volume_parameters();
 
         set_widgets_enabled(QMainWindow::layout(), true);
@@ -220,6 +221,14 @@ void MainWindow::constructor_interface()
         ASSERT(((ui.slider_ambient->maximum() - ui.slider_ambient->minimum()) & 1) == 0);
         ASSERT(((ui.slider_diffuse->maximum() - ui.slider_diffuse->minimum()) & 1) == 0);
         ASSERT(((ui.slider_specular->maximum() - ui.slider_specular->minimum()) & 1) == 0);
+}
+
+void MainWindow::disable_mesh_parameters()
+{
+        ui.tabMesh->setEnabled(false);
+
+        QSignalBlocker blocker(ui.slider_mesh_transparency);
+        set_slider_position(ui.slider_mesh_transparency, 0);
 }
 
 void MainWindow::disable_volume_parameters()
@@ -831,7 +840,14 @@ void MainWindow::model_tree_item_changed()
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         std::optional<ObjectId> id = m_model_tree->current_item();
-        update_volume_ui(id);
+        if (!id)
+        {
+                disable_mesh_parameters();
+                disable_volume_parameters();
+                return;
+        }
+        update_mesh_ui(*id);
+        update_volume_ui(*id);
 }
 
 double MainWindow::lighting_slider_value(const QSlider* slider)
@@ -1121,21 +1137,41 @@ void MainWindow::on_actionFullScreen_triggered()
 {
 }
 
-void MainWindow::update_mesh_ui(ObjectId /*id*/)
-{
-}
-
-void MainWindow::update_volume_ui(const std::optional<ObjectId>& id)
+void MainWindow::update_mesh_ui(ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        if (!id)
+        std::optional<storage::MeshObjectConst> object_opt = m_model_tree->mesh_const_if_current(id);
+        if (!object_opt)
         {
-                disable_volume_parameters();
+                disable_mesh_parameters();
                 return;
         }
 
-        std::optional<storage::VolumeObjectConst> volume_object_opt = m_model_tree->volume_const_if_current(*id);
+        ui.tabMesh->setEnabled(true);
+
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& object) {
+                        double alpha;
+                        {
+                                mesh::Reading reading(*object);
+                                alpha = object->alpha();
+                        }
+                        double transparency_position = 1.0 - alpha;
+                        {
+                                QSignalBlocker blocker(ui.slider_mesh_transparency);
+
+                                set_slider_position(ui.slider_mesh_transparency, transparency_position);
+                        }
+                },
+                *object_opt);
+}
+
+void MainWindow::update_volume_ui(ObjectId id)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::VolumeObjectConst> volume_object_opt = m_model_tree->volume_const_if_current(id);
         if (!volume_object_opt)
         {
                 disable_volume_parameters();
@@ -1289,5 +1325,25 @@ void MainWindow::on_slider_isovalue_valueChanged(int)
                         volume_object->set_isovalue(isovalue);
                 },
                 *volume_object_opt);
+}
+
+void MainWindow::on_slider_mesh_transparency_valueChanged(int)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
+        if (!object_opt)
+        {
+                return;
+        }
+
+        double alpha = 1.0 - slider_position(ui.slider_mesh_transparency);
+
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
+                        mesh::WritingUpdates updates(object.get(), {mesh::Update::Alpha});
+                        object->set_alpha(alpha);
+                },
+                *object_opt);
 }
 }
