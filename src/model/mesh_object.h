@@ -91,7 +91,9 @@ private:
 
 enum class Update
 {
-        All
+        All,
+        Alpha,
+        Matrix
 };
 
 template <size_t N>
@@ -105,6 +107,8 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
         Matrix<N + 1, N + 1, double> m_matrix;
         std::string m_name;
         ObjectId m_id;
+
+        float m_alpha = 1;
 
         bool m_visible = false;
 
@@ -196,6 +200,16 @@ public:
         const ObjectId& id() const
         {
                 return m_id;
+        }
+
+        float alpha() const
+        {
+                return m_alpha;
+        }
+
+        void set_alpha(float alpha)
+        {
+                m_alpha = alpha;
         }
 
         bool visible() const
