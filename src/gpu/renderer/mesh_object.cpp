@@ -469,7 +469,7 @@ class Impl final : public MeshObject
         const vulkan::CommandPool& m_graphics_command_pool;
         const vulkan::Queue& m_graphics_queue;
 
-        CoordinatesBuffer m_coordinates_buffer;
+        MeshBuffer m_mesh_buffer;
         std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_mesh_descriptor_sets;
         std::vector<vulkan::DescriptorSetLayoutAndBindings> m_mesh_layouts;
 
@@ -504,7 +504,7 @@ class Impl final : public MeshObject
                 {
                         vulkan::Descriptors sets = MeshMemory::create(
                                 m_device, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings,
-                                {&m_coordinates_buffer.buffer()});
+                                {&m_mesh_buffer.buffer()});
                         ASSERT(sets.descriptor_set_count() == 1);
                         m_mesh_descriptor_sets.emplace(sets.descriptor_set_layout(), std::move(sets));
                 }
@@ -758,6 +758,7 @@ class Impl final : public MeshObject
                 bool update_all = updates.contains(mesh::Update::All);
                 bool update_mesh = update_all;
                 bool update_matrix = update_all || updates.contains(mesh::Update::Matrix);
+                bool update_alpha = update_all || updates.contains(mesh::Update::Alpha);
 
                 ASSERT([&updates]() {
                         std::unordered_set<mesh::Update> s = updates;
@@ -769,8 +770,13 @@ class Impl final : public MeshObject
 
                 if (update_matrix)
                 {
-                        m_coordinates_buffer.set_coordinates(
+                        m_mesh_buffer.set_coordinates(
                                 mesh_object.matrix(), mesh_object.matrix().top_left<3, 3>().inverse().transpose());
+                }
+
+                if (update_alpha)
+                {
+                        m_mesh_buffer.set_alpha(mesh_object.alpha());
                 }
 
                 if (update_mesh)
@@ -796,7 +802,7 @@ public:
                 : m_device(device),
                   m_graphics_command_pool(graphics_command_pool),
                   m_graphics_queue(graphics_queue),
-                  m_coordinates_buffer(device, {m_graphics_queue.family_index()}),
+                  m_mesh_buffer(device, {m_graphics_queue.family_index()}),
                   m_mesh_layouts(mesh_layouts),
                   m_material_layouts(material_layouts),
                   m_texture_sampler(texture_sampler)

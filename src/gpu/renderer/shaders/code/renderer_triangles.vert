@@ -43,14 +43,14 @@ out gl_PerVertex
 
 void main()
 {
-        vec4 world_coordinates = coordinates.model_matrix * vec4(position, 1.0);
+        vec4 world_coordinates = mesh.model_matrix * vec4(position, 1.0);
 
         vec4 pos = matrices.vp_matrix * world_coordinates;
         gl_Position = pos;
 
         if (drawing.clip_plane_enabled)
         {
-                vec4 world = coordinates.model_matrix * vec4(position, 1.0);
+                vec4 world = mesh.model_matrix * vec4(position, 1.0);
                 gl_ClipDistance[0] = dot(drawing.clip_plane_equation, world);
         }
         else
@@ -58,7 +58,7 @@ void main()
                 gl_ClipDistance[0] = 1;
         }
 
-        vs.world_normal = coordinates.normal_matrix * normal;
+        vs.world_normal = mesh.normal_matrix * normal;
         vs.world_position = position;
 
         vs.shadow_position = matrices.shadow_vp_texture_matrix * world_coordinates;

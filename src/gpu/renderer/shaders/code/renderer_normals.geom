@@ -65,8 +65,8 @@ void line(vec3 world_from, vec3 world_to)
 
 void main()
 {
-        const vec3 world_from = (coordinates.model_matrix * vec4(vs[0].position, 1.0)).xyz;
-        const vec3 world_normal = coordinates.normal_matrix * vs[0].normal;
+        const vec3 world_from = (mesh.model_matrix * vec4(vs[0].position, 1.0)).xyz;
+        const vec3 world_normal = mesh.normal_matrix * vs[0].normal;
         const vec3 world_normal_vector = drawing.normal_length * normalize(world_normal);
 
         line(world_from - world_normal_vector, world_from + world_normal_vector);

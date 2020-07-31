@@ -140,22 +140,24 @@ public:
         const vulkan::Buffer& buffer() const;
 };
 
-class CoordinatesBuffer final
+class MeshBuffer final
 {
         vulkan::BufferWithMemory m_uniform_buffer;
 
-        struct Coordinates
+        struct Mesh
         {
-                mat4f model_matrix;
+                alignas(sizeof(vec4f)) mat4f model_matrix;
                 alignas(sizeof(vec4f)) Matrix<3, 4, float> normal_matrix;
+                float alpha;
         };
 
 public:
-        CoordinatesBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+        MeshBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
 
         const vulkan::Buffer& buffer() const;
 
         void set_coordinates(const mat4& model_matrix, const mat3& normal_matrix) const;
+        void set_alpha(float alpha) const;
 };
 
 class VolumeBuffer final

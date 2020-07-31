@@ -30,5 +30,5 @@ vs;
 
 void main()
 {
-        vs.world_position = coordinates.model_matrix * vec4(position, 1.0);
+        vs.world_position = mesh.model_matrix * vec4(position, 1.0);
 }

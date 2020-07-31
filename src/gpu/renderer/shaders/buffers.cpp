@@ -295,27 +295,41 @@ const vulkan::Buffer& MaterialBuffer::buffer() const
 
 //
 
-CoordinatesBuffer::CoordinatesBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
+MeshBuffer::MeshBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
         : m_uniform_buffer(
                 vulkan::BufferMemoryType::HostVisible,
                 device,
                 family_indices,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                sizeof(Coordinates))
+                sizeof(Mesh))
 {
 }
 
-const vulkan::Buffer& CoordinatesBuffer::buffer() const
+const vulkan::Buffer& MeshBuffer::buffer() const
 {
         return m_uniform_buffer.buffer();
 }
 
-void CoordinatesBuffer::set_coordinates(const mat4& model_matrix, const mat3& normal_matrix) const
+void MeshBuffer::set_coordinates(const mat4& model_matrix, const mat3& normal_matrix) const
 {
-        Coordinates coordinates;
-        coordinates.model_matrix = mat4_std140<float>(model_matrix);
-        coordinates.normal_matrix = mat3_std140<float>(normal_matrix);
-        vulkan::map_and_write_to_buffer(m_uniform_buffer, 0, coordinates);
+        static_assert(offsetof(Mesh, model_matrix) + sizeof(Mesh::model_matrix) == offsetof(Mesh, normal_matrix));
+
+        constexpr size_t offset = offsetof(Mesh, model_matrix);
+        constexpr size_t size = offsetof(Mesh, normal_matrix) + sizeof(Mesh::normal_matrix) - offset;
+
+        vulkan::BufferMapper map(m_uniform_buffer, offset, size);
+
+        decltype(Mesh().model_matrix) model = mat4_std140<float>(model_matrix);
+        decltype(Mesh().normal_matrix) normal = mat3_std140<float>(normal_matrix);
+
+        map.write(offsetof(Mesh, model_matrix) - offset, model);
+        map.write(offsetof(Mesh, normal_matrix) - offset, normal);
+}
+
+void MeshBuffer::set_alpha(float alpha) const
+{
+        decltype(Mesh().alpha) a = alpha;
+        vulkan::map_and_write_to_buffer(m_uniform_buffer, offsetof(Mesh, alpha), a);
 }
 
 //
