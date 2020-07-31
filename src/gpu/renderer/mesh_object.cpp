@@ -690,6 +690,8 @@ class Impl final : public MeshObject
                 ASSERT([&updates]() {
                         std::unordered_set<mesh::Update> s = updates;
                         s.erase(mesh::Update::All);
+                        s.erase(mesh::Update::Alpha);
+                        s.erase(mesh::Update::Matrix);
                         return s.empty();
                 }());
 
