@@ -554,6 +554,74 @@ class Impl final : public MeshObject
 
         //
 
+        void load_mesh_textures_and_materials(const mesh::Mesh<3>& mesh)
+        {
+                if (mesh.facets.empty())
+                {
+                        m_textures.clear();
+                        m_material_buffers.clear();
+                        create_material_descriptor_sets({});
+                        return;
+                }
+
+                m_textures = load_textures(
+                        m_device, m_graphics_command_pool, m_graphics_queue, {m_graphics_queue.family_index()}, mesh);
+
+                m_material_buffers = load_materials(
+                        m_device, m_graphics_command_pool, m_graphics_queue, {m_graphics_queue.family_index()}, mesh);
+
+                create_material_descriptor_sets(materials_info(mesh, m_textures, m_material_buffers));
+        }
+
+        void load_mesh_vertices(const mesh::Mesh<3>& mesh)
+        {
+                {
+                        std::vector<int> sorted_face_indices;
+                        std::vector<int> material_face_offset;
+                        std::vector<int> material_face_count;
+
+                        sort_facets_by_material(
+                                mesh, &sorted_face_indices, &material_face_offset, &material_face_count);
+
+                        ASSERT(material_face_offset.size() == material_face_count.size());
+                        ASSERT(std::all_of(
+                                m_material_descriptor_sets.cbegin(), m_material_descriptor_sets.cend(),
+                                [&](const auto& v) {
+                                        return material_face_offset.size() == v.second.descriptor_set_count();
+                                }));
+
+                        m_material_vertices.resize(material_face_count.size());
+                        for (unsigned i = 0; i < material_face_count.size(); ++i)
+                        {
+                                m_material_vertices[i].offset = 3 * material_face_offset[i];
+                                m_material_vertices[i].count = 3 * material_face_count[i];
+                        }
+
+                        load_vertices(
+                                m_device, m_graphics_command_pool, m_graphics_queue, {m_graphics_queue.family_index()},
+                                mesh, sorted_face_indices, &m_faces_vertex_buffer, &m_faces_index_buffer,
+                                &m_faces_vertex_count, &m_faces_index_count);
+
+                        ASSERT(m_faces_index_count == 3 * mesh.facets.size());
+                }
+
+                {
+                        m_lines_vertex_buffer = load_line_vertices(
+                                m_device, m_graphics_command_pool, m_graphics_queue, {m_graphics_queue.family_index()},
+                                mesh);
+                        m_lines_vertex_count = 2 * mesh.lines.size();
+                }
+
+                {
+                        m_points_vertex_buffer = load_point_vertices(
+                                m_device, m_graphics_command_pool, m_graphics_queue, {m_graphics_queue.family_index()},
+                                mesh);
+                        m_points_vertex_count = mesh.points.size();
+                }
+        }
+
+        //
+
         void commands_triangles(
                 VkCommandBuffer command_buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
@@ -687,6 +755,10 @@ class Impl final : public MeshObject
                 ASSERT(!mesh_object.mesh().facets.empty() || !mesh_object.mesh().lines.empty()
                        || !mesh_object.mesh().points.empty());
 
+                bool update_all = updates.contains(mesh::Update::All);
+                bool update_mesh = update_all;
+                bool update_matrix = update_all || updates.contains(mesh::Update::Matrix);
+
                 ASSERT([&updates]() {
                         std::unordered_set<mesh::Update> s = updates;
                         s.erase(mesh::Update::All);
@@ -695,82 +767,21 @@ class Impl final : public MeshObject
                         return s.empty();
                 }());
 
-                bool update_all = updates.contains(mesh::Update::All);
-
-                if (!update_all)
+                if (update_matrix)
                 {
-                        return;
+                        m_coordinates_buffer.set_coordinates(
+                                mesh_object.matrix(), mesh_object.matrix().top_left<3, 3>().inverse().transpose());
                 }
 
-                m_coordinates_buffer.set_coordinates(
-                        mesh_object.matrix(), mesh_object.matrix().top_left<3, 3>().inverse().transpose());
-
-                const mesh::Mesh<3>& mesh = mesh_object.mesh();
-
-                if (!mesh.facets.empty())
+                if (update_mesh)
                 {
-                        m_textures = load_textures(
-                                m_device, m_graphics_command_pool, m_graphics_queue, {m_graphics_queue.family_index()},
-                                mesh);
+                        const mesh::Mesh<3>& mesh = mesh_object.mesh();
 
-                        m_material_buffers = load_materials(
-                                m_device, m_graphics_command_pool, m_graphics_queue, {m_graphics_queue.family_index()},
-                                mesh);
+                        load_mesh_textures_and_materials(mesh);
+                        load_mesh_vertices(mesh);
 
-                        create_material_descriptor_sets(materials_info(mesh, m_textures, m_material_buffers));
+                        *update_command_buffers = true;
                 }
-                else
-                {
-                        m_textures.clear();
-                        m_material_buffers.clear();
-                        create_material_descriptor_sets({});
-                }
-
-                {
-                        std::vector<int> sorted_face_indices;
-                        std::vector<int> material_face_offset;
-                        std::vector<int> material_face_count;
-
-                        sort_facets_by_material(
-                                mesh, &sorted_face_indices, &material_face_offset, &material_face_count);
-
-                        ASSERT(material_face_offset.size() == material_face_count.size());
-                        ASSERT(std::all_of(
-                                m_material_descriptor_sets.cbegin(), m_material_descriptor_sets.cend(),
-                                [&](const auto& v) {
-                                        return material_face_offset.size() == v.second.descriptor_set_count();
-                                }));
-
-                        m_material_vertices.resize(material_face_count.size());
-                        for (unsigned i = 0; i < material_face_count.size(); ++i)
-                        {
-                                m_material_vertices[i].offset = 3 * material_face_offset[i];
-                                m_material_vertices[i].count = 3 * material_face_count[i];
-                        }
-
-                        load_vertices(
-                                m_device, m_graphics_command_pool, m_graphics_queue, {m_graphics_queue.family_index()},
-                                mesh, sorted_face_indices, &m_faces_vertex_buffer, &m_faces_index_buffer,
-                                &m_faces_vertex_count, &m_faces_index_count);
-
-                        ASSERT(m_faces_index_count == 3 * mesh.facets.size());
-                }
-
-                //
-
-                m_lines_vertex_buffer = load_line_vertices(
-                        m_device, m_graphics_command_pool, m_graphics_queue, {m_graphics_queue.family_index()}, mesh);
-                m_lines_vertex_count = 2 * mesh.lines.size();
-
-                //
-
-                m_points_vertex_buffer = load_point_vertices(
-                        m_device, m_graphics_command_pool, m_graphics_queue, {m_graphics_queue.family_index()}, mesh);
-                m_points_vertex_count = mesh.points.size();
-
-                //
-
-                *update_command_buffers = true;
         }
 
 public:
