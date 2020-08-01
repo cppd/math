@@ -282,7 +282,7 @@ MaterialBuffer::MaterialBuffer(
                 vulkan::BufferMemoryType::DeviceLocal,
                 device,
                 family_indices,
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                 sizeof(Material))
 {
         m_uniform_buffer.write(command_pool, queue, data_size(material), data_pointer(material));
@@ -345,7 +345,7 @@ VolumeBuffer::VolumeBuffer(const vulkan::Device& device, const std::unordered_se
                   vulkan::BufferMemoryType::DeviceLocal,
                   device,
                   family_indices,
-                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                   sizeof(Volume))
 {
 }

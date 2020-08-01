@@ -198,7 +198,7 @@ class Impl final : public View
                 m_vertices = std::make_unique<vulkan::BufferWithMemory>(
                         vulkan::BufferMemoryType::DeviceLocal, m_device,
                         std::unordered_set<uint32_t>({m_graphics_queue.family_index()}),
-                        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, data_size(vertices));
+                        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(vertices));
                 m_vertices->write(
                         m_graphics_command_pool, m_graphics_queue, data_size(vertices), data_pointer(vertices));
 

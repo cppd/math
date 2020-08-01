@@ -201,7 +201,8 @@ public:
                           vulkan::BufferMemoryType::DeviceLocal,
                           m_instance.device(),
                           {m_family_index},
-                          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+                          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT
+                                  | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                           sizeof(VkDrawIndirectCommand)),
                   m_compute(create_compute(instance))
         {

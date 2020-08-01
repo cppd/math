@@ -152,7 +152,7 @@ public:
                           vulkan::BufferMemoryType::DeviceLocal,
                           device,
                           family_indices,
-                          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                           data.size() * COMPLEX_SIZE)
         {
                 const std::vector<std::complex<float>>& float_data = conv<float>(data);

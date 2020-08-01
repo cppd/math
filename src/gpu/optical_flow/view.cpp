@@ -124,7 +124,7 @@ class Impl final : public View
                         vulkan::BufferMemoryType::DeviceLocal, m_device,
                         std::unordered_set<uint32_t>(
                                 {m_graphics_command_pool.family_index(), m_compute_command_pool.family_index()}),
-                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, data_size(points));
+                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(points));
                 m_top_points->write(m_graphics_command_pool, m_graphics_queue, data_size(points), data_pointer(points));
 
                 m_top_flow.emplace(

@@ -726,11 +726,7 @@ BufferWithMemory::BufferWithMemory(
         : m_device(device),
           m_physical_device(device.physical_device()),
           m_family_indices(family_indices),
-          m_buffer(create_buffer(
-                  device,
-                  size,
-                  (memory_type == BufferMemoryType::HostVisible) ? usage : (usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT),
-                  family_indices)),
+          m_buffer(create_buffer(device, size, usage, family_indices)),
           m_memory_properties(
                   memory_type == BufferMemoryType::HostVisible
                           ? (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
