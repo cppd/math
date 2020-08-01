@@ -60,7 +60,7 @@ const VkDescriptorSet& MergeMemory::descriptor_set() const
 
 void MergeMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
 {
-        ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         VkDescriptorBufferInfo buffer_info = {};
         buffer_info.buffer = buffer;

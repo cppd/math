@@ -201,8 +201,6 @@ class Impl final : public View
                         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(vertices));
                 m_vertices->write(
                         m_graphics_command_pool, m_graphics_queue, data_size(vertices), data_pointer(vertices));
-
-                ASSERT(m_vertices->usage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT));
         }
 
 public:

@@ -753,7 +753,7 @@ void BufferWithMemory::write(
                 error("Offset and data size is greater than buffer size");
         }
 
-        ASSERT(data && !host_visible() && usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT));
+        ASSERT(data && !host_visible() && has_usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
         if (command_pool.family_index() != queue.family_index())
         {
@@ -783,19 +783,19 @@ BufferWithMemory::operator VkBuffer() const&
         return m_buffer;
 }
 
-VkDeviceSize BufferWithMemory::size() const
-{
-        return m_buffer.size();
-}
-
 const vulkan::Buffer& BufferWithMemory::buffer() const
 {
         return m_buffer;
 }
 
-bool BufferWithMemory::usage(VkBufferUsageFlagBits flag) const
+VkDeviceSize BufferWithMemory::size() const
 {
-        return m_buffer.usage(flag);
+        return m_buffer.size();
+}
+
+bool BufferWithMemory::has_usage(VkBufferUsageFlagBits flag) const
+{
+        return m_buffer.has_usage(flag);
 }
 
 VkMemoryPropertyFlags BufferWithMemory::memory_properties() const

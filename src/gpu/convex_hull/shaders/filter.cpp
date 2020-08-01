@@ -78,7 +78,7 @@ const VkDescriptorSet& FilterMemory::descriptor_set() const
 
 void FilterMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
 {
-        ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         VkDescriptorBufferInfo buffer_info = {};
         buffer_info.buffer = buffer;
@@ -90,7 +90,7 @@ void FilterMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
 
 void FilterMemory::set_points(const vulkan::BufferWithMemory& buffer) const
 {
-        ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         VkDescriptorBufferInfo buffer_info = {};
         buffer_info.buffer = buffer;
@@ -102,7 +102,7 @@ void FilterMemory::set_points(const vulkan::BufferWithMemory& buffer) const
 
 void FilterMemory::set_point_count(const vulkan::BufferWithMemory& buffer) const
 {
-        ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         VkDescriptorBufferInfo buffer_info = {};
         buffer_info.buffer = buffer;

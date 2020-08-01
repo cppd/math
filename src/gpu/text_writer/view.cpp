@@ -140,7 +140,7 @@ class Impl final : public View
 
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
 
-                ASSERT(m_indirect_buffer.usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
+                ASSERT(m_indirect_buffer.has_usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
                 vkCmdDrawIndirect(command_buffer, m_indirect_buffer, 0, 1, sizeof(VkDrawIndirectCommand));
         }
 

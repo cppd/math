@@ -59,7 +59,7 @@ const VkDescriptorSet& BitReverseMemory::descriptor_set() const
 
 void BitReverseMemory::set_buffer(const vulkan::BufferWithMemory& buffer) const
 {
-        ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         VkDescriptorBufferInfo buffer_info = {};
         buffer_info.buffer = buffer;

@@ -82,7 +82,7 @@ void CopyInputMemory::set(
                 m_descriptors.update_descriptor_set(0, SRC_BINDING, image_info);
         }
         {
-                ASSERT(output.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+                ASSERT(output.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = output;
                 buffer_info.offset = 0;

@@ -70,7 +70,7 @@ const VkDescriptorSet& CopyOutputMemory::descriptor_set() const
 void CopyOutputMemory::set(const vulkan::BufferWithMemory& input, const vulkan::ImageWithMemory& output) const
 {
         {
-                ASSERT(input.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+                ASSERT(input.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = input;

@@ -78,9 +78,9 @@ public:
 
         operator VkBuffer() const&;
         operator VkBuffer() const&& = delete;
-        VkDeviceSize size() const;
         const vulkan::Buffer& buffer() const;
-        bool usage(VkBufferUsageFlagBits flag) const;
+        VkDeviceSize size() const;
+        bool has_usage(VkBufferUsageFlagBits flag) const;
         VkMemoryPropertyFlags memory_properties() const;
         bool host_visible() const;
 };

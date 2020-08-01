@@ -82,7 +82,7 @@ void PrepareMemory::set_object_image(const vulkan::ImageWithMemory& storage_imag
 
 void PrepareMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
 {
-        ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         VkDescriptorBufferInfo buffer_info = {};
         buffer_info.buffer = buffer;
