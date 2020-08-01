@@ -253,7 +253,8 @@ class Impl final : public VolumeObject
                         m_device, m_graphics_command_pool, m_graphics_queue,
                         std::unordered_set<uint32_t>{m_graphics_queue.family_index()},
                         vulkan_transfer_function_formats(image.color_format), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_1D,
-                        vulkan::make_extent(image.size[0]), VK_IMAGE_LAYOUT_UNDEFINED, false /*storage*/);
+                        vulkan::make_extent(image.size[0]), VK_IMAGE_LAYOUT_UNDEFINED,
+                        VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
                 m_transfer_function->write_pixels(
                         m_graphics_command_pool, m_graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
@@ -281,10 +282,8 @@ class Impl final : public VolumeObject
                                 std::unordered_set<uint32_t>({m_graphics_queue.family_index()}),
                                 vulkan_image_formats(image.color_format), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_3D,
                                 vulkan::make_extent(image.size[0], image.size[1], image.size[2]),
-                                VK_IMAGE_LAYOUT_UNDEFINED, false /*storage*/);
-
-                        ASSERT((m_image->usage() & VK_IMAGE_USAGE_SAMPLED_BIT) == VK_IMAGE_USAGE_SAMPLED_BIT);
-                        ASSERT((m_image->usage() & VK_IMAGE_USAGE_STORAGE_BIT) == 0);
+                                VK_IMAGE_LAYOUT_UNDEFINED,
+                                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
                         image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
                 }

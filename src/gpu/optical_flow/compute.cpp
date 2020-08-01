@@ -170,12 +170,14 @@ class Impl final : public Compute
 
         int m_i_index = -1;
 
-        std::vector<vulkan::ImageWithMemory> create_images(const std::vector<vec2i>& sizes, uint32_t family_index) const
+        std::vector<vulkan::ImageWithMemory> create_images(
+                const std::vector<vec2i>& sizes,
+                uint32_t family_index,
+                VkImageUsageFlags usage) const
         {
                 std::vector<vulkan::ImageWithMemory> images;
                 images.reserve(sizes.size());
 
-                const bool storage = true;
                 const std::unordered_set<uint32_t> family_indices(
                         {m_compute_command_pool.family_index(), family_index});
                 const std::vector<VkFormat> formats({IMAGE_FORMAT});
@@ -184,7 +186,7 @@ class Impl final : public Compute
                         images.emplace_back(
                                 m_device, m_compute_command_pool, m_compute_queue, family_indices, formats,
                                 VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D, vulkan::make_extent(s[0], s[1]),
-                                VK_IMAGE_LAYOUT_GENERAL, storage);
+                                VK_IMAGE_LAYOUT_GENERAL, usage);
                 }
 
                 return images;
@@ -585,10 +587,12 @@ class Impl final : public Compute
 
                 const uint32_t family_index = m_compute_command_pool.family_index();
 
-                m_images[0] = create_images(sizes, family_index);
-                m_images[1] = create_images(sizes, family_index);
-                m_dx = create_images(sizes, family_index);
-                m_dy = create_images(sizes, family_index);
+                m_images[0] =
+                        create_images(sizes, family_index, VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+                m_images[1] =
+                        create_images(sizes, family_index, VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+                m_dx = create_images(sizes, family_index, VK_IMAGE_USAGE_STORAGE_BIT);
+                m_dy = create_images(sizes, family_index, VK_IMAGE_USAGE_STORAGE_BIT);
                 m_flow_buffers = create_flow_buffers(sizes, family_index);
 
                 constexpr vec2i GROUPS = GROUP_SIZE;

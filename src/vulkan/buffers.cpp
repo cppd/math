@@ -696,6 +696,11 @@ VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage, bo
         return features;
 }
 
+VkFormatFeatureFlags format_features_for_color_image_usage(VkImageUsageFlags usage)
+{
+        return format_features_for_image_usage(usage, false /*depth*/);
+}
+
 VkFormatFeatureFlags format_features_for_depth_image_usage(VkImageUsageFlags usage)
 {
         return format_features_for_image_usage(usage, true /*depth*/);
@@ -851,22 +856,20 @@ ImageWithMemory::ImageWithMemory(
         VkImageType type,
         VkExtent3D extent,
         VkImageLayout image_layout,
-        bool storage)
+        VkImageUsageFlags usage)
         : m_extent(correct_image_extent(type, extent)),
           m_device(device),
           m_physical_device(device.physical_device()),
           m_family_indices(family_indices),
           m_type(type),
           m_sample_count(sample_count),
-          m_usage(VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
-                  | (storage ? VK_IMAGE_USAGE_STORAGE_BIT : 0)),
+          m_usage(usage),
           m_format(find_supported_image_format(
                   m_physical_device,
                   format_candidates,
                   m_type,
                   VK_IMAGE_TILING_OPTIMAL,
-                  VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
-                          | (storage ? VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT : 0),
+                  format_features_for_color_image_usage(m_usage),
                   m_usage,
                   m_sample_count)),
           m_image(create_image(

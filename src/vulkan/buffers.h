@@ -201,7 +201,7 @@ public:
                 VkImageType type,
                 VkExtent3D extent,
                 VkImageLayout image_layout,
-                bool storage);
+                VkImageUsageFlags usage);
 
         ImageWithMemory(const ImageWithMemory&) = delete;
         ImageWithMemory& operator=(const ImageWithMemory&) = delete;

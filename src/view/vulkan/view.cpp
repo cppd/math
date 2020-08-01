@@ -110,11 +110,8 @@ void create_resolve_texture_and_command_buffers(
                 instance.device(), instance.graphics_compute_command_pool(), instance.graphics_compute_queues()[0],
                 std::unordered_set({instance.graphics_compute_command_pool().family_index()}),
                 std::vector<VkFormat>({swapchain.format()}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
-                vulkan::make_extent(swapchain.width(), swapchain.height()), IMAGE_LAYOUT, false /*storage*/);
-
-        ASSERT(image.usage() & VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-        ASSERT(image.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
-        ASSERT(!(image.usage() & VK_IMAGE_USAGE_STORAGE_BIT));
+                vulkan::make_extent(swapchain.width(), swapchain.height()), IMAGE_LAYOUT,
+                VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
 
         //
 
@@ -575,9 +572,7 @@ class Impl final : public View
                         std::unordered_set({m_instance->graphics_compute_queues()[0].family_index()}),
                         std::vector<VkFormat>({VULKAN_OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(m_swapchain->width(), m_swapchain->height()), VK_IMAGE_LAYOUT_GENERAL,
-                        true /*storage*/);
-
-                ASSERT(m_object_image->usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+                        VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
                 //
 

@@ -276,7 +276,7 @@ class Impl final : public View
                           VK_IMAGE_TYPE_2D,
                           vulkan::make_extent(glyphs.image().size[0], glyphs.image().size[1]),
                           VK_IMAGE_LAYOUT_UNDEFINED,
-                          false /*storage*/),
+                          VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT),
                   m_glyphs(std::move(glyphs.glyphs())),
                   m_semaphore(m_device),
                   m_sampler(create_sampler(m_device)),
@@ -302,9 +302,6 @@ class Impl final : public View
                           sizeof(VkDrawIndirectCommand)),
                   m_graphics_family_index(graphics_queue.family_index())
         {
-                ASSERT(m_glyph_texture.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
-                ASSERT(!(m_glyph_texture.usage() & VK_IMAGE_USAGE_STORAGE_BIT));
-
                 m_glyph_texture.write_pixels(
                         graphics_command_pool, graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, glyphs.image().color_format, glyphs.image().pixels);
