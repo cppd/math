@@ -374,8 +374,6 @@ std::vector<vulkan::ImageWithMemory> load_textures(
         textures.back().write_pixels(
                 command_pool, queue, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, color_format,
                 pixels);
-        ASSERT(textures.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
-        ASSERT(!(textures.back().usage() & VK_IMAGE_USAGE_STORAGE_BIT));
 
         return textures;
 }

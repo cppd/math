@@ -107,7 +107,7 @@ void ViewMemory::set_brightness(float brightness) const
 
 void ViewMemory::set_image(VkSampler sampler, const vulkan::ImageWithMemory& image) const
 {
-        ASSERT(image.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+        ASSERT(image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

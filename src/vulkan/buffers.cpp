@@ -944,9 +944,9 @@ VkImageView ImageWithMemory::image_view() const
         return m_image_view;
 }
 
-VkImageUsageFlags ImageWithMemory::usage() const
+bool ImageWithMemory::has_usage(VkImageUsageFlags usage) const
 {
-        return m_usage;
+        return (m_usage & usage) == usage;
 }
 
 VkSampleCountFlagBits ImageWithMemory::sample_count() const

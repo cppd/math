@@ -224,7 +224,7 @@ public:
         VkImageType type() const;
         VkFormat format() const;
         VkImageView image_view() const;
-        VkImageUsageFlags usage() const;
+        bool has_usage(VkImageUsageFlags usage) const;
         VkSampleCountFlagBits sample_count() const;
         unsigned width() const;
         unsigned height() const;

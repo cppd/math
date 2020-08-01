@@ -207,7 +207,7 @@ void clear_uint32_image_commands(const vulkan::ImageWithMemory& image, VkCommand
         VkImageSubresourceRange range = barrier.subresourceRange;
 
         // Для vkCmdClearColorImage нужно VK_IMAGE_USAGE_TRANSFER_DST_BIT
-        ASSERT((image.usage() & VK_IMAGE_USAGE_TRANSFER_DST_BIT) == VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+        ASSERT(image.has_usage(VK_IMAGE_USAGE_TRANSFER_DST_BIT));
 
         vkCmdClearColorImage(
                 command_buffer, image.image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clear_color, 1, &range);

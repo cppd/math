@@ -73,7 +73,8 @@ void CopyInputMemory::set(
         const vulkan::BufferWithMemory& output) const
 {
         {
-                ASSERT(input.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+                ASSERT(input.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 image_info.imageView = input.image_view();
@@ -83,6 +84,7 @@ void CopyInputMemory::set(
         }
         {
                 ASSERT(output.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = output;
                 buffer_info.offset = 0;

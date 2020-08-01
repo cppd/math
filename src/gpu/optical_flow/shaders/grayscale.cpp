@@ -70,7 +70,7 @@ const VkDescriptorSet& GrayscaleMemory::descriptor_set(int index) const
 
 void GrayscaleMemory::set_src(VkSampler sampler, const vulkan::ImageWithMemory& image)
 {
-        ASSERT(image.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+        ASSERT(image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -86,9 +86,9 @@ void GrayscaleMemory::set_src(VkSampler sampler, const vulkan::ImageWithMemory& 
 void GrayscaleMemory::set_dst(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1)
 {
         ASSERT(&image_0 != &image_1);
-        ASSERT(image_0.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+        ASSERT(image_0.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(image_0.format() == VK_FORMAT_R32_SFLOAT);
-        ASSERT(image_1.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+        ASSERT(image_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(image_1.format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
