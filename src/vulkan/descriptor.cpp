@@ -37,7 +37,15 @@ vulkan::DescriptorPool create_descriptor_pool(
                 VkDescriptorPoolSize pool_size = {};
                 pool_size.type = binding.descriptorType;
                 pool_size.descriptorCount = max_sets * binding.descriptorCount;
-                pool_sizes.push_back(pool_size);
+                if (pool_size.descriptorCount > 0)
+                {
+                        pool_sizes.push_back(pool_size);
+                }
+        }
+
+        if (pool_sizes.empty())
+        {
+                error("Empty descriptor pool sizes");
         }
 
         VkDescriptorPoolCreateInfo create_info = {};
