@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "normals.h"
 
-#include "common.h"
+#include "descriptors.h"
 #include "vertex_triangles.h"
 
 #include "code/code.h"

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_object.h"
 
 #include "shaders/buffers.h"
-#include "shaders/common.h"
+#include "shaders/descriptors.h"
 #include "shaders/triangles.h"
 #include "shaders/vertex_points.h"
 #include "shaders/vertex_triangles.h"
