@@ -45,11 +45,20 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 {
         vulkan::PhysicalDeviceFeatures::fragmentStoresAndAtomics,
         vulkan::PhysicalDeviceFeatures::geometryShader,
-        vulkan::PhysicalDeviceFeatures::shaderClipDistance
+        vulkan::PhysicalDeviceFeatures::shaderClipDistance,
+        vulkan::PhysicalDeviceFeatures::shaderStorageImageMultisample
 };
 // clang-format on
 
 constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+constexpr uint32_t OBJECTS_CLEAR_VALUE = 0;
+
+constexpr uint32_t TRANSPARENCY_HEADS_NULL_POINTER = limits<uint32_t>::max();
+constexpr uint32_t TRANSPARENCY_COUNTER_BUFFER_SIZE = 4; // size of uint
+constexpr uint32_t TRANSPARENCY_COUNTER_BUFFER_INIT_VALUE = 0;
+constexpr uint32_t TRANSPARENCY_NODE_SIZE = 16; // packed rgba (2+2+2+2) + depth (4) + next(4)
+constexpr uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
 
 template <typename T>
 class ObjectStorage
@@ -224,6 +233,34 @@ void clear_uint32_image_commands(const vulkan::ImageWithMemory& image, VkCommand
                 nullptr, 1, &barrier);
 }
 
+void copy_buffer_commands(
+        VkCommandBuffer command_buffer,
+        const vulkan::BufferWithMemory& src,
+        const vulkan::BufferWithMemory& dst)
+{
+        ASSERT(src.size() == dst.size());
+
+        VkBufferCopy buffer_copy = {};
+        buffer_copy.srcOffset = 0;
+        buffer_copy.dstOffset = 0;
+        buffer_copy.size = dst.size();
+        vkCmdCopyBuffer(command_buffer, src, dst, 1, &buffer_copy);
+
+        VkBufferMemoryBarrier barrier = {};
+        barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.buffer = dst;
+        barrier.offset = 0;
+        barrier.size = VK_WHOLE_SIZE;
+
+        vkCmdPipelineBarrier(
+                command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 1, &barrier, 0, nullptr);
+}
+
 class Impl final : public Renderer
 {
         // Для получения текстуры для тени результат рисования находится в интервалах x(-1, 1) y(-1, 1) z(0, 1).
@@ -272,6 +309,13 @@ class Impl final : public Renderer
 
         std::optional<vulkan::CommandBuffers> m_clear_command_buffers;
         vulkan::Semaphore m_clear_signal_semaphore;
+
+        const unsigned m_transparency_node_counter_max;
+        const unsigned m_transparency_node_buffer_size;
+        std::unique_ptr<vulkan::ImageWithMemory> m_transparency_heads;
+        std::unique_ptr<vulkan::BufferWithMemory> m_transparency_node_counter_init_value;
+        std::unique_ptr<vulkan::BufferWithMemory> m_transparency_node_counter;
+        std::unique_ptr<vulkan::BufferWithMemory> m_transparency_node_buffer;
 
         void set_light_a(const Color& light) override
         {
@@ -722,6 +766,8 @@ class Impl final : public Renderer
                 create_mesh_depth_buffers();
                 m_volume_renderer.create_buffers(m_render_buffers, m_viewport, m_depth_copy_image->image_view());
 
+                create_transparency_buffers();
+
                 create_mesh_command_buffers();
                 create_volume_command_buffers();
                 create_clear_command_buffers();
@@ -734,6 +780,7 @@ class Impl final : public Renderer
                 //
 
                 m_clear_command_buffers.reset();
+                delete_transparency_buffers();
                 m_volume_renderer.delete_buffers();
                 delete_mesh_depth_buffers();
                 m_mesh_renderer.delete_render_buffers();
@@ -748,6 +795,43 @@ class Impl final : public Renderer
                         m_swapchain->width(), m_swapchain->height(),
                         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_graphics_command_pool,
                         m_graphics_queue, DEPTH_COPY_IMAGE_LAYOUT);
+        }
+
+        void create_transparency_buffers()
+        {
+                const std::unordered_set<uint32_t> family_indices = {m_graphics_queue.family_index()};
+
+                m_transparency_heads = std::make_unique<vulkan::ImageWithMemory>(
+                        m_device, m_graphics_command_pool, m_graphics_queue, family_indices,
+                        std::vector<VkFormat>({VK_FORMAT_R32_UINT}), m_render_buffers->sample_count(), VK_IMAGE_TYPE_2D,
+                        vulkan::make_extent(m_swapchain->width(), m_swapchain->height()), VK_IMAGE_LAYOUT_GENERAL,
+                        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
+
+                m_transparency_node_counter_init_value = std::make_unique<vulkan::BufferWithMemory>(
+                        vulkan::BufferMemoryType::HostVisible, m_device, family_indices,
+                        VK_BUFFER_USAGE_TRANSFER_SRC_BIT, TRANSPARENCY_COUNTER_BUFFER_SIZE);
+                {
+                        vulkan::BufferMapper mapper(
+                                *m_transparency_node_counter_init_value, 0,
+                                m_transparency_node_counter_init_value->size());
+                        mapper.write(TRANSPARENCY_COUNTER_BUFFER_INIT_VALUE);
+                }
+                m_transparency_node_counter = std::make_unique<vulkan::BufferWithMemory>(
+                        vulkan::BufferMemoryType::DeviceLocal, m_device, family_indices,
+                        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                        TRANSPARENCY_COUNTER_BUFFER_SIZE);
+
+                m_transparency_node_buffer = std::make_unique<vulkan::BufferWithMemory>(
+                        vulkan::BufferMemoryType::DeviceLocal, m_device, family_indices,
+                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, m_transparency_node_buffer_size);
+        }
+
+        void delete_transparency_buffers()
+        {
+                m_transparency_node_buffer.reset();
+                m_transparency_node_counter.reset();
+                m_transparency_node_counter_init_value.reset();
+                m_transparency_heads.reset();
         }
 
         void delete_mesh_depth_buffers()
@@ -787,7 +871,12 @@ class Impl final : public Renderer
                 info.command_pool = m_graphics_command_pool;
 
                 info.before_render_pass_commands = [this](VkCommandBuffer command_buffer) {
-                        clear_uint32_image_commands(*m_object_image, command_buffer, 0 /*clear_value*/);
+                        clear_uint32_image_commands(*m_object_image, command_buffer, OBJECTS_CLEAR_VALUE);
+
+                        clear_uint32_image_commands(
+                                *m_transparency_heads, command_buffer, TRANSPARENCY_HEADS_NULL_POINTER);
+                        copy_buffer_commands(
+                                command_buffer, *m_transparency_node_counter_init_value, *m_transparency_node_counter);
                 };
 
                 const std::vector<VkClearValue> clear_values = m_render_buffers->clear_values(m_clear_color);
@@ -884,7 +973,11 @@ public:
                   m_volume_renderer(m_device, sample_shading, m_shader_buffers),
                   m_mesh_storage([this]() { mesh_visibility_changed(); }),
                   m_volume_storage([this]() { volume_visibility_changed(); }),
-                  m_clear_signal_semaphore(m_device)
+                  m_clear_signal_semaphore(m_device),
+                  m_transparency_node_counter_max(
+                          std::min(TRANSPARENCY_NODE_BUFFER_MAX_SIZE, instance.limits().maxStorageBufferRange)
+                          / TRANSPARENCY_NODE_SIZE),
+                  m_transparency_node_buffer_size(m_transparency_node_counter_max * TRANSPARENCY_NODE_SIZE)
         {
         }
 
