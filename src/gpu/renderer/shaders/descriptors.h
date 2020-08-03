@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/vulkan/buffers.h>
+#include <src/vulkan/constant.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
 
@@ -25,6 +26,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
+class CommonConstants final : public vulkan::SpecializationConstant
+{
+        struct Data
+        {
+                uint32_t transparency_drawing;
+        } m_data;
+
+        std::vector<VkSpecializationMapEntry> m_entries;
+
+        const std::vector<VkSpecializationMapEntry>& entries() const override;
+        const void* data() const override;
+        size_t size() const override;
+
+public:
+        CommonConstants();
+
+        void set(bool transparency_drawing);
+};
+
 class CommonMemory final
 {
         static constexpr int SET_NUMBER = 0;

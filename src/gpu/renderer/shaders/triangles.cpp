@@ -212,7 +212,8 @@ vulkan::Pipeline TrianglesProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         bool sample_shading,
-        const Region<2, int>& viewport) const
+        const Region<2, int>& viewport,
+        bool transparency) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -225,8 +226,13 @@ vulkan::Pipeline TrianglesProgram::create_pipeline(
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
+        CommonConstants common_constants;
+        common_constants.set(transparency);
+        info.depth_write = !transparency;
+
         const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader, &m_geometry_shader, &m_fragment_shader};
-        const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr, nullptr};
+        const std::vector<const vulkan::SpecializationConstant*> constants = {
+                &common_constants, &common_constants, &common_constants};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions =
                 TrianglesVertex::binding_descriptions();
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =

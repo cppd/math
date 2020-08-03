@@ -19,6 +19,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
+CommonConstants::CommonConstants()
+{
+        VkSpecializationMapEntry entry = {};
+        entry.constantID = 0;
+        entry.offset = offsetof(Data, transparency_drawing);
+        entry.size = sizeof(Data::transparency_drawing);
+        m_entries.push_back(entry);
+}
+
+void CommonConstants::set(bool transparency_drawing)
+{
+        m_data.transparency_drawing = transparency_drawing ? 1 : 0;
+}
+
+const std::vector<VkSpecializationMapEntry>& CommonConstants::entries() const
+{
+        return m_entries;
+}
+
+const void* CommonConstants::data() const
+{
+        return &m_data;
+}
+
+size_t CommonConstants::size() const
+{
+        return sizeof(m_data);
+}
+
+//
+
 std::vector<VkDescriptorSetLayoutBinding> CommonMemory::descriptor_set_layout_bindings(
         VkShaderStageFlags matrices,
         VkShaderStageFlags drawing,

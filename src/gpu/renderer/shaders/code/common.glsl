@@ -15,6 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+layout(constant_id = 0) const bool TRANSPARENCY_DRAWING = false;
+
+//
+
 layout(set = 0, binding = 0, std140) uniform Matrices
 {
         mat4 vp_matrix;

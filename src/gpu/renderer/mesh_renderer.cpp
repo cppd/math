@@ -105,17 +105,17 @@ void MeshRenderer::create_render_buffers(
         m_normals_common_memory.set_transparency(transparency_heads_image, transparency_counter, transparency_nodes);
 
         m_render_triangles_pipeline = m_triangles_program.create_pipeline(
-                render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport);
+                render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport, false);
         m_render_triangle_lines_pipeline = m_triangle_lines_program.create_pipeline(
-                render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport);
+                render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport, false);
         m_render_normals_pipeline = m_normals_program.create_pipeline(
-                render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport);
+                render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport, false);
         m_render_points_pipeline = m_points_program.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
-                viewport);
+                viewport, false);
         m_render_lines_pipeline = m_points_program.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
-                viewport);
+                viewport, false);
 }
 
 void MeshRenderer::delete_render_buffers()

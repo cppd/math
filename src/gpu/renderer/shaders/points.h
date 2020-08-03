@@ -56,7 +56,8 @@ public:
                 VkRenderPass render_pass,
                 VkSampleCountFlagBits sample_count,
                 VkPrimitiveTopology primitive_topology,
-                const Region<2, int>& viewport) const;
+                const Region<2, int>& viewport,
+                bool transparency) const;
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings();

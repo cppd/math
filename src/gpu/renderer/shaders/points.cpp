@@ -75,7 +75,8 @@ vulkan::Pipeline PointsProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         VkPrimitiveTopology primitive_topology,
-        const Region<2, int>& viewport) const
+        const Region<2, int>& viewport,
+        bool transparency) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -87,6 +88,10 @@ vulkan::Pipeline PointsProgram::create_pipeline(
         info.pipeline_layout = m_pipeline_layout;
         info.viewport = viewport;
         info.primitive_topology = primitive_topology;
+
+        CommonConstants common_constants;
+        common_constants.set(transparency);
+        info.depth_write = !transparency;
 
         std::vector<const vulkan::Shader*> shaders;
         if (primitive_topology == VK_PRIMITIVE_TOPOLOGY_POINT_LIST)
@@ -101,7 +106,7 @@ vulkan::Pipeline PointsProgram::create_pipeline(
         {
                 error_fatal("Unsupported primitive topology for renderer points program");
         }
-        const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
+        const std::vector<const vulkan::SpecializationConstant*> constants = {&common_constants, &common_constants};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions = PointsVertex::binding_descriptions();
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
                 PointsVertex::attribute_descriptions();
