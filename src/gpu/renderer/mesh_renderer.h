@@ -59,11 +59,16 @@ class MeshRenderer
         PointsProgram m_points_program;
         CommonMemory m_points_common_memory;
 
-        std::optional<vulkan::Pipeline> m_render_triangles_pipeline;
-        std::optional<vulkan::Pipeline> m_render_triangle_lines_pipeline;
-        std::optional<vulkan::Pipeline> m_render_normals_pipeline;
-        std::optional<vulkan::Pipeline> m_render_points_pipeline;
-        std::optional<vulkan::Pipeline> m_render_lines_pipeline;
+        struct Pipelines
+        {
+                std::optional<vulkan::Pipeline> triangles;
+                std::optional<vulkan::Pipeline> triangle_lines;
+                std::optional<vulkan::Pipeline> normals;
+                std::optional<vulkan::Pipeline> points;
+                std::optional<vulkan::Pipeline> lines;
+        };
+        Pipelines m_render_pipelines_opaque;
+        Pipelines m_render_pipelines_transparent;
         std::optional<vulkan::CommandBuffers> m_render_command_buffers;
 
         std::optional<vulkan::Pipeline> m_render_triangles_depth_pipeline;
@@ -72,13 +77,17 @@ class MeshRenderer
         vulkan::Sampler m_texture_sampler;
         vulkan::Sampler m_shadow_sampler;
 
+        const Pipelines& render_pipelines(bool transparent) const;
+        Pipelines& render_pipelines(bool transparent);
+
         void draw_commands(
                 const std::unordered_set<const MeshObject*>& meshes,
                 VkCommandBuffer command_buffer,
                 bool clip_plane,
                 bool normals,
                 bool depth,
-                bool draw_transparent_objects) const;
+                bool transparent_pipeline,
+                bool transparent_objects) const;
 
 public:
         MeshRenderer(
