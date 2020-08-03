@@ -72,7 +72,7 @@ struct TransparencyNode
         float depth;
         uint next;
 };
-layout(set = 0, binding = 6, std430) restrict buffer TransparencyNodes
+layout(set = 0, binding = 6, std430) restrict writeonly buffer TransparencyNodes
 {
         TransparencyNode transparency_nodes[];
 };
@@ -105,6 +105,22 @@ void set_fragment_color(vec3 color)
         }
         else
         {
+                uint index = atomicAdd(transparency_counter, 1);
+
+                if (index < drawing.transparency_max_node_count)
+                {
+                        uint prev_head =
+                                imageAtomicExchange(transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID, index);
+
+                        TransparencyNode node;
+                        node.rg = packUnorm2x16(color.rg);
+                        node.ba = packUnorm2x16(vec2(color.b, mesh.alpha));
+                        node.depth = gl_FragCoord.z;
+                        node.next = prev_head;
+
+                        transparency_nodes[index] = node;
+                }
+
                 discard;
         }
 }

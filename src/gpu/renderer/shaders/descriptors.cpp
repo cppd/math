@@ -74,11 +74,8 @@ std::vector<VkDescriptorSetLayoutBinding> CommonMemory::descriptor_set_layout_bi
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = DRAWING_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                if (drawing)
-                {
-                        b.descriptorCount = 1;
-                        b.stageFlags = drawing;
-                }
+                b.descriptorCount = 1;
+                b.stageFlags = drawing | VK_SHADER_STAGE_FRAGMENT_BIT;
 
                 bindings.push_back(b);
         }
@@ -265,11 +262,9 @@ std::vector<VkDescriptorSetLayoutBinding> MeshMemory::descriptor_set_layout_bind
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = BUFFER_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                if (coordinates)
-                {
-                        b.descriptorCount = 1;
-                        b.stageFlags = coordinates;
-                }
+
+                b.descriptorCount = 1;
+                b.stageFlags = coordinates | VK_SHADER_STAGE_FRAGMENT_BIT;
 
                 bindings.push_back(b);
         }
