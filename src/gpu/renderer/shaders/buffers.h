@@ -65,6 +65,7 @@ class ShaderBuffers
                 alignas(sizeof(vec4f)) vec3f direction_to_camera;
                 alignas(sizeof(vec2f)) vec2f viewport_center;
                 alignas(sizeof(vec2f)) vec2f viewport_factor;
+                uint32_t transparency_max_node_count;
         };
 
         size_t m_matrices_buffer_index;
@@ -89,6 +90,8 @@ public:
                 const mat4& main_vp_matrix,
                 const mat4& shadow_vp_matrix,
                 const mat4& shadow_vp_texture_matrix) const;
+
+        void set_transparency_max_node_count(uint32_t count) const;
 
         void set_clip_plane(const vec4& equation, bool enabled) const;
         void set_viewport(const vec2& center, const vec2& factor) const;

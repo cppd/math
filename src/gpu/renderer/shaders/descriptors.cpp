@@ -77,6 +77,34 @@ std::vector<VkDescriptorSetLayoutBinding> CommonMemory::descriptor_set_layout_bi
 
                 bindings.push_back(b);
         }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = TRANSPARENCY_HEADS_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = TRANSPARENCY_COUNTER_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                bindings.push_back(b);
+        }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = TRANSPARENCY_NODES_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                bindings.push_back(b);
+        }
 
         return bindings;
 }
@@ -139,17 +167,61 @@ void CommonMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthImag
         m_descriptors.update_descriptor_set(0, SHADOW_BINDING, image_info);
 }
 
-void CommonMemory::set_object_image(const vulkan::ImageWithMemory* storage_image) const
+void CommonMemory::set_objects_image(const vulkan::ImageWithMemory& objects) const
 {
-        ASSERT(storage_image);
-        ASSERT(storage_image->format() == VK_FORMAT_R32_UINT);
-        ASSERT(storage_image->has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(objects.format() == VK_FORMAT_R32_UINT);
+        ASSERT(objects.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = storage_image->image_view();
+        image_info.imageView = objects.image_view();
 
         m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
+}
+
+void CommonMemory::set_transparency(
+        const vulkan::ImageWithMemory& heads,
+        const vulkan::Buffer& counter,
+        const vulkan::Buffer& nodes) const
+{
+        ASSERT(heads.format() == VK_FORMAT_R32_UINT);
+        ASSERT(heads.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(counter.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        ASSERT(nodes.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+
+        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<uint32_t> bindings;
+
+        {
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+                image_info.imageView = heads.image_view();
+
+                infos.emplace_back(image_info);
+                bindings.push_back(TRANSPARENCY_HEADS_BINDING);
+        }
+        {
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = counter;
+                buffer_info.offset = 0;
+                buffer_info.range = counter.size();
+
+                infos.emplace_back(buffer_info);
+
+                bindings.push_back(TRANSPARENCY_COUNTER_BINDING);
+        }
+        {
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = nodes;
+                buffer_info.offset = 0;
+                buffer_info.range = nodes.size();
+
+                infos.emplace_back(buffer_info);
+
+                bindings.push_back(TRANSPARENCY_NODES_BINDING);
+        }
+
+        m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
 //

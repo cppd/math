@@ -47,11 +47,31 @@ layout(set = 0, binding = 1, std140) uniform Drawing
         vec3 direction_to_camera;
         vec2 viewport_center;
         vec2 viewport_factor;
+        uint transparency_max_node_count;
 }
 drawing;
 
 layout(set = 0, binding = 2) uniform sampler2D shadow_texture;
 layout(set = 0, binding = 3, r32ui) uniform writeonly uimage2D object_image;
+
+//
+
+layout(set = 0, binding = 4, r32ui) uniform restrict uimage2DMS transparency_heads;
+layout(set = 0, binding = 5, std430) restrict buffer TransparencyCounter
+{
+        uint transparency_counter;
+};
+struct TransparencyNode
+{
+        uint rg;
+        uint ba;
+        float depth;
+        uint next;
+};
+layout(set = 0, binding = 6, std430) restrict buffer TransparencyNodes
+{
+        TransparencyNode transparency_nodes[];
+};
 
 //
 

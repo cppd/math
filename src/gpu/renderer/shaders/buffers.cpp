@@ -120,6 +120,12 @@ void ShaderBuffers::set_matrices(
         }
 }
 
+void ShaderBuffers::set_transparency_max_node_count(uint32_t count) const
+{
+        decltype(Drawing().transparency_max_node_count) c = count;
+        copy_to_drawing_buffer(offsetof(Drawing, transparency_max_node_count), c);
+}
+
 void ShaderBuffers::set_clip_plane(const vec4& equation, bool enabled) const
 {
         static_assert(

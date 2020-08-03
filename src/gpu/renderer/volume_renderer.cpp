@@ -43,7 +43,9 @@ VolumeRenderer::VolumeRenderer(const vulkan::Device& device, bool sample_shading
 void VolumeRenderer::create_buffers(
         const RenderBuffers3D* render_buffers,
         const Region<2, int>& viewport,
-        VkImageView depth_image)
+        VkImageView depth_image,
+        const vulkan::ImageWithMemory& transparency_heads_image,
+        const vulkan::Buffer& transparency_nodes)
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -52,6 +54,7 @@ void VolumeRenderer::create_buffers(
         m_render_buffers = render_buffers;
 
         m_memory.set_depth_image(depth_image, m_depth_sampler);
+        m_memory.set_transparency(transparency_heads_image, transparency_nodes);
 
         m_pipeline = m_program.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport);

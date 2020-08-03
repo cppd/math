@@ -56,7 +56,9 @@ public:
         void create_buffers(
                 const RenderBuffers3D* render_buffers,
                 const Region<2, int>& viewport,
-                VkImageView depth_image);
+                VkImageView depth_image,
+                const vulkan::ImageWithMemory& transparency_heads_image,
+                const vulkan::Buffer& transparency_nodes);
         void delete_buffers();
 
         void create_command_buffers(

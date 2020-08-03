@@ -34,6 +34,10 @@ class CommonMemory final
         static constexpr int SHADOW_BINDING = 2;
         static constexpr int OBJECTS_BINDING = 3;
 
+        static constexpr int TRANSPARENCY_HEADS_BINDING = 4;
+        static constexpr int TRANSPARENCY_COUNTER_BINDING = 5;
+        static constexpr int TRANSPARENCY_NODES_BINDING = 6;
+
         vulkan::Descriptors m_descriptors;
 
 public:
@@ -54,7 +58,11 @@ public:
         const VkDescriptorSet& descriptor_set() const;
 
         void set_shadow_texture(VkSampler sampler, const vulkan::DepthImageWithMemory* shadow_texture) const;
-        void set_object_image(const vulkan::ImageWithMemory* storage_image) const;
+        void set_objects_image(const vulkan::ImageWithMemory& objects_image) const;
+        void set_transparency(
+                const vulkan::ImageWithMemory& heads,
+                const vulkan::Buffer& counter,
+                const vulkan::Buffer& nodes) const;
 };
 
 class MeshMemory final

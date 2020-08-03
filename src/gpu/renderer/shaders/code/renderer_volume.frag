@@ -59,10 +59,24 @@ layout(set = 0, binding = 0, std140) uniform Drawing
         vec3 direction_to_camera;
         vec2 viewport_center;
         vec2 viewport_factor;
+        uint transparency_max_node_count;
 }
 drawing;
 
 layout(set = 0, binding = 1) uniform sampler2DMS depth_image;
+
+layout(set = 0, binding = 2, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
+struct TransparencyNode
+{
+        uint rg;
+        uint ba;
+        float depth;
+        uint next;
+};
+layout(set = 0, binding = 3, std430) restrict readonly buffer TransparencyNodes
+{
+        TransparencyNode transparency_nodes[];
+};
 
 //
 

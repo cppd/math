@@ -92,7 +92,10 @@ public:
 
         void create_render_buffers(
                 const RenderBuffers3D* render_buffers,
-                const vulkan::ImageWithMemory* object_image,
+                const vulkan::ImageWithMemory& objects_image,
+                const vulkan::ImageWithMemory& transparency_heads_image,
+                const vulkan::Buffer& transparency_counter,
+                const vulkan::Buffer& transparency_nodes,
                 const Region<2, int>& viewport);
         void delete_render_buffers();
 

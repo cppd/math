@@ -231,8 +231,6 @@ class Impl final : public Renderer
         std::optional<vulkan::CommandBuffers> m_clear_command_buffers;
         vulkan::Semaphore m_clear_signal_semaphore;
 
-        const unsigned m_transparency_node_counter_max;
-        const unsigned m_transparency_node_buffer_size;
         std::unique_ptr<vulkan::ImageWithMemory> m_transparency_heads;
         std::unique_ptr<vulkan::BufferWithMemory> m_transparency_node_counter_init_value;
         std::unique_ptr<vulkan::BufferWithMemory> m_transparency_node_counter;
@@ -683,11 +681,16 @@ class Impl final : public Renderer
                 ASSERT(m_render_buffers->framebuffers().size() == 1);
 
                 create_depth_image();
-                m_mesh_renderer.create_render_buffers(m_render_buffers, m_object_image, m_viewport);
-                create_mesh_depth_buffers();
-                m_volume_renderer.create_buffers(m_render_buffers, m_viewport, m_depth_copy_image->image_view());
-
                 create_transparency_buffers();
+
+                m_mesh_renderer.create_render_buffers(
+                        m_render_buffers, *m_object_image, *m_transparency_heads, m_transparency_node_counter->buffer(),
+                        m_transparency_node_buffer->buffer(), m_viewport);
+                create_mesh_depth_buffers();
+
+                m_volume_renderer.create_buffers(
+                        m_render_buffers, m_viewport, m_depth_copy_image->image_view(), *m_transparency_heads,
+                        m_transparency_node_buffer->buffer());
 
                 create_mesh_command_buffers();
                 create_volume_command_buffers();
@@ -701,11 +704,11 @@ class Impl final : public Renderer
                 //
 
                 m_clear_command_buffers.reset();
-                delete_transparency_buffers();
                 m_volume_renderer.delete_buffers();
                 delete_mesh_depth_buffers();
                 m_mesh_renderer.delete_render_buffers();
                 m_depth_copy_image.reset();
+                delete_transparency_buffers();
         }
 
         void create_depth_image()
@@ -731,20 +734,30 @@ class Impl final : public Renderer
                 m_transparency_node_counter_init_value = std::make_unique<vulkan::BufferWithMemory>(
                         vulkan::BufferMemoryType::HostVisible, m_device, family_indices,
                         VK_BUFFER_USAGE_TRANSFER_SRC_BIT, TRANSPARENCY_COUNTER_BUFFER_SIZE);
+
                 {
                         vulkan::BufferMapper mapper(
                                 *m_transparency_node_counter_init_value, 0,
                                 m_transparency_node_counter_init_value->size());
                         mapper.write(TRANSPARENCY_COUNTER_BUFFER_INIT_VALUE);
                 }
+
                 m_transparency_node_counter = std::make_unique<vulkan::BufferWithMemory>(
                         vulkan::BufferMemoryType::DeviceLocal, m_device, family_indices,
                         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                         TRANSPARENCY_COUNTER_BUFFER_SIZE);
 
+                const unsigned transparency_node_counter_max =
+                        std::min(TRANSPARENCY_NODE_BUFFER_MAX_SIZE, m_instance.limits().maxStorageBufferRange)
+                        / TRANSPARENCY_NODE_SIZE;
+
+                const unsigned transparency_node_buffer_size = transparency_node_counter_max * TRANSPARENCY_NODE_SIZE;
+
                 m_transparency_node_buffer = std::make_unique<vulkan::BufferWithMemory>(
                         vulkan::BufferMemoryType::DeviceLocal, m_device, family_indices,
-                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, m_transparency_node_buffer_size);
+                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, transparency_node_buffer_size);
+
+                m_shader_buffers.set_transparency_max_node_count(transparency_node_counter_max);
         }
 
         void delete_transparency_buffers()
@@ -894,11 +907,7 @@ public:
                   m_volume_renderer(m_device, sample_shading, m_shader_buffers),
                   m_mesh_storage([this]() { mesh_visibility_changed(); }),
                   m_volume_storage([this]() { volume_visibility_changed(); }),
-                  m_clear_signal_semaphore(m_device),
-                  m_transparency_node_counter_max(
-                          std::min(TRANSPARENCY_NODE_BUFFER_MAX_SIZE, instance.limits().maxStorageBufferRange)
-                          / TRANSPARENCY_NODE_SIZE),
-                  m_transparency_node_buffer_size(m_transparency_node_counter_max * TRANSPARENCY_NODE_SIZE)
+                  m_clear_signal_semaphore(m_device)
         {
         }
 

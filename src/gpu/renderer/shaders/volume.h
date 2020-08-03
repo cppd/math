@@ -37,6 +37,8 @@ class VolumeSharedMemory final
 
         static constexpr int DRAWING_BINDING = 0;
         static constexpr int DEPTH_IMAGE_BINDING = 1;
+        static constexpr int TRANSPARENCY_HEADS_BINDING = 2;
+        static constexpr int TRANSPARENCY_NODES_BINDING = 3;
 
         vulkan::Descriptors m_descriptors;
 
@@ -62,6 +64,7 @@ public:
         const VkDescriptorSet& descriptor_set() const;
 
         void set_depth_image(VkImageView image_view, VkSampler sampler) const;
+        void set_transparency(const vulkan::ImageWithMemory& heads, const vulkan::Buffer& nodes) const;
 };
 
 class VolumeImageMemory final

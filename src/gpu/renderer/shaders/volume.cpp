@@ -48,6 +48,25 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_lay
 
                 bindings.push_back(b);
         }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = TRANSPARENCY_HEADS_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = TRANSPARENCY_NODES_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                bindings.push_back(b);
+        }
 
         return bindings;
 }
@@ -94,6 +113,37 @@ void VolumeSharedMemory::set_depth_image(VkImageView image_view, VkSampler sampl
         image_info.sampler = sampler;
 
         m_descriptors.update_descriptor_set(0, DEPTH_IMAGE_BINDING, image_info);
+}
+
+void VolumeSharedMemory::set_transparency(const vulkan::ImageWithMemory& heads, const vulkan::Buffer& nodes) const
+{
+        ASSERT(heads.format() == VK_FORMAT_R32_UINT);
+        ASSERT(heads.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(nodes.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+
+        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<uint32_t> bindings;
+
+        {
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+                image_info.imageView = heads.image_view();
+
+                infos.emplace_back(image_info);
+                bindings.push_back(TRANSPARENCY_HEADS_BINDING);
+        }
+        {
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = nodes;
+                buffer_info.offset = 0;
+                buffer_info.range = nodes.size();
+
+                infos.emplace_back(buffer_info);
+
+                bindings.push_back(TRANSPARENCY_NODES_BINDING);
+        }
+
+        m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
 //
