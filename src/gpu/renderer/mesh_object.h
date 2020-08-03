@@ -34,27 +34,32 @@ struct MeshObject
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
                 VkDescriptorSetLayout material_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set) const = 0;
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set,
+                bool draw_transparent_objects) const = 0;
 
         virtual void commands_plain_triangles(
                 VkCommandBuffer buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const = 0;
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
+                bool draw_transparent_objects) const = 0;
 
         virtual void commands_triangle_vertices(
                 VkCommandBuffer buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const = 0;
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
+                bool draw_transparent_objects) const = 0;
 
         virtual void commands_lines(
                 VkCommandBuffer buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const = 0;
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
+                bool draw_transparent_objects) const = 0;
 
         virtual void commands_points(
                 VkCommandBuffer buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const = 0;
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
+                bool draw_transparent_objects) const = 0;
 
         virtual void update(
                 const std::unordered_set<mesh::Update>& updates,

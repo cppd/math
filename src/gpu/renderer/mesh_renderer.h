@@ -77,7 +77,8 @@ class MeshRenderer
                 VkCommandBuffer command_buffer,
                 bool clip_plane,
                 bool normals,
-                bool depth) const;
+                bool depth,
+                bool draw_transparent_objects) const;
 
 public:
         MeshRenderer(

@@ -202,11 +202,14 @@ void MeshRenderer::draw_commands(
         VkCommandBuffer command_buffer,
         bool clip_plane,
         bool normals,
-        bool depth) const
+        bool depth,
+        bool draw_transparent_objects) const
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
 
         //
+
+        ASSERT(!depth || !draw_transparent_objects);
 
         if (depth)
         {
@@ -239,7 +242,7 @@ void MeshRenderer::draw_commands(
                         mesh->commands_triangles(
                                 command_buffer, m_triangles_program.descriptor_set_layout_mesh(),
                                 bind_descriptor_set_mesh, m_triangles_program.descriptor_set_layout_material(),
-                                bind_descriptor_set_material);
+                                bind_descriptor_set_material, draw_transparent_objects);
                 }
         }
         else
@@ -262,7 +265,7 @@ void MeshRenderer::draw_commands(
                 {
                         mesh->commands_plain_triangles(
                                 command_buffer, m_triangles_depth_program.descriptor_set_layout_mesh(),
-                                bind_descriptor_set_mesh);
+                                bind_descriptor_set_mesh, draw_transparent_objects);
                 }
         }
 
@@ -284,8 +287,8 @@ void MeshRenderer::draw_commands(
                 for (const MeshObject* mesh : meshes)
                 {
                         mesh->commands_lines(
-                                command_buffer, m_points_program.descriptor_set_layout_mesh(),
-                                bind_descriptor_set_mesh);
+                                command_buffer, m_points_program.descriptor_set_layout_mesh(), bind_descriptor_set_mesh,
+                                draw_transparent_objects);
                 }
         }
 
@@ -307,8 +310,8 @@ void MeshRenderer::draw_commands(
                 for (const MeshObject* mesh : meshes)
                 {
                         mesh->commands_points(
-                                command_buffer, m_points_program.descriptor_set_layout_mesh(),
-                                bind_descriptor_set_mesh);
+                                command_buffer, m_points_program.descriptor_set_layout_mesh(), bind_descriptor_set_mesh,
+                                draw_transparent_objects);
                 }
         }
 
@@ -332,7 +335,7 @@ void MeshRenderer::draw_commands(
                 {
                         mesh->commands_plain_triangles(
                                 command_buffer, m_triangle_lines_program.descriptor_set_layout_mesh(),
-                                bind_descriptor_set_mesh);
+                                bind_descriptor_set_mesh, draw_transparent_objects);
                 }
         }
 
@@ -355,7 +358,7 @@ void MeshRenderer::draw_commands(
                 {
                         mesh->commands_triangle_vertices(
                                 command_buffer, m_normals_program.descriptor_set_layout_mesh(),
-                                bind_descriptor_set_mesh);
+                                bind_descriptor_set_mesh, draw_transparent_objects);
                 }
         }
 }
@@ -393,7 +396,9 @@ void MeshRenderer::create_render_command_buffers(
         info.command_pool = graphics_command_pool;
         info.before_render_pass_commands = before_render_pass_commands;
         info.render_pass_commands = [&](VkCommandBuffer command_buffer) {
-                draw_commands(meshes, command_buffer, clip_plane, normals, false /*depth*/);
+                draw_commands(
+                        meshes, command_buffer, clip_plane, normals, false /*depth*/,
+                        false /*draw_transparent_objects*/);
         };
 
         m_render_command_buffers = vulkan::create_command_buffers(info);
@@ -436,7 +441,9 @@ void MeshRenderer::create_depth_command_buffers(
         info.command_pool = graphics_command_pool;
         info.clear_values = &m_depth_buffers->clear_values();
         info.render_pass_commands = [&](VkCommandBuffer command_buffer) {
-                draw_commands(meshes, command_buffer, clip_plane, normals, true /*depth*/);
+                draw_commands(
+                        meshes, command_buffer, clip_plane, normals, true /*depth*/,
+                        false /*draw_transparent_objects*/);
         };
 
         m_render_depth_command_buffers = vulkan::create_command_buffers(info);

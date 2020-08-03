@@ -485,6 +485,8 @@ class Impl final : public MeshObject
         std::unique_ptr<vulkan::BufferWithMemory> m_points_vertex_buffer;
         unsigned m_points_vertex_count = 0;
 
+        bool m_transparent = false;
+
         void create_mesh_descriptor_sets()
         {
                 m_mesh_descriptor_sets.clear();
@@ -615,9 +617,14 @@ class Impl final : public MeshObject
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
                 VkDescriptorSetLayout material_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set) const override
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set,
+                bool draw_transparent_objects) const override
         {
                 if (m_faces_vertex_count == 0)
+                {
+                        return;
+                }
+                if (draw_transparent_objects != m_transparent)
                 {
                         return;
                 }
@@ -650,9 +657,14 @@ class Impl final : public MeshObject
         void commands_plain_triangles(
                 VkCommandBuffer command_buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
+                bool draw_transparent_objects) const override
         {
                 if (m_faces_vertex_count == 0)
+                {
+                        return;
+                }
+                if (draw_transparent_objects != m_transparent)
                 {
                         return;
                 }
@@ -671,9 +683,14 @@ class Impl final : public MeshObject
         void commands_triangle_vertices(
                 VkCommandBuffer command_buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
+                bool draw_transparent_objects) const override
         {
                 if (m_faces_vertex_count == 0)
+                {
+                        return;
+                }
+                if (draw_transparent_objects != m_transparent)
                 {
                         return;
                 }
@@ -691,9 +708,14 @@ class Impl final : public MeshObject
         void commands_lines(
                 VkCommandBuffer command_buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
+                bool draw_transparent_objects) const override
         {
                 if (m_lines_vertex_count == 0)
+                {
+                        return;
+                }
+                if (draw_transparent_objects != m_transparent)
                 {
                         return;
                 }
@@ -711,9 +733,14 @@ class Impl final : public MeshObject
         void commands_points(
                 VkCommandBuffer command_buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
+                bool draw_transparent_objects) const override
         {
                 if (m_points_vertex_count == 0)
+                {
+                        return;
+                }
+                if (draw_transparent_objects != m_transparent)
                 {
                         return;
                 }
@@ -764,7 +791,14 @@ class Impl final : public MeshObject
 
                 if (update_alpha)
                 {
-                        m_mesh_buffer.set_alpha(mesh_object.alpha());
+                        m_mesh_buffer.set_alpha(std::clamp(mesh_object.alpha(), 0.0f, 1.0f));
+
+                        bool transparent = mesh_object.alpha() < 1;
+                        if (m_transparent != transparent)
+                        {
+                                m_transparent = transparent;
+                                *update_command_buffers = true;
+                        }
                 }
 
                 if (update_mesh)
