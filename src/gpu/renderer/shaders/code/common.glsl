@@ -97,8 +97,16 @@ layout(location = 0) out vec4 out_color;
 
 void set_fragment_color(vec3 color)
 {
-        out_color = vec4(color, 1);
         imageStore(object_image, ivec2(gl_FragCoord.xy), uvec4(1));
+
+        if (!TRANSPARENCY_DRAWING)
+        {
+                out_color = vec4(color, 1);
+        }
+        else
+        {
+                discard;
+        }
 }
 
 #endif
