@@ -805,12 +805,7 @@ class Impl final : public Renderer
                 info.command_pool = m_graphics_command_pool;
 
                 info.before_render_pass_commands = [this](VkCommandBuffer command_buffer) {
-                        commands_clear_uint32_image(command_buffer, *m_object_image, OBJECTS_CLEAR_VALUE);
-
-                        commands_clear_uint32_image(
-                                command_buffer, *m_transparency_heads, TRANSPARENCY_HEADS_NULL_POINTER);
-                        commands_copy_buffer(
-                                command_buffer, *m_transparency_node_counter_init_value, *m_transparency_node_counter);
+                        commands_init_uint32_storage_image(command_buffer, *m_object_image, OBJECTS_CLEAR_VALUE);
                 };
 
                 const std::vector<VkClearValue> clear_values = m_render_buffers->clear_values(m_clear_color);
@@ -822,9 +817,18 @@ class Impl final : public Renderer
         void create_mesh_render_command_buffers()
         {
                 m_mesh_renderer.delete_render_command_buffers();
+
                 m_mesh_renderer.create_render_command_buffers(
                         m_mesh_storage.visible_objects(), m_graphics_command_pool, m_clip_plane.has_value(),
-                        m_show_normals, nullptr);
+                        m_show_normals,
+                        [this](VkCommandBuffer command_buffer) {
+                                commands_init_uint32_storage_image(
+                                        command_buffer, *m_transparency_heads, TRANSPARENCY_HEADS_NULL_POINTER);
+                                commands_init_buffer(
+                                        command_buffer, *m_transparency_node_counter_init_value,
+                                        *m_transparency_node_counter);
+                        },
+                        nullptr);
         }
 
         void create_mesh_depth_command_buffers()

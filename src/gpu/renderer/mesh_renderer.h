@@ -117,7 +117,8 @@ public:
                 VkCommandPool graphics_command_pool,
                 bool clip_plane,
                 bool normals,
-                const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands);
+                const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands,
+                const std::function<void(VkCommandBuffer command_buffer)>& after_render_pass_commands);
         void delete_render_command_buffers();
 
         void create_depth_command_buffers(

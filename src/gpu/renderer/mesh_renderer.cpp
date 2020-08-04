@@ -406,7 +406,8 @@ void MeshRenderer::create_render_command_buffers(
         VkCommandPool graphics_command_pool,
         bool clip_plane,
         bool normals,
-        const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands)
+        const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands,
+        const std::function<void(VkCommandBuffer command_buffer)>& after_render_pass_commands)
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -441,6 +442,7 @@ void MeshRenderer::create_render_command_buffers(
                         meshes, command_buffer, clip_plane, normals, false /*depth*/, true /*transparent_pipeline*/,
                         true /*transparent_objects*/);
         };
+        info.after_render_pass_commands = after_render_pass_commands;
 
         m_render_command_buffers = vulkan::create_command_buffers(info);
 }

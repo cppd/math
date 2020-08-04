@@ -21,9 +21,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-void commands_clear_uint32_image(VkCommandBuffer command_buffer, const vulkan::ImageWithMemory& image, uint32_t value);
+void commands_init_uint32_storage_image(
+        VkCommandBuffer command_buffer,
+        const vulkan::ImageWithMemory& image,
+        uint32_t value);
 
-void commands_copy_buffer(
+void commands_init_buffer(
+        VkCommandBuffer command_buffer,
+        const vulkan::BufferWithMemory& src,
+        const vulkan::BufferWithMemory& dst);
+
+void commands_read_buffer(
         VkCommandBuffer command_buffer,
         const vulkan::BufferWithMemory& src,
         const vulkan::BufferWithMemory& dst);

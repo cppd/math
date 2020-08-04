@@ -19,8 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
-void commands_clear_uint32_image(VkCommandBuffer command_buffer, const vulkan::ImageWithMemory& image, uint32_t value)
+void commands_init_uint32_storage_image(
+        VkCommandBuffer command_buffer,
+        const vulkan::ImageWithMemory& image,
+        uint32_t value)
 {
+        ASSERT(image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+
         VkImageMemoryBarrier barrier = {};
 
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -71,11 +76,12 @@ void commands_clear_uint32_image(VkCommandBuffer command_buffer, const vulkan::I
                 nullptr, 1, &barrier);
 }
 
-void commands_copy_buffer(
+void commands_init_buffer(
         VkCommandBuffer command_buffer,
         const vulkan::BufferWithMemory& src,
         const vulkan::BufferWithMemory& dst)
 {
+        ASSERT(src.host_visible() && !dst.host_visible());
         ASSERT(src.size() == dst.size());
 
         VkBufferCopy buffer_copy = {};
@@ -97,5 +103,34 @@ void commands_copy_buffer(
         vkCmdPipelineBarrier(
                 command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                 VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 1, &barrier, 0, nullptr);
+}
+
+void commands_read_buffer(
+        VkCommandBuffer command_buffer,
+        const vulkan::BufferWithMemory& src,
+        const vulkan::BufferWithMemory& dst)
+{
+        ASSERT(!src.host_visible() && dst.host_visible());
+        ASSERT(src.size() == dst.size());
+
+        VkBufferMemoryBarrier barrier = {};
+        barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+        barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
+        barrier.dstAccessMask = 0;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.buffer = src;
+        barrier.offset = 0;
+        barrier.size = VK_WHOLE_SIZE;
+
+        vkCmdPipelineBarrier(
+                command_buffer, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 1, &barrier, 0, nullptr);
+
+        VkBufferCopy buffer_copy = {};
+        buffer_copy.srcOffset = 0;
+        buffer_copy.dstOffset = 0;
+        buffer_copy.size = dst.size();
+        vkCmdCopyBuffer(command_buffer, src, dst, 1, &buffer_copy);
 }
 }
