@@ -55,7 +55,7 @@ constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ON
 
 constexpr uint32_t OBJECTS_CLEAR_VALUE = 0;
 
-constexpr uint32_t TRANSPARENCY_HEADS_NULL_POINTER = limits<uint32_t>::max();
+constexpr uint32_t TRANSPARENCY_NULL_POINTER = limits<uint32_t>::max();
 constexpr uint32_t TRANSPARENCY_COUNTER_BUFFER_SIZE = 4; // size of uint
 constexpr uint32_t TRANSPARENCY_COUNTER_BUFFER_INIT_VALUE = 0;
 constexpr uint32_t TRANSPARENCY_NODE_SIZE = 16; // packed rgba (2+2+2+2) + depth (4) + next(4)
@@ -823,7 +823,7 @@ class Impl final : public Renderer
                         m_show_normals,
                         [this](VkCommandBuffer command_buffer) {
                                 commands_init_uint32_storage_image(
-                                        command_buffer, *m_transparency_heads, TRANSPARENCY_HEADS_NULL_POINTER);
+                                        command_buffer, *m_transparency_heads, TRANSPARENCY_NULL_POINTER);
                                 commands_init_buffer(
                                         command_buffer, *m_transparency_node_counter_init_value,
                                         *m_transparency_node_counter);
