@@ -43,6 +43,7 @@ class ModelTree final
         QTreeWidget* m_tree = nullptr;
 
         std::vector<Connection> m_connections;
+        std::function<void()> m_item_changed;
 
         //void set_current(ObjectId id);
 
