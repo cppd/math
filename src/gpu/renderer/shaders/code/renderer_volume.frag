@@ -65,6 +65,8 @@ drawing;
 
 layout(set = 0, binding = 1) uniform sampler2DMS depth_image;
 
+//
+
 layout(set = 0, binding = 2, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
 struct TransparencyNode
 {
@@ -108,6 +110,66 @@ layout(set = 1, binding = 3) uniform sampler1D transfer_function;
 //
 
 layout(location = 0) out vec4 out_color;
+
+//
+
+const uint TRANSPARENCY_NULL_POINTER = 0xffffffff;
+const uint TRANSPARENCY_MAX_NODES = 32;
+TransparencyNode transparency_fragments[TRANSPARENCY_MAX_NODES];
+int transparency_fragment_count;
+
+void transparency_read_and_sort_fragments()
+{
+        transparency_fragment_count = 0;
+
+        uint pointer = imageLoad(transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID).r;
+
+        if (pointer == TRANSPARENCY_NULL_POINTER)
+        {
+                return;
+        }
+
+        while (pointer != TRANSPARENCY_NULL_POINTER && transparency_fragment_count < TRANSPARENCY_MAX_NODES)
+        {
+                transparency_fragments[transparency_fragment_count] = transparency_nodes[pointer];
+                pointer = transparency_fragments[transparency_fragment_count].next;
+                ++transparency_fragment_count;
+        }
+
+        // Insertion sort
+        for (int i = 1; i < transparency_fragment_count; ++i)
+        {
+                TransparencyNode n = transparency_fragments[i];
+                int j = i - 1;
+                while (j >= 0 && n.depth < transparency_fragments[j].depth)
+                {
+                        transparency_fragments[j + 1] = transparency_fragments[j];
+                        --j;
+                }
+                transparency_fragments[j + 1] = n;
+        }
+}
+
+vec4 transparency_compute()
+{
+        const float MIN_TRANSPARENCY = 1.0 / 256;
+        float transparency = 1; // transparency = 1 - α
+        vec3 color = vec3(0);
+
+        for (int i = 0; i < transparency_fragment_count; ++i)
+        {
+                TransparencyNode node = transparency_fragments[i];
+                vec4 c = vec4(unpackUnorm2x16(node.rg), unpackUnorm2x16(node.ba));
+                color += (transparency * c.a) * c.rgb;
+                transparency *= 1.0 - c.a;
+                if (transparency < MIN_TRANSPARENCY)
+                {
+                        break;
+                }
+        }
+
+        return vec4(color, transparency);
+}
 
 //
 
