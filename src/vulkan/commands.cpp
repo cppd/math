@@ -75,6 +75,11 @@ CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
 
                 vkCmdEndRenderPass(command_buffers[i]);
 
+                if (info.after_render_pass_commands)
+                {
+                        info.after_render_pass_commands(command_buffers[i]);
+                }
+
                 result = vkEndCommandBuffer(command_buffers[i]);
                 if (result != VK_SUCCESS)
                 {

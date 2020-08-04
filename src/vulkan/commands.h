@@ -38,6 +38,7 @@ struct CommandBufferCreateInfo
         std::optional<const std::vector<VkClearValue>*> clear_values;
         std::function<void(VkCommandBuffer command_buffer)> before_render_pass_commands;
         std::function<void(VkCommandBuffer command_buffer)> render_pass_commands;
+        std::function<void(VkCommandBuffer command_buffer)> after_render_pass_commands;
 };
 
 CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info);
