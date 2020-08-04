@@ -67,8 +67,8 @@ layout(set = 0, binding = 5, std430) restrict buffer TransparencyCounter
 };
 struct TransparencyNode
 {
-        uint rg;
-        uint ba;
+        uint color_rg;
+        uint color_ba;
         float depth;
         uint next;
 };
@@ -113,8 +113,8 @@ void set_fragment_color(vec3 color)
                                 imageAtomicExchange(transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID, index);
 
                         TransparencyNode node;
-                        node.rg = packUnorm2x16(color.rg);
-                        node.ba = packUnorm2x16(vec2(color.b, mesh.alpha));
+                        node.color_rg = packUnorm2x16(color.rg);
+                        node.color_ba = packUnorm2x16(vec2(color.b, mesh.alpha));
                         node.depth = gl_FragCoord.z;
                         node.next = prev_head;
 

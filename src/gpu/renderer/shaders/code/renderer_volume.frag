@@ -70,8 +70,8 @@ layout(set = 0, binding = 1) uniform sampler2DMS depth_image;
 layout(set = 0, binding = 2, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
 struct TransparencyNode
 {
-        uint rg;
-        uint ba;
+        uint color_rg;
+        uint color_ba;
         float depth;
         uint next;
 };
@@ -159,7 +159,7 @@ vec4 transparency_compute()
         for (int i = 0; i < transparency_fragment_count; ++i)
         {
                 TransparencyNode node = transparency_fragments[i];
-                vec4 c = vec4(unpackUnorm2x16(node.rg), unpackUnorm2x16(node.ba));
+                vec4 c = vec4(unpackUnorm2x16(node.color_rg), unpackUnorm2x16(node.color_ba));
                 color += (transparency * c.a) * c.rgb;
                 transparency *= 1.0 - c.a;
                 if (transparency < MIN_TRANSPARENCY)
