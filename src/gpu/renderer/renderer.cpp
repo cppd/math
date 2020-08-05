@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/device.h>
 #include <src/vulkan/query.h>
 #include <src/vulkan/queue.h>
+#include <src/vulkan/sync.h>
 
 #include <memory>
 #include <optional>
@@ -182,6 +183,23 @@ ViewportTransform viewport_transform(const Region<2, int>& viewport)
         return t;
 }
 
+void transparency_memory_message(long long node_count)
+{
+        thread_local long long previous_node_count = -1;
+        if (node_count < 0 && previous_node_count >= 0)
+        {
+                LOG("Transparency memory: OK");
+        }
+        else if (node_count >= 0 && previous_node_count != node_count)
+        {
+                std::ostringstream oss;
+                oss << "Transparency memory: required " << node_count * TRANSPARENCY_NODE_SIZE / 1'000'000
+                    << " MB, limit " << TRANSPARENCY_NODE_BUFFER_MAX_SIZE / 1'000'000 << " MB.";
+                LOG(oss.str());
+        }
+        previous_node_count = node_count;
+}
+
 class Impl final : public Renderer
 {
         // Для получения текстуры для тени результат рисования находится в интервалах x(-1, 1) y(-1, 1) z(0, 1).
@@ -233,8 +251,11 @@ class Impl final : public Renderer
 
         std::unique_ptr<vulkan::ImageWithMemory> m_transparency_heads;
         std::unique_ptr<vulkan::BufferWithMemory> m_transparency_node_counter_init_value;
+        std::unique_ptr<vulkan::BufferWithMemory> m_transparency_node_counter_read_value;
         std::unique_ptr<vulkan::BufferWithMemory> m_transparency_node_counter;
         std::unique_ptr<vulkan::BufferWithMemory> m_transparency_node_buffer;
+        unsigned m_transparency_max_node_count;
+        vulkan::Semaphore m_render_transparent_as_opaque_signal_semaphore;
 
         void set_light_a(const Color& light) override
         {
@@ -630,6 +651,37 @@ class Impl final : public Renderer
 
                                 semaphore = m_renderer_mesh_signal_semaphore;
                         }
+
+                        if (m_mesh_renderer.render_command_buffer_transparent_as_opaque(image_index))
+                        {
+                                vulkan::queue_wait_idle(graphics_queue_1);
+
+                                vulkan::BufferMapper mapper(
+                                        *m_transparency_node_counter_read_value, 0,
+                                        m_transparency_node_counter_read_value->size());
+                                uint32_t node_count;
+                                mapper.read(&node_count);
+                                if (node_count > m_transparency_max_node_count)
+                                {
+                                        vulkan::queue_submit(
+                                                semaphore, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                                *m_mesh_renderer.render_command_buffer_transparent_as_opaque(
+                                                        image_index),
+                                                m_render_transparent_as_opaque_signal_semaphore, graphics_queue_1);
+
+                                        semaphore = m_render_transparent_as_opaque_signal_semaphore;
+
+                                        transparency_memory_message(node_count);
+                                }
+                                else
+                                {
+                                        transparency_memory_message(-1);
+                                }
+                        }
+                        else
+                        {
+                                transparency_memory_message(-1);
+                        }
                 }
 
                 if (m_volume_renderer.command_buffer(image_index))
@@ -742,22 +794,27 @@ class Impl final : public Renderer
                         mapper.write(TRANSPARENCY_COUNTER_BUFFER_INIT_VALUE);
                 }
 
+                m_transparency_node_counter_read_value = std::make_unique<vulkan::BufferWithMemory>(
+                        vulkan::BufferMemoryType::HostVisible, m_device, family_indices,
+                        VK_BUFFER_USAGE_TRANSFER_DST_BIT, TRANSPARENCY_COUNTER_BUFFER_SIZE);
+
                 m_transparency_node_counter = std::make_unique<vulkan::BufferWithMemory>(
                         vulkan::BufferMemoryType::DeviceLocal, m_device, family_indices,
-                        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                        VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
+                                | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                         TRANSPARENCY_COUNTER_BUFFER_SIZE);
 
-                const unsigned transparency_node_counter_max =
+                m_transparency_max_node_count =
                         std::min(TRANSPARENCY_NODE_BUFFER_MAX_SIZE, m_instance.limits().maxStorageBufferRange)
                         / TRANSPARENCY_NODE_SIZE;
 
-                const unsigned transparency_node_buffer_size = transparency_node_counter_max * TRANSPARENCY_NODE_SIZE;
+                const unsigned transparency_node_buffer_size = m_transparency_max_node_count * TRANSPARENCY_NODE_SIZE;
 
                 m_transparency_node_buffer = std::make_unique<vulkan::BufferWithMemory>(
                         vulkan::BufferMemoryType::DeviceLocal, m_device, family_indices,
                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, transparency_node_buffer_size);
 
-                m_shader_buffers.set_transparency_max_node_count(transparency_node_counter_max);
+                m_shader_buffers.set_transparency_max_node_count(m_transparency_max_node_count);
         }
 
         void delete_transparency_buffers()
@@ -765,6 +822,7 @@ class Impl final : public Renderer
                 m_transparency_node_buffer.reset();
                 m_transparency_node_counter.reset();
                 m_transparency_node_counter_init_value.reset();
+                m_transparency_node_counter_read_value.reset();
                 m_transparency_heads.reset();
         }
 
@@ -828,7 +886,11 @@ class Impl final : public Renderer
                                         command_buffer, *m_transparency_node_counter_init_value,
                                         *m_transparency_node_counter);
                         },
-                        nullptr);
+                        [this](VkCommandBuffer command_buffer) {
+                                commands_read_buffer(
+                                        command_buffer, *m_transparency_node_counter,
+                                        *m_transparency_node_counter_read_value);
+                        });
         }
 
         void create_mesh_depth_command_buffers()
@@ -911,7 +973,8 @@ public:
                   m_volume_renderer(m_device, sample_shading, m_shader_buffers),
                   m_mesh_storage([this]() { mesh_visibility_changed(); }),
                   m_volume_storage([this]() { volume_visibility_changed(); }),
-                  m_clear_signal_semaphore(m_device)
+                  m_clear_signal_semaphore(m_device),
+                  m_render_transparent_as_opaque_signal_semaphore(m_device)
         {
         }
 
