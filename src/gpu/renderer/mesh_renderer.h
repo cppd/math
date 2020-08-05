@@ -69,7 +69,8 @@ class MeshRenderer
         };
         Pipelines m_render_pipelines_opaque;
         Pipelines m_render_pipelines_transparent;
-        std::optional<vulkan::CommandBuffers> m_render_command_buffers;
+        std::optional<vulkan::CommandBuffers> m_render_command_buffers_all;
+        std::optional<vulkan::CommandBuffers> m_render_command_buffers_transparent_as_opaque;
 
         std::optional<vulkan::Pipeline> m_render_triangles_depth_pipeline;
         std::optional<vulkan::CommandBuffers> m_render_depth_command_buffers;
@@ -80,14 +81,14 @@ class MeshRenderer
         const Pipelines& render_pipelines(bool transparent) const;
         Pipelines& render_pipelines(bool transparent);
 
+        template <template <typename...> typename T>
         void draw_commands(
-                const std::unordered_set<const MeshObject*>& meshes,
+                const T<const MeshObject*>& meshes,
                 VkCommandBuffer command_buffer,
                 bool clip_plane,
                 bool normals,
                 bool depth,
-                bool transparent_pipeline,
-                bool transparent_objects) const;
+                bool transparent_pipeline) const;
 
 public:
         MeshRenderer(
@@ -117,8 +118,8 @@ public:
                 VkCommandPool graphics_command_pool,
                 bool clip_plane,
                 bool normals,
-                const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands,
-                const std::function<void(VkCommandBuffer command_buffer)>& after_render_pass_commands);
+                const std::function<void(VkCommandBuffer command_buffer)>& before_transparency_render_pass_commands,
+                const std::function<void(VkCommandBuffer command_buffer)>& after_transparency_render_pass_commands);
         void delete_render_command_buffers();
 
         void create_depth_command_buffers(
@@ -128,7 +129,8 @@ public:
                 bool normals);
         void delete_depth_command_buffers();
 
-        std::optional<VkCommandBuffer> render_command_buffer(unsigned index) const;
+        std::optional<VkCommandBuffer> render_command_buffer_all(unsigned index) const;
+        std::optional<VkCommandBuffer> render_command_buffer_transparent_as_opaque(unsigned index) const;
         std::optional<VkCommandBuffer> depth_command_buffer(unsigned index) const;
 };
 }

@@ -612,19 +612,19 @@ class Impl final : public MeshObject
 
         //
 
+        bool transparent() const override
+        {
+                return m_transparent;
+        }
+
         void commands_triangles(
                 VkCommandBuffer command_buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
                 VkDescriptorSetLayout material_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set,
-                bool draw_transparent_objects) const override
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set) const override
         {
                 if (m_faces_vertex_count == 0)
-                {
-                        return;
-                }
-                if (draw_transparent_objects != m_transparent)
                 {
                         return;
                 }
@@ -657,14 +657,9 @@ class Impl final : public MeshObject
         void commands_plain_triangles(
                 VkCommandBuffer command_buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
-                bool draw_transparent_objects) const override
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
         {
                 if (m_faces_vertex_count == 0)
-                {
-                        return;
-                }
-                if (draw_transparent_objects != m_transparent)
                 {
                         return;
                 }
@@ -683,14 +678,9 @@ class Impl final : public MeshObject
         void commands_triangle_vertices(
                 VkCommandBuffer command_buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
-                bool draw_transparent_objects) const override
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
         {
                 if (m_faces_vertex_count == 0)
-                {
-                        return;
-                }
-                if (draw_transparent_objects != m_transparent)
                 {
                         return;
                 }
@@ -708,14 +698,9 @@ class Impl final : public MeshObject
         void commands_lines(
                 VkCommandBuffer command_buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
-                bool draw_transparent_objects) const override
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
         {
                 if (m_lines_vertex_count == 0)
-                {
-                        return;
-                }
-                if (draw_transparent_objects != m_transparent)
                 {
                         return;
                 }
@@ -733,14 +718,9 @@ class Impl final : public MeshObject
         void commands_points(
                 VkCommandBuffer command_buffer,
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
-                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
-                bool draw_transparent_objects) const override
+                const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
         {
                 if (m_points_vertex_count == 0)
-                {
-                        return;
-                }
-                if (draw_transparent_objects != m_transparent)
                 {
                         return;
                 }

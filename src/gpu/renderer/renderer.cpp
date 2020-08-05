@@ -602,13 +602,13 @@ class Impl final : public Renderer
                         semaphore = m_clear_signal_semaphore;
                 }
 
-                if (m_mesh_renderer.render_command_buffer(image_index))
+                if (m_mesh_renderer.render_command_buffer_all(image_index))
                 {
                         if (!m_show_shadow)
                         {
                                 vulkan::queue_submit(
                                         semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                        *m_mesh_renderer.render_command_buffer(image_index),
+                                        *m_mesh_renderer.render_command_buffer_all(image_index),
                                         m_renderer_mesh_signal_semaphore, graphics_queue_1);
 
                                 semaphore = m_renderer_mesh_signal_semaphore;
@@ -625,7 +625,7 @@ class Impl final : public Renderer
                                         std::array<VkPipelineStageFlags, 2>{
                                                 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                                                 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT},
-                                        *m_mesh_renderer.render_command_buffer(image_index),
+                                        *m_mesh_renderer.render_command_buffer_all(image_index),
                                         m_renderer_mesh_signal_semaphore, graphics_queue_1);
 
                                 semaphore = m_renderer_mesh_signal_semaphore;
@@ -651,7 +651,7 @@ class Impl final : public Renderer
 
                 //
 
-                return !m_mesh_renderer.render_command_buffer(0).has_value()
+                return !m_mesh_renderer.render_command_buffer_all(0).has_value()
                        && !m_volume_renderer.command_buffer(0).has_value();
         }
 

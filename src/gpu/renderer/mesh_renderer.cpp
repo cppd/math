@@ -24,6 +24,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
+namespace
+{
+template <template <typename...> typename T>
+void find_opaque_and_transparent(
+        const T<const MeshObject*>& meshes,
+        std::vector<const MeshObject*>* opaque_meshes,
+        std::vector<const MeshObject*>* transparent_meshes)
+{
+        const unsigned transparent_count = std::count_if(
+                meshes.cbegin(), meshes.cend(), [](const MeshObject* mesh) { return mesh->transparent(); });
+
+        opaque_meshes->clear();
+        opaque_meshes->reserve(meshes.size() - transparent_count);
+
+        transparent_meshes->clear();
+        transparent_meshes->reserve(transparent_count);
+
+        for (const MeshObject* mesh : meshes)
+        {
+                if (mesh->transparent())
+                {
+                        transparent_meshes->push_back(mesh);
+                }
+                else
+                {
+                        opaque_meshes->push_back(mesh);
+                }
+        }
+}
+}
+
 MeshRenderer::MeshRenderer(
         const vulkan::Device& device,
         bool sample_shading,
@@ -146,7 +177,7 @@ void MeshRenderer::delete_render_buffers()
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
 
-        m_render_command_buffers.reset();
+        delete_render_command_buffers();
 
         for (bool transparent : {false, true})
         {
@@ -177,7 +208,7 @@ void MeshRenderer::delete_depth_buffers()
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
 
-        m_render_depth_command_buffers.reset();
+        delete_depth_command_buffers();
 
         m_render_triangles_depth_pipeline.reset();
 }
@@ -224,21 +255,25 @@ VkSampler MeshRenderer::texture_sampler() const
         return m_texture_sampler;
 }
 
+template <template <typename...> typename T>
 void MeshRenderer::draw_commands(
-        const std::unordered_set<const MeshObject*>& meshes,
+        const T<const MeshObject*>& meshes,
         VkCommandBuffer command_buffer,
         bool clip_plane,
         bool normals,
         bool depth,
-        bool transparent_pipeline,
-        bool transparent_objects) const
+        bool transparent) const
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
 
         //
 
-        ASSERT(!depth || (!transparent_pipeline && !transparent_objects));
-        ASSERT(!transparent_pipeline || transparent_objects);
+        if (meshes.empty())
+        {
+                return;
+        }
+
+        ASSERT(!depth || !transparent);
 
         if (depth)
         {
@@ -248,8 +283,7 @@ void MeshRenderer::draw_commands(
         if (!depth)
         {
                 vkCmdBindPipeline(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        *render_pipelines(transparent_pipeline).triangles);
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent).triangles);
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_program.pipeline_layout(),
@@ -273,7 +307,7 @@ void MeshRenderer::draw_commands(
                         mesh->commands_triangles(
                                 command_buffer, m_triangles_program.descriptor_set_layout_mesh(),
                                 bind_descriptor_set_mesh, m_triangles_program.descriptor_set_layout_material(),
-                                bind_descriptor_set_material, transparent_objects);
+                                bind_descriptor_set_material);
                 }
         }
         else
@@ -296,14 +330,14 @@ void MeshRenderer::draw_commands(
                 {
                         mesh->commands_plain_triangles(
                                 command_buffer, m_triangles_depth_program.descriptor_set_layout_mesh(),
-                                bind_descriptor_set_mesh, transparent_objects);
+                                bind_descriptor_set_mesh);
                 }
         }
 
         if (!depth)
         {
                 vkCmdBindPipeline(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent_pipeline).lines);
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent).lines);
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_program.pipeline_layout(),
@@ -319,16 +353,15 @@ void MeshRenderer::draw_commands(
                 for (const MeshObject* mesh : meshes)
                 {
                         mesh->commands_lines(
-                                command_buffer, m_points_program.descriptor_set_layout_mesh(), bind_descriptor_set_mesh,
-                                transparent_objects);
+                                command_buffer, m_points_program.descriptor_set_layout_mesh(),
+                                bind_descriptor_set_mesh);
                 }
         }
 
         if (!depth)
         {
                 vkCmdBindPipeline(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        *render_pipelines(transparent_pipeline).points);
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent).points);
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_program.pipeline_layout(),
@@ -344,16 +377,15 @@ void MeshRenderer::draw_commands(
                 for (const MeshObject* mesh : meshes)
                 {
                         mesh->commands_points(
-                                command_buffer, m_points_program.descriptor_set_layout_mesh(), bind_descriptor_set_mesh,
-                                transparent_objects);
+                                command_buffer, m_points_program.descriptor_set_layout_mesh(),
+                                bind_descriptor_set_mesh);
                 }
         }
 
         if (!depth && clip_plane)
         {
                 vkCmdBindPipeline(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        *render_pipelines(transparent_pipeline).triangle_lines);
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent).triangle_lines);
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangle_lines_program.pipeline_layout(),
@@ -371,15 +403,14 @@ void MeshRenderer::draw_commands(
                 {
                         mesh->commands_plain_triangles(
                                 command_buffer, m_triangle_lines_program.descriptor_set_layout_mesh(),
-                                bind_descriptor_set_mesh, transparent_objects);
+                                bind_descriptor_set_mesh);
                 }
         }
 
         if (!depth && normals)
         {
                 vkCmdBindPipeline(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        *render_pipelines(transparent_pipeline).normals);
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent).normals);
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_normals_program.pipeline_layout(),
@@ -396,7 +427,7 @@ void MeshRenderer::draw_commands(
                 {
                         mesh->commands_triangle_vertices(
                                 command_buffer, m_normals_program.descriptor_set_layout_mesh(),
-                                bind_descriptor_set_mesh, transparent_objects);
+                                bind_descriptor_set_mesh);
                 }
         }
 }
@@ -406,8 +437,8 @@ void MeshRenderer::create_render_command_buffers(
         VkCommandPool graphics_command_pool,
         bool clip_plane,
         bool normals,
-        const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands,
-        const std::function<void(VkCommandBuffer command_buffer)>& after_render_pass_commands)
+        const std::function<void(VkCommandBuffer command_buffer)>& before_transparency_render_pass_commands,
+        const std::function<void(VkCommandBuffer command_buffer)>& after_transparency_render_pass_commands)
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -415,12 +446,16 @@ void MeshRenderer::create_render_command_buffers(
 
         ASSERT(m_render_buffers);
 
-        m_render_command_buffers.reset();
+        delete_render_command_buffers();
 
         if (meshes.empty())
         {
                 return;
         }
+
+        std::vector<const MeshObject*> opaque_meshes;
+        std::vector<const MeshObject*> transparent_meshes;
+        find_opaque_and_transparent(meshes, &opaque_meshes, &transparent_meshes);
 
         vulkan::CommandBufferCreateInfo info;
 
@@ -433,23 +468,44 @@ void MeshRenderer::create_render_command_buffers(
         info.render_pass = m_render_buffers->render_pass();
         info.framebuffers = &m_render_buffers->framebuffers();
         info.command_pool = graphics_command_pool;
-        info.before_render_pass_commands = before_render_pass_commands;
-        info.render_pass_commands = [&](VkCommandBuffer command_buffer) {
-                draw_commands(
-                        meshes, command_buffer, clip_plane, normals, false /*depth*/, false /*transparent_pipeline*/,
-                        false /*transparent_objects*/);
-                draw_commands(
-                        meshes, command_buffer, clip_plane, normals, false /*depth*/, true /*transparent_pipeline*/,
-                        true /*transparent_objects*/);
-        };
-        info.after_render_pass_commands = after_render_pass_commands;
 
-        m_render_command_buffers = vulkan::create_command_buffers(info);
+        info.before_render_pass_commands =
+                !transparent_meshes.empty() ? before_transparency_render_pass_commands : nullptr;
+        info.render_pass_commands = [&](VkCommandBuffer command_buffer) {
+                if (!opaque_meshes.empty())
+                {
+                        draw_commands(
+                                opaque_meshes, command_buffer, clip_plane, normals, false /*depth*/,
+                                false /*transparent_pipeline*/);
+                }
+                if (!transparent_meshes.empty())
+                {
+                        draw_commands(
+                                transparent_meshes, command_buffer, clip_plane, normals, false /*depth*/,
+                                true /*transparent_pipeline*/);
+                }
+        };
+        info.after_render_pass_commands =
+                !transparent_meshes.empty() ? after_transparency_render_pass_commands : nullptr;
+        m_render_command_buffers_all = vulkan::create_command_buffers(info);
+
+        if (!transparent_meshes.empty())
+        {
+                info.before_render_pass_commands = nullptr;
+                info.render_pass_commands = [&](VkCommandBuffer command_buffer) {
+                        draw_commands(
+                                transparent_meshes, command_buffer, clip_plane, normals, false /*depth*/,
+                                false /*transparent_pipeline*/);
+                };
+                info.after_render_pass_commands = nullptr;
+                m_render_command_buffers_transparent_as_opaque = vulkan::create_command_buffers(info);
+        }
 }
 
 void MeshRenderer::delete_render_command_buffers()
 {
-        m_render_command_buffers.reset();
+        m_render_command_buffers_all.reset();
+        m_render_command_buffers_transparent_as_opaque.reset();
 }
 
 void MeshRenderer::create_depth_command_buffers(
@@ -464,7 +520,7 @@ void MeshRenderer::create_depth_command_buffers(
 
         ASSERT(m_depth_buffers);
 
-        m_render_depth_command_buffers.reset();
+        delete_depth_command_buffers();
 
         if (meshes.empty())
         {
@@ -485,8 +541,7 @@ void MeshRenderer::create_depth_command_buffers(
         info.clear_values = &m_depth_buffers->clear_values();
         info.render_pass_commands = [&](VkCommandBuffer command_buffer) {
                 draw_commands(
-                        meshes, command_buffer, clip_plane, normals, true /*depth*/, false /*transparent_pipeline*/,
-                        false /*transparent_objects*/);
+                        meshes, command_buffer, clip_plane, normals, true /*depth*/, false /*transparent_pipeline*/);
         };
 
         m_render_depth_command_buffers = vulkan::create_command_buffers(info);
@@ -497,12 +552,22 @@ void MeshRenderer::delete_depth_command_buffers()
         m_render_depth_command_buffers.reset();
 }
 
-std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer(unsigned index) const
+std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_all(unsigned index) const
 {
-        if (m_render_command_buffers)
+        if (m_render_command_buffers_all)
         {
-                index = m_render_command_buffers->count() == 1 ? 0 : index;
-                return (*m_render_command_buffers)[index];
+                index = m_render_command_buffers_all->count() == 1 ? 0 : index;
+                return (*m_render_command_buffers_all)[index];
+        }
+        return std::nullopt;
+}
+
+std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_transparent_as_opaque(unsigned index) const
+{
+        if (m_render_command_buffers_transparent_as_opaque)
+        {
+                index = m_render_command_buffers_transparent_as_opaque->count() == 1 ? 0 : index;
+                return (*m_render_command_buffers_transparent_as_opaque)[index];
         }
         return std::nullopt;
 }
