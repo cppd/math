@@ -24,6 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu::renderer
 {
+namespace
+{
+constexpr uint32_t DRAWING_TRANSPARENCY = 0;
+constexpr uint32_t DRAWING_VOLUME = 1;
+}
 VolumeRenderer::VolumeRenderer(const vulkan::Device& device, bool sample_shading, const ShaderBuffers& buffers)
         : m_device(device),
           m_sample_shading(sample_shading),
@@ -42,6 +47,7 @@ VolumeRenderer::VolumeRenderer(const vulkan::Device& device, bool sample_shading
 
 void VolumeRenderer::create_buffers(
         const RenderBuffers3D* render_buffers,
+        VkCommandPool graphics_command_pool,
         const Region<2, int>& viewport,
         VkImageView depth_image,
         const vulkan::ImageWithMemory& transparency_heads_image,
@@ -56,16 +62,24 @@ void VolumeRenderer::create_buffers(
         m_memory.set_depth_image(depth_image, m_depth_sampler);
         m_memory.set_transparency(transparency_heads_image, transparency_nodes);
 
-        m_pipeline = m_program.create_pipeline(
-                render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport);
+        m_pipeline_volume = m_program.create_pipeline(
+                render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport,
+                DRAWING_VOLUME);
+        m_pipeline_transparency = m_program.create_pipeline(
+                render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport,
+                DRAWING_TRANSPARENCY);
+
+        create_command_buffers_transparency(graphics_command_pool);
 }
 
 void VolumeRenderer::delete_buffers()
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
 
-        m_command_buffers.reset();
-        m_pipeline.reset();
+        m_command_buffers_volume.reset();
+        m_command_buffers_transparency.reset();
+        m_pipeline_volume.reset();
+        m_pipeline_transparency.reset();
 }
 
 std::vector<vulkan::DescriptorSetLayoutAndBindings> VolumeRenderer::image_layouts() const
@@ -82,13 +96,54 @@ VkSampler VolumeRenderer::image_sampler() const
         return m_volume_sampler;
 }
 
-void VolumeRenderer::draw_commands(const VolumeObject* volume, VkCommandBuffer command_buffer) const
+void VolumeRenderer::draw_commands_transparency(VkCommandBuffer /*command_buffer*/) const
 {
         ASSERT(m_thread_id == std::this_thread::get_id());
 
         //
 
-        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        //vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline_transparency);
+
+        //vkCmdBindDescriptorSets(
+        //        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
+        //        VolumeSharedMemory::set_number(), 1 /*set count*/, &m_memory.descriptor_set(), 0, nullptr);
+
+        //vkCmdDraw(command_buffer, 3, 1, 0, 0);
+}
+
+void VolumeRenderer::create_command_buffers_transparency(VkCommandPool graphics_command_pool)
+{
+        ASSERT(m_thread_id == std::this_thread::get_id());
+
+        //
+
+        ASSERT(m_render_buffers);
+
+        m_command_buffers_transparency.reset();
+
+        vulkan::CommandBufferCreateInfo info;
+
+        info.device = m_device;
+        info.render_area.emplace();
+        info.render_area->offset.x = 0;
+        info.render_area->offset.y = 0;
+        info.render_area->extent.width = m_render_buffers->width();
+        info.render_area->extent.height = m_render_buffers->height();
+        info.render_pass = m_render_buffers->render_pass();
+        info.framebuffers = &m_render_buffers->framebuffers();
+        info.command_pool = graphics_command_pool;
+        info.render_pass_commands = [&](VkCommandBuffer command_buffer) { draw_commands_transparency(command_buffer); };
+
+        m_command_buffers_transparency = vulkan::create_command_buffers(info);
+}
+
+void VolumeRenderer::draw_commands_volume(const VolumeObject* volume, VkCommandBuffer command_buffer) const
+{
+        ASSERT(m_thread_id == std::this_thread::get_id());
+
+        //
+
+        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline_volume);
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
@@ -113,7 +168,7 @@ void VolumeRenderer::create_command_buffers(
 
         ASSERT(m_render_buffers);
 
-        m_command_buffers.reset();
+        m_command_buffers_volume.reset();
 
         if (!volume)
         {
@@ -132,23 +187,32 @@ void VolumeRenderer::create_command_buffers(
         info.framebuffers = &m_render_buffers->framebuffers();
         info.command_pool = graphics_command_pool;
         info.before_render_pass_commands = before_render_pass_commands;
-        info.render_pass_commands = [&](VkCommandBuffer command_buffer) { draw_commands(volume, command_buffer); };
+        info.render_pass_commands = [&](VkCommandBuffer command_buffer) {
+                draw_commands_volume(volume, command_buffer);
+        };
 
-        m_command_buffers = vulkan::create_command_buffers(info);
+        m_command_buffers_volume = vulkan::create_command_buffers(info);
 }
 
 void VolumeRenderer::delete_command_buffers()
 {
-        m_command_buffers.reset();
+        m_command_buffers_volume.reset();
 }
 
-std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(unsigned index) const
+std::optional<VkCommandBuffer> VolumeRenderer::command_buffer_volume(unsigned index) const
 {
-        if (m_command_buffers)
+        if (m_command_buffers_volume)
         {
-                index = m_command_buffers->count() == 1 ? 0 : index;
-                return (*m_command_buffers)[index];
+                index = m_command_buffers_volume->count() == 1 ? 0 : index;
+                return (*m_command_buffers_volume)[index];
         }
         return std::nullopt;
+}
+
+std::optional<VkCommandBuffer> VolumeRenderer::command_buffer_transparency(unsigned index) const
+{
+        ASSERT(m_command_buffers_transparency);
+        index = m_command_buffers_transparency->count() == 1 ? 0 : index;
+        return (*m_command_buffers_transparency)[index];
 }
 }

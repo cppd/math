@@ -123,7 +123,8 @@ public:
                 VkRenderPass render_pass,
                 VkSampleCountFlagBits sample_count,
                 bool sample_shading,
-                const Region<2, int>& viewport) const;
+                const Region<2, int>& viewport,
+                int drawing_type) const;
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings();

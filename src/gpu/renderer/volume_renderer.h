@@ -39,13 +39,20 @@ class VolumeRenderer
         VolumeProgram m_program;
         VolumeSharedMemory m_memory;
 
-        std::optional<vulkan::Pipeline> m_pipeline;
-        std::optional<vulkan::CommandBuffers> m_command_buffers;
+        std::optional<vulkan::Pipeline> m_pipeline_volume;
+        std::optional<vulkan::Pipeline> m_pipeline_transparency;
+        std::optional<vulkan::CommandBuffers> m_command_buffers_volume;
+        std::optional<vulkan::CommandBuffers> m_command_buffers_transparency;
 
         vulkan::Sampler m_volume_sampler;
         vulkan::Sampler m_depth_sampler;
 
-        void draw_commands(const VolumeObject* volume, VkCommandBuffer command_buffer) const;
+        std::unique_ptr<VolumeObject> m_empty_object;
+
+        void create_command_buffers_transparency(VkCommandPool graphics_command_pool);
+        void draw_commands_transparency(VkCommandBuffer command_buffer) const;
+
+        void draw_commands_volume(const VolumeObject* volume, VkCommandBuffer command_buffer) const;
 
 public:
         VolumeRenderer(const vulkan::Device& device, bool sample_shading, const ShaderBuffers& buffers);
@@ -55,6 +62,7 @@ public:
 
         void create_buffers(
                 const RenderBuffers3D* render_buffers,
+                VkCommandPool graphics_command_pool,
                 const Region<2, int>& viewport,
                 VkImageView depth_image,
                 const vulkan::ImageWithMemory& transparency_heads_image,
@@ -67,6 +75,7 @@ public:
                 const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands);
         void delete_command_buffers();
 
-        std::optional<VkCommandBuffer> command_buffer(unsigned index) const;
+        std::optional<VkCommandBuffer> command_buffer_volume(unsigned index) const;
+        std::optional<VkCommandBuffer> command_buffer_transparency(unsigned index) const;
 };
 }

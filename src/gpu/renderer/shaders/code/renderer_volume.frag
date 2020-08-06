@@ -34,6 +34,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
+layout(constant_id = 0) const uint DRAWING_TYPE = 0;
+
 layout(set = 0, binding = 0, std140) uniform Drawing
 {
         vec3 default_color;
@@ -350,6 +352,13 @@ vec3 shade(vec3 p)
 
 void main(void)
 {
+        if (DRAWING_TYPE == 0)
+        {
+                transparency_read_and_sort_fragments();
+                out_color = transparency_compute();
+                return;
+        }
+
         vec2 device_coordinates = (gl_FragCoord.xy - drawing.viewport_center) * drawing.viewport_factor;
 
         vec3 ray_org = (coordinates.inverse_mvp_matrix * vec4(device_coordinates, 0, 1)).xyz;

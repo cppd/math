@@ -623,6 +623,7 @@ class Impl final : public Renderer
                         semaphore = m_clear_signal_semaphore;
                 }
 
+                bool transparency = false;
                 if (m_mesh_renderer.render_command_buffer_all(image_index))
                 {
                         if (!m_show_shadow)
@@ -675,6 +676,7 @@ class Impl final : public Renderer
                                 }
                                 else
                                 {
+                                        transparency = true;
                                         transparency_memory_message(-1);
                                 }
                         }
@@ -684,12 +686,21 @@ class Impl final : public Renderer
                         }
                 }
 
-                if (m_volume_renderer.command_buffer(image_index))
+                if (m_volume_renderer.command_buffer_volume(image_index))
                 {
                         vulkan::queue_submit(
                                 semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                *m_volume_renderer.command_buffer(image_index), m_renderer_volume_signal_semaphore,
-                                graphics_queue_1);
+                                *m_volume_renderer.command_buffer_volume(image_index),
+                                m_renderer_volume_signal_semaphore, graphics_queue_1);
+
+                        semaphore = m_renderer_volume_signal_semaphore;
+                }
+                else if (transparency)
+                {
+                        vulkan::queue_submit(
+                                semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                *m_volume_renderer.command_buffer_transparency(image_index),
+                                m_renderer_volume_signal_semaphore, graphics_queue_1);
 
                         semaphore = m_renderer_volume_signal_semaphore;
                 }
@@ -704,7 +715,7 @@ class Impl final : public Renderer
                 //
 
                 return !m_mesh_renderer.render_command_buffer_all(0).has_value()
-                       && !m_volume_renderer.command_buffer(0).has_value();
+                       && !m_volume_renderer.command_buffer_volume(0).has_value();
         }
 
         void create_buffers(
@@ -741,8 +752,8 @@ class Impl final : public Renderer
                 create_mesh_depth_buffers();
 
                 m_volume_renderer.create_buffers(
-                        m_render_buffers, m_viewport, m_depth_copy_image->image_view(), *m_transparency_heads,
-                        m_transparency_node_buffer->buffer());
+                        m_render_buffers, m_graphics_command_pool, m_viewport, m_depth_copy_image->image_view(),
+                        *m_transparency_heads, m_transparency_node_buffer->buffer());
 
                 create_mesh_command_buffers();
                 create_volume_command_buffers();

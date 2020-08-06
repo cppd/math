@@ -20,11 +20,55 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "code/code.h"
 
 #include <src/com/error.h>
+#include <src/vulkan/constant.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
 namespace gpu::renderer
 {
+namespace
+{
+class Constants final : public vulkan::SpecializationConstant
+{
+        struct Data
+        {
+                uint32_t drawing_type;
+        } m_data;
+
+        std::vector<VkSpecializationMapEntry> m_entries;
+
+        const std::vector<VkSpecializationMapEntry>& entries() const override
+        {
+                return m_entries;
+        }
+
+        const void* data() const override
+        {
+                return &m_data;
+        }
+
+        size_t size() const override
+        {
+                return sizeof(m_data);
+        }
+
+public:
+        Constants()
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 0;
+                entry.offset = offsetof(Data, drawing_type);
+                entry.size = sizeof(Data::drawing_type);
+                m_entries.push_back(entry);
+        }
+
+        void set_drawing_type(uint32_t drawing_type)
+        {
+                m_data.drawing_type = drawing_type;
+        }
+};
+}
+
 std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -307,7 +351,8 @@ vulkan::Pipeline VolumeProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         bool sample_shading,
-        const Region<2, int>& viewport) const
+        const Region<2, int>& viewport,
+        int drawing_type) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -333,13 +378,16 @@ vulkan::Pipeline VolumeProgram::create_pipeline(
         info.color_blend->dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
         info.color_blend->alphaBlendOp = VK_BLEND_OP_ADD;
 
+        Constants constants;
+        constants.set_drawing_type(drawing_type);
+
         std::vector<const vulkan::Shader*> shaders{&m_vertex_shader, &m_fragment_shader};
-        const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
+        const std::vector<const vulkan::SpecializationConstant*> specialization_constants = {nullptr, &constants};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions;
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions;
 
         info.shaders = &shaders;
-        info.constants = &constants;
+        info.constants = &specialization_constants;
         info.binding_descriptions = &binding_descriptions;
         info.attribute_descriptions = &attribute_descriptions;
 
