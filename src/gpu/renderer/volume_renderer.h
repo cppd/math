@@ -40,19 +40,19 @@ class VolumeRenderer
         VolumeSharedMemory m_memory;
 
         std::optional<vulkan::Pipeline> m_pipeline_volume;
-        std::optional<vulkan::Pipeline> m_pipeline_transparency;
+        std::optional<vulkan::Pipeline> m_pipeline_volume_mesh;
+        std::optional<vulkan::Pipeline> m_pipeline_mesh;
         std::optional<vulkan::CommandBuffers> m_command_buffers_volume;
-        std::optional<vulkan::CommandBuffers> m_command_buffers_transparency;
+        std::optional<vulkan::CommandBuffers> m_command_buffers_volume_mesh;
+        std::optional<vulkan::CommandBuffers> m_command_buffers_mesh;
 
         vulkan::Sampler m_volume_sampler;
         vulkan::Sampler m_depth_sampler;
 
-        std::unique_ptr<VolumeObject> m_empty_object;
+        void create_command_buffers_mesh(VkCommandPool graphics_command_pool);
+        void draw_commands_mesh(VkCommandBuffer command_buffer) const;
 
-        void create_command_buffers_transparency(VkCommandPool graphics_command_pool);
-        void draw_commands_transparency(VkCommandBuffer command_buffer) const;
-
-        void draw_commands_volume(const VolumeObject* volume, VkCommandBuffer command_buffer) const;
+        void draw_commands_volume(const VolumeObject* volume, VkCommandBuffer command_buffer, bool mesh) const;
 
 public:
         VolumeRenderer(const vulkan::Device& device, bool sample_shading, const ShaderBuffers& buffers);
@@ -75,7 +75,7 @@ public:
                 const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands);
         void delete_command_buffers();
 
-        std::optional<VkCommandBuffer> command_buffer_volume(unsigned index) const;
-        std::optional<VkCommandBuffer> command_buffer_transparency(unsigned index) const;
+        bool has_volume() const;
+        std::optional<VkCommandBuffer> command_buffer(unsigned index, bool transparency) const;
 };
 }

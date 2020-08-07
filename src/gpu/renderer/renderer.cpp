@@ -686,20 +686,11 @@ class Impl final : public Renderer
                         }
                 }
 
-                if (m_volume_renderer.command_buffer_volume(image_index))
+                if (m_volume_renderer.has_volume() || transparency)
                 {
                         vulkan::queue_submit(
                                 semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                *m_volume_renderer.command_buffer_volume(image_index),
-                                m_renderer_volume_signal_semaphore, graphics_queue_1);
-
-                        semaphore = m_renderer_volume_signal_semaphore;
-                }
-                else if (transparency)
-                {
-                        vulkan::queue_submit(
-                                semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                *m_volume_renderer.command_buffer_transparency(image_index),
+                                *m_volume_renderer.command_buffer(image_index, transparency),
                                 m_renderer_volume_signal_semaphore, graphics_queue_1);
 
                         semaphore = m_renderer_volume_signal_semaphore;
@@ -714,8 +705,7 @@ class Impl final : public Renderer
 
                 //
 
-                return !m_mesh_renderer.render_command_buffer_all(0).has_value()
-                       && !m_volume_renderer.command_buffer_volume(0).has_value();
+                return !m_mesh_renderer.render_command_buffer_all(0).has_value() && !m_volume_renderer.has_volume();
         }
 
         void create_buffers(

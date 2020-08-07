@@ -131,10 +131,26 @@ std::vector<uint32_t> code_volume_vert()
         return {std::cbegin(code), std::cend(code)};
 }
 
-std::vector<uint32_t> code_volume_frag()
+std::vector<uint32_t> code_volume_image_frag()
 {
         static constexpr uint32_t code[]{
-#include "renderer_volume.frag.spr"
+#include "renderer_volume_image.frag.spr"
+        };
+        return {std::cbegin(code), std::cend(code)};
+}
+
+std::vector<uint32_t> code_volume_image_mesh_frag()
+{
+        static constexpr uint32_t code[]{
+#include "renderer_volume_image_mesh.frag.spr"
+        };
+        return {std::cbegin(code), std::cend(code)};
+}
+
+std::vector<uint32_t> code_volume_mesh_frag()
+{
+        static constexpr uint32_t code[]{
+#include "renderer_volume_mesh.frag.spr"
         };
         return {std::cbegin(code), std::cend(code)};
 }

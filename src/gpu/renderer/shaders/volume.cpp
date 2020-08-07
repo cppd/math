@@ -20,55 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "code/code.h"
 
 #include <src/com/error.h>
-#include <src/vulkan/constant.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
 namespace gpu::renderer
 {
-namespace
-{
-class Constants final : public vulkan::SpecializationConstant
-{
-        struct Data
-        {
-                uint32_t drawing_type;
-        } m_data;
-
-        std::vector<VkSpecializationMapEntry> m_entries;
-
-        const std::vector<VkSpecializationMapEntry>& entries() const override
-        {
-                return m_entries;
-        }
-
-        const void* data() const override
-        {
-                return &m_data;
-        }
-
-        size_t size() const override
-        {
-                return sizeof(m_data);
-        }
-
-public:
-        Constants()
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 0;
-                entry.offset = offsetof(Data, drawing_type);
-                entry.size = sizeof(Data::drawing_type);
-                m_entries.push_back(entry);
-        }
-
-        void set_drawing_type(uint32_t drawing_type)
-        {
-                m_data.drawing_type = drawing_type;
-        }
-};
-}
-
 std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -323,12 +279,18 @@ VolumeProgram::VolumeProgram(const vulkan::Device& device)
                   vulkan::create_descriptor_set_layout(device, descriptor_set_layout_shared_bindings())),
           m_descriptor_set_layout_image(
                   vulkan::create_descriptor_set_layout(device, descriptor_set_layout_image_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
+          m_pipeline_layout_volume(vulkan::create_pipeline_layout(
                   device,
                   {VolumeSharedMemory::set_number(), VolumeImageMemory::set_number()},
                   {m_descriptor_set_layout_shared, m_descriptor_set_layout_image})),
+          m_pipeline_layout_mesh(vulkan::create_pipeline_layout(
+                  device,
+                  {VolumeSharedMemory::set_number()},
+                  {m_descriptor_set_layout_shared})),
           m_vertex_shader(m_device, code_volume_vert(), "main"),
-          m_fragment_shader(m_device, code_volume_frag(), "main")
+          m_fragment_shader_volume(m_device, code_volume_image_frag(), "main"),
+          m_fragment_shader_volume_mesh(m_device, code_volume_image_mesh_frag(), "main"),
+          m_fragment_shader_mesh(m_device, code_volume_mesh_frag(), "main")
 {
 }
 
@@ -342,9 +304,16 @@ VkDescriptorSetLayout VolumeProgram::descriptor_set_layout_image() const
         return m_descriptor_set_layout_image;
 }
 
-VkPipelineLayout VolumeProgram::pipeline_layout() const
+VkPipelineLayout VolumeProgram::pipeline_layout(LayoutType layout_type) const
 {
-        return m_pipeline_layout;
+        switch (layout_type)
+        {
+        case LayoutType::Volume:
+                return m_pipeline_layout_volume;
+        case LayoutType::Mesh:
+                return m_pipeline_layout_mesh;
+        }
+        error_fatal("Unknown volume layout type");
 }
 
 vulkan::Pipeline VolumeProgram::create_pipeline(
@@ -352,8 +321,27 @@ vulkan::Pipeline VolumeProgram::create_pipeline(
         VkSampleCountFlagBits sample_count,
         bool sample_shading,
         const Region<2, int>& viewport,
-        int drawing_type) const
+        PipelineType type) const
 {
+        VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
+        const vulkan::FragmentShader* fragment_shader = nullptr;
+
+        switch (type)
+        {
+        case PipelineType::Volume:
+                pipeline_layout = m_pipeline_layout_volume;
+                fragment_shader = &m_fragment_shader_volume;
+                break;
+        case PipelineType::VolumeMesh:
+                pipeline_layout = m_pipeline_layout_volume;
+                fragment_shader = &m_fragment_shader_volume_mesh;
+                break;
+        case PipelineType::Mesh:
+                pipeline_layout = m_pipeline_layout_mesh;
+                fragment_shader = &m_fragment_shader_mesh;
+                break;
+        }
+
         vulkan::GraphicsPipelineCreateInfo info;
 
         info.device = &m_device;
@@ -361,7 +349,7 @@ vulkan::Pipeline VolumeProgram::create_pipeline(
         info.sub_pass = 0;
         info.sample_count = sample_count;
         info.sample_shading = sample_shading;
-        info.pipeline_layout = m_pipeline_layout;
+        info.pipeline_layout = pipeline_layout;
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         info.depth_test = false;
@@ -378,11 +366,8 @@ vulkan::Pipeline VolumeProgram::create_pipeline(
         info.color_blend->dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
         info.color_blend->alphaBlendOp = VK_BLEND_OP_ADD;
 
-        Constants constants;
-        constants.set_drawing_type(drawing_type);
-
-        std::vector<const vulkan::Shader*> shaders{&m_vertex_shader, &m_fragment_shader};
-        const std::vector<const vulkan::SpecializationConstant*> specialization_constants = {nullptr, &constants};
+        const std::vector<const vulkan::Shader*> shaders{&m_vertex_shader, fragment_shader};
+        const std::vector<const vulkan::SpecializationConstant*> specialization_constants = {nullptr, nullptr};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions;
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions;
 

@@ -32,10 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Real-Time Volume Graphics.
 // A K Peters, Ltd, 2006.
 
-#version 450
-
-layout(constant_id = 0) const uint DRAWING_TYPE = 0;
-
 layout(set = 0, binding = 0, std140) uniform Drawing
 {
         vec3 default_color;
@@ -67,8 +63,6 @@ drawing;
 
 layout(set = 0, binding = 1) uniform sampler2DMS depth_image;
 
-//
-
 layout(set = 0, binding = 2, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
 struct TransparencyNode
 {
@@ -82,7 +76,9 @@ layout(set = 0, binding = 3, std430) restrict readonly buffer TransparencyNodes
         TransparencyNode transparency_nodes[];
 };
 
-//
+#if defined(IMAGE)
+
+// layout(constant_id = 0) const uint DRAWING_TYPE = 0;
 
 layout(set = 1, binding = 0, std140) uniform Coordinates
 {
@@ -108,6 +104,8 @@ volume;
 
 layout(set = 1, binding = 2) uniform sampler3D image;
 layout(set = 1, binding = 3) uniform sampler1D transfer_function;
+
+#endif
 
 //
 
@@ -152,28 +150,7 @@ void transparency_read_and_sort_fragments()
         }
 }
 
-vec4 transparency_compute()
-{
-        const float MIN_TRANSPARENCY = 1.0 / 256;
-        float transparency = 1; // transparency = 1 - α
-        vec3 color = vec3(0);
-
-        for (int i = 0; i < transparency_fragment_count; ++i)
-        {
-                TransparencyNode node = transparency_fragments[i];
-                vec4 c = vec4(unpackUnorm2x16(node.color_rg), unpackUnorm2x16(node.color_ba));
-                color += (transparency * c.a) * c.rgb;
-                transparency *= 1.0 - c.a;
-                if (transparency < MIN_TRANSPARENCY)
-                {
-                        break;
-                }
-        }
-
-        return vec4(color, transparency);
-}
-
-//
+#if defined(IMAGE)
 
 float scalar_volume_value(vec3 p)
 {
@@ -352,13 +329,6 @@ vec3 shade(vec3 p)
 
 void main(void)
 {
-        if (DRAWING_TYPE == 0)
-        {
-                transparency_read_and_sort_fragments();
-                out_color = transparency_compute();
-                return;
-        }
-
         vec2 device_coordinates = (gl_FragCoord.xy - drawing.viewport_center) * drawing.viewport_factor;
 
         vec3 ray_org = (coordinates.inverse_mvp_matrix * vec4(device_coordinates, 0, 1)).xyz;
@@ -456,3 +426,32 @@ void main(void)
         // dstColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA
         out_color = vec4(color, transparency);
 }
+
+#elif defined(MESH)
+
+void main()
+{
+        transparency_read_and_sort_fragments();
+
+        const float MIN_TRANSPARENCY = 1.0 / 256;
+        float transparency = 1; // transparency = 1 - α
+        vec3 color = vec3(0);
+
+        for (int i = 0; i < transparency_fragment_count; ++i)
+        {
+                TransparencyNode node = transparency_fragments[i];
+                vec4 c = vec4(unpackUnorm2x16(node.color_rg), unpackUnorm2x16(node.color_ba));
+                color += (transparency * c.a) * c.rgb;
+                transparency *= 1.0 - c.a;
+                if (transparency < MIN_TRANSPARENCY)
+                {
+                        break;
+                }
+        }
+
+        out_color = vec4(color, transparency);
+}
+
+#else
+#error IMAGE or MESH not defined
+#endif

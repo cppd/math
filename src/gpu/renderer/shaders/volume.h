@@ -105,11 +105,27 @@ class VolumeProgram final
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout_shared;
         vulkan::DescriptorSetLayout m_descriptor_set_layout_image;
-        vulkan::PipelineLayout m_pipeline_layout;
+        vulkan::PipelineLayout m_pipeline_layout_volume;
+        vulkan::PipelineLayout m_pipeline_layout_mesh;
         vulkan::VertexShader m_vertex_shader;
-        vulkan::FragmentShader m_fragment_shader;
+        vulkan::FragmentShader m_fragment_shader_volume;
+        vulkan::FragmentShader m_fragment_shader_volume_mesh;
+        vulkan::FragmentShader m_fragment_shader_mesh;
 
 public:
+        enum class LayoutType
+        {
+                Volume,
+                Mesh
+        };
+
+        enum class PipelineType
+        {
+                Volume,
+                VolumeMesh,
+                Mesh
+        };
+
         explicit VolumeProgram(const vulkan::Device& device);
 
         VolumeProgram(const VolumeProgram&) = delete;
@@ -124,7 +140,7 @@ public:
                 VkSampleCountFlagBits sample_count,
                 bool sample_shading,
                 const Region<2, int>& viewport,
-                int drawing_type) const;
+                PipelineType type) const;
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings();
@@ -132,6 +148,6 @@ public:
         VkDescriptorSetLayout descriptor_set_layout_image() const;
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_image_bindings();
 
-        VkPipelineLayout pipeline_layout() const;
+        VkPipelineLayout pipeline_layout(LayoutType layout_type) const;
 };
 }
