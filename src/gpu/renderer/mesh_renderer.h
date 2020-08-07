@@ -129,6 +129,8 @@ public:
                 bool normals);
         void delete_depth_command_buffers();
 
+        bool has_meshes() const;
+        bool has_transparent_meshes() const;
         std::optional<VkCommandBuffer> render_command_buffer_all(unsigned index) const;
         std::optional<VkCommandBuffer> render_command_buffer_transparent_as_opaque(unsigned index) const;
         std::optional<VkCommandBuffer> depth_command_buffer(unsigned index) const;

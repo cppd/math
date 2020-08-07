@@ -218,9 +218,9 @@ void VolumeRenderer::delete_command_buffers()
 
 bool VolumeRenderer::has_volume() const
 {
-        ASSERT(static_cast<bool>(m_command_buffers_volume) == static_cast<bool>(m_command_buffers_volume_mesh));
+        ASSERT(m_command_buffers_volume.has_value() == m_command_buffers_volume_mesh.has_value());
 
-        return static_cast<bool>(m_command_buffers_volume);
+        return m_command_buffers_volume.has_value();
 }
 
 std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(unsigned index, bool transparency) const

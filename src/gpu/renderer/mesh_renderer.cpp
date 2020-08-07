@@ -552,6 +552,16 @@ void MeshRenderer::delete_depth_command_buffers()
         m_render_depth_command_buffers.reset();
 }
 
+bool MeshRenderer::has_meshes() const
+{
+        return m_render_command_buffers_all.has_value();
+}
+
+bool MeshRenderer::has_transparent_meshes() const
+{
+        return m_render_command_buffers_transparent_as_opaque.has_value();
+}
+
 std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_all(unsigned index) const
 {
         if (m_render_command_buffers_all)

@@ -624,7 +624,7 @@ class Impl final : public Renderer
                 }
 
                 bool transparency = false;
-                if (m_mesh_renderer.render_command_buffer_all(image_index))
+                if (m_mesh_renderer.has_meshes())
                 {
                         if (!m_show_shadow)
                         {
@@ -653,7 +653,7 @@ class Impl final : public Renderer
                                 semaphore = m_renderer_mesh_signal_semaphore;
                         }
 
-                        if (m_mesh_renderer.render_command_buffer_transparent_as_opaque(image_index))
+                        if (m_mesh_renderer.has_transparent_meshes())
                         {
                                 vulkan::queue_wait_idle(graphics_queue_1);
 
