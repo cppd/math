@@ -32,6 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Real-Time Volume Graphics.
 // A K Peters, Ltd, 2006.
 
+const float MIN_TRANSPARENCY = 1.0 / 256;
+
 layout(set = 0, binding = 0, std140) uniform Drawing
 {
         vec3 default_color;
@@ -78,8 +80,6 @@ layout(set = 0, binding = 3, std430) restrict readonly buffer TransparencyNodes
 
 #if defined(IMAGE)
 
-// layout(constant_id = 0) const uint DRAWING_TYPE = 0;
-
 layout(set = 1, binding = 0, std140) uniform Coordinates
 {
         mat4 inverse_mvp_matrix;
@@ -122,6 +122,8 @@ void transparency_read_and_sort_fragments()
 {
         transparency_fragment_count = 0;
 
+#if defined(MESH)
+
         uint pointer = imageLoad(transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID).r;
 
         if (pointer == TRANSPARENCY_NULL_POINTER)
@@ -148,6 +150,32 @@ void transparency_read_and_sort_fragments()
                 }
                 transparency_fragments[j + 1] = n;
         }
+
+#endif
+}
+
+vec4 transparency_compute()
+{
+#if !defined(MESH)
+        discard;
+        return vec4(0);
+#else
+        float transparency = 1; // transparency = 1 - α
+        vec3 color = vec3(0);
+
+        for (int i = 0; i < transparency_fragment_count; ++i)
+        {
+                TransparencyNode node = transparency_fragments[i];
+                vec4 c = vec4(unpackUnorm2x16(node.color_rg), unpackUnorm2x16(node.color_ba));
+                color += (transparency * c.a) * c.rgb;
+                transparency *= 1.0 - c.a;
+                if (transparency < MIN_TRANSPARENCY)
+                {
+                        break;
+                }
+        }
+        return vec4(color, transparency);
+#endif
 }
 
 #if defined(IMAGE)
@@ -329,6 +357,8 @@ vec3 shade(vec3 p)
 
 void main(void)
 {
+        transparency_read_and_sort_fragments();
+
         vec2 device_coordinates = (gl_FragCoord.xy - drawing.viewport_center) * drawing.viewport_factor;
 
         vec3 ray_org = (coordinates.inverse_mvp_matrix * vec4(device_coordinates, 0, 1)).xyz;
@@ -338,7 +368,8 @@ void main(void)
         float second;
         if (!intersect(ray_org, ray_dir, first, second))
         {
-                discard;
+                out_color = transparency_compute();
+                return;
         }
         first = max(0, first);
 
@@ -349,7 +380,8 @@ void main(void)
         float depth_direction_limit = texelFetch(depth_image, ivec2(gl_FragCoord.xy), gl_SampleID).r - depth_pos;
         if (depth_direction_limit <= 0)
         {
-                discard;
+                out_color = transparency_compute();
+                return;
         }
         float depth_direction = dot(coordinates.third_row_of_mvp.xyz, image_direction);
 
@@ -358,23 +390,115 @@ void main(void)
                 int(trunc((min(depth_direction_limit, depth_direction) / depth_direction * length_in_samples)));
         float length_in_samples_r = 1.0 / length_in_samples;
 
-        const float MIN_TRANSPARENCY = 1.0 / 256;
         float transparency = 1; // transparency = 1 - α
         vec3 color = vec3(0);
 
         if (volume.color_volume)
         {
-                for (int s = 0; s < sample_count; ++s)
+                int f = 0;
+                int s = 0;
+
+                if (f < transparency_fragment_count && s < sample_count)
+                {
+                        TransparencyNode node = transparency_fragments[f];
+                        float transparency_depth = node.depth;
+
+                        float k = s * length_in_samples_r;
+                        float volume_depth = depth_pos + k * depth_direction;
+
+                        while (true)
+                        {
+                                if (volume_depth < transparency_depth)
+                                {
+                                        while (true)
+                                        {
+                                                vec3 p = image_pos + k * image_direction;
+                                                vec4 c = color_volume_value(p);
+
+                                                color += (transparency * c.a) * c.rgb;
+                                                transparency *= 1.0 - c.a;
+
+                                                ++s;
+
+                                                if (s >= sample_count)
+                                                {
+                                                        break;
+                                                }
+                                                if (transparency < MIN_TRANSPARENCY)
+                                                {
+                                                        break;
+                                                }
+
+                                                k = s * length_in_samples_r;
+
+                                                volume_depth = depth_pos + k * depth_direction;
+                                                if (volume_depth > transparency_depth)
+                                                {
+                                                        break;
+                                                }
+                                        }
+                                }
+                                else
+                                {
+                                        while (true)
+                                        {
+                                                vec2 rg = unpackUnorm2x16(node.color_rg);
+                                                vec2 ba = unpackUnorm2x16(node.color_ba);
+                                                vec4 c = vec4(rg, ba);
+
+                                                color += (transparency * c.a) * c.rgb;
+                                                transparency *= 1.0 - c.a;
+
+                                                ++f;
+
+                                                if (f >= transparency_fragment_count)
+                                                {
+                                                        break;
+                                                }
+                                                if (transparency < MIN_TRANSPARENCY)
+                                                {
+                                                        break;
+                                                }
+
+                                                node = transparency_fragments[f];
+
+                                                transparency_depth = node.depth;
+                                                if (transparency_depth > volume_depth)
+                                                {
+                                                        break;
+                                                }
+                                        }
+                                }
+                                if (f >= transparency_fragment_count)
+                                {
+                                        break;
+                                }
+                                if (s >= sample_count)
+                                {
+                                        break;
+                                }
+                                if (transparency < MIN_TRANSPARENCY)
+                                {
+                                        break;
+                                }
+                        }
+                }
+                for (; s < sample_count && transparency >= MIN_TRANSPARENCY; ++s)
                 {
                         float k = s * length_in_samples_r;
                         vec3 p = image_pos + k * image_direction;
                         vec4 c = color_volume_value(p);
+
                         color += (transparency * c.a) * c.rgb;
                         transparency *= 1.0 - c.a;
-                        if (transparency < MIN_TRANSPARENCY)
-                        {
-                                break;
-                        }
+                }
+                for (; f < transparency_fragment_count && transparency >= MIN_TRANSPARENCY; ++f)
+                {
+                        TransparencyNode node = transparency_fragments[f];
+                        vec4 c = vec4(unpackUnorm2x16(node.color_rg), unpackUnorm2x16(node.color_ba));
+
+                        color += (transparency * c.a) * c.rgb;
+                        transparency *= 1.0 - c.a;
                 }
         }
         else if (!volume.isosurface)
@@ -432,24 +556,7 @@ void main(void)
 void main()
 {
         transparency_read_and_sort_fragments();
-
-        const float MIN_TRANSPARENCY = 1.0 / 256;
-        float transparency = 1; // transparency = 1 - α
-        vec3 color = vec3(0);
-
-        for (int i = 0; i < transparency_fragment_count; ++i)
-        {
-                TransparencyNode node = transparency_fragments[i];
-                vec4 c = vec4(unpackUnorm2x16(node.color_rg), unpackUnorm2x16(node.color_ba));
-                color += (transparency * c.a) * c.rgb;
-                transparency *= 1.0 - c.a;
-                if (transparency < MIN_TRANSPARENCY)
-                {
-                        break;
-                }
-        }
-
-        out_color = vec4(color, transparency);
+        out_color = transparency_compute();
 }
 
 #else
