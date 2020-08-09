@@ -115,7 +115,13 @@ layout(location = 0) out vec4 out_color;
 
 const uint TRANSPARENCY_NULL_POINTER = 0xffffffff;
 const uint TRANSPARENCY_MAX_NODES = 32;
-TransparencyNode transparency_fragments[TRANSPARENCY_MAX_NODES];
+struct TransparencyArrayNode
+{
+        uint color_rg;
+        uint color_ba;
+        float depth;
+};
+TransparencyArrayNode transparency_fragments[TRANSPARENCY_MAX_NODES];
 int transparency_fragment_count;
 
 void transparency_read_and_sort_fragments()
@@ -133,15 +139,17 @@ void transparency_read_and_sort_fragments()
 
         while (pointer != TRANSPARENCY_NULL_POINTER && transparency_fragment_count < TRANSPARENCY_MAX_NODES)
         {
-                transparency_fragments[transparency_fragment_count] = transparency_nodes[pointer];
-                pointer = transparency_fragments[transparency_fragment_count].next;
+                transparency_fragments[transparency_fragment_count].color_rg = transparency_nodes[pointer].color_rg;
+                transparency_fragments[transparency_fragment_count].color_ba = transparency_nodes[pointer].color_ba;
+                transparency_fragments[transparency_fragment_count].depth = transparency_nodes[pointer].depth;
+                pointer = transparency_nodes[pointer].next;
                 ++transparency_fragment_count;
         }
 
         // Insertion sort
         for (int i = 1; i < transparency_fragment_count; ++i)
         {
-                TransparencyNode n = transparency_fragments[i];
+                TransparencyArrayNode n = transparency_fragments[i];
                 int j = i - 1;
                 while (j >= 0 && n.depth < transparency_fragments[j].depth)
                 {
@@ -165,7 +173,7 @@ vec4 transparency_compute()
 
         for (int i = 0; i < transparency_fragment_count; ++i)
         {
-                TransparencyNode node = transparency_fragments[i];
+                TransparencyArrayNode node = transparency_fragments[i];
                 vec4 c = vec4(unpackUnorm2x16(node.color_rg), unpackUnorm2x16(node.color_ba));
                 color += (transparency * c.a) * c.rgb;
                 transparency *= 1.0 - c.a;
@@ -187,18 +195,17 @@ float scalar_volume_value(vec3 p)
         return clamp(value, 0, 1);
 }
 
-vec4 scalar_volume_color_value(vec3 p)
+vec4 volume_color(vec3 p)
 {
+        if (volume.color_volume)
+        {
+                vec4 color = texture(image, p);
+                color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
+                return color;
+        }
         float value = scalar_volume_value(p);
         // vec4 color = texture(transfer_function, value);
         vec4 color = vec4(drawing.default_color * (drawing.light_a + drawing.light_d), value);
-        color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
-        return color;
-}
-
-vec4 color_volume_value(vec3 p)
-{
-        vec4 color = texture(image, p);
         color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
         return color;
 }
@@ -393,14 +400,14 @@ void main(void)
         float transparency = 1; // transparency = 1 - α
         vec3 color = vec3(0);
 
-        if (volume.color_volume)
+        if (volume.color_volume || !volume.isosurface)
         {
                 int f = 0;
                 int s = 0;
 
                 if (f < transparency_fragment_count && s < sample_count)
                 {
-                        TransparencyNode node = transparency_fragments[f];
+                        TransparencyArrayNode node = transparency_fragments[f];
                         float transparency_depth = node.depth;
 
                         float k = s * length_in_samples_r;
@@ -413,7 +420,7 @@ void main(void)
                                         while (true)
                                         {
                                                 vec3 p = image_pos + k * image_direction;
-                                                vec4 c = color_volume_value(p);
+                                                vec4 c = volume_color(p);
 
                                                 color += (transparency * c.a) * c.rgb;
                                                 transparency *= 1.0 - c.a;
@@ -487,33 +494,18 @@ void main(void)
                 {
                         float k = s * length_in_samples_r;
                         vec3 p = image_pos + k * image_direction;
-                        vec4 c = color_volume_value(p);
+                        vec4 c = volume_color(p);
 
                         color += (transparency * c.a) * c.rgb;
                         transparency *= 1.0 - c.a;
                 }
                 for (; f < transparency_fragment_count && transparency >= MIN_TRANSPARENCY; ++f)
                 {
-                        TransparencyNode node = transparency_fragments[f];
+                        TransparencyArrayNode node = transparency_fragments[f];
                         vec4 c = vec4(unpackUnorm2x16(node.color_rg), unpackUnorm2x16(node.color_ba));
 
                         color += (transparency * c.a) * c.rgb;
                         transparency *= 1.0 - c.a;
-                }
-        }
-        else if (!volume.isosurface)
-        {
-                for (int s = 0; s < sample_count; ++s)
-                {
-                        float k = s * length_in_samples_r;
-                        vec3 p = image_pos + k * image_direction;
-                        vec4 c = scalar_volume_color_value(p);
-                        color += (transparency * c.a) * c.rgb;
-                        transparency *= 1.0 - c.a;
-                        if (transparency < MIN_TRANSPARENCY)
-                        {
-                                break;
-                        }
                 }
         }
         else
