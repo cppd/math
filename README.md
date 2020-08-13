@@ -34,6 +34,7 @@ Just for fun with mathematics and stuff
 * Triangle meshes.
 * Volumes (ray marching).
 * Isosurfaces (ray marching).
+* Order-independent transparency (lists of fragments).
 
 ### CPU
 
