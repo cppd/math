@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh.h"
 #include "object_id.h"
 
+#include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/numerical/matrix.h>
 
@@ -93,7 +94,8 @@ enum class Update
 {
         All,
         Alpha,
-        Matrix
+        Matrix,
+        Parameters
 };
 
 template <size_t N>
@@ -109,6 +111,8 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
         ObjectId m_id;
 
         float m_alpha = 1;
+
+        Color m_color = Color(Srgb8(150, 170, 150));
 
         bool m_visible = false;
 
@@ -210,6 +214,16 @@ public:
         void set_alpha(float alpha)
         {
                 m_alpha = alpha;
+        }
+
+        const Color& color() const
+        {
+                return m_color;
+        }
+
+        void set_color(const Color& color)
+        {
+                m_color = color;
         }
 
         bool visible() const

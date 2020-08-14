@@ -760,6 +760,7 @@ class Impl final : public MeshObject
                         s.erase(mesh::Update::All);
                         s.erase(mesh::Update::Alpha);
                         s.erase(mesh::Update::Matrix);
+                        s.erase(mesh::Update::Parameters);
                         return s.empty();
                 }());
 
