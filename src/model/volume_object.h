@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "object_id.h"
 #include "volume.h"
 
+#include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/numerical/matrix.h>
 
@@ -117,6 +118,8 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
 
         bool m_isosurface = false;
         float m_isovalue = 0.5f;
+
+        Color m_color = Color(Srgb8(150, 170, 150));
 
         bool m_visible = false;
 
@@ -267,6 +270,16 @@ public:
         void set_isovalue(float value)
         {
                 m_isovalue = value;
+        }
+
+        const Color& color() const
+        {
+                return m_color;
+        }
+
+        void set_color(const Color& color)
+        {
+                m_color = color;
         }
 
         bool visible() const
