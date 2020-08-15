@@ -753,6 +753,7 @@ class Impl final : public MeshObject
                 bool update_all = updates.contains(mesh::Update::All);
                 bool update_mesh = update_all;
                 bool update_matrix = update_all || updates.contains(mesh::Update::Matrix);
+                bool update_parameters = update_all || updates.contains(mesh::Update::Parameters);
                 bool update_alpha = update_all || updates.contains(mesh::Update::Alpha);
 
                 ASSERT([&updates]() {
@@ -780,6 +781,11 @@ class Impl final : public MeshObject
                                 m_transparent = transparent;
                                 *update_command_buffers = true;
                         }
+                }
+
+                if (update_parameters)
+                {
+                        m_mesh_buffer.set_color(mesh_object.color());
                 }
 
                 if (update_mesh)

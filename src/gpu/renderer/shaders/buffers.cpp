@@ -332,6 +332,12 @@ void MeshBuffer::set_coordinates(const mat4& model_matrix, const mat3& normal_ma
         map.write(offsetof(Mesh, normal_matrix) - offset, normal);
 }
 
+void MeshBuffer::set_color(const Color& color) const
+{
+        decltype(Mesh().color) c = color.to_rgb_vector<float>();
+        vulkan::map_and_write_to_buffer(m_uniform_buffer, offsetof(Mesh, color), c);
+}
+
 void MeshBuffer::set_alpha(float alpha) const
 {
         decltype(Mesh().alpha) a = alpha;
@@ -407,7 +413,8 @@ void VolumeBuffer::set_parameters(
         float volume_alpha_coefficient,
         float isosurface_alpha,
         bool isosurface,
-        float isovalue) const
+        float isovalue,
+        const Color& color) const
 {
         ASSERT(window_offset >= 0);
         ASSERT(window_scale > 0);
@@ -415,17 +422,23 @@ void VolumeBuffer::set_parameters(
         ASSERT(isosurface_alpha >= 0 && isosurface_alpha <= 1);
         ASSERT(isovalue >= 0 && isovalue <= 1);
 
-        Volume::Parameters parameters;
+        static_assert(offsetof(Volume, color) - offsetof(Volume, window_offset) == 8 * sizeof(float));
 
-        parameters.window_offset = window_offset;
-        parameters.window_scale = window_scale;
-        parameters.volume_alpha_coefficient = volume_alpha_coefficient;
-        parameters.isosurface_alpha = isosurface_alpha;
-        parameters.isosurface = isosurface ? 1 : 0;
-        parameters.isovalue = isovalue;
+        constexpr size_t offset = offsetof(Volume, window_offset);
+        constexpr size_t size = offsetof(Volume, color) + sizeof(Volume::color) - offset;
+
+        Volume volume;
+
+        volume.window_offset = window_offset;
+        volume.window_scale = window_scale;
+        volume.volume_alpha_coefficient = volume_alpha_coefficient;
+        volume.isosurface_alpha = isosurface_alpha;
+        volume.isosurface = isosurface ? 1 : 0;
+        volume.isovalue = isovalue;
+        volume.color = color.to_rgb_vector<float>();
 
         m_uniform_buffer_volume.write(
-                command_pool, queue, offsetof(Volume, parameters), data_size(parameters), data_pointer(parameters));
+                command_pool, queue, offset, size, reinterpret_cast<const char*>(&volume) + offset);
 }
 
 void VolumeBuffer::set_color_volume(

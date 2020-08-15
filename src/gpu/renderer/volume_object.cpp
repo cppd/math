@@ -177,7 +177,8 @@ class Impl final : public VolumeObject
                 float volume_alpha_coeficient,
                 float isosurface_alpha,
                 bool isosurface,
-                float isovalue) const
+                float isovalue,
+                const Color& color) const
         {
                 constexpr float eps = 1e-10f;
                 window_min = std::min(std::max(0.0f, window_min), 1 - eps);
@@ -190,7 +191,7 @@ class Impl final : public VolumeObject
 
                 m_buffer.set_parameters(
                         m_graphics_command_pool, m_graphics_queue, window_offset, window_scale, volume_alpha_coeficient,
-                        isosurface_alpha, isosurface, isovalue);
+                        isosurface_alpha, isosurface, isovalue, color);
         }
 
         void buffer_set_coordinates() const
@@ -368,7 +369,7 @@ class Impl final : public VolumeObject
                         buffer_set_parameters(
                                 volume_object.level_min(), volume_object.level_max(),
                                 volume_object.volume_alpha_coefficient(), volume_object.isosurface_alpha(),
-                                volume_object.isosurface(), volume_object.isovalue());
+                                volume_object.isosurface(), volume_object.isovalue(), volume_object.color());
                 }
 
                 if (update_matrices)

@@ -99,6 +99,7 @@ layout(set = 1, binding = 1, std140) uniform Volume
         float isosurface_alpha;
         bool isosurface;
         float isovalue;
+        vec3 color;
         bool color_volume;
 }
 volume;

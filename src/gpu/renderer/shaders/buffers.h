@@ -151,6 +151,7 @@ class MeshBuffer final
         {
                 alignas(sizeof(vec4f)) mat4f model_matrix;
                 alignas(sizeof(vec4f)) Matrix<3, 4, float> normal_matrix;
+                alignas(sizeof(vec4f)) vec3f color;
                 float alpha;
         };
 
@@ -160,6 +161,7 @@ public:
         const vulkan::Buffer& buffer() const;
 
         void set_coordinates(const mat4& model_matrix, const mat3& normal_matrix) const;
+        void set_color(const Color& color) const;
         void set_alpha(float alpha) const;
 };
 
@@ -179,16 +181,13 @@ class VolumeBuffer final
 
         struct Volume
         {
-                struct Parameters
-                {
-                        float window_offset;
-                        float window_scale;
-                        float volume_alpha_coefficient;
-                        float isosurface_alpha;
-                        uint32_t isosurface;
-                        float isovalue;
-                };
-                Parameters parameters;
+                float window_offset;
+                float window_scale;
+                float volume_alpha_coefficient;
+                float isosurface_alpha;
+                uint32_t isosurface;
+                float isovalue;
+                alignas(sizeof(vec4f)) vec3f color;
                 uint32_t color_volume;
         };
 
@@ -218,7 +217,8 @@ public:
                 float volume_alpha_coefficient,
                 float isosurface_alpha,
                 bool isosurface,
-                float isovalue) const;
+                float isovalue,
+                const Color& color) const;
 
         void set_color_volume(const vulkan::CommandPool& command_pool, const vulkan::Queue& queue, bool color_volume)
                 const;

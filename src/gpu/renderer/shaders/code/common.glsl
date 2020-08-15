@@ -83,6 +83,7 @@ layout(set = 1, binding = 0, std140) uniform Mesh
 {
         mat4 model_matrix;
         mat3 normal_matrix;
+        vec3 color;
         float alpha;
 }
 mesh;
