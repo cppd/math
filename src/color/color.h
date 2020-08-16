@@ -85,6 +85,14 @@ public:
                 return to_vector<F>(m_data);
         }
 
+        Srgb8 to_srgb8() const
+        {
+                unsigned char r = color_conversion::linear_float_to_srgb_uint8<Color::DataType>(red());
+                unsigned char g = color_conversion::linear_float_to_srgb_uint8<Color::DataType>(green());
+                unsigned char b = color_conversion::linear_float_to_srgb_uint8<Color::DataType>(blue());
+                return Srgb8(r, g, b);
+        }
+
         T luminance() const
         {
                 return color_conversion::linear_float_to_linear_luminance(m_data[0], m_data[1], m_data[2]);
