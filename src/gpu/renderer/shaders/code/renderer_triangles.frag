@@ -96,8 +96,8 @@ vec3 shade()
 
         if (!mtl.use_material || !drawing.show_materials)
         {
-                mtl_a = drawing.default_color;
-                mtl_d = drawing.default_color;
+                mtl_a = mesh.color;
+                mtl_d = mesh.color;
                 mtl_s = drawing.default_specular_color;
         }
         else if (!has_texture_coordinates())

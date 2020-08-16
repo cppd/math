@@ -41,11 +41,11 @@ void main(void)
 
         if (drawing.show_fog)
         {
-                color = fog(drawing.background_color, drawing.default_color * drawing.light_a);
+                color = fog(drawing.background_color, mesh.color * drawing.light_a);
         }
         else
         {
-                color = drawing.default_color * drawing.light_a;
+                color = mesh.color * drawing.light_a;
         }
 
         set_fragment_color(color);

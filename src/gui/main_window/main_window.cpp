@@ -227,6 +227,8 @@ void MainWindow::disable_mesh_parameters()
 {
         ui.tabMesh->setEnabled(false);
 
+        set_widget_color(ui.widget_mesh_color, QColor(255, 255, 255));
+
         QSignalBlocker blocker(ui.slider_mesh_transparency);
         set_slider_position(ui.slider_mesh_transparency, 0);
 }
@@ -1153,9 +1155,11 @@ void MainWindow::update_mesh_ui(ObjectId id)
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& object) {
                         double alpha;
+                        Color color;
                         {
                                 mesh::Reading reading(*object);
                                 alpha = object->alpha();
+                                color = object->color();
                         }
                         double transparency_position = 1.0 - alpha;
                         {
@@ -1163,6 +1167,7 @@ void MainWindow::update_mesh_ui(ObjectId id)
 
                                 set_slider_position(ui.slider_mesh_transparency, transparency_position);
                         }
+                        set_widget_color(ui.widget_mesh_color, color);
                 },
                 *object_opt);
 }
@@ -1345,5 +1350,39 @@ void MainWindow::on_slider_mesh_transparency_valueChanged(int)
                         object->set_alpha(alpha);
                 },
                 *object_opt);
+}
+
+void MainWindow::on_toolButton_mesh_color_clicked()
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
+        if (!object_opt)
+        {
+                return;
+        }
+
+        Color color;
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
+                        mesh::Reading reading(*object);
+                        color = object->color();
+                },
+                *object_opt);
+
+        QPointer ptr(this);
+        dialog::color_dialog("Mesh Color", rgb_to_qcolor(color), [&](const QColor& c) {
+                if (ptr.isNull())
+                {
+                        return;
+                }
+                std::visit(
+                        [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
+                                set_widget_color(ui.widget_mesh_color, c);
+                                mesh::WritingUpdates updates(object.get(), {mesh::Update::Parameters});
+                                object->set_color(qcolor_to_rgb(c));
+                        },
+                        *object_opt);
+        });
 }
 }
