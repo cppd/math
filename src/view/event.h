@@ -109,18 +109,10 @@ struct SetBackgroundColor final
         }
 };
 
-struct SetDefaultColor final
+struct SetSpecularColor final
 {
         Color value;
-        explicit SetDefaultColor(const Color& value) : value(value)
-        {
-        }
-};
-
-struct SetDefaultSpecularColor final
-{
-        Color value;
-        explicit SetDefaultSpecularColor(const Color& value) : value(value)
+        explicit SetSpecularColor(const Color& value) : value(value)
         {
         }
 };
@@ -383,8 +375,7 @@ struct Command final
                 command::SetAmbient,
                 command::SetBackgroundColor,
                 command::SetClipPlaneColor,
-                command::SetDefaultColor,
-                command::SetDefaultSpecularColor,
+                command::SetSpecularColor,
                 command::SetDefaultNs,
                 command::SetDftBackgroundColor,
                 command::SetDftBrightness,

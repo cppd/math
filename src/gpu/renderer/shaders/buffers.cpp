@@ -162,16 +162,10 @@ void ShaderBuffers::set_viewport(const vec2& center, const vec2& factor) const
         map.write(sizeof(viewport_center), viewport_factor);
 }
 
-void ShaderBuffers::set_default_color(const Color& color) const
+void ShaderBuffers::set_specular_color(const Color& color) const
 {
-        decltype(Drawing().default_color) c = color.to_rgb_vector<float>();
-        copy_to_drawing_buffer(offsetof(Drawing, default_color), c);
-}
-
-void ShaderBuffers::set_default_specular_color(const Color& color) const
-{
-        decltype(Drawing().default_specular_color) c = color.to_rgb_vector<float>();
-        copy_to_drawing_buffer(offsetof(Drawing, default_specular_color), c);
+        decltype(Drawing().specular_color) c = color.to_rgb_vector<float>();
+        copy_to_drawing_buffer(offsetof(Drawing, specular_color), c);
 }
 
 void ShaderBuffers::set_wireframe_color(const Color& color) const

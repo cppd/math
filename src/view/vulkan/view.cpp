@@ -335,13 +335,9 @@ class Impl final : public View
                         bool background_is_dark = d.value.luminance() <= 0.5;
                         m_text->set_color(background_is_dark ? Color(1) : Color(0));
                 },
-                [this](const command::SetDefaultColor& d)
+                [this](const command::SetSpecularColor& d)
                 {
-                        m_renderer->set_default_color(d.value);
-                },
-                [this](const command::SetDefaultSpecularColor& d)
-                {
-                        m_renderer->set_default_specular_color(d.value);
+                        m_renderer->set_specular_color(d.value);
                 },
                 [this](const command::SetWireframeColor& d)
                 {

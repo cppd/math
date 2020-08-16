@@ -50,7 +50,6 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         const view::info::Camera& camera,
         const std::string& title,
         const Color& background_color,
-        const Color& default_color,
         const Color::DataType& diffuse)
 {
         ASSERT(mesh_object);
@@ -66,7 +65,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 
         PainterSceneCommonInfo scene_common_info;
         scene_common_info.background_color = background_color;
-        scene_common_info.default_color = default_color;
+        scene_common_info.default_color = mesh_object->color();
         scene_common_info.diffuse = diffuse;
 
         int thread_count;
@@ -135,13 +134,11 @@ std::function<void(ProgressRatioList*)> action_painter(
         const view::info::Camera& camera,
         const std::string& title,
         const Color& background_color,
-        const Color& default_color,
         const Color::DataType& diffuse)
 {
         return std::visit(
                 [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object) {
-                        return action_painter_function(
-                                mesh_object, camera, title, background_color, default_color, diffuse);
+                        return action_painter_function(mesh_object, camera, title, background_color, diffuse);
                 },
                 object);
 }

@@ -32,7 +32,7 @@
          <enum>QTabWidget::West</enum>
         </property>
         <property name="currentIndex">
-         <number>3</number>
+         <number>4</number>
         </property>
         <widget class="QWidget" name="tabModels">
          <attribute name="title">
@@ -816,6 +816,20 @@
            <layout class="QHBoxLayout" name="horizontalLayout_2">
             <item>
              <layout class="QGridLayout" name="gridLayout">
+              <item row="6" column="0">
+               <widget class="QLabel" name="label_8">
+                <property name="text">
+                 <string>Normals −:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="2">
+               <widget class="QToolButton" name="toolButton_normal_color_positive">
+                <property name="text">
+                 <string>...</string>
+                </property>
+               </widget>
+              </item>
               <item row="4" column="1">
                <widget class="QWidget" name="widget_clip_plane_color" native="true">
                 <property name="minimumSize">
@@ -970,8 +984,8 @@
                 </property>
                </widget>
               </item>
-              <item row="7" column="1">
-               <widget class="QWidget" name="widget_default_color" native="true">
+              <item row="6" column="1">
+               <widget class="QWidget" name="widget_normal_color_negative" native="true">
                 <property name="minimumSize">
                  <size>
                   <width>20</width>
@@ -1044,13 +1058,6 @@
                 </property>
                 <property name="autoFillBackground">
                  <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="2">
-               <widget class="QToolButton" name="toolButton_clip_plane_color">
-                <property name="text">
-                 <string>...</string>
                 </property>
                </widget>
               </item>
@@ -1059,146 +1066,6 @@
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
-                <property name="text">
-                 <string>...</string>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="0">
-               <widget class="QLabel" name="label_7">
-                <property name="text">
-                 <string>Normals +:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="label_3">
-                <property name="text">
-                 <string>Background:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="7" column="2">
-               <widget class="QToolButton" name="toolButton_default_color">
-                <property name="text">
-                 <string>...</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="2">
-               <widget class="QToolButton" name="toolButton_background_color">
-                <property name="text">
-                 <string>...</string>
-                </property>
-               </widget>
-              </item>
-              <item row="7" column="0">
-               <widget class="QLabel" name="label_2">
-                <property name="text">
-                 <string>Default:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="0">
-               <widget class="QLabel" name="label_6">
-                <property name="text">
-                 <string>Clip Plane:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QWidget" name="widget_background_color" native="true">
-                <property name="minimumSize">
-                 <size>
-                  <width>20</width>
-                  <height>10</height>
-                 </size>
-                </property>
-                <property name="palette">
-                 <palette>
-                  <active>
-                   <colorrole role="Base">
-                    <brush brushstyle="SolidPattern">
-                     <color alpha="255">
-                      <red>255</red>
-                      <green>255</green>
-                      <blue>255</blue>
-                     </color>
-                    </brush>
-                   </colorrole>
-                   <colorrole role="Window">
-                    <brush brushstyle="SolidPattern">
-                     <color alpha="255">
-                      <red>255</red>
-                      <green>255</green>
-                      <blue>255</blue>
-                     </color>
-                    </brush>
-                   </colorrole>
-                  </active>
-                  <inactive>
-                   <colorrole role="Base">
-                    <brush brushstyle="SolidPattern">
-                     <color alpha="255">
-                      <red>255</red>
-                      <green>255</green>
-                      <blue>255</blue>
-                     </color>
-                    </brush>
-                   </colorrole>
-                   <colorrole role="Window">
-                    <brush brushstyle="SolidPattern">
-                     <color alpha="255">
-                      <red>255</red>
-                      <green>255</green>
-                      <blue>255</blue>
-                     </color>
-                    </brush>
-                   </colorrole>
-                  </inactive>
-                  <disabled>
-                   <colorrole role="Base">
-                    <brush brushstyle="SolidPattern">
-                     <color alpha="255">
-                      <red>255</red>
-                      <green>255</green>
-                      <blue>255</blue>
-                     </color>
-                    </brush>
-                   </colorrole>
-                   <colorrole role="Window">
-                    <brush brushstyle="SolidPattern">
-                     <color alpha="255">
-                      <red>255</red>
-                      <green>255</green>
-                      <blue>255</blue>
-                     </color>
-                    </brush>
-                   </colorrole>
-                  </disabled>
-                 </palette>
-                </property>
-                <property name="autoFillBackground">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="label_4">
-                <property name="text">
-                 <string>Wireframe:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="6" column="0">
-               <widget class="QLabel" name="label_8">
-                <property name="text">
-                 <string>Normals −:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="2">
-               <widget class="QToolButton" name="toolButton_normal_color_positive">
                 <property name="text">
                  <string>...</string>
                 </property>
@@ -1288,8 +1155,29 @@
                 </property>
                </widget>
               </item>
-              <item row="6" column="1">
-               <widget class="QWidget" name="widget_normal_color_negative" native="true">
+              <item row="4" column="0">
+               <widget class="QLabel" name="label_6">
+                <property name="text">
+                 <string>Clip Plane:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_4">
+                <property name="text">
+                 <string>Wireframe:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="2">
+               <widget class="QToolButton" name="toolButton_clip_plane_color">
+                <property name="text">
+                 <string>...</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QWidget" name="widget_background_color" native="true">
                 <property name="minimumSize">
                  <size>
                   <width>20</width>
@@ -1362,6 +1250,27 @@
                 </property>
                 <property name="autoFillBackground">
                  <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>Background:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="2">
+               <widget class="QToolButton" name="toolButton_background_color">
+                <property name="text">
+                 <string>...</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="0">
+               <widget class="QLabel" name="label_7">
+                <property name="text">
+                 <string>Normals +:</string>
                 </property>
                </widget>
               </item>

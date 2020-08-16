@@ -37,8 +37,7 @@ const int ISOSURFACE_ITERATION_COUNT = 5;
 
 layout(set = 0, binding = 0, std140) uniform Drawing
 {
-        vec3 default_color;
-        vec3 default_specular_color;
+        vec3 specular_color;
         vec3 wireframe_color;
         vec3 background_color;
         float normal_length;
@@ -377,7 +376,7 @@ vec3 shade(vec3 p)
         {
                 float specular = pow(max(0, dot(V, reflect(-L, N))), drawing.default_ns);
                 color += diffuse * volume.color * drawing.light_d;
-                color += specular * drawing.default_specular_color * drawing.light_s;
+                color += specular * drawing.specular_color * drawing.light_s;
         }
 
         return color;

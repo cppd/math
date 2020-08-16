@@ -92,7 +92,6 @@ private slots:
         void on_slider_mesh_transparency_valueChanged(int value);
         void on_toolButton_background_color_clicked();
         void on_toolButton_clip_plane_color_clicked();
-        void on_toolButton_default_color_clicked();
         void on_toolButton_dft_background_color_clicked();
         void on_toolButton_dft_color_clicked();
         void on_toolButton_mesh_color_clicked();
@@ -153,8 +152,7 @@ private:
         static double lighting_slider_value(const QSlider* slider);
 
         void set_background_color(const QColor& c);
-        void set_default_color(const QColor& c);
-        void set_default_specular_color(const QColor& c);
+        void set_specular_color(const QColor& c);
         void set_wireframe_color(const QColor& c);
         void set_clip_plane_color(const QColor& c);
         void set_normal_color_positive(const QColor& c);
@@ -189,8 +187,7 @@ private:
         std::unique_ptr<RangeSlider> m_slider_volume_levels;
 
         QColor m_background_color;
-        QColor m_default_color;
-        QColor m_default_specular_color;
+        QColor m_specular_color;
         QColor m_wireframe_color;
         QColor m_clip_plane_color;
         QColor m_normal_color_positive;

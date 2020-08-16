@@ -64,8 +64,7 @@ constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
 
 // Цвета по умолчанию
 constexpr QRgb BACKGROUND_COLOR = qRgb(50, 100, 150);
-constexpr QRgb DEFAULT_COLOR = qRgb(150, 170, 150);
-constexpr QRgb DEFAULT_SPECULAR_COLOR = qRgb(255, 255, 255);
+constexpr QRgb SPECULAR_COLOR = qRgb(255, 255, 255);
 constexpr QRgb WIREFRAME_COLOR = qRgb(255, 255, 255);
 constexpr QRgb CLIP_PLANE_COLOR = qRgb(250, 230, 150);
 constexpr QRgb DFT_BACKGROUND_COLOR = qRgb(0, 0, 50);
@@ -194,8 +193,7 @@ void MainWindow::constructor_interface()
         set_dependent_interface();
 
         set_background_color(BACKGROUND_COLOR);
-        set_default_color(DEFAULT_COLOR);
-        set_default_specular_color(DEFAULT_SPECULAR_COLOR);
+        set_specular_color(SPECULAR_COLOR);
         set_wireframe_color(WIREFRAME_COLOR);
         set_clip_plane_color(CLIP_PLANE_COLOR);
         set_normal_color_positive(NORMAL_COLOR_POSITIVE);
@@ -411,29 +409,15 @@ void MainWindow::set_background_color(const QColor& c)
         {
                 m_view->send(view::command::SetBackgroundColor(qcolor_to_rgb(c)));
         }
-        QPalette palette;
-        palette.setColor(QPalette::Window, m_background_color);
-        ui.widget_background_color->setPalette(palette);
+        set_widget_color(ui.widget_background_color, c);
 }
 
-void MainWindow::set_default_color(const QColor& c)
+void MainWindow::set_specular_color(const QColor& c)
 {
-        m_default_color = c;
+        m_specular_color = c;
         if (m_view)
         {
-                m_view->send(view::command::SetDefaultColor(qcolor_to_rgb(c)));
-        }
-        QPalette palette;
-        palette.setColor(QPalette::Window, m_default_color);
-        ui.widget_default_color->setPalette(palette);
-}
-
-void MainWindow::set_default_specular_color(const QColor& c)
-{
-        m_default_specular_color = c;
-        if (m_view)
-        {
-                m_view->send(view::command::SetDefaultSpecularColor(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetSpecularColor(qcolor_to_rgb(c)));
         }
 }
 
@@ -444,9 +428,7 @@ void MainWindow::set_wireframe_color(const QColor& c)
         {
                 m_view->send(view::command::SetWireframeColor(qcolor_to_rgb(c)));
         }
-        QPalette palette;
-        palette.setColor(QPalette::Window, m_wireframe_color);
-        ui.widget_wireframe_color->setPalette(palette);
+        set_widget_color(ui.widget_wireframe_color, c);
 }
 
 void MainWindow::set_clip_plane_color(const QColor& c)
@@ -456,9 +438,7 @@ void MainWindow::set_clip_plane_color(const QColor& c)
         {
                 m_view->send(view::command::SetClipPlaneColor(qcolor_to_rgb(c)));
         }
-        QPalette palette;
-        palette.setColor(QPalette::Window, m_clip_plane_color);
-        ui.widget_clip_plane_color->setPalette(palette);
+        set_widget_color(ui.widget_clip_plane_color, c);
 }
 
 void MainWindow::set_normal_color_positive(const QColor& c)
@@ -468,9 +448,7 @@ void MainWindow::set_normal_color_positive(const QColor& c)
         {
                 m_view->send(view::command::SetNormalColorPositive(qcolor_to_rgb(c)));
         }
-        QPalette palette;
-        palette.setColor(QPalette::Window, m_normal_color_positive);
-        ui.widget_normal_color_positive->setPalette(palette);
+        set_widget_color(ui.widget_normal_color_positive, c);
 }
 
 void MainWindow::set_normal_color_negative(const QColor& c)
@@ -480,9 +458,7 @@ void MainWindow::set_normal_color_negative(const QColor& c)
         {
                 m_view->send(view::command::SetNormalColorNegative(qcolor_to_rgb(c)));
         }
-        QPalette palette;
-        palette.setColor(QPalette::Window, m_normal_color_negative);
-        ui.widget_normal_color_negative->setPalette(palette);
+        set_widget_color(ui.widget_normal_color_negative, c);
 }
 
 void MainWindow::set_dft_background_color(const QColor& c)
@@ -492,9 +468,7 @@ void MainWindow::set_dft_background_color(const QColor& c)
         {
                 m_view->send(view::command::SetDftBackgroundColor(qcolor_to_rgb(c)));
         }
-        QPalette palette;
-        palette.setColor(QPalette::Window, m_dft_background_color);
-        ui.widget_dft_background_color->setPalette(palette);
+        set_widget_color(ui.widget_dft_background_color, c);
 }
 
 void MainWindow::set_dft_color(const QColor& c)
@@ -504,9 +478,7 @@ void MainWindow::set_dft_color(const QColor& c)
         {
                 m_view->send(view::command::SetDftColor(qcolor_to_rgb(c)));
         }
-        QPalette palette;
-        palette.setColor(QPalette::Window, m_dft_color);
-        ui.widget_dft_color->setPalette(palette);
+        set_widget_color(ui.widget_dft_color, c);
 }
 
 void MainWindow::set_dependent_interface()
@@ -563,8 +535,7 @@ void MainWindow::first_shown()
 
                 std::vector<view::Command> view_initial_commands{
                         view::command::SetBackgroundColor(qcolor_to_rgb(m_background_color)),
-                        view::command::SetDefaultColor(qcolor_to_rgb(m_default_color)),
-                        view::command::SetDefaultSpecularColor(qcolor_to_rgb(m_default_specular_color)),
+                        view::command::SetSpecularColor(qcolor_to_rgb(m_specular_color)),
                         view::command::SetWireframeColor(qcolor_to_rgb(m_wireframe_color)),
                         view::command::SetClipPlaneColor(qcolor_to_rgb(m_clip_plane_color)),
                         view::command::SetNormalLength(normal_length()),
@@ -765,7 +736,7 @@ void MainWindow::on_actionPainter_triggered()
 
                 WorkerThreads::Function f = process::action_painter(
                         *object, camera, QMainWindow::windowTitle().toStdString(), qcolor_to_rgb(m_background_color),
-                        qcolor_to_rgb(m_default_color), diffuse_light());
+                        diffuse_light());
 
                 m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
         });
@@ -963,17 +934,6 @@ void MainWindow::on_toolButton_background_color_clicked()
                 if (!ptr.isNull())
                 {
                         ptr->set_background_color(c);
-                }
-        });
-}
-
-void MainWindow::on_toolButton_default_color_clicked()
-{
-        QPointer ptr(this);
-        dialog::color_dialog("Default Color", m_default_color, [&](const QColor& c) {
-                if (!ptr.isNull())
-                {
-                        ptr->set_default_color(c);
                 }
         });
 }

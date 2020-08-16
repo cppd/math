@@ -98,7 +98,7 @@ vec3 shade()
         {
                 mtl_a = mesh.color;
                 mtl_d = mesh.color;
-                mtl_s = drawing.default_specular_color;
+                mtl_s = drawing.specular_color;
         }
         else if (!has_texture_coordinates())
         {

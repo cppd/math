@@ -284,17 +284,11 @@ class Impl final : public Renderer
 
                 create_clear_command_buffers();
         }
-        void set_default_color(const Color& color) override
+        void set_specular_color(const Color& color) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shader_buffers.set_default_color(color);
-        }
-        void set_default_specular_color(const Color& color) override
-        {
-                ASSERT(m_thread_id == std::this_thread::get_id());
-
-                m_shader_buffers.set_default_specular_color(color);
+                m_shader_buffers.set_specular_color(color);
         }
         void set_wireframe_color(const Color& color) override
         {

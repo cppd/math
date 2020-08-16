@@ -30,6 +30,5 @@ std::function<void(ProgressRatioList*)> action_painter(
         const view::info::Camera& camera,
         const std::string& title,
         const Color& background_color,
-        const Color& default_color,
         const Color::DataType& diffuse);
 }
