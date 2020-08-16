@@ -209,7 +209,7 @@ vec4 volume_color(vec3 p)
         }
         float value = scalar_volume_value(p);
         // vec4 color = texture(transfer_function, value);
-        vec4 color = vec4(drawing.default_color * (drawing.light_a + drawing.light_d), value);
+        vec4 color = vec4(volume.color * (drawing.light_a + drawing.light_d), value);
         color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
         return color;
 }
@@ -365,7 +365,7 @@ vec4 find_isosurface(vec4 a, vec4 b, float sign_a)
 
 vec3 shade(vec3 p)
 {
-        vec3 color = drawing.default_color * drawing.light_a;
+        vec3 color = volume.color * drawing.light_a;
 
         vec3 N = world_normal(p);
         N = faceforward(N, -drawing.direction_to_camera, N);
@@ -376,7 +376,7 @@ vec3 shade(vec3 p)
         if (diffuse > 0)
         {
                 float specular = pow(max(0, dot(V, reflect(-L, N))), drawing.default_ns);
-                color += diffuse * drawing.default_color * drawing.light_d;
+                color += diffuse * volume.color * drawing.light_d;
                 color += specular * drawing.default_specular_color * drawing.light_s;
         }
 

@@ -98,6 +98,7 @@ private slots:
         void on_toolButton_mesh_color_clicked();
         void on_toolButton_normal_color_negative_clicked();
         void on_toolButton_normal_color_positive_clicked();
+        void on_toolButton_volume_color_clicked();
         void on_toolButton_wireframe_color_clicked();
 
 private:

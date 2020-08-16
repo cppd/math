@@ -239,6 +239,8 @@ void MainWindow::disable_volume_parameters()
 
         m_slider_volume_levels->set_range(0, 1);
 
+        set_widget_color(ui.widget_volume_color, QColor(255, 255, 255));
+
         {
                 QSignalBlocker blocker_1(ui.slider_volume_transparency);
                 QSignalBlocker blocker_2(ui.slider_isosurface_transparency);
@@ -1193,6 +1195,7 @@ void MainWindow::update_volume_ui(ObjectId id)
                         double isosurface_alpha;
                         bool isosurface;
                         float isovalue;
+                        Color color;
                         {
                                 volume::Reading reading(*volume_object);
                                 min = volume_object->level_min();
@@ -1201,9 +1204,12 @@ void MainWindow::update_volume_ui(ObjectId id)
                                 isosurface_alpha = volume_object->isosurface_alpha();
                                 isosurface = volume_object->isosurface();
                                 isovalue = volume_object->isovalue();
+                                color = volume_object->color();
                         }
 
                         m_slider_volume_levels->set_range(min, max);
+
+                        set_widget_color(ui.widget_volume_color, color);
 
                         double isosurface_transparency_position = 1.0 - isosurface_alpha;
 
@@ -1380,6 +1386,40 @@ void MainWindow::on_toolButton_mesh_color_clicked()
                         [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
                                 set_widget_color(ui.widget_mesh_color, c);
                                 mesh::WritingUpdates updates(object.get(), {mesh::Update::Parameters});
+                                object->set_color(qcolor_to_rgb(c));
+                        },
+                        *object_opt);
+        });
+}
+
+void MainWindow::on_toolButton_volume_color_clicked()
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::VolumeObject> object_opt = m_model_tree->current_volume();
+        if (!object_opt)
+        {
+                return;
+        }
+
+        Color color;
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
+                        volume::Reading reading(*object);
+                        color = object->color();
+                },
+                *object_opt);
+
+        QPointer ptr(this);
+        dialog::color_dialog("Volume Color", rgb_to_qcolor(color), [&](const QColor& c) {
+                if (ptr.isNull())
+                {
+                        return;
+                }
+                std::visit(
+                        [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
+                                set_widget_color(ui.widget_volume_color, c);
+                                volume::WritingUpdates updates(object.get(), {volume::Update::Parameters});
                                 object->set_color(qcolor_to_rgb(c));
                         },
                         *object_opt);
