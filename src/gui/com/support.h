@@ -84,6 +84,10 @@ QSplitter* find_widget_splitter(QObject* object, QWidget* widget);
 void set_horizontal_stretch(QWidget* widget, int stretchFactor);
 
 Color qcolor_to_rgb(const QColor& c);
+QColor rgb_to_qcolor(const Color& c);
+
+void set_widget_color(QWidget* widget, const QColor& c);
+void set_widget_color(QWidget* widget, const Color& c);
 
 void button_strike_out(QRadioButton* button, bool strike_out);
 

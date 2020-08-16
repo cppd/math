@@ -128,6 +128,28 @@ Color qcolor_to_rgb(const QColor& c)
         return Color(Srgb8(r, g, b));
 }
 
+QColor rgb_to_qcolor(const Color& c)
+{
+        Srgb8 srgb8 = c.to_srgb8();
+        return QColor(srgb8.red, srgb8.green, srgb8.blue);
+}
+
+void set_widget_color(QWidget* widget, const QColor& c)
+{
+        ASSERT(widget);
+
+        QPalette palette;
+        palette.setColor(QPalette::Window, c);
+        widget->setPalette(palette);
+}
+
+void set_widget_color(QWidget* widget, const Color& c)
+{
+        ASSERT(widget);
+
+        set_widget_color(widget, rgb_to_qcolor(c));
+}
+
 void button_strike_out(QRadioButton* button, bool strike_out)
 {
         ASSERT(button);
