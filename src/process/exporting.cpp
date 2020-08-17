@@ -55,14 +55,15 @@ std::function<void(ProgressRatioList*)> action_export_function(
         mesh::FileType file_type = mesh::file_type_by_extension(file_name);
 
         return [=](ProgressRatioList*) {
+                mesh::Reading reading(*mesh_object);
                 switch (file_type)
                 {
                 case mesh::FileType::Obj:
-                        mesh::save_to_obj(mesh_object->mesh(), file_name, name);
+                        mesh::save_to_obj(reading.mesh(), file_name, name);
                         MESSAGE_INFORMATION(name + " exported to OBJ file " + file_name);
                         return;
                 case mesh::FileType::Stl:
-                        save_to_stl(mesh_object->mesh(), file_name, name, STL_EXPORT_FORMAT_ASCII);
+                        save_to_stl(reading.mesh(), file_name, name, STL_EXPORT_FORMAT_ASCII);
                         MESSAGE_INFORMATION(name + " exported to STL file " + file_name);
                         return;
                 }

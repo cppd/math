@@ -54,19 +54,17 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 {
         ASSERT(mesh_object);
 
-        if (mesh_object->mesh().facets.empty())
         {
-                MESSAGE_WARNING("No object to paint");
-                return nullptr;
+                mesh::Reading reading(*mesh_object);
+                if (reading.mesh().facets.empty())
+                {
+                        MESSAGE_WARNING("No object to paint");
+                        return nullptr;
+                }
         }
 
         const unsigned default_samples = power<N - 1>(static_cast<unsigned>(PAINTER_DEFAULT_SAMPLES_PER_DIMENSION));
         const unsigned max_samples = power<N - 1>(static_cast<unsigned>(PAINTER_MAXIMUM_SAMPLES_PER_DIMENSION));
-
-        PainterSceneCommonInfo scene_common_info;
-        scene_common_info.background_color = background_color;
-        scene_common_info.default_color = mesh_object->color();
-        scene_common_info.diffuse = diffuse;
 
         int thread_count;
         int samples_per_pixel;
@@ -105,11 +103,22 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         }
 
         return [=](ProgressRatioList* progress_list) {
+                PainterSceneCommonInfo scene_common_info;
+                scene_common_info.background_color = background_color;
+                scene_common_info.diffuse = diffuse;
+
                 std::shared_ptr<const painter::MeshObject<N, T>> painter_mesh_object;
                 {
+                        mesh::Reading reading(*mesh_object);
+                        if (reading.mesh().facets.empty())
+                        {
+                                MESSAGE_WARNING("No object to paint");
+                                return;
+                        }
+                        scene_common_info.default_color = reading.color();
                         ProgressRatio progress(progress_list);
                         painter_mesh_object = std::make_shared<painter::MeshObject<N, T>>(
-                                mesh_object->mesh(), to_matrix<T>(mesh_object->matrix()), &progress);
+                                reading.mesh(), to_matrix<T>(reading.matrix()), &progress);
                 }
 
                 if (!painter_mesh_object)

@@ -58,7 +58,7 @@ struct MeshObject
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const = 0;
 
-        virtual void update(const mesh::MeshObject<3>& mesh_object, bool* update_command_buffers) = 0;
+        virtual void update(const mesh::Reading<3>& mesh_object, bool* update_command_buffers) = 0;
 };
 
 std::unique_ptr<MeshObject> create_mesh_object(

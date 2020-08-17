@@ -737,7 +737,7 @@ class Impl final : public MeshObject
                 vkCmdDraw(command_buffer, m_points_vertex_count, 1, 0, 0);
         }
 
-        void update(const mesh::MeshObject<3>& mesh_object, bool* update_command_buffers) override
+        void update(const mesh::Reading<3>& mesh_object, bool* update_command_buffers) override
         {
                 *update_command_buffers = false;
 
@@ -754,7 +754,7 @@ class Impl final : public MeshObject
                 bool update_all = updates.contains(mesh::Update::All);
                 bool update_mesh = update_all;
                 bool update_matrix = update_all || updates.contains(mesh::Update::Matrix);
-                bool update_parameters = update_all || updates.contains(mesh::Update::Parameters);
+                bool update_color = update_all || updates.contains(mesh::Update::Color);
                 bool update_alpha = update_all || updates.contains(mesh::Update::Alpha);
 
                 ASSERT([&updates]() {
@@ -762,7 +762,7 @@ class Impl final : public MeshObject
                         s.erase(mesh::Update::All);
                         s.erase(mesh::Update::Alpha);
                         s.erase(mesh::Update::Matrix);
-                        s.erase(mesh::Update::Parameters);
+                        s.erase(mesh::Update::Color);
                         return s.empty();
                 }());
 
@@ -784,7 +784,7 @@ class Impl final : public MeshObject
                         }
                 }
 
-                if (update_parameters)
+                if (update_color)
                 {
                         m_mesh_buffer.set_color(mesh_object.color());
                 }

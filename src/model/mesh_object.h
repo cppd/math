@@ -96,7 +96,7 @@ enum class Update
         All,
         Alpha,
         Matrix,
-        Parameters
+        Color
 };
 
 template <size_t N>
@@ -147,38 +147,7 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
                 }
         }
 
-public:
-        static void set_events(const std::function<void(MeshEvent<N>&&)>* events)
-        {
-                m_events = events;
-        }
-
-        MeshObject(
-                std::unique_ptr<const Mesh<N>>&& mesh,
-                const Matrix<N + 1, N + 1, double>& matrix,
-                const std::string& name)
-                : m_mesh(std::move(mesh)), m_matrix(matrix), m_name(name)
-        {
-                ASSERT(m_mesh);
-        }
-
-        void insert(const std::optional<ObjectId>& parent_object_id = std::nullopt)
-        {
-                std::unique_lock m_lock(m_mutex);
-                if (!m_inserted)
-                {
-                        m_inserted = true;
-                        send_event(typename MeshEvent<N>::Insert(this->shared_from_this(), parent_object_id));
-                }
-        }
-
-        ~MeshObject()
-        {
-                if (m_inserted)
-                {
-                        send_event(typename MeshEvent<N>::Delete(m_id));
-                }
-        }
+        //
 
         const Mesh<N>& mesh() const
         {
@@ -193,16 +162,6 @@ public:
         void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
         {
                 m_matrix = matrix;
-        }
-
-        const std::string& name() const
-        {
-                return m_name;
-        }
-
-        const ObjectId& id() const
-        {
-                return m_id;
         }
 
         float alpha() const
@@ -228,6 +187,49 @@ public:
         void updates(std::optional<int>* version, std::unordered_set<Update>* updates) const
         {
                 m_versions.updates(version, updates);
+        }
+
+public:
+        static void set_events(const std::function<void(MeshEvent<N>&&)>* events)
+        {
+                m_events = events;
+        }
+
+        MeshObject(
+                std::unique_ptr<const Mesh<N>>&& mesh,
+                const Matrix<N + 1, N + 1, double>& matrix,
+                const std::string& name)
+                : m_mesh(std::move(mesh)), m_matrix(matrix), m_name(name)
+        {
+                ASSERT(m_mesh);
+        }
+
+        ~MeshObject()
+        {
+                if (m_inserted)
+                {
+                        send_event(typename MeshEvent<N>::Delete(m_id));
+                }
+        }
+
+        const std::string& name() const
+        {
+                return m_name;
+        }
+
+        const ObjectId& id() const
+        {
+                return m_id;
+        }
+
+        void insert(const std::optional<ObjectId>& parent_object_id = std::nullopt)
+        {
+                std::unique_lock m_lock(m_mutex);
+                if (!m_inserted)
+                {
+                        m_inserted = true;
+                        send_event(typename MeshEvent<N>::Insert(this->shared_from_this(), parent_object_id));
+                }
         }
 
         bool visible() const
@@ -256,30 +258,134 @@ class Writing
         MeshObject<N>* m_object;
         std::unique_lock<std::shared_mutex> m_lock;
 
+        bool m_alpha = false;
+        bool m_matrix = false;
+        bool m_color = false;
+
 public:
-        Writing(MeshObject<N>* object, std::unordered_set<Update>&& updates)
-                : m_object(object), m_lock(m_object->m_mutex)
+        Writing(MeshObject<N>* object) : m_object(object), m_lock(m_object->m_mutex)
         {
-                m_object->m_versions.add(std::move(updates));
         }
 
         ~Writing()
         {
+                std::unordered_set<Update> updates;
+                if (m_alpha)
+                {
+                        updates.insert(Update::Alpha);
+                }
+                if (m_matrix)
+                {
+                        updates.insert(Update::Matrix);
+                }
+                if (m_color)
+                {
+                        updates.insert(Update::Color);
+                }
+                if (updates.empty())
+                {
+                        return;
+                }
+                m_object->m_versions.add(std::move(updates));
                 if (m_object->m_inserted)
                 {
                         m_object->send_event(typename MeshEvent<N>::Update(m_object->shared_from_this()));
                 }
+        }
+
+        const std::string& name() const
+        {
+                return m_object->name();
+        }
+
+        const ObjectId& id() const
+        {
+                return m_object->id();
+        }
+
+        const Mesh<N>& mesh() const
+        {
+                return m_object->mesh();
+        }
+
+        const Matrix<N + 1, N + 1, double>& matrix() const
+        {
+                return m_object->matrix();
+        }
+
+        void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
+        {
+                m_matrix = true;
+                m_object->set_matrix(matrix);
+        }
+
+        float alpha() const
+        {
+                return m_object->alpha();
+        }
+
+        void set_alpha(float alpha)
+        {
+                m_alpha = true;
+                m_object->set_alpha(alpha);
+        }
+
+        const Color& color() const
+        {
+                return m_object->color();
+        }
+
+        void set_color(const Color& color)
+        {
+                m_color = true;
+                m_object->set_color(color);
         }
 };
 
 template <size_t N>
 class Reading
 {
+        const MeshObject<N>* m_object;
         std::shared_lock<std::shared_mutex> m_lock;
 
 public:
-        Reading(const MeshObject<N>& object) : m_lock(object.m_mutex)
+        Reading(const MeshObject<N>& object) : m_object(&object), m_lock(object.m_mutex)
         {
+        }
+
+        void updates(std::optional<int>* version, std::unordered_set<Update>* updates) const
+        {
+                m_object->m_versions.updates(version, updates);
+        }
+
+        const std::string& name() const
+        {
+                return m_object->name();
+        }
+
+        const ObjectId& id() const
+        {
+                return m_object->id();
+        }
+
+        const Mesh<N>& mesh() const
+        {
+                return m_object->mesh();
+        }
+
+        const Matrix<N + 1, N + 1, double>& matrix() const
+        {
+                return m_object->matrix();
+        }
+
+        float alpha() const
+        {
+                return m_object->alpha();
+        }
+
+        const Color& color() const
+        {
+                return m_object->color();
         }
 };
 }
