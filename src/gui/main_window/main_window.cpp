@@ -1210,7 +1210,7 @@ void MainWindow::slider_volume_levels_range_changed(double min, double max)
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
-                        volume::WritingUpdates updates(volume_object.get(), {volume::Update::Parameters});
+                        volume::Writing updates(volume_object.get(), {volume::Update::Parameters});
                         volume_object->set_levels(min, max);
                 },
                 *volume_object_opt);
@@ -1231,7 +1231,7 @@ void MainWindow::on_slider_volume_transparency_valueChanged(int)
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
-                        volume::WritingUpdates updates(volume_object.get(), {volume::Update::Parameters});
+                        volume::Writing updates(volume_object.get(), {volume::Update::Parameters});
                         volume_object->set_volume_alpha_coefficient(alpha_coefficient);
                 },
                 *volume_object_opt);
@@ -1251,7 +1251,7 @@ void MainWindow::on_slider_isosurface_transparency_valueChanged(int)
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
-                        volume::WritingUpdates updates(volume_object.get(), {volume::Update::Parameters});
+                        volume::Writing updates(volume_object.get(), {volume::Update::Parameters});
                         volume_object->set_isosurface_alpha(alpha);
                 },
                 *volume_object_opt);
@@ -1272,7 +1272,7 @@ void MainWindow::on_checkBox_isosurface_clicked()
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
-                        volume::WritingUpdates updates(volume_object.get(), {volume::Update::Parameters});
+                        volume::Writing updates(volume_object.get(), {volume::Update::Parameters});
                         volume_object->set_isosurface(checked);
                 },
                 *volume_object_opt);
@@ -1292,7 +1292,7 @@ void MainWindow::on_slider_isovalue_valueChanged(int)
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
-                        volume::WritingUpdates updates(volume_object.get(), {volume::Update::Parameters});
+                        volume::Writing updates(volume_object.get(), {volume::Update::Parameters});
                         volume_object->set_isovalue(isovalue);
                 },
                 *volume_object_opt);
@@ -1379,7 +1379,7 @@ void MainWindow::on_toolButton_volume_color_clicked()
                 std::visit(
                         [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
                                 set_widget_color(ui.widget_volume_color, c);
-                                volume::WritingUpdates updates(object.get(), {volume::Update::Parameters});
+                                volume::Writing updates(object.get(), {volume::Update::Parameters});
                                 object->set_color(qcolor_to_rgb(c));
                         },
                         *object_opt);

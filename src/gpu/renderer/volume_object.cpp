@@ -171,6 +171,8 @@ class Impl final : public VolumeObject
         std::vector<vulkan::DescriptorSetLayoutAndBindings> m_image_layouts;
         VkSampler m_image_sampler;
 
+        std::optional<int> m_version;
+
         void buffer_set_parameters(
                 float window_min,
                 float window_max,
@@ -325,13 +327,12 @@ class Impl final : public VolumeObject
                 buffer_set_clip_plane();
         }
 
-        void update(
-                const std::unordered_set<volume::Update>& updates,
-                const volume::VolumeObject<3>& volume_object,
-                bool* update_command_buffers) override
+        void update(const volume::VolumeObject<3>& volume_object, bool* update_command_buffers) override
         {
                 *update_command_buffers = false;
 
+                std::unordered_set<volume::Update> updates;
+                volume_object.updates(&m_version, &updates);
                 if (updates.empty())
                 {
                         return;
