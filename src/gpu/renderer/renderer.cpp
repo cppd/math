@@ -427,7 +427,7 @@ class Impl final : public Renderer
                 bool created = false;
 
                 {
-                        mesh::ReadingUpdates reading(object);
+                        mesh::Reading reading(object);
 
                         //
 
@@ -450,14 +450,7 @@ class Impl final : public Renderer
                         bool update_command_buffers;
                         try
                         {
-                                if (!created)
-                                {
-                                        ptr->update(reading.updates(), object, &update_command_buffers);
-                                }
-                                else
-                                {
-                                        ptr->update({mesh::Update::All}, object, &update_command_buffers);
-                                }
+                                ptr->update(object, &update_command_buffers);
                         }
                         catch (const std::exception& e)
                         {

@@ -1312,7 +1312,7 @@ void MainWindow::on_slider_mesh_transparency_valueChanged(int)
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
-                        mesh::WritingUpdates updates(object.get(), {mesh::Update::Alpha});
+                        mesh::Writing updates(object.get(), {mesh::Update::Alpha});
                         object->set_alpha(alpha);
                 },
                 *object_opt);
@@ -1345,7 +1345,7 @@ void MainWindow::on_toolButton_mesh_color_clicked()
                 std::visit(
                         [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
                                 set_widget_color(ui.widget_mesh_color, c);
-                                mesh::WritingUpdates updates(object.get(), {mesh::Update::Parameters});
+                                mesh::Writing updates(object.get(), {mesh::Update::Parameters});
                                 object->set_color(qcolor_to_rgb(c));
                         },
                         *object_opt);

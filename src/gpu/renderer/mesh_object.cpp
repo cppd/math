@@ -487,6 +487,8 @@ class Impl final : public MeshObject
 
         bool m_transparent = false;
 
+        std::optional<int> m_version;
+
         void create_mesh_descriptor_sets()
         {
                 m_mesh_descriptor_sets.clear();
@@ -735,13 +737,12 @@ class Impl final : public MeshObject
                 vkCmdDraw(command_buffer, m_points_vertex_count, 1, 0, 0);
         }
 
-        void update(
-                const std::unordered_set<mesh::Update>& updates,
-                const mesh::MeshObject<3>& mesh_object,
-                bool* update_command_buffers) override
+        void update(const mesh::MeshObject<3>& mesh_object, bool* update_command_buffers) override
         {
                 *update_command_buffers = false;
 
+                std::unordered_set<mesh::Update> updates;
+                mesh_object.updates(&m_version, &updates);
                 if (updates.empty())
                 {
                         return;
