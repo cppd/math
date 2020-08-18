@@ -37,7 +37,7 @@ struct VolumeObject
 
         virtual void set_clip_plane(const vec4& world_clip_plane_equation) = 0;
 
-        virtual void update(const volume::VolumeObject<3>& volume_object, bool* update_command_buffers) = 0;
+        virtual void update(const volume::Reading<3>& volume_object, bool* update_command_buffers) = 0;
 };
 
 std::unique_ptr<VolumeObject> create_volume_object(

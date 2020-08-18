@@ -327,7 +327,7 @@ class Impl final : public VolumeObject
                 buffer_set_clip_plane();
         }
 
-        void update(const volume::VolumeObject<3>& volume_object, bool* update_command_buffers) override
+        void update(const volume::Reading<3>& volume_object, bool* update_command_buffers) override
         {
                 *update_command_buffers = false;
 
