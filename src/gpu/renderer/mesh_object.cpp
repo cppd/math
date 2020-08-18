@@ -737,15 +737,15 @@ class Impl final : public MeshObject
                 vkCmdDraw(command_buffer, m_points_vertex_count, 1, 0, 0);
         }
 
-        void update(const mesh::Reading<3>& mesh_object, bool* update_command_buffers) override
+        UpdateChanges update(const mesh::Reading<3>& mesh_object) override
         {
-                *update_command_buffers = false;
+                UpdateChanges update_changes;
 
                 mesh::Update::Flags updates;
                 mesh_object.updates(&m_version, &updates);
                 if (updates.none())
                 {
-                        return;
+                        return update_changes;
                 }
 
                 ASSERT(!mesh_object.mesh().facets.empty() || !mesh_object.mesh().lines.empty()
@@ -772,7 +772,7 @@ class Impl final : public MeshObject
                         if (m_transparent != transparent)
                         {
                                 m_transparent = transparent;
-                                *update_command_buffers = true;
+                                update_changes.transparency = true;
                         }
                 }
 
@@ -788,8 +788,10 @@ class Impl final : public MeshObject
                         load_mesh_textures_and_materials(mesh);
                         load_mesh_vertices(mesh);
 
-                        *update_command_buffers = true;
+                        update_changes.command_buffers = true;
                 }
+
+                return update_changes;
         }
 
 public:
