@@ -507,10 +507,10 @@ class Impl final : public Renderer
                                 created = true;
                         }
 
-                        bool update_command_buffers;
+                        VolumeObject::UpdateChanges update_changes;
                         try
                         {
-                                ptr->update(object, &update_command_buffers);
+                                update_changes = ptr->update(object);
                         }
                         catch (const std::exception& e)
                         {
@@ -526,7 +526,7 @@ class Impl final : public Renderer
                         }
 
                         ASSERT(!(created && m_volume_storage.is_visible(object.id())));
-                        if (update_command_buffers && m_volume_storage.is_visible(object.id()))
+                        if (update_changes.command_buffers && m_volume_storage.is_visible(object.id()))
                         {
                                 create_volume_command_buffers();
                         }

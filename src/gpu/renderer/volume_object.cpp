@@ -338,15 +338,15 @@ class Impl final : public VolumeObject
                 buffer_set_clip_plane();
         }
 
-        void update(const volume::Reading<3>& volume_object, bool* update_command_buffers) override
+        UpdateChanges update(const volume::Reading<3>& volume_object) override
         {
-                *update_command_buffers = false;
+                UpdateChanges update_changes;
 
                 volume::Update::Flags updates;
                 volume_object.updates(&m_version, &updates);
                 if (updates.none())
                 {
-                        return;
+                        return update_changes;
                 }
 
                 static_assert(volume::Update::Flags().size() == 8);
@@ -365,7 +365,7 @@ class Impl final : public VolumeObject
 
                         create_descriptor_sets();
 
-                        *update_command_buffers = true;
+                        update_changes.command_buffers = true;
                 }
 
                 if (update_parameters)
@@ -385,6 +385,8 @@ class Impl final : public VolumeObject
 
                         buffer_set_coordinates();
                 }
+
+                return update_changes;
         }
 
 public:
