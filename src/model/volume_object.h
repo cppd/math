@@ -91,17 +91,28 @@ private:
         T m_data;
 };
 
-enum class Update
+namespace Update
 {
-        All,
+enum Flag
+{
         Image,
         Parameters,
         Matrices
 };
+using Flags = std::bitset<Flag::Matrices + 1>;
+}
 
 template <size_t N>
 class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
 {
+        template <size_t>
+        friend class Writing;
+
+        template <size_t>
+        friend class Reading;
+
+        //
+
         inline static const std::function<void(VolumeEvent<N>&&)>* m_events = nullptr;
 
         //
@@ -123,20 +134,11 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         Color m_color = Color(Srgb8(150, 170, 150));
 
         bool m_visible = false;
-
-        //
-
-        template <size_t>
-        friend class Writing;
-
-        template <size_t>
-        friend class Reading;
-
         bool m_inserted = false;
 
         mutable std::shared_mutex m_mutex;
 
-        Versions<Update, Update::All> m_versions;
+        Versions<Update::Flags().size()> m_versions;
 
         void send_event(VolumeEvent<N>&& event) noexcept
         {
@@ -237,7 +239,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
                 m_color = color;
         }
 
-        void updates(std::optional<int>* version, std::unordered_set<Update>* updates) const
+        void updates(std::optional<int>* version, Update::Flags* updates) const
         {
                 m_versions.updates(version, updates);
         }
@@ -313,9 +315,7 @@ class Writing
         VolumeObject<N>* m_object;
         std::unique_lock<std::shared_mutex> m_lock;
 
-        bool m_image = false;
-        bool m_parameters = false;
-        bool m_matrices = false;
+        Update::Flags m_updates;
 
 public:
         Writing(VolumeObject<N>* object) : m_object(object), m_lock(m_object->m_mutex)
@@ -324,24 +324,11 @@ public:
 
         ~Writing()
         {
-                std::unordered_set<Update> updates;
-                if (m_image)
-                {
-                        updates.insert(Update::Image);
-                }
-                if (m_matrices)
-                {
-                        updates.insert(Update::Matrices);
-                }
-                if (m_parameters)
-                {
-                        updates.insert(Update::Parameters);
-                }
-                if (updates.empty())
+                if (m_updates.none())
                 {
                         return;
                 }
-                m_object->m_versions.add(std::move(updates));
+                m_object->m_versions.add(std::move(m_updates));
                 if (m_object->m_inserted)
                 {
                         m_object->send_event(typename VolumeEvent<N>::Update(m_object->shared_from_this()));
@@ -360,7 +347,7 @@ public:
 
         void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
         {
-                m_matrices = true;
+                m_updates.set(Update::Matrices);
                 m_object->set_matrix(matrix);
         }
 
@@ -376,7 +363,7 @@ public:
 
         void set_levels(float min, float max)
         {
-                m_parameters = true;
+                m_updates.set(Update::Parameters);
                 m_object->set_levels(min, max);
         }
 
@@ -387,7 +374,7 @@ public:
 
         void set_volume_alpha_coefficient(float coefficient)
         {
-                m_parameters = true;
+                m_updates.set(Update::Parameters);
                 m_object->set_volume_alpha_coefficient(coefficient);
         }
 
@@ -398,7 +385,7 @@ public:
 
         void set_isosurface_alpha(float alpha)
         {
-                m_parameters = true;
+                m_updates.set(Update::Parameters);
                 m_object->set_isosurface_alpha(alpha);
         }
 
@@ -409,7 +396,7 @@ public:
 
         void set_isosurface(bool enabled)
         {
-                m_parameters = true;
+                m_updates.set(Update::Parameters);
                 m_object->set_isosurface(enabled);
         }
 
@@ -420,7 +407,7 @@ public:
 
         void set_isovalue(float value)
         {
-                m_parameters = true;
+                m_updates.set(Update::Parameters);
                 m_object->set_isovalue(value);
         }
 
@@ -431,7 +418,7 @@ public:
 
         void set_color(const Color& color)
         {
-                m_parameters = true;
+                m_updates.set(Update::Parameters);
                 m_object->set_color(color);
         }
 };
@@ -447,7 +434,7 @@ public:
         {
         }
 
-        void updates(std::optional<int>* version, std::unordered_set<Update>* updates) const
+        void updates(std::optional<int>* version, Update::Flags* updates) const
         {
                 m_object->updates(version, updates);
         }

@@ -741,9 +741,9 @@ class Impl final : public MeshObject
         {
                 *update_command_buffers = false;
 
-                std::unordered_set<mesh::Update> updates;
+                mesh::Update::Flags updates;
                 mesh_object.updates(&m_version, &updates);
-                if (updates.empty())
+                if (updates.none())
                 {
                         return;
                 }
@@ -751,20 +751,12 @@ class Impl final : public MeshObject
                 ASSERT(!mesh_object.mesh().facets.empty() || !mesh_object.mesh().lines.empty()
                        || !mesh_object.mesh().points.empty());
 
-                bool update_all = updates.contains(mesh::Update::All);
-                bool update_mesh = update_all;
-                bool update_matrix = update_all || updates.contains(mesh::Update::Matrix);
-                bool update_color = update_all || updates.contains(mesh::Update::Color);
-                bool update_alpha = update_all || updates.contains(mesh::Update::Alpha);
+                static_assert(mesh::Update::Flags().size() == 4);
 
-                ASSERT([&updates]() {
-                        std::unordered_set<mesh::Update> s = updates;
-                        s.erase(mesh::Update::All);
-                        s.erase(mesh::Update::Alpha);
-                        s.erase(mesh::Update::Matrix);
-                        s.erase(mesh::Update::Color);
-                        return s.empty();
-                }());
+                bool update_mesh = updates[mesh::Update::Mesh];
+                bool update_matrix = updates[mesh::Update::Matrix];
+                bool update_color = updates[mesh::Update::Color];
+                bool update_alpha = updates[mesh::Update::Alpha];
 
                 if (update_matrix)
                 {

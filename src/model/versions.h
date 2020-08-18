@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <bitset>
 #include <deque>
 #include <optional>
-#include <unordered_set>
 
-template <typename Update, Update ALL>
+template <size_t N>
 class Versions
 {
         static constexpr size_t MAX_VERSION_COUNT = 10;
@@ -31,36 +31,35 @@ class Versions
         struct Version
         {
                 int version;
-                std::unordered_set<Update> updates;
-                Version(int version, std::unordered_set<Update>&& updates)
-                        : version(version), updates(std::move(updates))
+                std::bitset<N> updates;
+                Version(int version, const std::bitset<N>& updates) : version(version), updates(updates)
                 {
                 }
         };
-        std::deque<Version> m_versions{{Version(0, {ALL})}};
+        std::deque<Version> m_versions{{Version(0, std::bitset<N>().set())}};
 
 public:
-        void add(std::unordered_set<Update>&& updates)
+        void add(const std::bitset<N>& updates)
         {
                 while (m_versions.size() > MAX_VERSION_COUNT)
                 {
                         m_versions.pop_front();
                 }
-                m_versions.emplace_back(m_versions.back().version + 1, std::move(updates));
+                m_versions.emplace_back(m_versions.back().version + 1, updates);
         }
 
-        void updates(std::optional<int>* version, std::unordered_set<Update>* updates) const
+        void updates(std::optional<int>* version, std::bitset<N>* updates) const
         {
                 ASSERT(!m_versions.empty());
 
                 if (!version->has_value())
                 {
                         *version = m_versions.back().version;
-                        *updates = {ALL};
+                        updates->set();
                         return;
                 }
 
-                updates->clear();
+                updates->reset();
 
                 ASSERT(version->value() <= m_versions.back().version);
                 if (version->value() == m_versions.back().version)
@@ -80,7 +79,7 @@ public:
                 }
                 for (; iter != m_versions.cend(); ++iter)
                 {
-                        updates->insert(iter->updates.cbegin(), iter->updates.cend());
+                        *updates |= iter->updates;
                 }
 
                 *version = m_versions.back().version;

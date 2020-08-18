@@ -331,26 +331,18 @@ class Impl final : public VolumeObject
         {
                 *update_command_buffers = false;
 
-                std::unordered_set<volume::Update> updates;
+                volume::Update::Flags updates;
                 volume_object.updates(&m_version, &updates);
-                if (updates.empty())
+                if (updates.none())
                 {
                         return;
                 }
 
-                bool update_all = updates.contains(volume::Update::All);
-                bool update_image = update_all || updates.contains(volume::Update::Image);
-                bool update_parameters = update_all || updates.contains(volume::Update::Parameters);
-                bool update_matrices = update_all || updates.contains(volume::Update::Matrices);
+                static_assert(volume::Update::Flags().size() == 3);
 
-                ASSERT([&updates]() {
-                        std::unordered_set<volume::Update> s = updates;
-                        s.erase(volume::Update::All);
-                        s.erase(volume::Update::Image);
-                        s.erase(volume::Update::Parameters);
-                        s.erase(volume::Update::Matrices);
-                        return s.empty();
-                }());
+                bool update_image = updates[volume::Update::Image];
+                bool update_parameters = updates[volume::Update::Parameters];
+                bool update_matrices = updates[volume::Update::Matrices];
 
                 if (update_image)
                 {
