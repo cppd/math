@@ -96,10 +96,15 @@ namespace Update
 enum Flag
 {
         Image,
-        Parameters,
-        Matrices
+        Matrices,
+        Levels,
+        VolumeAlphaCoefficient,
+        IsosurfaceAlpha,
+        Isosurface,
+        Isovalue,
+        Color
 };
-using Flags = std::bitset<Flag::Matrices + 1>;
+using Flags = std::bitset<Flag::Color + 1>;
 }
 
 template <size_t N>
@@ -363,7 +368,7 @@ public:
 
         void set_levels(float min, float max)
         {
-                m_updates.set(Update::Parameters);
+                m_updates.set(Update::Levels);
                 m_object->set_levels(min, max);
         }
 
@@ -374,7 +379,7 @@ public:
 
         void set_volume_alpha_coefficient(float coefficient)
         {
-                m_updates.set(Update::Parameters);
+                m_updates.set(Update::VolumeAlphaCoefficient);
                 m_object->set_volume_alpha_coefficient(coefficient);
         }
 
@@ -385,7 +390,7 @@ public:
 
         void set_isosurface_alpha(float alpha)
         {
-                m_updates.set(Update::Parameters);
+                m_updates.set(Update::IsosurfaceAlpha);
                 m_object->set_isosurface_alpha(alpha);
         }
 
@@ -396,7 +401,7 @@ public:
 
         void set_isosurface(bool enabled)
         {
-                m_updates.set(Update::Parameters);
+                m_updates.set(Update::Isovalue);
                 m_object->set_isosurface(enabled);
         }
 
@@ -407,7 +412,7 @@ public:
 
         void set_isovalue(float value)
         {
-                m_updates.set(Update::Parameters);
+                m_updates.set(Update::Isovalue);
                 m_object->set_isovalue(value);
         }
 
@@ -418,7 +423,7 @@ public:
 
         void set_color(const Color& color)
         {
-                m_updates.set(Update::Parameters);
+                m_updates.set(Update::Color);
                 m_object->set_color(color);
         }
 };

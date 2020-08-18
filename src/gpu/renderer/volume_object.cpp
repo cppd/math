@@ -173,6 +173,17 @@ class Impl final : public VolumeObject
 
         std::optional<int> m_version;
 
+        const volume::Update::Flags UPDATE_PARAMETERS = []() {
+                volume::Update::Flags flags;
+                flags.set(volume::Update::Color);
+                flags.set(volume::Update::Levels);
+                flags.set(volume::Update::Isovalue);
+                flags.set(volume::Update::Isosurface);
+                flags.set(volume::Update::IsosurfaceAlpha);
+                flags.set(volume::Update::VolumeAlphaCoefficient);
+                return flags;
+        }();
+
         void buffer_set_parameters(
                 float window_min,
                 float window_max,
@@ -338,11 +349,11 @@ class Impl final : public VolumeObject
                         return;
                 }
 
-                static_assert(volume::Update::Flags().size() == 3);
+                static_assert(volume::Update::Flags().size() == 8);
 
                 bool update_image = updates[volume::Update::Image];
-                bool update_parameters = updates[volume::Update::Parameters];
                 bool update_matrices = updates[volume::Update::Matrices];
+                bool update_parameters = (updates & UPDATE_PARAMETERS).any();
 
                 if (update_image)
                 {
