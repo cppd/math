@@ -417,7 +417,7 @@ public:
         void set_specular_power(float specular_power)
         {
                 m_updates.set(Update::SpecularPower);
-                m_object->specular_power(specular_power);
+                m_object->set_specular_power(specular_power);
         }
 };
 

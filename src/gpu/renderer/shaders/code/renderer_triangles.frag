@@ -83,37 +83,36 @@ float edge_factor()
         return min(min(a.x, a.y), a.z);
 }
 
-float material_ns()
-{
-        return (mtl.use_material && drawing.show_materials) ? mtl.Ns : drawing.default_ns;
-}
-
 vec3 shade()
 {
         //
 
         vec3 mtl_a, mtl_d, mtl_s;
+        float ns;
 
         if (!mtl.use_material || !drawing.show_materials)
         {
                 mtl_a = mesh.color;
                 mtl_d = mesh.color;
                 mtl_s = drawing.specular_color;
+                ns = mesh.specular_power;
         }
         else if (!has_texture_coordinates())
         {
                 mtl_a = mtl.Ka;
                 mtl_d = mtl.Kd;
                 mtl_s = mtl.Ks;
+                ns = mtl.Ns;
         }
         else
         {
                 mtl_a = mtl.use_texture_Ka ? texture_Ka_color(gs.texture_coordinates).rgb : mtl.Ka;
                 mtl_d = mtl.use_texture_Kd ? texture_Kd_color(gs.texture_coordinates).rgb : mtl.Kd;
                 mtl_s = mtl.use_texture_Ks ? texture_Ks_color(gs.texture_coordinates).rgb : mtl.Ks;
+                ns = mtl.Ns;
         }
 
-        vec3 color = mtl_a * drawing.light_a;
+        vec3 color = mtl_a * mesh.ambient;
 
         if (!drawing.show_shadow || !shadow(gs.shadow_position))
         {
@@ -124,9 +123,9 @@ vec3 shade()
                 float diffuse = max(0, dot(N, L));
                 if (diffuse > 0)
                 {
-                        float specular = pow(max(0, dot(V, reflect(-L, N))), material_ns());
-                        color += diffuse * mtl_d * drawing.light_d;
-                        color += specular * mtl_s * drawing.light_s;
+                        float specular = pow(max(0, dot(V, reflect(-L, N))), ns);
+                        color += diffuse * mtl_d * mesh.diffuse;
+                        color += specular * mtl_s * mesh.specular;
                 }
         }
 

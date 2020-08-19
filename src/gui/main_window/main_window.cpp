@@ -83,6 +83,9 @@ constexpr double MAXIMUM_COLOR_AMPLIFICATION = 3;
 // Максимальный коэффициент для умножения и деления α на него.
 constexpr double VOLUME_ALPHA_COEFFICIENT = 20;
 
+constexpr double MAXIMUM_SPECULAR_POWER = 1000.0;
+constexpr double MAXIMUM_LIGHTING = 2.0;
+
 constexpr float NORMAL_LENGTH_MINIMUM = 0.001;
 constexpr float NORMAL_LENGTH_DEFAULT = 0.05;
 constexpr float NORMAL_LENGTH_MAXIMUM = 0.2;
@@ -227,8 +230,26 @@ void MainWindow::disable_mesh_parameters()
 
         set_widget_color(ui.widget_mesh_color, QColor(255, 255, 255));
 
-        QSignalBlocker blocker(ui.slider_mesh_transparency);
-        set_slider_position(ui.slider_mesh_transparency, 0);
+        {
+                QSignalBlocker blocker(ui.slider_mesh_transparency);
+                set_slider_position(ui.slider_mesh_transparency, 0);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_mesh_ambient);
+                set_slider_to_middle(ui.slider_mesh_ambient);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_mesh_diffuse);
+                set_slider_to_middle(ui.slider_mesh_diffuse);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_mesh_specular);
+                set_slider_to_middle(ui.slider_mesh_specular);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_mesh_specular_power);
+                set_slider_to_middle(ui.slider_mesh_specular_power);
+        }
 }
 
 void MainWindow::disable_volume_parameters()
@@ -1118,18 +1139,43 @@ void MainWindow::update_mesh_ui(ObjectId id)
                 [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& object) {
                         double alpha;
                         Color color;
+                        double ambient, diffuse, specular, specular_power;
                         {
                                 mesh::Reading reading(*object);
                                 alpha = reading.alpha();
                                 color = reading.color();
+                                ambient = reading.ambient();
+                                diffuse = reading.diffuse();
+                                specular = reading.specular();
+                                specular_power = reading.specular_power();
                         }
-                        double transparency_position = 1.0 - alpha;
                         {
+                                double position = 1.0 - alpha;
                                 QSignalBlocker blocker(ui.slider_mesh_transparency);
-
-                                set_slider_position(ui.slider_mesh_transparency, transparency_position);
+                                set_slider_position(ui.slider_mesh_transparency, position);
                         }
                         set_widget_color(ui.widget_mesh_color, color);
+                        {
+                                double position = ambient / MAXIMUM_LIGHTING;
+                                QSignalBlocker blocker(ui.slider_mesh_ambient);
+                                set_slider_position(ui.slider_mesh_ambient, position);
+                        }
+                        {
+                                double position = diffuse / MAXIMUM_LIGHTING;
+                                QSignalBlocker blocker(ui.slider_mesh_diffuse);
+                                set_slider_position(ui.slider_mesh_diffuse, position);
+                        }
+                        {
+                                double position = specular / MAXIMUM_LIGHTING;
+                                QSignalBlocker blocker(ui.slider_mesh_specular);
+                                set_slider_position(ui.slider_mesh_specular, position);
+                        }
+                        {
+                                double position = std::log(std::clamp(specular_power, 1.0, MAXIMUM_SPECULAR_POWER))
+                                                  / std::log(MAXIMUM_SPECULAR_POWER);
+                                QSignalBlocker blocker(ui.slider_mesh_specular_power);
+                                set_slider_position(ui.slider_mesh_specular_power, position);
+                        }
                 },
                 *object_opt);
 }
@@ -1384,5 +1430,85 @@ void MainWindow::on_toolButton_volume_color_clicked()
                         },
                         *object_opt);
         });
+}
+
+void MainWindow::on_slider_mesh_ambient_valueChanged(int)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
+        if (!object_opt)
+        {
+                return;
+        }
+
+        double ambient = MAXIMUM_LIGHTING * slider_position(ui.slider_mesh_ambient);
+
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
+                        mesh::Writing writing(object.get());
+                        writing.set_ambient(ambient);
+                },
+                *object_opt);
+}
+
+void MainWindow::on_slider_mesh_diffuse_valueChanged(int)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
+        if (!object_opt)
+        {
+                return;
+        }
+
+        double diffuse = MAXIMUM_LIGHTING * slider_position(ui.slider_mesh_diffuse);
+
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
+                        mesh::Writing writing(object.get());
+                        writing.set_diffuse(diffuse);
+                },
+                *object_opt);
+}
+
+void MainWindow::on_slider_mesh_specular_valueChanged(int)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
+        if (!object_opt)
+        {
+                return;
+        }
+
+        double specular = MAXIMUM_LIGHTING * slider_position(ui.slider_mesh_specular);
+
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
+                        mesh::Writing writing(object.get());
+                        writing.set_specular(specular);
+                },
+                *object_opt);
+}
+
+void MainWindow::on_slider_mesh_specular_power_valueChanged(int)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
+        if (!object_opt)
+        {
+                return;
+        }
+
+        double specular_power = std::pow(MAXIMUM_SPECULAR_POWER, slider_position(ui.slider_mesh_specular_power));
+
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
+                        mesh::Writing writing(object.get());
+                        writing.set_specular_power(specular_power);
+                },
+                *object_opt);
 }
 }
