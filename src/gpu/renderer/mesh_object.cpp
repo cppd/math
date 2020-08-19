@@ -489,6 +489,15 @@ class Impl final : public MeshObject
 
         std::optional<int> m_version;
 
+        const mesh::Update::Flags UPDATE_LIGHTING = []() {
+                mesh::Update::Flags flags;
+                flags.set(mesh::Update::Ambient);
+                flags.set(mesh::Update::Diffuse);
+                flags.set(mesh::Update::Specular);
+                flags.set(mesh::Update::SpecularPower);
+                return flags;
+        }();
+
         void create_mesh_descriptor_sets()
         {
                 m_mesh_descriptor_sets.clear();
@@ -751,12 +760,13 @@ class Impl final : public MeshObject
                 ASSERT(!mesh_object.mesh().facets.empty() || !mesh_object.mesh().lines.empty()
                        || !mesh_object.mesh().points.empty());
 
-                static_assert(mesh::Update::Flags().size() == 4);
+                static_assert(mesh::Update::Flags().size() == 8);
 
                 bool update_mesh = updates[mesh::Update::Mesh];
                 bool update_matrix = updates[mesh::Update::Matrix];
                 bool update_color = updates[mesh::Update::Color];
                 bool update_alpha = updates[mesh::Update::Alpha];
+                bool update_lighting = (updates & UPDATE_LIGHTING).any();
 
                 if (update_matrix)
                 {
@@ -779,6 +789,13 @@ class Impl final : public MeshObject
                 if (update_color)
                 {
                         m_mesh_buffer.set_color(mesh_object.color());
+                }
+
+                if (update_lighting)
+                {
+                        m_mesh_buffer.set_lighting(
+                                mesh_object.ambient(), mesh_object.diffuse(), mesh_object.specular(),
+                                mesh_object.specular_power());
                 }
 
                 if (update_mesh)

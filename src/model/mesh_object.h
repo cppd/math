@@ -98,9 +98,13 @@ enum Flag
         Mesh,
         Alpha,
         Matrix,
-        Color
+        Color,
+        Ambient,
+        Diffuse,
+        Specular,
+        SpecularPower
 };
-using Flags = std::bitset<Flag::Color + 1>;
+using Flags = std::bitset<Flag::SpecularPower + 1>;
 }
 
 template <size_t N>
@@ -125,6 +129,10 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
 
         float m_alpha = 1;
         Color m_color = Color(Srgb8(150, 170, 150));
+        float m_ambient = 1;
+        float m_diffuse = 1;
+        float m_specular = 1;
+        float m_specular_power = 50;
 
         bool m_visible = false;
         bool m_inserted = false;
@@ -184,6 +192,46 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
         void set_color(const Color& color)
         {
                 m_color = color;
+        }
+
+        float ambient() const
+        {
+                return m_ambient;
+        }
+
+        void set_ambient(float ambient)
+        {
+                m_ambient = ambient;
+        }
+
+        float diffuse() const
+        {
+                return m_diffuse;
+        }
+
+        void set_diffuse(float diffuse)
+        {
+                m_diffuse = diffuse;
+        }
+
+        float specular() const
+        {
+                return m_specular;
+        }
+
+        void set_specular(float specular)
+        {
+                m_specular = specular;
+        }
+
+        float specular_power() const
+        {
+                return m_specular_power;
+        }
+
+        void set_specular_power(float specular_power)
+        {
+                m_specular_power = specular_power;
         }
 
         void updates(std::optional<int>* version, Update::Flags* updates) const
@@ -327,6 +375,50 @@ public:
                 m_updates.set(Update::Color);
                 m_object->set_color(color);
         }
+
+        float ambient() const
+        {
+                return m_object->ambient();
+        }
+
+        void set_ambient(float ambient)
+        {
+                m_updates.set(Update::Ambient);
+                m_object->set_ambient(ambient);
+        }
+
+        float diffuse() const
+        {
+                return m_object->diffuse();
+        }
+
+        void set_diffuse(float diffuse)
+        {
+                m_updates.set(Update::Diffuse);
+                m_object->set_diffuse(diffuse);
+        }
+
+        float specular() const
+        {
+                return m_object->specular();
+        }
+
+        void set_specular(float specular)
+        {
+                m_updates.set(Update::Specular);
+                m_object->set_specular(specular);
+        }
+
+        float specular_power() const
+        {
+                return m_object->specular_power();
+        }
+
+        void set_specular_power(float specular_power)
+        {
+                m_updates.set(Update::SpecularPower);
+                m_object->specular_power(specular_power);
+        }
 };
 
 template <size_t N>
@@ -373,6 +465,26 @@ public:
         const Color& color() const
         {
                 return m_object->color();
+        }
+
+        float ambient() const
+        {
+                return m_object->ambient();
+        }
+
+        float diffuse() const
+        {
+                return m_object->diffuse();
+        }
+
+        float specular() const
+        {
+                return m_object->specular();
+        }
+
+        float specular_power() const
+        {
+                return m_object->specular_power();
         }
 };
 }
