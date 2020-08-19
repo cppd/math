@@ -151,6 +151,10 @@ class MeshBuffer final
                 alignas(sizeof(vec4f)) Matrix<3, 4, float> normal_matrix;
                 alignas(sizeof(vec4f)) vec3f color;
                 float alpha;
+                float ambient;
+                float diffuse;
+                float specular;
+                float specular_power;
         };
 
 public:
@@ -161,6 +165,7 @@ public:
         void set_coordinates(const mat4& model_matrix, const mat3& normal_matrix) const;
         void set_color(const Color& color) const;
         void set_alpha(float alpha) const;
+        void set_lighting(float ambient, float diffuse, float specular, float specular_power) const;
 };
 
 class VolumeBuffer final

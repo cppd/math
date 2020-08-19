@@ -338,6 +338,24 @@ void MeshBuffer::set_alpha(float alpha) const
         vulkan::map_and_write_to_buffer(m_uniform_buffer, offsetof(Mesh, alpha), a);
 }
 
+void MeshBuffer::set_lighting(float ambient, float diffuse, float specular, float specular_power) const
+{
+        static_assert(offsetof(Mesh, specular_power) - offsetof(Mesh, ambient) == 3 * sizeof(float));
+
+        constexpr size_t offset = offsetof(Mesh, ambient);
+        constexpr size_t size = offsetof(Mesh, specular_power) + sizeof(Mesh::specular_power) - offset;
+
+        vulkan::BufferMapper map(m_uniform_buffer, offset, size);
+
+        Mesh mesh;
+        mesh.ambient = ambient;
+        mesh.diffuse = diffuse;
+        mesh.specular = specular;
+        mesh.specular_power = specular_power;
+
+        map.write(0, size, reinterpret_cast<const char*>(&mesh) + offset);
+}
+
 //
 
 VolumeBuffer::VolumeBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
