@@ -184,6 +184,15 @@ class Impl final : public VolumeObject
                 return flags;
         }();
 
+        const volume::Update::Flags UPDATE_LIGHTING = []() {
+                volume::Update::Flags flags;
+                flags.set(volume::Update::Ambient);
+                flags.set(volume::Update::Diffuse);
+                flags.set(volume::Update::Specular);
+                flags.set(volume::Update::SpecularPower);
+                return flags;
+        }();
+
         void buffer_set_parameters(
                 float window_min,
                 float window_max,
@@ -205,6 +214,17 @@ class Impl final : public VolumeObject
                 m_buffer.set_parameters(
                         m_graphics_command_pool, m_graphics_queue, window_offset, window_scale, volume_alpha_coeficient,
                         isosurface_alpha, isosurface, isovalue, color);
+        }
+
+        void buffer_set_lighting(float ambient, float diffuse, float specular, float specular_power) const
+        {
+                ambient = std::max(0.0f, ambient);
+                diffuse = std::max(0.0f, diffuse);
+                specular = std::max(0.0f, specular);
+                specular_power = std::max(1.0f, specular_power);
+
+                m_buffer.set_lighting(
+                        m_graphics_command_pool, m_graphics_queue, ambient, diffuse, specular, specular_power);
         }
 
         void buffer_set_coordinates() const
@@ -349,11 +369,12 @@ class Impl final : public VolumeObject
                         return update_changes;
                 }
 
-                static_assert(volume::Update::Flags().size() == 8);
+                static_assert(volume::Update::Flags().size() == 12);
 
                 bool update_image = updates[volume::Update::Image];
                 bool update_matrices = updates[volume::Update::Matrices];
                 bool update_parameters = (updates & UPDATE_PARAMETERS).any();
+                bool update_ligthing = (updates & UPDATE_LIGHTING).any();
 
                 if (update_image)
                 {
@@ -374,6 +395,13 @@ class Impl final : public VolumeObject
                                 volume_object.level_min(), volume_object.level_max(),
                                 volume_object.volume_alpha_coefficient(), volume_object.isosurface_alpha(),
                                 volume_object.isosurface(), volume_object.isovalue(), volume_object.color());
+                }
+
+                if (update_ligthing)
+                {
+                        buffer_set_lighting(
+                                volume_object.ambient(), volume_object.diffuse(), volume_object.specular(),
+                                volume_object.specular_power());
                 }
 
                 if (update_matrices)
