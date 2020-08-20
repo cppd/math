@@ -498,6 +498,32 @@ class Impl final : public MeshObject
                 return flags;
         }();
 
+        void buffer_set_lighting(float ambient, float diffuse, float specular, float specular_power) const
+        {
+                ambient = std::max(0.0f, ambient);
+                diffuse = std::max(0.0f, diffuse);
+                specular = std::max(0.0f, specular);
+                specular_power = std::max(1.0f, specular_power);
+
+                m_mesh_buffer.set_lighting(ambient, diffuse, specular, specular_power);
+        }
+
+        void buffer_set_color(const Color& color)
+        {
+                m_mesh_buffer.set_color(color);
+        }
+
+        void buffer_set_alpha(float alpha)
+        {
+                alpha = std::clamp(alpha, 0.0f, 1.0f);
+                m_mesh_buffer.set_alpha(alpha);
+        }
+
+        void buffer_set_coordinates(const mat4& model_matrix)
+        {
+                m_mesh_buffer.set_coordinates(model_matrix, model_matrix.top_left<3, 3>().inverse().transpose());
+        }
+
         void create_mesh_descriptor_sets()
         {
                 m_mesh_descriptor_sets.clear();
@@ -770,13 +796,12 @@ class Impl final : public MeshObject
 
                 if (update_matrix)
                 {
-                        m_mesh_buffer.set_coordinates(
-                                mesh_object.matrix(), mesh_object.matrix().top_left<3, 3>().inverse().transpose());
+                        buffer_set_coordinates(mesh_object.matrix());
                 }
 
                 if (update_alpha)
                 {
-                        m_mesh_buffer.set_alpha(std::clamp(mesh_object.alpha(), 0.0f, 1.0f));
+                        buffer_set_alpha(mesh_object.alpha());
 
                         bool transparent = mesh_object.alpha() < 1;
                         if (m_transparent != transparent)
@@ -788,12 +813,12 @@ class Impl final : public MeshObject
 
                 if (update_color)
                 {
-                        m_mesh_buffer.set_color(mesh_object.color());
+                        buffer_set_color(mesh_object.color());
                 }
 
                 if (update_lighting)
                 {
-                        m_mesh_buffer.set_lighting(
+                        buffer_set_lighting(
                                 mesh_object.ambient(), mesh_object.diffuse(), mesh_object.specular(),
                                 mesh_object.specular_power());
                 }
