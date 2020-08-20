@@ -228,8 +228,10 @@ void MainWindow::disable_mesh_parameters()
 {
         ui.tabMesh->setEnabled(false);
 
-        set_widget_color(ui.widget_mesh_color, QColor(255, 255, 255));
-
+        {
+                QSignalBlocker blocker(ui.widget_mesh_color);
+                set_widget_color(ui.widget_mesh_color, QColor(255, 255, 255));
+        }
         {
                 QSignalBlocker blocker(ui.slider_mesh_transparency);
                 set_slider_position(ui.slider_mesh_transparency, 0);
@@ -256,23 +258,46 @@ void MainWindow::disable_volume_parameters()
 {
         ui.tabVolume->setEnabled(false);
 
-        m_slider_volume_levels->set_range(0, 1);
-
-        set_widget_color(ui.widget_volume_color, QColor(255, 255, 255));
-
         {
-                QSignalBlocker blocker_1(ui.slider_volume_transparency);
-                QSignalBlocker blocker_2(ui.slider_isosurface_transparency);
-                QSignalBlocker blocker_3(ui.checkBox_isosurface);
-                QSignalBlocker blocker_4(ui.slider_isovalue);
-
+                QSignalBlocker blocker_min(ui.slider_volume_level_min);
+                QSignalBlocker blocker_max(ui.slider_volume_level_max);
+                m_slider_volume_levels->set_range(0, 1);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_volume_transparency);
                 set_slider_to_middle(ui.slider_volume_transparency);
-                set_slider_position(ui.slider_isosurface_transparency, 0);
+        }
+        {
+                QSignalBlocker blocker(ui.checkBox_isosurface);
                 ui.checkBox_isosurface->setChecked(false);
-                ui.slider_isovalue->setEnabled(false);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_isovalue);
                 set_slider_to_middle(ui.slider_isovalue);
-                // Должно быть точное среднее положение
-                ASSERT(((ui.slider_isovalue->maximum() - ui.slider_isovalue->minimum()) & 1) == 0);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_isosurface_transparency);
+                set_slider_position(ui.slider_isosurface_transparency, 0);
+        }
+        {
+                QSignalBlocker blocker(ui.widget_volume_color);
+                set_widget_color(ui.widget_volume_color, QColor(255, 255, 255));
+        }
+        {
+                QSignalBlocker blocker(ui.slider_volume_ambient);
+                set_slider_to_middle(ui.slider_volume_ambient);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_volume_diffuse);
+                set_slider_to_middle(ui.slider_volume_diffuse);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_volume_specular);
+                set_slider_to_middle(ui.slider_volume_specular);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_volume_specular_power);
+                set_slider_to_middle(ui.slider_volume_specular_power);
         }
 }
 
@@ -1154,7 +1179,10 @@ void MainWindow::update_mesh_ui(ObjectId id)
                                 QSignalBlocker blocker(ui.slider_mesh_transparency);
                                 set_slider_position(ui.slider_mesh_transparency, position);
                         }
-                        set_widget_color(ui.widget_mesh_color, color);
+                        {
+                                QSignalBlocker blocker(ui.widget_mesh_color);
+                                set_widget_color(ui.widget_mesh_color, color);
+                        }
                         {
                                 double position = ambient / MAXIMUM_LIGHTING;
                                 QSignalBlocker blocker(ui.slider_mesh_ambient);
@@ -1202,6 +1230,7 @@ void MainWindow::update_volume_ui(ObjectId id)
                         bool isosurface;
                         float isovalue;
                         Color color;
+                        double ambient, diffuse, specular, specular_power;
                         {
                                 volume::Reading reading(*volume_object);
                                 min = reading.level_min();
@@ -1211,34 +1240,66 @@ void MainWindow::update_volume_ui(ObjectId id)
                                 isosurface = reading.isosurface();
                                 isovalue = reading.isovalue();
                                 color = reading.color();
+                                ambient = reading.ambient();
+                                diffuse = reading.diffuse();
+                                specular = reading.specular();
+                                specular_power = reading.specular_power();
                         }
-
-                        m_slider_volume_levels->set_range(min, max);
-
-                        set_widget_color(ui.widget_volume_color, color);
-
-                        double isosurface_transparency_position = 1.0 - isosurface_alpha;
-
-                        volume_alpha_coefficient = std::clamp(
-                                volume_alpha_coefficient, 1.0 / VOLUME_ALPHA_COEFFICIENT, VOLUME_ALPHA_COEFFICIENT);
-                        double log_volume_alpha_coefficient =
-                                std::log(volume_alpha_coefficient) / std::log(VOLUME_ALPHA_COEFFICIENT);
-                        double volume_transparency_position = 0.5 * (1.0 - log_volume_alpha_coefficient);
-
                         {
-                                QSignalBlocker blocker_1(ui.checkBox_isosurface);
-                                QSignalBlocker blocker_2(ui.slider_volume_transparency);
-                                QSignalBlocker blocker_3(ui.slider_isosurface_transparency);
-                                QSignalBlocker blocker_4(ui.slider_isovalue);
-
-                                ui.checkBox_isosurface->setChecked(isosurface);
-                                ui.slider_isovalue->setEnabled(isosurface);
-                                ui.slider_isosurface_transparency->setEnabled(isosurface);
+                                QSignalBlocker blocker_min(ui.slider_volume_level_min);
+                                QSignalBlocker blocker_max(ui.slider_volume_level_max);
+                                m_slider_volume_levels->set_range(min, max);
+                        }
+                        {
+                                volume_alpha_coefficient = std::clamp(
+                                        volume_alpha_coefficient, 1.0 / VOLUME_ALPHA_COEFFICIENT,
+                                        VOLUME_ALPHA_COEFFICIENT);
+                                double log_volume_alpha_coefficient =
+                                        std::log(volume_alpha_coefficient) / std::log(VOLUME_ALPHA_COEFFICIENT);
+                                double position = 0.5 * (1.0 - log_volume_alpha_coefficient);
+                                QSignalBlocker blocker(ui.slider_volume_transparency);
                                 ui.slider_volume_transparency->setEnabled(!isosurface);
+                                set_slider_position(ui.slider_volume_transparency, position);
+                        }
+                        {
+                                QSignalBlocker blocker(ui.checkBox_isosurface);
+                                ui.checkBox_isosurface->setChecked(isosurface);
+                        }
+                        {
+                                double position = 1.0 - isosurface_alpha;
+                                QSignalBlocker blocker(ui.slider_isosurface_transparency);
+                                ui.slider_isosurface_transparency->setEnabled(isosurface);
+                                set_slider_position(ui.slider_isosurface_transparency, position);
+                        }
+                        {
+                                QSignalBlocker blocker(ui.slider_isovalue);
+                                ui.slider_isovalue->setEnabled(isosurface);
                                 set_slider_position(ui.slider_isovalue, isovalue);
-                                set_slider_position(
-                                        ui.slider_isosurface_transparency, isosurface_transparency_position);
-                                set_slider_position(ui.slider_volume_transparency, volume_transparency_position);
+                        }
+                        {
+                                QSignalBlocker blocker(ui.widget_volume_color);
+                                set_widget_color(ui.widget_volume_color, color);
+                        }
+                        {
+                                double position = ambient / MAXIMUM_LIGHTING;
+                                QSignalBlocker blocker(ui.slider_volume_ambient);
+                                set_slider_position(ui.slider_volume_ambient, position);
+                        }
+                        {
+                                double position = diffuse / MAXIMUM_LIGHTING;
+                                QSignalBlocker blocker(ui.slider_volume_diffuse);
+                                set_slider_position(ui.slider_volume_diffuse, position);
+                        }
+                        {
+                                double position = specular / MAXIMUM_LIGHTING;
+                                QSignalBlocker blocker(ui.slider_volume_specular);
+                                set_slider_position(ui.slider_volume_specular, position);
+                        }
+                        {
+                                double position = std::log(std::clamp(specular_power, 1.0, MAXIMUM_SPECULAR_POWER))
+                                                  / std::log(MAXIMUM_SPECULAR_POWER);
+                                QSignalBlocker blocker(ui.slider_volume_specular_power);
+                                set_slider_position(ui.slider_volume_specular_power, position);
                         }
                 },
                 *volume_object_opt);
@@ -1507,6 +1568,86 @@ void MainWindow::on_slider_mesh_specular_power_valueChanged(int)
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
                         mesh::Writing writing(object.get());
+                        writing.set_specular_power(specular_power);
+                },
+                *object_opt);
+}
+
+void MainWindow::on_slider_volume_ambient_valueChanged(int)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::VolumeObject> object_opt = m_model_tree->current_volume();
+        if (!object_opt)
+        {
+                return;
+        }
+
+        double ambient = MAXIMUM_LIGHTING * slider_position(ui.slider_volume_ambient);
+
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
+                        volume::Writing writing(object.get());
+                        writing.set_ambient(ambient);
+                },
+                *object_opt);
+}
+
+void MainWindow::on_slider_volume_diffuse_valueChanged(int)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::VolumeObject> object_opt = m_model_tree->current_volume();
+        if (!object_opt)
+        {
+                return;
+        }
+
+        double diffuse = MAXIMUM_LIGHTING * slider_position(ui.slider_volume_diffuse);
+
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
+                        volume::Writing writing(object.get());
+                        writing.set_diffuse(diffuse);
+                },
+                *object_opt);
+}
+
+void MainWindow::on_slider_volume_specular_valueChanged(int)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::VolumeObject> object_opt = m_model_tree->current_volume();
+        if (!object_opt)
+        {
+                return;
+        }
+
+        double specular = MAXIMUM_LIGHTING * slider_position(ui.slider_volume_specular);
+
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
+                        volume::Writing writing(object.get());
+                        writing.set_specular(specular);
+                },
+                *object_opt);
+}
+
+void MainWindow::on_slider_volume_specular_power_valueChanged(int)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::VolumeObject> object_opt = m_model_tree->current_volume();
+        if (!object_opt)
+        {
+                return;
+        }
+
+        double specular_power = std::pow(MAXIMUM_SPECULAR_POWER, slider_position(ui.slider_volume_specular_power));
+
+        std::visit(
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
+                        volume::Writing writing(object.get());
                         writing.set_specular_power(specular_power);
                 },
                 *object_opt);
