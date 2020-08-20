@@ -462,4 +462,28 @@ void VolumeBuffer::set_color_volume(
         m_uniform_buffer_volume.write(
                 command_pool, queue, offsetof(Volume, color_volume), data_size(v), data_pointer(v));
 }
+
+void VolumeBuffer::set_lighting(
+        const vulkan::CommandPool& command_pool,
+        const vulkan::Queue& queue,
+        float ambient,
+        float diffuse,
+        float specular,
+        float specular_power) const
+{
+        static_assert(offsetof(Volume, specular_power) - offsetof(Volume, ambient) == 3 * sizeof(float));
+
+        constexpr size_t offset = offsetof(Volume, ambient);
+        constexpr size_t size = offsetof(Volume, specular_power) + sizeof(Volume::specular_power) - offset;
+
+        Volume volume;
+
+        volume.ambient = ambient;
+        volume.diffuse = diffuse;
+        volume.specular = specular;
+        volume.specular_power = specular_power;
+
+        m_uniform_buffer_volume.write(
+                command_pool, queue, offset, size, reinterpret_cast<const char*>(&volume) + offset);
+}
 }

@@ -192,6 +192,10 @@ class VolumeBuffer final
                 float isovalue;
                 alignas(sizeof(vec4f)) vec3f color;
                 uint32_t color_volume;
+                float ambient;
+                float diffuse;
+                float specular;
+                float specular_power;
         };
 
 public:
@@ -225,5 +229,13 @@ public:
 
         void set_color_volume(const vulkan::CommandPool& command_pool, const vulkan::Queue& queue, bool color_volume)
                 const;
+
+        void set_lighting(
+                const vulkan::CommandPool& command_pool,
+                const vulkan::Queue& queue,
+                float ambient,
+                float diffuse,
+                float specular,
+                float specular_power) const;
 };
 }

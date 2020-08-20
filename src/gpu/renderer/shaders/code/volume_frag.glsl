@@ -100,6 +100,10 @@ layout(set = 1, binding = 1, std140) uniform Volume
         float isovalue;
         vec3 color;
         bool color_volume;
+        float ambient;
+        float diffuse;
+        float specular;
+        float specular_power;
 }
 volume;
 
