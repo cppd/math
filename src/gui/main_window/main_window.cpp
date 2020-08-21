@@ -77,14 +77,13 @@ constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 // увеличение текстуры тени по сравнению с размером окна.
 constexpr int SHADOW_ZOOM = 2;
 
-// Максимальное увеличение для освещений ambient, diffuse, specular.
-constexpr double MAXIMUM_COLOR_AMPLIFICATION = 3;
+constexpr double MAXIMUM_LIGHTING_INTENSITY = 3.0;
 
 // Максимальный коэффициент для умножения и деления α на него.
 constexpr double VOLUME_ALPHA_COEFFICIENT = 20;
 
 constexpr double MAXIMUM_SPECULAR_POWER = 1000.0;
-constexpr double MAXIMUM_LIGHTING = 2.0;
+constexpr double MAXIMUM_MODEL_LIGHTING = 2.0;
 
 constexpr float NORMAL_LENGTH_MINIMUM = 0.001;
 constexpr float NORMAL_LENGTH_DEFAULT = 0.05;
@@ -188,6 +187,12 @@ void MainWindow::constructor_interface()
                 static_assert(v >= 0 && v <= d && d > 0);
                 set_slider_position(ui.slider_normals, p);
         }
+        {
+                // Должно быть точное среднее положение
+                ASSERT(((ui.slider_lighting_intensity->maximum() - ui.slider_lighting_intensity->minimum()) & 1) == 0);
+                QSignalBlocker blocker(ui.slider_lighting_intensity);
+                set_slider_to_middle(ui.slider_lighting_intensity);
+        }
 
         disable_mesh_parameters();
         disable_volume_parameters();
@@ -217,11 +222,6 @@ void MainWindow::constructor_interface()
 
         // Чтобы добавление и удаление QProgressBar не меняло высоту ui.statusBar
         ui.statusBar->setFixedHeight(ui.statusBar->height());
-
-        // Должно быть точное среднее положение
-        ASSERT(((ui.slider_ambient->maximum() - ui.slider_ambient->minimum()) & 1) == 0);
-        ASSERT(((ui.slider_diffuse->maximum() - ui.slider_diffuse->minimum()) & 1) == 0);
-        ASSERT(((ui.slider_specular->maximum() - ui.slider_specular->minimum()) & 1) == 0);
 }
 
 void MainWindow::disable_mesh_parameters()
@@ -598,13 +598,10 @@ void MainWindow::first_shown()
                         view::command::ShowConvexHull2D(ui.checkBox_convex_hull_2d->isChecked()),
                         view::command::ShowOpticalFlow(ui.checkBox_optical_flow->isChecked()),
                         view::command::ShowNormals(ui.checkBox_normals->isChecked()),
-                        view::command::SetAmbient(ambient_light()),
-                        view::command::SetDiffuse(diffuse_light()),
-                        view::command::SetSpecular(specular_light()),
+                        view::command::SetLightingIntensity(lighting_intensity()),
                         view::command::SetDftBrightness(dft_brightness()),
                         view::command::SetDftBackgroundColor(qcolor_to_rgb(m_dft_background_color)),
                         view::command::SetDftColor(qcolor_to_rgb(m_dft_color)),
-                        view::command::SetDefaultNs(default_ns()),
                         view::command::SetVerticalSync(ui.checkBox_vertical_sync->isChecked()),
                         view::command::SetShadowZoom(shadow_zoom())};
 
@@ -782,7 +779,7 @@ void MainWindow::on_actionPainter_triggered()
 
                 WorkerThreads::Function f = process::action_painter(
                         *object, camera, QMainWindow::windowTitle().toStdString(), qcolor_to_rgb(m_background_color),
-                        diffuse_light());
+                        lighting_intensity());
 
                 m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
         });
@@ -871,31 +868,10 @@ void MainWindow::model_tree_item_changed()
         update_volume_ui(*id);
 }
 
-double MainWindow::lighting_slider_value(const QSlider* slider)
+double MainWindow::lighting_intensity() const
 {
-        double value = slider->value() - slider->minimum();
-        double delta = slider->maximum() - slider->minimum();
-        double ratio = 2.0 * value / delta;
-        return (ratio <= 1) ? ratio : interpolation(1.0, MAXIMUM_COLOR_AMPLIFICATION, ratio - 1);
-}
-
-double MainWindow::ambient_light() const
-{
-        return lighting_slider_value(ui.slider_ambient);
-}
-double MainWindow::diffuse_light() const
-{
-        return lighting_slider_value(ui.slider_diffuse);
-}
-
-double MainWindow::specular_light() const
-{
-        return lighting_slider_value(ui.slider_specular);
-}
-
-double MainWindow::default_ns() const
-{
-        return ui.slider_default_ns->value();
+        double v = 2.0 * slider_position(ui.slider_lighting_intensity);
+        return (v <= 1.0) ? v : interpolation(1.0, MAXIMUM_LIGHTING_INTENSITY, v - 1.0);
 }
 
 void MainWindow::on_pushButton_reset_lighting_clicked()
@@ -906,10 +882,7 @@ void MainWindow::on_pushButton_reset_lighting_clicked()
                 return;
         }
 
-        set_slider_to_middle(ui.slider_ambient);
-        set_slider_to_middle(ui.slider_diffuse);
-        set_slider_to_middle(ui.slider_specular);
-        set_slider_to_middle(ui.slider_default_ns);
+        set_slider_to_middle(ui.slider_lighting_intensity);
 }
 
 double MainWindow::dft_brightness() const
@@ -930,29 +903,14 @@ double MainWindow::normal_length() const
         return interpolation(NORMAL_LENGTH_MINIMUM, NORMAL_LENGTH_MAXIMUM, slider_position(ui.slider_normals));
 }
 
-void MainWindow::on_slider_ambient_valueChanged(int)
+void MainWindow::on_slider_lighting_intensity_valueChanged(int)
 {
-        m_view->send(view::command::SetAmbient(ambient_light()));
-}
-
-void MainWindow::on_slider_diffuse_valueChanged(int)
-{
-        m_view->send(view::command::SetDiffuse(diffuse_light()));
-}
-
-void MainWindow::on_slider_specular_valueChanged(int)
-{
-        m_view->send(view::command::SetSpecular(specular_light()));
+        m_view->send(view::command::SetLightingIntensity(lighting_intensity()));
 }
 
 void MainWindow::on_slider_dft_brightness_valueChanged(int)
 {
         m_view->send(view::command::SetDftBrightness(dft_brightness()));
-}
-
-void MainWindow::on_slider_default_ns_valueChanged(int)
-{
-        m_view->send(view::command::SetDefaultNs(default_ns()));
 }
 
 void MainWindow::on_slider_shadow_quality_valueChanged(int)
@@ -1184,17 +1142,17 @@ void MainWindow::update_mesh_ui(ObjectId id)
                                 set_widget_color(ui.widget_mesh_color, color);
                         }
                         {
-                                double position = ambient / MAXIMUM_LIGHTING;
+                                double position = ambient / MAXIMUM_MODEL_LIGHTING;
                                 QSignalBlocker blocker(ui.slider_mesh_ambient);
                                 set_slider_position(ui.slider_mesh_ambient, position);
                         }
                         {
-                                double position = diffuse / MAXIMUM_LIGHTING;
+                                double position = diffuse / MAXIMUM_MODEL_LIGHTING;
                                 QSignalBlocker blocker(ui.slider_mesh_diffuse);
                                 set_slider_position(ui.slider_mesh_diffuse, position);
                         }
                         {
-                                double position = specular / MAXIMUM_LIGHTING;
+                                double position = specular / MAXIMUM_MODEL_LIGHTING;
                                 QSignalBlocker blocker(ui.slider_mesh_specular);
                                 set_slider_position(ui.slider_mesh_specular, position);
                         }
@@ -1281,17 +1239,17 @@ void MainWindow::update_volume_ui(ObjectId id)
                                 set_widget_color(ui.widget_volume_color, color);
                         }
                         {
-                                double position = ambient / MAXIMUM_LIGHTING;
+                                double position = ambient / MAXIMUM_MODEL_LIGHTING;
                                 QSignalBlocker blocker(ui.slider_volume_ambient);
                                 set_slider_position(ui.slider_volume_ambient, position);
                         }
                         {
-                                double position = diffuse / MAXIMUM_LIGHTING;
+                                double position = diffuse / MAXIMUM_MODEL_LIGHTING;
                                 QSignalBlocker blocker(ui.slider_volume_diffuse);
                                 set_slider_position(ui.slider_volume_diffuse, position);
                         }
                         {
-                                double position = specular / MAXIMUM_LIGHTING;
+                                double position = specular / MAXIMUM_MODEL_LIGHTING;
                                 QSignalBlocker blocker(ui.slider_volume_specular);
                                 set_slider_position(ui.slider_volume_specular, position);
                         }
@@ -1503,7 +1461,7 @@ void MainWindow::on_slider_mesh_ambient_valueChanged(int)
                 return;
         }
 
-        double ambient = MAXIMUM_LIGHTING * slider_position(ui.slider_mesh_ambient);
+        double ambient = MAXIMUM_MODEL_LIGHTING * slider_position(ui.slider_mesh_ambient);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
@@ -1523,7 +1481,7 @@ void MainWindow::on_slider_mesh_diffuse_valueChanged(int)
                 return;
         }
 
-        double diffuse = MAXIMUM_LIGHTING * slider_position(ui.slider_mesh_diffuse);
+        double diffuse = MAXIMUM_MODEL_LIGHTING * slider_position(ui.slider_mesh_diffuse);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
@@ -1543,7 +1501,7 @@ void MainWindow::on_slider_mesh_specular_valueChanged(int)
                 return;
         }
 
-        double specular = MAXIMUM_LIGHTING * slider_position(ui.slider_mesh_specular);
+        double specular = MAXIMUM_MODEL_LIGHTING * slider_position(ui.slider_mesh_specular);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
@@ -1583,7 +1541,7 @@ void MainWindow::on_slider_volume_ambient_valueChanged(int)
                 return;
         }
 
-        double ambient = MAXIMUM_LIGHTING * slider_position(ui.slider_volume_ambient);
+        double ambient = MAXIMUM_MODEL_LIGHTING * slider_position(ui.slider_volume_ambient);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
@@ -1603,7 +1561,7 @@ void MainWindow::on_slider_volume_diffuse_valueChanged(int)
                 return;
         }
 
-        double diffuse = MAXIMUM_LIGHTING * slider_position(ui.slider_volume_diffuse);
+        double diffuse = MAXIMUM_MODEL_LIGHTING * slider_position(ui.slider_volume_diffuse);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
@@ -1623,7 +1581,7 @@ void MainWindow::on_slider_volume_specular_valueChanged(int)
                 return;
         }
 
-        double specular = MAXIMUM_LIGHTING * slider_position(ui.slider_volume_specular);
+        double specular = MAXIMUM_MODEL_LIGHTING * slider_position(ui.slider_volume_specular);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {

@@ -124,8 +124,8 @@ vec3 shade()
                 if (diffuse > 0)
                 {
                         float specular = pow(max(0, dot(V, reflect(-L, N))), ns);
-                        color += diffuse * mtl_d * mesh.diffuse;
-                        color += specular * mtl_s * mesh.specular;
+                        color += (diffuse * mesh.diffuse * drawing.lighting_intensity) * mtl_d;
+                        color += (specular * mesh.specular * drawing.lighting_intensity) * mtl_s;
                 }
         }
 

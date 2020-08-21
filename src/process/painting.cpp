@@ -50,7 +50,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         const view::info::Camera& camera,
         const std::string& title,
         const Color& background_color,
-        const Color::DataType& diffuse)
+        const Color::DataType& lighting_intensity)
 {
         ASSERT(mesh_object);
 
@@ -105,7 +105,6 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         return [=](ProgressRatioList* progress_list) {
                 PainterSceneCommonInfo scene_common_info;
                 scene_common_info.background_color = background_color;
-                scene_common_info.diffuse = diffuse;
 
                 std::shared_ptr<const painter::MeshObject<N, T>> painter_mesh_object;
                 {
@@ -116,6 +115,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                                 return;
                         }
                         scene_common_info.default_color = reading.color();
+                        scene_common_info.diffuse = reading.diffuse() * lighting_intensity;
                         ProgressRatio progress(progress_list);
                         painter_mesh_object = std::make_shared<painter::MeshObject<N, T>>(
                                 reading.mesh(), to_matrix<T>(reading.matrix()), &progress);
@@ -143,11 +143,12 @@ std::function<void(ProgressRatioList*)> action_painter(
         const view::info::Camera& camera,
         const std::string& title,
         const Color& background_color,
-        const Color::DataType& diffuse)
+        const Color::DataType& lighting_intensity)
 {
         return std::visit(
                 [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object) {
-                        return action_painter_function(mesh_object, camera, title, background_color, diffuse);
+                        return action_painter_function(
+                                mesh_object, camera, title, background_color, lighting_intensity);
                 },
                 object);
 }

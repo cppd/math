@@ -78,13 +78,11 @@ private slots:
         void on_checkBox_wireframe_clicked();
         void on_pushButton_reset_lighting_clicked();
         void on_pushButton_reset_view_clicked();
-        void on_slider_ambient_valueChanged(int value);
         void on_slider_clip_plane_valueChanged(int value);
-        void on_slider_default_ns_valueChanged(int value);
         void on_slider_dft_brightness_valueChanged(int value);
-        void on_slider_diffuse_valueChanged(int value);
         void on_slider_isosurface_transparency_valueChanged(int value);
         void on_slider_isovalue_valueChanged(int value);
+        void on_slider_lighting_intensity_valueChanged(int value);
         void on_slider_mesh_ambient_valueChanged(int value);
         void on_slider_mesh_diffuse_valueChanged(int value);
         void on_slider_mesh_specular_power_valueChanged(int value);
@@ -92,7 +90,6 @@ private slots:
         void on_slider_mesh_transparency_valueChanged(int value);
         void on_slider_normals_valueChanged(int value);
         void on_slider_shadow_quality_valueChanged(int value);
-        void on_slider_specular_valueChanged(int value);
         void on_slider_volume_ambient_valueChanged(int value);
         void on_slider_volume_diffuse_valueChanged(int value);
         void on_slider_volume_specular_power_valueChanged(int value);
@@ -149,15 +146,10 @@ private:
                 const ProgressRatioList* progress_list,
                 std::list<QProgressBar>* progress_bars);
 
-        double ambient_light() const;
-        double diffuse_light() const;
-        double specular_light() const;
-        double default_ns() const;
+        double lighting_intensity() const;
         double dft_brightness() const;
         double shadow_zoom() const;
         double normal_length() const;
-
-        static double lighting_slider_value(const QSlider* slider);
 
         void set_background_color(const QColor& c);
         void set_specular_color(const QColor& c);

@@ -314,20 +314,9 @@ class Impl final : public View
                 {
                         reset_view_handler();
                 },
-                [this](const command::SetAmbient& d)
+                [this](const command::SetLightingIntensity& v)
                 {
-                        Color light = Color(d.value);
-                        m_renderer->set_light_a(light);
-                },
-                [this](const command::SetDiffuse& d)
-                {
-                        Color light = Color(d.value);
-                        m_renderer->set_light_d(light);
-                },
-                [this](const command::SetSpecular& d)
-                {
-                        Color light = Color(d.value);
-                        m_renderer->set_light_s(light);
+                        m_renderer->set_lighting_intensity(v.value);
                 },
                 [this](const command::SetBackgroundColor& d)
                 {
@@ -358,10 +347,6 @@ class Impl final : public View
                 [this](const command::SetNormalColorNegative& d)
                 {
                         m_renderer->set_normal_color_negative(d.value);
-                },
-                [this](const command::SetDefaultNs& d)
-                {
-                        m_renderer->set_default_ns(d.value);
                 },
                 [this](const command::ShowSmooth& d)
                 {

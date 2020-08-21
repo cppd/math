@@ -57,9 +57,7 @@ struct Renderer
 
         virtual ~Renderer() = default;
 
-        virtual void set_light_a(const Color& light) = 0;
-        virtual void set_light_d(const Color& light) = 0;
-        virtual void set_light_s(const Color& light) = 0;
+        virtual void set_lighting_intensity(double lighting_intensity) = 0;
         virtual void set_background_color(const Color& color) = 0;
         virtual void set_specular_color(const Color& color) = 0;
         virtual void set_wireframe_color(const Color& color) = 0;
@@ -67,7 +65,6 @@ struct Renderer
         virtual void set_normal_length(float length) = 0;
         virtual void set_normal_color_positive(const Color& color) = 0;
         virtual void set_normal_color_negative(const Color& color) = 0;
-        virtual void set_default_ns(double default_ns) = 0;
         virtual void set_show_smooth(bool show) = 0;
         virtual void set_show_wireframe(bool show) = 0;
         virtual void set_show_shadow(bool show) = 0;

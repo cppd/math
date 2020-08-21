@@ -34,10 +34,7 @@ layout(set = 0, binding = 1, std140) uniform Drawing
         float normal_length;
         vec3 normal_color_positive;
         vec3 normal_color_negative;
-        float default_ns;
-        vec3 light_a;
-        vec3 light_d;
-        vec3 light_s;
+        float lighting_intensity;
         bool show_materials;
         bool show_wireframe;
         bool show_shadow;

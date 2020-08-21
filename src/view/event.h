@@ -77,26 +77,10 @@ struct ResetView final
 {
 };
 
-struct SetAmbient final
+struct SetLightingIntensity final
 {
         double value;
-        explicit SetAmbient(double value) : value(value)
-        {
-        }
-};
-
-struct SetDiffuse final
-{
-        double value;
-        explicit SetDiffuse(double value) : value(value)
-        {
-        }
-};
-
-struct SetSpecular final
-{
-        double value;
-        explicit SetSpecular(double value) : value(value)
+        explicit SetLightingIntensity(double value) : value(value)
         {
         }
 };
@@ -153,14 +137,6 @@ struct SetNormalColorNegative final
 {
         Color value;
         explicit SetNormalColorNegative(const Color& value) : value(value)
-        {
-        }
-};
-
-struct SetDefaultNs final
-{
-        double value;
-        explicit SetDefaultNs(double value) : value(value)
         {
         }
 };
@@ -372,20 +348,17 @@ struct Command final
                 command::MouseRelease,
                 command::MouseWheel,
                 command::ResetView,
-                command::SetAmbient,
                 command::SetBackgroundColor,
                 command::SetClipPlaneColor,
-                command::SetSpecularColor,
-                command::SetDefaultNs,
                 command::SetDftBackgroundColor,
                 command::SetDftBrightness,
                 command::SetDftColor,
-                command::SetDiffuse,
+                command::SetLightingIntensity,
                 command::SetNormalColorNegative,
                 command::SetNormalColorPositive,
                 command::SetNormalLength,
                 command::SetShadowZoom,
-                command::SetSpecular,
+                command::SetSpecularColor,
                 command::SetVerticalSync,
                 command::SetWireframeColor,
                 command::ShowConvexHull2D,

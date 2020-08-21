@@ -204,28 +204,10 @@ void ShaderBuffers::set_normal_color_negative(const Color& color) const
         copy_to_drawing_buffer(offsetof(Drawing, normal_color_negative), c);
 }
 
-void ShaderBuffers::set_default_ns(float default_ns) const
+void ShaderBuffers::set_lighting_intensity(float intensity) const
 {
-        decltype(Drawing().default_ns) ns = default_ns;
-        copy_to_drawing_buffer(offsetof(Drawing, default_ns), ns);
-}
-
-void ShaderBuffers::set_light_a(const Color& color) const
-{
-        decltype(Drawing().light_a) c = color.to_rgb_vector<float>();
-        copy_to_drawing_buffer(offsetof(Drawing, light_a), c);
-}
-
-void ShaderBuffers::set_light_d(const Color& color) const
-{
-        decltype(Drawing().light_d) c = color.to_rgb_vector<float>();
-        copy_to_drawing_buffer(offsetof(Drawing, light_d), c);
-}
-
-void ShaderBuffers::set_light_s(const Color& color) const
-{
-        decltype(Drawing().light_s) c = color.to_rgb_vector<float>();
-        copy_to_drawing_buffer(offsetof(Drawing, light_s), c);
+        decltype(Drawing().lighting_intensity) v = intensity;
+        copy_to_drawing_buffer(offsetof(Drawing, lighting_intensity), v);
 }
 
 void ShaderBuffers::set_show_materials(bool show) const

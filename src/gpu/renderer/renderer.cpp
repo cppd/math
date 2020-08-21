@@ -257,23 +257,11 @@ class Impl final : public Renderer
         unsigned m_transparency_max_node_count;
         vulkan::Semaphore m_render_transparent_as_opaque_signal_semaphore;
 
-        void set_light_a(const Color& light) override
+        void set_lighting_intensity(double intensity) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shader_buffers.set_light_a(light);
-        }
-        void set_light_d(const Color& light) override
-        {
-                ASSERT(m_thread_id == std::this_thread::get_id());
-
-                m_shader_buffers.set_light_d(light);
-        }
-        void set_light_s(const Color& light) override
-        {
-                ASSERT(m_thread_id == std::this_thread::get_id());
-
-                m_shader_buffers.set_light_s(light);
+                m_shader_buffers.set_lighting_intensity(intensity);
         }
         void set_background_color(const Color& color) override
         {
@@ -319,12 +307,6 @@ class Impl final : public Renderer
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 m_shader_buffers.set_normal_color_negative(color);
-        }
-        void set_default_ns(double default_ns) override
-        {
-                ASSERT(m_thread_id == std::this_thread::get_id());
-
-                m_shader_buffers.set_default_ns(default_ns);
         }
         void set_show_smooth(bool show) override
         {

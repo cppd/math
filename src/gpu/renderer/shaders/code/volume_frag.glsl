@@ -43,10 +43,7 @@ layout(set = 0, binding = 0, std140) uniform Drawing
         float normal_length;
         vec3 normal_color_positive;
         vec3 normal_color_negative;
-        float default_ns;
-        vec3 light_a;
-        vec3 light_d;
-        vec3 light_s;
+        float lighting_intensity;
         bool show_materials;
         bool show_wireframe;
         bool show_shadow;
@@ -212,7 +209,7 @@ vec4 volume_color(vec3 p)
         }
         float value = scalar_volume_value(p);
         // vec4 color = texture(transfer_function, value);
-        vec4 color = vec4(volume.color * (volume.ambient + volume.diffuse), value);
+        vec4 color = vec4(volume.color * (volume.ambient + volume.diffuse * drawing.lighting_intensity), value);
         color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
         return color;
 }
@@ -379,8 +376,8 @@ vec3 shade(vec3 p)
         if (diffuse > 0)
         {
                 float specular = pow(max(0, dot(V, reflect(-L, N))), volume.specular_power);
-                color += diffuse * volume.color * volume.diffuse;
-                color += specular * drawing.specular_color * volume.specular;
+                color += (diffuse * volume.diffuse * drawing.lighting_intensity) * volume.color;
+                color += (specular * volume.specular * drawing.lighting_intensity) * drawing.specular_color;
         }
 
         return color;
