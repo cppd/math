@@ -93,7 +93,7 @@ public:
                 const std::string& obj_file_name,
                 T size,
                 const Color& default_color,
-                Color::DataType diffuse,
+                const Color::DataType& diffuse,
                 const Vector<3, T>& camera_direction,
                 const Vector<3, T>& camera_up);
 
@@ -102,52 +102,9 @@ public:
                 int height,
                 const std::shared_ptr<const MeshObject<3, T>>& mesh,
                 T size,
-                const Color& default_color,
-                Color::DataType diffuse,
                 const Vector<3, T>& camera_direction,
                 const Vector<3, T>& camera_up);
 };
-
-template <typename T>
-CornellBoxScene<T>::CornellBoxScene(
-        int width,
-        int height,
-        const std::string& obj_file_name,
-        T size,
-        const Color& default_color,
-        Color::DataType diffuse,
-        const Vector<3, T>& camera_direction,
-        const Vector<3, T>& camera_up)
-{
-        ProgressRatio progress(nullptr);
-
-        std::unique_ptr<mesh::Mesh<3>> mesh = mesh::load<3>(obj_file_name, &progress);
-
-        mat4 vertex_matrix = model_matrix_for_size_and_position(*mesh, size, vec3(0));
-
-        std::shared_ptr painter_mesh =
-                std::make_shared<MeshObject<3, T>>(*mesh, to_matrix<T>(vertex_matrix), &progress);
-
-        m_mesh = std::make_unique<VisibleSharedMesh<3, T>>(default_color, diffuse, painter_mesh);
-
-        create_scene(width, height, size, camera_direction, camera_up);
-}
-
-template <typename T>
-CornellBoxScene<T>::CornellBoxScene(
-        int width,
-        int height,
-        const std::shared_ptr<const MeshObject<3, T>>& mesh,
-        T size,
-        const Color& default_color,
-        Color::DataType diffuse,
-        const Vector<3, T>& camera_direction,
-        const Vector<3, T>& camera_up)
-{
-        m_mesh = std::make_unique<VisibleSharedMesh<3, T>>(default_color, diffuse, mesh);
-
-        create_scene(width, height, size, camera_direction, camera_up);
-}
 
 template <typename T>
 void CornellBoxScene<T>::create_scene(
@@ -232,6 +189,44 @@ void CornellBoxScene<T>::create_scene(
         m_objects.push_back(m_box.get());
 }
 
+template <typename T>
+CornellBoxScene<T>::CornellBoxScene(
+        int width,
+        int height,
+        const std::string& obj_file_name,
+        T size,
+        const Color& default_color,
+        const Color::DataType& diffuse,
+        const Vector<3, T>& camera_direction,
+        const Vector<3, T>& camera_up)
+{
+        ProgressRatio progress(nullptr);
+
+        std::unique_ptr<mesh::Mesh<3>> mesh = mesh::load<3>(obj_file_name, &progress);
+
+        mat4 vertex_matrix = model_matrix_for_size_and_position(*mesh, size, vec3(0));
+
+        std::shared_ptr painter_mesh = std::make_shared<MeshObject<3, T>>(
+                *mesh, default_color, diffuse, to_matrix<T>(vertex_matrix), &progress);
+
+        m_mesh = std::make_unique<VisibleSharedMesh<3, T>>(painter_mesh);
+
+        create_scene(width, height, size, camera_direction, camera_up);
+}
+
+template <typename T>
+CornellBoxScene<T>::CornellBoxScene(
+        int width,
+        int height,
+        const std::shared_ptr<const MeshObject<3, T>>& mesh,
+        T size,
+        const Vector<3, T>& camera_direction,
+        const Vector<3, T>& camera_up)
+{
+        m_mesh = std::make_unique<VisibleSharedMesh<3, T>>(mesh);
+
+        create_scene(width, height, size, camera_direction, camera_up);
+}
 }
 
 template <typename T>
@@ -255,13 +250,10 @@ std::unique_ptr<const PaintObjects<3, T>> cornell_box_scene(
         int height,
         const std::shared_ptr<const MeshObject<3, T>>& mesh,
         T size,
-        const Color& default_color,
-        Color::DataType diffuse,
         const Vector<3, T>& camera_direction,
         const Vector<3, T>& camera_up)
 {
-        return std::make_unique<CornellBoxScene<T>>(
-                width, height, mesh, size, default_color, diffuse, camera_direction, camera_up);
+        return std::make_unique<CornellBoxScene<T>>(width, height, mesh, size, camera_direction, camera_up);
 }
 
 //
@@ -291,8 +283,6 @@ template std::unique_ptr<const PaintObjects<3, float>> cornell_box_scene(
         int height,
         const std::shared_ptr<const MeshObject<3, float>>& mesh,
         float size,
-        const Color& default_color,
-        Color::DataType diffuse,
         const Vector<3, float>& camera_direction,
         const Vector<3, float>& camera_up);
 
@@ -301,8 +291,6 @@ template std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(
         int height,
         const std::shared_ptr<const MeshObject<3, double>>& mesh,
         double size,
-        const Color& default_color,
-        Color::DataType diffuse,
         const Vector<3, double>& camera_direction,
         const Vector<3, double>& camera_up);
 }

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_hyperplane_simplex.h"
 
+#include "../objects.h"
 #include "../space/parallelotope_ortho.h"
 #include "../space/tree.h"
 
@@ -62,10 +63,17 @@ class MeshObject
 
         Vector<N, T> m_min, m_max;
 
+        SurfaceProperties<N, T> m_surface_properties;
+
         void create(const mesh::Mesh<N>& mesh, const Matrix<N + 1, N + 1, T>& vertex_matrix, ProgressRatio* progress);
 
 public:
-        MeshObject(const mesh::Mesh<N>& mesh, const Matrix<N + 1, N + 1, T>& matrix, ProgressRatio* progress);
+        MeshObject(
+                const mesh::Mesh<N>& mesh,
+                const Color& default_color,
+                const Color::DataType& diffuse,
+                const Matrix<N + 1, N + 1, T>& matrix,
+                ProgressRatio* progress);
 
         ~MeshObject() = default;
 
@@ -80,10 +88,7 @@ public:
         bool intersect_approximate(const Ray<N, T>& r, T* t) const;
         bool intersect_precise(const Ray<N, T>&, T approximate_t, T* t, const void** intersection_data) const;
 
-        Vector<N, T> geometric_normal(const void* intersection_data) const;
-        Vector<N, T> shading_normal(const Vector<N, T>& p, const void* intersection_data) const;
-
-        std::optional<Color> color(const Vector<N, T>& p, const void* intersection_data) const;
+        SurfaceProperties<N, T> surface_properties(const Vector<N, T>& p, const void* intersection_data) const;
 
         void min_max(Vector<N, T>* min, Vector<N, T>* max) const;
 };

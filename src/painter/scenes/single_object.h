@@ -68,14 +68,10 @@ class SingleObjectScene final : public PaintObjects<N, T>
 public:
         SingleObjectScene(
                 const Color& background_color,
-                const Color& default_color,
-                Color::DataType diffuse,
                 std::unique_ptr<const Projector<N, T>>&& projector,
                 std::unique_ptr<const LightSource<N, T>>&& light_source,
                 std::shared_ptr<const MeshObject<N, T>>&& mesh)
-                : m_object(default_color, diffuse, std::move(mesh)),
-                  m_projector(std::move(projector)),
-                  m_light_source(std::move(light_source))
+                : m_object(std::move(mesh)), m_projector(std::move(projector)), m_light_source(std::move(light_source))
         {
                 m_default_surface_properties.set_color(background_color);
                 m_default_surface_properties.set_diffuse(1);
@@ -91,8 +87,6 @@ public:
 template <size_t N, typename T>
 std::unique_ptr<const PaintObjects<N, T>> single_object_scene(
         const Color& background_color,
-        const Color& default_color,
-        Color::DataType diffuse,
         std::unique_ptr<const Projector<N, T>>&& projector,
         std::unique_ptr<const LightSource<N, T>>&& light_source,
         std::shared_ptr<const MeshObject<N, T>> mesh)
@@ -102,15 +96,13 @@ std::unique_ptr<const PaintObjects<N, T>> single_object_scene(
         namespace impl = single_object_scene_implementation;
 
         return std::make_unique<impl::SingleObjectScene<N, T>>(
-                background_color, default_color, diffuse, std::move(projector), std::move(light_source),
-                std::move(mesh));
+                background_color, std::move(projector), std::move(light_source), std::move(mesh));
 }
 
 template <size_t N, typename T>
 std::unique_ptr<const PaintObjects<N, T>> single_object_scene(
         const Color& background_color,
-        const Color& default_color,
-        Color::DataType diffuse,
+        const Color::DataType& lighting_intensity,
         int min_screen_size,
         int max_screen_size,
         std::shared_ptr<const MeshObject<N, T>> mesh)
@@ -180,14 +172,13 @@ std::unique_ptr<const PaintObjects<N, T>> single_object_scene(
         Vector<N, T> light_position(max + T(100) * (max - center));
 
         std::unique_ptr<const LightSource<N, T>> light_source =
-                std::make_unique<const VisibleConstantLight<N, T>>(light_position, Color(1));
+                std::make_unique<const VisibleConstantLight<N, T>>(light_position, Color(lighting_intensity));
 
         //
 
         namespace impl = single_object_scene_implementation;
 
         return std::make_unique<impl::SingleObjectScene<N, T>>(
-                background_color, default_color, diffuse, std::move(projector), std::move(light_source),
-                std::move(mesh));
+                background_color, std::move(projector), std::move(light_source), std::move(mesh));
 }
 }

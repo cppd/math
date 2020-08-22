@@ -133,8 +133,16 @@ void MeshObject<N, T>::create(const mesh::Mesh<N>& mesh, const Matrix<N + 1, N +
 }
 
 template <size_t N, typename T>
-MeshObject<N, T>::MeshObject(const mesh::Mesh<N>& mesh, const Matrix<N + 1, N + 1, T>& matrix, ProgressRatio* progress)
+MeshObject<N, T>::MeshObject(
+        const mesh::Mesh<N>& mesh,
+        const Color& default_color,
+        const Color::DataType& diffuse,
+        const Matrix<N + 1, N + 1, T>& matrix,
+        ProgressRatio* progress)
 {
+        m_surface_properties.set_color(default_color);
+        m_surface_properties.set_diffuse(diffuse);
+
         double start_time = time_in_seconds();
 
         create(mesh, matrix, progress);
@@ -174,34 +182,26 @@ bool MeshObject<N, T>::intersect_precise(const Ray<N, T>& ray, T approximate_t, 
 }
 
 template <size_t N, typename T>
-Vector<N, T> MeshObject<N, T>::geometric_normal(const void* intersection_data) const
+SurfaceProperties<N, T> MeshObject<N, T>::surface_properties(const Vector<N, T>& p, const void* intersection_data) const
 {
-        return static_cast<const Facet*>(intersection_data)->geometric_normal();
-}
+        SurfaceProperties<N, T> s = m_surface_properties;
 
-template <size_t N, typename T>
-Vector<N, T> MeshObject<N, T>::shading_normal(const Vector<N, T>& p, const void* intersection_data) const
-{
-        return static_cast<const Facet*>(intersection_data)->shading_normal(p);
-}
-
-template <size_t N, typename T>
-std::optional<Color> MeshObject<N, T>::color(const Vector<N, T>& p, const void* intersection_data) const
-{
         const Facet* facet = static_cast<const Facet*>(intersection_data);
+
+        s.set_geometric_normal(facet->geometric_normal());
+        s.set_shading_normal(facet->shading_normal(p));
 
         if (facet->material() >= 0)
         {
                 const Material& m = m_materials[facet->material()];
-
                 if (facet->has_texcoord() && m.map_Kd >= 0)
                 {
-                        return m_images[m.map_Kd].texture(facet->texcoord(p));
+                        s.set_color(m_images[m.map_Kd].texture(facet->texcoord(p)));
                 }
-                return m.Kd;
+                s.set_color(m.Kd);
         }
 
-        return std::nullopt;
+        return s;
 }
 
 template <size_t N, typename T>

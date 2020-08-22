@@ -26,5 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace painter
 {
 template <size_t N, typename T>
-std::unique_ptr<const MeshObject<N, T>> simplex_mesh_of_random_sphere(int point_count, ProgressRatio* progress);
+std::unique_ptr<const MeshObject<N, T>> simplex_mesh_of_random_sphere(
+        const Color& color,
+        const Color::DataType& diffuse,
+        int point_count,
+        ProgressRatio* progress);
 }

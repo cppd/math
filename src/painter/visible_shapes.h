@@ -150,19 +150,10 @@ template <size_t N, typename T>
 class VisibleSharedMesh final : public GenericObject<N, T>, public Surface<N, T>
 {
         std::shared_ptr<const MeshObject<N, T>> m_mesh;
-        SurfaceProperties<N, T> m_surface_properties;
 
 public:
-        VisibleSharedMesh(const Color& color, T diffuse, const std::shared_ptr<const MeshObject<N, T>>& mesh)
-                : m_mesh(mesh)
+        VisibleSharedMesh(const std::shared_ptr<const MeshObject<N, T>>& mesh) : m_mesh(mesh)
         {
-                m_surface_properties.set_color(color);
-                m_surface_properties.set_diffuse(diffuse);
-        }
-
-        void set_light_source(const Color& color)
-        {
-                m_surface_properties.set_light_source_color(color);
         }
 
         bool intersect_approximate(const Ray<N, T>& r, T* t) const override
@@ -187,17 +178,7 @@ public:
 
         SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const override
         {
-                SurfaceProperties<N, T> s = m_surface_properties;
-
-                s.set_geometric_normal(m_mesh->geometric_normal(intersection_data));
-                s.set_shading_normal(m_mesh->shading_normal(p, intersection_data));
-
-                if (std::optional<Color> color = m_mesh->color(p, intersection_data))
-                {
-                        s.set_color(color.value());
-                }
-
-                return s;
+                return m_mesh->surface_properties(p, intersection_data);
         }
 
         void min_max(Vector<N, T>* min, Vector<N, T>* max) const override

@@ -43,8 +43,6 @@ std::unique_ptr<const PaintObjects<3, T>> cornell_box_scene(
         int height,
         const std::shared_ptr<const MeshObject<3, T>>& mesh,
         T size,
-        const Color& default_color,
-        Color::DataType diffuse,
         const Vector<3, T>& camera_direction,
         const Vector<3, T>& camera_up);
 }

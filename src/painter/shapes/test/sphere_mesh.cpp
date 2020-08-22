@@ -94,6 +94,8 @@ void create_spherical_convex_hull(
 
 template <size_t N, typename T>
 std::unique_ptr<const MeshObject<N, T>> simplex_mesh_of_sphere(
+        const Color& color,
+        const Color::DataType& diffuse,
         const Vector<N, float>& center,
         float radius,
         int point_count,
@@ -116,12 +118,16 @@ std::unique_ptr<const MeshObject<N, T>> simplex_mesh_of_sphere(
 
         constexpr Matrix<N + 1, N + 1, T> matrix(1);
 
-        return std::make_unique<const MeshObject<N, T>>(*mesh, matrix, progress);
+        return std::make_unique<const MeshObject<N, T>>(*mesh, color, diffuse, matrix, progress);
 }
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const MeshObject<N, T>> simplex_mesh_of_random_sphere(int point_count, ProgressRatio* progress)
+std::unique_ptr<const MeshObject<N, T>> simplex_mesh_of_random_sphere(
+        const Color& color,
+        const Color::DataType& diffuse,
+        int point_count,
+        ProgressRatio* progress)
 {
         static_assert(N >= 3 && N <= 6);
         static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
@@ -150,32 +156,48 @@ std::unique_ptr<const MeshObject<N, T>> simplex_mesh_of_random_sphere(int point_
         LOG("mesh radius = " + to_string(radius));
         LOG("mesh center = " + to_string(center));
 
-        return simplex_mesh_of_sphere<N, T>(center, radius, point_count, progress);
+        return simplex_mesh_of_sphere<N, T>(color, diffuse, center, radius, point_count, progress);
 }
 
 template std::unique_ptr<const MeshObject<3, float>> simplex_mesh_of_random_sphere(
+        const Color& color,
+        const Color::DataType& diffuse,
         int point_count,
         ProgressRatio* progress);
 template std::unique_ptr<const MeshObject<4, float>> simplex_mesh_of_random_sphere(
+        const Color& color,
+        const Color::DataType& diffuse,
         int point_count,
         ProgressRatio* progress);
 template std::unique_ptr<const MeshObject<5, float>> simplex_mesh_of_random_sphere(
+        const Color& color,
+        const Color::DataType& diffuse,
         int point_count,
         ProgressRatio* progress);
 template std::unique_ptr<const MeshObject<6, float>> simplex_mesh_of_random_sphere(
+        const Color& color,
+        const Color::DataType& diffuse,
         int point_count,
         ProgressRatio* progress);
 
 template std::unique_ptr<const MeshObject<3, double>> simplex_mesh_of_random_sphere(
+        const Color& color,
+        const Color::DataType& diffuse,
         int point_count,
         ProgressRatio* progress);
 template std::unique_ptr<const MeshObject<4, double>> simplex_mesh_of_random_sphere(
+        const Color& color,
+        const Color::DataType& diffuse,
         int point_count,
         ProgressRatio* progress);
 template std::unique_ptr<const MeshObject<5, double>> simplex_mesh_of_random_sphere(
+        const Color& color,
+        const Color::DataType& diffuse,
         int point_count,
         ProgressRatio* progress);
 template std::unique_ptr<const MeshObject<6, double>> simplex_mesh_of_random_sphere(
+        const Color& color,
+        const Color::DataType& diffuse,
         int point_count,
         ProgressRatio* progress);
 }

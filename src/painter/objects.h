@@ -41,7 +41,7 @@ class SurfaceProperties
         // Если поверхность является источником света, то цвет этого источника.
         std::optional<Color> m_light_source_color;
         // Коэффициент для диффузного отражения.
-        T m_diffuse;
+        Color::DataType m_diffuse;
 
 public:
         void set_geometric_normal(const Vector<N, T>& normal)
@@ -80,11 +80,11 @@ public:
                 return m_light_source_color;
         }
 
-        void set_diffuse(T diffuse)
+        void set_diffuse(const Color::DataType& diffuse)
         {
                 m_diffuse = diffuse;
         }
-        T diffuse() const
+        const Color::DataType& diffuse() const
         {
                 return m_diffuse;
         }

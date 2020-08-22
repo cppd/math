@@ -40,6 +40,8 @@ namespace
 {
 constexpr Srgb8 BACKGROUND_COLOR(50, 100, 150);
 constexpr Srgb8 DEFAULT_COLOR(150, 170, 150);
+constexpr Color::DataType DIFFUSE = 1;
+constexpr Color::DataType LIGHTING_INTENSITY = 1;
 
 class Images : public PainterNotifier<3>
 {
@@ -127,7 +129,8 @@ template <size_t N, typename T>
 std::shared_ptr<const MeshObject<N, T>> sphere_mesh(int point_count, ProgressRatio* progress)
 {
         LOG("Creating mesh...");
-        std::shared_ptr<const MeshObject<N, T>> mesh = simplex_mesh_of_random_sphere<N, T>(point_count, progress);
+        std::shared_ptr<const MeshObject<N, T>> mesh =
+                simplex_mesh_of_random_sphere<N, T>(DEFAULT_COLOR, DIFFUSE, point_count, progress);
 
         return mesh;
 }
@@ -141,10 +144,10 @@ std::shared_ptr<const MeshObject<N, T>> file_mesh(const std::string& file_name, 
         std::unique_ptr<const mesh::Mesh<N>> mesh = mesh::load<N>(file_name, progress);
 
         LOG("Creating mesh...");
-        std::shared_ptr<const MeshObject<N, T>> spatial_mesh =
-                std::make_shared<const MeshObject<N, T>>(*mesh, matrix, progress);
+        std::shared_ptr<const MeshObject<N, T>> painter_mesh =
+                std::make_shared<const MeshObject<N, T>>(*mesh, DEFAULT_COLOR, DIFFUSE, matrix, progress);
 
-        return spatial_mesh;
+        return painter_mesh;
 }
 
 template <size_t N, typename T>
@@ -206,10 +209,8 @@ void test_painter(
         int samples_per_pixel,
         int thread_count)
 {
-        Color::DataType diffuse = 1;
-
         std::unique_ptr<const PaintObjects<N, T>> paint_objects =
-                single_object_scene(BACKGROUND_COLOR, DEFAULT_COLOR, diffuse, min_screen_size, max_screen_size, mesh);
+                single_object_scene(BACKGROUND_COLOR, LIGHTING_INTENSITY, min_screen_size, max_screen_size, mesh);
 
         static_assert(type == PainterTestOutputType::File || type == PainterTestOutputType::Window);
 

@@ -51,13 +51,6 @@ struct PainterSceneInfo<3, T>
         bool cornell_box;
 };
 
-struct PainterSceneCommonInfo
-{
-        Color background_color;
-        Color default_color;
-        Color::DataType diffuse;
-};
-
 namespace painter_scene_implementation
 {
 template <typename T>
@@ -76,11 +69,13 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(const PainterSc
 }
 
 template <typename T>
-std::unique_ptr<const painter::LightSource<3, T>> create_light_source(const PainterSceneInfo<3, T>& info)
+std::unique_ptr<const painter::LightSource<3, T>> create_light_source(
+        const PainterSceneInfo<3, T>& info,
+        const Color::DataType& lighting_intensity)
 {
         Vector<3, T> light_position = info.view_center - info.light_direction * info.scene_size * T(1000);
 
-        return std::make_unique<const painter::VisibleConstantLight<3, T>>(light_position, Color(1));
+        return std::make_unique<const painter::VisibleConstantLight<3, T>>(light_position, Color(lighting_intensity));
 }
 }
 
@@ -88,7 +83,8 @@ template <size_t N, typename T>
 std::unique_ptr<const painter::PaintObjects<N, T>> create_painter_scene(
         const std::shared_ptr<const painter::MeshObject<N, T>>& mesh,
         const PainterSceneInfo<N, T>& info,
-        const PainterSceneCommonInfo& info_all)
+        const Color& background_color,
+        const Color::DataType& lighting_intensity)
 {
         if constexpr (N == 3)
         {
@@ -97,21 +93,19 @@ std::unique_ptr<const painter::PaintObjects<N, T>> create_painter_scene(
                 if (!info.cornell_box)
                 {
                         return single_object_scene(
-                                info_all.background_color, info_all.default_color, info_all.diffuse,
-                                impl::create_projector(info), impl::create_light_source(info), mesh);
+                                background_color, impl::create_projector(info),
+                                impl::create_light_source(info, lighting_intensity), mesh);
                 }
                 else
                 {
                         return cornell_box_scene(
-                                info.width, info.height, mesh, info.scene_size, info_all.default_color,
-                                info_all.diffuse, info.camera_direction, info.camera_up);
+                                info.width, info.height, mesh, info.scene_size, info.camera_direction, info.camera_up);
                 }
         }
         else
         {
                 return single_object_scene(
-                        info_all.background_color, info_all.default_color, info_all.diffuse, info.min_screen_size,
-                        info.max_screen_size, mesh);
+                        background_color, lighting_intensity, info.min_screen_size, info.max_screen_size, mesh);
         }
 }
 }

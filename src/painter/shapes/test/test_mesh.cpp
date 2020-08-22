@@ -264,7 +264,7 @@ void test_mesh(
                 ray_count = random_integer(random_engine, ray_low, ray_high);
         }
 
-        std::unique_ptr mesh = simplex_mesh_of_random_sphere<N, T>(point_count, progress);
+        std::unique_ptr mesh = simplex_mesh_of_random_sphere<N, T>(Color(1), 1, point_count, progress);
 
         test_sphere_mesh(*mesh, ray_count, with_ray_log, with_error_log, progress);
 }
