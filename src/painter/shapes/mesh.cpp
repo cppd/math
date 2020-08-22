@@ -63,7 +63,12 @@ int tree_max_depth()
 }
 
 template <size_t N, typename T>
-void MeshObject<N, T>::create(const mesh::Mesh<N>& mesh, const Matrix<N + 1, N + 1, T>& matrix, ProgressRatio* progress)
+void MeshObject<N, T>::create(
+        const mesh::Mesh<N>& mesh,
+        const Color& default_color,
+        const Color::DataType& diffuse,
+        const Matrix<N + 1, N + 1, T>& matrix,
+        ProgressRatio* progress)
 {
         const unsigned thread_count = hardware_concurrency();
 
@@ -91,11 +96,15 @@ void MeshObject<N, T>::create(const mesh::Mesh<N>& mesh, const Matrix<N + 1, N +
         m_min = Vector<N, T>(limits<T>::max());
         m_max = Vector<N, T>(limits<T>::lowest());
         m_facets.reserve(mesh.facets.size());
+        bool facets_without_material = false;
+        int default_material_index = mesh.materials.size();
         for (const typename mesh::Mesh<N>::Facet& facet : mesh.facets)
         {
+                bool no_material = facet.material < 0;
+                facets_without_material = facets_without_material || no_material;
                 m_facets.emplace_back(
                         m_vertices, m_normals, m_texcoords, facet.vertices, facet.has_normal, facet.normals,
-                        facet.has_texcoord, facet.texcoords, facet.material);
+                        facet.has_texcoord, facet.texcoords, no_material ? default_material_index : facet.material);
 
                 for (int index : facet.vertices)
                 {
@@ -104,10 +113,15 @@ void MeshObject<N, T>::create(const mesh::Mesh<N>& mesh, const Matrix<N + 1, N +
                 }
         }
 
-        m_materials.reserve(mesh.materials.size());
+        m_materials.reserve(facets_without_material ? mesh.materials.size() + 1 : mesh.materials.size());
         for (const typename mesh::Mesh<N>::Material& m : mesh.materials)
         {
-                m_materials.emplace_back(m.Kd, m.Ks, m.Ns, m.map_Kd, m.map_Ks);
+                m_materials.emplace_back(m.Kd, m.Ks, m.Ns, diffuse, m.map_Kd, m.map_Ks);
+        }
+        if (facets_without_material)
+        {
+                ASSERT(default_material_index == static_cast<int>(m_materials.size()));
+                m_materials.emplace_back(default_color, Color(1), 1, diffuse, -1, -1);
         }
 
         m_images.reserve(mesh.images.size());
@@ -140,12 +154,9 @@ MeshObject<N, T>::MeshObject(
         const Matrix<N + 1, N + 1, T>& matrix,
         ProgressRatio* progress)
 {
-        m_surface_properties.set_color(default_color);
-        m_surface_properties.set_diffuse(diffuse);
-
         double start_time = time_in_seconds();
 
-        create(mesh, matrix, progress);
+        create(mesh, default_color, diffuse, matrix, progress);
 
         LOG("Mesh object created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 }
@@ -184,20 +195,23 @@ bool MeshObject<N, T>::intersect_precise(const Ray<N, T>& ray, T approximate_t, 
 template <size_t N, typename T>
 SurfaceProperties<N, T> MeshObject<N, T>::surface_properties(const Vector<N, T>& p, const void* intersection_data) const
 {
-        SurfaceProperties<N, T> s = m_surface_properties;
+        SurfaceProperties<N, T> s;
 
         const Facet* facet = static_cast<const Facet*>(intersection_data);
 
         s.set_geometric_normal(facet->geometric_normal());
         s.set_shading_normal(facet->shading_normal(p));
 
-        if (facet->material() >= 0)
+        ASSERT(facet->material() >= 0);
+
+        const Material& m = m_materials[facet->material()];
+        s.set_diffuse(m.diffuse);
+        if (facet->has_texcoord() && m.map_Kd >= 0)
         {
-                const Material& m = m_materials[facet->material()];
-                if (facet->has_texcoord() && m.map_Kd >= 0)
-                {
-                        s.set_color(m_images[m.map_Kd].texture(facet->texcoord(p)));
-                }
+                s.set_color(m_images[m.map_Kd].texture(facet->texcoord(p)));
+        }
+        else
+        {
                 s.set_color(m.Kd);
         }
 

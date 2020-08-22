@@ -45,11 +45,20 @@ class MeshObject
 
         struct Material
         {
-                Color Kd, Ks;
+                Color Kd;
+                Color Ks;
                 Color::DataType Ns;
-                int map_Kd, map_Ks;
-                Material(const Color& Kd, const Color& Ks, Color::DataType Ns, int map_Kd, int map_Ks)
-                        : Kd(Kd), Ks(Ks), Ns(Ns), map_Kd(map_Kd), map_Ks(map_Ks)
+                Color::DataType diffuse;
+                int map_Kd;
+                int map_Ks;
+                Material(
+                        const Color& Kd,
+                        const Color& Ks,
+                        Color::DataType Ns,
+                        Color::DataType diffuse,
+                        int map_Kd,
+                        int map_Ks)
+                        : Kd(Kd), Ks(Ks), Ns(Ns), diffuse(diffuse), map_Kd(map_Kd), map_Ks(map_Ks)
                 {
                 }
         };
@@ -63,9 +72,12 @@ class MeshObject
 
         Vector<N, T> m_min, m_max;
 
-        SurfaceProperties<N, T> m_surface_properties;
-
-        void create(const mesh::Mesh<N>& mesh, const Matrix<N + 1, N + 1, T>& vertex_matrix, ProgressRatio* progress);
+        void create(
+                const mesh::Mesh<N>& mesh,
+                const Color& default_color,
+                const Color::DataType& diffuse,
+                const Matrix<N + 1, N + 1, T>& vertex_matrix,
+                ProgressRatio* progress);
 
 public:
         MeshObject(
