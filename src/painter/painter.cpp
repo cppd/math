@@ -236,9 +236,8 @@ Color direct_diffuse_lighting(
         const Vector<N, T>& p,
         const Vector<N, T>& geometric_normal,
         const Vector<N, T>& shading_normal,
-        bool mesh,
-        const T& ray_offset,
-        bool smooth_normal)
+        bool smooth_normal,
+        const T& ray_offset)
 {
         Color color(0);
 
@@ -264,7 +263,7 @@ Color direct_diffuse_lighting(
                         continue;
                 }
 
-                if (!mesh || !smooth_normal || dot(ray_to_light.dir(), geometric_normal) >= 0)
+                if (!smooth_normal || dot(ray_to_light.dir(), geometric_normal) >= 0)
                 {
                         // Если объект не состоит из симплексов или геометрическая сторона обращена
                         // к источнику света, то напрямую рассчитать видимость источника света.
@@ -338,7 +337,7 @@ bool diffuse_weighted_ray(
         const Vector<N, T>& point,
         const Vector<N, T>& shading_normal,
         const Vector<N, T>& geometric_normal,
-        bool mesh,
+        bool smooth_normal,
         Ray<N, T>* ray)
 {
         // Распределение случайного луча с вероятностью по косинусу угла между нормалью и случайным вектором.
@@ -346,7 +345,7 @@ bool diffuse_weighted_ray(
         // Случайный вектор диффузного освещения надо определять от видимой нормали.
         *ray = Ray<N, T>(point, random_cosine_weighted_on_hemisphere(random_engine, shading_normal));
 
-        if (mesh && dot(ray->dir(), geometric_normal) <= DOT_PRODUCT_EPSILON<T>)
+        if (smooth_normal && dot(ray->dir(), geometric_normal) <= DOT_PRODUCT_EPSILON<T>)
         {
                 // Если получившийся случайный вектор диффузного отражения показывает
                 // в другую сторону от поверхности, то диффузного освещения нет.
@@ -377,8 +376,8 @@ Color trace_path(
         {
                 if (recursion_level > 0)
                 {
-                        return paint_data.default_surface_properties.is_light_source()
-                                       ? paint_data.default_surface_properties.light_source_color()
+                        return paint_data.default_surface_properties.light_source_color()
+                                       ? *paint_data.default_surface_properties.light_source_color()
                                        : Color(0);
                 }
                 return EMPTY_COLOR;
@@ -395,10 +394,9 @@ Color trace_path(
                 return Color(0);
         }
 
-        bool mesh = surface_properties.is_mesh();
+        bool smooth_normal = paint_data.smooth_normal && surface_properties.shading_normal().has_value();
 
-        Vector<N, T> shading_normal =
-                (mesh && paint_data.smooth_normal) ? surface_properties.shading_normal() : geometric_normal;
+        Vector<N, T> shading_normal = smooth_normal ? *surface_properties.shading_normal() : geometric_normal;
 
         ASSERT(dot(geometric_normal, shading_normal) > DOT_PRODUCT_EPSILON<T>);
 
@@ -412,9 +410,9 @@ Color trace_path(
 
         Color color(0);
 
-        if (surface_properties.is_light_source())
+        if (surface_properties.light_source_color())
         {
-                color += surface_properties.light_source_color();
+                color += *surface_properties.light_source_color();
         }
 
         if (surface_properties.diffuse() > 0)
@@ -427,7 +425,7 @@ Color trace_path(
                 {
                         Color direct = direct_diffuse_lighting(
                                 ray_count, paint_data.objects, paint_data.light_sources, point, geometric_normal,
-                                shading_normal, mesh, paint_data.ray_offset, paint_data.smooth_normal);
+                                shading_normal, smooth_normal, paint_data.ray_offset);
 
                         color += surface_color * direct;
 
@@ -435,8 +433,8 @@ Color trace_path(
                         {
                                 Ray<N, T> new_ray;
                                 if (diffuse_weighted_ray(
-                                            paint_data, random_engine, point, shading_normal, geometric_normal, mesh,
-                                            &new_ray))
+                                            paint_data, random_engine, point, shading_normal, geometric_normal,
+                                            smooth_normal, &new_ray))
                                 {
                                         Color diffuse = trace_path(
                                                 paint_data, ray_count, random_engine, recursion_level + 1,

@@ -83,8 +83,6 @@ class CornellBoxScene : public PaintObjects<3, T>
                 int width,
                 int height,
                 T size,
-                const Color& default_color,
-                Color::DataType diffuse,
                 const Vector<3, T>& camera_direction,
                 const Vector<3, T>& camera_up);
 
@@ -127,12 +125,12 @@ CornellBoxScene<T>::CornellBoxScene(
 
         mat4 vertex_matrix = model_matrix_for_size_and_position(*mesh, size, vec3(0));
 
-        std::shared_ptr spatial_mesh =
+        std::shared_ptr painter_mesh =
                 std::make_shared<MeshObject<3, T>>(*mesh, to_matrix<T>(vertex_matrix), &progress);
 
-        m_mesh = std::make_unique<VisibleSharedMesh<3, T>>(spatial_mesh);
+        m_mesh = std::make_unique<VisibleSharedMesh<3, T>>(default_color, diffuse, painter_mesh);
 
-        create_scene(width, height, size, default_color, diffuse, camera_direction, camera_up);
+        create_scene(width, height, size, camera_direction, camera_up);
 }
 
 template <typename T>
@@ -146,9 +144,9 @@ CornellBoxScene<T>::CornellBoxScene(
         const Vector<3, T>& camera_direction,
         const Vector<3, T>& camera_up)
 {
-        m_mesh = std::make_unique<VisibleSharedMesh<3, T>>(mesh);
+        m_mesh = std::make_unique<VisibleSharedMesh<3, T>>(default_color, diffuse, mesh);
 
-        create_scene(width, height, size, default_color, diffuse, camera_direction, camera_up);
+        create_scene(width, height, size, camera_direction, camera_up);
 }
 
 template <typename T>
@@ -156,15 +154,9 @@ void CornellBoxScene<T>::create_scene(
         int width,
         int height,
         T size,
-        const Color& default_color,
-        Color::DataType diffuse,
         const Vector<3, T>& camera_direction,
         const Vector<3, T>& camera_up)
 {
-        m_mesh->set_color(default_color);
-        m_mesh->set_diffuse_and_fresnel(diffuse, 0);
-        m_mesh->set_light_source(false);
-
         m_objects.push_back(m_mesh.get());
 
         //
@@ -182,32 +174,22 @@ void CornellBoxScene<T>::create_scene(
 
         //
 
+        constexpr T DIFFUSE = 1;
+
         m_rectangle_back = std::make_unique<VisibleHyperplaneParallelotope<3, T>>(
-                lower_left + size * dir, size * right, size * up);
-        m_rectangle_back->set_color(colors::WHITE);
-        m_rectangle_back->set_diffuse_and_fresnel(1, 0);
-        m_rectangle_back->set_light_source(false);
+                colors::WHITE, DIFFUSE, lower_left + size * dir, size * right, size * up);
 
-        m_rectangle_top = std::make_unique<VisibleHyperplaneParallelotope<3, T>>(upper_left, size * dir, size * right);
-        m_rectangle_top->set_color(colors::WHITE);
-        m_rectangle_top->set_diffuse_and_fresnel(1, 0);
-        m_rectangle_top->set_light_source(false);
+        m_rectangle_top = std::make_unique<VisibleHyperplaneParallelotope<3, T>>(
+                colors::WHITE, DIFFUSE, upper_left, size * dir, size * right);
 
-        m_rectangle_bottom =
-                std::make_unique<VisibleHyperplaneParallelotope<3, T>>(lower_left, size * dir, size * right);
-        m_rectangle_bottom->set_color(colors::WHITE);
-        m_rectangle_bottom->set_diffuse_and_fresnel(1, 0);
-        m_rectangle_bottom->set_light_source(false);
+        m_rectangle_bottom = std::make_unique<VisibleHyperplaneParallelotope<3, T>>(
+                colors::WHITE, DIFFUSE, lower_left, size * dir, size * right);
 
-        m_rectangle_left = std::make_unique<VisibleHyperplaneParallelotope<3, T>>(lower_left, size * dir, size * up);
-        m_rectangle_left->set_color(colors::RED);
-        m_rectangle_left->set_diffuse_and_fresnel(1, 0);
-        m_rectangle_left->set_light_source(false);
+        m_rectangle_left = std::make_unique<VisibleHyperplaneParallelotope<3, T>>(
+                colors::RED, DIFFUSE, lower_left, size * dir, size * up);
 
-        m_rectangle_right = std::make_unique<VisibleHyperplaneParallelotope<3, T>>(lower_right, size * dir, size * up);
-        m_rectangle_right->set_color(colors::GREEN);
-        m_rectangle_right->set_diffuse_and_fresnel(1, 0);
-        m_rectangle_right->set_light_source(false);
+        m_rectangle_right = std::make_unique<VisibleHyperplaneParallelotope<3, T>>(
+                colors::GREEN, DIFFUSE, lower_right, size * dir, size * up);
 
         //
 
@@ -221,26 +203,18 @@ void CornellBoxScene<T>::create_scene(
                 std::make_unique<VisibleSphericalProjector<3, T>>(view_point, dir, screen_axes, 80, screen_sizes);
 
         m_default_surface_properties.set_color(colors::BLACK);
-        m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
-        m_default_surface_properties.set_light_source(false);
-        m_default_surface_properties.set_light_source_color(colors::BLACK);
+        m_default_surface_properties.set_diffuse(1);
 
         m_box = std::make_unique<VisibleParallelotope<3, T>>(
-                lower_left + size * (T(0.7) * dir + T(0.8) * right + T(0.1) * up), T(0.1) * size * right,
-                T(0.8) * size * up, T(0.1) * size * dir);
-
-        m_box->set_color(colors::MAGENTA);
-        m_box->set_diffuse_and_fresnel(1, 0);
-        m_box->set_light_source(false);
+                colors::MAGENTA, DIFFUSE, lower_left + size * (T(0.7) * dir + T(0.8) * right + T(0.1) * up),
+                T(0.1) * size * right, T(0.8) * size * up, T(0.1) * size * dir);
 
         Vector<3, T> upper_center = upper_left - T(0.001) * size * up + T(0.5) * size * right + T(0.5) * size * dir;
 
         m_lamp = std::make_unique<VisibleHyperplaneParallelotope<3, T>>(
-                upper_center - T(0.1) * size * dir - T(0.1) * size * right, T(0.2) * size * right, T(0.2) * size * dir);
-        m_lamp->set_color(colors::WHITE);
-        m_lamp->set_diffuse_and_fresnel(1, 0);
-        m_lamp->set_light_source(true);
-        m_lamp->set_light_source_color(Color(50));
+                colors::WHITE, DIFFUSE, upper_center - T(0.1) * size * dir - T(0.1) * size * right,
+                T(0.2) * size * right, T(0.2) * size * dir);
+        m_lamp->set_light_source(Color(50));
 
         m_constant_light = std::make_unique<VisibleConstantLight<3, T>>(upper_center, Color(1));
         m_point_light = std::make_unique<VisiblePointLight<3, T>>(upper_center, Color(1), 1);

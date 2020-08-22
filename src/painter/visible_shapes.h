@@ -31,18 +31,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace painter
 {
 template <size_t N, typename T>
-class VisibleHyperplaneParallelotope final : public GenericObject<N, T>,
-                                             public Surface<N, T>,
-                                             public SurfaceProperties<N, T>
+class VisibleHyperplaneParallelotope final : public GenericObject<N, T>, public Surface<N, T>
 {
         HyperplaneParallelotope<N, T> m_hyperplane_parallelotope;
+        SurfaceProperties<N, T> m_surface_properties;
 
 public:
         template <typename... V>
-        explicit VisibleHyperplaneParallelotope(const Vector<N, T>& org, const V&... e)
+        VisibleHyperplaneParallelotope(const Color& color, T diffuse, const Vector<N, T>& org, const V&... e)
                 : m_hyperplane_parallelotope(org, e...)
         {
                 static_assert((std::is_same_v<V, Vector<N, T>> && ...));
+
+                m_surface_properties.set_color(color);
+                m_surface_properties.set_diffuse(diffuse);
+        }
+
+        void set_light_source(const Color& color)
+        {
+                m_surface_properties.set_light_source_color(color);
         }
 
         bool intersect_approximate(const Ray<N, T>& r, T* t) const override
@@ -68,7 +75,7 @@ public:
 
         SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* /*intersection_data*/) const override
         {
-                SurfaceProperties<N, T> s = *this;
+                SurfaceProperties<N, T> s = m_surface_properties;
 
                 s.set_geometric_normal(m_hyperplane_parallelotope.normal(p));
 
@@ -82,15 +89,25 @@ public:
 };
 
 template <size_t N, typename T>
-class VisibleParallelotope final : public GenericObject<N, T>, public Surface<N, T>, public SurfaceProperties<N, T>
+class VisibleParallelotope final : public GenericObject<N, T>, public Surface<N, T>
 {
         Parallelotope<N, T> m_parallelotope;
+        SurfaceProperties<N, T> m_surface_properties;
 
 public:
         template <typename... V>
-        explicit VisibleParallelotope(const Vector<N, T>& org, const V&... e) : m_parallelotope(org, e...)
+        VisibleParallelotope(const Color& color, T diffuse, const Vector<N, T>& org, const V&... e)
+                : m_parallelotope(org, e...)
         {
                 static_assert((std::is_same_v<V, Vector<N, T>> && ...));
+
+                m_surface_properties.set_color(color);
+                m_surface_properties.set_diffuse(diffuse);
+        }
+
+        void set_light_source(const Color& color)
+        {
+                m_surface_properties.set_light_source_color(color);
         }
 
         bool intersect_approximate(const Ray<N, T>& r, T* t) const override
@@ -116,7 +133,7 @@ public:
 
         SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* /*intersection_data*/) const override
         {
-                SurfaceProperties<N, T> s = *this;
+                SurfaceProperties<N, T> s = m_surface_properties;
 
                 s.set_geometric_normal(m_parallelotope.normal(p));
 
@@ -130,13 +147,22 @@ public:
 };
 
 template <size_t N, typename T>
-class VisibleSharedMesh final : public GenericObject<N, T>, public Surface<N, T>, public SurfaceProperties<N, T>
+class VisibleSharedMesh final : public GenericObject<N, T>, public Surface<N, T>
 {
         std::shared_ptr<const MeshObject<N, T>> m_mesh;
+        SurfaceProperties<N, T> m_surface_properties;
 
 public:
-        explicit VisibleSharedMesh(const std::shared_ptr<const MeshObject<N, T>>& mesh) : m_mesh(mesh)
+        VisibleSharedMesh(const Color& color, T diffuse, const std::shared_ptr<const MeshObject<N, T>>& mesh)
+                : m_mesh(mesh)
         {
+                m_surface_properties.set_color(color);
+                m_surface_properties.set_diffuse(diffuse);
+        }
+
+        void set_light_source(const Color& color)
+        {
+                m_surface_properties.set_light_source_color(color);
         }
 
         bool intersect_approximate(const Ray<N, T>& r, T* t) const override
@@ -161,11 +187,10 @@ public:
 
         SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const override
         {
-                SurfaceProperties<N, T> s = *this;
+                SurfaceProperties<N, T> s = m_surface_properties;
 
                 s.set_geometric_normal(m_mesh->geometric_normal(intersection_data));
                 s.set_shading_normal(m_mesh->shading_normal(p, intersection_data));
-                s.set_mesh(true);
 
                 if (std::optional<Color> color = m_mesh->color(p, intersection_data))
                 {

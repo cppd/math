@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
+#include <array>
+#include <optional>
 #include <vector>
 
 namespace painter
@@ -33,49 +35,15 @@ class SurfaceProperties
         Vector<N, T> m_geometric_normal;
         // Видимый перпендикуляр к поверхности. Например, при интерполяции
         // перпендикуляра по перпендикулярам в вершинах симплексов.
-        Vector<N, T> m_shading_normal;
+        std::optional<Vector<N, T>> m_shading_normal;
         // Цвет поверхности.
         Color m_color;
         // Если поверхность является источником света, то цвет этого источника.
-        Color m_light_source_color;
-        // Коэффициент для диффузного отражения и коэффициент для отражения и преломления по формулам Френеля.
+        std::optional<Color> m_light_source_color;
+        // Коэффициент для диффузного отражения.
         T m_diffuse;
-        T m_fresnel;
-        // Коэффициент преломления.
-        T m_refraction;
-        // Является ли поверхность источником света.
-        bool m_light_source;
-        // Является ли поверхность набором симплексов
-        bool m_mesh = false;
 
 public:
-        SurfaceProperties() = default;
-
-        SurfaceProperties(
-                const Color& color,
-                const Color& light_source_color,
-                T diffuse,
-                bool use_fresnel,
-                T refraction,
-                bool light_source)
-                : m_color(color),
-                  m_light_source_color(light_source_color),
-                  m_diffuse(diffuse),
-                  m_fresnel(use_fresnel),
-                  m_refraction(refraction),
-                  m_light_source(light_source)
-        {
-        }
-
-        void set_shading_normal(const Vector<N, T>& normal)
-        {
-                m_shading_normal = normal.normalized();
-        }
-        const Vector<N, T>& shading_normal() const
-        {
-                return m_shading_normal;
-        }
-
         void set_geometric_normal(const Vector<N, T>& normal)
         {
                 m_geometric_normal = normal.normalized();
@@ -83,6 +51,15 @@ public:
         const Vector<N, T>& geometric_normal() const
         {
                 return m_geometric_normal;
+        }
+
+        void set_shading_normal(const Vector<N, T>& normal)
+        {
+                m_shading_normal = normal.normalized();
+        }
+        const std::optional<Vector<N, T>>& shading_normal() const
+        {
+                return m_shading_normal;
         }
 
         void set_color(const Color& color)
@@ -98,50 +75,18 @@ public:
         {
                 m_light_source_color = light_source_color;
         }
-        const Color& light_source_color() const
+        const std::optional<Color>& light_source_color() const
         {
                 return m_light_source_color;
         }
 
-        void set_diffuse_and_fresnel(T diffuse, T fresnel)
+        void set_diffuse(T diffuse)
         {
                 m_diffuse = diffuse;
-                m_fresnel = fresnel;
         }
         T diffuse() const
         {
                 return m_diffuse;
-        }
-        T fresnel() const
-        {
-                return m_fresnel;
-        }
-
-        void set_refraction(T refraction)
-        {
-                m_refraction = refraction;
-        }
-        T refraction() const
-        {
-                return m_refraction;
-        }
-
-        void set_light_source(bool light_source)
-        {
-                m_light_source = light_source;
-        }
-        bool is_light_source() const
-        {
-                return m_light_source;
-        }
-
-        void set_mesh(bool mesh)
-        {
-                m_mesh = mesh;
-        }
-        bool is_mesh() const
-        {
-                return m_mesh;
         }
 };
 

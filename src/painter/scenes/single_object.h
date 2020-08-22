@@ -73,16 +73,13 @@ public:
                 std::unique_ptr<const Projector<N, T>>&& projector,
                 std::unique_ptr<const LightSource<N, T>>&& light_source,
                 std::shared_ptr<const MeshObject<N, T>>&& mesh)
-                : m_object(std::move(mesh)), m_projector(std::move(projector)), m_light_source(std::move(light_source))
+                : m_object(default_color, diffuse, std::move(mesh)),
+                  m_projector(std::move(projector)),
+                  m_light_source(std::move(light_source))
         {
                 m_default_surface_properties.set_color(background_color);
-                m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
-                m_default_surface_properties.set_light_source(true);
+                m_default_surface_properties.set_diffuse(1);
                 m_default_surface_properties.set_light_source_color(Color(background_color.luminance()));
-
-                m_object.set_color(default_color);
-                m_object.set_diffuse_and_fresnel(diffuse, 0);
-                m_object.set_light_source(false);
 
                 m_light_sources.push_back(m_light_source.get());
 
