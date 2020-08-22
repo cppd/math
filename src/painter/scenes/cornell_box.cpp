@@ -202,12 +202,21 @@ CornellBoxScene<T>::CornellBoxScene(
 {
         ProgressRatio progress(nullptr);
 
-        std::unique_ptr<mesh::Mesh<3>> mesh = mesh::load<3>(obj_file_name, &progress);
-
-        mat4 vertex_matrix = model_matrix_for_size_and_position(*mesh, size, vec3(0));
-
-        std::shared_ptr painter_mesh = std::make_shared<MeshObject<3, T>>(
-                *mesh, default_color, diffuse, to_matrix<T>(vertex_matrix), &progress);
+        std::shared_ptr<const MeshObject<3, T>> painter_mesh;
+        {
+                std::unique_ptr<const mesh::Mesh<3>> mesh = mesh::load<3>(obj_file_name, &progress);
+                mat4 vertex_matrix = model_matrix_for_size_and_position(*mesh, size, vec3(0));
+                mesh::MeshObject<3> mesh_object(std::move(mesh), vertex_matrix, "");
+                {
+                        mesh::Writing writing(&mesh_object);
+                        writing.set_color(default_color);
+                        writing.set_diffuse(diffuse);
+                }
+                {
+                        mesh::Reading reading(mesh_object);
+                        painter_mesh = std::make_shared<const MeshObject<3, T>>(reading, &progress);
+                }
+        }
 
         m_mesh = std::make_unique<VisibleSharedMesh<3, T>>(painter_mesh);
 

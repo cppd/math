@@ -112,9 +112,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                                 return;
                         }
                         ProgressRatio progress(progress_list);
-                        painter_mesh_object = std::make_shared<painter::MeshObject<N, T>>(
-                                reading.mesh(), reading.color(), reading.diffuse(), to_matrix<T>(reading.matrix()),
-                                &progress);
+                        painter_mesh_object = std::make_shared<painter::MeshObject<N, T>>(reading, &progress);
                 }
 
                 if (!painter_mesh_object)

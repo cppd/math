@@ -147,16 +147,11 @@ void MeshObject<N, T>::create(
 }
 
 template <size_t N, typename T>
-MeshObject<N, T>::MeshObject(
-        const mesh::Mesh<N>& mesh,
-        const Color& default_color,
-        const Color::DataType& diffuse,
-        const Matrix<N + 1, N + 1, T>& matrix,
-        ProgressRatio* progress)
+MeshObject<N, T>::MeshObject(const mesh::Reading<N>& mesh, ProgressRatio* progress)
 {
         double start_time = time_in_seconds();
 
-        create(mesh, default_color, diffuse, matrix, progress);
+        create(mesh.mesh(), mesh.color(), mesh.diffuse(), to_matrix<T>(mesh.matrix()), progress);
 
         LOG("Mesh object created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 }

@@ -114,11 +114,16 @@ std::unique_ptr<const MeshObject<N, T>> simplex_mesh_of_sphere(
 
         std::unique_ptr<const mesh::Mesh<N>> mesh(mesh::create_mesh_for_facets(points, facets));
 
-        LOG("simplex mesh...");
+        LOG("painter mesh...");
 
-        constexpr Matrix<N + 1, N + 1, T> matrix(1);
-
-        return std::make_unique<const MeshObject<N, T>>(*mesh, color, diffuse, matrix, progress);
+        mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
+        {
+                mesh::Writing writing(&mesh_object);
+                writing.set_color(color);
+                writing.set_diffuse(diffuse);
+        }
+        mesh::Reading reading(mesh_object);
+        return std::make_unique<const MeshObject<N, T>>(reading, progress);
 }
 }
 

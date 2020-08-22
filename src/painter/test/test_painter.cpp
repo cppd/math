@@ -138,16 +138,18 @@ std::shared_ptr<const MeshObject<N, T>> sphere_mesh(int point_count, ProgressRat
 template <size_t N, typename T>
 std::shared_ptr<const MeshObject<N, T>> file_mesh(const std::string& file_name, ProgressRatio* progress)
 {
-        constexpr Matrix<N + 1, N + 1, T> matrix(1);
-
         LOG("Loading geometry from file...");
         std::unique_ptr<const mesh::Mesh<N>> mesh = mesh::load<N>(file_name, progress);
 
         LOG("Creating mesh...");
-        std::shared_ptr<const MeshObject<N, T>> painter_mesh =
-                std::make_shared<const MeshObject<N, T>>(*mesh, DEFAULT_COLOR, DIFFUSE, matrix, progress);
-
-        return painter_mesh;
+        mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
+        {
+                mesh::Writing writing(&mesh_object);
+                writing.set_color(DEFAULT_COLOR);
+                writing.set_diffuse(DIFFUSE);
+        }
+        mesh::Reading reading(mesh_object);
+        return std::make_shared<const MeshObject<N, T>>(reading, progress);
 }
 
 template <size_t N, typename T>

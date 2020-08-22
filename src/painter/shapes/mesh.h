@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/image/color_image.h>
-#include <src/model/mesh.h>
+#include <src/model/mesh_object.h>
 #include <src/numerical/matrix.h>
 #include <src/progress/progress.h>
 
@@ -80,12 +80,7 @@ class MeshObject
                 ProgressRatio* progress);
 
 public:
-        MeshObject(
-                const mesh::Mesh<N>& mesh,
-                const Color& default_color,
-                const Color::DataType& diffuse,
-                const Matrix<N + 1, N + 1, T>& matrix,
-                ProgressRatio* progress);
+        MeshObject(const mesh::Reading<N>& mesh, ProgressRatio* progress);
 
         ~MeshObject() = default;
 
