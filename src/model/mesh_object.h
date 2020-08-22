@@ -296,7 +296,10 @@ public:
                         return;
                 }
                 m_visible = visible;
-                send_event(typename MeshEvent<N>::Visibility(m_id, visible));
+                if (m_inserted)
+                {
+                        send_event(typename MeshEvent<N>::Visibility(m_id, visible));
+                }
         }
 };
 
