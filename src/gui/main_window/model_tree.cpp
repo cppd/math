@@ -401,6 +401,16 @@ std::optional<storage::VolumeObject> ModelTree::volume_if_current(ObjectId id) c
         return object;
 }
 
+std::vector<storage::MeshObjectConst> ModelTree::const_mesh_objects() const
+{
+        return m_storage.objects<storage::MeshObjectConst>();
+}
+
+std::vector<storage::VolumeObjectConst> ModelTree::const_volume_objects() const
+{
+        return m_storage.objects<storage::VolumeObjectConst>();
+}
+
 void ModelTree::make_menu(const QPoint& pos)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);

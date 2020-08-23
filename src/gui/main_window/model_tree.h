@@ -83,10 +83,12 @@ public:
         std::optional<storage::MeshObjectConst> current_mesh_const() const;
         std::optional<storage::MeshObject> mesh_if_current(ObjectId id) const;
         std::optional<storage::MeshObjectConst> mesh_const_if_current(ObjectId id) const;
+        std::vector<storage::MeshObjectConst> const_mesh_objects() const;
 
         std::optional<storage::VolumeObject> current_volume() const;
         std::optional<storage::VolumeObjectConst> current_volume_const() const;
         std::optional<storage::VolumeObject> volume_if_current(ObjectId id) const;
         std::optional<storage::VolumeObjectConst> volume_const_if_current(ObjectId id) const;
+        std::vector<storage::VolumeObjectConst> const_volume_objects() const;
 };
 }
