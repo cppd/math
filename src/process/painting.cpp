@@ -46,21 +46,22 @@ constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_ND = 5000;
 
 template <size_t N>
 std::function<void(ProgressRatioList*)> action_painter_function(
-        const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object,
+        const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
         const view::info::Camera& camera,
         const std::string& title,
         const Color& background_color,
         const Color::DataType& lighting_intensity)
 {
-        ASSERT(mesh_object);
-
+        ASSERT(!mesh_objects.empty());
+        long long facet_count = 0;
+        for (const std::shared_ptr<const mesh::MeshObject<N>>& object : mesh_objects)
         {
-                mesh::Reading reading(*mesh_object);
-                if (reading.mesh().facets.empty())
-                {
-                        MESSAGE_WARNING("No object to paint");
-                        return nullptr;
-                }
+                facet_count += mesh::Reading<N>(*object).mesh().facets.size();
+        }
+        if (facet_count == 0)
+        {
+                MESSAGE_WARNING("No objects to paint");
+                return nullptr;
         }
 
         const unsigned default_samples = power<N - 1>(static_cast<unsigned>(PAINTER_DEFAULT_SAMPLES_PER_DIMENSION));
@@ -105,14 +106,14 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         return [=](ProgressRatioList* progress_list) {
                 std::shared_ptr<const painter::MeshObject<N, T>> painter_mesh_object;
                 {
-                        mesh::Reading reading(*mesh_object);
-                        if (reading.mesh().facets.empty())
+                        std::vector<const mesh::MeshObject<N>*> meshes;
+                        meshes.reserve(mesh_objects.size());
+                        for (const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object : mesh_objects)
                         {
-                                MESSAGE_WARNING("No object to paint");
-                                return;
+                                meshes.push_back(mesh_object.get());
                         }
                         ProgressRatio progress(progress_list);
-                        painter_mesh_object = std::make_shared<painter::MeshObject<N, T>>(reading, &progress);
+                        painter_mesh_object = std::make_shared<painter::MeshObject<N, T>>(meshes, &progress);
                 }
 
                 if (!painter_mesh_object)
@@ -121,7 +122,8 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                         return;
                 }
 
-                std::string window_title = title + " (" + mesh_object->name() + ")";
+                std::string window_title =
+                        mesh_objects.size() != 1 ? title : title + " (" + mesh_objects[0]->name() + ")";
 
                 std::unique_ptr<const painter::PaintObjects<N, T>> scene =
                         create_painter_scene(painter_mesh_object, scene_info, background_color, lighting_intensity);
@@ -133,17 +135,51 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 }
 
 std::function<void(ProgressRatioList*)> action_painter(
-        const storage::MeshObjectConst& object,
+        const std::vector<storage::MeshObjectConst>& objects,
         const view::info::Camera& camera,
         const std::string& title,
         const Color& background_color,
         const Color::DataType& lighting_intensity)
 {
-        return std::visit(
-                [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object) {
-                        return action_painter_function(
-                                mesh_object, camera, title, background_color, lighting_intensity);
-                },
-                object);
+        std::set<size_t> dimensions;
+        std::vector<storage::MeshObjectConst> visible_objects;
+        for (const storage::MeshObjectConst& storage_object : objects)
+        {
+                std::visit(
+                        [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& object) {
+                                if (object->visible())
+                                {
+                                        dimensions.insert(N);
+                                        visible_objects.push_back(object);
+                                }
+                        },
+                        storage_object);
+        }
+        if (visible_objects.empty())
+        {
+                MESSAGE_WARNING("No objects to paint");
+                return nullptr;
+        }
+        if (dimensions.size() > 1)
+        {
+                MESSAGE_WARNING("Painting different dimensions is not supported: " + to_string(dimensions) + ".");
+                return nullptr;
+        }
+
+        return apply_for_dimension(*dimensions.cbegin(), [&]<size_t N>(const Dimension<N>&) {
+                std::vector<std::shared_ptr<const mesh::MeshObject<N>>> meshes;
+                for (storage::MeshObjectConst& visible_object : visible_objects)
+                {
+                        std::visit(
+                                [&]<size_t M>(std::shared_ptr<const mesh::MeshObject<M>>&& object) {
+                                        if constexpr (N == M)
+                                        {
+                                                meshes.push_back(std::move(object));
+                                        }
+                                },
+                                std::move(visible_object));
+                }
+                return action_painter_function(meshes, camera, title, background_color, lighting_intensity);
+        });
 }
 }

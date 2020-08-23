@@ -122,8 +122,9 @@ std::unique_ptr<const MeshObject<N, T>> simplex_mesh_of_sphere(
                 writing.set_color(color);
                 writing.set_diffuse(diffuse);
         }
-        mesh::Reading reading(mesh_object);
-        return std::make_unique<const MeshObject<N, T>>(reading, progress);
+        std::vector<const mesh::MeshObject<N>*> meshes;
+        meshes.push_back(&mesh_object);
+        return std::make_unique<const MeshObject<N, T>>(meshes, progress);
 }
 }
 

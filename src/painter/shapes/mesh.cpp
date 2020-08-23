@@ -86,8 +86,18 @@ void MeshObject<N, T>::create_tree(
 }
 
 template <size_t N, typename T>
-void MeshObject<N, T>::create(const mesh::Reading<N>& mesh_object)
+void MeshObject<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
 {
+        if (mesh_objects.size() > 1)
+        {
+                error("Painting multiple objects is not supported");
+        }
+        if (mesh_objects.empty())
+        {
+                error("No objects to paint");
+        }
+
+        const mesh::Reading<N>& mesh_object = mesh_objects[0];
         const mesh::Mesh<N>& mesh = mesh_object.mesh();
 
         if (mesh.vertices.empty())
@@ -151,11 +161,19 @@ void MeshObject<N, T>::create(const mesh::Reading<N>& mesh_object)
 }
 
 template <size_t N, typename T>
-MeshObject<N, T>::MeshObject(const mesh::Reading<N>& mesh_object, ProgressRatio* progress)
+MeshObject<N, T>::MeshObject(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* progress)
 {
         double start_time = time_in_seconds();
 
-        create(mesh_object);
+        {
+                std::vector<mesh::Reading<N>> reading;
+                reading.reserve(mesh_objects.size());
+                for (const mesh::MeshObject<N>* mesh_object : mesh_objects)
+                {
+                        reading.emplace_back(*mesh_object);
+                }
+                create(reading);
+        }
         create_tree(m_facets, &m_tree, progress);
 
         LOG("Painter mesh object created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");

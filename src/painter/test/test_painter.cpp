@@ -148,8 +148,9 @@ std::shared_ptr<const MeshObject<N, T>> file_mesh(const std::string& file_name, 
                 writing.set_color(DEFAULT_COLOR);
                 writing.set_diffuse(DIFFUSE);
         }
-        mesh::Reading reading(mesh_object);
-        return std::make_shared<const MeshObject<N, T>>(reading, progress);
+        std::vector<const mesh::MeshObject<N>*> meshes;
+        meshes.emplace_back(&mesh_object);
+        return std::make_shared<const MeshObject<N, T>>(meshes, progress);
 }
 
 template <size_t N, typename T>

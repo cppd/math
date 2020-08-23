@@ -767,10 +767,10 @@ void MainWindow::on_actionPainter_triggered()
                         return;
                 }
 
-                std::optional<storage::MeshObjectConst> object = m_model_tree->current_mesh_const();
-                if (!object)
+                std::vector<storage::MeshObjectConst> objects = m_model_tree->const_mesh_objects();
+                if (objects.empty())
                 {
-                        MESSAGE_WARNING("No object to paint");
+                        MESSAGE_WARNING("No objects to paint");
                         return;
                 }
 
@@ -778,7 +778,7 @@ void MainWindow::on_actionPainter_triggered()
                 m_view->receive({&camera});
 
                 WorkerThreads::Function f = process::action_painter(
-                        *object, camera, QMainWindow::windowTitle().toStdString(), qcolor_to_rgb(m_background_color),
+                        objects, camera, QMainWindow::windowTitle().toStdString(), qcolor_to_rgb(m_background_color),
                         lighting_intensity());
 
                 m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));

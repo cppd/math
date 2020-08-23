@@ -213,8 +213,9 @@ CornellBoxScene<T>::CornellBoxScene(
                         writing.set_diffuse(diffuse);
                 }
                 {
-                        mesh::Reading reading(mesh_object);
-                        painter_mesh = std::make_shared<const MeshObject<3, T>>(reading, &progress);
+                        std::vector<const mesh::MeshObject<3>*> meshes;
+                        meshes.emplace_back(&mesh_object);
+                        painter_mesh = std::make_shared<const MeshObject<3, T>>(meshes, &progress);
                 }
         }
 

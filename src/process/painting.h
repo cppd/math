@@ -22,11 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/view/interface.h>
 
 #include <functional>
+#include <vector>
 
 namespace process
 {
 std::function<void(ProgressRatioList*)> action_painter(
-        const storage::MeshObjectConst& object,
+        const std::vector<storage::MeshObjectConst>& objects,
         const view::info::Camera& camera,
         const std::string& title,
         const Color& background_color,
