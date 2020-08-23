@@ -38,7 +38,7 @@ class Storage final
         template <typename To, typename From>
         static To to_type(From&& object)
         {
-                static_assert(!std::is_same_v<From, To>);
+                static_assert(!std::is_same_v<std::remove_cvref_t<From>, std::remove_cvref_t<To>>);
 
                 return std::visit(
                         [](auto&& v) { return To(std::forward<decltype(v)>(v)); }, std::forward<From>(object));
@@ -168,6 +168,36 @@ public:
                         return to_type<VolumeObjectConst>(*opt);
                 }
                 return std::nullopt;
+        }
+
+        template <typename T>
+        std::vector<T> objects() const
+        {
+                std::vector<T> objects;
+                std::shared_lock lock(m_mutex);
+                if constexpr (std::is_same_v<T, MeshObjectConst> || std::is_same_v<T, VolumeObjectConst>)
+                {
+                        using OBJ = std::conditional_t<std::is_same_v<T, MeshObjectConst>, MeshObject, VolumeObject>;
+                        for (const auto& v : m_map)
+                        {
+                                if (std::holds_alternative<OBJ>(v.second))
+                                {
+                                        objects.push_back(to_type<T>(std::get<OBJ>(v.second)));
+                                }
+                        }
+                }
+                else
+                {
+                        static_assert(std::is_same_v<T, MeshObject> || std::is_same_v<T, VolumeObject>);
+                        for (const auto& v : m_map)
+                        {
+                                if (std::holds_alternative<T>(v.second))
+                                {
+                                        objects.push_back(std::get<T>(v.second));
+                                }
+                        }
+                }
+                return objects;
         }
 };
 }
