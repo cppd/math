@@ -363,7 +363,7 @@ public:
 //
 
 template <size_t N>
-class Writing
+class Writing final
 {
         VolumeObject<N>* m_object;
         std::unique_lock<std::shared_mutex> m_lock;
@@ -521,7 +521,7 @@ public:
 };
 
 template <size_t N>
-class Reading
+class Reading final
 {
         const VolumeObject<N>* m_object;
         std::shared_lock<std::shared_mutex> m_lock;
