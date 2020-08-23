@@ -34,55 +34,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace painter
 {
 template <size_t N, typename T>
-class MeshObject
+class MeshObject final
 {
         using TreeParallelotope = ParallelotopeOrtho<N, T>;
         using Facet = MeshHyperplaneSimplex<N, T>;
 
-        std::vector<Vector<N, T>> m_vertices;
-        std::vector<Vector<N, T>> m_normals;
-        std::vector<Vector<N - 1, T>> m_texcoords;
-
         struct Material
         {
                 Color Kd;
-                Color Ks;
-                Color::DataType Ns;
                 Color::DataType diffuse;
                 int map_Kd;
-                int map_Ks;
-                Material(
-                        const Color& Kd,
-                        const Color& Ks,
-                        Color::DataType Ns,
-                        Color::DataType diffuse,
-                        int map_Kd,
-                        int map_Ks)
-                        : Kd(Kd), Ks(Ks), Ns(Ns), diffuse(diffuse), map_Kd(map_Kd), map_Ks(map_Ks)
+                Material(const Color& Kd, Color::DataType diffuse, int map_Kd)
+                        : Kd(Kd), diffuse(diffuse), map_Kd(map_Kd)
                 {
                 }
         };
+
+        std::vector<Vector<N, T>> m_vertices;
+        std::vector<Vector<N, T>> m_normals;
+        std::vector<Vector<N - 1, T>> m_texcoords;
         std::vector<Material> m_materials;
-
         std::vector<image::ColorImage<N - 1>> m_images;
-
         std::vector<Facet> m_facets;
 
         SpatialSubdivisionTree<TreeParallelotope> m_tree;
-
         Vector<N, T> m_min, m_max;
 
-        void create(
-                const mesh::Mesh<N>& mesh,
-                const Color& default_color,
-                const Color::DataType& diffuse,
-                const Matrix<N + 1, N + 1, T>& vertex_matrix,
+        static void create_tree(
+                const std::vector<Facet>& facets,
+                SpatialSubdivisionTree<TreeParallelotope>* tree,
                 ProgressRatio* progress);
 
-public:
-        MeshObject(const mesh::Reading<N>& mesh, ProgressRatio* progress);
+        void create(const mesh::Reading<N>& mesh_object);
 
-        ~MeshObject() = default;
+public:
+        MeshObject(const mesh::Reading<N>& mesh_object, ProgressRatio* progress);
 
         // Грани имеют адреса первых элементов векторов вершин,
         // нормалей и текстурных координат, поэтому при копировании

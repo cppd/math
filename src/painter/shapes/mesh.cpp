@@ -63,14 +63,32 @@ int tree_max_depth()
 }
 
 template <size_t N, typename T>
-void MeshObject<N, T>::create(
-        const mesh::Mesh<N>& mesh,
-        const Color& default_color,
-        const Color::DataType& diffuse,
-        const Matrix<N + 1, N + 1, T>& matrix,
+void MeshObject<N, T>::create_tree(
+        const std::vector<Facet>& facets,
+        SpatialSubdivisionTree<TreeParallelotope>* tree,
         ProgressRatio* progress)
 {
+        progress->set_text(to_string(1 << N) + "-tree: %v of %m");
+
+        std::vector<HyperplaneSimplexWrapperForShapeIntersection<Facet>> simplex_wrappers;
+        simplex_wrappers.reserve(facets.size());
+        for (const Facet& t : facets)
+        {
+                simplex_wrappers.emplace_back(t);
+        }
+
+        // Указатель на объект дерева
+        auto lambda_simplex = [w = std::as_const(simplex_wrappers)](int simplex_index) { return &(w[simplex_index]); };
+
         const unsigned thread_count = hardware_concurrency();
+        tree->decompose(
+                tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, facets.size(), lambda_simplex, thread_count, progress);
+}
+
+template <size_t N, typename T>
+void MeshObject<N, T>::create(const mesh::Reading<N>& mesh_object)
+{
+        const mesh::Mesh<N>& mesh = mesh_object.mesh();
 
         if (mesh.vertices.empty())
         {
@@ -85,7 +103,8 @@ void MeshObject<N, T>::create(
         m_vertices = to_vector<T>(mesh.vertices);
         m_vertices.shrink_to_fit();
         std::transform(
-                m_vertices.begin(), m_vertices.end(), m_vertices.begin(), matrix::MatrixVectorMultiplier(matrix));
+                m_vertices.begin(), m_vertices.end(), m_vertices.begin(),
+                matrix::MatrixVectorMultiplier(to_matrix<T>(mesh_object.matrix())));
 
         m_normals = to_vector<T>(mesh.normals);
         m_normals.shrink_to_fit();
@@ -116,12 +135,12 @@ void MeshObject<N, T>::create(
         m_materials.reserve(facets_without_material ? mesh.materials.size() + 1 : mesh.materials.size());
         for (const typename mesh::Mesh<N>::Material& m : mesh.materials)
         {
-                m_materials.emplace_back(m.Kd, m.Ks, m.Ns, diffuse, m.map_Kd, m.map_Ks);
+                m_materials.emplace_back(m.Kd, mesh_object.diffuse(), m.map_Kd);
         }
         if (facets_without_material)
         {
                 ASSERT(default_material_index == static_cast<int>(m_materials.size()));
-                m_materials.emplace_back(default_color, Color(1), 1, diffuse, -1, -1);
+                m_materials.emplace_back(mesh_object.color(), mesh_object.diffuse(), -1);
         }
 
         m_images.reserve(mesh.images.size());
@@ -129,31 +148,17 @@ void MeshObject<N, T>::create(
         {
                 m_images.emplace_back(image);
         }
-
-        progress->set_text(to_string(1 << N) + "-tree: %v of %m");
-
-        std::vector<HyperplaneSimplexWrapperForShapeIntersection<Facet>> simplex_wrappers;
-        simplex_wrappers.reserve(m_facets.size());
-        for (const Facet& t : m_facets)
-        {
-                simplex_wrappers.emplace_back(t);
-        }
-
-        // Указатель на объект дерева
-        auto lambda_simplex = [w = std::as_const(simplex_wrappers)](int simplex_index) { return &(w[simplex_index]); };
-
-        m_tree.decompose(
-                tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, m_facets.size(), lambda_simplex, thread_count, progress);
 }
 
 template <size_t N, typename T>
-MeshObject<N, T>::MeshObject(const mesh::Reading<N>& mesh, ProgressRatio* progress)
+MeshObject<N, T>::MeshObject(const mesh::Reading<N>& mesh_object, ProgressRatio* progress)
 {
         double start_time = time_in_seconds();
 
-        create(mesh.mesh(), mesh.color(), mesh.diffuse(), to_matrix<T>(mesh.matrix()), progress);
+        create(mesh_object);
+        create_tree(m_facets, &m_tree, progress);
 
-        LOG("Mesh object created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG("Painter mesh object created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 }
 
 template <size_t N, typename T>
