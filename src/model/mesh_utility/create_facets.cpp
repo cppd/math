@@ -60,32 +60,39 @@ std::unique_ptr<Mesh<N>> create_mesh(
                 error("No facets for facet object");
         }
 
-        std::unordered_map<int, std::vector<Vector<N, double>>> vertices;
-        std::unordered_map<int, int> index_map;
+        struct Vertex
+        {
+                int new_index;
+                std::vector<Vector<N, double>> normals;
+        };
+        std::unordered_map<int, Vertex> vertices;
 
+        int idx = 0;
         for (const std::array<int, N>& facet : facets)
         {
                 Vector<N, double> normal = face_normal(points, facet);
                 for (int v : facet)
                 {
-                        vertices[v].push_back(normal);
+                        auto [iter, inserted] = vertices.try_emplace(v);
+                        iter->second.normals.push_back(normal);
+                        if (inserted)
+                        {
+                                iter->second.new_index = idx++;
+                        }
                 }
         }
+        ASSERT(idx == static_cast<int>(vertices.size()));
 
         std::unique_ptr<Mesh<N>> mesh = std::make_unique<Mesh<N>>();
 
         mesh->vertices.resize(vertices.size());
         mesh->normals.resize(vertices.size());
 
-        int idx = 0;
-        for (const auto& [vertex, normals] : vertices)
+        for (const auto& [old_index, vertex] : vertices)
         {
-                index_map[vertex] = idx;
-
-                mesh->vertices[idx] = points[vertex];
-                mesh->normals[idx] = to_vector<float>(average_normal(point_normals[vertex], normals));
-
-                ++idx;
+                mesh->vertices[vertex.new_index] = points[old_index];
+                mesh->normals[vertex.new_index] =
+                        to_vector<float>(average_normal(point_normals[old_index], vertex.normals));
         }
 
         mesh->facets.reserve(facets.size());
@@ -100,7 +107,9 @@ std::unique_ptr<Mesh<N>> create_mesh(
 
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        mesh_facet.vertices[i] = index_map[facet[i]];
+                        auto iter = vertices.find(facet[i]);
+                        ASSERT(iter != vertices.cend());
+                        mesh_facet.vertices[i] = iter->second.new_index;
                         mesh_facet.normals[i] = mesh_facet.vertices[i];
                         mesh_facet.texcoords[i] = -1;
                 }
@@ -123,27 +132,29 @@ std::unique_ptr<Mesh<N>> create_mesh(
                 error("No facets for facet object");
         }
 
-        std::unordered_set<int> vertices;
-        std::unordered_map<int, int> index_map;
+        std::unordered_map<int, int> vertex_map;
 
+        int idx = 0;
         for (const std::array<int, N>& facet : facets)
         {
                 for (int v : facet)
                 {
-                        vertices.insert(v);
+                        auto [iter, inserted] = vertex_map.try_emplace(v);
+                        if (inserted)
+                        {
+                                iter->second = idx++;
+                        }
                 }
         }
+        ASSERT(idx == static_cast<int>(vertex_map.size()));
 
         std::unique_ptr<Mesh<N>> mesh = std::make_unique<Mesh<N>>();
 
-        mesh->vertices.resize(vertices.size());
+        mesh->vertices.resize(vertex_map.size());
 
-        int idx = 0;
-        for (auto v : vertices)
+        for (const auto& [old_index, new_index] : vertex_map)
         {
-                index_map[v] = idx;
-                mesh->vertices[idx] = points[v];
-                ++idx;
+                mesh->vertices[new_index] = points[old_index];
         }
 
         mesh->facets.reserve(facets.size());
@@ -158,7 +169,9 @@ std::unique_ptr<Mesh<N>> create_mesh(
 
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        mesh_facet.vertices[i] = index_map[facet[i]];
+                        auto iter = vertex_map.find(facet[i]);
+                        ASSERT(iter != vertex_map.cend());
+                        mesh_facet.vertices[i] = iter->second;
                         mesh_facet.normals[i] = -1;
                         mesh_facet.texcoords[i] = -1;
                 }
