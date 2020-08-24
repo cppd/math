@@ -65,6 +65,7 @@ class MeshObject final
                 SpatialSubdivisionTree<TreeParallelotope>* tree,
                 ProgressRatio* progress);
 
+        void create(const mesh::Reading<N>& mesh_object);
         void create(const std::vector<mesh::Reading<N>>& mesh_objects);
 
 public:

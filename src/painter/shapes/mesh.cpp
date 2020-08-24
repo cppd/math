@@ -60,6 +60,37 @@ int tree_max_depth()
                 return std::max(2.0, std::floor(n));
         }
 }
+
+template <size_t N>
+std::array<int, N> add_offset(const std::array<int, N>& src, int offset, bool add)
+{
+        std::array<int, N> r;
+        if (add)
+        {
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        r[i] = offset + src[i];
+                }
+        }
+        else
+        {
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        r[i] = -1;
+                }
+        }
+        return r;
+}
+template <size_t N>
+std::array<int, N> add_offset(const std::array<int, N>& src, int offset)
+{
+        std::array<int, N> r;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                r[i] = offset + src[i];
+        }
+        return r;
+}
 }
 
 template <size_t N, typename T>
@@ -86,78 +117,154 @@ void MeshObject<N, T>::create_tree(
 }
 
 template <size_t N, typename T>
-void MeshObject<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
+void MeshObject<N, T>::create(const mesh::Reading<N>& mesh_object)
 {
-        if (mesh_objects.size() > 1)
-        {
-                error("Painting multiple objects is not supported");
-        }
-        if (mesh_objects.empty())
-        {
-                error("No objects to paint");
-        }
-
-        const mesh::Reading<N>& mesh_object = mesh_objects[0];
         const mesh::Mesh<N>& mesh = mesh_object.mesh();
 
         if (mesh.vertices.empty())
         {
-                error("No vertices found in mesh");
+                return;
         }
-
         if (mesh.facets.empty())
         {
-                error("No facets found in mesh");
+                return;
         }
 
-        m_vertices = to_vector<T>(mesh.vertices);
-        m_vertices.shrink_to_fit();
-        std::transform(
-                m_vertices.begin(), m_vertices.end(), m_vertices.begin(),
-                matrix::MatrixVectorMultiplier(to_matrix<T>(mesh_object.matrix())));
+        int vertices_offset = m_vertices.size();
+        int normals_offset = m_normals.size();
+        int texcoords_offset = m_texcoords.size();
+        int materials_offset = m_materials.size();
+        int images_offset = m_images.size();
 
-        m_normals = to_vector<T>(mesh.normals);
-        m_normals.shrink_to_fit();
+        {
+                const std::vector<Vector<N, T>>& vertices = to_vector<T>(mesh.vertices);
+                m_vertices.insert(m_vertices.cend(), vertices.cbegin(), vertices.cend());
+        }
+        {
+                auto iter_begin = std::next(m_vertices.begin(), vertices_offset);
+                auto iter_end = m_vertices.end();
+                std::transform(
+                        iter_begin, iter_end, iter_begin,
+                        matrix::MatrixVectorMultiplier(to_matrix<T>(mesh_object.matrix())));
+        }
+        {
+                const std::vector<Vector<N, T>>& normals = to_vector<T>(mesh.normals);
+                m_normals.insert(m_normals.cend(), normals.cbegin(), normals.cend());
+        }
+        {
+                const std::vector<Vector<N - 1, T>>& texcoords = to_vector<T>(mesh.texcoords);
+                m_texcoords.insert(m_texcoords.cend(), texcoords.cbegin(), texcoords.cend());
+        }
 
-        m_texcoords = to_vector<T>(mesh.texcoords);
-        m_texcoords.shrink_to_fit();
-
-        m_min = Vector<N, T>(limits<T>::max());
-        m_max = Vector<N, T>(limits<T>::lowest());
-        m_facets.reserve(mesh.facets.size());
         bool facets_without_material = false;
         int default_material_index = mesh.materials.size();
         for (const typename mesh::Mesh<N>::Facet& facet : mesh.facets)
         {
                 bool no_material = facet.material < 0;
                 facets_without_material = facets_without_material || no_material;
-                m_facets.emplace_back(
-                        m_vertices, m_normals, m_texcoords, facet.vertices, facet.has_normal, facet.normals,
-                        facet.has_texcoord, facet.texcoords, no_material ? default_material_index : facet.material);
+                int facet_material = no_material ? default_material_index : facet.material;
 
-                for (int index : facet.vertices)
+                std::array<int, N> vertices = add_offset(facet.vertices, vertices_offset);
+                std::array<int, N> normals = add_offset(facet.normals, normals_offset, facet.has_normal);
+                std::array<int, N> texcoords = add_offset(facet.texcoords, texcoords_offset, facet.has_texcoord);
+                int material = facet_material + materials_offset;
+
+                m_facets.emplace_back(
+                        m_vertices, m_normals, m_texcoords, vertices, facet.has_normal, normals, facet.has_texcoord,
+                        texcoords, material);
+
+                for (int index : vertices)
                 {
                         m_min = min_vector(m_min, m_vertices[index]);
                         m_max = max_vector(m_max, m_vertices[index]);
                 }
         }
 
-        m_materials.reserve(facets_without_material ? mesh.materials.size() + 1 : mesh.materials.size());
         for (const typename mesh::Mesh<N>::Material& m : mesh.materials)
         {
-                m_materials.emplace_back(m.Kd, mesh_object.diffuse(), m.map_Kd);
+                int map_Kd = m.map_Kd < 0 ? -1 : (images_offset + m.map_Kd);
+                m_materials.emplace_back(m.Kd, mesh_object.diffuse(), map_Kd);
         }
         if (facets_without_material)
         {
-                ASSERT(default_material_index == static_cast<int>(m_materials.size()));
+                ASSERT(materials_offset + default_material_index == static_cast<int>(m_materials.size()));
                 m_materials.emplace_back(mesh_object.color(), mesh_object.diffuse(), -1);
         }
 
-        m_images.reserve(mesh.images.size());
         for (const image::Image<N - 1>& image : mesh.images)
         {
                 m_images.emplace_back(image);
         }
+}
+
+template <size_t N, typename T>
+void MeshObject<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
+{
+        if (mesh_objects.empty())
+        {
+                error("No objects to paint");
+        }
+
+        m_vertices.clear();
+        m_normals.clear();
+        m_texcoords.clear();
+        m_materials.clear();
+        m_images.clear();
+        m_facets.clear();
+        size_t vertex_count = 0;
+        size_t normal_count = 0;
+        size_t texcoord_count = 0;
+        size_t material_count = 0;
+        size_t image_count = 0;
+        size_t facet_count = 0;
+        for (const mesh::Reading<N>& mesh : mesh_objects)
+        {
+                vertex_count += mesh.mesh().vertices.size();
+                normal_count += mesh.mesh().normals.size();
+                texcoord_count += mesh.mesh().texcoords.size();
+                bool no_material = false;
+                for (const typename mesh::Mesh<N>::Facet& facet : mesh.mesh().facets)
+                {
+                        if (facet.material < 0)
+                        {
+                                no_material = true;
+                                break;
+                        }
+                }
+                material_count += mesh.mesh().materials.size() + (no_material ? 1 : 0);
+                image_count += mesh.mesh().images.size();
+                facet_count += mesh.mesh().facets.size();
+        }
+        m_vertices.reserve(vertex_count);
+        m_normals.reserve(normal_count);
+        m_texcoords.reserve(texcoord_count);
+        m_materials.reserve(material_count);
+        m_images.reserve(image_count);
+        m_facets.reserve(facet_count);
+
+        m_min = Vector<N, T>(limits<T>::max());
+        m_max = Vector<N, T>(limits<T>::lowest());
+
+        for (const mesh::Reading<N>& mesh_object : mesh_objects)
+        {
+                create(mesh_object);
+        }
+
+        if (m_vertices.empty())
+        {
+                error("No vertices found in meshes");
+        }
+        if (m_facets.empty())
+        {
+                error("No facets found in meshes");
+        }
+
+        ASSERT(vertex_count == m_vertices.size());
+        ASSERT(normal_count == m_normals.size());
+        ASSERT(texcoord_count == m_texcoords.size());
+        ASSERT(material_count == m_materials.size());
+        ASSERT(image_count == m_images.size());
+        ASSERT(facet_count == m_facets.size());
 }
 
 template <size_t N, typename T>
