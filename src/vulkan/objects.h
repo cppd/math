@@ -141,12 +141,14 @@ struct DeviceFeatures final
 {
         VkPhysicalDeviceFeatures features_10;
         VkPhysicalDeviceVulkan11Features features_11;
+        VkPhysicalDeviceVulkan12Features features_12;
 };
 
 struct DeviceProperties final
 {
         VkPhysicalDeviceProperties properties_10;
         VkPhysicalDeviceVulkan11Properties properties_11;
+        VkPhysicalDeviceVulkan12Properties properties_12;
 };
 
 class Device final

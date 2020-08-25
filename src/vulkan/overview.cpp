@@ -97,10 +97,178 @@ std::vector<unsigned> samples(VkSampleCountFlags flags)
         return samples;
 }
 
+std::string resolve_modes(VkResolveModeFlags flags)
+{
+        if (!flags)
+        {
+                return "NONE";
+        }
+        std::string s;
+        if ((flags & VK_RESOLVE_MODE_SAMPLE_ZERO_BIT) == VK_RESOLVE_MODE_SAMPLE_ZERO_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "SAMPLE_ZERO";
+        }
+        if ((flags & VK_RESOLVE_MODE_AVERAGE_BIT) == VK_RESOLVE_MODE_AVERAGE_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "AVERAGE";
+        }
+        if ((flags & VK_RESOLVE_MODE_MIN_BIT) == VK_RESOLVE_MODE_MIN_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "MIN";
+        }
+        if ((flags & VK_RESOLVE_MODE_MAX_BIT) == VK_RESOLVE_MODE_MAX_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "MAX";
+        }
+        return s;
+}
+
+std::string shader_stages(VkShaderStageFlags flags)
+{
+        if (!flags)
+        {
+                return "NONE";
+        }
+        std::string s;
+        if ((flags & VK_SHADER_STAGE_VERTEX_BIT) == VK_SHADER_STAGE_VERTEX_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "VERTEX";
+        }
+        if ((flags & VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT) == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "TESSELLATION_CONTROL_BIT";
+        }
+        if ((flags & VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT) == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "TESSELLATION_EVALUATION_BIT";
+        }
+        if ((flags & VK_SHADER_STAGE_GEOMETRY_BIT) == VK_SHADER_STAGE_GEOMETRY_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "GEOMETRY";
+        }
+        if ((flags & VK_SHADER_STAGE_FRAGMENT_BIT) == VK_SHADER_STAGE_FRAGMENT_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "FRAGMENT";
+        }
+        if ((flags & VK_SHADER_STAGE_COMPUTE_BIT) == VK_SHADER_STAGE_COMPUTE_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "COMPUTE";
+        }
+        return s;
+}
+
+std::string subgroup_features(VkSubgroupFeatureFlags flags)
+{
+        if (!flags)
+        {
+                return "NONE";
+        }
+        std::string s;
+        if ((flags & VK_SUBGROUP_FEATURE_BASIC_BIT) == VK_SUBGROUP_FEATURE_BASIC_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "BASIC";
+        }
+        if ((flags & VK_SUBGROUP_FEATURE_VOTE_BIT) == VK_SUBGROUP_FEATURE_VOTE_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "VOTE";
+        }
+        if ((flags & VK_SUBGROUP_FEATURE_ARITHMETIC_BIT) == VK_SUBGROUP_FEATURE_ARITHMETIC_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "ARITHMETIC";
+        }
+        if ((flags & VK_SUBGROUP_FEATURE_BALLOT_BIT) == VK_SUBGROUP_FEATURE_BALLOT_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "BALLOT";
+        }
+        if ((flags & VK_SUBGROUP_FEATURE_SHUFFLE_BIT) == VK_SUBGROUP_FEATURE_SHUFFLE_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "SHUFFLE";
+        }
+        if ((flags & VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT) == VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "SHUFFLE_RELATIVE";
+        }
+        if ((flags & VK_SUBGROUP_FEATURE_CLUSTERED_BIT) == VK_SUBGROUP_FEATURE_CLUSTERED_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "CLUSTERED";
+        }
+        if ((flags & VK_SUBGROUP_FEATURE_QUAD_BIT) == VK_SUBGROUP_FEATURE_QUAD_BIT)
+        {
+                s += s.empty() ? "" : ", ";
+                s += "QUAD";
+        }
+        return s;
+}
+
+std::string shader_float_controls_independence(VkShaderFloatControlsIndependence v)
+{
+        if (v == VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_32_BIT_ONLY)
+        {
+                return "32_BIT_ONLY";
+        }
+
+        if (v == VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_ALL)
+        {
+                return "ALL";
+        }
+        if (v == VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_NONE)
+        {
+                return "NONE";
+        }
+        return "UNKNOWN";
+}
+
+std::string point_clipping_behavior(VkPointClippingBehavior v)
+{
+        if (v == VK_POINT_CLIPPING_BEHAVIOR_ALL_CLIP_PLANES)
+        {
+                return "ALL_CLIP_PLANES";
+        }
+        if (v == VK_POINT_CLIPPING_BEHAVIOR_USER_CLIP_PLANES_ONLY)
+        {
+                return "USER_CLIP_PLANES_ONLY";
+        }
+        return "UNKNOWN";
+}
+
+void conformance_version(const PhysicalDevice& device, size_t device_node, StringTree* tree)
+{
+        std::ostringstream oss;
+        VkConformanceVersion v = device.properties().properties_12.conformanceVersion;
+        oss << static_cast<int>(v.major) << "." << static_cast<int>(v.minor) << "." << static_cast<int>(v.subminor)
+            << "." << static_cast<int>(v.patch);
+        size_t node = tree->add(device_node, "Conformance Version");
+        tree->add(node, oss.str());
+}
+
 void device_name(const PhysicalDevice& device, size_t device_node, StringTree* tree)
 {
         size_t type_node = tree->add(device_node, "Device Name");
         tree->add(type_node, device.properties().properties_10.deviceName);
+}
+
+void driver_info(const PhysicalDevice& device, size_t device_node, StringTree* tree)
+{
+        size_t node = tree->add(device_node, "Driver");
+        tree->add(node, std::string("Name = ") + device.properties().properties_12.driverName);
+        tree->add(node, std::string("Info = ") + device.properties().properties_12.driverInfo);
 }
 
 void device_type(const PhysicalDevice& device, size_t device_node, StringTree* tree)
@@ -148,7 +316,18 @@ void extensions(const PhysicalDevice& device, size_t device_node, StringTree* tr
 
 #define ADD_VALUE_10(v) properties.emplace_back(#v, to_string(value(device.properties().properties_10.limits.v)))
 #define ADD_SAMPLE_10(v) properties.emplace_back(#v, to_string(samples(device.properties().properties_10.limits.v)))
+
 #define ADD_VALUE_11(v) properties.emplace_back(#v, to_string(value(device.properties().properties_11.v)))
+#define ADD_SHADER_STAGE_11(v) properties.emplace_back(#v, shader_stages(device.properties().properties_11.v))
+#define ADD_POINT_CLIPPING_BEHAVIOR_11(v) \
+        properties.emplace_back(#v, point_clipping_behavior(device.properties().properties_11.v))
+#define ADD_SUBGROUP_FEATURE_11(v) properties.emplace_back(#v, subgroup_features(device.properties().properties_11.v))
+
+#define ADD_VALUE_12(v) properties.emplace_back(#v, to_string(value(device.properties().properties_12.v)))
+#define ADD_SAMPLE_12(v) properties.emplace_back(#v, to_string(samples(device.properties().properties_12.v)))
+#define ADD_RESOLVE_MODE_12(v) properties.emplace_back(#v, resolve_modes(device.properties().properties_12.v))
+#define ADD_SHADER_FLOAT_CONTROLS_INDEPENDENCE_12(v) \
+        properties.emplace_back(#v, shader_float_controls_independence(device.properties().properties_12.v))
 
 void properties(const PhysicalDevice& device, size_t device_node, StringTree* tree)
 {
@@ -158,116 +337,170 @@ void properties(const PhysicalDevice& device, size_t device_node, StringTree* tr
         {
                 std::vector<std::tuple<std::string, std::string>> properties;
 
-                ADD_VALUE_10(maxImageDimension1D);
-                ADD_VALUE_10(maxImageDimension2D);
-                ADD_VALUE_10(maxImageDimension3D);
-                ADD_VALUE_10(maxImageDimensionCube);
-                ADD_VALUE_10(maxImageArrayLayers);
-                ADD_VALUE_10(maxTexelBufferElements);
-                ADD_VALUE_10(maxUniformBufferRange);
-                ADD_VALUE_10(maxStorageBufferRange);
-                ADD_VALUE_10(maxPushConstantsSize);
-                ADD_VALUE_10(maxMemoryAllocationCount);
-                ADD_VALUE_10(maxSamplerAllocationCount);
+                ADD_SAMPLE_10(framebufferColorSampleCounts);
+                ADD_SAMPLE_10(framebufferDepthSampleCounts);
+                ADD_SAMPLE_10(framebufferNoAttachmentsSampleCounts);
+                ADD_SAMPLE_10(framebufferStencilSampleCounts);
+                ADD_SAMPLE_10(sampledImageColorSampleCounts);
+                ADD_SAMPLE_10(sampledImageDepthSampleCounts);
+                ADD_SAMPLE_10(sampledImageIntegerSampleCounts);
+                ADD_SAMPLE_10(sampledImageStencilSampleCounts);
+                ADD_SAMPLE_10(storageImageSampleCounts);
                 ADD_VALUE_10(bufferImageGranularity);
-                ADD_VALUE_10(sparseAddressSpaceSize);
+                ADD_VALUE_10(discreteQueuePriorities);
+                ADD_VALUE_10(lineWidthGranularity);
+                ADD_VALUE_10(lineWidthRange);
                 ADD_VALUE_10(maxBoundDescriptorSets);
-                ADD_VALUE_10(maxPerStageDescriptorSamplers);
-                ADD_VALUE_10(maxPerStageDescriptorUniformBuffers);
-                ADD_VALUE_10(maxPerStageDescriptorStorageBuffers);
-                ADD_VALUE_10(maxPerStageDescriptorSampledImages);
-                ADD_VALUE_10(maxPerStageDescriptorStorageImages);
-                ADD_VALUE_10(maxPerStageDescriptorInputAttachments);
-                ADD_VALUE_10(maxPerStageResources);
-                ADD_VALUE_10(maxDescriptorSetSamplers);
-                ADD_VALUE_10(maxDescriptorSetUniformBuffers);
-                ADD_VALUE_10(maxDescriptorSetUniformBuffersDynamic);
-                ADD_VALUE_10(maxDescriptorSetStorageBuffers);
-                ADD_VALUE_10(maxDescriptorSetStorageBuffersDynamic);
-                ADD_VALUE_10(maxDescriptorSetSampledImages);
-                ADD_VALUE_10(maxDescriptorSetStorageImages);
-                ADD_VALUE_10(maxDescriptorSetInputAttachments);
-                ADD_VALUE_10(maxVertexInputAttributes);
-                ADD_VALUE_10(maxVertexInputBindings);
-                ADD_VALUE_10(maxVertexInputAttributeOffset);
-                ADD_VALUE_10(maxVertexInputBindingStride);
-                ADD_VALUE_10(maxVertexOutputComponents);
-                ADD_VALUE_10(maxTessellationGenerationLevel);
-                ADD_VALUE_10(maxTessellationPatchSize);
-                ADD_VALUE_10(maxTessellationControlPerVertexInputComponents);
-                ADD_VALUE_10(maxTessellationControlPerVertexOutputComponents);
-                ADD_VALUE_10(maxTessellationControlPerPatchOutputComponents);
-                ADD_VALUE_10(maxTessellationControlTotalOutputComponents);
-                ADD_VALUE_10(maxTessellationEvaluationInputComponents);
-                ADD_VALUE_10(maxTessellationEvaluationOutputComponents);
-                ADD_VALUE_10(maxGeometryShaderInvocations);
-                ADD_VALUE_10(maxGeometryInputComponents);
-                ADD_VALUE_10(maxGeometryOutputComponents);
-                ADD_VALUE_10(maxGeometryOutputVertices);
-                ADD_VALUE_10(maxGeometryTotalOutputComponents);
-                ADD_VALUE_10(maxFragmentInputComponents);
-                ADD_VALUE_10(maxFragmentOutputAttachments);
-                ADD_VALUE_10(maxFragmentDualSrcAttachments);
-                ADD_VALUE_10(maxFragmentCombinedOutputResources);
+                ADD_VALUE_10(maxClipDistances);
+                ADD_VALUE_10(maxColorAttachments);
+                ADD_VALUE_10(maxCombinedClipAndCullDistances);
                 ADD_VALUE_10(maxComputeSharedMemorySize);
                 ADD_VALUE_10(maxComputeWorkGroupCount);
                 ADD_VALUE_10(maxComputeWorkGroupInvocations);
                 ADD_VALUE_10(maxComputeWorkGroupSize);
-                ADD_VALUE_10(subPixelPrecisionBits);
-                ADD_VALUE_10(subTexelPrecisionBits);
-                ADD_VALUE_10(mipmapPrecisionBits);
+                ADD_VALUE_10(maxCullDistances);
+                ADD_VALUE_10(maxDescriptorSetInputAttachments);
+                ADD_VALUE_10(maxDescriptorSetSampledImages);
+                ADD_VALUE_10(maxDescriptorSetSamplers);
+                ADD_VALUE_10(maxDescriptorSetStorageBuffers);
+                ADD_VALUE_10(maxDescriptorSetStorageBuffersDynamic);
+                ADD_VALUE_10(maxDescriptorSetStorageImages);
+                ADD_VALUE_10(maxDescriptorSetUniformBuffers);
+                ADD_VALUE_10(maxDescriptorSetUniformBuffersDynamic);
                 ADD_VALUE_10(maxDrawIndexedIndexValue);
                 ADD_VALUE_10(maxDrawIndirectCount);
-                ADD_VALUE_10(maxSamplerLodBias);
-                ADD_VALUE_10(maxSamplerAnisotropy);
-                ADD_VALUE_10(maxViewports);
-                ADD_VALUE_10(maxViewportDimensions);
-                ADD_VALUE_10(viewportBoundsRange);
-                ADD_VALUE_10(viewportSubPixelBits);
-                ADD_VALUE_10(minMemoryMapAlignment);
-                ADD_VALUE_10(minTexelBufferOffsetAlignment);
-                ADD_VALUE_10(minUniformBufferOffsetAlignment);
-                ADD_VALUE_10(minStorageBufferOffsetAlignment);
-                ADD_VALUE_10(minTexelOffset);
-                ADD_VALUE_10(maxTexelOffset);
-                ADD_VALUE_10(minTexelGatherOffset);
-                ADD_VALUE_10(maxTexelGatherOffset);
-                ADD_VALUE_10(minInterpolationOffset);
-                ADD_VALUE_10(maxInterpolationOffset);
-                ADD_VALUE_10(subPixelInterpolationOffsetBits);
-                ADD_VALUE_10(maxFramebufferWidth);
+                ADD_VALUE_10(maxFragmentCombinedOutputResources);
+                ADD_VALUE_10(maxFragmentDualSrcAttachments);
+                ADD_VALUE_10(maxFragmentInputComponents);
+                ADD_VALUE_10(maxFragmentOutputAttachments);
                 ADD_VALUE_10(maxFramebufferHeight);
                 ADD_VALUE_10(maxFramebufferLayers);
-                ADD_SAMPLE_10(framebufferColorSampleCounts);
-                ADD_SAMPLE_10(framebufferDepthSampleCounts);
-                ADD_SAMPLE_10(framebufferStencilSampleCounts);
-                ADD_SAMPLE_10(framebufferNoAttachmentsSampleCounts);
-                ADD_VALUE_10(maxColorAttachments);
-                ADD_SAMPLE_10(sampledImageColorSampleCounts);
-                ADD_SAMPLE_10(sampledImageIntegerSampleCounts);
-                ADD_SAMPLE_10(sampledImageDepthSampleCounts);
-                ADD_SAMPLE_10(sampledImageStencilSampleCounts);
-                ADD_SAMPLE_10(storageImageSampleCounts);
+                ADD_VALUE_10(maxFramebufferWidth);
+                ADD_VALUE_10(maxGeometryInputComponents);
+                ADD_VALUE_10(maxGeometryOutputComponents);
+                ADD_VALUE_10(maxGeometryOutputVertices);
+                ADD_VALUE_10(maxGeometryShaderInvocations);
+                ADD_VALUE_10(maxGeometryTotalOutputComponents);
+                ADD_VALUE_10(maxImageArrayLayers);
+                ADD_VALUE_10(maxImageDimension1D);
+                ADD_VALUE_10(maxImageDimension2D);
+                ADD_VALUE_10(maxImageDimension3D);
+                ADD_VALUE_10(maxImageDimensionCube);
+                ADD_VALUE_10(maxInterpolationOffset);
+                ADD_VALUE_10(maxMemoryAllocationCount);
+                ADD_VALUE_10(maxPerStageDescriptorInputAttachments);
+                ADD_VALUE_10(maxPerStageDescriptorSampledImages);
+                ADD_VALUE_10(maxPerStageDescriptorSamplers);
+                ADD_VALUE_10(maxPerStageDescriptorStorageBuffers);
+                ADD_VALUE_10(maxPerStageDescriptorStorageImages);
+                ADD_VALUE_10(maxPerStageDescriptorUniformBuffers);
+                ADD_VALUE_10(maxPerStageResources);
+                ADD_VALUE_10(maxPushConstantsSize);
                 ADD_VALUE_10(maxSampleMaskWords);
-                ADD_VALUE_10(maxClipDistances);
-                ADD_VALUE_10(maxCullDistances);
-                ADD_VALUE_10(maxCombinedClipAndCullDistances);
-                ADD_VALUE_10(discreteQueuePriorities);
-                ADD_VALUE_10(pointSizeRange);
-                ADD_VALUE_10(lineWidthRange);
-                ADD_VALUE_10(pointSizeGranularity);
-                ADD_VALUE_10(lineWidthGranularity);
-                ADD_VALUE_10(strictLines);
-                ADD_VALUE_10(standardSampleLocations);
+                ADD_VALUE_10(maxSamplerAllocationCount);
+                ADD_VALUE_10(maxSamplerAnisotropy);
+                ADD_VALUE_10(maxSamplerLodBias);
+                ADD_VALUE_10(maxStorageBufferRange);
+                ADD_VALUE_10(maxTessellationControlPerPatchOutputComponents);
+                ADD_VALUE_10(maxTessellationControlPerVertexInputComponents);
+                ADD_VALUE_10(maxTessellationControlPerVertexOutputComponents);
+                ADD_VALUE_10(maxTessellationControlTotalOutputComponents);
+                ADD_VALUE_10(maxTessellationEvaluationInputComponents);
+                ADD_VALUE_10(maxTessellationEvaluationOutputComponents);
+                ADD_VALUE_10(maxTessellationGenerationLevel);
+                ADD_VALUE_10(maxTessellationPatchSize);
+                ADD_VALUE_10(maxTexelBufferElements);
+                ADD_VALUE_10(maxTexelGatherOffset);
+                ADD_VALUE_10(maxTexelOffset);
+                ADD_VALUE_10(maxUniformBufferRange);
+                ADD_VALUE_10(maxVertexInputAttributeOffset);
+                ADD_VALUE_10(maxVertexInputAttributes);
+                ADD_VALUE_10(maxVertexInputBindingStride);
+                ADD_VALUE_10(maxVertexInputBindings);
+                ADD_VALUE_10(maxVertexOutputComponents);
+                ADD_VALUE_10(maxViewportDimensions);
+                ADD_VALUE_10(maxViewports);
+                ADD_VALUE_10(minInterpolationOffset);
+                ADD_VALUE_10(minMemoryMapAlignment);
+                ADD_VALUE_10(minStorageBufferOffsetAlignment);
+                ADD_VALUE_10(minTexelBufferOffsetAlignment);
+                ADD_VALUE_10(minTexelGatherOffset);
+                ADD_VALUE_10(minTexelOffset);
+                ADD_VALUE_10(minUniformBufferOffsetAlignment);
+                ADD_VALUE_10(mipmapPrecisionBits);
+                ADD_VALUE_10(nonCoherentAtomSize);
                 ADD_VALUE_10(optimalBufferCopyOffsetAlignment);
                 ADD_VALUE_10(optimalBufferCopyRowPitchAlignment);
-                ADD_VALUE_10(nonCoherentAtomSize);
+                ADD_VALUE_10(pointSizeGranularity);
+                ADD_VALUE_10(pointSizeRange);
+                ADD_VALUE_10(sparseAddressSpaceSize);
+                ADD_VALUE_10(standardSampleLocations);
+                ADD_VALUE_10(strictLines);
+                ADD_VALUE_10(subPixelInterpolationOffsetBits);
+                ADD_VALUE_10(subPixelPrecisionBits);
+                ADD_VALUE_10(subTexelPrecisionBits);
+                ADD_VALUE_10(viewportBoundsRange);
+                ADD_VALUE_10(viewportSubPixelBits);
                 //
-                ADD_VALUE_11(maxMultiviewViewCount);
-                ADD_VALUE_11(maxMultiviewInstanceIndex);
-                ADD_VALUE_11(protectedNoFault);
-                ADD_VALUE_11(maxPerSetDescriptors);
+                ADD_POINT_CLIPPING_BEHAVIOR_11(pointClippingBehavior);
+                ADD_SHADER_STAGE_11(subgroupSupportedStages);
+                ADD_SUBGROUP_FEATURE_11(subgroupSupportedOperations);
                 ADD_VALUE_11(maxMemoryAllocationSize);
+                ADD_VALUE_11(maxMultiviewInstanceIndex);
+                ADD_VALUE_11(maxMultiviewViewCount);
+                ADD_VALUE_11(maxPerSetDescriptors);
+                ADD_VALUE_11(protectedNoFault);
+                ADD_VALUE_11(subgroupQuadOperationsInAllStages);
+                ADD_VALUE_11(subgroupSize);
+                //
+                ADD_RESOLVE_MODE_12(supportedDepthResolveModes);
+                ADD_RESOLVE_MODE_12(supportedStencilResolveModes);
+                ADD_SAMPLE_12(framebufferIntegerColorSampleCounts);
+                ADD_SHADER_FLOAT_CONTROLS_INDEPENDENCE_12(denormBehaviorIndependence);
+                ADD_SHADER_FLOAT_CONTROLS_INDEPENDENCE_12(roundingModeIndependence);
+                ADD_VALUE_12(filterMinmaxImageComponentMapping);
+                ADD_VALUE_12(filterMinmaxSingleComponentFormats);
+                ADD_VALUE_12(independentResolve);
+                ADD_VALUE_12(independentResolveNone);
+                ADD_VALUE_12(maxDescriptorSetUpdateAfterBindInputAttachments);
+                ADD_VALUE_12(maxDescriptorSetUpdateAfterBindSampledImages);
+                ADD_VALUE_12(maxDescriptorSetUpdateAfterBindSamplers);
+                ADD_VALUE_12(maxDescriptorSetUpdateAfterBindStorageBuffers);
+                ADD_VALUE_12(maxDescriptorSetUpdateAfterBindStorageBuffersDynamic);
+                ADD_VALUE_12(maxDescriptorSetUpdateAfterBindStorageImages);
+                ADD_VALUE_12(maxDescriptorSetUpdateAfterBindUniformBuffers);
+                ADD_VALUE_12(maxDescriptorSetUpdateAfterBindUniformBuffersDynamic);
+                ADD_VALUE_12(maxPerStageDescriptorUpdateAfterBindInputAttachments);
+                ADD_VALUE_12(maxPerStageDescriptorUpdateAfterBindSampledImages);
+                ADD_VALUE_12(maxPerStageDescriptorUpdateAfterBindSamplers);
+                ADD_VALUE_12(maxPerStageDescriptorUpdateAfterBindStorageBuffers);
+                ADD_VALUE_12(maxPerStageDescriptorUpdateAfterBindStorageImages);
+                ADD_VALUE_12(maxPerStageDescriptorUpdateAfterBindUniformBuffers);
+                ADD_VALUE_12(maxPerStageUpdateAfterBindResources);
+                ADD_VALUE_12(maxTimelineSemaphoreValueDifference);
+                ADD_VALUE_12(maxUpdateAfterBindDescriptorsInAllPools);
+                ADD_VALUE_12(quadDivergentImplicitLod);
+                ADD_VALUE_12(robustBufferAccessUpdateAfterBind);
+                ADD_VALUE_12(shaderDenormFlushToZeroFloat16);
+                ADD_VALUE_12(shaderDenormFlushToZeroFloat32);
+                ADD_VALUE_12(shaderDenormFlushToZeroFloat64);
+                ADD_VALUE_12(shaderDenormPreserveFloat16);
+                ADD_VALUE_12(shaderDenormPreserveFloat32);
+                ADD_VALUE_12(shaderDenormPreserveFloat64);
+                ADD_VALUE_12(shaderInputAttachmentArrayNonUniformIndexingNative);
+                ADD_VALUE_12(shaderRoundingModeRTEFloat16);
+                ADD_VALUE_12(shaderRoundingModeRTEFloat32);
+                ADD_VALUE_12(shaderRoundingModeRTEFloat64);
+                ADD_VALUE_12(shaderRoundingModeRTZFloat16);
+                ADD_VALUE_12(shaderRoundingModeRTZFloat32);
+                ADD_VALUE_12(shaderRoundingModeRTZFloat64);
+                ADD_VALUE_12(shaderSampledImageArrayNonUniformIndexingNative);
+                ADD_VALUE_12(shaderSignedZeroInfNanPreserveFloat16);
+                ADD_VALUE_12(shaderSignedZeroInfNanPreserveFloat32);
+                ADD_VALUE_12(shaderSignedZeroInfNanPreserveFloat64);
+                ADD_VALUE_12(shaderStorageBufferArrayNonUniformIndexingNative);
+                ADD_VALUE_12(shaderStorageImageArrayNonUniformIndexingNative);
+                ADD_VALUE_12(shaderUniformBufferArrayNonUniformIndexingNative);
 
                 std::sort(properties.begin(), properties.end(), [](const auto& v1, const auto& v2) {
                         return std::get<0>(v1) < std::get<0>(v2);
@@ -301,6 +534,19 @@ void properties(const PhysicalDevice& device, size_t device_node, StringTree* tr
         do                                                      \
         {                                                       \
                 if (device.features().features_11.v == VK_TRUE) \
+                {                                               \
+                        supported.emplace_back(#v);             \
+                }                                               \
+                else                                            \
+                {                                               \
+                        not_supported.emplace_back(#v);         \
+                }                                               \
+        } while (false)
+
+#define ADD_FEATURE_12(v)                                       \
+        do                                                      \
+        {                                                       \
+                if (device.features().features_12.v == VK_TRUE) \
                 {                                               \
                         supported.emplace_back(#v);             \
                 }                                               \
@@ -389,6 +635,54 @@ void features(const PhysicalDevice& device, size_t device_node, StringTree* tree
                 ADD_FEATURE_11(uniformAndStorageBuffer16BitAccess);
                 ADD_FEATURE_11(variablePointers);
                 ADD_FEATURE_11(variablePointersStorageBuffer);
+                //
+                ADD_FEATURE_12(bufferDeviceAddress);
+                ADD_FEATURE_12(bufferDeviceAddressCaptureReplay);
+                ADD_FEATURE_12(bufferDeviceAddressMultiDevice);
+                ADD_FEATURE_12(descriptorBindingPartiallyBound);
+                ADD_FEATURE_12(descriptorBindingSampledImageUpdateAfterBind);
+                ADD_FEATURE_12(descriptorBindingStorageBufferUpdateAfterBind);
+                ADD_FEATURE_12(descriptorBindingStorageImageUpdateAfterBind);
+                ADD_FEATURE_12(descriptorBindingStorageTexelBufferUpdateAfterBind);
+                ADD_FEATURE_12(descriptorBindingUniformBufferUpdateAfterBind);
+                ADD_FEATURE_12(descriptorBindingUniformTexelBufferUpdateAfterBind);
+                ADD_FEATURE_12(descriptorBindingUpdateUnusedWhilePending);
+                ADD_FEATURE_12(descriptorBindingVariableDescriptorCount);
+                ADD_FEATURE_12(descriptorIndexing);
+                ADD_FEATURE_12(drawIndirectCount);
+                ADD_FEATURE_12(hostQueryReset);
+                ADD_FEATURE_12(imagelessFramebuffer);
+                ADD_FEATURE_12(runtimeDescriptorArray);
+                ADD_FEATURE_12(samplerFilterMinmax);
+                ADD_FEATURE_12(samplerMirrorClampToEdge);
+                ADD_FEATURE_12(scalarBlockLayout);
+                ADD_FEATURE_12(separateDepthStencilLayouts);
+                ADD_FEATURE_12(shaderBufferInt64Atomics);
+                ADD_FEATURE_12(shaderFloat16);
+                ADD_FEATURE_12(shaderInputAttachmentArrayDynamicIndexing);
+                ADD_FEATURE_12(shaderInputAttachmentArrayNonUniformIndexing);
+                ADD_FEATURE_12(shaderInt8);
+                ADD_FEATURE_12(shaderOutputLayer);
+                ADD_FEATURE_12(shaderOutputViewportIndex);
+                ADD_FEATURE_12(shaderSampledImageArrayNonUniformIndexing);
+                ADD_FEATURE_12(shaderSharedInt64Atomics);
+                ADD_FEATURE_12(shaderStorageBufferArrayNonUniformIndexing);
+                ADD_FEATURE_12(shaderStorageImageArrayNonUniformIndexing);
+                ADD_FEATURE_12(shaderStorageTexelBufferArrayDynamicIndexing);
+                ADD_FEATURE_12(shaderStorageTexelBufferArrayNonUniformIndexing);
+                ADD_FEATURE_12(shaderSubgroupExtendedTypes);
+                ADD_FEATURE_12(shaderUniformBufferArrayNonUniformIndexing);
+                ADD_FEATURE_12(shaderUniformTexelBufferArrayDynamicIndexing);
+                ADD_FEATURE_12(shaderUniformTexelBufferArrayNonUniformIndexing);
+                ADD_FEATURE_12(storageBuffer8BitAccess);
+                ADD_FEATURE_12(storagePushConstant8);
+                ADD_FEATURE_12(subgroupBroadcastDynamicId);
+                ADD_FEATURE_12(timelineSemaphore);
+                ADD_FEATURE_12(uniformAndStorageBuffer8BitAccess);
+                ADD_FEATURE_12(uniformBufferStandardLayout);
+                ADD_FEATURE_12(vulkanMemoryModel);
+                ADD_FEATURE_12(vulkanMemoryModelAvailabilityVisibilityChains);
+                ADD_FEATURE_12(vulkanMemoryModelDeviceScope);
 
                 for (const std::string& name : sorted(supported))
                 {
@@ -572,6 +866,8 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
                 device_name(device, node, &tree);
                 device_type(device, node, &tree);
                 api_version(device, node, &tree);
+                driver_info(device, node, &tree);
+                conformance_version(device, node, &tree);
                 extensions(device, node, &tree);
                 features(device, node, &tree);
                 properties(device, node, &tree);

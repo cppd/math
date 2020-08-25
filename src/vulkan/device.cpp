@@ -137,6 +137,18 @@ public:
                 }                                                                                          \
                 break;
 
+#define CASE_FEATURE_12(feature)                                                                           \
+        case PhysicalDeviceFeatures::feature:                                                              \
+                if (!device_features.features_12.feature && required)                                      \
+                {                                                                                          \
+                        feature_is_not_supported(#feature);                                                \
+                }                                                                                          \
+                if (result_device_features)                                                                \
+                {                                                                                          \
+                        result_device_features->features_12.feature = device_features.features_12.feature; \
+                }                                                                                          \
+                break;
+
 void set_features(
         const std::vector<PhysicalDeviceFeatures>& features,
         bool required,
@@ -215,6 +227,54 @@ void set_features(
                         CASE_FEATURE_11(uniformAndStorageBuffer16BitAccess)
                         CASE_FEATURE_11(variablePointers)
                         CASE_FEATURE_11(variablePointersStorageBuffer)
+                        //
+                        CASE_FEATURE_12(bufferDeviceAddress)
+                        CASE_FEATURE_12(bufferDeviceAddressCaptureReplay)
+                        CASE_FEATURE_12(bufferDeviceAddressMultiDevice)
+                        CASE_FEATURE_12(descriptorBindingPartiallyBound)
+                        CASE_FEATURE_12(descriptorBindingSampledImageUpdateAfterBind)
+                        CASE_FEATURE_12(descriptorBindingStorageBufferUpdateAfterBind)
+                        CASE_FEATURE_12(descriptorBindingStorageImageUpdateAfterBind)
+                        CASE_FEATURE_12(descriptorBindingStorageTexelBufferUpdateAfterBind)
+                        CASE_FEATURE_12(descriptorBindingUniformBufferUpdateAfterBind)
+                        CASE_FEATURE_12(descriptorBindingUniformTexelBufferUpdateAfterBind)
+                        CASE_FEATURE_12(descriptorBindingUpdateUnusedWhilePending)
+                        CASE_FEATURE_12(descriptorBindingVariableDescriptorCount)
+                        CASE_FEATURE_12(descriptorIndexing)
+                        CASE_FEATURE_12(drawIndirectCount)
+                        CASE_FEATURE_12(hostQueryReset)
+                        CASE_FEATURE_12(imagelessFramebuffer)
+                        CASE_FEATURE_12(runtimeDescriptorArray)
+                        CASE_FEATURE_12(samplerFilterMinmax)
+                        CASE_FEATURE_12(samplerMirrorClampToEdge)
+                        CASE_FEATURE_12(scalarBlockLayout)
+                        CASE_FEATURE_12(separateDepthStencilLayouts)
+                        CASE_FEATURE_12(shaderBufferInt64Atomics)
+                        CASE_FEATURE_12(shaderFloat16)
+                        CASE_FEATURE_12(shaderInputAttachmentArrayDynamicIndexing)
+                        CASE_FEATURE_12(shaderInputAttachmentArrayNonUniformIndexing)
+                        CASE_FEATURE_12(shaderInt8)
+                        CASE_FEATURE_12(shaderOutputLayer)
+                        CASE_FEATURE_12(shaderOutputViewportIndex)
+                        CASE_FEATURE_12(shaderSampledImageArrayNonUniformIndexing)
+                        CASE_FEATURE_12(shaderSharedInt64Atomics)
+                        CASE_FEATURE_12(shaderStorageBufferArrayNonUniformIndexing)
+                        CASE_FEATURE_12(shaderStorageImageArrayNonUniformIndexing)
+                        CASE_FEATURE_12(shaderStorageTexelBufferArrayDynamicIndexing)
+                        CASE_FEATURE_12(shaderStorageTexelBufferArrayNonUniformIndexing)
+                        CASE_FEATURE_12(shaderSubgroupExtendedTypes)
+                        CASE_FEATURE_12(shaderUniformBufferArrayNonUniformIndexing)
+                        CASE_FEATURE_12(shaderUniformTexelBufferArrayDynamicIndexing)
+                        CASE_FEATURE_12(shaderUniformTexelBufferArrayNonUniformIndexing)
+                        CASE_FEATURE_12(storageBuffer8BitAccess)
+                        CASE_FEATURE_12(storagePushConstant8)
+                        CASE_FEATURE_12(subgroupBroadcastDynamicId)
+                        CASE_FEATURE_12(timelineSemaphore)
+                        CASE_FEATURE_12(uniformAndStorageBuffer8BitAccess)
+                        CASE_FEATURE_12(uniformBufferStandardLayout)
+                        CASE_FEATURE_12(vulkanMemoryModel)
+                        CASE_FEATURE_12(vulkanMemoryModelAvailabilityVisibilityChains)
+                        CASE_FEATURE_12(vulkanMemoryModelDeviceScope)
                 }
         }
 }
@@ -310,8 +370,11 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR su
         ASSERT(physical_device != VK_NULL_HANDLE);
 
         {
+                VkPhysicalDeviceVulkan12Properties vulkan_12_properties = {};
+                vulkan_12_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
                 VkPhysicalDeviceVulkan11Properties vulkan_11_properties = {};
                 vulkan_11_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES;
+                vulkan_11_properties.pNext = &vulkan_12_properties;
                 VkPhysicalDeviceProperties2 properties_2 = {};
                 properties_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
                 properties_2.pNext = &vulkan_11_properties;
@@ -320,10 +383,15 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR su
                 m_properties.properties_10 = properties_2.properties;
                 m_properties.properties_11 = vulkan_11_properties;
                 m_properties.properties_11.pNext = nullptr;
+                m_properties.properties_12 = vulkan_12_properties;
+                m_properties.properties_12.pNext = nullptr;
         }
         {
+                VkPhysicalDeviceVulkan12Features vulkan_12_features = {};
+                vulkan_12_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
                 VkPhysicalDeviceVulkan11Features vulkan_11_features = {};
                 vulkan_11_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+                vulkan_11_features.pNext = &vulkan_12_features;
                 VkPhysicalDeviceFeatures2 features_2 = {};
                 features_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
                 features_2.pNext = &vulkan_11_features;
@@ -332,6 +400,8 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR su
                 m_features.features_10 = features_2.features;
                 m_features.features_11 = vulkan_11_features;
                 m_features.features_11.pNext = nullptr;
+                m_features.features_12 = vulkan_12_features;
+                m_features.features_12.pNext = nullptr;
         }
 
         m_queue_families = find_queue_families(physical_device);
@@ -447,8 +517,10 @@ Device PhysicalDevice::create_device(
         DeviceFeatures enabled_features = {};
         make_enabled_device_features(required_features, optional_features, m_features, &enabled_features);
 
+        enabled_features.features_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+        enabled_features.features_12.pNext = nullptr;
         enabled_features.features_11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-        enabled_features.features_11.pNext = nullptr;
+        enabled_features.features_11.pNext = &enabled_features.features_12;
         VkPhysicalDeviceFeatures2 features_2 = {};
         features_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
         features_2.pNext = &enabled_features.features_11;

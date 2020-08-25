@@ -213,9 +213,17 @@ Device::Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& creat
         VkPhysicalDeviceVulkan11Features vulkan_11_features;
         std::memcpy(&vulkan_11_features, features_2.pNext, sizeof(VkPhysicalDeviceVulkan11Features));
 
+        ASSERT(vulkan_11_features.pNext);
+        std::memcpy(&type, vulkan_11_features.pNext, sizeof(VkStructureType));
+        ASSERT(type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES);
+        VkPhysicalDeviceVulkan12Features vulkan_12_features;
+        std::memcpy(&vulkan_12_features, vulkan_11_features.pNext, sizeof(VkPhysicalDeviceVulkan12Features));
+
         m_features.features_10 = features_2.features;
         m_features.features_11 = vulkan_11_features;
         m_features.features_11.pNext = nullptr;
+        m_features.features_12 = vulkan_12_features;
+        m_features.features_12.pNext = nullptr;
 
         for (unsigned i = 0; i < create_info.queueCreateInfoCount; ++i)
         {
