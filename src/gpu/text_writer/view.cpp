@@ -325,7 +325,7 @@ public:
                        transfer_queue,
                        sample_shading,
                        color,
-                       Glyphs(size, instance.limits().maxImageDimension2D))
+                       Glyphs(size, instance.device_properties().properties_10.limits.maxImageDimension2D))
         {
         }
 

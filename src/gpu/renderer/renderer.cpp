@@ -769,7 +769,9 @@ class Impl final : public Renderer
                         TRANSPARENCY_COUNTER_BUFFER_SIZE);
 
                 m_transparency_max_node_count =
-                        std::min(TRANSPARENCY_NODE_BUFFER_MAX_SIZE, m_instance.limits().maxStorageBufferRange)
+                        std::min(
+                                TRANSPARENCY_NODE_BUFFER_MAX_SIZE,
+                                m_instance.device_properties().properties_10.limits.maxStorageBufferRange)
                         / TRANSPARENCY_NODE_SIZE;
 
                 const unsigned transparency_node_buffer_size = m_transparency_max_node_count * TRANSPARENCY_NODE_SIZE;

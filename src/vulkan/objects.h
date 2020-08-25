@@ -137,11 +137,23 @@ public:
         }
 };
 
+struct DeviceFeatures final
+{
+        VkPhysicalDeviceFeatures features_10;
+        VkPhysicalDeviceVulkan11Features features_11;
+};
+
+struct DeviceProperties final
+{
+        VkPhysicalDeviceProperties properties_10;
+        VkPhysicalDeviceVulkan11Properties properties_11;
+};
+
 class Device final
 {
         DeviceHandle m_device;
         VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
-        VkPhysicalDeviceFeatures m_features = {};
+        DeviceFeatures m_features = {};
         std::unordered_map<uint32_t, std::vector<VkQueue>> m_queues;
 
 public:
@@ -160,7 +172,7 @@ public:
                 return m_physical_device;
         }
 
-        const VkPhysicalDeviceFeatures& features() const noexcept
+        const DeviceFeatures& features() const noexcept
         {
                 return m_features;
         }

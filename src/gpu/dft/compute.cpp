@@ -328,7 +328,7 @@ public:
                 }
 
                 m_data_size = count * n;
-                m_n_shared = shared_size(n, instance.limits());
+                m_n_shared = shared_size(n, instance.device_properties().properties_10.limits);
                 m_only_shared = m_n <= m_n_shared;
 
                 const uint32_t n_mask = n - 1;
@@ -340,7 +340,7 @@ public:
                 m_fft_program.emplace(instance.device());
                 m_fft_program->create_pipelines(
                         m_data_size, n, n_mask, n_bits, m_n_shared, fft_reverse_input,
-                        group_size(n, instance.limits()));
+                        group_size(n, instance.device_properties().properties_10.limits));
                 m_fft_memory.emplace(instance.device(), m_fft_program->descriptor_set_layout());
                 m_fft_groups = group_count(m_data_size, m_n_shared);
 

@@ -130,7 +130,7 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
         multisampling_state_info.rasterizationSamples = info.sample_count.value();
         if (info.sample_count.value() != VK_SAMPLE_COUNT_1_BIT && info.sample_shading.value())
         {
-                if (!info.device.value()->features().sampleRateShading)
+                if (!info.device.value()->features().features_10.sampleRateShading)
                 {
                         error("Sample shading required but not supported");
                 }

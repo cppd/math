@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace vulkan
 {
 constexpr int API_VERSION_MAJOR = 1;
-constexpr int API_VERSION_MINOR = 1;
+constexpr int API_VERSION_MINOR = 2;
 
 // clang-format off
 constexpr std::initializer_list<const char*> VALIDATION_LAYERS

@@ -82,14 +82,27 @@ enum class PhysicalDeviceFeatures
         textureCompressionETC2,
         variableMultisampleRate,
         vertexPipelineStoresAndAtomics,
-        wideLines
+        wideLines,
+        //
+        multiview,
+        multiviewGeometryShader,
+        multiviewTessellationShader,
+        protectedMemory,
+        samplerYcbcrConversion,
+        shaderDrawParameters,
+        storageBuffer16BitAccess,
+        storageInputOutput16,
+        storagePushConstant16,
+        uniformAndStorageBuffer16BitAccess,
+        variablePointers,
+        variablePointersStorageBuffer
 };
 
 class PhysicalDevice final
 {
         VkPhysicalDevice m_physical_device;
-        VkPhysicalDeviceFeatures m_features;
-        VkPhysicalDeviceProperties m_properties;
+        DeviceFeatures m_features;
+        DeviceProperties m_properties;
         std::vector<VkQueueFamilyProperties> m_queue_families;
         std::vector<bool> m_presentation_supported;
         std::unordered_set<std::string> m_supported_extensions;
@@ -100,8 +113,8 @@ public:
         operator VkPhysicalDevice() const&;
         operator VkPhysicalDevice() const&& = delete;
 
-        const VkPhysicalDeviceFeatures& features() const;
-        const VkPhysicalDeviceProperties& properties() const;
+        const DeviceFeatures& features() const;
+        const DeviceProperties& properties() const;
         const std::vector<VkQueueFamilyProperties>& queue_families() const;
         const std::unordered_set<std::string>& supported_extensions() const;
 

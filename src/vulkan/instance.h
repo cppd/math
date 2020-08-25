@@ -93,9 +93,9 @@ public:
                 return m_device;
         }
 
-        const VkPhysicalDeviceLimits& limits() const
+        const DeviceProperties& device_properties() const
         {
-                return m_physical_device.properties().limits;
+                return m_physical_device.properties();
         }
 
         const vulkan::CommandPool& graphics_compute_command_pool() const

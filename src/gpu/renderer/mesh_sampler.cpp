@@ -36,7 +36,7 @@ vulkan::Sampler create_mesh_texture_sampler(const vulkan::Device& device, bool a
 
         if (anisotropy)
         {
-                if (!device.features().samplerAnisotropy)
+                if (!device.features().features_10.samplerAnisotropy)
                 {
                         error("Sampler anisotropy required but not supported");
                 }

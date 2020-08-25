@@ -100,7 +100,7 @@ std::vector<unsigned> samples(VkSampleCountFlags flags)
 void device_name(const PhysicalDevice& device, size_t device_node, StringTree* tree)
 {
         size_t type_node = tree->add(device_node, "Device Name");
-        tree->add(type_node, device.properties().deviceName);
+        tree->add(type_node, device.properties().properties_10.deviceName);
 }
 
 void device_type(const PhysicalDevice& device, size_t device_node, StringTree* tree)
@@ -108,7 +108,7 @@ void device_type(const PhysicalDevice& device, size_t device_node, StringTree* t
         size_t type_node = tree->add(device_node, "Device Type");
         try
         {
-                tree->add(type_node, physical_device_type_to_string(device.properties().deviceType));
+                tree->add(type_node, physical_device_type_to_string(device.properties().properties_10.deviceType));
         }
         catch (const std::exception& e)
         {
@@ -121,7 +121,7 @@ void api_version(const PhysicalDevice& device, size_t device_node, StringTree* t
         size_t api_node = tree->add(device_node, "API Version");
         try
         {
-                tree->add(api_node, api_version_to_string(device.properties().apiVersion));
+                tree->add(api_node, api_version_to_string(device.properties().properties_10.apiVersion));
         }
         catch (const std::exception& e)
         {
@@ -146,148 +146,168 @@ void extensions(const PhysicalDevice& device, size_t device_node, StringTree* tr
         }
 }
 
-#define ADD_VALUE(v) limits.emplace_back(#v, to_string(value(device.properties().limits.v)))
-#define ADD_SAMPLE(v) limits.emplace_back(#v, to_string(samples(device.properties().limits.v)))
+#define ADD_VALUE_10(v) properties.emplace_back(#v, to_string(value(device.properties().properties_10.limits.v)))
+#define ADD_SAMPLE_10(v) properties.emplace_back(#v, to_string(samples(device.properties().properties_10.limits.v)))
+#define ADD_VALUE_11(v) properties.emplace_back(#v, to_string(value(device.properties().properties_11.v)))
 
-void limits(const PhysicalDevice& device, size_t device_node, StringTree* tree)
+void properties(const PhysicalDevice& device, size_t device_node, StringTree* tree)
 {
-        size_t limits_node = tree->add(device_node, "Limits");
+        size_t properties_node = tree->add(device_node, "Properties");
 
         try
         {
-                std::vector<std::tuple<std::string, std::string>> limits;
+                std::vector<std::tuple<std::string, std::string>> properties;
 
-                ADD_VALUE(maxImageDimension1D);
-                ADD_VALUE(maxImageDimension2D);
-                ADD_VALUE(maxImageDimension3D);
-                ADD_VALUE(maxImageDimensionCube);
-                ADD_VALUE(maxImageArrayLayers);
-                ADD_VALUE(maxTexelBufferElements);
-                ADD_VALUE(maxUniformBufferRange);
-                ADD_VALUE(maxStorageBufferRange);
-                ADD_VALUE(maxPushConstantsSize);
-                ADD_VALUE(maxMemoryAllocationCount);
-                ADD_VALUE(maxSamplerAllocationCount);
-                ADD_VALUE(bufferImageGranularity);
-                ADD_VALUE(sparseAddressSpaceSize);
-                ADD_VALUE(maxBoundDescriptorSets);
-                ADD_VALUE(maxPerStageDescriptorSamplers);
-                ADD_VALUE(maxPerStageDescriptorUniformBuffers);
-                ADD_VALUE(maxPerStageDescriptorStorageBuffers);
-                ADD_VALUE(maxPerStageDescriptorSampledImages);
-                ADD_VALUE(maxPerStageDescriptorStorageImages);
-                ADD_VALUE(maxPerStageDescriptorInputAttachments);
-                ADD_VALUE(maxPerStageResources);
-                ADD_VALUE(maxDescriptorSetSamplers);
-                ADD_VALUE(maxDescriptorSetUniformBuffers);
-                ADD_VALUE(maxDescriptorSetUniformBuffersDynamic);
-                ADD_VALUE(maxDescriptorSetStorageBuffers);
-                ADD_VALUE(maxDescriptorSetStorageBuffersDynamic);
-                ADD_VALUE(maxDescriptorSetSampledImages);
-                ADD_VALUE(maxDescriptorSetStorageImages);
-                ADD_VALUE(maxDescriptorSetInputAttachments);
-                ADD_VALUE(maxVertexInputAttributes);
-                ADD_VALUE(maxVertexInputBindings);
-                ADD_VALUE(maxVertexInputAttributeOffset);
-                ADD_VALUE(maxVertexInputBindingStride);
-                ADD_VALUE(maxVertexOutputComponents);
-                ADD_VALUE(maxTessellationGenerationLevel);
-                ADD_VALUE(maxTessellationPatchSize);
-                ADD_VALUE(maxTessellationControlPerVertexInputComponents);
-                ADD_VALUE(maxTessellationControlPerVertexOutputComponents);
-                ADD_VALUE(maxTessellationControlPerPatchOutputComponents);
-                ADD_VALUE(maxTessellationControlTotalOutputComponents);
-                ADD_VALUE(maxTessellationEvaluationInputComponents);
-                ADD_VALUE(maxTessellationEvaluationOutputComponents);
-                ADD_VALUE(maxGeometryShaderInvocations);
-                ADD_VALUE(maxGeometryInputComponents);
-                ADD_VALUE(maxGeometryOutputComponents);
-                ADD_VALUE(maxGeometryOutputVertices);
-                ADD_VALUE(maxGeometryTotalOutputComponents);
-                ADD_VALUE(maxFragmentInputComponents);
-                ADD_VALUE(maxFragmentOutputAttachments);
-                ADD_VALUE(maxFragmentDualSrcAttachments);
-                ADD_VALUE(maxFragmentCombinedOutputResources);
-                ADD_VALUE(maxComputeSharedMemorySize);
-                ADD_VALUE(maxComputeWorkGroupCount);
-                ADD_VALUE(maxComputeWorkGroupInvocations);
-                ADD_VALUE(maxComputeWorkGroupSize);
-                ADD_VALUE(subPixelPrecisionBits);
-                ADD_VALUE(subTexelPrecisionBits);
-                ADD_VALUE(mipmapPrecisionBits);
-                ADD_VALUE(maxDrawIndexedIndexValue);
-                ADD_VALUE(maxDrawIndirectCount);
-                ADD_VALUE(maxSamplerLodBias);
-                ADD_VALUE(maxSamplerAnisotropy);
-                ADD_VALUE(maxViewports);
-                ADD_VALUE(maxViewportDimensions);
-                ADD_VALUE(viewportBoundsRange);
-                ADD_VALUE(viewportSubPixelBits);
-                ADD_VALUE(minMemoryMapAlignment);
-                ADD_VALUE(minTexelBufferOffsetAlignment);
-                ADD_VALUE(minUniformBufferOffsetAlignment);
-                ADD_VALUE(minStorageBufferOffsetAlignment);
-                ADD_VALUE(minTexelOffset);
-                ADD_VALUE(maxTexelOffset);
-                ADD_VALUE(minTexelGatherOffset);
-                ADD_VALUE(maxTexelGatherOffset);
-                ADD_VALUE(minInterpolationOffset);
-                ADD_VALUE(maxInterpolationOffset);
-                ADD_VALUE(subPixelInterpolationOffsetBits);
-                ADD_VALUE(maxFramebufferWidth);
-                ADD_VALUE(maxFramebufferHeight);
-                ADD_VALUE(maxFramebufferLayers);
-                ADD_SAMPLE(framebufferColorSampleCounts);
-                ADD_SAMPLE(framebufferDepthSampleCounts);
-                ADD_SAMPLE(framebufferStencilSampleCounts);
-                ADD_SAMPLE(framebufferNoAttachmentsSampleCounts);
-                ADD_VALUE(maxColorAttachments);
-                ADD_SAMPLE(sampledImageColorSampleCounts);
-                ADD_SAMPLE(sampledImageIntegerSampleCounts);
-                ADD_SAMPLE(sampledImageDepthSampleCounts);
-                ADD_SAMPLE(sampledImageStencilSampleCounts);
-                ADD_SAMPLE(storageImageSampleCounts);
-                ADD_VALUE(maxSampleMaskWords);
-                ADD_VALUE(maxClipDistances);
-                ADD_VALUE(maxCullDistances);
-                ADD_VALUE(maxCombinedClipAndCullDistances);
-                ADD_VALUE(discreteQueuePriorities);
-                ADD_VALUE(pointSizeRange);
-                ADD_VALUE(lineWidthRange);
-                ADD_VALUE(pointSizeGranularity);
-                ADD_VALUE(lineWidthGranularity);
-                ADD_VALUE(strictLines);
-                ADD_VALUE(standardSampleLocations);
-                ADD_VALUE(optimalBufferCopyOffsetAlignment);
-                ADD_VALUE(optimalBufferCopyRowPitchAlignment);
-                ADD_VALUE(nonCoherentAtomSize);
+                ADD_VALUE_10(maxImageDimension1D);
+                ADD_VALUE_10(maxImageDimension2D);
+                ADD_VALUE_10(maxImageDimension3D);
+                ADD_VALUE_10(maxImageDimensionCube);
+                ADD_VALUE_10(maxImageArrayLayers);
+                ADD_VALUE_10(maxTexelBufferElements);
+                ADD_VALUE_10(maxUniformBufferRange);
+                ADD_VALUE_10(maxStorageBufferRange);
+                ADD_VALUE_10(maxPushConstantsSize);
+                ADD_VALUE_10(maxMemoryAllocationCount);
+                ADD_VALUE_10(maxSamplerAllocationCount);
+                ADD_VALUE_10(bufferImageGranularity);
+                ADD_VALUE_10(sparseAddressSpaceSize);
+                ADD_VALUE_10(maxBoundDescriptorSets);
+                ADD_VALUE_10(maxPerStageDescriptorSamplers);
+                ADD_VALUE_10(maxPerStageDescriptorUniformBuffers);
+                ADD_VALUE_10(maxPerStageDescriptorStorageBuffers);
+                ADD_VALUE_10(maxPerStageDescriptorSampledImages);
+                ADD_VALUE_10(maxPerStageDescriptorStorageImages);
+                ADD_VALUE_10(maxPerStageDescriptorInputAttachments);
+                ADD_VALUE_10(maxPerStageResources);
+                ADD_VALUE_10(maxDescriptorSetSamplers);
+                ADD_VALUE_10(maxDescriptorSetUniformBuffers);
+                ADD_VALUE_10(maxDescriptorSetUniformBuffersDynamic);
+                ADD_VALUE_10(maxDescriptorSetStorageBuffers);
+                ADD_VALUE_10(maxDescriptorSetStorageBuffersDynamic);
+                ADD_VALUE_10(maxDescriptorSetSampledImages);
+                ADD_VALUE_10(maxDescriptorSetStorageImages);
+                ADD_VALUE_10(maxDescriptorSetInputAttachments);
+                ADD_VALUE_10(maxVertexInputAttributes);
+                ADD_VALUE_10(maxVertexInputBindings);
+                ADD_VALUE_10(maxVertexInputAttributeOffset);
+                ADD_VALUE_10(maxVertexInputBindingStride);
+                ADD_VALUE_10(maxVertexOutputComponents);
+                ADD_VALUE_10(maxTessellationGenerationLevel);
+                ADD_VALUE_10(maxTessellationPatchSize);
+                ADD_VALUE_10(maxTessellationControlPerVertexInputComponents);
+                ADD_VALUE_10(maxTessellationControlPerVertexOutputComponents);
+                ADD_VALUE_10(maxTessellationControlPerPatchOutputComponents);
+                ADD_VALUE_10(maxTessellationControlTotalOutputComponents);
+                ADD_VALUE_10(maxTessellationEvaluationInputComponents);
+                ADD_VALUE_10(maxTessellationEvaluationOutputComponents);
+                ADD_VALUE_10(maxGeometryShaderInvocations);
+                ADD_VALUE_10(maxGeometryInputComponents);
+                ADD_VALUE_10(maxGeometryOutputComponents);
+                ADD_VALUE_10(maxGeometryOutputVertices);
+                ADD_VALUE_10(maxGeometryTotalOutputComponents);
+                ADD_VALUE_10(maxFragmentInputComponents);
+                ADD_VALUE_10(maxFragmentOutputAttachments);
+                ADD_VALUE_10(maxFragmentDualSrcAttachments);
+                ADD_VALUE_10(maxFragmentCombinedOutputResources);
+                ADD_VALUE_10(maxComputeSharedMemorySize);
+                ADD_VALUE_10(maxComputeWorkGroupCount);
+                ADD_VALUE_10(maxComputeWorkGroupInvocations);
+                ADD_VALUE_10(maxComputeWorkGroupSize);
+                ADD_VALUE_10(subPixelPrecisionBits);
+                ADD_VALUE_10(subTexelPrecisionBits);
+                ADD_VALUE_10(mipmapPrecisionBits);
+                ADD_VALUE_10(maxDrawIndexedIndexValue);
+                ADD_VALUE_10(maxDrawIndirectCount);
+                ADD_VALUE_10(maxSamplerLodBias);
+                ADD_VALUE_10(maxSamplerAnisotropy);
+                ADD_VALUE_10(maxViewports);
+                ADD_VALUE_10(maxViewportDimensions);
+                ADD_VALUE_10(viewportBoundsRange);
+                ADD_VALUE_10(viewportSubPixelBits);
+                ADD_VALUE_10(minMemoryMapAlignment);
+                ADD_VALUE_10(minTexelBufferOffsetAlignment);
+                ADD_VALUE_10(minUniformBufferOffsetAlignment);
+                ADD_VALUE_10(minStorageBufferOffsetAlignment);
+                ADD_VALUE_10(minTexelOffset);
+                ADD_VALUE_10(maxTexelOffset);
+                ADD_VALUE_10(minTexelGatherOffset);
+                ADD_VALUE_10(maxTexelGatherOffset);
+                ADD_VALUE_10(minInterpolationOffset);
+                ADD_VALUE_10(maxInterpolationOffset);
+                ADD_VALUE_10(subPixelInterpolationOffsetBits);
+                ADD_VALUE_10(maxFramebufferWidth);
+                ADD_VALUE_10(maxFramebufferHeight);
+                ADD_VALUE_10(maxFramebufferLayers);
+                ADD_SAMPLE_10(framebufferColorSampleCounts);
+                ADD_SAMPLE_10(framebufferDepthSampleCounts);
+                ADD_SAMPLE_10(framebufferStencilSampleCounts);
+                ADD_SAMPLE_10(framebufferNoAttachmentsSampleCounts);
+                ADD_VALUE_10(maxColorAttachments);
+                ADD_SAMPLE_10(sampledImageColorSampleCounts);
+                ADD_SAMPLE_10(sampledImageIntegerSampleCounts);
+                ADD_SAMPLE_10(sampledImageDepthSampleCounts);
+                ADD_SAMPLE_10(sampledImageStencilSampleCounts);
+                ADD_SAMPLE_10(storageImageSampleCounts);
+                ADD_VALUE_10(maxSampleMaskWords);
+                ADD_VALUE_10(maxClipDistances);
+                ADD_VALUE_10(maxCullDistances);
+                ADD_VALUE_10(maxCombinedClipAndCullDistances);
+                ADD_VALUE_10(discreteQueuePriorities);
+                ADD_VALUE_10(pointSizeRange);
+                ADD_VALUE_10(lineWidthRange);
+                ADD_VALUE_10(pointSizeGranularity);
+                ADD_VALUE_10(lineWidthGranularity);
+                ADD_VALUE_10(strictLines);
+                ADD_VALUE_10(standardSampleLocations);
+                ADD_VALUE_10(optimalBufferCopyOffsetAlignment);
+                ADD_VALUE_10(optimalBufferCopyRowPitchAlignment);
+                ADD_VALUE_10(nonCoherentAtomSize);
+                //
+                ADD_VALUE_11(maxMultiviewViewCount);
+                ADD_VALUE_11(maxMultiviewInstanceIndex);
+                ADD_VALUE_11(protectedNoFault);
+                ADD_VALUE_11(maxPerSetDescriptors);
+                ADD_VALUE_11(maxMemoryAllocationSize);
 
-                std::sort(limits.begin(), limits.end(), [](const auto& v1, const auto& v2) {
+                std::sort(properties.begin(), properties.end(), [](const auto& v1, const auto& v2) {
                         return std::get<0>(v1) < std::get<0>(v2);
                 });
 
-                for (const auto& [name, value] : limits)
+                for (const auto& [name, value] : properties)
                 {
-                        tree->add(limits_node, name + " = " + value);
+                        tree->add(properties_node, name + " = " + value);
                 }
         }
         catch (const std::exception& e)
         {
-                tree->add(limits_node, e.what());
+                tree->add(properties_node, e.what());
         }
 }
 
-#define ADD_FEATURE(v)                                  \
-        do                                              \
-        {                                               \
-                if (device.features().v == VK_TRUE)     \
-                {                                       \
-                        supported.emplace_back(#v);     \
-                }                                       \
-                else                                    \
-                {                                       \
-                        not_supported.emplace_back(#v); \
-                }                                       \
+#define ADD_FEATURE_10(v)                                       \
+        do                                                      \
+        {                                                       \
+                if (device.features().features_10.v == VK_TRUE) \
+                {                                               \
+                        supported.emplace_back(#v);             \
+                }                                               \
+                else                                            \
+                {                                               \
+                        not_supported.emplace_back(#v);         \
+                }                                               \
+        } while (false)
+
+#define ADD_FEATURE_11(v)                                       \
+        do                                                      \
+        {                                                       \
+                if (device.features().features_11.v == VK_TRUE) \
+                {                                               \
+                        supported.emplace_back(#v);             \
+                }                                               \
+                else                                            \
+                {                                               \
+                        not_supported.emplace_back(#v);         \
+                }                                               \
         } while (false)
 
 void features(const PhysicalDevice& device, size_t device_node, StringTree* tree)
@@ -301,61 +321,74 @@ void features(const PhysicalDevice& device, size_t device_node, StringTree* tree
                 std::vector<std::string> supported;
                 std::vector<std::string> not_supported;
 
-                ADD_FEATURE(robustBufferAccess);
-                ADD_FEATURE(fullDrawIndexUint32);
-                ADD_FEATURE(imageCubeArray);
-                ADD_FEATURE(independentBlend);
-                ADD_FEATURE(geometryShader);
-                ADD_FEATURE(tessellationShader);
-                ADD_FEATURE(sampleRateShading);
-                ADD_FEATURE(dualSrcBlend);
-                ADD_FEATURE(logicOp);
-                ADD_FEATURE(multiDrawIndirect);
-                ADD_FEATURE(drawIndirectFirstInstance);
-                ADD_FEATURE(depthClamp);
-                ADD_FEATURE(depthBiasClamp);
-                ADD_FEATURE(fillModeNonSolid);
-                ADD_FEATURE(depthBounds);
-                ADD_FEATURE(wideLines);
-                ADD_FEATURE(largePoints);
-                ADD_FEATURE(alphaToOne);
-                ADD_FEATURE(multiViewport);
-                ADD_FEATURE(samplerAnisotropy);
-                ADD_FEATURE(textureCompressionETC2);
-                ADD_FEATURE(textureCompressionASTC_LDR);
-                ADD_FEATURE(textureCompressionBC);
-                ADD_FEATURE(occlusionQueryPrecise);
-                ADD_FEATURE(pipelineStatisticsQuery);
-                ADD_FEATURE(vertexPipelineStoresAndAtomics);
-                ADD_FEATURE(fragmentStoresAndAtomics);
-                ADD_FEATURE(shaderTessellationAndGeometryPointSize);
-                ADD_FEATURE(shaderImageGatherExtended);
-                ADD_FEATURE(shaderStorageImageExtendedFormats);
-                ADD_FEATURE(shaderStorageImageMultisample);
-                ADD_FEATURE(shaderStorageImageReadWithoutFormat);
-                ADD_FEATURE(shaderStorageImageWriteWithoutFormat);
-                ADD_FEATURE(shaderUniformBufferArrayDynamicIndexing);
-                ADD_FEATURE(shaderSampledImageArrayDynamicIndexing);
-                ADD_FEATURE(shaderStorageBufferArrayDynamicIndexing);
-                ADD_FEATURE(shaderStorageImageArrayDynamicIndexing);
-                ADD_FEATURE(shaderClipDistance);
-                ADD_FEATURE(shaderCullDistance);
-                ADD_FEATURE(shaderFloat64);
-                ADD_FEATURE(shaderInt64);
-                ADD_FEATURE(shaderInt16);
-                ADD_FEATURE(shaderResourceResidency);
-                ADD_FEATURE(shaderResourceMinLod);
-                ADD_FEATURE(sparseBinding);
-                ADD_FEATURE(sparseResidencyBuffer);
-                ADD_FEATURE(sparseResidencyImage2D);
-                ADD_FEATURE(sparseResidencyImage3D);
-                ADD_FEATURE(sparseResidency2Samples);
-                ADD_FEATURE(sparseResidency4Samples);
-                ADD_FEATURE(sparseResidency8Samples);
-                ADD_FEATURE(sparseResidency16Samples);
-                ADD_FEATURE(sparseResidencyAliased);
-                ADD_FEATURE(variableMultisampleRate);
-                ADD_FEATURE(inheritedQueries);
+                ADD_FEATURE_10(alphaToOne);
+                ADD_FEATURE_10(depthBiasClamp);
+                ADD_FEATURE_10(depthBounds);
+                ADD_FEATURE_10(depthClamp);
+                ADD_FEATURE_10(drawIndirectFirstInstance);
+                ADD_FEATURE_10(dualSrcBlend);
+                ADD_FEATURE_10(fillModeNonSolid);
+                ADD_FEATURE_10(fragmentStoresAndAtomics);
+                ADD_FEATURE_10(fullDrawIndexUint32);
+                ADD_FEATURE_10(geometryShader);
+                ADD_FEATURE_10(imageCubeArray);
+                ADD_FEATURE_10(independentBlend);
+                ADD_FEATURE_10(inheritedQueries);
+                ADD_FEATURE_10(largePoints);
+                ADD_FEATURE_10(logicOp);
+                ADD_FEATURE_10(multiDrawIndirect);
+                ADD_FEATURE_10(multiViewport);
+                ADD_FEATURE_10(occlusionQueryPrecise);
+                ADD_FEATURE_10(pipelineStatisticsQuery);
+                ADD_FEATURE_10(robustBufferAccess);
+                ADD_FEATURE_10(sampleRateShading);
+                ADD_FEATURE_10(samplerAnisotropy);
+                ADD_FEATURE_10(shaderClipDistance);
+                ADD_FEATURE_10(shaderCullDistance);
+                ADD_FEATURE_10(shaderFloat64);
+                ADD_FEATURE_10(shaderImageGatherExtended);
+                ADD_FEATURE_10(shaderInt16);
+                ADD_FEATURE_10(shaderInt64);
+                ADD_FEATURE_10(shaderResourceMinLod);
+                ADD_FEATURE_10(shaderResourceResidency);
+                ADD_FEATURE_10(shaderSampledImageArrayDynamicIndexing);
+                ADD_FEATURE_10(shaderStorageBufferArrayDynamicIndexing);
+                ADD_FEATURE_10(shaderStorageImageArrayDynamicIndexing);
+                ADD_FEATURE_10(shaderStorageImageExtendedFormats);
+                ADD_FEATURE_10(shaderStorageImageMultisample);
+                ADD_FEATURE_10(shaderStorageImageReadWithoutFormat);
+                ADD_FEATURE_10(shaderStorageImageWriteWithoutFormat);
+                ADD_FEATURE_10(shaderTessellationAndGeometryPointSize);
+                ADD_FEATURE_10(shaderUniformBufferArrayDynamicIndexing);
+                ADD_FEATURE_10(sparseBinding);
+                ADD_FEATURE_10(sparseResidency16Samples);
+                ADD_FEATURE_10(sparseResidency2Samples);
+                ADD_FEATURE_10(sparseResidency4Samples);
+                ADD_FEATURE_10(sparseResidency8Samples);
+                ADD_FEATURE_10(sparseResidencyAliased);
+                ADD_FEATURE_10(sparseResidencyBuffer);
+                ADD_FEATURE_10(sparseResidencyImage2D);
+                ADD_FEATURE_10(sparseResidencyImage3D);
+                ADD_FEATURE_10(tessellationShader);
+                ADD_FEATURE_10(textureCompressionASTC_LDR);
+                ADD_FEATURE_10(textureCompressionBC);
+                ADD_FEATURE_10(textureCompressionETC2);
+                ADD_FEATURE_10(variableMultisampleRate);
+                ADD_FEATURE_10(vertexPipelineStoresAndAtomics);
+                ADD_FEATURE_10(wideLines);
+                //
+                ADD_FEATURE_11(multiview);
+                ADD_FEATURE_11(multiviewGeometryShader);
+                ADD_FEATURE_11(multiviewTessellationShader);
+                ADD_FEATURE_11(protectedMemory);
+                ADD_FEATURE_11(samplerYcbcrConversion);
+                ADD_FEATURE_11(shaderDrawParameters);
+                ADD_FEATURE_11(storageBuffer16BitAccess);
+                ADD_FEATURE_11(storageInputOutput16);
+                ADD_FEATURE_11(storagePushConstant16);
+                ADD_FEATURE_11(uniformAndStorageBuffer16BitAccess);
+                ADD_FEATURE_11(variablePointers);
+                ADD_FEATURE_11(variablePointersStorageBuffer);
 
                 for (const std::string& name : sorted(supported))
                 {
@@ -529,7 +562,7 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
         {
                 PhysicalDevice device(d, surface);
 
-                if (!uuids.emplace(to_string(value(device.properties().pipelineCacheUUID))).second)
+                if (!uuids.emplace(to_string(value(device.properties().properties_10.pipelineCacheUUID))).second)
                 {
                         continue;
                 }
@@ -541,7 +574,7 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
                 api_version(device, node, &tree);
                 extensions(device, node, &tree);
                 features(device, node, &tree);
-                limits(device, node, &tree);
+                properties(device, node, &tree);
                 queue_families(device, node, &tree);
         }
 

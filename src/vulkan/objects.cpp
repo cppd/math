@@ -196,10 +196,27 @@ DeviceHandle::operator VkDevice() const& noexcept
 //
 
 Device::Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info)
-        : m_device(physical_device, create_info),
-          m_physical_device(physical_device),
-          m_features(*create_info.pEnabledFeatures)
+        : m_device(physical_device, create_info), m_physical_device(physical_device)
 {
+        ASSERT(!create_info.pEnabledFeatures);
+
+        ASSERT(create_info.pNext);
+        VkStructureType type;
+        std::memcpy(&type, create_info.pNext, sizeof(VkStructureType));
+        ASSERT(type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2);
+        VkPhysicalDeviceFeatures2 features_2;
+        std::memcpy(&features_2, create_info.pNext, sizeof(VkPhysicalDeviceFeatures2));
+
+        ASSERT(features_2.pNext);
+        std::memcpy(&type, features_2.pNext, sizeof(VkStructureType));
+        ASSERT(type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES);
+        VkPhysicalDeviceVulkan11Features vulkan_11_features;
+        std::memcpy(&vulkan_11_features, features_2.pNext, sizeof(VkPhysicalDeviceVulkan11Features));
+
+        m_features.features_10 = features_2.features;
+        m_features.features_11 = vulkan_11_features;
+        m_features.features_11.pNext = nullptr;
+
         for (unsigned i = 0; i < create_info.queueCreateInfoCount; ++i)
         {
                 uint32_t family_index = create_info.pQueueCreateInfos[i].queueFamilyIndex;
