@@ -75,7 +75,7 @@ Property                  | Value
 Programming languages     | C++20, GLSL 4.50
 C++ compilers             | GCC 10, Clang 10
 Platforms                 | Linux, Windows
-Graphics and compute APIs | Vulkan 1.1
+Graphics and compute APIs | Vulkan 1.2
 Frameworks                | Qt 5
 Libraries                 | FreeType, GMP, Xlib
 Optional libraries        | cuFFT (for DFT tests), FFTW (for DFT tests)
