@@ -103,7 +103,7 @@ std::enable_if_t<std::is_integral_v<T> && std::is_unsigned_v<T>, std::string> to
         unsigned width = std::numeric_limits<T>::digits - std::countl_zero(v);
         std::string s(prefix);
         s.resize(s.size() + width);
-        for (auto i = std::ssize(s) - 1; i >= std::ssize(prefix); --i)
+        for (std::ptrdiff_t i = std::ssize(s) - 1; i >= std::ssize(prefix); --i)
         {
                 s[i] = (v & 1u) ? '1' : '0';
                 v >>= 1u;
