@@ -200,30 +200,58 @@ Device::Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& creat
 {
         ASSERT(!create_info.pEnabledFeatures);
 
-        ASSERT(create_info.pNext);
-        VkStructureType type;
-        std::memcpy(&type, create_info.pNext, sizeof(VkStructureType));
-        ASSERT(type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2);
-        VkPhysicalDeviceFeatures2 features_2;
-        std::memcpy(&features_2, create_info.pNext, sizeof(VkPhysicalDeviceFeatures2));
+        bool features_10 = false;
+        bool features_11 = false;
+        bool features_12 = false;
+        const void* ptr = create_info.pNext;
+        while (ptr)
+        {
+                VkStructureType type;
+                std::memcpy(&type, ptr, sizeof(VkStructureType));
+                if (type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2)
+                {
+                        if (features_10)
+                        {
+                                error("Unique features required");
+                        }
+                        features_10 = true;
+                        VkPhysicalDeviceFeatures2 features_2;
+                        std::memcpy(&features_2, ptr, sizeof(VkPhysicalDeviceFeatures2));
+                        ptr = features_2.pNext;
+                        m_features.features_10 = features_2.features;
+                }
+                else if (type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES)
+                {
+                        if (features_11)
+                        {
+                                error("Unique features required");
+                        }
+                        features_11 = true;
+                        std::memcpy(&m_features.features_11, ptr, sizeof(VkPhysicalDeviceVulkan11Features));
+                        ptr = m_features.features_11.pNext;
+                        m_features.features_11.pNext = nullptr;
+                }
+                else if (type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES)
+                {
+                        if (features_12)
+                        {
+                                error("Unique features required");
+                        }
+                        features_12 = true;
+                        std::memcpy(&m_features.features_12, ptr, sizeof(VkPhysicalDeviceVulkan12Features));
+                        ptr = m_features.features_12.pNext;
+                        m_features.features_12.pNext = nullptr;
+                }
+                else
+                {
+                        error("Unknown device create info type " + to_string(static_cast<long long>(type)));
+                }
+        }
 
-        ASSERT(features_2.pNext);
-        std::memcpy(&type, features_2.pNext, sizeof(VkStructureType));
-        ASSERT(type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES);
-        VkPhysicalDeviceVulkan11Features vulkan_11_features;
-        std::memcpy(&vulkan_11_features, features_2.pNext, sizeof(VkPhysicalDeviceVulkan11Features));
-
-        ASSERT(vulkan_11_features.pNext);
-        std::memcpy(&type, vulkan_11_features.pNext, sizeof(VkStructureType));
-        ASSERT(type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES);
-        VkPhysicalDeviceVulkan12Features vulkan_12_features;
-        std::memcpy(&vulkan_12_features, vulkan_11_features.pNext, sizeof(VkPhysicalDeviceVulkan12Features));
-
-        m_features.features_10 = features_2.features;
-        m_features.features_11 = vulkan_11_features;
-        m_features.features_11.pNext = nullptr;
-        m_features.features_12 = vulkan_12_features;
-        m_features.features_12.pNext = nullptr;
+        if (!features_10 || !features_11 || !features_12)
+        {
+                error("Not all device features specified for device creation");
+        }
 
         for (unsigned i = 0; i < create_info.queueCreateInfoCount; ++i)
         {
