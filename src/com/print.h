@@ -22,11 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "type/trait.h"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <complex>
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <string_view>
 
 std::string to_string(__float128 t);
 
@@ -86,6 +88,27 @@ std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string_fixed(T t, 
         }
 
         return r;
+}
+
+template <typename T>
+std::enable_if_t<std::is_integral_v<T> && std::is_unsigned_v<T>, std::string> to_string_binary(
+        T v,
+        const std::string_view& prefix = "")
+{
+        if (v == 0)
+        {
+                return std::string(prefix) + '0';
+        }
+        // std::bit_width
+        unsigned width = std::numeric_limits<T>::digits - std::countl_zero(v);
+        std::string s(prefix);
+        s.resize(s.size() + width);
+        for (auto i = std::ssize(s) - 1; i >= std::ssize(prefix); --i)
+        {
+                s[i] = (v & 1u) ? '1' : '0';
+                v >>= 1u;
+        }
+        return s;
 }
 
 //
