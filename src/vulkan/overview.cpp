@@ -63,38 +63,48 @@ std::vector<T> value(const T (&data)[N])
         return r;
 }
 
-std::vector<unsigned> samples(VkSampleCountFlags flags)
+#define ADD_FLAG(s, flags, flag, name)            \
+        do                                        \
+        {                                         \
+                if (((flags) & (flag)) == (flag)) \
+                {                                 \
+                        if (!(s).empty())         \
+                        {                         \
+                                (s) += ", ";      \
+                        }                         \
+                        (s) += (name);            \
+                        (flags) &= ~(flag);       \
+                }                                 \
+        } while (false)
+
+#define ADD_FLAG_UNKNOWN(s, flags)                              \
+        do                                                      \
+        {                                                       \
+                if ((flags) != 0)                               \
+                {                                               \
+                        (s) += (s).empty() ? "" : ", ";         \
+                        (s) += "UNKNOWN (";                     \
+                        (s) += to_string_binary((flags), "0b"); \
+                        (s) += ")";                             \
+                }                                               \
+        } while (false)
+
+std::string samples(VkSampleCountFlags flags)
 {
-        std::vector<unsigned> samples;
-        if ((flags & VK_SAMPLE_COUNT_1_BIT) == VK_SAMPLE_COUNT_1_BIT)
+        if (!flags)
         {
-                samples.push_back(1);
+                return "NONE";
         }
-        if ((flags & VK_SAMPLE_COUNT_2_BIT) == VK_SAMPLE_COUNT_2_BIT)
-        {
-                samples.push_back(2);
-        }
-        if ((flags & VK_SAMPLE_COUNT_4_BIT) == VK_SAMPLE_COUNT_4_BIT)
-        {
-                samples.push_back(4);
-        }
-        if ((flags & VK_SAMPLE_COUNT_8_BIT) == VK_SAMPLE_COUNT_8_BIT)
-        {
-                samples.push_back(8);
-        }
-        if ((flags & VK_SAMPLE_COUNT_16_BIT) == VK_SAMPLE_COUNT_16_BIT)
-        {
-                samples.push_back(16);
-        }
-        if ((flags & VK_SAMPLE_COUNT_32_BIT) == VK_SAMPLE_COUNT_32_BIT)
-        {
-                samples.push_back(32);
-        }
-        if ((flags & VK_SAMPLE_COUNT_64_BIT) == VK_SAMPLE_COUNT_64_BIT)
-        {
-                samples.push_back(64);
-        }
-        return samples;
+        std::string s;
+        ADD_FLAG(s, flags, VK_SAMPLE_COUNT_1_BIT, "1");
+        ADD_FLAG(s, flags, VK_SAMPLE_COUNT_2_BIT, "2");
+        ADD_FLAG(s, flags, VK_SAMPLE_COUNT_4_BIT, "4");
+        ADD_FLAG(s, flags, VK_SAMPLE_COUNT_8_BIT, "8");
+        ADD_FLAG(s, flags, VK_SAMPLE_COUNT_16_BIT, "16");
+        ADD_FLAG(s, flags, VK_SAMPLE_COUNT_32_BIT, "32");
+        ADD_FLAG(s, flags, VK_SAMPLE_COUNT_64_BIT, "64");
+        ADD_FLAG_UNKNOWN(s, flags);
+        return s;
 }
 
 std::string resolve_modes(VkResolveModeFlags flags)
@@ -104,26 +114,11 @@ std::string resolve_modes(VkResolveModeFlags flags)
                 return "NONE";
         }
         std::string s;
-        if ((flags & VK_RESOLVE_MODE_SAMPLE_ZERO_BIT) == VK_RESOLVE_MODE_SAMPLE_ZERO_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "SAMPLE_ZERO";
-        }
-        if ((flags & VK_RESOLVE_MODE_AVERAGE_BIT) == VK_RESOLVE_MODE_AVERAGE_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "AVERAGE";
-        }
-        if ((flags & VK_RESOLVE_MODE_MIN_BIT) == VK_RESOLVE_MODE_MIN_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "MIN";
-        }
-        if ((flags & VK_RESOLVE_MODE_MAX_BIT) == VK_RESOLVE_MODE_MAX_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "MAX";
-        }
+        ADD_FLAG(s, flags, VK_RESOLVE_MODE_SAMPLE_ZERO_BIT, "SAMPLE_ZERO");
+        ADD_FLAG(s, flags, VK_RESOLVE_MODE_AVERAGE_BIT, "AVERAGE");
+        ADD_FLAG(s, flags, VK_RESOLVE_MODE_MIN_BIT, "MIN");
+        ADD_FLAG(s, flags, VK_RESOLVE_MODE_MAX_BIT, "MAX");
+        ADD_FLAG_UNKNOWN(s, flags);
         return s;
 }
 
@@ -134,36 +129,13 @@ std::string shader_stages(VkShaderStageFlags flags)
                 return "NONE";
         }
         std::string s;
-        if ((flags & VK_SHADER_STAGE_VERTEX_BIT) == VK_SHADER_STAGE_VERTEX_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "VERTEX";
-        }
-        if ((flags & VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT) == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "TESSELLATION_CONTROL_BIT";
-        }
-        if ((flags & VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT) == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "TESSELLATION_EVALUATION_BIT";
-        }
-        if ((flags & VK_SHADER_STAGE_GEOMETRY_BIT) == VK_SHADER_STAGE_GEOMETRY_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "GEOMETRY";
-        }
-        if ((flags & VK_SHADER_STAGE_FRAGMENT_BIT) == VK_SHADER_STAGE_FRAGMENT_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "FRAGMENT";
-        }
-        if ((flags & VK_SHADER_STAGE_COMPUTE_BIT) == VK_SHADER_STAGE_COMPUTE_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "COMPUTE";
-        }
+        ADD_FLAG(s, flags, VK_SHADER_STAGE_VERTEX_BIT, "VERTEX");
+        ADD_FLAG(s, flags, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT, "TESSELLATION_CONTROL");
+        ADD_FLAG(s, flags, VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT, "TESSELLATION_EVALUATION");
+        ADD_FLAG(s, flags, VK_SHADER_STAGE_GEOMETRY_BIT, "GEOMETRY");
+        ADD_FLAG(s, flags, VK_SHADER_STAGE_FRAGMENT_BIT, "FRAGMENT");
+        ADD_FLAG(s, flags, VK_SHADER_STAGE_COMPUTE_BIT, "COMPUTE");
+        ADD_FLAG_UNKNOWN(s, flags);
         return s;
 }
 
@@ -174,46 +146,15 @@ std::string subgroup_features(VkSubgroupFeatureFlags flags)
                 return "NONE";
         }
         std::string s;
-        if ((flags & VK_SUBGROUP_FEATURE_BASIC_BIT) == VK_SUBGROUP_FEATURE_BASIC_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "BASIC";
-        }
-        if ((flags & VK_SUBGROUP_FEATURE_VOTE_BIT) == VK_SUBGROUP_FEATURE_VOTE_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "VOTE";
-        }
-        if ((flags & VK_SUBGROUP_FEATURE_ARITHMETIC_BIT) == VK_SUBGROUP_FEATURE_ARITHMETIC_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "ARITHMETIC";
-        }
-        if ((flags & VK_SUBGROUP_FEATURE_BALLOT_BIT) == VK_SUBGROUP_FEATURE_BALLOT_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "BALLOT";
-        }
-        if ((flags & VK_SUBGROUP_FEATURE_SHUFFLE_BIT) == VK_SUBGROUP_FEATURE_SHUFFLE_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "SHUFFLE";
-        }
-        if ((flags & VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT) == VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "SHUFFLE_RELATIVE";
-        }
-        if ((flags & VK_SUBGROUP_FEATURE_CLUSTERED_BIT) == VK_SUBGROUP_FEATURE_CLUSTERED_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "CLUSTERED";
-        }
-        if ((flags & VK_SUBGROUP_FEATURE_QUAD_BIT) == VK_SUBGROUP_FEATURE_QUAD_BIT)
-        {
-                s += s.empty() ? "" : ", ";
-                s += "QUAD";
-        }
+        ADD_FLAG(s, flags, VK_SUBGROUP_FEATURE_BASIC_BIT, "BASIC");
+        ADD_FLAG(s, flags, VK_SUBGROUP_FEATURE_VOTE_BIT, "VOTE");
+        ADD_FLAG(s, flags, VK_SUBGROUP_FEATURE_ARITHMETIC_BIT, "ARITHMETIC");
+        ADD_FLAG(s, flags, VK_SUBGROUP_FEATURE_BALLOT_BIT, "BALLOT");
+        ADD_FLAG(s, flags, VK_SUBGROUP_FEATURE_SHUFFLE_BIT, "SHUFFLE");
+        ADD_FLAG(s, flags, VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT, "SHUFFLE_RELATIVE");
+        ADD_FLAG(s, flags, VK_SUBGROUP_FEATURE_CLUSTERED_BIT, "CLUSTERED");
+        ADD_FLAG(s, flags, VK_SUBGROUP_FEATURE_QUAD_BIT, "QUAD");
+        ADD_FLAG_UNKNOWN(s, flags);
         return s;
 }
 
@@ -315,7 +256,7 @@ void extensions(const PhysicalDevice& device, size_t device_node, StringTree* tr
 }
 
 #define ADD_VALUE_10(v) properties.emplace_back(#v, to_string(value(device.properties().properties_10.limits.v)))
-#define ADD_SAMPLE_10(v) properties.emplace_back(#v, to_string(samples(device.properties().properties_10.limits.v)))
+#define ADD_SAMPLE_10(v) properties.emplace_back(#v, samples(device.properties().properties_10.limits.v))
 
 #define ADD_VALUE_11(v) properties.emplace_back(#v, to_string(value(device.properties().properties_11.v)))
 #define ADD_SHADER_STAGE_11(v) properties.emplace_back(#v, shader_stages(device.properties().properties_11.v))
@@ -324,7 +265,7 @@ void extensions(const PhysicalDevice& device, size_t device_node, StringTree* tr
 #define ADD_SUBGROUP_FEATURE_11(v) properties.emplace_back(#v, subgroup_features(device.properties().properties_11.v))
 
 #define ADD_VALUE_12(v) properties.emplace_back(#v, to_string(value(device.properties().properties_12.v)))
-#define ADD_SAMPLE_12(v) properties.emplace_back(#v, to_string(samples(device.properties().properties_12.v)))
+#define ADD_SAMPLE_12(v) properties.emplace_back(#v, samples(device.properties().properties_12.v))
 #define ADD_RESOLVE_MODE_12(v) properties.emplace_back(#v, resolve_modes(device.properties().properties_12.v))
 #define ADD_SHADER_FLOAT_CONTROLS_INDEPENDENCE_12(v) \
         properties.emplace_back(#v, shader_float_controls_independence(device.properties().properties_12.v))
