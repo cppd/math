@@ -38,13 +38,19 @@ class VisibleHyperplaneParallelotope final : public GenericObject<N, T>, public 
 
 public:
         template <typename... V>
-        VisibleHyperplaneParallelotope(const Color& color, T diffuse, const Vector<N, T>& org, const V&... e)
+        VisibleHyperplaneParallelotope(
+                const Color& color,
+                const Color::DataType& diffuse,
+                const Color::DataType& alpha,
+                const Vector<N, T>& org,
+                const V&... e)
                 : m_hyperplane_parallelotope(org, e...)
         {
                 static_assert((std::is_same_v<V, Vector<N, T>> && ...));
 
                 m_surface_properties.set_color(color);
                 m_surface_properties.set_diffuse(diffuse);
+                m_surface_properties.set_alpha(alpha);
         }
 
         void set_light_source(const Color& color)
@@ -96,13 +102,19 @@ class VisibleParallelotope final : public GenericObject<N, T>, public Surface<N,
 
 public:
         template <typename... V>
-        VisibleParallelotope(const Color& color, T diffuse, const Vector<N, T>& org, const V&... e)
+        VisibleParallelotope(
+                const Color& color,
+                const Color::DataType& diffuse,
+                const Color::DataType& alpha,
+                const Vector<N, T>& org,
+                const V&... e)
                 : m_parallelotope(org, e...)
         {
                 static_assert((std::is_same_v<V, Vector<N, T>> && ...));
 
                 m_surface_properties.set_color(color);
                 m_surface_properties.set_diffuse(diffuse);
+                m_surface_properties.set_alpha(alpha);
         }
 
         void set_light_source(const Color& color)

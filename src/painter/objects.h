@@ -42,6 +42,8 @@ class SurfaceProperties
         std::optional<Color> m_light_source_color;
         // Коэффициент для диффузного отражения.
         Color::DataType m_diffuse;
+        // Коэффициент для прозрачности.
+        Color::DataType m_alpha;
 
 public:
         void set_geometric_normal(const Vector<N, T>& normal)
@@ -82,11 +84,20 @@ public:
 
         void set_diffuse(const Color::DataType& diffuse)
         {
-                m_diffuse = diffuse;
+                m_diffuse = std::clamp(diffuse, Color::DataType(0), Color::DataType(1));
         }
         const Color::DataType& diffuse() const
         {
                 return m_diffuse;
+        }
+
+        void set_alpha(const Color::DataType& alpha)
+        {
+                m_alpha = std::clamp(alpha, Color::DataType(0), Color::DataType(1));
+        }
+        const Color::DataType& alpha() const
+        {
+                return m_alpha;
         }
 };
 

@@ -131,22 +131,23 @@ void CornellBoxScene<T>::create_scene(
 
         //
 
-        constexpr T DIFFUSE = 1;
+        constexpr Color::DataType DIFFUSE = 1;
+        constexpr Color::DataType ALPHA = 1;
 
         m_rectangle_back = std::make_unique<VisibleHyperplaneParallelotope<3, T>>(
-                colors::WHITE, DIFFUSE, lower_left + size * dir, size * right, size * up);
+                colors::WHITE, DIFFUSE, ALPHA, lower_left + size * dir, size * right, size * up);
 
         m_rectangle_top = std::make_unique<VisibleHyperplaneParallelotope<3, T>>(
-                colors::WHITE, DIFFUSE, upper_left, size * dir, size * right);
+                colors::WHITE, DIFFUSE, ALPHA, upper_left, size * dir, size * right);
 
         m_rectangle_bottom = std::make_unique<VisibleHyperplaneParallelotope<3, T>>(
-                colors::WHITE, DIFFUSE, lower_left, size * dir, size * right);
+                colors::WHITE, DIFFUSE, ALPHA, lower_left, size * dir, size * right);
 
         m_rectangle_left = std::make_unique<VisibleHyperplaneParallelotope<3, T>>(
-                colors::RED, DIFFUSE, lower_left, size * dir, size * up);
+                colors::RED, DIFFUSE, ALPHA, lower_left, size * dir, size * up);
 
         m_rectangle_right = std::make_unique<VisibleHyperplaneParallelotope<3, T>>(
-                colors::GREEN, DIFFUSE, lower_right, size * dir, size * up);
+                colors::GREEN, DIFFUSE, ALPHA, lower_right, size * dir, size * up);
 
         //
 
@@ -163,13 +164,13 @@ void CornellBoxScene<T>::create_scene(
         m_default_surface_properties.set_diffuse(1);
 
         m_box = std::make_unique<VisibleParallelotope<3, T>>(
-                colors::MAGENTA, DIFFUSE, lower_left + size * (T(0.7) * dir + T(0.8) * right + T(0.1) * up),
+                colors::MAGENTA, DIFFUSE, ALPHA, lower_left + size * (T(0.7) * dir + T(0.8) * right + T(0.1) * up),
                 T(0.1) * size * right, T(0.8) * size * up, T(0.1) * size * dir);
 
         Vector<3, T> upper_center = upper_left - T(0.001) * size * up + T(0.5) * size * right + T(0.5) * size * dir;
 
         m_lamp = std::make_unique<VisibleHyperplaneParallelotope<3, T>>(
-                colors::WHITE, DIFFUSE, upper_center - T(0.1) * size * dir - T(0.1) * size * right,
+                colors::WHITE, DIFFUSE, ALPHA, upper_center - T(0.1) * size * dir - T(0.1) * size * right,
                 T(0.2) * size * right, T(0.2) * size * dir);
         m_lamp->set_light_source(Color(50));
 

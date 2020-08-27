@@ -183,12 +183,12 @@ void MeshObject<N, T>::create(const mesh::Reading<N>& mesh_object)
         for (const typename mesh::Mesh<N>::Material& m : mesh.materials)
         {
                 int map_Kd = m.map_Kd < 0 ? -1 : (images_offset + m.map_Kd);
-                m_materials.emplace_back(m.Kd, mesh_object.diffuse(), map_Kd);
+                m_materials.emplace_back(m.Kd, mesh_object.diffuse(), map_Kd, mesh_object.alpha());
         }
         if (facets_without_material)
         {
                 ASSERT(materials_offset + default_material_index == static_cast<int>(m_materials.size()));
-                m_materials.emplace_back(mesh_object.color(), mesh_object.diffuse(), -1);
+                m_materials.emplace_back(mesh_object.color(), mesh_object.diffuse(), -1, mesh_object.alpha());
         }
 
         for (const image::Image<N - 1>& image : mesh.images)
@@ -330,7 +330,10 @@ SurfaceProperties<N, T> MeshObject<N, T>::surface_properties(const Vector<N, T>&
         ASSERT(facet->material() >= 0);
 
         const Material& m = m_materials[facet->material()];
+
         s.set_diffuse(m.diffuse);
+        s.set_alpha(m.alpha);
+
         if (facet->has_texcoord() && m.map_Kd >= 0)
         {
                 s.set_color(m_images[m.map_Kd].texture(facet->texcoord(p)));

@@ -44,8 +44,9 @@ class MeshObject final
                 Color Kd;
                 Color::DataType diffuse;
                 int map_Kd;
-                Material(const Color& Kd, Color::DataType diffuse, int map_Kd)
-                        : Kd(Kd), diffuse(diffuse), map_Kd(map_Kd)
+                Color::DataType alpha;
+                Material(const Color& Kd, Color::DataType diffuse, int map_Kd, Color::DataType alpha)
+                        : Kd(Kd), diffuse(diffuse), map_Kd(map_Kd), alpha(alpha)
                 {
                 }
         };
