@@ -268,7 +268,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 }
                 else if (coverage <= 0)
                 {
-                        Color c = m_paint_objects->default_surface_properties().color();
+                        Color c = m_paint_objects->background_color();
                         unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
                         unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
                         unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
@@ -276,7 +276,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 }
                 else
                 {
-                        Color c = interpolation(m_paint_objects->default_surface_properties().color(), color, coverage);
+                        Color c = interpolation(m_paint_objects->background_color(), color, coverage);
                         unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
                         unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
                         unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());

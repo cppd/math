@@ -142,19 +142,19 @@ struct PaintData
 {
         const std::vector<const GenericObject<N, T>*>& objects;
         const std::vector<const LightSource<N, T>*>& light_sources;
-        const SurfaceProperties<N, T>& default_surface_properties;
+        const std::optional<Color> background_light_source_color;
         const T ray_offset;
         const bool smooth_normal;
 
         PaintData(
                 const std::vector<const GenericObject<N, T>*>& objects,
                 const std::vector<const LightSource<N, T>*>& light_sources,
-                const SurfaceProperties<N, T>& default_surface_properties,
+                const std::optional<Color>& background_light_source_color,
                 const T& ray_offset,
                 bool smooth_normal)
                 : objects(objects),
                   light_sources(light_sources),
-                  default_surface_properties(default_surface_properties),
+                  background_light_source_color(background_light_source_color),
                   ray_offset(ray_offset),
                   smooth_normal(smooth_normal)
         {
@@ -376,9 +376,7 @@ Color trace_path(
         {
                 if (recursion_level > 0)
                 {
-                        return paint_data.default_surface_properties.light_source_color()
-                                       ? *paint_data.default_surface_properties.light_source_color()
-                                       : Color(0);
+                        return paint_data.background_light_source_color.value_or(Color(0));
                 }
                 return EMPTY_COLOR;
         }
@@ -654,7 +652,7 @@ void paint_threads(
         const PainterSampler<N - 1, T> sampler(samples_per_pixel);
 
         const PaintData paint_data(
-                paint_objects.objects(), paint_objects.light_sources(), paint_objects.default_surface_properties(),
+                paint_objects.objects(), paint_objects.light_sources(), paint_objects.background_light_source_color(),
                 compute_ray_offset(paint_objects.objects()), smooth_normal);
 
         Pixels pixels(paint_objects.projector().screen_size());

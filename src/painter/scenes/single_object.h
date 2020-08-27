@@ -38,7 +38,9 @@ class SingleObjectScene final : public PaintObjects<N, T>
         VisibleSharedMesh<N, T> m_object;
         std::unique_ptr<const Projector<N, T>> m_projector;
         std::unique_ptr<const LightSource<N, T>> m_light_source;
-        SurfaceProperties<N, T> m_default_surface_properties;
+
+        Color m_background_color;
+        std::optional<Color> m_background_light_source_color;
 
         std::vector<const GenericObject<N, T>*> m_objects;
         std::vector<const LightSource<N, T>*> m_light_sources;
@@ -60,9 +62,14 @@ class SingleObjectScene final : public PaintObjects<N, T>
                 return *m_projector;
         }
 
-        const SurfaceProperties<N, T>& default_surface_properties() const override
+        const Color& background_color() const override
         {
-                return m_default_surface_properties;
+                return m_background_color;
+        }
+
+        const std::optional<Color>& background_light_source_color() const override
+        {
+                return m_background_light_source_color;
         }
 
 public:
@@ -73,9 +80,8 @@ public:
                 std::shared_ptr<const MeshObject<N, T>>&& mesh)
                 : m_object(std::move(mesh)), m_projector(std::move(projector)), m_light_source(std::move(light_source))
         {
-                m_default_surface_properties.set_color(background_color);
-                m_default_surface_properties.set_diffuse(1);
-                m_default_surface_properties.set_light_source_color(Color(background_color.luminance()));
+                m_background_color = background_color;
+                m_background_light_source_color = Color(background_color.luminance());
 
                 m_light_sources.push_back(m_light_source.get());
 

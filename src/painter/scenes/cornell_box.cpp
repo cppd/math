@@ -36,7 +36,9 @@ class CornellBoxScene : public PaintObjects<3, T>
         std::unique_ptr<VisiblePerspectiveProjector<3, T>> m_perspective_projector;
         std::unique_ptr<VisibleParallelProjector<3, T>> m_parallel_projector;
         std::unique_ptr<VisibleSphericalProjector<3, T>> m_spherical_projector;
-        SurfaceProperties<3, T> m_default_surface_properties;
+
+        Color m_background_color;
+        std::optional<Color> m_background_light_source_color;
 
         std::unique_ptr<VisibleHyperplaneParallelotope<3, T>> m_rectangle_back;
         std::unique_ptr<VisibleHyperplaneParallelotope<3, T>> m_rectangle_top;
@@ -72,9 +74,14 @@ class CornellBoxScene : public PaintObjects<3, T>
                 // return *m_spherical_projector;
         }
 
-        const SurfaceProperties<3, T>& default_surface_properties() const override
+        const Color& background_color() const override
         {
-                return m_default_surface_properties;
+                return m_background_color;
+        }
+
+        const std::optional<Color>& background_light_source_color() const override
+        {
+                return m_background_light_source_color;
         }
 
         //
@@ -160,9 +167,6 @@ void CornellBoxScene<T>::create_scene(
         m_spherical_projector =
                 std::make_unique<VisibleSphericalProjector<3, T>>(view_point, dir, screen_axes, 80, screen_sizes);
 
-        m_default_surface_properties.set_color(colors::BLACK);
-        m_default_surface_properties.set_diffuse(1);
-
         m_box = std::make_unique<VisibleParallelotope<3, T>>(
                 colors::MAGENTA, DIFFUSE, ALPHA, lower_left + size * (T(0.7) * dir + T(0.8) * right + T(0.1) * up),
                 T(0.1) * size * right, T(0.8) * size * up, T(0.1) * size * dir);
@@ -176,6 +180,8 @@ void CornellBoxScene<T>::create_scene(
 
         m_constant_light = std::make_unique<VisibleConstantLight<3, T>>(upper_center, Color(1));
         m_point_light = std::make_unique<VisiblePointLight<3, T>>(upper_center, Color(1), 1);
+
+        m_background_color = colors::BLACK;
 
         m_objects.push_back(m_lamp.get());
         // m_light_sources.push_back(m_constant_light.get());
