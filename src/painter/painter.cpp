@@ -410,12 +410,13 @@ Color trace_path(
 
         if (surface_properties.light_source_color())
         {
-                color += *surface_properties.light_source_color();
+                color += *surface_properties.light_source_color() * surface_properties.alpha();
         }
 
-        if (surface_properties.diffuse() > 0)
+        Color::DataType reflection = surface_properties.diffuse() * surface_properties.alpha();
+        if (reflection > 0)
         {
-                Color surface_color = surface_properties.diffuse() * surface_properties.color();
+                Color surface_color = reflection * surface_properties.color();
 
                 Color::DataType new_color_level = color_level * surface_color.max_element();
 
@@ -441,6 +442,23 @@ Color trace_path(
                                         color += surface_color * diffuse;
                                 }
                         }
+                }
+        }
+
+        Color::DataType transmission = 1 - surface_properties.alpha();
+        if (transmission > 0)
+        {
+                Color::DataType new_color_level = color_level * transmission;
+                if (new_color_level >= MIN_COLOR_LEVEL)
+                {
+                        Ray<N, T> new_ray = ray;
+                        new_ray.set_org(point);
+                        new_ray.move_along_dir(paint_data.ray_offset);
+
+                        Color transmitted = trace_path(
+                                paint_data, ray_count, random_engine, recursion_level + 1, new_color_level, new_ray);
+
+                        color += transmission * transmitted;
                 }
         }
 
