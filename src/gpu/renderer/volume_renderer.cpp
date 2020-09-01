@@ -235,7 +235,7 @@ std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(unsigned index, bo
                 index = m_command_buffers_volume->count() == 1 ? 0 : index;
                 return (*m_command_buffers_volume)[index];
         }
-        else if (transparency)
+        if (transparency)
         {
                 ASSERT(m_command_buffers_mesh);
 

@@ -34,7 +34,7 @@ public:
 
         [[nodiscard]] bool show(
                 int dimension,
-                const std::string& point_object_name,
+                const std::string& volume_object_name,
                 int default_image_size,
                 int min_image_size,
                 int max_image_size,

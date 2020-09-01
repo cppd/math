@@ -74,7 +74,8 @@ class ObjectStorage
         std::function<void()> m_visibility_changed;
 
 public:
-        ObjectStorage(std::function<void()>&& visibility_changed) : m_visibility_changed(std::move(visibility_changed))
+        explicit ObjectStorage(std::function<void()>&& visibility_changed)
+                : m_visibility_changed(std::move(visibility_changed))
         {
                 ASSERT(m_visibility_changed);
         }

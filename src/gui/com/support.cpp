@@ -226,13 +226,9 @@ WindowID widget_window_id(const QWidget* widget)
         static_assert(std::is_integral_v<WindowID> || std::is_pointer_v<WindowID>);
         static_assert(std::is_integral_v<WId> || std::is_pointer_v<WId>);
 
-        union
-        {
-                WId w_id;
-                WindowID window_id;
-        };
-
-        w_id = widget->winId();
+        const WId w_id = widget->winId();
+        WindowID window_id;
+        std::memcpy(&window_id, &w_id, sizeof(window_id));
         return window_id;
 }
 
