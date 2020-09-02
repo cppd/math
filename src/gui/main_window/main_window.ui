@@ -1675,19 +1675,19 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionLoad"/>
-    <addaction name="actionExport"/>
+    <addaction name="action_load"/>
+    <addaction name="action_export"/>
     <addaction name="separator"/>
-    <addaction name="actionExit"/>
+    <addaction name="action_exit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionHelp"/>
-    <addaction name="actionSelfTest"/>
+    <addaction name="action_help"/>
+    <addaction name="action_self_test"/>
     <addaction name="separator"/>
-    <addaction name="actionAbout"/>
+    <addaction name="action_about"/>
    </widget>
    <widget class="QMenu" name="menuCreate">
     <property name="title">
@@ -1698,13 +1698,13 @@
     <property name="title">
      <string>Edit</string>
     </property>
-    <addaction name="actionBoundCocone"/>
+    <addaction name="action_bound_cocone"/>
    </widget>
    <widget class="QMenu" name="menuRendering">
     <property name="title">
      <string>Rendering</string>
     </property>
-    <addaction name="actionPainter"/>
+    <addaction name="action_painter"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -1713,22 +1713,22 @@
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <action name="actionLoad">
+  <action name="action_load">
    <property name="text">
     <string>Open...</string>
    </property>
   </action>
-  <action name="actionExit">
+  <action name="action_exit">
    <property name="text">
     <string>Exit</string>
    </property>
   </action>
-  <action name="actionAbout">
+  <action name="action_about">
    <property name="text">
     <string>About</string>
    </property>
   </action>
-  <action name="actionFullScreen">
+  <action name="action_full_screen">
    <property name="text">
     <string>FullScreen</string>
    </property>
@@ -1736,27 +1736,27 @@
     <string>F11</string>
    </property>
   </action>
-  <action name="actionHelp">
+  <action name="action_help">
    <property name="text">
     <string>Help</string>
    </property>
   </action>
-  <action name="actionExport">
+  <action name="action_export">
    <property name="text">
     <string>Export...</string>
    </property>
   </action>
-  <action name="actionSelfTest">
+  <action name="action_self_test">
    <property name="text">
     <string>Self-Test</string>
    </property>
   </action>
-  <action name="actionBoundCocone">
+  <action name="action_bound_cocone">
    <property name="text">
     <string>BoundCocone...</string>
    </property>
   </action>
-  <action name="actionPainter">
+  <action name="action_painter">
    <property name="text">
     <string>Painter...</string>
    </property>

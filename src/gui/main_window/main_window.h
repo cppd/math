@@ -50,62 +50,59 @@ public:
 
         void append_to_log(const std::string& text, const Srgb8& color);
 
-public slots:
-
-private slots:
-        void on_actionAbout_triggered();
-        void on_actionBoundCocone_triggered();
-        void on_actionExit_triggered();
-        void on_actionExport_triggered();
-        void on_actionFullScreen_triggered();
-        void on_actionHelp_triggered();
-        void on_actionLoad_triggered();
-        void on_actionPainter_triggered();
-        void on_actionSelfTest_triggered();
-        void on_checkBox_clip_plane_clicked();
-        void on_checkBox_convex_hull_2d_clicked();
-        void on_checkBox_dft_clicked();
-        void on_checkBox_fog_clicked();
-        void on_checkBox_fps_clicked();
-        void on_checkBox_isosurface_clicked();
-        void on_checkBox_materials_clicked();
-        void on_checkBox_normals_clicked();
-        void on_checkBox_optical_flow_clicked();
-        void on_checkBox_pencil_sketch_clicked();
-        void on_checkBox_shadow_clicked();
-        void on_checkBox_smooth_clicked();
-        void on_checkBox_vertical_sync_clicked();
-        void on_checkBox_wireframe_clicked();
-        void on_pushButton_reset_lighting_clicked();
-        void on_pushButton_reset_view_clicked();
-        void on_slider_clip_plane_valueChanged(int value);
-        void on_slider_dft_brightness_valueChanged(int value);
-        void on_slider_isosurface_transparency_valueChanged(int value);
-        void on_slider_isovalue_valueChanged(int value);
-        void on_slider_lighting_intensity_valueChanged(int value);
-        void on_slider_mesh_ambient_valueChanged(int value);
-        void on_slider_mesh_diffuse_valueChanged(int value);
-        void on_slider_mesh_specular_power_valueChanged(int value);
-        void on_slider_mesh_specular_valueChanged(int value);
-        void on_slider_mesh_transparency_valueChanged(int value);
-        void on_slider_normals_valueChanged(int value);
-        void on_slider_shadow_quality_valueChanged(int value);
-        void on_slider_volume_ambient_valueChanged(int value);
-        void on_slider_volume_diffuse_valueChanged(int value);
-        void on_slider_volume_specular_power_valueChanged(int value);
-        void on_slider_volume_specular_valueChanged(int value);
-        void on_slider_volume_transparency_valueChanged(int value);
-        void on_toolButton_background_color_clicked();
-        void on_toolButton_clip_plane_color_clicked();
-        void on_toolButton_dft_background_color_clicked();
-        void on_toolButton_dft_color_clicked();
-        void on_toolButton_mesh_color_clicked();
-        void on_toolButton_normal_color_negative_clicked();
-        void on_toolButton_normal_color_positive_clicked();
-        void on_toolButton_volume_color_clicked();
-        void on_toolButton_wireframe_color_clicked();
-
 private:
+        void on_about_triggered();
+        void on_background_color_clicked();
+        void on_bound_cocone_triggered();
+        void on_clip_plane_changed(int value);
+        void on_clip_plane_clicked();
+        void on_clip_plane_color_clicked();
+        void on_convex_hull_2d_clicked();
+        void on_dft_background_color_clicked();
+        void on_dft_brightness_changed(int value);
+        void on_dft_clicked();
+        void on_dft_color_clicked();
+        void on_exit_triggered();
+        void on_export_triggered();
+        void on_fog_clicked();
+        void on_fps_clicked();
+        void on_full_screen_triggered();
+        void on_help_triggered();
+        void on_isosurface_clicked();
+        void on_isosurface_transparency_changed(int value);
+        void on_isovalue_changed(int value);
+        void on_lighting_intensity_changed(int value);
+        void on_load_triggered();
+        void on_materials_clicked();
+        void on_mesh_ambient_changed(int value);
+        void on_mesh_color_clicked();
+        void on_mesh_diffuse_changed(int value);
+        void on_mesh_specular_changed(int value);
+        void on_mesh_specular_power_changed(int value);
+        void on_mesh_transparency_changed(int value);
+        void on_normal_color_negative_clicked();
+        void on_normal_color_positive_clicked();
+        void on_normals_changed(int value);
+        void on_normals_clicked();
+        void on_optical_flow_clicked();
+        void on_painter_triggered();
+        void on_pencil_sketch_clicked();
+        void on_reset_lighting_clicked();
+        void on_reset_view_clicked();
+        void on_self_test_triggered();
+        void on_shadow_clicked();
+        void on_shadow_quality_changed(int value);
+        void on_smooth_clicked();
+        void on_vertical_sync_clicked();
+        void on_volume_ambient_changed(int value);
+        void on_volume_color_clicked();
+        void on_volume_diffuse_changed(int value);
+        void on_volume_specular_changed(int value);
+        void on_volume_specular_power_changed(int value);
+        void on_volume_transparency_changed(int value);
+        void on_wireframe_clicked();
+        void on_wireframe_color_clicked();
+
         void graphics_widget_resize(QResizeEvent*);
         void graphics_widget_mouse_wheel(QWheelEvent*);
         void graphics_widget_mouse_move(QMouseEvent*);
@@ -122,6 +119,7 @@ private:
 
         //
 
+        void constructor_connect();
         void constructor_graphics_widget();
         void constructor_interface();
         void constructor_objects();

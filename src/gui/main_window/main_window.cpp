@@ -100,6 +100,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 
         constructor_graphics_widget();
         constructor_objects();
+        constructor_connect();
         constructor_interface();
 }
 
@@ -159,11 +160,77 @@ void MainWindow::constructor_objects()
                 [this](double min, double max) { slider_volume_levels_range_changed(min, max); });
 }
 
+void MainWindow::constructor_connect()
+{
+        connect(ui.action_about, &QAction::triggered, this, &MainWindow::on_about_triggered);
+        connect(ui.action_bound_cocone, &QAction::triggered, this, &MainWindow::on_bound_cocone_triggered);
+        connect(ui.action_exit, &QAction::triggered, this, &MainWindow::on_exit_triggered);
+        connect(ui.action_export, &QAction::triggered, this, &MainWindow::on_export_triggered);
+        connect(ui.action_full_screen, &QAction::triggered, this, &MainWindow::on_full_screen_triggered);
+        connect(ui.action_help, &QAction::triggered, this, &MainWindow::on_help_triggered);
+        connect(ui.action_load, &QAction::triggered, this, &MainWindow::on_load_triggered);
+        connect(ui.action_painter, &QAction::triggered, this, &MainWindow::on_painter_triggered);
+        connect(ui.action_self_test, &QAction::triggered, this, &MainWindow::on_self_test_triggered);
+
+        connect(ui.checkBox_clip_plane, &QCheckBox::clicked, this, &MainWindow::on_clip_plane_clicked);
+        connect(ui.checkBox_convex_hull_2d, &QCheckBox::clicked, this, &MainWindow::on_convex_hull_2d_clicked);
+        connect(ui.checkBox_dft, &QCheckBox::clicked, this, &MainWindow::on_dft_clicked);
+        connect(ui.checkBox_fog, &QCheckBox::clicked, this, &MainWindow::on_fog_clicked);
+        connect(ui.checkBox_fps, &QCheckBox::clicked, this, &MainWindow::on_fps_clicked);
+        connect(ui.checkBox_isosurface, &QCheckBox::clicked, this, &MainWindow::on_isosurface_clicked);
+        connect(ui.checkBox_materials, &QCheckBox::clicked, this, &MainWindow::on_materials_clicked);
+        connect(ui.checkBox_normals, &QCheckBox::clicked, this, &MainWindow::on_normals_clicked);
+        connect(ui.checkBox_optical_flow, &QCheckBox::clicked, this, &MainWindow::on_optical_flow_clicked);
+        connect(ui.checkBox_pencil_sketch, &QCheckBox::clicked, this, &MainWindow::on_pencil_sketch_clicked);
+        connect(ui.checkBox_shadow, &QCheckBox::clicked, this, &MainWindow::on_shadow_clicked);
+        connect(ui.checkBox_smooth, &QCheckBox::clicked, this, &MainWindow::on_smooth_clicked);
+        connect(ui.checkBox_vertical_sync, &QCheckBox::clicked, this, &MainWindow::on_vertical_sync_clicked);
+        connect(ui.checkBox_wireframe, &QCheckBox::clicked, this, &MainWindow::on_wireframe_clicked);
+
+        connect(ui.pushButton_reset_lighting, &QPushButton::clicked, this, &MainWindow::on_reset_lighting_clicked);
+        connect(ui.pushButton_reset_view, &QPushButton::clicked, this, &MainWindow::on_reset_view_clicked);
+
+        connect(ui.slider_clip_plane, &QSlider::valueChanged, this, &MainWindow::on_clip_plane_changed);
+        connect(ui.slider_dft_brightness, &QSlider::valueChanged, this, &MainWindow::on_dft_brightness_changed);
+        connect(ui.slider_isosurface_transparency, &QSlider::valueChanged, this,
+                &MainWindow::on_isosurface_transparency_changed);
+        connect(ui.slider_isovalue, &QSlider::valueChanged, this, &MainWindow::on_isovalue_changed);
+        connect(ui.slider_lighting_intensity, &QSlider::valueChanged, this, &MainWindow::on_lighting_intensity_changed);
+        connect(ui.slider_mesh_ambient, &QSlider::valueChanged, this, &MainWindow::on_mesh_ambient_changed);
+        connect(ui.slider_mesh_diffuse, &QSlider::valueChanged, this, &MainWindow::on_mesh_diffuse_changed);
+        connect(ui.slider_mesh_specular_power, &QSlider::valueChanged, this,
+                &MainWindow::on_mesh_specular_power_changed);
+        connect(ui.slider_mesh_specular, &QSlider::valueChanged, this, &MainWindow::on_mesh_specular_changed);
+        connect(ui.slider_mesh_transparency, &QSlider::valueChanged, this, &MainWindow::on_mesh_transparency_changed);
+        connect(ui.slider_normals, &QSlider::valueChanged, this, &MainWindow::on_normals_changed);
+        connect(ui.slider_shadow_quality, &QSlider::valueChanged, this, &MainWindow::on_shadow_quality_changed);
+        connect(ui.slider_volume_ambient, &QSlider::valueChanged, this, &MainWindow::on_volume_ambient_changed);
+        connect(ui.slider_volume_diffuse, &QSlider::valueChanged, this, &MainWindow::on_volume_diffuse_changed);
+        connect(ui.slider_volume_specular_power, &QSlider::valueChanged, this,
+                &MainWindow::on_volume_specular_power_changed);
+        connect(ui.slider_volume_specular, &QSlider::valueChanged, this, &MainWindow::on_volume_specular_changed);
+        connect(ui.slider_volume_transparency, &QSlider::valueChanged, this,
+                &MainWindow::on_volume_transparency_changed);
+
+        connect(ui.toolButton_background_color, &QToolButton::clicked, this, &MainWindow::on_background_color_clicked);
+        connect(ui.toolButton_clip_plane_color, &QToolButton::clicked, this, &MainWindow::on_clip_plane_color_clicked);
+        connect(ui.toolButton_dft_background_color, &QToolButton::clicked, this,
+                &MainWindow::on_dft_background_color_clicked);
+        connect(ui.toolButton_dft_color, &QToolButton::clicked, this, &MainWindow::on_dft_color_clicked);
+        connect(ui.toolButton_mesh_color, &QToolButton::clicked, this, &MainWindow::on_mesh_color_clicked);
+        connect(ui.toolButton_normal_color_negative, &QToolButton::clicked, this,
+                &MainWindow::on_normal_color_negative_clicked);
+        connect(ui.toolButton_normal_color_positive, &QToolButton::clicked, this,
+                &MainWindow::on_normal_color_positive_clicked);
+        connect(ui.toolButton_volume_color, &QToolButton::clicked, this, &MainWindow::on_volume_color_clicked);
+        connect(ui.toolButton_wireframe_color, &QToolButton::clicked, this, &MainWindow::on_wireframe_color_clicked);
+}
+
 void MainWindow::constructor_interface()
 {
         connect(&m_timer_progress_bar, &QTimer::timeout, this, &MainWindow::timer_progress_bar);
 
-        QMainWindow::addAction(ui.actionFullScreen);
+        QMainWindow::addAction(ui.action_full_screen);
 
         {
                 QSignalBlocker blocker_check_box(ui.checkBox_clip_plane);
@@ -214,8 +281,8 @@ void MainWindow::constructor_interface()
 
         ui.tabWidget->setCurrentIndex(0);
 
-        ui.actionHelp->setText(QString(settings::APPLICATION_NAME) + " Help");
-        ui.actionAbout->setText("About " + QString(settings::APPLICATION_NAME));
+        ui.action_help->setText(QString(settings::APPLICATION_NAME) + " Help");
+        ui.action_about->setText("About " + QString(settings::APPLICATION_NAME));
 
         ui.slider_shadow_quality->setSliderPosition(SHADOW_ZOOM);
 
@@ -644,7 +711,7 @@ void MainWindow::load_from_file(std::string file_name, bool use_object_selection
         });
 }
 
-void MainWindow::on_actionLoad_triggered()
+void MainWindow::on_load_triggered()
 {
         load_from_file("", true);
 }
@@ -683,7 +750,7 @@ void MainWindow::action_volume_repository(int dimension, std::string object_name
         });
 }
 
-void MainWindow::on_actionExport_triggered()
+void MainWindow::on_export_triggered()
 {
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
         static constexpr const char* DESCRIPTION = "Export";
@@ -704,7 +771,7 @@ void MainWindow::on_actionExport_triggered()
         });
 }
 
-void MainWindow::on_actionBoundCocone_triggered()
+void MainWindow::on_bound_cocone_triggered()
 {
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
         static constexpr const char* DESCRIPTION = "BoundCocone";
@@ -725,12 +792,12 @@ void MainWindow::on_actionBoundCocone_triggered()
         });
 }
 
-void MainWindow::on_actionExit_triggered()
+void MainWindow::on_exit_triggered()
 {
         close();
 }
 
-void MainWindow::on_actionHelp_triggered()
+void MainWindow::on_help_triggered()
 {
         dialog::application_help();
 }
@@ -750,12 +817,12 @@ void MainWindow::self_test(test::SelfTestType test_type, bool with_confirmation)
         });
 }
 
-void MainWindow::on_actionSelfTest_triggered()
+void MainWindow::on_self_test_triggered()
 {
         self_test(test::SelfTestType::Extended, true);
 }
 
-void MainWindow::on_actionPainter_triggered()
+void MainWindow::on_painter_triggered()
 {
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
         static constexpr const char* DESCRIPTION = "Painter";
@@ -784,12 +851,12 @@ void MainWindow::on_actionPainter_triggered()
         });
 }
 
-void MainWindow::on_actionAbout_triggered()
+void MainWindow::on_about_triggered()
 {
         dialog::application_about();
 }
 
-void MainWindow::on_pushButton_reset_view_clicked()
+void MainWindow::on_reset_view_clicked()
 {
         m_view->send(view::command::ResetView());
 }
@@ -873,7 +940,7 @@ double MainWindow::lighting_intensity() const
         return (v <= 1.0) ? v : interpolation(1.0, MAXIMUM_LIGHTING_INTENSITY, v - 1.0);
 }
 
-void MainWindow::on_pushButton_reset_lighting_clicked()
+void MainWindow::on_reset_lighting_clicked()
 {
         bool yes;
         if (!dialog::message_question_default_yes("Reset lighting?", &yes) || !yes)
@@ -902,17 +969,17 @@ double MainWindow::normal_length() const
         return interpolation(NORMAL_LENGTH_MINIMUM, NORMAL_LENGTH_MAXIMUM, slider_position(ui.slider_normals));
 }
 
-void MainWindow::on_slider_lighting_intensity_valueChanged(int)
+void MainWindow::on_lighting_intensity_changed(int)
 {
         m_view->send(view::command::SetLightingIntensity(lighting_intensity()));
 }
 
-void MainWindow::on_slider_dft_brightness_valueChanged(int)
+void MainWindow::on_dft_brightness_changed(int)
 {
         m_view->send(view::command::SetDftBrightness(dft_brightness()));
 }
 
-void MainWindow::on_slider_shadow_quality_valueChanged(int)
+void MainWindow::on_shadow_quality_changed(int)
 {
         if (m_view)
         {
@@ -920,17 +987,17 @@ void MainWindow::on_slider_shadow_quality_valueChanged(int)
         }
 }
 
-void MainWindow::on_slider_clip_plane_valueChanged(int)
+void MainWindow::on_clip_plane_changed(int)
 {
         m_view->send(view::command::ClipPlanePosition(slider_position(ui.slider_clip_plane)));
 }
 
-void MainWindow::on_slider_normals_valueChanged(int)
+void MainWindow::on_normals_changed(int)
 {
         m_view->send(view::command::SetNormalLength(normal_length()));
 }
 
-void MainWindow::on_toolButton_background_color_clicked()
+void MainWindow::on_background_color_clicked()
 {
         QPointer ptr(this);
         dialog::color_dialog("Background Color", m_background_color, [&](const QColor& c) {
@@ -941,7 +1008,7 @@ void MainWindow::on_toolButton_background_color_clicked()
         });
 }
 
-void MainWindow::on_toolButton_wireframe_color_clicked()
+void MainWindow::on_wireframe_color_clicked()
 {
         QPointer ptr(this);
         dialog::color_dialog("Wireframe Color", m_wireframe_color, [&](const QColor& c) {
@@ -952,7 +1019,7 @@ void MainWindow::on_toolButton_wireframe_color_clicked()
         });
 }
 
-void MainWindow::on_toolButton_clip_plane_color_clicked()
+void MainWindow::on_clip_plane_color_clicked()
 {
         QPointer ptr(this);
         dialog::color_dialog("Clip Plane Color", m_clip_plane_color, [&](const QColor& c) {
@@ -963,7 +1030,7 @@ void MainWindow::on_toolButton_clip_plane_color_clicked()
         });
 }
 
-void MainWindow::on_toolButton_normal_color_positive_clicked()
+void MainWindow::on_normal_color_positive_clicked()
 {
         QPointer ptr(this);
         dialog::color_dialog("Positive Normal Color", m_normal_color_positive, [&](const QColor& c) {
@@ -974,7 +1041,7 @@ void MainWindow::on_toolButton_normal_color_positive_clicked()
         });
 }
 
-void MainWindow::on_toolButton_normal_color_negative_clicked()
+void MainWindow::on_normal_color_negative_clicked()
 {
         QPointer ptr(this);
         dialog::color_dialog("Negative Normal Color", m_normal_color_negative, [&](const QColor& c) {
@@ -985,7 +1052,7 @@ void MainWindow::on_toolButton_normal_color_negative_clicked()
         });
 }
 
-void MainWindow::on_toolButton_dft_background_color_clicked()
+void MainWindow::on_dft_background_color_clicked()
 {
         QPointer ptr(this);
         dialog::color_dialog("DFT Background Color", m_dft_background_color, [&](const QColor& c) {
@@ -996,7 +1063,7 @@ void MainWindow::on_toolButton_dft_background_color_clicked()
         });
 }
 
-void MainWindow::on_toolButton_dft_color_clicked()
+void MainWindow::on_dft_color_clicked()
 {
         QPointer ptr(this);
         dialog::color_dialog("DFT Color", m_dft_color, [&](const QColor& c) {
@@ -1007,7 +1074,7 @@ void MainWindow::on_toolButton_dft_color_clicked()
         });
 }
 
-void MainWindow::on_checkBox_shadow_clicked()
+void MainWindow::on_shadow_clicked()
 {
         bool checked = ui.checkBox_shadow->isChecked();
 
@@ -1017,37 +1084,37 @@ void MainWindow::on_checkBox_shadow_clicked()
         m_view->send(view::command::ShowShadow(checked));
 }
 
-void MainWindow::on_checkBox_fog_clicked()
+void MainWindow::on_fog_clicked()
 {
         m_view->send(view::command::ShowFog(ui.checkBox_fog->isChecked()));
 }
 
-void MainWindow::on_checkBox_wireframe_clicked()
+void MainWindow::on_wireframe_clicked()
 {
         m_view->send(view::command::ShowWireframe(ui.checkBox_wireframe->isChecked()));
 }
 
-void MainWindow::on_checkBox_materials_clicked()
+void MainWindow::on_materials_clicked()
 {
         m_view->send(view::command::ShowMaterials(ui.checkBox_materials->isChecked()));
 }
 
-void MainWindow::on_checkBox_smooth_clicked()
+void MainWindow::on_smooth_clicked()
 {
         m_view->send(view::command::ShowSmooth(ui.checkBox_smooth->isChecked()));
 }
 
-void MainWindow::on_checkBox_fps_clicked()
+void MainWindow::on_fps_clicked()
 {
         m_view->send(view::command::ShowFps(ui.checkBox_fps->isChecked()));
 }
 
-void MainWindow::on_checkBox_pencil_sketch_clicked()
+void MainWindow::on_pencil_sketch_clicked()
 {
         m_view->send(view::command::ShowPencilSketch(ui.checkBox_pencil_sketch->isChecked()));
 }
 
-void MainWindow::on_checkBox_dft_clicked()
+void MainWindow::on_dft_clicked()
 {
         bool checked = ui.checkBox_dft->isChecked();
 
@@ -1057,7 +1124,7 @@ void MainWindow::on_checkBox_dft_clicked()
         m_view->send(view::command::ShowDft(checked));
 }
 
-void MainWindow::on_checkBox_clip_plane_clicked()
+void MainWindow::on_clip_plane_clicked()
 {
         constexpr double default_position = 0.5;
 
@@ -1078,29 +1145,29 @@ void MainWindow::on_checkBox_clip_plane_clicked()
         }
 }
 
-void MainWindow::on_checkBox_normals_clicked()
+void MainWindow::on_normals_clicked()
 {
         bool checked = ui.checkBox_normals->isChecked();
         ui.slider_normals->setEnabled(checked);
         m_view->send(view::command::ShowNormals(checked));
 }
 
-void MainWindow::on_checkBox_convex_hull_2d_clicked()
+void MainWindow::on_convex_hull_2d_clicked()
 {
         m_view->send(view::command::ShowConvexHull2D(ui.checkBox_convex_hull_2d->isChecked()));
 }
 
-void MainWindow::on_checkBox_optical_flow_clicked()
+void MainWindow::on_optical_flow_clicked()
 {
         m_view->send(view::command::ShowOpticalFlow(ui.checkBox_optical_flow->isChecked()));
 }
 
-void MainWindow::on_checkBox_vertical_sync_clicked()
+void MainWindow::on_vertical_sync_clicked()
 {
         m_view->send(view::command::SetVerticalSync(ui.checkBox_vertical_sync->isChecked()));
 }
 
-void MainWindow::on_actionFullScreen_triggered()
+void MainWindow::on_full_screen_triggered()
 {
 }
 
@@ -1280,7 +1347,7 @@ void MainWindow::slider_volume_levels_range_changed(double min, double max)
                 *volume_object_opt);
 }
 
-void MainWindow::on_slider_volume_transparency_valueChanged(int)
+void MainWindow::on_volume_transparency_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -1301,7 +1368,7 @@ void MainWindow::on_slider_volume_transparency_valueChanged(int)
                 *volume_object_opt);
 }
 
-void MainWindow::on_slider_isosurface_transparency_valueChanged(int)
+void MainWindow::on_isosurface_transparency_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -1321,7 +1388,7 @@ void MainWindow::on_slider_isosurface_transparency_valueChanged(int)
                 *volume_object_opt);
 }
 
-void MainWindow::on_checkBox_isosurface_clicked()
+void MainWindow::on_isosurface_clicked()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -1342,7 +1409,7 @@ void MainWindow::on_checkBox_isosurface_clicked()
                 *volume_object_opt);
 }
 
-void MainWindow::on_slider_isovalue_valueChanged(int)
+void MainWindow::on_isovalue_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -1362,7 +1429,7 @@ void MainWindow::on_slider_isovalue_valueChanged(int)
                 *volume_object_opt);
 }
 
-void MainWindow::on_slider_mesh_transparency_valueChanged(int)
+void MainWindow::on_mesh_transparency_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -1382,7 +1449,7 @@ void MainWindow::on_slider_mesh_transparency_valueChanged(int)
                 *object_opt);
 }
 
-void MainWindow::on_toolButton_mesh_color_clicked()
+void MainWindow::on_mesh_color_clicked()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -1416,7 +1483,7 @@ void MainWindow::on_toolButton_mesh_color_clicked()
         });
 }
 
-void MainWindow::on_toolButton_volume_color_clicked()
+void MainWindow::on_volume_color_clicked()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -1450,7 +1517,7 @@ void MainWindow::on_toolButton_volume_color_clicked()
         });
 }
 
-void MainWindow::on_slider_mesh_ambient_valueChanged(int)
+void MainWindow::on_mesh_ambient_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -1470,7 +1537,7 @@ void MainWindow::on_slider_mesh_ambient_valueChanged(int)
                 *object_opt);
 }
 
-void MainWindow::on_slider_mesh_diffuse_valueChanged(int)
+void MainWindow::on_mesh_diffuse_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -1490,7 +1557,7 @@ void MainWindow::on_slider_mesh_diffuse_valueChanged(int)
                 *object_opt);
 }
 
-void MainWindow::on_slider_mesh_specular_valueChanged(int)
+void MainWindow::on_mesh_specular_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -1510,7 +1577,7 @@ void MainWindow::on_slider_mesh_specular_valueChanged(int)
                 *object_opt);
 }
 
-void MainWindow::on_slider_mesh_specular_power_valueChanged(int)
+void MainWindow::on_mesh_specular_power_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -1530,7 +1597,7 @@ void MainWindow::on_slider_mesh_specular_power_valueChanged(int)
                 *object_opt);
 }
 
-void MainWindow::on_slider_volume_ambient_valueChanged(int)
+void MainWindow::on_volume_ambient_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -1550,7 +1617,7 @@ void MainWindow::on_slider_volume_ambient_valueChanged(int)
                 *object_opt);
 }
 
-void MainWindow::on_slider_volume_diffuse_valueChanged(int)
+void MainWindow::on_volume_diffuse_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -1570,7 +1637,7 @@ void MainWindow::on_slider_volume_diffuse_valueChanged(int)
                 *object_opt);
 }
 
-void MainWindow::on_slider_volume_specular_valueChanged(int)
+void MainWindow::on_volume_specular_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -1590,7 +1657,7 @@ void MainWindow::on_slider_volume_specular_valueChanged(int)
                 *object_opt);
 }
 
-void MainWindow::on_slider_volume_specular_power_valueChanged(int)
+void MainWindow::on_volume_specular_power_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
