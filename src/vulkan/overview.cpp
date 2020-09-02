@@ -643,41 +643,39 @@ void features(const PhysicalDevice& device, size_t device_node, StringTree* tree
 
 void queues(
         const PhysicalDevice& device,
-        const std::vector<VkQueueFamilyProperties>& families,
+        const VkQueueFamilyProperties& family_properties,
         size_t family_index,
         size_t queue_families_node,
         StringTree* tree)
 {
-        const VkQueueFamilyProperties& p = families[family_index];
-
         size_t queue_family_node = tree->add(queue_families_node, "Family " + to_string(family_index));
 
         try
         {
-                tree->add(queue_family_node, "queue count: " + to_string(p.queueCount));
+                tree->add(queue_family_node, "queue count: " + to_string(family_properties.queueCount));
 
-                if (p.queueCount < 1)
+                if (family_properties.queueCount < 1)
                 {
                         return;
                 }
 
-                if (p.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+                if (family_properties.queueFlags & VK_QUEUE_GRAPHICS_BIT)
                 {
                         tree->add(queue_family_node, "graphics");
                 }
-                if (p.queueFlags & VK_QUEUE_COMPUTE_BIT)
+                if (family_properties.queueFlags & VK_QUEUE_COMPUTE_BIT)
                 {
                         tree->add(queue_family_node, "compute");
                 }
-                if (p.queueFlags & VK_QUEUE_TRANSFER_BIT)
+                if (family_properties.queueFlags & VK_QUEUE_TRANSFER_BIT)
                 {
                         tree->add(queue_family_node, "transfer");
                 }
-                if (p.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT)
+                if (family_properties.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT)
                 {
                         tree->add(queue_family_node, "sparse binding");
                 }
-                if (p.queueFlags & VK_QUEUE_PROTECTED_BIT)
+                if (family_properties.queueFlags & VK_QUEUE_PROTECTED_BIT)
                 {
                         tree->add(queue_family_node, "protected");
                 }
@@ -699,11 +697,9 @@ void queue_families(const PhysicalDevice& device, size_t device_node, StringTree
 
         try
         {
-                std::vector<VkQueueFamilyProperties> families = device.queue_families();
-
-                for (size_t family_index = 0; family_index < families.size(); ++family_index)
+                for (size_t index = 0; const VkQueueFamilyProperties& properties : device.queue_families())
                 {
-                        queues(device, families, family_index, queue_families_node, tree);
+                        queues(device, properties, index++, queue_families_node, tree);
                 }
         }
         catch (const std::exception& e)

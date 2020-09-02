@@ -70,7 +70,7 @@ public:
 };
 }
 
-int run_application(int argc, char* argv[])
+int run_application(int argc, char** argv)
 {
         LOG(command_line_description());
 

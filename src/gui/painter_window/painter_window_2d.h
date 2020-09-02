@@ -29,9 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <vector>
 
-namespace gui
-{
-namespace painter_window_implementation
+namespace gui::painter_window_implementation
 {
 class PainterWindow2d : public QWidget
 {
@@ -80,7 +78,9 @@ private:
         virtual void save_to_file() const = 0;
         virtual void add_volume() const = 0;
 
-        const std::thread::id m_window_thread_id;
+        const std::thread::id m_window_thread_id = std::this_thread::get_id();
+        bool m_first_show = true;
+
         const std::vector<int> m_screen_size;
         const int m_width;
         const int m_height;
@@ -88,7 +88,6 @@ private:
         const long long m_image_byte_count;
         QImage m_image;
         QTimer m_timer;
-        bool m_first_show;
 
         class Difference;
         std::unique_ptr<Difference> m_difference;
@@ -97,5 +96,4 @@ private:
 
         Ui::PainterWindow ui;
 };
-}
 }

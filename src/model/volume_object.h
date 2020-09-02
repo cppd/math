@@ -53,7 +53,7 @@ struct VolumeEvent final
         struct Update final
         {
                 std::shared_ptr<VolumeObject<N>> object;
-                Update(std::shared_ptr<VolumeObject<N>>&& object) : object(std::move(object))
+                explicit Update(std::shared_ptr<VolumeObject<N>>&& object) : object(std::move(object))
                 {
                 }
         };
@@ -61,7 +61,7 @@ struct VolumeEvent final
         struct Delete final
         {
                 ObjectId id;
-                Delete(ObjectId id) : id(id)
+                explicit Delete(ObjectId id) : id(id)
                 {
                 }
         };
@@ -371,7 +371,7 @@ class Writing final
         Update::Flags m_updates;
 
 public:
-        Writing(VolumeObject<N>* object) : m_object(object), m_lock(m_object->m_mutex)
+        explicit Writing(VolumeObject<N>* object) : m_object(object), m_lock(m_object->m_mutex)
         {
         }
 
@@ -527,7 +527,7 @@ class Reading final
         std::shared_lock<std::shared_mutex> m_lock;
 
 public:
-        Reading(const VolumeObject<N>& object) : m_object(&object), m_lock(object.m_mutex)
+        explicit Reading(const VolumeObject<N>& object) : m_object(&object), m_lock(object.m_mutex)
         {
         }
 

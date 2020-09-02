@@ -164,7 +164,7 @@ public:
                 {
                         return false;
                 }
-                return m_visible_objects.count(iter->second.get()) > 0;
+                return m_visible_objects.contains(iter->second.get());
         }
 };
 
@@ -433,7 +433,7 @@ class Impl final : public Renderer
                         MeshObject::UpdateChanges update_changes;
                         try
                         {
-                                update_changes = ptr->update(object);
+                                update_changes = ptr->update(reading);
                         }
                         catch (const std::exception& e)
                         {
@@ -493,7 +493,7 @@ class Impl final : public Renderer
                         VolumeObject::UpdateChanges update_changes;
                         try
                         {
-                                update_changes = ptr->update(object);
+                                update_changes = ptr->update(reading);
                         }
                         catch (const std::exception& e)
                         {

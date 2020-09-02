@@ -216,7 +216,7 @@ public:
                 return res;
         }
 
-        void render_ascii_printable_characters_to_files()
+        void render_ascii_printable_characters_to_files() const
         {
                 for (char32_t code_point = 32; code_point <= 126; ++code_point)
                 {

@@ -28,7 +28,7 @@ namespace merge_implementation
 template <typename T1, typename T2>
 void add(std::vector<T1>* v, const T2& e)
 {
-        if constexpr (has_begin_end<T2>)
+        if constexpr (is_vector<T2> || is_array<T2>)
         {
                 v->insert(v->end(), e.cbegin(), e.cend());
         }

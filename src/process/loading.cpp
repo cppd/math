@@ -86,10 +86,10 @@ std::function<void(ProgressRatioList*)> action_load_from_file(std::string file_n
         double alpha;
         gui::dialog::bound_cocone_parameters_current(&rho, &alpha);
 
-        bool bound_cocone = objects_to_load.count(gui::dialog::ComputationType::BoundCocone);
-        bool cocone = objects_to_load.count(gui::dialog::ComputationType::Cocone);
-        bool convex_hull = objects_to_load.count(gui::dialog::ComputationType::ConvexHull);
-        bool mst = objects_to_load.count(gui::dialog::ComputationType::Mst);
+        bool bound_cocone = objects_to_load.contains(gui::dialog::ComputationType::BoundCocone);
+        bool cocone = objects_to_load.contains(gui::dialog::ComputationType::Cocone);
+        bool convex_hull = objects_to_load.contains(gui::dialog::ComputationType::ConvexHull);
+        bool mst = objects_to_load.contains(gui::dialog::ComputationType::Mst);
 
         return [=](ProgressRatioList* progress_list) {
                 unsigned dimension = mesh::file_dimension(file_name);
@@ -134,10 +134,10 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
         double alpha;
         gui::dialog::bound_cocone_parameters_current(&rho, &alpha);
 
-        bool bound_cocone = objects_to_load.count(gui::dialog::ComputationType::BoundCocone);
-        bool cocone = objects_to_load.count(gui::dialog::ComputationType::Cocone);
-        bool convex_hull = objects_to_load.count(gui::dialog::ComputationType::ConvexHull);
-        bool mst = objects_to_load.count(gui::dialog::ComputationType::Mst);
+        bool bound_cocone = objects_to_load.contains(gui::dialog::ComputationType::BoundCocone);
+        bool cocone = objects_to_load.contains(gui::dialog::ComputationType::Cocone);
+        bool convex_hull = objects_to_load.contains(gui::dialog::ComputationType::ConvexHull);
+        bool mst = objects_to_load.contains(gui::dialog::ComputationType::Mst);
 
         return [=](ProgressRatioList* progress_list) {
                 apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {

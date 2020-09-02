@@ -98,13 +98,23 @@ FileType file_type_by_extension(const std::string& file_name)
 {
         const std::string ext = file_extension(file_name);
         const std::string OBJ = "obj";
-        if (ext.find(OBJ) == 0 && (ext == OBJ || file::read_dimension_number(ext.substr(OBJ.size()))))
+        if (ext.find(OBJ) == 0)
         {
+                if (ext == OBJ)
+                {
+                        return FileType::Obj;
+                }
+                file::read_dimension_number(ext.substr(OBJ.size()));
                 return FileType::Obj;
         }
         const std::string STL = "stl";
-        if (ext.find(STL) == 0 && (ext == STL || file::read_dimension_number(ext.substr(STL.size()))))
+        if (ext.find(STL) == 0)
         {
+                if (ext == STL)
+                {
+                        return FileType::Stl;
+                }
+                file::read_dimension_number(ext.substr(STL.size()));
                 return FileType::Stl;
         }
         error("Failed to find the file type by its extension for the file name " + file_name);

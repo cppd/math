@@ -169,7 +169,8 @@ private:
         void disable_volume_parameters();
         void update_volume_ui(ObjectId id);
 
-        const std::thread::id m_thread_id;
+        const std::thread::id m_thread_id = std::this_thread::get_id();
+        bool m_first_show = true;
 
         Ui::MainWindow ui;
 
@@ -194,8 +195,6 @@ private:
         QColor m_normal_color_negative;
         QColor m_dft_background_color;
         QColor m_dft_color;
-
-        bool m_first_show;
 
         QTimer m_timer_progress_bar;
 };

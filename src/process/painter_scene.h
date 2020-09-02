@@ -96,11 +96,8 @@ std::unique_ptr<const painter::PaintObjects<N, T>> create_painter_scene(
                                 background_color, impl::create_projector(info),
                                 impl::create_light_source(info, lighting_intensity), mesh);
                 }
-                else
-                {
-                        return cornell_box_scene(
-                                info.width, info.height, mesh, info.scene_size, info.camera_direction, info.camera_up);
-                }
+                return cornell_box_scene(
+                        info.width, info.height, mesh, info.scene_size, info.camera_direction, info.camera_up);
         }
         else
         {

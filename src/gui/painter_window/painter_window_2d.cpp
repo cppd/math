@@ -31,9 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstring>
 
-namespace gui
-{
-namespace painter_window_implementation
+namespace gui::painter_window_implementation
 {
 namespace
 {
@@ -99,14 +97,12 @@ PainterWindow2d::PainterWindow2d(
         const std::string& title,
         std::vector<int>&& screen_size,
         const std::vector<int>& initial_slider_positions)
-        : m_window_thread_id(std::this_thread::get_id()),
-          m_screen_size(std::move(screen_size)),
+        : m_screen_size(std::move(screen_size)),
           m_width(m_screen_size[0]),
           m_height(m_screen_size[1]),
           m_image_pixel_count(static_cast<long long>(m_width) * m_height),
           m_image_byte_count(static_cast<long long>(m_width) * m_height * sizeof(quint32)),
           m_image(m_width, m_height, QImage::Format_RGB32),
-          m_first_show(true),
           m_difference(std::make_unique<Difference>(DIFFERENCE_INTERVAL_MILLISECONDS))
 {
         ui.setupUi(this);
@@ -321,6 +317,5 @@ void PainterWindow2d::slider_changed_slot(int)
                 }
         }
         error_fatal("Failed to find sender in sliders");
-}
 }
 }

@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace process
 {
-constexpr double SCENE_SIZE = 2;
+inline constexpr double SCENE_SIZE = 2;
 
 template <size_t N, typename T>
-constexpr Vector<N, T> SCENE_CENTER = Vector<N, T>(0);
+inline constexpr Vector<N, T> SCENE_CENTER = Vector<N, T>(0);
 }

@@ -86,7 +86,7 @@ public:
                 resize(size);
         }
 
-        ColorImage(const Image<N>& image)
+        explicit ColorImage(const Image<N>& image)
         {
                 resize(image.size);
 

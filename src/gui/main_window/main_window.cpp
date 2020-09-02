@@ -92,8 +92,7 @@ constexpr QRgb NORMAL_COLOR_POSITIVE = qRgb(200, 200, 0);
 constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(50, 150, 50);
 }
 
-MainWindow::MainWindow(QWidget* parent)
-        : QMainWindow(parent), m_thread_id(std::this_thread::get_id()), m_first_show(true)
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 {
         ui.setupUi(this);
 

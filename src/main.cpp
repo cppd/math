@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <exception>
 
-int main(int argc, char* argv[])
+int main(int argc, char** argv)
 {
         try
         {

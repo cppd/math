@@ -135,11 +135,6 @@ public:
         {
                 return m_data == c.m_data;
         }
-
-        bool operator!=(const Color& c) const
-        {
-                return m_data != c.m_data;
-        }
 };
 
 template <typename F>

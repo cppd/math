@@ -164,7 +164,7 @@ class VisibleSharedMesh final : public GenericObject<N, T>, public Surface<N, T>
         std::shared_ptr<const MeshObject<N, T>> m_mesh;
 
 public:
-        VisibleSharedMesh(const std::shared_ptr<const MeshObject<N, T>>& mesh) : m_mesh(mesh)
+        explicit VisibleSharedMesh(const std::shared_ptr<const MeshObject<N, T>>& mesh) : m_mesh(mesh)
         {
         }
 
