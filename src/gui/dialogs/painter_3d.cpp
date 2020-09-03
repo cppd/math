@@ -41,6 +41,11 @@ PainterParametersFor3d::PainterParametersFor3d(QWidget* parent) : QDialog(parent
 {
         ui.setupUi(this);
         setWindowTitle("Painter");
+
+        connect(ui.spinBox_width, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                &PainterParametersFor3d::on_width_value_changed);
+        connect(ui.spinBox_height, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                &PainterParametersFor3d::on_height_value_changed);
 }
 
 bool PainterParametersFor3d::show(
@@ -104,9 +109,6 @@ bool PainterParametersFor3d::show(
         ui.spinBox_samples_per_pixel->setMinimum(1);
         ui.spinBox_samples_per_pixel->setMaximum(max_samples_per_pixel);
         ui.spinBox_samples_per_pixel->setValue(default_samples_per_pixel);
-
-        connect(ui.spinBox_width, SIGNAL(valueChanged(int)), this, SLOT(width_value_changed(int)));
-        connect(ui.spinBox_height, SIGNAL(valueChanged(int)), this, SLOT(height_value_changed(int)));
 
         ui.checkBox_flat_facets->setChecked(false);
         ui.checkBox_cornell_box->setChecked(false);
@@ -176,24 +178,20 @@ void PainterParametersFor3d::done(int r)
         QDialog::done(r);
 }
 
-void PainterParametersFor3d::width_value_changed(int)
+void PainterParametersFor3d::on_width_value_changed(int)
 {
-        disconnect(ui.spinBox_height, SIGNAL(valueChanged(int)), this, SLOT(height_value_changed(int)));
-
         int height = std::lround(ui.spinBox_width->value() / m_aspect_ratio);
-        ui.spinBox_height->setValue(std::clamp(height, m_min_height, m_max_height));
 
-        connect(ui.spinBox_height, SIGNAL(valueChanged(int)), this, SLOT(height_value_changed(int)));
+        QSignalBlocker blocker(ui.spinBox_height);
+        ui.spinBox_height->setValue(std::clamp(height, m_min_height, m_max_height));
 }
 
-void PainterParametersFor3d::height_value_changed(int)
+void PainterParametersFor3d::on_height_value_changed(int)
 {
-        disconnect(ui.spinBox_width, SIGNAL(valueChanged(int)), this, SLOT(width_value_changed(int)));
-
         int width = std::lround(ui.spinBox_height->value() * m_aspect_ratio);
-        ui.spinBox_width->setValue(std::clamp(width, m_min_width, m_max_width));
 
-        connect(ui.spinBox_width, SIGNAL(valueChanged(int)), this, SLOT(width_value_changed(int)));
+        QSignalBlocker blocker(ui.spinBox_width);
+        ui.spinBox_width->setValue(std::clamp(width, m_min_width, m_max_width));
 }
 }
 

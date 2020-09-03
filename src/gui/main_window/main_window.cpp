@@ -132,7 +132,7 @@ void MainWindow::constructor_graphics_widget()
         connect(m_graphics_widget, &GraphicsWidget::mouse_move, this, &MainWindow::graphics_widget_mouse_move);
         connect(m_graphics_widget, &GraphicsWidget::mouse_press, this, &MainWindow::graphics_widget_mouse_press);
         connect(m_graphics_widget, &GraphicsWidget::mouse_release, this, &MainWindow::graphics_widget_mouse_release);
-        connect(m_graphics_widget, &GraphicsWidget::resize, this, &MainWindow::graphics_widget_resize);
+        connect(m_graphics_widget, &GraphicsWidget::widget_resize, this, &MainWindow::graphics_widget_resize);
 }
 
 void MainWindow::constructor_objects()
@@ -150,8 +150,8 @@ void MainWindow::constructor_objects()
 
         m_repository_actions = std::make_unique<RepositoryActions>(ui.menuCreate, *m_repository);
 
-        connect(m_repository_actions.get(), &RepositoryActions::mesh, this, &MainWindow::action_mesh_repository);
-        connect(m_repository_actions.get(), &RepositoryActions::volume, this, &MainWindow::action_volume_repository);
+        connect(m_repository_actions.get(), &RepositoryActions::mesh, this, &MainWindow::on_repository_mesh);
+        connect(m_repository_actions.get(), &RepositoryActions::volume, this, &MainWindow::on_repository_volume);
 
         m_model_tree = std::make_unique<ModelTree>(ui.model_tree, [this]() { model_tree_item_changed(); });
 
@@ -619,10 +619,10 @@ void MainWindow::showEvent(QShowEvent* /*event*/)
         m_first_show = false;
 
         // Окно ещё не видно, поэтому небольшая задержка, чтобы окно реально появилось.
-        QTimer::singleShot(WINDOW_SHOW_DELAY_MSEC, this, &MainWindow::first_shown);
+        QTimer::singleShot(WINDOW_SHOW_DELAY_MSEC, this, &MainWindow::on_first_shown);
 }
 
-void MainWindow::first_shown()
+void MainWindow::on_first_shown()
 {
         m_timer_progress_bar.start(TIMER_PROGRESS_BAR_INTERVAL);
 
@@ -694,7 +694,7 @@ void MainWindow::first_shown()
         }
 }
 
-void MainWindow::load_from_file(std::string file_name, bool use_object_selection_dialog)
+void MainWindow::load_from_file(const std::string& file_name, bool use_object_selection_dialog)
 {
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
         static constexpr const char* DESCRIPTION = "Loading from file";
@@ -716,7 +716,7 @@ void MainWindow::on_load_triggered()
         load_from_file("", true);
 }
 
-void MainWindow::action_mesh_repository(int dimension, std::string object_name)
+void MainWindow::on_repository_mesh(int dimension, std::string object_name)
 {
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
         static constexpr const char* DESCRIPTION = "Load from mesh repository";
@@ -734,7 +734,7 @@ void MainWindow::action_mesh_repository(int dimension, std::string object_name)
         });
 }
 
-void MainWindow::action_volume_repository(int dimension, std::string object_name)
+void MainWindow::on_repository_volume(int dimension, std::string object_name)
 {
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
         static constexpr const char* DESCRIPTION = "Load from volume repository";

@@ -35,14 +35,6 @@ class PainterWindow2d : public QWidget
 {
         Q_OBJECT
 
-private slots:
-        void timer_slot();
-        void first_shown();
-        void slider_changed_slot(int);
-
-        void on_pushButton_save_to_file_clicked();
-        void on_pushButton_add_volume_clicked();
-
 public:
         PainterWindow2d(
                 const std::string& title,
@@ -51,6 +43,13 @@ public:
         ~PainterWindow2d() override;
 
 private:
+        void on_save_to_file_clicked();
+        void on_add_volume_clicked();
+
+        void on_timer_timeout();
+        void on_first_shown();
+        void on_slider_changed(int);
+
         struct DimensionSlider
         {
                 QLabel label;

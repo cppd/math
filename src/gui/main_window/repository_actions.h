@@ -36,11 +36,10 @@ signals:
         void mesh(int dimension, std::string object_name);
         void volume(int dimension, std::string object_name);
 
-private slots:
-        void slot_mesh();
-        void slot_volume();
-
 private:
+        void on_mesh_triggered();
+        void on_volume_triggered();
+
         struct RepositoryActionDescription final
         {
                 int dimension;

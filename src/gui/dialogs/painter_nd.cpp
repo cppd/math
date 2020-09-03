@@ -35,6 +35,11 @@ PainterParametersForNd::PainterParametersForNd(QWidget* parent) : QDialog(parent
 {
         ui.setupUi(this);
         setWindowTitle("Painter");
+
+        connect(ui.spinBox_min_size, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                &PainterParametersForNd::on_min_size_changed);
+        connect(ui.spinBox_max_size, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                &PainterParametersForNd::on_max_size_changed);
 }
 
 bool PainterParametersForNd::show(
@@ -109,20 +114,22 @@ bool PainterParametersForNd::show(
         return true;
 }
 
-void PainterParametersForNd::on_spinBox_min_size_valueChanged(int)
+void PainterParametersForNd::on_min_size_changed(int)
 {
         int min = ui.spinBox_min_size->value();
         if (min > ui.spinBox_max_size->value())
         {
+                QSignalBlocker blocker(ui.spinBox_max_size);
                 ui.spinBox_max_size->setValue(min);
         }
 }
 
-void PainterParametersForNd::on_spinBox_max_size_valueChanged(int)
+void PainterParametersForNd::on_max_size_changed(int)
 {
         int max = ui.spinBox_max_size->value();
         if (max < ui.spinBox_min_size->value())
         {
+                QSignalBlocker blocker(ui.spinBox_min_size);
                 ui.spinBox_min_size->setValue(max);
         }
 }

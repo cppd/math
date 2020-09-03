@@ -39,7 +39,7 @@ signals:
         void mouse_press(QMouseEvent* e);
         void mouse_release(QMouseEvent* e);
         void mouse_wheel(QWheelEvent* e);
-        void resize(QResizeEvent* e);
+        void widget_resize(QResizeEvent* e);
 
 protected:
         void wheelEvent(QWheelEvent* e) override
@@ -64,7 +64,7 @@ protected:
 
         void resizeEvent(QResizeEvent* e) override
         {
-                emit resize(e);
+                emit widget_resize(e);
         }
 };
 }

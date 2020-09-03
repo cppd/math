@@ -49,7 +49,7 @@ RepositoryActions::RepositoryActions(QMenu* menu, const storage::Repository& rep
                         action_description.object_name = object_name;
 
                         m_repository_actions.try_emplace(action, action_description);
-                        connect(action, SIGNAL(triggered()), this, SLOT(slot_mesh()));
+                        connect(action, &QAction::triggered, this, &RepositoryActions::on_mesh_triggered);
                 }
 
                 if (objects.dimension == 3)
@@ -69,13 +69,13 @@ RepositoryActions::RepositoryActions(QMenu* menu, const storage::Repository& rep
                                 action_description.object_name = object_name;
 
                                 m_repository_actions.try_emplace(action, action_description);
-                                connect(action, SIGNAL(triggered()), this, SLOT(slot_volume()));
+                                connect(action, &QAction::triggered, this, &RepositoryActions::on_volume_triggered);
                         }
                 }
         }
 }
 
-void RepositoryActions::slot_mesh()
+void RepositoryActions::on_mesh_triggered()
 {
         auto iter = m_repository_actions.find(sender());
         if (iter == m_repository_actions.cend())
@@ -89,7 +89,7 @@ void RepositoryActions::slot_mesh()
         emit mesh(dimension, object_name);
 }
 
-void RepositoryActions::slot_volume()
+void RepositoryActions::on_volume_triggered()
 {
         auto iter = m_repository_actions.find(sender());
         if (iter == m_repository_actions.cend())

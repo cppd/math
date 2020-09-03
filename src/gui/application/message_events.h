@@ -21,12 +21,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui::application
 {
-class MessageEvents
+class MessageEvents final
 {
         std::function<void(MessageEvent&&)> m_events;
 
 public:
         MessageEvents();
         ~MessageEvents();
+
+        MessageEvents(const MessageEvents&) = delete;
+        MessageEvents(MessageEvents&&) = delete;
+        MessageEvents& operator=(const MessageEvents&) = delete;
+        MessageEvents& operator=(MessageEvents&&) = delete;
 };
 }

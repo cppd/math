@@ -44,12 +44,10 @@ public:
                 bool* flat_facets,
                 bool* cornell_box);
 
-private slots:
-
-        void width_value_changed(int);
-        void height_value_changed(int);
-
 private:
+        void on_width_value_changed(int);
+        void on_height_value_changed(int);
+
         int m_width;
         int m_height;
         int m_min_width;

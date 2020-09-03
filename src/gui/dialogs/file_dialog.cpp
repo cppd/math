@@ -179,7 +179,7 @@ bool save_file(const std::string& caption, const std::vector<FileFilter>& filter
 
         if (!dialog_filters.empty())
         {
-                w->filterSelected(dialog_filters.front());
+                emit w->filterSelected(dialog_filters.front());
         }
 
         w->setOptions(make_options(read_only));

@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui::application
 {
-class LogEvents
+class LogEvents final
 {
         std::function<void(LogEvent&&)> m_events;
         std::function<void(const std::string&, const Srgb8&)> m_window_log;
@@ -34,6 +34,11 @@ class LogEvents
 public:
         LogEvents();
         ~LogEvents();
+
+        LogEvents(const LogEvents&) = delete;
+        LogEvents(LogEvents&&) = delete;
+        LogEvents& operator=(const LogEvents&) = delete;
+        LogEvents& operator=(LogEvents&&) = delete;
 
         void set_window_log(const std::function<void(const std::string&, const Srgb8&)>& window_log);
 };

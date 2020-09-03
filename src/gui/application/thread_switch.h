@@ -49,9 +49,11 @@ public:
         GlobalThreadSwitch();
         ~GlobalThreadSwitch();
 
-        static void run_in_global_thread(const std::function<void()>& f);
-
         GlobalThreadSwitch(const GlobalThreadSwitch&) = delete;
+        GlobalThreadSwitch(GlobalThreadSwitch&&) = delete;
         GlobalThreadSwitch& operator=(const GlobalThreadSwitch&) = delete;
+        GlobalThreadSwitch& operator=(GlobalThreadSwitch&&) = delete;
+
+        static void run_in_global_thread(const std::function<void()>& f);
 };
 }

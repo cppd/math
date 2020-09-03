@@ -35,12 +35,10 @@ public:
 
         [[nodiscard]] bool show(bool* bound_cocone, bool* cocone, bool* convex_hull, bool* mst);
 
-private slots:
-
-        void on_pushButton_set_all_clicked();
-        void on_pushButton_clear_all_clicked();
-
 private:
+        void on_set_all_clicked();
+        void on_clear_all_clicked();
+
         Ui::ObjectSelection ui;
 
         std::vector<QCheckBox*> m_boxes;

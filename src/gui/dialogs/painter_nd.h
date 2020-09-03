@@ -46,11 +46,10 @@ public:
                 int* samples_per_pixel,
                 bool* flat_facets);
 
-private slots:
-        void on_spinBox_min_size_valueChanged(int);
-        void on_spinBox_max_size_valueChanged(int);
-
 private:
+        void on_min_size_changed(int);
+        void on_max_size_changed(int);
+
         int m_max_thread_count;
         int m_min_screen_size;
         int m_max_screen_size;

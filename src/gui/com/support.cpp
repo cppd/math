@@ -42,9 +42,9 @@ bool is_child_widget_of_any_layout(QLayout* layout, QWidget* widget)
         {
                 return true;
         }
-        foreach (QObject* o, layout->children())
+        for (QObject* object : layout->children())
         {
-                if (is_child_widget_of_any_layout(static_cast<QLayout*>(o), widget))
+                if (is_child_widget_of_any_layout(static_cast<QLayout*>(object), widget))
                 {
                         return true;
                 }
@@ -82,16 +82,16 @@ void set_widgets_enabled(QLayout* layout, bool v)
 {
         ASSERT(layout);
 
-        QWidget* pw = layout->parentWidget();
-        if (!pw)
+        QWidget* parent_widget = layout->parentWidget();
+        if (!parent_widget)
         {
                 return;
         }
-        foreach (QWidget* w, pw->findChildren<QWidget*>())
+        for (QWidget* widget : parent_widget->findChildren<QWidget*>())
         {
-                if (is_child_widget_of_any_layout(layout, w))
+                if (is_child_widget_of_any_layout(layout, widget))
                 {
-                        w->setEnabled(v);
+                        widget->setEnabled(v);
                 }
         }
 }

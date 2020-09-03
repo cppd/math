@@ -109,13 +109,13 @@ private:
         void graphics_widget_mouse_press(QMouseEvent*);
         void graphics_widget_mouse_release(QMouseEvent*);
 
-        void action_mesh_repository(int dimension, std::string object_name);
-        void action_volume_repository(int dimension, std::string object_name);
+        void on_repository_mesh(int dimension, std::string object_name);
+        void on_repository_volume(int dimension, std::string object_name);
 
         void model_tree_item_changed();
         void slider_volume_levels_range_changed(double, double);
         void timer_progress_bar();
-        void first_shown();
+        void on_first_shown();
 
         //
 
@@ -131,7 +131,7 @@ private:
 
         //
 
-        void load_from_file(std::string file_name, bool use_object_selection_dialog);
+        void load_from_file(const std::string& file_name, bool use_object_selection_dialog);
         void self_test(test::SelfTestType test_type, bool with_confirmation);
 
         //

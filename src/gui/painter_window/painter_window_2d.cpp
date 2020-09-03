@@ -61,7 +61,7 @@ class PainterWindow2d::Difference
         {
                 std::array<long long, 3> data;
                 double time;
-                Point(std::array<long long, 3> data, double time) : data(data), time(time)
+                Point(const std::array<long long, 3>& data, double time) : data(data), time(time)
                 {
                 }
         };
@@ -109,7 +109,10 @@ PainterWindow2d::PainterWindow2d(
 
         this->setWindowTitle(title.c_str());
 
-        connect(&m_timer, SIGNAL(timeout()), this, SLOT(timer_slot()));
+        connect(ui.pushButton_save_to_file, &QPushButton::clicked, this, &PainterWindow2d::on_save_to_file_clicked);
+        connect(ui.pushButton_add_volume, &QPushButton::clicked, this, &PainterWindow2d::on_add_volume_clicked);
+
+        connect(&m_timer, &QTimer::timeout, this, &PainterWindow2d::on_timer_timeout);
 
         ASSERT(m_image.sizeInBytes() == m_image_byte_count);
 
@@ -199,8 +202,8 @@ void PainterWindow2d::init_interface(const std::vector<int>& initial_slider_posi
                 layout->addWidget(&m_dimension_sliders[i].label, i, 2);
                 layout->addWidget(&m_dimension_sliders[i].slider, i, 3);
 
-                connect(&m_dimension_sliders[i].slider, SIGNAL(valueChanged(int)), this,
-                        SLOT(slider_changed_slot(int)));
+                connect(&m_dimension_sliders[i].slider, &QSlider::valueChanged, this,
+                        &PainterWindow2d::on_slider_changed);
         }
 }
 
@@ -226,10 +229,10 @@ void PainterWindow2d::showEvent(QShowEvent* e)
         }
         m_first_show = false;
 
-        QTimer::singleShot(50, this, SLOT(first_shown()));
+        QTimer::singleShot(50, this, &PainterWindow2d::on_first_shown);
 }
 
-void PainterWindow2d::first_shown()
+void PainterWindow2d::on_first_shown()
 {
         ui.scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         ui.scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -288,23 +291,23 @@ void PainterWindow2d::update_points()
         ui.label_points->update();
 }
 
-void PainterWindow2d::timer_slot()
+void PainterWindow2d::on_timer_timeout()
 {
         update_statistics();
         update_points();
 }
 
-void PainterWindow2d::on_pushButton_save_to_file_clicked()
+void PainterWindow2d::on_save_to_file_clicked()
 {
         catch_all("Save to file", [&]() { save_to_file(); });
 }
 
-void PainterWindow2d::on_pushButton_add_volume_clicked()
+void PainterWindow2d::on_add_volume_clicked()
 {
         catch_all("Volume", [&]() { add_volume(); });
 }
 
-void PainterWindow2d::slider_changed_slot(int)
+void PainterWindow2d::on_slider_changed(int)
 {
         QObject* s = sender();
         for (DimensionSlider& dm : m_dimension_sliders)

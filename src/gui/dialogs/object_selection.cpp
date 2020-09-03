@@ -38,6 +38,9 @@ ObjectSelection::ObjectSelection(QWidget* parent) : QDialog(parent)
         ui.setupUi(this);
         setWindowTitle("Object Selection");
 
+        connect(ui.pushButton_set_all, &QPushButton::clicked, this, &ObjectSelection::on_set_all_clicked);
+        connect(ui.pushButton_clear_all, &QPushButton::clicked, this, &ObjectSelection::on_clear_all_clicked);
+
         m_boxes.push_back(ui.checkBox_model_convex_hull);
         m_boxes.push_back(ui.checkBox_model_minumum_spanning_tree);
         m_boxes.push_back(ui.checkBox_cocone);
@@ -64,7 +67,7 @@ bool ObjectSelection::show(bool* bound_cocone, bool* cocone, bool* convex_hull, 
         return true;
 }
 
-void ObjectSelection::on_pushButton_set_all_clicked()
+void ObjectSelection::on_set_all_clicked()
 {
         for (QCheckBox* c : m_boxes)
         {
@@ -72,7 +75,7 @@ void ObjectSelection::on_pushButton_set_all_clicked()
         }
 }
 
-void ObjectSelection::on_pushButton_clear_all_clicked()
+void ObjectSelection::on_clear_all_clicked()
 {
         for (QCheckBox* c : m_boxes)
         {
