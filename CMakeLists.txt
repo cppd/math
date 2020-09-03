@@ -373,6 +373,8 @@ AddIncludeFiles(BINARY_FILES
                         SOURCE "font"
                         EXTENSIONS ${extensions_binary})
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE -DQT_NO_KEYWORDS)
+
 # CMake при использовании target_include_directories вставляет -I
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}")
 
