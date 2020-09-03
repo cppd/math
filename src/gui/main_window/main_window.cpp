@@ -145,19 +145,18 @@ void MainWindow::constructor_objects()
 
         m_repository = std::make_unique<storage::Repository>();
 
-        // QMenu* menuCreate = new QMenu("Create", this);
-        // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
-
         m_repository_actions = std::make_unique<RepositoryActions>(ui.menuCreate, *m_repository);
-
         connect(m_repository_actions.get(), &RepositoryActions::mesh, this, &MainWindow::on_repository_mesh);
         connect(m_repository_actions.get(), &RepositoryActions::volume, this, &MainWindow::on_repository_volume);
 
         m_model_tree = std::make_unique<ModelTree>(ui.model_tree, [this]() { on_model_tree_item_changed(); });
 
-        m_slider_volume_levels = std::make_unique<RangeSlider>(
-                ui.slider_volume_level_min, ui.slider_volume_level_max,
-                [this](double min, double max) { on_slider_volume_levels_changed(min, max); });
+        m_slider_volume_levels = std::make_unique<RangeSlider>(ui.slider_volume_level_min, ui.slider_volume_level_max);
+        connect(m_slider_volume_levels.get(), &RangeSlider::changed, this,
+                &MainWindow::on_slider_volume_levels_changed);
+
+        // QMenu* menuCreate = new QMenu("Create", this);
+        // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
 }
 
 void MainWindow::constructor_connect()
@@ -325,8 +324,7 @@ void MainWindow::disable_volume_parameters()
         ui.tabVolume->setEnabled(false);
 
         {
-                QSignalBlocker blocker_min(ui.slider_volume_level_min);
-                QSignalBlocker blocker_max(ui.slider_volume_level_max);
+                QSignalBlocker blocker(m_slider_volume_levels.get());
                 m_slider_volume_levels->set_range(0, 1);
         }
         {
@@ -1270,8 +1268,7 @@ void MainWindow::update_volume_ui(ObjectId id)
                                 specular_power = reading.specular_power();
                         }
                         {
-                                QSignalBlocker blocker_min(ui.slider_volume_level_min);
-                                QSignalBlocker blocker_max(ui.slider_volume_level_max);
+                                QSignalBlocker blocker(m_slider_volume_levels.get());
                                 m_slider_volume_levels->set_range(min, max);
                         }
                         {

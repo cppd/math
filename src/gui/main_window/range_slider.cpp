@@ -33,19 +33,14 @@ constexpr int MAX = 500;
 static_assert(MIN >= 0 && MIN < MAX);
 }
 
-RangeSlider::RangeSlider(
-        QSlider* slider_min,
-        QSlider* slider_max,
-        const std::function<void(double, double)>& range_changed)
+RangeSlider::RangeSlider(QSlider* slider_min, QSlider* slider_max)
         : m_slider_min(slider_min),
           m_slider_max(slider_max),
           m_last_min(std::numeric_limits<decltype(m_last_min)>::lowest()),
-          m_last_max(std::numeric_limits<decltype(m_last_max)>::lowest()),
-          m_range_changed(range_changed)
+          m_last_max(std::numeric_limits<decltype(m_last_max)>::lowest())
 {
         ASSERT(m_slider_min);
         ASSERT(m_slider_max);
-        ASSERT(m_range_changed);
 
         m_slider_min->setInvertedAppearance(true);
         m_slider_min->setMinimum(MIN);
@@ -59,10 +54,10 @@ RangeSlider::RangeSlider(
         set_range(0, 1);
 
         m_connections.emplace_back(
-                QObject::connect(m_slider_min, &QSlider::valueChanged, [&](int) { min_value_changed(); }));
+                QObject::connect(m_slider_min, &QSlider::valueChanged, [&](int) { on_min_value_changed(); }));
 
         m_connections.emplace_back(
-                QObject::connect(m_slider_max, &QSlider::valueChanged, [&](int) { max_value_changed(); }));
+                QObject::connect(m_slider_max, &QSlider::valueChanged, [&](int) { on_max_value_changed(); }));
 }
 
 void RangeSlider::set_range(double min, double max)
@@ -76,11 +71,12 @@ void RangeSlider::set_range(double min, double max)
                 max = min = std::midpoint(min, max);
         }
 
-        QSignalBlocker blocker_min(m_slider_min);
-        QSignalBlocker blocker_max(m_slider_max);
-
-        set_min_value(std::lround(std::lerp(MIN, MAX, min)));
-        set_max_value(std::lround(std::lerp(MIN, MAX, max)));
+        {
+                QSignalBlocker blocker_min(m_slider_min);
+                QSignalBlocker blocker_max(m_slider_max);
+                set_min_value(std::lround(std::lerp(MIN, MAX, min)));
+                set_max_value(std::lround(std::lerp(MIN, MAX, max)));
+        }
 
         ASSERT(min_value() <= max_value());
 
@@ -107,7 +103,7 @@ void RangeSlider::set_max_value(int value)
         m_slider_max->setValue(value);
 }
 
-void RangeSlider::min_value_changed()
+void RangeSlider::on_min_value_changed()
 {
         if (min_value() > max_value())
         {
@@ -116,7 +112,7 @@ void RangeSlider::min_value_changed()
         range_changed();
 }
 
-void RangeSlider::max_value_changed()
+void RangeSlider::on_max_value_changed()
 {
         if (max_value() < min_value())
         {
@@ -137,7 +133,7 @@ void RangeSlider::range_changed()
         {
                 m_last_min = min;
                 m_last_max = max;
-                m_range_changed(min, max);
+                Q_EMIT changed(min, max);
         }
 }
 }

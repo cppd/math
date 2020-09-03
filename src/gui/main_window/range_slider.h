@@ -19,35 +19,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/connection.h"
 
+#include <QObject>
 #include <QSlider>
 #include <vector>
 
 namespace gui
 {
-class RangeSlider final
+class RangeSlider final : public QObject
 {
+        Q_OBJECT
+private:
         QSlider* m_slider_min;
         QSlider* m_slider_max;
 
         double m_last_min;
         double m_last_max;
 
-        std::function<void(double, double)> m_range_changed;
-
         std::vector<Connection> m_connections;
+
+        void on_min_value_changed();
+        void on_max_value_changed();
 
         int min_value() const;
         int max_value() const;
         void set_min_value(int);
         void set_max_value(int);
 
-        void min_value_changed();
-        void max_value_changed();
         void range_changed();
 
 public:
-        RangeSlider(QSlider* slider_min, QSlider* slider_max, const std::function<void(double, double)>& range_changed);
+        RangeSlider(QSlider* slider_min, QSlider* slider_max);
 
         void set_range(double min, double max);
+
+Q_SIGNALS:
+        void changed(double min, double max);
 };
 }
