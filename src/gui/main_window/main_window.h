@@ -112,6 +112,9 @@ private:
         void on_repository_mesh(int dimension, const std::string& object_name);
         void on_repository_volume(int dimension, const std::string& object_name);
 
+        void on_update_mesh(ObjectId id);
+        void on_update_volume(ObjectId id);
+
         void on_model_tree_item_changed();
         void on_slider_volume_levels_changed(double, double);
         void on_timer_progress_bar();

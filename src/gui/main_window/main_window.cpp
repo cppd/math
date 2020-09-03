@@ -140,8 +140,8 @@ void MainWindow::constructor_objects()
         m_worker_threads = create_worker_threads();
 
         m_mesh_and_volume_events = std::make_unique<ModelEvents>(
-                &m_model_tree, &m_view, [this](ObjectId id) { update_mesh_ui(id); },
-                [this](ObjectId id) { update_volume_ui(id); });
+                &m_model_tree, &m_view, [this](ObjectId id) { on_update_mesh(id); },
+                [this](ObjectId id) { on_update_volume(id); });
 
         m_repository = std::make_unique<storage::Repository>();
 
@@ -915,6 +915,16 @@ void MainWindow::on_graphics_widget_resize(QResizeEvent* e)
         {
                 m_view->send(view::command::WindowResize(e->size().width(), e->size().height()));
         }
+}
+
+void MainWindow::on_update_mesh(ObjectId id)
+{
+        update_mesh_ui(id);
+}
+
+void MainWindow::on_update_volume(ObjectId id)
+{
+        update_volume_ui(id);
 }
 
 void MainWindow::on_model_tree_item_changed()
