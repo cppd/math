@@ -34,7 +34,7 @@ public:
                 // setMouseTracking(true);
         }
 
-signals:
+Q_SIGNALS:
         void mouse_move(QMouseEvent* e);
         void mouse_press(QMouseEvent* e);
         void mouse_release(QMouseEvent* e);
@@ -44,27 +44,27 @@ signals:
 protected:
         void wheelEvent(QWheelEvent* e) override
         {
-                emit mouse_wheel(e);
+                Q_EMIT mouse_wheel(e);
         }
 
         void mouseMoveEvent(QMouseEvent* e) override
         {
-                emit mouse_move(e);
+                Q_EMIT mouse_move(e);
         }
 
         void mousePressEvent(QMouseEvent* e) override
         {
-                emit mouse_press(e);
+                Q_EMIT mouse_press(e);
         }
 
         void mouseReleaseEvent(QMouseEvent* e) override
         {
-                emit mouse_release(e);
+                Q_EMIT mouse_release(e);
         }
 
         void resizeEvent(QResizeEvent* e) override
         {
-                emit widget_resize(e);
+                Q_EMIT widget_resize(e);
         }
 };
 }

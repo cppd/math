@@ -103,18 +103,18 @@ private:
         void on_wireframe_clicked();
         void on_wireframe_color_clicked();
 
-        void graphics_widget_resize(QResizeEvent*);
-        void graphics_widget_mouse_wheel(QWheelEvent*);
-        void graphics_widget_mouse_move(QMouseEvent*);
-        void graphics_widget_mouse_press(QMouseEvent*);
-        void graphics_widget_mouse_release(QMouseEvent*);
+        void on_graphics_widget_resize(QResizeEvent*);
+        void on_graphics_widget_mouse_wheel(QWheelEvent*);
+        void on_graphics_widget_mouse_move(QMouseEvent*);
+        void on_graphics_widget_mouse_press(QMouseEvent*);
+        void on_graphics_widget_mouse_release(QMouseEvent*);
 
-        void on_repository_mesh(int dimension, std::string object_name);
-        void on_repository_volume(int dimension, std::string object_name);
+        void on_repository_mesh(int dimension, const std::string& object_name);
+        void on_repository_volume(int dimension, const std::string& object_name);
 
-        void model_tree_item_changed();
-        void slider_volume_levels_range_changed(double, double);
-        void timer_progress_bar();
+        void on_model_tree_item_changed();
+        void on_slider_volume_levels_changed(double, double);
+        void on_timer_progress_bar();
         void on_first_shown();
 
         //

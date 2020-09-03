@@ -35,7 +35,7 @@ void ThreadSwitch::slot(const std::function<void()>& f) const
 
 void ThreadSwitch::run_in_object_thread(const std::function<void()>& f) const
 {
-        emit signal(f);
+        Q_EMIT signal(f);
 }
 
 //

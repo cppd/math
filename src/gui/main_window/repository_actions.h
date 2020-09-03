@@ -32,9 +32,9 @@ class RepositoryActions final : public QObject
 public:
         RepositoryActions(QMenu* menu, const storage::Repository& repository);
 
-signals:
-        void mesh(int dimension, std::string object_name);
-        void volume(int dimension, std::string object_name);
+Q_SIGNALS:
+        void mesh(int dimension, const std::string& object_name);
+        void volume(int dimension, const std::string& object_name);
 
 private:
         void on_mesh_triggered();

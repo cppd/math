@@ -86,7 +86,7 @@ void RepositoryActions::on_mesh_triggered()
         int dimension = iter->second.dimension;
         std::string object_name = iter->second.object_name;
 
-        emit mesh(dimension, object_name);
+        Q_EMIT mesh(dimension, object_name);
 }
 
 void RepositoryActions::on_volume_triggered()
@@ -100,6 +100,6 @@ void RepositoryActions::on_volume_triggered()
         int dimension = iter->second.dimension;
         std::string object_name = iter->second.object_name;
 
-        emit volume(dimension, object_name);
+        Q_EMIT volume(dimension, object_name);
 }
 }

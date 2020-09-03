@@ -128,11 +128,11 @@ void MainWindow::constructor_graphics_widget()
                 }
         }
 
-        connect(m_graphics_widget, &GraphicsWidget::mouse_wheel, this, &MainWindow::graphics_widget_mouse_wheel);
-        connect(m_graphics_widget, &GraphicsWidget::mouse_move, this, &MainWindow::graphics_widget_mouse_move);
-        connect(m_graphics_widget, &GraphicsWidget::mouse_press, this, &MainWindow::graphics_widget_mouse_press);
-        connect(m_graphics_widget, &GraphicsWidget::mouse_release, this, &MainWindow::graphics_widget_mouse_release);
-        connect(m_graphics_widget, &GraphicsWidget::widget_resize, this, &MainWindow::graphics_widget_resize);
+        connect(m_graphics_widget, &GraphicsWidget::mouse_wheel, this, &MainWindow::on_graphics_widget_mouse_wheel);
+        connect(m_graphics_widget, &GraphicsWidget::mouse_move, this, &MainWindow::on_graphics_widget_mouse_move);
+        connect(m_graphics_widget, &GraphicsWidget::mouse_press, this, &MainWindow::on_graphics_widget_mouse_press);
+        connect(m_graphics_widget, &GraphicsWidget::mouse_release, this, &MainWindow::on_graphics_widget_mouse_release);
+        connect(m_graphics_widget, &GraphicsWidget::widget_resize, this, &MainWindow::on_graphics_widget_resize);
 }
 
 void MainWindow::constructor_objects()
@@ -153,11 +153,11 @@ void MainWindow::constructor_objects()
         connect(m_repository_actions.get(), &RepositoryActions::mesh, this, &MainWindow::on_repository_mesh);
         connect(m_repository_actions.get(), &RepositoryActions::volume, this, &MainWindow::on_repository_volume);
 
-        m_model_tree = std::make_unique<ModelTree>(ui.model_tree, [this]() { model_tree_item_changed(); });
+        m_model_tree = std::make_unique<ModelTree>(ui.model_tree, [this]() { on_model_tree_item_changed(); });
 
         m_slider_volume_levels = std::make_unique<RangeSlider>(
                 ui.slider_volume_level_min, ui.slider_volume_level_max,
-                [this](double min, double max) { slider_volume_levels_range_changed(min, max); });
+                [this](double min, double max) { on_slider_volume_levels_changed(min, max); });
 }
 
 void MainWindow::constructor_connect()
@@ -228,7 +228,7 @@ void MainWindow::constructor_connect()
 
 void MainWindow::constructor_interface()
 {
-        connect(&m_timer_progress_bar, &QTimer::timeout, this, &MainWindow::timer_progress_bar);
+        connect(&m_timer_progress_bar, &QTimer::timeout, this, &MainWindow::on_timer_progress_bar);
 
         QMainWindow::addAction(ui.action_full_screen);
 
@@ -506,7 +506,7 @@ void MainWindow::progress_bars(
         }
 }
 
-void MainWindow::timer_progress_bar()
+void MainWindow::on_timer_progress_bar()
 {
         for (const WorkerThreads::Progress& t : m_worker_threads->progresses())
         {
@@ -716,7 +716,7 @@ void MainWindow::on_load_triggered()
         load_from_file("", true);
 }
 
-void MainWindow::on_repository_mesh(int dimension, std::string object_name)
+void MainWindow::on_repository_mesh(int dimension, const std::string& object_name)
 {
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
         static constexpr const char* DESCRIPTION = "Load from mesh repository";
@@ -734,7 +734,7 @@ void MainWindow::on_repository_mesh(int dimension, std::string object_name)
         });
 }
 
-void MainWindow::on_repository_volume(int dimension, std::string object_name)
+void MainWindow::on_repository_volume(int dimension, const std::string& object_name)
 {
         static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
         static constexpr const char* DESCRIPTION = "Load from volume repository";
@@ -861,7 +861,7 @@ void MainWindow::on_reset_view_clicked()
         m_view->send(view::command::ResetView());
 }
 
-void MainWindow::graphics_widget_mouse_wheel(QWheelEvent* e)
+void MainWindow::on_graphics_widget_mouse_wheel(QWheelEvent* e)
 {
         if (m_view)
         {
@@ -869,7 +869,7 @@ void MainWindow::graphics_widget_mouse_wheel(QWheelEvent* e)
         }
 }
 
-void MainWindow::graphics_widget_mouse_move(QMouseEvent* e)
+void MainWindow::on_graphics_widget_mouse_move(QMouseEvent* e)
 {
         if (m_view)
         {
@@ -877,7 +877,7 @@ void MainWindow::graphics_widget_mouse_move(QMouseEvent* e)
         }
 }
 
-void MainWindow::graphics_widget_mouse_press(QMouseEvent* e)
+void MainWindow::on_graphics_widget_mouse_press(QMouseEvent* e)
 {
         if (m_view)
         {
@@ -894,7 +894,7 @@ void MainWindow::graphics_widget_mouse_press(QMouseEvent* e)
         }
 }
 
-void MainWindow::graphics_widget_mouse_release(QMouseEvent* e)
+void MainWindow::on_graphics_widget_mouse_release(QMouseEvent* e)
 {
         if (m_view)
         {
@@ -911,7 +911,7 @@ void MainWindow::graphics_widget_mouse_release(QMouseEvent* e)
         }
 }
 
-void MainWindow::graphics_widget_resize(QResizeEvent* e)
+void MainWindow::on_graphics_widget_resize(QResizeEvent* e)
 {
         if (m_view)
         {
@@ -919,7 +919,7 @@ void MainWindow::graphics_widget_resize(QResizeEvent* e)
         }
 }
 
-void MainWindow::model_tree_item_changed()
+void MainWindow::on_model_tree_item_changed()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -1329,7 +1329,7 @@ void MainWindow::update_volume_ui(ObjectId id)
                 *volume_object_opt);
 }
 
-void MainWindow::slider_volume_levels_range_changed(double min, double max)
+void MainWindow::on_slider_volume_levels_changed(double min, double max)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 

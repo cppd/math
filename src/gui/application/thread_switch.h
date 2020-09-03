@@ -33,7 +33,7 @@ public:
 
         void run_in_object_thread(const std::function<void()>& f) const;
 
-signals:
+Q_SIGNALS:
         void signal(const std::function<void()>&) const;
 };
 
