@@ -116,7 +116,7 @@ private:
         void on_update_volume(ObjectId id);
 
         void on_model_tree_item_changed();
-        void on_slider_volume_levels_changed(double, double);
+        void on_volume_levels_changed(double, double);
         void on_timer_progress_bar();
         void on_first_shown();
 
@@ -139,9 +139,7 @@ private:
 
         //
 
-        void set_dependent_interface();
-
-        void progress_bars(
+        void set_progress_bars(
                 WorkerThreads::Action action,
                 bool permanent,
                 const ProgressRatioList* progress_list,
@@ -164,11 +162,11 @@ private:
 
         bool stop_action(WorkerThreads::Action action);
 
-        void disable_mesh_parameters();
-        void update_mesh_ui(ObjectId id);
+        void mesh_ui_disable();
+        void mesh_ui_set(const storage::MeshObjectConst& object);
 
-        void disable_volume_parameters();
-        void update_volume_ui(ObjectId id);
+        void volume_ui_disable();
+        void volume_ui_set(const storage::VolumeObjectConst& object);
 
         const std::thread::id m_thread_id = std::this_thread::get_id();
         bool m_first_show = true;

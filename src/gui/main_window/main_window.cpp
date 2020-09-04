@@ -100,8 +100,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 
         constructor_graphics_widget();
         constructor_objects();
-        constructor_connect();
         constructor_interface();
+        constructor_connect();
 }
 
 void MainWindow::constructor_graphics_widget()
@@ -151,12 +151,74 @@ void MainWindow::constructor_objects()
 
         m_model_tree = std::make_unique<ModelTree>(ui.model_tree, [this]() { on_model_tree_item_changed(); });
 
-        m_slider_volume_levels = std::make_unique<RangeSlider>(ui.slider_volume_level_min, ui.slider_volume_level_max);
-        connect(m_slider_volume_levels.get(), &RangeSlider::changed, this,
-                &MainWindow::on_slider_volume_levels_changed);
-
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
+}
+
+void MainWindow::constructor_interface()
+{
+        set_widgets_enabled(QMainWindow::layout(), true);
+
+        m_slider_volume_levels = std::make_unique<RangeSlider>(ui.slider_volume_level_min, ui.slider_volume_level_max);
+
+        QMainWindow::addAction(ui.action_full_screen);
+
+        {
+                QSignalBlocker blocker_check_box(ui.checkBox_clip_plane);
+                QSignalBlocker blocker_slider(ui.slider_clip_plane);
+                ui.checkBox_clip_plane->setChecked(false);
+                ui.slider_clip_plane->setEnabled(false);
+                set_slider_position(ui.slider_clip_plane, 0.5);
+                // Должно быть точное среднее положение
+                ASSERT(((ui.slider_clip_plane->maximum() - ui.slider_clip_plane->minimum()) & 1) == 0);
+        }
+
+        {
+                QSignalBlocker blocker_check_box(ui.checkBox_normals);
+                QSignalBlocker blocker_slider(ui.slider_normals);
+                ui.checkBox_normals->setChecked(false);
+                ui.slider_normals->setEnabled(false);
+                constexpr float v = NORMAL_LENGTH_DEFAULT - NORMAL_LENGTH_MINIMUM;
+                constexpr float d = NORMAL_LENGTH_MAXIMUM - NORMAL_LENGTH_MINIMUM;
+                constexpr float p = v / d;
+                static_assert(v >= 0 && v <= d && d > 0);
+                set_slider_position(ui.slider_normals, p);
+        }
+        {
+                // Должно быть точное среднее положение
+                ASSERT(((ui.slider_lighting_intensity->maximum() - ui.slider_lighting_intensity->minimum()) & 1) == 0);
+                QSignalBlocker blocker(ui.slider_lighting_intensity);
+                set_slider_to_middle(ui.slider_lighting_intensity);
+        }
+
+        mesh_ui_disable();
+        volume_ui_disable();
+
+        on_dft_clicked();
+        on_shadow_clicked();
+
+        set_background_color(BACKGROUND_COLOR);
+        set_specular_color(SPECULAR_COLOR);
+        set_wireframe_color(WIREFRAME_COLOR);
+        set_clip_plane_color(CLIP_PLANE_COLOR);
+        set_normal_color_positive(NORMAL_COLOR_POSITIVE);
+        set_normal_color_negative(NORMAL_COLOR_NEGATIVE);
+
+        set_dft_background_color(DFT_BACKGROUND_COLOR);
+        set_dft_color(DFT_COLOR);
+
+        ui.mainWidget->layout()->setContentsMargins(3, 3, 3, 3);
+        ui.mainWidget->layout()->setSpacing(3);
+
+        ui.tabWidget->setCurrentIndex(0);
+
+        ui.action_help->setText(QString(settings::APPLICATION_NAME) + " Help");
+        ui.action_about->setText("About " + QString(settings::APPLICATION_NAME));
+
+        ui.slider_shadow_quality->setSliderPosition(SHADOW_ZOOM);
+
+        // Чтобы добавление и удаление QProgressBar не меняло высоту ui.statusBar
+        ui.statusBar->setFixedHeight(ui.statusBar->height());
 }
 
 void MainWindow::constructor_connect()
@@ -223,146 +285,10 @@ void MainWindow::constructor_connect()
                 &MainWindow::on_normal_color_positive_clicked);
         connect(ui.toolButton_volume_color, &QToolButton::clicked, this, &MainWindow::on_volume_color_clicked);
         connect(ui.toolButton_wireframe_color, &QToolButton::clicked, this, &MainWindow::on_wireframe_color_clicked);
-}
 
-void MainWindow::constructor_interface()
-{
+        connect(m_slider_volume_levels.get(), &RangeSlider::changed, this, &MainWindow::on_volume_levels_changed);
+
         connect(&m_timer_progress_bar, &QTimer::timeout, this, &MainWindow::on_timer_progress_bar);
-
-        QMainWindow::addAction(ui.action_full_screen);
-
-        {
-                QSignalBlocker blocker_check_box(ui.checkBox_clip_plane);
-                QSignalBlocker blocker_slider(ui.slider_clip_plane);
-                ui.checkBox_clip_plane->setChecked(false);
-                ui.slider_clip_plane->setEnabled(false);
-                set_slider_position(ui.slider_clip_plane, 0.5);
-                // Должно быть точное среднее положение
-                ASSERT(((ui.slider_clip_plane->maximum() - ui.slider_clip_plane->minimum()) & 1) == 0);
-        }
-
-        {
-                QSignalBlocker blocker_check_box(ui.checkBox_normals);
-                QSignalBlocker blocker_slider(ui.slider_normals);
-                ui.checkBox_normals->setChecked(false);
-                ui.slider_normals->setEnabled(false);
-                constexpr float v = NORMAL_LENGTH_DEFAULT - NORMAL_LENGTH_MINIMUM;
-                constexpr float d = NORMAL_LENGTH_MAXIMUM - NORMAL_LENGTH_MINIMUM;
-                constexpr float p = v / d;
-                static_assert(v >= 0 && v <= d && d > 0);
-                set_slider_position(ui.slider_normals, p);
-        }
-        {
-                // Должно быть точное среднее положение
-                ASSERT(((ui.slider_lighting_intensity->maximum() - ui.slider_lighting_intensity->minimum()) & 1) == 0);
-                QSignalBlocker blocker(ui.slider_lighting_intensity);
-                set_slider_to_middle(ui.slider_lighting_intensity);
-        }
-
-        disable_mesh_parameters();
-        disable_volume_parameters();
-
-        set_widgets_enabled(QMainWindow::layout(), true);
-        set_dependent_interface();
-
-        set_background_color(BACKGROUND_COLOR);
-        set_specular_color(SPECULAR_COLOR);
-        set_wireframe_color(WIREFRAME_COLOR);
-        set_clip_plane_color(CLIP_PLANE_COLOR);
-        set_normal_color_positive(NORMAL_COLOR_POSITIVE);
-        set_normal_color_negative(NORMAL_COLOR_NEGATIVE);
-
-        set_dft_background_color(DFT_BACKGROUND_COLOR);
-        set_dft_color(DFT_COLOR);
-
-        ui.mainWidget->layout()->setContentsMargins(3, 3, 3, 3);
-        ui.mainWidget->layout()->setSpacing(3);
-
-        ui.tabWidget->setCurrentIndex(0);
-
-        ui.action_help->setText(QString(settings::APPLICATION_NAME) + " Help");
-        ui.action_about->setText("About " + QString(settings::APPLICATION_NAME));
-
-        ui.slider_shadow_quality->setSliderPosition(SHADOW_ZOOM);
-
-        // Чтобы добавление и удаление QProgressBar не меняло высоту ui.statusBar
-        ui.statusBar->setFixedHeight(ui.statusBar->height());
-}
-
-void MainWindow::disable_mesh_parameters()
-{
-        ui.tabMesh->setEnabled(false);
-
-        {
-                QSignalBlocker blocker(ui.widget_mesh_color);
-                set_widget_color(ui.widget_mesh_color, QColor(255, 255, 255));
-        }
-        {
-                QSignalBlocker blocker(ui.slider_mesh_transparency);
-                set_slider_position(ui.slider_mesh_transparency, 0);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_mesh_ambient);
-                set_slider_to_middle(ui.slider_mesh_ambient);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_mesh_diffuse);
-                set_slider_to_middle(ui.slider_mesh_diffuse);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_mesh_specular);
-                set_slider_to_middle(ui.slider_mesh_specular);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_mesh_specular_power);
-                set_slider_to_middle(ui.slider_mesh_specular_power);
-        }
-}
-
-void MainWindow::disable_volume_parameters()
-{
-        ui.tabVolume->setEnabled(false);
-
-        {
-                QSignalBlocker blocker(m_slider_volume_levels.get());
-                m_slider_volume_levels->set_range(0, 1);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_volume_transparency);
-                set_slider_to_middle(ui.slider_volume_transparency);
-        }
-        {
-                QSignalBlocker blocker(ui.checkBox_isosurface);
-                ui.checkBox_isosurface->setChecked(false);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_isovalue);
-                set_slider_to_middle(ui.slider_isovalue);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_isosurface_transparency);
-                set_slider_position(ui.slider_isosurface_transparency, 0);
-        }
-        {
-                QSignalBlocker blocker(ui.widget_volume_color);
-                set_widget_color(ui.widget_volume_color, QColor(255, 255, 255));
-        }
-        {
-                QSignalBlocker blocker(ui.slider_volume_ambient);
-                set_slider_to_middle(ui.slider_volume_ambient);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_volume_diffuse);
-                set_slider_to_middle(ui.slider_volume_diffuse);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_volume_specular);
-                set_slider_to_middle(ui.slider_volume_specular);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_volume_specular_power);
-                set_slider_to_middle(ui.slider_volume_specular_power);
-        }
 }
 
 MainWindow::~MainWindow()
@@ -428,7 +354,7 @@ bool MainWindow::stop_action(WorkerThreads::Action action)
         return true;
 }
 
-void MainWindow::progress_bars(
+void MainWindow::set_progress_bars(
         WorkerThreads::Action action,
         bool permanent,
         const ProgressRatioList* progress_list,
@@ -508,7 +434,7 @@ void MainWindow::on_timer_progress_bar()
 {
         for (const WorkerThreads::Progress& t : m_worker_threads->progresses())
         {
-                progress_bars(t.action, t.permanent, t.progress_list, t.progress_bars);
+                set_progress_bars(t.action, t.permanent, t.progress_list, t.progress_bars);
         }
 }
 
@@ -589,23 +515,6 @@ void MainWindow::set_dft_color(const QColor& c)
                 m_view->send(view::command::SetDftColor(qcolor_to_rgb(c)));
         }
         set_widget_color(ui.widget_dft_color, c);
-}
-
-void MainWindow::set_dependent_interface()
-{
-        {
-                bool enabled_and_checked = ui.checkBox_shadow->isEnabled() && ui.checkBox_shadow->isChecked();
-
-                ui.label_shadow_quality->setEnabled(enabled_and_checked);
-                ui.slider_shadow_quality->setEnabled(enabled_and_checked);
-        }
-
-        {
-                bool enabled_and_checked = ui.checkBox_dft->isEnabled() && ui.checkBox_dft->isChecked();
-
-                ui.label_dft_brightness->setEnabled(enabled_and_checked);
-                ui.slider_dft_brightness->setEnabled(enabled_and_checked);
-        }
 }
 
 void MainWindow::showEvent(QShowEvent* /*event*/)
@@ -919,12 +828,24 @@ void MainWindow::on_graphics_widget_resize(QResizeEvent* e)
 
 void MainWindow::on_update_mesh(ObjectId id)
 {
-        update_mesh_ui(id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::MeshObjectConst> mesh = m_model_tree->mesh_const_if_current(id);
+        if (mesh)
+        {
+                mesh_ui_set(*mesh);
+        }
 }
 
 void MainWindow::on_update_volume(ObjectId id)
 {
-        update_volume_ui(id);
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<storage::VolumeObjectConst> volume = m_model_tree->volume_const_if_current(id);
+        if (volume)
+        {
+                volume_ui_set(*volume);
+        }
 }
 
 void MainWindow::on_model_tree_item_changed()
@@ -934,12 +855,30 @@ void MainWindow::on_model_tree_item_changed()
         std::optional<ObjectId> id = m_model_tree->current_item();
         if (!id)
         {
-                disable_mesh_parameters();
-                disable_volume_parameters();
+                mesh_ui_disable();
+                volume_ui_disable();
                 return;
         }
-        update_mesh_ui(*id);
-        update_volume_ui(*id);
+
+        std::optional<storage::MeshObjectConst> mesh = m_model_tree->mesh_const_if_current(*id);
+        if (mesh)
+        {
+                mesh_ui_set(*mesh);
+        }
+        else
+        {
+                mesh_ui_disable();
+        }
+
+        std::optional<storage::VolumeObjectConst> volume = m_model_tree->volume_const_if_current(*id);
+        if (volume)
+        {
+                volume_ui_set(*volume);
+        }
+        else
+        {
+                volume_ui_disable();
+        }
 }
 
 double MainWindow::lighting_intensity() const
@@ -1089,7 +1028,10 @@ void MainWindow::on_shadow_clicked()
         ui.label_shadow_quality->setEnabled(checked);
         ui.slider_shadow_quality->setEnabled(checked);
 
-        m_view->send(view::command::ShowShadow(checked));
+        if (m_view)
+        {
+                m_view->send(view::command::ShowShadow(checked));
+        }
 }
 
 void MainWindow::on_fog_clicked()
@@ -1129,7 +1071,10 @@ void MainWindow::on_dft_clicked()
         ui.label_dft_brightness->setEnabled(checked);
         ui.slider_dft_brightness->setEnabled(checked);
 
-        m_view->send(view::command::ShowDft(checked));
+        if (m_view)
+        {
+                m_view->send(view::command::ShowDft(checked));
+        }
 }
 
 void MainWindow::on_clip_plane_clicked()
@@ -1179,26 +1124,95 @@ void MainWindow::on_full_screen_triggered()
 {
 }
 
-void MainWindow::update_mesh_ui(ObjectId id)
+void MainWindow::mesh_ui_disable()
+{
+        ui.tabMesh->setEnabled(false);
+
+        {
+                QSignalBlocker blocker(ui.widget_mesh_color);
+                set_widget_color(ui.widget_mesh_color, QColor(255, 255, 255));
+        }
+        {
+                QSignalBlocker blocker(ui.slider_mesh_transparency);
+                set_slider_position(ui.slider_mesh_transparency, 0);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_mesh_ambient);
+                set_slider_to_middle(ui.slider_mesh_ambient);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_mesh_diffuse);
+                set_slider_to_middle(ui.slider_mesh_diffuse);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_mesh_specular);
+                set_slider_to_middle(ui.slider_mesh_specular);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_mesh_specular_power);
+                set_slider_to_middle(ui.slider_mesh_specular_power);
+        }
+}
+
+void MainWindow::volume_ui_disable()
+{
+        ui.tabVolume->setEnabled(false);
+
+        {
+                QSignalBlocker blocker(m_slider_volume_levels.get());
+                m_slider_volume_levels->set_range(0, 1);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_volume_transparency);
+                set_slider_to_middle(ui.slider_volume_transparency);
+        }
+        {
+                QSignalBlocker blocker(ui.checkBox_isosurface);
+                ui.checkBox_isosurface->setChecked(false);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_isovalue);
+                set_slider_to_middle(ui.slider_isovalue);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_isosurface_transparency);
+                set_slider_position(ui.slider_isosurface_transparency, 0);
+        }
+        {
+                QSignalBlocker blocker(ui.widget_volume_color);
+                set_widget_color(ui.widget_volume_color, QColor(255, 255, 255));
+        }
+        {
+                QSignalBlocker blocker(ui.slider_volume_ambient);
+                set_slider_to_middle(ui.slider_volume_ambient);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_volume_diffuse);
+                set_slider_to_middle(ui.slider_volume_diffuse);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_volume_specular);
+                set_slider_to_middle(ui.slider_volume_specular);
+        }
+        {
+                QSignalBlocker blocker(ui.slider_volume_specular_power);
+                set_slider_to_middle(ui.slider_volume_specular_power);
+        }
+}
+
+void MainWindow::mesh_ui_set(const storage::MeshObjectConst& object)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::MeshObjectConst> object_opt = m_model_tree->mesh_const_if_current(id);
-        if (!object_opt)
-        {
-                disable_mesh_parameters();
-                return;
-        }
 
         ui.tabMesh->setEnabled(true);
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& object) {
+                [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object) {
                         double alpha;
                         Color color;
                         double ambient, diffuse, specular, specular_power;
                         {
-                                mesh::Reading reading(*object);
+                                mesh::Reading reading(*mesh_object);
                                 alpha = reading.alpha();
                                 color = reading.color();
                                 ambient = reading.ambient();
@@ -1237,19 +1251,12 @@ void MainWindow::update_mesh_ui(ObjectId id)
                                 set_slider_position(ui.slider_mesh_specular_power, position);
                         }
                 },
-                *object_opt);
+                object);
 }
 
-void MainWindow::update_volume_ui(ObjectId id)
+void MainWindow::volume_ui_set(const storage::VolumeObjectConst& object)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::VolumeObjectConst> volume_object_opt = m_model_tree->volume_const_if_current(id);
-        if (!volume_object_opt)
-        {
-                disable_volume_parameters();
-                return;
-        }
 
         ui.tabVolume->setEnabled(true);
 
@@ -1333,10 +1340,10 @@ void MainWindow::update_volume_ui(ObjectId id)
                                 set_slider_position(ui.slider_volume_specular_power, position);
                         }
                 },
-                *volume_object_opt);
+                object);
 }
 
-void MainWindow::on_slider_volume_levels_changed(double min, double max)
+void MainWindow::on_volume_levels_changed(double min, double max)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
