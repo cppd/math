@@ -43,7 +43,7 @@ class ModelTree final
         QTreeWidget* m_tree = nullptr;
 
         std::vector<Connection> m_connections;
-        std::function<void()> m_item_changed;
+        std::function<void()> m_on_item_changed;
 
         //void set_current(ObjectId id);
 
@@ -71,7 +71,7 @@ class ModelTree final
         void show_only_this_object(ObjectId id);
 
 public:
-        ModelTree(QTreeWidget* tree, const std::function<void()>& item_changed);
+        ModelTree(QTreeWidget* tree, const std::function<void()>& on_item_changed);
 
         ~ModelTree();
 

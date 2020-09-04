@@ -17,34 +17,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../com/connection.h"
+
 #include <src/storage/repository.h>
 
 #include <QMenu>
-#include <QObject>
+#include <functional>
 #include <string>
-#include <unordered_map>
 
 namespace gui
 {
-class RepositoryActions final : public QObject
+class RepositoryActions final
 {
-        Q_OBJECT
+        std::vector<Connection> m_connections;
+
+        std::function<void(int dimension, const std::string& object_name)> m_on_mesh;
+        std::function<void(int dimension, const std::string& object_name)> m_on_volume;
+
 public:
-        RepositoryActions(QMenu* menu, const storage::Repository& repository);
-
-Q_SIGNALS:
-        void mesh(int dimension, const std::string& object_name);
-        void volume(int dimension, const std::string& object_name);
-
-private:
-        void on_mesh_triggered();
-        void on_volume_triggered();
-
-        struct RepositoryActionDescription final
-        {
-                int dimension;
-                std::string object_name;
-        };
-        std::unordered_map<QObject*, RepositoryActionDescription> m_repository_actions;
+        RepositoryActions(
+                QMenu* menu,
+                const storage::Repository& repository,
+                std::function<void(int dimension, const std::string& object_name)>&& on_mesh,
+                std::function<void(int dimension, const std::string& object_name)>&& on_volume);
 };
 }

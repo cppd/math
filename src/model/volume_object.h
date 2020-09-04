@@ -52,8 +52,8 @@ struct VolumeEvent final
 
         struct Update final
         {
-                std::shared_ptr<VolumeObject<N>> object;
-                explicit Update(std::shared_ptr<VolumeObject<N>>&& object) : object(std::move(object))
+                std::weak_ptr<VolumeObject<N>> object;
+                explicit Update(std::weak_ptr<VolumeObject<N>>&& object) : object(std::move(object))
                 {
                 }
         };
@@ -384,7 +384,7 @@ public:
                 m_object->m_versions.add(std::move(m_updates));
                 if (m_object->m_inserted)
                 {
-                        m_object->send_event(typename VolumeEvent<N>::Update(m_object->shared_from_this()));
+                        m_object->send_event(typename VolumeEvent<N>::Update(m_object->weak_from_this()));
                 }
         }
 

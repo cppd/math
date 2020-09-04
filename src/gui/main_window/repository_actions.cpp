@@ -22,7 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui
 {
-RepositoryActions::RepositoryActions(QMenu* menu, const storage::Repository& repository)
+RepositoryActions::RepositoryActions(
+        QMenu* menu,
+        const storage::Repository& repository,
+        std::function<void(int dimension, const std::string& object_name)>&& on_mesh,
+        std::function<void(int dimension, const std::string& object_name)>&& on_volume)
+        : m_on_mesh(std::move(on_mesh)), m_on_volume(std::move(on_volume))
+
 {
         std::vector<storage::Repository::ObjectNames> repository_objects = repository.object_names();
 
@@ -44,12 +50,10 @@ RepositoryActions::RepositoryActions(QMenu* menu, const storage::Repository& rep
                         std::string action_text = object_name + "...";
                         QAction* action = sub_menu->addAction(action_text.c_str());
 
-                        RepositoryActionDescription action_description;
-                        action_description.dimension = objects.dimension;
-                        action_description.object_name = object_name;
-
-                        m_repository_actions.try_emplace(action, action_description);
-                        connect(action, &QAction::triggered, this, &RepositoryActions::on_mesh_triggered);
+                        m_connections.emplace_back(QObject::connect(
+                                action, &QAction::triggered, [this, dimension = objects.dimension, object_name]() {
+                                        m_on_mesh(dimension, object_name);
+                                }));
                 }
 
                 if (objects.dimension == 3)
@@ -64,42 +68,13 @@ RepositoryActions::RepositoryActions(QMenu* menu, const storage::Repository& rep
                                 std::string action_text = object_name + "...";
                                 QAction* action = sub_menu->addAction(action_text.c_str());
 
-                                RepositoryActionDescription action_description;
-                                action_description.dimension = objects.dimension;
-                                action_description.object_name = object_name;
-
-                                m_repository_actions.try_emplace(action, action_description);
-                                connect(action, &QAction::triggered, this, &RepositoryActions::on_volume_triggered);
+                                m_connections.emplace_back(QObject::connect(
+                                        action, &QAction::triggered,
+                                        [this, dimension = objects.dimension, object_name]() {
+                                                m_on_volume(dimension, object_name);
+                                        }));
                         }
                 }
         }
-}
-
-void RepositoryActions::on_mesh_triggered()
-{
-        auto iter = m_repository_actions.find(sender());
-        if (iter == m_repository_actions.cend())
-        {
-                return;
-        }
-
-        int dimension = iter->second.dimension;
-        std::string object_name = iter->second.object_name;
-
-        Q_EMIT mesh(dimension, object_name);
-}
-
-void RepositoryActions::on_volume_triggered()
-{
-        auto iter = m_repository_actions.find(sender());
-        if (iter == m_repository_actions.cend())
-        {
-                return;
-        }
-
-        int dimension = iter->second.dimension;
-        std::string object_name = iter->second.object_name;
-
-        Q_EMIT volume(dimension, object_name);
 }
 }

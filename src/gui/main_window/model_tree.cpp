@@ -35,14 +35,14 @@ void set_item_color(QTreeWidgetItem* item, bool visible)
 }
 }
 
-ModelTree::ModelTree(QTreeWidget* tree, const std::function<void()>& item_changed)
-        : m_thread_id(std::this_thread::get_id()), m_tree(tree), m_item_changed(item_changed)
+ModelTree::ModelTree(QTreeWidget* tree, const std::function<void()>& on_item_changed)
+        : m_thread_id(std::this_thread::get_id()), m_tree(tree), m_on_item_changed(on_item_changed)
 {
         ASSERT(m_tree);
 
         m_connections.emplace_back(
                 QObject::connect(m_tree, &QTreeWidget::currentItemChanged, [this](QTreeWidgetItem*, QTreeWidgetItem*) {
-                        m_item_changed();
+                        m_on_item_changed();
                 }));
 
         m_tree->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -171,7 +171,7 @@ void ModelTree::erase_from_tree(ObjectId id)
                 font.setStrikeOut(true);
                 item->setFont(0, font);
                 set_item_color(item, false);
-                m_item_changed();
+                m_on_item_changed();
         }
         else
         {

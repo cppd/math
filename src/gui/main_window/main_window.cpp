@@ -145,9 +145,10 @@ void MainWindow::constructor_objects()
 
         m_repository = std::make_unique<storage::Repository>();
 
-        m_repository_actions = std::make_unique<RepositoryActions>(ui.menuCreate, *m_repository);
-        connect(m_repository_actions.get(), &RepositoryActions::mesh, this, &MainWindow::on_repository_mesh);
-        connect(m_repository_actions.get(), &RepositoryActions::volume, this, &MainWindow::on_repository_volume);
+        m_repository_actions = std::make_unique<RepositoryActions>(
+                ui.menuCreate, *m_repository,
+                [this](int dimension, const std::string& name) { on_repository_mesh(dimension, name); },
+                [this](int dimension, const std::string& name) { on_repository_volume(dimension, name); });
 
         m_model_tree = std::make_unique<ModelTree>(ui.model_tree, [this]() { on_model_tree_item_changed(); });
 
