@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "model_tree.h"
 
+#include "../dialogs/message.h"
+
 #include <src/com/error.h>
 
 #include <QMenu>
@@ -97,7 +99,7 @@ void ModelTree::insert_into_tree_and_storage(
                 object);
 }
 
-void ModelTree::delete_from_tree_and_storage(ObjectId id)
+void ModelTree::erase_from_tree_and_storage(ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -411,72 +413,83 @@ std::vector<storage::VolumeObjectConst> ModelTree::const_volume_objects() const
         return m_storage.objects<storage::VolumeObjectConst>();
 }
 
+template <typename T>
+void ModelTree::make_menu_for_object(QMenu* menu, const std::shared_ptr<T>& object)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        {
+                QAction* action = menu->addAction("Show only it");
+                QObject::connect(action, &QAction::triggered, [&]() { show_only_this_object(object->id()); });
+        }
+        {
+                bool visible = object->visible();
+                QAction* action = visible ? menu->addAction("Hide") : menu->addAction("Show");
+                QObject::connect(action, &QAction::triggered, [&, visible]() { object->set_visible(!visible); });
+        }
+        menu->addSeparator();
+        {
+                QAction* action = menu->addAction("Delete");
+                QObject::connect(action, &QAction::triggered, [&]() {
+                        bool yes;
+                        if (dialog::message_question_default_no("Delete?", &yes) && yes)
+                        {
+                                object->erase();
+                        }
+                });
+        }
+        {
+                QAction* action = menu->addAction("Delete All");
+                QObject::connect(action, &QAction::triggered, [&]() {
+                        bool yes;
+                        if (dialog::message_question_default_no("Delete All?", &yes) && yes)
+                        {
+                                clear();
+                        }
+                });
+        }
+}
+
 void ModelTree::make_menu(const QPoint& pos)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         QTreeWidgetItem* item = m_tree->itemAt(pos);
-
-        auto iter = m_map_item_id.find(item);
-        if (iter == m_map_item_id.cend())
+        if (item != m_tree->currentItem())
         {
                 return;
         }
 
-        ObjectId id = iter->second;
+        std::optional<storage::VolumeObject> volume = ModelTree::current_volume();
+        std::optional<storage::MeshObject> mesh = ModelTree::current_mesh();
+        ASSERT(!volume || !mesh);
+        if (!volume && !mesh)
+        {
+                return;
+        }
 
         std::unique_ptr<QMenu> menu = std::make_unique<QMenu>();
 
+        if (volume)
         {
-                QAction* action = menu->addAction("Show only it");
-                QObject::connect(action, &QAction::triggered, [id, this]() { show_only_this_object(id); });
+                std::visit(
+                        [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
+                                make_menu_for_object(menu.get(), object);
+                        },
+                        *volume);
+        }
+        else if (mesh)
+        {
+                std::visit(
+                        [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
+                                make_menu_for_object(menu.get(), object);
+                        },
+                        *mesh);
         }
 
-        std::optional<storage::VolumeObject> v = ModelTree::current_volume();
-        std::optional<storage::MeshObject> m = ModelTree::current_mesh();
-        if (v.has_value() != m.has_value())
+        if (menu->actions().empty())
         {
-                if (v)
-                {
-                        bool visible;
-                        std::visit(
-                                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
-                                        visible = volume_object->visible();
-                                },
-                                *v);
-                        QAction* action = visible ? menu->addAction("Hide") : menu->addAction("Show");
-                        QObject::connect(action, &QAction::triggered, [&, visible]() {
-                                std::visit(
-                                        [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
-                                                volume_object->set_visible(!visible);
-                                        },
-                                        *v);
-                        });
-                }
-                else if (m)
-                {
-                        bool visible;
-                        std::visit(
-                                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh_object) {
-                                        visible = mesh_object->visible();
-                                },
-                                *m);
-                        QAction* action = visible ? menu->addAction("Hide") : menu->addAction("Show");
-                        QObject::connect(action, &QAction::triggered, [&, visible]() {
-                                std::visit(
-                                        [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh_object) {
-                                                mesh_object->set_visible(!visible);
-                                        },
-                                        *m);
-                        });
-                }
-        }
-
-        menu->addSeparator();
-
-        {
-                QAction* action = menu->addAction("Delete");
-                QObject::connect(action, &QAction::triggered, [id, this]() { delete_from_tree_and_storage(id); });
+                return;
         }
 
         menu->exec(m_tree->mapToGlobal(pos));

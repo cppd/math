@@ -50,18 +50,18 @@ struct MeshEvent final
                 }
         };
 
-        struct Update final
+        struct Erase final
         {
-                std::weak_ptr<MeshObject<N>> object;
-                explicit Update(std::weak_ptr<MeshObject<N>>&& object) : object(std::move(object))
+                ObjectId id;
+                explicit Erase(ObjectId id) : id(id)
                 {
                 }
         };
 
-        struct Delete final
+        struct Update final
         {
-                ObjectId id;
-                explicit Delete(ObjectId id) : id(id)
+                std::weak_ptr<MeshObject<N>> object;
+                explicit Update(std::weak_ptr<MeshObject<N>>&& object) : object(std::move(object))
                 {
                 }
         };
@@ -75,7 +75,7 @@ struct MeshEvent final
                 }
         };
 
-        using T = std::variant<Insert, Update, Delete, Visibility>;
+        using T = std::variant<Insert, Erase, Update, Visibility>;
 
         template <typename Type, typename = std::enable_if_t<!std::is_same_v<MeshEvent, std::remove_cvref_t<Type>>>>
         MeshEvent(Type&& arg) : m_data(std::forward<Type>(arg))
@@ -254,11 +254,16 @@ public:
                 ASSERT(m_mesh);
         }
 
+        MeshObject(const MeshObject&) = delete;
+        MeshObject& operator=(const MeshObject&) = delete;
+        MeshObject(MeshObject&&) = delete;
+        MeshObject& operator=(MeshObject&&) = delete;
+
         ~MeshObject()
         {
                 if (m_inserted)
                 {
-                        send_event(typename MeshEvent<N>::Delete(m_id));
+                        send_event(typename MeshEvent<N>::Erase(m_id));
                 }
         }
 
@@ -279,6 +284,16 @@ public:
                 {
                         m_inserted = true;
                         send_event(typename MeshEvent<N>::Insert(this->shared_from_this(), parent_object_id));
+                }
+        }
+
+        void erase()
+        {
+                std::unique_lock m_lock(m_mutex);
+                if (m_inserted)
+                {
+                        m_inserted = false;
+                        send_event(typename MeshEvent<N>::Erase(m_id));
                 }
         }
 
@@ -317,6 +332,11 @@ public:
         explicit Writing(MeshObject<N>* object) : m_object(object), m_lock(m_object->m_mutex)
         {
         }
+
+        Writing(const Writing&) = delete;
+        Writing& operator=(const Writing&) = delete;
+        Writing(Writing&&) = delete;
+        Writing& operator=(Writing&&) = delete;
 
         ~Writing()
         {

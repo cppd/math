@@ -78,13 +78,13 @@ void ModelEvents::event_from_mesh(const mesh::MeshEvent<N>& event)
                                 ASSERT(m_view);
                                 m_view->send(view::command::UpdateMeshObject(v.object));
                         },
+                        [this](const typename mesh::MeshEvent<N>::Erase& v) {
+                                ASSERT(m_view);
+                                m_view->send(view::command::DeleteObject(v.id));
+                        },
                         [this](const typename mesh::MeshEvent<N>::Update& v) {
                                 ASSERT(m_view);
                                 m_view->send(view::command::UpdateMeshObject(v.object));
-                        },
-                        [this](const typename mesh::MeshEvent<N>::Delete& v) {
-                                ASSERT(m_view);
-                                m_view->send(view::command::DeleteObject(v.id));
                         },
                         [this](const typename mesh::MeshEvent<N>::Visibility& v) {
                                 ASSERT(m_view);
@@ -106,6 +106,10 @@ void ModelEvents::event_from_mesh_ui_thread(const mesh::MeshEvent<N>& event)
                         ASSERT(m_model_tree);
                         m_model_tree->insert_into_tree_and_storage(v.object, v.parent_object_id);
                 },
+                [this](const typename mesh::MeshEvent<N>::Erase& v) {
+                        ASSERT(m_model_tree);
+                        m_model_tree->erase_from_tree_and_storage(v.id);
+                },
                 [this](const typename mesh::MeshEvent<N>::Update& v) {
                         auto ptr = v.object.lock();
                         if (ptr)
@@ -113,10 +117,6 @@ void ModelEvents::event_from_mesh_ui_thread(const mesh::MeshEvent<N>& event)
                                 ASSERT(m_on_mesh_update);
                                 m_on_mesh_update(ptr->id());
                         }
-                },
-                [this](const typename mesh::MeshEvent<N>::Delete& v) {
-                        ASSERT(m_model_tree);
-                        m_model_tree->erase_from_tree(v.id);
                 },
                 [this](const typename mesh::MeshEvent<N>::Visibility& v) {
                         ASSERT(m_model_tree);
@@ -136,13 +136,13 @@ void ModelEvents::event_from_volume(const volume::VolumeEvent<N>& event)
                                 ASSERT(m_view);
                                 m_view->send(view::command::UpdateVolumeObject(v.object));
                         },
+                        [this](const typename volume::VolumeEvent<N>::Erase& v) {
+                                ASSERT(m_view);
+                                m_view->send(view::command::DeleteObject(v.id));
+                        },
                         [this](const typename volume::VolumeEvent<N>::Update& v) {
                                 ASSERT(m_view);
                                 m_view->send(view::command::UpdateVolumeObject(v.object));
-                        },
-                        [this](const typename volume::VolumeEvent<N>::Delete& v) {
-                                ASSERT(m_view);
-                                m_view->send(view::command::DeleteObject(v.id));
                         },
                         [this](const typename volume::VolumeEvent<N>::Visibility& v) {
                                 ASSERT(m_view);
@@ -164,6 +164,10 @@ void ModelEvents::event_from_volume_ui_thread(const volume::VolumeEvent<N>& even
                         ASSERT(m_model_tree);
                         m_model_tree->insert_into_tree_and_storage(v.object, v.parent_object_id);
                 },
+                [this](const typename volume::VolumeEvent<N>::Erase& v) {
+                        ASSERT(m_model_tree);
+                        m_model_tree->erase_from_tree_and_storage(v.id);
+                },
                 [this](const typename volume::VolumeEvent<N>::Update& v) {
                         auto ptr = v.object.lock();
                         if (ptr)
@@ -171,10 +175,6 @@ void ModelEvents::event_from_volume_ui_thread(const volume::VolumeEvent<N>& even
                                 ASSERT(m_on_volume_update);
                                 m_on_volume_update(ptr->id());
                         }
-                },
-                [this](const typename volume::VolumeEvent<N>::Delete& v) {
-                        ASSERT(m_model_tree);
-                        m_model_tree->erase_from_tree(v.id);
                 },
                 [this](const typename volume::VolumeEvent<N>::Visibility& v) {
                         ASSERT(m_model_tree);

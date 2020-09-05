@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/object_id.h>
 #include <src/storage/storage.h>
 
+#include <QMenu>
+#include <QPoint>
 #include <QTreeWidget>
 #include <optional>
 #include <thread>
@@ -31,8 +33,6 @@ namespace gui
 {
 class ModelTree final
 {
-        friend class ModelEvents;
-
         const std::thread::id m_thread_id;
 
         storage::Storage m_storage;
@@ -48,14 +48,8 @@ class ModelTree final
         //void set_current(ObjectId id);
 
         void make_menu(const QPoint& pos);
-
-        void insert_into_tree_and_storage(
-                const storage::MeshObject& object,
-                const std::optional<ObjectId>& parent_object_id);
-        void insert_into_tree_and_storage(
-                const storage::VolumeObject& object,
-                const std::optional<ObjectId>& parent_object_id);
-        void delete_from_tree_and_storage(ObjectId id);
+        template <typename T>
+        void make_menu_for_object(QMenu* menu, const std::shared_ptr<T>& object);
 
         void insert_into_tree(
                 ObjectId id,
@@ -65,8 +59,6 @@ class ModelTree final
                 const std::optional<ObjectId>& parent_object_id);
         void erase_from_tree(ObjectId id);
 
-        void set_visible_in_tree(ObjectId id, bool visible);
-
         void show_object(ObjectId id, bool show);
         void show_only_this_object(ObjectId id);
 
@@ -74,6 +66,15 @@ public:
         ModelTree(QTreeWidget* tree, const std::function<void()>& on_item_changed);
 
         ~ModelTree();
+
+        void insert_into_tree_and_storage(
+                const storage::MeshObject& object,
+                const std::optional<ObjectId>& parent_object_id);
+        void insert_into_tree_and_storage(
+                const storage::VolumeObject& object,
+                const std::optional<ObjectId>& parent_object_id);
+        void erase_from_tree_and_storage(ObjectId id);
+        void set_visible_in_tree(ObjectId id, bool visible);
 
         void clear();
 
