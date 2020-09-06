@@ -19,13 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "model_tree.h"
 
-#include "../application/thread_switch.h"
-
 #include <src/com/sequence.h>
 #include <src/model/mesh_object.h>
 #include <src/model/volume_object.h>
 #include <src/settings/dimensions.h>
-#include <src/storage/storage.h>
 #include <src/view/interface.h>
 
 #include <functional>
@@ -37,8 +34,6 @@ namespace gui
 class ModelEvents final
 {
         const std::thread::id m_thread_id;
-
-        application::ThreadSwitch m_thread_switch;
 
         template <size_t N>
         struct Events
@@ -52,13 +47,9 @@ class ModelEvents final
         std::unique_ptr<view::View>& m_view;
 
         template <size_t N>
-        void event_from_mesh([[maybe_unused]] const mesh::MeshEvent<N>& event);
+        void on_mesh(mesh::MeshEvent<N>&& event);
         template <size_t N>
-        void event_from_mesh_ui_thread(const mesh::MeshEvent<N>& event);
-        template <size_t N>
-        void event_from_volume([[maybe_unused]] const volume::VolumeEvent<N>& event);
-        template <size_t N>
-        void event_from_volume_ui_thread(const volume::VolumeEvent<N>& event);
+        void on_volume(volume::VolumeEvent<N>&& event);
 
 public:
         ModelEvents(std::unique_ptr<ModelTree>* model_tree, std::unique_ptr<view::View>* view);

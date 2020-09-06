@@ -71,56 +71,74 @@ void ModelTree::clear()
         m_tree->clear();
 }
 
-void ModelTree::insert_into_tree_and_storage(
-        const storage::MeshObject& object,
-        const std::optional<ObjectId>& parent_object_id)
+void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        m_thread_switch.run_in_object_thread([this, object = std::move(object), parent_object_id]() {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh) {
-                        insert_into_tree(mesh->id(), N, mesh->name(), mesh->visible(), parent_object_id);
-                        m_storage.set_mesh_object(mesh);
-                },
-                object);
+                std::visit(
+                        [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh) {
+                                insert_into_tree(mesh->id(), N, mesh->name(), mesh->visible(), parent_object_id);
+                                m_storage.set_mesh_object(mesh);
+                        },
+                        object);
+        });
 }
 
-void ModelTree::insert_into_tree_and_storage(
-        const storage::VolumeObject& object,
-        const std::optional<ObjectId>& parent_object_id)
+void ModelTree::insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        m_thread_switch.run_in_object_thread([this, object = std::move(object), parent_object_id]() {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume) {
-                        insert_into_tree(volume->id(), N, volume->name(), volume->visible(), parent_object_id);
-                        m_storage.set_volume_object(volume);
-                },
-                object);
+                std::visit(
+                        [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume) {
+                                insert_into_tree(volume->id(), N, volume->name(), volume->visible(), parent_object_id);
+                                m_storage.set_volume_object(volume);
+                        },
+                        object);
+        });
 }
 
-void ModelTree::erase_from_tree_and_storage(ObjectId id)
+void ModelTree::erase(ObjectId id)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        m_thread_switch.run_in_object_thread([this, id]() {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        m_storage.delete_object(id);
-        erase_from_tree(id);
+                m_storage.delete_object(id);
+                erase_from_tree(id);
+        });
 }
 
 void ModelTree::update(ObjectId id)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        m_thread_switch.run_in_object_thread([this, id]() {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        std::optional<ObjectId> current_id = current_item();
-        if (!current_id)
-        {
-                return;
-        }
-        if (id != *current_id)
-        {
-                return;
-        }
-        m_on_item_changed();
+                std::optional<ObjectId> current_id = current_item();
+                if (!current_id)
+                {
+                        return;
+                }
+                if (id != *current_id)
+                {
+                        return;
+                }
+                m_on_item_changed();
+        });
+}
+
+void ModelTree::show(ObjectId id, bool visible)
+{
+        m_thread_switch.run_in_object_thread([this, id, visible]() {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                auto iter = m_map_id_item.find(id);
+                if (iter == m_map_id_item.cend())
+                {
+                        return;
+                }
+                set_item_color(iter->second, visible);
+        });
 }
 
 void ModelTree::insert_into_tree(
@@ -203,18 +221,6 @@ void ModelTree::erase_from_tree(ObjectId id)
                         delete item;
                 }
         }
-}
-
-void ModelTree::set_visible_in_tree(ObjectId id, bool visible)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        auto iter = m_map_id_item.find(id);
-        if (iter == m_map_id_item.cend())
-        {
-                return;
-        }
-        set_item_color(iter->second, visible);
 }
 
 void ModelTree::show_object(ObjectId id, bool show)

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../application/thread_switch.h"
 #include "../com/connection.h"
 
 #include <src/model/object_id.h>
@@ -34,6 +35,7 @@ namespace gui
 class ModelTree final
 {
         const std::thread::id m_thread_id;
+        application::ThreadSwitch m_thread_switch;
 
         storage::Storage m_storage;
 
@@ -67,15 +69,11 @@ public:
 
         ~ModelTree();
 
-        void insert_into_tree_and_storage(
-                const storage::MeshObject& object,
-                const std::optional<ObjectId>& parent_object_id);
-        void insert_into_tree_and_storage(
-                const storage::VolumeObject& object,
-                const std::optional<ObjectId>& parent_object_id);
-        void erase_from_tree_and_storage(ObjectId id);
+        void insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id);
+        void insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id);
+        void erase(ObjectId id);
         void update(ObjectId id);
-        void set_visible_in_tree(ObjectId id, bool visible);
+        void show(ObjectId id, bool visible);
 
         void clear();
 
