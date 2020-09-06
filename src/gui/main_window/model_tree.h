@@ -74,6 +74,7 @@ public:
                 const storage::VolumeObject& object,
                 const std::optional<ObjectId>& parent_object_id);
         void erase_from_tree_and_storage(ObjectId id);
+        void update(ObjectId id);
         void set_visible_in_tree(ObjectId id, bool visible);
 
         void clear();

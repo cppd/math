@@ -50,8 +50,6 @@ class ModelEvents final
 
         std::unique_ptr<ModelTree>& m_model_tree;
         std::unique_ptr<view::View>& m_view;
-        std::function<void(ObjectId)> m_on_mesh_update;
-        std::function<void(ObjectId)> m_on_volume_update;
 
         template <size_t N>
         void event_from_mesh([[maybe_unused]] const mesh::MeshEvent<N>& event);
@@ -63,11 +61,7 @@ class ModelEvents final
         void event_from_volume_ui_thread(const volume::VolumeEvent<N>& event);
 
 public:
-        ModelEvents(
-                std::unique_ptr<ModelTree>* model_tree,
-                std::unique_ptr<view::View>* view,
-                std::function<void(ObjectId)>&& on_mesh_update,
-                std::function<void(ObjectId)>&& on_volume_update);
+        ModelEvents(std::unique_ptr<ModelTree>* model_tree, std::unique_ptr<view::View>* view);
         ~ModelEvents();
 
         ModelEvents(const ModelEvents&) = delete;

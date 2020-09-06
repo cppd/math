@@ -107,6 +107,22 @@ void ModelTree::erase_from_tree_and_storage(ObjectId id)
         erase_from_tree(id);
 }
 
+void ModelTree::update(ObjectId id)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<ObjectId> current_id = current_item();
+        if (!current_id)
+        {
+                return;
+        }
+        if (id != *current_id)
+        {
+                return;
+        }
+        m_on_item_changed();
+}
+
 void ModelTree::insert_into_tree(
         ObjectId id,
         unsigned dimension,

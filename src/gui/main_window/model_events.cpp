@@ -21,16 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui
 {
-ModelEvents::ModelEvents(
-        std::unique_ptr<ModelTree>* model_tree,
-        std::unique_ptr<view::View>* view,
-        std::function<void(ObjectId)>&& on_mesh_update,
-        std::function<void(ObjectId)>&& on_volume_update)
-        : m_thread_id(std::this_thread::get_id()),
-          m_model_tree(*model_tree),
-          m_view(*view),
-          m_on_mesh_update(std::move(on_mesh_update)),
-          m_on_volume_update(std::move(on_volume_update))
+ModelEvents::ModelEvents(std::unique_ptr<ModelTree>* model_tree, std::unique_ptr<view::View>* view)
+        : m_thread_id(std::this_thread::get_id()), m_model_tree(*model_tree), m_view(*view)
 {
         const auto f = [this]<size_t N>(Events<N>& model_events) {
                 model_events.mesh_events = [this](mesh::MeshEvent<N>&& event) {
@@ -111,12 +103,17 @@ void ModelEvents::event_from_mesh_ui_thread(const mesh::MeshEvent<N>& event)
                         m_model_tree->erase_from_tree_and_storage(v.id);
                 },
                 [this](const typename mesh::MeshEvent<N>::Update& v) {
-                        auto ptr = v.object.lock();
-                        if (ptr)
+                        ObjectId id;
                         {
-                                ASSERT(m_on_mesh_update);
-                                m_on_mesh_update(ptr->id());
+                                auto ptr = v.object.lock();
+                                if (!ptr)
+                                {
+                                        return;
+                                }
+                                id = ptr->id();
                         }
+                        ASSERT(m_model_tree);
+                        m_model_tree->update(id);
                 },
                 [this](const typename mesh::MeshEvent<N>::Visibility& v) {
                         ASSERT(m_model_tree);
@@ -169,12 +166,17 @@ void ModelEvents::event_from_volume_ui_thread(const volume::VolumeEvent<N>& even
                         m_model_tree->erase_from_tree_and_storage(v.id);
                 },
                 [this](const typename volume::VolumeEvent<N>::Update& v) {
-                        auto ptr = v.object.lock();
-                        if (ptr)
+                        ObjectId id;
                         {
-                                ASSERT(m_on_volume_update);
-                                m_on_volume_update(ptr->id());
+                                auto ptr = v.object.lock();
+                                if (!ptr)
+                                {
+                                        return;
+                                }
+                                id = ptr->id();
                         }
+                        ASSERT(m_model_tree);
+                        m_model_tree->update(id);
                 },
                 [this](const typename volume::VolumeEvent<N>::Visibility& v) {
                         ASSERT(m_model_tree);
