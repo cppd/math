@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <tuple>
 
-namespace gui
+namespace gui::application
 {
 class ModelEvents final
 {
@@ -49,7 +49,7 @@ class ModelEvents final
 
 public:
         ModelEvents();
-        ModelEvents(std::unique_ptr<ModelTree>* tree, std::unique_ptr<view::View>* view);
+        ModelEvents(ModelTree* tree, view::View* view);
         ~ModelEvents();
 
         ModelEvents(const ModelEvents&) = delete;

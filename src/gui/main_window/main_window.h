@@ -18,11 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "graphics_widget.h"
-#include "model_events.h"
 #include "model_tree.h"
 #include "range_slider.h"
 #include "repository_actions.h"
 #include "threads.h"
+
+#include "../application/model_events.h"
 
 #include "ui_main_window.h"
 
@@ -167,7 +168,6 @@ private:
 
         const std::thread::id m_thread_id = std::this_thread::get_id();
         bool m_first_show = true;
-        ModelEvents m_default_model_events;
 
         Ui::MainWindow ui;
 
@@ -182,7 +182,7 @@ private:
         std::unique_ptr<ModelTree> m_model_tree;
         std::unique_ptr<RangeSlider> m_slider_volume_levels;
 
-        std::unique_ptr<ModelEvents> m_model_events;
+        std::unique_ptr<application::ModelEvents> m_model_events;
 
         QColor m_background_color;
         QColor m_specular_color;

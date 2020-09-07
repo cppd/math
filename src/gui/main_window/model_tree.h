@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../application/thread_switch.h"
+#include "../application/model_tree.h"
 #include "../com/connection.h"
 
 #include <src/model/object_id.h>
@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui
 {
-class ModelTree final
+class ModelTree final : public application::ModelTree
 {
         const std::thread::id m_thread_id;
 
@@ -45,6 +45,12 @@ class ModelTree final
 
         std::vector<Connection> m_connections;
         std::function<void()> m_on_update_model;
+
+        void insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id) override;
+        void insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id) override;
+        void erase(ObjectId id) override;
+        void update(ObjectId id) override;
+        void show(ObjectId id, bool visible) override;
 
         //void set_current(ObjectId id);
 
@@ -67,12 +73,6 @@ public:
         ModelTree(QTreeWidget* tree, const std::function<void()>& on_update_model);
 
         ~ModelTree();
-
-        void insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id);
-        void insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id);
-        void erase(ObjectId id);
-        void update(ObjectId id);
-        void show(ObjectId id, bool visible);
 
         void clear();
 
