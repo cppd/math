@@ -298,9 +298,11 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         }
 
 public:
-        static void set_events(const std::function<void(VolumeEvent<N>&&)>* events)
+        static const std::function<void(VolumeEvent<N>&&)>* set_events(
+                const std::function<void(VolumeEvent<N>&&)>* events)
         {
-                m_events = events;
+                std::swap(m_events, events);
+                return events;
         }
 
         //
