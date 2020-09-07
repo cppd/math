@@ -240,9 +240,10 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
         }
 
 public:
-        static void set_events(const std::function<void(MeshEvent<N>&&)>* events)
+        static const std::function<void(MeshEvent<N>&&)>* set_events(const std::function<void(MeshEvent<N>&&)>* events)
         {
-                m_events = events;
+                std::swap(m_events, events);
+                return events;
         }
 
         MeshObject(
