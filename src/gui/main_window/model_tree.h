@@ -35,7 +35,6 @@ namespace gui
 class ModelTree final
 {
         const std::thread::id m_thread_id;
-        application::ThreadSwitch m_thread_switch;
 
         storage::Storage m_storage;
 
@@ -45,7 +44,7 @@ class ModelTree final
         QTreeWidget* m_tree = nullptr;
 
         std::vector<Connection> m_connections;
-        std::function<void()> m_on_item_changed;
+        std::function<void()> m_on_update_model;
 
         //void set_current(ObjectId id);
 
@@ -65,7 +64,7 @@ class ModelTree final
         void show_only_this_object(ObjectId id);
 
 public:
-        ModelTree(QTreeWidget* tree, const std::function<void()>& on_item_changed);
+        ModelTree(QTreeWidget* tree, const std::function<void()>& on_update_model);
 
         ~ModelTree();
 

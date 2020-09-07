@@ -139,8 +139,6 @@ void MainWindow::constructor_objects()
 {
         m_worker_threads = create_worker_threads();
 
-        m_mesh_and_volume_events = std::make_unique<ModelEvents>(&m_model_tree, &m_view);
-
         m_repository = std::make_unique<storage::Repository>();
 
         m_repository_actions = std::make_unique<RepositoryActions>(
@@ -148,7 +146,8 @@ void MainWindow::constructor_objects()
                 [this](int dimension, const std::string& name) { on_repository_mesh(dimension, name); },
                 [this](int dimension, const std::string& name) { on_repository_volume(dimension, name); });
 
-        m_model_tree = std::make_unique<ModelTree>(ui.model_tree, [this]() { on_model_tree_item_changed(); });
+        m_model_tree = std::make_unique<ModelTree>(ui.model_tree, [this]() { on_model_tree_update(); });
+        m_model_events.set_tree(m_model_tree.get());
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
@@ -330,10 +329,10 @@ void MainWindow::terminate_all_threads()
 
         m_worker_threads->terminate_all();
 
+        m_model_events.clear();
+
         m_model_tree.reset();
         m_view.reset();
-
-        m_mesh_and_volume_events.reset();
 }
 
 bool MainWindow::stop_action(WorkerThreads::Action action)
@@ -580,6 +579,7 @@ void MainWindow::on_first_shown()
                 m_view = view::create_view(
                         widget_window_id(m_graphics_widget), widget_pixels_per_inch(m_graphics_widget),
                         std::move(view_initial_commands));
+                m_model_events.set_view(m_view.get());
 
                 //
 
@@ -825,7 +825,7 @@ void MainWindow::on_graphics_widget_resize(QResizeEvent* e)
         }
 }
 
-void MainWindow::on_model_tree_item_changed()
+void MainWindow::on_model_tree_update()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 

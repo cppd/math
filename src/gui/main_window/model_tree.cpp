@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "model_tree.h"
 
+#include "../com/thread_ui.h"
 #include "../dialogs/message.h"
 
 #include <src/com/error.h>
@@ -37,14 +38,14 @@ void set_item_color(QTreeWidgetItem* item, bool visible)
 }
 }
 
-ModelTree::ModelTree(QTreeWidget* tree, const std::function<void()>& on_item_changed)
-        : m_thread_id(std::this_thread::get_id()), m_tree(tree), m_on_item_changed(on_item_changed)
+ModelTree::ModelTree(QTreeWidget* tree, const std::function<void()>& on_update_model)
+        : m_thread_id(std::this_thread::get_id()), m_tree(tree), m_on_update_model(on_update_model)
 {
         ASSERT(m_tree);
 
         m_connections.emplace_back(
                 QObject::connect(m_tree, &QTreeWidget::currentItemChanged, [this](QTreeWidgetItem*, QTreeWidgetItem*) {
-                        m_on_item_changed();
+                        m_on_update_model();
                 }));
 
         m_tree->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -73,7 +74,7 @@ void ModelTree::clear()
 
 void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id)
 {
-        m_thread_switch.run_in_object_thread([this, object = std::move(object), parent_object_id]() {
+        run_in_ui_thread([this, object = std::move(object), parent_object_id]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 std::visit(
@@ -87,7 +88,7 @@ void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectI
 
 void ModelTree::insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id)
 {
-        m_thread_switch.run_in_object_thread([this, object = std::move(object), parent_object_id]() {
+        run_in_ui_thread([this, object = std::move(object), parent_object_id]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 std::visit(
@@ -101,7 +102,7 @@ void ModelTree::insert(storage::VolumeObject&& object, const std::optional<Objec
 
 void ModelTree::erase(ObjectId id)
 {
-        m_thread_switch.run_in_object_thread([this, id]() {
+        run_in_ui_thread([this, id]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_storage.delete_object(id);
@@ -111,7 +112,7 @@ void ModelTree::erase(ObjectId id)
 
 void ModelTree::update(ObjectId id)
 {
-        m_thread_switch.run_in_object_thread([this, id]() {
+        run_in_ui_thread([this, id]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 std::optional<ObjectId> current_id = current_item();
@@ -123,13 +124,13 @@ void ModelTree::update(ObjectId id)
                 {
                         return;
                 }
-                m_on_item_changed();
+                m_on_update_model();
         });
 }
 
 void ModelTree::show(ObjectId id, bool visible)
 {
-        m_thread_switch.run_in_object_thread([this, id, visible]() {
+        run_in_ui_thread([this, id, visible]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 auto iter = m_map_id_item.find(id);
@@ -207,7 +208,7 @@ void ModelTree::erase_from_tree(ObjectId id)
                 font.setStrikeOut(true);
                 item->setFont(0, font);
                 set_item_color(item, false);
-                m_on_item_changed();
+                m_on_update_model();
         }
         else
         {

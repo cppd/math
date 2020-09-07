@@ -33,7 +33,7 @@ namespace gui
 {
 class ModelEvents final
 {
-        const std::thread::id m_thread_id;
+        const std::thread::id m_thread_id = std::this_thread::get_id();
 
         template <size_t N>
         struct Events
@@ -43,19 +43,19 @@ class ModelEvents final
         };
         Sequence<settings::Dimensions, std::tuple, Events> m_events;
 
-        std::unique_ptr<ModelTree>& m_model_tree;
-        std::unique_ptr<view::View>& m_view;
-
-        template <size_t N>
-        void on_mesh(mesh::MeshEvent<N>&& event);
-        template <size_t N>
-        void on_volume(volume::VolumeEvent<N>&& event);
+        ModelTree* m_tree = nullptr;
+        view::View* m_view = nullptr;
 
 public:
-        ModelEvents(std::unique_ptr<ModelTree>* model_tree, std::unique_ptr<view::View>* view);
+        ModelEvents();
         ~ModelEvents();
 
         ModelEvents(const ModelEvents&) = delete;
         ModelEvents& operator=(const ModelEvents&) = delete;
+
+        void set_tree(ModelTree* tree);
+        void set_view(view::View* view);
+
+        void clear();
 };
 }

@@ -112,7 +112,7 @@ private:
         void on_repository_mesh(int dimension, const std::string& object_name);
         void on_repository_volume(int dimension, const std::string& object_name);
 
-        void on_model_tree_item_changed();
+        void on_model_tree_update();
         void on_volume_levels_changed(double, double);
         void on_timer_progress_bar();
         void on_first_shown();
@@ -170,9 +170,9 @@ private:
 
         Ui::MainWindow ui;
 
-        std::unique_ptr<WorkerThreads> m_worker_threads;
+        ModelEvents m_model_events;
 
-        std::unique_ptr<ModelEvents> m_mesh_and_volume_events;
+        std::unique_ptr<WorkerThreads> m_worker_threads;
 
         GraphicsWidget* m_graphics_widget;
         std::unique_ptr<view::View> m_view;
