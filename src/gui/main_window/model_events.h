@@ -38,24 +38,21 @@ class ModelEvents final
         template <size_t N>
         struct Events
         {
+                const std::function<void(mesh::MeshEvent<N>&&)>* saved_mesh_events;
+                const std::function<void(volume::VolumeEvent<N>&&)>* saved_volume_events;
                 std::function<void(mesh::MeshEvent<N>&&)> mesh_events;
                 std::function<void(volume::VolumeEvent<N>&&)> volume_events;
         };
         Sequence<settings::Dimensions, std::tuple, Events> m_events;
 
-        ModelTree* m_tree = nullptr;
-        view::View* m_view = nullptr;
+        static void set(Sequence<settings::Dimensions, std::tuple, Events>* events_ptr);
 
 public:
         ModelEvents();
+        ModelEvents(std::unique_ptr<ModelTree>* tree, std::unique_ptr<view::View>* view);
         ~ModelEvents();
 
         ModelEvents(const ModelEvents&) = delete;
         ModelEvents& operator=(const ModelEvents&) = delete;
-
-        void set_tree(ModelTree* tree);
-        void set_view(view::View* view);
-
-        void clear();
 };
 }

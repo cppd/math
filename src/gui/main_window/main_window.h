@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/progress/progress_list.h>
 #include <src/storage/repository.h>
 #include <src/test/self_test.h>
+#include <src/view/interface.h>
 
 #include <QColor>
 #include <QTimer>
@@ -36,7 +37,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 #include <thread>
-#include <vector>
 
 namespace gui
 {
@@ -167,10 +167,9 @@ private:
 
         const std::thread::id m_thread_id = std::this_thread::get_id();
         bool m_first_show = true;
+        ModelEvents m_default_model_events;
 
         Ui::MainWindow ui;
-
-        ModelEvents m_model_events;
 
         std::unique_ptr<WorkerThreads> m_worker_threads;
 
@@ -182,6 +181,8 @@ private:
 
         std::unique_ptr<ModelTree> m_model_tree;
         std::unique_ptr<RangeSlider> m_slider_volume_levels;
+
+        std::unique_ptr<ModelEvents> m_model_events;
 
         QColor m_background_color;
         QColor m_specular_color;
