@@ -39,7 +39,7 @@ constexpr QRgb DFT_COLOR = qRgb(150, 200, 250);
 constexpr double MAXIMUM_LIGHTING_INTENSITY = 3.0;
 }
 
-ColorsWidget::ColorsWidget(QWidget* parent, std::unique_ptr<view::View>* view) : QWidget(parent), m_view(*view)
+ColorsWidget::ColorsWidget(QWidget* parent) : QWidget(parent)
 {
         ui.setupUi(this);
 
@@ -72,6 +72,11 @@ ColorsWidget::ColorsWidget(QWidget* parent, std::unique_ptr<view::View>* view) :
         connect(ui.toolButton_normal_color_positive, &QToolButton::clicked, this,
                 &ColorsWidget::on_normal_color_positive_clicked);
         connect(ui.toolButton_wireframe_color, &QToolButton::clicked, this, &ColorsWidget::on_wireframe_color_clicked);
+}
+
+void ColorsWidget::set_view(view::View* view)
+{
+        m_view = view;
 }
 
 void ColorsWidget::on_reset_lighting_clicked()

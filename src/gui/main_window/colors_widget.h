@@ -31,7 +31,7 @@ class ColorsWidget final : public QWidget
 private:
         Ui::ColorsWidget ui;
 
-        std::unique_ptr<view::View>& m_view;
+        view::View* m_view = nullptr;
 
         QColor m_background_color;
         QColor m_specular_color;
@@ -62,7 +62,9 @@ private:
         void set_dft_color(const QColor& c);
 
 public:
-        ColorsWidget(QWidget* parent, std::unique_ptr<view::View>* view);
+        ColorsWidget(QWidget* parent);
+
+        void set_view(view::View* view);
 
         Color background_color() const;
         Color specular_color() const;

@@ -134,10 +134,10 @@ void MainWindow::constructor_interface()
 {
         // set_widgets_enabled(QMainWindow::layout(), true);
 
-        m_colors_widget = new ColorsWidget(ui.tabColor, &m_view);
+        m_colors_widget = new ColorsWidget(ui.tabColor);
         ui.tabColor->setLayout(m_colors_widget->layout());
 
-        m_view_widget = new ViewWidget(ui.tabView, &m_view);
+        m_view_widget = new ViewWidget(ui.tabView);
         ui.tabView->setLayout(m_view_widget->layout());
 
         m_slider_volume_levels = std::make_unique<RangeSlider>(ui.slider_volume_level_min, ui.slider_volume_level_max);
@@ -233,8 +233,12 @@ void MainWindow::terminate_all_threads()
 
         m_worker_threads->terminate_all();
 
+        m_colors_widget->set_view(nullptr);
+        m_view_widget->set_view(nullptr);
+
         m_model_events.reset();
         application::ModelEvents model_events;
+
         m_model_tree.reset();
         m_view.reset();
 }
@@ -406,6 +410,8 @@ void MainWindow::on_first_shown()
                         std::move(view_initial_commands));
 
                 m_model_events = std::make_unique<application::ModelEvents>(m_model_tree.get(), m_view.get());
+                m_colors_widget->set_view(m_view.get());
+                m_view_widget->set_view(m_view.get());
 
                 //
 

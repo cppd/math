@@ -30,7 +30,7 @@ class ViewWidget final : public QWidget
 private:
         Ui::ViewWidget ui;
 
-        std::unique_ptr<view::View>& m_view;
+        view::View* m_view = nullptr;
 
         void on_clip_plane_clicked();
         void on_convex_hull_2d_clicked();
@@ -52,7 +52,9 @@ private:
         void on_shadow_quality_changed(int);
 
 public:
-        ViewWidget(QWidget* parent, std::unique_ptr<view::View>* view);
+        ViewWidget(QWidget* parent);
+
+        void set_view(view::View* view);
 
         double dft_brightness() const;
         double shadow_zoom() const;

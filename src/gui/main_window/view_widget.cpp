@@ -38,7 +38,7 @@ constexpr int SHADOW_ZOOM = 2;
 constexpr double DFT_MAX_BRIGHTNESS = 50000;
 constexpr double DFT_GAMMA = 0.5;
 }
-ViewWidget::ViewWidget(QWidget* parent, std::unique_ptr<view::View>* view) : QWidget(parent), m_view(*view)
+ViewWidget::ViewWidget(QWidget* parent) : QWidget(parent)
 {
         ui.setupUi(this);
 
@@ -78,6 +78,11 @@ ViewWidget::ViewWidget(QWidget* parent, std::unique_ptr<view::View>* view) : QWi
         connect(ui.slider_dft_brightness, &QSlider::valueChanged, this, &ViewWidget::on_dft_brightness_changed);
         connect(ui.slider_normals, &QSlider::valueChanged, this, &ViewWidget::on_normals_changed);
         connect(ui.slider_shadow_quality, &QSlider::valueChanged, this, &ViewWidget::on_shadow_quality_changed);
+}
+
+void ViewWidget::set_view(view::View* view)
+{
+        m_view = view;
 }
 
 void ViewWidget::on_clip_plane_clicked()
