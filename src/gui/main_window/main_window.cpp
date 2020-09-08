@@ -62,22 +62,12 @@ constexpr double DFT_GAMMA = 0.5;
 // Таймер отображения хода расчётов. Величина в миллисекундах.
 constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
 
-// Цвета по умолчанию
-constexpr QRgb BACKGROUND_COLOR = qRgb(50, 100, 150);
-constexpr QRgb SPECULAR_COLOR = qRgb(255, 255, 255);
-constexpr QRgb WIREFRAME_COLOR = qRgb(255, 255, 255);
-constexpr QRgb CLIP_PLANE_COLOR = qRgb(250, 230, 150);
-constexpr QRgb DFT_BACKGROUND_COLOR = qRgb(0, 0, 50);
-constexpr QRgb DFT_COLOR = qRgb(150, 200, 250);
-
 // Задержка в миллисекундах после showEvent для вызова по таймеру
 // функции обработки появления окна.
 constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 
 // увеличение текстуры тени по сравнению с размером окна.
 constexpr int SHADOW_ZOOM = 2;
-
-constexpr double MAXIMUM_LIGHTING_INTENSITY = 3.0;
 
 // Максимальный коэффициент для умножения и деления α на него.
 constexpr double VOLUME_ALPHA_COEFFICIENT = 20;
@@ -88,8 +78,6 @@ constexpr double MAXIMUM_MODEL_LIGHTING = 2.0;
 constexpr float NORMAL_LENGTH_MINIMUM = 0.001;
 constexpr float NORMAL_LENGTH_DEFAULT = 0.05;
 constexpr float NORMAL_LENGTH_MAXIMUM = 0.2;
-constexpr QRgb NORMAL_COLOR_POSITIVE = qRgb(200, 200, 0);
-constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(50, 150, 50);
 }
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
@@ -154,6 +142,9 @@ void MainWindow::constructor_objects()
 
 void MainWindow::constructor_interface()
 {
+        m_colors_widget = new ColorsWidget(ui.tabColor, &m_view);
+        ui.tabColor->setLayout(m_colors_widget->layout());
+
         set_widgets_enabled(QMainWindow::layout(), true);
 
         m_slider_volume_levels = std::make_unique<RangeSlider>(ui.slider_volume_level_min, ui.slider_volume_level_max);
@@ -181,28 +172,12 @@ void MainWindow::constructor_interface()
                 static_assert(v >= 0 && v <= d && d > 0);
                 set_slider_position(ui.slider_normals, p);
         }
-        {
-                // Должно быть точное среднее положение
-                ASSERT(((ui.slider_lighting_intensity->maximum() - ui.slider_lighting_intensity->minimum()) & 1) == 0);
-                QSignalBlocker blocker(ui.slider_lighting_intensity);
-                set_slider_to_middle(ui.slider_lighting_intensity);
-        }
 
         mesh_ui_disable();
         volume_ui_disable();
 
         on_dft_clicked();
         on_shadow_clicked();
-
-        set_background_color(BACKGROUND_COLOR);
-        set_specular_color(SPECULAR_COLOR);
-        set_wireframe_color(WIREFRAME_COLOR);
-        set_clip_plane_color(CLIP_PLANE_COLOR);
-        set_normal_color_positive(NORMAL_COLOR_POSITIVE);
-        set_normal_color_negative(NORMAL_COLOR_NEGATIVE);
-
-        set_dft_background_color(DFT_BACKGROUND_COLOR);
-        set_dft_color(DFT_COLOR);
 
         ui.mainWidget->layout()->setContentsMargins(3, 3, 3, 3);
         ui.mainWidget->layout()->setSpacing(3);
@@ -245,7 +220,6 @@ void MainWindow::constructor_connect()
         connect(ui.checkBox_vertical_sync, &QCheckBox::clicked, this, &MainWindow::on_vertical_sync_clicked);
         connect(ui.checkBox_wireframe, &QCheckBox::clicked, this, &MainWindow::on_wireframe_clicked);
 
-        connect(ui.pushButton_reset_lighting, &QPushButton::clicked, this, &MainWindow::on_reset_lighting_clicked);
         connect(ui.pushButton_reset_view, &QPushButton::clicked, this, &MainWindow::on_reset_view_clicked);
 
         connect(ui.slider_clip_plane, &QSlider::valueChanged, this, &MainWindow::on_clip_plane_changed);
@@ -253,7 +227,6 @@ void MainWindow::constructor_connect()
         connect(ui.slider_isosurface_transparency, &QSlider::valueChanged, this,
                 &MainWindow::on_isosurface_transparency_changed);
         connect(ui.slider_isovalue, &QSlider::valueChanged, this, &MainWindow::on_isovalue_changed);
-        connect(ui.slider_lighting_intensity, &QSlider::valueChanged, this, &MainWindow::on_lighting_intensity_changed);
         connect(ui.slider_mesh_ambient, &QSlider::valueChanged, this, &MainWindow::on_mesh_ambient_changed);
         connect(ui.slider_mesh_diffuse, &QSlider::valueChanged, this, &MainWindow::on_mesh_diffuse_changed);
         connect(ui.slider_mesh_specular_power, &QSlider::valueChanged, this,
@@ -269,22 +242,9 @@ void MainWindow::constructor_connect()
         connect(ui.slider_volume_specular, &QSlider::valueChanged, this, &MainWindow::on_volume_specular_changed);
         connect(ui.slider_volume_transparency, &QSlider::valueChanged, this,
                 &MainWindow::on_volume_transparency_changed);
-
-        connect(ui.toolButton_background_color, &QToolButton::clicked, this, &MainWindow::on_background_color_clicked);
-        connect(ui.toolButton_clip_plane_color, &QToolButton::clicked, this, &MainWindow::on_clip_plane_color_clicked);
-        connect(ui.toolButton_dft_background_color, &QToolButton::clicked, this,
-                &MainWindow::on_dft_background_color_clicked);
-        connect(ui.toolButton_dft_color, &QToolButton::clicked, this, &MainWindow::on_dft_color_clicked);
         connect(ui.toolButton_mesh_color, &QToolButton::clicked, this, &MainWindow::on_mesh_color_clicked);
-        connect(ui.toolButton_normal_color_negative, &QToolButton::clicked, this,
-                &MainWindow::on_normal_color_negative_clicked);
-        connect(ui.toolButton_normal_color_positive, &QToolButton::clicked, this,
-                &MainWindow::on_normal_color_positive_clicked);
         connect(ui.toolButton_volume_color, &QToolButton::clicked, this, &MainWindow::on_volume_color_clicked);
-        connect(ui.toolButton_wireframe_color, &QToolButton::clicked, this, &MainWindow::on_wireframe_color_clicked);
-
         connect(m_slider_volume_levels.get(), &RangeSlider::changed, this, &MainWindow::on_volume_levels_changed);
-
         connect(&m_timer_progress_bar, &QTimer::timeout, this, &MainWindow::on_timer_progress_bar);
 }
 
@@ -435,85 +395,6 @@ void MainWindow::on_timer_progress_bar()
         }
 }
 
-void MainWindow::set_background_color(const QColor& c)
-{
-        m_background_color = c;
-        if (m_view)
-        {
-                m_view->send(view::command::SetBackgroundColor(qcolor_to_rgb(c)));
-        }
-        set_widget_color(ui.widget_background_color, c);
-}
-
-void MainWindow::set_specular_color(const QColor& c)
-{
-        m_specular_color = c;
-        if (m_view)
-        {
-                m_view->send(view::command::SetSpecularColor(qcolor_to_rgb(c)));
-        }
-}
-
-void MainWindow::set_wireframe_color(const QColor& c)
-{
-        m_wireframe_color = c;
-        if (m_view)
-        {
-                m_view->send(view::command::SetWireframeColor(qcolor_to_rgb(c)));
-        }
-        set_widget_color(ui.widget_wireframe_color, c);
-}
-
-void MainWindow::set_clip_plane_color(const QColor& c)
-{
-        m_clip_plane_color = c;
-        if (m_view)
-        {
-                m_view->send(view::command::SetClipPlaneColor(qcolor_to_rgb(c)));
-        }
-        set_widget_color(ui.widget_clip_plane_color, c);
-}
-
-void MainWindow::set_normal_color_positive(const QColor& c)
-{
-        m_normal_color_positive = c;
-        if (m_view)
-        {
-                m_view->send(view::command::SetNormalColorPositive(qcolor_to_rgb(c)));
-        }
-        set_widget_color(ui.widget_normal_color_positive, c);
-}
-
-void MainWindow::set_normal_color_negative(const QColor& c)
-{
-        m_normal_color_negative = c;
-        if (m_view)
-        {
-                m_view->send(view::command::SetNormalColorNegative(qcolor_to_rgb(c)));
-        }
-        set_widget_color(ui.widget_normal_color_negative, c);
-}
-
-void MainWindow::set_dft_background_color(const QColor& c)
-{
-        m_dft_background_color = c;
-        if (m_view)
-        {
-                m_view->send(view::command::SetDftBackgroundColor(qcolor_to_rgb(c)));
-        }
-        set_widget_color(ui.widget_dft_background_color, c);
-}
-
-void MainWindow::set_dft_color(const QColor& c)
-{
-        m_dft_color = c;
-        if (m_view)
-        {
-                m_view->send(view::command::SetDftColor(qcolor_to_rgb(c)));
-        }
-        set_widget_color(ui.widget_dft_color, c);
-}
-
 void MainWindow::showEvent(QShowEvent* /*event*/)
 {
         if (!m_first_show)
@@ -550,13 +431,13 @@ void MainWindow::on_first_shown()
                 //
 
                 std::vector<view::Command> view_initial_commands{
-                        view::command::SetBackgroundColor(qcolor_to_rgb(m_background_color)),
-                        view::command::SetSpecularColor(qcolor_to_rgb(m_specular_color)),
-                        view::command::SetWireframeColor(qcolor_to_rgb(m_wireframe_color)),
-                        view::command::SetClipPlaneColor(qcolor_to_rgb(m_clip_plane_color)),
+                        view::command::SetBackgroundColor(m_colors_widget->background_color()),
+                        view::command::SetSpecularColor(m_colors_widget->specular_color()),
+                        view::command::SetWireframeColor(m_colors_widget->wireframe_color()),
+                        view::command::SetClipPlaneColor(m_colors_widget->clip_plane_color()),
                         view::command::SetNormalLength(normal_length()),
-                        view::command::SetNormalColorPositive(qcolor_to_rgb(m_normal_color_positive)),
-                        view::command::SetNormalColorNegative(qcolor_to_rgb(m_normal_color_negative)),
+                        view::command::SetNormalColorPositive(m_colors_widget->normal_color_positive()),
+                        view::command::SetNormalColorNegative(m_colors_widget->normal_color_negative()),
                         view::command::ShowSmooth(ui.checkBox_smooth->isChecked()),
                         view::command::ShowWireframe(ui.checkBox_wireframe->isChecked()),
                         view::command::ShowShadow(ui.checkBox_shadow->isChecked()),
@@ -568,10 +449,10 @@ void MainWindow::on_first_shown()
                         view::command::ShowConvexHull2D(ui.checkBox_convex_hull_2d->isChecked()),
                         view::command::ShowOpticalFlow(ui.checkBox_optical_flow->isChecked()),
                         view::command::ShowNormals(ui.checkBox_normals->isChecked()),
-                        view::command::SetLightingIntensity(lighting_intensity()),
+                        view::command::SetLightingIntensity(m_colors_widget->lighting_intensity()),
                         view::command::SetDftBrightness(dft_brightness()),
-                        view::command::SetDftBackgroundColor(qcolor_to_rgb(m_dft_background_color)),
-                        view::command::SetDftColor(qcolor_to_rgb(m_dft_color)),
+                        view::command::SetDftBackgroundColor(m_colors_widget->dft_background_color()),
+                        view::command::SetDftColor(m_colors_widget->dft_color()),
                         view::command::SetVerticalSync(ui.checkBox_vertical_sync->isChecked()),
                         view::command::SetShadowZoom(shadow_zoom())};
 
@@ -750,8 +631,8 @@ void MainWindow::on_painter_triggered()
                 m_view->receive({&camera});
 
                 WorkerThreads::Function f = process::action_painter(
-                        objects, camera, QMainWindow::windowTitle().toStdString(), qcolor_to_rgb(m_background_color),
-                        lighting_intensity());
+                        objects, camera, QMainWindow::windowTitle().toStdString(), m_colors_widget->background_color(),
+                        m_colors_widget->lighting_intensity());
 
                 m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
         });
@@ -858,23 +739,6 @@ void MainWindow::on_model_tree_update()
         }
 }
 
-double MainWindow::lighting_intensity() const
-{
-        double v = 2.0 * slider_position(ui.slider_lighting_intensity);
-        return (v <= 1.0) ? v : interpolation(1.0, MAXIMUM_LIGHTING_INTENSITY, v - 1.0);
-}
-
-void MainWindow::on_reset_lighting_clicked()
-{
-        bool yes;
-        if (!dialog::message_question_default_yes("Reset lighting?", &yes) || !yes)
-        {
-                return;
-        }
-
-        set_slider_to_middle(ui.slider_lighting_intensity);
-}
-
 double MainWindow::dft_brightness() const
 {
         double value = ui.slider_dft_brightness->value() - ui.slider_dft_brightness->minimum();
@@ -891,11 +755,6 @@ double MainWindow::shadow_zoom() const
 double MainWindow::normal_length() const
 {
         return interpolation(NORMAL_LENGTH_MINIMUM, NORMAL_LENGTH_MAXIMUM, slider_position(ui.slider_normals));
-}
-
-void MainWindow::on_lighting_intensity_changed(int)
-{
-        m_view->send(view::command::SetLightingIntensity(lighting_intensity()));
 }
 
 void MainWindow::on_dft_brightness_changed(int)
@@ -919,83 +778,6 @@ void MainWindow::on_clip_plane_changed(int)
 void MainWindow::on_normals_changed(int)
 {
         m_view->send(view::command::SetNormalLength(normal_length()));
-}
-
-void MainWindow::on_background_color_clicked()
-{
-        QPointer ptr(this);
-        dialog::color_dialog("Background Color", m_background_color, [&](const QColor& c) {
-                if (!ptr.isNull())
-                {
-                        ptr->set_background_color(c);
-                }
-        });
-}
-
-void MainWindow::on_wireframe_color_clicked()
-{
-        QPointer ptr(this);
-        dialog::color_dialog("Wireframe Color", m_wireframe_color, [&](const QColor& c) {
-                if (!ptr.isNull())
-                {
-                        set_wireframe_color(c);
-                }
-        });
-}
-
-void MainWindow::on_clip_plane_color_clicked()
-{
-        QPointer ptr(this);
-        dialog::color_dialog("Clip Plane Color", m_clip_plane_color, [&](const QColor& c) {
-                if (!ptr.isNull())
-                {
-                        set_clip_plane_color(c);
-                }
-        });
-}
-
-void MainWindow::on_normal_color_positive_clicked()
-{
-        QPointer ptr(this);
-        dialog::color_dialog("Positive Normal Color", m_normal_color_positive, [&](const QColor& c) {
-                if (!ptr.isNull())
-                {
-                        set_normal_color_positive(c);
-                }
-        });
-}
-
-void MainWindow::on_normal_color_negative_clicked()
-{
-        QPointer ptr(this);
-        dialog::color_dialog("Negative Normal Color", m_normal_color_negative, [&](const QColor& c) {
-                if (!ptr.isNull())
-                {
-                        set_normal_color_negative(c);
-                }
-        });
-}
-
-void MainWindow::on_dft_background_color_clicked()
-{
-        QPointer ptr(this);
-        dialog::color_dialog("DFT Background Color", m_dft_background_color, [&](const QColor& c) {
-                if (!ptr.isNull())
-                {
-                        set_dft_background_color(c);
-                }
-        });
-}
-
-void MainWindow::on_dft_color_clicked()
-{
-        QPointer ptr(this);
-        dialog::color_dialog("DFT Color", m_dft_color, [&](const QColor& c) {
-                if (!ptr.isNull())
-                {
-                        set_dft_color(c);
-                }
-        });
 }
 
 void MainWindow::on_shadow_clicked()

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "colors_widget.h"
 #include "graphics_widget.h"
 #include "model_tree.h"
 #include "range_slider.h"
@@ -53,16 +54,12 @@ public:
 
 private:
         void on_about_triggered();
-        void on_background_color_clicked();
         void on_bound_cocone_triggered();
         void on_clip_plane_changed(int value);
         void on_clip_plane_clicked();
-        void on_clip_plane_color_clicked();
         void on_convex_hull_2d_clicked();
-        void on_dft_background_color_clicked();
         void on_dft_brightness_changed(int value);
         void on_dft_clicked();
-        void on_dft_color_clicked();
         void on_exit_triggered();
         void on_export_triggered();
         void on_fog_clicked();
@@ -72,7 +69,6 @@ private:
         void on_isosurface_clicked();
         void on_isosurface_transparency_changed(int value);
         void on_isovalue_changed(int value);
-        void on_lighting_intensity_changed(int value);
         void on_load_triggered();
         void on_materials_clicked();
         void on_mesh_ambient_changed(int value);
@@ -81,14 +77,11 @@ private:
         void on_mesh_specular_changed(int value);
         void on_mesh_specular_power_changed(int value);
         void on_mesh_transparency_changed(int value);
-        void on_normal_color_negative_clicked();
-        void on_normal_color_positive_clicked();
         void on_normals_changed(int value);
         void on_normals_clicked();
         void on_optical_flow_clicked();
         void on_painter_triggered();
         void on_pencil_sketch_clicked();
-        void on_reset_lighting_clicked();
         void on_reset_view_clicked();
         void on_self_test_triggered();
         void on_shadow_clicked();
@@ -102,7 +95,6 @@ private:
         void on_volume_specular_power_changed(int value);
         void on_volume_transparency_changed(int value);
         void on_wireframe_clicked();
-        void on_wireframe_color_clicked();
 
         void on_graphics_widget_resize(QResizeEvent*);
         void on_graphics_widget_mouse_wheel(QWheelEvent*);
@@ -143,20 +135,9 @@ private:
                 const ProgressRatioList* progress_list,
                 std::list<QProgressBar>* progress_bars);
 
-        double lighting_intensity() const;
         double dft_brightness() const;
         double shadow_zoom() const;
         double normal_length() const;
-
-        void set_background_color(const QColor& c);
-        void set_specular_color(const QColor& c);
-        void set_wireframe_color(const QColor& c);
-        void set_clip_plane_color(const QColor& c);
-        void set_normal_color_positive(const QColor& c);
-        void set_normal_color_negative(const QColor& c);
-
-        void set_dft_background_color(const QColor& c);
-        void set_dft_color(const QColor& c);
 
         bool stop_action(WorkerThreads::Action action);
 
@@ -171,6 +152,8 @@ private:
 
         Ui::MainWindow ui;
 
+        ColorsWidget* m_colors_widget = nullptr;
+
         std::unique_ptr<WorkerThreads> m_worker_threads;
 
         GraphicsWidget* m_graphics_widget;
@@ -183,15 +166,6 @@ private:
         std::unique_ptr<RangeSlider> m_slider_volume_levels;
 
         std::unique_ptr<application::ModelEvents> m_model_events;
-
-        QColor m_background_color;
-        QColor m_specular_color;
-        QColor m_wireframe_color;
-        QColor m_clip_plane_color;
-        QColor m_normal_color_positive;
-        QColor m_normal_color_negative;
-        QColor m_dft_background_color;
-        QColor m_dft_color;
 
         QTimer m_timer_progress_bar;
 };
