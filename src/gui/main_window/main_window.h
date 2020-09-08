@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "range_slider.h"
 #include "repository_actions.h"
 #include "threads.h"
+#include "view_widget.h"
 
 #include "../application/model_events.h"
 
@@ -55,60 +56,39 @@ public:
 private:
         void on_about_triggered();
         void on_bound_cocone_triggered();
-        void on_clip_plane_changed(int value);
-        void on_clip_plane_clicked();
-        void on_convex_hull_2d_clicked();
-        void on_dft_brightness_changed(int value);
-        void on_dft_clicked();
         void on_exit_triggered();
         void on_export_triggered();
-        void on_fog_clicked();
-        void on_fps_clicked();
+        void on_first_shown();
         void on_full_screen_triggered();
+        void on_graphics_widget_mouse_move(QMouseEvent*);
+        void on_graphics_widget_mouse_press(QMouseEvent*);
+        void on_graphics_widget_mouse_release(QMouseEvent*);
+        void on_graphics_widget_mouse_wheel(QWheelEvent*);
+        void on_graphics_widget_resize(QResizeEvent*);
         void on_help_triggered();
         void on_isosurface_clicked();
         void on_isosurface_transparency_changed(int value);
         void on_isovalue_changed(int value);
         void on_load_triggered();
-        void on_materials_clicked();
         void on_mesh_ambient_changed(int value);
         void on_mesh_color_clicked();
         void on_mesh_diffuse_changed(int value);
         void on_mesh_specular_changed(int value);
         void on_mesh_specular_power_changed(int value);
         void on_mesh_transparency_changed(int value);
-        void on_normals_changed(int value);
-        void on_normals_clicked();
-        void on_optical_flow_clicked();
+        void on_model_tree_update();
         void on_painter_triggered();
-        void on_pencil_sketch_clicked();
-        void on_reset_view_clicked();
+        void on_repository_mesh(int dimension, const std::string& object_name);
+        void on_repository_volume(int dimension, const std::string& object_name);
         void on_self_test_triggered();
-        void on_shadow_clicked();
-        void on_shadow_quality_changed(int value);
-        void on_smooth_clicked();
-        void on_vertical_sync_clicked();
+        void on_timer_progress_bar();
         void on_volume_ambient_changed(int value);
         void on_volume_color_clicked();
         void on_volume_diffuse_changed(int value);
+        void on_volume_levels_changed(double, double);
         void on_volume_specular_changed(int value);
         void on_volume_specular_power_changed(int value);
         void on_volume_transparency_changed(int value);
-        void on_wireframe_clicked();
-
-        void on_graphics_widget_resize(QResizeEvent*);
-        void on_graphics_widget_mouse_wheel(QWheelEvent*);
-        void on_graphics_widget_mouse_move(QMouseEvent*);
-        void on_graphics_widget_mouse_press(QMouseEvent*);
-        void on_graphics_widget_mouse_release(QMouseEvent*);
-
-        void on_repository_mesh(int dimension, const std::string& object_name);
-        void on_repository_volume(int dimension, const std::string& object_name);
-
-        void on_model_tree_update();
-        void on_volume_levels_changed(double, double);
-        void on_timer_progress_bar();
-        void on_first_shown();
 
         //
 
@@ -135,10 +115,6 @@ private:
                 const ProgressRatioList* progress_list,
                 std::list<QProgressBar>* progress_bars);
 
-        double dft_brightness() const;
-        double shadow_zoom() const;
-        double normal_length() const;
-
         bool stop_action(WorkerThreads::Action action);
 
         void mesh_ui_disable();
@@ -153,6 +129,7 @@ private:
         Ui::MainWindow ui;
 
         ColorsWidget* m_colors_widget = nullptr;
+        ViewWidget* m_view_widget = nullptr;
 
         std::unique_ptr<WorkerThreads> m_worker_threads;
 

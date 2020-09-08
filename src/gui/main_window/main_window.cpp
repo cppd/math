@@ -56,9 +56,6 @@ constexpr double WINDOW_SIZE_COEF = 0.7;
 // Если true, то размер для графики, если false, то размер всего окна.
 constexpr bool WINDOW_SIZE_GRAPHICS = true;
 
-constexpr double DFT_MAX_BRIGHTNESS = 50000;
-constexpr double DFT_GAMMA = 0.5;
-
 // Таймер отображения хода расчётов. Величина в миллисекундах.
 constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
 
@@ -66,18 +63,11 @@ constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
 // функции обработки появления окна.
 constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 
-// увеличение текстуры тени по сравнению с размером окна.
-constexpr int SHADOW_ZOOM = 2;
-
 // Максимальный коэффициент для умножения и деления α на него.
 constexpr double VOLUME_ALPHA_COEFFICIENT = 20;
 
 constexpr double MAXIMUM_SPECULAR_POWER = 1000.0;
 constexpr double MAXIMUM_MODEL_LIGHTING = 2.0;
-
-constexpr float NORMAL_LENGTH_MINIMUM = 0.001;
-constexpr float NORMAL_LENGTH_DEFAULT = 0.05;
-constexpr float NORMAL_LENGTH_MAXIMUM = 0.2;
 }
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
@@ -142,42 +132,20 @@ void MainWindow::constructor_objects()
 
 void MainWindow::constructor_interface()
 {
+        // set_widgets_enabled(QMainWindow::layout(), true);
+
         m_colors_widget = new ColorsWidget(ui.tabColor, &m_view);
         ui.tabColor->setLayout(m_colors_widget->layout());
 
-        set_widgets_enabled(QMainWindow::layout(), true);
+        m_view_widget = new ViewWidget(ui.tabView, &m_view);
+        ui.tabView->setLayout(m_view_widget->layout());
 
         m_slider_volume_levels = std::make_unique<RangeSlider>(ui.slider_volume_level_min, ui.slider_volume_level_max);
 
         QMainWindow::addAction(ui.action_full_screen);
 
-        {
-                QSignalBlocker blocker_check_box(ui.checkBox_clip_plane);
-                QSignalBlocker blocker_slider(ui.slider_clip_plane);
-                ui.checkBox_clip_plane->setChecked(false);
-                ui.slider_clip_plane->setEnabled(false);
-                set_slider_position(ui.slider_clip_plane, 0.5);
-                // Должно быть точное среднее положение
-                ASSERT(((ui.slider_clip_plane->maximum() - ui.slider_clip_plane->minimum()) & 1) == 0);
-        }
-
-        {
-                QSignalBlocker blocker_check_box(ui.checkBox_normals);
-                QSignalBlocker blocker_slider(ui.slider_normals);
-                ui.checkBox_normals->setChecked(false);
-                ui.slider_normals->setEnabled(false);
-                constexpr float v = NORMAL_LENGTH_DEFAULT - NORMAL_LENGTH_MINIMUM;
-                constexpr float d = NORMAL_LENGTH_MAXIMUM - NORMAL_LENGTH_MINIMUM;
-                constexpr float p = v / d;
-                static_assert(v >= 0 && v <= d && d > 0);
-                set_slider_position(ui.slider_normals, p);
-        }
-
         mesh_ui_disable();
         volume_ui_disable();
-
-        on_dft_clicked();
-        on_shadow_clicked();
 
         ui.mainWidget->layout()->setContentsMargins(3, 3, 3, 3);
         ui.mainWidget->layout()->setSpacing(3);
@@ -186,8 +154,6 @@ void MainWindow::constructor_interface()
 
         ui.action_help->setText(QString(settings::APPLICATION_NAME) + " Help");
         ui.action_about->setText("About " + QString(settings::APPLICATION_NAME));
-
-        ui.slider_shadow_quality->setSliderPosition(SHADOW_ZOOM);
 
         // Чтобы добавление и удаление QProgressBar не меняло высоту ui.statusBar
         ui.statusBar->setFixedHeight(ui.statusBar->height());
@@ -204,26 +170,7 @@ void MainWindow::constructor_connect()
         connect(ui.action_load, &QAction::triggered, this, &MainWindow::on_load_triggered);
         connect(ui.action_painter, &QAction::triggered, this, &MainWindow::on_painter_triggered);
         connect(ui.action_self_test, &QAction::triggered, this, &MainWindow::on_self_test_triggered);
-
-        connect(ui.checkBox_clip_plane, &QCheckBox::clicked, this, &MainWindow::on_clip_plane_clicked);
-        connect(ui.checkBox_convex_hull_2d, &QCheckBox::clicked, this, &MainWindow::on_convex_hull_2d_clicked);
-        connect(ui.checkBox_dft, &QCheckBox::clicked, this, &MainWindow::on_dft_clicked);
-        connect(ui.checkBox_fog, &QCheckBox::clicked, this, &MainWindow::on_fog_clicked);
-        connect(ui.checkBox_fps, &QCheckBox::clicked, this, &MainWindow::on_fps_clicked);
         connect(ui.checkBox_isosurface, &QCheckBox::clicked, this, &MainWindow::on_isosurface_clicked);
-        connect(ui.checkBox_materials, &QCheckBox::clicked, this, &MainWindow::on_materials_clicked);
-        connect(ui.checkBox_normals, &QCheckBox::clicked, this, &MainWindow::on_normals_clicked);
-        connect(ui.checkBox_optical_flow, &QCheckBox::clicked, this, &MainWindow::on_optical_flow_clicked);
-        connect(ui.checkBox_pencil_sketch, &QCheckBox::clicked, this, &MainWindow::on_pencil_sketch_clicked);
-        connect(ui.checkBox_shadow, &QCheckBox::clicked, this, &MainWindow::on_shadow_clicked);
-        connect(ui.checkBox_smooth, &QCheckBox::clicked, this, &MainWindow::on_smooth_clicked);
-        connect(ui.checkBox_vertical_sync, &QCheckBox::clicked, this, &MainWindow::on_vertical_sync_clicked);
-        connect(ui.checkBox_wireframe, &QCheckBox::clicked, this, &MainWindow::on_wireframe_clicked);
-
-        connect(ui.pushButton_reset_view, &QPushButton::clicked, this, &MainWindow::on_reset_view_clicked);
-
-        connect(ui.slider_clip_plane, &QSlider::valueChanged, this, &MainWindow::on_clip_plane_changed);
-        connect(ui.slider_dft_brightness, &QSlider::valueChanged, this, &MainWindow::on_dft_brightness_changed);
         connect(ui.slider_isosurface_transparency, &QSlider::valueChanged, this,
                 &MainWindow::on_isosurface_transparency_changed);
         connect(ui.slider_isovalue, &QSlider::valueChanged, this, &MainWindow::on_isovalue_changed);
@@ -233,8 +180,6 @@ void MainWindow::constructor_connect()
                 &MainWindow::on_mesh_specular_power_changed);
         connect(ui.slider_mesh_specular, &QSlider::valueChanged, this, &MainWindow::on_mesh_specular_changed);
         connect(ui.slider_mesh_transparency, &QSlider::valueChanged, this, &MainWindow::on_mesh_transparency_changed);
-        connect(ui.slider_normals, &QSlider::valueChanged, this, &MainWindow::on_normals_changed);
-        connect(ui.slider_shadow_quality, &QSlider::valueChanged, this, &MainWindow::on_shadow_quality_changed);
         connect(ui.slider_volume_ambient, &QSlider::valueChanged, this, &MainWindow::on_volume_ambient_changed);
         connect(ui.slider_volume_diffuse, &QSlider::valueChanged, this, &MainWindow::on_volume_diffuse_changed);
         connect(ui.slider_volume_specular_power, &QSlider::valueChanged, this,
@@ -435,26 +380,26 @@ void MainWindow::on_first_shown()
                         view::command::SetSpecularColor(m_colors_widget->specular_color()),
                         view::command::SetWireframeColor(m_colors_widget->wireframe_color()),
                         view::command::SetClipPlaneColor(m_colors_widget->clip_plane_color()),
-                        view::command::SetNormalLength(normal_length()),
+                        view::command::SetNormalLength(m_view_widget->normal_length()),
                         view::command::SetNormalColorPositive(m_colors_widget->normal_color_positive()),
                         view::command::SetNormalColorNegative(m_colors_widget->normal_color_negative()),
-                        view::command::ShowSmooth(ui.checkBox_smooth->isChecked()),
-                        view::command::ShowWireframe(ui.checkBox_wireframe->isChecked()),
-                        view::command::ShowShadow(ui.checkBox_shadow->isChecked()),
-                        view::command::ShowFog(ui.checkBox_fog->isChecked()),
-                        view::command::ShowMaterials(ui.checkBox_materials->isChecked()),
-                        view::command::ShowFps(ui.checkBox_fps->isChecked()),
-                        view::command::ShowPencilSketch(ui.checkBox_pencil_sketch->isChecked()),
-                        view::command::ShowDft(ui.checkBox_dft->isChecked()),
-                        view::command::ShowConvexHull2D(ui.checkBox_convex_hull_2d->isChecked()),
-                        view::command::ShowOpticalFlow(ui.checkBox_optical_flow->isChecked()),
-                        view::command::ShowNormals(ui.checkBox_normals->isChecked()),
+                        view::command::ShowSmooth(m_view_widget->smooth_checked()),
+                        view::command::ShowWireframe(m_view_widget->wireframe_checked()),
+                        view::command::ShowShadow(m_view_widget->shadow_checked()),
+                        view::command::ShowFog(m_view_widget->fog_checked()),
+                        view::command::ShowMaterials(m_view_widget->materials_checked()),
+                        view::command::ShowFps(m_view_widget->fps_checked()),
+                        view::command::ShowPencilSketch(m_view_widget->pencil_sketch_checked()),
+                        view::command::ShowDft(m_view_widget->dft_checked()),
+                        view::command::ShowConvexHull2D(m_view_widget->convex_hull_2d_checked()),
+                        view::command::ShowOpticalFlow(m_view_widget->optical_flow_checked()),
+                        view::command::ShowNormals(m_view_widget->normals_checked()),
                         view::command::SetLightingIntensity(m_colors_widget->lighting_intensity()),
-                        view::command::SetDftBrightness(dft_brightness()),
+                        view::command::SetDftBrightness(m_view_widget->dft_brightness()),
                         view::command::SetDftBackgroundColor(m_colors_widget->dft_background_color()),
                         view::command::SetDftColor(m_colors_widget->dft_color()),
-                        view::command::SetVerticalSync(ui.checkBox_vertical_sync->isChecked()),
-                        view::command::SetShadowZoom(shadow_zoom())};
+                        view::command::SetVerticalSync(m_view_widget->vertical_sync_checked()),
+                        view::command::SetShadowZoom(m_view_widget->shadow_zoom())};
 
                 m_view = view::create_view(
                         widget_window_id(m_graphics_widget), widget_pixels_per_inch(m_graphics_widget),
@@ -643,11 +588,6 @@ void MainWindow::on_about_triggered()
         dialog::application_about();
 }
 
-void MainWindow::on_reset_view_clicked()
-{
-        m_view->send(view::command::ResetView());
-}
-
 void MainWindow::on_graphics_widget_mouse_wheel(QWheelEvent* e)
 {
         if (m_view)
@@ -737,146 +677,6 @@ void MainWindow::on_model_tree_update()
         {
                 volume_ui_disable();
         }
-}
-
-double MainWindow::dft_brightness() const
-{
-        double value = ui.slider_dft_brightness->value() - ui.slider_dft_brightness->minimum();
-        double delta = ui.slider_dft_brightness->maximum() - ui.slider_dft_brightness->minimum();
-        double value_gamma = std::pow(value / delta, DFT_GAMMA);
-        return std::pow(DFT_MAX_BRIGHTNESS, value_gamma);
-}
-
-double MainWindow::shadow_zoom() const
-{
-        return ui.slider_shadow_quality->value();
-}
-
-double MainWindow::normal_length() const
-{
-        return interpolation(NORMAL_LENGTH_MINIMUM, NORMAL_LENGTH_MAXIMUM, slider_position(ui.slider_normals));
-}
-
-void MainWindow::on_dft_brightness_changed(int)
-{
-        m_view->send(view::command::SetDftBrightness(dft_brightness()));
-}
-
-void MainWindow::on_shadow_quality_changed(int)
-{
-        if (m_view)
-        {
-                m_view->send(view::command::SetShadowZoom(shadow_zoom()));
-        }
-}
-
-void MainWindow::on_clip_plane_changed(int)
-{
-        m_view->send(view::command::ClipPlanePosition(slider_position(ui.slider_clip_plane)));
-}
-
-void MainWindow::on_normals_changed(int)
-{
-        m_view->send(view::command::SetNormalLength(normal_length()));
-}
-
-void MainWindow::on_shadow_clicked()
-{
-        bool checked = ui.checkBox_shadow->isChecked();
-
-        ui.label_shadow_quality->setEnabled(checked);
-        ui.slider_shadow_quality->setEnabled(checked);
-
-        if (m_view)
-        {
-                m_view->send(view::command::ShowShadow(checked));
-        }
-}
-
-void MainWindow::on_fog_clicked()
-{
-        m_view->send(view::command::ShowFog(ui.checkBox_fog->isChecked()));
-}
-
-void MainWindow::on_wireframe_clicked()
-{
-        m_view->send(view::command::ShowWireframe(ui.checkBox_wireframe->isChecked()));
-}
-
-void MainWindow::on_materials_clicked()
-{
-        m_view->send(view::command::ShowMaterials(ui.checkBox_materials->isChecked()));
-}
-
-void MainWindow::on_smooth_clicked()
-{
-        m_view->send(view::command::ShowSmooth(ui.checkBox_smooth->isChecked()));
-}
-
-void MainWindow::on_fps_clicked()
-{
-        m_view->send(view::command::ShowFps(ui.checkBox_fps->isChecked()));
-}
-
-void MainWindow::on_pencil_sketch_clicked()
-{
-        m_view->send(view::command::ShowPencilSketch(ui.checkBox_pencil_sketch->isChecked()));
-}
-
-void MainWindow::on_dft_clicked()
-{
-        bool checked = ui.checkBox_dft->isChecked();
-
-        ui.label_dft_brightness->setEnabled(checked);
-        ui.slider_dft_brightness->setEnabled(checked);
-
-        if (m_view)
-        {
-                m_view->send(view::command::ShowDft(checked));
-        }
-}
-
-void MainWindow::on_clip_plane_clicked()
-{
-        constexpr double default_position = 0.5;
-
-        bool checked = ui.checkBox_clip_plane->isChecked();
-
-        ui.slider_clip_plane->setEnabled(checked);
-        {
-                QSignalBlocker blocker(ui.slider_clip_plane);
-                set_slider_position(ui.slider_clip_plane, default_position);
-        }
-        if (checked)
-        {
-                m_view->send(view::command::ClipPlaneShow(slider_position(ui.slider_clip_plane)));
-        }
-        else
-        {
-                m_view->send(view::command::ClipPlaneHide());
-        }
-}
-
-void MainWindow::on_normals_clicked()
-{
-        bool checked = ui.checkBox_normals->isChecked();
-        ui.slider_normals->setEnabled(checked);
-        m_view->send(view::command::ShowNormals(checked));
-}
-
-void MainWindow::on_convex_hull_2d_clicked()
-{
-        m_view->send(view::command::ShowConvexHull2D(ui.checkBox_convex_hull_2d->isChecked()));
-}
-
-void MainWindow::on_optical_flow_clicked()
-{
-        m_view->send(view::command::ShowOpticalFlow(ui.checkBox_optical_flow->isChecked()));
-}
-
-void MainWindow::on_vertical_sync_clicked()
-{
-        m_view->send(view::command::SetVerticalSync(ui.checkBox_vertical_sync->isChecked()));
 }
 
 void MainWindow::on_full_screen_triggered()
