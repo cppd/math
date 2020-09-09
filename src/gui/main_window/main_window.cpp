@@ -63,9 +63,6 @@ constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
 // функции обработки появления окна.
 constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 
-// Максимальный коэффициент для умножения и деления α на него.
-constexpr double VOLUME_ALPHA_COEFFICIENT = 20;
-
 constexpr double MAXIMUM_SPECULAR_POWER = 1000.0;
 constexpr double MAXIMUM_MODEL_LIGHTING = 2.0;
 }
@@ -144,11 +141,11 @@ void MainWindow::constructor_interface()
                 std::make_unique<MeshWidget>(m_model_tree.get(), MAXIMUM_SPECULAR_POWER, MAXIMUM_MODEL_LIGHTING);
         ui.tabMesh->setLayout(m_mesh_widget->layout());
 
-        m_slider_volume_levels = std::make_unique<RangeSlider>(ui.slider_volume_level_min, ui.slider_volume_level_max);
+        m_volume_widget =
+                std::make_unique<VolumeWidget>(m_model_tree.get(), MAXIMUM_SPECULAR_POWER, MAXIMUM_MODEL_LIGHTING);
+        ui.tabVolume->setLayout(m_volume_widget->layout());
 
         QMainWindow::addAction(ui.action_full_screen);
-
-        volume_ui_disable();
 
         ui.mainWidget->layout()->setContentsMargins(3, 3, 3, 3);
         ui.mainWidget->layout()->setSpacing(3);
@@ -173,19 +170,6 @@ void MainWindow::constructor_connect()
         connect(ui.action_load, &QAction::triggered, this, &MainWindow::on_load_triggered);
         connect(ui.action_painter, &QAction::triggered, this, &MainWindow::on_painter_triggered);
         connect(ui.action_self_test, &QAction::triggered, this, &MainWindow::on_self_test_triggered);
-        connect(ui.checkBox_isosurface, &QCheckBox::clicked, this, &MainWindow::on_isosurface_clicked);
-        connect(ui.slider_isosurface_transparency, &QSlider::valueChanged, this,
-                &MainWindow::on_isosurface_transparency_changed);
-        connect(ui.slider_isovalue, &QSlider::valueChanged, this, &MainWindow::on_isovalue_changed);
-        connect(ui.slider_volume_ambient, &QSlider::valueChanged, this, &MainWindow::on_volume_ambient_changed);
-        connect(ui.slider_volume_diffuse, &QSlider::valueChanged, this, &MainWindow::on_volume_diffuse_changed);
-        connect(ui.slider_volume_specular_power, &QSlider::valueChanged, this,
-                &MainWindow::on_volume_specular_power_changed);
-        connect(ui.slider_volume_specular, &QSlider::valueChanged, this, &MainWindow::on_volume_specular_changed);
-        connect(ui.slider_volume_transparency, &QSlider::valueChanged, this,
-                &MainWindow::on_volume_transparency_changed);
-        connect(ui.toolButton_volume_color, &QToolButton::clicked, this, &MainWindow::on_volume_color_clicked);
-        connect(m_slider_volume_levels.get(), &RangeSlider::changed, this, &MainWindow::on_volume_levels_changed);
         connect(&m_timer_progress_bar, &QTimer::timeout, this, &MainWindow::on_timer_progress_bar);
 }
 
@@ -232,6 +216,7 @@ void MainWindow::terminate_all_threads()
         m_colors_widget->set_view(nullptr);
         m_view_widget->set_view(nullptr);
         m_mesh_widget.reset();
+        m_volume_widget.reset();
 
         m_model_events.reset();
         application::ModelEvents model_events;
@@ -658,374 +643,13 @@ void MainWindow::on_model_tree_update()
                 m_mesh_widget->update();
         }
 
-        std::optional<ObjectId> id = m_model_tree->current_item();
-        if (!id)
+        if (m_volume_widget)
         {
-                volume_ui_disable();
-                return;
-        }
-
-        std::optional<storage::VolumeObjectConst> volume = m_model_tree->volume_const_if_current(*id);
-        if (volume)
-        {
-                volume_ui_set(*volume);
-        }
-        else
-        {
-                volume_ui_disable();
+                m_volume_widget->update();
         }
 }
 
 void MainWindow::on_full_screen_triggered()
 {
-}
-
-void MainWindow::volume_ui_disable()
-{
-        ui.tabVolume->setEnabled(false);
-
-        {
-                QSignalBlocker blocker(m_slider_volume_levels.get());
-                m_slider_volume_levels->set_range(0, 1);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_volume_transparency);
-                set_slider_to_middle(ui.slider_volume_transparency);
-        }
-        {
-                QSignalBlocker blocker(ui.checkBox_isosurface);
-                ui.checkBox_isosurface->setChecked(false);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_isovalue);
-                set_slider_to_middle(ui.slider_isovalue);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_isosurface_transparency);
-                set_slider_position(ui.slider_isosurface_transparency, 0);
-        }
-        {
-                QSignalBlocker blocker(ui.widget_volume_color);
-                set_widget_color(ui.widget_volume_color, QColor(255, 255, 255));
-        }
-        {
-                QSignalBlocker blocker(ui.slider_volume_ambient);
-                set_slider_to_middle(ui.slider_volume_ambient);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_volume_diffuse);
-                set_slider_to_middle(ui.slider_volume_diffuse);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_volume_specular);
-                set_slider_to_middle(ui.slider_volume_specular);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_volume_specular_power);
-                set_slider_to_middle(ui.slider_volume_specular_power);
-        }
-}
-
-void MainWindow::volume_ui_set(const storage::VolumeObjectConst& object)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        ui.tabVolume->setEnabled(true);
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<const volume::VolumeObject<N>>& volume_object) {
-                        double min;
-                        double max;
-                        double volume_alpha_coefficient;
-                        double isosurface_alpha;
-                        bool isosurface;
-                        float isovalue;
-                        Color color;
-                        double ambient, diffuse, specular, specular_power;
-                        {
-                                volume::Reading reading(*volume_object);
-                                min = reading.level_min();
-                                max = reading.level_max();
-                                volume_alpha_coefficient = reading.volume_alpha_coefficient();
-                                isosurface_alpha = reading.isosurface_alpha();
-                                isosurface = reading.isosurface();
-                                isovalue = reading.isovalue();
-                                color = reading.color();
-                                ambient = reading.ambient();
-                                diffuse = reading.diffuse();
-                                specular = reading.specular();
-                                specular_power = reading.specular_power();
-                        }
-                        {
-                                QSignalBlocker blocker(m_slider_volume_levels.get());
-                                m_slider_volume_levels->set_range(min, max);
-                        }
-                        {
-                                volume_alpha_coefficient = std::clamp(
-                                        volume_alpha_coefficient, 1.0 / VOLUME_ALPHA_COEFFICIENT,
-                                        VOLUME_ALPHA_COEFFICIENT);
-                                double log_volume_alpha_coefficient =
-                                        std::log(volume_alpha_coefficient) / std::log(VOLUME_ALPHA_COEFFICIENT);
-                                double position = 0.5 * (1.0 - log_volume_alpha_coefficient);
-                                QSignalBlocker blocker(ui.slider_volume_transparency);
-                                ui.slider_volume_transparency->setEnabled(!isosurface);
-                                set_slider_position(ui.slider_volume_transparency, position);
-                        }
-                        {
-                                QSignalBlocker blocker(ui.checkBox_isosurface);
-                                ui.checkBox_isosurface->setChecked(isosurface);
-                        }
-                        {
-                                double position = 1.0 - isosurface_alpha;
-                                QSignalBlocker blocker(ui.slider_isosurface_transparency);
-                                ui.slider_isosurface_transparency->setEnabled(isosurface);
-                                set_slider_position(ui.slider_isosurface_transparency, position);
-                        }
-                        {
-                                QSignalBlocker blocker(ui.slider_isovalue);
-                                ui.slider_isovalue->setEnabled(isosurface);
-                                set_slider_position(ui.slider_isovalue, isovalue);
-                        }
-                        {
-                                QSignalBlocker blocker(ui.widget_volume_color);
-                                set_widget_color(ui.widget_volume_color, color);
-                        }
-                        {
-                                double position = ambient / MAXIMUM_MODEL_LIGHTING;
-                                QSignalBlocker blocker(ui.slider_volume_ambient);
-                                set_slider_position(ui.slider_volume_ambient, position);
-                        }
-                        {
-                                double position = diffuse / MAXIMUM_MODEL_LIGHTING;
-                                QSignalBlocker blocker(ui.slider_volume_diffuse);
-                                set_slider_position(ui.slider_volume_diffuse, position);
-                        }
-                        {
-                                double position = specular / MAXIMUM_MODEL_LIGHTING;
-                                QSignalBlocker blocker(ui.slider_volume_specular);
-                                set_slider_position(ui.slider_volume_specular, position);
-                        }
-                        {
-                                double position = std::log(std::clamp(specular_power, 1.0, MAXIMUM_SPECULAR_POWER))
-                                                  / std::log(MAXIMUM_SPECULAR_POWER);
-                                QSignalBlocker blocker(ui.slider_volume_specular_power);
-                                set_slider_position(ui.slider_volume_specular_power, position);
-                        }
-                },
-                object);
-}
-
-void MainWindow::on_volume_levels_changed(double min, double max)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::VolumeObject> volume_object_opt = m_model_tree->current_volume();
-        if (!volume_object_opt)
-        {
-                return;
-        }
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
-                        volume::Writing writing(volume_object.get());
-                        writing.set_levels(min, max);
-                },
-                *volume_object_opt);
-}
-
-void MainWindow::on_volume_transparency_changed(int)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::VolumeObject> volume_object_opt = m_model_tree->current_volume();
-        if (!volume_object_opt)
-        {
-                return;
-        }
-
-        double log_alpha_coefficient = 1.0 - 2.0 * slider_position(ui.slider_volume_transparency);
-        double alpha_coefficient = std::pow(VOLUME_ALPHA_COEFFICIENT, log_alpha_coefficient);
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
-                        volume::Writing writing(volume_object.get());
-                        writing.set_volume_alpha_coefficient(alpha_coefficient);
-                },
-                *volume_object_opt);
-}
-
-void MainWindow::on_isosurface_transparency_changed(int)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::VolumeObject> volume_object_opt = m_model_tree->current_volume();
-        if (!volume_object_opt)
-        {
-                return;
-        }
-
-        double alpha = 1.0 - slider_position(ui.slider_isosurface_transparency);
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
-                        volume::Writing writing(volume_object.get());
-                        writing.set_isosurface_alpha(alpha);
-                },
-                *volume_object_opt);
-}
-
-void MainWindow::on_isosurface_clicked()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        bool checked = ui.checkBox_isosurface->isChecked();
-        ui.slider_isovalue->setEnabled(checked);
-
-        std::optional<storage::VolumeObject> volume_object_opt = m_model_tree->current_volume();
-        if (!volume_object_opt)
-        {
-                return;
-        }
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
-                        volume::Writing writing(volume_object.get());
-                        writing.set_isosurface(checked);
-                },
-                *volume_object_opt);
-}
-
-void MainWindow::on_isovalue_changed(int)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::VolumeObject> volume_object_opt = m_model_tree->current_volume();
-        if (!volume_object_opt)
-        {
-                return;
-        }
-
-        float isovalue = slider_position(ui.slider_isovalue);
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
-                        volume::Writing writing(volume_object.get());
-                        writing.set_isovalue(isovalue);
-                },
-                *volume_object_opt);
-}
-
-void MainWindow::on_volume_color_clicked()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::VolumeObject> object_opt = m_model_tree->current_volume();
-        if (!object_opt)
-        {
-                return;
-        }
-
-        Color color;
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
-                        volume::Reading reading(*object);
-                        color = reading.color();
-                },
-                *object_opt);
-
-        QPointer ptr(this);
-        dialog::color_dialog("Volume Color", rgb_to_qcolor(color), [&](const QColor& c) {
-                if (ptr.isNull())
-                {
-                        return;
-                }
-                std::visit(
-                        [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
-                                set_widget_color(ui.widget_volume_color, c);
-                                volume::Writing writing(object.get());
-                                writing.set_color(qcolor_to_rgb(c));
-                        },
-                        *object_opt);
-        });
-}
-
-void MainWindow::on_volume_ambient_changed(int)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::VolumeObject> object_opt = m_model_tree->current_volume();
-        if (!object_opt)
-        {
-                return;
-        }
-
-        double ambient = MAXIMUM_MODEL_LIGHTING * slider_position(ui.slider_volume_ambient);
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
-                        volume::Writing writing(object.get());
-                        writing.set_ambient(ambient);
-                },
-                *object_opt);
-}
-
-void MainWindow::on_volume_diffuse_changed(int)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::VolumeObject> object_opt = m_model_tree->current_volume();
-        if (!object_opt)
-        {
-                return;
-        }
-
-        double diffuse = MAXIMUM_MODEL_LIGHTING * slider_position(ui.slider_volume_diffuse);
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
-                        volume::Writing writing(object.get());
-                        writing.set_diffuse(diffuse);
-                },
-                *object_opt);
-}
-
-void MainWindow::on_volume_specular_changed(int)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::VolumeObject> object_opt = m_model_tree->current_volume();
-        if (!object_opt)
-        {
-                return;
-        }
-
-        double specular = MAXIMUM_MODEL_LIGHTING * slider_position(ui.slider_volume_specular);
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
-                        volume::Writing writing(object.get());
-                        writing.set_specular(specular);
-                },
-                *object_opt);
-}
-
-void MainWindow::on_volume_specular_power_changed(int)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::VolumeObject> object_opt = m_model_tree->current_volume();
-        if (!object_opt)
-        {
-                return;
-        }
-
-        double specular_power = std::pow(MAXIMUM_SPECULAR_POWER, slider_position(ui.slider_volume_specular_power));
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
-                        volume::Writing writing(object.get());
-                        writing.set_specular_power(specular_power);
-                },
-                *object_opt);
 }
 }

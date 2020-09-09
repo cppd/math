@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "repository_actions.h"
 #include "threads.h"
 #include "view_widget.h"
+#include "volume_widget.h"
 
 #include "../application/model_events.h"
 
@@ -67,9 +68,6 @@ private:
         void on_graphics_widget_mouse_wheel(QWheelEvent*);
         void on_graphics_widget_resize(QResizeEvent*);
         void on_help_triggered();
-        void on_isosurface_clicked();
-        void on_isosurface_transparency_changed(int value);
-        void on_isovalue_changed(int value);
         void on_load_triggered();
         void on_model_tree_update();
         void on_painter_triggered();
@@ -77,13 +75,6 @@ private:
         void on_repository_volume(int dimension, const std::string& object_name);
         void on_self_test_triggered();
         void on_timer_progress_bar();
-        void on_volume_ambient_changed(int value);
-        void on_volume_color_clicked();
-        void on_volume_diffuse_changed(int value);
-        void on_volume_levels_changed(double, double);
-        void on_volume_specular_changed(int value);
-        void on_volume_specular_power_changed(int value);
-        void on_volume_transparency_changed(int value);
 
         //
 
@@ -112,9 +103,6 @@ private:
 
         bool stop_action(WorkerThreads::Action action);
 
-        void volume_ui_disable();
-        void volume_ui_set(const storage::VolumeObjectConst& object);
-
         const std::thread::id m_thread_id = std::this_thread::get_id();
         bool m_first_show = true;
 
@@ -129,11 +117,11 @@ private:
         std::unique_ptr<RepositoryActions> m_repository_actions;
 
         std::unique_ptr<ModelTree> m_model_tree;
-        std::unique_ptr<RangeSlider> m_slider_volume_levels;
 
         ColorsWidget* m_colors_widget = nullptr;
         ViewWidget* m_view_widget = nullptr;
         std::unique_ptr<MeshWidget> m_mesh_widget;
+        std::unique_ptr<VolumeWidget> m_volume_widget;
 
         std::unique_ptr<application::ModelEvents> m_model_events;
 
