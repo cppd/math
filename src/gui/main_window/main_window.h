@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "colors_widget.h"
 #include "graphics_widget.h"
+#include "mesh_widget.h"
 #include "model_tree.h"
 #include "range_slider.h"
 #include "repository_actions.h"
@@ -70,12 +71,6 @@ private:
         void on_isosurface_transparency_changed(int value);
         void on_isovalue_changed(int value);
         void on_load_triggered();
-        void on_mesh_ambient_changed(int value);
-        void on_mesh_color_clicked();
-        void on_mesh_diffuse_changed(int value);
-        void on_mesh_specular_changed(int value);
-        void on_mesh_specular_power_changed(int value);
-        void on_mesh_transparency_changed(int value);
         void on_model_tree_update();
         void on_painter_triggered();
         void on_repository_mesh(int dimension, const std::string& object_name);
@@ -117,9 +112,6 @@ private:
 
         bool stop_action(WorkerThreads::Action action);
 
-        void mesh_ui_disable();
-        void mesh_ui_set(const storage::MeshObjectConst& object);
-
         void volume_ui_disable();
         void volume_ui_set(const storage::VolumeObjectConst& object);
 
@@ -127,9 +119,6 @@ private:
         bool m_first_show = true;
 
         Ui::MainWindow ui;
-
-        ColorsWidget* m_colors_widget = nullptr;
-        ViewWidget* m_view_widget = nullptr;
 
         std::unique_ptr<WorkerThreads> m_worker_threads;
 
@@ -141,6 +130,10 @@ private:
 
         std::unique_ptr<ModelTree> m_model_tree;
         std::unique_ptr<RangeSlider> m_slider_volume_levels;
+
+        ColorsWidget* m_colors_widget = nullptr;
+        ViewWidget* m_view_widget = nullptr;
+        std::unique_ptr<MeshWidget> m_mesh_widget;
 
         std::unique_ptr<application::ModelEvents> m_model_events;
 

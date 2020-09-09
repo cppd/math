@@ -140,11 +140,14 @@ void MainWindow::constructor_interface()
         m_view_widget = new ViewWidget(ui.tabView);
         ui.tabView->setLayout(m_view_widget->layout());
 
+        m_mesh_widget =
+                std::make_unique<MeshWidget>(m_model_tree.get(), MAXIMUM_SPECULAR_POWER, MAXIMUM_MODEL_LIGHTING);
+        ui.tabMesh->setLayout(m_mesh_widget->layout());
+
         m_slider_volume_levels = std::make_unique<RangeSlider>(ui.slider_volume_level_min, ui.slider_volume_level_max);
 
         QMainWindow::addAction(ui.action_full_screen);
 
-        mesh_ui_disable();
         volume_ui_disable();
 
         ui.mainWidget->layout()->setContentsMargins(3, 3, 3, 3);
@@ -174,12 +177,6 @@ void MainWindow::constructor_connect()
         connect(ui.slider_isosurface_transparency, &QSlider::valueChanged, this,
                 &MainWindow::on_isosurface_transparency_changed);
         connect(ui.slider_isovalue, &QSlider::valueChanged, this, &MainWindow::on_isovalue_changed);
-        connect(ui.slider_mesh_ambient, &QSlider::valueChanged, this, &MainWindow::on_mesh_ambient_changed);
-        connect(ui.slider_mesh_diffuse, &QSlider::valueChanged, this, &MainWindow::on_mesh_diffuse_changed);
-        connect(ui.slider_mesh_specular_power, &QSlider::valueChanged, this,
-                &MainWindow::on_mesh_specular_power_changed);
-        connect(ui.slider_mesh_specular, &QSlider::valueChanged, this, &MainWindow::on_mesh_specular_changed);
-        connect(ui.slider_mesh_transparency, &QSlider::valueChanged, this, &MainWindow::on_mesh_transparency_changed);
         connect(ui.slider_volume_ambient, &QSlider::valueChanged, this, &MainWindow::on_volume_ambient_changed);
         connect(ui.slider_volume_diffuse, &QSlider::valueChanged, this, &MainWindow::on_volume_diffuse_changed);
         connect(ui.slider_volume_specular_power, &QSlider::valueChanged, this,
@@ -187,7 +184,6 @@ void MainWindow::constructor_connect()
         connect(ui.slider_volume_specular, &QSlider::valueChanged, this, &MainWindow::on_volume_specular_changed);
         connect(ui.slider_volume_transparency, &QSlider::valueChanged, this,
                 &MainWindow::on_volume_transparency_changed);
-        connect(ui.toolButton_mesh_color, &QToolButton::clicked, this, &MainWindow::on_mesh_color_clicked);
         connect(ui.toolButton_volume_color, &QToolButton::clicked, this, &MainWindow::on_volume_color_clicked);
         connect(m_slider_volume_levels.get(), &RangeSlider::changed, this, &MainWindow::on_volume_levels_changed);
         connect(&m_timer_progress_bar, &QTimer::timeout, this, &MainWindow::on_timer_progress_bar);
@@ -235,6 +231,7 @@ void MainWindow::terminate_all_threads()
 
         m_colors_widget->set_view(nullptr);
         m_view_widget->set_view(nullptr);
+        m_mesh_widget.reset();
 
         m_model_events.reset();
         application::ModelEvents model_events;
@@ -656,22 +653,16 @@ void MainWindow::on_model_tree_update()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
+        if (m_mesh_widget)
+        {
+                m_mesh_widget->update();
+        }
+
         std::optional<ObjectId> id = m_model_tree->current_item();
         if (!id)
         {
-                mesh_ui_disable();
                 volume_ui_disable();
                 return;
-        }
-
-        std::optional<storage::MeshObjectConst> mesh = m_model_tree->mesh_const_if_current(*id);
-        if (mesh)
-        {
-                mesh_ui_set(*mesh);
-        }
-        else
-        {
-                mesh_ui_disable();
         }
 
         std::optional<storage::VolumeObjectConst> volume = m_model_tree->volume_const_if_current(*id);
@@ -687,36 +678,6 @@ void MainWindow::on_model_tree_update()
 
 void MainWindow::on_full_screen_triggered()
 {
-}
-
-void MainWindow::mesh_ui_disable()
-{
-        ui.tabMesh->setEnabled(false);
-
-        {
-                QSignalBlocker blocker(ui.widget_mesh_color);
-                set_widget_color(ui.widget_mesh_color, QColor(255, 255, 255));
-        }
-        {
-                QSignalBlocker blocker(ui.slider_mesh_transparency);
-                set_slider_position(ui.slider_mesh_transparency, 0);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_mesh_ambient);
-                set_slider_to_middle(ui.slider_mesh_ambient);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_mesh_diffuse);
-                set_slider_to_middle(ui.slider_mesh_diffuse);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_mesh_specular);
-                set_slider_to_middle(ui.slider_mesh_specular);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_mesh_specular_power);
-                set_slider_to_middle(ui.slider_mesh_specular_power);
-        }
 }
 
 void MainWindow::volume_ui_disable()
@@ -763,60 +724,6 @@ void MainWindow::volume_ui_disable()
                 QSignalBlocker blocker(ui.slider_volume_specular_power);
                 set_slider_to_middle(ui.slider_volume_specular_power);
         }
-}
-
-void MainWindow::mesh_ui_set(const storage::MeshObjectConst& object)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        ui.tabMesh->setEnabled(true);
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object) {
-                        double alpha;
-                        Color color;
-                        double ambient, diffuse, specular, specular_power;
-                        {
-                                mesh::Reading reading(*mesh_object);
-                                alpha = reading.alpha();
-                                color = reading.color();
-                                ambient = reading.ambient();
-                                diffuse = reading.diffuse();
-                                specular = reading.specular();
-                                specular_power = reading.specular_power();
-                        }
-                        {
-                                double position = 1.0 - alpha;
-                                QSignalBlocker blocker(ui.slider_mesh_transparency);
-                                set_slider_position(ui.slider_mesh_transparency, position);
-                        }
-                        {
-                                QSignalBlocker blocker(ui.widget_mesh_color);
-                                set_widget_color(ui.widget_mesh_color, color);
-                        }
-                        {
-                                double position = ambient / MAXIMUM_MODEL_LIGHTING;
-                                QSignalBlocker blocker(ui.slider_mesh_ambient);
-                                set_slider_position(ui.slider_mesh_ambient, position);
-                        }
-                        {
-                                double position = diffuse / MAXIMUM_MODEL_LIGHTING;
-                                QSignalBlocker blocker(ui.slider_mesh_diffuse);
-                                set_slider_position(ui.slider_mesh_diffuse, position);
-                        }
-                        {
-                                double position = specular / MAXIMUM_MODEL_LIGHTING;
-                                QSignalBlocker blocker(ui.slider_mesh_specular);
-                                set_slider_position(ui.slider_mesh_specular, position);
-                        }
-                        {
-                                double position = std::log(std::clamp(specular_power, 1.0, MAXIMUM_SPECULAR_POWER))
-                                                  / std::log(MAXIMUM_SPECULAR_POWER);
-                                QSignalBlocker blocker(ui.slider_mesh_specular_power);
-                                set_slider_position(ui.slider_mesh_specular_power, position);
-                        }
-                },
-                object);
 }
 
 void MainWindow::volume_ui_set(const storage::VolumeObjectConst& object)
@@ -1008,60 +915,6 @@ void MainWindow::on_isovalue_changed(int)
                 *volume_object_opt);
 }
 
-void MainWindow::on_mesh_transparency_changed(int)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
-        if (!object_opt)
-        {
-                return;
-        }
-
-        double alpha = 1.0 - slider_position(ui.slider_mesh_transparency);
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
-                        mesh::Writing writing(object.get());
-                        writing.set_alpha(alpha);
-                },
-                *object_opt);
-}
-
-void MainWindow::on_mesh_color_clicked()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
-        if (!object_opt)
-        {
-                return;
-        }
-
-        Color color;
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
-                        mesh::Reading reading(*object);
-                        color = reading.color();
-                },
-                *object_opt);
-
-        QPointer ptr(this);
-        dialog::color_dialog("Mesh Color", rgb_to_qcolor(color), [&](const QColor& c) {
-                if (ptr.isNull())
-                {
-                        return;
-                }
-                std::visit(
-                        [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
-                                set_widget_color(ui.widget_mesh_color, c);
-                                mesh::Writing writing(object.get());
-                                writing.set_color(qcolor_to_rgb(c));
-                        },
-                        *object_opt);
-        });
-}
-
 void MainWindow::on_volume_color_clicked()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -1094,86 +947,6 @@ void MainWindow::on_volume_color_clicked()
                         },
                         *object_opt);
         });
-}
-
-void MainWindow::on_mesh_ambient_changed(int)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
-        if (!object_opt)
-        {
-                return;
-        }
-
-        double ambient = MAXIMUM_MODEL_LIGHTING * slider_position(ui.slider_mesh_ambient);
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
-                        mesh::Writing writing(object.get());
-                        writing.set_ambient(ambient);
-                },
-                *object_opt);
-}
-
-void MainWindow::on_mesh_diffuse_changed(int)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
-        if (!object_opt)
-        {
-                return;
-        }
-
-        double diffuse = MAXIMUM_MODEL_LIGHTING * slider_position(ui.slider_mesh_diffuse);
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
-                        mesh::Writing writing(object.get());
-                        writing.set_diffuse(diffuse);
-                },
-                *object_opt);
-}
-
-void MainWindow::on_mesh_specular_changed(int)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
-        if (!object_opt)
-        {
-                return;
-        }
-
-        double specular = MAXIMUM_MODEL_LIGHTING * slider_position(ui.slider_mesh_specular);
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
-                        mesh::Writing writing(object.get());
-                        writing.set_specular(specular);
-                },
-                *object_opt);
-}
-
-void MainWindow::on_mesh_specular_power_changed(int)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
-        if (!object_opt)
-        {
-                return;
-        }
-
-        double specular_power = std::pow(MAXIMUM_SPECULAR_POWER, slider_position(ui.slider_mesh_specular_power));
-
-        std::visit(
-                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
-                        mesh::Writing writing(object.get());
-                        writing.set_specular_power(specular_power);
-                },
-                *object_opt);
 }
 
 void MainWindow::on_volume_ambient_changed(int)
