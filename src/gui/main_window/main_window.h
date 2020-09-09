@@ -118,8 +118,8 @@ private:
 
         std::unique_ptr<ModelTree> m_model_tree;
 
-        ColorsWidget* m_colors_widget = nullptr;
-        ViewWidget* m_view_widget = nullptr;
+        std::unique_ptr<ColorsWidget> m_colors_widget;
+        std::unique_ptr<ViewWidget> m_view_widget;
         std::unique_ptr<MeshWidget> m_mesh_widget;
         std::unique_ptr<VolumeWidget> m_volume_widget;
 

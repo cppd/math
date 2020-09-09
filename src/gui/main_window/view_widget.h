@@ -52,7 +52,7 @@ private:
         void on_shadow_quality_changed(int);
 
 public:
-        ViewWidget(QWidget* parent);
+        ViewWidget();
 
         void set_view(view::View* view);
 

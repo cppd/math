@@ -131,10 +131,10 @@ void MainWindow::constructor_interface()
 {
         // set_widgets_enabled(QMainWindow::layout(), true);
 
-        m_colors_widget = new ColorsWidget(ui.tabColor);
+        m_colors_widget = std::make_unique<ColorsWidget>();
         ui.tabColor->setLayout(m_colors_widget->layout());
 
-        m_view_widget = new ViewWidget(ui.tabView);
+        m_view_widget = std::make_unique<ViewWidget>();
         ui.tabView->setLayout(m_view_widget->layout());
 
         m_mesh_widget =

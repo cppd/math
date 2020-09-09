@@ -62,7 +62,7 @@ private:
         void set_dft_color(const QColor& c);
 
 public:
-        ColorsWidget(QWidget* parent);
+        ColorsWidget();
 
         void set_view(view::View* view);
 

@@ -39,7 +39,7 @@ constexpr QRgb DFT_COLOR = qRgb(150, 200, 250);
 constexpr double MAXIMUM_LIGHTING_INTENSITY = 3.0;
 }
 
-ColorsWidget::ColorsWidget(QWidget* parent) : QWidget(parent)
+ColorsWidget::ColorsWidget() : QWidget(nullptr)
 {
         ui.setupUi(this);
 
