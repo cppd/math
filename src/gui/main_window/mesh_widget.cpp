@@ -39,13 +39,12 @@ MeshWidget::MeshWidget(double maximum_specular_power, double maximum_model_light
 
         set_model_tree(nullptr);
 
-        connect(ui.slider_mesh_ambient, &QSlider::valueChanged, this, &MeshWidget::on_mesh_ambient_changed);
-        connect(ui.slider_mesh_diffuse, &QSlider::valueChanged, this, &MeshWidget::on_mesh_diffuse_changed);
-        connect(ui.slider_mesh_specular_power, &QSlider::valueChanged, this,
-                &MeshWidget::on_mesh_specular_power_changed);
-        connect(ui.slider_mesh_specular, &QSlider::valueChanged, this, &MeshWidget::on_mesh_specular_changed);
-        connect(ui.slider_mesh_transparency, &QSlider::valueChanged, this, &MeshWidget::on_mesh_transparency_changed);
-        connect(ui.toolButton_mesh_color, &QToolButton::clicked, this, &MeshWidget::on_mesh_color_clicked);
+        connect(ui.slider_ambient, &QSlider::valueChanged, this, &MeshWidget::on_ambient_changed);
+        connect(ui.slider_diffuse, &QSlider::valueChanged, this, &MeshWidget::on_diffuse_changed);
+        connect(ui.slider_specular_power, &QSlider::valueChanged, this, &MeshWidget::on_specular_power_changed);
+        connect(ui.slider_specular, &QSlider::valueChanged, this, &MeshWidget::on_specular_changed);
+        connect(ui.slider_transparency, &QSlider::valueChanged, this, &MeshWidget::on_transparency_changed);
+        connect(ui.toolButton_color, &QToolButton::clicked, this, &MeshWidget::on_color_clicked);
 }
 
 void MeshWidget::set_model_tree(ModelTree* model_tree)
@@ -60,7 +59,7 @@ void MeshWidget::set_model_tree(ModelTree* model_tree)
         }
         else
         {
-                mesh_ui_disable();
+                ui_disable();
         }
 }
 
@@ -73,7 +72,7 @@ void MeshWidget::set_enabled(bool enabled) const
         }
 }
 
-void MeshWidget::on_mesh_ambient_changed(int)
+void MeshWidget::on_ambient_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -83,7 +82,7 @@ void MeshWidget::on_mesh_ambient_changed(int)
                 return;
         }
 
-        double ambient = m_maximum_model_lighting * slider_position(ui.slider_mesh_ambient);
+        double ambient = m_maximum_model_lighting * slider_position(ui.slider_ambient);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
@@ -93,7 +92,7 @@ void MeshWidget::on_mesh_ambient_changed(int)
                 *object_opt);
 }
 
-void MeshWidget::on_mesh_diffuse_changed(int)
+void MeshWidget::on_diffuse_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -103,7 +102,7 @@ void MeshWidget::on_mesh_diffuse_changed(int)
                 return;
         }
 
-        double diffuse = m_maximum_model_lighting * slider_position(ui.slider_mesh_diffuse);
+        double diffuse = m_maximum_model_lighting * slider_position(ui.slider_diffuse);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
@@ -113,7 +112,7 @@ void MeshWidget::on_mesh_diffuse_changed(int)
                 *object_opt);
 }
 
-void MeshWidget::on_mesh_specular_changed(int)
+void MeshWidget::on_specular_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -123,7 +122,7 @@ void MeshWidget::on_mesh_specular_changed(int)
                 return;
         }
 
-        double specular = m_maximum_model_lighting * slider_position(ui.slider_mesh_specular);
+        double specular = m_maximum_model_lighting * slider_position(ui.slider_specular);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
@@ -133,7 +132,7 @@ void MeshWidget::on_mesh_specular_changed(int)
                 *object_opt);
 }
 
-void MeshWidget::on_mesh_specular_power_changed(int)
+void MeshWidget::on_specular_power_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -143,7 +142,7 @@ void MeshWidget::on_mesh_specular_power_changed(int)
                 return;
         }
 
-        double specular_power = std::pow(m_maximum_specular_power, slider_position(ui.slider_mesh_specular_power));
+        double specular_power = std::pow(m_maximum_specular_power, slider_position(ui.slider_specular_power));
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
@@ -153,7 +152,7 @@ void MeshWidget::on_mesh_specular_power_changed(int)
                 *object_opt);
 }
 
-void MeshWidget::on_mesh_transparency_changed(int)
+void MeshWidget::on_transparency_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -163,7 +162,7 @@ void MeshWidget::on_mesh_transparency_changed(int)
                 return;
         }
 
-        double alpha = 1.0 - slider_position(ui.slider_mesh_transparency);
+        double alpha = 1.0 - slider_position(ui.slider_transparency);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
@@ -173,7 +172,7 @@ void MeshWidget::on_mesh_transparency_changed(int)
                 *object_opt);
 }
 
-void MeshWidget::on_mesh_color_clicked()
+void MeshWidget::on_color_clicked()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -199,7 +198,7 @@ void MeshWidget::on_mesh_color_clicked()
                 }
                 std::visit(
                         [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
-                                set_widget_color(ui.widget_mesh_color, c);
+                                set_widget_color(ui.widget_color, c);
                                 mesh::Writing writing(object.get());
                                 writing.set_color(qcolor_to_rgb(c));
                         },
@@ -214,54 +213,54 @@ void MeshWidget::on_model_tree_item_update()
         std::optional<ObjectId> id = m_model_tree->current_item();
         if (!id)
         {
-                mesh_ui_disable();
+                ui_disable();
                 return;
         }
 
         std::optional<storage::MeshObjectConst> mesh = m_model_tree->mesh_const_if_current(*id);
         if (mesh)
         {
-                mesh_ui_set(*mesh);
+                ui_set(*mesh);
         }
         else
         {
-                mesh_ui_disable();
+                ui_disable();
         }
 }
 
-void MeshWidget::mesh_ui_disable()
+void MeshWidget::ui_disable()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         set_enabled(false);
 
         {
-                QSignalBlocker blocker(ui.widget_mesh_color);
-                set_widget_color(ui.widget_mesh_color, QColor(255, 255, 255));
+                QSignalBlocker blocker(ui.widget_color);
+                set_widget_color(ui.widget_color, QColor(255, 255, 255));
         }
         {
-                QSignalBlocker blocker(ui.slider_mesh_transparency);
-                set_slider_position(ui.slider_mesh_transparency, 0);
+                QSignalBlocker blocker(ui.slider_transparency);
+                set_slider_position(ui.slider_transparency, 0);
         }
         {
-                QSignalBlocker blocker(ui.slider_mesh_ambient);
-                set_slider_to_middle(ui.slider_mesh_ambient);
+                QSignalBlocker blocker(ui.slider_ambient);
+                set_slider_to_middle(ui.slider_ambient);
         }
         {
-                QSignalBlocker blocker(ui.slider_mesh_diffuse);
-                set_slider_to_middle(ui.slider_mesh_diffuse);
+                QSignalBlocker blocker(ui.slider_diffuse);
+                set_slider_to_middle(ui.slider_diffuse);
         }
         {
-                QSignalBlocker blocker(ui.slider_mesh_specular);
-                set_slider_to_middle(ui.slider_mesh_specular);
+                QSignalBlocker blocker(ui.slider_specular);
+                set_slider_to_middle(ui.slider_specular);
         }
         {
-                QSignalBlocker blocker(ui.slider_mesh_specular_power);
-                set_slider_to_middle(ui.slider_mesh_specular_power);
+                QSignalBlocker blocker(ui.slider_specular_power);
+                set_slider_to_middle(ui.slider_specular_power);
         }
 }
 
-void MeshWidget::mesh_ui_set(const storage::MeshObjectConst& object)
+void MeshWidget::ui_set(const storage::MeshObjectConst& object)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -283,33 +282,33 @@ void MeshWidget::mesh_ui_set(const storage::MeshObjectConst& object)
                         }
                         {
                                 double position = 1.0 - alpha;
-                                QSignalBlocker blocker(ui.slider_mesh_transparency);
-                                set_slider_position(ui.slider_mesh_transparency, position);
+                                QSignalBlocker blocker(ui.slider_transparency);
+                                set_slider_position(ui.slider_transparency, position);
                         }
                         {
-                                QSignalBlocker blocker(ui.widget_mesh_color);
-                                set_widget_color(ui.widget_mesh_color, color);
+                                QSignalBlocker blocker(ui.widget_color);
+                                set_widget_color(ui.widget_color, color);
                         }
                         {
                                 double position = ambient / m_maximum_model_lighting;
-                                QSignalBlocker blocker(ui.slider_mesh_ambient);
-                                set_slider_position(ui.slider_mesh_ambient, position);
+                                QSignalBlocker blocker(ui.slider_ambient);
+                                set_slider_position(ui.slider_ambient, position);
                         }
                         {
                                 double position = diffuse / m_maximum_model_lighting;
-                                QSignalBlocker blocker(ui.slider_mesh_diffuse);
-                                set_slider_position(ui.slider_mesh_diffuse, position);
+                                QSignalBlocker blocker(ui.slider_diffuse);
+                                set_slider_position(ui.slider_diffuse, position);
                         }
                         {
                                 double position = specular / m_maximum_model_lighting;
-                                QSignalBlocker blocker(ui.slider_mesh_specular);
-                                set_slider_position(ui.slider_mesh_specular, position);
+                                QSignalBlocker blocker(ui.slider_specular);
+                                set_slider_position(ui.slider_specular, position);
                         }
                         {
                                 double position = std::log(std::clamp(specular_power, 1.0, m_maximum_specular_power))
                                                   / std::log(m_maximum_specular_power);
-                                QSignalBlocker blocker(ui.slider_mesh_specular_power);
-                                set_slider_position(ui.slider_mesh_specular_power, position);
+                                QSignalBlocker blocker(ui.slider_specular_power);
+                                set_slider_position(ui.slider_specular_power, position);
                         }
                 },
                 object);

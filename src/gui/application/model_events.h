@@ -45,7 +45,8 @@ class ModelEvents final
         };
         Sequence<settings::Dimensions, std::tuple, Events> m_events;
 
-        static void set(Sequence<settings::Dimensions, std::tuple, Events>* events_ptr);
+        static void set(Sequence<settings::Dimensions, std::tuple, Events>* all_events);
+        static void unset(const Sequence<settings::Dimensions, std::tuple, Events>& all_events);
 
 public:
         ModelEvents();

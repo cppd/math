@@ -22,7 +22,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QSlider" name="slider_mesh_transparency">
+    <widget class="QSlider" name="slider_transparency">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
@@ -38,7 +38,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QWidget" name="widget_mesh_color" native="true">
+      <widget class="QWidget" name="widget_color" native="true">
        <property name="minimumSize">
         <size>
          <width>30</width>
@@ -115,7 +115,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="toolButton_mesh_color">
+      <widget class="QToolButton" name="toolButton_color">
        <property name="text">
         <string>...</string>
        </property>
@@ -139,7 +139,7 @@
    <item>
     <layout class="QFormLayout" name="formLayout_5">
      <item row="0" column="1">
-      <widget class="QSlider" name="slider_mesh_ambient">
+      <widget class="QSlider" name="slider_ambient">
        <property name="maximum">
         <number>2000</number>
        </property>
@@ -152,7 +152,7 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QSlider" name="slider_mesh_diffuse">
+      <widget class="QSlider" name="slider_diffuse">
        <property name="maximum">
         <number>2000</number>
        </property>
@@ -165,7 +165,7 @@
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QSlider" name="slider_mesh_specular">
+      <widget class="QSlider" name="slider_specular">
        <property name="maximum">
         <number>2000</number>
        </property>
@@ -178,7 +178,7 @@
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QSlider" name="slider_mesh_specular_power">
+      <widget class="QSlider" name="slider_specular_power">
        <property name="minimum">
         <number>0</number>
        </property>

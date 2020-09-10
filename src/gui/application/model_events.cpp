@@ -21,17 +21,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui::application
 {
-void ModelEvents::set(Sequence<settings::Dimensions, std::tuple, Events>* events_ptr)
+void ModelEvents::set(Sequence<settings::Dimensions, std::tuple, Events>* all_events)
 {
-        ASSERT(events_ptr);
+        ASSERT(all_events);
 
-        const auto set_events = []<size_t N>(Events<N>& events) {
+        const auto f = []<size_t N>(Events<N>& events) {
                 events.saved_mesh_events = mesh::MeshObject<N>::set_events(&events.mesh_events);
                 events.saved_volume_events = volume::VolumeObject<N>::set_events(&events.volume_events);
         };
 
         std::apply(
-                [&set_events]<size_t... N>(Events<N> & ... events) { (set_events(events), ...); }, *events_ptr);
+                [&f]<size_t... N>(Events<N> & ... events) { (f(events), ...); }, *all_events);
+}
+
+void ModelEvents::unset(const Sequence<settings::Dimensions, std::tuple, Events>& all_events)
+{
+        const auto f = []<size_t N>(const Events<N>& events) {
+                const std::function<void(mesh::MeshEvent<N> &&)>* m =
+                        mesh::MeshObject<N>::set_events(events.saved_mesh_events);
+
+                const std::function<void(volume::VolumeEvent<N> &&)>* v =
+                        volume::VolumeObject<N>::set_events(events.saved_volume_events);
+
+                if (m != &events.mesh_events || v != &events.volume_events)
+                {
+                        ASSERT(false);
+                }
+        };
+
+        std::apply(
+                [&f]<size_t... N>(const Events<N>&... events) { (f(events), ...); }, all_events);
 }
 
 ModelEvents::ModelEvents(ModelTree* tree, view::View* view)
@@ -151,20 +170,6 @@ ModelEvents::~ModelEvents()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        const auto f = []<size_t N>(const Events<N>& events) {
-                const std::function<void(mesh::MeshEvent<N> &&)>* m =
-                        mesh::MeshObject<N>::set_events(events.saved_mesh_events);
-
-                const std::function<void(volume::VolumeEvent<N> &&)>* v =
-                        volume::VolumeObject<N>::set_events(events.saved_volume_events);
-
-                if (m != &events.mesh_events || v != &events.volume_events)
-                {
-                        ASSERT(false);
-                }
-        };
-
-        std::apply(
-                [&f]<size_t... N>(const Events<N>&... events) { (f(events), ...); }, m_events);
+        unset(m_events);
 }
 }

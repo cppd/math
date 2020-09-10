@@ -39,7 +39,7 @@ private:
 
         Ui::VolumeWidget ui;
 
-        std::unique_ptr<RangeSlider> m_slider_volume_levels;
+        std::unique_ptr<RangeSlider> m_slider_levels;
 
         std::vector<QPointer<QWidget>> m_widgets;
 
@@ -48,20 +48,20 @@ private:
         void on_isosurface_clicked();
         void on_isosurface_transparency_changed(int value);
         void on_isovalue_changed(int value);
-        void on_volume_ambient_changed(int value);
-        void on_volume_color_clicked();
-        void on_volume_diffuse_changed(int value);
-        void on_volume_levels_changed(double, double);
-        void on_volume_specular_changed(int value);
-        void on_volume_specular_power_changed(int value);
-        void on_volume_transparency_changed(int value);
+        void on_ambient_changed(int value);
+        void on_color_clicked();
+        void on_diffuse_changed(int value);
+        void on_levels_changed(double, double);
+        void on_specular_changed(int value);
+        void on_specular_power_changed(int value);
+        void on_transparency_changed(int value);
 
         void on_model_tree_item_update();
 
-        void volume_ui_disable();
+        void ui_disable();
+        void ui_set(const storage::VolumeObjectConst& object);
 
         void set_enabled(bool enabled) const;
-        void volume_ui_set(const storage::VolumeObjectConst& object);
 
 public:
         VolumeWidget(double maximum_specular_power, double maximum_model_lighting);

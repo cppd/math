@@ -41,7 +41,7 @@ VolumeWidget::VolumeWidget(double maximum_specular_power, double maximum_model_l
                 m_widgets.emplace_back(widget);
         }
 
-        m_slider_volume_levels = std::make_unique<RangeSlider>(ui.slider_volume_level_min, ui.slider_volume_level_max);
+        m_slider_levels = std::make_unique<RangeSlider>(ui.slider_level_min, ui.slider_level_max);
 
         set_model_tree(nullptr);
 
@@ -49,15 +49,13 @@ VolumeWidget::VolumeWidget(double maximum_specular_power, double maximum_model_l
         connect(ui.slider_isosurface_transparency, &QSlider::valueChanged, this,
                 &VolumeWidget::on_isosurface_transparency_changed);
         connect(ui.slider_isovalue, &QSlider::valueChanged, this, &VolumeWidget::on_isovalue_changed);
-        connect(ui.slider_volume_ambient, &QSlider::valueChanged, this, &VolumeWidget::on_volume_ambient_changed);
-        connect(ui.slider_volume_diffuse, &QSlider::valueChanged, this, &VolumeWidget::on_volume_diffuse_changed);
-        connect(ui.slider_volume_specular_power, &QSlider::valueChanged, this,
-                &VolumeWidget::on_volume_specular_power_changed);
-        connect(ui.slider_volume_specular, &QSlider::valueChanged, this, &VolumeWidget::on_volume_specular_changed);
-        connect(ui.slider_volume_transparency, &QSlider::valueChanged, this,
-                &VolumeWidget::on_volume_transparency_changed);
-        connect(ui.toolButton_volume_color, &QToolButton::clicked, this, &VolumeWidget::on_volume_color_clicked);
-        connect(m_slider_volume_levels.get(), &RangeSlider::changed, this, &VolumeWidget::on_volume_levels_changed);
+        connect(ui.slider_ambient, &QSlider::valueChanged, this, &VolumeWidget::on_ambient_changed);
+        connect(ui.slider_diffuse, &QSlider::valueChanged, this, &VolumeWidget::on_diffuse_changed);
+        connect(ui.slider_specular_power, &QSlider::valueChanged, this, &VolumeWidget::on_specular_power_changed);
+        connect(ui.slider_specular, &QSlider::valueChanged, this, &VolumeWidget::on_specular_changed);
+        connect(ui.slider_transparency, &QSlider::valueChanged, this, &VolumeWidget::on_transparency_changed);
+        connect(ui.toolButton_color, &QToolButton::clicked, this, &VolumeWidget::on_color_clicked);
+        connect(m_slider_levels.get(), &RangeSlider::changed, this, &VolumeWidget::on_levels_changed);
 }
 
 void VolumeWidget::set_model_tree(ModelTree* model_tree)
@@ -72,7 +70,7 @@ void VolumeWidget::set_model_tree(ModelTree* model_tree)
         }
         else
         {
-                volume_ui_disable();
+                ui_disable();
         }
 }
 
@@ -85,7 +83,7 @@ void VolumeWidget::set_enabled(bool enabled) const
         }
 }
 
-void VolumeWidget::on_volume_levels_changed(double min, double max)
+void VolumeWidget::on_levels_changed(double min, double max)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -103,7 +101,7 @@ void VolumeWidget::on_volume_levels_changed(double min, double max)
                 *volume_object_opt);
 }
 
-void VolumeWidget::on_volume_transparency_changed(int)
+void VolumeWidget::on_transparency_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -113,7 +111,7 @@ void VolumeWidget::on_volume_transparency_changed(int)
                 return;
         }
 
-        double log_alpha_coefficient = 1.0 - 2.0 * slider_position(ui.slider_volume_transparency);
+        double log_alpha_coefficient = 1.0 - 2.0 * slider_position(ui.slider_transparency);
         double alpha_coefficient = std::pow(VOLUME_ALPHA_COEFFICIENT, log_alpha_coefficient);
 
         std::visit(
@@ -185,7 +183,7 @@ void VolumeWidget::on_isovalue_changed(int)
                 *volume_object_opt);
 }
 
-void VolumeWidget::on_volume_color_clicked()
+void VolumeWidget::on_color_clicked()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -211,7 +209,7 @@ void VolumeWidget::on_volume_color_clicked()
                 }
                 std::visit(
                         [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
-                                set_widget_color(ui.widget_volume_color, c);
+                                set_widget_color(ui.widget_color, c);
                                 volume::Writing writing(object.get());
                                 writing.set_color(qcolor_to_rgb(c));
                         },
@@ -219,7 +217,7 @@ void VolumeWidget::on_volume_color_clicked()
         });
 }
 
-void VolumeWidget::on_volume_ambient_changed(int)
+void VolumeWidget::on_ambient_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -229,7 +227,7 @@ void VolumeWidget::on_volume_ambient_changed(int)
                 return;
         }
 
-        double ambient = m_maximum_model_lighting * slider_position(ui.slider_volume_ambient);
+        double ambient = m_maximum_model_lighting * slider_position(ui.slider_ambient);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
@@ -239,7 +237,7 @@ void VolumeWidget::on_volume_ambient_changed(int)
                 *object_opt);
 }
 
-void VolumeWidget::on_volume_diffuse_changed(int)
+void VolumeWidget::on_diffuse_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -249,7 +247,7 @@ void VolumeWidget::on_volume_diffuse_changed(int)
                 return;
         }
 
-        double diffuse = m_maximum_model_lighting * slider_position(ui.slider_volume_diffuse);
+        double diffuse = m_maximum_model_lighting * slider_position(ui.slider_diffuse);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
@@ -259,7 +257,7 @@ void VolumeWidget::on_volume_diffuse_changed(int)
                 *object_opt);
 }
 
-void VolumeWidget::on_volume_specular_changed(int)
+void VolumeWidget::on_specular_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -269,7 +267,7 @@ void VolumeWidget::on_volume_specular_changed(int)
                 return;
         }
 
-        double specular = m_maximum_model_lighting * slider_position(ui.slider_volume_specular);
+        double specular = m_maximum_model_lighting * slider_position(ui.slider_specular);
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
@@ -279,7 +277,7 @@ void VolumeWidget::on_volume_specular_changed(int)
                 *object_opt);
 }
 
-void VolumeWidget::on_volume_specular_power_changed(int)
+void VolumeWidget::on_specular_power_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -289,7 +287,7 @@ void VolumeWidget::on_volume_specular_power_changed(int)
                 return;
         }
 
-        double specular_power = std::pow(m_maximum_specular_power, slider_position(ui.slider_volume_specular_power));
+        double specular_power = std::pow(m_maximum_specular_power, slider_position(ui.slider_specular_power));
 
         std::visit(
                 [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
@@ -306,34 +304,34 @@ void VolumeWidget::on_model_tree_item_update()
         std::optional<ObjectId> id = m_model_tree->current_item();
         if (!id)
         {
-                volume_ui_disable();
+                ui_disable();
                 return;
         }
 
         std::optional<storage::VolumeObjectConst> volume = m_model_tree->volume_const_if_current(*id);
         if (volume)
         {
-                volume_ui_set(*volume);
+                ui_set(*volume);
         }
         else
         {
-                volume_ui_disable();
+                ui_disable();
         }
 }
 
-void VolumeWidget::volume_ui_disable()
+void VolumeWidget::ui_disable()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         set_enabled(false);
 
         {
-                QSignalBlocker blocker(m_slider_volume_levels.get());
-                m_slider_volume_levels->set_range(0, 1);
+                QSignalBlocker blocker(m_slider_levels.get());
+                m_slider_levels->set_range(0, 1);
         }
         {
-                QSignalBlocker blocker(ui.slider_volume_transparency);
-                set_slider_to_middle(ui.slider_volume_transparency);
+                QSignalBlocker blocker(ui.slider_transparency);
+                set_slider_to_middle(ui.slider_transparency);
         }
         {
                 QSignalBlocker blocker(ui.checkBox_isosurface);
@@ -348,28 +346,28 @@ void VolumeWidget::volume_ui_disable()
                 set_slider_position(ui.slider_isosurface_transparency, 0);
         }
         {
-                QSignalBlocker blocker(ui.widget_volume_color);
-                set_widget_color(ui.widget_volume_color, QColor(255, 255, 255));
+                QSignalBlocker blocker(ui.widget_color);
+                set_widget_color(ui.widget_color, QColor(255, 255, 255));
         }
         {
-                QSignalBlocker blocker(ui.slider_volume_ambient);
-                set_slider_to_middle(ui.slider_volume_ambient);
+                QSignalBlocker blocker(ui.slider_ambient);
+                set_slider_to_middle(ui.slider_ambient);
         }
         {
-                QSignalBlocker blocker(ui.slider_volume_diffuse);
-                set_slider_to_middle(ui.slider_volume_diffuse);
+                QSignalBlocker blocker(ui.slider_diffuse);
+                set_slider_to_middle(ui.slider_diffuse);
         }
         {
-                QSignalBlocker blocker(ui.slider_volume_specular);
-                set_slider_to_middle(ui.slider_volume_specular);
+                QSignalBlocker blocker(ui.slider_specular);
+                set_slider_to_middle(ui.slider_specular);
         }
         {
-                QSignalBlocker blocker(ui.slider_volume_specular_power);
-                set_slider_to_middle(ui.slider_volume_specular_power);
+                QSignalBlocker blocker(ui.slider_specular_power);
+                set_slider_to_middle(ui.slider_specular_power);
         }
 }
 
-void VolumeWidget::volume_ui_set(const storage::VolumeObjectConst& object)
+void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -400,8 +398,8 @@ void VolumeWidget::volume_ui_set(const storage::VolumeObjectConst& object)
                                 specular_power = reading.specular_power();
                         }
                         {
-                                QSignalBlocker blocker(m_slider_volume_levels.get());
-                                m_slider_volume_levels->set_range(min, max);
+                                QSignalBlocker blocker(m_slider_levels.get());
+                                m_slider_levels->set_range(min, max);
                         }
                         {
                                 volume_alpha_coefficient = std::clamp(
@@ -410,9 +408,9 @@ void VolumeWidget::volume_ui_set(const storage::VolumeObjectConst& object)
                                 double log_volume_alpha_coefficient =
                                         std::log(volume_alpha_coefficient) / std::log(VOLUME_ALPHA_COEFFICIENT);
                                 double position = 0.5 * (1.0 - log_volume_alpha_coefficient);
-                                QSignalBlocker blocker(ui.slider_volume_transparency);
-                                ui.slider_volume_transparency->setEnabled(!isosurface);
-                                set_slider_position(ui.slider_volume_transparency, position);
+                                QSignalBlocker blocker(ui.slider_transparency);
+                                ui.slider_transparency->setEnabled(!isosurface);
+                                set_slider_position(ui.slider_transparency, position);
                         }
                         {
                                 QSignalBlocker blocker(ui.checkBox_isosurface);
@@ -430,29 +428,29 @@ void VolumeWidget::volume_ui_set(const storage::VolumeObjectConst& object)
                                 set_slider_position(ui.slider_isovalue, isovalue);
                         }
                         {
-                                QSignalBlocker blocker(ui.widget_volume_color);
-                                set_widget_color(ui.widget_volume_color, color);
+                                QSignalBlocker blocker(ui.widget_color);
+                                set_widget_color(ui.widget_color, color);
                         }
                         {
                                 double position = ambient / m_maximum_model_lighting;
-                                QSignalBlocker blocker(ui.slider_volume_ambient);
-                                set_slider_position(ui.slider_volume_ambient, position);
+                                QSignalBlocker blocker(ui.slider_ambient);
+                                set_slider_position(ui.slider_ambient, position);
                         }
                         {
                                 double position = diffuse / m_maximum_model_lighting;
-                                QSignalBlocker blocker(ui.slider_volume_diffuse);
-                                set_slider_position(ui.slider_volume_diffuse, position);
+                                QSignalBlocker blocker(ui.slider_diffuse);
+                                set_slider_position(ui.slider_diffuse, position);
                         }
                         {
                                 double position = specular / m_maximum_model_lighting;
-                                QSignalBlocker blocker(ui.slider_volume_specular);
-                                set_slider_position(ui.slider_volume_specular, position);
+                                QSignalBlocker blocker(ui.slider_specular);
+                                set_slider_position(ui.slider_specular, position);
                         }
                         {
                                 double position = std::log(std::clamp(specular_power, 1.0, m_maximum_specular_power))
                                                   / std::log(m_maximum_specular_power);
-                                QSignalBlocker blocker(ui.slider_volume_specular_power);
-                                set_slider_position(ui.slider_volume_specular_power, position);
+                                QSignalBlocker blocker(ui.slider_specular_power);
+                                set_slider_position(ui.slider_specular_power, position);
                         }
                 },
                 object);

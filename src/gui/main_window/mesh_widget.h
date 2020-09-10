@@ -42,17 +42,17 @@ private:
 
         ModelTree* m_model_tree = nullptr;
 
-        void on_mesh_ambient_changed(int);
-        void on_mesh_diffuse_changed(int);
-        void on_mesh_specular_changed(int);
-        void on_mesh_specular_power_changed(int);
-        void on_mesh_transparency_changed(int);
-        void on_mesh_color_clicked();
+        void on_ambient_changed(int);
+        void on_diffuse_changed(int);
+        void on_specular_changed(int);
+        void on_specular_power_changed(int);
+        void on_transparency_changed(int);
+        void on_color_clicked();
 
         void on_model_tree_item_update();
 
-        void mesh_ui_disable();
-        void mesh_ui_set(const storage::MeshObjectConst& object);
+        void ui_disable();
+        void ui_set(const storage::MeshObjectConst& object);
 
         void set_enabled(bool enabled) const;
 

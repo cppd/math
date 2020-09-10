@@ -22,14 +22,14 @@
     </widget>
    </item>
    <item>
-    <widget class="QSlider" name="slider_volume_level_min">
+    <widget class="QSlider" name="slider_level_min">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QSlider" name="slider_volume_level_max">
+    <widget class="QSlider" name="slider_level_max">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
@@ -43,7 +43,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QSlider" name="slider_volume_transparency">
+    <widget class="QSlider" name="slider_transparency">
      <property name="maximum">
       <number>100</number>
      </property>
@@ -115,7 +115,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QWidget" name="widget_volume_color" native="true">
+      <widget class="QWidget" name="widget_color" native="true">
        <property name="minimumSize">
         <size>
          <width>30</width>
@@ -192,7 +192,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="toolButton_volume_color">
+      <widget class="QToolButton" name="toolButton_color">
        <property name="text">
         <string>...</string>
        </property>
@@ -216,7 +216,7 @@
    <item>
     <layout class="QFormLayout" name="formLayout_6">
      <item row="0" column="1">
-      <widget class="QSlider" name="slider_volume_ambient">
+      <widget class="QSlider" name="slider_ambient">
        <property name="maximum">
         <number>2000</number>
        </property>
@@ -229,7 +229,7 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QSlider" name="slider_volume_diffuse">
+      <widget class="QSlider" name="slider_diffuse">
        <property name="maximum">
         <number>2000</number>
        </property>
@@ -242,7 +242,7 @@
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QSlider" name="slider_volume_specular">
+      <widget class="QSlider" name="slider_specular">
        <property name="maximum">
         <number>2000</number>
        </property>
@@ -255,7 +255,7 @@
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QSlider" name="slider_volume_specular_power">
+      <widget class="QSlider" name="slider_specular_power">
        <property name="minimum">
         <number>0</number>
        </property>
