@@ -36,13 +36,14 @@ private:
         const std::thread::id m_thread_id = std::this_thread::get_id();
         const double m_maximum_specular_power;
         const double m_maximum_model_lighting;
-        ModelTree* const m_model_tree;
 
         Ui::VolumeWidget ui;
 
         std::unique_ptr<RangeSlider> m_slider_volume_levels;
 
         std::vector<QPointer<QWidget>> m_widgets;
+
+        ModelTree* m_model_tree = nullptr;
 
         void on_isosurface_clicked();
         void on_isosurface_transparency_changed(int value);
@@ -55,14 +56,16 @@ private:
         void on_volume_specular_power_changed(int value);
         void on_volume_transparency_changed(int value);
 
+        void on_model_tree_item_update();
+
         void volume_ui_disable();
 
         void set_enabled(bool enabled) const;
         void volume_ui_set(const storage::VolumeObjectConst& object);
 
 public:
-        VolumeWidget(ModelTree* model_tree, double maximum_specular_power, double maximum_model_lighting);
+        VolumeWidget(double maximum_specular_power, double maximum_model_lighting);
 
-        void update();
+        void set_model_tree(ModelTree* model_tree);
 };
 }

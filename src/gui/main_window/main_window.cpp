@@ -127,21 +127,19 @@ void MainWindow::constructor_objects()
 
 void MainWindow::constructor_interface()
 {
+        m_model_tree = std::make_unique<ModelTree>();
+        ui.tabModels->setLayout(m_model_tree->layout());
+
         m_colors_widget = std::make_unique<ColorsWidget>();
         ui.tabColor->setLayout(m_colors_widget->layout());
 
         m_view_widget = std::make_unique<ViewWidget>();
         ui.tabView->setLayout(m_view_widget->layout());
 
-        m_model_tree = std::make_unique<ModelTree>([this]() { on_model_tree_update(); });
-        ui.tabModels->setLayout(m_model_tree->layout());
-
-        m_mesh_widget =
-                std::make_unique<MeshWidget>(m_model_tree.get(), MAXIMUM_SPECULAR_POWER, MAXIMUM_MODEL_LIGHTING);
+        m_mesh_widget = std::make_unique<MeshWidget>(MAXIMUM_SPECULAR_POWER, MAXIMUM_MODEL_LIGHTING);
         ui.tabMesh->setLayout(m_mesh_widget->layout());
 
-        m_volume_widget =
-                std::make_unique<VolumeWidget>(m_model_tree.get(), MAXIMUM_SPECULAR_POWER, MAXIMUM_MODEL_LIGHTING);
+        m_volume_widget = std::make_unique<VolumeWidget>(MAXIMUM_SPECULAR_POWER, MAXIMUM_MODEL_LIGHTING);
         ui.tabVolume->setLayout(m_volume_widget->layout());
 
         QMainWindow::addAction(ui.action_full_screen);
@@ -214,8 +212,8 @@ void MainWindow::terminate_all_threads()
 
         m_colors_widget->set_view(nullptr);
         m_view_widget->set_view(nullptr);
-        m_mesh_widget.reset();
-        m_volume_widget.reset();
+        m_mesh_widget->set_model_tree(nullptr);
+        m_volume_widget->set_model_tree(nullptr);
 
         m_model_events.reset();
         application::ModelEvents model_events;
@@ -394,6 +392,8 @@ void MainWindow::on_first_shown()
                         std::make_unique<application::ModelEvents>(m_model_tree->event_interface(), m_view.get());
                 m_colors_widget->set_view(m_view.get());
                 m_view_widget->set_view(m_view.get());
+                m_mesh_widget->set_model_tree(m_model_tree.get());
+                m_volume_widget->set_model_tree(m_model_tree.get());
 
                 //
 
@@ -631,21 +631,6 @@ void MainWindow::on_graphics_widget_resize(QResizeEvent* e)
         if (m_view)
         {
                 m_view->send(view::command::WindowResize(e->size().width(), e->size().height()));
-        }
-}
-
-void MainWindow::on_model_tree_update()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        if (m_mesh_widget)
-        {
-                m_mesh_widget->update();
-        }
-
-        if (m_volume_widget)
-        {
-                m_volume_widget->update();
         }
 }
 

@@ -28,14 +28,11 @@ namespace
 constexpr double VOLUME_ALPHA_COEFFICIENT = 20;
 }
 
-VolumeWidget::VolumeWidget(ModelTree* model_tree, double maximum_specular_power, double maximum_model_lighting)
+VolumeWidget::VolumeWidget(double maximum_specular_power, double maximum_model_lighting)
         : QWidget(nullptr),
           m_maximum_specular_power(maximum_specular_power),
-          m_maximum_model_lighting(maximum_model_lighting),
-          m_model_tree(model_tree)
+          m_maximum_model_lighting(maximum_model_lighting)
 {
-        ASSERT(m_model_tree);
-
         ui.setupUi(this);
 
         m_widgets.reserve(this->findChildren<QWidget*>().size());
@@ -46,7 +43,7 @@ VolumeWidget::VolumeWidget(ModelTree* model_tree, double maximum_specular_power,
 
         m_slider_volume_levels = std::make_unique<RangeSlider>(ui.slider_volume_level_min, ui.slider_volume_level_max);
 
-        volume_ui_disable();
+        set_model_tree(nullptr);
 
         connect(ui.checkBox_isosurface, &QCheckBox::clicked, this, &VolumeWidget::on_isosurface_clicked);
         connect(ui.slider_isosurface_transparency, &QSlider::valueChanged, this,
@@ -61,6 +58,22 @@ VolumeWidget::VolumeWidget(ModelTree* model_tree, double maximum_specular_power,
                 &VolumeWidget::on_volume_transparency_changed);
         connect(ui.toolButton_volume_color, &QToolButton::clicked, this, &VolumeWidget::on_volume_color_clicked);
         connect(m_slider_volume_levels.get(), &RangeSlider::changed, this, &VolumeWidget::on_volume_levels_changed);
+}
+
+void VolumeWidget::set_model_tree(ModelTree* model_tree)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        m_model_tree = model_tree;
+        if (model_tree)
+        {
+                connect(m_model_tree, &ModelTree::item_update, this, &VolumeWidget::on_model_tree_item_update);
+                on_model_tree_item_update();
+        }
+        else
+        {
+                volume_ui_disable();
+        }
 }
 
 void VolumeWidget::set_enabled(bool enabled) const
@@ -286,8 +299,32 @@ void VolumeWidget::on_volume_specular_power_changed(int)
                 *object_opt);
 }
 
+void VolumeWidget::on_model_tree_item_update()
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<ObjectId> id = m_model_tree->current_item();
+        if (!id)
+        {
+                volume_ui_disable();
+                return;
+        }
+
+        std::optional<storage::VolumeObjectConst> volume = m_model_tree->volume_const_if_current(*id);
+        if (volume)
+        {
+                volume_ui_set(*volume);
+        }
+        else
+        {
+                volume_ui_disable();
+        }
+}
+
 void VolumeWidget::volume_ui_disable()
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         set_enabled(false);
 
         {
@@ -419,25 +456,5 @@ void VolumeWidget::volume_ui_set(const storage::VolumeObjectConst& object)
                         }
                 },
                 object);
-}
-
-void VolumeWidget::update()
-{
-        std::optional<ObjectId> id = m_model_tree->current_item();
-        if (!id)
-        {
-                volume_ui_disable();
-                return;
-        }
-
-        std::optional<storage::VolumeObjectConst> volume = m_model_tree->volume_const_if_current(*id);
-        if (volume)
-        {
-                volume_ui_set(*volume);
-        }
-        else
-        {
-                volume_ui_disable();
-        }
 }
 }

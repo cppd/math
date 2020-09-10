@@ -69,7 +69,6 @@ private:
         void on_graphics_widget_resize(QResizeEvent*);
         void on_help_triggered();
         void on_load_triggered();
-        void on_model_tree_update();
         void on_painter_triggered();
         void on_repository_mesh(int dimension, const std::string& object_name);
         void on_repository_volume(int dimension, const std::string& object_name);

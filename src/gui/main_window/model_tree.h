@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui
 {
-class ModelTree final : private QWidget, private application::ModelTree
+class ModelTree final : public QWidget, private application::ModelTree
 {
         Q_OBJECT
 
@@ -49,7 +49,6 @@ private:
         std::unordered_map<ObjectId, QTreeWidgetItem*> m_map_id_item;
 
         std::vector<Connection> m_connections;
-        std::function<void()> m_on_update_model;
 
         void insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id) override;
         void insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id) override;
@@ -75,10 +74,9 @@ private:
         void show_only_this_object(ObjectId id);
 
 public:
-        ModelTree(const std::function<void()>& on_update_model);
+        ModelTree();
         ~ModelTree() override;
 
-        QLayout* layout() const;
         application::ModelTree* event_interface();
 
         void clear();
@@ -96,5 +94,8 @@ public:
         std::optional<storage::VolumeObject> volume_if_current(ObjectId id) const;
         std::optional<storage::VolumeObjectConst> volume_const_if_current(ObjectId id) const;
         std::vector<storage::VolumeObjectConst> const_volume_objects() const;
+
+Q_SIGNALS:
+        void item_update();
 };
 }

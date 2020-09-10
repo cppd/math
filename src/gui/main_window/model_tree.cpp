@@ -38,14 +38,13 @@ void set_item_color(QTreeWidgetItem* item, bool visible)
 }
 }
 
-ModelTree::ModelTree(const std::function<void()>& on_update_model)
-        : QWidget(nullptr), m_thread_id(std::this_thread::get_id()), m_on_update_model(on_update_model)
+ModelTree::ModelTree() : QWidget(nullptr), m_thread_id(std::this_thread::get_id())
 {
         ui.setupUi(this);
 
         m_connections.emplace_back(QObject::connect(
                 ui.model_tree, &QTreeWidget::currentItemChanged,
-                [this](QTreeWidgetItem*, QTreeWidgetItem*) { m_on_update_model(); }));
+                [this](QTreeWidgetItem*, QTreeWidgetItem*) { Q_EMIT item_update(); }));
 
         ui.model_tree->setContextMenuPolicy(Qt::CustomContextMenu);
         m_connections.emplace_back(QObject::connect(
@@ -59,11 +58,6 @@ ModelTree::~ModelTree()
         m_connections.clear();
 
         clear();
-}
-
-QLayout* ModelTree::layout() const
-{
-        return QWidget::layout();
 }
 
 application::ModelTree* ModelTree::event_interface()
@@ -133,7 +127,7 @@ void ModelTree::update(ObjectId id)
                 {
                         return;
                 }
-                m_on_update_model();
+                Q_EMIT item_update();
         });
 }
 
@@ -217,7 +211,7 @@ void ModelTree::erase_from_tree(ObjectId id)
                 font.setStrikeOut(true);
                 item->setFont(0, font);
                 set_item_color(item, false);
-                m_on_update_model();
+                Q_EMIT item_update();
         }
         else
         {

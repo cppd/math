@@ -35,11 +35,12 @@ private:
         const std::thread::id m_thread_id = std::this_thread::get_id();
         const double m_maximum_specular_power;
         const double m_maximum_model_lighting;
-        ModelTree* const m_model_tree;
 
         Ui::MeshWidget ui;
 
         std::vector<QPointer<QWidget>> m_widgets;
+
+        ModelTree* m_model_tree = nullptr;
 
         void on_mesh_ambient_changed(int);
         void on_mesh_diffuse_changed(int);
@@ -48,14 +49,16 @@ private:
         void on_mesh_transparency_changed(int);
         void on_mesh_color_clicked();
 
+        void on_model_tree_item_update();
+
         void mesh_ui_disable();
         void mesh_ui_set(const storage::MeshObjectConst& object);
 
         void set_enabled(bool enabled) const;
 
 public:
-        MeshWidget(ModelTree* model_tree, double maximum_specular_power, double maximum_model_lighting);
+        MeshWidget(double maximum_specular_power, double maximum_model_lighting);
 
-        void update();
+        void set_model_tree(ModelTree* model_tree);
 };
 }

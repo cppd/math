@@ -24,14 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui
 {
-MeshWidget::MeshWidget(ModelTree* model_tree, double maximum_specular_power, double maximum_model_lighting)
+MeshWidget::MeshWidget(double maximum_specular_power, double maximum_model_lighting)
         : QWidget(nullptr),
           m_maximum_specular_power(maximum_specular_power),
-          m_maximum_model_lighting(maximum_model_lighting),
-          m_model_tree(model_tree)
+          m_maximum_model_lighting(maximum_model_lighting)
 {
-        ASSERT(m_model_tree);
-
         ui.setupUi(this);
 
         m_widgets.reserve(this->findChildren<QWidget*>().size());
@@ -40,7 +37,7 @@ MeshWidget::MeshWidget(ModelTree* model_tree, double maximum_specular_power, dou
                 m_widgets.emplace_back(widget);
         }
 
-        mesh_ui_disable();
+        set_model_tree(nullptr);
 
         connect(ui.slider_mesh_ambient, &QSlider::valueChanged, this, &MeshWidget::on_mesh_ambient_changed);
         connect(ui.slider_mesh_diffuse, &QSlider::valueChanged, this, &MeshWidget::on_mesh_diffuse_changed);
@@ -49,6 +46,22 @@ MeshWidget::MeshWidget(ModelTree* model_tree, double maximum_specular_power, dou
         connect(ui.slider_mesh_specular, &QSlider::valueChanged, this, &MeshWidget::on_mesh_specular_changed);
         connect(ui.slider_mesh_transparency, &QSlider::valueChanged, this, &MeshWidget::on_mesh_transparency_changed);
         connect(ui.toolButton_mesh_color, &QToolButton::clicked, this, &MeshWidget::on_mesh_color_clicked);
+}
+
+void MeshWidget::set_model_tree(ModelTree* model_tree)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        m_model_tree = model_tree;
+        if (model_tree)
+        {
+                connect(m_model_tree, &ModelTree::item_update, this, &MeshWidget::on_model_tree_item_update);
+                on_model_tree_item_update();
+        }
+        else
+        {
+                mesh_ui_disable();
+        }
 }
 
 void MeshWidget::set_enabled(bool enabled) const
@@ -194,6 +207,28 @@ void MeshWidget::on_mesh_color_clicked()
         });
 }
 
+void MeshWidget::on_model_tree_item_update()
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::optional<ObjectId> id = m_model_tree->current_item();
+        if (!id)
+        {
+                mesh_ui_disable();
+                return;
+        }
+
+        std::optional<storage::MeshObjectConst> mesh = m_model_tree->mesh_const_if_current(*id);
+        if (mesh)
+        {
+                mesh_ui_set(*mesh);
+        }
+        else
+        {
+                mesh_ui_disable();
+        }
+}
+
 void MeshWidget::mesh_ui_disable()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -278,25 +313,5 @@ void MeshWidget::mesh_ui_set(const storage::MeshObjectConst& object)
                         }
                 },
                 object);
-}
-
-void MeshWidget::update()
-{
-        std::optional<ObjectId> id = m_model_tree->current_item();
-        if (!id)
-        {
-                mesh_ui_disable();
-                return;
-        }
-
-        std::optional<storage::MeshObjectConst> mesh = m_model_tree->mesh_const_if_current(*id);
-        if (mesh)
-        {
-                mesh_ui_set(*mesh);
-        }
-        else
-        {
-                mesh_ui_disable();
-        }
 }
 }
