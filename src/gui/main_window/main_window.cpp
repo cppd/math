@@ -121,21 +121,20 @@ void MainWindow::constructor_objects()
                 [this](int dimension, const std::string& name) { on_repository_mesh(dimension, name); },
                 [this](int dimension, const std::string& name) { on_repository_volume(dimension, name); });
 
-        m_model_tree = std::make_unique<ModelTree>(ui.model_tree, [this]() { on_model_tree_update(); });
-
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
 }
 
 void MainWindow::constructor_interface()
 {
-        // set_widgets_enabled(QMainWindow::layout(), true);
-
         m_colors_widget = std::make_unique<ColorsWidget>();
         ui.tabColor->setLayout(m_colors_widget->layout());
 
         m_view_widget = std::make_unique<ViewWidget>();
         ui.tabView->setLayout(m_view_widget->layout());
+
+        m_model_tree = std::make_unique<ModelTree>([this]() { on_model_tree_update(); });
+        ui.tabModels->setLayout(m_model_tree->layout());
 
         m_mesh_widget =
                 std::make_unique<MeshWidget>(m_model_tree.get(), MAXIMUM_SPECULAR_POWER, MAXIMUM_MODEL_LIGHTING);
@@ -150,7 +149,7 @@ void MainWindow::constructor_interface()
         ui.mainWidget->layout()->setContentsMargins(3, 3, 3, 3);
         ui.mainWidget->layout()->setSpacing(3);
 
-        ui.tabWidget->setCurrentIndex(0);
+        ui.tabWidget->setCurrentWidget(ui.tabModels);
 
         ui.action_help->setText(QString(settings::APPLICATION_NAME) + " Help");
         ui.action_about->setText("About " + QString(settings::APPLICATION_NAME));
@@ -391,7 +390,8 @@ void MainWindow::on_first_shown()
                         widget_window_id(m_graphics_widget), widget_pixels_per_inch(m_graphics_widget),
                         std::move(view_initial_commands));
 
-                m_model_events = std::make_unique<application::ModelEvents>(m_model_tree.get(), m_view.get());
+                m_model_events =
+                        std::make_unique<application::ModelEvents>(m_model_tree->event_interface(), m_view.get());
                 m_colors_widget->set_view(m_view.get());
                 m_view_widget->set_view(m_view.get());
 

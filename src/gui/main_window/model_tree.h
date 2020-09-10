@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../application/model_tree.h"
 #include "../com/connection.h"
 
+#include "ui_model_tree.h"
+
 #include <src/model/object_id.h>
 #include <src/storage/storage.h>
 
@@ -32,16 +34,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui
 {
-class ModelTree final : public application::ModelTree
+class ModelTree final : private QWidget, private application::ModelTree
 {
+        Q_OBJECT
+
+private:
         const std::thread::id m_thread_id;
+
+        Ui::ModelTree ui;
 
         storage::Storage m_storage;
 
         std::unordered_map<QTreeWidgetItem*, ObjectId> m_map_item_id;
         std::unordered_map<ObjectId, QTreeWidgetItem*> m_map_id_item;
-
-        QTreeWidget* m_tree = nullptr;
 
         std::vector<Connection> m_connections;
         std::function<void()> m_on_update_model;
@@ -70,9 +75,11 @@ class ModelTree final : public application::ModelTree
         void show_only_this_object(ObjectId id);
 
 public:
-        ModelTree(QTreeWidget* tree, const std::function<void()>& on_update_model);
+        ModelTree(const std::function<void()>& on_update_model);
+        ~ModelTree() override;
 
-        ~ModelTree();
+        QLayout* layout() const;
+        application::ModelTree* event_interface();
 
         void clear();
 

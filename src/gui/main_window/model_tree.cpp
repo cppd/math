@@ -38,19 +38,18 @@ void set_item_color(QTreeWidgetItem* item, bool visible)
 }
 }
 
-ModelTree::ModelTree(QTreeWidget* tree, const std::function<void()>& on_update_model)
-        : m_thread_id(std::this_thread::get_id()), m_tree(tree), m_on_update_model(on_update_model)
+ModelTree::ModelTree(const std::function<void()>& on_update_model)
+        : QWidget(nullptr), m_thread_id(std::this_thread::get_id()), m_on_update_model(on_update_model)
 {
-        ASSERT(m_tree);
+        ui.setupUi(this);
 
-        m_connections.emplace_back(
-                QObject::connect(m_tree, &QTreeWidget::currentItemChanged, [this](QTreeWidgetItem*, QTreeWidgetItem*) {
-                        m_on_update_model();
-                }));
-
-        m_tree->setContextMenuPolicy(Qt::CustomContextMenu);
         m_connections.emplace_back(QObject::connect(
-                m_tree, &QTreeWidget::customContextMenuRequested, [this](const QPoint& p) { make_menu(p); }));
+                ui.model_tree, &QTreeWidget::currentItemChanged,
+                [this](QTreeWidgetItem*, QTreeWidgetItem*) { m_on_update_model(); }));
+
+        ui.model_tree->setContextMenuPolicy(Qt::CustomContextMenu);
+        m_connections.emplace_back(QObject::connect(
+                ui.model_tree, &QTreeWidget::customContextMenuRequested, [this](const QPoint& p) { make_menu(p); }));
 }
 
 ModelTree::~ModelTree()
@@ -62,6 +61,16 @@ ModelTree::~ModelTree()
         clear();
 }
 
+QLayout* ModelTree::layout() const
+{
+        return QWidget::layout();
+}
+
+application::ModelTree* ModelTree::event_interface()
+{
+        return this;
+}
+
 void ModelTree::clear()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -69,7 +78,7 @@ void ModelTree::clear()
         m_storage.clear();
         m_map_item_id.clear();
         m_map_id_item.clear();
-        m_tree->clear();
+        ui.model_tree->clear();
 }
 
 void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id)
@@ -175,7 +184,7 @@ void ModelTree::insert_into_tree(
         }
         else
         {
-                item = new QTreeWidgetItem(m_tree);
+                item = new QTreeWidgetItem(ui.model_tree);
         }
 
         QString s = QString("(%1D) %2").arg(dimension).arg(QString::fromStdString(name));
@@ -272,7 +281,7 @@ std::optional<ObjectId> ModelTree::current_item() const
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        auto iter = m_map_item_id.find(m_tree->currentItem());
+        auto iter = m_map_item_id.find(ui.model_tree->currentItem());
         if (iter != m_map_item_id.cend())
         {
                 return iter->second;
@@ -477,8 +486,8 @@ void ModelTree::make_menu(const QPoint& pos)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        QTreeWidgetItem* item = m_tree->itemAt(pos);
-        if (item != m_tree->currentItem())
+        QTreeWidgetItem* item = ui.model_tree->itemAt(pos);
+        if (item != ui.model_tree->currentItem())
         {
                 return;
         }
@@ -515,6 +524,6 @@ void ModelTree::make_menu(const QPoint& pos)
                 return;
         }
 
-        menu->exec(m_tree->mapToGlobal(pos));
+        menu->exec(ui.model_tree->mapToGlobal(pos));
 }
 }
