@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "message_events.h"
 
-#include "thread_switch.h"
+#include "main_thread.h"
 
 #include "../dialogs/message.h"
 
@@ -64,7 +64,7 @@ void message_event(const MessageEvent& event)
 MessageEvents::MessageEvents()
 {
         m_events = [](MessageEvent&& event) {
-                GlobalThreadSwitch::run_in_global_thread([event = std::move(event)]() { message_event(event); });
+                MainThreadQueue::push([event = std::move(event)]() { message_event(event); });
         };
 
         set_message_events(&m_events);

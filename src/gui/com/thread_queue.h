@@ -20,40 +20,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QObject>
 #include <functional>
 
-namespace gui::application
+namespace gui
 {
-class ThreadSwitch final : public QObject
+class ThreadQueue final : public QObject
 {
         Q_OBJECT
 
         void slot(const std::function<void()>&) const;
 
 public:
-        ThreadSwitch();
+        ThreadQueue();
 
-        void run_in_object_thread(const std::function<void()>& f) const;
+        void push(const std::function<void()>& f) const;
 
 Q_SIGNALS:
         void signal(const std::function<void()>&) const;
-};
-
-//
-
-class GlobalThreadSwitch final
-{
-        static const ThreadSwitch* m_thread_switch_object;
-
-        ThreadSwitch m_thread_switch;
-
-public:
-        GlobalThreadSwitch();
-        ~GlobalThreadSwitch();
-
-        GlobalThreadSwitch(const GlobalThreadSwitch&) = delete;
-        GlobalThreadSwitch(GlobalThreadSwitch&&) = delete;
-        GlobalThreadSwitch& operator=(const GlobalThreadSwitch&) = delete;
-        GlobalThreadSwitch& operator=(GlobalThreadSwitch&&) = delete;
-
-        static void run_in_global_thread(const std::function<void()>& f);
 };
 }

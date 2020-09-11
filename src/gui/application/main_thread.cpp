@@ -15,24 +15,32 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "main_thread.h"
 
-#include <src/storage/storage.h>
-
-#include <optional>
+#include <src/com/error.h>
 
 namespace gui::application
 {
-class ModelTree
+namespace
 {
-protected:
-        ~ModelTree() = default;
+const ThreadQueue* global_thread_queue = nullptr;
+}
 
-public:
-        virtual void insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id) = 0;
-        virtual void insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id) = 0;
-        virtual void erase(ObjectId id) = 0;
-        virtual void update(ObjectId id) = 0;
-        virtual void show(ObjectId id, bool visible) = 0;
-};
+MainThreadQueue::MainThreadQueue()
+{
+        ASSERT(!global_thread_queue);
+        global_thread_queue = &m_thread_queue;
+}
+
+MainThreadQueue::~MainThreadQueue()
+{
+        ASSERT(global_thread_queue);
+        global_thread_queue = nullptr;
+}
+
+void MainThreadQueue::push(const std::function<void()>& f)
+{
+        ASSERT(global_thread_queue);
+        global_thread_queue->push(f);
+}
 }

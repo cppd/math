@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter_window_2d.h"
 
+#include "../application/main_thread.h"
 #include "../com/support.h"
-#include "../com/thread_ui.h"
 #include "../dialogs/file_dialog.h"
 
 #include <src/color/conversion.h>
@@ -351,7 +351,7 @@ void create_painter_window(
 {
         namespace impl = painter_window_implementation;
         std::shared_ptr<const painter::PaintObjects<N, T>> objects = std::move(paint_objects);
-        run_in_ui_thread([=]() {
+        application::MainThreadQueue::push([=]() {
                 create_and_show_delete_on_close_window<impl::PainterWindow<N, T>>(
                         title, thread_count, samples_per_pixel, smooth_normal, objects);
         });

@@ -15,14 +15,28 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "thread_ui.h"
+#pragma once
 
-#include "../application/thread_switch.h"
+#include "../com/thread_queue.h"
 
-namespace gui
+#include <QObject>
+#include <functional>
+
+namespace gui::application
 {
-void run_in_ui_thread(const std::function<void()>& f)
+class MainThreadQueue final
 {
-        application::GlobalThreadSwitch::run_in_global_thread(f);
-}
+        ThreadQueue m_thread_queue;
+
+public:
+        MainThreadQueue();
+        ~MainThreadQueue();
+
+        MainThreadQueue(const MainThreadQueue&) = delete;
+        MainThreadQueue(MainThreadQueue&&) = delete;
+        MainThreadQueue& operator=(const MainThreadQueue&) = delete;
+        MainThreadQueue& operator=(MainThreadQueue&&) = delete;
+
+        static void push(const std::function<void()>& f);
+};
 }

@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics_widget.h"
 #include "mesh_widget.h"
 #include "model_tree.h"
-#include "range_slider.h"
 #include "repository_actions.h"
 #include "threads.h"
 #include "view_widget.h"
@@ -36,7 +35,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/test/self_test.h>
 #include <src/view/interface.h>
 
-#include <QColor>
 #include <QTimer>
 #include <list>
 #include <memory>
@@ -61,7 +59,6 @@ private:
         void on_exit_triggered();
         void on_export_triggered();
         void on_first_shown();
-        void on_full_screen_triggered();
         void on_graphics_widget_mouse_move(QMouseEvent*);
         void on_graphics_widget_mouse_press(QMouseEvent*);
         void on_graphics_widget_mouse_release(QMouseEvent*);

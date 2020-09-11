@@ -18,8 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "application.h"
 
 #include "application/log_events.h"
+#include "application/main_thread.h"
 #include "application/message_events.h"
-#include "application/thread_switch.h"
+#include "application/model_events.h"
 #include "com/command_line.h"
 #include "com/support.h"
 #include "dialogs/message.h"
@@ -76,13 +77,14 @@ int run_application(int argc, char** argv)
 
         Application a(argc, argv);
 
-        application::GlobalThreadSwitch global_thread_switch;
+        application::MainThreadQueue main_thread_queue;
         application::LogEvents log_events;
         application::MessageEvents message_events;
+        application::ModelEvents model_events;
 
         QPointer main_window = create_delete_on_close_window<MainWindow>();
 
-        log_events.set_window_log([&](const std::string& text, const Srgb8& color) {
+        log_events.set_window_log([main_window](const std::string& text, const Srgb8& color) {
                 if (main_window)
                 {
                         main_window->append_to_log(text, color);

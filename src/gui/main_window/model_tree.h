@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../application/model_tree.h"
-#include "../application/thread_switch.h"
 #include "../com/connection.h"
+#include "../com/model_tree.h"
+#include "../com/thread_queue.h"
 
 #include "ui_model_tree.h"
 
@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui
 {
-class ModelTree final : public QWidget, private application::ModelTree
+class ModelTree final : public QWidget, private ModelTreeEvents
 {
         Q_OBJECT
 
@@ -50,7 +50,7 @@ private:
         std::unordered_map<ObjectId, QTreeWidgetItem*> m_map_id_item;
 
         std::vector<Connection> m_connections;
-        application::ThreadSwitch m_thread_switch;
+        ThreadQueue m_thread_queue;
 
         void insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id) override;
         void insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id) override;
@@ -81,7 +81,7 @@ public:
         ModelTree();
         ~ModelTree() override;
 
-        application::ModelTree* event_interface();
+        ModelTreeEvents* events();
 
         std::optional<ObjectId> current_item() const;
 

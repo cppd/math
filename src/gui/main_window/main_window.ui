@@ -158,14 +158,6 @@
     <string>About</string>
    </property>
   </action>
-  <action name="action_full_screen">
-   <property name="text">
-    <string>FullScreen</string>
-   </property>
-   <property name="shortcut">
-    <string>F11</string>
-   </property>
-  </action>
   <action name="action_help">
    <property name="text">
     <string>Help</string>

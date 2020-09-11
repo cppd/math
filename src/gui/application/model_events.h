@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "model_tree.h"
+#include "../com/model_tree.h"
 
 #include <src/com/sequence.h>
 #include <src/model/mesh_object.h>
@@ -50,7 +50,7 @@ class ModelEvents final
 
 public:
         ModelEvents();
-        ModelEvents(ModelTree* tree, view::View* view);
+        ModelEvents(ModelTreeEvents* tree, view::View* view);
         ~ModelEvents();
 
         ModelEvents(const ModelEvents&) = delete;

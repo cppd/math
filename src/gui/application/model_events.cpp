@@ -53,7 +53,7 @@ void ModelEvents::unset(const Sequence<settings::Dimensions, std::tuple, Events>
                 [&f]<size_t... N>(const Events<N>&... events) { (f(events), ...); }, all_events);
 }
 
-ModelEvents::ModelEvents(ModelTree* tree, view::View* view)
+ModelEvents::ModelEvents(ModelTreeEvents* tree, view::View* view)
 {
         ASSERT(tree);
         ASSERT(view);

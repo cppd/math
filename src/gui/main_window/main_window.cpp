@@ -19,18 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/command_line.h"
 #include "../com/support.h"
-#include "../com/thread_ui.h"
 #include "../dialogs/application_about.h"
 #include "../dialogs/application_help.h"
-#include "../dialogs/color_dialog.h"
 #include "../dialogs/message.h"
 
 #include <src/com/error.h>
 #include <src/com/exception.h>
 #include <src/com/log.h>
-#include <src/com/math.h>
 #include <src/com/message.h>
-#include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 #include <src/process/computing.h>
@@ -45,7 +41,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QCloseEvent>
 #include <QDesktopWidget>
 #include <QPointer>
-#include <QSignalBlocker>
 
 namespace gui
 {
@@ -142,8 +137,6 @@ void MainWindow::constructor_interface()
         m_volume_widget = std::make_unique<VolumeWidget>(MAXIMUM_SPECULAR_POWER, MAXIMUM_MODEL_LIGHTING);
         ui.tabVolume->setLayout(m_volume_widget->layout());
 
-        QMainWindow::addAction(ui.action_full_screen);
-
         ui.mainWidget->layout()->setContentsMargins(3, 3, 3, 3);
         ui.mainWidget->layout()->setSpacing(3);
 
@@ -162,7 +155,6 @@ void MainWindow::constructor_connect()
         connect(ui.action_bound_cocone, &QAction::triggered, this, &MainWindow::on_bound_cocone_triggered);
         connect(ui.action_exit, &QAction::triggered, this, &MainWindow::on_exit_triggered);
         connect(ui.action_export, &QAction::triggered, this, &MainWindow::on_export_triggered);
-        connect(ui.action_full_screen, &QAction::triggered, this, &MainWindow::on_full_screen_triggered);
         connect(ui.action_help, &QAction::triggered, this, &MainWindow::on_help_triggered);
         connect(ui.action_load, &QAction::triggered, this, &MainWindow::on_load_triggered);
         connect(ui.action_painter, &QAction::triggered, this, &MainWindow::on_painter_triggered);
@@ -210,13 +202,12 @@ void MainWindow::terminate_all_threads()
 
         m_worker_threads->terminate_all();
 
-        m_colors_widget->set_view(nullptr);
-        m_view_widget->set_view(nullptr);
-        m_mesh_widget->set_model_tree(nullptr);
-        m_volume_widget->set_model_tree(nullptr);
-
         m_model_events.reset();
-        application::ModelEvents model_events;
+
+        m_colors_widget.reset();
+        m_view_widget.reset();
+        m_mesh_widget.reset();
+        m_volume_widget.reset();
 
         m_model_tree.reset();
         m_view.reset();
@@ -388,12 +379,11 @@ void MainWindow::on_first_shown()
                         widget_window_id(m_graphics_widget), widget_pixels_per_inch(m_graphics_widget),
                         std::move(view_initial_commands));
 
-                m_model_events =
-                        std::make_unique<application::ModelEvents>(m_model_tree->event_interface(), m_view.get());
                 m_colors_widget->set_view(m_view.get());
                 m_view_widget->set_view(m_view.get());
                 m_mesh_widget->set_model_tree(m_model_tree.get());
                 m_volume_widget->set_model_tree(m_model_tree.get());
+                m_model_events = std::make_unique<application::ModelEvents>(m_model_tree->events(), m_view.get());
 
                 //
 
@@ -632,9 +622,5 @@ void MainWindow::on_graphics_widget_resize(QResizeEvent* e)
         {
                 m_view->send(view::command::WindowResize(e->size().width(), e->size().height()));
         }
-}
-
-void MainWindow::on_full_screen_triggered()
-{
 }
 }

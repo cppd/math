@@ -15,11 +15,24 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
-
-#include <functional>
+#include "thread_queue.h"
 
 namespace gui
 {
-void run_in_ui_thread(const std::function<void()>& f);
+ThreadQueue::ThreadQueue()
+{
+        qRegisterMetaType<std::function<void()>>("std::function<void()>");
+
+        connect(this, &ThreadQueue::signal, this, &ThreadQueue::slot, Qt::QueuedConnection);
+}
+
+void ThreadQueue::slot(const std::function<void()>& f) const
+{
+        f();
+}
+
+void ThreadQueue::push(const std::function<void()>& f) const
+{
+        Q_EMIT signal(f);
+}
 }

@@ -55,14 +55,14 @@ ModelTree::~ModelTree()
         ASSERT(std::this_thread::get_id() == m_thread_id);
 }
 
-application::ModelTree* ModelTree::event_interface()
+ModelTreeEvents* ModelTree::events()
 {
         return this;
 }
 
 void ModelTree::clear()
 {
-        m_thread_switch.run_in_object_thread([this]() {
+        m_thread_queue.push([this]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_map_item_id.clear();
@@ -74,7 +74,7 @@ void ModelTree::clear()
 
 void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id)
 {
-        m_thread_switch.run_in_object_thread([this, object = std::move(object), parent_object_id]() {
+        m_thread_queue.push([this, object = std::move(object), parent_object_id]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 std::visit(
@@ -88,7 +88,7 @@ void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectI
 
 void ModelTree::insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id)
 {
-        m_thread_switch.run_in_object_thread([this, object = std::move(object), parent_object_id]() {
+        m_thread_queue.push([this, object = std::move(object), parent_object_id]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 std::visit(
@@ -102,7 +102,7 @@ void ModelTree::insert(storage::VolumeObject&& object, const std::optional<Objec
 
 void ModelTree::erase(ObjectId id)
 {
-        m_thread_switch.run_in_object_thread([this, id]() {
+        m_thread_queue.push([this, id]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_storage.delete_object(id);
@@ -112,7 +112,7 @@ void ModelTree::erase(ObjectId id)
 
 void ModelTree::update(ObjectId id)
 {
-        m_thread_switch.run_in_object_thread([this, id]() {
+        m_thread_queue.push([this, id]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 std::optional<ObjectId> current_id = current_item();
@@ -130,7 +130,7 @@ void ModelTree::update(ObjectId id)
 
 void ModelTree::show(ObjectId id, bool visible)
 {
-        m_thread_switch.run_in_object_thread([this, id, visible]() {
+        m_thread_queue.push([this, id, visible]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 auto iter = m_map_id_item.find(id);
