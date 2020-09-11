@@ -30,7 +30,7 @@ constexpr float NORMAL_LENGTH_DEFAULT = 0.05;
 constexpr float NORMAL_LENGTH_MAXIMUM = 0.2;
 static_assert(NORMAL_LENGTH_DEFAULT >= NORMAL_LENGTH_MINIMUM);
 static_assert(NORMAL_LENGTH_DEFAULT <= NORMAL_LENGTH_MAXIMUM);
-static_assert(NORMAL_LENGTH_MAXIMUM - NORMAL_LENGTH_MINIMUM);
+static_assert(NORMAL_LENGTH_MAXIMUM - NORMAL_LENGTH_MINIMUM > 0);
 
 // увеличение текстуры тени по сравнению с размером окна.
 constexpr int SHADOW_ZOOM = 2;
