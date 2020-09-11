@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "model_tree.h"
 
-#include "../com/thread_ui.h"
 #include "../dialogs/message.h"
 
 #include <src/com/error.h>
@@ -54,10 +53,6 @@ ModelTree::ModelTree() : QWidget(nullptr), m_thread_id(std::this_thread::get_id(
 ModelTree::~ModelTree()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        m_connections.clear();
-
-        clear();
 }
 
 application::ModelTree* ModelTree::event_interface()
@@ -67,17 +62,19 @@ application::ModelTree* ModelTree::event_interface()
 
 void ModelTree::clear()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        m_thread_switch.run_in_object_thread([this]() {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        m_storage.clear();
-        m_map_item_id.clear();
-        m_map_id_item.clear();
-        ui.model_tree->clear();
+                m_map_item_id.clear();
+                m_map_id_item.clear();
+                m_storage.clear();
+                ui.model_tree->clear();
+        });
 }
 
 void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id)
 {
-        run_in_ui_thread([this, object = std::move(object), parent_object_id]() {
+        m_thread_switch.run_in_object_thread([this, object = std::move(object), parent_object_id]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 std::visit(
@@ -91,7 +88,7 @@ void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectI
 
 void ModelTree::insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id)
 {
-        run_in_ui_thread([this, object = std::move(object), parent_object_id]() {
+        m_thread_switch.run_in_object_thread([this, object = std::move(object), parent_object_id]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 std::visit(
@@ -105,7 +102,7 @@ void ModelTree::insert(storage::VolumeObject&& object, const std::optional<Objec
 
 void ModelTree::erase(ObjectId id)
 {
-        run_in_ui_thread([this, id]() {
+        m_thread_switch.run_in_object_thread([this, id]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_storage.delete_object(id);
@@ -115,7 +112,7 @@ void ModelTree::erase(ObjectId id)
 
 void ModelTree::update(ObjectId id)
 {
-        run_in_ui_thread([this, id]() {
+        m_thread_switch.run_in_object_thread([this, id]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 std::optional<ObjectId> current_id = current_item();
@@ -133,7 +130,7 @@ void ModelTree::update(ObjectId id)
 
 void ModelTree::show(ObjectId id, bool visible)
 {
-        run_in_ui_thread([this, id, visible]() {
+        m_thread_switch.run_in_object_thread([this, id, visible]() {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 auto iter = m_map_id_item.find(id);

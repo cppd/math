@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "../application/model_tree.h"
+#include "../application/thread_switch.h"
 #include "../com/connection.h"
 
 #include "ui_model_tree.h"
@@ -49,12 +50,15 @@ private:
         std::unordered_map<ObjectId, QTreeWidgetItem*> m_map_id_item;
 
         std::vector<Connection> m_connections;
+        application::ThreadSwitch m_thread_switch;
 
         void insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id) override;
         void insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id) override;
         void erase(ObjectId id) override;
         void update(ObjectId id) override;
         void show(ObjectId id, bool visible) override;
+
+        void clear();
 
         //void set_current(ObjectId id);
 
@@ -78,8 +82,6 @@ public:
         ~ModelTree() override;
 
         application::ModelTree* event_interface();
-
-        void clear();
 
         std::optional<ObjectId> current_item() const;
 
