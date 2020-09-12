@@ -17,28 +17,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "threads.h"
+
 #include "../com/connection.h"
 
 #include <src/storage/repository.h>
 
 #include <QMenu>
-#include <functional>
 #include <string>
+#include <vector>
 
 namespace gui
 {
-class RepositoryActions final
+class Actions final
 {
         std::vector<Connection> m_connections;
-
-        std::function<void(int dimension, const std::string& object_name)> m_on_mesh;
-        std::function<void(int dimension, const std::string& object_name)> m_on_volume;
+        WorkerThreads* m_threads;
 
 public:
-        RepositoryActions(
-                QMenu* menu,
-                const storage::Repository& repository,
-                std::function<void(int dimension, const std::string& object_name)>&& on_mesh,
-                std::function<void(int dimension, const std::string& object_name)>&& on_volume);
+        Actions(QMenu* menu, const storage::Repository* repository, WorkerThreads* threads);
+
+        void connect_load_action(QAction* action);
+        void load_from_file(const std::string& file_name, bool use_object_selection_dialog);
 };
 }

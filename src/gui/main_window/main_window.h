@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "actions.h"
 #include "colors_widget.h"
 #include "graphics_widget.h"
 #include "mesh_widget.h"
 #include "model_tree.h"
-#include "repository_actions.h"
 #include "threads.h"
 #include "view_widget.h"
 #include "volume_widget.h"
@@ -65,10 +65,7 @@ private:
         void on_graphics_widget_mouse_wheel(QWheelEvent*);
         void on_graphics_widget_resize(QResizeEvent*);
         void on_help_triggered();
-        void on_load_triggered();
         void on_painter_triggered();
-        void on_repository_mesh(int dimension, const std::string& object_name);
-        void on_repository_volume(int dimension, const std::string& object_name);
         void on_self_test_triggered();
         void on_timer_progress_bar();
 
@@ -86,7 +83,6 @@ private:
 
         //
 
-        void load_from_file(const std::string& file_name, bool use_object_selection_dialog);
         void self_test(test::SelfTestType test_type, bool with_confirmation);
 
         //
@@ -108,7 +104,6 @@ private:
         std::unique_ptr<view::View> m_view;
 
         std::unique_ptr<storage::Repository> m_repository;
-        std::unique_ptr<RepositoryActions> m_repository_actions;
 
         std::unique_ptr<ModelTree> m_model_tree;
 
@@ -118,6 +113,7 @@ private:
         std::unique_ptr<VolumeWidget> m_volume_widget;
 
         std::unique_ptr<application::ModelEvents> m_model_events;
+        std::unique_ptr<Actions> m_actions;
 
         QTimer m_timer_progress_bar;
 };

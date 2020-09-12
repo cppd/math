@@ -31,7 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/process/computing.h>
 #include <src/process/exporting.h>
-#include <src/process/loading.h>
 #include <src/process/painting.h>
 #include <src/process/testing.h>
 #include <src/settings/name.h>
@@ -111,10 +110,7 @@ void MainWindow::constructor_objects()
 
         m_repository = std::make_unique<storage::Repository>();
 
-        m_repository_actions = std::make_unique<RepositoryActions>(
-                ui.menuCreate, *m_repository,
-                [this](int dimension, const std::string& name) { on_repository_mesh(dimension, name); },
-                [this](int dimension, const std::string& name) { on_repository_volume(dimension, name); });
+        m_actions = std::make_unique<Actions>(ui.menuCreate, m_repository.get(), m_worker_threads.get());
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
@@ -156,10 +152,11 @@ void MainWindow::constructor_connect()
         connect(ui.action_exit, &QAction::triggered, this, &MainWindow::on_exit_triggered);
         connect(ui.action_export, &QAction::triggered, this, &MainWindow::on_export_triggered);
         connect(ui.action_help, &QAction::triggered, this, &MainWindow::on_help_triggered);
-        connect(ui.action_load, &QAction::triggered, this, &MainWindow::on_load_triggered);
         connect(ui.action_painter, &QAction::triggered, this, &MainWindow::on_painter_triggered);
         connect(ui.action_self_test, &QAction::triggered, this, &MainWindow::on_self_test_triggered);
         connect(&m_timer_progress_bar, &QTimer::timeout, this, &MainWindow::on_timer_progress_bar);
+
+        m_actions->connect_load_action(ui.action_load);
 }
 
 MainWindow::~MainWindow()
@@ -202,6 +199,7 @@ void MainWindow::terminate_all_threads()
 
         m_worker_threads->terminate_all();
 
+        m_actions.reset();
         m_model_events.reset();
 
         m_colors_widget.reset();
@@ -374,7 +372,7 @@ void MainWindow::on_first_shown()
 
                 if (!options.file_name.empty())
                 {
-                        load_from_file(options.file_name, !options.no_object_selection_dialog);
+                        m_actions->load_from_file(options.file_name, !options.no_object_selection_dialog);
                 }
         }
         catch (const std::exception& e)
@@ -385,39 +383,6 @@ void MainWindow::on_first_shown()
         {
                 MESSAGE_ERROR_FATAL("Error first show");
         }
-}
-
-void MainWindow::load_from_file(const std::string& file_name, bool use_object_selection_dialog)
-{
-        m_worker_threads->terminate_and_start(WorkerThreads::Action::Work, "Loading from file", [&]() {
-                WorkerThreads::Function f = process::action_load_from_file(file_name, use_object_selection_dialog);
-                //m_model_tree->clear();
-                //m_view->send(view::command::ResetView());
-                return f;
-        });
-}
-
-void MainWindow::on_load_triggered()
-{
-        load_from_file("", true);
-}
-
-void MainWindow::on_repository_mesh(int dimension, const std::string& object_name)
-{
-        m_worker_threads->terminate_and_start(WorkerThreads::Action::Work, "Load from mesh repository", [&]() {
-                WorkerThreads::Function f =
-                        process::action_load_from_mesh_repository(m_repository.get(), dimension, object_name);
-                //m_model_tree->clear();
-                //m_view->send(view::command::ResetView());
-                return f;
-        });
-}
-
-void MainWindow::on_repository_volume(int dimension, const std::string& object_name)
-{
-        m_worker_threads->terminate_and_start(WorkerThreads::Action::Work, "Load from volume repository", [&]() {
-                return process::action_load_from_volume_repository(m_repository.get(), dimension, object_name);
-        });
 }
 
 void MainWindow::on_export_triggered()
