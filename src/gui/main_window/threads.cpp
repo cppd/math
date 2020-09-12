@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "threads.h"
 
+#include "../dialogs/message.h"
+
 #include <src/com/exception.h>
 
 #include <atomic>
@@ -149,6 +151,89 @@ class Impl final : public WorkerThreads
                 return t->second;
         }
 
+        void start(Action action, const std::string& description, std::function<void(ProgressRatioList*)>&& function)
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                if (!function)
+                {
+                        return;
+                }
+
+                thread_data(action).start(description, std::move(function));
+        }
+
+        bool terminate_with_dialog(Action action)
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                if (is_working(action))
+                {
+                        bool yes;
+                        if (!dialog::message_question_default_no(
+                                    "There is work in progress.\nDo you want to continue?", &yes)
+                            || !yes)
+                        {
+                                return false;
+                        }
+                }
+
+                terminate_quietly(action);
+
+                return true;
+        }
+
+        bool is_working(Action action) const
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                return thread_data(action).working();
+        }
+
+        void terminate_quietly(Action action)
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                thread_data(action).terminate_quietly();
+        }
+
+        void terminate_with_message(Action action) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                thread_data(action).terminate_with_message();
+        }
+
+        bool terminate_and_start(Action action, const std::string& description, std::function<Function()>&& function)
+                override
+        {
+                bool result = false;
+                catch_all(description, [&]() {
+                        if (!terminate_with_dialog(action))
+                        {
+                                return;
+                        }
+                        start(action, description, function());
+                        result = true;
+                });
+                return result;
+        }
+
+        void terminate_all() override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                for (auto& t : m_threads)
+                {
+                        t.second.terminate_quietly();
+                }
+        }
+
+        const std::vector<Progress>& progresses() const override
+        {
+                return m_progress;
+        }
+
 public:
         Impl() : m_thread_id(std::this_thread::get_id())
         {
@@ -178,55 +263,6 @@ public:
                 {
                         error_fatal("Working threads in the work thread class destructor");
                 }
-        }
-
-        bool is_working(Action action) const override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                return thread_data(action).working();
-        }
-
-        void terminate_quietly(Action action) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                thread_data(action).terminate_quietly();
-        }
-
-        void terminate_with_message(Action action) override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                thread_data(action).terminate_with_message();
-        }
-
-        void terminate_all() override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                for (auto& t : m_threads)
-                {
-                        t.second.terminate_quietly();
-                }
-        }
-
-        void start(Action action, const std::string& description, std::function<void(ProgressRatioList*)>&& function)
-                override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                if (!function)
-                {
-                        return;
-                }
-
-                thread_data(action).start(description, std::move(function));
-        }
-
-        const std::vector<Progress>& progresses() const override
-        {
-                return m_progress;
         }
 };
 }

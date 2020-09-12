@@ -213,23 +213,6 @@ void MainWindow::terminate_all_threads()
         m_view.reset();
 }
 
-bool MainWindow::stop_action(WorkerThreads::Action action)
-{
-        if (m_worker_threads->is_working(action))
-        {
-                bool yes;
-                if (!dialog::message_question_default_no("There is work in progress.\nDo you want to continue?", &yes)
-                    || !yes)
-                {
-                        return false;
-                }
-        }
-
-        m_worker_threads->terminate_quietly(action);
-
-        return true;
-}
-
 void MainWindow::set_progress_bars(
         WorkerThreads::Action action,
         bool permanent,
@@ -406,18 +389,11 @@ void MainWindow::on_first_shown()
 
 void MainWindow::load_from_file(const std::string& file_name, bool use_object_selection_dialog)
 {
-        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
-        static constexpr const char* DESCRIPTION = "Loading from file";
-
-        catch_all(DESCRIPTION, [&]() {
-                if (!stop_action(ACTION))
-                {
-                        return;
-                }
+        m_worker_threads->terminate_and_start(WorkerThreads::Action::Work, "Loading from file", [&]() {
                 WorkerThreads::Function f = process::action_load_from_file(file_name, use_object_selection_dialog);
                 //m_model_tree->clear();
                 //m_view->send(view::command::ResetView());
-                m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
+                return f;
         });
 }
 
@@ -428,77 +404,45 @@ void MainWindow::on_load_triggered()
 
 void MainWindow::on_repository_mesh(int dimension, const std::string& object_name)
 {
-        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
-        static constexpr const char* DESCRIPTION = "Load from mesh repository";
-
-        catch_all(DESCRIPTION, [&]() {
-                if (!stop_action(ACTION))
-                {
-                        return;
-                }
+        m_worker_threads->terminate_and_start(WorkerThreads::Action::Work, "Load from mesh repository", [&]() {
                 WorkerThreads::Function f =
                         process::action_load_from_mesh_repository(m_repository.get(), dimension, object_name);
                 //m_model_tree->clear();
                 //m_view->send(view::command::ResetView());
-                m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
+                return f;
         });
 }
 
 void MainWindow::on_repository_volume(int dimension, const std::string& object_name)
 {
-        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
-        static constexpr const char* DESCRIPTION = "Load from volume repository";
-
-        catch_all(DESCRIPTION, [&]() {
-                if (!stop_action(ACTION))
-                {
-                        return;
-                }
-                WorkerThreads::Function f =
-                        process::action_load_from_volume_repository(m_repository.get(), dimension, object_name);
-                m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
+        m_worker_threads->terminate_and_start(WorkerThreads::Action::Work, "Load from volume repository", [&]() {
+                return process::action_load_from_volume_repository(m_repository.get(), dimension, object_name);
         });
 }
 
 void MainWindow::on_export_triggered()
 {
-        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
-        static constexpr const char* DESCRIPTION = "Export";
-
-        catch_all(DESCRIPTION, [&]() {
-                if (!stop_action(ACTION))
-                {
-                        return;
-                }
+        m_worker_threads->terminate_and_start(WorkerThreads::Action::Work, "Export", [&]() {
                 std::optional<storage::MeshObjectConst> object = m_model_tree->current_mesh_const();
                 if (!object)
                 {
                         MESSAGE_WARNING("No object to export");
-                        return;
+                        return WorkerThreads::Function();
                 }
-                WorkerThreads::Function f = process::action_export(*object);
-                m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
+                return process::action_export(*object);
         });
 }
 
 void MainWindow::on_bound_cocone_triggered()
 {
-        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
-        static constexpr const char* DESCRIPTION = "BoundCocone";
-
-        catch_all(DESCRIPTION, [&]() {
-                if (!stop_action(ACTION))
-                {
-                        return;
-                }
+        m_worker_threads->terminate_and_start(WorkerThreads::Action::Work, "BoundCocone", [&]() {
                 std::optional<storage::MeshObjectConst> object = m_model_tree->current_mesh_const();
                 if (!object)
                 {
                         MESSAGE_WARNING("No object to compute BoundCocone");
-                        return;
+                        return WorkerThreads::Function();
                 }
-                WorkerThreads::Function f = process::action_bound_cocone(*object);
-                m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
+                return process::action_bound_cocone(*object);
         });
 }
 
@@ -514,16 +458,8 @@ void MainWindow::on_help_triggered()
 
 void MainWindow::self_test(test::SelfTestType test_type, bool with_confirmation)
 {
-        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::SelfTest;
-        static constexpr const char* DESCRIPTION = "Self-Test";
-
-        catch_all(DESCRIPTION, [&]() {
-                if (!stop_action(ACTION))
-                {
-                        return;
-                }
-                WorkerThreads::Function f = process::action_self_test(test_type, with_confirmation);
-                m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
+        m_worker_threads->terminate_and_start(WorkerThreads::Action::SelfTest, "Self-Test", [&]() {
+                return process::action_self_test(test_type, with_confirmation);
         });
 }
 
@@ -534,30 +470,18 @@ void MainWindow::on_self_test_triggered()
 
 void MainWindow::on_painter_triggered()
 {
-        static constexpr WorkerThreads::Action ACTION = WorkerThreads::Action::Work;
-        static constexpr const char* DESCRIPTION = "Painter";
-
-        catch_all(DESCRIPTION, [&]() {
-                if (!stop_action(ACTION))
-                {
-                        return;
-                }
-
+        m_worker_threads->terminate_and_start(WorkerThreads::Action::Work, "Painter", [&]() {
                 std::vector<storage::MeshObjectConst> objects = m_model_tree->const_mesh_objects();
                 if (objects.empty())
                 {
                         MESSAGE_WARNING("No objects to paint");
-                        return;
+                        return WorkerThreads::Function();
                 }
-
                 view::info::Camera camera;
                 m_view->receive({&camera});
-
-                WorkerThreads::Function f = process::action_painter(
+                return process::action_painter(
                         objects, camera, QMainWindow::windowTitle().toStdString(), m_colors_widget->background_color(),
                         m_colors_widget->lighting_intensity());
-
-                m_worker_threads->start(ACTION, DESCRIPTION, std::move(f));
         });
 }
 

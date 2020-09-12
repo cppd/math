@@ -20,10 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/progress/progress_list.h>
 
 #include <QProgressBar>
-#include <exception>
 #include <functional>
 #include <list>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace gui
 {
@@ -47,11 +48,12 @@ struct WorkerThreads
 
         virtual ~WorkerThreads() = default;
 
-        virtual bool is_working(Action action) const = 0;
-        virtual void terminate_quietly(Action action) = 0;
         virtual void terminate_with_message(Action action) = 0;
         virtual void terminate_all() = 0;
-        virtual void start(Action action, const std::string& description, Function&& function) = 0;
+        virtual bool terminate_and_start(
+                Action action,
+                const std::string& description,
+                std::function<Function()>&& function) = 0;
         virtual const std::vector<Progress>& progresses() const = 0;
 };
 

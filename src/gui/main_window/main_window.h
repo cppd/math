@@ -97,8 +97,6 @@ private:
                 const ProgressRatioList* progress_list,
                 std::list<QProgressBar>* progress_bars);
 
-        bool stop_action(WorkerThreads::Action action);
-
         const std::thread::id m_thread_id = std::this_thread::get_id();
         bool m_first_show = true;
 
