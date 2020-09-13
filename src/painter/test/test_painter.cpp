@@ -192,10 +192,9 @@ void test_painter_window(
 
         check_application_instance();
 
-        std::string window_title = "Path Tracing In " + to_upper_first_letters(space_name(N));
+        std::string name = "Path Tracing In " + to_upper_first_letters(space_name(N));
 
-        gui::create_painter_window(
-                window_title, thread_count, samples_per_pixel, smooth_normal, std::move(paint_objects));
+        gui::create_painter_window(name, thread_count, samples_per_pixel, smooth_normal, std::move(paint_objects));
 }
 
 enum class PainterTestOutputType

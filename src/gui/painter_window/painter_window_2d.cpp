@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/time.h>
+#include <src/settings/name.h>
 
 #include <QCloseEvent>
 #include <QPointer>
@@ -94,7 +95,7 @@ public:
 };
 
 PainterWindow2d::PainterWindow2d(
-        const std::string& title,
+        const std::string& name,
         std::vector<int>&& screen_size,
         const std::vector<int>& initial_slider_positions)
         : m_screen_size(std::move(screen_size)),
@@ -107,7 +108,13 @@ PainterWindow2d::PainterWindow2d(
 {
         ui.setupUi(this);
 
-        this->setWindowTitle(title.c_str());
+        std::string title = std::string(settings::APPLICATION_NAME);
+        if (!name.empty())
+        {
+                title += " - ";
+                title += name;
+        }
+        this->setWindowTitle(QString::fromStdString(title));
 
         connect(ui.pushButton_save_to_file, &QPushButton::clicked, this, &PainterWindow2d::on_save_to_file_clicked);
         connect(ui.pushButton_add_volume, &QPushButton::clicked, this, &PainterWindow2d::on_add_volume_clicked);

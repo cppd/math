@@ -37,7 +37,7 @@ class PainterWindow2d : public QWidget
 
 public:
         PainterWindow2d(
-                const std::string& title,
+                const std::string& name,
                 std::vector<int>&& m_screen_size,
                 const std::vector<int>& initial_slider_positions);
         ~PainterWindow2d() override;

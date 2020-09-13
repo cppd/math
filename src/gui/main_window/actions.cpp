@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/process/loading.h>
 #include <src/process/painting.h>
 #include <src/process/testing.h>
-#include <src/settings/name.h>
 
 namespace gui
 {
@@ -92,8 +91,7 @@ void painter(WorkerThreads* threads, const ModelTree* model_tree, view::View* vi
                 view::info::Camera camera;
                 view->receive({&camera});
                 return process::action_painter(
-                        objects, camera, settings::APPLICATION_NAME, colors->background_color(),
-                        colors->lighting_intensity());
+                        objects, camera, colors->background_color(), colors->lighting_intensity());
         });
 }
 

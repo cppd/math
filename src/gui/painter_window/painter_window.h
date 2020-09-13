@@ -291,13 +291,13 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
 
 public:
         PainterWindow(
-                const std::string& title,
+                const std::string& name,
                 unsigned thread_count,
                 int samples_per_pixel,
                 bool smooth_normal,
                 const std::shared_ptr<const painter::PaintObjects<N, T>>& paint_objects)
                 : PainterWindow2d(
-                        title,
+                        name,
                         array_to_vector(paint_objects->projector().screen_size()),
                         initial_slider_positions()),
                   m_thread_id(std::this_thread::get_id()),
@@ -343,7 +343,7 @@ public:
 
 template <size_t N, typename T>
 void create_painter_window(
-        const std::string& title,
+        const std::string& name,
         unsigned thread_count,
         int samples_per_pixel,
         bool smooth_normal,
@@ -353,7 +353,7 @@ void create_painter_window(
         std::shared_ptr<const painter::PaintObjects<N, T>> objects = std::move(paint_objects);
         application::MainThreadQueue::push([=]() {
                 create_and_show_delete_on_close_window<impl::PainterWindow<N, T>>(
-                        title, thread_count, samples_per_pixel, smooth_normal, objects);
+                        name, thread_count, samples_per_pixel, smooth_normal, objects);
         });
 }
 }

@@ -48,7 +48,6 @@ template <size_t N>
 std::function<void(ProgressRatioList*)> action_painter_function(
         const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
         const view::info::Camera& camera,
-        const std::string& title,
         const Color& background_color,
         const Color::DataType& lighting_intensity)
 {
@@ -122,14 +121,12 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                         return;
                 }
 
-                std::string window_title =
-                        mesh_objects.size() != 1 ? title : title + " (" + mesh_objects[0]->name() + ")";
+                std::string name = mesh_objects.size() != 1 ? "" : mesh_objects[0]->name();
 
                 std::unique_ptr<const painter::PaintObjects<N, T>> scene =
                         create_painter_scene(painter_mesh_object, scene_info, background_color, lighting_intensity);
 
-                gui::create_painter_window(
-                        window_title, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
+                gui::create_painter_window(name, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
         };
 }
 }
@@ -137,7 +134,6 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 std::function<void(ProgressRatioList*)> action_painter(
         const std::vector<storage::MeshObjectConst>& objects,
         const view::info::Camera& camera,
-        const std::string& title,
         const Color& background_color,
         const Color::DataType& lighting_intensity)
 {
@@ -179,7 +175,7 @@ std::function<void(ProgressRatioList*)> action_painter(
                                 },
                                 std::move(visible_object));
                 }
-                return action_painter_function(meshes, camera, title, background_color, lighting_intensity);
+                return action_painter_function(meshes, camera, background_color, lighting_intensity);
         });
 }
 }
