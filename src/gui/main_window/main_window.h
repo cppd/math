@@ -22,11 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics_widget.h"
 #include "mesh_widget.h"
 #include "model_tree.h"
-#include "threads.h"
 #include "view_widget.h"
 #include "volume_widget.h"
 
 #include "../application/model_events.h"
+#include "../com/threads.h"
 
 #include "ui_main_window.h"
 
@@ -77,8 +77,7 @@ private:
         //
 
         void set_progress_bars(
-                WorkerThreads::Action action,
-                bool permanent,
+                unsigned id,
                 const ProgressRatioList* progress_list,
                 std::list<QProgressBar>* progress_bars);
 

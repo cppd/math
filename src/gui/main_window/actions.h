@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "colors_widget.h"
 #include "model_tree.h"
-#include "threads.h"
 
 #include "../com/command_line.h"
 #include "../com/connection.h"
+#include "../com/threads.h"
 
 #include <src/storage/repository.h>
 #include <src/view/interface.h>
@@ -30,18 +30,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QAction>
 #include <QMenu>
 #include <string>
-#include <thread>
 #include <vector>
 
 namespace gui
 {
 class Actions final
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
-
         std::vector<Connection> m_connections;
 
 public:
+        static unsigned required_thread_count();
+        static unsigned permanent_thread_id();
+
         Actions(const CommandLineOptions& options,
                 QAction* action_load,
                 QAction* action_export,

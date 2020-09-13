@@ -99,7 +99,7 @@ void MainWindow::constructor_objects()
         // QMenu* menu_create = new QMenu("Create", this);
         // ui.menu_bar->insertMenu(ui.menu_help->menuAction(), menu_create);
 
-        m_worker_threads = create_worker_threads();
+        m_worker_threads = create_worker_threads(Actions::required_thread_count());
 
         m_repository = std::make_unique<storage::Repository>();
 
@@ -178,6 +178,7 @@ void MainWindow::terminate_all_threads()
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         m_worker_threads->terminate_all();
+
         m_timer_progress_bar.stop();
 
         m_actions.reset();
@@ -193,8 +194,7 @@ void MainWindow::terminate_all_threads()
 }
 
 void MainWindow::set_progress_bars(
-        WorkerThreads::Action action,
-        bool permanent,
+        unsigned id,
         const ProgressRatioList* progress_list,
         std::list<QProgressBar>* progress_bars)
 {
@@ -211,7 +211,7 @@ void MainWindow::set_progress_bars(
                 bar.setContextMenuPolicy(Qt::CustomContextMenu);
 
                 connect(&bar, &QProgressBar::customContextMenuRequested,
-                        [action, &bar, ptr_this = QPointer(this)](const QPoint&) {
+                        [id, &bar, ptr_this = QPointer(this)](const QPoint&) {
                                 QtObjectInDynamicMemory<QMenu> menu(&bar);
                                 menu->addAction("Terminate");
 
@@ -220,7 +220,7 @@ void MainWindow::set_progress_bars(
                                         return;
                                 }
 
-                                ptr_this->m_worker_threads->terminate_with_message(action);
+                                ptr_this->m_worker_threads->terminate_with_message(id);
                         });
         }
 
@@ -230,7 +230,7 @@ void MainWindow::set_progress_bars(
         {
                 if (!bar->isVisible())
                 {
-                        if (permanent)
+                        if (id == Actions::permanent_thread_id())
                         {
                                 ui.status_bar->insertPermanentWidget(0, &(*bar));
                         }
@@ -272,7 +272,7 @@ void MainWindow::on_timer_progress_bar()
 {
         for (const WorkerThreads::Progress& t : m_worker_threads->progresses())
         {
-                set_progress_bars(t.action, t.permanent, t.progress_list, t.progress_bars);
+                set_progress_bars(t.id, t.progress_list, t.progress_bars);
         }
 }
 

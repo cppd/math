@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exception.h>
 
 #include <atomic>
+#include <deque>
 #include <thread>
-#include <unordered_map>
 
 namespace gui
 {
@@ -132,26 +132,24 @@ public:
 
 class Impl final : public WorkerThreads
 {
-        const std::thread::id m_thread_id;
+        const std::thread::id m_thread_id = std::this_thread::get_id();
 
-        std::unordered_map<Action, ThreadData> m_threads;
+        std::deque<ThreadData> m_threads;
         std::vector<Progress> m_progress;
 
-        ThreadData& thread_data(Action action)
+        ThreadData& thread_data(unsigned id)
         {
-                auto t = m_threads.find(action);
-                ASSERT(t != m_threads.end());
-                return t->second;
+                ASSERT(id < m_threads.size());
+                return m_threads[id];
         }
 
-        const ThreadData& thread_data(Action action) const
+        const ThreadData& thread_data(unsigned id) const
         {
-                auto t = m_threads.find(action);
-                ASSERT(t != m_threads.end());
-                return t->second;
+                ASSERT(id < m_threads.size());
+                return m_threads[id];
         }
 
-        void start(Action action, const std::string& description, std::function<void(ProgressRatioList*)>&& function)
+        void start(unsigned id, const std::string& description, std::function<void(ProgressRatioList*)>&& function)
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -160,14 +158,14 @@ class Impl final : public WorkerThreads
                         return;
                 }
 
-                thread_data(action).start(description, std::move(function));
+                thread_data(id).start(description, std::move(function));
         }
 
-        bool terminate_with_dialog(Action action)
+        bool terminate_with_dialog(unsigned id)
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                if (is_working(action))
+                if (is_working(id))
                 {
                         bool yes;
                         if (!dialog::message_question_default_no(
@@ -178,42 +176,42 @@ class Impl final : public WorkerThreads
                         }
                 }
 
-                terminate_quietly(action);
+                terminate_quietly(id);
 
                 return true;
         }
 
-        bool is_working(Action action) const
+        bool is_working(unsigned id) const
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                return thread_data(action).working();
+                return thread_data(id).working();
         }
 
-        void terminate_quietly(Action action)
+        void terminate_quietly(unsigned id)
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                thread_data(action).terminate_quietly();
+                thread_data(id).terminate_quietly();
         }
 
-        void terminate_with_message(Action action) override
+        void terminate_with_message(unsigned id) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                thread_data(action).terminate_with_message();
+                thread_data(id).terminate_with_message();
         }
 
-        bool terminate_and_start(Action action, const std::string& description, std::function<Function()>&& function)
+        bool terminate_and_start(unsigned id, const std::string& description, std::function<Function()>&& function)
                 override
         {
                 bool result = false;
                 catch_all(description, [&]() {
-                        if (!terminate_with_dialog(action))
+                        if (!terminate_with_dialog(id))
                         {
                                 return;
                         }
-                        start(action, description, function());
+                        start(id, description, function());
                         result = true;
                 });
                 return result;
@@ -223,9 +221,9 @@ class Impl final : public WorkerThreads
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                for (auto& t : m_threads)
+                for (ThreadData& t : m_threads)
                 {
-                        t.second.terminate_quietly();
+                        t.terminate_quietly();
                 }
         }
 
@@ -234,21 +232,24 @@ class Impl final : public WorkerThreads
                 return m_progress;
         }
 
-public:
-        Impl() : m_thread_id(std::this_thread::get_id())
+        unsigned count() const override
         {
-                m_threads.try_emplace(Action::Work);
-                m_threads.try_emplace(Action::SelfTest);
+                return m_threads.size();
+        }
 
-                for (auto& t : m_threads)
+public:
+        Impl(unsigned thread_count)
+        {
+                ASSERT(thread_count > 0);
+
+                m_threads.resize(thread_count);
+
+                for (unsigned id = 0; id < m_threads.size(); ++id)
                 {
                         Progress p;
-
-                        p.action = t.first;
-                        p.permanent = (t.first == Action::SelfTest);
-                        p.progress_list = t.second.progress_list();
-                        p.progress_bars = t.second.progress_bars();
-
+                        p.id = id;
+                        p.progress_list = m_threads[id].progress_list();
+                        p.progress_bars = m_threads[id].progress_bars();
                         m_progress.push_back(p);
                 }
         }
@@ -258,7 +259,7 @@ public:
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 if (std::any_of(m_threads.cbegin(), m_threads.cend(), [](const auto& t) {
-                            return t.second.working() || t.second.joinable();
+                            return t.working() || t.joinable();
                     }))
                 {
                         error_fatal("Working threads in the work thread class destructor");
@@ -267,8 +268,8 @@ public:
 };
 }
 
-std::unique_ptr<WorkerThreads> create_worker_threads()
+std::unique_ptr<WorkerThreads> create_worker_threads(unsigned thread_count)
 {
-        return std::make_unique<Impl>();
+        return std::make_unique<Impl>(thread_count);
 }
 }

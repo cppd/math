@@ -30,13 +30,17 @@ namespace gui
 {
 namespace
 {
+constexpr unsigned WORKER_THREAD_ID = 0;
+constexpr unsigned SELF_TEST_THREAD_ID = 1;
+constexpr unsigned REQUIRED_THREAD_COUNT = 2;
+
 void load_mesh(
         WorkerThreads* threads,
         const storage::Repository* repository,
         int dimension,
         const std::string& object_name)
 {
-        threads->terminate_and_start(WorkerThreads::Action::Work, "Load from mesh repository", [&]() {
+        threads->terminate_and_start(WORKER_THREAD_ID, "Load from mesh repository", [&]() {
                 WorkerThreads::Function f =
                         process::action_load_from_mesh_repository(repository, dimension, object_name);
                 //model_tree->clear();
@@ -51,14 +55,14 @@ void load_volume(
         int dimension,
         const std::string& object_name)
 {
-        threads->terminate_and_start(WorkerThreads::Action::Work, "Load from volume repository", [&]() {
+        threads->terminate_and_start(WORKER_THREAD_ID, "Load from volume repository", [&]() {
                 return process::action_load_from_volume_repository(repository, dimension, object_name);
         });
 }
 
 void load_file(WorkerThreads* threads, const std::string& file_name, bool use_object_selection_dialog)
 {
-        threads->terminate_and_start(WorkerThreads::Action::Work, "Loading from file", [&]() {
+        threads->terminate_and_start(WORKER_THREAD_ID, "Loading from file", [&]() {
                 WorkerThreads::Function f = process::action_load_from_file(file_name, use_object_selection_dialog);
                 //model_tree->clear();
                 //view->send(view::command::ResetView());
@@ -68,7 +72,7 @@ void load_file(WorkerThreads* threads, const std::string& file_name, bool use_ob
 
 void export_mesh(WorkerThreads* threads, const ModelTree* model_tree)
 {
-        threads->terminate_and_start(WorkerThreads::Action::Work, "Export", [&]() {
+        threads->terminate_and_start(WORKER_THREAD_ID, "Export", [&]() {
                 std::optional<storage::MeshObjectConst> object = model_tree->current_mesh_const();
                 if (!object)
                 {
@@ -81,7 +85,7 @@ void export_mesh(WorkerThreads* threads, const ModelTree* model_tree)
 
 void painter(WorkerThreads* threads, const ModelTree* model_tree, view::View* view, const ColorsWidget* colors)
 {
-        threads->terminate_and_start(WorkerThreads::Action::Work, "Painter", [&]() {
+        threads->terminate_and_start(WORKER_THREAD_ID, "Painter", [&]() {
                 std::vector<storage::MeshObjectConst> objects = model_tree->const_mesh_objects();
                 if (objects.empty())
                 {
@@ -97,7 +101,7 @@ void painter(WorkerThreads* threads, const ModelTree* model_tree, view::View* vi
 
 void bound_cocone(WorkerThreads* threads, const ModelTree* model_tree)
 {
-        threads->terminate_and_start(WorkerThreads::Action::Work, "BoundCocone", [&]() {
+        threads->terminate_and_start(WORKER_THREAD_ID, "BoundCocone", [&]() {
                 std::optional<storage::MeshObjectConst> object = model_tree->current_mesh_const();
                 if (!object)
                 {
@@ -110,10 +114,20 @@ void bound_cocone(WorkerThreads* threads, const ModelTree* model_tree)
 
 void self_test(WorkerThreads* threads, test::SelfTestType test_type, bool with_confirmation)
 {
-        threads->terminate_and_start(WorkerThreads::Action::SelfTest, "Self-Test", [&]() {
+        threads->terminate_and_start(SELF_TEST_THREAD_ID, "Self-Test", [&]() {
                 return process::action_self_test(test_type, with_confirmation);
         });
 }
+}
+
+unsigned Actions::required_thread_count()
+{
+        return REQUIRED_THREAD_COUNT;
+}
+
+unsigned Actions::permanent_thread_id()
+{
+        return SELF_TEST_THREAD_ID;
 }
 
 Actions::Actions(
@@ -130,6 +144,8 @@ Actions::Actions(
         ModelTree* model_tree,
         const ColorsWidget* colors)
 {
+        ASSERT(threads->count() >= required_thread_count());
+
         m_connections.emplace_back(
                 QObject::connect(action_load, &QAction::triggered, [threads]() { load_file(threads, "", true); }));
 

@@ -30,16 +30,9 @@ namespace gui
 {
 struct WorkerThreads
 {
-        enum class Action
-        {
-                Work,
-                SelfTest
-        };
-
         struct Progress
         {
-                Action action;
-                bool permanent;
+                unsigned id;
                 const ProgressRatioList* progress_list;
                 std::list<QProgressBar>* progress_bars;
         };
@@ -48,14 +41,15 @@ struct WorkerThreads
 
         virtual ~WorkerThreads() = default;
 
-        virtual void terminate_with_message(Action action) = 0;
+        virtual unsigned count() const = 0;
+        virtual void terminate_with_message(unsigned id) = 0;
         virtual void terminate_all() = 0;
         virtual bool terminate_and_start(
-                Action action,
+                unsigned id,
                 const std::string& description,
                 std::function<Function()>&& function) = 0;
         virtual const std::vector<Progress>& progresses() const = 0;
 };
 
-std::unique_ptr<WorkerThreads> create_worker_threads();
+std::unique_ptr<WorkerThreads> create_worker_threads(unsigned thread_count);
 }
