@@ -178,6 +178,7 @@ void MainWindow::terminate_all_threads()
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         m_worker_threads->terminate_all();
+        m_timer_progress_bar.stop();
 
         m_actions.reset();
         m_model_events.reset();
@@ -289,8 +290,6 @@ void MainWindow::showEvent(QShowEvent* /*event*/)
 
 void MainWindow::on_first_shown()
 {
-        m_timer_progress_bar.start(TIMER_PROGRESS_BAR_INTERVAL);
-
         if (WINDOW_SIZE_GRAPHICS)
         {
                 QSize size = QDesktopWidget().screenGeometry(this).size() * WINDOW_SIZE_COEF;
@@ -349,6 +348,8 @@ void MainWindow::on_first_shown()
                         options, ui.action_load, ui.action_export, ui.action_self_test, ui.menu_create, ui.menu_edit,
                         ui.menu_rendering, m_repository.get(), m_worker_threads.get(), m_view.get(), m_model_tree.get(),
                         m_colors_widget.get());
+
+                m_timer_progress_bar.start(TIMER_PROGRESS_BAR_INTERVAL);
         }
         catch (const std::exception& e)
         {
