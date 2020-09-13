@@ -24,17 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dialogs/message.h"
 
 #include <src/com/error.h>
-#include <src/com/exception.h>
-#include <src/com/log.h>
 #include <src/com/message.h>
-#include <src/com/print.h>
 #include <src/com/type/limit.h>
-#include <src/process/computing.h>
-#include <src/process/exporting.h>
-#include <src/process/painting.h>
-#include <src/process/testing.h>
 #include <src/settings/name.h>
-#include <src/utility/file/sys.h>
 #include <src/view/create.h>
 
 #include <QCloseEvent>
@@ -69,8 +61,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 
         constructor_graphics_widget();
         constructor_objects();
-        constructor_interface();
-        constructor_connect();
 }
 
 void MainWindow::constructor_graphics_widget()
@@ -106,57 +96,47 @@ void MainWindow::constructor_graphics_widget()
 
 void MainWindow::constructor_objects()
 {
+        // QMenu* menu_create = new QMenu("Create", this);
+        // ui.menu_bar->insertMenu(ui.menu_help->menuAction(), menu_create);
+
         m_worker_threads = create_worker_threads();
 
         m_repository = std::make_unique<storage::Repository>();
 
-        m_actions = std::make_unique<Actions>(ui.menuCreate, m_repository.get(), m_worker_threads.get());
-
-        // QMenu* menuCreate = new QMenu("Create", this);
-        // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
-}
-
-void MainWindow::constructor_interface()
-{
         m_model_tree = std::make_unique<ModelTree>();
-        ui.tabModels->setLayout(m_model_tree->layout());
+        ui.tab_models->setLayout(m_model_tree->layout());
 
         m_colors_widget = std::make_unique<ColorsWidget>();
-        ui.tabColor->setLayout(m_colors_widget->layout());
+        ui.tab_color->setLayout(m_colors_widget->layout());
 
         m_view_widget = std::make_unique<ViewWidget>();
-        ui.tabView->setLayout(m_view_widget->layout());
+        ui.tab_view->setLayout(m_view_widget->layout());
 
         m_mesh_widget = std::make_unique<MeshWidget>(MAXIMUM_SPECULAR_POWER, MAXIMUM_MODEL_LIGHTING);
-        ui.tabMesh->setLayout(m_mesh_widget->layout());
+        ui.tab_mesh->setLayout(m_mesh_widget->layout());
 
         m_volume_widget = std::make_unique<VolumeWidget>(MAXIMUM_SPECULAR_POWER, MAXIMUM_MODEL_LIGHTING);
-        ui.tabVolume->setLayout(m_volume_widget->layout());
+        ui.tab_volume->setLayout(m_volume_widget->layout());
 
-        ui.mainWidget->layout()->setContentsMargins(3, 3, 3, 3);
-        ui.mainWidget->layout()->setSpacing(3);
+        //
 
-        ui.tabWidget->setCurrentWidget(ui.tabModels);
+        ui.main_widget->layout()->setContentsMargins(3, 3, 3, 3);
+        ui.main_widget->layout()->setSpacing(3);
+
+        ui.tab_widget->setCurrentWidget(ui.tab_models);
 
         ui.action_help->setText(QString(settings::APPLICATION_NAME) + " Help");
         ui.action_about->setText("About " + QString(settings::APPLICATION_NAME));
 
         // Чтобы добавление и удаление QProgressBar не меняло высоту ui.statusBar
-        ui.statusBar->setFixedHeight(ui.statusBar->height());
-}
+        ui.status_bar->setFixedHeight(ui.status_bar->height());
 
-void MainWindow::constructor_connect()
-{
+        //
+
         connect(ui.action_about, &QAction::triggered, this, &MainWindow::on_about_triggered);
-        connect(ui.action_bound_cocone, &QAction::triggered, this, &MainWindow::on_bound_cocone_triggered);
         connect(ui.action_exit, &QAction::triggered, this, &MainWindow::on_exit_triggered);
-        connect(ui.action_export, &QAction::triggered, this, &MainWindow::on_export_triggered);
         connect(ui.action_help, &QAction::triggered, this, &MainWindow::on_help_triggered);
-        connect(ui.action_painter, &QAction::triggered, this, &MainWindow::on_painter_triggered);
-        connect(ui.action_self_test, &QAction::triggered, this, &MainWindow::on_self_test_triggered);
         connect(&m_timer_progress_bar, &QTimer::timeout, this, &MainWindow::on_timer_progress_bar);
-
-        m_actions->connect_load_action(ui.action_load);
 }
 
 MainWindow::~MainWindow()
@@ -251,11 +231,11 @@ void MainWindow::set_progress_bars(
                 {
                         if (permanent)
                         {
-                                ui.statusBar->insertPermanentWidget(0, &(*bar));
+                                ui.status_bar->insertPermanentWidget(0, &(*bar));
                         }
                         else
                         {
-                                ui.statusBar->addWidget(&(*bar));
+                                ui.status_bar->addWidget(&(*bar));
                         }
                         bar->show();
                 }
@@ -282,7 +262,7 @@ void MainWindow::set_progress_bars(
 
         while (bar != progress_bars->end())
         {
-                ui.statusBar->removeWidget(&(*bar));
+                ui.status_bar->removeWidget(&(*bar));
                 bar = progress_bars->erase(bar);
         }
 }
@@ -365,15 +345,10 @@ void MainWindow::on_first_shown()
                 m_mesh_widget->set_model_tree(m_model_tree.get());
                 m_volume_widget->set_model_tree(m_model_tree.get());
                 m_model_events = std::make_unique<application::ModelEvents>(m_model_tree->events(), m_view.get());
-
-                //
-
-                self_test(test::SelfTestType::Essential, false);
-
-                if (!options.file_name.empty())
-                {
-                        m_actions->load_from_file(options.file_name, !options.no_object_selection_dialog);
-                }
+                m_actions = std::make_unique<Actions>(
+                        options, ui.action_load, ui.action_export, ui.action_self_test, ui.menu_create, ui.menu_edit,
+                        ui.menu_rendering, m_repository.get(), m_worker_threads.get(), m_view.get(), m_model_tree.get(),
+                        m_colors_widget.get());
         }
         catch (const std::exception& e)
         {
@@ -385,32 +360,6 @@ void MainWindow::on_first_shown()
         }
 }
 
-void MainWindow::on_export_triggered()
-{
-        m_worker_threads->terminate_and_start(WorkerThreads::Action::Work, "Export", [&]() {
-                std::optional<storage::MeshObjectConst> object = m_model_tree->current_mesh_const();
-                if (!object)
-                {
-                        MESSAGE_WARNING("No object to export");
-                        return WorkerThreads::Function();
-                }
-                return process::action_export(*object);
-        });
-}
-
-void MainWindow::on_bound_cocone_triggered()
-{
-        m_worker_threads->terminate_and_start(WorkerThreads::Action::Work, "BoundCocone", [&]() {
-                std::optional<storage::MeshObjectConst> object = m_model_tree->current_mesh_const();
-                if (!object)
-                {
-                        MESSAGE_WARNING("No object to compute BoundCocone");
-                        return WorkerThreads::Function();
-                }
-                return process::action_bound_cocone(*object);
-        });
-}
-
 void MainWindow::on_exit_triggered()
 {
         close();
@@ -419,35 +368,6 @@ void MainWindow::on_exit_triggered()
 void MainWindow::on_help_triggered()
 {
         dialog::application_help();
-}
-
-void MainWindow::self_test(test::SelfTestType test_type, bool with_confirmation)
-{
-        m_worker_threads->terminate_and_start(WorkerThreads::Action::SelfTest, "Self-Test", [&]() {
-                return process::action_self_test(test_type, with_confirmation);
-        });
-}
-
-void MainWindow::on_self_test_triggered()
-{
-        self_test(test::SelfTestType::Extended, true);
-}
-
-void MainWindow::on_painter_triggered()
-{
-        m_worker_threads->terminate_and_start(WorkerThreads::Action::Work, "Painter", [&]() {
-                std::vector<storage::MeshObjectConst> objects = m_model_tree->const_mesh_objects();
-                if (objects.empty())
-                {
-                        MESSAGE_WARNING("No objects to paint");
-                        return WorkerThreads::Function();
-                }
-                view::info::Camera camera;
-                m_view->receive({&camera});
-                return process::action_painter(
-                        objects, camera, QMainWindow::windowTitle().toStdString(), m_colors_widget->background_color(),
-                        m_colors_widget->lighting_intensity());
-        });
 }
 
 void MainWindow::on_about_triggered()

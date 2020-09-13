@@ -32,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress_list.h>
 #include <src/storage/repository.h>
-#include <src/test/self_test.h>
 #include <src/view/interface.h>
 
 #include <QTimer>
@@ -55,9 +54,7 @@ public:
 
 private:
         void on_about_triggered();
-        void on_bound_cocone_triggered();
         void on_exit_triggered();
-        void on_export_triggered();
         void on_first_shown();
         void on_graphics_widget_mouse_move(QMouseEvent*);
         void on_graphics_widget_mouse_press(QMouseEvent*);
@@ -65,25 +62,17 @@ private:
         void on_graphics_widget_mouse_wheel(QWheelEvent*);
         void on_graphics_widget_resize(QResizeEvent*);
         void on_help_triggered();
-        void on_painter_triggered();
-        void on_self_test_triggered();
         void on_timer_progress_bar();
 
         //
 
-        void constructor_connect();
         void constructor_graphics_widget();
-        void constructor_interface();
         void constructor_objects();
 
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;
 
         void terminate_all_threads();
-
-        //
-
-        void self_test(test::SelfTestType test_type, bool with_confirmation);
 
         //
 

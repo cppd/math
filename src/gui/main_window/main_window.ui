@@ -13,7 +13,7 @@
     <height>1265</height>
    </rect>
   </property>
-  <widget class="QWidget" name="mainWidget">
+  <widget class="QWidget" name="main_widget">
    <property name="layoutDirection">
     <enum>Qt::LeftToRight</enum>
    </property>
@@ -27,34 +27,34 @@
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <widget class="QTabWidget" name="tabWidget">
+       <widget class="QTabWidget" name="tab_widget">
         <property name="tabPosition">
          <enum>QTabWidget::West</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>4</number>
         </property>
-        <widget class="QWidget" name="tabModels">
+        <widget class="QWidget" name="tab_models">
          <attribute name="title">
           <string>Models</string>
          </attribute>
         </widget>
-        <widget class="QWidget" name="tabView">
+        <widget class="QWidget" name="tab_view">
          <attribute name="title">
           <string>View</string>
          </attribute>
         </widget>
-        <widget class="QWidget" name="tabMesh">
+        <widget class="QWidget" name="tab_mesh">
          <attribute name="title">
           <string>Mesh</string>
          </attribute>
         </widget>
-        <widget class="QWidget" name="tabVolume">
+        <widget class="QWidget" name="tab_volume">
          <attribute name="title">
           <string>Volume</string>
          </attribute>
         </widget>
-        <widget class="QWidget" name="tabColor">
+        <widget class="QWidget" name="tab_color">
          <attribute name="title">
           <string>Color</string>
          </attribute>
@@ -86,7 +86,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menuBar">
+  <widget class="QMenuBar" name="menu_bar">
    <property name="geometry">
     <rect>
      <x>0</x>
@@ -101,7 +101,7 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <widget class="QMenu" name="menuFile">
+   <widget class="QMenu" name="menu_file">
     <property name="title">
      <string>File</string>
     </property>
@@ -110,7 +110,7 @@
     <addaction name="separator"/>
     <addaction name="action_exit"/>
    </widget>
-   <widget class="QMenu" name="menuHelp">
+   <widget class="QMenu" name="menu_help">
     <property name="title">
      <string>Help</string>
     </property>
@@ -119,30 +119,28 @@
     <addaction name="separator"/>
     <addaction name="action_about"/>
    </widget>
-   <widget class="QMenu" name="menuCreate">
+   <widget class="QMenu" name="menu_create">
     <property name="title">
      <string>Create</string>
     </property>
    </widget>
-   <widget class="QMenu" name="menuEdit">
+   <widget class="QMenu" name="menu_edit">
     <property name="title">
      <string>Edit</string>
     </property>
-    <addaction name="action_bound_cocone"/>
    </widget>
-   <widget class="QMenu" name="menuRendering">
+   <widget class="QMenu" name="menu_rendering">
     <property name="title">
      <string>Rendering</string>
     </property>
-    <addaction name="action_painter"/>
    </widget>
-   <addaction name="menuFile"/>
-   <addaction name="menuEdit"/>
-   <addaction name="menuCreate"/>
-   <addaction name="menuRendering"/>
-   <addaction name="menuHelp"/>
+   <addaction name="menu_file"/>
+   <addaction name="menu_edit"/>
+   <addaction name="menu_create"/>
+   <addaction name="menu_rendering"/>
+   <addaction name="menu_help"/>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QStatusBar" name="status_bar"/>
   <action name="action_load">
    <property name="text">
     <string>Open...</string>
@@ -171,16 +169,6 @@
   <action name="action_self_test">
    <property name="text">
     <string>Self-Test</string>
-   </property>
-  </action>
-  <action name="action_bound_cocone">
-   <property name="text">
-    <string>BoundCocone...</string>
-   </property>
-  </action>
-  <action name="action_painter">
-   <property name="text">
-    <string>Painter...</string>
    </property>
   </action>
  </widget>

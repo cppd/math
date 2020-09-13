@@ -17,27 +17,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "colors_widget.h"
+#include "model_tree.h"
 #include "threads.h"
 
+#include "../com/command_line.h"
 #include "../com/connection.h"
 
 #include <src/storage/repository.h>
+#include <src/view/interface.h>
 
+#include <QAction>
 #include <QMenu>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace gui
 {
 class Actions final
 {
+        const std::thread::id m_thread_id = std::this_thread::get_id();
+
         std::vector<Connection> m_connections;
-        WorkerThreads* m_threads;
 
 public:
-        Actions(QMenu* menu, const storage::Repository* repository, WorkerThreads* threads);
-
-        void connect_load_action(QAction* action);
-        void load_from_file(const std::string& file_name, bool use_object_selection_dialog);
+        Actions(const CommandLineOptions& options,
+                QAction* action_load,
+                QAction* action_export,
+                QAction* action_self_test,
+                QMenu* menu_create,
+                QMenu* menu_edit,
+                QMenu* menu_rendering,
+                const storage::Repository* repository,
+                WorkerThreads* threads,
+                view::View* view,
+                ModelTree* model_tree,
+                const ColorsWidget* colors);
 };
 }
