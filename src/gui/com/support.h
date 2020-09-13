@@ -77,6 +77,8 @@ public:
 
 QWidget* parent_for_dialog();
 
+std::string main_window_title();
+
 void set_widgets_enabled(QLayout* layout, bool v);
 
 QSplitter* find_widget_splitter(QObject* object, QWidget* widget);

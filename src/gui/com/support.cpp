@@ -78,6 +78,25 @@ QWidget* parent_for_dialog()
         return qApp->activeWindow();
 }
 
+std::string main_window_title()
+{
+        QMainWindow* main_window = nullptr;
+        for (QWidget* widget : qApp->topLevelWidgets())
+        {
+                QMainWindow* window = qobject_cast<QMainWindow*>(widget);
+                if (window)
+                {
+                        ASSERT(!main_window);
+                        main_window = window;
+                }
+        }
+        if (main_window)
+        {
+                return main_window->windowTitle().toStdString();
+        }
+        return std::string();
+}
+
 void set_widgets_enabled(QLayout* layout, bool v)
 {
         ASSERT(layout);
