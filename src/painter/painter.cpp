@@ -63,7 +63,7 @@ static_assert(std::is_floating_point_v<Color::DataType>);
 constexpr Color EMPTY_COLOR(-1e38);
 
 template <size_t N>
-class Pixels
+class Pixels final
 {
         using CounterType = std::uint_least16_t;
 
@@ -111,30 +111,32 @@ public:
         }
 };
 
-class Counter
+class Counter final
 {
-        int m_counter;
+        int m_counter = 0;
 
 public:
-        Counter(int v) : m_counter(v)
+        Counter() = default;
+
+        Counter& operator=(const Counter&) = delete;
+        Counter& operator=(Counter&&) = delete;
+        Counter(const Counter&) = delete;
+        Counter(Counter&&) = delete;
+
+        void reset()
         {
+                m_counter = 0;
         }
 
-        operator int&()
+        void inc()
+        {
+                ++m_counter;
+        }
+
+        int value() const
         {
                 return m_counter;
         }
-
-        Counter& operator=(int v)
-        {
-                m_counter = v;
-                return *this;
-        }
-
-        Counter& operator=(Counter&&) = delete;
-        Counter& operator=(const Counter&) = delete;
-        Counter(const Counter&) = delete;
-        Counter(Counter&&) = delete;
 };
 
 template <size_t N, typename T>
@@ -206,7 +208,7 @@ bool light_source_is_visible(
 {
         for (const GenericObject<N, T>* object : objects)
         {
-                ++(*ray_count);
+                ray_count->inc();
 
                 if (object_is_obstacle_to_light(object, ray, distance_to_light_source))
                 {
@@ -284,7 +286,7 @@ Color direct_diffuse_lighting(
                         // самого первого пересечения в предположении, что оно произошло с этой самой
                         // окрестностью точки.
 
-                        ++(*ray_count);
+                        ray_count->inc();
                         ray_to_light.move_along_dir(ray_offset);
                         T t;
                         if (!ray_intersection_distance(objects, ray_to_light, &t))
@@ -302,7 +304,7 @@ Color direct_diffuse_lighting(
                                 continue;
                         }
 
-                        ++(*ray_count);
+                        ray_count->inc();
                         Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
                         ray_from_light.move_along_dir(2 * ray_offset);
                         T t_reverse;
@@ -366,7 +368,7 @@ Color trace_path(
         Color::DataType color_level,
         const Ray<N, T>& ray)
 {
-        ++(*ray_count);
+        ray_count->inc();
 
         const Surface<N, T>* surface;
         T t;
@@ -491,10 +493,10 @@ void paint_pixels(
 {
         std::array<int_least16_t, N - 1> pixel;
 
-        Counter ray_count = 0;
-        Counter all_sample_count = 0;
+        Counter ray_count;
+        int sample_count = 0;
 
-        while (!(*stop) && paintbrush->next_pixel(ray_count, all_sample_count, &pixel))
+        while (!(*stop) && paintbrush->next_pixel(ray_count.value(), sample_count, &pixel))
         {
                 painter_notifier->painter_pixel_before(thread_number, pixel);
 
@@ -502,10 +504,10 @@ void paint_pixels(
 
                 sampler.generate(random_engine, samples);
 
-                ray_count = 0;
-                all_sample_count = samples->size();
-                Counter hit_sample_count = 0;
+                sample_count = samples->size();
+                int hit_sample_count = 0;
 
+                ray_count.reset();
                 Color color(0);
 
                 for (const Vector<N - 1, T>& sample_point : *samples)
@@ -526,8 +528,7 @@ void paint_pixels(
 
                 Color pixel_color;
                 float coverage;
-                pixels->add_color_and_samples(
-                        pixel, color, hit_sample_count, all_sample_count, &pixel_color, &coverage);
+                pixels->add_color_and_samples(pixel, color, hit_sample_count, sample_count, &pixel_color, &coverage);
 
                 painter_notifier->painter_pixel_after(thread_number, pixel, pixel_color, coverage);
         }
