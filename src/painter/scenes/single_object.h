@@ -40,7 +40,7 @@ class SingleObjectScene final : public PaintObjects<N, T>
         std::unique_ptr<const LightSource<N, T>> m_light_source;
 
         Color m_background_color;
-        std::optional<Color> m_background_light_source_color;
+        Color m_background_light_source_color;
 
         std::vector<const GenericObject<N, T>*> m_objects;
         std::vector<const LightSource<N, T>*> m_light_sources;
@@ -67,7 +67,7 @@ class SingleObjectScene final : public PaintObjects<N, T>
                 return m_background_color;
         }
 
-        const std::optional<Color>& background_light_source_color() const override
+        const Color& background_light_source_color() const override
         {
                 return m_background_light_source_color;
         }

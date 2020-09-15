@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/utility/random/engine.h>
 
+#include <optional>
 #include <random>
 #include <thread>
 #include <type_traits>
@@ -59,8 +60,6 @@ using PainterSampler = StratifiedJitteredSampler<N, T>;
 // using PainterSampler = LatinHypercubeSampler<N, T>;
 
 static_assert(std::is_floating_point_v<Color::DataType>);
-
-constexpr Color EMPTY_COLOR(-1e38);
 
 template <size_t N>
 class Pixels final
@@ -144,18 +143,21 @@ struct PaintData
 {
         const std::vector<const GenericObject<N, T>*>& objects;
         const std::vector<const LightSource<N, T>*>& light_sources;
-        const std::optional<Color> background_light_source_color;
+        const Color background_color;
+        const Color background_light_source_color;
         const T ray_offset;
         const bool smooth_normal;
 
         PaintData(
                 const std::vector<const GenericObject<N, T>*>& objects,
                 const std::vector<const LightSource<N, T>*>& light_sources,
-                const std::optional<Color>& background_light_source_color,
+                const Color& background_color,
+                const Color& background_light_source_color,
                 const T& ray_offset,
                 bool smooth_normal)
                 : objects(objects),
                   light_sources(light_sources),
+                  background_color(background_color),
                   background_light_source_color(background_light_source_color),
                   ray_offset(ray_offset),
                   smooth_normal(smooth_normal)
@@ -360,7 +362,7 @@ bool diffuse_weighted_ray(
 }
 
 template <size_t N, typename T>
-Color trace_path(
+std::optional<Color> trace_path(
         const PaintData<N, T>& paint_data,
         Counter* ray_count,
         PainterRandomEngine<T>& random_engine,
@@ -368,41 +370,33 @@ Color trace_path(
         Color::DataType color_level,
         const Ray<N, T>& ray)
 {
+        if (recursion_level > MAX_RECURSION_LEVEL)
+        {
+                return std::nullopt;
+        }
+
         ray_count->inc();
-
-        const Surface<N, T>* surface;
         T t;
+        const Surface<N, T>* surface;
         const void* intersection_data;
-
         if (!ray_intersection(paint_data.objects, ray, &t, &surface, &intersection_data))
         {
-                if (recursion_level > 0)
-                {
-                        return paint_data.background_light_source_color.value_or(Color(0));
-                }
-                return EMPTY_COLOR;
+                return std::nullopt;
         }
 
         Vector<N, T> point = ray.point(t);
         const SurfaceProperties surface_properties = surface->properties(point, intersection_data);
         Vector<N, T> geometric_normal = surface_properties.geometric_normal();
 
-        T dot_dir_and_geometric_normal = dot(ray.dir(), geometric_normal);
-
-        if (std::abs(dot_dir_and_geometric_normal) <= DOT_PRODUCT_EPSILON<T>)
-        {
-                return Color(0);
-        }
-
         bool smooth_normal = paint_data.smooth_normal && surface_properties.shading_normal().has_value();
 
         Vector<N, T> shading_normal = smooth_normal ? *surface_properties.shading_normal() : geometric_normal;
 
-        ASSERT(dot(geometric_normal, shading_normal) > DOT_PRODUCT_EPSILON<T>);
+        ASSERT(dot(geometric_normal, shading_normal) > 0);
 
         // Определять только по реальной нормали, так как видимая нормаль может
         // показать, что пересечение находится с другой стороны объекта.
-        if (dot_dir_and_geometric_normal > 0)
+        if (dot(ray.dir(), geometric_normal) > 0)
         {
                 geometric_normal = -geometric_normal;
                 shading_normal = -shading_normal;
@@ -421,7 +415,6 @@ Color trace_path(
                 Color surface_color = reflection * surface_properties.color();
 
                 Color::DataType new_color_level = color_level * surface_color.max_element();
-
                 if (new_color_level >= MIN_COLOR_LEVEL)
                 {
                         Color direct = direct_diffuse_lighting(
@@ -430,19 +423,16 @@ Color trace_path(
 
                         color += surface_color * direct;
 
-                        if (recursion_level <= MAX_RECURSION_LEVEL)
+                        Ray<N, T> new_ray;
+                        if (diffuse_weighted_ray(
+                                    paint_data, random_engine, point, shading_normal, geometric_normal, smooth_normal,
+                                    &new_ray))
                         {
-                                Ray<N, T> new_ray;
-                                if (diffuse_weighted_ray(
-                                            paint_data, random_engine, point, shading_normal, geometric_normal,
-                                            smooth_normal, &new_ray))
-                                {
-                                        Color diffuse = trace_path(
-                                                paint_data, ray_count, random_engine, recursion_level + 1,
-                                                new_color_level, new_ray);
+                                std::optional<Color> diffuse = trace_path(
+                                        paint_data, ray_count, random_engine, recursion_level + 1, new_color_level,
+                                        new_ray);
 
-                                        color += surface_color * diffuse;
-                                }
+                                color += surface_color * diffuse.value_or(paint_data.background_light_source_color);
                         }
                 }
         }
@@ -457,10 +447,10 @@ Color trace_path(
                         new_ray.set_org(point);
                         new_ray.move_along_dir(paint_data.ray_offset);
 
-                        Color transmitted = trace_path(
+                        std::optional<Color> transmitted = trace_path(
                                 paint_data, ray_count, random_engine, recursion_level + 1, new_color_level, new_ray);
 
-                        color += transmission * transmitted;
+                        color += transmission * transmitted.value_or(paint_data.background_color);
                 }
         }
 
@@ -517,11 +507,12 @@ void paint_pixels(
 
                         Ray<N, T> ray = projector.ray(screen_point + sample_point);
 
-                        Color c = trace_path(paint_data, &ray_count, random_engine, recursion_level, color_level, ray);
+                        std::optional<Color> sample_color =
+                                trace_path(paint_data, &ray_count, random_engine, recursion_level, color_level, ray);
 
-                        if (c != EMPTY_COLOR)
+                        if (sample_color)
                         {
-                                color += c;
+                                color += *sample_color;
                                 ++hit_sample_count;
                         }
                 }
@@ -671,8 +662,9 @@ void paint_threads(
         const PainterSampler<N - 1, T> sampler(samples_per_pixel);
 
         const PaintData paint_data(
-                paint_objects.objects(), paint_objects.light_sources(), paint_objects.background_light_source_color(),
-                compute_ray_offset(paint_objects.objects()), smooth_normal);
+                paint_objects.objects(), paint_objects.light_sources(), paint_objects.background_color(),
+                paint_objects.background_light_source_color(), compute_ray_offset(paint_objects.objects()),
+                smooth_normal);
 
         Pixels pixels(paint_objects.projector().screen_size());
 

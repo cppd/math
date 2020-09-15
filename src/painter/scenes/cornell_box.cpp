@@ -38,7 +38,7 @@ class CornellBoxScene : public PaintObjects<3, T>
         std::unique_ptr<VisibleSphericalProjector<3, T>> m_spherical_projector;
 
         Color m_background_color;
-        std::optional<Color> m_background_light_source_color;
+        Color m_background_light_source_color;
 
         std::unique_ptr<VisibleHyperplaneParallelotope<3, T>> m_rectangle_back;
         std::unique_ptr<VisibleHyperplaneParallelotope<3, T>> m_rectangle_top;
@@ -79,7 +79,7 @@ class CornellBoxScene : public PaintObjects<3, T>
                 return m_background_color;
         }
 
-        const std::optional<Color>& background_light_source_color() const override
+        const Color& background_light_source_color() const override
         {
                 return m_background_light_source_color;
         }
@@ -182,6 +182,7 @@ void CornellBoxScene<T>::create_scene(
         m_point_light = std::make_unique<VisiblePointLight<3, T>>(upper_center, Color(1), 1);
 
         m_background_color = colors::BLACK;
+        m_background_light_source_color = colors::BLACK;
 
         m_objects.push_back(m_lamp.get());
         // m_light_sources.push_back(m_constant_light.get());

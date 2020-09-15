@@ -194,6 +194,6 @@ struct PaintObjects
         virtual const Projector<N, T>& projector() const = 0;
 
         virtual const Color& background_color() const = 0;
-        virtual const std::optional<Color>& background_light_source_color() const = 0;
+        virtual const Color& background_light_source_color() const = 0;
 };
 }
