@@ -31,7 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/time.h>
-#include <src/utility/file/file.h>
 #include <src/utility/file/sys.h>
 #include <src/utility/random/engine.h>
 
@@ -39,6 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <complex>
 #include <cstdio>
+#include <fstream>
 #include <random>
 #include <sstream>
 #include <string>
@@ -96,12 +96,13 @@ void load_data(const std::string& file_name, int* n1, int* n2, std::vector<compl
 {
         constexpr int MAX_DIMENSION_SIZE = 1e9;
 
-        CFile f(file_name, "r");
+        std::fstream file(file_name);
 
         int v1;
         int v2;
 
-        if (2 != fscanf(f, "%d%d", &v1, &v2))
+        file >> v1 >> v2;
+        if (!file)
         {
                 error("Data dimensions read error");
         }
@@ -125,7 +126,8 @@ void load_data(const std::string& file_name, int* n1, int* n2, std::vector<compl
         {
                 double real;
                 double imag;
-                if (2 != fscanf(f, "%lf%lf", &real, &imag))
+                file >> real >> imag;
+                if (!file)
                 {
                         error("Error read number № " + to_string(i));
                 }
@@ -137,6 +139,20 @@ void load_data(const std::string& file_name, int* n1, int* n2, std::vector<compl
         *data = std::move(x);
 }
 
+#define FPRINTF(file, format, ...)                                                                         \
+        do                                                                                                 \
+        {                                                                                                  \
+                constexpr int FPRINTF_BUFFER_SIZE = 100;                                                   \
+                std::array<char, FPRINTF_BUFFER_SIZE> fprintf_buffer;                                      \
+                int fprintf_result = std::snprintf(                                                        \
+                        fprintf_buffer.data(), fprintf_buffer.size(), (format)__VA_OPT__(, ) __VA_ARGS__); \
+                if (fprintf_result < 0 || fprintf_result >= FPRINTF_BUFFER_SIZE)                           \
+                {                                                                                          \
+                        error("printf buffer error");                                                      \
+                }                                                                                          \
+                (file) << fprintf_buffer.data();                                                           \
+        } while (false)
+
 void save_data(const std::string& file_name, const std::vector<complex>& x)
 {
         if (file_name.empty())
@@ -145,13 +161,13 @@ void save_data(const std::string& file_name, const std::vector<complex>& x)
                 return;
         }
 
-        CFile f(file_name, "w");
+        std::ofstream file(file_name);
 
         for (const complex& c : x)
         {
                 double r = c.real();
                 double i = c.imag();
-                fprintf(f, "%18.15f %18.15f\n", r, i);
+                FPRINTF(file, "%18.15f %18.15f\n", r, i);
         }
 }
 
@@ -167,15 +183,15 @@ void generate_random_data(const std::string& file_name, int n1, int n2)
         std::mt19937_64 gen((static_cast<long long>(n1) << 32) + n2);
         std::uniform_real_distribution<double> urd(-1.0, 1.0);
 
-        CFile f(file_name, "w");
+        std::ofstream file(file_name);
 
-        fprintf(f, "%ld %ld\n", static_cast<long>(n1), static_cast<long>(n2));
+        FPRINTF(file, "%ld %ld\n", static_cast<long>(n1), static_cast<long>(n2));
 
         for (int i = 0; i < n1 * n2; ++i)
         {
                 double real = urd(gen);
                 double imag = urd(gen);
-                fprintf(f, "%18.15f %18.15f\n", real, imag);
+                FPRINTF(file, "%18.15f %18.15f\n", real, imag);
         }
 }
 
