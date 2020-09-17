@@ -37,7 +37,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cmath>
 #include <complex>
-#include <cstdio>
 #include <fstream>
 #include <random>
 #include <sstream>
@@ -92,14 +91,15 @@ void compare(
 }
 #endif
 
-void load_data(const std::string& file_name, int* n1, int* n2, std::vector<complex>* data)
+template <typename T>
+void load_data(const std::string& file_name, int* n1, int* n2, std::vector<std::complex<T>>* data)
 {
         constexpr int MAX_DIMENSION_SIZE = 1e9;
 
         std::fstream file(file_name);
 
-        int v1;
-        int v2;
+        long long v1;
+        long long v2;
 
         file >> v1 >> v2;
         if (!file)
@@ -120,18 +120,18 @@ void load_data(const std::string& file_name, int* n1, int* n2, std::vector<compl
 
         LOG("Loading " + to_string(v1) + "x" + to_string(v2) + ", total number count " + to_string(count));
 
-        std::vector<complex> x(count);
+        std::vector<std::complex<T>> x(count);
 
         for (long long i = 0; i < count; ++i)
         {
-                double real;
-                double imag;
+                T real;
+                T imag;
                 file >> real >> imag;
                 if (!file)
                 {
                         error("Error read number № " + to_string(i));
                 }
-                x[i] = complex(real, imag);
+                x[i] = std::complex<T>(real, imag);
         }
 
         *n1 = v1;
@@ -139,21 +139,8 @@ void load_data(const std::string& file_name, int* n1, int* n2, std::vector<compl
         *data = std::move(x);
 }
 
-#define FPRINTF(file, format, ...)                                                                         \
-        do                                                                                                 \
-        {                                                                                                  \
-                constexpr int FPRINTF_BUFFER_SIZE = 100;                                                   \
-                std::array<char, FPRINTF_BUFFER_SIZE> fprintf_buffer;                                      \
-                int fprintf_result = std::snprintf(                                                        \
-                        fprintf_buffer.data(), fprintf_buffer.size(), (format)__VA_OPT__(, ) __VA_ARGS__); \
-                if (fprintf_result < 0 || fprintf_result >= FPRINTF_BUFFER_SIZE)                           \
-                {                                                                                          \
-                        error("printf buffer error");                                                      \
-                }                                                                                          \
-                (file) << fprintf_buffer.data();                                                           \
-        } while (false)
-
-void save_data(const std::string& file_name, const std::vector<complex>& x)
+template <typename T>
+void save_data(const std::string& file_name, const std::vector<std::complex<T>>& x)
 {
         if (file_name.empty())
         {
@@ -163,14 +150,18 @@ void save_data(const std::string& file_name, const std::vector<complex>& x)
 
         std::ofstream file(file_name);
 
-        for (const complex& c : x)
+        file << std::scientific;
+        file << std::setprecision(limits<T>::max_digits10);
+        file << std::showpos;
+        file << std::showpoint;
+
+        for (const std::complex<T>& c : x)
         {
-                double r = c.real();
-                double i = c.imag();
-                FPRINTF(file, "%18.15f %18.15f\n", r, i);
+                file << c.real() << ' ' << c.imag() << '\n';
         }
 }
 
+template <typename T>
 void generate_random_data(const std::string& file_name, int n1, int n2)
 {
         if (n1 < 1 || n2 < 1)
@@ -180,18 +171,21 @@ void generate_random_data(const std::string& file_name, int n1, int n2)
 
         LOG("Generating " + to_string(n1) + "x" + to_string(n2) + ", total number count " + to_string(n1 * n2));
 
-        std::mt19937_64 gen((static_cast<long long>(n1) << 32) + n2);
-        std::uniform_real_distribution<double> urd(-1.0, 1.0);
+        std::mt19937_64 gen((static_cast<unsigned long long>(n1) << 32) + n2);
+        std::uniform_real_distribution<T> urd(-1, 1);
 
         std::ofstream file(file_name);
 
-        FPRINTF(file, "%ld %ld\n", static_cast<long>(n1), static_cast<long>(n2));
+        file << n1 << ' ' << n2 << '\n';
+
+        file << std::scientific;
+        file << std::setprecision(limits<T>::max_digits10);
+        file << std::showpos;
+        file << std::showpoint;
 
         for (int i = 0; i < n1 * n2; ++i)
         {
-                double real = urd(gen);
-                double imag = urd(gen);
-                FPRINTF(file, "%18.15f %18.15f\n", real, imag);
+                file << urd(gen) << ' ' << urd(gen) << '\n';
         }
 }
 
@@ -379,7 +373,7 @@ void random_data_test(ComputeVector* dft, const std::array<int, 2>& dimensions, 
         const std::string inverse_cuda_file_name = tmp_dir + "/dft_output_inverse_cuda.txt";
         const std::string inverse_fftw_file_name = tmp_dir + "/dft_output_inverse_fftw.txt";
 
-        generate_random_data(input_file_name, dimensions[0], dimensions[1]);
+        generate_random_data<complex::value_type>(input_file_name, dimensions[0], dimensions[1]);
 
         int n1;
         int n2;
