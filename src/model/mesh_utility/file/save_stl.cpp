@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "save_stl.h"
 
-#include "data_write.h"
-
 #include "../bounding_box.h"
 #include "../file_info.h"
 #include "../normalize.h"
@@ -29,11 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/orthogonal.h>
-#include <src/utility/file/file.h>
 #include <src/utility/file/sys.h>
 #include <src/utility/string/str.h>
 
 #include <bit>
+#include <fstream>
 
 namespace mesh::file
 {
@@ -68,17 +66,17 @@ std::string comment_to_solid_name(const std::string_view& comment)
         return "s";
 }
 
-void write_begin_ascii(const CFile& file, const std::string& solid_name)
+void write_begin_ascii(std::ostream& file, const std::string& solid_name)
 {
-        std::fprintf(file, "%s %s\n", SOLID, solid_name.c_str());
+        file << SOLID << ' ' << solid_name << '\n';
 }
 
-void write_end_ascii(const CFile& file, const std::string& solid_name)
+void write_end_ascii(std::ostream& file, const std::string& solid_name)
 {
-        std::fprintf(file, "%s %s\n", END_SOLID, solid_name.c_str());
+        file << END_SOLID << ' ' << solid_name << '\n';
 }
 
-void write_begin_binary(const CFile& file, unsigned facet_count)
+void write_begin_binary(std::ostream& file, unsigned facet_count)
 {
         struct Begin
         {
@@ -89,10 +87,10 @@ void write_begin_binary(const CFile& file, unsigned facet_count)
         Begin begin;
         std::memset(begin.header.data(), 0, begin.header.size());
         begin.number_of_triangles = facet_count;
-        std::fwrite(&begin, sizeof(begin), 1, file);
+        file.write(reinterpret_cast<const char*>(&begin), sizeof(begin));
 }
 
-void write_end_binary(const CFile& file)
+void write_end_binary(std::ostream& file)
 {
         struct End
         {
@@ -101,12 +99,12 @@ void write_end_binary(const CFile& file)
         static_assert(sizeof(End) == 2 * sizeof(uint8_t));
         End end;
         end.attribute_byte_count = 0;
-        std::fwrite(&end, sizeof(end), 1, file);
+        file.write(reinterpret_cast<const char*>(&end), sizeof(end));
 }
 
 template <bool ascii, size_t N>
 void write_facet(
-        const CFile& file,
+        std::ostream& file,
         const Vector<N, double>& normal,
         const std::array<int, N>& indices,
         const std::vector<Vector<N, float>>& vertices)
@@ -119,34 +117,40 @@ void write_facet(
 
         if (ascii)
         {
-                std::fprintf(file, "%s", FACET_NORMAL);
-                write_vector(file, n);
-                std::fprintf(file, "\n");
-
-                std::fprintf(file, "%s\n", OUTER_LOOP);
+                file << FACET_NORMAL;
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        std::fprintf(file, "%s", VERTEX);
-                        write_vector(file, vertices[indices[i]]);
-                        std::fprintf(file, "\n");
+                        file << ' ' << n[i];
                 }
-                std::fprintf(file, "%s\n", END_LOOP);
-                std::fprintf(file, "%s\n", END_FACET);
+                file << '\n';
+
+                file << OUTER_LOOP << '\n';
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        file << VERTEX;
+                        for (unsigned j = 0; j < N; ++j)
+                        {
+                                file << ' ' << vertices[indices[i]][j];
+                        }
+                        file << '\n';
+                }
+                file << END_LOOP << '\n';
+                file << END_FACET << '\n';
         }
         else
         {
                 static_assert(sizeof(n) == N * sizeof(float));
-                std::fwrite(&n, sizeof(n), 1, file);
+                file.write(reinterpret_cast<const char*>(&n), sizeof(n));
                 for (unsigned i = 0; i < N; ++i)
                 {
                         static_assert(sizeof(vertices[indices[i]]) == N * sizeof(float));
-                        std::fwrite(&vertices[indices[i]], sizeof(vertices[indices[i]]), 1, file);
+                        file.write(reinterpret_cast<const char*>(&vertices[indices[i]]), sizeof(vertices[indices[i]]));
                 }
         }
 }
 
 template <bool ascii, size_t N>
-void write_facets(const CFile& file, const Mesh<N>& mesh, const std::vector<Vector<N, float>>& vertices)
+void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vector<N, float>>& vertices)
 {
         // Вершины граней надо записывать в трёхмерный STL таким образом,
         // чтобы при обходе против часовой стрелки перпендикуляр к грани
@@ -195,7 +199,7 @@ void write_facets(const CFile& file, const Mesh<N>& mesh, const std::vector<Vect
 }
 
 template <bool ascii, size_t N>
-void write_facets(const CFile& file, const Mesh<N>& mesh)
+void write_facets(std::ostream& file, const Mesh<N>& mesh)
 {
         if (NORMALIZE_VERTEX_COORDINATES)
         {
@@ -258,7 +262,7 @@ void check_facets(const Mesh<N>& mesh)
 }
 
 template <size_t N>
-void write(bool ascii, const CFile& file, const Mesh<N>& mesh, const std::string_view& comment)
+void write(bool ascii, std::ostream& file, const Mesh<N>& mesh, const std::string_view& comment)
 {
         if (ascii)
         {
@@ -289,11 +293,29 @@ std::string save_to_stl_file(
 
         std::string full_name = file_name_with_extension<N>(file_name);
 
-        CFile file(full_name, "w");
+        std::ofstream file(full_name);
+
+        if (!file)
+        {
+                error("Error opening file for writing " + full_name);
+        }
+
+        if (ascii_format)
+        {
+                file << std::scientific;
+                file << std::setprecision(limits<float>::max_digits10);
+                file << std::showpoint;
+                file << std::showpos;
+        }
 
         double start_time = time_in_seconds();
 
         write(ascii_format, file, mesh, comment);
+
+        if (!file)
+        {
+                error("Error writing to file " + full_name);
+        }
 
         LOG(stl_type_name(N) + " saved, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 
