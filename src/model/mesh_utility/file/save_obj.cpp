@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "save_obj.h"
 
-#include "data_write.h"
-
 #include "../bounding_box.h"
 #include "../file_info.h"
 #include "../normalize.h"
@@ -28,9 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
-#include <src/utility/file/file.h>
 #include <src/utility/file/sys.h>
 #include <src/utility/string/str.h>
+
+#include <fstream>
 
 namespace mesh::file
 {
@@ -39,12 +38,12 @@ namespace
 constexpr bool NORMALIZE_VERTEX_COORDINATES = false;
 
 constexpr const char* OBJ_comment_and_space = "# ";
-constexpr const char* OBJ_v = "v";
-constexpr const char* OBJ_vn = "vn";
-constexpr const char* OBJ_f = "f";
-constexpr const char* OBJ_l = "l";
+constexpr char OBJ_v = 'v';
+constexpr char OBJ_n = 'n';
+constexpr char OBJ_f = 'f';
+constexpr char OBJ_l = 'l';
 
-void write_comment(const CFile& file, const std::string_view& comment)
+void write_comment(std::ostream& file, const std::string_view& comment)
 {
         if (comment.empty())
         {
@@ -68,66 +67,68 @@ void write_comment(const CFile& file, const std::string_view& comment)
         }
         str += '\n';
 
-        fprintf(file, "%s", str.c_str());
+        file << str;
 }
 
 template <size_t N>
-void write_vertex(const CFile& file, const Vector<N, float>& vertex)
+void write_vertex(std::ostream& file, const Vector<N, float>& vertex)
 {
-        fprintf(file, "%s", OBJ_v);
-        write_vector(file, vertex);
-        fprintf(file, "\n");
+        file << OBJ_v;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                file << ' ' << vertex[i];
+        }
+        file << '\n';
 }
 
 template <size_t N>
-void write_normal(const CFile& file, const Vector<N, float>& normal)
+void write_normal(std::ostream& file, const Vector<N, float>& normal)
 {
-        fprintf(file, "%s", OBJ_vn);
-        write_vector(file, normal);
-        fprintf(file, "\n");
+        file << OBJ_v << OBJ_n;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                file << ' ' << normal[i];
+        }
+        file << '\n';
 }
 
 template <size_t N>
-void write_face(const CFile& file, const std::array<int, N>& vertices)
+void write_face(std::ostream& file, const std::array<int, N>& vertices)
 {
-        fprintf(file, "%s", OBJ_f);
+        file << OBJ_f;
         for (unsigned i = 0; i < N; ++i)
         {
                 // В файлах OBJ номера начинаются с 1
-                long v = vertices[i] + 1;
-                fprintf(file, " %ld", v);
+                file << ' ' << (vertices[i] + 1);
         }
-        fprintf(file, "\n");
+        file << '\n';
 }
 
 template <size_t N>
-void write_face(const CFile& file, const std::array<int, N>& vertices, const std::array<int, N>& normals)
+void write_face(std::ostream& file, const std::array<int, N>& vertices, const std::array<int, N>& normals)
 {
-        fprintf(file, "%s", OBJ_f);
+        file << OBJ_f;
         for (unsigned i = 0; i < N; ++i)
         {
                 // В файлах OBJ номера начинаются с 1
-                long v = vertices[i] + 1;
-                long n = normals[i] + 1;
-                fprintf(file, " %ld//%ld", v, n);
+                file << ' ' << (vertices[i] + 1) << "//" << (normals[i] + 1);
         }
-        fprintf(file, "\n");
+        file << '\n';
 }
 
-void write_line(const CFile& file, const std::array<int, 2>& vertices)
+void write_line(std::ostream& file, const std::array<int, 2>& vertices)
 {
-        fprintf(file, "%s", OBJ_l);
+        file << OBJ_l;
         for (unsigned i = 0; i < 2; ++i)
         {
                 // В файлах OBJ номера начинаются с 1
-                long v = vertices[i] + 1;
-                fprintf(file, " %ld", v);
+                file << ' ' << vertices[i] + 1;
         }
-        fprintf(file, "\n");
+        file << '\n';
 }
 
 template <size_t N>
-void write_vertices(const CFile& file, const std::vector<Vector<N, float>>& vertices)
+void write_vertices(std::ostream& file, const std::vector<Vector<N, float>>& vertices)
 {
         for (const Vector<N, float>& v : vertices)
         {
@@ -136,7 +137,7 @@ void write_vertices(const CFile& file, const std::vector<Vector<N, float>>& vert
 }
 
 template <size_t N>
-void write_vertices(const CFile& file, const Mesh<N>& mesh)
+void write_vertices(std::ostream& file, const Mesh<N>& mesh)
 {
         if (NORMALIZE_VERTEX_COORDINATES)
         {
@@ -154,7 +155,7 @@ void write_vertices(const CFile& file, const Mesh<N>& mesh)
 }
 
 template <size_t N>
-void write_normals(const CFile& file, const Mesh<N>& mesh)
+void write_normals(std::ostream& file, const Mesh<N>& mesh)
 {
         for (const Vector<N, float>& vn : mesh.normals)
         {
@@ -173,7 +174,7 @@ void write_normals(const CFile& file, const Mesh<N>& mesh)
 }
 
 template <size_t N>
-void write_facets(const CFile& file, const Mesh<N>& mesh)
+void write_facets(std::ostream& file, const Mesh<N>& mesh)
 {
         // Вершины граней надо записывать в трёхмерный OBJ таким образом,
         // чтобы при обходе против часовой стрелки перпендикуляр к грани
@@ -221,7 +222,7 @@ void write_facets(const CFile& file, const Mesh<N>& mesh)
 }
 
 template <size_t N>
-void write_lines(const CFile& file, const Mesh<N>& mesh)
+void write_lines(std::ostream& file, const Mesh<N>& mesh)
 {
         for (const typename Mesh<N>::Line& l : mesh.lines)
         {
@@ -289,15 +290,34 @@ std::string save_to_obj_file(const Mesh<N>& mesh, const std::string& file_name, 
 
         std::string full_name = file_name_with_extension<N>(file_name);
 
-        CFile file(full_name, "w");
+        std::ofstream file(full_name);
+
+        if (!file)
+        {
+                error("Error opening file for writing " + full_name);
+        }
+
+        file << std::scientific;
+        file << std::setprecision(limits<float>::max_digits10);
+        file << std::showpoint;
 
         double start_time = time_in_seconds();
 
+        file << std::noshowpos;
         write_comment(file, comment);
+
+        file << std::showpos;
         write_vertices(file, mesh);
         write_normals(file, mesh);
+
+        file << std::noshowpos;
         write_facets(file, mesh);
         write_lines(file, mesh);
+
+        if (!file)
+        {
+                error("Error writing to file " + full_name);
+        }
 
         LOG(obj_type_name(N) + " saved, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 
