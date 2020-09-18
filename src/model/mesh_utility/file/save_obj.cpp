@@ -159,17 +159,12 @@ void write_normals(std::ostream& file, const Mesh<N>& mesh)
 {
         for (const Vector<N, float>& vn : mesh.normals)
         {
-                Vector<N, double> normal = to_vector<double>(vn);
-                double len = normal.norm();
-
-                if (len == 0)
+                Vector<N, float> normal = to_vector<float>(to_vector<double>(vn).normalized());
+                if (!is_finite(normal))
                 {
-                        error("Object zero length normal");
+                        normal = Vector<N, float>(0);
                 }
-
-                normal /= len;
-
-                write_normal(file, to_vector<float>(normal));
+                write_normal(file, normal);
         }
 }
 
