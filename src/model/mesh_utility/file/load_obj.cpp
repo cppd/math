@@ -722,6 +722,10 @@ void read_obj_stage_one(
                                 Vector<N, float> v;
                                 read_float(&data[lp.second_b], &v);
                                 lp.v = v.normalized();
+                                if (!is_finite(lp.v))
+                                {
+                                        lp.v = Vector<N, float>(0);
+                                }
 
                                 ++((*counters)[thread_num].normal);
                         }
