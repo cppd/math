@@ -57,6 +57,8 @@ constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
 
 constexpr VkIndexType VULKAN_INDEX_TYPE = VK_INDEX_TYPE_UINT32;
 
+constexpr float LIMIT_COSINE = 0.7; // 0.7 немного больше 45 градусов
+
 using IndexType = std::conditional_t<
         VULKAN_INDEX_TYPE == VK_INDEX_TYPE_UINT32,
         uint32_t,
@@ -176,22 +178,39 @@ void load_vertices(
                                 p[i] = mesh.vertices[f.vertices[i]];
                         }
 
+                        const vec3f geometric_normal = cross(p[1] - p[0], p[2] - p[0]).normalized();
+                        if (!is_finite(geometric_normal))
+                        {
+                                error("Face unit orthogonal vector is not finite for the face with vertices ("
+                                      + to_string(p[0]) + ", " + to_string(p[1]) + ", " + to_string(p[2]) + ")");
+                        }
                         if (f.has_normal)
                         {
-                                for (int i = 0; i < 3; ++i)
+                                std::array<float, 3> dots;
+                                for (unsigned i = 0; i < 3; ++i)
                                 {
-                                        n[i] = mesh.normals[f.normals[i]];
+                                        dots[i] = dot(mesh.normals[f.normals[i]], geometric_normal);
+                                }
+                                if (std::all_of(dots.cbegin(), dots.cend(), [](float d) {
+                                            static_assert(LIMIT_COSINE > 0);
+                                            return is_finite(d) && std::abs(d) >= LIMIT_COSINE;
+                                    }))
+                                {
+                                        for (int i = 0; i < 3; ++i)
+                                        {
+                                                n[i] = mesh.normals[f.normals[i]];
+                                        }
+                                }
+                                else
+                                {
+                                        for (int i = 0; i < 3; ++i)
+                                        {
+                                                n[i] = geometric_normal;
+                                        }
                                 }
                         }
                         else
                         {
-                                vec3f geometric_normal = cross(p[1] - p[0], p[2] - p[0]).normalized();
-                                if (!is_finite(geometric_normal))
-                                {
-                                        error("Face unit orthogonal vector is not finite for the face with vertices ("
-                                              + to_string(p[0]) + ", " + to_string(p[1]) + ", " + to_string(p[2])
-                                              + ")");
-                                }
                                 for (int i = 0; i < 3; ++i)
                                 {
                                         n[i] = geometric_normal;
