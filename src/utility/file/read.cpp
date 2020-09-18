@@ -17,12 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "read.h"
 
+#include "path.h"
+
 #include <src/com/error.h>
 
 #include <fstream>
 
 template <typename T>
-void read_text_file(const std::string& file_name, T* s)
+void read_text_file(const std::filesystem::path& file_name, T* s)
 {
         static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::vector<char>>);
 
@@ -30,7 +32,7 @@ void read_text_file(const std::string& file_name, T* s)
 
         if (!f)
         {
-                error("Failed to open file " + file_name);
+                error("Failed to open file " + generic_utf8_filename(file_name));
         }
 
         f.seekg(0, std::ios_base::end);
@@ -57,7 +59,7 @@ void read_text_file(const std::string& file_name, T* s)
 }
 
 template <typename T>
-void read_binary_file(const std::string& file_name, T* s)
+void read_binary_file(const std::filesystem::path& file_name, T* s)
 {
         static_assert(sizeof(typename T::value_type) == 1);
 
@@ -65,7 +67,7 @@ void read_binary_file(const std::string& file_name, T* s)
 
         if (!f)
         {
-                error("Failed to open file " + file_name);
+                error("Failed to open file " + generic_utf8_filename(file_name));
         }
 
         f.seekg(0, std::ios_base::end);
@@ -82,8 +84,8 @@ void read_binary_file(const std::string& file_name, T* s)
         f.read(s->data(), length);
 }
 
-template void read_text_file(const std::string& file_name, std::string* s);
-template void read_text_file(const std::string& file_name, std::vector<char>* s);
+template void read_text_file(const std::filesystem::path& file_name, std::string* s);
+template void read_text_file(const std::filesystem::path& file_name, std::vector<char>* s);
 
-template void read_binary_file(const std::string& file_name, std::string* s);
-template void read_binary_file(const std::string& file_name, std::vector<char>* s);
+template void read_binary_file(const std::filesystem::path& file_name, std::string* s);
+template void read_binary_file(const std::filesystem::path& file_name, std::vector<char>* s);

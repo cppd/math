@@ -31,12 +31,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/time.h>
-#include <src/utility/file/sys.h>
+#include <src/utility/file/path.h>
 #include <src/utility/random/engine.h>
 
 #include <array>
 #include <cmath>
 #include <complex>
+#include <filesystem>
 #include <fstream>
 #include <random>
 #include <sstream>
@@ -92,7 +93,7 @@ void compare(
 #endif
 
 template <typename T>
-void load_data(const std::string& file_name, int* n1, int* n2, std::vector<std::complex<T>>* data)
+void load_data(const std::filesystem::path& file_name, int* n1, int* n2, std::vector<std::complex<T>>* data)
 {
         constexpr int MAX_DIMENSION_SIZE = 1e9;
 
@@ -140,7 +141,7 @@ void load_data(const std::string& file_name, int* n1, int* n2, std::vector<std::
 }
 
 template <typename T>
-void save_data(const std::string& file_name, const std::vector<std::complex<T>>& x)
+void save_data(const std::filesystem::path& file_name, const std::vector<std::complex<T>>& x)
 {
         if (file_name.empty())
         {
@@ -162,7 +163,7 @@ void save_data(const std::string& file_name, const std::vector<std::complex<T>>&
 }
 
 template <typename T>
-void generate_random_data(const std::string& file_name, int n1, int n2)
+void generate_random_data(const std::filesystem::path& file_name, int n1, int n2)
 {
         if (n1 < 1 || n2 < 1)
         {
@@ -357,21 +358,26 @@ void constant_data_test(ComputeVector* dft, ProgressRatio* progress)
         LOG("---\nDFT check passed");
 }
 
+std::filesystem::path make_path(const std::filesystem::path& tmp, const std::string_view& name)
+{
+        return tmp / path_from_utf8(name);
+}
+
 void random_data_test(ComputeVector* dft, const std::array<int, 2>& dimensions, ProgressRatio* progress)
 {
         LOG("\n----- Random Data DFT Tests -----");
 
-        const std::string tmp_dir = temp_directory();
+        const std::filesystem::path tmp_dir = std::filesystem::temp_directory_path();
 
-        const std::string input_file_name = tmp_dir + "/dft_input.txt";
+        const std::filesystem::path input_file_name = make_path(tmp_dir, "dft_input.txt");
 
-        const std::string vulkan_file_name = tmp_dir + "/dft_output_vulkan.txt";
-        const std::string cuda_file_name = tmp_dir + "/dft_output_cuda.txt";
-        const std::string fftw_file_name = tmp_dir + "/dft_output_fftw.txt";
+        const std::filesystem::path vulkan_file_name = make_path(tmp_dir, "dft_output_vulkan.txt");
+        const std::filesystem::path cuda_file_name = make_path(tmp_dir, "dft_output_cuda.txt");
+        const std::filesystem::path fftw_file_name = make_path(tmp_dir, "dft_output_fftw.txt");
 
-        const std::string inverse_vulkan_file_name = tmp_dir + "/dft_output_inverse_vulkan.txt";
-        const std::string inverse_cuda_file_name = tmp_dir + "/dft_output_inverse_cuda.txt";
-        const std::string inverse_fftw_file_name = tmp_dir + "/dft_output_inverse_fftw.txt";
+        const std::filesystem::path inverse_vulkan_file_name = make_path(tmp_dir, "dft_output_inverse_vulkan.txt");
+        const std::filesystem::path inverse_cuda_file_name = make_path(tmp_dir, "dft_output_inverse_cuda.txt");
+        const std::filesystem::path inverse_fftw_file_name = make_path(tmp_dir, "dft_output_inverse_fftw.txt");
 
         generate_random_data<complex::value_type>(input_file_name, dimensions[0], dimensions[1]);
 

@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
-#include <src/utility/file/sys.h>
+#include <src/utility/file/path.h>
 
 namespace mesh
 {
@@ -70,14 +70,14 @@ std::vector<FileFormat> load_formats(const std::set<unsigned>& dimensions)
 //
 
 template <size_t N>
-std::unique_ptr<Mesh<N>> load(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> load(const std::filesystem::path& file_name, ProgressRatio* progress)
 {
         auto [dimension, file_type] = file::file_dimension_and_type(file_name);
 
         if (dimension != static_cast<int>(N))
         {
                 error("Requested file dimension " + to_string(N) + ", detected file dimension " + to_string(dimension)
-                      + ", file " + file_name);
+                      + ", file " + generic_utf8_filename(file_name));
         }
 
         switch (file_type)
@@ -94,45 +94,48 @@ std::unique_ptr<Mesh<N>> load(const std::string& file_name, ProgressRatio* progr
 }
 
 template <size_t N>
-std::string save_to_obj(const Mesh<N>& mesh, const std::string& file_name, const std::string_view& comment)
+std::filesystem::path save_to_obj(
+        const Mesh<N>& mesh,
+        const std::filesystem::path& file_name,
+        const std::string_view& comment)
 {
-        std::string ext = file_extension(file_name);
-        if (!is_obj_file_extension(N, ext))
+        if (!file_has_obj_extension(N, file_name))
         {
-                error("Not OBJ file extension \"" + ext + "\" for saving to OBJ format, " + space_name(N));
+                error("Not OBJ file extension \"" + generic_utf8_filename(file_name) + "\" for saving to OBJ format, "
+                      + space_name(N));
         }
         return file::save_to_obj_file(mesh, file_name, comment);
 }
 
 template <size_t N>
-std::string save_to_stl(
+std::filesystem::path save_to_stl(
         const Mesh<N>& mesh,
-        const std::string& file_name,
+        const std::filesystem::path& file_name,
         const std::string_view& comment,
         bool ascii_format)
 {
-        std::string ext = file_extension(file_name);
-        if (!is_stl_file_extension(N, ext))
+        if (!file_has_stl_extension(N, file_name))
         {
-                error("Not STL file extension \"" + ext + "\" for saving to STL format, " + space_name(N));
+                error("Not STL file extension \"" + generic_utf8_filename(file_name) + "\" for saving to STL format, "
+                      + space_name(N));
         }
         return file::save_to_stl_file(mesh, file_name, comment, ascii_format);
 }
 
 //
 
-template std::unique_ptr<Mesh<3>> load(const std::string&, ProgressRatio*);
-template std::unique_ptr<Mesh<4>> load(const std::string&, ProgressRatio*);
-template std::unique_ptr<Mesh<5>> load(const std::string&, ProgressRatio*);
-template std::unique_ptr<Mesh<6>> load(const std::string&, ProgressRatio*);
+template std::unique_ptr<Mesh<3>> load(const std::filesystem::path&, ProgressRatio*);
+template std::unique_ptr<Mesh<4>> load(const std::filesystem::path&, ProgressRatio*);
+template std::unique_ptr<Mesh<5>> load(const std::filesystem::path&, ProgressRatio*);
+template std::unique_ptr<Mesh<6>> load(const std::filesystem::path&, ProgressRatio*);
 
-template std::string save_to_obj(const Mesh<3>&, const std::string&, const std::string_view&);
-template std::string save_to_obj(const Mesh<4>&, const std::string&, const std::string_view&);
-template std::string save_to_obj(const Mesh<5>&, const std::string&, const std::string_view&);
-template std::string save_to_obj(const Mesh<6>&, const std::string&, const std::string_view&);
+template std::filesystem::path save_to_obj(const Mesh<3>&, const std::filesystem::path&, const std::string_view&);
+template std::filesystem::path save_to_obj(const Mesh<4>&, const std::filesystem::path&, const std::string_view&);
+template std::filesystem::path save_to_obj(const Mesh<5>&, const std::filesystem::path&, const std::string_view&);
+template std::filesystem::path save_to_obj(const Mesh<6>&, const std::filesystem::path&, const std::string_view&);
 
-template std::string save_to_stl(const Mesh<3>&, const std::string&, const std::string_view&, bool);
-template std::string save_to_stl(const Mesh<4>&, const std::string&, const std::string_view&, bool);
-template std::string save_to_stl(const Mesh<5>&, const std::string&, const std::string_view&, bool);
-template std::string save_to_stl(const Mesh<6>&, const std::string&, const std::string_view&, bool);
+template std::filesystem::path save_to_stl(const Mesh<3>&, const std::filesystem::path&, const std::string_view&, bool);
+template std::filesystem::path save_to_stl(const Mesh<4>&, const std::filesystem::path&, const std::string_view&, bool);
+template std::filesystem::path save_to_stl(const Mesh<5>&, const std::filesystem::path&, const std::string_view&, bool);
+template std::filesystem::path save_to_stl(const Mesh<6>&, const std::filesystem::path&, const std::string_view&, bool);
 }

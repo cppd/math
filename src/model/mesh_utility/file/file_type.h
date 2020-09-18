@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <filesystem>
 #include <string>
 #include <tuple>
 
@@ -29,6 +30,6 @@ enum class MeshFileType
         Txt
 };
 
-std::tuple<int, MeshFileType> file_dimension_and_type(const std::string& file_name);
+std::tuple<int, MeshFileType> file_dimension_and_type(const std::filesystem::path& file_name);
 int read_dimension_number(const std::string& s);
 }

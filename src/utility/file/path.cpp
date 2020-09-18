@@ -15,13 +15,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "path.h"
 
-#include <filesystem>
-#include <vector>
-
-template <typename T>
-void read_text_file(const std::filesystem::path& file_name, T* s);
+#include <string_view>
 
 template <typename T>
-void read_binary_file(const std::filesystem::path& file_name, T* s);
+std::string generic_utf8_filename(const T& path)
+{
+        return reinterpret_cast<const char*>(path.generic_u8string().c_str());
+}
+
+template <typename T>
+std::filesystem::path path_from_utf8(const T& filename)
+{
+#if !defined(__clang__)
+        const char8_t* data = reinterpret_cast<const char8_t*>(filename.data());
+        return std::filesystem::path(data, data + filename.size());
+#else
+        return std::filesystem::u8path(filename);
+#endif
+}
+
+template std::string generic_utf8_filename(const std::filesystem::path& path);
+template std::filesystem::path path_from_utf8(const std::string& filename);
+template std::filesystem::path path_from_utf8(const std::string_view& filename);

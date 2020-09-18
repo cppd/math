@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/painter/painter.h>
 #include <src/painter/visible_paintbrush.h>
 #include <src/process/load.h>
+#include <src/utility/file/path.h>
 
 #include <algorithm>
 #include <array>
@@ -197,14 +198,15 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 filter.name = "Images";
                 filter.file_extensions = {SAVE_IMAGE_FILE_FORMAT};
                 const bool read_only = true;
-                std::string file_name;
-                if (!dialog::save_file(caption, {filter}, read_only, &file_name))
+                std::string file_name_string;
+                if (!dialog::save_file(caption, {filter}, read_only, &file_name_string))
                 {
                         return;
                 }
 
                 image::save_image_to_file(
-                        file_name, image::ImageView<2>({width, height}, image::ColorFormat::R8G8B8_SRGB, bytes));
+                        path_from_utf8(file_name_string),
+                        image::ImageView<2>({width, height}, image::ColorFormat::R8G8B8_SRGB, bytes));
         }
 
         void add_volume() const override

@@ -17,10 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <filesystem>
 #include <string>
 
-std::string file_base_name(const std::string& file_name);
-std::string file_extension(const std::string& file_name);
-std::string file_parent_path(const std::string& file_name);
+template <typename T>
+std::string generic_utf8_filename(const T& path);
 
-std::string temp_directory();
+template <typename T>
+std::filesystem::path path_from_utf8(const T& filename);

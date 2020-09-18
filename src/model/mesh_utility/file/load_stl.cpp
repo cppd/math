@@ -215,7 +215,7 @@ void read_binary_stl(
 }
 
 template <size_t N>
-std::unique_ptr<Mesh<N>> read_stl(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, ProgressRatio* progress)
 {
         std::unordered_map<Vector<N, float>, unsigned> unique_vertices;
         Mesh<N> mesh;
@@ -268,7 +268,7 @@ std::unique_ptr<Mesh<N>> read_stl(const std::string& file_name, ProgressRatio* p
 }
 
 template <size_t N>
-std::unique_ptr<Mesh<N>> load_from_stl_file(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> load_from_stl_file(const std::filesystem::path& file_name, ProgressRatio* progress)
 {
         double start_time = time_in_seconds();
 
@@ -279,8 +279,8 @@ std::unique_ptr<Mesh<N>> load_from_stl_file(const std::string& file_name, Progre
         return mesh;
 }
 
-template std::unique_ptr<Mesh<3>> load_from_stl_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Mesh<4>> load_from_stl_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Mesh<5>> load_from_stl_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Mesh<6>> load_from_stl_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<3>> load_from_stl_file(const std::filesystem::path& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<4>> load_from_stl_file(const std::filesystem::path& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<5>> load_from_stl_file(const std::filesystem::path& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<6>> load_from_stl_file(const std::filesystem::path& file_name, ProgressRatio* progress);
 }

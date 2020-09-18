@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/utility/file/sys.h>
+#include <src/utility/file/path.h>
 #include <src/utility/string/ascii.h>
 
 #include <algorithm>
@@ -36,13 +36,13 @@ namespace mesh::file
 namespace
 {
 // Чтение первой строки файла с ограничением на максимальное количество символов
-std::string read_first_line_from_file(const std::string& file_name, int max_char_count)
+std::string read_first_line_from_file(const std::filesystem::path& file_name, int max_char_count)
 {
         std::ifstream f(file_name, std::ios_base::binary);
 
         if (!f)
         {
-                error("Failed to open file " + file_name);
+                error("Failed to open file " + generic_utf8_filename(file_name));
         }
 
         int char_count = 0;
@@ -56,12 +56,13 @@ std::string read_first_line_from_file(const std::string& file_name, int max_char
 
         if (!f)
         {
-                error("Failed to read line with endline character from file " + file_name);
+                error("Failed to read line with endline character from file " + generic_utf8_filename(file_name));
         }
 
         if (char_count > max_char_count)
         {
-                error("The first file line is too long (limit " + to_string(max_char_count) + "), file " + file_name);
+                error("The first file line is too long (limit " + to_string(max_char_count) + "), file "
+                      + generic_utf8_filename(file_name));
         }
 
         return line;
@@ -102,13 +103,13 @@ int count_numbers(const std::string& s)
 }
 
 // Определение размерности по количеству чисел в первой строке файла
-int count_numbers_in_file(const std::string& file_name)
+int count_numbers_in_file(const std::filesystem::path& file_name)
 {
         std::string line = read_first_line_from_file(file_name, 1000000);
 
         if (line.empty())
         {
-                error("The first line of the file is empty, file " + file_name);
+                error("The first line of the file is empty, file " + generic_utf8_filename(file_name));
         }
 
         return count_numbers(line);
@@ -142,18 +143,18 @@ int read_dimension_number(const std::string& s)
         return d;
 }
 
-std::tuple<int, MeshFileType> file_dimension_and_type(const std::string& file_name)
+std::tuple<int, MeshFileType> file_dimension_and_type(const std::filesystem::path& file_name)
 {
         // Если не только obj, stl, txt, то после obj, stl, txt должно быть целое
         // число и только целое число, например, строка "obj4" или "txt4"
 
-        const std::string OBJ = "obj";
-        const std::string STL = "stl";
-        const std::string TXT = "txt";
+        const std::string OBJ = ".obj";
+        const std::string STL = ".stl";
+        const std::string TXT = ".txt";
 
-        std::string e = file_extension(file_name);
+        std::string e = generic_utf8_filename(file_name.extension());
 
-        if (e.empty())
+        if (e.empty() || e[0] != '.')
         {
                 error("No file extension found");
         }

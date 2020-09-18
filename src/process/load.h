@@ -41,7 +41,7 @@ template <size_t N>
 std::shared_ptr<mesh::MeshObject<N>> load_from_file(
         const std::string& object_name,
         ProgressRatioList* progress_list,
-        const std::string& file_name)
+        const std::filesystem::path& file_name)
 {
         std::unique_ptr<mesh::Mesh<N>> mesh;
 

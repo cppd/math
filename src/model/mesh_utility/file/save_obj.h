@@ -19,11 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../../mesh.h"
 
-#include <string>
+#include <filesystem>
 #include <string_view>
 
 namespace mesh::file
 {
 template <size_t N>
-std::string save_to_obj_file(const Mesh<N>& mesh, const std::string& file_name, const std::string_view& comment);
+std::filesystem::path save_to_obj_file(
+        const Mesh<N>& mesh,
+        const std::filesystem::path& file_name,
+        const std::string_view& comment);
 }

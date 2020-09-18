@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gui/dialogs/volume_object.h>
 #include <src/model/mesh_utility.h>
 #include <src/settings/utility.h>
-#include <src/utility/file/sys.h>
+#include <src/utility/file/path.h>
 
 namespace process
 {
@@ -45,7 +45,9 @@ constexpr int VOLUME_IMAGE_SIZE_DEFAULT = 500;
 constexpr int VOLUME_IMAGE_SIZE_MAXIMUM = 1000;
 }
 
-std::function<void(ProgressRatioList*)> action_load_from_file(std::string file_name, bool use_object_selection_dialog)
+std::function<void(ProgressRatioList*)> action_load_from_file(
+        std::filesystem::path file_name,
+        bool use_object_selection_dialog)
 {
         if (file_name.empty())
         {
@@ -62,10 +64,12 @@ std::function<void(ProgressRatioList*)> action_load_from_file(std::string file_n
                         f.file_extensions = v.file_name_extensions;
                 }
 
-                if (!gui::dialog::open_file(caption, filters, read_only, &file_name))
+                std::string file_name_string;
+                if (!gui::dialog::open_file(caption, filters, read_only, &file_name_string))
                 {
                         return nullptr;
                 }
+                file_name = path_from_utf8(file_name_string);
         }
 
         std::unordered_set<gui::dialog::ComputationType> objects_to_load;
@@ -95,8 +99,8 @@ std::function<void(ProgressRatioList*)> action_load_from_file(std::string file_n
                 unsigned dimension = mesh::file_dimension(file_name);
 
                 apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
-                        std::shared_ptr<mesh::MeshObject<N>> mesh =
-                                load_from_file<N>(file_base_name(file_name), progress_list, file_name);
+                        std::shared_ptr<mesh::MeshObject<N>> mesh = load_from_file<N>(
+                                generic_utf8_filename(file_name.filename()), progress_list, file_name);
 
                         compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
                 });

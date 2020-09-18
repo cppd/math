@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/message.h>
 #include <src/gui/dialogs/file_dialog.h>
 #include <src/model/mesh_utility.h>
+#include <src/utility/file/path.h>
 
 namespace process
 {
@@ -45,14 +46,14 @@ std::function<void(ProgressRatioList*)> action_export_function(
                 filter.file_extensions = v.file_name_extensions;
         }
 
-        std::string file_name;
-
-        if (!gui::dialog::save_file(caption, filters, read_only, &file_name))
+        std::string file_name_string;
+        if (!gui::dialog::save_file(caption, filters, read_only, &file_name_string))
         {
                 return nullptr;
         }
+        std::filesystem::path file_name = path_from_utf8(file_name_string);
 
-        mesh::FileType file_type = mesh::file_type_by_extension(file_name);
+        mesh::FileType file_type = mesh::file_type_by_name(file_name);
 
         return [=](ProgressRatioList*) {
                 mesh::Reading reading(*mesh_object);
@@ -60,11 +61,11 @@ std::function<void(ProgressRatioList*)> action_export_function(
                 {
                 case mesh::FileType::Obj:
                         mesh::save_to_obj(reading.mesh(), file_name, name);
-                        MESSAGE_INFORMATION(name + " exported to OBJ file " + file_name);
+                        MESSAGE_INFORMATION(name + " exported to OBJ file " + generic_utf8_filename(file_name));
                         return;
                 case mesh::FileType::Stl:
-                        save_to_stl(reading.mesh(), file_name, name, STL_EXPORT_FORMAT_ASCII);
-                        MESSAGE_INFORMATION(name + " exported to STL file " + file_name);
+                        mesh::save_to_stl(reading.mesh(), file_name, name, STL_EXPORT_FORMAT_ASCII);
+                        MESSAGE_INFORMATION(name + " exported to STL file " + generic_utf8_filename(file_name));
                         return;
                 }
                 error_fatal("Unknown file type for export");

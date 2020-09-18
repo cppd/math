@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <filesystem>
 #include <optional>
 #include <string>
 
@@ -26,7 +27,7 @@ std::string command_line_description();
 
 struct CommandLineOptions
 {
-        std::string file_name;
+        std::filesystem::path file_name;
         bool no_object_selection_dialog;
 };
 

@@ -19,14 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image.h"
 
-#include <string>
+#include <filesystem>
 #include <vector>
 
 namespace image
 {
-void save_image_to_file(const std::string& file_name, const ImageView<2>& image_view);
+void save_image_to_file(const std::filesystem::path& file_name, const ImageView<2>& image_view);
 
-void load_image_from_file_rgba(const std::string& file_name, Image<2>* image);
+void load_image_from_file_rgba(const std::filesystem::path& file_name, Image<2>* image);
 
 void flip_image_vertically(Image<2>* image);
 }

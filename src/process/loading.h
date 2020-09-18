@@ -21,12 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/progress/progress_list.h>
 #include <src/storage/repository.h>
 
+#include <filesystem>
 #include <functional>
 #include <string>
 
 namespace process
 {
-std::function<void(ProgressRatioList*)> action_load_from_file(std::string file_name, bool use_object_selection_dialog);
+std::function<void(ProgressRatioList*)> action_load_from_file(
+        std::filesystem::path file_name,
+        bool use_object_selection_dialog);
 
 std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
         const storage::Repository* repository,

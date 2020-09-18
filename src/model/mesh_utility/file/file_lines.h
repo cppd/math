@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string>
+#include <filesystem>
 #include <vector>
 
 namespace mesh::file
 {
 template <typename T>
-void read_file_lines(const std::string& file_name, T* file_data, std::vector<long long>* line_begin);
+void read_file_lines(const std::filesystem::path& file_name, T* file_data, std::vector<long long>* line_begin);
 }

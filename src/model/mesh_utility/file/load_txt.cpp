@@ -79,7 +79,10 @@ void read_points_thread(
 }
 
 template <size_t N>
-void read_points(std::vector<Vector<N, float>>* vertices, const std::string& file_name, ProgressRatio* progress)
+void read_points(
+        std::vector<Vector<N, float>>* vertices,
+        const std::filesystem::path& file_name,
+        ProgressRatio* progress)
 {
         const int thread_count = hardware_concurrency();
 
@@ -100,7 +103,7 @@ void read_points(std::vector<Vector<N, float>>* vertices, const std::string& fil
 }
 
 template <size_t N>
-std::unique_ptr<Mesh<N>> read_text(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> read_text(const std::filesystem::path& file_name, ProgressRatio* progress)
 {
         progress->set_undefined();
 
@@ -126,7 +129,7 @@ std::unique_ptr<Mesh<N>> read_text(const std::string& file_name, ProgressRatio* 
 }
 
 template <size_t N>
-std::unique_ptr<Mesh<N>> load_from_txt_file(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> load_from_txt_file(const std::filesystem::path& file_name, ProgressRatio* progress)
 {
         double start_time = time_in_seconds();
 
@@ -137,8 +140,8 @@ std::unique_ptr<Mesh<N>> load_from_txt_file(const std::string& file_name, Progre
         return mesh;
 }
 
-template std::unique_ptr<Mesh<3>> load_from_txt_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Mesh<4>> load_from_txt_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Mesh<5>> load_from_txt_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Mesh<6>> load_from_txt_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<3>> load_from_txt_file(const std::filesystem::path& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<4>> load_from_txt_file(const std::filesystem::path& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<5>> load_from_txt_file(const std::filesystem::path& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<6>> load_from_txt_file(const std::filesystem::path& file_name, ProgressRatio* progress);
 }

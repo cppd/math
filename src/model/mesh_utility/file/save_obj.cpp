@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
-#include <src/utility/file/sys.h>
+#include <src/utility/file/path.h>
 #include <src/utility/string/str.h>
 
 #include <fstream>
@@ -236,22 +236,20 @@ std::string obj_type_name(size_t N)
 }
 
 template <size_t N>
-std::string file_name_with_extension(const std::string& file_name)
+std::filesystem::path file_name_with_extension(std::filesystem::path file_name)
 {
-        std::string e = file_extension(file_name);
-
-        if (!e.empty())
+        if (file_name.has_extension())
         {
-                if (!is_obj_file_extension(N, e))
+                if (!file_has_obj_extension(N, file_name))
                 {
-                        error("Wrong " + obj_type_name(N) + " file name extension: " + e);
+                        error("Wrong " + obj_type_name(N)
+                              + " file name extension: " + generic_utf8_filename(file_name));
                 }
 
                 return file_name;
         }
 
-        // Если имя заканчивается на точку, то пусть будет 2 точки подряд
-        return file_name + "." + obj_file_extension(N);
+        return file_name.replace_extension(path_from_utf8(obj_file_extension(N)));
 }
 
 template <size_t N>
@@ -282,19 +280,22 @@ void check_facets_and_lines(const Mesh<N>& mesh)
 }
 
 template <size_t N>
-std::string save_to_obj_file(const Mesh<N>& mesh, const std::string& file_name, const std::string_view& comment)
+std::filesystem::path save_to_obj_file(
+        const Mesh<N>& mesh,
+        const std::filesystem::path& file_name,
+        const std::string_view& comment)
 {
         static_assert(N >= 3);
 
         check_facets_and_lines(mesh);
 
-        std::string full_name = file_name_with_extension<N>(file_name);
+        std::filesystem::path full_name = file_name_with_extension<N>(file_name);
 
         std::ofstream file(full_name);
 
         if (!file)
         {
-                error("Error opening file for writing " + full_name);
+                error("Error opening file for writing " + generic_utf8_filename(full_name));
         }
 
         file << std::scientific;
@@ -316,7 +317,7 @@ std::string save_to_obj_file(const Mesh<N>& mesh, const std::string& file_name, 
 
         if (!file)
         {
-                error("Error writing to file " + full_name);
+                error("Error writing to file " + generic_utf8_filename(full_name));
         }
 
         LOG(obj_type_name(N) + " saved, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
@@ -324,8 +325,8 @@ std::string save_to_obj_file(const Mesh<N>& mesh, const std::string& file_name, 
         return full_name;
 }
 
-template std::string save_to_obj_file(const Mesh<3>&, const std::string&, const std::string_view&);
-template std::string save_to_obj_file(const Mesh<4>&, const std::string&, const std::string_view&);
-template std::string save_to_obj_file(const Mesh<5>&, const std::string&, const std::string_view&);
-template std::string save_to_obj_file(const Mesh<6>&, const std::string&, const std::string_view&);
+template std::filesystem::path save_to_obj_file(const Mesh<3>&, const std::filesystem::path&, const std::string_view&);
+template std::filesystem::path save_to_obj_file(const Mesh<4>&, const std::filesystem::path&, const std::string_view&);
+template std::filesystem::path save_to_obj_file(const Mesh<5>&, const std::filesystem::path&, const std::string_view&);
+template std::filesystem::path save_to_obj_file(const Mesh<6>&, const std::filesystem::path&, const std::string_view&);
 }

@@ -17,28 +17,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <filesystem>
 #include <set>
 #include <string>
 #include <vector>
 
 namespace mesh
 {
-int file_dimension(const std::string& file_name);
+int file_dimension(const std::filesystem::path& file_name);
 
 enum class FileType
 {
         Obj,
         Stl
 };
-FileType file_type_by_extension(const std::string& file_name);
+FileType file_type_by_name(const std::filesystem::path& file_name);
 
 std::string obj_file_extension(size_t N);
 std::vector<std::string> obj_file_extensions(const std::set<unsigned>& dimensions);
-bool is_obj_file_extension(size_t N, const std::string& e);
+bool file_has_obj_extension(size_t N, const std::filesystem::path& file_name);
 
 std::string stl_file_extension(size_t N);
 std::vector<std::string> stl_file_extensions(const std::set<unsigned>& dimensions);
-bool is_stl_file_extension(size_t N, const std::string& e);
+bool file_has_stl_extension(size_t N, const std::filesystem::path& file_name);
 
 std::vector<std::string> txt_file_extensions(const std::set<unsigned>& dimensions);
 }

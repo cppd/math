@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/image/file.h>
+#include <src/utility/file/path.h>
 
 #include <cmath>
 #include <fstream>
@@ -153,9 +154,10 @@ void save_to_file(char32_t code_point, const std::optional<Font::Char>& data)
         oss << ".png";
 
         save_image_to_file(
-                oss.str(), image::ImageView<2>(
-                                   {data->width, data->height}, image::ColorFormat::R8_SRGB,
-                                   std::as_bytes(std::span(data->image, 1ull * data->width * data->height))));
+                path_from_utf8(oss.str()),
+                image::ImageView<2>(
+                        {data->width, data->height}, image::ColorFormat::R8_SRGB,
+                        std::as_bytes(std::span(data->image, 1ull * data->width * data->height))));
 }
 }
 

@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/com/type/trait.h>
 #include <src/image/file.h>
-#include <src/utility/file/sys.h>
+#include <src/utility/file/path.h>
 #include <src/utility/string/ascii.h>
 #include <src/utility/string/str.h>
 
@@ -128,7 +128,7 @@ bool check_color(const Color& v)
 }
 
 template <size_t N>
-image::Image<N> read_image_from_file(const std::string& file_name)
+image::Image<N> read_image_from_file(const std::filesystem::path& file_name)
 {
         if constexpr (N != 2)
         {
@@ -146,25 +146,20 @@ image::Image<N> read_image_from_file(const std::string& file_name)
 
 template <size_t N>
 void load_image(
-        const std::string& dir_name,
-        const std::string& image_name,
+        const std::filesystem::path& dir_name,
+        const std::filesystem::path& image_name,
         std::map<std::string, int>* image_index,
         std::vector<image::Image<N - 1>>* images,
         int* index)
 {
-        std::string file_name = trim(image_name);
+        std::filesystem::path file_name = path_from_utf8(trim(generic_utf8_filename(image_name)));
 
         if (file_name.empty())
         {
                 error("No image file name");
         }
 
-#if defined(__linux__)
-        // путь к файлу может быть указан в формате Windows, поэтому надо заменить разделители
-        std::replace(file_name.begin(), file_name.end(), '\\', '/');
-#endif
-
-        file_name = dir_name + "/" + file_name;
+        file_name = dir_name / file_name;
 
         if (auto iter = image_index->find(file_name); iter != image_index->end())
         {
@@ -383,8 +378,8 @@ void read_library_names(
         const T& data,
         long long begin,
         long long end,
-        std::vector<std::string>* v,
-        std::set<std::string>* lib_unique_names)
+        std::vector<std::filesystem::path>* v,
+        std::set<std::filesystem::path>* lib_unique_names)
 {
         const long long size = end;
         bool found = false;
@@ -404,11 +399,11 @@ void read_library_names(
 
                 long long i2 = i;
                 read(data, size, ascii::is_not_space, &i2);
-                std::string name = std::string(&data[i], i2 - i);
+                std::filesystem::path name = path_from_utf8(std::string(&data[i], i2 - i));
                 i = i2;
                 found = true;
 
-                if (lib_unique_names->find(name) == lib_unique_names->end())
+                if (!lib_unique_names->contains(name))
                 {
                         v->push_back(name);
                         lib_unique_names->insert(std::move(name));
@@ -798,7 +793,7 @@ void read_obj_stage_two(
         std::vector<ObjLine<N>>* line_prop,
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
-        std::vector<std::string>* library_names,
+        std::vector<std::filesystem::path>* library_names,
         Mesh<N>* mesh)
 {
         mesh->vertices.reserve(counters.vertex);
@@ -811,7 +806,7 @@ void read_obj_stage_two(
         const double line_count_reciprocal = 1.0 / line_prop->size();
 
         int mtl_index = -1;
-        std::set<std::string> unique_library_names;
+        std::set<std::filesystem::path> unique_library_names;
 
         for (long long line_num = 0; line_num < line_count; ++line_num)
         {
@@ -901,7 +896,7 @@ void read_obj_thread(
         std::vector<ObjLine<N>>* line_prop,
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
-        std::vector<std::string>* library_names,
+        std::vector<std::filesystem::path>* library_names,
         Mesh<N>* mesh)
 {
         // параллельно
@@ -937,8 +932,8 @@ void read_obj_thread(
 
 template <size_t N>
 void read_lib(
-        const std::string& dir_name,
-        const std::string& file_name,
+        const std::filesystem::path& dir_name,
+        const std::filesystem::path& file_name,
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
         std::map<std::string, int>* image_index,
@@ -947,11 +942,11 @@ void read_lib(
         std::vector<char> data;
         std::vector<long long> line_begin;
 
-        const std::string lib_name = dir_name + "/" + file_name;
+        const std::filesystem::path lib_name = dir_name / file_name;
 
         read_file_lines(lib_name, &data, &line_begin);
 
-        const std::string lib_dir = file_parent_path(lib_name);
+        const std::filesystem::path lib_dir = lib_name.parent_path();
 
         typename Mesh<N>::Material* mtl = nullptr;
         std::string name;
@@ -1089,23 +1084,23 @@ void read_lib(
                 }
                 catch (const std::exception& e)
                 {
-                        error("Library: " + lib_name + "\n" + "Line " + to_string(line_num) + ": " + first + " "
-                              + second + "\n" + e.what());
+                        error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(line_num)
+                              + ": " + first + " " + second + "\n" + e.what());
                 }
                 catch (...)
                 {
-                        error("Library: " + lib_name + "\n" + "Line " + to_string(line_num) + ": " + first + " "
-                              + second + "\n" + "Unknown error");
+                        error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(line_num)
+                              + ": " + first + " " + second + "\n" + "Unknown error");
                 }
         }
 }
 
 template <size_t N>
 void read_libs(
-        const std::string& dir_name,
+        const std::filesystem::path& dir_name,
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
-        const std::vector<std::string>& library_names,
+        const std::vector<std::filesystem::path>& library_names,
         Mesh<N>* mesh)
 {
         std::map<std::string, int> image_index;
@@ -1126,10 +1121,10 @@ void read_libs(
 
 template <size_t N>
 void read_obj(
-        const std::string& file_name,
+        const std::filesystem::path& file_name,
         ProgressRatio* progress,
         std::map<std::string, int>* material_index,
-        std::vector<std::string>* library_names,
+        std::vector<std::filesystem::path>* library_names,
         Mesh<N>* mesh)
 {
         const int thread_count = hardware_concurrency();
@@ -1157,12 +1152,12 @@ void read_obj(
 }
 
 template <size_t N>
-std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::filesystem::path& file_name, ProgressRatio* progress)
 {
         progress->set_undefined();
 
         std::map<std::string, int> material_index;
-        std::vector<std::string> library_names;
+        std::vector<std::filesystem::path> library_names;
 
         Mesh<N> mesh;
 
@@ -1186,14 +1181,14 @@ std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::string& file_name, Progress
                 set_center_and_length(&mesh);
         }
 
-        read_libs(file_parent_path(file_name), progress, &material_index, library_names, &mesh);
+        read_libs(file_name.parent_path(), progress, &material_index, library_names, &mesh);
 
         return std::make_unique<Mesh<N>>(std::move(mesh));
 }
 }
 
 template <size_t N>
-std::unique_ptr<Mesh<N>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> load_from_obj_file(const std::filesystem::path& file_name, ProgressRatio* progress)
 {
         double start_time = time_in_seconds();
 
@@ -1204,8 +1199,8 @@ std::unique_ptr<Mesh<N>> load_from_obj_file(const std::string& file_name, Progre
         return mesh;
 }
 
-template std::unique_ptr<Mesh<3>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Mesh<4>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Mesh<5>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
-template std::unique_ptr<Mesh<6>> load_from_obj_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<3>> load_from_obj_file(const std::filesystem::path& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<4>> load_from_obj_file(const std::filesystem::path& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<5>> load_from_obj_file(const std::filesystem::path& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<6>> load_from_obj_file(const std::filesystem::path& file_name, ProgressRatio* progress);
 }

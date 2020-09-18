@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "conversion.h"
 
 #include <src/com/error.h>
-#include <src/utility/file/sys.h>
+#include <src/utility/file/path.h>
 #include <src/utility/string/str.h>
 
 #include <QImage>
@@ -44,7 +44,7 @@ std::set<std::string> supported_formats()
         return formats;
 }
 
-void checkWriteFormatSupport(const std::string& format)
+void check_write_format_support(const std::string& format)
 {
         const static std::set<std::string> formats = supported_formats();
 
@@ -63,19 +63,17 @@ void checkWriteFormatSupport(const std::string& format)
         error("Unsupported format for image writing \"" + format + "\", supported formats " + format_string);
 }
 
-std::string file_name_with_extension(const std::string& file_name)
+std::filesystem::path file_name_with_extension(std::filesystem::path file_name)
 {
-        std::string ext = file_extension(file_name);
-
-        if (!ext.empty())
+        std::string extension = generic_utf8_filename(file_name.extension());
+        if (!extension.empty() && extension[0] == '.')
         {
-                checkWriteFormatSupport(ext);
+                check_write_format_support(extension.substr(1));
                 return file_name;
         }
 
-        checkWriteFormatSupport(DEFAULT_WRITE_FORMAT);
-        // Если имя заканчивается на точку, то пусть будет 2 точки подряд
-        return file_name + "." + DEFAULT_WRITE_FORMAT;
+        check_write_format_support(DEFAULT_WRITE_FORMAT);
+        return file_name.replace_extension(DEFAULT_WRITE_FORMAT);
 }
 
 void save_1(const std::string& file_name, const ImageView<2>& image_view)
@@ -182,9 +180,9 @@ void save_4(const std::string& file_name, const ImageView<2>& image_view)
 }
 }
 
-void save_image_to_file(const std::string& file_name, const ImageView<2>& image_view)
+void save_image_to_file(const std::filesystem::path& file_name, const ImageView<2>& image_view)
 {
-        std::string f = file_name_with_extension(file_name);
+        std::string f = generic_utf8_filename(file_name_with_extension(file_name));
 
         int width = image_view.size[0];
         int height = image_view.size[1];
@@ -213,12 +211,13 @@ void save_image_to_file(const std::string& file_name, const ImageView<2>& image_
         }
 }
 
-void load_image_from_file_rgba(const std::string& file_name, Image<2>* image)
+void load_image_from_file_rgba(const std::filesystem::path& file_name, Image<2>* image)
 {
+        std::string f = generic_utf8_filename(file_name);
         QImage q_image;
-        if (!q_image.load(file_name.c_str()) || q_image.width() < 1 || q_image.height() < 1)
+        if (!q_image.load(f.c_str()) || q_image.width() < 1 || q_image.height() < 1)
         {
-                error("Error loading image from the file " + file_name);
+                error("Error loading image from the file " + f);
         }
 
         if (q_image.format() != QImage::Format_ARGB32)

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "command_line.h"
 
 #include <src/com/error.h>
+#include <src/utility/file/path.h>
 
 #include <QCommandLineParser>
 
@@ -84,7 +85,7 @@ CommandLineOptions command_line_options()
                         error("Empty the file name argument");
                 }
 
-                options.file_name = positional_arguments.value(0).toStdString();
+                options.file_name = path_from_utf8(positional_arguments.value(0).toStdString());
                 options.no_object_selection_dialog = parser.isSet(no_object_selection_option);
         }
         else

@@ -23,10 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/time.h>
 #include <src/com/type/name.h>
-#include <src/utility/file/sys.h>
+#include <src/utility/file/path.h>
 #include <src/utility/random/engine.h>
 
 #include <cctype>
+#include <filesystem>
 #include <fstream>
 #include <random>
 #include <string_view>
@@ -86,11 +87,11 @@ const std::string_view& short_sampler_name(const LatinHypercubeSampler<N, T>&)
 }
 
 template <template <size_t, typename> typename S, size_t N, typename T>
-const std::string& sampler_file_name(const S<N, T>& sampler)
+std::filesystem::path sampler_file_name(const S<N, T>& sampler)
 {
-        static const std::string s = "samples_" + std::string(short_sampler_name(sampler)) + "_" + to_string(N) + "d_"
-                                     + replace_space(type_name<T>()) + ".txt";
-        return s;
+        return path_from_utf8(
+                "samples_" + std::string(short_sampler_name(sampler)) + "_" + to_string(N) + "d_"
+                + replace_space(type_name<T>()) + ".txt");
 }
 
 template <size_t N>
@@ -113,13 +114,9 @@ constexpr int sample_count()
 }
 
 template <size_t N, typename T, typename Sampler, typename RandomEngine>
-void write_samples_to_file(
-        RandomEngine& random_engine,
-        const Sampler& sampler,
-        const std::string& directory,
-        int pass_count)
+void write_samples_to_file(RandomEngine& random_engine, const Sampler& sampler, int pass_count)
 {
-        std::ofstream file(directory + "/" + sampler_file_name(sampler));
+        std::ofstream file(std::filesystem::temp_directory_path() / sampler_file_name(sampler));
 
         file << sampler_name(sampler) << "\n";
         file << "Pass count: " << to_string(pass_count) << "\n";
@@ -160,12 +157,9 @@ void write_samples_to_files()
 
         constexpr int pass_count = 10;
 
-        const std::string tmp_dir = temp_directory();
-
         LOG("Writing samples " + to_string(N) + "D");
-        write_samples_to_file<N, T>(
-                random_engine, StratifiedJitteredSampler<N, T>(sample_count<N>()), tmp_dir, pass_count);
-        write_samples_to_file<N, T>(random_engine, LatinHypercubeSampler<N, T>(sample_count<N>()), tmp_dir, pass_count);
+        write_samples_to_file<N, T>(random_engine, StratifiedJitteredSampler<N, T>(sample_count<N>()), pass_count);
+        write_samples_to_file<N, T>(random_engine, LatinHypercubeSampler<N, T>(sample_count<N>()), pass_count);
 }
 
 template <size_t N, typename T, typename RandomEngine>

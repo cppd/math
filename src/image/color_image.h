@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <array>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -149,7 +150,7 @@ public:
         }
 
         template <size_t X = N>
-        std::enable_if_t<X == 2> write_to_file(const std::string& file_name) const
+        std::enable_if_t<X == 2> write_to_file(const std::filesystem::path& file_name) const
         {
                 static_assert(N == X);
 

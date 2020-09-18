@@ -21,11 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/utility/file/sys.h>
+#include <src/utility/file/path.h>
 
 namespace mesh
 {
-int file_dimension(const std::string& file_name)
+int file_dimension(const std::filesystem::path& file_name)
 {
         return std::get<0>(file::file_dimension_and_type(file_name));
 }
@@ -56,9 +56,10 @@ std::vector<std::string> obj_file_extensions(const std::set<unsigned>& dimension
         return result;
 }
 
-bool is_obj_file_extension(size_t N, const std::string& extension)
+bool file_has_obj_extension(size_t N, const std::filesystem::path& file_name)
 {
-        return (extension == obj_file_extension(N)) || (extension == "obj" + to_string(N));
+        return (file_name.extension() == "." + obj_file_extension(N))
+               || (file_name.extension() == ".obj" + to_string(N));
 }
 
 //
@@ -87,17 +88,18 @@ std::vector<std::string> stl_file_extensions(const std::set<unsigned>& dimension
         return result;
 }
 
-bool is_stl_file_extension(size_t N, const std::string& extension)
+bool file_has_stl_extension(size_t N, const std::filesystem::path& file_name)
 {
-        return (extension == stl_file_extension(N)) || (extension == "stl" + to_string(N));
+        return (file_name.extension() == "." + stl_file_extension(N))
+               || (file_name.extension() == ".stl" + to_string(N));
 }
 
 //
 
-FileType file_type_by_extension(const std::string& file_name)
+FileType file_type_by_name(const std::filesystem::path& file_name)
 {
-        const std::string ext = file_extension(file_name);
-        const std::string OBJ = "obj";
+        const std::string ext = generic_utf8_filename(file_name.extension());
+        const std::string OBJ = ".obj";
         if (ext.find(OBJ) == 0)
         {
                 if (ext == OBJ)
@@ -107,7 +109,7 @@ FileType file_type_by_extension(const std::string& file_name)
                 file::read_dimension_number(ext.substr(OBJ.size()));
                 return FileType::Obj;
         }
-        const std::string STL = "stl";
+        const std::string STL = ".stl";
         if (ext.find(STL) == 0)
         {
                 if (ext == STL)
@@ -117,7 +119,7 @@ FileType file_type_by_extension(const std::string& file_name)
                 file::read_dimension_number(ext.substr(STL.size()));
                 return FileType::Stl;
         }
-        error("Failed to find the file type by its extension for the file name " + file_name);
+        error("Failed to find the file type by its extension for the file name " + generic_utf8_filename(file_name));
 }
 
 //

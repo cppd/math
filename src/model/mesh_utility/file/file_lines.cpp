@@ -62,7 +62,7 @@ void find_line_begin(const T& s, std::vector<long long>* line_begin)
 }
 
 template <typename T>
-void read_file_lines(const std::string& file_name, T* file_data, std::vector<long long>* line_begin)
+void read_file_lines(const std::filesystem::path& file_name, T* file_data, std::vector<long long>* line_begin)
 {
         static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::vector<char>>);
 
@@ -73,10 +73,13 @@ void read_file_lines(const std::string& file_name, T* file_data, std::vector<lon
 
 //
 
-template void read_file_lines(const std::string& file_name, std::string* file_data, std::vector<long long>* line_begin);
+template void read_file_lines(
+        const std::filesystem::path& file_name,
+        std::string* file_data,
+        std::vector<long long>* line_begin);
 
 template void read_file_lines(
-        const std::string& file_name,
+        const std::filesystem::path& file_name,
         std::vector<char>* file_data,
         std::vector<long long>* line_begin);
 }

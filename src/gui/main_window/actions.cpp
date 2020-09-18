@@ -60,7 +60,7 @@ void load_volume(
         });
 }
 
-void load_file(WorkerThreads* threads, const std::string& file_name, bool use_object_selection_dialog)
+void load_file(WorkerThreads* threads, const std::filesystem::path& file_name, bool use_object_selection_dialog)
 {
         threads->terminate_and_start(WORKER_THREAD_ID, "Loading from file", [&]() {
                 WorkerThreads::Function f = process::action_load_from_file(file_name, use_object_selection_dialog);

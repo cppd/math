@@ -27,10 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/model/mesh_utility.h>
 #include <src/numerical/random.h>
-#include <src/utility/file/sys.h>
+#include <src/utility/file/path.h>
 #include <src/utility/random/engine.h>
 
 #include <cmath>
+#include <filesystem>
 #include <random>
 #include <tuple>
 #include <unordered_set>
@@ -152,13 +153,14 @@ constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
 template <size_t N>
 void test_obj_file(
         const mesh::Mesh<N>& mesh,
-        const std::string& file_name,
+        std::filesystem::path file_name,
         const std::string& comment,
         ProgressRatio* progress)
 {
         LOG("saving to OBJ...");
 
-        std::string saved_file = mesh::save_to_obj(mesh, file_name + "." + mesh::obj_file_extension(N), comment);
+        file_name.replace_extension(path_from_utf8(mesh::obj_file_extension(N)));
+        std::filesystem::path saved_file = mesh::save_to_obj(mesh, file_name, comment);
 
         LOG("loading from OBJ...");
 
@@ -203,7 +205,7 @@ void test_obj_file(
 template <size_t N>
 void test_stl_file(
         const mesh::Mesh<N>& mesh,
-        const std::string& file_name,
+        std::filesystem::path file_name,
         const std::string& comment,
         ProgressRatio* progress,
         bool ascii_format)
@@ -212,8 +214,8 @@ void test_stl_file(
 
         LOG("saving to " + type_name + " STL...");
 
-        std::string saved_file =
-                mesh::save_to_stl(mesh, file_name + "." + mesh::stl_file_extension(N), comment, ascii_format);
+        file_name.replace_extension(path_from_utf8(mesh::stl_file_extension(N)));
+        std::filesystem::path saved_file = mesh::save_to_stl(mesh, file_name, comment, ascii_format);
 
         LOG("loading from " + type_name + " STL...");
 
@@ -243,7 +245,7 @@ void test_geometry_files(
 
         LOG("Test saving and loading");
 
-        std::string file_name = temp_directory() + "/" + name;
+        std::filesystem::path file_name = std::filesystem::temp_directory_path() / name;
 
         LOG("creating mesh for facets...");
         std::unique_ptr<const mesh::Mesh<N>> mesh = mesh::create_mesh_for_facets(points, normals, facets);

@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/image/file.h>
+#include <src/utility/file/path.h>
 
 #include <array>
 #include <cstring>
@@ -251,7 +252,7 @@ void create_font_glyphs(
 
         if ((false))
         {
-                save_image_to_file("font_texture.png", image::ImageView<2>(*image));
+                save_image_to_file(path_from_utf8("font_texture.png"), image::ImageView<2>(*image));
         }
 }
 }

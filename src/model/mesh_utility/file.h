@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress.h>
 
+#include <filesystem>
 #include <memory>
 #include <set>
 #include <string>
@@ -38,15 +39,18 @@ std::vector<FileFormat> save_formats(unsigned dimension);
 std::vector<FileFormat> load_formats(const std::set<unsigned>& dimensions);
 
 template <size_t N>
-std::unique_ptr<Mesh<N>> load(const std::string& file_name, ProgressRatio* progress);
+std::unique_ptr<Mesh<N>> load(const std::filesystem::path& file_name, ProgressRatio* progress);
 
 template <size_t N>
-std::string save_to_obj(const Mesh<N>& mesh, const std::string& file_name, const std::string_view& comment);
-
-template <size_t N>
-std::string save_to_stl(
+std::filesystem::path save_to_obj(
         const Mesh<N>& mesh,
-        const std::string& file_name,
+        const std::filesystem::path& file_name,
+        const std::string_view& comment);
+
+template <size_t N>
+std::filesystem::path save_to_stl(
+        const Mesh<N>& mesh,
+        const std::filesystem::path& file_name,
         const std::string_view& comment,
         bool ascii_format);
 }

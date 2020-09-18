@@ -31,8 +31,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gui/painter_window/painter_window.h>
 #include <src/image/color_image.h>
 #include <src/model/mesh_utility.h>
-#include <src/utility/file/sys.h>
+#include <src/utility/file/path.h>
 #include <src/utility/string/str.h>
+
+#include <filesystem>
 
 namespace painter
 {
@@ -94,7 +96,7 @@ public:
                 LOG(msg);
         }
 
-        void write_to_files(const std::string& dir) const
+        void write_to_files() const
         {
                 int w = std::floor(std::log10(m_images.size())) + 1;
 
@@ -105,7 +107,7 @@ public:
                 {
                         oss.str("");
                         oss << BEGINNING_OF_FILE_NAME << std::setw(w) << i + 1;
-                        m_images[i].write_to_file(dir + "/" + oss.str());
+                        m_images[i].write_to_file(std::filesystem::temp_directory_path() / path_from_utf8(oss.str()));
                 }
         }
 };
@@ -175,7 +177,7 @@ void test_painter_file(
         LOG("Painted, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 
         LOG("Writing screen images to files...");
-        images.write_to_files(temp_directory());
+        images.write_to_files();
 
         LOG("Done");
 }
