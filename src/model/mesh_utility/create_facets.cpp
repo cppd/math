@@ -28,23 +28,70 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <unordered_set>
 
+/*
+ Jakob Andreas Bærentzen, Jens Gravesen, François Anton, Henrik Aanæs.
+ Guide to Computational Geometry Processing. Foundations, Algorithms, and Methods.
+ Springer-Verlag London, 2012.
+
+ 8.1 Estimating the Surface Normal.
+*/
+
 namespace mesh
 {
 namespace
 {
 template <size_t N>
-Vector<N, double> face_normal(const std::vector<Vector<N, float>>& points, const std::array<int, N>& face)
+Vector<N, double> facet_normal(const std::vector<Vector<N, float>>& points, const std::array<int, N>& facet)
 {
-        return ortho_nn<N, float, double>(points, face).normalized();
+        return ortho_nn<N, float, double>(points, facet).normalized();
+}
+
+template <size_t N>
+double facet_normat_weight_at_vertex(
+        const std::vector<Vector<N, float>>& points,
+        const std::array<int, N>& facet,
+        int facet_vertex_index)
+{
+        if constexpr (N != 3)
+        {
+                return 1.0;
+        }
+        else
+        {
+                ASSERT(facet_vertex_index >= 0 && facet_vertex_index < 3);
+                int n1 = (facet_vertex_index + 1) % 3;
+                int n2 = (facet_vertex_index + 2) % 3;
+                vec3 v1 = to_vector<double>(points[facet[n1]] - points[facet[facet_vertex_index]]);
+                vec3 v2 = to_vector<double>(points[facet[n2]] - points[facet[facet_vertex_index]]);
+                double norm1 = v1.norm();
+                if (norm1 == 0)
+                {
+                        return 0;
+                }
+                double norm2 = v2.norm();
+                if (norm2 == 0)
+                {
+                        return 0;
+                }
+                double cosine = dot(v1 / norm1, v2 / norm2);
+                return std::acos(std::clamp(cosine, -1.0, 1.0));
+        }
 }
 
 template <size_t N, typename T>
-Vector<N, T> average_normal(const Vector<N, T>& original_normal, const std::vector<Vector<N, T>>& normals)
+Vector<N, T> average_of_normals(const Vector<N, T>& original_normal, const std::vector<Vector<N, T>>& normals)
 {
         Vector<N, T> sum(0);
         for (const Vector<N, T>& n : normals)
         {
-                sum += (dot(n, original_normal) >= 0) ? n : -n;
+                if (dot(n, original_normal) >= 0)
+                {
+                        sum += n;
+                }
+                else
+                {
+                        sum -= n;
+                }
         }
         return sum.normalized();
 }
@@ -63,22 +110,23 @@ std::unique_ptr<Mesh<N>> create_mesh(
         struct Vertex
         {
                 int new_index;
-                std::vector<Vector<N, double>> normals;
+                std::vector<Vector<N, double>> weighted_normals;
         };
         std::unordered_map<int, Vertex> vertices;
 
         int idx = 0;
         for (const std::array<int, N>& facet : facets)
         {
-                Vector<N, double> normal = face_normal(points, facet);
-                for (int v : facet)
+                Vector<N, double> normal = facet_normal(points, facet);
+                for (unsigned i = 0; i < N; ++i)
                 {
-                        auto [iter, inserted] = vertices.try_emplace(v);
-                        iter->second.normals.push_back(normal);
+                        auto [iter, inserted] = vertices.try_emplace(facet[i]);
                         if (inserted)
                         {
                                 iter->second.new_index = idx++;
                         }
+                        double normat_weight = facet_normat_weight_at_vertex(points, facet, i);
+                        iter->second.weighted_normals.push_back(normat_weight * normal);
                 }
         }
         ASSERT(idx == static_cast<int>(vertices.size()));
@@ -92,7 +140,7 @@ std::unique_ptr<Mesh<N>> create_mesh(
         {
                 mesh->vertices[vertex.new_index] = points[old_index];
                 mesh->normals[vertex.new_index] =
-                        to_vector<float>(average_normal(point_normals[old_index], vertex.normals));
+                        to_vector<float>(average_of_normals(point_normals[old_index], vertex.weighted_normals));
         }
 
         mesh->facets.reserve(facets.size());
