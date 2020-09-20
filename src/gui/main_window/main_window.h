@@ -46,41 +46,7 @@ class MainWindow final : public QMainWindow
 {
         Q_OBJECT
 
-public:
-        explicit MainWindow(QWidget* parent = nullptr);
-        ~MainWindow() override;
-
-        void append_to_log(const std::string& text, const Srgb8& color);
-
 private:
-        void on_about_triggered();
-        void on_exit_triggered();
-        void on_first_shown();
-        void on_graphics_widget_mouse_move(QMouseEvent*);
-        void on_graphics_widget_mouse_press(QMouseEvent*);
-        void on_graphics_widget_mouse_release(QMouseEvent*);
-        void on_graphics_widget_mouse_wheel(QWheelEvent*);
-        void on_graphics_widget_resize(QResizeEvent*);
-        void on_help_triggered();
-        void on_timer_progress_bar();
-
-        //
-
-        void constructor_graphics_widget();
-        void constructor_objects();
-
-        void showEvent(QShowEvent* event) override;
-        void closeEvent(QCloseEvent* event) override;
-
-        void terminate_all_threads();
-
-        //
-
-        void set_progress_bars(
-                unsigned id,
-                const ProgressRatioList* progress_list,
-                std::list<QProgressBar>* progress_bars);
-
         const std::thread::id m_thread_id = std::this_thread::get_id();
         bool m_first_show = true;
 
@@ -104,5 +70,35 @@ private:
         std::unique_ptr<Actions> m_actions;
 
         QTimer m_timer_progress_bar;
+
+        void on_about_triggered();
+        void on_exit_triggered();
+        void on_first_shown();
+        void on_graphics_widget_mouse_move(QMouseEvent*);
+        void on_graphics_widget_mouse_press(QMouseEvent*);
+        void on_graphics_widget_mouse_release(QMouseEvent*);
+        void on_graphics_widget_mouse_wheel(QWheelEvent*);
+        void on_graphics_widget_resize(QResizeEvent*);
+        void on_help_triggered();
+        void on_timer_progress_bar();
+
+        void constructor_graphics_widget();
+        void constructor_objects();
+
+        void showEvent(QShowEvent* event) override;
+        void closeEvent(QCloseEvent* event) override;
+
+        void terminate_all_threads();
+
+        void set_progress_bars(
+                unsigned id,
+                const ProgressRatioList* progress_list,
+                std::list<QProgressBar>* progress_bars);
+
+public:
+        MainWindow();
+        ~MainWindow() override;
+
+        void append_to_log(const std::string& text, const Srgb8& color);
 };
 }
