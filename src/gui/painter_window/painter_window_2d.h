@@ -35,26 +35,36 @@ class PainterWindow2d : public QWidget
 {
         Q_OBJECT
 
-public:
-        PainterWindow2d(
-                const std::string& name,
-                std::vector<int>&& m_screen_size,
-                const std::vector<int>& initial_slider_positions);
-        ~PainterWindow2d() override;
-
 private:
-        void on_save_to_file_clicked();
-        void on_add_volume_clicked();
+        const std::thread::id m_window_thread_id = std::this_thread::get_id();
+        bool m_first_show = true;
 
-        void on_timer_timeout();
-        void on_first_shown();
-        void on_slider_changed(int);
+        Ui::PainterWindow ui;
+
+        const std::vector<int> m_screen_size;
+        const int m_width;
+        const int m_height;
+        const long long m_image_pixel_count;
+        const long long m_image_byte_count;
+        QImage m_image;
+        QTimer m_timer;
+
+        class Difference;
+        std::unique_ptr<Difference> m_difference;
 
         struct DimensionSlider
         {
                 QLabel label;
                 QSlider slider;
         };
+        std::deque<DimensionSlider> m_dimension_sliders;
+
+        void on_save_to_file_clicked();
+        void on_add_volume_clicked();
+
+        void on_timer_timeout();
+        void on_first_shown();
+        void on_slider_changed(int);
 
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;
@@ -77,22 +87,11 @@ private:
         virtual void save_to_file() const = 0;
         virtual void add_volume() const = 0;
 
-        const std::thread::id m_window_thread_id = std::this_thread::get_id();
-        bool m_first_show = true;
-
-        const std::vector<int> m_screen_size;
-        const int m_width;
-        const int m_height;
-        const long long m_image_pixel_count;
-        const long long m_image_byte_count;
-        QImage m_image;
-        QTimer m_timer;
-
-        class Difference;
-        std::unique_ptr<Difference> m_difference;
-
-        std::deque<DimensionSlider> m_dimension_sliders;
-
-        Ui::PainterWindow ui;
+public:
+        PainterWindow2d(
+                const std::string& name,
+                std::vector<int>&& m_screen_size,
+                const std::vector<int>& initial_slider_positions);
+        ~PainterWindow2d() override;
 };
 }
