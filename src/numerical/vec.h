@@ -127,7 +127,7 @@ public:
         // Linear Algebra with Applications. Ninth Edition.
         // Pearson Education, 2015.
         // 5.4 Inner Product Spaces.
-        T norm_1() const
+        [[nodiscard]] T norm_1() const
         {
                 T sum = std::abs(m_data[0]);
                 for (unsigned i = 1; i < N; ++i)
@@ -136,7 +136,7 @@ public:
                 }
                 return sum;
         }
-        T norm_infinity() const
+        [[nodiscard]] T norm_infinity() const
         {
                 T max = std::abs(m_data[0]);
                 for (unsigned i = 1; i < N; ++i)
@@ -145,7 +145,7 @@ public:
                 }
                 return max;
         }
-        T norm_squared() const
+        [[nodiscard]] T norm_squared() const
         {
                 T s = m_data[0] * m_data[0];
                 for (unsigned i = 1; i < N; ++i)
@@ -154,11 +154,11 @@ public:
                 }
                 return s;
         }
-        T norm() const
+        [[nodiscard]] T norm() const
         {
                 return std::sqrt(norm_squared());
         }
-        T norm_stable() const
+        [[nodiscard]] T norm_stable() const
         {
                 const T max = norm_infinity();
 
