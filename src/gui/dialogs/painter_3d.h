@@ -27,26 +27,8 @@ class PainterParametersFor3d final : public QDialog
 {
         Q_OBJECT
 
-public:
-        explicit PainterParametersFor3d(QWidget* parent = nullptr);
-
-        [[nodiscard]] bool show(
-                int max_thread_count,
-                int width,
-                int height,
-                int max_screen_size,
-                int default_samples_per_pixel,
-                int max_samples_per_pixel,
-                int* thread_count,
-                int* paint_width,
-                int* paint_height,
-                int* samples_per_pixel,
-                bool* flat_facets,
-                bool* cornell_box);
-
 private:
-        void on_width_value_changed(int);
-        void on_height_value_changed(int);
+        Ui::PainterParametersFor3d ui;
 
         int m_width;
         int m_height;
@@ -64,9 +46,27 @@ private:
         bool m_flat_facets;
         bool m_cornell_box;
 
-        Ui::PainterParametersFor3d ui;
+        void on_width_value_changed(int);
+        void on_height_value_changed(int);
 
         void done(int r) override;
+
+public:
+        explicit PainterParametersFor3d(QWidget* parent = nullptr);
+
+        [[nodiscard]] bool show(
+                int max_thread_count,
+                int width,
+                int height,
+                int max_screen_size,
+                int default_samples_per_pixel,
+                int max_samples_per_pixel,
+                int* thread_count,
+                int* paint_width,
+                int* paint_height,
+                int* samples_per_pixel,
+                bool* flat_facets,
+                bool* cornell_box);
 };
 }
 

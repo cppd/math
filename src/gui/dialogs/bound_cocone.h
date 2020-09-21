@@ -27,11 +27,6 @@ class BoundCoconeParameters final : public QDialog
 {
         Q_OBJECT
 
-public:
-        explicit BoundCoconeParameters(QWidget* parent = nullptr);
-
-        [[nodiscard]] bool show(int minimum_rho_exponent, int minimum_alpha_exponent, double* rho, double* alpha);
-
 private:
         Ui::BoundCoconeParameters ui;
 
@@ -44,6 +39,11 @@ private:
         double m_alpha;
 
         void done(int r) override;
+
+public:
+        explicit BoundCoconeParameters(QWidget* parent = nullptr);
+
+        [[nodiscard]] bool show(int minimum_rho_exponent, int minimum_alpha_exponent, double* rho, double* alpha);
 };
 }
 

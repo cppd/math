@@ -29,6 +29,15 @@ class PointObjectParameters final : public QDialog
 {
         Q_OBJECT
 
+private:
+        Ui::PointObjectParameters ui;
+
+        int m_min_point_count;
+        int m_max_point_count;
+        int m_point_count;
+
+        void done(int r) override;
+
 public:
         explicit PointObjectParameters(QWidget* parent = nullptr);
 
@@ -39,15 +48,6 @@ public:
                 int min_point_count,
                 int max_point_count,
                 int* point_count);
-
-private:
-        int m_min_point_count;
-        int m_max_point_count;
-        int m_point_count;
-
-        Ui::PointObjectParameters ui;
-
-        void done(int r) override;
 };
 }
 

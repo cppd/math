@@ -29,6 +29,15 @@ class VolumeObjectParameters final : public QDialog
 {
         Q_OBJECT
 
+private:
+        Ui::VolumeObjectParameters ui;
+
+        int m_min_image_size;
+        int m_max_image_size;
+        int m_image_size;
+
+        void done(int r) override;
+
 public:
         explicit VolumeObjectParameters(QWidget* parent = nullptr);
 
@@ -39,15 +48,6 @@ public:
                 int min_image_size,
                 int max_image_size,
                 int* image_size);
-
-private:
-        int m_min_image_size;
-        int m_max_image_size;
-        int m_image_size;
-
-        Ui::VolumeObjectParameters ui;
-
-        void done(int r) override;
 };
 }
 

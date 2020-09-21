@@ -29,6 +29,25 @@ class PainterParametersForNd final : public QDialog
 {
         Q_OBJECT
 
+private:
+        Ui::PainterParametersForNd ui;
+
+        int m_max_thread_count;
+        int m_min_screen_size;
+        int m_max_screen_size;
+        int m_max_samples_per_pixel;
+
+        int m_thread_count;
+        int m_min_size;
+        int m_max_size;
+        int m_samples_per_pixel;
+        bool m_flat_facets;
+
+        void on_min_size_changed(int);
+        void on_max_size_changed(int);
+
+        void done(int r) override;
+
 public:
         explicit PainterParametersForNd(QWidget* parent = nullptr);
 
@@ -45,25 +64,6 @@ public:
                 int* max_size,
                 int* samples_per_pixel,
                 bool* flat_facets);
-
-private:
-        void on_min_size_changed(int);
-        void on_max_size_changed(int);
-
-        int m_max_thread_count;
-        int m_min_screen_size;
-        int m_max_screen_size;
-        int m_max_samples_per_pixel;
-
-        int m_thread_count;
-        int m_min_size;
-        int m_max_size;
-        int m_samples_per_pixel;
-        bool m_flat_facets;
-
-        Ui::PainterParametersForNd ui;
-
-        void done(int r) override;
 };
 }
 
