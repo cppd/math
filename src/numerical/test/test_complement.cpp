@@ -32,6 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <random>
 
+namespace numerical
+{
 namespace
 {
 constexpr int VECTOR_COUNT = 1'000'000;
@@ -210,4 +212,5 @@ void test_complement()
         test_complement<double>(VECTOR_COUNT);
         LOG("---");
         test_complement<long double>(VECTOR_COUNT / 100);
+}
 }

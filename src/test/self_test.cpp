@@ -41,7 +41,7 @@ void self_test_essential(ProgressRatios* progress_ratios)
         std::string s;
 
         s = "Self-Test, Eigen";
-        catch_all(s, []() { test_eigen(); });
+        catch_all(s, []() { numerical::test_eigen(); });
 
         s = "Self-Test, DFT in " + space_name_upper(2);
         catch_all(s, [&]() {

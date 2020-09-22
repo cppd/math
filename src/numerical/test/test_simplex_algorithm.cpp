@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/type/name.h>
 
+namespace numerical
+{
 namespace
 {
 template <typename T>
@@ -144,4 +146,5 @@ void test_simplex_algorithm()
         test_pivot();
         LOG("");
         test_feasible();
+}
 }
