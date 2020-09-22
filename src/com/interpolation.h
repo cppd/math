@@ -27,7 +27,7 @@ T interpolation(T v0, T v1, F x)
 {
         static_assert(is_native_floating_point<T> && is_native_floating_point<F>);
 
-        return fma(static_cast<T>(x), v1, fma(-static_cast<T>(x), v0, v0));
+        return std::fma(static_cast<T>(x), v1, std::fma(-static_cast<T>(x), v0, v0));
 }
 
 template <typename T, typename F>

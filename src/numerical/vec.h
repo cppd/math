@@ -322,7 +322,7 @@ T dot(const Vector<N, T>& a, const Vector<N, T>& b)
         T result = a[0] * b[0];
         for (unsigned i = 1; i < N; ++i)
         {
-                result = fma(a[i], b[i], result);
+                result = std::fma(a[i], b[i], result);
         }
         return result;
 }

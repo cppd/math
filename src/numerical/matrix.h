@@ -200,7 +200,7 @@ Matrix<Rows, Columns, T> operator*(const Matrix<Rows, Inner, T>& m1, const Matri
                 {
                         for (unsigned c = 0; c < Columns; ++c)
                         {
-                                row[c] = fma(m1(r, i), m2(i, c), row[c]);
+                                row[c] = std::fma(m1(r, i), m2(i, c), row[c]);
                         }
                 }
         }
@@ -219,7 +219,7 @@ Vector<Columns, T> operator*(const Vector<Rows, T>& v, const Matrix<Rows, Column
         {
                 for (unsigned c = 0; c < Columns; ++c)
                 {
-                        res[c] = fma(v[r], m(r, c), res[c]);
+                        res[c] = std::fma(v[r], m(r, c), res[c]);
                 }
         }
         return res;
@@ -234,7 +234,7 @@ Vector<Rows, T> operator*(const Matrix<Rows, Columns, T>& m, const Vector<Column
                 res[r] = m(r, 0) * v[0];
                 for (unsigned c = 1; c < Columns; ++c)
                 {
-                        res[r] = fma(m(r, c), v[c], res[r]);
+                        res[r] = std::fma(m(r, c), v[c], res[r]);
                 }
         }
         return res;

@@ -129,7 +129,7 @@ public:
                         res[r] = m_matrix(r, 0) * v[0];
                         for (unsigned c = 1; c < N - 1; ++c)
                         {
-                                res[r] = fma(m_matrix(r, c), v[c], res[r]);
+                                res[r] = std::fma(m_matrix(r, c), v[c], res[r]);
                         }
                         res[r] += m_matrix(r, N - 1);
                 }
