@@ -183,6 +183,28 @@ public:
                 }
                 return res;
         }
+
+        T trace() const
+        {
+                constexpr size_t N = std::min(Rows, Columns);
+                T s = 0;
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        s += m_data[i][i];
+                }
+                return s;
+        }
+
+        Vector<std::min(Rows, Columns), T> diagonal() const
+        {
+                constexpr size_t N = std::min(Rows, Columns);
+                Vector<N, T> d;
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        d[i] = m_data[i][i];
+                }
+                return d;
+        }
 };
 
 template <size_t Rows, size_t Inner, size_t Columns, typename T>
