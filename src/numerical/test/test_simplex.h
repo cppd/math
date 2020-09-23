@@ -19,5 +19,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace numerical
 {
-void test_simplex_algorithm();
+void test_simplex();
 }

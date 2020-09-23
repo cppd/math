@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_simplex_algorithm.h"
+#include "test_simplex.h"
 
 #include "../simplex.h"
 
@@ -141,7 +141,7 @@ void test_feasible()
 }
 }
 
-void test_simplex_algorithm()
+void test_simplex()
 {
         test_pivot();
         LOG("");
