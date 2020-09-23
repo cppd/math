@@ -131,17 +131,6 @@ void set_identity_matrix(std::array<Vector<N, T>, N>* eigenvectors)
 }
 
 template <size_t N, typename T>
-Vector<N, T> diagonal(const Matrix<N, N, T>& a)
-{
-        Vector<N, T> v;
-        for (unsigned i = 0; i < N; ++i)
-        {
-                v[i] = a(i, i);
-        }
-        return v;
-}
-
-template <size_t N, typename T>
 void check_symmetric_matrix(const Matrix<N, N, T>& a)
 {
         for (unsigned i = 0; i < N - 1; ++i)
@@ -196,7 +185,7 @@ void eigen(Matrix<N, N, T> a, T tolerance, Vector<N, T>* eigenvalues, std::array
 
                 if (mu <= tolerance)
                 {
-                        *eigenvalues = impl::diagonal(a);
+                        *eigenvalues = a.diagonal();
                         *eigenvectors = vectors;
                         return;
                 }
