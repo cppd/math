@@ -153,12 +153,12 @@ bool intersect_cocone(
         if (dot_1 > dot_2)
         {
                 from_apex_to_intersection_point = pi_1;
-                *distance = sqrt(dot_1);
+                *distance = std::sqrt(dot_1);
         }
         else
         {
                 from_apex_to_intersection_point = pi_2;
-                *distance = sqrt(dot_2);
+                *distance = std::sqrt(dot_2);
         }
 
         return true;

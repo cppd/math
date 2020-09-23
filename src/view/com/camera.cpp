@@ -96,7 +96,7 @@ void Camera::reset(const vec3& right, const vec3& up, double scale, const vec2& 
 
         set_vectors(right, up);
 
-        m_scale_exponent = std::log(scale) / log(SCALE_BASE);
+        m_scale_exponent = std::log(scale) / std::log(SCALE_BASE);
         m_window_center = window_center;
 
         if (m_width > 0 && m_height > 0)
