@@ -22,7 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/core/test/test_convex_hull.h>
 #include <src/geometry/reconstruction/test/test_reconstruction.h>
 #include <src/gpu/dft/test/test_dft.h>
+#include <src/numerical/test/test_complement.h>
 #include <src/numerical/test/test_eigen.h>
+#include <src/numerical/test/test_simplex_algorithm.h>
 #include <src/painter/shapes/test/test_mesh.h>
 #include <src/painter/space/test/test_parallelotope.h>
 #include <src/utility/string/str.h>
@@ -40,8 +42,17 @@ void self_test_essential(ProgressRatios* progress_ratios)
 {
         std::string s;
 
+        s = "Self-Test, Complement";
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
+                numerical::test_complement(&progress);
+        });
+
         s = "Self-Test, Eigen";
         catch_all(s, []() { numerical::test_eigen(); });
+
+        s = "Self-Test, Simplex";
+        catch_all(s, []() { numerical::test_simplex_algorithm(); });
 
         s = "Self-Test, DFT in " + space_name_upper(2);
         catch_all(s, [&]() {

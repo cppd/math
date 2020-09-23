@@ -44,7 +44,7 @@ void test_pivot()
         if (!(b == std::array<T, 3>{21, 6, 9}))
         {
                 impl::print_simplex_algorithm_data(b, a, v, c);
-                error("b error");
+                error("pivot b error");
         }
 
         if (!(a
@@ -52,22 +52,22 @@ void test_pivot()
                       Vector<3, T>(0.25, -0.75, -2.5), Vector<3, T>(0.5, -1.5, -4), Vector<3, T>(-0.25, -0.25, -0.5)}))
         {
                 impl::print_simplex_algorithm_data(b, a, v, c);
-                error("a error");
+                error("pivot a error");
         }
 
         if (!(v == 32))
         {
                 impl::print_simplex_algorithm_data(b, a, v, c);
-                error("v error");
+                error("pivot v error");
         }
 
         if (!(c == Vector<3, T>(-0.75, 0.25, 0.5)))
         {
                 impl::print_simplex_algorithm_data(b, a, v, c);
-                error("c error");
+                error("pivot c error");
         }
 
-        LOG("passed");
+        LOG("pivot passed");
 }
 
 template <typename T>

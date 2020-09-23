@@ -36,7 +36,7 @@ namespace numerical
 {
 namespace
 {
-constexpr int VECTOR_COUNT = 1'000'000;
+constexpr int VECTOR_COUNT = 100'000;
 
 template <typename T>
 constexpr T COS_LIMIT_ORTHOGONAL = limits<T>::epsilon() * 100;
@@ -205,12 +205,16 @@ void test_complement(int vector_count)
 }
 }
 
-void test_complement()
+void test_complement(ProgressRatio* progress)
 {
+        progress->set(0);
         test_complement<float>(VECTOR_COUNT);
+        progress->set(1, 3);
         LOG("---");
         test_complement<double>(VECTOR_COUNT);
+        progress->set(2, 3);
         LOG("---");
         test_complement<long double>(VECTOR_COUNT / 100);
+        progress->set(3, 3);
 }
 }
