@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/type/limit.h>
+#include <src/com/type/name.h>
 #include <src/utility/random/engine.h>
 
 #include <random>
@@ -48,22 +49,39 @@ bool equal(const Vector<3, double>& a, const Vector<3, double>& b)
 }
 
 template <size_t N, typename T>
-Matrix<N, N, T> random_symmetric_matrix(T min, T max)
+struct MatrixWithDeterminant
 {
-        Matrix<N, N, T> m;
+        Matrix<N, N, T> matrix;
+        T determinant;
+};
+
+template <size_t N, typename T>
+std::vector<MatrixWithDeterminant<N, T>> random_symmetric_matrices(unsigned count, T min, T max)
+{
         RandomEngineWithSeed<std::mt19937_64> random_engine;
         std::uniform_real_distribution<T> urd(min, max);
-        for (unsigned i = 0; i < N; ++i)
+
+        std::vector<MatrixWithDeterminant<N, T>> matrices;
+        matrices.reserve(count);
+        for (size_t n = 0; n < count; ++n)
         {
-                m(i, i) = urd(random_engine);
-                for (unsigned j = i + 1; j < N; ++j)
+                MatrixWithDeterminant<N, T>& m = matrices.emplace_back();
+                do
                 {
-                        T v = urd(random_engine);
-                        m(i, j) = v;
-                        m(j, i) = v;
-                }
+                        for (unsigned i = 0; i < N; ++i)
+                        {
+                                m.matrix(i, i) = urd(random_engine);
+                                for (unsigned j = i + 1; j < N; ++j)
+                                {
+                                        T v = urd(random_engine);
+                                        m.matrix(i, j) = v;
+                                        m.matrix(j, i) = v;
+                                }
+                        }
+                        m.determinant = m.matrix.determinant();
+                } while (!(is_finite(m.determinant) && m.determinant >= T(0.001)));
         }
-        return m;
+        return matrices;
 }
 
 void test_eigen_defined()
@@ -107,50 +125,51 @@ void test_eigen_defined()
 }
 
 template <size_t N, typename T>
-void test_eigen_random()
+void test_eigen_random(unsigned count)
 {
         constexpr T TOLERANCE = limits<T>::epsilon() * 100;
 
-        Matrix<N, N, T> matrix = random_symmetric_matrix<N, T>(-1, 1);
+        for (const MatrixWithDeterminant<N, T>& m : random_symmetric_matrices<N, T>(count, -1, 1))
+        {
+                Vector<N, T> eigenvalues;
+                std::array<Vector<N, T>, N> eigenvectors;
+                try
+                {
+                        numerical::eigen(m.matrix, TOLERANCE, &eigenvalues, &eigenvectors);
+                }
+                catch (const numerical::EigenException& e)
+                {
+                        error(e.what());
+                }
 
-        Vector<N, T> eigenvalues;
-        std::array<Vector<N, T>, N> eigenvectors;
-        try
-        {
-                numerical::eigen(matrix, TOLERANCE, &eigenvalues, &eigenvectors);
-        }
-        catch (const numerical::EigenException& e)
-        {
-                error(e.what());
-        }
-
-        T trace = 0;
-        T sum = 0;
-        T product = 1;
-        T det = matrix.determinant();
-        for (unsigned i = 0; i < N; ++i)
-        {
-                trace += matrix(i, i);
-                sum += eigenvalues[i];
-                product *= eigenvalues[i];
-        }
-        if (std::abs((trace - sum) / std::max(std::abs(trace), std::abs(sum))) > T(0.01))
-        {
-                error("Eigenvalues error, trace " + to_string(trace) + " and sum " + to_string(sum) + " are not equal");
-        }
-        if (std::abs((det - product) / std::max(std::abs(det), std::abs(product))) > T(0.01))
-        {
-                error("Eigenvalues error, determinant " + to_string(det) + " and product " + to_string(product)
-                      + " are not equal");
+                const T trace = m.matrix.trace();
+                const T det = m.determinant;
+                T sum = 0;
+                T product = 1;
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        sum += eigenvalues[i];
+                        product *= eigenvalues[i];
+                }
+                if (std::abs((trace - sum) / std::max(std::abs(trace), std::abs(sum))) > T(0.01))
+                {
+                        error(std::string("Eigenvalues error for ") + type_name<T>() + ": trace " + to_string(trace)
+                              + " and sum " + to_string(sum) + " are not equal");
+                }
+                if (std::abs((det - product) / std::max(std::abs(det), std::abs(product))) > T(0.01))
+                {
+                        error(std::string("Eigenvalues error for ") + type_name<T>() + ": determinant " + to_string(det)
+                              + " and product " + to_string(product) + " are not equal");
+                }
         }
 }
 
 template <typename T>
-void test_eigen_random()
+void test_eigen_random(unsigned count)
 {
-        test_eigen_random<3, T>();
-        test_eigen_random<4, T>();
-        test_eigen_random<5, T>();
+        test_eigen_random<3, T>(count);
+        test_eigen_random<4, T>(count);
+        test_eigen_random<5, T>(count);
 }
 }
 
@@ -158,12 +177,9 @@ void test_eigen()
 {
         LOG("Test eigenvalues and eigenvectors");
         test_eigen_defined();
-        for (int i = 0; i < 100; ++i)
-        {
-                test_eigen_random<float>();
-                test_eigen_random<double>();
-                test_eigen_random<long double>();
-        }
+        test_eigen_random<float>(100);
+        test_eigen_random<double>(100);
+        test_eigen_random<long double>(100);
         LOG("Test eigenvalues and eigenvectors passed");
 }
 }
