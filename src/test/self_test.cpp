@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/dft/test/test_dft.h>
 #include <src/numerical/test/test_complement.h>
 #include <src/numerical/test/test_eigen.h>
+#include <src/numerical/test/test_normal.h>
 #include <src/numerical/test/test_simplex.h>
 #include <src/painter/shapes/test/test_mesh.h>
 #include <src/painter/space/test/test_parallelotope.h>
@@ -50,6 +51,9 @@ void self_test_essential(ProgressRatios* progress_ratios)
 
         s = "Self-Test, Eigen";
         catch_all(s, []() { numerical::test_eigen(); });
+
+        s = "Self-Test, Normal";
+        catch_all(s, []() { numerical::test_normal(); });
 
         s = "Self-Test, Simplex";
         catch_all(s, []() { numerical::test_simplex(); });
