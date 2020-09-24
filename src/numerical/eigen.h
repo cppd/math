@@ -118,11 +118,11 @@ void set_identity_matrix(std::array<Vector<N, T>, N>* eigenvectors)
 {
         for (unsigned i = 0; i < N; ++i)
         {
-                (*eigenvectors)[i][i] = 1;
                 for (unsigned j = 0; j < i; ++j)
                 {
                         (*eigenvectors)[i][j] = 0;
                 }
+                (*eigenvectors)[i][i] = 1;
                 for (unsigned j = i + 1; j < N; ++j)
                 {
                         (*eigenvectors)[i][j] = 0;
