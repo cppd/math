@@ -56,17 +56,19 @@ Convex hull                                    | Divide et impera
 
 C++
 
-Domain                                          | Algorithm
-------------------------------------------------|----------------------------------------------------
-Convex hull                                     | Randomized incremental
-Delaunay triangulation                          | Convex hull of paraboloid
-Voronoi diagram                                 | The Delaunay triangulation
-Manifold reconstruction                         | Cocone
-Manifold reconstruction with boundary detection | BoundCocone
-Euclidean minimum spanning tree                 | Kruskal’s algorithm and the Delaunay triangulation
-Intersection of hyperplanes                     | Gaussian elimination
-Intersection of convex polytopes                | The simplex algorithm
-Ray intersection acceleration                   | Spatial subdivision and 2<sup>d</sup>-trees
+Domain                                             | Algorithm
+---------------------------------------------------|----------------------------------------------------
+Convex hull                                        | Randomized incremental
+Delaunay triangulation                             | Convex hull of paraboloid
+Voronoi diagram                                    | The Delaunay triangulation
+Manifold reconstruction                            | Cocone
+Manifold reconstruction with boundary detection    | BoundCocone
+Euclidean minimum spanning tree                    | Kruskal’s algorithm and the Delaunay triangulation
+Intersection of hyperplanes                        | Gaussian elimination
+Intersection of convex polytopes                   | The simplex algorithm
+Ray intersection acceleration                      | Spatial subdivision and 2<sup>d</sup>-trees
+Eigenvalues and eigenvectors of symmetric matrices | Jacobi method
+Least squares fitting a plane to points            | Principal component analysis 
 
 ## Technical details
 
