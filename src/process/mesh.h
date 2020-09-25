@@ -125,7 +125,7 @@ void cocone(
 
                 constructor.cocone(&normals, &facets, &progress);
 
-                cocone_mesh = mesh::create_mesh_for_facets(constructor.points(), normals, facets);
+                cocone_mesh = mesh::create_mesh_for_facets(constructor.points(), facets);
 
                 LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5)
                     + " s");
@@ -161,7 +161,7 @@ void bound_cocone(
 
                 constructor.bound_cocone(rho, alpha, &normals, &facets, &progress);
 
-                bound_cocone_mesh = mesh::create_mesh_for_facets(constructor.points(), normals, facets);
+                bound_cocone_mesh = mesh::create_mesh_for_facets(constructor.points(), facets);
 
                 LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5)
                     + " s");

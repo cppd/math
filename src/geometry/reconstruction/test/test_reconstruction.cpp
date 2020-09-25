@@ -237,7 +237,7 @@ template <size_t N>
 void test_geometry_files(
         const std::string& name,
         const std::vector<Vector<N, float>>& points,
-        const std::vector<Vector<N, double>>& normals,
+        const std::vector<Vector<N, double>>& /*normals*/,
         const std::vector<std::array<int, N>>& facets,
         ProgressRatio* progress)
 {
@@ -248,7 +248,7 @@ void test_geometry_files(
         std::filesystem::path file_name = std::filesystem::temp_directory_path() / name;
 
         LOG("creating mesh for facets...");
-        std::unique_ptr<const mesh::Mesh<N>> mesh = mesh::create_mesh_for_facets(points, normals, facets);
+        std::unique_ptr<const mesh::Mesh<N>> mesh = mesh::create_mesh_for_facets(points, facets);
 
         std::string comment;
         comment += "Manifold Reconstruction\n";

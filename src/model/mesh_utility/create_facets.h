@@ -21,16 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vec.h>
 
+#include <array>
 #include <memory>
+#include <vector>
 
 namespace mesh
 {
-template <size_t N>
-std::unique_ptr<Mesh<N>> create_mesh_for_facets(
-        const std::vector<Vector<N, float>>& points,
-        const std::vector<Vector<N, double>>& normals,
-        const std::vector<std::array<int, N>>& facets);
-
 template <size_t N>
 std::unique_ptr<Mesh<N>> create_mesh_for_facets(
         const std::vector<Vector<N, float>>& points,
