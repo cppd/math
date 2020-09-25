@@ -141,10 +141,15 @@ void test_feasible()
 }
 }
 
-void test_simplex()
+void test_simplex(ProgressRatio* progress)
 {
+        progress->set(0);
+
         test_pivot();
         LOG("");
+        progress->set(1, 2);
+
         test_feasible();
+        progress->set(2, 2);
 }
 }

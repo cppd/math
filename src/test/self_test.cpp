@@ -50,13 +50,22 @@ void self_test_essential(ProgressRatios* progress_ratios)
         });
 
         s = "Self-Test, Eigen";
-        catch_all(s, []() { numerical::test_eigen(); });
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
+                numerical::test_eigen(&progress);
+        });
 
         s = "Self-Test, Normal";
-        catch_all(s, []() { numerical::test_normal(); });
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
+                numerical::test_normal(&progress);
+        });
 
         s = "Self-Test, Simplex";
-        catch_all(s, []() { numerical::test_simplex(); });
+        catch_all(s, [&]() {
+                ProgressRatio progress(progress_ratios, s);
+                numerical::test_simplex(&progress);
+        });
 
         s = "Self-Test, DFT in " + space_name_upper(2);
         catch_all(s, [&]() {

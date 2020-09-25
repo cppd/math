@@ -149,17 +149,24 @@ void test_normal_random(unsigned test_count)
 }
 }
 
-void test_normal()
+void test_normal(ProgressRatio* progress)
 {
         LOG("Test point normals");
+        progress->set(0);
 
         test_normal_defined<float>();
         test_normal_defined<double>();
         test_normal_defined<long double>();
+        progress->set(1, 4);
 
         test_normal_random<float>(10);
+        progress->set(2, 4);
+
         test_normal_random<double>(10);
+        progress->set(3, 4);
+
         test_normal_random<long double>(10);
+        progress->set(4, 4);
 
         LOG("Test point normals passed");
 }

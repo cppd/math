@@ -173,13 +173,21 @@ void test_eigen_random(unsigned count)
 }
 }
 
-void test_eigen()
+void test_eigen(ProgressRatio* progress)
 {
         LOG("Test eigenvalues and eigenvectors");
+        progress->set(0);
+
         test_eigen_defined();
         test_eigen_random<float>(100);
+        progress->set(1, 3);
+
         test_eigen_random<double>(100);
+        progress->set(2, 3);
+
         test_eigen_random<long double>(100);
+        progress->set(3, 3);
+
         LOG("Test eigenvalues and eigenvectors passed");
 }
 }

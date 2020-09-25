@@ -17,7 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/progress/progress.h>
+
 namespace numerical
 {
-void test_eigen();
+void test_eigen(ProgressRatio* progress);
 }
