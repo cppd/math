@@ -29,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "matrix.h"
 #include "vec.h"
 
-#include <src/com/error.h>
 #include <src/com/type/limit.h>
 
 #include <exception>
@@ -118,30 +117,11 @@ void set_identity_matrix(std::array<Vector<N, T>, N>* eigenvectors)
 {
         for (unsigned i = 0; i < N; ++i)
         {
-                for (unsigned j = 0; j < i; ++j)
+                for (unsigned j = 0; j < N; ++j)
                 {
                         (*eigenvectors)[i][j] = 0;
                 }
                 (*eigenvectors)[i][i] = 1;
-                for (unsigned j = i + 1; j < N; ++j)
-                {
-                        (*eigenvectors)[i][j] = 0;
-                }
-        }
-}
-
-template <size_t N, typename T>
-void check_symmetric_matrix(const Matrix<N, N, T>& a)
-{
-        for (unsigned i = 0; i < N - 1; ++i)
-        {
-                for (unsigned j = i + 1; j < N; ++j)
-                {
-                        if (a(i, j) != a(j, i))
-                        {
-                                error("Symmetric matrix is required for Jacobi method");
-                        }
-                }
         }
 }
 }
@@ -158,12 +138,14 @@ public:
 };
 
 template <size_t N, typename T>
-void eigen(Matrix<N, N, T> a, T tolerance, Vector<N, T>* eigenvalues, std::array<Vector<N, T>, N>* eigenvectors)
+void eigen_symmetric_upper_triangular(
+        Matrix<N, N, T> a,
+        T tolerance,
+        Vector<N, T>* eigenvalues,
+        std::array<Vector<N, T>, N>* eigenvectors)
 {
         static_assert(std::is_floating_point_v<T>);
         namespace impl = jacobi_method_implementation;
-
-        impl::check_symmetric_matrix(a);
 
         std::array<Vector<N, T>, N> vectors;
         impl::set_identity_matrix(&vectors);
