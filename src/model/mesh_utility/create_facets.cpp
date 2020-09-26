@@ -21,6 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "position.h"
 
 #include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/print.h>
+#include <src/com/time.h>
 
 #include <unordered_map>
 
@@ -94,8 +97,21 @@ std::unique_ptr<Mesh<N>> create_mesh_for_facets(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, N>>& facets)
 {
-        std::unique_ptr<Mesh<N>> mesh = create_mesh(points, facets);
-        compute_normals(mesh.get());
+        std::unique_ptr<Mesh<N>> mesh;
+        {
+                double start_time = time_in_seconds();
+
+                mesh = create_mesh(points, facets);
+
+                LOG("Facets loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        }
+        {
+                double start_time = time_in_seconds();
+
+                compute_normals(mesh.get());
+
+                LOG("Normals computed, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        }
         return mesh;
 }
 
