@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../bounding_box.h"
 #include "../file_info.h"
-#include "../normalize.h"
 #include "../unique.h"
+#include "../vertices.h"
 
 #include <src/com/log.h>
 #include <src/com/print.h>

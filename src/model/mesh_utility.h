@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_utility/file.h"
 #include "mesh_utility/file_info.h"
 #include "mesh_utility/matrix.h"
-#include "mesh_utility/normalize.h"
 #include "mesh_utility/position.h"
 #include "mesh_utility/sort.h"
 #include "mesh_utility/unique.h"
+#include "mesh_utility/vertices.h"
