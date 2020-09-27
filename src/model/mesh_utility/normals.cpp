@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "normals.h"
 
 #include <src/com/alg.h>
+#include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/numerical/normal.h>
 #include <src/numerical/orthogonal.h>
@@ -40,35 +41,78 @@ Vector<N, double> facet_normal(const std::vector<Vector<N, double>>& points, con
         return ortho_nn(points, facet).normalized();
 }
 
+double spherical_triangle_area(const std::array<Vector<4, double>, 3>& vectors, const Vector<4, double>& normal)
+{
+        std::array<Vector<4, double>, 3> v;
+        v[2] = normal;
+
+        v[0] = vectors[0];
+        v[1] = vectors[1];
+        Vector<4, double> edge_01_normal = ortho_nn(v).normalized();
+
+        v[0] = vectors[1];
+        v[1] = vectors[2];
+        Vector<4, double> edge_12_normal = ortho_nn(v).normalized();
+
+        v[0] = vectors[2];
+        v[1] = vectors[0];
+        Vector<4, double> edge_20_normal = ortho_nn(v).normalized();
+
+        double dihedral_cosine_0 = -dot(edge_01_normal, edge_20_normal);
+        double dihedral_cosine_1 = -dot(edge_01_normal, edge_12_normal);
+        double dihedral_cosine_2 = -dot(edge_20_normal, edge_12_normal);
+        if (!is_finite(dihedral_cosine_0) || !is_finite(dihedral_cosine_1) || !is_finite(dihedral_cosine_2))
+        {
+                return 0;
+        }
+
+        double dihedral_0 = std::acos(std::clamp(dihedral_cosine_0, -1.0, 1.0));
+        double dihedral_1 = std::acos(std::clamp(dihedral_cosine_1, -1.0, 1.0));
+        double dihedral_2 = std::acos(std::clamp(dihedral_cosine_2, -1.0, 1.0));
+
+        double area = dihedral_0 + dihedral_1 + dihedral_2 - PI<double>;
+
+        return std::max(0.0, area);
+}
+
 template <size_t N>
 double facet_normat_weight_at_vertex(
         const std::vector<Vector<N, double>>& points,
         const std::array<int, N>& facet,
-        int facet_vertex_index)
+        int facet_vertex_index,
+        const Vector<N, double>& facet_normal)
 {
-        if constexpr (N != 3)
+        if constexpr (N >= 5)
         {
                 return 1.0;
         }
-        else
+
+        if constexpr (N == 4 || N == 3)
         {
-                ASSERT(facet_vertex_index >= 0 && facet_vertex_index < 3);
-                int n1 = (facet_vertex_index + 1) % 3;
-                int n2 = (facet_vertex_index + 2) % 3;
-                vec3 v1 = points[facet[n1]] - points[facet[facet_vertex_index]];
-                vec3 v2 = points[facet[n2]] - points[facet[facet_vertex_index]];
-                double norm1 = v1.norm();
-                if (norm1 == 0)
+                ASSERT(facet_vertex_index >= 0 && facet_vertex_index < static_cast<int>(N));
+
+                std::array<Vector<N, double>, N - 1> vectors;
+                for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        return 0;
+                        int index = (facet_vertex_index + 1 + i) % N;
+                        Vector<N, double> v = points[facet[index]] - points[facet[facet_vertex_index]];
+                        double norm = v.norm();
+                        if (norm == 0)
+                        {
+                                return 0;
+                        }
+                        vectors[i] = v / norm;
                 }
-                double norm2 = v2.norm();
-                if (norm2 == 0)
+
+                if constexpr (N == 4)
                 {
-                        return 0;
+                        return spherical_triangle_area(vectors, facet_normal);
                 }
-                double cosine = dot(v1 / norm1, v2 / norm2);
-                return std::acos(std::clamp(cosine, -1.0, 1.0));
+                if constexpr (N == 3)
+                {
+                        double cosine = dot(vectors[0], vectors[1]);
+                        return std::acos(std::clamp(cosine, -1.0, 1.0));
+                }
         }
 }
 
@@ -115,7 +159,8 @@ Vector<N, double> compute_normal(
         for (const VertexFacet& f : vertex_facets)
         {
                 const std::array<int, N>& facet_vertices = mesh_facets[f.facet_index].vertices;
-                double weight = facet_normat_weight_at_vertex(vertices, facet_vertices, f.facet_vertex);
+                double weight = facet_normat_weight_at_vertex(
+                        vertices, facet_vertices, f.facet_vertex, facet_normals[f.facet_index]);
                 weighted_normals.push_back(weight * facet_normals[f.facet_index]);
 
                 for (unsigned fv = 0; fv < f.facet_vertex; ++fv)
