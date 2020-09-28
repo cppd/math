@@ -48,23 +48,43 @@ double spherical_triangle_area(const std::array<Vector<4, double>, 3>& vectors, 
 
         v[0] = vectors[0];
         v[1] = vectors[1];
-        Vector<4, double> edge_01_normal = ortho_nn(v).normalized();
+        Vector<4, double> ridge_01_normal = ortho_nn(v);
+        {
+                double norm = ridge_01_normal.norm();
+                if (norm == 0)
+                {
+                        return 0;
+                }
+                ridge_01_normal /= norm;
+        }
 
         v[0] = vectors[1];
         v[1] = vectors[2];
-        Vector<4, double> edge_12_normal = ortho_nn(v).normalized();
+        Vector<4, double> ridge_12_normal = ortho_nn(v);
+        {
+                double norm = ridge_12_normal.norm();
+                if (norm == 0)
+                {
+                        return 0;
+                }
+                ridge_12_normal /= norm;
+        }
 
         v[0] = vectors[2];
         v[1] = vectors[0];
-        Vector<4, double> edge_20_normal = ortho_nn(v).normalized();
-
-        double dihedral_cosine_0 = -dot(edge_01_normal, edge_20_normal);
-        double dihedral_cosine_1 = -dot(edge_01_normal, edge_12_normal);
-        double dihedral_cosine_2 = -dot(edge_20_normal, edge_12_normal);
-        if (!is_finite(dihedral_cosine_0) || !is_finite(dihedral_cosine_1) || !is_finite(dihedral_cosine_2))
+        Vector<4, double> ridge_20_normal = ortho_nn(v);
         {
-                return 0;
+                double norm = ridge_20_normal.norm();
+                if (norm == 0)
+                {
+                        return 0;
+                }
+                ridge_20_normal /= norm;
         }
+
+        double dihedral_cosine_0 = -dot(ridge_01_normal, ridge_20_normal);
+        double dihedral_cosine_1 = -dot(ridge_01_normal, ridge_12_normal);
+        double dihedral_cosine_2 = -dot(ridge_20_normal, ridge_12_normal);
 
         double dihedral_0 = std::acos(std::clamp(dihedral_cosine_0, -1.0, 1.0));
         double dihedral_1 = std::acos(std::clamp(dihedral_cosine_1, -1.0, 1.0));
@@ -95,13 +115,7 @@ double facet_normat_weight_at_vertex(
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
                         int index = (facet_vertex_index + 1 + i) % N;
-                        Vector<N, double> v = points[facet[index]] - points[facet[facet_vertex_index]];
-                        double norm = v.norm();
-                        if (norm == 0)
-                        {
-                                return 0;
-                        }
-                        vectors[i] = v / norm;
+                        vectors[i] = points[facet[index]] - points[facet[facet_vertex_index]];
                 }
 
                 if constexpr (N == 4)
@@ -110,6 +124,15 @@ double facet_normat_weight_at_vertex(
                 }
                 if constexpr (N == 3)
                 {
+                        for (Vector<N, double>& v : vectors)
+                        {
+                                double norm = v.norm();
+                                if (norm == 0)
+                                {
+                                        return 0;
+                                }
+                                v /= norm;
+                        }
                         double cosine = dot(vectors[0], vectors[1]);
                         return std::acos(std::clamp(cosine, -1.0, 1.0));
                 }
