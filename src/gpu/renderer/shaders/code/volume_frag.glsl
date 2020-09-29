@@ -117,22 +117,32 @@ layout(location = 0) out vec4 out_color;
 
 //
 
-const uint TRANSPARENCY_NULL_POINTER = 0xffffffff;
-const uint TRANSPARENCY_MAX_NODES = 32;
 struct TransparencyArrayNode
 {
         uint color_rg;
         uint color_ba;
         float depth;
 };
+
+#if !defined(MESH)
+
+TransparencyArrayNode transparency_fragments[1];
+int transparency_fragment_count = 0;
+
+void transparency_read_and_sort_fragments()
+{
+}
+
+#else
+
+const uint TRANSPARENCY_NULL_POINTER = 0xffffffff;
+const uint TRANSPARENCY_MAX_NODES = 32;
 TransparencyArrayNode transparency_fragments[TRANSPARENCY_MAX_NODES];
 int transparency_fragment_count;
 
 void transparency_read_and_sort_fragments()
 {
         transparency_fragment_count = 0;
-
-#if defined(MESH)
 
         uint pointer = imageLoad(transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID).r;
 
@@ -162,16 +172,10 @@ void transparency_read_and_sort_fragments()
                 }
                 transparency_fragments[j + 1] = n;
         }
-
-#endif
 }
 
 vec4 transparency_compute()
 {
-#if !defined(MESH)
-        discard;
-        return vec4(0);
-#else
         float transparency = 1; // transparency = 1 - α
         vec3 color = vec3(0);
 
@@ -187,8 +191,9 @@ vec4 transparency_compute()
                 }
         }
         return vec4(color, transparency);
-#endif
 }
+
+#endif
 
 #if defined(IMAGE)
 
@@ -396,8 +401,12 @@ void main(void)
         float second;
         if (!intersect(ray_org, ray_dir, first, second))
         {
+#if defined(MESH)
                 out_color = transparency_compute();
                 return;
+#else
+                discard;
+#endif
         }
         first = max(0, first);
 
@@ -409,8 +418,12 @@ void main(void)
         float depth_direction_limit = depth_limit - depth_pos;
         if (depth_direction_limit <= 0)
         {
+#if defined(MESH)
                 out_color = transparency_compute();
                 return;
+#else
+                discard;
+#endif
         }
         float depth_direction = dot(coordinates.third_row_of_mvp.xyz, image_direction);
 
