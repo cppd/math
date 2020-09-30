@@ -388,16 +388,10 @@ vec3 shade(vec3 p)
         return color;
 }
 
-vec4 draw_image_as_volume(
-        vec3 image_direction,
-        vec3 image_pos,
-        float depth_direction_limit,
-        float depth_direction,
-        float depth_pos)
+vec4 draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir_limit, float depth_dir, float depth_org)
 {
-        float length_in_samples = length(textureSize(image, 0) * image_direction);
-        int sample_count =
-                int(trunc((min(depth_direction_limit, depth_direction) / depth_direction * length_in_samples)));
+        float length_in_samples = length(textureSize(image, 0) * image_dir);
+        int sample_count = int(trunc((min(depth_dir_limit, depth_dir) / depth_dir * length_in_samples)));
         float length_in_samples_r = 1.0 / length_in_samples;
 
         int f = 0;
@@ -412,7 +406,7 @@ vec4 draw_image_as_volume(
                 float transparency_depth = node.depth;
 
                 float k = 0;
-                float volume_depth = depth_pos;
+                float volume_depth = depth_org;
 
                 do
                 {
@@ -420,7 +414,7 @@ vec4 draw_image_as_volume(
                         {
                                 do
                                 {
-                                        vec3 p = image_pos + k * image_direction;
+                                        vec3 p = image_org + k * image_dir;
                                         vec4 c = volume_color(p);
 
                                         color += (transparency * c.a) * c.rgb;
@@ -437,7 +431,7 @@ vec4 draw_image_as_volume(
 
                                         k = s * length_in_samples_r;
 
-                                        volume_depth = depth_pos + k * depth_direction;
+                                        volume_depth = depth_org + k * depth_dir;
                                 } while (volume_depth <= transparency_depth);
                         }
                         else
@@ -471,7 +465,7 @@ vec4 draw_image_as_volume(
         for (; s < sample_count; ++s)
         {
                 float k = s * length_in_samples_r;
-                vec3 p = image_pos + k * image_direction;
+                vec3 p = image_org + k * image_dir;
                 vec4 c = volume_color(p);
 
                 color += (transparency * c.a) * c.rgb;
@@ -498,19 +492,14 @@ vec4 draw_image_as_volume(
         return vec4(color, transparency);
 }
 
-vec4 draw_image_as_isosurface(
-        vec3 image_direction,
-        vec3 image_pos,
-        float depth_direction_limit,
-        float depth_direction,
-        float depth_pos)
+vec4 draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir_limit, float depth_dir, float depth_org)
 {
-        float length_coef = min(depth_direction_limit, depth_direction) / depth_direction;
+        float length_coef = min(depth_dir_limit, depth_dir) / depth_dir;
 
-        image_direction *= length_coef;
-        depth_direction *= length_coef;
+        image_dir *= length_coef;
+        depth_dir *= length_coef;
 
-        int sample_count = int(ceil(length(textureSize(image, 0) * image_direction)));
+        int sample_count = int(ceil(length(textureSize(image, 0) * image_dir)));
         float length_in_samples_r = 1.0 / sample_count;
 
         int f = 0;
@@ -524,7 +513,7 @@ vec4 draw_image_as_isosurface(
                 TransparencyArrayNode node = transparency_fragments[f];
                 float transparency_depth = node.depth;
 
-                while (transparency_depth <= depth_pos)
+                while (transparency_depth <= depth_org)
                 {
                         vec2 rg = unpackUnorm2x16(node.color_rg);
                         vec2 ba = unpackUnorm2x16(node.color_ba);
@@ -548,7 +537,7 @@ vec4 draw_image_as_isosurface(
                 }
         }
 
-        float prev_sign = sample_count >= 1 ? sign(scalar_volume_value(image_pos) - volume.isovalue) : 0;
+        float prev_sign = sample_count >= 1 ? sign(scalar_volume_value(image_org) - volume.isovalue) : 0;
 
         if (f < transparency_fragment_count && s <= sample_count)
         {
@@ -556,19 +545,19 @@ vec4 draw_image_as_isosurface(
                 float transparency_depth = node.depth;
 
                 float k = length_in_samples_r;
-                float volume_depth = depth_pos + k * depth_direction;
+                float volume_depth = depth_org + k * depth_dir;
 
                 do
                 {
                         while (volume_depth <= transparency_depth)
                         {
-                                vec3 p = image_pos + k * image_direction;
+                                vec3 p = image_org + k * image_dir;
 
                                 float next_sign = sign(scalar_volume_value(p) - volume.isovalue);
                                 if (next_sign != prev_sign)
                                 {
                                         float prev_k = (s - 1) * length_in_samples_r;
-                                        vec3 prev_p = image_pos + prev_k * image_direction;
+                                        vec3 prev_p = image_org + prev_k * image_dir;
                                         p = find_isosurface(prev_p, p, prev_sign);
                                         vec4 c = vec4(shade(p), volume.isosurface_alpha);
 
@@ -589,18 +578,18 @@ vec4 draw_image_as_isosurface(
 
                                 k = s * length_in_samples_r;
 
-                                volume_depth = depth_pos + k * depth_direction;
+                                volume_depth = depth_org + k * depth_dir;
                         }
 
                         if (s <= sample_count)
                         {
-                                vec3 p = image_pos + k * image_direction;
+                                vec3 p = image_org + k * image_dir;
                                 float next_sign = sign(scalar_volume_value(p) - volume.isovalue);
                                 if (next_sign != prev_sign)
                                 {
                                         float prev_k = (s - 1) * length_in_samples_r;
-                                        vec3 prev_p = image_pos + prev_k * image_direction;
-                                        float prev_depth = depth_pos + prev_k * depth_direction;
+                                        vec3 prev_p = image_org + prev_k * image_dir;
+                                        float prev_depth = depth_org + prev_k * depth_dir;
                                         vec4 prev_v = vec4(prev_p, prev_depth);
                                         vec4 v = vec4(p, volume_depth);
                                         vec4 iso_p = find_isosurface(prev_v, v, prev_sign);
@@ -685,7 +674,7 @@ vec4 draw_image_as_isosurface(
         for (; s <= sample_count; ++s)
         {
                 float k = s * length_in_samples_r;
-                vec3 p = image_pos + k * image_direction;
+                vec3 p = image_org + k * image_dir;
 
                 float next_sign = sign(scalar_volume_value(p) - volume.isovalue);
                 if (next_sign == prev_sign)
@@ -694,7 +683,7 @@ vec4 draw_image_as_isosurface(
                 }
 
                 float prev_k = (s - 1) * length_in_samples_r;
-                vec3 prev_p = image_pos + prev_k * image_direction;
+                vec3 prev_p = image_org + prev_k * image_dir;
                 p = find_isosurface(prev_p, p, prev_sign);
                 vec4 c = vec4(shade(p), volume.isosurface_alpha);
 
@@ -733,13 +722,13 @@ void main(void)
         }
         first = max(0, first);
 
-        vec3 image_direction = ray_dir * (second - first);
-        vec3 image_pos = ray_org + ray_dir * first;
+        vec3 image_dir = ray_dir * (second - first);
+        vec3 image_org = ray_org + ray_dir * first;
 
-        float depth_pos = dot(coordinates.third_row_of_mvp, vec4(image_pos, 1));
+        float depth_org = dot(coordinates.third_row_of_mvp, vec4(image_org, 1));
         float depth_limit = texelFetch(depth_image, ivec2(gl_FragCoord.xy), gl_SampleID).r;
-        float depth_direction_limit = depth_limit - depth_pos;
-        if (depth_direction_limit <= 0)
+        float depth_dir_limit = depth_limit - depth_org;
+        if (depth_dir_limit <= 0)
         {
 #if defined(MESH)
                 out_color = transparency_compute();
@@ -748,22 +737,19 @@ void main(void)
                 discard;
 #endif
         }
-        float depth_direction = dot(coordinates.third_row_of_mvp.xyz, image_direction);
+        float depth_dir = dot(coordinates.third_row_of_mvp.xyz, image_dir);
 
         if (volume.color_volume)
         {
-                out_color = draw_image_as_volume(
-                        image_direction, image_pos, depth_direction_limit, depth_direction, depth_pos);
+                out_color = draw_image_as_volume(image_dir, image_org, depth_dir_limit, depth_dir, depth_org);
                 return;
         }
         if (!volume.isosurface)
         {
-                out_color = draw_image_as_volume(
-                        image_direction, image_pos, depth_direction_limit, depth_direction, depth_pos);
+                out_color = draw_image_as_volume(image_dir, image_org, depth_dir_limit, depth_dir, depth_org);
                 return;
         }
-        out_color =
-                draw_image_as_isosurface(image_direction, image_pos, depth_direction_limit, depth_direction, depth_pos);
+        out_color = draw_image_as_isosurface(image_dir, image_org, depth_dir_limit, depth_dir, depth_org);
 }
 
 #elif defined(MESH)
