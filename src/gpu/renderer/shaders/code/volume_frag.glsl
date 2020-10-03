@@ -436,42 +436,46 @@ vec4 draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir, float
         if (f < fragments_count && s < sample_count)
         {
                 Fragment fragment = fragments[f];
-
                 float volume_depth = depth_org + s * depth_dir;
 
-                do
+                while (true)
                 {
-                        if (volume_depth <= fragment.depth)
+                        while (volume_depth <= fragment.depth)
                         {
-                                do
+                                vec3 p = image_org + s * image_dir;
+
+                                ADD_COLOR(color, transparency, volume_color(p));
+
+                                if (++s >= sample_count)
                                 {
-                                        vec3 p = image_org + s * image_dir;
+                                        break;
+                                }
 
-                                        ADD_COLOR(color, transparency, volume_color(p));
-
-                                        if (++s >= sample_count)
-                                        {
-                                                break;
-                                        }
-
-                                        volume_depth = depth_org + s * depth_dir;
-                                } while (volume_depth <= fragment.depth);
+                                volume_depth = depth_org + s * depth_dir;
                         }
-                        else
+
+                        if (s >= sample_count)
                         {
-                                do
-                                {
-                                        ADD_FRAGMENT_COLOR(color, transparency, fragment);
-
-                                        if (++f >= fragments_count)
-                                        {
-                                                break;
-                                        }
-
-                                        fragment = fragments[f];
-                                } while (fragment.depth <= volume_depth);
+                                break;
                         }
-                } while (f < fragments_count && s < sample_count);
+
+                        while (fragment.depth <= volume_depth)
+                        {
+                                ADD_FRAGMENT_COLOR(color, transparency, fragment);
+
+                                if (++f >= fragments_count)
+                                {
+                                        break;
+                                }
+
+                                fragment = fragments[f];
+                        }
+
+                        if (f >= fragments_count)
+                        {
+                                break;
+                        }
+                }
         }
 
         for (; s < sample_count; ++s)
@@ -531,7 +535,7 @@ vec4 draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
 
                 float volume_depth = depth_org + s * depth_dir;
 
-                do
+                while (true)
                 {
                         while (volume_depth <= fragment.depth)
                         {
@@ -542,10 +546,9 @@ vec4 draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
                                 {
                                         vec3 prev_p = image_org + (s - 1) * image_dir;
                                         p = find_isosurface(prev_p, p, prev_sign);
+                                        prev_sign = next_sign;
 
                                         ADD_COLOR(color, transparency, isosurface_color(p));
-
-                                        prev_sign = next_sign;
                                 }
 
                                 if (++s >= sample_count)
@@ -567,7 +570,6 @@ vec4 draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
                         {
                                 vec4 prev_v = vec4(image_org, depth_org) + (s - 1) * vec4(image_dir, depth_dir);
                                 vec4 v = find_isosurface(prev_v, vec4(p, volume_depth), prev_sign);
-
                                 prev_sign = next_sign;
 
                                 while (fragment.depth <= v.w)
@@ -583,21 +585,28 @@ vec4 draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
                                 };
 
                                 ADD_COLOR(color, transparency, isosurface_color(v.xyz));
+
+                                if (f >= fragments_count)
+                                {
+                                        break;
+                                }
                         }
 
-                        if (f < fragments_count)
+                        while (fragment.depth <= volume_depth)
                         {
-                                while (fragment.depth <= volume_depth)
+                                ADD_FRAGMENT_COLOR(color, transparency, fragment);
+
+                                if (++f >= fragments_count)
                                 {
-                                        ADD_FRAGMENT_COLOR(color, transparency, fragment);
-
-                                        if (++f >= fragments_count)
-                                        {
-                                                break;
-                                        }
-
-                                        fragment = fragments[f];
+                                        break;
                                 }
+
+                                fragment = fragments[f];
+                        }
+
+                        if (f >= fragments_count)
+                        {
+                                break;
                         }
 
                         if (++s >= sample_count)
@@ -606,8 +615,7 @@ vec4 draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
                         }
 
                         volume_depth = depth_org + s * depth_dir;
-
-                } while (f < fragments_count && s < sample_count);
+                }
         }
 
         for (; f < fragments_count; ++f)
@@ -629,10 +637,9 @@ vec4 draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
 
                 vec3 prev_p = image_org + (s - 1) * image_dir;
                 p = find_isosurface(prev_p, p, prev_sign);
+                prev_sign = next_sign;
 
                 ADD_COLOR(color, transparency, isosurface_color(p));
-
-                prev_sign = next_sign;
         }
 
         return vec4(color, transparency);
