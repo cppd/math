@@ -419,14 +419,16 @@ vec4 isosurface_color(vec3 p)
                 }                                               \
         } while (false)
 
-vec4 draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir_limit, float depth_dir, float depth_org)
+vec4 draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir, float depth_org)
 {
-        float length_in_samples = length(textureSize(image, 0) * image_dir);
-        int sample_count = int(trunc((min(depth_dir_limit, depth_dir) / depth_dir * length_in_samples)));
-        float length_in_samples_r = 1.0 / length_in_samples;
+        const float length_in_samples = length(textureSize(image, 0) * image_dir);
+        const float sample_count = trunc(length_in_samples);
+
+        image_dir /= length_in_samples;
+        depth_dir /= length_in_samples;
 
         int f = 0;
-        int s = 0;
+        float s = 0.5;
 
         float transparency = 1; // transparency = 1 - α
         vec3 color = vec3(0);
@@ -435,8 +437,7 @@ vec4 draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir_limit,
         {
                 Fragment fragment = fragments[f];
 
-                float k = 0;
-                float volume_depth = depth_org;
+                float volume_depth = depth_org + s * depth_dir;
 
                 do
                 {
@@ -444,7 +445,7 @@ vec4 draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir_limit,
                         {
                                 do
                                 {
-                                        vec3 p = image_org + k * image_dir;
+                                        vec3 p = image_org + s * image_dir;
 
                                         ADD_COLOR(color, transparency, volume_color(p));
 
@@ -453,9 +454,7 @@ vec4 draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir_limit,
                                                 break;
                                         }
 
-                                        k = s * length_in_samples_r;
-
-                                        volume_depth = depth_org + k * depth_dir;
+                                        volume_depth = depth_org + s * depth_dir;
                                 } while (volume_depth <= fragment.depth);
                         }
                         else
@@ -477,8 +476,7 @@ vec4 draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir_limit,
 
         for (; s < sample_count; ++s)
         {
-                float k = s * length_in_samples_r;
-                vec3 p = image_org + k * image_dir;
+                vec3 p = image_org + s * image_dir;
 
                 ADD_COLOR(color, transparency, volume_color(p));
         }
@@ -493,23 +491,22 @@ vec4 draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir_limit,
         return vec4(color, transparency);
 }
 
-vec4 draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir_limit, float depth_dir, float depth_org)
+vec4 draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, float depth_org)
 {
-        float length_coef = min(depth_dir_limit, depth_dir) / depth_dir;
+        const float length_in_samples = ceil(length(textureSize(image, 0) * image_dir));
+        const float length_in_samples_r = 1.0 / length_in_samples;
+        const float sample_count = 1 + length_in_samples;
 
-        image_dir *= length_coef;
-        depth_dir *= length_coef;
-
-        int sample_count = int(ceil(length(textureSize(image, 0) * image_dir)));
-        float length_in_samples_r = 1.0 / sample_count;
+        image_dir /= length_in_samples;
+        depth_dir /= length_in_samples;
 
         int f = 0;
-        int s = 1;
+        float s = 1;
 
         float transparency = 1; // transparency = 1 - α
         vec3 color = vec3(0);
 
-        if (f < fragments_count && s <= sample_count)
+        if (f < fragments_count && s < sample_count)
         {
                 Fragment fragment = fragments[f];
 
@@ -526,26 +523,24 @@ vec4 draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir_li
                 }
         }
 
-        float prev_sign = sample_count >= 1 ? sign(scalar_volume_value(image_org) - volume.isovalue) : 0;
+        float prev_sign = sample_count > 1 ? sign(scalar_volume_value(image_org) - volume.isovalue) : 0;
 
-        if (f < fragments_count && s <= sample_count)
+        if (f < fragments_count && s < sample_count)
         {
                 Fragment fragment = fragments[f];
 
-                float k = length_in_samples_r;
-                float volume_depth = depth_org + k * depth_dir;
+                float volume_depth = depth_org + s * depth_dir;
 
                 do
                 {
                         while (volume_depth <= fragment.depth)
                         {
-                                vec3 p = image_org + k * image_dir;
+                                vec3 p = image_org + s * image_dir;
 
                                 float next_sign = sign(scalar_volume_value(p) - volume.isovalue);
                                 if (next_sign != prev_sign)
                                 {
-                                        float prev_k = (s - 1) * length_in_samples_r;
-                                        vec3 prev_p = image_org + prev_k * image_dir;
+                                        vec3 prev_p = image_org + (s - 1) * image_dir;
                                         p = find_isosurface(prev_p, p, prev_sign);
 
                                         ADD_COLOR(color, transparency, isosurface_color(p));
@@ -553,62 +548,66 @@ vec4 draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir_li
                                         prev_sign = next_sign;
                                 }
 
-                                if (++s > sample_count)
+                                if (++s >= sample_count)
                                 {
                                         break;
                                 }
 
-                                k = s * length_in_samples_r;
-
-                                volume_depth = depth_org + k * depth_dir;
+                                volume_depth = depth_org + s * depth_dir;
                         }
 
-                        if (s <= sample_count)
+                        if (s >= sample_count)
                         {
-                                vec3 p = image_org + k * image_dir;
-                                float next_sign = sign(scalar_volume_value(p) - volume.isovalue);
-                                if (next_sign != prev_sign)
+                                break;
+                        }
+
+                        vec3 p = image_org + s * image_dir;
+                        float next_sign = sign(scalar_volume_value(p) - volume.isovalue);
+                        if (next_sign != prev_sign)
+                        {
+                                vec4 prev_v = vec4(image_org, depth_org) + (s - 1) * vec4(image_dir, depth_dir);
+                                vec4 v = find_isosurface(prev_v, vec4(p, volume_depth), prev_sign);
+
+                                prev_sign = next_sign;
+
+                                while (fragment.depth <= v.w)
                                 {
-                                        float prev_k = (s - 1) * length_in_samples_r;
-                                        vec3 prev_p = image_org + prev_k * image_dir;
-                                        float prev_depth = depth_org + prev_k * depth_dir;
-                                        vec4 prev_v = vec4(prev_p, prev_depth);
-                                        vec4 v = vec4(p, volume_depth);
-                                        vec4 iso_p = find_isosurface(prev_v, v, prev_sign);
+                                        ADD_FRAGMENT_COLOR(color, transparency, fragment);
 
-                                        prev_sign = next_sign;
-
-                                        while (fragment.depth <= iso_p.w)
+                                        if (++f >= fragments_count)
                                         {
-                                                ADD_FRAGMENT_COLOR(color, transparency, fragment);
-
-                                                if (++f >= fragments_count)
-                                                {
-                                                        break;
-                                                }
-
-                                                fragment = fragments[f];
-                                        };
-
-                                        ADD_COLOR(color, transparency, isosurface_color(iso_p.xyz));
-                                }
-
-                                if (f < fragments_count)
-                                {
-                                        while (fragment.depth <= volume_depth)
-                                        {
-                                                ADD_FRAGMENT_COLOR(color, transparency, fragment);
-
-                                                if (++f >= fragments_count)
-                                                {
-                                                        break;
-                                                }
-
-                                                fragment = fragments[f];
+                                                break;
                                         }
+
+                                        fragment = fragments[f];
+                                };
+
+                                ADD_COLOR(color, transparency, isosurface_color(v.xyz));
+                        }
+
+                        if (f < fragments_count)
+                        {
+                                while (fragment.depth <= volume_depth)
+                                {
+                                        ADD_FRAGMENT_COLOR(color, transparency, fragment);
+
+                                        if (++f >= fragments_count)
+                                        {
+                                                break;
+                                        }
+
+                                        fragment = fragments[f];
                                 }
                         }
-                } while (f < fragments_count && s <= sample_count);
+
+                        if (++s >= sample_count)
+                        {
+                                break;
+                        }
+
+                        volume_depth = depth_org + s * depth_dir;
+
+                } while (f < fragments_count && s < sample_count);
         }
 
         for (; f < fragments_count; ++f)
@@ -618,10 +617,9 @@ vec4 draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir_li
                 ADD_FRAGMENT_COLOR(color, transparency, fragment);
         }
 
-        for (; s <= sample_count; ++s)
+        for (; s < sample_count; ++s)
         {
-                float k = s * length_in_samples_r;
-                vec3 p = image_org + k * image_dir;
+                vec3 p = image_org + s * image_dir;
 
                 float next_sign = sign(scalar_volume_value(p) - volume.isovalue);
                 if (next_sign == prev_sign)
@@ -629,8 +627,7 @@ vec4 draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir_li
                         continue;
                 }
 
-                float prev_k = (s - 1) * length_in_samples_r;
-                vec3 prev_p = image_org + prev_k * image_dir;
+                vec3 prev_p = image_org + (s - 1) * image_dir;
                 p = find_isosurface(prev_p, p, prev_sign);
 
                 ADD_COLOR(color, transparency, isosurface_color(p));
@@ -680,17 +677,23 @@ void main(void)
         }
         float depth_dir = dot(coordinates.third_row_of_mvp.xyz, image_dir);
 
+        if (depth_dir > depth_dir_limit)
+        {
+                image_dir *= depth_dir_limit / depth_dir;
+                depth_dir = depth_dir_limit;
+        }
+
         if (volume.color_volume)
         {
-                out_color = draw_image_as_volume(image_dir, image_org, depth_dir_limit, depth_dir, depth_org);
+                out_color = draw_image_as_volume(image_dir, image_org, depth_dir, depth_org);
                 return;
         }
         if (!volume.isosurface)
         {
-                out_color = draw_image_as_volume(image_dir, image_org, depth_dir_limit, depth_dir, depth_org);
+                out_color = draw_image_as_volume(image_dir, image_org, depth_dir, depth_org);
                 return;
         }
-        out_color = draw_image_as_isosurface(image_dir, image_org, depth_dir_limit, depth_dir, depth_org);
+        out_color = draw_image_as_isosurface(image_dir, image_org, depth_dir, depth_org);
 }
 
 #elif defined(MESH)
