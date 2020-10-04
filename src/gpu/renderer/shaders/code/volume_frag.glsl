@@ -162,24 +162,49 @@ bool color_add(Fragment fragment)
 
 #if !defined(MESH)
 
-Fragment fragments[1];
-const int fragments_count = 0;
-
 void fragments_build()
 {
+}
+bool fragments_empty()
+{
+        return true;
+}
+void fragments_pop()
+{
+}
+Fragment fragments_top()
+{
+        Fragment f;
+        return f;
 }
 
 #else
 
 const uint TRANSPARENCY_NULL_POINTER = 0xffffffff;
 const uint TRANSPARENCY_MAX_NODES = 32;
-Fragment fragments[TRANSPARENCY_MAX_NODES];
-int fragments_count;
+
+Fragment g_fragments[TRANSPARENCY_MAX_NODES];
+int g_fragments_count = 0;
+int g_fragments_top = 0;
+
+void fragments_sort()
+{
+        // Insertion sort
+        for (int i = 1; i < g_fragments_count; ++i)
+        {
+                Fragment n = g_fragments[i];
+                int j = i - 1;
+                while (j >= 0 && n.depth < g_fragments[j].depth)
+                {
+                        g_fragments[j + 1] = g_fragments[j];
+                        --j;
+                }
+                g_fragments[j + 1] = n;
+        }
+}
 
 void fragments_build()
 {
-        fragments_count = 0;
-
         uint pointer = imageLoad(transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID).r;
 
         if (pointer == TRANSPARENCY_NULL_POINTER)
@@ -187,27 +212,31 @@ void fragments_build()
                 return;
         }
 
-        while (pointer != TRANSPARENCY_NULL_POINTER && fragments_count < TRANSPARENCY_MAX_NODES)
+        while (pointer != TRANSPARENCY_NULL_POINTER && g_fragments_count < TRANSPARENCY_MAX_NODES)
         {
-                fragments[fragments_count].color_rg = transparency_nodes[pointer].color_rg;
-                fragments[fragments_count].color_ba = transparency_nodes[pointer].color_ba;
-                fragments[fragments_count].depth = transparency_nodes[pointer].depth;
+                g_fragments[g_fragments_count].color_rg = transparency_nodes[pointer].color_rg;
+                g_fragments[g_fragments_count].color_ba = transparency_nodes[pointer].color_ba;
+                g_fragments[g_fragments_count].depth = transparency_nodes[pointer].depth;
                 pointer = transparency_nodes[pointer].next;
-                ++fragments_count;
+                ++g_fragments_count;
         }
 
-        // Insertion sort
-        for (int i = 1; i < fragments_count; ++i)
-        {
-                Fragment n = fragments[i];
-                int j = i - 1;
-                while (j >= 0 && n.depth < fragments[j].depth)
-                {
-                        fragments[j + 1] = fragments[j];
-                        --j;
-                }
-                fragments[j + 1] = n;
-        }
+        fragments_sort();
+}
+
+bool fragments_empty()
+{
+        return g_fragments_top >= g_fragments_count;
+}
+
+void fragments_pop()
+{
+        ++g_fragments_top;
+}
+
+Fragment fragments_top()
+{
+        return g_fragments[g_fragments_top];
 }
 
 #endif
@@ -418,12 +447,11 @@ void draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir, float
         image_dir /= length_in_samples;
         depth_dir /= length_in_samples;
 
-        int f = 0;
         float s = 0.5;
 
-        if (f < fragments_count && s < sample_count)
+        if (!fragments_empty() && s < sample_count)
         {
-                Fragment fragment = fragments[f];
+                Fragment fragment = fragments_top();
                 float volume_depth = depth_org + s * depth_dir;
 
                 while (true)
@@ -447,14 +475,14 @@ void draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir, float
                         while (fragment.depth <= volume_depth)
                         {
                                 COLOR_ADD(fragment);
-                                if (++f >= fragments_count)
+                                if (fragments_pop(), fragments_empty())
                                 {
                                         break;
                                 }
-                                fragment = fragments[f];
+                                fragment = fragments_top();
                         }
 
-                        if (f >= fragments_count)
+                        if (fragments_empty())
                         {
                                 break;
                         }
@@ -467,9 +495,9 @@ void draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir, float
                 COLOR_ADD(volume_color(p));
         }
 
-        for (; f < fragments_count; ++f)
+        for (; !fragments_empty(); fragments_pop())
         {
-                COLOR_ADD(fragments[f]);
+                COLOR_ADD(fragments_top());
         }
 }
 
@@ -482,29 +510,28 @@ void draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
         image_dir /= length_in_samples;
         depth_dir /= length_in_samples;
 
-        int f = 0;
         float s = 1;
 
-        if (f < fragments_count && s < sample_count)
+        if (!fragments_empty() && s < sample_count)
         {
-                Fragment fragment = fragments[f];
+                Fragment fragment = fragments_top();
 
                 while (fragment.depth <= depth_org)
                 {
                         COLOR_ADD(fragment);
-                        if (++f >= fragments_count)
+                        if (fragments_pop(), fragments_empty())
                         {
                                 break;
                         }
-                        fragment = fragments[f];
+                        fragment = fragments_top();
                 }
         }
 
         float prev_sign = sample_count > 1 ? sign(scalar_volume_value(image_org) - volume.isovalue) : 0;
 
-        if (f < fragments_count && s < sample_count)
+        if (!fragments_empty() && s < sample_count)
         {
-                Fragment fragment = fragments[f];
+                Fragment fragment = fragments_top();
 
                 float volume_depth = depth_org + s * depth_dir;
 
@@ -547,26 +574,26 @@ void draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
                                 while (fragment.depth <= v.w)
                                 {
                                         COLOR_ADD(fragment);
-                                        if (++f >= fragments_count)
+                                        if (fragments_pop(), fragments_empty())
                                         {
                                                 break;
                                         }
-                                        fragment = fragments[f];
+                                        fragment = fragments_top();
                                 };
 
                                 COLOR_ADD(isosurface_color(v.xyz));
                         }
 
-                        if (f < fragments_count)
+                        if (!fragments_empty())
                         {
                                 while (fragment.depth <= volume_depth)
                                 {
                                         COLOR_ADD(fragment);
-                                        if (++f >= fragments_count)
+                                        if (fragments_pop(), fragments_empty())
                                         {
                                                 break;
                                         }
-                                        fragment = fragments[f];
+                                        fragment = fragments_top();
                                 }
                         }
 
@@ -575,7 +602,7 @@ void draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
                                 break;
                         }
 
-                        if (f >= fragments_count)
+                        if (fragments_empty())
                         {
                                 break;
                         }
@@ -584,9 +611,9 @@ void draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
                 }
         }
 
-        for (; f < fragments_count; ++f)
+        for (; !fragments_empty(); fragments_pop())
         {
-                COLOR_ADD(fragments[f]);
+                COLOR_ADD(fragments_top());
         }
 
         for (; s < sample_count; ++s)
@@ -610,11 +637,11 @@ void draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
 
 #if defined(MESH)
 
-void draw_only_fragments()
+void draw_fragments()
 {
-        for (int f = 0; f < fragments_count; ++f)
+        for (; !fragments_empty(); fragments_pop())
         {
-                COLOR_ADD(fragments[f]);
+                COLOR_ADD(fragments_top());
         }
 }
 
@@ -637,7 +664,7 @@ void main(void)
         {
 #if defined(MESH)
                 color_init();
-                draw_only_fragments();
+                draw_fragments();
                 color_set();
                 return;
 #else
@@ -656,7 +683,7 @@ void main(void)
         {
 #if defined(MESH)
                 color_init();
-                draw_only_fragments();
+                draw_fragments();
                 color_set();
                 return;
 #else
@@ -697,7 +724,7 @@ void main()
         fragments_build();
 
         color_init();
-        draw_only_fragments();
+        draw_fragments();
         color_set();
 }
 
