@@ -32,6 +32,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Real-Time Volume Graphics.
 // A K Peters, Ltd, 2006.
 
+// Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein.
+// Introduction to Algorithms. Third Edition.
+// The MIT Press, 2009.
+// 6. Heapsort.
+
 const float MIN_TRANSPARENCY = 1.0 / 256;
 const int ISOSURFACE_ITERATION_COUNT = 5;
 
@@ -185,22 +190,59 @@ const uint TRANSPARENCY_MAX_NODES = 32;
 
 Fragment g_fragments[TRANSPARENCY_MAX_NODES];
 int g_fragments_count = 0;
-int g_fragments_top = 0;
 
-void fragments_sort()
+int fragments_min_heapify_impl(int i)
 {
-        // Insertion sort
-        for (int i = 1; i < g_fragments_count; ++i)
+        int left = 2 * i + 1;
+        int right = left + 1;
+        int m;
+        m = (left < g_fragments_count && g_fragments[left].depth < g_fragments[i].depth) ? left : i;
+        m = (right < g_fragments_count && g_fragments[right].depth < g_fragments[m].depth) ? right : m;
+        if (m != i)
         {
-                Fragment n = g_fragments[i];
-                int j = i - 1;
-                while (j >= 0 && n.depth < g_fragments[j].depth)
-                {
-                        g_fragments[j + 1] = g_fragments[j];
-                        --j;
-                }
-                g_fragments[j + 1] = n;
+                Fragment t = g_fragments[i];
+                g_fragments[i] = g_fragments[m];
+                g_fragments[m] = t;
+                return m;
         }
+        return -1;
+}
+
+void fragments_min_heapify(int i)
+{
+        while ((i = fragments_min_heapify_impl(i)) >= 0)
+        {
+        }
+}
+
+void fragments_build_min_heap()
+{
+        for (int i = g_fragments_count / 2 - 1; i >= 0; --i)
+        {
+                fragments_min_heapify(i);
+        }
+}
+
+void fragments_pop()
+{
+        if (g_fragments_count > 1)
+        {
+                --g_fragments_count;
+                g_fragments[0] = g_fragments[g_fragments_count];
+                fragments_min_heapify(0);
+                return;
+        }
+        g_fragments_count = 0;
+}
+
+bool fragments_empty()
+{
+        return g_fragments_count <= 0;
+}
+
+Fragment fragments_top()
+{
+        return g_fragments[0];
 }
 
 void fragments_build()
@@ -221,22 +263,7 @@ void fragments_build()
                 ++g_fragments_count;
         }
 
-        fragments_sort();
-}
-
-bool fragments_empty()
-{
-        return g_fragments_top >= g_fragments_count;
-}
-
-void fragments_pop()
-{
-        ++g_fragments_top;
-}
-
-Fragment fragments_top()
-{
-        return g_fragments[g_fragments_top];
+        fragments_build_min_heap();
 }
 
 #endif
