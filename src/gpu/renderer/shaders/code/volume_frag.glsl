@@ -15,30 +15,35 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Mike Bailey, Steve Cunningham.
-// Graphics Shaders. Theory and Practice. Second Edition.
-// CRC Press, 2012.
-// 15. Using Shaders for Scientific Visualization.
+/*
+ Mike Bailey, Steve Cunningham.
+ Graphics Shaders. Theory and Practice. Second Edition.
+ CRC Press, 2012.
+ 15. Using Shaders for Scientific Visualization.
 
-// Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
-// Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
-// Real-Time Rendering. Fourth Edition.
-// CRC Press, 2018.
-// 5. Shading Basics.
-// 14. Volumetric and Translucency Rendering.
+ Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
+ Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
+ Real-Time Rendering. Fourth Edition.
+ CRC Press, 2018.
+ 5. Shading Basics.
+ 14. Volumetric and Translucency Rendering.
 
-// Klaus Engel, Markus Hadwiger, Joe M. Kniss,
-// Christof Rezk-Salama, Daniel Weiskopf.
-// Real-Time Volume Graphics.
-// A K Peters, Ltd, 2006.
+ Klaus Engel, Markus Hadwiger, Joe M. Kniss,
+ Christof Rezk-Salama, Daniel Weiskopf.
+ Real-Time Volume Graphics.
+ A K Peters, Ltd, 2006.
 
-// Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein.
-// Introduction to Algorithms. Third Edition.
-// The MIT Press, 2009.
-// 6. Heapsort.
+ Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein.
+ Introduction to Algorithms. Third Edition.
+ The MIT Press, 2009.
+ 6. Heapsort.
+*/
 
 const float MIN_TRANSPARENCY = 1.0 / 256;
 const int ISOSURFACE_ITERATION_COUNT = 5;
+
+const uint TRANSPARENCY_NULL_POINTER = 0xffffffff;
+const uint TRANSPARENCY_MAX_NODES = 32;
 
 layout(set = 0, binding = 0, std140) uniform Drawing
 {
@@ -185,11 +190,8 @@ Fragment fragments_top()
 
 #else
 
-const uint TRANSPARENCY_NULL_POINTER = 0xffffffff;
-const uint TRANSPARENCY_MAX_NODES = 32;
-
 Fragment g_fragments[TRANSPARENCY_MAX_NODES];
-int g_fragments_count = 0;
+int g_fragments_count;
 
 int fragments_min_heapify_impl(int i)
 {
@@ -210,9 +212,10 @@ int fragments_min_heapify_impl(int i)
 
 void fragments_min_heapify(int i)
 {
-        while ((i = fragments_min_heapify_impl(i)) >= 0)
+        do
         {
-        }
+                i = fragments_min_heapify_impl(i);
+        } while (i >= 0);
 }
 
 void fragments_build_min_heap()
@@ -247,6 +250,8 @@ Fragment fragments_top()
 
 void fragments_build()
 {
+        g_fragments_count = 0;
+
         uint pointer = imageLoad(transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID).r;
 
         if (pointer == TRANSPARENCY_NULL_POINTER)
