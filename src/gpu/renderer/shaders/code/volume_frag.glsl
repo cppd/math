@@ -39,11 +39,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  6. Heapsort.
 */
 
+#extension GL_GOOGLE_include_directive : enable
+#include "transparency.glsl"
+
 const float MIN_TRANSPARENCY = 1.0 / 256;
 const int ISOSURFACE_ITERATION_COUNT = 5;
 
 const uint TRANSPARENCY_NULL_POINTER = 0xffffffff;
-const uint TRANSPARENCY_MAX_NODES = 32;
 
 layout(set = 0, binding = 0, std140) uniform Drawing
 {
@@ -73,13 +75,6 @@ drawing;
 layout(set = 0, binding = 1) uniform sampler2DMS depth_image;
 
 layout(set = 0, binding = 2, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
-struct TransparencyNode
-{
-        uint color_rg;
-        uint color_ba;
-        float depth;
-        uint next;
-};
 layout(set = 0, binding = 3, std430) restrict readonly buffer TransparencyNodes
 {
         TransparencyNode transparency_nodes[];

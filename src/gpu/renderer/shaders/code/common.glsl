@@ -15,6 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#extension GL_GOOGLE_include_directive : enable
+#include "transparency.glsl"
+
 layout(constant_id = 0) const bool TRANSPARENCY_DRAWING = false;
 
 //
@@ -57,18 +60,13 @@ layout(set = 0, binding = 3, r32ui) uniform writeonly uimage2D object_image;
 //
 
 layout(set = 0, binding = 4, r32ui) uniform restrict uimage2DMS transparency_heads;
-layout(set = 0, binding = 5, std430) restrict buffer TransparencyCounter
+layout(set = 0, binding = 5, r32ui) uniform restrict uimage2DMS transparency_heads_size;
+layout(set = 0, binding = 6, std430) restrict buffer TransparencyCounters
 {
-        uint transparency_counter;
+        uint transparency_node_counter;
+        uint transparency_overload_counter;
 };
-struct TransparencyNode
-{
-        uint color_rg;
-        uint color_ba;
-        float depth;
-        uint next;
-};
-layout(set = 0, binding = 6, std430) restrict writeonly buffer TransparencyNodes
+layout(set = 0, binding = 7, std430) restrict writeonly buffer TransparencyNodes
 {
         TransparencyNode transparency_nodes[];
 };
@@ -106,20 +104,30 @@ void set_fragment_color(vec3 color)
         }
         else
         {
-                uint index = atomicAdd(transparency_counter, 1);
-
-                if (index < drawing.transparency_max_node_count)
+                uint heads_size = imageAtomicAdd(transparency_heads_size, ivec2(gl_FragCoord.xy), gl_SampleID, 1);
+                if (heads_size < TRANSPARENCY_MAX_NODES)
                 {
-                        uint prev_head =
-                                imageAtomicExchange(transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID, index);
+                        uint index = atomicAdd(transparency_node_counter, 1);
+                        if (index < drawing.transparency_max_node_count)
+                        {
+                                uint prev_head = imageAtomicExchange(
+                                        transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID, index);
 
-                        TransparencyNode node;
-                        node.color_rg = packUnorm2x16(color.rg);
-                        node.color_ba = packUnorm2x16(vec2(color.b, mesh.alpha));
-                        node.depth = gl_FragCoord.z;
-                        node.next = prev_head;
+                                TransparencyNode node;
+                                node.color_rg = packUnorm2x16(color.rg);
+                                node.color_ba = packUnorm2x16(vec2(color.b, mesh.alpha));
+                                node.depth = gl_FragCoord.z;
+                                node.next = prev_head;
 
-                        transparency_nodes[index] = node;
+                                transparency_nodes[index] = node;
+                        }
+                }
+                else
+                {
+                        if (heads_size == TRANSPARENCY_MAX_NODES)
+                        {
+                                atomicAdd(transparency_overload_counter, 1);
+                        }
                 }
 
                 discard;

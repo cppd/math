@@ -130,6 +130,7 @@ void MeshRenderer::create_render_buffers(
         const RenderBuffers3D* render_buffers,
         const vulkan::ImageWithMemory& objects_image,
         const vulkan::ImageWithMemory& transparency_heads_image,
+        const vulkan::ImageWithMemory& transparency_heads_size_image,
         const vulkan::Buffer& transparency_counter,
         const vulkan::Buffer& transparency_nodes,
         const Region<2, int>& viewport)
@@ -141,17 +142,20 @@ void MeshRenderer::create_render_buffers(
         m_render_buffers = render_buffers;
 
         m_triangles_common_memory.set_objects_image(objects_image);
-        m_triangles_common_memory.set_transparency(transparency_heads_image, transparency_counter, transparency_nodes);
+        m_triangles_common_memory.set_transparency(
+                transparency_heads_image, transparency_heads_size_image, transparency_counter, transparency_nodes);
 
         m_triangle_lines_common_memory.set_objects_image(objects_image);
         m_triangle_lines_common_memory.set_transparency(
-                transparency_heads_image, transparency_counter, transparency_nodes);
+                transparency_heads_image, transparency_heads_size_image, transparency_counter, transparency_nodes);
 
         m_points_common_memory.set_objects_image(objects_image);
-        m_points_common_memory.set_transparency(transparency_heads_image, transparency_counter, transparency_nodes);
+        m_points_common_memory.set_transparency(
+                transparency_heads_image, transparency_heads_size_image, transparency_counter, transparency_nodes);
 
         m_normals_common_memory.set_objects_image(objects_image);
-        m_normals_common_memory.set_transparency(transparency_heads_image, transparency_counter, transparency_nodes);
+        m_normals_common_memory.set_transparency(
+                transparency_heads_image, transparency_heads_size_image, transparency_counter, transparency_nodes);
 
         for (bool transparent : {false, true})
         {

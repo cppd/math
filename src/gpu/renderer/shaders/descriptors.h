@@ -55,8 +55,9 @@ class CommonMemory final
         static constexpr int OBJECTS_BINDING = 3;
 
         static constexpr int TRANSPARENCY_HEADS_BINDING = 4;
-        static constexpr int TRANSPARENCY_COUNTER_BINDING = 5;
-        static constexpr int TRANSPARENCY_NODES_BINDING = 6;
+        static constexpr int TRANSPARENCY_HEADS_SIZE_BINDING = 5;
+        static constexpr int TRANSPARENCY_COUNTERS_BINDING = 6;
+        static constexpr int TRANSPARENCY_NODES_BINDING = 7;
 
         vulkan::Descriptors m_descriptors;
 
@@ -81,7 +82,8 @@ public:
         void set_objects_image(const vulkan::ImageWithMemory& objects_image) const;
         void set_transparency(
                 const vulkan::ImageWithMemory& heads,
-                const vulkan::Buffer& counter,
+                const vulkan::ImageWithMemory& heads_size,
+                const vulkan::Buffer& counters,
                 const vulkan::Buffer& nodes) const;
 };
 

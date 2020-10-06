@@ -105,6 +105,7 @@ public:
                 const RenderBuffers3D* render_buffers,
                 const vulkan::ImageWithMemory& objects_image,
                 const vulkan::ImageWithMemory& transparency_heads_image,
+                const vulkan::ImageWithMemory& transparency_heads_size_image,
                 const vulkan::Buffer& transparency_counter,
                 const vulkan::Buffer& transparency_nodes,
                 const Region<2, int>& viewport);

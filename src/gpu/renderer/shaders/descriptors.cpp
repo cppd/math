@@ -117,7 +117,17 @@ std::vector<VkDescriptorSetLayoutBinding> CommonMemory::descriptor_set_layout_bi
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = TRANSPARENCY_COUNTER_BINDING;
+                b.binding = TRANSPARENCY_HEADS_SIZE_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = TRANSPARENCY_COUNTERS_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -209,12 +219,15 @@ void CommonMemory::set_objects_image(const vulkan::ImageWithMemory& objects) con
 
 void CommonMemory::set_transparency(
         const vulkan::ImageWithMemory& heads,
-        const vulkan::Buffer& counter,
+        const vulkan::ImageWithMemory& heads_size,
+        const vulkan::Buffer& counters,
         const vulkan::Buffer& nodes) const
 {
         ASSERT(heads.format() == VK_FORMAT_R32_UINT);
         ASSERT(heads.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(counter.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+        ASSERT(heads_size.format() == VK_FORMAT_R32_UINT);
+        ASSERT(heads_size.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(counters.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
         ASSERT(nodes.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
@@ -229,14 +242,22 @@ void CommonMemory::set_transparency(
                 bindings.push_back(TRANSPARENCY_HEADS_BINDING);
         }
         {
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+                image_info.imageView = heads_size.image_view();
+
+                infos.emplace_back(image_info);
+                bindings.push_back(TRANSPARENCY_HEADS_SIZE_BINDING);
+        }
+        {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = counter;
+                buffer_info.buffer = counters;
                 buffer_info.offset = 0;
-                buffer_info.range = counter.size();
+                buffer_info.range = counters.size();
 
                 infos.emplace_back(buffer_info);
 
-                bindings.push_back(TRANSPARENCY_COUNTER_BINDING);
+                bindings.push_back(TRANSPARENCY_COUNTERS_BINDING);
         }
         {
                 VkDescriptorBufferInfo buffer_info = {};
