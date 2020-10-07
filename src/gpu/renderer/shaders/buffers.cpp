@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers.h"
 
+#include "../commands.h"
+
 namespace gpu::renderer
 {
 namespace
@@ -467,5 +469,110 @@ void VolumeBuffer::set_lighting(
 
         m_uniform_buffer_volume.write(
                 command_pool, queue, offset, size, reinterpret_cast<const char*>(&volume) + offset);
+}
+
+TransparencyBuffers::TransparencyBuffers(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& command_pool,
+        const vulkan::Queue& queue,
+        const std::unordered_set<uint32_t>& family_indices,
+        VkSampleCountFlagBits sample_count,
+        unsigned width,
+        unsigned height,
+        unsigned long long node_buffer_size)
+        : m_heads(
+                device,
+                command_pool,
+                queue,
+                family_indices,
+                std::vector<VkFormat>({VK_FORMAT_R32_UINT}),
+                sample_count,
+                VK_IMAGE_TYPE_2D,
+                vulkan::make_extent(width, height),
+                VK_IMAGE_LAYOUT_GENERAL,
+                VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT),
+          m_heads_size(
+                  device,
+                  command_pool,
+                  queue,
+                  family_indices,
+                  std::vector<VkFormat>({VK_FORMAT_R32_UINT}),
+                  sample_count,
+                  VK_IMAGE_TYPE_2D,
+                  vulkan::make_extent(width, height),
+                  VK_IMAGE_LAYOUT_GENERAL,
+                  VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT),
+          m_node_buffer(
+                  vulkan::BufferMemoryType::DeviceLocal,
+                  device,
+                  family_indices,
+                  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                  node_buffer_size),
+          m_init_buffer(
+                  vulkan::BufferMemoryType::HostVisible,
+                  device,
+                  family_indices,
+                  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                  sizeof(Counters)),
+          m_read_buffer(
+                  vulkan::BufferMemoryType::HostVisible,
+                  device,
+                  family_indices,
+                  VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                  sizeof(Counters)),
+          m_counters(
+                  vulkan::BufferMemoryType::DeviceLocal,
+                  device,
+                  family_indices,
+                  VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
+                          | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                  sizeof(Counters))
+{
+        Counters counters;
+        counters.transparency_node_counter = 0;
+        counters.transparency_overload_counter = 0;
+        vulkan::BufferMapper mapper(m_init_buffer, 0, m_init_buffer.size());
+        mapper.write(counters);
+}
+
+const vulkan::Buffer& TransparencyBuffers::counters() const
+{
+        return m_counters.buffer();
+}
+
+const vulkan::ImageWithMemory& TransparencyBuffers::heads() const
+{
+        return m_heads;
+}
+
+const vulkan::ImageWithMemory& TransparencyBuffers::heads_size() const
+{
+        return m_heads_size;
+}
+
+const vulkan::Buffer& TransparencyBuffers::nodes() const
+{
+        return m_node_buffer.buffer();
+}
+
+void TransparencyBuffers::commands_init(VkCommandBuffer command_buffer, uint32_t null_pointer_value) const
+{
+        commands_init_uint32_storage_image(command_buffer, m_heads, null_pointer_value);
+        commands_init_uint32_storage_image(command_buffer, m_heads_size, 0);
+        commands_init_buffer(command_buffer, m_init_buffer, m_counters);
+}
+
+void TransparencyBuffers::commands_read(VkCommandBuffer command_buffer) const
+{
+        commands_read_buffer(command_buffer, m_counters, m_read_buffer);
+}
+
+void TransparencyBuffers::read(unsigned* node_counter, unsigned* overload_counter) const
+{
+        vulkan::BufferMapper mapper(m_read_buffer);
+        Counters counters;
+        mapper.read(&counters);
+        *node_counter = counters.transparency_node_counter;
+        *overload_counter = counters.transparency_overload_counter;
 }
 }

@@ -232,4 +232,43 @@ public:
                 float specular,
                 float specular_power) const;
 };
+
+class TransparencyBuffers
+{
+        vulkan::ImageWithMemory m_heads;
+        vulkan::ImageWithMemory m_heads_size;
+        vulkan::BufferWithMemory m_node_buffer;
+
+        vulkan::BufferWithMemory m_init_buffer;
+        vulkan::BufferWithMemory m_read_buffer;
+        vulkan::BufferWithMemory m_counters;
+
+        struct Counters
+        {
+                uint32_t transparency_node_counter;
+                uint32_t transparency_overload_counter;
+        };
+
+public:
+        TransparencyBuffers(
+                const vulkan::Device& device,
+                const vulkan::CommandPool& command_pool,
+                const vulkan::Queue& queue,
+                const std::unordered_set<uint32_t>& family_indices,
+                VkSampleCountFlagBits sample_count,
+                unsigned width,
+                unsigned height,
+                unsigned long long node_buffer_size);
+
+        const vulkan::Buffer& counters() const;
+        const vulkan::ImageWithMemory& heads() const;
+        const vulkan::ImageWithMemory& heads_size() const;
+        const vulkan::Buffer& nodes() const;
+
+        void commands_init(VkCommandBuffer command_buffer, uint32_t null_pointer_value) const;
+        void commands_read(VkCommandBuffer command_buffer) const;
+
+        void read(unsigned* node_counter, unsigned* overload_counter) const;
+};
+
 }

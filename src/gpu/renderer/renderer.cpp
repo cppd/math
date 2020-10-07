@@ -60,12 +60,6 @@ constexpr uint32_t TRANSPARENCY_NULL_POINTER = limits<uint32_t>::max();
 constexpr uint32_t TRANSPARENCY_NODE_SIZE = 16; // packed rgba (2+2+2+2) + depth (4) + next(4)
 constexpr uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
 
-struct TransparencyCounters
-{
-        uint32_t transparency_node_counter;
-        uint32_t transparency_overload_counter;
-};
-
 template <typename T>
 class ObjectStorage
 {
@@ -278,12 +272,7 @@ class Impl final : public Renderer
         std::optional<vulkan::CommandBuffers> m_clear_command_buffers;
         vulkan::Semaphore m_clear_signal_semaphore;
 
-        std::unique_ptr<vulkan::ImageWithMemory> m_transparency_heads;
-        std::unique_ptr<vulkan::ImageWithMemory> m_transparency_heads_size;
-        std::unique_ptr<vulkan::BufferWithMemory> m_transparency_node_counter_init_value;
-        std::unique_ptr<vulkan::BufferWithMemory> m_transparency_node_counter_read_value;
-        std::unique_ptr<vulkan::BufferWithMemory> m_transparency_node_counter;
-        std::unique_ptr<vulkan::BufferWithMemory> m_transparency_node_buffer;
+        std::unique_ptr<TransparencyBuffers> m_transparency_buffers;
         unsigned m_transparency_max_node_count;
         vulkan::Semaphore m_render_transparent_as_opaque_signal_semaphore;
 
@@ -650,11 +639,12 @@ class Impl final : public Renderer
                         {
                                 vulkan::queue_wait_idle(graphics_queue_1);
 
-                                vulkan::BufferMapper mapper(*m_transparency_node_counter_read_value);
-                                TransparencyCounters counters;
-                                mapper.read(&counters);
-                                bool nodes = counters.transparency_node_counter > m_transparency_max_node_count;
-                                bool overload = counters.transparency_overload_counter > 0;
+                                unsigned node_counter;
+                                unsigned overload_counter;
+                                m_transparency_buffers->read(&node_counter, &overload_counter);
+
+                                bool nodes = node_counter > m_transparency_max_node_count;
+                                bool overload = overload_counter > 0;
                                 if (nodes || overload)
                                 {
                                         vulkan::queue_submit(
@@ -671,8 +661,8 @@ class Impl final : public Renderer
                                 }
 
                                 transparency_message(
-                                        nodes ? static_cast<long long>(counters.transparency_node_counter) : -1,
-                                        overload ? static_cast<long long>(counters.transparency_overload_counter) : -1);
+                                        nodes ? static_cast<long long>(node_counter) : -1,
+                                        overload ? static_cast<long long>(overload_counter) : -1);
                         }
                         else
                         {
@@ -731,13 +721,14 @@ class Impl final : public Renderer
                 create_transparency_buffers();
 
                 m_mesh_renderer.create_render_buffers(
-                        m_render_buffers, *m_object_image, *m_transparency_heads, *m_transparency_heads_size,
-                        m_transparency_node_counter->buffer(), m_transparency_node_buffer->buffer(), m_viewport);
+                        m_render_buffers, *m_object_image, m_transparency_buffers->heads(),
+                        m_transparency_buffers->heads_size(), m_transparency_buffers->counters(),
+                        m_transparency_buffers->nodes(), m_viewport);
                 create_mesh_depth_buffers();
 
                 m_volume_renderer.create_buffers(
                         m_render_buffers, m_graphics_command_pool, m_viewport, m_depth_copy_image->image_view(),
-                        *m_transparency_heads, m_transparency_node_buffer->buffer());
+                        m_transparency_buffers->heads(), m_transparency_buffers->nodes());
 
                 create_mesh_command_buffers();
                 create_volume_command_buffers();
@@ -770,66 +761,27 @@ class Impl final : public Renderer
 
         void create_transparency_buffers()
         {
-                const std::unordered_set<uint32_t> family_indices = {m_graphics_queue.family_index()};
-
-                m_transparency_heads = std::make_unique<vulkan::ImageWithMemory>(
-                        m_device, m_graphics_command_pool, m_graphics_queue, family_indices,
-                        std::vector<VkFormat>({VK_FORMAT_R32_UINT}), m_render_buffers->sample_count(), VK_IMAGE_TYPE_2D,
-                        vulkan::make_extent(m_swapchain->width(), m_swapchain->height()), VK_IMAGE_LAYOUT_GENERAL,
-                        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
-                m_transparency_heads_size = std::make_unique<vulkan::ImageWithMemory>(
-                        m_device, m_graphics_command_pool, m_graphics_queue, family_indices,
-                        std::vector<VkFormat>({VK_FORMAT_R32_UINT}), m_render_buffers->sample_count(), VK_IMAGE_TYPE_2D,
-                        vulkan::make_extent(m_swapchain->width(), m_swapchain->height()), VK_IMAGE_LAYOUT_GENERAL,
-                        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
-
-                m_transparency_node_counter_init_value = std::make_unique<vulkan::BufferWithMemory>(
-                        vulkan::BufferMemoryType::HostVisible, m_device, family_indices,
-                        VK_BUFFER_USAGE_TRANSFER_SRC_BIT, sizeof(TransparencyCounters));
-
-                {
-                        TransparencyCounters counters;
-                        counters.transparency_node_counter = 0;
-                        counters.transparency_overload_counter = 0;
-                        vulkan::BufferMapper mapper(
-                                *m_transparency_node_counter_init_value, 0,
-                                m_transparency_node_counter_init_value->size());
-                        mapper.write(counters);
-                }
-
-                m_transparency_node_counter_read_value = std::make_unique<vulkan::BufferWithMemory>(
-                        vulkan::BufferMemoryType::HostVisible, m_device, family_indices,
-                        VK_BUFFER_USAGE_TRANSFER_DST_BIT, sizeof(TransparencyCounters));
-
-                m_transparency_node_counter = std::make_unique<vulkan::BufferWithMemory>(
-                        vulkan::BufferMemoryType::DeviceLocal, m_device, family_indices,
-                        VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
-                                | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                        sizeof(TransparencyCounters));
-
                 m_transparency_max_node_count =
                         std::min(
                                 TRANSPARENCY_NODE_BUFFER_MAX_SIZE,
                                 m_instance.device_properties().properties_10.limits.maxStorageBufferRange)
                         / TRANSPARENCY_NODE_SIZE;
 
-                const unsigned transparency_node_buffer_size = m_transparency_max_node_count * TRANSPARENCY_NODE_SIZE;
+                const unsigned long long nodes_buffer_size =
+                        static_cast<unsigned long long>(m_transparency_max_node_count) * TRANSPARENCY_NODE_SIZE;
 
-                m_transparency_node_buffer = std::make_unique<vulkan::BufferWithMemory>(
-                        vulkan::BufferMemoryType::DeviceLocal, m_device, family_indices,
-                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, transparency_node_buffer_size);
+                m_transparency_buffers = std::make_unique<TransparencyBuffers>(
+                        m_device, m_graphics_command_pool, m_graphics_queue,
+                        std::unordered_set<uint32_t>({m_graphics_queue.family_index()}),
+                        m_render_buffers->sample_count(), m_swapchain->width(), m_swapchain->height(),
+                        nodes_buffer_size);
 
                 m_shader_buffers.set_transparency_max_node_count(m_transparency_max_node_count);
         }
 
         void delete_transparency_buffers()
         {
-                m_transparency_node_buffer.reset();
-                m_transparency_node_counter.reset();
-                m_transparency_node_counter_init_value.reset();
-                m_transparency_node_counter_read_value.reset();
-                m_transparency_heads.reset();
-                m_transparency_heads_size.reset();
+                m_transparency_buffers.reset();
         }
 
         void delete_mesh_depth_buffers()
@@ -886,17 +838,10 @@ class Impl final : public Renderer
                         m_mesh_storage.visible_objects(), m_graphics_command_pool, m_clip_plane.has_value(),
                         m_show_normals,
                         [this](VkCommandBuffer command_buffer) {
-                                commands_init_uint32_storage_image(
-                                        command_buffer, *m_transparency_heads, TRANSPARENCY_NULL_POINTER);
-                                commands_init_uint32_storage_image(command_buffer, *m_transparency_heads_size, 0);
-                                commands_init_buffer(
-                                        command_buffer, *m_transparency_node_counter_init_value,
-                                        *m_transparency_node_counter);
+                                m_transparency_buffers->commands_init(command_buffer, TRANSPARENCY_NULL_POINTER);
                         },
                         [this](VkCommandBuffer command_buffer) {
-                                commands_read_buffer(
-                                        command_buffer, *m_transparency_node_counter,
-                                        *m_transparency_node_counter_read_value);
+                                m_transparency_buffers->commands_read(command_buffer);
                         });
         }
 
