@@ -235,6 +235,13 @@ public:
 
 class TransparencyBuffers
 {
+        static constexpr uint32_t HEADS_NULL_POINTER = limits<uint32_t>::max();
+
+        // (uint color_rg) + (uint color_ba) + (float depth) + (uint next)
+        static constexpr uint32_t NODE_SIZE = 16;
+
+        const unsigned m_node_count;
+
         vulkan::ImageWithMemory m_heads;
         vulkan::ImageWithMemory m_heads_size;
         vulkan::BufferWithMemory m_node_buffer;
@@ -251,6 +258,7 @@ class TransparencyBuffers
 
 public:
         TransparencyBuffers(
+                const vulkan::DeviceProperties& device_properties,
                 const vulkan::Device& device,
                 const vulkan::CommandPool& command_pool,
                 const vulkan::Queue& queue,
@@ -258,17 +266,19 @@ public:
                 VkSampleCountFlagBits sample_count,
                 unsigned width,
                 unsigned height,
-                unsigned long long node_buffer_size);
+                unsigned long long max_node_buffer_size);
 
         const vulkan::Buffer& counters() const;
         const vulkan::ImageWithMemory& heads() const;
         const vulkan::ImageWithMemory& heads_size() const;
         const vulkan::Buffer& nodes() const;
 
-        void commands_init(VkCommandBuffer command_buffer, uint32_t null_pointer_value) const;
+        unsigned node_count() const;
+
+        void commands_init(VkCommandBuffer command_buffer) const;
         void commands_read(VkCommandBuffer command_buffer) const;
 
-        void read(unsigned* node_counter, unsigned* overload_counter) const;
+        void read(unsigned long long* required_node_memory, unsigned* overload_counter) const;
 };
 
 }

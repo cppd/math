@@ -472,6 +472,7 @@ void VolumeBuffer::set_lighting(
 }
 
 TransparencyBuffers::TransparencyBuffers(
+        const vulkan::DeviceProperties& device_properties,
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
@@ -479,18 +480,22 @@ TransparencyBuffers::TransparencyBuffers(
         VkSampleCountFlagBits sample_count,
         unsigned width,
         unsigned height,
-        unsigned long long node_buffer_size)
-        : m_heads(
-                device,
-                command_pool,
-                queue,
-                family_indices,
-                std::vector<VkFormat>({VK_FORMAT_R32_UINT}),
-                sample_count,
-                VK_IMAGE_TYPE_2D,
-                vulkan::make_extent(width, height),
-                VK_IMAGE_LAYOUT_GENERAL,
-                VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT),
+        unsigned long long max_node_buffer_size)
+        : m_node_count(
+                std::min(
+                        max_node_buffer_size,
+                        static_cast<unsigned long long>(device_properties.properties_10.limits.maxStorageBufferRange))
+                / NODE_SIZE),
+          m_heads(device,
+                  command_pool,
+                  queue,
+                  family_indices,
+                  std::vector<VkFormat>({VK_FORMAT_R32_UINT}),
+                  sample_count,
+                  VK_IMAGE_TYPE_2D,
+                  vulkan::make_extent(width, height),
+                  VK_IMAGE_LAYOUT_GENERAL,
+                  VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT),
           m_heads_size(
                   device,
                   command_pool,
@@ -507,7 +512,7 @@ TransparencyBuffers::TransparencyBuffers(
                   device,
                   family_indices,
                   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                  node_buffer_size),
+                  m_node_count * NODE_SIZE),
           m_init_buffer(
                   vulkan::BufferMemoryType::HostVisible,
                   device,
@@ -555,9 +560,14 @@ const vulkan::Buffer& TransparencyBuffers::nodes() const
         return m_node_buffer.buffer();
 }
 
-void TransparencyBuffers::commands_init(VkCommandBuffer command_buffer, uint32_t null_pointer_value) const
+unsigned TransparencyBuffers::node_count() const
 {
-        commands_init_uint32_storage_image(command_buffer, m_heads, null_pointer_value);
+        return m_node_count;
+}
+
+void TransparencyBuffers::commands_init(VkCommandBuffer command_buffer) const
+{
+        commands_init_uint32_storage_image(command_buffer, m_heads, HEADS_NULL_POINTER);
         commands_init_uint32_storage_image(command_buffer, m_heads_size, 0);
         commands_init_buffer(command_buffer, m_init_buffer, m_counters);
 }
@@ -567,12 +577,12 @@ void TransparencyBuffers::commands_read(VkCommandBuffer command_buffer) const
         commands_read_buffer(command_buffer, m_counters, m_read_buffer);
 }
 
-void TransparencyBuffers::read(unsigned* node_counter, unsigned* overload_counter) const
+void TransparencyBuffers::read(unsigned long long* required_node_memory, unsigned* overload_counter) const
 {
         vulkan::BufferMapper mapper(m_read_buffer);
         Counters counters;
         mapper.read(&counters);
-        *node_counter = counters.transparency_node_counter;
+        *required_node_memory = counters.transparency_node_counter * NODE_SIZE;
         *overload_counter = counters.transparency_overload_counter;
 }
 }

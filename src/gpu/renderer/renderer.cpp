@@ -53,11 +53,7 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 // clang-format on
 
 constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
 constexpr uint32_t OBJECTS_CLEAR_VALUE = 0;
-
-constexpr uint32_t TRANSPARENCY_NULL_POINTER = limits<uint32_t>::max();
-constexpr uint32_t TRANSPARENCY_NODE_SIZE = 16; // packed rgba (2+2+2+2) + depth (4) + next(4)
 constexpr uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
 
 struct ViewportTransform
@@ -76,24 +72,24 @@ ViewportTransform viewport_transform(const Region<2, int>& viewport)
         return t;
 }
 
-void transparency_message(long long node_count, long long overload_count)
+void transparency_message(long long required_node_memory, long long overload_count)
 {
-        thread_local long long previous_node_count = -1;
+        thread_local long long previous_required_node_memory = -1;
         thread_local long long previous_overload_count = -1;
-        if (node_count < 0)
+        if (required_node_memory < 0)
         {
-                if (previous_node_count >= 0)
+                if (previous_required_node_memory >= 0)
                 {
                         LOG("Transparency memory: OK");
                 }
         }
         else
         {
-                if (previous_node_count != node_count)
+                if (previous_required_node_memory != required_node_memory)
                 {
                         std::ostringstream oss;
-                        oss << "Transparency memory: required " << node_count * TRANSPARENCY_NODE_SIZE / 1'000'000
-                            << " MB, limit " << TRANSPARENCY_NODE_BUFFER_MAX_SIZE / 1'000'000 << " MB.";
+                        oss << "Transparency memory: required " << required_node_memory / 1'000'000 << " MB, limit "
+                            << TRANSPARENCY_NODE_BUFFER_MAX_SIZE / 1'000'000 << " MB.";
                         LOG(oss.str());
                 }
         }
@@ -113,7 +109,7 @@ void transparency_message(long long node_count, long long overload_count)
                         LOG(oss.str());
                 }
         }
-        previous_node_count = node_count;
+        previous_required_node_memory = required_node_memory;
         previous_overload_count = overload_count;
 }
 
@@ -167,7 +163,6 @@ class Impl final : public Renderer
         vulkan::Semaphore m_clear_signal_semaphore;
 
         std::unique_ptr<TransparencyBuffers> m_transparency_buffers;
-        unsigned m_transparency_max_node_count;
         vulkan::Semaphore m_render_transparent_as_opaque_signal_semaphore;
 
         void set_lighting_intensity(double intensity) override
@@ -533,11 +528,11 @@ class Impl final : public Renderer
                         {
                                 vulkan::queue_wait_idle(graphics_queue_1);
 
-                                unsigned node_counter;
+                                unsigned long long required_node_memory;
                                 unsigned overload_counter;
-                                m_transparency_buffers->read(&node_counter, &overload_counter);
+                                m_transparency_buffers->read(&required_node_memory, &overload_counter);
 
-                                bool nodes = node_counter > m_transparency_max_node_count;
+                                bool nodes = required_node_memory > TRANSPARENCY_NODE_BUFFER_MAX_SIZE;
                                 bool overload = overload_counter > 0;
                                 if (nodes || overload)
                                 {
@@ -555,7 +550,7 @@ class Impl final : public Renderer
                                 }
 
                                 transparency_message(
-                                        nodes ? static_cast<long long>(node_counter) : -1,
+                                        nodes ? static_cast<long long>(required_node_memory) : -1,
                                         overload ? static_cast<long long>(overload_counter) : -1);
                         }
                         else
@@ -655,22 +650,15 @@ class Impl final : public Renderer
 
         void create_transparency_buffers()
         {
-                m_transparency_max_node_count =
-                        std::min(
-                                TRANSPARENCY_NODE_BUFFER_MAX_SIZE,
-                                m_instance.device_properties().properties_10.limits.maxStorageBufferRange)
-                        / TRANSPARENCY_NODE_SIZE;
-
-                const unsigned long long nodes_buffer_size =
-                        static_cast<unsigned long long>(m_transparency_max_node_count) * TRANSPARENCY_NODE_SIZE;
-
                 m_transparency_buffers = std::make_unique<TransparencyBuffers>(
-                        m_device, m_graphics_command_pool, m_graphics_queue,
+                        m_instance.device_properties(), m_device, m_graphics_command_pool, m_graphics_queue,
                         std::unordered_set<uint32_t>({m_graphics_queue.family_index()}),
                         m_render_buffers->sample_count(), m_swapchain->width(), m_swapchain->height(),
-                        nodes_buffer_size);
+                        TRANSPARENCY_NODE_BUFFER_MAX_SIZE);
 
-                m_shader_buffers.set_transparency_max_node_count(m_transparency_max_node_count);
+                LOG("Transparency node count: " + to_string_digit_groups(m_transparency_buffers->node_count()));
+
+                m_shader_buffers.set_transparency_max_node_count(m_transparency_buffers->node_count());
         }
 
         void delete_transparency_buffers()
@@ -732,7 +720,7 @@ class Impl final : public Renderer
                         m_mesh_storage.visible_objects(), m_graphics_command_pool, m_clip_plane.has_value(),
                         m_show_normals,
                         [this](VkCommandBuffer command_buffer) {
-                                m_transparency_buffers->commands_init(command_buffer, TRANSPARENCY_NULL_POINTER);
+                                m_transparency_buffers->commands_init(command_buffer);
                         },
                         [this](VkCommandBuffer command_buffer) {
                                 m_transparency_buffers->commands_read(command_buffer);
