@@ -73,7 +73,7 @@ VulkanInstance::VulkanInstance(
                                                          : std::nullopt),
           m_surface(create_surface ? std::optional(SurfaceKHR(m_instance, *create_surface)) : std::nullopt),
           //
-          m_physical_device(find_physical_device(
+          m_physical_device(create_physical_device(
                   m_instance,
                   //
                   (create_surface ? static_cast<VkSurfaceKHR>(*m_surface) : VK_NULL_HANDLE),
@@ -99,7 +99,8 @@ VulkanInstance::VulkanInstance(
                   VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)),
           m_presentation_family_index(create_surface ? m_physical_device.presentation_family_index() : NO_FAMILY_INDEX),
           //
-          m_device(m_physical_device.create_device(
+          m_device(create_device(
+                  m_physical_device,
                   compute_queue_count(
                           {{m_graphics_compute_family_index, GRAPHICS_COMPUTE_QUEUE_COUNT},
                            {m_compute_family_index, COMPUTE_QUEUE_COUNT},

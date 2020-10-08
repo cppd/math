@@ -170,21 +170,22 @@ public:
         uint32_t presentation_family_index() const;
         bool supports_extensions(const std::vector<std::string>& extensions) const;
         bool queue_family_supports_presentation(uint32_t index) const;
-
-        Device create_device(
-                const std::unordered_map<uint32_t, uint32_t>& queue_families,
-                const std::vector<std::string>& required_extensions,
-                const std::vector<PhysicalDeviceFeatures>& required_features,
-                const std::vector<PhysicalDeviceFeatures>& optional_features) const;
 };
 
 std::vector<VkPhysicalDevice> physical_devices(VkInstance instance);
 
-PhysicalDevice find_physical_device(
+PhysicalDevice create_physical_device(
         VkInstance instance,
         VkSurfaceKHR surface,
         int api_version_major,
         int api_version_minor,
         const std::vector<std::string>& required_extensions,
         const std::vector<PhysicalDeviceFeatures>& required_features);
+
+Device create_device(
+        const PhysicalDevice& physical_device,
+        const std::unordered_map<uint32_t, uint32_t>& queue_families,
+        const std::vector<std::string>& required_extensions,
+        const std::vector<PhysicalDeviceFeatures>& required_features,
+        const std::vector<PhysicalDeviceFeatures>& optional_features);
 }

@@ -478,70 +478,6 @@ bool PhysicalDevice::queue_family_supports_presentation(uint32_t index) const
         return m_presentation_supported[index];
 }
 
-Device PhysicalDevice::create_device(
-        const std::unordered_map<uint32_t, uint32_t>& queue_families,
-        const std::vector<std::string>& required_extensions,
-        const std::vector<PhysicalDeviceFeatures>& required_features,
-        const std::vector<PhysicalDeviceFeatures>& optional_features) const
-{
-        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(), [&](const auto& v) {
-                return v.first < m_queue_families.size();
-        }));
-        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(), [](const auto& v) { return v.second > 0; }));
-        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(), [&](const auto& v) {
-                return v.second <= m_queue_families[v.first].queueCount;
-        }));
-
-        if (queue_families.empty())
-        {
-                error("No queue families for device creation");
-        }
-
-        std::vector<std::vector<float>> queue_priorities(queue_families.size());
-        std::vector<VkDeviceQueueCreateInfo> queue_create_infos(queue_families.size());
-        unsigned i = 0;
-        for (const auto& [queue_family_index, queue_count] : queue_families)
-        {
-                queue_priorities[i].resize(queue_count, 1);
-
-                VkDeviceQueueCreateInfo queue_create_info = {};
-                queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-                queue_create_info.queueFamilyIndex = queue_family_index;
-                queue_create_info.queueCount = queue_count;
-                queue_create_info.pQueuePriorities = queue_priorities[i].data();
-                queue_create_infos[i] = queue_create_info;
-
-                ++i;
-        }
-
-        DeviceFeatures enabled_features = {};
-        make_enabled_device_features(required_features, optional_features, m_features, &enabled_features);
-
-        enabled_features.features_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-        enabled_features.features_12.pNext = nullptr;
-        enabled_features.features_11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-        enabled_features.features_11.pNext = &enabled_features.features_12;
-        VkPhysicalDeviceFeatures2 features_2 = {};
-        features_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-        features_2.pNext = &enabled_features.features_11;
-        features_2.features = enabled_features.features_10;
-
-        VkDeviceCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        create_info.queueCreateInfoCount = queue_create_infos.size();
-        create_info.pQueueCreateInfos = queue_create_infos.data();
-        create_info.pNext = &features_2;
-
-        const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
-        if (!extensions.empty())
-        {
-                create_info.enabledExtensionCount = extensions.size();
-                create_info.ppEnabledExtensionNames = extensions.data();
-        }
-
-        return Device(m_physical_device, create_info);
-}
-
 //
 
 std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
@@ -571,7 +507,7 @@ std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
         return devices;
 }
 
-PhysicalDevice find_physical_device(
+PhysicalDevice create_physical_device(
         VkInstance instance,
         VkSurfaceKHR surface,
         int api_version_major,
@@ -644,5 +580,71 @@ PhysicalDevice find_physical_device(
         }
 
         error("Failed to find a suitable Vulkan physical device");
+}
+
+Device create_device(
+        const PhysicalDevice& physical_device,
+        const std::unordered_map<uint32_t, uint32_t>& queue_families,
+        const std::vector<std::string>& required_extensions,
+        const std::vector<PhysicalDeviceFeatures>& required_features,
+        const std::vector<PhysicalDeviceFeatures>& optional_features)
+{
+        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(), [&](const auto& v) {
+                return v.first < physical_device.queue_families().size();
+        }));
+        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(), [](const auto& v) { return v.second > 0; }));
+        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(), [&](const auto& v) {
+                return v.second <= physical_device.queue_families()[v.first].queueCount;
+        }));
+
+        if (queue_families.empty())
+        {
+                error("No queue families for device creation");
+        }
+
+        std::vector<std::vector<float>> queue_priorities(queue_families.size());
+        std::vector<VkDeviceQueueCreateInfo> queue_create_infos(queue_families.size());
+        unsigned i = 0;
+        for (const auto& [queue_family_index, queue_count] : queue_families)
+        {
+                queue_priorities[i].resize(queue_count, 1);
+
+                VkDeviceQueueCreateInfo queue_create_info = {};
+                queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+                queue_create_info.queueFamilyIndex = queue_family_index;
+                queue_create_info.queueCount = queue_count;
+                queue_create_info.pQueuePriorities = queue_priorities[i].data();
+                queue_create_infos[i] = queue_create_info;
+
+                ++i;
+        }
+
+        DeviceFeatures enabled_features = {};
+        make_enabled_device_features(
+                required_features, optional_features, physical_device.features(), &enabled_features);
+
+        enabled_features.features_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+        enabled_features.features_12.pNext = nullptr;
+        enabled_features.features_11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+        enabled_features.features_11.pNext = &enabled_features.features_12;
+        VkPhysicalDeviceFeatures2 features_2 = {};
+        features_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        features_2.pNext = &enabled_features.features_11;
+        features_2.features = enabled_features.features_10;
+
+        VkDeviceCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        create_info.queueCreateInfoCount = queue_create_infos.size();
+        create_info.pQueueCreateInfos = queue_create_infos.data();
+        create_info.pNext = &features_2;
+
+        const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
+        if (!extensions.empty())
+        {
+                create_info.enabledExtensionCount = extensions.size();
+                create_info.ppEnabledExtensionNames = extensions.data();
+        }
+
+        return Device(physical_device, create_info);
 }
 }
