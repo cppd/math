@@ -147,7 +147,7 @@ class Impl final : public View
         vulkan::CommandBuffers create_commands()
         {
                 vulkan::CommandBufferCreateInfo info;
-                info.device = m_instance.device();
+                info.device = m_device;
                 info.render_area.emplace();
                 info.render_area->offset.x = 0;
                 info.render_area->offset.y = 0;
@@ -325,7 +325,7 @@ public:
                        transfer_queue,
                        sample_shading,
                        color,
-                       Glyphs(size, instance.device_properties().properties_10.limits.maxImageDimension2D))
+                       Glyphs(size, instance.device().properties().properties_10.limits.maxImageDimension2D))
         {
         }
 

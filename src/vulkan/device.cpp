@@ -645,6 +645,6 @@ Device create_device(
                 create_info.ppEnabledExtensionNames = extensions.data();
         }
 
-        return Device(physical_device, create_info);
+        return Device(physical_device, &physical_device.properties(), create_info);
 }
 }

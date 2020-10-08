@@ -195,8 +195,13 @@ DeviceHandle::operator VkDevice() const& noexcept
 
 //
 
-Device::Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info)
-        : m_device(physical_device, create_info), m_physical_device(physical_device)
+Device::Device(
+        VkPhysicalDevice physical_device,
+        const DeviceProperties* physical_device_properties,
+        const VkDeviceCreateInfo& create_info)
+        : m_device(physical_device, create_info),
+          m_physical_device(physical_device),
+          m_physical_device_properties(physical_device_properties)
 {
         ASSERT(!create_info.pEnabledFeatures);
 

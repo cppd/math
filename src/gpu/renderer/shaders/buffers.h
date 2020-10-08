@@ -258,7 +258,6 @@ class TransparencyBuffers
 
 public:
         TransparencyBuffers(
-                const vulkan::DeviceProperties& device_properties,
                 const vulkan::Device& device,
                 const vulkan::CommandPool& command_pool,
                 const vulkan::Queue& queue,

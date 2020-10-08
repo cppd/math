@@ -472,7 +472,6 @@ void VolumeBuffer::set_lighting(
 }
 
 TransparencyBuffers::TransparencyBuffers(
-        const vulkan::DeviceProperties& device_properties,
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
@@ -484,7 +483,7 @@ TransparencyBuffers::TransparencyBuffers(
         : m_node_count(
                 std::min(
                         max_node_buffer_size,
-                        static_cast<unsigned long long>(device_properties.properties_10.limits.maxStorageBufferRange))
+                        static_cast<unsigned long long>(device.properties().properties_10.limits.maxStorageBufferRange))
                 / NODE_SIZE),
           m_heads(device,
                   command_pool,

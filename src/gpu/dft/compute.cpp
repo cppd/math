@@ -316,10 +316,7 @@ class Fft1d final
         }
 
 public:
-        Fft1d(const vulkan::VulkanInstance& instance,
-              const std::unordered_set<uint32_t>& family_indices,
-              int count,
-              int n)
+        Fft1d(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices, int count, int n)
                 : m_n(n)
         {
                 if (m_n == 1)
@@ -328,7 +325,7 @@ public:
                 }
 
                 m_data_size = count * n;
-                m_n_shared = shared_size(n, instance.device_properties().properties_10.limits);
+                m_n_shared = shared_size(n, device.properties().properties_10.limits);
                 m_only_shared = m_n <= m_n_shared;
 
                 const uint32_t n_mask = n - 1;
@@ -337,11 +334,11 @@ public:
                 //
 
                 const bool fft_reverse_input = m_only_shared;
-                m_fft_program.emplace(instance.device());
+                m_fft_program.emplace(device);
                 m_fft_program->create_pipelines(
                         m_data_size, n, n_mask, n_bits, m_n_shared, fft_reverse_input,
-                        group_size(n, instance.device_properties().properties_10.limits));
-                m_fft_memory.emplace(instance.device(), m_fft_program->descriptor_set_layout());
+                        group_size(n, device.properties().properties_10.limits));
+                m_fft_memory.emplace(device, m_fft_program->descriptor_set_layout());
                 m_fft_groups = group_count(m_data_size, m_n_shared);
 
                 if (m_only_shared)
@@ -351,14 +348,14 @@ public:
 
                 //
 
-                m_bit_reverse_program.emplace(instance.device());
+                m_bit_reverse_program.emplace(device);
                 m_bit_reverse_program->create_pipeline(GROUP_SIZE_1D, m_data_size, n_mask, n_bits);
-                m_bit_reverse_memory.emplace(instance.device(), m_bit_reverse_program->descriptor_set_layout());
+                m_bit_reverse_memory.emplace(device, m_bit_reverse_program->descriptor_set_layout());
                 m_bit_reverse_groups = group_count(m_data_size, GROUP_SIZE_1D);
 
                 //
 
-                m_fft_g_program.emplace(instance.device());
+                m_fft_g_program.emplace(device);
                 m_fft_g_program->create_pipelines(GROUP_SIZE_1D, m_data_size, n);
                 m_fft_g_groups = group_count(m_data_size / 2, GROUP_SIZE_1D);
 
@@ -366,8 +363,7 @@ public:
                 float two_pi_div_m = PI<float> / m_div_2;
                 for (; m_div_2 < m_n; two_pi_div_m /= 2, m_div_2 <<= 1)
                 {
-                        m_fft_g_memory.emplace_back(
-                                instance.device(), m_fft_g_program->descriptor_set_layout(), family_indices);
+                        m_fft_g_memory.emplace_back(device, m_fft_g_program->descriptor_set_layout(), family_indices);
                         m_fft_g_memory.back().set_data(two_pi_div_m, m_div_2);
                 }
                 ASSERT(!m_fft_g_memory.empty());
@@ -586,12 +582,12 @@ class Dft final
                 m_d2_inv.emplace(m_device, m_transfer_command_pool, m_transfer_queue, family_indices, d2_inv);
 
                 {
-                        Fft1d fft(m_instance, {m_compute_command_pool.family_index()}, 1, m_m1);
+                        Fft1d fft(m_instance.device(), {m_compute_command_pool.family_index()}, 1, m_m1);
                         fft.run_for_data(false, *m_d1_fwd, m_device, m_compute_command_pool, m_compute_queue);
                         fft.run_for_data(true, *m_d1_inv, m_device, m_compute_command_pool, m_compute_queue);
                 }
                 {
-                        Fft1d fft(m_instance, {m_compute_command_pool.family_index()}, 1, m_m2);
+                        Fft1d fft(m_instance.device(), {m_compute_command_pool.family_index()}, 1, m_m2);
                         fft.run_for_data(false, *m_d2_fwd, m_device, m_compute_command_pool, m_compute_queue);
                         fft.run_for_data(true, *m_d2_inv, m_device, m_compute_command_pool, m_compute_queue);
                 }
@@ -618,9 +614,9 @@ public:
                 m_x_d.emplace(m_device, family_indices, m_n1 * m_n2, m_buffer_memory_type);
                 m_buffer.emplace(m_device, family_indices, std::max(m_m1 * m_n2, m_m2 * m_n1));
 
-                m_fft_n2_m1.emplace(m_instance, family_indices, m_n2, m_m1);
+                m_fft_n2_m1.emplace(m_instance.device(), family_indices, m_n2, m_m1);
                 m_fft_n2_m1->set_data(*m_buffer);
-                m_fft_n1_m2.emplace(m_instance, family_indices, m_n1, m_m2);
+                m_fft_n1_m2.emplace(m_instance.device(), family_indices, m_n1, m_m2);
                 m_fft_n1_m2->set_data(*m_buffer);
 
                 m_mul_memory.set(*m_x_d, *m_buffer);

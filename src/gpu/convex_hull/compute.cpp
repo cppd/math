@@ -186,11 +186,11 @@ class Impl final : public Compute
                 m_prepare_memory.set_lines(*m_lines_buffer);
                 m_prepare_group_count = height;
                 m_prepare_program.create_pipeline(
-                        group_size_prepare(width, m_instance.device_properties().properties_10.limits), rectangle);
+                        group_size_prepare(width, m_instance.device().properties().properties_10.limits), rectangle);
 
                 m_merge_memory.set_lines(*m_lines_buffer);
                 m_merge_program.create_pipeline(
-                        height, group_size_merge(height, m_instance.device_properties().properties_10.limits),
+                        height, group_size_merge(height, m_instance.device().properties().properties_10.limits),
                         iteration_count_merge(height));
 
                 m_filter_memory.set_lines(*m_lines_buffer);

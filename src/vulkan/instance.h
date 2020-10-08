@@ -93,11 +93,6 @@ public:
                 return m_device;
         }
 
-        const DeviceProperties& device_properties() const
-        {
-                return m_physical_device.properties();
-        }
-
         const vulkan::CommandPool& graphics_compute_command_pool() const
         {
                 return m_graphics_compute_command_pool;

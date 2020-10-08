@@ -651,7 +651,7 @@ class Impl final : public Renderer
         void create_transparency_buffers()
         {
                 m_transparency_buffers = std::make_unique<TransparencyBuffers>(
-                        m_instance.device_properties(), m_device, m_graphics_command_pool, m_graphics_queue,
+                        m_device, m_graphics_command_pool, m_graphics_queue,
                         std::unordered_set<uint32_t>({m_graphics_queue.family_index()}),
                         m_render_buffers->sample_count(), m_swapchain->width(), m_swapchain->height(),
                         TRANSPARENCY_NODE_BUFFER_MAX_SIZE);
