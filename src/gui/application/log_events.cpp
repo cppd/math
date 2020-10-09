@@ -17,48 +17,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "log_events.h"
 
-#include "main_thread.h"
-
+#include <src/com/error.h>
 #include <src/com/output/format.h>
-#include <src/com/variant.h>
 
 namespace gui::application
 {
-namespace
+LogEvents::LogEvents()
 {
-void log_event(const LogEvent& event, const std::function<void(const std::string&, const Srgb8&)>& window_log)
-{
-        // Здесь без вызовов функции LOG, так как начнёт вызывать сама себя
+        m_empty_window_log = [](std::string&&, const Srgb8&) {};
+        m_window_log_ptr = &m_empty_window_log;
 
-        std::string text = format_log_text(event.text);
+        m_events = [this](LogEvent&& event) {
+                // Здесь без вызовов функции LOG, так как начнёт вызывать сама себя
 
-        write_formatted_log_text(text);
+                std::string text = format_log_text(event.text);
 
-        if (window_log)
-        {
+                write_formatted_log_text(text);
+
                 switch (event.type)
                 {
                 case LogEvent::Type::Normal:
-                        window_log(text, Srgb8(0, 0, 0));
+                        (*m_window_log_ptr)(std::move(text), Srgb8(0, 0, 0));
                         break;
                 case LogEvent::Type::Error:
-                        window_log(text, Srgb8(255, 0, 0));
+                        (*m_window_log_ptr)(std::move(text), Srgb8(255, 0, 0));
                         break;
                 case LogEvent::Type::Warning:
-                        window_log(text, Srgb8(200, 150, 0));
+                        (*m_window_log_ptr)(std::move(text), Srgb8(200, 150, 0));
                         break;
                 case LogEvent::Type::Information:
-                        window_log(text, Srgb8(0, 0, 255));
+                        (*m_window_log_ptr)(std::move(text), Srgb8(0, 0, 255));
                         break;
                 }
-        }
-}
-}
-
-LogEvents::LogEvents()
-{
-        m_events = [this](LogEvent&& event) {
-                MainThreadQueue::push([this, event = std::move(event)]() { log_event(event, m_window_log); });
         };
 
         set_log_events(&m_events);
@@ -69,8 +59,18 @@ LogEvents::~LogEvents()
         set_log_events(nullptr);
 }
 
-void LogEvents::set_window_log(const std::function<void(const std::string&, const Srgb8&)>& window_log)
+void LogEvents::set_window_log(const std::function<void(std::string&&, const Srgb8&)>* window_log_ptr)
 {
-        m_window_log = window_log;
+        if (window_log_ptr)
+        {
+                ASSERT(*window_log_ptr);
+                ASSERT(m_window_log_ptr == &m_empty_window_log);
+
+                m_window_log_ptr = window_log_ptr;
+        }
+        else
+        {
+                m_window_log_ptr = &m_empty_window_log;
+        }
 }
 }

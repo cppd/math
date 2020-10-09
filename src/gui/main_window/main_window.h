@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view_widget.h"
 #include "volume_widget.h"
 
+#include "../application/log_events.h"
 #include "../application/model_events.h"
 #include "../com/threads.h"
 
@@ -49,6 +50,7 @@ class MainWindow final : public QMainWindow
 private:
         const std::thread::id m_thread_id = std::this_thread::get_id();
         bool m_first_show = true;
+        application::LogEvents* const m_log_events;
 
         Ui::MainWindow ui;
 
@@ -69,7 +71,11 @@ private:
         std::unique_ptr<application::ModelEvents> m_model_events;
         std::unique_ptr<Actions> m_actions;
 
-        QTimer m_timer_progress_bar;
+        QTimer m_timer;
+
+        std::array<std::vector<std::tuple<std::string, Srgb8>>, 2> m_log_messages;
+        std::atomic<std::vector<std::tuple<std::string, Srgb8>>*> m_log_messages_ptr;
+        std::function<void(std::string&&, const Srgb8&)> m_log_function;
 
         void on_about_triggered();
         void on_exit_triggered();
@@ -80,25 +86,26 @@ private:
         void on_graphics_widget_mouse_wheel(QWheelEvent*);
         void on_graphics_widget_resize(QResizeEvent*);
         void on_help_triggered();
-        void on_timer_progress_bar();
+        void on_timer();
 
         void constructor_graphics_widget();
         void constructor_objects();
+        void constructor_log();
 
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;
 
         void terminate_all_threads();
 
+        void write_log();
         void set_progress_bars(
                 unsigned id,
                 const ProgressRatioList* progress_list,
                 std::list<QProgressBar>* progress_bars);
+        void set_progress_bars();
 
 public:
-        MainWindow();
+        MainWindow(application::LogEvents* log_events);
         ~MainWindow() override;
-
-        void append_to_log(const std::string& text, const Srgb8& color);
 };
 }

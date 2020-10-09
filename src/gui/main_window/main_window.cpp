@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dialogs/message.h"
 
 #include <src/com/error.h>
+#include <src/com/log.h>
 #include <src/com/message.h>
 #include <src/com/type/limit.h>
 #include <src/settings/name.h>
@@ -42,8 +43,8 @@ constexpr double WINDOW_SIZE_COEF = 0.7;
 // Если true, то размер для графики, если false, то размер всего окна.
 constexpr bool WINDOW_SIZE_GRAPHICS = true;
 
-// Таймер отображения хода расчётов. Величина в миллисекундах.
-constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
+// Интервал таймера отображения лога и хода расчётов.
+constexpr std::chrono::milliseconds TIMER_INTERVAL{200};
 
 // Задержка в миллисекундах после showEvent для вызова по таймеру
 // функции обработки появления окна.
@@ -53,7 +54,7 @@ constexpr double MAXIMUM_SPECULAR_POWER = 1000.0;
 constexpr double MAXIMUM_MODEL_LIGHTING = 2.0;
 }
 
-MainWindow::MainWindow()
+MainWindow::MainWindow(application::LogEvents* log_events) : m_log_events(log_events)
 {
         ui.setupUi(this);
 
@@ -61,6 +62,7 @@ MainWindow::MainWindow()
 
         constructor_graphics_widget();
         constructor_objects();
+        constructor_log();
 }
 
 void MainWindow::constructor_graphics_widget()
@@ -136,7 +138,16 @@ void MainWindow::constructor_objects()
         connect(ui.action_about, &QAction::triggered, this, &MainWindow::on_about_triggered);
         connect(ui.action_exit, &QAction::triggered, this, &MainWindow::on_exit_triggered);
         connect(ui.action_help, &QAction::triggered, this, &MainWindow::on_help_triggered);
-        connect(&m_timer_progress_bar, &QTimer::timeout, this, &MainWindow::on_timer_progress_bar);
+        connect(&m_timer, &QTimer::timeout, this, &MainWindow::on_timer);
+}
+
+void MainWindow::constructor_log()
+{
+        m_log_messages_ptr = &m_log_messages[0];
+        m_log_function = [this](std::string&& s, const Srgb8& c) {
+                (*m_log_messages_ptr).emplace_back(std::move(s), c);
+        };
+        m_log_events->set_window_log(&m_log_function);
 }
 
 MainWindow::~MainWindow()
@@ -144,13 +155,8 @@ MainWindow::~MainWindow()
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         terminate_all_threads();
-}
 
-void MainWindow::append_to_log(const std::string& text, const Srgb8& color)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        append_to_text_edit(ui.text_log, text, color);
+        m_log_events->set_window_log(nullptr);
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)
@@ -179,7 +185,7 @@ void MainWindow::terminate_all_threads()
 
         m_worker_threads->terminate_all();
 
-        m_timer_progress_bar.stop();
+        m_timer.stop();
 
         m_actions.reset();
         m_model_events.reset();
@@ -191,6 +197,20 @@ void MainWindow::terminate_all_threads()
 
         m_model_tree.reset();
         m_view.reset();
+}
+
+void MainWindow::write_log()
+{
+        unsigned n = (m_log_messages_ptr == &m_log_messages[0]) ? 1 : 0;
+        if (!m_log_messages[n].empty())
+        {
+                for (const auto& [message, color] : m_log_messages[n])
+                {
+                        append_to_text_edit(ui.text_log, message, color);
+                }
+                m_log_messages[n].clear();
+        }
+        m_log_messages_ptr = &m_log_messages[n];
 }
 
 void MainWindow::set_progress_bars(
@@ -268,12 +288,18 @@ void MainWindow::set_progress_bars(
         }
 }
 
-void MainWindow::on_timer_progress_bar()
+void MainWindow::set_progress_bars()
 {
         for (const WorkerThreads::Progress& t : m_worker_threads->progresses())
         {
                 set_progress_bars(t.id, t.progress_list, t.progress_bars);
         }
+}
+
+void MainWindow::on_timer()
+{
+        write_log();
+        set_progress_bars();
 }
 
 void MainWindow::showEvent(QShowEvent* /*event*/)
@@ -349,7 +375,7 @@ void MainWindow::on_first_shown()
                         ui.menu_rendering, m_repository.get(), m_worker_threads.get(), m_view.get(), m_model_tree.get(),
                         m_colors_widget.get());
 
-                m_timer_progress_bar.start(TIMER_PROGRESS_BAR_INTERVAL);
+                m_timer.start(TIMER_INTERVAL);
         }
         catch (const std::exception& e)
         {

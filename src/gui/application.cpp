@@ -82,16 +82,7 @@ int run_application(int argc, char** argv)
         application::MessageEvents message_events;
         application::ModelEvents model_events;
 
-        QPointer main_window = create_delete_on_close_window<MainWindow>();
-
-        log_events.set_window_log([main_window](const std::string& text, const Srgb8& color) {
-                if (main_window)
-                {
-                        main_window->append_to_log(text, color);
-                }
-        });
-
-        main_window->show();
+        create_delete_on_close_window<MainWindow>(&log_events)->show();
 
         int r = Application::exec();
 
