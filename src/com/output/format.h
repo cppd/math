@@ -20,4 +20,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 
 std::string format_log_text(const std::string& text) noexcept;
-void write_formatted_log_text(const std::string& text) noexcept;
+void write_formatted_log_text(std::string text) noexcept;

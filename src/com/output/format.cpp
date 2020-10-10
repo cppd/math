@@ -55,30 +55,31 @@ std::string format_log_text(const std::string& text) noexcept
                 }
                 catch (const std::exception& e)
                 {
-                        error_fatal(std::string("error format log text: ") + e.what());
+                        error_fatal(std::string("Error formatting log text: ") + e.what());
                 }
         }
         catch (...)
         {
-                error_fatal("error format log text");
+                error_fatal("Error formatting log text");
         }
 }
 
-void write_formatted_log_text(const std::string& text) noexcept
+void write_formatted_log_text(std::string text) noexcept
 {
         try
         {
                 try
                 {
-                        std::cerr << text << '\n';
+                        text += '\n';
+                        std::cerr << text;
                 }
                 catch (const std::exception& e)
                 {
-                        error_fatal(std::string("error writing log text to stderr: ") + e.what());
+                        error_fatal(std::string("Error writing log text to stderr: ") + e.what());
                 }
         }
         catch (...)
         {
-                error_fatal("error writing log text to stderr");
+                error_fatal("Error writing log text to stderr");
         }
 }

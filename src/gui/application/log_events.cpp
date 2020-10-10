@@ -22,55 +22,93 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui::application
 {
+namespace
+{
+LogEvents* g_log_events = nullptr;
+std::atomic_int g_log_events_count = 0;
+
+Srgb8 event_color(LogEvent::Type type)
+{
+        switch (type)
+        {
+        case LogEvent::Type::Normal:
+        {
+                return Srgb8(0, 0, 0);
+        }
+        case LogEvent::Type::Error:
+        {
+                return Srgb8(255, 0, 0);
+        }
+        case LogEvent::Type::Warning:
+        {
+                return Srgb8(200, 150, 0);
+        }
+        case LogEvent::Type::Information:
+        {
+                return Srgb8(0, 0, 255);
+        }
+        }
+        error_fatal("Unknown log event type");
+}
+}
+
 LogEvents::LogEvents()
 {
-        m_empty_window_log = [](std::string&&, const Srgb8&) {};
-        m_window_log_ptr = &m_empty_window_log;
+        if (++g_log_events_count != 1)
+        {
+                error_fatal("Multiple LogEvent");
+        }
 
         m_events = [this](LogEvent&& event) {
-                // Здесь без вызовов функции LOG, так как начнёт вызывать сама себя
-
-                std::string text = format_log_text(event.text);
-
+                std::string text = format_log_text(std::move(event.text));
                 write_formatted_log_text(text);
-
-                switch (event.type)
+                std::lock_guard lg(m_pointer_lock);
+                if (m_pointer)
                 {
-                case LogEvent::Type::Normal:
-                        (*m_window_log_ptr)(std::move(text), Srgb8(0, 0, 0));
-                        break;
-                case LogEvent::Type::Error:
-                        (*m_window_log_ptr)(std::move(text), Srgb8(255, 0, 0));
-                        break;
-                case LogEvent::Type::Warning:
-                        (*m_window_log_ptr)(std::move(text), Srgb8(200, 150, 0));
-                        break;
-                case LogEvent::Type::Information:
-                        (*m_window_log_ptr)(std::move(text), Srgb8(0, 0, 255));
-                        break;
+                        (*m_pointer)(std::move(text), event_color(event.type));
                 }
         };
 
         set_log_events(&m_events);
+
+        g_log_events = this;
 }
 
 LogEvents::~LogEvents()
 {
+        g_log_events = nullptr;
+
         set_log_events(nullptr);
 }
 
-void LogEvents::set_window_log(const std::function<void(std::string&&, const Srgb8&)>* window_log_ptr)
+void LogEvents::set_log(const std::function<void(std::string&&, const Srgb8&)>* log_ptr)
 {
-        if (window_log_ptr)
+        if (log_ptr)
         {
-                ASSERT(*window_log_ptr);
-                ASSERT(m_window_log_ptr == &m_empty_window_log);
-
-                m_window_log_ptr = window_log_ptr;
+                ASSERT(*log_ptr);
+                std::lock_guard lg(m_pointer_lock);
+                ASSERT(!m_pointer);
+                m_pointer = log_ptr;
         }
         else
         {
-                m_window_log_ptr = &m_empty_window_log;
+                std::lock_guard lg(m_pointer_lock);
+                ASSERT(m_pointer);
+                m_pointer = nullptr;
         }
+}
+
+//
+
+SetLogEvents::SetLogEvents(const std::function<void(std::string&&, const Srgb8&)>* log_ptr)
+{
+        ASSERT(log_ptr);
+        ASSERT(*log_ptr);
+        g_log_events->set_log(log_ptr);
+}
+
+SetLogEvents::~SetLogEvents()
+{
+        g_log_events->set_log(nullptr);
 }
 }

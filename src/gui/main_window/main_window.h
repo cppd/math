@@ -50,7 +50,6 @@ class MainWindow final : public QMainWindow
 private:
         const std::thread::id m_thread_id = std::this_thread::get_id();
         bool m_first_show = true;
-        application::LogEvents* const m_log_events;
 
         Ui::MainWindow ui;
 
@@ -69,6 +68,7 @@ private:
         std::unique_ptr<VolumeWidget> m_volume_widget;
 
         std::unique_ptr<application::ModelEvents> m_model_events;
+        std::unique_ptr<application::SetLogEvents> m_log_events;
         std::unique_ptr<Actions> m_actions;
 
         QTimer m_timer;
@@ -105,7 +105,7 @@ private:
         void set_progress_bars();
 
 public:
-        MainWindow(application::LogEvents* log_events);
+        MainWindow();
         ~MainWindow() override;
 };
 }

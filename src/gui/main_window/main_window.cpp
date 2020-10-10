@@ -54,7 +54,7 @@ constexpr double MAXIMUM_SPECULAR_POWER = 1000.0;
 constexpr double MAXIMUM_MODEL_LIGHTING = 2.0;
 }
 
-MainWindow::MainWindow(application::LogEvents* log_events) : m_log_events(log_events)
+MainWindow::MainWindow()
 {
         ui.setupUi(this);
 
@@ -147,7 +147,7 @@ void MainWindow::constructor_log()
         m_log_function = [this](std::string&& s, const Srgb8& c) {
                 (*m_log_messages_ptr).emplace_back(std::move(s), c);
         };
-        m_log_events->set_window_log(&m_log_function);
+        m_log_events = std::make_unique<application::SetLogEvents>(&m_log_function);
 }
 
 MainWindow::~MainWindow()
@@ -155,8 +155,6 @@ MainWindow::~MainWindow()
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         terminate_all_threads();
-
-        m_log_events->set_window_log(nullptr);
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)
@@ -188,6 +186,7 @@ void MainWindow::terminate_all_threads()
         m_timer.stop();
 
         m_actions.reset();
+        m_log_events.reset();
         m_model_events.reset();
 
         m_colors_widget.reset();

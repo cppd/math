@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/output/event.h>
+#include <src/com/thread.h>
 
-#include <atomic>
 #include <functional>
 #include <string>
 #include <vector>
@@ -29,9 +29,14 @@ namespace gui::application
 {
 class LogEvents final
 {
+        friend class SetLogEvents;
+
         std::function<void(LogEvent&&)> m_events;
-        std::function<void(std::string&&, const Srgb8&)> m_empty_window_log;
-        std::atomic<const std::function<void(std::string&&, const Srgb8&)>*> m_window_log_ptr;
+
+        const std::function<void(std::string&&, const Srgb8&)>* m_pointer = nullptr;
+        SpinLock m_pointer_lock;
+
+        void set_log(const std::function<void(std::string&&, const Srgb8&)>* log_ptr);
 
 public:
         LogEvents();
@@ -41,7 +46,17 @@ public:
         LogEvents(LogEvents&&) = delete;
         LogEvents& operator=(const LogEvents&) = delete;
         LogEvents& operator=(LogEvents&&) = delete;
+};
 
-        void set_window_log(const std::function<void(std::string&&, const Srgb8&)>* window_log_ptr);
+class SetLogEvents final
+{
+public:
+        SetLogEvents(const std::function<void(std::string&&, const Srgb8&)>* log_ptr);
+        ~SetLogEvents();
+
+        SetLogEvents(const SetLogEvents&) = delete;
+        SetLogEvents(SetLogEvents&&) = delete;
+        SetLogEvents& operator=(const SetLogEvents&) = delete;
+        SetLogEvents& operator=(SetLogEvents&&) = delete;
 };
 }

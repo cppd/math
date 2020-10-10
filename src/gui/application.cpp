@@ -73,8 +73,6 @@ public:
 
 int run_application(int argc, char** argv)
 {
-        LOG(command_line_description());
-
         Application a(argc, argv);
 
         application::MainThreadQueue main_thread_queue;
@@ -82,7 +80,9 @@ int run_application(int argc, char** argv)
         application::MessageEvents message_events;
         application::ModelEvents model_events;
 
-        create_delete_on_close_window<MainWindow>(&log_events)->show();
+        LOG(command_line_description());
+
+        create_delete_on_close_window<MainWindow>()->show();
 
         int r = Application::exec();
 
