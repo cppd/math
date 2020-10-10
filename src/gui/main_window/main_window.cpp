@@ -52,6 +52,27 @@ constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 
 constexpr double MAXIMUM_SPECULAR_POWER = 1000.0;
 constexpr double MAXIMUM_MODEL_LIGHTING = 2.0;
+
+template <typename D, typename S>
+class LogSwitcher final
+{
+        D* const m_dst;
+        S* const m_src;
+
+public:
+        LogSwitcher(D* dst, S* src) : m_dst(dst), m_src(src)
+        {
+        }
+        ~LogSwitcher()
+        {
+                m_src->clear();
+                *m_dst = m_src;
+        }
+        LogSwitcher(const LogSwitcher&) = delete;
+        LogSwitcher(LogSwitcher&&) = delete;
+        LogSwitcher& operator=(const LogSwitcher&) = delete;
+        LogSwitcher& operator=(LogSwitcher&&) = delete;
+};
 }
 
 MainWindow::MainWindow()
@@ -200,16 +221,28 @@ void MainWindow::terminate_all_threads()
 
 void MainWindow::write_log()
 {
-        unsigned n = (m_log_messages_ptr == &m_log_messages[0]) ? 1 : 0;
-        if (!m_log_messages[n].empty())
+        std::vector<std::tuple<std::string, Srgb8>>& log =
+                m_log_messages[(m_log_messages_ptr == &m_log_messages[0]) ? 1 : 0];
+        LogSwitcher switcher(&m_log_messages_ptr, &log);
+        if (log.empty())
         {
-                for (const auto& [message, color] : m_log_messages[n])
-                {
-                        append_to_text_edit(ui.text_log, message, color);
-                }
-                m_log_messages[n].clear();
+                return;
         }
-        m_log_messages_ptr = &m_log_messages[n];
+        std::string text;
+        size_t i = 0;
+        do
+        {
+                text.clear();
+                Srgb8 color = std::get<1>(log[i]);
+                text += std::move(std::get<0>(log[i++]));
+                while (i < log.size() && color == std::get<1>(log[i]))
+                {
+                        text += '\n';
+                        text += std::move(std::get<0>(log[i++]));
+                }
+                append_to_text_edit(ui.text_log, text, color);
+
+        } while (i < log.size());
 }
 
 void MainWindow::set_progress_bars(
