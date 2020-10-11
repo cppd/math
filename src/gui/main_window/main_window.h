@@ -76,7 +76,6 @@ private:
 
         void on_about_triggered();
         void on_exit_triggered();
-        void on_first_shown();
         void on_graphics_widget_mouse_move(QMouseEvent*);
         void on_graphics_widget_mouse_press(QMouseEvent*);
         void on_graphics_widget_mouse_release(QMouseEvent*);
@@ -87,6 +86,9 @@ private:
 
         void constructor_graphics_widget();
         void constructor_objects();
+        void first_shown();
+
+        std::vector<view::Command> view_initial_commands() const;
 
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;

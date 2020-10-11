@@ -141,6 +141,34 @@ void MainWindow::constructor_objects()
         connect(&m_timer, &QTimer::timeout, this, &MainWindow::on_timer);
 }
 
+std::vector<view::Command> MainWindow::view_initial_commands() const
+{
+        return {view::command::SetBackgroundColor(m_colors_widget->background_color()),
+                view::command::SetSpecularColor(m_colors_widget->specular_color()),
+                view::command::SetWireframeColor(m_colors_widget->wireframe_color()),
+                view::command::SetClipPlaneColor(m_colors_widget->clip_plane_color()),
+                view::command::SetNormalLength(m_view_widget->normal_length()),
+                view::command::SetNormalColorPositive(m_colors_widget->normal_color_positive()),
+                view::command::SetNormalColorNegative(m_colors_widget->normal_color_negative()),
+                view::command::ShowSmooth(m_view_widget->smooth_checked()),
+                view::command::ShowWireframe(m_view_widget->wireframe_checked()),
+                view::command::ShowShadow(m_view_widget->shadow_checked()),
+                view::command::ShowFog(m_view_widget->fog_checked()),
+                view::command::ShowMaterials(m_view_widget->materials_checked()),
+                view::command::ShowFps(m_view_widget->fps_checked()),
+                view::command::ShowPencilSketch(m_view_widget->pencil_sketch_checked()),
+                view::command::ShowDft(m_view_widget->dft_checked()),
+                view::command::ShowConvexHull2D(m_view_widget->convex_hull_2d_checked()),
+                view::command::ShowOpticalFlow(m_view_widget->optical_flow_checked()),
+                view::command::ShowNormals(m_view_widget->normals_checked()),
+                view::command::SetLightingIntensity(m_colors_widget->lighting_intensity()),
+                view::command::SetDftBrightness(m_view_widget->dft_brightness()),
+                view::command::SetDftBackgroundColor(m_colors_widget->dft_background_color()),
+                view::command::SetDftColor(m_colors_widget->dft_color()),
+                view::command::SetVerticalSync(m_view_widget->vertical_sync_checked()),
+                view::command::SetShadowZoom(m_view_widget->shadow_zoom())};
+}
+
 MainWindow::~MainWindow()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -197,10 +225,23 @@ void MainWindow::showEvent(QShowEvent* /*event*/)
         m_first_show = false;
 
         // Окно ещё не видно, поэтому небольшая задержка, чтобы окно реально появилось.
-        QTimer::singleShot(WINDOW_SHOW_DELAY_MSEC, this, &MainWindow::on_first_shown);
+        QTimer::singleShot(WINDOW_SHOW_DELAY_MSEC, this, [this]() {
+                try
+                {
+                        first_shown();
+                }
+                catch (const std::exception& e)
+                {
+                        MESSAGE_ERROR_FATAL(e.what());
+                }
+                catch (...)
+                {
+                        MESSAGE_ERROR_FATAL("Error first show");
+                }
+        });
 }
 
-void MainWindow::on_first_shown()
+void MainWindow::first_shown()
 {
         if (WINDOW_SIZE_GRAPHICS)
         {
@@ -215,62 +256,23 @@ void MainWindow::on_first_shown()
 
         move_window_to_desktop_center(this);
 
-        try
-        {
-                const CommandLineOptions options = command_line_options();
+        const CommandLineOptions options = command_line_options();
 
-                //
+        m_view = view::create_view(
+                widget_window_id(m_graphics_widget), widget_pixels_per_inch(m_graphics_widget),
+                view_initial_commands());
 
-                std::vector<view::Command> view_initial_commands{
-                        view::command::SetBackgroundColor(m_colors_widget->background_color()),
-                        view::command::SetSpecularColor(m_colors_widget->specular_color()),
-                        view::command::SetWireframeColor(m_colors_widget->wireframe_color()),
-                        view::command::SetClipPlaneColor(m_colors_widget->clip_plane_color()),
-                        view::command::SetNormalLength(m_view_widget->normal_length()),
-                        view::command::SetNormalColorPositive(m_colors_widget->normal_color_positive()),
-                        view::command::SetNormalColorNegative(m_colors_widget->normal_color_negative()),
-                        view::command::ShowSmooth(m_view_widget->smooth_checked()),
-                        view::command::ShowWireframe(m_view_widget->wireframe_checked()),
-                        view::command::ShowShadow(m_view_widget->shadow_checked()),
-                        view::command::ShowFog(m_view_widget->fog_checked()),
-                        view::command::ShowMaterials(m_view_widget->materials_checked()),
-                        view::command::ShowFps(m_view_widget->fps_checked()),
-                        view::command::ShowPencilSketch(m_view_widget->pencil_sketch_checked()),
-                        view::command::ShowDft(m_view_widget->dft_checked()),
-                        view::command::ShowConvexHull2D(m_view_widget->convex_hull_2d_checked()),
-                        view::command::ShowOpticalFlow(m_view_widget->optical_flow_checked()),
-                        view::command::ShowNormals(m_view_widget->normals_checked()),
-                        view::command::SetLightingIntensity(m_colors_widget->lighting_intensity()),
-                        view::command::SetDftBrightness(m_view_widget->dft_brightness()),
-                        view::command::SetDftBackgroundColor(m_colors_widget->dft_background_color()),
-                        view::command::SetDftColor(m_colors_widget->dft_color()),
-                        view::command::SetVerticalSync(m_view_widget->vertical_sync_checked()),
-                        view::command::SetShadowZoom(m_view_widget->shadow_zoom())};
+        m_colors_widget->set_view(m_view.get());
+        m_view_widget->set_view(m_view.get());
+        m_mesh_widget->set_model_tree(m_model_tree.get());
+        m_volume_widget->set_model_tree(m_model_tree.get());
+        m_model_events = std::make_unique<application::ModelEvents>(m_model_tree->events(), m_view.get());
+        m_actions = std::make_unique<Actions>(
+                options, ui.action_load, ui.action_export, ui.action_self_test, ui.menu_create, ui.menu_edit,
+                ui.menu_rendering, m_repository.get(), m_worker_threads.get(), m_view.get(), m_model_tree.get(),
+                m_colors_widget.get());
 
-                m_view = view::create_view(
-                        widget_window_id(m_graphics_widget), widget_pixels_per_inch(m_graphics_widget),
-                        std::move(view_initial_commands));
-
-                m_colors_widget->set_view(m_view.get());
-                m_view_widget->set_view(m_view.get());
-                m_mesh_widget->set_model_tree(m_model_tree.get());
-                m_volume_widget->set_model_tree(m_model_tree.get());
-                m_model_events = std::make_unique<application::ModelEvents>(m_model_tree->events(), m_view.get());
-                m_actions = std::make_unique<Actions>(
-                        options, ui.action_load, ui.action_export, ui.action_self_test, ui.menu_create, ui.menu_edit,
-                        ui.menu_rendering, m_repository.get(), m_worker_threads.get(), m_view.get(), m_model_tree.get(),
-                        m_colors_widget.get());
-
-                m_timer.start(TIMER_INTERVAL);
-        }
-        catch (const std::exception& e)
-        {
-                MESSAGE_ERROR_FATAL(e.what());
-        }
-        catch (...)
-        {
-                MESSAGE_ERROR_FATAL("Error first show");
-        }
+        m_timer.start(TIMER_INTERVAL);
 }
 
 void MainWindow::on_timer()
