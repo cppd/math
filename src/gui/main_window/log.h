@@ -41,19 +41,21 @@ class Log final
                 }
         };
 
+        QPlainTextEdit* const m_text_edit;
+
         std::array<std::vector<Message>, 2> m_messages;
         std::atomic<std::vector<Message>*> m_messages_ptr;
 
         application::LogEventsObserver m_observer;
 
 public:
-        Log();
+        Log(QPlainTextEdit* text_edit);
 
         Log(const Log&) = delete;
         Log(Log&&) = delete;
         Log& operator=(const Log&) = delete;
         Log& operator=(Log&&) = delete;
 
-        void write(QPlainTextEdit* text_edit);
+        void write();
 };
 }

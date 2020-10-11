@@ -69,8 +69,8 @@ public:
 };
 }
 
-Log::Log()
-        : m_messages_ptr(&m_messages[0]), m_observer([this](const LogEvent& event) {
+Log::Log(QPlainTextEdit* text_edit)
+        : m_text_edit(text_edit), m_messages_ptr(&m_messages[0]), m_observer([this](const LogEvent& event) {
                   Srgb8 color = event_color(event.type);
                   if (!(*m_messages_ptr).empty() && (*m_messages_ptr).back().color == color)
                   {
@@ -83,13 +83,13 @@ Log::Log()
 {
 }
 
-void Log::write(QPlainTextEdit* text_edit)
+void Log::write()
 {
         std::vector<Message>& log = m_messages[(m_messages_ptr == &m_messages[0]) ? 1 : 0];
         Switcher switcher(&m_messages_ptr, &log);
         for (const Message& m : log)
         {
-                append_to_text_edit(text_edit, m.text, m.color);
+                append_to_text_edit(m_text_edit, m.text, m.color);
         }
 }
 }

@@ -59,7 +59,7 @@ MainWindow::MainWindow()
         ui.setupUi(this);
         this->setWindowTitle(settings::APPLICATION_NAME);
 
-        m_log = std::make_unique<Log>();
+        m_log = std::make_unique<Log>(ui.text_log);
         constructor_graphics_widget();
         constructor_objects();
 }
@@ -100,7 +100,8 @@ void MainWindow::constructor_objects()
         // QMenu* menu_create = new QMenu("Create", this);
         // ui.menu_bar->insertMenu(ui.menu_help->menuAction(), menu_create);
 
-        m_worker_threads = create_worker_threads(Actions::required_thread_count());
+        m_worker_threads =
+                create_worker_threads(Actions::required_thread_count(), Actions::permanent_thread_id(), ui.status_bar);
 
         m_repository = std::make_unique<storage::Repository>();
 
@@ -187,95 +188,6 @@ void MainWindow::terminate_all_threads()
         m_view.reset();
 }
 
-void MainWindow::set_progress_bars(
-        unsigned id,
-        const ProgressRatioList* progress_list,
-        std::list<QProgressBar>* progress_bars)
-{
-        static_assert(limits<unsigned>::max() >= limits<int>::max());
-
-        constexpr unsigned MAX_INT = limits<int>::max();
-
-        std::vector<std::tuple<unsigned, unsigned, std::string>> ratios = progress_list->ratios();
-
-        while (ratios.size() > progress_bars->size())
-        {
-                QProgressBar& bar = progress_bars->emplace_back();
-
-                bar.setContextMenuPolicy(Qt::CustomContextMenu);
-
-                connect(&bar, &QProgressBar::customContextMenuRequested,
-                        [id, &bar, ptr_this = QPointer(this)](const QPoint&) {
-                                QtObjectInDynamicMemory<QMenu> menu(&bar);
-                                menu->addAction("Terminate");
-
-                                if (!menu->exec(QCursor::pos()) || menu.isNull() || ptr_this.isNull())
-                                {
-                                        return;
-                                }
-
-                                ptr_this->m_worker_threads->terminate_with_message(id);
-                        });
-        }
-
-        auto bar = progress_bars->begin();
-
-        for (unsigned i = 0; i < ratios.size(); ++i, ++bar)
-        {
-                if (!bar->isVisible())
-                {
-                        if (id == Actions::permanent_thread_id())
-                        {
-                                ui.status_bar->insertPermanentWidget(0, &(*bar));
-                        }
-                        else
-                        {
-                                ui.status_bar->addWidget(&(*bar));
-                        }
-                        bar->show();
-                }
-
-                bar->setFormat(std::get<2>(ratios[i]).c_str());
-
-                unsigned v = std::get<0>(ratios[i]);
-                unsigned m = std::get<1>(ratios[i]);
-
-                if (m > 0)
-                {
-                        m = std::min(m, MAX_INT);
-                        v = std::min(v, m);
-
-                        bar->setMaximum(m);
-                        bar->setValue(v);
-                }
-                else
-                {
-                        bar->setMaximum(0);
-                        bar->setValue(0);
-                }
-        }
-
-        while (bar != progress_bars->end())
-        {
-                ui.status_bar->removeWidget(&(*bar));
-                bar = progress_bars->erase(bar);
-        }
-}
-
-void MainWindow::set_progress_bars()
-{
-        for (const WorkerThreads::Progress& t : m_worker_threads->progresses())
-        {
-                set_progress_bars(t.id, t.progress_list, t.progress_bars);
-        }
-}
-
-void MainWindow::on_timer()
-{
-        m_log->write(ui.text_log);
-        set_progress_bars();
-}
-
 void MainWindow::showEvent(QShowEvent* /*event*/)
 {
         if (!m_first_show)
@@ -359,6 +271,12 @@ void MainWindow::on_first_shown()
         {
                 MESSAGE_ERROR_FATAL("Error first show");
         }
+}
+
+void MainWindow::on_timer()
+{
+        m_log->write();
+        m_worker_threads->set_progresses();
 }
 
 void MainWindow::on_exit_triggered()

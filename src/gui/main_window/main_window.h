@@ -93,12 +93,6 @@ private:
 
         void terminate_all_threads();
 
-        void set_progress_bars(
-                unsigned id,
-                const ProgressRatioList* progress_list,
-                std::list<QProgressBar>* progress_bars);
-        void set_progress_bars();
-
 public:
         MainWindow();
         ~MainWindow() override;

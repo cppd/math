@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/progress/progress_list.h>
 
 #include <QProgressBar>
+#include <QStatusBar>
 #include <functional>
 #include <list>
 #include <memory>
@@ -48,8 +49,12 @@ struct WorkerThreads
                 unsigned id,
                 const std::string& description,
                 std::function<Function()>&& function) = 0;
-        virtual const std::vector<Progress>& progresses() const = 0;
+
+        virtual void set_progresses() = 0;
 };
 
-std::unique_ptr<WorkerThreads> create_worker_threads(unsigned thread_count);
+std::unique_ptr<WorkerThreads> create_worker_threads(
+        unsigned thread_count,
+        unsigned permanent_thread_id,
+        QStatusBar* status_bar);
 }

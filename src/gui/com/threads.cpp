@@ -17,10 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "threads.h"
 
+#include "support.h"
+
 #include "../dialogs/message.h"
 
 #include <src/com/exception.h>
+#include <src/com/type/limit.h>
 
+#include <QMenu>
 #include <atomic>
 #include <deque>
 #include <thread>
@@ -134,6 +138,9 @@ class Impl final : public WorkerThreads
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
+        const unsigned m_permanent_thread_id;
+        QStatusBar* const m_status_bar;
+
         std::deque<ThreadData> m_threads;
         std::vector<Progress> m_progress;
 
@@ -227,20 +234,98 @@ class Impl final : public WorkerThreads
                 }
         }
 
-        const std::vector<Progress>& progresses() const override
-        {
-                return m_progress;
-        }
-
         unsigned count() const override
         {
                 return m_threads.size();
         }
 
+        void set_progress(unsigned id, const ProgressRatioList* progress_list, std::list<QProgressBar>* progress_bars)
+        {
+                static_assert(limits<unsigned>::max() >= limits<int>::max());
+
+                constexpr unsigned MAX_INT = limits<int>::max();
+
+                std::vector<std::tuple<unsigned, unsigned, std::string>> ratios = progress_list->ratios();
+
+                while (ratios.size() > progress_bars->size())
+                {
+                        QProgressBar& bar = progress_bars->emplace_back();
+
+                        bar.setContextMenuPolicy(Qt::CustomContextMenu);
+
+                        QObject::connect(
+                                &bar, &QProgressBar::customContextMenuRequested,
+                                [this, id, bar_ptr = QPointer(&bar)](const QPoint&) {
+                                        QtObjectInDynamicMemory<QMenu> menu(bar_ptr);
+                                        menu->addAction("Terminate");
+
+                                        if (!menu->exec(QCursor::pos()) || menu.isNull() || bar_ptr.isNull())
+                                        {
+                                                return;
+                                        }
+
+                                        terminate_with_message(id);
+                                });
+                }
+
+                auto bar = progress_bars->begin();
+
+                for (unsigned i = 0; i < ratios.size(); ++i, ++bar)
+                {
+                        if (!bar->isVisible())
+                        {
+                                if (id == m_permanent_thread_id)
+                                {
+                                        m_status_bar->insertPermanentWidget(0, &(*bar));
+                                }
+                                else
+                                {
+                                        m_status_bar->addWidget(&(*bar));
+                                }
+                                bar->show();
+                        }
+
+                        bar->setFormat(std::get<2>(ratios[i]).c_str());
+
+                        unsigned v = std::get<0>(ratios[i]);
+                        unsigned m = std::get<1>(ratios[i]);
+
+                        if (m > 0)
+                        {
+                                m = std::min(m, MAX_INT);
+                                v = std::min(v, m);
+
+                                bar->setMaximum(m);
+                                bar->setValue(v);
+                        }
+                        else
+                        {
+                                bar->setMaximum(0);
+                                bar->setValue(0);
+                        }
+                }
+
+                while (bar != progress_bars->end())
+                {
+                        m_status_bar->removeWidget(&(*bar));
+                        bar = progress_bars->erase(bar);
+                }
+        }
+
+        void set_progresses() override
+        {
+                for (const WorkerThreads::Progress& t : m_progress)
+                {
+                        set_progress(t.id, t.progress_list, t.progress_bars);
+                }
+        }
+
 public:
-        Impl(unsigned thread_count)
+        Impl(unsigned thread_count, unsigned permanent_thread_id, QStatusBar* status_bar)
+                : m_permanent_thread_id(permanent_thread_id), m_status_bar(status_bar)
         {
                 ASSERT(thread_count > 0);
+                ASSERT(m_permanent_thread_id < thread_count);
 
                 m_threads.resize(thread_count);
 
@@ -268,8 +353,11 @@ public:
 };
 }
 
-std::unique_ptr<WorkerThreads> create_worker_threads(unsigned thread_count)
+std::unique_ptr<WorkerThreads> create_worker_threads(
+        unsigned thread_count,
+        unsigned permanent_thread_id,
+        QStatusBar* status_bar)
 {
-        return std::make_unique<Impl>(thread_count);
+        return std::make_unique<Impl>(thread_count, permanent_thread_id, status_bar);
 }
 }
