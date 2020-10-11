@@ -17,26 +17,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/color/color.h>
 #include <src/com/output/event.h>
-#include <src/com/thread.h>
 
 #include <functional>
-#include <string>
+#include <mutex>
+#include <thread>
 #include <vector>
 
 namespace gui::application
 {
 class LogEvents final
 {
-        friend class SetLogEvents;
+        friend class LogEventsObserver;
 
+        const std::thread::id m_thread_id = std::this_thread::get_id();
+
+        std::mutex m_lock;
         std::function<void(LogEvent&&)> m_events;
+        std::vector<const std::function<void(const LogEvent&)>*> m_observers;
 
-        const std::function<void(std::string&&, const Srgb8&)>* m_pointer = nullptr;
-        SpinLock m_pointer_lock;
-
-        void set_log(const std::function<void(std::string&&, const Srgb8&)>* log_ptr);
+        void insert(const std::function<void(const LogEvent&)>* observer);
+        void erase(const std::function<void(const LogEvent&)>* observer);
 
 public:
         LogEvents();
@@ -48,15 +49,17 @@ public:
         LogEvents& operator=(LogEvents&&) = delete;
 };
 
-class SetLogEvents final
+class LogEventsObserver final
 {
-public:
-        SetLogEvents(const std::function<void(std::string&&, const Srgb8&)>* log_ptr);
-        ~SetLogEvents();
+        std::function<void(const LogEvent&)> m_observer;
 
-        SetLogEvents(const SetLogEvents&) = delete;
-        SetLogEvents(SetLogEvents&&) = delete;
-        SetLogEvents& operator=(const SetLogEvents&) = delete;
-        SetLogEvents& operator=(SetLogEvents&&) = delete;
+public:
+        LogEventsObserver(std::function<void(const LogEvent&)> observer);
+        ~LogEventsObserver();
+
+        LogEventsObserver(const LogEventsObserver&) = delete;
+        LogEventsObserver(LogEventsObserver&&) = delete;
+        LogEventsObserver& operator=(const LogEventsObserver&) = delete;
+        LogEventsObserver& operator=(LogEventsObserver&&) = delete;
 };
 }

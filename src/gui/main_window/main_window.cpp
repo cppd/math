@@ -52,38 +52,16 @@ constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 
 constexpr double MAXIMUM_SPECULAR_POWER = 1000.0;
 constexpr double MAXIMUM_MODEL_LIGHTING = 2.0;
-
-template <typename D, typename S>
-class LogSwitcher final
-{
-        D* const m_dst;
-        S* const m_src;
-
-public:
-        LogSwitcher(D* dst, S* src) : m_dst(dst), m_src(src)
-        {
-        }
-        ~LogSwitcher()
-        {
-                m_src->clear();
-                *m_dst = m_src;
-        }
-        LogSwitcher(const LogSwitcher&) = delete;
-        LogSwitcher(LogSwitcher&&) = delete;
-        LogSwitcher& operator=(const LogSwitcher&) = delete;
-        LogSwitcher& operator=(LogSwitcher&&) = delete;
-};
 }
 
 MainWindow::MainWindow()
 {
         ui.setupUi(this);
-
         this->setWindowTitle(settings::APPLICATION_NAME);
 
+        m_log = std::make_unique<Log>();
         constructor_graphics_widget();
         constructor_objects();
-        constructor_log();
 }
 
 void MainWindow::constructor_graphics_widget()
@@ -162,15 +140,6 @@ void MainWindow::constructor_objects()
         connect(&m_timer, &QTimer::timeout, this, &MainWindow::on_timer);
 }
 
-void MainWindow::constructor_log()
-{
-        m_log_messages_ptr = &m_log_messages[0];
-        m_log_function = [this](std::string&& s, const Srgb8& c) {
-                (*m_log_messages_ptr).emplace_back(std::move(s), c);
-        };
-        m_log_events = std::make_unique<application::SetLogEvents>(&m_log_function);
-}
-
 MainWindow::~MainWindow()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -207,7 +176,6 @@ void MainWindow::terminate_all_threads()
         m_timer.stop();
 
         m_actions.reset();
-        m_log_events.reset();
         m_model_events.reset();
 
         m_colors_widget.reset();
@@ -217,32 +185,6 @@ void MainWindow::terminate_all_threads()
 
         m_model_tree.reset();
         m_view.reset();
-}
-
-void MainWindow::write_log()
-{
-        std::vector<std::tuple<std::string, Srgb8>>& log =
-                m_log_messages[(m_log_messages_ptr == &m_log_messages[0]) ? 1 : 0];
-        LogSwitcher switcher(&m_log_messages_ptr, &log);
-        if (log.empty())
-        {
-                return;
-        }
-        std::string text;
-        size_t i = 0;
-        do
-        {
-                text.clear();
-                Srgb8 color = std::get<1>(log[i]);
-                text += std::move(std::get<0>(log[i++]));
-                while (i < log.size() && color == std::get<1>(log[i]))
-                {
-                        text += '\n';
-                        text += std::move(std::get<0>(log[i++]));
-                }
-                append_to_text_edit(ui.text_log, text, color);
-
-        } while (i < log.size());
 }
 
 void MainWindow::set_progress_bars(
@@ -330,7 +272,7 @@ void MainWindow::set_progress_bars()
 
 void MainWindow::on_timer()
 {
-        write_log();
+        m_log->write(ui.text_log);
         set_progress_bars();
 }
 

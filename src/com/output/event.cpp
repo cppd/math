@@ -43,7 +43,6 @@ void log_impl(const std::string& msg, LogEvent::Type type) noexcept
         {
                 try
                 {
-                        ASSERT(global_log_events);
                         (*global_log_events)(LogEvent(msg, type));
                 }
                 catch (const std::exception& e)
@@ -63,7 +62,6 @@ void message_impl(const std::string& msg, MessageEvent::Type type) noexcept
         {
                 try
                 {
-                        ASSERT(global_message_events);
                         (*global_message_events)(MessageEvent(msg, type));
                 }
                 catch (const std::exception& e)

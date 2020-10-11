@@ -20,12 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "actions.h"
 #include "colors_widget.h"
 #include "graphics_widget.h"
+#include "log.h"
 #include "mesh_widget.h"
 #include "model_tree.h"
 #include "view_widget.h"
 #include "volume_widget.h"
 
-#include "../application/log_events.h"
 #include "../application/model_events.h"
 #include "../com/threads.h"
 
@@ -53,6 +53,8 @@ private:
 
         Ui::MainWindow ui;
 
+        std::unique_ptr<Log> m_log;
+
         std::unique_ptr<WorkerThreads> m_worker_threads;
 
         GraphicsWidget* m_graphics_widget;
@@ -68,14 +70,9 @@ private:
         std::unique_ptr<VolumeWidget> m_volume_widget;
 
         std::unique_ptr<application::ModelEvents> m_model_events;
-        std::unique_ptr<application::SetLogEvents> m_log_events;
         std::unique_ptr<Actions> m_actions;
 
         QTimer m_timer;
-
-        std::array<std::vector<std::tuple<std::string, Srgb8>>, 2> m_log_messages;
-        std::atomic<std::vector<std::tuple<std::string, Srgb8>>*> m_log_messages_ptr;
-        std::function<void(std::string&&, const Srgb8&)> m_log_function;
 
         void on_about_triggered();
         void on_exit_triggered();
@@ -90,14 +87,12 @@ private:
 
         void constructor_graphics_widget();
         void constructor_objects();
-        void constructor_log();
 
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;
 
         void terminate_all_threads();
 
-        void write_log();
         void set_progress_bars(
                 unsigned id,
                 const ProgressRatioList* progress_list,

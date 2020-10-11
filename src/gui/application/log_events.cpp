@@ -18,97 +18,99 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "log_events.h"
 
 #include <src/com/error.h>
-#include <src/com/output/format.h>
+#include <src/com/time.h>
+
+#include <array>
+#include <atomic>
+#include <cstdio>
+#include <iostream>
 
 namespace gui::application
 {
 namespace
 {
-LogEvents* g_log_events = nullptr;
-std::atomic_int g_log_events_count = 0;
+LogEvents* global_log_events = nullptr;
+std::atomic_int global_log_events_count = 0;
 
-Srgb8 event_color(LogEvent::Type type)
+std::string format_log_text(const std::string& text)
 {
-        switch (type)
+        constexpr int BUFFER_SIZE = 100;
+        std::array<char, BUFFER_SIZE> buffer;
+        int char_count = std::snprintf(buffer.data(), buffer.size(), "[%011.6f]: ", time_in_seconds());
+        if (char_count < 0 || static_cast<size_t>(char_count) >= buffer.size())
         {
-        case LogEvent::Type::Normal:
+                error_fatal("message beginning length out of range");
+        }
+
+        const std::string_view line_beginning = buffer.data();
+
+        std::string result;
+        result.reserve(line_beginning.size() + text.size());
+        result += line_beginning;
+        for (char c : text)
         {
-                return Srgb8(0, 0, 0);
+                result += c;
+                if (c == '\n')
+                {
+                        result += line_beginning;
+                }
         }
-        case LogEvent::Type::Error:
-        {
-                return Srgb8(255, 0, 0);
-        }
-        case LogEvent::Type::Warning:
-        {
-                return Srgb8(200, 150, 0);
-        }
-        case LogEvent::Type::Information:
-        {
-                return Srgb8(0, 0, 255);
-        }
-        }
-        error_fatal("Unknown log event type");
+        return result;
 }
 }
 
 LogEvents::LogEvents()
 {
-        if (++g_log_events_count != 1)
-        {
-                error_fatal("Multiple LogEvent");
-        }
+        ASSERT(++global_log_events_count == 1);
 
         m_events = [this](LogEvent&& event) {
-                std::string text = format_log_text(std::move(event.text));
-                write_formatted_log_text(text);
-                std::lock_guard lg(m_pointer_lock);
-                if (m_pointer)
+                std::lock_guard lg(m_lock);
+                event.text = format_log_text(std::move(event.text));
+                event.text += '\n';
+                std::cerr << event.text;
+                event.text.pop_back();
+                for (const std::function<void(const LogEvent&)>* observer : m_observers)
                 {
-                        (*m_pointer)(std::move(text), event_color(event.type));
+                        (*observer)(event);
                 }
         };
 
         set_log_events(&m_events);
-
-        g_log_events = this;
+        global_log_events = this;
 }
 
 LogEvents::~LogEvents()
 {
-        g_log_events = nullptr;
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
+        global_log_events = nullptr;
         set_log_events(nullptr);
 }
 
-void LogEvents::set_log(const std::function<void(std::string&&, const Srgb8&)>* log_ptr)
+void LogEvents::insert(const std::function<void(const LogEvent&)>* observer)
 {
-        if (log_ptr)
-        {
-                ASSERT(*log_ptr);
-                std::lock_guard lg(m_pointer_lock);
-                ASSERT(!m_pointer);
-                m_pointer = log_ptr;
-        }
-        else
-        {
-                std::lock_guard lg(m_pointer_lock);
-                ASSERT(m_pointer);
-                m_pointer = nullptr;
-        }
+        std::lock_guard lg(m_lock);
+        ASSERT(std::find(m_observers.cbegin(), m_observers.cend(), observer) == m_observers.cend());
+        m_observers.push_back(observer);
+}
+
+void LogEvents::erase(const std::function<void(const LogEvent&)>* observer)
+{
+        std::lock_guard lg(m_lock);
+        auto iter = std::remove(m_observers.begin(), m_observers.end(), observer);
+        ASSERT(iter != m_observers.cend());
+        m_observers.erase(iter, m_observers.cend());
 }
 
 //
 
-SetLogEvents::SetLogEvents(const std::function<void(std::string&&, const Srgb8&)>* log_ptr)
+LogEventsObserver::LogEventsObserver(std::function<void(const LogEvent&)> observer) : m_observer(std::move(observer))
 {
-        ASSERT(log_ptr);
-        ASSERT(*log_ptr);
-        g_log_events->set_log(log_ptr);
+        global_log_events->insert(&m_observer);
 }
 
-SetLogEvents::~SetLogEvents()
+LogEventsObserver::~LogEventsObserver()
 {
-        g_log_events->set_log(nullptr);
+        global_log_events->erase(&m_observer);
 }
 }
