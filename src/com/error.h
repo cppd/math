@@ -26,8 +26,7 @@ class ErrorException final : public std::exception
         std::string m_text;
 
 public:
-        template <typename T, typename = std::enable_if_t<!std::is_same_v<ErrorException, std::remove_cvref<T>>>>
-        explicit ErrorException(T&& text) : m_text(std::forward<T>(text))
+        explicit ErrorException(std::string&& text) : m_text(std::move(text))
         {
         }
         const char* what() const noexcept override
@@ -36,8 +35,7 @@ public:
         }
 };
 
-[[noreturn]] void error(const std::string& text);
-[[noreturn]] void error(std::string&& text);
+[[noreturn]] void error(std::string text);
 
 [[noreturn]] void error_fatal(const char* text) noexcept;
 [[noreturn]] void error_fatal(const std::string& text) noexcept;

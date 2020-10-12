@@ -26,11 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view_widget.h"
 #include "volume_widget.h"
 
-#include "../application/model_events.h"
 #include "../com/threads.h"
 
 #include "ui_main_window.h"
 
+#include <src/application/model_events.h>
 #include <src/progress/progress_list.h>
 #include <src/storage/repository.h>
 #include <src/view/interface.h>

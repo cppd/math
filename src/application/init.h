@@ -17,26 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../com/thread_queue.h"
-
-#include <QObject>
-#include <functional>
-
-namespace gui::application
+namespace application
 {
-class MainThreadQueue final
+class Init final
 {
-        ThreadQueue m_thread_queue;
-
 public:
-        MainThreadQueue();
-        ~MainThreadQueue();
+        Init();
+        ~Init();
 
-        MainThreadQueue(const MainThreadQueue&) = delete;
-        MainThreadQueue(MainThreadQueue&&) = delete;
-        MainThreadQueue& operator=(const MainThreadQueue&) = delete;
-        MainThreadQueue& operator=(MainThreadQueue&&) = delete;
-
-        static void push(const std::function<void()>& f);
+        Init(const Init&) = delete;
+        Init(Init&&) = delete;
+        Init& operator=(const Init&) = delete;
+        Init& operator=(Init&&) = delete;
 };
 }

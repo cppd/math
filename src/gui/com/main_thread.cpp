@@ -15,15 +15,32 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "main_thread.h"
 
-struct Initialization
+#include <src/com/error.h>
+
+namespace gui
 {
-        Initialization();
-        ~Initialization();
+namespace
+{
+const ThreadQueue* global_thread_queue = nullptr;
+}
 
-        Initialization(const Initialization&) = delete;
-        Initialization& operator=(const Initialization&) = delete;
-        Initialization(Initialization&&) = delete;
-        Initialization& operator=(Initialization&&) = delete;
-};
+MainThreadQueue::MainThreadQueue()
+{
+        ASSERT(!global_thread_queue);
+        global_thread_queue = &m_thread_queue;
+}
+
+MainThreadQueue::~MainThreadQueue()
+{
+        ASSERT(global_thread_queue);
+        global_thread_queue = nullptr;
+}
+
+void MainThreadQueue::push(const std::function<void()>& f)
+{
+        ASSERT(global_thread_queue);
+        global_thread_queue->push(f);
+}
+}

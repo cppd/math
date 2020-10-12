@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../com/model_tree.h"
-
 #include <src/com/sequence.h>
+#include <src/gui/model_tree.h>
 #include <src/model/mesh_object.h>
 #include <src/model/volume_object.h>
 #include <src/settings/dimensions.h>
@@ -29,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <tuple>
 
-namespace gui::application
+namespace application
 {
 class ModelEvents final
 {
@@ -50,10 +49,12 @@ class ModelEvents final
 
 public:
         ModelEvents();
-        ModelEvents(ModelTreeEvents* tree, view::View* view);
+        ModelEvents(gui::ModelTreeEvents* tree, view::View* view);
         ~ModelEvents();
 
         ModelEvents(const ModelEvents&) = delete;
+        ModelEvents(ModelEvents&&) = delete;
         ModelEvents& operator=(const ModelEvents&) = delete;
+        ModelEvents& operator=(ModelEvents&&) = delete;
 };
 }

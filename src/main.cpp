@@ -15,11 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if 1
-
+#include "application/init.h"
+#include "application/log_events.h"
+#include "application/model_events.h"
 #include "com/error.h"
 #include "gui/application.h"
-#include "init/init.h"
 
 #include <exception>
 
@@ -29,7 +29,9 @@ int main(int argc, char** argv)
         {
                 try
                 {
-                        Initialization init;
+                        application::Init init;
+                        application::LogEvents log_events;
+                        application::ModelEvents model_events;
 
                         return gui::run_application(argc, argv);
                 }
@@ -47,17 +49,3 @@ int main(int argc, char** argv)
                 error_fatal("Exception in the main function exception handlers");
         }
 }
-
-#else
-
-#include "com/log.h"
-#include "com/math.h"
-#include "com/print.h"
-#include "init/init.h"
-
-int main()
-{
-        Initialization init;
-}
-
-#endif

@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../application/log_events.h"
-
+#include <src/application/log_events.h>
 #include <src/color/color.h>
 
 #include <QPlainTextEdit>

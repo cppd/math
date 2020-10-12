@@ -17,21 +17,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/output/event.h>
+#include "../com/thread_queue.h"
 
-namespace gui::application
+#include <QObject>
+#include <functional>
+
+namespace gui
 {
-class MessageEvents final
+class MainThreadQueue final
 {
-        std::function<void(MessageEvent&&)> m_events;
+        ThreadQueue m_thread_queue;
 
 public:
-        MessageEvents();
-        ~MessageEvents();
+        MainThreadQueue();
+        ~MainThreadQueue();
 
-        MessageEvents(const MessageEvents&) = delete;
-        MessageEvents(MessageEvents&&) = delete;
-        MessageEvents& operator=(const MessageEvents&) = delete;
-        MessageEvents& operator=(MessageEvents&&) = delete;
+        MainThreadQueue(const MainThreadQueue&) = delete;
+        MainThreadQueue(MainThreadQueue&&) = delete;
+        MainThreadQueue& operator=(const MainThreadQueue&) = delete;
+        MainThreadQueue& operator=(MainThreadQueue&&) = delete;
+
+        static void push(const std::function<void()>& f);
 };
 }

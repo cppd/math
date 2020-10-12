@@ -20,12 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdio>
 #include <cstdlib>
 
-void error(const std::string& text)
-{
-        throw ErrorException(text);
-}
-
-void error(std::string&& text)
+void error(std::string text)
 {
         throw ErrorException(std::move(text));
 }

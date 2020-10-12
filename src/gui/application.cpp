@@ -17,11 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "application.h"
 
-#include "application/log_events.h"
-#include "application/main_thread.h"
-#include "application/message_events.h"
-#include "application/model_events.h"
 #include "com/command_line.h"
+#include "com/main_thread.h"
 #include "com/support.h"
 #include "dialogs/message.h"
 #include "main_window/main_window.h"
@@ -69,16 +66,34 @@ public:
         {
         }
 };
+
+void message_event(const MessageEvent& event)
+{
+        switch (event.type)
+        {
+        case MessageEvent::Type::Error:
+                dialog::message_critical(event.text);
+                return;
+        case MessageEvent::Type::ErrorFatal:
+                dialog::message_critical(event.text, false /*with_parent*/);
+                std::_Exit(EXIT_FAILURE);
+        case MessageEvent::Type::Information:
+                dialog::message_information(event.text);
+                return;
+        case MessageEvent::Type::Warning:
+                dialog::message_warning(event.text);
+                return;
+        }
+}
 }
 
 int run_application(int argc, char** argv)
 {
         Application a(argc, argv);
 
-        application::MainThreadQueue main_thread_queue;
-        application::LogEvents log_events;
-        application::MessageEvents message_events;
-        application::ModelEvents model_events;
+        MainThreadQueue main_thread_queue;
+        application::MessageEventsObserver message_observer(
+                [](const MessageEvent& event) { MainThreadQueue::push([event]() { message_event(event); }); });
 
         LOG(command_line_description());
 

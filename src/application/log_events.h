@@ -24,20 +24,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <vector>
 
-namespace gui::application
+namespace application
 {
 class LogEvents final
 {
         friend class LogEventsObserver;
+        friend class MessageEventsObserver;
 
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
         std::mutex m_lock;
-        std::function<void(LogEvent&&)> m_events;
-        std::vector<const std::function<void(const LogEvent&)>*> m_observers;
+        std::function<void(LogEvent&&)> m_log_events;
+        std::function<void(MessageEvent&&)> m_msg_events;
+        std::vector<const std::function<void(const LogEvent&)>*> m_log_observers;
+        std::vector<const std::function<void(const MessageEvent&)>*> m_msg_observers;
 
         void insert(const std::function<void(const LogEvent&)>* observer);
         void erase(const std::function<void(const LogEvent&)>* observer);
+
+        void insert(const std::function<void(const MessageEvent&)>* observer);
+        void erase(const std::function<void(const MessageEvent&)>* observer);
+
+        void log_event(LogEvent&& event);
+        void message_event(MessageEvent&& event);
 
 public:
         LogEvents();
@@ -62,4 +71,19 @@ public:
         LogEventsObserver& operator=(const LogEventsObserver&) = delete;
         LogEventsObserver& operator=(LogEventsObserver&&) = delete;
 };
+
+class MessageEventsObserver final
+{
+        std::function<void(const MessageEvent&)> m_observer;
+
+public:
+        MessageEventsObserver(std::function<void(const MessageEvent&)> observer);
+        ~MessageEventsObserver();
+
+        MessageEventsObserver(const MessageEventsObserver&) = delete;
+        MessageEventsObserver(MessageEventsObserver&&) = delete;
+        MessageEventsObserver& operator=(const MessageEventsObserver&) = delete;
+        MessageEventsObserver& operator=(MessageEventsObserver&&) = delete;
+};
+
 }

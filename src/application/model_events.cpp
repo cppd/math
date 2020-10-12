@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/variant.h>
 
-namespace gui::application
+namespace application
 {
 void ModelEvents::set(Sequence<settings::Dimensions, std::tuple, Events>* all_events)
 {
@@ -53,7 +53,7 @@ void ModelEvents::unset(const Sequence<settings::Dimensions, std::tuple, Events>
                 [&f]<size_t... N>(const Events<N>&... events) { (f(events), ...); }, all_events);
 }
 
-ModelEvents::ModelEvents(ModelTreeEvents* tree, view::View* view)
+ModelEvents::ModelEvents(gui::ModelTreeEvents* tree, view::View* view)
 {
         ASSERT(tree);
         ASSERT(view);

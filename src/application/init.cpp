@@ -15,32 +15,53 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "main_thread.h"
+#include "init.h"
 
 #include <src/com/error.h>
+#include <src/com/time.h>
+#include <src/window/vulkan/window.h>
 
-namespace gui::application
+#include <atomic>
+
+#if defined(__linux__)
+#include <src/window/manage.h>
+#endif
+
+namespace application
 {
 namespace
 {
-const ThreadQueue* global_thread_queue = nullptr;
+std::atomic_int global_call_counter = 0;
 }
 
-MainThreadQueue::MainThreadQueue()
+Init::Init()
 {
-        ASSERT(!global_thread_queue);
-        global_thread_queue = &m_thread_queue;
+        if (++global_call_counter != 1)
+        {
+                error_fatal("Initialization must be called once");
+        }
+
+        time_init();
+
+#if defined(__linux__)
+        xlib_init();
+#endif
+
+#if 0
+        vulkan::window_init();
+#endif
 }
 
-MainThreadQueue::~MainThreadQueue()
+Init::~Init()
 {
-        ASSERT(global_thread_queue);
-        global_thread_queue = nullptr;
-}
+#if 0
+        vulkan::window_terminate();
+#endif
 
-void MainThreadQueue::push(const std::function<void()>& f)
-{
-        ASSERT(global_thread_queue);
-        global_thread_queue->push(f);
+#if defined(__linux__)
+        xlib_exit();
+#endif
+
+        time_exit();
 }
 }
