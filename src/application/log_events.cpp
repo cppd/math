@@ -18,12 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "log_events.h"
 
 #include <src/com/error.h>
-#include <src/com/time.h>
+#include <src/com/output/write.h>
 
-#include <array>
 #include <atomic>
-#include <cstdio>
-#include <iostream>
 
 namespace application
 {
@@ -31,66 +28,6 @@ namespace
 {
 LogEvents* global_log_events = nullptr;
 std::atomic_int global_call_counter = 0;
-
-std::string format_log_text(const std::string& text, const std::string_view& description) noexcept
-{
-        std::string line_beginning;
-
-        if (description.empty())
-        {
-                constexpr int BUFFER_SIZE = 100;
-                std::array<char, BUFFER_SIZE> buffer;
-                std::snprintf(buffer.data(), buffer.size(), "[%011.6f]: ", time_in_seconds());
-                line_beginning = buffer.data();
-        }
-        else
-        {
-                constexpr int BUFFER_SIZE = 100;
-                std::array<char, BUFFER_SIZE> buffer;
-                std::snprintf(buffer.data(), buffer.size(), "[%011.6f](", time_in_seconds());
-                line_beginning = buffer.data();
-                for (char c : description)
-                {
-                        line_beginning += std::isalpha(static_cast<unsigned char>(c)) ? c : ' ';
-                }
-                line_beginning += "): ";
-        }
-
-        std::string result;
-        result.reserve(line_beginning.size() + text.size());
-        result += line_beginning;
-        for (char c : text)
-        {
-                result += c;
-                if (c == '\n')
-                {
-                        result += line_beginning;
-                }
-        }
-        return result;
-}
-
-std::string write_log(const std::string& text, const std::string_view& description) noexcept
-{
-        try
-        {
-                std::string result = format_log_text(text, description);
-                result += '\n';
-                std::cerr << result;
-                result.pop_back();
-                return result;
-        }
-        catch (const std::exception& e)
-        {
-                std::cerr << std::string("Error writing to log: ").append(e.what()).append("\n");
-                return format_log_text(text, description);
-        }
-        catch (...)
-        {
-                std::cerr << "Error writing to log\n";
-                return format_log_text(text, description);
-        }
-}
 
 LogEvent::Type message_type_to_log_type(MessageEvent::Type type)
 {
