@@ -32,17 +32,29 @@ namespace
 LogEvents* global_log_events = nullptr;
 std::atomic_int global_call_counter = 0;
 
-std::string format_log_text(const std::string& text)
+std::string format_log_text(const std::string& text, const std::string_view& description) noexcept
 {
-        constexpr int BUFFER_SIZE = 100;
-        std::array<char, BUFFER_SIZE> buffer;
-        int char_count = std::snprintf(buffer.data(), buffer.size(), "[%011.6f]: ", time_in_seconds());
-        if (char_count < 0 || static_cast<size_t>(char_count) >= buffer.size())
-        {
-                error_fatal("message beginning length out of range");
-        }
+        std::string line_beginning;
 
-        const std::string_view line_beginning = buffer.data();
+        if (description.empty())
+        {
+                constexpr int BUFFER_SIZE = 100;
+                std::array<char, BUFFER_SIZE> buffer;
+                std::snprintf(buffer.data(), buffer.size(), "[%011.6f]: ", time_in_seconds());
+                line_beginning = buffer.data();
+        }
+        else
+        {
+                constexpr int BUFFER_SIZE = 100;
+                std::array<char, BUFFER_SIZE> buffer;
+                std::snprintf(buffer.data(), buffer.size(), "[%011.6f](", time_in_seconds());
+                line_beginning = buffer.data();
+                for (char c : description)
+                {
+                        line_beginning += std::isalpha(static_cast<unsigned char>(c)) ? c : ' ';
+                }
+                line_beginning += "): ";
+        }
 
         std::string result;
         result.reserve(line_beginning.size() + text.size());
@@ -56,6 +68,73 @@ std::string format_log_text(const std::string& text)
                 }
         }
         return result;
+}
+
+std::string write_log(const std::string& text, const std::string_view& description) noexcept
+{
+        try
+        {
+                std::string result = format_log_text(text, description);
+                result += '\n';
+                std::cerr << result;
+                result.pop_back();
+                return result;
+        }
+        catch (const std::exception& e)
+        {
+                std::cerr << std::string("Error writing to log: ").append(e.what()).append("\n");
+                return format_log_text(text, description);
+        }
+        catch (...)
+        {
+                std::cerr << "Error writing to log\n";
+                return format_log_text(text, description);
+        }
+}
+
+LogEvent::Type message_type_to_log_type(MessageEvent::Type type)
+{
+        switch (type)
+        {
+        case MessageEvent::Type::Error:
+        {
+                return LogEvent::Type::Error;
+        }
+        case MessageEvent::Type::ErrorFatal:
+        {
+                return LogEvent::Type::Error;
+        }
+        case MessageEvent::Type::Information:
+        {
+                return LogEvent::Type::Information;
+        }
+        case MessageEvent::Type::Warning:
+        {
+                return LogEvent::Type::Warning;
+        }
+        }
+        return LogEvent::Type::Error;
+}
+
+std::string_view log_type_to_string(LogEvent::Type type)
+{
+        switch (type)
+        {
+        case LogEvent::Type::Error:
+                return "error";
+        case LogEvent::Type::Information:
+                return "information";
+        case LogEvent::Type::Normal:
+                return "";
+        case LogEvent::Type::Warning:
+                return "warning";
+        }
+        return "unknown";
+}
+
+void write_log_event(LogEvent* event)
+{
+        event->text = write_log(event->text, log_type_to_string(event->type));
 }
 }
 
@@ -87,16 +166,12 @@ LogEvents::~LogEvents()
 
 void LogEvents::log_event(LogEvent&& event)
 {
-        std::lock_guard lg(m_lock);
-
-        event.text = format_log_text(std::move(event.text));
-
-        event.text += '\n';
-        std::cerr << event.text;
-        event.text.pop_back();
-
         try
         {
+                std::lock_guard lg(m_lock);
+
+                write_log_event(&event);
+
                 for (const std::function<void(const LogEvent&)>* observer : m_log_observers)
                 {
                         (*observer)(event);
@@ -114,32 +189,19 @@ void LogEvents::log_event(LogEvent&& event)
 
 void LogEvents::message_event(MessageEvent&& event)
 {
-        switch (event.type)
-        {
-        case MessageEvent::Type::Error:
-        {
-                m_log_events(LogEvent(event.text, LogEvent::Type::Error));
-                break;
-        }
-        case MessageEvent::Type::ErrorFatal:
-        {
-                m_log_events(LogEvent(event.text, LogEvent::Type::Error));
-                break;
-        }
-        case MessageEvent::Type::Information:
-        {
-                m_log_events(LogEvent(event.text, LogEvent::Type::Information));
-                break;
-        }
-        case MessageEvent::Type::Warning:
-        {
-                m_log_events(LogEvent(event.text, LogEvent::Type::Warning));
-                break;
-        }
-        }
-
         try
         {
+                LogEvent log_event(event.text, message_type_to_log_type(event.type));
+
+                std::lock_guard lg(m_lock);
+
+                write_log_event(&log_event);
+
+                for (const std::function<void(const LogEvent&)>* observer : m_log_observers)
+                {
+                        (*observer)(log_event);
+                }
+
                 for (const std::function<void(const MessageEvent&)>* observer : m_msg_observers)
                 {
                         (*observer)(event);
