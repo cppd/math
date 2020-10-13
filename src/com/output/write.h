@@ -19,4 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-std::string write_log(const std::string& text, const std::string_view& description) noexcept;
+std::string write_log(const std::string_view& text, const std::string_view& description) noexcept;
+
+void write_log_error_fatal(const char* text) noexcept;

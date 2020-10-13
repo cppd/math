@@ -28,7 +28,7 @@ namespace
 {
 std::mutex global_lock;
 
-std::string format(const std::string& text, const std::string_view& description) noexcept
+std::string format(const std::string_view& text, const std::string_view& description, double time) noexcept
 {
         std::string line_beginning;
 
@@ -36,14 +36,14 @@ std::string format(const std::string& text, const std::string_view& description)
         {
                 constexpr int BUFFER_SIZE = 100;
                 std::array<char, BUFFER_SIZE> buffer;
-                std::snprintf(buffer.data(), buffer.size(), "[%011.6f]: ", time_in_seconds());
+                std::snprintf(buffer.data(), buffer.size(), "[%011.6f]: ", time);
                 line_beginning = buffer.data();
         }
         else
         {
                 constexpr int BUFFER_SIZE = 100;
                 std::array<char, BUFFER_SIZE> buffer;
-                std::snprintf(buffer.data(), buffer.size(), "[%011.6f](", time_in_seconds());
+                std::snprintf(buffer.data(), buffer.size(), "[%011.6f](", time);
                 line_beginning = buffer.data();
                 for (char c : description)
                 {
@@ -66,18 +66,19 @@ std::string format(const std::string& text, const std::string_view& description)
         return result;
 }
 
-void write(const std::string& text) noexcept
+void write(const std::string_view& text) noexcept
 {
         std::cerr << text;
 }
 }
 
-std::string write_log(const std::string& text, const std::string_view& description) noexcept
+std::string write_log(const std::string_view& text, const std::string_view& description) noexcept
 {
         std::lock_guard lg(global_lock);
+        double time = time_in_seconds();
         try
         {
-                std::string result = format(text, description);
+                std::string result = format(text, description, time);
                 result += '\n';
                 write(result);
                 result.pop_back();
@@ -86,11 +87,17 @@ std::string write_log(const std::string& text, const std::string_view& descripti
         catch (const std::exception& e)
         {
                 write(std::string("Error writing to log: ").append(e.what()).append("\n"));
-                return format(text, description);
+                return format(text, description, time);
         }
         catch (...)
         {
                 write("Error writing to log\n");
-                return format(text, description);
+                return format(text, description, time);
         }
+}
+
+void write_log_error_fatal(const char* text) noexcept
+{
+        // Без вызовов других функций программы.
+        write(std::string(text).append("\n"));
 }

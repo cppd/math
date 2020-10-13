@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
-#include <cstdio>
-#include <cstdlib>
+#include "output/write.h"
 
 void error(std::string text)
 {
@@ -27,17 +26,10 @@ void error(std::string text)
 
 void error_fatal(const char* text) noexcept
 {
-        // Без вызовов других функций программы, так как они могут вызвать эту же функцию.
-        // Поэтому только std::fprintf и завершение программы.
-        try
-        {
-                std::fprintf(stderr, "%s\n", text);
-                std::fflush(stderr);
-        }
-        catch (...)
-        {
-        }
-
+        // Только запись в лог, без вызовов других функций программы,
+        // так как они могут вызвать эту же функцию.
+        static_assert(noexcept(write_log_error_fatal(text)));
+        write_log_error_fatal(text);
         std::_Exit(EXIT_FAILURE);
 }
 
