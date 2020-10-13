@@ -78,7 +78,7 @@ Log::Log(QPlainTextEdit* text_edit)
                           (*m_messages_ptr).back().text += event.text;
                           return;
                   }
-                  (*m_messages_ptr).emplace_back(event.text, event_color(event.type));
+                  (*m_messages_ptr).emplace_back(event.text, color);
           })
 {
 }
