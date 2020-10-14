@@ -54,7 +54,7 @@ class Impl final : public View
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
         const bool m_sample_shading;
-        double m_start_time;
+        TimePoint m_start_time = time();
 
         const uint32_t m_family_index;
 
@@ -73,7 +73,7 @@ class Impl final : public View
 
         void reset_timer() override
         {
-                m_start_time = time_in_seconds();
+                m_start_time = time();
         }
 
         void draw_commands(VkCommandBuffer command_buffer) const
@@ -159,7 +159,7 @@ class Impl final : public View
 
                 ASSERT(queue.family_index() == m_family_index);
 
-                float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
+                float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * duration_from(m_start_time));
                 m_memory.set_brightness(brightness);
 
                 //

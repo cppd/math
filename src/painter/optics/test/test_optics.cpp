@@ -82,7 +82,7 @@ void test_optics_performance(int count, const Vector<3, T>& normal_vector, T eta
         ASSERT(is_finite(normal));
 
         {
-                T time = time_in_seconds();
+                TimePoint start_time = time();
 
                 Vector<3, T> t;
                 T sum = 0;
@@ -94,11 +94,11 @@ void test_optics_performance(int count, const Vector<3, T>& normal_vector, T eta
                         }
                 }
 
-                LOG("refract  : " + to_string(time_in_seconds() - time) + ", sum = " + to_string(sum));
+                LOG("refract  : " + to_string_fixed(duration_from(start_time), 5) + ", sum = " + to_string(sum));
         }
 
         {
-                T time = time_in_seconds();
+                TimePoint start_time = time();
 
                 Vector<3, T> t;
                 T sum = 0;
@@ -110,7 +110,7 @@ void test_optics_performance(int count, const Vector<3, T>& normal_vector, T eta
                         }
                 }
 
-                LOG("refract 2: " + to_string(time_in_seconds() - time) + ", sum = " + to_string(sum));
+                LOG("refract 2: " + to_string_fixed(duration_from(start_time), 5) + ", sum = " + to_string(sum));
         }
 }
 

@@ -127,7 +127,7 @@ class BarPaintbrush
         long long m_sample_count = 0;
 
         double m_previous_pass_duration = 0;
-        double m_pass_start_time = -1;
+        TimePoint m_pass_start_time;
 
         mutable SpinLock m_lock;
 
@@ -180,7 +180,7 @@ public:
         {
                 std::lock_guard lg(m_lock);
 
-                m_pass_start_time = time_in_seconds();
+                m_pass_start_time = time();
         }
 
         bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count, Pixel* pixel)
@@ -208,11 +208,10 @@ public:
                 std::lock_guard lg(m_lock);
 
                 ASSERT(m_current_pixel == m_pixels.size());
-                ASSERT(m_pass_start_time >= 0);
 
-                double time = time_in_seconds();
-                m_previous_pass_duration = time - m_pass_start_time;
-                m_pass_start_time = time;
+                TimePoint now = time();
+                m_previous_pass_duration = duration(m_pass_start_time, now);
+                m_pass_start_time = now;
 
                 m_current_pixel = 0;
 

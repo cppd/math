@@ -156,7 +156,7 @@ void load_vertices(
 
         //
 
-        double create_time = time_in_seconds();
+        TimePoint create_start_time = time();
 
         std::vector<Face> faces(sorted_face_indices.size());
 
@@ -238,11 +238,11 @@ void load_vertices(
 
         run_in_threads(function, sorted_face_indices.size());
 
-        create_time = time_in_seconds() - create_time;
+        double create_duration = duration_from(create_start_time);
 
         //
 
-        double map_time = time_in_seconds();
+        TimePoint map_start_time = time();
 
         std::vector<TrianglesVertex> vertices;
         std::vector<IndexType> indices;
@@ -267,11 +267,11 @@ void load_vertices(
 
         ASSERT((indices.size() >= 3) && (indices.size() % 3 == 0));
 
-        map_time = time_in_seconds() - map_time;
+        double map_duration = duration_from(map_start_time);
 
         //
 
-        double load_time = time_in_seconds();
+        TimePoint load_start_time = time();
 
         *vertex_buffer = std::make_unique<vulkan::BufferWithMemory>(
                 vulkan::BufferMemoryType::DeviceLocal, device, family_indices,
@@ -286,14 +286,14 @@ void load_vertices(
         *vertex_count = vertices.size();
         *index_count = indices.size();
 
-        load_time = time_in_seconds() - load_time;
+        double load_duration = duration_from(load_start_time);
 
         //
 
         std::ostringstream oss;
-        oss << "create = " << time_string(create_time);
-        oss << ", map = " << time_string(map_time);
-        oss << ", load = " << time_string(load_time);
+        oss << "create = " << time_string(create_duration);
+        oss << ", map = " << time_string(map_duration);
+        oss << ", load = " << time_string(load_duration);
         oss << ", vertices = " << vertices.size() << " (" << data_size(vertices) << " bytes)";
         oss << ", faces = " << indices.size() / 3 << " (" << data_size(indices) << " bytes)";
         LOG(oss.str());

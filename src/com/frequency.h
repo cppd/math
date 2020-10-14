@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "time.h"
+
 #include <deque>
 #include <vector>
 
@@ -30,6 +32,8 @@ class Frequency
                 {
                 }
         };
+
+        const TimePoint m_start_time = time();
 
         // Интервал в секундах
         const double m_interval_length;

@@ -55,11 +55,11 @@ std::unique_ptr<Mesh<N>> create_mesh(std::vector<Vector<N, float>>&& points)
 template <size_t N>
 std::unique_ptr<Mesh<N>> create_mesh_for_points(std::vector<Vector<N, float>>&& points)
 {
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         std::unique_ptr<Mesh<N>> mesh = create_mesh(std::move(points));
 
-        LOG("Points loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG("Points loaded, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
         return mesh;
 }

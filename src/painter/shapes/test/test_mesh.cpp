@@ -130,7 +130,7 @@ void test_sphere_mesh(
         LOG("intersections...");
         progress->set_text("Rays: %v of %m");
 
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         for (unsigned i = 1; i <= rays.size(); ++i)
         {
@@ -228,7 +228,7 @@ void test_sphere_mesh(
 
         double error_percent = 100.0 * error_count / rays.size();
 
-        LOG("intersections " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG("intersections " + to_string_fixed(duration_from(start_time), 5) + " s");
         LOG("");
         LOG(to_string(error_count) + " errors, " + to_string(rays.size()) + " rays, "
             + to_string_fixed(error_percent, 5) + "%");

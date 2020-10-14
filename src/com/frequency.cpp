@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "constant.h"
 #include "error.h"
-#include "time.h"
 
 #include <cmath>
 
@@ -72,7 +71,7 @@ Frequency::Frequency(double interval_length, int sample_count)
 
 double Frequency::calculate()
 {
-        const int sample_number = time_in_seconds() * m_sample_frequency;
+        const int sample_number = duration_from(m_start_time) * m_sample_frequency;
 
         while (!m_deque.empty() && (m_deque.front().sample_number < sample_number - m_sample_count))
         {

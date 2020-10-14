@@ -188,7 +188,7 @@ std::vector<std::array<int, 2>> minimum_spanning_tree(
 
         LOG("Minimum spanning tree...");
         progress->set_text("Minimum spanning tree");
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         progress->set(0, 5);
 
@@ -220,7 +220,7 @@ std::vector<std::array<int, 2>> minimum_spanning_tree(
         std::vector<std::array<int, 2>> mst =
                 kruskal(points.size(), unique_vertex_count(delaunay_objects), weighted_edges);
 
-        LOG("Minimum spanning tree created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG("Minimum spanning tree created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
         return mst;
 }

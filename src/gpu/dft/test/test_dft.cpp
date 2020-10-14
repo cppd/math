@@ -190,9 +190,9 @@ void generate_random_data(const std::filesystem::path& file_name, int n1, int n2
         }
 }
 
-std::string time_string(double start_time)
+std::string time_string(const TimePoint& start_time)
 {
-        return to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms";
+        return to_string_fixed(1000.0 * duration_from(start_time), 5) + " ms";
 }
 
 void compute_vulkan(ComputeVector* dft, bool inverse, int n1, int n2, std::vector<complex>* data)
@@ -209,7 +209,7 @@ void compute_vulkan(ComputeVector* dft, bool inverse, int n1, int n2, std::vecto
                 dft->create_buffers(uid(engine), uid(engine));
         }
 
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         dft->create_buffers(n1, n2);
         dft->exec(inverse, data);
@@ -229,7 +229,7 @@ void compute_cuda(bool inverse, int n1, int n2, std::vector<complex>* data)
                 LOG("----- cuFFT forward -----");
         }
 
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         std::unique_ptr<DFT> cufft = create_cufft(n1, n2);
         cufft->exec(inverse, data);
@@ -250,7 +250,7 @@ void compute_fftw(bool inverse, int n1, int n2, std::vector<complex>* data)
                 LOG("----- FFTW forward -----");
         }
 
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         std::unique_ptr<DFT> fftw = create_fftw(n1, n2);
         fftw->exec(inverse, data);

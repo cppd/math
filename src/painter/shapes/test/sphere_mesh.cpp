@@ -79,9 +79,9 @@ void create_spherical_convex_hull(
         std::vector<geometry::ConvexHullFacet<N>> ch_facets;
 
         LOG("convex hull...");
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
         geometry::compute_convex_hull(*points, &ch_facets, progress);
-        LOG("convex hull created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG("convex hull created, " + to_string_fixed(duration_from(start_time), 5) + " s");
         LOG("facet count = " + to_string(ch_facets.size()));
 
         facets->clear();

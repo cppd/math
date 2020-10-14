@@ -306,7 +306,7 @@ std::filesystem::path save_to_stl_file(
                 file << std::showpos;
         }
 
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         write(ascii_format, file, mesh, comment);
 
@@ -315,7 +315,7 @@ std::filesystem::path save_to_stl_file(
                 error("Error writing to file " + generic_utf8_filename(full_name));
         }
 
-        LOG(stl_type_name(N) + " saved, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG(stl_type_name(N) + " saved, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
         return full_name;
 }

@@ -142,7 +142,7 @@ void test_speed(int count)
                 data.push_back(random_vector<N, T>(random_engine, urd).normalized());
         }
 
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         // Сумма для того, чтобы избежать оптимизаций компилятора из-за неиспользуемого значения функции
         Vector<N, T> sum(0);
@@ -151,7 +151,7 @@ void test_speed(int count)
                 sum += random_cosine_weighted_on_hemisphere(random_engine, n);
         }
 
-        LOG("Time = " + to_string_fixed(time_in_seconds() - start_time, 5)
+        LOG("Time = " + to_string_fixed(duration_from(start_time), 5)
             + " seconds, sum = " + to_string(component_sum(sum)));
 }
 

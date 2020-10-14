@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "write.h"
 
-#include "../time.h"
-
 #include <array>
+#include <chrono>
 #include <cstdio>
 #include <iostream>
 #include <mutex>
@@ -27,6 +26,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace
 {
 std::mutex global_lock;
+
+#if defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wglobal-constructors"
+#endif
+const std::chrono::steady_clock::time_point START_TIME = std::chrono::steady_clock::now();
+#if defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 std::string format(const std::string_view& text, const std::string_view& description, double time) noexcept
 {
@@ -75,7 +83,7 @@ void write(const std::string_view& text) noexcept
 std::string write_log(const std::string_view& text, const std::string_view& description) noexcept
 {
         std::lock_guard lg(global_lock);
-        double time = time_in_seconds();
+        double time = std::chrono::duration<double>(std::chrono::steady_clock::now() - START_TIME).count();
         try
         {
                 std::string result = format(text, description, time);

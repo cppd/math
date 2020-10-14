@@ -69,11 +69,11 @@ std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh,
 
         std::vector<geometry::ConvexHullFacet<N>> convex_hull_facets;
 
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         geometry::compute_convex_hull(points, &convex_hull_facets, progress);
 
-        LOG("Convex hull created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG("Convex hull created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
         std::vector<std::array<int, N>> facets;
         facets.clear();
@@ -118,7 +118,7 @@ void cocone(
         {
                 ProgressRatio progress(progress_list);
 
-                double start_time = time_in_seconds();
+                TimePoint start_time = time();
 
                 std::vector<vec<N>> normals;
                 std::vector<std::array<int, N>> facets;
@@ -127,8 +127,7 @@ void cocone(
 
                 cocone_mesh = mesh::create_mesh_for_facets(constructor.points(), facets);
 
-                LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5)
-                    + " s");
+                LOG("Manifold reconstruction second phase, " + to_string_fixed(duration_from(start_time), 5) + " s");
         }
         if (cocone_mesh->facets.empty())
         {
@@ -154,7 +153,7 @@ void bound_cocone(
         {
                 ProgressRatio progress(progress_list);
 
-                double start_time = time_in_seconds();
+                TimePoint start_time = time();
 
                 std::vector<vec<N>> normals;
                 std::vector<std::array<int, N>> facets;
@@ -163,8 +162,7 @@ void bound_cocone(
 
                 bound_cocone_mesh = mesh::create_mesh_for_facets(constructor.points(), facets);
 
-                LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5)
-                    + " s");
+                LOG("Manifold reconstruction second phase, " + to_string_fixed(duration_from(start_time), 5) + " s");
         }
         if (bound_cocone_mesh->facets.empty())
         {
@@ -210,12 +208,12 @@ std::unique_ptr<geometry::ManifoldConstructor<N>> create_manifold_constructor(
         const std::vector<Vector<N, float>>& points)
 {
         ProgressRatio progress(progress_list);
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         std::unique_ptr<geometry::ManifoldConstructor<N>> manifold_constructor =
                 geometry::create_manifold_constructor(points, &progress);
 
-        LOG("Manifold constructor created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG("Manifold constructor created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
         return manifold_constructor;
 }

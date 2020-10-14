@@ -17,9 +17,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-void time_init();
-void time_exit();
+#include <chrono>
 
-double time_in_seconds() noexcept;
+using TimePoint = std::chrono::steady_clock::time_point;
+using TimeDuration = std::chrono::steady_clock::duration;
 
-void sleep_this_thread_until(double time) noexcept;
+inline TimePoint time() noexcept
+{
+        return std::chrono::steady_clock::now();
+}
+
+inline double duration_from(const TimePoint& t) noexcept
+{
+        return std::chrono::duration<double>(std::chrono::steady_clock::now() - t).count();
+}
+
+inline double duration(const TimePoint& t1, const TimePoint& t2) noexcept
+{
+        return std::chrono::duration<double>(t2 - t1).count();
+}

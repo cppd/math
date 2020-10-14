@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "init.h"
 
 #include <src/com/error.h>
-#include <src/com/time.h>
 #include <src/window/vulkan/window.h>
 
 #include <atomic>
@@ -41,8 +40,6 @@ Init::Init()
                 error_fatal("Initialization must be called once");
         }
 
-        time_init();
-
 #if defined(__linux__)
         xlib_init();
 #endif
@@ -61,7 +58,5 @@ Init::~Init()
 #if defined(__linux__)
         xlib_exit();
 #endif
-
-        time_exit();
 }
 }

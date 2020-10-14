@@ -36,12 +36,12 @@ __attribute__((noinline)) double computation(std::vector<T>* v)
         constexpr T add = 20;
         constexpr T sub = 30;
 
-        double t = time_in_seconds();
+        TimePoint start_time = time();
         for (int i = 0; i < N; ++i)
         {
                 (*v)[i] = ((*v)[i] + add) * ((*v)[i] - sub) + add;
         }
-        return time_in_seconds() - t;
+        return duration_from(start_time);
 }
 __attribute__((noinline)) double computation(std::vector<mpz_class>* v)
 {
@@ -50,7 +50,7 @@ __attribute__((noinline)) double computation(std::vector<mpz_class>* v)
         mpz_class tmp1;
         mpz_class tmp2;
 
-        double t = time_in_seconds();
+        TimePoint start_time = time();
         for (int i = 0; i < N; ++i)
         {
                 mpz_add(tmp1.get_mpz_t(), (*v)[i].get_mpz_t(), add.get_mpz_t());
@@ -58,7 +58,7 @@ __attribute__((noinline)) double computation(std::vector<mpz_class>* v)
                 mpz_mul((*v)[i].get_mpz_t(), tmp1.get_mpz_t(), tmp2.get_mpz_t());
                 mpz_add((*v)[i].get_mpz_t(), (*v)[i].get_mpz_t(), add.get_mpz_t());
         }
-        return time_in_seconds() - t;
+        return duration_from(start_time);
 }
 __attribute__((noinline)) double computation(std::vector<mpf_class>* v)
 {
@@ -67,7 +67,7 @@ __attribute__((noinline)) double computation(std::vector<mpf_class>* v)
         mpf_class tmp1;
         mpf_class tmp2;
 
-        double t = time_in_seconds();
+        TimePoint start_time = time();
         for (int i = 0; i < N; ++i)
         {
                 mpf_add(tmp1.get_mpf_t(), (*v)[i].get_mpf_t(), add.get_mpf_t());
@@ -75,7 +75,7 @@ __attribute__((noinline)) double computation(std::vector<mpf_class>* v)
                 mpf_mul((*v)[i].get_mpf_t(), tmp1.get_mpf_t(), tmp2.get_mpf_t());
                 mpf_add((*v)[i].get_mpf_t(), (*v)[i].get_mpf_t(), add.get_mpf_t());
         }
-        return time_in_seconds() - t;
+        return duration_from(start_time);
 }
 }
 

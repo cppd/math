@@ -96,7 +96,7 @@ std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vecto
         std::vector<std::array<Vector<N, T>, N - 1>> res;
         res.reserve(vectors.size());
 
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         for (const Vector<N, T>& unit_vector : vectors)
         {
@@ -107,7 +107,7 @@ std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vecto
                 res.push_back(complement);
         }
 
-        LOG("Time = " + to_string_fixed(time_in_seconds() - start_time, 5) + " seconds");
+        LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " seconds");
 
         return res;
 }

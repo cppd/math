@@ -29,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/merge.h>
 #include <src/com/print.h>
-#include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/com/variant.h>
 #include <src/gpu/convex_hull/view.h>
@@ -45,11 +44,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/sync.h>
 #include <src/window/manage.h>
 
+#include <chrono>
+
 namespace view
 {
 namespace
 {
-constexpr double IDLE_MODE_FRAME_DURATION_IN_SECONDS = 0.1;
+using FrameClock = std::chrono::steady_clock;
+constexpr FrameClock::duration IDLE_MODE_FRAME_DURATION = std::chrono::milliseconds(100);
 
 // 2 - double buffering, 3 - triple buffering
 constexpr int VULKAN_PREFERRED_IMAGE_COUNT = 2;
@@ -792,7 +794,7 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                double last_frame_time = time_in_seconds();
+                FrameClock::time_point last_frame_time = FrameClock::now();
                 while (!(*stop))
                 {
                         dispatch_events();
@@ -810,8 +812,8 @@ public:
 
                         if (m_renderer->empty())
                         {
-                                sleep_this_thread_until(last_frame_time + IDLE_MODE_FRAME_DURATION_IN_SECONDS);
-                                last_frame_time = time_in_seconds();
+                                std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
+                                last_frame_time = FrameClock::now();
                         }
                 }
         }

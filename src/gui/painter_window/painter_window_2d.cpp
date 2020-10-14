@@ -61,36 +61,38 @@ class PainterWindow2d::Difference
         struct Point
         {
                 std::array<long long, 3> data;
-                double time;
-                Point(const std::array<long long, 3>& data, double time) : data(data), time(time)
+                TimePoint time;
+                Point(const std::array<long long, 3>& data, const TimePoint& time) : data(data), time(time)
                 {
                 }
         };
 
-        const double m_interval_seconds;
+        const TimeDuration m_interval;
         std::deque<Point> m_deque;
 
 public:
-        explicit Difference(int interval_milliseconds) : m_interval_seconds(interval_milliseconds / 1000.0)
+        explicit Difference(int interval_milliseconds) : m_interval(std::chrono::milliseconds(interval_milliseconds))
         {
         }
 
         std::tuple<long long, long long, long long, double> compute(const std::array<long long, 3>& data)
         {
-                double time = time_in_seconds();
+                TimePoint now = time();
+                TimePoint p = now - m_interval;
 
                 // Удаление старых элементов
-                while (!m_deque.empty() && m_deque.front().time < time - m_interval_seconds)
+                while (!m_deque.empty() && m_deque.front().time < p)
                 {
                         m_deque.pop_front();
                 }
 
-                m_deque.emplace_back(data, time);
+                m_deque.emplace_back(data, now);
 
                 return std::make_tuple(
                         m_deque.back().data[0] - m_deque.front().data[0],
                         m_deque.back().data[1] - m_deque.front().data[1],
-                        m_deque.back().data[2] - m_deque.front().data[2], m_deque.back().time - m_deque.front().time);
+                        m_deque.back().data[2] - m_deque.front().data[2],
+                        duration(m_deque.front().time, m_deque.back().time));
         }
 };
 

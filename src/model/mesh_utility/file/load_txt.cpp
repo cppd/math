@@ -131,11 +131,11 @@ std::unique_ptr<Mesh<N>> read_text(const std::filesystem::path& file_name, Progr
 template <size_t N>
 std::unique_ptr<Mesh<N>> load_from_txt_file(const std::filesystem::path& file_name, ProgressRatio* progress)
 {
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         std::unique_ptr<Mesh<N>> mesh = read_text<N>(file_name, progress);
 
-        LOG("TEXT loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG("TEXT loaded, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
         return mesh;
 }

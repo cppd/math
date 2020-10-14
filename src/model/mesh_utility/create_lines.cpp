@@ -88,11 +88,11 @@ std::unique_ptr<Mesh<N>> create_mesh_for_lines(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, 2>>& lines)
 {
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         std::unique_ptr<Mesh<N>> mesh = create_mesh(points, lines);
 
-        LOG("Lines loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG("Lines loaded, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
         return mesh;
 }

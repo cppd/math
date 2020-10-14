@@ -322,7 +322,7 @@ void test_algorithms(
         ASSERT(expected_facets_min > 0 && expected_facets_max > 0 && expected_bound_facets_min > 0
                && expected_bound_facets_max > 0);
 
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         LOG("Point count: " + to_string(points.size()));
 
@@ -378,7 +378,7 @@ void test_algorithms(
                 test_geometry_files(name + ", BoundCocone", points, normals, facets, progress);
         }
 
-        LOG("Time: " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG("Time: " + to_string_fixed(duration_from(start_time), 5) + " s");
         LOG("Successful manifold reconstruction in " + space_name(N));
 }
 

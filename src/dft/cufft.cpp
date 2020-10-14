@@ -217,7 +217,7 @@ class CudaFFT final : public DFT
 
                 cuda_device_sync();
 
-                double start_time = time_in_seconds();
+                TimePoint start_time = time();
 
                 if (inverse)
                 {
@@ -236,7 +236,7 @@ class CudaFFT final : public DFT
 
                 cuda_device_sync();
 
-                LOG("calc cuFFT: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
+                LOG("calc cuFFT: " + to_string_fixed(1000.0 * duration_from(start_time), 5) + " ms");
 
                 cuda_memory_copy(data, m_cuda_data);
 

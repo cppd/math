@@ -119,7 +119,7 @@ class FFTW final : public DFT
 
                 std::copy(data->cbegin(), data->cend(), m_in.begin());
 
-                double start_time = time_in_seconds();
+                TimePoint start_time = time();
 
                 if (inverse)
                 {
@@ -136,7 +136,7 @@ class FFTW final : public DFT
                         std::copy(m_out.cbegin(), m_out.cend(), data->begin());
                 }
 
-                LOG("calc FFTW: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
+                LOG("calc FFTW: " + to_string_fixed(1000.0 * duration_from(start_time), 5) + " ms");
         }
 
 public:

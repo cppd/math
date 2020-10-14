@@ -172,9 +172,9 @@ void test_painter_file(
         std::atomic_bool stop = false;
 
         LOG("Painting...");
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
         paint(&images, samples_per_pixel, *paint_objects, &paintbrush, thread_count, &stop, smooth_normal);
-        LOG("Painted, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG("Painted, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
         LOG("Writing screen images to files...");
         images.write_to_files();

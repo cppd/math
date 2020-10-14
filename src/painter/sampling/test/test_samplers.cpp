@@ -139,14 +139,14 @@ void test_performance(RandomEngine& random_engine, const Sampler& sampler, int i
 {
         std::vector<Vector<N, T>> data;
 
-        double t = time_in_seconds();
+        TimePoint start_time = time();
 
         for (int i = 0; i < iter_count; ++i)
         {
                 sampler.generate(random_engine, &data);
         }
 
-        LOG(std::string(sampler_name(sampler)) + ": time = " + to_string_fixed(time_in_seconds() - t, 5)
+        LOG(std::string(sampler_name(sampler)) + ": time = " + to_string_fixed(duration_from(start_time), 5)
             + " seconds, size = " + to_string(data.size()));
 }
 

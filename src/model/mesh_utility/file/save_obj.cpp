@@ -297,7 +297,7 @@ std::filesystem::path save_to_obj_file(
         file << std::setprecision(limits<float>::max_digits10);
         file << std::showpoint;
 
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         file << std::noshowpos;
         write_comment(file, comment);
@@ -315,7 +315,7 @@ std::filesystem::path save_to_obj_file(
                 error("Error writing to file " + generic_utf8_filename(full_name));
         }
 
-        LOG(obj_type_name(N) + " saved, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG(obj_type_name(N) + " saved, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
         return full_name;
 }

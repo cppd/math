@@ -270,7 +270,7 @@ void MeshObject<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
 template <size_t N, typename T>
 MeshObject<N, T>::MeshObject(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* progress)
 {
-        double start_time = time_in_seconds();
+        TimePoint start_time = time();
 
         {
                 std::vector<mesh::Reading<N>> reading;
@@ -283,7 +283,7 @@ MeshObject<N, T>::MeshObject(const std::vector<const mesh::MeshObject<N>*>& mesh
         }
         create_tree(m_facets, &m_tree, progress);
 
-        LOG("Painter mesh object created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG("Painter mesh object created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 }
 
 template <size_t N, typename T>
