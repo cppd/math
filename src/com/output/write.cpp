@@ -17,10 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "write.h"
 
+#include <src/settings/name.h>
+
 #include <array>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <mutex>
 
@@ -78,7 +82,15 @@ std::string format(const std::string_view& text, const std::string_view& descrip
 
 void write(const std::string_view& text) noexcept
 {
+        static std::ofstream file = []() {
+                std::string name = std::string(settings::APPLICATION_NAME) + " log.txt";
+                std::filesystem::path path = std::filesystem::temp_directory_path() / name;
+                std::ofstream f(path);
+                f << std::unitbuf;
+                return f;
+        }();
         std::cerr << text;
+        file << text;
 }
 
 std::string write(const std::string_view& text, const std::string_view& description) noexcept
