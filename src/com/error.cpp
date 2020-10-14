@@ -28,9 +28,8 @@ void error_fatal(const char* text) noexcept
 {
         // Только запись в лог, без вызовов других функций программы,
         // так как они могут вызвать эту же функцию.
-        static_assert(noexcept(write_log_error_fatal(text)));
-        write_log_error_fatal(text);
-        std::_Exit(EXIT_FAILURE);
+        static_assert(noexcept(write_log_fatal_error_and_exit(text)));
+        write_log_fatal_error_and_exit(text);
 }
 
 void error_fatal(const std::string& text) noexcept

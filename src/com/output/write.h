@@ -21,4 +21,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 std::string write_log(const std::string_view& text, const std::string_view& description) noexcept;
 
-void write_log_error_fatal(const char* text) noexcept;
+[[noreturn]] void write_log_fatal_error_and_exit(const char* text) noexcept;

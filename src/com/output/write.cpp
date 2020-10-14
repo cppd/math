@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <chrono>
 #include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <mutex>
 
@@ -61,7 +62,7 @@ std::string format(const std::string_view& text, const std::string_view& descrip
         }
 
         std::string result;
-        result.reserve(line_beginning.size() + text.size());
+        result.reserve(line_beginning.size() + text.size() + 1);
         result += line_beginning;
         for (char c : text)
         {
@@ -71,6 +72,7 @@ std::string format(const std::string_view& text, const std::string_view& descrip
                         result += line_beginning;
                 }
         }
+        result += '\n';
         return result;
 }
 
@@ -78,34 +80,26 @@ void write(const std::string_view& text) noexcept
 {
         std::cerr << text;
 }
+
+std::string write(const std::string_view& text, const std::string_view& description) noexcept
+{
+        double time = std::chrono::duration<double>(std::chrono::steady_clock::now() - START_TIME).count();
+        std::string result = format(text, description, time);
+        write(result);
+        result.pop_back();
+        return result;
+}
 }
 
 std::string write_log(const std::string_view& text, const std::string_view& description) noexcept
 {
         std::lock_guard lg(global_lock);
-        double time = std::chrono::duration<double>(std::chrono::steady_clock::now() - START_TIME).count();
-        try
-        {
-                std::string result = format(text, description, time);
-                result += '\n';
-                write(result);
-                result.pop_back();
-                return result;
-        }
-        catch (const std::exception& e)
-        {
-                write(std::string("Error writing to log: ").append(e.what()).append("\n"));
-                return format(text, description, time);
-        }
-        catch (...)
-        {
-                write("Error writing to log\n");
-                return format(text, description, time);
-        }
+        return write(text, description);
 }
 
-void write_log_error_fatal(const char* text) noexcept
+void write_log_fatal_error_and_exit(const char* text) noexcept
 {
-        // Без вызовов других функций программы.
-        write(std::string(text).append("\n"));
+        std::lock_guard lg(global_lock);
+        write(text, "fatal error");
+        std::_Exit(EXIT_FAILURE);
 }
