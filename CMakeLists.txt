@@ -412,7 +412,7 @@ find_package(GMP REQUIRED)
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GMP_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${GMP_C_LIBRARIES} ${GMP_CXX_LIBRARIES})
 
-find_package(Qt5Widgets REQUIRED)
+find_package(Qt5 REQUIRED COMPONENTS Widgets)
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${Qt5Widgets_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${Qt5Widgets_LIBRARIES})
 
@@ -446,13 +446,4 @@ endif()
 
 #if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
 #target_link_libraries(${PROJECT_NAME} quadmath)
-#endif()
-
-#set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Eigen3")
-##set(EIGEN3_ROOT "")
-##set(EIGEN3_ROOT_DIR "")
-#find_package(Eigen3 NO_MODULE)
-#if (EIGEN3_FOUND)
-#        target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${EIGEN3_INCLUDE_DIR})
-#        target_compile_definitions(${PROJECT_NAME} PRIVATE -DEIGEN_MPL2_ONLY)
 #endif()
