@@ -34,9 +34,6 @@ LogEvent::Type message_type_to_log_type(MessageEvent::Type type)
         switch (type)
         {
         case MessageEvent::Type::Error:
-        {
-                return LogEvent::Type::Error;
-        }
         case MessageEvent::Type::ErrorFatal:
         {
                 return LogEvent::Type::Error;

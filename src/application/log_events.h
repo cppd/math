@@ -63,7 +63,7 @@ class LogEventsObserver final
         std::function<void(const LogEvent&)> m_observer;
 
 public:
-        LogEventsObserver(std::function<void(const LogEvent&)> observer);
+        explicit LogEventsObserver(std::function<void(const LogEvent&)> observer);
         ~LogEventsObserver();
 
         LogEventsObserver(const LogEventsObserver&) = delete;
@@ -77,7 +77,7 @@ class MessageEventsObserver final
         std::function<void(const MessageEvent&)> m_observer;
 
 public:
-        MessageEventsObserver(std::function<void(const MessageEvent&)> observer);
+        explicit MessageEventsObserver(std::function<void(const MessageEvent&)> observer);
         ~MessageEventsObserver();
 
         MessageEventsObserver(const MessageEventsObserver&) = delete;
