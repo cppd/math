@@ -19,14 +19,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/settings/name.h>
 
-#include <array>
 #include <chrono>
-#include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <mutex>
+#include <sstream>
+#include <thread>
+#include <unordered_map>
 
 namespace
 {
@@ -41,65 +42,109 @@ const std::chrono::steady_clock::time_point START_TIME = std::chrono::steady_clo
 #pragma GCC diagnostic pop
 #endif
 
-std::string format(const std::string_view& text, const std::string_view& description, double time) noexcept
+class Log final
 {
-        std::string line_beginning;
+        static constexpr unsigned MAX_THREADS = 1'000'000;
+        static constexpr unsigned THREADS_WIDTH = 6;
 
-        if (description.empty())
+        std::unordered_map<std::thread::id, unsigned> m_map;
+        unsigned m_width = THREADS_WIDTH;
+        std::ostringstream m_oss_line_beginning;
+        std::string m_line_beginning;
+        std::string m_result;
+
+        std::ofstream m_file;
+
+        void write_thread_id(const std::thread::id& thread_id) noexcept
         {
-                constexpr int BUFFER_SIZE = 100;
-                std::array<char, BUFFER_SIZE> buffer;
-                std::snprintf(buffer.data(), buffer.size(), "[%011.6f]: ", time);
-                line_beginning = buffer.data();
-        }
-        else
-        {
-                constexpr int BUFFER_SIZE = 100;
-                std::array<char, BUFFER_SIZE> buffer;
-                std::snprintf(buffer.data(), buffer.size(), "[%011.6f](", time);
-                line_beginning = buffer.data();
-                for (char c : description)
+                auto iter = m_map.find(thread_id);
+                if (iter == m_map.cend())
                 {
-                        line_beginning += std::isalpha(static_cast<unsigned char>(c)) ? c : ' ';
+                        if (m_map.size() < MAX_THREADS)
+                        {
+                                iter = m_map.emplace(thread_id, m_map.size()).first;
+                        }
+                        else
+                        {
+                                m_width = 18;
+                                m_oss_line_beginning << "0x" << std::hex << std::setw(16) << thread_id;
+                                return;
+                        }
                 }
-                line_beginning += "): ";
+                m_oss_line_beginning << std::setw(m_width) << iter->second;
         }
 
-        std::string result;
-        result.reserve(line_beginning.size() + text.size() + 1);
-        result += line_beginning;
-        for (char c : text)
+        std::string format(const std::string_view& text, const std::string_view& description, double time) noexcept
         {
-                result += c;
-                if (c == '\n')
-                {
-                        result += line_beginning;
-                }
-        }
-        result += '\n';
-        return result;
-}
+                m_oss_line_beginning.str(std::string());
+                m_oss_line_beginning << "[" << std::setw(11) << time << "][";
+                write_thread_id(std::this_thread::get_id());
+                m_oss_line_beginning << "]";
 
-void write(const std::string_view& text) noexcept
-{
-        static std::ofstream file = []() {
+                m_line_beginning = m_oss_line_beginning.str();
+                if (description.empty())
+                {
+                        m_line_beginning += ": ";
+                }
+                else
+                {
+                        m_line_beginning += "(";
+                        for (char c : description)
+                        {
+                                m_line_beginning += std::isalpha(static_cast<unsigned char>(c)) ? c : ' ';
+                        }
+                        m_line_beginning += "): ";
+                }
+
+                m_result.clear();
+                m_result.reserve(m_line_beginning.size() + text.size() + 1);
+                m_result = m_line_beginning;
+                for (char c : text)
+                {
+                        m_result += c;
+                        if (c == '\n')
+                        {
+                                m_result += m_line_beginning;
+                        }
+                }
+                m_result += '\n';
+                return m_result;
+        }
+
+        void write(const std::string_view& text) noexcept
+        {
+                std::cerr << text;
+                m_file << text;
+        }
+
+public:
+        Log()
+        {
+                m_oss_line_beginning << std::fixed;
+                m_oss_line_beginning << std::setfill('0');
+                m_oss_line_beginning << std::right;
+                m_oss_line_beginning << std::setprecision(6);
+
                 std::string name = std::string(settings::APPLICATION_NAME) + " log.txt";
                 std::filesystem::path path = std::filesystem::temp_directory_path() / name;
-                std::ofstream f(path);
-                f << std::unitbuf;
-                return f;
-        }();
-        std::cerr << text;
-        file << text;
-}
+                m_file = std::ofstream(path);
+                m_file << std::unitbuf;
+        }
+
+        std::string write(const std::string_view& text, const std::string_view& description, double time) noexcept
+        {
+                std::string result = format(text, description, time);
+                write(result);
+                result.pop_back();
+                return result;
+        }
+};
 
 std::string write(const std::string_view& text, const std::string_view& description) noexcept
 {
-        double time = std::chrono::duration<double>(std::chrono::steady_clock::now() - START_TIME).count();
-        std::string result = format(text, description, time);
-        write(result);
-        result.pop_back();
-        return result;
+        const double time = std::chrono::duration<double>(std::chrono::steady_clock::now() - START_TIME).count();
+        static Log log;
+        return log.write(text, description, time);
 }
 }
 
