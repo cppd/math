@@ -43,7 +43,7 @@ class Application final : public QApplication
                         catch (const std::exception& e)
                         {
                                 std::string msg;
-                                msg += "Error in an event receiver:\n";
+                                msg += "Error in an event receiver\n";
                                 msg += e.what();
                                 dialog::message_critical(msg, false /*with_parent*/);
                                 error_fatal(msg);
@@ -76,7 +76,7 @@ void message_event(const MessageEvent& event)
                 return;
         case MessageEvent::Type::ErrorFatal:
                 dialog::message_critical(event.text, false /*with_parent*/);
-                std::_Exit(EXIT_FAILURE);
+                error_fatal("Exit after error message\n" + event.text);
         case MessageEvent::Type::Information:
                 dialog::message_information(event.text);
                 return;
