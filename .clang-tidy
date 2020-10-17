@@ -8,7 +8,6 @@ Checks:
 
 bugprone-*,
 -bugprone-narrowing-conversions,
--bugprone-suspicious-semicolon,
 
 cert-*,
 
@@ -21,31 +20,29 @@ cppcoreguidelines-*,
 -cppcoreguidelines-pro-bounds-pointer-arithmetic,
 -cppcoreguidelines-pro-type-member-init,
 -cppcoreguidelines-pro-type-reinterpret-cast,
--cppcoreguidelines-pro-type-vararg,
 -cppcoreguidelines-special-member-functions,
 
 hicpp-*,
--hicpp-braces-around-statements,
 -hicpp-member-init,
 -hicpp-signed-bitwise,
 -hicpp-special-member-functions,
 -hicpp-uppercase-literal-suffix,
--hicpp-vararg,
+-hicpp-use-auto,
 
 misc-*,
 
 modernize-*,
+-modernize-use-auto,
 -modernize-use-nodiscard,
 -modernize-use-trailing-return-type,
 
 performance-*,
 
 readability-*,
--readability-braces-around-statements,
 -readability-magic-numbers,
--readability-misleading-indentation
+-readability-misleading-indentation,
 -readability-named-parameter,
-
+-readability-static-accessed-through-instance
 '
 
 CheckOptions:
