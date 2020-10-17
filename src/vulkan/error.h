@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string>
+#include <string_view>
 #include <vulkan/vulkan.h>
 
 namespace vulkan
 {
-[[noreturn]] void vulkan_function_error(const std::string& function_name, const VkResult& code);
+[[noreturn]] void vulkan_function_error(const std::string_view& function_name, VkResult code);
 }
