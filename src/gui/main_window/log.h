@@ -48,7 +48,7 @@ class Log final
         application::LogEventsObserver m_observer;
 
 public:
-        Log(QPlainTextEdit* text_edit);
+        explicit Log(QPlainTextEdit* text_edit);
 
         Log(const Log&) = delete;
         Log(Log&&) = delete;

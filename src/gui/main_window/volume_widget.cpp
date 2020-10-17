@@ -382,7 +382,10 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                         bool isosurface;
                         float isovalue;
                         Color color;
-                        double ambient, diffuse, specular, specular_power;
+                        double ambient;
+                        double diffuse;
+                        double specular;
+                        double specular_power;
                         {
                                 volume::Reading reading(*volume_object);
                                 min = reading.level_min();

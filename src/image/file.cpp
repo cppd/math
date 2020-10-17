@@ -57,7 +57,9 @@ void check_write_format_support(const std::string& format)
         for (const std::string& f : formats)
         {
                 if (!format_string.empty())
+                {
                         format_string += ", ";
+                }
                 format_string += f;
         }
         error("Unsupported format for image writing \"" + format + "\", supported formats " + format_string);

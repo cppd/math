@@ -270,7 +270,10 @@ void MeshWidget::ui_set(const storage::MeshObjectConst& object)
                 [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object) {
                         double alpha;
                         Color color;
-                        double ambient, diffuse, specular, specular_power;
+                        double ambient;
+                        double diffuse;
+                        double specular;
+                        double specular_power;
                         {
                                 mesh::Reading reading(*mesh_object);
                                 alpha = reading.alpha();

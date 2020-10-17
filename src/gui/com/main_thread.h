@@ -30,7 +30,7 @@ class MainThread final : public QObject
 
 public:
         MainThread();
-        ~MainThread();
+        ~MainThread() override;
 
         static void run(const std::function<void()>& f);
 
