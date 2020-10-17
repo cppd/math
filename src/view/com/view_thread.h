@@ -138,11 +138,11 @@ class ViewThread final : public View
                 }
                 catch (const std::exception& e)
                 {
-                        MESSAGE_ERROR_FATAL(std::string("View error: ") + e.what());
+                        MESSAGE_ERROR_FATAL(std::string("Error from view: ") + e.what());
                 }
                 catch (...)
                 {
-                        MESSAGE_ERROR_FATAL("Unknown view error. Thread ended.");
+                        MESSAGE_ERROR_FATAL("Unknown error from view.");
                 }
         }
 
