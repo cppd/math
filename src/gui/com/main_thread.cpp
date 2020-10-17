@@ -19,28 +19,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <atomic>
+
 namespace gui
 {
 namespace
 {
-const ThreadQueue* global_thread_queue = nullptr;
+std::atomic_int global_call_counter = 0;
+const MainThread* global_main_thread = nullptr;
 }
 
-MainThreadQueue::MainThreadQueue()
+MainThread::MainThread()
 {
-        ASSERT(!global_thread_queue);
-        global_thread_queue = &m_thread_queue;
+        if (++global_call_counter != 1)
+        {
+                error_fatal("MainThread must be called once");
+        }
+
+        qRegisterMetaType<std::function<void()>>("std::function<void()>");
+
+        connect(this, &MainThread::signal, this, &MainThread::slot, Qt::AutoConnection);
+
+        global_main_thread = this;
 }
 
-MainThreadQueue::~MainThreadQueue()
+MainThread::~MainThread()
 {
-        ASSERT(global_thread_queue);
-        global_thread_queue = nullptr;
+        global_main_thread = nullptr;
 }
 
-void MainThreadQueue::push(const std::function<void()>& f)
+void MainThread::slot(const std::function<void()>& f) const
 {
-        ASSERT(global_thread_queue);
-        global_thread_queue->push(f);
+        f();
+}
+
+void MainThread::run(const std::function<void()>& f)
+{
+        Q_EMIT global_main_thread->signal(f);
 }
 }

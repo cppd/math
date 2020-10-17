@@ -17,26 +17,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../com/thread_queue.h"
-
 #include <QObject>
 #include <functional>
 
 namespace gui
 {
-class MainThreadQueue final
+class MainThread final : public QObject
 {
-        ThreadQueue m_thread_queue;
+        Q_OBJECT
+
+        void slot(const std::function<void()>&) const;
 
 public:
-        MainThreadQueue();
-        ~MainThreadQueue();
+        MainThread();
+        ~MainThread();
 
-        MainThreadQueue(const MainThreadQueue&) = delete;
-        MainThreadQueue(MainThreadQueue&&) = delete;
-        MainThreadQueue& operator=(const MainThreadQueue&) = delete;
-        MainThreadQueue& operator=(MainThreadQueue&&) = delete;
+        static void run(const std::function<void()>& f);
 
-        static void push(const std::function<void()>& f);
+Q_SIGNALS:
+        void signal(const std::function<void()>&) const;
 };
 }

@@ -353,7 +353,7 @@ void create_painter_window(
 {
         namespace impl = painter_window_implementation;
         std::shared_ptr<const painter::PaintObjects<N, T>> objects = std::move(paint_objects);
-        MainThreadQueue::push([=]() {
+        MainThread::run([=]() {
                 create_and_show_delete_on_close_window<impl::PainterWindow<N, T>>(
                         name, thread_count, samples_per_pixel, smooth_normal, objects);
         });

@@ -91,9 +91,9 @@ int run_application(int argc, char** argv)
 {
         Application a(argc, argv);
 
-        MainThreadQueue main_thread_queue;
+        MainThread ui_thread;
         application::MessageEventsObserver message_observer(
-                [](const MessageEvent& event) { MainThreadQueue::push([event]() { message_event(event); }); });
+                [](const MessageEvent& event) { MainThread::run([event]() { message_event(event); }); });
 
         LOG(command_line_description());
 
