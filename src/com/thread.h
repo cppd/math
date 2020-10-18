@@ -58,49 +58,6 @@ public:
         }
 };
 
-template <typename T>
-class ThreadQueue
-{
-        SpinLock m_lock;
-        std::queue<T> m_queue;
-
-public:
-        std::optional<T> pop()
-        {
-                static_assert(std::is_nothrow_move_assignable_v<T>);
-                static_assert(std::is_nothrow_destructible_v<T>);
-
-                std::lock_guard lg(m_lock);
-                if (m_queue.empty())
-                {
-                        return std::optional<T>();
-                }
-                std::optional<T> value(std::move(m_queue.front()));
-                m_queue.pop();
-                return value;
-        }
-
-        template <typename A>
-        void push(A&& e)
-        {
-                std::lock_guard lg(m_lock);
-                m_queue.push(std::forward<A>(e));
-        }
-
-        template <typename... Args>
-        void emplace(Args&&... e)
-        {
-                std::lock_guard lg(m_lock);
-                m_queue.emplace(std::forward<Args>(e)...);
-        }
-
-        void clear()
-        {
-                std::lock_guard lg(m_lock);
-                m_queue = std::queue<T>();
-        }
-};
-
 class ThreadBarrier
 {
         std::mutex m_mutex;

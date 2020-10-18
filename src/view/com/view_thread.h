@@ -30,6 +30,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace view
 {
+namespace implementation
+{
+template <typename T>
+class ThreadQueue final
+{
+        SpinLock m_lock;
+        std::queue<T> m_queue;
+
+public:
+        template <typename A>
+        void push(A&& e)
+        {
+                std::lock_guard lg(m_lock);
+                m_queue.push(std::forward<A>(e));
+        }
+
+        std::vector<T> pop()
+        {
+                static_assert(std::is_nothrow_move_assignable_v<T>);
+                static_assert(std::is_nothrow_destructible_v<T>);
+
+                std::vector<T> result;
+                {
+                        std::lock_guard lg(m_lock);
+                        while (!m_queue.empty())
+                        {
+                                result.push_back(std::move(m_queue.front()));
+                                m_queue.pop();
+                        }
+                }
+                return result;
+        }
+};
+
+template <typename T>
 class EventQueues final
 {
         ThreadQueue<Command> m_send_queue;
@@ -69,36 +104,28 @@ public:
                 v.cv.wait(lock, [&] { return v.received; });
         }
 
-        void dispatch_events(View* view)
+        void dispatch_events(T* view)
         {
-                {
-                        std::optional<Command> event;
-                        while ((event = m_send_queue.pop()))
-                        {
-                                view->send(std::move(*event));
-                        }
-                }
-                {
-                        std::optional<ViewInfoExt*> event;
-                        while ((event = m_receive_queue.pop()))
-                        {
-                                view->receive(*((*event)->info));
+                view->send(m_send_queue.pop());
 
-                                {
-                                        std::lock_guard<std::mutex> lock((*event)->mutex);
-                                        (*event)->received = true;
-                                }
-                                (*event)->cv.notify_all();
+                for (ViewInfoExt* event : m_receive_queue.pop())
+                {
+                        view->receive(*(event->info));
+                        {
+                                std::lock_guard<std::mutex> lock(event->mutex);
+                                event->received = true;
                         }
+                        event->cv.notify_all();
                 }
         }
 };
+}
 
 template <typename T>
 class ViewThread final : public View
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
-        EventQueues m_event_queues;
+        implementation::EventQueues<T> m_event_queues;
         std::thread m_thread;
         std::atomic_bool m_stop{false};
         std::atomic_bool m_started{false};
@@ -119,11 +146,18 @@ class ViewThread final : public View
                 {
                         try
                         {
+                                const std::thread::id thread_id = std::this_thread::get_id();
+
                                 T view(parent_window, parent_window_ppi);
 
                                 m_started = true;
 
-                                view.loop([&]() { m_event_queues.dispatch_events(&view); }, &m_stop);
+                                view.loop(
+                                        [&]() {
+                                                ASSERT(std::this_thread::get_id() == thread_id);
+                                                m_event_queues.dispatch_events(&view);
+                                        },
+                                        &m_stop);
 
                                 if (!m_stop)
                                 {
