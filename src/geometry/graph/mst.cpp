@@ -29,7 +29,7 @@ Pearson Education, 2011.
 
 #include "mst.h"
 
-#include "dynamic_connectivity.h"
+#include "union_find.h"
 
 #include "../core/ridge.h"
 
@@ -134,14 +134,14 @@ std::vector<std::array<int, 2>> kruskal(
 
         mst.reserve(mst_size);
 
-        WeightedQuickUnion<int> wqn(point_count);
+        UnionFind<int> union_find(point_count);
 
         for (unsigned i = 0; i < sorted_edges.size() && mst.size() < mst_size; ++i)
         {
                 int v = sorted_edges[i].vertex(0);
                 int w = sorted_edges[i].vertex(1);
 
-                if (wqn.add_connection(v, w))
+                if (union_find.add_connection(v, w))
                 {
                         mst.push_back({v, w});
                 }

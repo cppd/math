@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
-По книге
-
 Robert Sedgewick, Kevin Wayne.
 Algorithms. Fourth edition.
 Pearson Education, 2011.
@@ -34,8 +32,9 @@ Pearson Education, 2011.
 
 namespace geometry
 {
+// Weighted quick-union with path compression
 template <typename T>
-class WeightedQuickUnion
+class UnionFind
 {
         static_assert(std::is_integral_v<T>);
 
@@ -43,15 +42,7 @@ class WeightedQuickUnion
         std::vector<T> m_component_size;
         T m_component_count;
 
-public:
-        // std::type_identity_t для запрета template argument deduction
-        explicit WeightedQuickUnion(std::type_identity_t<T> N) : m_parent(N), m_component_size(N), m_component_count(N)
-        {
-                std::iota(m_parent.begin(), m_parent.end(), 0);
-                std::fill(m_component_size.begin(), m_component_size.end(), 1);
-        }
-
-        T find(T p) const
+        T find_root(T p) const
         {
                 while (p != m_parent[p])
                 {
@@ -60,10 +51,36 @@ public:
                 return p;
         }
 
+        void compress_path(T p, T root)
+        {
+                while (m_parent[p] != root)
+                {
+                        T next = m_parent[p];
+                        m_parent[p] = root;
+                        p = next;
+                }
+        }
+
+        T find_and_compress(T p)
+        {
+                T root = find_root(p);
+                compress_path(p, root);
+                return root;
+        }
+
+public:
+        // std::type_identity_t для запрета template argument deduction
+        explicit UnionFind(std::type_identity_t<T> count)
+                : m_parent(count), m_component_size(count), m_component_count(count)
+        {
+                std::iota(m_parent.begin(), m_parent.end(), 0);
+                std::fill(m_component_size.begin(), m_component_size.end(), 1);
+        }
+
         bool add_connection(T p, T q)
         {
-                T i = find(p);
-                T j = find(q);
+                T i = find_and_compress(p);
+                T j = find_and_compress(q);
 
                 if (i == j)
                 {
@@ -87,14 +104,14 @@ public:
                 return true;
         }
 
-        T count() const
-        {
-                return m_component_count;
-        }
+        //T count() const
+        //{
+        //        return m_component_count;
+        //}
 
-        bool connected(T p, T q) const
-        {
-                return find(p) == find(q);
-        }
+        //bool connected(T p, T q) const
+        //{
+        //        return find_root(p) == find_root(q);
+        //}
 };
 }
