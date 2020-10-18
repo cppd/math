@@ -44,12 +44,14 @@ public:
         {
                 spin_lock.clear();
         }
+
         void lock()
         {
                 while (spin_lock.test_and_set(std::memory_order_acquire))
                 {
                 }
         }
+
         void unlock()
         {
                 spin_lock.clear(std::memory_order_release);
@@ -65,27 +67,33 @@ class ThreadQueue
 public:
         std::optional<T> pop()
         {
+                static_assert(std::is_nothrow_move_assignable_v<T>);
+                static_assert(std::is_nothrow_destructible_v<T>);
+
                 std::lock_guard lg(m_lock);
                 if (m_queue.empty())
                 {
                         return std::optional<T>();
                 }
-                std::optional value(std::move(m_queue.front()));
+                std::optional<T> value(std::move(m_queue.front()));
                 m_queue.pop();
                 return value;
         }
+
         template <typename A>
         void push(A&& e)
         {
                 std::lock_guard lg(m_lock);
                 m_queue.push(std::forward<A>(e));
         }
+
         template <typename... Args>
         void emplace(Args&&... e)
         {
                 std::lock_guard lg(m_lock);
                 m_queue.emplace(std::forward<Args>(e)...);
         }
+
         void clear()
         {
                 std::lock_guard lg(m_lock);
@@ -105,6 +113,7 @@ public:
         explicit ThreadBarrier(int thread_count) : m_count(thread_count), m_thread_count(thread_count)
         {
         }
+
         void wait() noexcept
         {
                 try
@@ -186,19 +195,23 @@ class ThreadsWithCatch
                 explicit ThreadData(std::thread&& t) : m_thread(std::move(t))
                 {
                 }
+
                 void join()
                 {
                         m_thread.join();
                 }
+
                 void set_error(const char* s)
                 {
                         m_has_error = true;
                         m_error_message = s;
                 }
+
                 bool has_error() const
                 {
                         return m_has_error;
                 }
+
                 const std::string& error_message() const
                 {
                         return m_error_message;
@@ -357,22 +370,27 @@ public:
         AtomicCounter() : m_counter(0)
         {
         }
+
         explicit AtomicCounter(std::type_identity_t<T> v) : m_counter(v)
         {
         }
+
         AtomicCounter& operator=(T v)
         {
                 m_counter.store(v, std::memory_order_relaxed);
                 return *this;
         }
+
         operator T() const
         {
                 return m_counter.load(std::memory_order_relaxed);
         }
+
         void operator++()
         {
                 m_counter.fetch_add(1, std::memory_order_relaxed);
         }
+
         void operator+=(T v)
         {
                 m_counter.fetch_add(v, std::memory_order_relaxed);
