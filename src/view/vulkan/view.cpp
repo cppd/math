@@ -303,6 +303,233 @@ class Impl final
                 }
         }
 
+        //
+
+        void command(const command::UpdateMeshObject& d)
+        {
+                if (auto ptr = d.object.lock(); ptr)
+                {
+                        m_renderer->object_update(*ptr);
+                }
+        }
+
+        void command(const command::UpdateVolumeObject& d)
+        {
+                if (auto ptr = d.object.lock(); ptr)
+                {
+                        m_renderer->object_update(*ptr);
+                }
+        }
+
+        void command(const command::DeleteObject& d)
+        {
+                m_renderer->object_delete(d.id);
+        }
+
+        void command(const command::ShowObject& d)
+        {
+                m_renderer->object_show(d.id, d.show);
+        }
+
+        void command(const command::DeleteAllObjects&)
+        {
+                m_renderer->object_delete_all();
+                reset_view_handler();
+        }
+
+        void command(const command::ResetView&)
+        {
+                reset_view_handler();
+        }
+
+        void command(const command::SetLightingIntensity& v)
+        {
+                m_renderer->set_lighting_intensity(v.value);
+        }
+
+        void command(const command::SetBackgroundColor& d)
+        {
+                m_renderer->set_background_color(d.value);
+                bool background_is_dark = d.value.luminance() <= 0.5;
+                m_text->set_color(background_is_dark ? Color(1) : Color(0));
+        }
+
+        void command(const command::SetSpecularColor& d)
+        {
+                m_renderer->set_specular_color(d.value);
+        }
+
+        void command(const command::SetWireframeColor& d)
+        {
+                m_renderer->set_wireframe_color(d.value);
+        }
+
+        void command(const command::SetClipPlaneColor& d)
+        {
+                m_renderer->set_clip_plane_color(d.value);
+        }
+
+        void command(const command::SetNormalLength& d)
+        {
+                m_renderer->set_normal_length(d.value);
+        }
+
+        void command(const command::SetNormalColorPositive& d)
+        {
+                m_renderer->set_normal_color_positive(d.value);
+        }
+
+        void command(const command::SetNormalColorNegative& d)
+        {
+                m_renderer->set_normal_color_negative(d.value);
+        }
+
+        void command(const command::ShowSmooth& d)
+        {
+                m_renderer->set_show_smooth(d.show);
+        }
+
+        void command(const command::ShowWireframe& d)
+        {
+                m_renderer->set_show_wireframe(d.show);
+        }
+
+        void command(const command::ShowShadow& d)
+        {
+                m_renderer->set_show_shadow(d.show);
+        }
+
+        void command(const command::ShowFog& d)
+        {
+                m_renderer->set_show_fog(d.show);
+        }
+
+        void command(const command::ShowMaterials& d)
+        {
+                m_renderer->set_show_materials(d.show);
+        }
+
+        void command(const command::ShowFps& d)
+        {
+                m_text_active = d.show;
+        }
+
+        void command(const command::ShowPencilSketch& d)
+        {
+                m_pencil_sketch_active = d.show;
+        }
+
+        void command(const command::ShowDft& d)
+        {
+                if (m_dft_active != d.show)
+                {
+                        m_dft_active = d.show;
+                        create_swapchain();
+                }
+        }
+
+        void command(const command::SetDftBrightness& d)
+        {
+                m_dft->set_brightness(d.value);
+        }
+
+        void command(const command::SetDftBackgroundColor& d)
+        {
+                m_dft->set_background_color(d.value);
+        }
+
+        void command(const command::SetDftColor& d)
+        {
+                m_dft->set_color(d.value);
+        }
+
+        void command(const command::ShowConvexHull2D& d)
+        {
+                m_convex_hull_active = d.show;
+                if (m_convex_hull_active)
+                {
+                        m_convex_hull->reset_timer();
+                }
+        }
+
+        void command(const command::ShowOpticalFlow& d)
+        {
+                m_optical_flow_active = d.show;
+        }
+
+        void command(const command::SetVerticalSync& d)
+        {
+                set_vertical_sync_swapchain(d.enabled);
+        }
+
+        void command(const command::SetShadowZoom& d)
+        {
+                m_renderer->set_shadow_zoom(d.value);
+        }
+
+        void command(const command::ClipPlaneShow& d)
+        {
+                clip_plane_show(d.position);
+        }
+
+        void command(const command::ClipPlanePosition& d)
+        {
+                clip_plane_position(d.position);
+        }
+
+        void command(const command::ClipPlaneHide&)
+        {
+                clip_plane_hide();
+        }
+
+        void command(const command::ShowNormals& d)
+        {
+                m_renderer->set_show_normals(d.show);
+        }
+
+        void command(const command::MousePress& d)
+        {
+                m_mouse_x = d.x;
+                m_mouse_y = d.y;
+                PressedMouseButton& m = m_mouse[d.button];
+                m.pressed = true;
+                m.pressed_x = m_mouse_x;
+                m.pressed_y = m_mouse_y;
+                m.delta_x = 0;
+                m.delta_y = 0;
+        }
+
+        void command(const command::MouseRelease& d)
+        {
+                m_mouse[d.button].pressed = false;
+                m_mouse_x = d.x;
+                m_mouse_y = d.y;
+        }
+
+        void command(const command::MouseMove& d)
+        {
+                mouse_move(d.x, d.y);
+        }
+
+        void command(const command::MouseWheel& d)
+        {
+                m_camera.scale(d.x - m_draw_rectangle.x0(), d.y - m_draw_rectangle.y0(), d.delta);
+                m_renderer->set_camera(m_camera.renderer_info());
+        }
+
+        void command(const command::WindowResize&)
+        {
+        }
+
+        //
+
+        void info(info::Camera* d)
+        {
+                *d = m_camera.view_info();
+        }
+
+        //
+
         void create_swapchain()
         {
                 m_instance->device_wait_idle();
@@ -576,6 +803,11 @@ public:
                 ASSERT(std::this_thread::get_id() == m_thread_id);
         }
 
+        Impl(const Impl&) = delete;
+        Impl(Impl&&) = delete;
+        Impl& operator=(const Impl&) = delete;
+        Impl& operator=(Impl&&) = delete;
+
         void loop(const std::function<void()>& dispatch_events, std::atomic_bool* stop)
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -608,195 +840,10 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                // clang-format off
-                const auto visitors =
-                Visitors
-                {
-                [this](const command::UpdateMeshObject& d)
-                {
-                        if (auto ptr = d.object.lock(); ptr)
-                        {
-                                m_renderer->object_update(*ptr);
-                        }
-
-                },
-                [this](const command::UpdateVolumeObject& d)
-                {
-                        if (auto ptr = d.object.lock(); ptr)
-                        {
-                                m_renderer->object_update(*ptr);
-                        }
-                },
-                [this](const command::DeleteObject& d)
-                {
-                        m_renderer->object_delete(d.id);
-                },
-                [this](const command::ShowObject& d)
-                {
-                        m_renderer->object_show(d.id, d.show);
-                },
-                [this](const command::DeleteAllObjects&)
-                {
-                        m_renderer->object_delete_all();
-                        reset_view_handler();
-                },
-                [this](const command::ResetView&)
-                {
-                        reset_view_handler();
-                },
-                [this](const command::SetLightingIntensity& v)
-                {
-                        m_renderer->set_lighting_intensity(v.value);
-                },
-                [this](const command::SetBackgroundColor& d)
-                {
-                        m_renderer->set_background_color(d.value);
-                        bool background_is_dark = d.value.luminance() <= 0.5;
-                        m_text->set_color(background_is_dark ? Color(1) : Color(0));
-                },
-                [this](const command::SetSpecularColor& d)
-                {
-                        m_renderer->set_specular_color(d.value);
-                },
-                [this](const command::SetWireframeColor& d)
-                {
-                        m_renderer->set_wireframe_color(d.value);
-                },
-                [this](const command::SetClipPlaneColor& d)
-                {
-                        m_renderer->set_clip_plane_color(d.value);
-                },
-                [this](const command::SetNormalLength& d)
-                {
-                        m_renderer->set_normal_length(d.value);
-                },
-                [this](const command::SetNormalColorPositive& d)
-                {
-                        m_renderer->set_normal_color_positive(d.value);
-                },
-                [this](const command::SetNormalColorNegative& d)
-                {
-                        m_renderer->set_normal_color_negative(d.value);
-                },
-                [this](const command::ShowSmooth& d)
-                {
-                        m_renderer->set_show_smooth(d.show);
-                },
-                [this](const command::ShowWireframe& d)
-                {
-                        m_renderer->set_show_wireframe(d.show);
-                },
-                [this](const command::ShowShadow& d)
-                {
-                        m_renderer->set_show_shadow(d.show);
-                },
-                [this](const command::ShowFog& d)
-                {
-                        m_renderer->set_show_fog(d.show);
-                },
-                [this](const command::ShowMaterials& d)
-                {
-                        m_renderer->set_show_materials(d.show);
-                },
-                [this](const command::ShowFps& d)
-                {
-                        m_text_active = d.show;
-                },
-                [this](const command::ShowPencilSketch& d)
-                {
-                        m_pencil_sketch_active = d.show;
-                },
-                [this](const command::ShowDft& d)
-                {
-                        if (m_dft_active != d.show)
-                        {
-                                m_dft_active = d.show;
-                                create_swapchain();
-                        }
-                },
-                [this](const command::SetDftBrightness& d)
-                {
-                        m_dft->set_brightness(d.value);
-                },
-                [this](const command::SetDftBackgroundColor& d)
-                {
-                        m_dft->set_background_color(d.value);
-                },
-                [this](const command::SetDftColor& d)
-                {
-                        m_dft->set_color(d.value);
-                },
-                [this](const command::ShowConvexHull2D& d)
-                {
-                        m_convex_hull_active = d.show;
-                        if (m_convex_hull_active)
-                        {
-                                m_convex_hull->reset_timer();
-                        }
-                },
-                [this](const command::ShowOpticalFlow& d)
-                {
-                        m_optical_flow_active = d.show;
-                },
-                [this](const command::SetVerticalSync& d)
-                {
-                        set_vertical_sync_swapchain(d.enabled);
-                },
-                [this](const command::SetShadowZoom& d)
-                {
-                        m_renderer->set_shadow_zoom(d.value);
-                },
-                [this](const command::ClipPlaneShow& d)
-                {
-                        clip_plane_show(d.position);
-                },
-                [this](const command::ClipPlanePosition& d)
-                {
-                        clip_plane_position(d.position);
-                },
-                [this](const command::ClipPlaneHide&)
-                {
-                        clip_plane_hide();
-                },
-                [this](const command::ShowNormals& d)
-                {
-                        m_renderer->set_show_normals(d.show);
-                },
-                [this](const command::MousePress& d)
-                {
-                        m_mouse_x = d.x;
-                        m_mouse_y = d.y;
-                        PressedMouseButton& m = m_mouse[d.button];
-                        m.pressed = true;
-                        m.pressed_x = m_mouse_x;
-                        m.pressed_y = m_mouse_y;
-                        m.delta_x = 0;
-                        m.delta_y = 0;
-                },
-                [this](const command::MouseRelease& d)
-                {
-                        m_mouse[d.button].pressed = false;
-                        m_mouse_x = d.x;
-                        m_mouse_y = d.y;
-                },
-                [this](const command::MouseMove& d)
-                {
-                        mouse_move(d.x, d.y);
-                },
-                [this](const command::MouseWheel& d)
-                {
-                        m_camera.scale(d.x - m_draw_rectangle.x0(), d.y - m_draw_rectangle.y0(), d.delta);
-                        m_renderer->set_camera(m_camera.renderer_info());
-                },
-                [](const command::WindowResize&)
-                {
-                }
-                };
-                // clang-format on
-
+                const auto visitor = [this](const auto& c) { command(c); };
                 for (const view::Command& command : commands)
                 {
-                        std::visit(visitors, command.data());
+                        std::visit(visitor, command.data());
                 }
         }
 
@@ -804,27 +851,12 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                // clang-format off
-                const auto visitors =
-                Visitors
-                {
-                [this](info::Camera* d)
-                {
-                        *d = m_camera.view_info();
-                }
-                };
-                // clang-format on
-
+                const auto visitor = [this](const auto& d) { this->info(d); };
                 for (const Info& v : info)
                 {
-                        std::visit(visitors, v.data());
+                        std::visit(visitor, v.data());
                 }
         }
-
-        Impl(const Impl&) = delete;
-        Impl(Impl&&) = delete;
-        Impl& operator=(const Impl&) = delete;
-        Impl& operator=(Impl&&) = delete;
 };
 }
 
