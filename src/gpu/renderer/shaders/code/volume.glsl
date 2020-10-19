@@ -165,7 +165,7 @@ bool color_add(Fragment fragment)
                 }                   \
         } while (false)
 
-#if !defined(MESH)
+#if !defined(FRAGMENTS)
 
 void fragments_build()
 {
@@ -662,7 +662,7 @@ void draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
 
 #endif
 
-#if defined(MESH)
+#if defined(FRAGMENTS)
 
 void draw_fragments()
 {
@@ -689,7 +689,7 @@ void main(void)
         float second;
         if (!intersect(ray_org, ray_dir, first, second))
         {
-#if defined(MESH)
+#if defined(FRAGMENTS)
                 color_init();
                 draw_fragments();
                 color_set();
@@ -708,7 +708,7 @@ void main(void)
         float depth_dir_limit = depth_limit - depth_org;
         if (depth_dir_limit <= 0)
         {
-#if defined(MESH)
+#if defined(FRAGMENTS)
                 color_init();
                 draw_fragments();
                 color_set();
@@ -744,7 +744,7 @@ void main(void)
         color_set();
 }
 
-#elif defined(MESH)
+#elif defined(FRAGMENTS)
 
 void main()
 {
@@ -756,5 +756,5 @@ void main()
 }
 
 #else
-#error IMAGE or MESH not defined
+#error IMAGE or FRAGMENTS not defined
 #endif

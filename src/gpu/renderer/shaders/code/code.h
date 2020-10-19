@@ -37,6 +37,6 @@ std::vector<uint32_t> code_normals_geom();
 std::vector<uint32_t> code_normals_frag();
 std::vector<uint32_t> code_volume_vert();
 std::vector<uint32_t> code_volume_image_frag();
-std::vector<uint32_t> code_volume_image_mesh_frag();
-std::vector<uint32_t> code_volume_mesh_frag();
+std::vector<uint32_t> code_volume_image_fragments_frag();
+std::vector<uint32_t> code_volume_fragments_frag();
 }

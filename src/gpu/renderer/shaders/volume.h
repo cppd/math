@@ -105,25 +105,25 @@ class VolumeProgram final
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout_shared;
         vulkan::DescriptorSetLayout m_descriptor_set_layout_image;
-        vulkan::PipelineLayout m_pipeline_layout_volume;
-        vulkan::PipelineLayout m_pipeline_layout_mesh;
+        vulkan::PipelineLayout m_pipeline_layout_image_fragments;
+        vulkan::PipelineLayout m_pipeline_layout_fragments;
         vulkan::VertexShader m_vertex_shader;
-        vulkan::FragmentShader m_fragment_shader_volume;
-        vulkan::FragmentShader m_fragment_shader_volume_mesh;
-        vulkan::FragmentShader m_fragment_shader_mesh;
+        vulkan::FragmentShader m_fragment_shader_image;
+        vulkan::FragmentShader m_fragment_shader_image_fragments;
+        vulkan::FragmentShader m_fragment_shader_fragments;
 
 public:
-        enum class LayoutType
+        enum class PipelineLayoutType
         {
-                Volume,
-                Mesh
+                ImageFragments,
+                Fragments
         };
 
         enum class PipelineType
         {
-                Volume,
-                VolumeMesh,
-                Mesh
+                Image,
+                ImageFragments,
+                Fragments
         };
 
         explicit VolumeProgram(const vulkan::Device& device);
@@ -148,6 +148,6 @@ public:
         VkDescriptorSetLayout descriptor_set_layout_image() const;
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_image_bindings();
 
-        VkPipelineLayout pipeline_layout(LayoutType layout_type) const;
+        VkPipelineLayout pipeline_layout(PipelineLayoutType type) const;
 };
 }

@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
-#define IMAGE
-#define MESH
+#define FRAGMENTS
 
 #extension GL_GOOGLE_include_directive : enable
-#include "volume_frag.glsl"
+#include "volume.glsl"

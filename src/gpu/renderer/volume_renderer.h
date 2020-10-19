@@ -37,22 +37,24 @@ class VolumeRenderer
         const RenderBuffers3D* m_render_buffers = nullptr;
 
         VolumeProgram m_program;
-        VolumeSharedMemory m_memory;
 
-        std::optional<vulkan::Pipeline> m_pipeline_volume;
-        std::optional<vulkan::Pipeline> m_pipeline_volume_mesh;
-        std::optional<vulkan::Pipeline> m_pipeline_mesh;
-        std::optional<vulkan::CommandBuffers> m_command_buffers_volume;
-        std::optional<vulkan::CommandBuffers> m_command_buffers_volume_mesh;
-        std::optional<vulkan::CommandBuffers> m_command_buffers_mesh;
+        VolumeSharedMemory m_shared_memory;
+
+        std::optional<vulkan::Pipeline> m_pipeline_image;
+        std::optional<vulkan::Pipeline> m_pipeline_image_fragments;
+        std::optional<vulkan::Pipeline> m_pipeline_fragments;
+        std::optional<vulkan::CommandBuffers> m_command_buffers_image;
+        std::optional<vulkan::CommandBuffers> m_command_buffers_image_fragments;
+        std::optional<vulkan::CommandBuffers> m_command_buffers_fragments;
 
         vulkan::Sampler m_volume_sampler;
         vulkan::Sampler m_depth_sampler;
 
-        void create_command_buffers_mesh(VkCommandPool graphics_command_pool);
-        void draw_commands_mesh(VkCommandBuffer command_buffer) const;
+        void draw_commands_fragments(VkCommandBuffer command_buffer) const;
+        void draw_commands_image(const VolumeObject* volume, VkCommandBuffer command_buffer) const;
+        void draw_commands_image_fragments(const VolumeObject* volume, VkCommandBuffer command_buffer) const;
 
-        void draw_commands_volume(const VolumeObject* volume, VkCommandBuffer command_buffer, bool mesh) const;
+        void create_command_buffers_fragments(VkCommandPool graphics_command_pool);
 
 public:
         VolumeRenderer(const vulkan::Device& device, bool sample_shading, const ShaderBuffers& buffers);
@@ -76,6 +78,6 @@ public:
         void delete_command_buffers();
 
         bool has_volume() const;
-        std::optional<VkCommandBuffer> command_buffer(unsigned index, bool transparency) const;
+        std::optional<VkCommandBuffer> command_buffer(unsigned index, bool with_fragments) const;
 };
 }

@@ -279,18 +279,18 @@ VolumeProgram::VolumeProgram(const vulkan::Device& device)
                   vulkan::create_descriptor_set_layout(device, descriptor_set_layout_shared_bindings())),
           m_descriptor_set_layout_image(
                   vulkan::create_descriptor_set_layout(device, descriptor_set_layout_image_bindings())),
-          m_pipeline_layout_volume(vulkan::create_pipeline_layout(
+          m_pipeline_layout_image_fragments(vulkan::create_pipeline_layout(
                   device,
                   {VolumeSharedMemory::set_number(), VolumeImageMemory::set_number()},
                   {m_descriptor_set_layout_shared, m_descriptor_set_layout_image})),
-          m_pipeline_layout_mesh(vulkan::create_pipeline_layout(
+          m_pipeline_layout_fragments(vulkan::create_pipeline_layout(
                   device,
                   {VolumeSharedMemory::set_number()},
                   {m_descriptor_set_layout_shared})),
           m_vertex_shader(m_device, code_volume_vert(), "main"),
-          m_fragment_shader_volume(m_device, code_volume_image_frag(), "main"),
-          m_fragment_shader_volume_mesh(m_device, code_volume_image_mesh_frag(), "main"),
-          m_fragment_shader_mesh(m_device, code_volume_mesh_frag(), "main")
+          m_fragment_shader_image(m_device, code_volume_image_frag(), "main"),
+          m_fragment_shader_image_fragments(m_device, code_volume_image_fragments_frag(), "main"),
+          m_fragment_shader_fragments(m_device, code_volume_fragments_frag(), "main")
 {
 }
 
@@ -304,16 +304,16 @@ VkDescriptorSetLayout VolumeProgram::descriptor_set_layout_image() const
         return m_descriptor_set_layout_image;
 }
 
-VkPipelineLayout VolumeProgram::pipeline_layout(LayoutType layout_type) const
+VkPipelineLayout VolumeProgram::pipeline_layout(PipelineLayoutType type) const
 {
-        switch (layout_type)
+        switch (type)
         {
-        case LayoutType::Volume:
-                return m_pipeline_layout_volume;
-        case LayoutType::Mesh:
-                return m_pipeline_layout_mesh;
+        case PipelineLayoutType::ImageFragments:
+                return m_pipeline_layout_image_fragments;
+        case PipelineLayoutType::Fragments:
+                return m_pipeline_layout_fragments;
         }
-        error_fatal("Unknown volume layout type");
+        error_fatal("Unknown volume pipeline layout type");
 }
 
 vulkan::Pipeline VolumeProgram::create_pipeline(
@@ -328,17 +328,17 @@ vulkan::Pipeline VolumeProgram::create_pipeline(
 
         switch (type)
         {
-        case PipelineType::Volume:
-                pipeline_layout = m_pipeline_layout_volume;
-                fragment_shader = &m_fragment_shader_volume;
+        case PipelineType::Image:
+                pipeline_layout = m_pipeline_layout_image_fragments;
+                fragment_shader = &m_fragment_shader_image;
                 break;
-        case PipelineType::VolumeMesh:
-                pipeline_layout = m_pipeline_layout_volume;
-                fragment_shader = &m_fragment_shader_volume_mesh;
+        case PipelineType::ImageFragments:
+                pipeline_layout = m_pipeline_layout_image_fragments;
+                fragment_shader = &m_fragment_shader_image_fragments;
                 break;
-        case PipelineType::Mesh:
-                pipeline_layout = m_pipeline_layout_mesh;
-                fragment_shader = &m_fragment_shader_mesh;
+        case PipelineType::Fragments:
+                pipeline_layout = m_pipeline_layout_fragments;
+                fragment_shader = &m_fragment_shader_fragments;
                 break;
         }
 
