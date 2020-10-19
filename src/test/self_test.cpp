@@ -94,7 +94,7 @@ void self_test_essential(ProgressRatios* progress_ratios)
                 painter::test_parallelotope(4);
         });
 
-        s = "Self-Test, Parallelotope in " + space_name_upper(4);
+        s = "Self-Test, Mesh in " + space_name_upper(3);
         catch_all(s, [&]() {
                 ProgressRatio progress(progress_ratios, s);
                 painter::test_mesh(3, &progress);
