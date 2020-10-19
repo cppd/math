@@ -18,7 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh.h"
 
 #include "../space/hyperplane_simplex_wrapper.h"
+#include "../space/parallelotope_wrapper.h"
 #include "../space/ray_intersection.h"
+#include "../space/shape_intersection.h"
 
 #include <src/com/log.h>
 #include <src/com/thread.h>
@@ -108,12 +110,30 @@ void MeshObject<N, T>::create_tree(
                 simplex_wrappers.emplace_back(t);
         }
 
-        // Указатель на объект дерева
-        auto lambda_simplex = [w = std::as_const(simplex_wrappers)](int simplex_index) { return &(w[simplex_index]); };
+        const auto simplex_intersections = [w = std::as_const(simplex_wrappers)](
+                                                   const TreeParallelotope& parallelotope,
+                                                   const std::vector<int>& indices) {
+                ParallelotopeWrapperForShapeIntersection p(parallelotope);
+                std::vector<int> intersections;
+                intersections.reserve(indices.size());
+                for (int object_index : indices)
+                {
+                        if (shape_intersection(p, w[object_index]))
+                        {
+                                intersections.push_back(object_index);
+                        }
+                }
+                return intersections;
+        };
+
+        const auto simplex_vertices = [w = std::as_const(simplex_wrappers)](int simplex_index) {
+                return w[simplex_index].vertices();
+        };
 
         const unsigned thread_count = hardware_concurrency();
         tree->decompose(
-                tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, facets.size(), lambda_simplex, thread_count, progress);
+                tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, facets.size(), simplex_vertices, simplex_intersections,
+                thread_count, progress);
 }
 
 template <size_t N, typename T>

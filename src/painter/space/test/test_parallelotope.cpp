@@ -648,10 +648,7 @@ void test_intersection(
         bool with_intersection,
         const std::string& text)
 {
-        // Параллелотопы имеют объём, поэтому им не нужно задавать это число
-        constexpr int distance_from_flat_shapes_in_epsilons = 0;
-
-        if (with_intersection != shape_intersection(p1, p2, distance_from_flat_shapes_in_epsilons))
+        if (with_intersection != shape_intersection(p1, p2))
         {
                 error("Error intersection " + text);
         }

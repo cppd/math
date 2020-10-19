@@ -25,9 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "parallelotope_wrapper.h"
-#include "shape_intersection.h"
-
 #include <src/com/arrays.h>
 #include <src/com/error.h>
 #include <src/com/thread.h>
@@ -167,12 +164,12 @@ constexpr Parallelotope create_parallelotope_from_vector(
         return Parallelotope(org, edges[I]...);
 }
 
-template <size_t N, typename T, typename FunctorObjectPointer>
+template <size_t N, typename T, typename ObjectVertices>
 void min_max_and_distance(
         int max_divisions,
         int distance_from_facet_in_epsilons,
         int object_index_count,
-        const FunctorObjectPointer& functor_object_pointer,
+        const ObjectVertices& object_vertices,
         Vector<N, T>* minimum,
         Vector<N, T>* maximum,
         T* distance)
@@ -184,7 +181,7 @@ void min_max_and_distance(
 
         for (int object_index = 0; object_index < object_index_count; ++object_index)
         {
-                for (const Vector<N, T>& v : functor_object_pointer(object_index)->vertices())
+                for (const Vector<N, T>& v : object_vertices(object_index))
                 {
                         for (unsigned i = 0; i < N; ++i)
                         {
@@ -335,16 +332,15 @@ std::array<std::tuple<int, Box<Parallelotope>*, int>, BOX_COUNT<Parallelotope::D
         return {std::make_tuple(I, &(boxes->emplace_back(std::move(child_parallelotopes[I]))), index++)...};
 }
 
-template <template <typename...> typename Container, typename Parallelotope, typename FunctorObjectPointer>
+template <template <typename...> typename Container, typename Parallelotope, typename ObjectIntersections>
 void extend(
         const int MAX_DEPTH,
         const int MIN_OBJECTS,
         const int MAX_BOXES,
-        const typename Parallelotope::DataType& DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS,
         SpinLock* boxes_lock,
         Container<Box<Parallelotope>>* boxes,
         BoxJobs<Box<Parallelotope>>* box_jobs,
-        const FunctorObjectPointer& functor_object_pointer,
+        const ObjectIntersections& object_intersections,
         ProgressRatio* progress)
 try
 {
@@ -384,16 +380,9 @@ try
                                 progress->set(child_box_index, MAX_BOXES);
                         }
 
-                        ParallelotopeWrapperForShapeIntersection p(child_box->parallelotope());
-
-                        for (int object_index : box->object_indices())
+                        for (int object_index : object_intersections(child_box->parallelotope(), box->object_indices()))
                         {
-                                if (shape_intersection(
-                                            p, *functor_object_pointer(object_index),
-                                            DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS))
-                                {
-                                        child_box->add_object_index(object_index);
-                                }
+                                child_box->add_object_index(object_index);
                         }
 
                         box_jobs->push(child_box, depth + 1);
@@ -434,9 +423,6 @@ class SpatialSubdivisionTree
 
         // Расстояние от грани, при котором точка считается внутри коробки.
         static constexpr int DISTANCE_FROM_FACET_IN_EPSILONS = 20;
-        // Расстояние от плоских граней в каждую сторону для получения
-        // дополнительного измерения при определении пересечения объектов.
-        static constexpr int DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS = 10;
 
         // Нижняя и верхняя границы для минимального количества объектов в коробке.
         static constexpr int MIN_OBJECTS_LEFT_BOUND = 2;
@@ -485,18 +471,17 @@ class SpatialSubdivisionTree
         }
 
 public:
-        template <typename FunctorObjectPointer>
+        template <typename ObjectVertices, typename ObjectIntersections>
         void decompose(
                 int max_depth,
                 int min_objects_per_box,
                 int object_index_count,
-                const FunctorObjectPointer& functor_object_pointer,
+                const ObjectVertices& object_vertices,
+                const ObjectIntersections& object_intersections,
                 unsigned thread_count,
                 ProgressRatio* progress)
 
         {
-                static_assert(std::is_pointer_v<decltype(functor_object_pointer(0))>);
-                static_assert(std::is_const_v<std::remove_pointer_t<decltype(functor_object_pointer(0))>>);
                 static_assert(MAX_BOX_COUNT_LIMIT <= (1LL << 31) - 1);
 
                 namespace impl = spatial_subdivision_tree_implementation;
@@ -531,8 +516,8 @@ public:
                 T distance_from_facet;
 
                 impl::min_max_and_distance(
-                        max_divisions, DISTANCE_FROM_FACET_IN_EPSILONS, object_index_count, functor_object_pointer,
-                        &min, &max, &distance_from_facet);
+                        max_divisions, DISTANCE_FROM_FACET_IN_EPSILONS, object_index_count, object_vertices, &min, &max,
+                        &distance_from_facet);
 
                 BoxContainer boxes(
                         {Box(impl::root_parallelotope<Parallelotope>(min, max),
@@ -546,9 +531,8 @@ public:
                 for (unsigned i = 0; i < thread_count; ++i)
                 {
                         threads.add([&]() {
-                                extend(max_depth, min_objects_per_box, max_box_count,
-                                       DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS, &boxes_lock, &boxes, &jobs,
-                                       functor_object_pointer, progress);
+                                extend(max_depth, min_objects_per_box, max_box_count, &boxes_lock, &boxes, &jobs,
+                                       object_intersections, progress);
                         });
                 }
                 threads.join();
