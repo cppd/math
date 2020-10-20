@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/numerical/vec.h>
+#include <src/painter/mesh/mesh_object.h>
 #include <src/painter/objects.h>
 #include <src/painter/scenes/cornell_box.h>
 #include <src/painter/scenes/single_object.h>
-#include <src/painter/shapes/mesh.h>
 #include <src/painter/visible_lights.h>
 #include <src/painter/visible_projectors.h>
 

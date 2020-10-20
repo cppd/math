@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "mesh_hyperplane_simplex.h"
+#include "mesh_facet.h"
 
 #include <src/com/alg.h>
 #include <src/com/error.h>
@@ -59,7 +59,7 @@ std::array<Vector<N, T>, N> vertices_to_array(const std::vector<Vector<N, T>>& v
 }
 
 template <size_t N, typename T>
-MeshHyperplaneSimplex<N, T>::MeshHyperplaneSimplex(
+MeshFacet<N, T>::MeshFacet(
         const std::vector<Vector<N, T>>& vertices,
         const std::vector<Vector<N, T>>& normals,
         const std::vector<Vector<N - 1, T>>& texcoords,
@@ -91,7 +91,7 @@ MeshHyperplaneSimplex<N, T>::MeshHyperplaneSimplex(
 
         if (!is_finite(m_normal))
         {
-                error("Simplex normal is not finite, simplex vertices\n" + vertices_to_string(m_vertices, m_v));
+                error("Mesh facet normal is not finite, facet vertices\n" + vertices_to_string(m_vertices, m_v));
         }
 
         m_geometry.set_data(m_normal, vertices_to_array(m_vertices, m_v));
@@ -152,19 +152,19 @@ MeshHyperplaneSimplex<N, T>::MeshHyperplaneSimplex(
 }
 
 template <size_t N, typename T>
-bool MeshHyperplaneSimplex<N, T>::intersect(const Ray<N, T>& r, T* t) const
+bool MeshFacet<N, T>::intersect(const Ray<N, T>& r, T* t) const
 {
         return m_geometry.intersect(r, m_vertices[m_v[0]], m_normal, t);
 }
 
 template <size_t N, typename T>
-Vector<N, T> MeshHyperplaneSimplex<N, T>::geometric_normal() const
+Vector<N, T> MeshFacet<N, T>::geometric_normal() const
 {
         return m_normal;
 }
 
 template <size_t N, typename T>
-Vector<N, T> MeshHyperplaneSimplex<N, T>::shading_normal(const Vector<N, T>& point) const
+Vector<N, T> MeshFacet<N, T>::shading_normal(const Vector<N, T>& point) const
 {
         switch (m_normal_type)
         {
@@ -191,17 +191,17 @@ Vector<N, T> MeshHyperplaneSimplex<N, T>::shading_normal(const Vector<N, T>& poi
                 return m_geometry.interpolate(point, normals).normalized();
         }
         }
-        error_fatal("Unknown mesh simplex normal type");
+        error_fatal("Unknown mesh facet normal type");
 }
 
 template <size_t N, typename T>
-bool MeshHyperplaneSimplex<N, T>::has_texcoord() const
+bool MeshFacet<N, T>::has_texcoord() const
 {
         return m_t[0] >= 0;
 }
 
 template <size_t N, typename T>
-Vector<N - 1, T> MeshHyperplaneSimplex<N, T>::texcoord(const Vector<N, T>& point) const
+Vector<N - 1, T> MeshFacet<N, T>::texcoord(const Vector<N, T>& point) const
 {
         if (has_texcoord())
         {
@@ -212,34 +212,34 @@ Vector<N - 1, T> MeshHyperplaneSimplex<N, T>::texcoord(const Vector<N, T>& point
                 }
                 return m_geometry.interpolate(point, texcoords);
         }
-        error("Mesh simplex texture coordinates request when there are no texture coordinates");
+        error("Mesh facet texture coordinates request when there are no texture coordinates");
 }
 
 template <size_t N, typename T>
-int MeshHyperplaneSimplex<N, T>::material() const
+int MeshFacet<N, T>::material() const
 {
         return m_material;
 }
 
 template <size_t N, typename T>
-std::array<Vector<N, T>, N> MeshHyperplaneSimplex<N, T>::vertices() const
+std::array<Vector<N, T>, N> MeshFacet<N, T>::vertices() const
 {
         return vertices_to_array(m_vertices, m_v);
 }
 
 template <size_t N, typename T>
-void MeshHyperplaneSimplex<N, T>::constraints(std::array<Constraint<N, T>, N>* c, Constraint<N, T>* c_eq) const
+void MeshFacet<N, T>::constraints(std::array<Constraint<N, T>, N>* c, Constraint<N, T>* c_eq) const
 {
         m_geometry.constraints(m_normal, vertices_to_array(m_vertices, m_v), c, c_eq);
 }
 
-template class MeshHyperplaneSimplex<3, float>;
-template class MeshHyperplaneSimplex<4, float>;
-template class MeshHyperplaneSimplex<5, float>;
-template class MeshHyperplaneSimplex<6, float>;
+template class MeshFacet<3, float>;
+template class MeshFacet<4, float>;
+template class MeshFacet<5, float>;
+template class MeshFacet<6, float>;
 
-template class MeshHyperplaneSimplex<3, double>;
-template class MeshHyperplaneSimplex<4, double>;
-template class MeshHyperplaneSimplex<5, double>;
-template class MeshHyperplaneSimplex<6, double>;
+template class MeshFacet<3, double>;
+template class MeshFacet<4, double>;
+template class MeshFacet<5, double>;
+template class MeshFacet<6, double>;
 }

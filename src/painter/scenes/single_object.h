@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../mesh/mesh_object.h"
 #include "../objects.h"
-#include "../shapes/mesh.h"
 #include "../visible_lights.h"
 #include "../visible_projectors.h"
 #include "../visible_shapes.h"
@@ -113,8 +113,6 @@ std::unique_ptr<const PaintObjects<N, T>> single_object_scene(
         int max_screen_size,
         std::shared_ptr<const MeshObject<N, T>> mesh)
 {
-        LOG("Creating single object scene...");
-
         ASSERT(mesh);
 
         if (min_screen_size < 3)

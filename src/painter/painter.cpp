@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "coefficient/cosine_sphere.h"
 #include "sampling/sampler.h"
 #include "sampling/sphere.h"
-#include "space/ray_intersection.h"
 
 #include <src/color/color.h>
 #include <src/com/alg.h>
@@ -28,11 +27,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/global_index.h>
 #include <src/com/thread.h>
 #include <src/com/type/limit.h>
+#include <src/numerical/ray.h>
 #include <src/utility/random/engine.h>
 
+#include <algorithm>
 #include <optional>
 #include <random>
 #include <thread>
+#include <tuple>
 #include <type_traits>
 #include <vector>
 
@@ -164,6 +166,93 @@ struct PaintData
         {
         }
 };
+
+template <size_t N, typename T, typename Object, typename Surface, typename Data>
+bool ray_intersection(
+        const std::vector<const Object*>& objects,
+        const Ray<N, T>& ray,
+        T* intersection_distance,
+        const Surface** intersection_surface,
+        const Data** intersection_data)
+{
+        if (objects.size() == 1)
+        {
+                T approximate_distance;
+                T distance;
+                const Surface* surface;
+                const Data* data;
+
+                if (objects[0]->intersect_approximate(ray, &approximate_distance)
+                    && objects[0]->intersect_precise(ray, approximate_distance, &distance, &surface, &data))
+                {
+                        *intersection_distance = distance;
+                        *intersection_surface = surface;
+                        *intersection_data = data;
+
+                        return true;
+                }
+
+                return false;
+        }
+
+        // Объекты могут быть сложными, поэтому перед поиском точного пересечения
+        // их надо разместить по возрастанию примерного пересечения.
+
+        std::vector<std::tuple<T, const Object*>> approximate_intersections;
+        approximate_intersections.reserve(objects.size());
+
+        for (const Object* obj : objects)
+        {
+                T distance;
+                if (obj->intersect_approximate(ray, &distance))
+                {
+                        approximate_intersections.emplace_back(distance, obj);
+                }
+        }
+
+        if (approximate_intersections.empty())
+        {
+                return false;
+        }
+
+        std::sort(
+                approximate_intersections.begin(), approximate_intersections.end(),
+                [](const std::tuple<T, const Object*>& a, const std::tuple<T, const Object*>& b) {
+                        return std::get<0>(a) < std::get<0>(b);
+                });
+
+        T min_distance = limits<T>::max();
+        bool found = false;
+
+        for (const auto& [approximate_distance, object] : approximate_intersections)
+        {
+                if (min_distance < approximate_distance)
+                {
+                        break;
+                }
+
+                T distance;
+                const Surface* surface;
+                const Data* data;
+
+                if (object->intersect_precise(ray, approximate_distance, &distance, &surface, &data)
+                    && distance < min_distance)
+                {
+                        min_distance = distance;
+                        *intersection_surface = surface;
+                        *intersection_data = data;
+                        found = true;
+                }
+        }
+
+        if (found)
+        {
+                *intersection_distance = min_distance;
+                return true;
+        }
+
+        return false;
+}
 
 bool color_is_zero(const Color& c)
 {

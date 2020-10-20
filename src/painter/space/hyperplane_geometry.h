@@ -57,7 +57,7 @@ bool plane_intersect(const Ray<N, T>& ray, const Vector<N, T>& plane_point, cons
 }
 
 template <size_t N, typename T>
-class HyperplaneSimplexGeometry
+class HyperplaneSimplexGeometry final
 {
         static_assert(N >= 2);
         static_assert(is_floating_point<T>);
@@ -227,7 +227,7 @@ public:
 };
 
 template <size_t N, typename T>
-class HyperplaneParallelotopeGeometry
+class HyperplaneParallelotopeGeometry final
 {
         HyperplaneSimplexGeometry<N, T> m_simplex_geometry;
 

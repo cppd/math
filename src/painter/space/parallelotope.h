@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "constraint.h"
-#include "shape_intersection.h"
 
 #include <src/com/arrays.h>
 #include <src/com/error.h>

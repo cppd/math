@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/test/test_eigen.h>
 #include <src/numerical/test/test_normal.h>
 #include <src/numerical/test/test_simplex.h>
-#include <src/painter/shapes/test/test_mesh.h>
+#include <src/painter/mesh/test/test_mesh.h>
 #include <src/painter/space/test/test_parallelotope.h>
 #include <src/utility/string/str.h>
 

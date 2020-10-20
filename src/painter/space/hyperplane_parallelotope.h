@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace painter
 {
 template <size_t N, typename T>
-class HyperplaneParallelotope
+class HyperplaneParallelotope final
 {
         static constexpr int VERTEX_COUNT = 1 << (N - 1);
 

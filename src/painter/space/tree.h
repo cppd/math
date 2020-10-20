@@ -51,7 +51,7 @@ template <size_t DIMENSION>
 inline constexpr int BOX_COUNT = 1u << DIMENSION;
 
 template <typename Parallelotope>
-class Box
+class Box final
 {
         static constexpr int EMPTY = -1;
 
@@ -244,7 +244,7 @@ Parallelotope root_parallelotope(
 }
 
 template <typename Box>
-class BoxJobs
+class BoxJobs final
 {
         // Если задач нет, и все потоки с ними не работают, то всё сделано. Если задач нет,
         // но хотя бы один поток с ними работает, то могут появиться новые задачи и надо подождать.
@@ -399,7 +399,7 @@ catch (...)
 }
 
 template <typename Parallelotope>
-class SpatialSubdivisionTree
+class SpatialSubdivisionTree final
 {
         static double maximum_box_count(int box_count, int max_depth)
         {

@@ -19,8 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "constraint.h"
 
-#include "../algorithm/algorithm.h"
-
+#include <src/numerical/algorithm.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
@@ -31,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace painter
 {
 template <typename Simplex, typename = void>
-class HyperplaneSimplexWrapperForShapeIntersection
+class HyperplaneSimplexWrapperForShapeIntersection final
 {
         static_assert(Simplex::SPACE_DIMENSION == Simplex::SHAPE_DIMENSION + 1);
         // Для меньшего количества измерений есть второй класс
@@ -65,7 +64,7 @@ public:
 
                 m_simplex.constraints(&m_constraints, &m_constraints_eq[0]);
 
-                vertex_min_max(m_vertices, &m_min, &m_max);
+                min_max_vector(m_vertices, &m_min, &m_max);
         }
 
         bool intersect(const Ray<N, T>& r, T* t) const
@@ -100,7 +99,7 @@ public:
 };
 
 template <typename Simplex>
-class HyperplaneSimplexWrapperForShapeIntersection<Simplex, std::enable_if_t<Simplex::SPACE_DIMENSION == 3>>
+class HyperplaneSimplexWrapperForShapeIntersection<Simplex, std::enable_if_t<Simplex::SPACE_DIMENSION == 3>> final
 {
         static_assert(Simplex::SPACE_DIMENSION == Simplex::SHAPE_DIMENSION + 1);
         static_assert(Simplex::SPACE_DIMENSION == 3);

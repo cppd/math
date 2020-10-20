@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../mesh/mesh_object.h"
 #include "../objects.h"
-#include "../shapes/mesh.h"
 
 #include <src/color/color.h>
 

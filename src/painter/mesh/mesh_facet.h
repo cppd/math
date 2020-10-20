@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace painter
 {
 template <size_t N, typename T>
-class MeshHyperplaneSimplex
+class MeshFacet
 {
         static_assert(N >= 3);
 
@@ -61,7 +61,7 @@ public:
         static constexpr size_t SHAPE_DIMENSION = N - 1;
         using DataType = T;
 
-        MeshHyperplaneSimplex(
+        MeshFacet(
                 const std::vector<Vector<N, T>>& vertices,
                 const std::vector<Vector<N, T>>& normals,
                 const std::vector<Vector<N - 1, T>>& texcoords,

@@ -19,12 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-#include "algorithm/algorithm.h"
-#include "shapes/mesh.h"
+#include "mesh/mesh_object.h"
 #include "space/hyperplane_parallelotope.h"
 #include "space/hyperplane_parallelotope_algorithm.h"
 #include "space/parallelotope.h"
 #include "space/parallelotope_algorithm.h"
+
+#include <src/numerical/algorithm.h>
 
 #include <memory>
 
@@ -90,7 +91,7 @@ public:
 
         void min_max(Vector<N, T>* min, Vector<N, T>* max) const override
         {
-                vertex_min_max(hyperplane_parallelotope_vertices(m_hyperplane_parallelotope), min, max);
+                min_max_vector(hyperplane_parallelotope_vertices(m_hyperplane_parallelotope), min, max);
         }
 };
 
@@ -154,7 +155,7 @@ public:
 
         void min_max(Vector<N, T>* min, Vector<N, T>* max) const override
         {
-                vertex_min_max(parallelotope_vertices(m_parallelotope), min, max);
+                min_max_vector(parallelotope_vertices(m_parallelotope), min, max);
         }
 };
 

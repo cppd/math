@@ -17,30 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/error.h>
-#include <src/numerical/vec.h>
+#include "vec.h"
 
-#include <iterator>
+#include <array>
 
-namespace painter
+template <size_t ArraySize, typename T, size_t N>
+void min_max_vector(const std::array<Vector<N, T>, ArraySize>& vectors, Vector<N, T>* min, Vector<N, T>* max)
 {
-template <typename Container, typename T, size_t N>
-void vertex_min_max(const Container& vertices, Vector<N, T>* min, Vector<N, T>* max)
-{
-        if (std::empty(vertices))
+        static_assert(ArraySize > 0);
+
+        *min = vectors[0];
+        *max = vectors[0];
+
+        for (size_t i = 1; i < ArraySize; ++i)
         {
-                error("No vertex for minimum and maximum");
+                *min = min_vector(vectors[i], *min);
+                *max = max_vector(vectors[i], *max);
         }
-
-        auto i = std::cbegin(vertices);
-
-        *min = *i;
-        *max = *i;
-
-        while (++i != std::cend(vertices))
-        {
-                *min = min_vector(*i, *min);
-                *max = max_vector(*i, *max);
-        }
-}
 }

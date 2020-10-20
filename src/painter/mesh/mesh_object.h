@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "mesh_hyperplane_simplex.h"
+#include "mesh_facet.h"
 
 #include "../objects.h"
 #include "../space/parallelotope_ortho.h"
@@ -37,7 +37,6 @@ template <size_t N, typename T>
 class MeshObject final
 {
         using TreeParallelotope = ParallelotopeOrtho<N, T>;
-        using Facet = MeshHyperplaneSimplex<N, T>;
 
         struct Material
         {
@@ -56,13 +55,13 @@ class MeshObject final
         std::vector<Vector<N - 1, T>> m_texcoords;
         std::vector<Material> m_materials;
         std::vector<image::ColorImage<N - 1>> m_images;
-        std::vector<Facet> m_facets;
+        std::vector<MeshFacet<N, T>> m_facets;
 
         SpatialSubdivisionTree<TreeParallelotope> m_tree;
         Vector<N, T> m_min, m_max;
 
         static void create_tree(
-                const std::vector<Facet>& facets,
+                const std::vector<MeshFacet<N, T>>& facets,
                 SpatialSubdivisionTree<TreeParallelotope>* tree,
                 ProgressRatio* progress);
 

@@ -20,8 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "constraint.h"
 #include "parallelotope_algorithm.h"
 
-#include "../algorithm/algorithm.h"
-
+#include <src/numerical/algorithm.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
@@ -32,8 +31,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace painter
 {
 template <typename Parallelotope, typename = void>
-class ParallelotopeWrapperForShapeIntersection
+class ParallelotopeWrapperForShapeIntersection final
 {
+        // Для меньшего количества измерений есть второй класс
+        static_assert(Parallelotope::DIMENSION >= 4);
+
         static constexpr size_t N = Parallelotope::DIMENSION;
         using T = typename Parallelotope::DataType;
 
@@ -59,7 +61,7 @@ public:
         {
                 m_parallelotope.constraints(&m_constraints);
 
-                vertex_min_max(m_vertices, &m_min, &m_max);
+                min_max_vector(m_vertices, &m_min, &m_max);
         }
 
         bool intersect(const Ray<N, T>& r, T* t) const
@@ -102,7 +104,10 @@ template <typename Parallelotope>
 class ParallelotopeWrapperForShapeIntersection<
         Parallelotope,
         std::enable_if_t<Parallelotope::DIMENSION == 2 || Parallelotope::DIMENSION == 3>>
+        final
 {
+        static_assert(Parallelotope::DIMENSION == 2 || Parallelotope::DIMENSION == 3);
+
         static constexpr size_t N = Parallelotope::DIMENSION;
         using T = typename Parallelotope::DataType;
 

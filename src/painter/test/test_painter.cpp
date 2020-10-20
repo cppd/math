@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_painter.h"
 
+#include "../mesh/mesh_object.h"
+#include "../mesh/test/sphere_mesh.h"
 #include "../painter.h"
 #include "../scenes/single_object.h"
-#include "../shapes/mesh.h"
-#include "../shapes/test/sphere_mesh.h"
 #include "../visible_lights.h"
 #include "../visible_paintbrush.h"
 #include "../visible_projectors.h"

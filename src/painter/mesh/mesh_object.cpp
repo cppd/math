@@ -15,11 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "mesh.h"
+#include "mesh_object.h"
 
 #include "../space/hyperplane_simplex_wrapper.h"
 #include "../space/parallelotope_wrapper.h"
-#include "../space/ray_intersection.h"
 #include "../space/shape_intersection.h"
 
 #include <src/com/log.h>
@@ -93,19 +92,50 @@ std::array<int, N> add_offset(const std::array<int, N>& src, int offset)
         }
         return r;
 }
+
+template <size_t N, typename T>
+bool ray_intersection(
+        const std::vector<MeshFacet<N, T>>& facets,
+        const std::vector<int>& object_indices,
+        const Ray<N, T>& ray,
+        T* intersection_distance,
+        const MeshFacet<N, T>** intersection_object)
+{
+        T min_distance = limits<T>::max();
+        bool found = false;
+
+        for (int object_index : object_indices)
+        {
+                T distance;
+                if (facets[object_index].intersect(ray, &distance) && distance < min_distance)
+                {
+                        min_distance = distance;
+                        *intersection_object = &facets[object_index];
+                        found = true;
+                }
+        }
+
+        if (found)
+        {
+                *intersection_distance = min_distance;
+                return true;
+        }
+
+        return false;
+}
 }
 
 template <size_t N, typename T>
 void MeshObject<N, T>::create_tree(
-        const std::vector<Facet>& facets,
+        const std::vector<MeshFacet<N, T>>& facets,
         SpatialSubdivisionTree<TreeParallelotope>* tree,
         ProgressRatio* progress)
 {
         progress->set_text(to_string(1 << N) + "-tree: %v of %m");
 
-        std::vector<HyperplaneSimplexWrapperForShapeIntersection<Facet>> simplex_wrappers;
+        std::vector<HyperplaneSimplexWrapperForShapeIntersection<MeshFacet<N, T>>> simplex_wrappers;
         simplex_wrappers.reserve(facets.size());
-        for (const Facet& t : facets)
+        for (const MeshFacet<N, T>& t : facets)
         {
                 simplex_wrappers.emplace_back(t);
         }
@@ -316,7 +346,7 @@ template <size_t N, typename T>
 bool MeshObject<N, T>::intersect_precise(const Ray<N, T>& ray, T approximate_t, T* t, const void** intersection_data)
         const
 {
-        const Facet* facet = nullptr;
+        const MeshFacet<N, T>* facet = nullptr;
 
         if (m_tree.trace_ray(
                     ray, approximate_t,
@@ -342,7 +372,7 @@ SurfaceProperties<N, T> MeshObject<N, T>::surface_properties(const Vector<N, T>&
 {
         SurfaceProperties<N, T> s;
 
-        const Facet* facet = static_cast<const Facet*>(intersection_data);
+        const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
 
         s.set_geometric_normal(facet->geometric_normal());
         s.set_shading_normal(facet->shading_normal(p));
