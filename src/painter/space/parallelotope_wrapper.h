@@ -64,11 +64,6 @@ public:
                 min_max_vector(m_vertices, &m_min, &m_max);
         }
 
-        bool intersect(const Ray<N, T>& r, T* t) const
-        {
-                return m_parallelotope.intersect(r, t);
-        }
-
         bool inside(const Vector<N, T>& p) const
         {
                 return m_parallelotope.inside(p);

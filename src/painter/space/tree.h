@@ -548,8 +548,8 @@ public:
 
         // Вызывается после intersect_root. Если в intersect_root пересечение было найдено,
         // то сюда передаётся результат пересечения в параметре root_t.
-        template <typename FunctorFindIntersection>
-        bool trace_ray(Ray<N, T> ray, T root_t, const FunctorFindIntersection& functor_find_intersection) const
+        template <typename FindIntersection>
+        bool trace_ray(Ray<N, T> ray, T root_t, const FindIntersection& find_intersection) const
         {
                 bool first = true;
 
@@ -563,8 +563,7 @@ public:
                         if (find_box_for_point(m_boxes[ROOT_BOX], interior_point, &box))
                         {
                                 Vector<N, T> point;
-                                if (box->object_index_count() > 0
-                                    && functor_find_intersection(box->object_indices(), &point)
+                                if (box->object_index_count() > 0 && find_intersection(box->object_indices(), &point)
                                     && box->parallelotope().inside(point))
                                 {
                                         return true;

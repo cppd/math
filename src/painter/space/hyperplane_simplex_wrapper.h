@@ -67,11 +67,6 @@ public:
                 min_max_vector(m_vertices, &m_min, &m_max);
         }
 
-        bool intersect(const Ray<N, T>& r, T* t) const
-        {
-                return m_simplex.intersect(r, t);
-        }
-
         const Vertices& vertices() const
         {
                 return m_vertices;
