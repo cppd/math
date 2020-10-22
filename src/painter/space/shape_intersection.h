@@ -52,6 +52,12 @@ public:
 #pragma GCC diagnostic pop
 #endif
 
+template <typename T>
+constexpr size_t size()
+{
+        return std::remove_reference_t<T>().size();
+}
+
 template <typename Shape1, typename Shape2>
 bool shapes_intersect_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
 {
@@ -197,43 +203,23 @@ bool shapes_intersect_by_spaces(const Shape1& shape_1, const Shape2& shape_2)
         constexpr size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
 
-        constexpr T DISTANCE_FROM_CONSTRAINTS_EQ_IN_EPSILONS = 10;
-
-        constexpr size_t CONSTRAINT_COUNT = std::remove_reference_t<decltype(shape_1.constraints())>().size()
-                                            + std::remove_reference_t<decltype(shape_2.constraints())>().size()
-                                            + 2 * std::remove_reference_t<decltype(shape_1.constraints_eq())>().size()
-                                            + 2 * std::remove_reference_t<decltype(shape_2.constraints_eq())>().size();
+        constexpr size_t CONSTRAINT_COUNT =
+                size<decltype(shape_1.constraints())>() + size<decltype(shape_2.constraints())>()
+                + size<decltype(shape_1.constraints_eq())>() + size<decltype(shape_2.constraints_eq())>();
 
         const Vector<N, T> min = min_vector(shape_1.min(), shape_2.min());
-
-        // Максимум после смещения минимума к нулю
-        const T max_value = (max_vector(shape_1.max(), shape_2.max()) - min).norm_infinity();
-
-        const T distance = max_value * (DISTANCE_FROM_CONSTRAINTS_EQ_IN_EPSILONS * limits<T>::epsilon());
 
         std::array<Vector<N, T>, CONSTRAINT_COUNT> a;
         std::array<T, CONSTRAINT_COUNT> b;
 
-        // 1.
         // Со смещением минимума к нулю для всех ограничений,
         // чтобы работа была с положительными числами
         // x_new = x_old - min
         // x_old = x_new + min
         // a ⋅ (x_new + min) + b  ->  a ⋅ x_new + a ⋅ min + b  ->  a ⋅ x_new + (a ⋅ min + b)
-        //
-        // 2.
-        // С превращением каждого равенства в 2 неравенства
-        // a ⋅ x + b == 0
-        // ---
-        //  a ⋅ x + b >= -distance
-        //  a ⋅ x + b <=  distance
-        // ---
-        //  a ⋅ x + b >= -distance
-        // -a ⋅ x - b >= -distance
-        // ---
-        //  a ⋅ x + b + distance >= 0
-        // -a ⋅ x - b + distance >= 0
+
         int i = 0;
+
         for (const Constraint<N, T>& c : shape_1.constraints())
         {
                 a[i] = c.a;
@@ -246,34 +232,36 @@ bool shapes_intersect_by_spaces(const Shape1& shape_1, const Shape2& shape_2)
                 b[i] = dot(c.a, min) + c.b;
                 ++i;
         }
-        for (const Constraint<N, T>& c : shape_1.constraints_eq())
+
+        static_assert(1 >= size<decltype(shape_1.constraints_eq())>() + size<decltype(shape_2.constraints_eq())>());
+
+        if constexpr (0 == size<decltype(shape_1.constraints_eq())>() + size<decltype(shape_2.constraints_eq())>())
         {
+                ASSERT(i == CONSTRAINT_COUNT);
+
+                return (numerical::solve_constraints(a, b) == numerical::ConstraintSolution::Feasible);
+        }
+
+        if constexpr (1 == size<decltype(shape_1.constraints_eq())>() + size<decltype(shape_2.constraints_eq())>())
+        {
+                ASSERT(i + 1 == CONSTRAINT_COUNT);
+
+                const Constraint<N, T>& c =
+                        !shape_1.constraints_eq().empty() ? shape_1.constraints_eq()[0] : shape_2.constraints_eq()[0];
+
                 const Vector<N, T> a_v = c.a;
                 const T b_v = dot(c.a, min) + c.b;
 
                 a[i] = a_v;
-                b[i] = b_v + distance;
-                ++i;
+                b[i] = b_v;
+                if (numerical::solve_constraints(a, b) != numerical::ConstraintSolution::Feasible)
+                {
+                        return false;
+                }
                 a[i] = -a_v;
-                b[i] = -b_v + distance;
-                ++i;
+                b[i] = -b_v;
+                return (numerical::solve_constraints(a, b) == numerical::ConstraintSolution::Feasible);
         }
-        for (const Constraint<N, T>& c : shape_2.constraints_eq())
-        {
-                const Vector<N, T> a_v = c.a;
-                const T b_v = dot(c.a, min) + c.b;
-
-                a[i] = a_v;
-                b[i] = b_v + distance;
-                ++i;
-                a[i] = -a_v;
-                b[i] = -b_v + distance;
-                ++i;
-        }
-
-        ASSERT(i == CONSTRAINT_COUNT);
-
-        return (numerical::solve_constraints(a, b) == numerical::ConstraintSolution::Feasible);
 }
 
 template <typename Shape1, typename Shape2>
@@ -284,43 +272,15 @@ void static_checks(const Shape1& shape_1, const Shape2& shape_2)
 
         constexpr size_t N = Shape1::SPACE_DIMENSION;
 
-        static_assert(N >= Shape1::SHAPE_DIMENSION && N <= 1 + Shape1::SHAPE_DIMENSION);
-        static_assert(N >= Shape2::SHAPE_DIMENSION && N <= 1 + Shape2::SHAPE_DIMENSION);
-
-        static_assert(std::is_reference_v<decltype(shape_1.vertices())>);
-        static_assert(std::is_reference_v<decltype(shape_2.vertices())>);
-
-        if constexpr (N <= 3)
-        {
-                static_assert(std::is_reference_v<decltype(shape_1.vertex_ridges())>);
-                static_assert(std::is_reference_v<decltype(shape_2.vertex_ridges())>);
-        }
+        static_assert(Shape1::SHAPE_DIMENSION == N || Shape1::SHAPE_DIMENSION + 1 == N);
+        static_assert(Shape2::SHAPE_DIMENSION == N || Shape2::SHAPE_DIMENSION + 1 == N);
 
         if constexpr (N >= 4)
         {
-                static_assert(std::is_reference_v<decltype(shape_1.constraints())>);
-                static_assert(std::is_reference_v<decltype(shape_2.constraints())>);
-
-                static_assert(std::is_reference_v<decltype(shape_1.constraints_eq())>);
-                static_assert(std::is_reference_v<decltype(shape_2.constraints_eq())>);
-
-                static_assert(std::is_reference_v<decltype(shape_1.min())>);
-                static_assert(std::is_reference_v<decltype(shape_2.min())>);
-
-                static_assert(std::is_reference_v<decltype(shape_1.max())>);
-                static_assert(std::is_reference_v<decltype(shape_2.max())>);
-
-                constexpr size_t shape_1_c_size = std::remove_reference_t<decltype(shape_1.constraints())>().size();
-                constexpr size_t shape_2_c_size = std::remove_reference_t<decltype(shape_2.constraints())>().size();
-                static_assert(shape_1_c_size >= Shape1::SHAPE_DIMENSION + 1);
-                static_assert(shape_2_c_size >= Shape2::SHAPE_DIMENSION + 1);
-
-                constexpr size_t shape_1_c_eq_size =
-                        std::remove_reference_t<decltype(shape_1.constraints_eq())>().size();
-                constexpr size_t shape_2_c_eq_size =
-                        std::remove_reference_t<decltype(shape_2.constraints_eq())>().size();
-                static_assert(shape_1_c_eq_size + Shape1::SHAPE_DIMENSION == N);
-                static_assert(shape_2_c_eq_size + Shape2::SHAPE_DIMENSION == N);
+                static_assert(size<decltype(shape_1.constraints())>() >= Shape1::SHAPE_DIMENSION + 1);
+                static_assert(size<decltype(shape_2.constraints())>() >= Shape2::SHAPE_DIMENSION + 1);
+                static_assert(size<decltype(shape_1.constraints_eq())>() + Shape1::SHAPE_DIMENSION == N);
+                static_assert(size<decltype(shape_2.constraints_eq())>() + Shape2::SHAPE_DIMENSION == N);
         }
 }
 }
