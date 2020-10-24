@@ -39,7 +39,7 @@ class ParallelotopeWrapperForShapeIntersection final
         static constexpr size_t N = Parallelotope::DIMENSION;
         using T = typename Parallelotope::DataType;
 
-        using Vertices = typename ParallelotopeAlgorithm<Parallelotope>::Vertices;
+        using Vertices = typename ParallelotopeTraits<Parallelotope>::Vertices;
         using Constraints = std::array<Constraint<N, T>, 2 * N>;
         using ConstraintsEq = std::array<Constraint<N, T>, 0>;
 
@@ -106,8 +106,8 @@ class ParallelotopeWrapperForShapeIntersection<
         static constexpr size_t N = Parallelotope::DIMENSION;
         using T = typename Parallelotope::DataType;
 
-        using VertexRidges = typename ParallelotopeAlgorithm<Parallelotope>::VertexRidges;
-        using Vertices = typename ParallelotopeAlgorithm<Parallelotope>::Vertices;
+        using VertexRidges = typename ParallelotopeTraits<Parallelotope>::VertexRidges;
+        using Vertices = typename ParallelotopeTraits<Parallelotope>::Vertices;
 
         const Parallelotope& m_parallelotope;
 
