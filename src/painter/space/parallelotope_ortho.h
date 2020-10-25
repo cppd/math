@@ -112,7 +112,7 @@ class ParallelotopeOrtho final
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        // Пример массива: {( 1, 0, 0), (0,  1, 0), (0, 0,  1)}
+        // Пример массива: {(1, 0, 0), (0, 1, 0), (0, 0, 1)}
         static constexpr std::array<Vector<N, T>, N> NORMALS_POSITIVE =
                 parallelotope_ortho_implementation::index_vectors<N, T>(1);
         // Пример массива: {(-1, 0, 0), (0, -1, 0), (0, 0, -1)}
@@ -129,14 +129,12 @@ class ParallelotopeOrtho final
         };
         std::array<Planes, N> m_planes;
 
-        Vector<N, T> m_org;
-        std::array<T, N> m_sizes;
-
-        void create_planes();
         void set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
         void set_data(const Vector<N, T>& org, const std::array<T, N>& sizes);
 
         bool intersect_impl(const Ray<N, T>& r, T* first, T* second) const;
+
+        T size(unsigned i) const;
 
 public:
         static constexpr size_t DIMENSION = N;
@@ -160,7 +158,7 @@ public:
 
         std::array<ParallelotopeOrtho<N, T>, DIVISIONS> binary_division() const;
 
-        const Vector<N, T>& org() const;
+        Vector<N, T> org() const;
 
         Vector<N, T> e(unsigned n) const;
 };
@@ -217,24 +215,24 @@ void ParallelotopeOrtho<N, T>::set_data(const Vector<N, T>& org, const std::arra
         {
                 if (!(sizes[i] > 0))
                 {
-                        error("Error orthogonal parallelotope sizes");
+                        error("Orthogonal parallelotope sizes " + to_string(sizes));
                 }
         }
 
-        m_org = org;
-        m_sizes = sizes;
-
-        // d1 для нормалей с положительной координатой NORMALS_POSITIVE
-        // d2 для нормалей с отрицательной координатой NORMALS_NEGATIVE
-        // Уравнения плоскостей, перпендикулярных измерению 0
-        // x - (org[0] + x) = 0
-        // -x - (-org[0]) = 0
-
+        // Расстояние от точки до плоскости
+        // dot(p - org, normal) = dot(p, normal) - dot(org, normal)
+        // d = dot(org, normal)
         for (unsigned i = 0; i < N; ++i)
         {
-                m_planes[i].d1 = m_org[i] + m_sizes[i];
-                m_planes[i].d2 = -m_org[i];
+                m_planes[i].d1 = org[i];
+                m_planes[i].d2 = org[i] + sizes[i];
         }
+}
+
+template <size_t N, typename T>
+T ParallelotopeOrtho<N, T>::size(unsigned i) const
+{
+        return m_planes[i].d2 - m_planes[i].d1;
 }
 
 // Неравенства в виде b + a * x >= 0, задающие множество точек параллелотопа.
@@ -244,13 +242,12 @@ void ParallelotopeOrtho<N, T>::constraints(std::array<Constraint<N, T>, 2 * N>* 
         // Плоскости n * x - d имеют перпендикуляр с направлением наружу.
         // Направление внутрь -n * x + d или d + -(n * x), тогда условие
         // для точек параллелотопа d + -(n * x) >= 0.
-
         for (unsigned i = 0, c_i = 0; i < N; ++i, c_i += 2)
         {
-                (*c)[c_i].a = NORMALS_NEGATIVE[i];
-                (*c)[c_i].b = m_planes[i].d1;
+                (*c)[c_i].a = NORMALS_POSITIVE[i];
+                (*c)[c_i].b = -m_planes[i].d1;
 
-                (*c)[c_i + 1].a = NORMALS_POSITIVE[i];
+                (*c)[c_i + 1].a = NORMALS_NEGATIVE[i];
                 (*c)[c_i + 1].b = m_planes[i].d2;
         }
 }
@@ -263,11 +260,11 @@ bool ParallelotopeOrtho<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* s
 
         for (unsigned i = 0; i < N; ++i)
         {
-                T s = r.dir()[i]; // dot(r.dir(), m_planes[i].n);
+                T s = r.dir()[i]; // dot(r.dir(), NORMALS_POSITIVE[i])
                 if (s == 0)
                 {
-                        T d = r.org()[i]; // dot(r.org(), m_planes[i].n);
-                        if (d - m_planes[i].d1 > 0 || -d - m_planes[i].d2 > 0)
+                        T d = r.org()[i]; // dot(r.org(), NORMALS_POSITIVE[i])
+                        if (d < m_planes[i].d1 || d > m_planes[i].d2)
                         {
                                 // параллельно плоскостям и снаружи
                                 return false;
@@ -276,12 +273,11 @@ bool ParallelotopeOrtho<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* s
                         continue;
                 }
 
-                T d = r.org()[i]; // dot(r.org(), m_planes[i].n);
+                T d = r.org()[i]; // dot(r.org(), NORMALS_POSITIVE[i])
                 T alpha1 = (m_planes[i].d1 - d) / s;
-                // d и s имеют противоположный знак для другой плоскости
-                T alpha2 = (m_planes[i].d2 + d) / -s;
+                T alpha2 = (m_planes[i].d2 - d) / s;
 
-                if (s < 0)
+                if (s > 0)
                 {
                         // пересечение снаружи для первой плоскости
                         // пересечение внутри для второй плоскости
@@ -344,16 +340,20 @@ Vector<N, T> ParallelotopeOrtho<N, T>::normal(const Vector<N, T>& p) const
         Vector<N, T> n;
         for (unsigned i = 0; i < N; ++i)
         {
-                if (T l = std::abs(p[i] - m_planes[i].d1); l < min)
-                {
-                        min = l;
-                        n = NORMALS_POSITIVE[i];
-                }
+                T l;
 
-                if (T l = std::abs(p[i] + m_planes[i].d2); l < min)
+                l = std::abs(p[i] - m_planes[i].d1);
+                if (l < min)
                 {
                         min = l;
                         n = NORMALS_NEGATIVE[i];
+                }
+
+                l = std::abs(p[i] - m_planes[i].d2);
+                if (l < min)
+                {
+                        min = l;
+                        n = NORMALS_POSITIVE[i];
                 }
         }
 
@@ -367,8 +367,12 @@ bool ParallelotopeOrtho<N, T>::inside(const Vector<N, T>& p) const
 {
         for (unsigned i = 0; i < N; ++i)
         {
-                // Надо использовать <=, не <.
-                if (!(p[i] <= m_planes[i].d1) || !(-p[i] <= m_planes[i].d2))
+                if (p[i] < m_planes[i].d1)
+                {
+                        return false;
+                }
+
+                if (p[i] > m_planes[i].d2)
                 {
                         return false;
                 }
@@ -380,16 +384,18 @@ template <size_t N, typename T>
 std::array<ParallelotopeOrtho<N, T>, ParallelotopeOrtho<N, T>::DIVISIONS> ParallelotopeOrtho<N, T>::binary_division()
         const
 {
+        Vector<N, T> d1 = org();
+
         std::array<T, N> half_sizes;
         for (unsigned i = 0; i < N; ++i)
         {
-                half_sizes[i] = m_sizes[i] / 2;
+                half_sizes[i] = size(i) / 2;
         }
 
-        std::array<T, N> org_plus_half;
+        std::array<T, N> d1_plus_half;
         for (unsigned i = 0; i < N; ++i)
         {
-                org_plus_half[i] = m_org[i] + half_sizes[i];
+                d1_plus_half[i] = d1[i] + half_sizes[i];
         }
 
         std::array<ParallelotopeOrtho, DIVISIONS> res;
@@ -402,7 +408,7 @@ std::array<ParallelotopeOrtho<N, T>, ParallelotopeOrtho<N, T>::DIVISIONS> Parall
                 Vector<N, T> org;
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        org[i] = (division & (1u << i)) ? org_plus_half[i] : m_org[i];
+                        org[i] = (division & (1u << i)) ? d1_plus_half[i] : d1[i];
                 }
 
                 res[division] = parallelotope_ortho_implementation::create_object_from_array<ParallelotopeOrtho>(
@@ -413,16 +419,21 @@ std::array<ParallelotopeOrtho<N, T>, ParallelotopeOrtho<N, T>::DIVISIONS> Parall
 }
 
 template <size_t N, typename T>
-const Vector<N, T>& ParallelotopeOrtho<N, T>::org() const
+Vector<N, T> ParallelotopeOrtho<N, T>::org() const
 {
-        return m_org;
+        Vector<N, T> v;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                v[i] = m_planes[i].d1;
+        }
+        return v;
 }
 
 template <size_t N, typename T>
 Vector<N, T> ParallelotopeOrtho<N, T>::e(unsigned n) const
 {
         ASSERT(n < N);
-        return parallelotope_ortho_implementation::index_vector<N, T>(n, m_sizes[n]);
+        return parallelotope_ortho_implementation::index_vector<N, T>(n, size(n));
 }
 }
 

@@ -80,8 +80,6 @@ class Parallelotope final
         Vector<N, T> m_org;
         std::array<Vector<N, T>, N> m_vectors;
 
-        void reverse_planes(Planes* p);
-        void create_planes();
         void set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
 
         bool intersect_impl(const Ray<N, T>& r, T* first, T* second) const;
@@ -135,39 +133,20 @@ void Parallelotope<N, T>::set_data(const Vector<N, T>& org, const std::array<Vec
 {
         m_org = org;
         m_vectors = vectors;
-        create_planes();
-}
 
-// Умножение уравнений плоскостей на -1.
-template <size_t N, typename T>
-void Parallelotope<N, T>::reverse_planes(Planes* planes)
-{
-        planes->n = -planes->n;
-        planes->d1 = -planes->d1;
-        planes->d2 = -planes->d2;
-}
-
-template <size_t N, typename T>
-void Parallelotope<N, T>::create_planes()
-{
-        // расстояние от точки до плоскости
-        // dot(p - org, normal) = dot(p, normal) - dot(org, normal) = dot(p, normal) - d
-        //
-        // Вектор n наружу от объекта предназначен для плоскости с параметром d1.
-        // Вектор -n наружу от объекта предназначен для плоскости с параметром d2.
-
-        // Если векторы плоскостей получаются направленными внутрь параллелепипеда,
-        // то надо умножить уравнения на - 1.
-
+        // Расстояние от точки до плоскости
+        // dot(p - org, normal) = dot(p, normal) - dot(org, normal)
+        // d = dot(org, normal)
+        // Вектор n наружу от объекта предназначен для плоскости с параметром d2.
         for (unsigned i = 0; i < N; ++i)
         {
                 m_planes[i].n = ortho_nn(del_elem(m_vectors, i)).normalized();
-                m_planes[i].d1 = dot(m_org, m_planes[i].n);
-                m_planes[i].d2 = -dot(m_org + m_vectors[i], m_planes[i].n);
-                if (dot(m_planes[i].n, m_vectors[i]) > 0)
+                if (dot(m_planes[i].n, m_vectors[i]) < 0)
                 {
-                        reverse_planes(&m_planes[i]);
+                        m_planes[i].n = -m_planes[i].n;
                 }
+                m_planes[i].d1 = dot(m_org, m_planes[i].n);
+                m_planes[i].d2 = dot(m_org + m_vectors[i], m_planes[i].n);
         }
 }
 
@@ -178,13 +157,12 @@ void Parallelotope<N, T>::constraints(std::array<Constraint<N, T>, 2 * N>* c) co
         // Плоскости n * x - d имеют перпендикуляр с направлением наружу.
         // Направление внутрь -n * x + d или d + -(n * x), тогда условие
         // для точек параллелотопа d + -(n * x) >= 0.
-
         for (unsigned i = 0, c_i = 0; i < N; ++i, c_i += 2)
         {
-                (*c)[c_i].a = -m_planes[i].n;
-                (*c)[c_i].b = m_planes[i].d1;
+                (*c)[c_i].a = m_planes[i].n;
+                (*c)[c_i].b = -m_planes[i].d1;
 
-                (*c)[c_i + 1].a = m_planes[i].n;
+                (*c)[c_i + 1].a = -m_planes[i].n;
                 (*c)[c_i + 1].b = m_planes[i].d2;
         }
 }
@@ -201,7 +179,7 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second
                 if (s == 0)
                 {
                         T d = dot(r.org(), m_planes[i].n);
-                        if (d - m_planes[i].d1 > 0 || -d - m_planes[i].d2 > 0)
+                        if (d < m_planes[i].d1 || d > m_planes[i].d2)
                         {
                                 // параллельно плоскостям и снаружи
                                 return false;
@@ -212,10 +190,9 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second
 
                 T d = dot(r.org(), m_planes[i].n);
                 T alpha1 = (m_planes[i].d1 - d) / s;
-                // d и s имеют противоположный знак для другой плоскости
-                T alpha2 = (m_planes[i].d2 + d) / -s;
+                T alpha2 = (m_planes[i].d2 - d) / s;
 
-                if (s < 0)
+                if (s > 0)
                 {
                         // пересечение снаружи для первой плоскости
                         // пересечение внутри для второй плоскости
@@ -274,6 +251,7 @@ Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& p) const
         // К какой плоскости точка ближе, такой и перпендикуляр в точке
 
         T min = limits<T>::max();
+
         Vector<N, T> n;
         for (unsigned i = 0; i < N; ++i)
         {
@@ -284,14 +262,14 @@ Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& p) const
                 if (l < min)
                 {
                         min = l;
-                        n = m_planes[i].n;
+                        n = -m_planes[i].n;
                 }
 
-                l = std::abs(-d - m_planes[i].d2);
+                l = std::abs(d - m_planes[i].d2);
                 if (l < min)
                 {
                         min = l;
-                        n = -m_planes[i].n;
+                        n = m_planes[i].n;
                 }
         }
 
@@ -303,20 +281,17 @@ Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& p) const
 template <size_t N, typename T>
 bool Parallelotope<N, T>::inside(const Vector<N, T>& p) const
 {
-        // Надо использовать >, не >=.
         for (unsigned i = 0; i < N; ++i)
         {
                 T d = dot(p, m_planes[i].n);
 
-                if (d - m_planes[i].d1 > 0)
+                if (d < m_planes[i].d1)
                 {
-                        // на внешней стороне
                         return false;
                 }
 
-                if (-d - m_planes[i].d2 > 0)
+                if (d > m_planes[i].d2)
                 {
-                        // на внешней стороне
                         return false;
                 }
         }
