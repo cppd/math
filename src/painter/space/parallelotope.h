@@ -41,25 +41,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace painter
 {
-namespace parallelotope_implementation
-{
-// Вспомогательная функция для следующей после неё функции
-template <typename ObjectType, typename T, size_t... I>
-constexpr ObjectType create_object_from_array_impl(
-        const Vector<sizeof...(I), T>& org,
-        const std::array<Vector<sizeof...(I), T>, sizeof...(I)>& parameters,
-        std::integer_sequence<size_t, I...>)
-{
-        return ObjectType(org, parameters[I]...);
-}
-// Создать объект, передавая отдельные элементы массива как отдельные параметры конструктора этого объекта
-template <typename ObjectType, size_t N, typename T>
-constexpr ObjectType create_object_from_array(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& parameters)
-{
-        return create_object_from_array_impl<ObjectType>(org, parameters, std::make_integer_sequence<size_t, N>());
-}
-}
-
 template <size_t N, typename T>
 class Parallelotope final
 {
@@ -301,31 +282,44 @@ bool Parallelotope<N, T>::inside(const Vector<N, T>& p) const
 template <size_t N, typename T>
 std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N, T>::binary_division() const
 {
+        std::array<Parallelotope, DIVISIONS> res;
+
         std::array<Vector<N, T>, N> half_vectors;
+        Vector<N, T> middle_org = m_org;
+        Vector<N, T> middle_plane_d;
         for (unsigned i = 0; i < N; ++i)
         {
                 half_vectors[i] = m_vectors[i] / static_cast<T>(2);
+                middle_org += half_vectors[i];
+                middle_plane_d[i] = (m_planes[i].d2 + m_planes[i].d1) / static_cast<T>(2);
         }
 
-        std::array<Parallelotope, DIVISIONS> res;
-
-        // Если имеется 0 в разряде i номера объекта, то без смещения от начала объекта по измерению i.
-        // Если имеется 1 в разряде i номера объекта, то со смещением от начала объекта по измерению i.
-        static_assert(N <= 32);
         for (size_t division = 0; division < DIVISIONS; ++division)
         {
-                Vector<N, T> org = m_org;
-
+                res[division].m_vectors = half_vectors;
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        if (division & (1u << i))
+                        res[division].m_planes[i].n = m_planes[i].n;
+                }
+        }
+
+        for (size_t division = 0; division < DIVISIONS; ++division)
+        {
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        if ((division & (1u << i)) != 0)
                         {
-                                org += half_vectors[i];
+                                res[division].m_org[i] = middle_org[i];
+                                res[division].m_planes[i].d1 = middle_plane_d[i];
+                                res[division].m_planes[i].d2 = m_planes[i].d2;
+                        }
+                        else
+                        {
+                                res[division].m_org[i] = m_org[i];
+                                res[division].m_planes[i].d1 = m_planes[i].d1;
+                                res[division].m_planes[i].d2 = middle_plane_d[i];
                         }
                 }
-
-                res[division] =
-                        parallelotope_implementation::create_object_from_array<Parallelotope>(org, half_vectors);
         }
 
         return res;
