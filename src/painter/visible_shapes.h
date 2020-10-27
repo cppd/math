@@ -154,7 +154,7 @@ public:
 
         void min_max(Vector<N, T>* min, Vector<N, T>* max) const override
         {
-                min_max_vector(parallelotope_vertices(m_parallelotope), min, max);
+                min_max_vector(m_parallelotope.vertices(), min, max);
         }
 };
 

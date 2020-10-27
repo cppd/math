@@ -58,31 +58,6 @@ void diagonals(const Parallelotope<N, T>& p, const F& f)
 //
 
 template <int INDEX, template <size_t N, typename T> typename Parallelotope, size_t N, typename T, typename F>
-void vertices_impl(const Parallelotope<N, T>& p, const Vector<N, T>& org, const F& f)
-{
-        if constexpr (INDEX >= 0)
-        {
-                vertices_impl<INDEX - 1>(p, org, f);
-                vertices_impl<INDEX - 1>(p, org + p.e(INDEX), f);
-        }
-        else
-        {
-                f(org);
-        }
-}
-
-template <template <size_t N, typename T> typename Parallelotope, size_t N, typename T, typename F>
-void vertices(const Parallelotope<N, T>& p, const F& f)
-{
-        constexpr int LAST_INDEX = N - 1;
-
-        // Смещаться по каждому измерению для перехода к другой вершине.
-        vertices_impl<LAST_INDEX>(p, p.org(), f);
-}
-
-//
-
-template <int INDEX, template <size_t N, typename T> typename Parallelotope, size_t N, typename T, typename F>
 void vertex_ridges_impl(
         const Parallelotope<N, T>& p,
         const Vector<N, T>& org,
@@ -131,7 +106,6 @@ class ParallelotopeTraits final
 
         static_assert(N <= 27);
 
-        static constexpr int VERTEX_COUNT = 1 << N;
         static constexpr int DIAGONAL_COUNT = 1 << (N - 1);
 
         // Количество вершин 2 ^ N умножить на количество измерений N у каждой вершины
@@ -141,9 +115,6 @@ class ParallelotopeTraits final
 public:
         // Каждый элемент массива - это вектор произвольного по знаку направления
         using Diagonals = std::array<Vector<N, T>, DIAGONAL_COUNT>;
-
-        // Каждый элемент массива - это точка в пространстве
-        using Vertices = std::array<Vector<N, T>, VERTEX_COUNT>;
 
         // Каждый элемент массива - это вершина откуда и вектор куда
         using VertexRidges = std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT>;
@@ -182,27 +153,6 @@ typename ParallelotopeTraits<Parallelotope<N, T>>::Diagonals parallelotope_diago
         impl::diagonals(p, f);
 
         ASSERT(diagonal_count == result.size());
-
-        return result;
-}
-
-template <template <size_t N, typename T> typename Parallelotope, size_t N, typename T>
-typename ParallelotopeTraits<Parallelotope<N, T>>::Vertices parallelotope_vertices(const Parallelotope<N, T>& p)
-{
-        namespace impl = parallelotope_algorithm_implementation;
-
-        typename ParallelotopeTraits<Parallelotope<N, T>>::Vertices result;
-
-        unsigned vertex_count = 0;
-
-        auto f = [&vertex_count, &result](const Vector<N, T>& org) {
-                ASSERT(vertex_count < result.size());
-                result[vertex_count++] = org;
-        };
-
-        impl::vertices(p, f);
-
-        ASSERT(vertex_count == result.size());
 
         return result;
 }

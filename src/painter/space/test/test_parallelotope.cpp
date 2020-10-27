@@ -599,7 +599,7 @@ void test_algorithms(const Parallelotope& p)
 
         print_separator();
         print_message("vertices");
-        for (auto v : parallelotope_vertices(p))
+        for (auto v : p.vertices())
         {
                 print_message(to_string(v));
         }

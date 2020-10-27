@@ -118,8 +118,15 @@ class ParallelotopeOrtho final
 
         T size(unsigned i) const;
 
+        template <int INDEX, typename F>
+        void binary_division_impl(std::array<Planes, N>* p, const Vector<N, T>& middle_d, const F& f) const;
+
+        template <int INDEX, typename F>
+        void vertices_impl(Vector<N, T>* p, const F& f) const;
+
 public:
         static constexpr size_t DIMENSION = N;
+        static constexpr int VERTEX_COUNT = 1 << N;
         using DataType = T;
 
         ParallelotopeOrtho() = default;
@@ -139,6 +146,8 @@ public:
         Vector<N, T> normal(const Vector<N, T>& p) const;
 
         std::array<ParallelotopeOrtho<N, T>, DIVISIONS> binary_division() const;
+
+        std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
 
         Vector<N, T> org() const;
 
@@ -363,35 +372,85 @@ bool ParallelotopeOrtho<N, T>::inside(const Vector<N, T>& p) const
 }
 
 template <size_t N, typename T>
+template <int INDEX, typename F>
+void ParallelotopeOrtho<N, T>::binary_division_impl(std::array<Planes, N>* p, const Vector<N, T>& middle_d, const F& f)
+        const
+{
+        if constexpr (INDEX >= 0)
+        {
+                (*p)[INDEX].d1 = m_planes[INDEX].d1;
+                (*p)[INDEX].d2 = middle_d[INDEX];
+                binary_division_impl<INDEX - 1>(p, middle_d, f);
+                (*p)[INDEX].d1 = middle_d[INDEX];
+                (*p)[INDEX].d2 = m_planes[INDEX].d2;
+                binary_division_impl<INDEX - 1>(p, middle_d, f);
+        }
+        else
+        {
+                f();
+        }
+}
+
+template <size_t N, typename T>
 std::array<ParallelotopeOrtho<N, T>, ParallelotopeOrtho<N, T>::DIVISIONS> ParallelotopeOrtho<N, T>::binary_division()
         const
 {
-        std::array<ParallelotopeOrtho, DIVISIONS> res;
+        std::array<ParallelotopeOrtho, DIVISIONS> result;
 
-        Vector<N, T> middle_plane_d;
+        Vector<N, T> middle_d;
         for (unsigned i = 0; i < N; ++i)
         {
-                middle_plane_d[i] = (m_planes[i].d1 + m_planes[i].d2) / static_cast<T>(2);
+                middle_d[i] = (m_planes[i].d1 + m_planes[i].d2) / static_cast<T>(2);
         }
 
-        for (size_t division = 0; division < DIVISIONS; ++division)
+        unsigned count = 0;
+        std::array<Planes, N> p;
+        auto f = [&count, &result, &p]() {
+                ASSERT(count < result.size());
+                result[count++].m_planes = p;
+        };
+
+        binary_division_impl<N - 1>(&p, middle_d, f);
+
+        ASSERT(count == result.size());
+
+        return result;
+}
+
+template <size_t N, typename T>
+template <int INDEX, typename F>
+void ParallelotopeOrtho<N, T>::vertices_impl(Vector<N, T>* p, const F& f) const
+{
+        if constexpr (INDEX >= 0)
         {
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        if ((division & (1u << i)) != 0)
-                        {
-                                res[division].m_planes[i].d1 = middle_plane_d[i];
-                                res[division].m_planes[i].d2 = m_planes[i].d2;
-                        }
-                        else
-                        {
-                                res[division].m_planes[i].d1 = m_planes[i].d1;
-                                res[division].m_planes[i].d2 = middle_plane_d[i];
-                        }
-                }
+                (*p)[INDEX] = m_planes[INDEX].d1;
+                vertices_impl<INDEX - 1>(p, f);
+                (*p)[INDEX] = m_planes[INDEX].d2;
+                vertices_impl<INDEX - 1>(p, f);
         }
+        else
+        {
+                f();
+        }
+}
 
-        return res;
+template <size_t N, typename T>
+std::array<Vector<N, T>, ParallelotopeOrtho<N, T>::VERTEX_COUNT> ParallelotopeOrtho<N, T>::vertices() const
+{
+        std::array<Vector<N, T>, VERTEX_COUNT> result;
+
+        unsigned count = 0;
+        Vector<N, T> p;
+        auto f = [&count, &result, &p]() {
+                ASSERT(count < result.size());
+                result[count++] = p;
+        };
+
+        vertices_impl<N - 1>(&p, f);
+
+        ASSERT(count == result.size());
+
+        return result;
 }
 
 template <size_t N, typename T>
@@ -411,6 +470,7 @@ Vector<N, T> ParallelotopeOrtho<N, T>::e(unsigned n) const
         ASSERT(n < N);
         return parallelotope_ortho_implementation::index_vector<N, T>(n, size(n));
 }
+
 }
 
 template <size_t N, typename T>

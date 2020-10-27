@@ -65,8 +65,21 @@ class Parallelotope final
 
         bool intersect_impl(const Ray<N, T>& r, T* first, T* second) const;
 
+        template <int INDEX, typename F>
+        void binary_division_impl(
+                const Vector<N, T>& org,
+                Vector<N, T>* d1,
+                Vector<N, T>* d2,
+                const std::array<Vector<N, T>, N>& half_vectors,
+                const Vector<N, T>& middle_d,
+                const F& f) const;
+
+        template <int INDEX, typename F>
+        void vertices_impl(const Vector<N, T>& p, const F& f) const;
+
 public:
         static constexpr size_t DIMENSION = N;
+        static constexpr int VERTEX_COUNT = 1 << N;
         using DataType = T;
 
         Parallelotope() = default;
@@ -86,6 +99,8 @@ public:
         Vector<N, T> normal(const Vector<N, T>& p) const;
 
         std::array<Parallelotope<N, T>, DIVISIONS> binary_division() const;
+
+        std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
 
         const Vector<N, T>& org() const;
 
@@ -280,49 +295,104 @@ bool Parallelotope<N, T>::inside(const Vector<N, T>& p) const
 }
 
 template <size_t N, typename T>
+template <int INDEX, typename F>
+void Parallelotope<N, T>::binary_division_impl(
+        const Vector<N, T>& org,
+        Vector<N, T>* d1,
+        Vector<N, T>* d2,
+        const std::array<Vector<N, T>, N>& half_vectors,
+        const Vector<N, T>& middle_d,
+        const F& f) const
+{
+        if constexpr (INDEX >= 0)
+        {
+                (*d1)[INDEX] = m_planes[INDEX].d1;
+                (*d2)[INDEX] = middle_d[INDEX];
+                binary_division_impl<INDEX - 1>(org, d1, d2, half_vectors, middle_d, f);
+                (*d1)[INDEX] = middle_d[INDEX];
+                (*d2)[INDEX] = m_planes[INDEX].d2;
+                binary_division_impl<INDEX - 1>(org + half_vectors[INDEX], d1, d2, half_vectors, middle_d, f);
+        }
+        else
+        {
+                f(org);
+        }
+}
+
+template <size_t N, typename T>
 std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N, T>::binary_division() const
 {
-        std::array<Parallelotope, DIVISIONS> res;
+        std::array<Parallelotope, DIVISIONS> result;
 
         std::array<Vector<N, T>, N> half_vectors;
-        Vector<N, T> middle_org = m_org;
-        Vector<N, T> middle_plane_d;
+        Vector<N, T> middle_d;
         for (unsigned i = 0; i < N; ++i)
         {
                 half_vectors[i] = m_vectors[i] / static_cast<T>(2);
-                middle_org += half_vectors[i];
-                middle_plane_d[i] = (m_planes[i].d2 + m_planes[i].d1) / static_cast<T>(2);
+                middle_d[i] = (m_planes[i].d2 + m_planes[i].d1) / static_cast<T>(2);
         }
 
         for (size_t division = 0; division < DIVISIONS; ++division)
         {
-                res[division].m_vectors = half_vectors;
+                result[division].m_vectors = half_vectors;
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        res[division].m_planes[i].n = m_planes[i].n;
+                        result[division].m_planes[i].n = m_planes[i].n;
                 }
         }
 
-        for (size_t division = 0; division < DIVISIONS; ++division)
+        Vector<N, T> d1;
+        Vector<N, T> d2;
+        unsigned count = 0;
+        auto f = [&count, &result, &d1, &d2](const Vector<N, T>& org) {
+                ASSERT(count < result.size());
+                result[count].m_org = org;
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        result[count].m_planes[i].d1 = d1[i];
+                        result[count].m_planes[i].d2 = d2[i];
+                }
+                ++count;
+        };
+
+        binary_division_impl<N - 1>(m_org, &d1, &d2, half_vectors, middle_d, f);
+
+        ASSERT(count == result.size());
+
+        return result;
+}
+
+template <size_t N, typename T>
+template <int INDEX, typename F>
+void Parallelotope<N, T>::vertices_impl(const Vector<N, T>& p, const F& f) const
+{
+        if constexpr (INDEX >= 0)
         {
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        if ((division & (1u << i)) != 0)
-                        {
-                                res[division].m_org[i] = middle_org[i];
-                                res[division].m_planes[i].d1 = middle_plane_d[i];
-                                res[division].m_planes[i].d2 = m_planes[i].d2;
-                        }
-                        else
-                        {
-                                res[division].m_org[i] = m_org[i];
-                                res[division].m_planes[i].d1 = m_planes[i].d1;
-                                res[division].m_planes[i].d2 = middle_plane_d[i];
-                        }
-                }
+                vertices_impl<INDEX - 1>(p, f);
+                vertices_impl<INDEX - 1>(p + m_vectors[INDEX], f);
         }
+        else
+        {
+                f(p);
+        }
+}
 
-        return res;
+template <size_t N, typename T>
+std::array<Vector<N, T>, Parallelotope<N, T>::VERTEX_COUNT> Parallelotope<N, T>::vertices() const
+{
+        std::array<Vector<N, T>, VERTEX_COUNT> result;
+
+        unsigned count = 0;
+        auto f = [&count, &result](const Vector<N, T>& p) {
+                ASSERT(count < result.size());
+                result[count++] = p;
+        };
+
+        vertices_impl<N - 1>(m_org, f);
+
+        ASSERT(count == result.size());
+
+        return result;
 }
 
 template <size_t N, typename T>

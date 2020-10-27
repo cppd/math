@@ -37,9 +37,9 @@ class ParallelotopeWrapperForShapeIntersection final
         static_assert(Parallelotope::DIMENSION >= 4);
 
         static constexpr size_t N = Parallelotope::DIMENSION;
-        using T = typename Parallelotope::DataType;
 
-        using Vertices = typename ParallelotopeTraits<Parallelotope>::Vertices;
+        using T = typename Parallelotope::DataType;
+        using Vertices = std::array<Vector<N, T>, Parallelotope::VERTEX_COUNT>;
         using Constraints = std::array<Constraint<N, T>, 2 * N>;
         using ConstraintsEq = std::array<Constraint<N, T>, 0>;
 
@@ -57,7 +57,7 @@ public:
         using DataType = T;
 
         explicit ParallelotopeWrapperForShapeIntersection(const Parallelotope& p)
-                : m_parallelotope(p), m_vertices(parallelotope_vertices(p))
+                : m_parallelotope(p), m_vertices(p.vertices())
         {
                 m_parallelotope.constraints(&m_constraints);
 
@@ -104,10 +104,10 @@ class ParallelotopeWrapperForShapeIntersection<
         static_assert(Parallelotope::DIMENSION == 2 || Parallelotope::DIMENSION == 3);
 
         static constexpr size_t N = Parallelotope::DIMENSION;
-        using T = typename Parallelotope::DataType;
 
+        using T = typename Parallelotope::DataType;
+        using Vertices = std::array<Vector<N, T>, Parallelotope::VERTEX_COUNT>;
         using VertexRidges = typename ParallelotopeTraits<Parallelotope>::VertexRidges;
-        using Vertices = typename ParallelotopeTraits<Parallelotope>::Vertices;
 
         const Parallelotope& m_parallelotope;
 
@@ -120,9 +120,7 @@ public:
         using DataType = T;
 
         explicit ParallelotopeWrapperForShapeIntersection(const Parallelotope& p)
-                : m_parallelotope(p),
-                  m_vertices(parallelotope_vertices(p)),
-                  m_vertex_ridges(parallelotope_vertex_ridges(p))
+                : m_parallelotope(p), m_vertices(p.vertices()), m_vertex_ridges(parallelotope_vertex_ridges(p))
         {
         }
 
