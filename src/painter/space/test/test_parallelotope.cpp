@@ -329,7 +329,7 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
         constexpr size_t N = Parallelotope::DIMENSION;
         using T = typename Parallelotope::DataType;
 
-        T max_length = parallelotope_max_diagonal(p);
+        T length = p.length();
 
         std::array<Constraint<N, T>, 2 * N> c;
 
@@ -375,31 +375,31 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
                 {
                         error("Ray must intersect\n" + to_string(ray));
                 }
-                if (t >= max_length)
+                if (t >= length)
                 {
                         error("Intersection out of parallelotope.\ndistance = " + to_string(t) + ", "
-                              + "max distance = " + to_string(max_length) + "\n" + to_string(ray));
+                              + "max distance = " + to_string(length) + "\n" + to_string(ray));
                 }
 
-                ray = Ray<N, T>(ray_orig.point(-10 * max_length), direction);
+                ray = Ray<N, T>(ray_orig.point(-10 * length), direction);
                 if (!p.intersect(ray, &t))
                 {
                         error("Ray must intersect\n" + to_string(ray));
                 }
 
-                ray = Ray<N, T>(ray_orig.point(10 * max_length), -direction);
+                ray = Ray<N, T>(ray_orig.point(10 * length), -direction);
                 if (!p.intersect(ray, &t))
                 {
                         error("Ray must intersect\n" + to_string(ray));
                 }
 
-                ray = Ray<N, T>(ray_orig.point(10 * max_length), direction);
+                ray = Ray<N, T>(ray_orig.point(10 * length), direction);
                 if (p.intersect(ray, &t))
                 {
                         error("Ray must not intersect\n" + to_string(ray));
                 }
 
-                ray = Ray<N, T>(ray_orig.point(-10 * max_length), -direction);
+                ray = Ray<N, T>(ray_orig.point(-10 * length), -direction);
                 if (p.intersect(ray, &t))
                 {
                         error("Ray must not intersect\n" + to_string(ray));
@@ -455,14 +455,13 @@ void compare_parallelotopes(RandomEngine& engine, int point_count, const Paralle
         static_assert(((N == Parallelotope::DIMENSION) && ...));
         static_assert(((std::is_same_v<T, typename Parallelotope::DataType>)&&...));
 
-        std::array<T, sizeof...(Parallelotope)> max_length{parallelotope_max_diagonal(p)...};
+        std::array<T, sizeof...(Parallelotope)> lengths{p.length()...};
 
         for (unsigned i = 1; i < sizeof...(Parallelotope); ++i)
         {
-                if (!almost_equal(max_length[i], max_length[0]))
+                if (!almost_equal(lengths[i], lengths[0]))
                 {
-                        error("Error diagonal max length.\n" + to_string(max_length[i]) + " and "
-                              + to_string(max_length[0]));
+                        error("Error diagonal max length.\n" + to_string(lengths[i]) + " and " + to_string(lengths[0]));
                 }
         }
 
@@ -497,19 +496,19 @@ void compare_parallelotopes(RandomEngine& engine, int point_count, const Paralle
 
                 verify_intersection(ray, p...);
 
-                ray = Ray<N, T>(ray_orig.point(-10 * max_length[0]), direction);
+                ray = Ray<N, T>(ray_orig.point(-10 * lengths[0]), direction);
 
                 verify_intersection(ray, p...);
 
-                ray = Ray<N, T>(ray_orig.point(10 * max_length[0]), -direction);
+                ray = Ray<N, T>(ray_orig.point(10 * lengths[0]), -direction);
 
                 verify_intersection(ray, p...);
 
-                ray = Ray<N, T>(ray_orig.point(10 * max_length[0]), direction);
+                ray = Ray<N, T>(ray_orig.point(10 * lengths[0]), direction);
 
                 verify_intersection(ray, p...);
 
-                ray = Ray<N, T>(ray_orig.point(-10 * max_length[0]), -direction);
+                ray = Ray<N, T>(ray_orig.point(-10 * lengths[0]), -direction);
 
                 verify_intersection(ray, p...);
         }
@@ -591,11 +590,8 @@ template <typename Parallelotope>
 void test_algorithms(const Parallelotope& p)
 {
         print_separator();
-        print_message("diagonals");
-        for (auto d : parallelotope_diagonals(p))
-        {
-                print_message(to_string(d));
-        }
+        print_message("length");
+        print_message(to_string(p.length()));
 
         print_separator();
         print_message("vertices");

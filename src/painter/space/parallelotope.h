@@ -50,6 +50,7 @@ class Parallelotope final
         // Количество объектов после деления по каждому измерению
         static_assert(N <= 32);
         static constexpr size_t DIVISIONS = 1ull << N;
+        static constexpr int DIAGONAL_COUNT = 1 << (N - 1);
 
         struct Planes
         {
@@ -77,6 +78,9 @@ class Parallelotope final
         template <int INDEX, typename F>
         void vertices_impl(const Vector<N, T>& p, const F& f) const;
 
+        template <int INDEX, typename F>
+        void length_impl(const Vector<N, T>& sum, const F& f) const;
+
 public:
         static constexpr size_t DIMENSION = N;
         static constexpr int VERTEX_COUNT = 1 << N;
@@ -101,6 +105,8 @@ public:
         std::array<Parallelotope<N, T>, DIVISIONS> binary_division() const;
 
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
+
+        T length() const;
 
         const Vector<N, T>& org() const;
 
@@ -393,6 +399,45 @@ std::array<Vector<N, T>, Parallelotope<N, T>::VERTEX_COUNT> Parallelotope<N, T>:
         ASSERT(count == result.size());
 
         return result;
+}
+
+template <size_t N, typename T>
+template <int INDEX, typename F>
+void Parallelotope<N, T>::length_impl(const Vector<N, T>& sum, const F& f) const
+{
+        if constexpr (INDEX >= 0)
+        {
+                length_impl<INDEX - 1>(sum + m_vectors[INDEX], f);
+                length_impl<INDEX - 1>(sum - m_vectors[INDEX], f);
+        }
+        else
+        {
+                f(sum);
+        }
+}
+
+template <size_t N, typename T>
+T Parallelotope<N, T>::length() const
+{
+        T max_squared = limits<T>::lowest();
+
+        unsigned count = 0;
+
+        auto f = [&max_squared, &count](const Vector<N, T>& d) {
+                ++count;
+                max_squared = std::max(max_squared, d.norm_squared());
+        };
+
+        // Перебрать все диагонали одной из граней параллелотопа с учётом их направления.
+        // Количество таких диагоналей равно 2 ^ (N - 1). Добавляя к каждой такой
+        // диагонали оставшееся измерение, получаются все диагонали целого параллелотопа.
+        // Одно из измерений не меняется, остальные к нему прибавляются и вычитаются.
+        constexpr int LAST_INDEX = N - 1;
+        length_impl<LAST_INDEX - 1>(m_vectors[LAST_INDEX], f);
+
+        ASSERT(count == DIAGONAL_COUNT);
+
+        return std::sqrt(max_squared);
 }
 
 template <size_t N, typename T>

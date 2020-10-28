@@ -149,6 +149,8 @@ public:
 
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
 
+        T length() const;
+
         Vector<N, T> org() const;
 
         Vector<N, T> e(unsigned n) const;
@@ -451,6 +453,17 @@ std::array<Vector<N, T>, ParallelotopeOrtho<N, T>::VERTEX_COUNT> ParallelotopeOr
         ASSERT(count == result.size());
 
         return result;
+}
+
+template <size_t N, typename T>
+T ParallelotopeOrtho<N, T>::length() const
+{
+        Vector<N, T> s;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                s[i] = m_planes[i].d2 - m_planes[i].d1;
+        }
+        return s.norm();
 }
 
 template <size_t N, typename T>
