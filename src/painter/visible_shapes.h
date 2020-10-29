@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh/mesh_object.h"
 #include "space/hyperplane_parallelotope.h"
 #include "space/parallelotope.h"
-#include "space/parallelotope_algorithm.h"
 
 #include <src/numerical/algorithm.h>
 

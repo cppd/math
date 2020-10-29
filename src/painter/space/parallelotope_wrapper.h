@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "constraint.h"
-#include "parallelotope_algorithm.h"
 
 #include <src/numerical/algorithm.h>
 #include <src/numerical/ray.h>
@@ -107,7 +106,7 @@ class ParallelotopeWrapperForShapeIntersection<
 
         using T = typename Parallelotope::DataType;
         using Vertices = std::array<Vector<N, T>, Parallelotope::VERTEX_COUNT>;
-        using VertexRidges = typename ParallelotopeTraits<Parallelotope>::VertexRidges;
+        using VertexRidges = std::array<std::array<Vector<N, T>, 2>, Parallelotope::VERTEX_RIDGE_COUNT>;
 
         const Parallelotope& m_parallelotope;
 
@@ -120,7 +119,7 @@ public:
         using DataType = T;
 
         explicit ParallelotopeWrapperForShapeIntersection(const Parallelotope& p)
-                : m_parallelotope(p), m_vertices(p.vertices()), m_vertex_ridges(parallelotope_vertex_ridges(p))
+                : m_parallelotope(p), m_vertices(p.vertices()), m_vertex_ridges(p.vertex_ridges())
         {
         }
 

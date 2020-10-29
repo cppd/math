@@ -127,6 +127,11 @@ class ParallelotopeOrtho final
 public:
         static constexpr size_t DIMENSION = N;
         static constexpr int VERTEX_COUNT = 1 << N;
+        static_assert(N <= 27);
+        // Количество вершин 2 ^ N умножить на количество измерений N у каждой вершины
+        // и для уникальности разделить на 2 = ((2 ^ N) * N) / 2 = (2 ^ (N - 1)) * N
+        static constexpr int VERTEX_RIDGE_COUNT = (1 << (N - 1)) * N;
+
         using DataType = T;
 
         ParallelotopeOrtho() = default;
@@ -148,6 +153,8 @@ public:
         std::array<ParallelotopeOrtho<N, T>, DIVISIONS> binary_division() const;
 
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
+
+        std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> vertex_ridges() const;
 
         T length() const;
 
@@ -446,6 +453,40 @@ std::array<Vector<N, T>, ParallelotopeOrtho<N, T>::VERTEX_COUNT> ParallelotopeOr
         auto f = [&count, &result, &p]() {
                 ASSERT(count < result.size());
                 result[count++] = p;
+        };
+
+        vertices_impl<N - 1>(&p, f);
+
+        ASSERT(count == result.size());
+
+        return result;
+}
+
+template <size_t N, typename T>
+std::array<std::array<Vector<N, T>, 2>, ParallelotopeOrtho<N, T>::VERTEX_RIDGE_COUNT> ParallelotopeOrtho<N, T>::
+        vertex_ridges() const
+{
+        std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> result;
+
+        std::array<Vector<N, T>, N> vectors;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                vectors[i] = parallelotope_ortho_implementation::index_vector<N, T>(i, m_planes[i].d2 - m_planes[i].d1);
+        }
+
+        unsigned count = 0;
+        Vector<N, T> p;
+        auto f = [this, &count, &result, &p, &vectors]() {
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        if (p[i] == m_planes[i].d1)
+                        {
+                                ASSERT(count < result.size());
+                                result[count][0] = p;
+                                result[count][1] = vectors[i];
+                                ++count;
+                        }
+                }
         };
 
         vertices_impl<N - 1>(&p, f);

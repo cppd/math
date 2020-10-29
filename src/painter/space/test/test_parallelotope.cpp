@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "test_parallelotope.h"
 
 #include "../parallelotope.h"
-#include "../parallelotope_algorithm.h"
 #include "../parallelotope_ortho.h"
 #include "../parallelotope_wrapper.h"
 #include "../shape_intersection.h"
@@ -602,7 +601,7 @@ void test_algorithms(const Parallelotope& p)
 
         print_separator();
         print_message("vertex ridges");
-        for (auto vr : parallelotope_vertex_ridges(p))
+        for (auto vr : p.vertex_ridges())
         {
                 print_message(to_string(vr));
         }
