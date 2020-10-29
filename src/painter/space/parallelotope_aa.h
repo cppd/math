@@ -39,7 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace painter
 {
-namespace parallelotope_ortho_implementation
+namespace parallelotope_aa_implementation
 {
 // Вспомогательная функция для следующей после неё функции
 template <typename T, size_t ValueIndex, size_t... I>
@@ -89,17 +89,17 @@ constexpr std::array<Vector<N, T>, N> index_vectors(T value)
 }
 
 template <size_t N, typename T>
-class ParallelotopeOrtho final
+class ParallelotopeAA final
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
         // Пример массива: {(1, 0, 0), (0, 1, 0), (0, 0, 1)}
         static constexpr std::array<Vector<N, T>, N> NORMALS_POSITIVE =
-                parallelotope_ortho_implementation::index_vectors<N, T>(1);
+                parallelotope_aa_implementation::index_vectors<N, T>(1);
         // Пример массива: {(-1, 0, 0), (0, -1, 0), (0, 0, -1)}
         static constexpr std::array<Vector<N, T>, N> NORMALS_NEGATIVE =
-                parallelotope_ortho_implementation::index_vectors<N, T>(-1);
+                parallelotope_aa_implementation::index_vectors<N, T>(-1);
 
         // Количество объектов после деления по каждому измерению
         static_assert(N <= 32);
@@ -134,12 +134,12 @@ public:
 
         using DataType = T;
 
-        ParallelotopeOrtho() = default;
+        ParallelotopeAA() = default;
 
         template <typename... P>
-        explicit ParallelotopeOrtho(const Vector<N, T>& org, const P&... vectors);
+        explicit ParallelotopeAA(const Vector<N, T>& org, const P&... vectors);
 
-        ParallelotopeOrtho(const Vector<N, T>& org, const std::array<T, N>& vectors);
+        ParallelotopeAA(const Vector<N, T>& org, const std::array<T, N>& vectors);
 
         void constraints(std::array<Constraint<N, T>, 2 * N>* c) const;
 
@@ -150,7 +150,7 @@ public:
 
         Vector<N, T> normal(const Vector<N, T>& p) const;
 
-        std::array<ParallelotopeOrtho<N, T>, DIVISIONS> binary_division() const;
+        std::array<ParallelotopeAA<N, T>, DIVISIONS> binary_division() const;
 
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
 
@@ -166,7 +166,7 @@ public:
 // Параметр vectors — это или все только T, или все только Vector<N, T>
 template <size_t N, typename T>
 template <typename... P>
-ParallelotopeOrtho<N, T>::ParallelotopeOrtho(const Vector<N, T>& org, const P&... vectors)
+ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const P&... vectors)
 {
         static_assert((std::is_same_v<T, P> && ...) || (std::is_same_v<Vector<N, T>, P> && ...));
         static_assert(sizeof...(P) == N);
@@ -182,13 +182,13 @@ ParallelotopeOrtho<N, T>::ParallelotopeOrtho(const Vector<N, T>& org, const P&..
 }
 
 template <size_t N, typename T>
-ParallelotopeOrtho<N, T>::ParallelotopeOrtho(const Vector<N, T>& org, const std::array<T, N>& vectors)
+ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const std::array<T, N>& vectors)
 {
         set_data(org, vectors);
 }
 
 template <size_t N, typename T>
-void ParallelotopeOrtho<N, T>::set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors)
+void ParallelotopeAA<N, T>::set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors)
 {
         std::array<T, N> data;
 
@@ -198,7 +198,7 @@ void ParallelotopeOrtho<N, T>::set_data(const Vector<N, T>& org, const std::arra
                 {
                         if (i != vector_number && vectors[vector_number][i] != 0)
                         {
-                                error("Error orthogonal parallelotope vectors");
+                                error("Error axis-aligned parallelotope vectors");
                         }
                 }
 
@@ -209,13 +209,13 @@ void ParallelotopeOrtho<N, T>::set_data(const Vector<N, T>& org, const std::arra
 }
 
 template <size_t N, typename T>
-void ParallelotopeOrtho<N, T>::set_data(const Vector<N, T>& org, const std::array<T, N>& sizes)
+void ParallelotopeAA<N, T>::set_data(const Vector<N, T>& org, const std::array<T, N>& sizes)
 {
         for (unsigned i = 0; i < N; ++i)
         {
                 if (!(sizes[i] > 0))
                 {
-                        error("Orthogonal parallelotope sizes " + to_string(sizes));
+                        error("Axis-aligned parallelotope sizes " + to_string(sizes));
                 }
         }
 
@@ -230,14 +230,14 @@ void ParallelotopeOrtho<N, T>::set_data(const Vector<N, T>& org, const std::arra
 }
 
 template <size_t N, typename T>
-T ParallelotopeOrtho<N, T>::size(unsigned i) const
+T ParallelotopeAA<N, T>::size(unsigned i) const
 {
         return m_planes[i].d2 - m_planes[i].d1;
 }
 
 // Неравенства в виде b + a * x >= 0, задающие множество точек параллелотопа.
 template <size_t N, typename T>
-void ParallelotopeOrtho<N, T>::constraints(std::array<Constraint<N, T>, 2 * N>* c) const
+void ParallelotopeAA<N, T>::constraints(std::array<Constraint<N, T>, 2 * N>* c) const
 {
         // Плоскости n * x - d имеют перпендикуляр с направлением наружу.
         // Направление внутрь -n * x + d или d + -(n * x), тогда условие
@@ -253,7 +253,7 @@ void ParallelotopeOrtho<N, T>::constraints(std::array<Constraint<N, T>, 2 * N>* 
 }
 
 template <size_t N, typename T>
-bool ParallelotopeOrtho<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second) const
+bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second) const
 {
         T f_max = limits<T>::lowest();
         T b_min = limits<T>::max();
@@ -305,7 +305,7 @@ bool ParallelotopeOrtho<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* s
 }
 
 template <size_t N, typename T>
-bool ParallelotopeOrtho<N, T>::intersect(const Ray<N, T>& r, T* t) const
+bool ParallelotopeAA<N, T>::intersect(const Ray<N, T>& r, T* t) const
 {
         T first;
         T second;
@@ -318,7 +318,7 @@ bool ParallelotopeOrtho<N, T>::intersect(const Ray<N, T>& r, T* t) const
 }
 
 template <size_t N, typename T>
-bool ParallelotopeOrtho<N, T>::intersect_farthest(const Ray<N, T>& r, T* t) const
+bool ParallelotopeAA<N, T>::intersect_farthest(const Ray<N, T>& r, T* t) const
 {
         T first;
         T second;
@@ -331,7 +331,7 @@ bool ParallelotopeOrtho<N, T>::intersect_farthest(const Ray<N, T>& r, T* t) cons
 }
 
 template <size_t N, typename T>
-Vector<N, T> ParallelotopeOrtho<N, T>::normal(const Vector<N, T>& p) const
+Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& p) const
 {
         // К какой плоскости точка ближе, такой и перпендикуляр в точке
 
@@ -363,7 +363,7 @@ Vector<N, T> ParallelotopeOrtho<N, T>::normal(const Vector<N, T>& p) const
 }
 
 template <size_t N, typename T>
-bool ParallelotopeOrtho<N, T>::inside(const Vector<N, T>& p) const
+bool ParallelotopeAA<N, T>::inside(const Vector<N, T>& p) const
 {
         for (unsigned i = 0; i < N; ++i)
         {
@@ -382,7 +382,7 @@ bool ParallelotopeOrtho<N, T>::inside(const Vector<N, T>& p) const
 
 template <size_t N, typename T>
 template <int INDEX, typename F>
-void ParallelotopeOrtho<N, T>::binary_division_impl(std::array<Planes, N>* p, const Vector<N, T>& middle_d, const F& f)
+void ParallelotopeAA<N, T>::binary_division_impl(std::array<Planes, N>* p, const Vector<N, T>& middle_d, const F& f)
         const
 {
         if constexpr (INDEX >= 0)
@@ -401,10 +401,9 @@ void ParallelotopeOrtho<N, T>::binary_division_impl(std::array<Planes, N>* p, co
 }
 
 template <size_t N, typename T>
-std::array<ParallelotopeOrtho<N, T>, ParallelotopeOrtho<N, T>::DIVISIONS> ParallelotopeOrtho<N, T>::binary_division()
-        const
+std::array<ParallelotopeAA<N, T>, ParallelotopeAA<N, T>::DIVISIONS> ParallelotopeAA<N, T>::binary_division() const
 {
-        std::array<ParallelotopeOrtho, DIVISIONS> result;
+        std::array<ParallelotopeAA, DIVISIONS> result;
 
         Vector<N, T> middle_d;
         for (unsigned i = 0; i < N; ++i)
@@ -428,7 +427,7 @@ std::array<ParallelotopeOrtho<N, T>, ParallelotopeOrtho<N, T>::DIVISIONS> Parall
 
 template <size_t N, typename T>
 template <int INDEX, typename F>
-void ParallelotopeOrtho<N, T>::vertices_impl(Vector<N, T>* p, const F& f) const
+void ParallelotopeAA<N, T>::vertices_impl(Vector<N, T>* p, const F& f) const
 {
         if constexpr (INDEX >= 0)
         {
@@ -444,7 +443,7 @@ void ParallelotopeOrtho<N, T>::vertices_impl(Vector<N, T>* p, const F& f) const
 }
 
 template <size_t N, typename T>
-std::array<Vector<N, T>, ParallelotopeOrtho<N, T>::VERTEX_COUNT> ParallelotopeOrtho<N, T>::vertices() const
+std::array<Vector<N, T>, ParallelotopeAA<N, T>::VERTEX_COUNT> ParallelotopeAA<N, T>::vertices() const
 {
         std::array<Vector<N, T>, VERTEX_COUNT> result;
 
@@ -463,7 +462,7 @@ std::array<Vector<N, T>, ParallelotopeOrtho<N, T>::VERTEX_COUNT> ParallelotopeOr
 }
 
 template <size_t N, typename T>
-std::array<std::array<Vector<N, T>, 2>, ParallelotopeOrtho<N, T>::VERTEX_RIDGE_COUNT> ParallelotopeOrtho<N, T>::
+std::array<std::array<Vector<N, T>, 2>, ParallelotopeAA<N, T>::VERTEX_RIDGE_COUNT> ParallelotopeAA<N, T>::
         vertex_ridges() const
 {
         std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> result;
@@ -471,7 +470,7 @@ std::array<std::array<Vector<N, T>, 2>, ParallelotopeOrtho<N, T>::VERTEX_RIDGE_C
         std::array<Vector<N, T>, N> vectors;
         for (unsigned i = 0; i < N; ++i)
         {
-                vectors[i] = parallelotope_ortho_implementation::index_vector<N, T>(i, m_planes[i].d2 - m_planes[i].d1);
+                vectors[i] = parallelotope_aa_implementation::index_vector<N, T>(i, m_planes[i].d2 - m_planes[i].d1);
         }
 
         unsigned count = 0;
@@ -497,7 +496,7 @@ std::array<std::array<Vector<N, T>, 2>, ParallelotopeOrtho<N, T>::VERTEX_RIDGE_C
 }
 
 template <size_t N, typename T>
-T ParallelotopeOrtho<N, T>::length() const
+T ParallelotopeAA<N, T>::length() const
 {
         Vector<N, T> s;
         for (unsigned i = 0; i < N; ++i)
@@ -508,7 +507,7 @@ T ParallelotopeOrtho<N, T>::length() const
 }
 
 template <size_t N, typename T>
-Vector<N, T> ParallelotopeOrtho<N, T>::org() const
+Vector<N, T> ParallelotopeAA<N, T>::org() const
 {
         Vector<N, T> v;
         for (unsigned i = 0; i < N; ++i)
@@ -519,16 +518,16 @@ Vector<N, T> ParallelotopeOrtho<N, T>::org() const
 }
 
 template <size_t N, typename T>
-Vector<N, T> ParallelotopeOrtho<N, T>::e(unsigned n) const
+Vector<N, T> ParallelotopeAA<N, T>::e(unsigned n) const
 {
         ASSERT(n < N);
-        return parallelotope_ortho_implementation::index_vector<N, T>(n, size(n));
+        return parallelotope_aa_implementation::index_vector<N, T>(n, size(n));
 }
 
 }
 
 template <size_t N, typename T>
-std::string to_string(const painter::ParallelotopeOrtho<N, T>& p)
+std::string to_string(const painter::ParallelotopeAA<N, T>& p)
 {
         std::string s;
         s += "org = " + to_string(p.org()) + "\n";

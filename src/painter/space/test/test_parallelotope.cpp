@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "test_parallelotope.h"
 
 #include "../parallelotope.h"
-#include "../parallelotope_ortho.h"
+#include "../parallelotope_aa.h"
 #include "../parallelotope_wrapper.h"
 #include "../shape_intersection.h"
 
@@ -125,7 +125,7 @@ std::array<Vector<N, T>, N> random_edges(RandomEngine& engine, Distribution& dis
 }
 
 template <size_t N, typename T, typename RandomEngine, typename Distribution>
-std::array<T, N> random_ortho_edges(RandomEngine& engine, Distribution& distribution)
+std::array<T, N> random_aa_edges(RandomEngine& engine, Distribution& distribution)
 {
         std::array<T, N> edges;
         for (unsigned i = 0; i < N; ++i)
@@ -538,21 +538,21 @@ void test_points(int point_count)
         LOG("Parallelotope points in " + space_name(N));
 
         print_separator();
-        LOG("parallelotope ortho");
+        LOG("ParallelotopeAA");
 
         {
                 Vector<N, T> org = random_vector<N, T>(engine, urd_org);
                 std::uniform_real_distribution<T> urd(0.1, 20);
-                std::array<T, N> edges = random_ortho_edges<N, T>(engine, urd);
-                ParallelotopeOrtho<N, T> p_ortho(org, edges);
+                std::array<T, N> edges = random_aa_edges<N, T>(engine, urd);
+                ParallelotopeAA<N, T> p(org, edges);
 
-                print_message(to_string(p_ortho));
+                print_message(to_string(p));
 
-                test_points(engine, point_count, p_ortho);
+                test_points(engine, point_count, p);
         }
 
         print_separator();
-        LOG("parallelotope");
+        LOG("Parallelotope");
 
         {
                 Vector<N, T> org = random_vector<N, T>(engine, urd_org);
@@ -566,23 +566,23 @@ void test_points(int point_count)
         }
 
         print_separator();
-        LOG("parallelotope comparison");
+        LOG("Parallelotope comparison");
 
         {
                 Vector<N, T> org = random_vector<N, T>(engine, urd_org);
                 std::uniform_real_distribution<T> urd(0.1, 20);
-                std::array<T, N> edges = random_ortho_edges<N, T>(engine, urd);
+                std::array<T, N> edges = random_aa_edges<N, T>(engine, urd);
 
-                ParallelotopeOrtho<N, T> p_ortho(org, edges);
+                ParallelotopeAA<N, T> p_aa(org, edges);
                 Parallelotope<N, T> p(org, to_edge_vector(edges));
 
-                print_message("#1\n" + to_string(p_ortho) + "\n#2\n" + to_string(p));
+                print_message("#1\n" + to_string(p_aa) + "\n#2\n" + to_string(p));
 
-                compare_parallelotopes(engine, point_count, p_ortho, p);
+                compare_parallelotopes(engine, point_count, p_aa, p);
         }
 
         print_separator();
-        LOG("check passed");
+        LOG("Check passed");
 }
 
 template <typename Parallelotope>
@@ -617,15 +617,15 @@ void test_algorithms()
         LOG("Parallelotope algorithms in " + space_name(N));
 
         print_separator();
-        LOG("parallelotope ortho");
+        LOG("ParallelotopeAA");
 
         {
-                ParallelotopeOrtho<N, T> p(org, edges);
+                ParallelotopeAA<N, T> p(org, edges);
                 test_algorithms(p);
         }
 
         print_separator();
-        LOG("parallelotope");
+        LOG("Parallelotope");
 
         {
                 Parallelotope<N, T> p(org, to_edge_vector(edges));
@@ -633,7 +633,7 @@ void test_algorithms()
         }
 
         print_separator();
-        LOG("check passed");
+        LOG("Check passed");
 }
 
 template <typename Parallelotope1, typename Parallelotope2>
@@ -672,13 +672,13 @@ void test_intersections()
         LOG("Parallelotope intersections in " + space_name(N));
 
         print_separator();
-        LOG("parallelotope ortho");
+        LOG("ParallelotopeAA");
 
         {
-                ParallelotopeOrtho<N, T> p1(org0, edges);
-                ParallelotopeOrtho<N, T> p2(org1, edges);
-                ParallelotopeOrtho<N, T> p3(org2, edges);
-                ParallelotopeOrtho<N, T> p_big(org_big, edges_big);
+                ParallelotopeAA<N, T> p1(org0, edges);
+                ParallelotopeAA<N, T> p2(org1, edges);
+                ParallelotopeAA<N, T> p3(org2, edges);
+                ParallelotopeAA<N, T> p_big(org_big, edges_big);
 
                 std::unique_ptr w1 = make_unique_wrapper(p1);
                 std::unique_ptr w2 = make_unique_wrapper(p2);
@@ -695,7 +695,7 @@ void test_intersections()
         }
 
         print_separator();
-        LOG("parallelotope");
+        LOG("Parallelotope");
 
         {
                 Parallelotope<N, T> p1(org0, to_edge_vector(edges));
@@ -718,7 +718,7 @@ void test_intersections()
         }
 
         print_separator();
-        LOG("check passed");
+        LOG("Check passed");
 }
 
 template <size_t N, typename T>

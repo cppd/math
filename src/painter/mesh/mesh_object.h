@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_facet.h"
 
 #include "../objects.h"
-#include "../space/parallelotope_ortho.h"
+#include "../space/parallelotope_aa.h"
 #include "../space/tree.h"
 
 #include <src/color/color.h>
@@ -36,7 +36,7 @@ namespace painter
 template <size_t N, typename T>
 class MeshObject final
 {
-        using TreeParallelotope = ParallelotopeOrtho<N, T>;
+        using TreeParallelotope = ParallelotopeAA<N, T>;
 
         struct Material
         {
