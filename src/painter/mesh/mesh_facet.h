@@ -59,6 +59,11 @@ class MeshFacet
 public:
         static constexpr size_t SPACE_DIMENSION = N;
         static constexpr size_t SHAPE_DIMENSION = N - 1;
+        static constexpr int VERTEX_COUNT = N;
+        // Количество сочетаний по 2 из N
+        // N! / ((N - 2)! * 2!) = (N * (N - 1)) / 2
+        static constexpr int VERTEX_RIDGE_COUNT = (N * (N - 1)) / 2;
+
         using DataType = T;
 
         MeshFacet(
@@ -84,6 +89,8 @@ public:
 
         std::array<Vector<N, T>, N> vertices() const;
 
-        void constraints(std::array<Constraint<N, T>, N>* c, Constraint<N, T>* c_eq) const;
+        void constraints(std::array<Constraint<N, T>, N>* c, std::array<Constraint<N, T>, 1>* c_eq) const;
+
+        std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> vertex_ridges() const;
 };
 }

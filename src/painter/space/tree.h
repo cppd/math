@@ -55,7 +55,7 @@ class Box final
 {
         static constexpr int EMPTY = -1;
 
-        static constexpr int CHILD_COUNT = BOX_COUNT<Parallelotope::DIMENSION>;
+        static constexpr int CHILD_COUNT = BOX_COUNT<Parallelotope::SPACE_DIMENSION>;
 
         Parallelotope m_parallelotope;
         std::vector<int> m_object_indices;
@@ -152,10 +152,10 @@ constexpr Parallelotope create_parallelotope_from_vector(
         const Vector<sizeof...(I), typename Parallelotope::DataType>& d,
         std::integer_sequence<size_t, I...>)
 {
-        static_assert(Parallelotope::DIMENSION == sizeof...(I));
+        static_assert(Parallelotope::SPACE_DIMENSION == sizeof...(I));
 
         using T = typename Parallelotope::DataType;
-        constexpr int N = Parallelotope::DIMENSION;
+        constexpr int N = Parallelotope::SPACE_DIMENSION;
 
         // Заполнение диагонали матрицы NxN значениями из d, остальные элементы 0
         std::array<Vector<N, T>, N> edges{(static_cast<void>(I), Vector<N, T>(0))...};
@@ -232,15 +232,15 @@ void min_max_and_distance(
 
 template <typename Parallelotope>
 Parallelotope root_parallelotope(
-        const Vector<Parallelotope::DIMENSION, typename Parallelotope::DataType>& min,
-        const Vector<Parallelotope::DIMENSION, typename Parallelotope::DataType>& max)
+        const Vector<Parallelotope::SPACE_DIMENSION, typename Parallelotope::DataType>& min,
+        const Vector<Parallelotope::SPACE_DIMENSION, typename Parallelotope::DataType>& max)
 {
         static_assert(std::is_floating_point_v<typename Parallelotope::DataType>);
 
-        const Vector<Parallelotope::DIMENSION, typename Parallelotope::DataType>& diagonal = max - min;
+        const Vector<Parallelotope::SPACE_DIMENSION, typename Parallelotope::DataType>& diagonal = max - min;
 
         return create_parallelotope_from_vector<Parallelotope>(
-                min, diagonal, std::make_integer_sequence<size_t, Parallelotope::DIMENSION>());
+                min, diagonal, std::make_integer_sequence<size_t, Parallelotope::SPACE_DIMENSION>());
 }
 
 template <typename Box>
@@ -314,13 +314,13 @@ public:
 };
 
 template <template <typename...> typename Container, typename Parallelotope, int... I>
-std::array<std::tuple<int, Box<Parallelotope>*, int>, BOX_COUNT<Parallelotope::DIMENSION>> create_child_boxes(
+std::array<std::tuple<int, Box<Parallelotope>*, int>, BOX_COUNT<Parallelotope::SPACE_DIMENSION>> create_child_boxes(
         SpinLock* boxes_lock,
         Container<Box<Parallelotope>>* boxes,
         const Parallelotope& parallelotope,
         std::integer_sequence<int, I...>)
 {
-        static_assert(BOX_COUNT<Parallelotope::DIMENSION> == sizeof...(I));
+        static_assert(BOX_COUNT<Parallelotope::SPACE_DIMENSION> == sizeof...(I));
         static_assert(((I >= 0 && I < sizeof...(I)) && ...));
 
         std::array<Parallelotope, sizeof...(I)> child_parallelotopes = parallelotope.binary_division();
@@ -352,7 +352,8 @@ try
                         std::deque<Box<
                                 Parallelotope>>> || std::is_same_v<Container<Box<Parallelotope>>, std::list<Box<Parallelotope>>>);
 
-        constexpr auto integer_sequence_n = std::make_integer_sequence<int, BOX_COUNT<Parallelotope::DIMENSION>>();
+        constexpr auto integer_sequence_n =
+                std::make_integer_sequence<int, BOX_COUNT<Parallelotope::SPACE_DIMENSION>>();
 
         Box<Parallelotope>* box = nullptr; // nullptr — предыдущей задачи нет.
         int depth;
@@ -414,7 +415,7 @@ class SpatialSubdivisionTree final
         using BoxJobs = spatial_subdivision_tree_implementation::BoxJobs<Box>;
 
         // Размерность задачи и тип данных
-        static constexpr int N = Parallelotope::DIMENSION;
+        static constexpr int N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
 
         // Адреса имеющихся элементов не должны меняться при вставке

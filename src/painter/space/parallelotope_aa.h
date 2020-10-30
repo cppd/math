@@ -125,7 +125,8 @@ class ParallelotopeAA final
         void vertices_impl(Vector<N, T>* p, const F& f) const;
 
 public:
-        static constexpr size_t DIMENSION = N;
+        static constexpr size_t SPACE_DIMENSION = N;
+        static constexpr size_t SHAPE_DIMENSION = N;
         static constexpr int VERTEX_COUNT = 1 << N;
         static_assert(N <= 27);
         // Количество вершин 2 ^ N умножить на количество измерений N у каждой вершины

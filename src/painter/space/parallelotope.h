@@ -85,7 +85,8 @@ class Parallelotope final
         void length_impl(const Vector<N, T>& sum, const F& f) const;
 
 public:
-        static constexpr size_t DIMENSION = N;
+        static constexpr size_t SPACE_DIMENSION = N;
+        static constexpr size_t SHAPE_DIMENSION = N;
         static constexpr int VERTEX_COUNT = 1 << N;
         static_assert(N <= 27);
         // Количество вершин 2 ^ N умножить на количество измерений N у каждой вершины
@@ -114,7 +115,7 @@ public:
 
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
 
-        std::array<std::array<Vector<N, T>, 2>, Parallelotope<N, T>::VERTEX_RIDGE_COUNT> vertex_ridges() const;
+        std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> vertex_ridges() const;
 
         T length() const;
 

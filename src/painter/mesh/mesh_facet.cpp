@@ -228,9 +228,25 @@ std::array<Vector<N, T>, N> MeshFacet<N, T>::vertices() const
 }
 
 template <size_t N, typename T>
-void MeshFacet<N, T>::constraints(std::array<Constraint<N, T>, N>* c, Constraint<N, T>* c_eq) const
+void MeshFacet<N, T>::constraints(std::array<Constraint<N, T>, N>* c, std::array<Constraint<N, T>, 1>* c_eq) const
 {
         m_geometry.constraints(m_normal, vertices_to_array(m_vertices, m_v), c, c_eq);
+}
+
+template <size_t N, typename T>
+std::array<std::array<Vector<N, T>, 2>, MeshFacet<N, T>::VERTEX_RIDGE_COUNT> MeshFacet<N, T>::vertex_ridges() const
+{
+        std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> result;
+        unsigned n = 0;
+        for (unsigned i = 0; i < N - 1; ++i)
+        {
+                for (unsigned j = i + 1; j < N; ++j)
+                {
+                        result[n++] = {m_vertices[m_v[i]], m_vertices[m_v[j]] - m_vertices[m_v[i]]};
+                }
+        }
+        ASSERT(n == VERTEX_RIDGE_COUNT);
+        return result;
 }
 
 template class MeshFacet<3, float>;

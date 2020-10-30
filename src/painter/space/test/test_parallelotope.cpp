@@ -61,7 +61,7 @@ template <>
 constexpr double MAX_DOT_PRODUCT_OF_EDGES<double> = 0.9;
 
 template <typename Parallelotope>
-using VectorP = Vector<Parallelotope::DIMENSION, typename Parallelotope::DataType>;
+using VectorP = Vector<Parallelotope::SPACE_DIMENSION, typename Parallelotope::DataType>;
 
 void print_separator()
 {
@@ -142,7 +142,7 @@ std::vector<VectorP<Parallelotope>> external_points(
         const Parallelotope& p,
         std::integer_sequence<size_t, I...>)
 {
-        constexpr size_t N = Parallelotope::DIMENSION;
+        constexpr size_t N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
 
         static_assert(sizeof...(I) == N);
@@ -177,7 +177,7 @@ std::vector<VectorP<Parallelotope>> internal_points(
         const Parallelotope& p,
         std::integer_sequence<size_t, I...>)
 {
-        constexpr size_t N = Parallelotope::DIMENSION;
+        constexpr size_t N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
 
         static_assert(sizeof...(I) == N);
@@ -208,7 +208,7 @@ std::vector<VectorP<Parallelotope>> cover_points(
         const Parallelotope& p,
         std::integer_sequence<size_t, I...>)
 {
-        constexpr size_t N = Parallelotope::DIMENSION;
+        constexpr size_t N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
 
         static_assert(sizeof...(I) == N);
@@ -325,7 +325,7 @@ bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Con
 template <typename RandomEngine, typename Parallelotope>
 void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
 {
-        constexpr size_t N = Parallelotope::DIMENSION;
+        constexpr size_t N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
 
         T length = p.length();
@@ -409,7 +409,7 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
 template <size_t N, typename T, typename... Parallelotope>
 void verify_intersection(const Ray<N, T>& ray, const Parallelotope&... p)
 {
-        static_assert(((N == Parallelotope::DIMENSION) && ...));
+        static_assert(((N == Parallelotope::SPACE_DIMENSION) && ...));
         static_assert(((std::is_same_v<T, typename Parallelotope::DataType>)&&...));
 
         std::array<T, sizeof...(Parallelotope)> distances;
@@ -448,10 +448,10 @@ void compare_parallelotopes(RandomEngine& engine, int point_count, const Paralle
 {
         static_assert(sizeof...(Parallelotope) >= 2);
 
-        constexpr size_t N = std::get<0>(std::make_tuple(Parallelotope::DIMENSION...));
+        constexpr size_t N = std::get<0>(std::make_tuple(Parallelotope::SPACE_DIMENSION...));
         using T = typename std::tuple_element_t<0, std::tuple<Parallelotope...>>::DataType;
 
-        static_assert(((N == Parallelotope::DIMENSION) && ...));
+        static_assert(((N == Parallelotope::SPACE_DIMENSION) && ...));
         static_assert(((std::is_same_v<T, typename Parallelotope::DataType>)&&...));
 
         std::array<T, sizeof...(Parallelotope)> lengths{p.length()...};

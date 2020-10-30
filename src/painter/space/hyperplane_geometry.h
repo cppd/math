@@ -125,7 +125,7 @@ public:
                 Vector<N, T> simplex_normal,
                 const std::array<Vector<N, T>, N>& vertices,
                 std::array<Constraint<N, T>, N>* c,
-                Constraint<N, T>* c_eq) const
+                std::array<Constraint<N, T>, 1>* c_eq) const
         {
                 // На основе уравнений плоскостей n * x - d = 0, перпендикуляры которых направлены
                 // внутрь симплекса, а значит получается условие n * x - d >= 0 или условие -d + n * x >= 0.
@@ -162,8 +162,8 @@ public:
 
                 // На основе уравнения плоскости симплекса n * x - d = 0
                 d = dot(vertices[0], simplex_normal);
-                c_eq->a = simplex_normal;
-                c_eq->b = -d;
+                (*c_eq)[0].a = simplex_normal;
+                (*c_eq)[0].b = -d;
         }
 
         T barycentric_coordinate(const Vector<N, T>& point, unsigned i) const

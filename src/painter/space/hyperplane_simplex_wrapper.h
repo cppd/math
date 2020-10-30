@@ -32,7 +32,6 @@ namespace painter
 template <typename Simplex, typename = void>
 class HyperplaneSimplexWrapperForShapeIntersection final
 {
-        static_assert(Simplex::SPACE_DIMENSION == Simplex::SHAPE_DIMENSION + 1);
         // Для меньшего количества измерений есть второй класс
         static_assert(Simplex::SPACE_DIMENSION >= 4);
 
@@ -54,15 +53,15 @@ class HyperplaneSimplexWrapperForShapeIntersection final
         Vector<N, T> m_min, m_max;
 
 public:
-        static constexpr size_t SPACE_DIMENSION = N;
-        static constexpr size_t SHAPE_DIMENSION = N - 1;
+        static constexpr size_t SPACE_DIMENSION = Simplex::SPACE_DIMENSION;
+        static constexpr size_t SHAPE_DIMENSION = Simplex::SHAPE_DIMENSION;
         using DataType = T;
 
         explicit HyperplaneSimplexWrapperForShapeIntersection(const Simplex& s) : m_simplex(s), m_vertices(s.vertices())
         {
                 static_assert(std::remove_reference_t<decltype(s.vertices())>().size() == N);
 
-                m_simplex.constraints(&m_constraints, &m_constraints_eq[0]);
+                m_simplex.constraints(&m_constraints, &m_constraints_eq);
 
                 min_max_vector(m_vertices, &m_min, &m_max);
         }
@@ -96,22 +95,15 @@ public:
 template <typename Simplex>
 class HyperplaneSimplexWrapperForShapeIntersection<Simplex, std::enable_if_t<Simplex::SPACE_DIMENSION == 3>> final
 {
-        static_assert(Simplex::SPACE_DIMENSION == Simplex::SHAPE_DIMENSION + 1);
         static_assert(Simplex::SPACE_DIMENSION == 3);
 
         static constexpr size_t N = Simplex::SPACE_DIMENSION;
         using T = typename Simplex::DataType;
 
-        static constexpr int VERTEX_COUNT = N;
-
-        // Количество сочетаний по 2 из N
-        // N! / ((N - 2)! * 2!) = (N * (N - 1)) / 2
-        static constexpr int VERTEX_RIDGE_COUNT = (N * (N - 1)) / 2;
-
-        using Vertices = std::array<Vector<N, T>, VERTEX_COUNT>;
+        using Vertices = std::array<Vector<N, T>, Simplex::VERTEX_COUNT>;
 
         // Элементы массива — вершина откуда и вектор к другой вершине
-        using VertexRidges = std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT>;
+        using VertexRidges = std::array<std::array<Vector<N, T>, 2>, Simplex::VERTEX_RIDGE_COUNT>;
 
         const Simplex& m_simplex;
 
@@ -119,22 +111,13 @@ class HyperplaneSimplexWrapperForShapeIntersection<Simplex, std::enable_if_t<Sim
         VertexRidges m_vertex_ridges;
 
 public:
-        static constexpr size_t SPACE_DIMENSION = N;
-        static constexpr size_t SHAPE_DIMENSION = N - 1;
+        static constexpr size_t SPACE_DIMENSION = Simplex::SPACE_DIMENSION;
+        static constexpr size_t SHAPE_DIMENSION = Simplex::SHAPE_DIMENSION;
         using DataType = T;
 
-        explicit HyperplaneSimplexWrapperForShapeIntersection(const Simplex& s) : m_simplex(s), m_vertices(s.vertices())
+        explicit HyperplaneSimplexWrapperForShapeIntersection(const Simplex& s)
+                : m_simplex(s), m_vertices(s.vertices()), m_vertex_ridges(s.vertex_ridges())
         {
-                static_assert(std::remove_reference_t<decltype(s.vertices())>().size() == N);
-
-                unsigned n = 0;
-                for (unsigned i = 0; i < m_vertices.size() - 1; ++i)
-                {
-                        for (unsigned j = i + 1; j < m_vertices.size(); ++j)
-                        {
-                                m_vertex_ridges[n++] = {m_vertices[i], m_vertices[j] - m_vertices[i]};
-                        }
-                }
         }
 
         bool intersect(const Ray<N, T>& r, T* t) const

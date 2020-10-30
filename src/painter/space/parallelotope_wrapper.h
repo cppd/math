@@ -33,9 +33,9 @@ template <typename Parallelotope, typename = void>
 class ParallelotopeWrapperForShapeIntersection final
 {
         // Для меньшего количества измерений есть второй класс
-        static_assert(Parallelotope::DIMENSION >= 4);
+        static_assert(Parallelotope::SPACE_DIMENSION >= 4);
 
-        static constexpr size_t N = Parallelotope::DIMENSION;
+        static constexpr size_t N = Parallelotope::SPACE_DIMENSION;
 
         using T = typename Parallelotope::DataType;
         using Vertices = std::array<Vector<N, T>, Parallelotope::VERTEX_COUNT>;
@@ -51,8 +51,8 @@ class ParallelotopeWrapperForShapeIntersection final
         Vector<N, T> m_min, m_max;
 
 public:
-        static constexpr size_t SPACE_DIMENSION = N;
-        static constexpr size_t SHAPE_DIMENSION = N;
+        static constexpr size_t SPACE_DIMENSION = Parallelotope::SPACE_DIMENSION;
+        static constexpr size_t SHAPE_DIMENSION = Parallelotope::SHAPE_DIMENSION;
         using DataType = T;
 
         explicit ParallelotopeWrapperForShapeIntersection(const Parallelotope& p)
@@ -97,12 +97,12 @@ public:
 template <typename Parallelotope>
 class ParallelotopeWrapperForShapeIntersection<
         Parallelotope,
-        std::enable_if_t<Parallelotope::DIMENSION == 2 || Parallelotope::DIMENSION == 3>>
+        std::enable_if_t<Parallelotope::SPACE_DIMENSION == 2 || Parallelotope::SPACE_DIMENSION == 3>>
         final
 {
-        static_assert(Parallelotope::DIMENSION == 2 || Parallelotope::DIMENSION == 3);
+        static_assert(Parallelotope::SPACE_DIMENSION == 2 || Parallelotope::SPACE_DIMENSION == 3);
 
-        static constexpr size_t N = Parallelotope::DIMENSION;
+        static constexpr size_t N = Parallelotope::SPACE_DIMENSION;
 
         using T = typename Parallelotope::DataType;
         using Vertices = std::array<Vector<N, T>, Parallelotope::VERTEX_COUNT>;
@@ -114,8 +114,8 @@ class ParallelotopeWrapperForShapeIntersection<
         VertexRidges m_vertex_ridges;
 
 public:
-        static constexpr size_t SPACE_DIMENSION = N;
-        static constexpr size_t SHAPE_DIMENSION = N;
+        static constexpr size_t SPACE_DIMENSION = Parallelotope::SPACE_DIMENSION;
+        static constexpr size_t SHAPE_DIMENSION = Parallelotope::SHAPE_DIMENSION;
         using DataType = T;
 
         explicit ParallelotopeWrapperForShapeIntersection(const Parallelotope& p)
