@@ -38,16 +38,13 @@ class ParallelotopeWrapperForShapeIntersection final
         static constexpr size_t N = Parallelotope::SPACE_DIMENSION;
 
         using T = typename Parallelotope::DataType;
-        using Vertices = std::array<Vector<N, T>, Parallelotope::VERTEX_COUNT>;
-        using Constraints = std::array<Constraint<N, T>, 2 * N>;
-        using ConstraintsEq = std::array<Constraint<N, T>, 0>;
+        using Vertices = decltype(std::declval<Parallelotope>().vertices());
+        using Constraints = decltype(std::declval<Parallelotope>().constraints());
 
         const Parallelotope& m_parallelotope;
 
         Vertices m_vertices;
         Constraints m_constraints;
-        static constexpr ConstraintsEq m_constraints_eq{};
-
         Vector<N, T> m_min, m_max;
 
 public:
@@ -56,10 +53,8 @@ public:
         using DataType = T;
 
         explicit ParallelotopeWrapperForShapeIntersection(const Parallelotope& p)
-                : m_parallelotope(p), m_vertices(p.vertices())
+                : m_parallelotope(p), m_vertices(p.vertices()), m_constraints(p.constraints())
         {
-                m_parallelotope.constraints(&m_constraints);
-
                 min_max_vector(m_vertices, &m_min, &m_max);
         }
 
@@ -76,11 +71,6 @@ public:
         const Constraints& constraints() const
         {
                 return m_constraints;
-        }
-
-        const ConstraintsEq& constraints_eq() const
-        {
-                return m_constraints_eq;
         }
 
         const Vector<N, T>& min() const
@@ -105,8 +95,8 @@ class ParallelotopeWrapperForShapeIntersection<
         static constexpr size_t N = Parallelotope::SPACE_DIMENSION;
 
         using T = typename Parallelotope::DataType;
-        using Vertices = std::array<Vector<N, T>, Parallelotope::VERTEX_COUNT>;
-        using VertexRidges = std::array<std::array<Vector<N, T>, 2>, Parallelotope::VERTEX_RIDGE_COUNT>;
+        using Vertices = decltype(std::declval<Parallelotope>().vertices());
+        using VertexRidges = decltype(std::declval<Parallelotope>().vertex_ridges());
 
         const Parallelotope& m_parallelotope;
 

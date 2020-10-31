@@ -47,10 +47,17 @@ class Parallelotope final
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
+        static_assert(N <= 27);
+
         // Количество объектов после деления по каждому измерению
-        static_assert(N <= 32);
-        static constexpr size_t DIVISIONS = 1ull << N;
+        static constexpr int DIVISIONS = 1 << N;
+
         static constexpr int DIAGONAL_COUNT = 1 << (N - 1);
+        static constexpr int VERTEX_COUNT = 1 << N;
+
+        // Количество вершин 2 ^ N умножить на количество измерений N у каждой вершины
+        // и для уникальности разделить на 2 = ((2 ^ N) * N) / 2 = (2 ^ (N - 1)) * N
+        static constexpr int VERTEX_RIDGE_COUNT = (1 << (N - 1)) * N;
 
         struct Planes
         {
@@ -87,11 +94,6 @@ class Parallelotope final
 public:
         static constexpr size_t SPACE_DIMENSION = N;
         static constexpr size_t SHAPE_DIMENSION = N;
-        static constexpr int VERTEX_COUNT = 1 << N;
-        static_assert(N <= 27);
-        // Количество вершин 2 ^ N умножить на количество измерений N у каждой вершины
-        // и для уникальности разделить на 2 = ((2 ^ N) * N) / 2 = (2 ^ (N - 1)) * N
-        static constexpr int VERTEX_RIDGE_COUNT = (1 << (N - 1)) * N;
 
         using DataType = T;
 
@@ -102,7 +104,7 @@ public:
 
         Parallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
 
-        void constraints(std::array<Constraint<N, T>, 2 * N>* c) const;
+        Constraints<N, T, 2 * N, 0> constraints() const;
 
         bool inside(const Vector<N, T>& p) const;
 
@@ -165,19 +167,23 @@ void Parallelotope<N, T>::set_data(const Vector<N, T>& org, const std::array<Vec
 
 // Неравенства в виде b + a * x >= 0, задающие множество точек параллелотопа.
 template <size_t N, typename T>
-void Parallelotope<N, T>::constraints(std::array<Constraint<N, T>, 2 * N>* c) const
+Constraints<N, T, 2 * N, 0> Parallelotope<N, T>::constraints() const
 {
+        Constraints<N, T, 2 * N, 0> result;
+
         // Плоскости n * x - d имеют перпендикуляр с направлением наружу.
         // Направление внутрь -n * x + d или d + -(n * x), тогда условие
         // для точек параллелотопа d + -(n * x) >= 0.
         for (unsigned i = 0, c_i = 0; i < N; ++i, c_i += 2)
         {
-                (*c)[c_i].a = m_planes[i].n;
-                (*c)[c_i].b = -m_planes[i].d1;
+                result.c[c_i].a = m_planes[i].n;
+                result.c[c_i].b = -m_planes[i].d1;
 
-                (*c)[c_i + 1].a = -m_planes[i].n;
-                (*c)[c_i + 1].b = m_planes[i].d2;
+                result.c[c_i + 1].a = -m_planes[i].n;
+                result.c[c_i + 1].b = m_planes[i].d2;
         }
+
+        return result;
 }
 
 template <size_t N, typename T>
@@ -349,12 +355,12 @@ std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N,
                 middle_d[i] = (m_planes[i].d2 + m_planes[i].d1) / static_cast<T>(2);
         }
 
-        for (size_t division = 0; division < DIVISIONS; ++division)
+        for (Parallelotope& p : result)
         {
-                result[division].m_vectors = half_vectors;
+                p.m_vectors = half_vectors;
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        result[division].m_planes[i].n = m_planes[i].n;
+                        p.m_planes[i].n = m_planes[i].n;
                 }
         }
 

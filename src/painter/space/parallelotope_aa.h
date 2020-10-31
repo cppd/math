@@ -101,9 +101,16 @@ class ParallelotopeAA final
         static constexpr std::array<Vector<N, T>, N> NORMALS_NEGATIVE =
                 parallelotope_aa_implementation::index_vectors<N, T>(-1);
 
+        static_assert(N <= 27);
+
         // Количество объектов после деления по каждому измерению
-        static_assert(N <= 32);
-        static constexpr size_t DIVISIONS = 1ull << N;
+        static constexpr int DIVISIONS = 1 << N;
+
+        static constexpr int VERTEX_COUNT = 1 << N;
+
+        // Количество вершин 2 ^ N умножить на количество измерений N у каждой вершины
+        // и для уникальности разделить на 2 = ((2 ^ N) * N) / 2 = (2 ^ (N - 1)) * N
+        static constexpr int VERTEX_RIDGE_COUNT = (1 << (N - 1)) * N;
 
         struct Planes
         {
@@ -127,11 +134,6 @@ class ParallelotopeAA final
 public:
         static constexpr size_t SPACE_DIMENSION = N;
         static constexpr size_t SHAPE_DIMENSION = N;
-        static constexpr int VERTEX_COUNT = 1 << N;
-        static_assert(N <= 27);
-        // Количество вершин 2 ^ N умножить на количество измерений N у каждой вершины
-        // и для уникальности разделить на 2 = ((2 ^ N) * N) / 2 = (2 ^ (N - 1)) * N
-        static constexpr int VERTEX_RIDGE_COUNT = (1 << (N - 1)) * N;
 
         using DataType = T;
 
@@ -142,7 +144,7 @@ public:
 
         ParallelotopeAA(const Vector<N, T>& org, const std::array<T, N>& vectors);
 
-        void constraints(std::array<Constraint<N, T>, 2 * N>* c) const;
+        Constraints<N, T, 2 * N, 0> constraints() const;
 
         bool inside(const Vector<N, T>& p) const;
 
@@ -238,19 +240,23 @@ T ParallelotopeAA<N, T>::size(unsigned i) const
 
 // Неравенства в виде b + a * x >= 0, задающие множество точек параллелотопа.
 template <size_t N, typename T>
-void ParallelotopeAA<N, T>::constraints(std::array<Constraint<N, T>, 2 * N>* c) const
+Constraints<N, T, 2 * N, 0> ParallelotopeAA<N, T>::constraints() const
 {
+        Constraints<N, T, 2 * N, 0> result;
+
         // Плоскости n * x - d имеют перпендикуляр с направлением наружу.
         // Направление внутрь -n * x + d или d + -(n * x), тогда условие
         // для точек параллелотопа d + -(n * x) >= 0.
         for (unsigned i = 0, c_i = 0; i < N; ++i, c_i += 2)
         {
-                (*c)[c_i].a = NORMALS_POSITIVE[i];
-                (*c)[c_i].b = -m_planes[i].d1;
+                result.c[c_i].a = NORMALS_POSITIVE[i];
+                result.c[c_i].b = -m_planes[i].d1;
 
-                (*c)[c_i + 1].a = NORMALS_NEGATIVE[i];
-                (*c)[c_i + 1].b = m_planes[i].d2;
+                result.c[c_i + 1].a = NORMALS_NEGATIVE[i];
+                result.c[c_i + 1].b = m_planes[i].d2;
         }
+
+        return result;
 }
 
 template <size_t N, typename T>

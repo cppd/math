@@ -33,6 +33,12 @@ class MeshFacet
 {
         static_assert(N >= 3);
 
+        static constexpr int VERTEX_COUNT = N;
+
+        // Количество сочетаний по 2 из N
+        // N! / ((N - 2)! * 2!) = (N * (N - 1)) / 2
+        static constexpr int VERTEX_RIDGE_COUNT = (N * (N - 1)) / 2;
+
         const std::vector<Vector<N, T>>& m_vertices;
         const std::vector<Vector<N, T>>& m_normals;
         const std::vector<Vector<N - 1, T>>& m_texcoords;
@@ -59,10 +65,6 @@ class MeshFacet
 public:
         static constexpr size_t SPACE_DIMENSION = N;
         static constexpr size_t SHAPE_DIMENSION = N - 1;
-        static constexpr int VERTEX_COUNT = N;
-        // Количество сочетаний по 2 из N
-        // N! / ((N - 2)! * 2!) = (N * (N - 1)) / 2
-        static constexpr int VERTEX_RIDGE_COUNT = (N * (N - 1)) / 2;
 
         using DataType = T;
 
@@ -87,10 +89,8 @@ public:
         Vector<N, T> geometric_normal() const;
         Vector<N, T> shading_normal(const Vector<N, T>& point) const;
 
-        std::array<Vector<N, T>, N> vertices() const;
-
-        void constraints(std::array<Constraint<N, T>, N>* c, std::array<Constraint<N, T>, 1>* c_eq) const;
-
+        std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
+        Constraints<N, T, N, 1> constraints() const;
         std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> vertex_ridges() const;
 };
 }

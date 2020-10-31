@@ -330,9 +330,7 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
 
         T length = p.length();
 
-        std::array<Constraint<N, T>, 2 * N> c;
-
-        p.constraints(&c);
+        const Constraints<N, T, 2 * N, 0> constraints = p.constraints();
 
         for (const Vector<N, T>& point :
              external_points(engine, point_count, p, std::make_integer_sequence<size_t, N>()))
@@ -342,7 +340,7 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
                         error("Inside. Point must be outside\n" + to_string(point));
                 }
 
-                if (point_is_in_feasible_region(point, c))
+                if (point_is_in_feasible_region(point, constraints.c))
                 {
                         error("Constraints. Point must be outside\n" + to_string(point));
                 }
@@ -356,7 +354,7 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
                         error("Inside. Point must be inside\n" + to_string(origin));
                 }
 
-                if (!point_is_in_feasible_region(origin, c))
+                if (!point_is_in_feasible_region(origin, constraints.c))
                 {
                         error("Constraints. Point must be inside\n" + to_string(origin));
                 }

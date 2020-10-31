@@ -58,6 +58,45 @@ constexpr size_t size()
         return std::remove_reference_t<T>().size();
 }
 
+template <typename Shape>
+constexpr std::enable_if_t<(size<decltype(std::declval<Shape>().constraints().c_eq)>() >= 0), size_t> constraint_count()
+{
+        static_assert(size<decltype(std::declval<Shape>().constraints().c)>() > 0);
+        static_assert(size<decltype(std::declval<Shape>().constraints().c_eq)>() > 0);
+        static_assert(
+                Shape::SHAPE_DIMENSION + size<decltype(std::declval<Shape>().constraints().c_eq)>()
+                == Shape::SPACE_DIMENSION);
+        return size<decltype(std::declval<Shape>().constraints().c)>()
+               + size<decltype(std::declval<Shape>().constraints().c_eq)>();
+}
+
+template <typename Shape>
+constexpr std::enable_if_t<Shape::SPACE_DIMENSION == Shape::SHAPE_DIMENSION, size_t> constraint_count()
+{
+        static_assert(size<decltype(std::declval<Shape>().constraints().c)>() > 0);
+        return size<decltype(std::declval<Shape>().constraints().c)>();
+}
+
+template <typename Shape1, typename Shape2>
+const Constraint<Shape1::SPACE_DIMENSION, typename Shape1::DataType>& constraint_eq(
+        const Shape1& shape_1,
+        const Shape2& shape_2)
+{
+        static_assert(
+                (size<decltype(std::declval<Shape1>().constraints().c)>() == constraint_count<Shape1>())
+                != (size<decltype(std::declval<Shape2>().constraints().c)>() == constraint_count<Shape2>()));
+        if constexpr (size<decltype(std::declval<Shape1>().constraints().c)>() == constraint_count<Shape1>())
+        {
+                static_assert(std::is_reference_v<decltype(shape_2.constraints())>);
+                return shape_2.constraints().c_eq[0];
+        }
+        if constexpr (size<decltype(std::declval<Shape2>().constraints().c)>() == constraint_count<Shape2>())
+        {
+                static_assert(std::is_reference_v<decltype(shape_1.constraints())>);
+                return shape_1.constraints().c_eq[0];
+        }
+}
+
 template <typename Shape1, typename Shape2>
 bool shapes_intersect_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
 {
@@ -162,7 +201,7 @@ bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2
         constexpr size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
 
-        for (const Constraint<N, T>& constraint : shape_1.constraints())
+        for (const Constraint<N, T>& constraint : shape_1.constraints().c)
         {
                 if (all_vertices_are_on_negative_side(shape_2.vertices(), constraint))
                 {
@@ -170,7 +209,7 @@ bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2
                 }
         }
 
-        for (const Constraint<N, T>& constraint : shape_2.constraints())
+        for (const Constraint<N, T>& constraint : shape_2.constraints().c)
         {
                 if (all_vertices_are_on_negative_side(shape_1.vertices(), constraint))
                 {
@@ -178,19 +217,25 @@ bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2
                 }
         }
 
-        for (const Constraint<N, T>& constraint : shape_1.constraints_eq())
+        if constexpr (N > Shape1::SHAPE_DIMENSION)
         {
-                if (all_vertices_are_on_the_same_side(shape_2.vertices(), constraint))
+                for (const Constraint<N, T>& constraint_eq : shape_1.constraints().c_eq)
                 {
-                        return true;
+                        if (all_vertices_are_on_the_same_side(shape_2.vertices(), constraint_eq))
+                        {
+                                return true;
+                        }
                 }
         }
 
-        for (const Constraint<N, T>& constraint : shape_2.constraints_eq())
+        if constexpr (N > Shape2::SHAPE_DIMENSION)
         {
-                if (all_vertices_are_on_the_same_side(shape_1.vertices(), constraint))
+                for (const Constraint<N, T>& constraint_eq : shape_2.constraints().c_eq)
                 {
-                        return true;
+                        if (all_vertices_are_on_the_same_side(shape_1.vertices(), constraint_eq))
+                        {
+                                return true;
+                        }
                 }
         }
 
@@ -203,9 +248,10 @@ bool shapes_intersect_by_spaces(const Shape1& shape_1, const Shape2& shape_2)
         constexpr size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
 
-        constexpr size_t CONSTRAINT_COUNT =
-                size<decltype(shape_1.constraints())>() + size<decltype(shape_2.constraints())>()
-                + size<decltype(shape_1.constraints_eq())>() + size<decltype(shape_2.constraints_eq())>();
+        static_assert(size<decltype(shape_1.constraints().c)>() > 0);
+        static_assert(size<decltype(shape_2.constraints().c)>() > 0);
+
+        constexpr size_t CONSTRAINT_COUNT = constraint_count<Shape1>() + constraint_count<Shape2>();
 
         const Vector<N, T> min = min_vector(shape_1.min(), shape_2.min());
 
@@ -220,34 +266,39 @@ bool shapes_intersect_by_spaces(const Shape1& shape_1, const Shape2& shape_2)
 
         int i = 0;
 
-        for (const Constraint<N, T>& c : shape_1.constraints())
+        for (const Constraint<N, T>& c : shape_1.constraints().c)
         {
                 a[i] = c.a;
                 b[i] = dot(c.a, min) + c.b;
                 ++i;
         }
-        for (const Constraint<N, T>& c : shape_2.constraints())
+        for (const Constraint<N, T>& c : shape_2.constraints().c)
         {
                 a[i] = c.a;
                 b[i] = dot(c.a, min) + c.b;
                 ++i;
         }
 
-        static_assert(1 >= size<decltype(shape_1.constraints_eq())>() + size<decltype(shape_2.constraints_eq())>());
+        static_assert(
+                CONSTRAINT_COUNT
+                <= 1 + size<decltype(shape_1.constraints().c)>() + size<decltype(shape_2.constraints().c)>());
 
-        if constexpr (0 == size<decltype(shape_1.constraints_eq())>() + size<decltype(shape_2.constraints_eq())>())
+        if constexpr (
+                CONSTRAINT_COUNT
+                == size<decltype(shape_1.constraints().c)>() + size<decltype(shape_2.constraints().c)>())
         {
                 ASSERT(i == CONSTRAINT_COUNT);
 
                 return (numerical::solve_constraints(a, b) == numerical::ConstraintSolution::Feasible);
         }
 
-        if constexpr (1 == size<decltype(shape_1.constraints_eq())>() + size<decltype(shape_2.constraints_eq())>())
+        if constexpr (
+                CONSTRAINT_COUNT
+                == 1 + size<decltype(shape_1.constraints().c)>() + size<decltype(shape_2.constraints().c)>())
         {
                 ASSERT(i + 1 == CONSTRAINT_COUNT);
 
-                const Constraint<N, T>& c =
-                        !shape_1.constraints_eq().empty() ? shape_1.constraints_eq()[0] : shape_2.constraints_eq()[0];
+                const Constraint<N, T>& c = constraint_eq(shape_1, shape_2);
 
                 const Vector<N, T> a_v = c.a;
                 const T b_v = dot(c.a, min) + c.b;
@@ -277,10 +328,16 @@ void static_checks(const Shape1& shape_1, const Shape2& shape_2)
 
         if constexpr (N >= 4)
         {
-                static_assert(size<decltype(shape_1.constraints())>() >= Shape1::SHAPE_DIMENSION + 1);
-                static_assert(size<decltype(shape_2.constraints())>() >= Shape2::SHAPE_DIMENSION + 1);
-                static_assert(size<decltype(shape_1.constraints_eq())>() + Shape1::SHAPE_DIMENSION == N);
-                static_assert(size<decltype(shape_2.constraints_eq())>() + Shape2::SHAPE_DIMENSION == N);
+                static_assert(size<decltype(shape_1.constraints().c)>() >= Shape1::SHAPE_DIMENSION + 1);
+                static_assert(size<decltype(shape_2.constraints().c)>() >= Shape2::SHAPE_DIMENSION + 1);
+                if constexpr (N > Shape1::SHAPE_DIMENSION)
+                {
+                        static_assert(size<decltype(shape_1.constraints().c_eq)>() + Shape1::SHAPE_DIMENSION == N);
+                }
+                if constexpr (N > Shape2::SHAPE_DIMENSION)
+                {
+                        static_assert(size<decltype(shape_2.constraints().c_eq)>() + Shape2::SHAPE_DIMENSION == N);
+                }
         }
 }
 }

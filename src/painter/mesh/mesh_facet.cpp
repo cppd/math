@@ -222,15 +222,15 @@ int MeshFacet<N, T>::material() const
 }
 
 template <size_t N, typename T>
-std::array<Vector<N, T>, N> MeshFacet<N, T>::vertices() const
+std::array<Vector<N, T>, MeshFacet<N, T>::VERTEX_COUNT> MeshFacet<N, T>::vertices() const
 {
         return vertices_to_array(m_vertices, m_v);
 }
 
 template <size_t N, typename T>
-void MeshFacet<N, T>::constraints(std::array<Constraint<N, T>, N>* c, std::array<Constraint<N, T>, 1>* c_eq) const
+Constraints<N, T, N, 1> MeshFacet<N, T>::constraints() const
 {
-        m_geometry.constraints(m_normal, vertices_to_array(m_vertices, m_v), c, c_eq);
+        return m_geometry.constraints(m_normal, vertices_to_array(m_vertices, m_v));
 }
 
 template <size_t N, typename T>

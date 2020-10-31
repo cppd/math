@@ -36,20 +36,15 @@ class HyperplaneSimplexWrapperForShapeIntersection final
         static_assert(Simplex::SPACE_DIMENSION >= 4);
 
         static constexpr size_t N = Simplex::SPACE_DIMENSION;
+
         using T = typename Simplex::DataType;
-
-        static constexpr int VERTEX_COUNT = N;
-
-        using Vertices = std::array<Vector<N, T>, VERTEX_COUNT>;
-
-        using Constraints = std::array<Constraint<N, T>, N>;
-        using ConstraintsEq = std::array<Constraint<N, T>, 1>;
+        using Vertices = decltype(std::declval<Simplex>().vertices());
+        using Constraints = decltype(std::declval<Simplex>().constraints());
 
         const Simplex& m_simplex;
 
         Vertices m_vertices;
         Constraints m_constraints;
-        ConstraintsEq m_constraints_eq;
         Vector<N, T> m_min, m_max;
 
 public:
@@ -57,12 +52,9 @@ public:
         static constexpr size_t SHAPE_DIMENSION = Simplex::SHAPE_DIMENSION;
         using DataType = T;
 
-        explicit HyperplaneSimplexWrapperForShapeIntersection(const Simplex& s) : m_simplex(s), m_vertices(s.vertices())
+        explicit HyperplaneSimplexWrapperForShapeIntersection(const Simplex& s)
+                : m_simplex(s), m_vertices(s.vertices()), m_constraints(m_simplex.constraints())
         {
-                static_assert(std::remove_reference_t<decltype(s.vertices())>().size() == N);
-
-                m_simplex.constraints(&m_constraints, &m_constraints_eq);
-
                 min_max_vector(m_vertices, &m_min, &m_max);
         }
 
@@ -74,11 +66,6 @@ public:
         const Constraints& constraints() const
         {
                 return m_constraints;
-        }
-
-        const ConstraintsEq& constraints_eq() const
-        {
-                return m_constraints_eq;
         }
 
         const Vector<N, T>& min() const
@@ -98,12 +85,10 @@ class HyperplaneSimplexWrapperForShapeIntersection<Simplex, std::enable_if_t<Sim
         static_assert(Simplex::SPACE_DIMENSION == 3);
 
         static constexpr size_t N = Simplex::SPACE_DIMENSION;
+
         using T = typename Simplex::DataType;
-
-        using Vertices = std::array<Vector<N, T>, Simplex::VERTEX_COUNT>;
-
-        // Элементы массива — вершина откуда и вектор к другой вершине
-        using VertexRidges = std::array<std::array<Vector<N, T>, 2>, Simplex::VERTEX_RIDGE_COUNT>;
+        using Vertices = decltype(std::declval<Simplex>().vertices());
+        using VertexRidges = decltype(std::declval<Simplex>().vertex_ridges());
 
         const Simplex& m_simplex;
 

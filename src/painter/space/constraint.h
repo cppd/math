@@ -28,4 +28,17 @@ struct Constraint
         Vector<N, T> a;
         T b;
 };
+
+template <size_t N, typename T, size_t Count, size_t CountEq>
+struct Constraints
+{
+        std::array<Constraint<N, T>, Count> c;
+        std::array<Constraint<N, T>, CountEq> c_eq;
+};
+
+template <size_t N, typename T, size_t Count>
+struct Constraints<N, T, Count, 0>
+{
+        std::array<Constraint<N, T>, Count> c;
+};
 }
