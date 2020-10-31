@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../parallelotope.h"
 #include "../parallelotope_aa.h"
-#include "../parallelotope_wrapper.h"
 #include "../shape_intersection.h"
+#include "../shape_wrapper.h"
 
 #include <src/com/arrays.h>
 #include <src/com/error.h>
@@ -650,9 +650,9 @@ void test_intersection(
 }
 
 template <typename Parallelotope>
-std::unique_ptr<ParallelotopeWrapperForShapeIntersection<Parallelotope>> make_unique_wrapper(const Parallelotope& p)
+std::unique_ptr<ShapeWrapperForIntersection<Parallelotope>> make_unique_wrapper(const Parallelotope& p)
 {
-        return std::make_unique<ParallelotopeWrapperForShapeIntersection<Parallelotope>>(p);
+        return std::make_unique<ShapeWrapperForIntersection<Parallelotope>>(p);
 }
 
 template <size_t N, typename T>

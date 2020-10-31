@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_object.h"
 
-#include "../space/hyperplane_simplex_wrapper.h"
-#include "../space/parallelotope_wrapper.h"
 #include "../space/shape_intersection.h"
+#include "../space/shape_wrapper.h"
 
 #include <src/com/log.h>
 #include <src/com/thread.h>
@@ -133,7 +132,7 @@ void MeshObject<N, T>::create_tree(
 {
         progress->set_text(to_string(1 << N) + "-tree: %v of %m");
 
-        std::vector<HyperplaneSimplexWrapperForShapeIntersection<MeshFacet<N, T>>> simplex_wrappers;
+        std::vector<ShapeWrapperForIntersection<MeshFacet<N, T>>> simplex_wrappers;
         simplex_wrappers.reserve(facets.size());
         for (const MeshFacet<N, T>& t : facets)
         {
@@ -143,7 +142,7 @@ void MeshObject<N, T>::create_tree(
         const auto simplex_intersections = [w = std::as_const(simplex_wrappers)](
                                                    const TreeParallelotope& parallelotope,
                                                    const std::vector<int>& indices) {
-                ParallelotopeWrapperForShapeIntersection p(parallelotope);
+                ShapeWrapperForIntersection p(parallelotope);
                 std::vector<int> intersections;
                 intersections.reserve(indices.size());
                 for (int object_index : indices)
