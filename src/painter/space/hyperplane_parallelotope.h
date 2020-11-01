@@ -41,9 +41,10 @@ class HyperplaneParallelotope final
 
         void set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N - 1>& vectors);
 
-public:
-        using Vertices = std::array<Vector<N, T>, VERTEX_COUNT>;
+        template <int INDEX, typename F>
+        void vertices_impl(const Vector<N, T>& org, const F& f) const;
 
+public:
         template <typename... P>
         explicit HyperplaneParallelotope(const Vector<N, T>& org, const P&... vectors);
 
@@ -52,6 +53,9 @@ public:
         bool intersect(const Ray<N, T>& r, T* t) const;
 
         const Vector<N, T>& normal(const Vector<N, T>& point) const;
+
+        std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
+
         const Vector<N, T>& org() const;
         const Vector<N, T>& e(unsigned n) const;
 };
@@ -96,6 +100,39 @@ const Vector<N, T>& HyperplaneParallelotope<N, T>::normal(const Vector<N, T>&) c
 }
 
 template <size_t N, typename T>
+template <int INDEX, typename F>
+void HyperplaneParallelotope<N, T>::vertices_impl(const Vector<N, T>& p, const F& f) const
+{
+        if constexpr (INDEX >= 0)
+        {
+                vertices_impl<INDEX - 1>(p, f);
+                vertices_impl<INDEX - 1>(p + m_vectors[INDEX], f);
+        }
+        else
+        {
+                f(p);
+        }
+}
+
+template <size_t N, typename T>
+std::array<Vector<N, T>, HyperplaneParallelotope<N, T>::VERTEX_COUNT> HyperplaneParallelotope<N, T>::vertices() const
+{
+        std::array<Vector<N, T>, VERTEX_COUNT> result;
+
+        unsigned count = 0;
+        auto f = [&count, &result](const Vector<N, T>& p) {
+                ASSERT(count < result.size());
+                result[count++] = p;
+        };
+
+        vertices_impl<N - 2>(m_org, f);
+
+        ASSERT(count == result.size());
+
+        return result;
+}
+
+template <size_t N, typename T>
 const Vector<N, T>& HyperplaneParallelotope<N, T>::org() const
 {
         return m_org;
@@ -106,46 +143,5 @@ const Vector<N, T>& HyperplaneParallelotope<N, T>::e(unsigned n) const
 {
         ASSERT(n < N - 1);
         return m_vectors[n];
-}
-
-namespace hyperplane_parallelotope_implementation
-{
-template <int INDEX, size_t N, typename T, typename F>
-void vertices(const HyperplaneParallelotope<N, T>& p, const Vector<N, T>& org, const F& f)
-{
-        if constexpr (INDEX >= 0)
-        {
-                vertices<INDEX - 1>(p, org, f);
-                vertices<INDEX - 1>(p, org + p.e(INDEX), f);
-        }
-        else
-        {
-                f(org);
-        }
-}
-}
-
-template <size_t N, typename T>
-typename HyperplaneParallelotope<N, T>::Vertices hyperplane_parallelotope_vertices(
-        const HyperplaneParallelotope<N, T>& p)
-{
-        namespace impl = hyperplane_parallelotope_implementation;
-
-        typename HyperplaneParallelotope<N, T>::Vertices result;
-
-        unsigned vertex_count = 0;
-
-        auto f = [&vertex_count, &result](const Vector<N, T>& org) {
-                ASSERT(vertex_count < result.size());
-                result[vertex_count++] = org;
-        };
-
-        // Смещаться по каждому измерению для перехода к другой вершине.
-        constexpr int LAST_INDEX = N - 2;
-        impl::vertices<LAST_INDEX>(p, p.org(), f);
-
-        ASSERT(vertex_count == result.size());
-
-        return result;
 }
 }
