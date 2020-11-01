@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "constraint.h"
 #include "hyperplane.h"
 
 #include <src/com/error.h>
@@ -33,6 +34,9 @@ class HyperplaneParallelotope final
 {
         static_assert(N <= 30);
         static constexpr int VERTEX_COUNT = 1 << (N - 1);
+        // Количество вершин 2 ^ (N-1) умножить на количество измерений (N-1) у каждой вершины
+        // и для уникальности разделить на 2 = ((2 ^ (N-1)) * (N-1)) / 2 = (2 ^ (N-2)) * (N-1)
+        static constexpr int VERTEX_RIDGE_COUNT = (1 << (N - 2)) * (N - 1);
 
         struct Planes
         {
@@ -48,17 +52,29 @@ class HyperplaneParallelotope final
         template <int INDEX, typename F>
         void vertices_impl(const Vector<N, T>& org, const F& f) const;
 
+        template <int INDEX, typename F>
+        void vertex_ridges_impl(const Vector<N, T>& p, std::array<bool, N - 1>* dimensions, const F& f) const;
+
 public:
+        static constexpr size_t SPACE_DIMENSION = N;
+        static constexpr size_t SHAPE_DIMENSION = N - 1;
+
+        using DataType = T;
+
         template <typename... P>
         explicit HyperplaneParallelotope(const Vector<N, T>& org, const P&... vectors);
 
         HyperplaneParallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N - 1>& vectors);
+
+        Constraints<N, T, 2 * (N - 1), 1> constraints() const;
 
         bool intersect(const Ray<N, T>& r, T* t) const;
 
         const Vector<N, T>& normal(const Vector<N, T>& point) const;
 
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
+
+        std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> vertex_ridges() const;
 
         const Vector<N, T>& org() const;
         const Vector<N, T>& e(unsigned n) const;
@@ -99,6 +115,32 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
                 m_planes[i].n /= distance;
                 m_planes[i].d /= distance;
         }
+}
+
+// 2*(N-1) неравенств в виде b + a * x >= 0 и одно равенство в виде b + a * x = 0
+template <size_t N, typename T>
+Constraints<N, T, 2 * (N - 1), 1> HyperplaneParallelotope<N, T>::constraints() const
+{
+        Constraints<N, T, 2 * (N - 1), 1> result;
+
+        // Плоскости n * x - d имеют перпендикуляр с направлением наружу.
+        // Направление внутрь -n * x + d или d + -(n * x), тогда условие
+        // для точек параллелотопа d + -(n * x) >= 0.
+        for (unsigned i = 0, c_i = 0; i < N - 1; ++i, c_i += 2)
+        {
+                T len = m_planes[i].n.norm();
+
+                result.c[c_i].a = m_planes[i].n / len;
+                result.c[c_i].b = -m_planes[i].d / len;
+
+                result.c[c_i + 1].a = -m_planes[i].n / len;
+                result.c[c_i + 1].b = dot(m_org + m_vectors[i], m_planes[i].n) / len;
+        }
+
+        result.c_eq[0].a = m_normal;
+        result.c_eq[0].b = -dot(m_org, m_normal);
+
+        return result;
 }
 
 template <size_t N, typename T>
@@ -157,6 +199,59 @@ std::array<Vector<N, T>, HyperplaneParallelotope<N, T>::VERTEX_COUNT> Hyperplane
         };
 
         vertices_impl<N - 2>(m_org, f);
+
+        ASSERT(count == result.size());
+
+        return result;
+}
+
+template <size_t N, typename T>
+template <int INDEX, typename F>
+void HyperplaneParallelotope<N, T>::vertex_ridges_impl(
+        const Vector<N, T>& p,
+        std::array<bool, N - 1>* dimensions,
+        const F& f) const
+{
+        if constexpr (INDEX >= 0)
+        {
+                (*dimensions)[INDEX] = true;
+                vertex_ridges_impl<INDEX - 1>(p, dimensions, f);
+
+                (*dimensions)[INDEX] = false;
+                vertex_ridges_impl<INDEX - 1>(p + m_vectors[INDEX], dimensions, f);
+        }
+        else
+        {
+                f(p);
+        }
+}
+
+template <size_t N, typename T>
+std::array<std::array<Vector<N, T>, 2>, HyperplaneParallelotope<N, T>::VERTEX_RIDGE_COUNT> HyperplaneParallelotope<
+        N,
+        T>::vertex_ridges() const
+{
+        std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> result;
+
+        unsigned count = 0;
+        std::array<bool, N - 1> dimensions;
+        auto f = [this, &dimensions, &count, &result](const Vector<N, T>& p) {
+                for (unsigned i = 0; i < N - 1; ++i)
+                {
+                        if (dimensions[i])
+                        {
+                                ASSERT(count < result.size());
+                                result[count][0] = p;
+                                result[count][1] = m_vectors[i];
+                                ++count;
+                        }
+                }
+        };
+
+        // Смещаться по каждому измерению для перехода к другой вершине.
+        // Добавлять к массиву рёбер пары, состоящие из вершины и векторов
+        // измерений, по которым не смещались для перехода к этой вершине.
+        vertex_ridges_impl<N - 2>(m_org, &dimensions, f);
 
         ASSERT(count == result.size());
 
