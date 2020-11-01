@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "hyperplane_geometry.h"
+#include "hyperplane.h"
 
 #include <src/com/error.h>
 #include <src/numerical/orthogonal.h>
@@ -34,12 +34,16 @@ class HyperplaneParallelotope final
         static_assert(N <= 30);
         static constexpr int VERTEX_COUNT = 1 << (N - 1);
 
+        struct Planes
+        {
+                Vector<N, T> n;
+                T d;
+        };
+        std::array<Planes, N - 1> m_planes;
+
         Vector<N, T> m_org;
         std::array<Vector<N, T>, N - 1> m_vectors;
         Vector<N, T> m_normal;
-        HyperplaneParallelotopeGeometry<N, T> m_geometry;
-
-        void set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N - 1>& vectors);
 
         template <int INDEX, typename F>
         void vertices_impl(const Vector<N, T>& org, const F& f) const;
@@ -63,11 +67,8 @@ public:
 template <size_t N, typename T>
 template <typename... P>
 HyperplaneParallelotope<N, T>::HyperplaneParallelotope(const Vector<N, T>& org, const P&... vectors)
+        : HyperplaneParallelotope(org, {vectors...})
 {
-        static_assert((std::is_same_v<Vector<N, T>, P> && ...));
-        static_assert(sizeof...(P) == N - 1);
-
-        set_data(org, {vectors...});
 }
 
 template <size_t N, typename T>
@@ -75,22 +76,52 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N - 1>& vectors)
 {
-        set_data(org, vectors);
-}
-
-template <size_t N, typename T>
-void HyperplaneParallelotope<N, T>::set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N - 1>& vectors)
-{
         m_org = org;
         m_vectors = vectors;
         m_normal = ortho_nn(vectors).normalized();
-        m_geometry.set_data(m_normal, m_org, m_vectors);
+
+        for (unsigned i = 0; i < N - 1; ++i)
+        {
+                std::swap(m_normal, m_vectors[i]);
+                m_planes[i].n = ortho_nn(m_vectors);
+                std::swap(m_normal, m_vectors[i]);
+
+                if (dot(m_planes[i].n, m_vectors[i]) < 0)
+                {
+                        m_planes[i].n = -m_planes[i].n;
+                }
+
+                m_planes[i].d = dot(m_org, m_planes[i].n);
+
+                // Относительное расстояние от вершины до плоскости должно быть равно 1
+                T distance = dot(m_org + m_vectors[i], m_planes[i].n) - m_planes[i].d;
+                ASSERT(distance >= 0);
+                m_planes[i].n /= distance;
+                m_planes[i].d /= distance;
+        }
 }
 
 template <size_t N, typename T>
 bool HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& r, T* t) const
 {
-        return m_geometry.intersect(r, m_org, m_normal, t);
+        if (!hyperplane_intersect(r, m_org, m_normal, t))
+        {
+                return false;
+        }
+
+        Vector<N, T> intersection_point = r.point(*t);
+
+        for (unsigned i = 0; i < N - 1; ++i)
+        {
+                // Относительное расстояние от грани до точки является координатой точки
+                T d = dot(intersection_point, m_planes[i].n) - m_planes[i].d;
+                if (d <= 0 || d >= 1)
+                {
+                        return false;
+                }
+        }
+
+        return true;
 }
 
 template <size_t N, typename T>

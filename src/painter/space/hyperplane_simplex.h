@@ -41,7 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace painter
 {
 template <size_t N, typename T>
-class HyperplaneSimplexGeometry final
+class HyperplaneSimplex final
 {
         static_assert(N >= 2);
         static_assert(is_floating_point<T>);
@@ -205,46 +205,6 @@ public:
                 }
 
                 return result;
-        }
-};
-
-template <size_t N, typename T>
-class HyperplaneParallelotopeGeometry final
-{
-        HyperplaneSimplexGeometry<N, T> m_simplex_geometry;
-
-public:
-        void set_data(const Vector<N, T>& normal, const Vector<N, T>& org, const std::array<Vector<N, T>, N - 1>& edges)
-        {
-                std::array<Vector<N, T>, N> points;
-                for (unsigned i = 0; i < N - 1; ++i)
-                {
-                        points[i] = org + edges[i];
-                }
-                // Начало использовать как последнюю точку, для которой не надо определять координату
-                points[N - 1] = org;
-                m_simplex_geometry.set_data(normal, points);
-        }
-
-        bool intersect(const Ray<N, T>& ray, const Vector<N, T>& any_vertex, const Vector<N, T>& normal, T* t) const
-        {
-                if (!hyperplane_intersect(ray, any_vertex, normal, t))
-                {
-                        return false;
-                }
-
-                Vector<N, T> intersection_point = ray.point(*t);
-
-                for (unsigned i = 0; i < N - 1; ++i)
-                {
-                        T d = m_simplex_geometry.barycentric_coordinate(intersection_point, i);
-                        if (d <= 0 || d >= 1)
-                        {
-                                return false;
-                        }
-                }
-
-                return true;
         }
 };
 }

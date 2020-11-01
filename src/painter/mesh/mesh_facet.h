@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "../space/constraint.h"
-#include "../space/hyperplane_geometry.h"
+#include "../space/hyperplane_simplex.h"
 
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
@@ -51,7 +51,7 @@ class MeshFacet
 
         Vector<N, T> m_normal;
 
-        HyperplaneSimplexGeometry<N, T> m_geometry;
+        HyperplaneSimplex<N, T> m_geometry;
 
         enum class NormalType : char
         {
