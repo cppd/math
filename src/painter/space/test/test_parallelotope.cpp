@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_parallelotope.h"
 
+#include "../hyperplane_parallelotope.h"
 #include "../parallelotope.h"
 #include "../parallelotope_aa.h"
 #include "../shape_intersection.h"
@@ -526,6 +527,20 @@ std::array<Vector<N, T>, N> to_edge_vector(const std::array<T, N>& edges)
 }
 
 template <size_t N, typename T>
+std::array<Vector<N + 1, T>, N> to_edge_vector_hyper(const std::array<T, N>& edges)
+{
+        std::array<Vector<N + 1, T>, N> edge_vector;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                for (unsigned j = 0; j < N + 1; ++j)
+                {
+                        edge_vector[i][j] = (i != j) ? 0 : edges[i];
+                }
+        }
+        return edge_vector;
+}
+
+template <size_t N, typename T>
 void test_points(int point_count)
 {
         RandomEngineWithSeed<std::mt19937_64> engine;
@@ -720,11 +735,127 @@ void test_intersections()
 }
 
 template <size_t N, typename T>
+void test_intersections_hyperplane()
+{
+        Vector<N, T> org(5);
+        std::array<T, N> edges = make_array_value<T, N>(1);
+
+        std::array<Vector<N, T>, N - 1> edges_hyper_big = to_edge_vector_hyper(make_array_value<T, N - 1>(3));
+        Vector<N, T> org1(4);
+        Vector<N, T> org2(4);
+        Vector<N, T> org3(4);
+        org1[N - 1] = 4.9;
+        org2[N - 1] = 5.5;
+        org3[N - 1] = 6.1;
+
+        std::array<Vector<N, T>, N - 1> edges_hyper_small = to_edge_vector_hyper(make_array_value<T, N - 1>(0.2));
+        Vector<N, T> org4(4.9);
+        Vector<N, T> org5(4.9);
+        Vector<N, T> org6(4.9);
+        org4[N - 1] = 4.9;
+        org5[N - 1] = 5.5;
+        org6[N - 1] = 6.1;
+        Vector<N, T> org7(4);
+        Vector<N, T> org8(4);
+        Vector<N, T> org9(4);
+        org7[N - 1] = 4.9;
+        org8[N - 1] = 5.5;
+        org9[N - 1] = 6.1;
+        Vector<N, T> org10(5.5);
+        Vector<N, T> org11(5.5);
+        Vector<N, T> org12(5.5);
+        org10[N - 1] = 4.9;
+        org11[N - 1] = 5.5;
+        org12[N - 1] = 6.1;
+
+        LOG("------------------------------");
+        LOG("Hyperplane parallelotope intersections in " + space_name(N));
+
+        HyperplaneParallelotope<N, T> p1(org1, edges_hyper_big);
+        HyperplaneParallelotope<N, T> p2(org2, edges_hyper_big);
+        HyperplaneParallelotope<N, T> p3(org3, edges_hyper_big);
+        HyperplaneParallelotope<N, T> p4(org4, edges_hyper_small);
+        HyperplaneParallelotope<N, T> p5(org5, edges_hyper_small);
+        HyperplaneParallelotope<N, T> p6(org6, edges_hyper_small);
+        HyperplaneParallelotope<N, T> p7(org7, edges_hyper_small);
+        HyperplaneParallelotope<N, T> p8(org8, edges_hyper_small);
+        HyperplaneParallelotope<N, T> p9(org9, edges_hyper_small);
+        HyperplaneParallelotope<N, T> p10(org10, edges_hyper_small);
+        HyperplaneParallelotope<N, T> p11(org11, edges_hyper_small);
+        HyperplaneParallelotope<N, T> p12(org12, edges_hyper_small);
+
+        std::unique_ptr w1 = make_unique_wrapper(p1);
+        std::unique_ptr w2 = make_unique_wrapper(p2);
+        std::unique_ptr w3 = make_unique_wrapper(p3);
+        std::unique_ptr w4 = make_unique_wrapper(p4);
+        std::unique_ptr w5 = make_unique_wrapper(p5);
+        std::unique_ptr w6 = make_unique_wrapper(p6);
+        std::unique_ptr w7 = make_unique_wrapper(p7);
+        std::unique_ptr w8 = make_unique_wrapper(p8);
+        std::unique_ptr w9 = make_unique_wrapper(p9);
+        std::unique_ptr w10 = make_unique_wrapper(p10);
+        std::unique_ptr w11 = make_unique_wrapper(p11);
+        std::unique_ptr w12 = make_unique_wrapper(p12);
+
+        print_separator();
+        LOG("ParallelotopeAA");
+
+        {
+                ParallelotopeAA<N, T> p(org, edges);
+                std::unique_ptr w = make_unique_wrapper(p);
+
+                test_intersection(*w1, *w, false, "1-p");
+                test_intersection(*w2, *w, true, "2-p");
+                test_intersection(*w3, *w, false, "3-p");
+
+                test_intersection(*w4, *w, false, "4-p");
+                test_intersection(*w5, *w, true, "5-p");
+                test_intersection(*w6, *w, false, "6-p");
+
+                test_intersection(*w7, *w, false, "7-p");
+                test_intersection(*w8, *w, false, "8-p");
+                test_intersection(*w9, *w, false, "9-p");
+
+                test_intersection(*w10, *w, false, "10-p");
+                test_intersection(*w11, *w, true, "11-p");
+                test_intersection(*w12, *w, false, "12-p");
+        }
+
+        print_separator();
+        LOG("Parallelotope");
+
+        {
+                Parallelotope<N, T> p(org, to_edge_vector(edges));
+                std::unique_ptr w = make_unique_wrapper(p);
+
+                test_intersection(*w1, *w, false, "1-p");
+                test_intersection(*w2, *w, true, "2-p");
+                test_intersection(*w3, *w, false, "3-p");
+
+                test_intersection(*w4, *w, false, "4-p");
+                test_intersection(*w5, *w, true, "5-p");
+                test_intersection(*w6, *w, false, "6-p");
+
+                test_intersection(*w7, *w, false, "7-p");
+                test_intersection(*w8, *w, false, "8-p");
+                test_intersection(*w9, *w, false, "9-p");
+
+                test_intersection(*w10, *w, false, "10-p");
+                test_intersection(*w11, *w, true, "11-p");
+                test_intersection(*w12, *w, false, "12-p");
+        }
+
+        print_separator();
+        LOG("Check passed");
+}
+
+template <size_t N, typename T>
 void all_tests(int point_count)
 {
         test_points<N, T>(point_count);
         test_algorithms<N, T>();
         test_intersections<N, T>();
+        test_intersections_hyperplane<N, T>();
 }
 }
 
