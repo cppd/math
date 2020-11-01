@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "constraint.h"
+#include "hyperplane.h"
 
 #include <src/com/error.h>
 #include <src/com/type/trait.h>
@@ -39,23 +40,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace painter
 {
-namespace hyperplane_geometry_implementation
-{
-template <size_t N, typename T>
-bool plane_intersect(const Ray<N, T>& ray, const Vector<N, T>& plane_point, const Vector<N, T>& plane_normal, T* t)
-{
-        T s = dot(plane_normal, ray.dir());
-
-        if (s != 0)
-        {
-                *t = dot(plane_point - ray.org(), plane_normal) / s;
-                return *t > 0;
-        }
-
-        return false;
-}
-}
-
 template <size_t N, typename T>
 class HyperplaneSimplexGeometry final
 {
@@ -84,7 +68,7 @@ class HyperplaneSimplexGeometry final
         }
 
 public:
-        void set_data(Vector<N, T> simplex_normal, const std::array<Vector<N, T>, N>& vertices)
+        void set_data(Vector<N, T> normal, const std::array<Vector<N, T>, N>& vertices)
         {
                 std::array<Vector<N, T>, N - 1> vectors;
                 for (unsigned i = 0; i < N - 1; ++i)
@@ -92,7 +76,7 @@ public:
                         difference(&vectors[i], vertices[i], vertices[N - 1]);
                 }
 
-                // Перпендикуляр к симплексу берётся готовым в параметре simplex_normal
+                // Перпендикуляр к симплексу берётся готовым в параметре normal
                 // и должен быть равен ortho_nn(vectors).
 
                 // Найти уравнения плоскостей, проходящих через каждую грань и перпендикулярных симплексу.
@@ -102,9 +86,9 @@ public:
                 {
                         // Перпендикуляр от точки к грани — это перпендикуляр к пространству,
                         // образуемому перпендикуляром к симплексу и пространством грани
-                        std::swap(simplex_normal, vectors[i]);
+                        std::swap(normal, vectors[i]);
                         m_planes[i].n = ortho_nn(vectors);
-                        std::swap(simplex_normal, vectors[i]);
+                        std::swap(normal, vectors[i]);
 
                         // Уравнение плоскости
                         // dot(p - org, normal) = dot(p, normal) - dot(org, normal) = dot(p, normal) - d
@@ -120,9 +104,8 @@ public:
 
         // N неравенств в виде b + a * x >= 0 и одно равенство в виде b + a * x = 0,
         // задающие множество точек симплекса.
-        // Параметры simplex_normal и vertices точно такие же, как при вызове set_data.
-        Constraints<N, T, N, 1> constraints(Vector<N, T> simplex_normal, const std::array<Vector<N, T>, N>& vertices)
-                const
+        // Параметры normal и vertices точно такие же, как при вызове set_data.
+        Constraints<N, T, N, 1> constraints(Vector<N, T> normal, const std::array<Vector<N, T>, N>& vertices) const
         {
                 Constraints<N, T, N, 1> result;
 
@@ -148,7 +131,7 @@ public:
                         difference(&vectors[i], vertices[i + 1], vertices[0]);
                 }
 
-                vectors[N - 2] = simplex_normal;
+                vectors[N - 2] = normal;
                 Vector<N, T> n = ortho_nn(vectors).normalized();
                 T d = dot(vertices[0], n);
 
@@ -160,8 +143,8 @@ public:
                 //
 
                 // На основе уравнения плоскости симплекса n * x - d = 0
-                d = dot(vertices[0], simplex_normal);
-                result.c_eq[0].a = simplex_normal;
+                d = dot(vertices[0], normal);
+                result.c_eq[0].a = normal;
                 result.c_eq[0].b = -d;
 
                 return result;
@@ -188,9 +171,7 @@ public:
 
         bool intersect(const Ray<N, T>& ray, const Vector<N, T>& any_vertex, const Vector<N, T>& normal, T* t) const
         {
-                namespace impl = hyperplane_geometry_implementation;
-
-                if (!impl::plane_intersect(ray, any_vertex, normal, t))
+                if (!hyperplane_intersect(ray, any_vertex, normal, t))
                 {
                         return false;
                 }
@@ -247,9 +228,7 @@ public:
 
         bool intersect(const Ray<N, T>& ray, const Vector<N, T>& any_vertex, const Vector<N, T>& normal, T* t) const
         {
-                namespace impl = hyperplane_geometry_implementation;
-
-                if (!impl::plane_intersect(ray, any_vertex, normal, t))
+                if (!hyperplane_intersect(ray, any_vertex, normal, t))
                 {
                         return false;
                 }
