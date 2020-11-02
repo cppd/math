@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "object_functions.h"
+
 #include "../mesh/mesh_object.h"
 #include "../objects.h"
 #include "../visible_lights.h"
@@ -33,7 +35,7 @@ namespace painter
 namespace single_object_scene_implementation
 {
 template <size_t N, typename T>
-class SingleObjectScene final : public PaintObjects<N, T>
+class SingleObjectScene final : public Scene<N, T>
 {
         VisibleSharedMesh<N, T> m_object;
         std::unique_ptr<const Projector<N, T>> m_projector;
@@ -45,11 +47,24 @@ class SingleObjectScene final : public PaintObjects<N, T>
         std::vector<const GenericObject<N, T>*> m_objects;
         std::vector<const LightSource<N, T>*> m_light_sources;
 
+        T m_size;
+
         //
 
-        const std::vector<const GenericObject<N, T>*>& objects() const override
+        T size() const override
         {
-                return m_objects;
+                return m_size;
+        }
+
+        bool intersect(const Ray<N, T>& ray, T* distance, const Surface<N, T>** surface, const void** intersection_data)
+                const override
+        {
+                return ray_intersect(m_objects, ray, distance, surface, intersection_data);
+        }
+
+        bool has_intersection(const Ray<N, T>& ray, const T& distance) const override
+        {
+                return ray_has_intersection(m_objects, ray, distance);
         }
 
         const std::vector<const LightSource<N, T>*>& light_sources() const override
@@ -86,12 +101,13 @@ public:
                 m_light_sources.push_back(m_light_source.get());
 
                 m_objects.push_back(&m_object);
+                m_size = scene_size(m_objects);
         }
 };
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const PaintObjects<N, T>> single_object_scene(
+std::unique_ptr<const Scene<N, T>> single_object_scene(
         const Color& background_color,
         std::unique_ptr<const Projector<N, T>>&& projector,
         std::unique_ptr<const LightSource<N, T>>&& light_source,
@@ -106,7 +122,7 @@ std::unique_ptr<const PaintObjects<N, T>> single_object_scene(
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const PaintObjects<N, T>> single_object_scene(
+std::unique_ptr<const Scene<N, T>> single_object_scene(
         const Color& background_color,
         const Color::DataType& lighting_intensity,
         int min_screen_size,

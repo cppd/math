@@ -156,24 +156,21 @@ std::shared_ptr<const MeshObject<N, T>> file_mesh(const std::string& file_name, 
 }
 
 template <size_t N, typename T>
-void test_painter_file(
-        int samples_per_pixel,
-        int thread_count,
-        std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
+void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<const Scene<N, T>>&& scene)
 {
         constexpr int paint_height = 2;
         constexpr int max_pass_count = 1;
         constexpr bool smooth_normal = true;
 
-        Images images(paint_objects->projector().screen_size(), paint_objects->background_color());
+        Images images(scene->projector().screen_size(), scene->background_color());
 
-        VisibleBarPaintbrush<N - 1> paintbrush(paint_objects->projector().screen_size(), paint_height, max_pass_count);
+        VisibleBarPaintbrush<N - 1> paintbrush(scene->projector().screen_size(), paint_height, max_pass_count);
 
         std::atomic_bool stop = false;
 
         LOG("Painting...");
         TimePoint start_time = time();
-        paint(&images, samples_per_pixel, *paint_objects, &paintbrush, thread_count, &stop, smooth_normal);
+        paint(&images, samples_per_pixel, *scene, &paintbrush, thread_count, &stop, smooth_normal);
         LOG("Painted, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
         LOG("Writing screen images to files...");
@@ -183,10 +180,7 @@ void test_painter_file(
 }
 
 template <size_t N, typename T>
-void test_painter_window(
-        int samples_per_pixel,
-        int thread_count,
-        std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
+void test_painter_window(int samples_per_pixel, int thread_count, std::unique_ptr<const Scene<N, T>>&& scene)
 {
         constexpr bool smooth_normal = true;
 
@@ -196,7 +190,7 @@ void test_painter_window(
 
         std::string name = "Path Tracing In " + to_upper_first_letters(space_name(N));
 
-        gui::create_painter_window(name, thread_count, samples_per_pixel, smooth_normal, std::move(paint_objects));
+        gui::create_painter_window(name, thread_count, samples_per_pixel, smooth_normal, std::move(scene));
 }
 
 enum class PainterTestOutputType
@@ -213,19 +207,19 @@ void test_painter(
         int samples_per_pixel,
         int thread_count)
 {
-        std::unique_ptr<const PaintObjects<N, T>> paint_objects =
+        std::unique_ptr<const Scene<N, T>> scene =
                 single_object_scene(BACKGROUND_COLOR, LIGHTING_INTENSITY, min_screen_size, max_screen_size, mesh);
 
         static_assert(type == PainterTestOutputType::File || type == PainterTestOutputType::Window);
 
         if constexpr (type == PainterTestOutputType::File)
         {
-                test_painter_file(samples_per_pixel, thread_count, std::move(paint_objects));
+                test_painter_file(samples_per_pixel, thread_count, std::move(scene));
         }
 
         if constexpr (type == PainterTestOutputType::Window)
         {
-                test_painter_window(samples_per_pixel, thread_count, std::move(paint_objects));
+                test_painter_window(samples_per_pixel, thread_count, std::move(scene));
         }
 }
 

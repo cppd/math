@@ -80,7 +80,7 @@ std::unique_ptr<const painter::LightSource<3, T>> create_light_source(
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const painter::PaintObjects<N, T>> create_painter_scene(
+std::unique_ptr<const painter::Scene<N, T>> create_painter_scene(
         const std::shared_ptr<const painter::MeshObject<N, T>>& mesh,
         const PainterSceneInfo<N, T>& info,
         const Color& background_color,

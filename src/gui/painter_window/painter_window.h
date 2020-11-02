@@ -61,7 +61,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
         static constexpr size_t N_IMAGE = N - 1;
 
         const std::thread::id m_thread_id;
-        const std::shared_ptr<const painter::PaintObjects<N, T>> m_paint_objects;
+        const std::shared_ptr<const painter::Scene<N, T>> m_scene;
         const GlobalIndex<N_IMAGE, long long> m_global_index;
         const std::array<int, N - 1> m_screen_size;
         const int m_height;
@@ -136,7 +136,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                         pixel[dimension] = slider_positions[i];
 
                         ASSERT(pixel[dimension] >= 0
-                               && pixel[dimension] < m_paint_objects->projector().screen_size()[dimension]);
+                               && pixel[dimension] < m_scene->projector().screen_size()[dimension]);
                 }
 
                 return pixel_index(pixel);
@@ -270,7 +270,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 }
                 else if (coverage <= 0)
                 {
-                        Color c = m_paint_objects->background_color();
+                        Color c = m_scene->background_color();
                         unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
                         unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
                         unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
@@ -278,7 +278,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 }
                 else
                 {
-                        Color c = interpolation(m_paint_objects->background_color(), color, coverage);
+                        Color c = interpolation(m_scene->background_color(), color, coverage);
                         unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
                         unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
                         unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
@@ -297,19 +297,16 @@ public:
                 unsigned thread_count,
                 int samples_per_pixel,
                 bool smooth_normal,
-                const std::shared_ptr<const painter::PaintObjects<N, T>>& paint_objects)
-                : PainterWindow2d(
-                        name,
-                        array_to_vector(paint_objects->projector().screen_size()),
-                        initial_slider_positions()),
+                const std::shared_ptr<const painter::Scene<N, T>>& scene)
+                : PainterWindow2d(name, array_to_vector(scene->projector().screen_size()), initial_slider_positions()),
                   m_thread_id(std::this_thread::get_id()),
-                  m_paint_objects(paint_objects),
-                  m_global_index(m_paint_objects->projector().screen_size()),
-                  m_screen_size(m_paint_objects->projector().screen_size()),
-                  m_height(m_paint_objects->projector().screen_size()[1]),
+                  m_scene(scene),
+                  m_global_index(m_scene->projector().screen_size()),
+                  m_screen_size(m_scene->projector().screen_size()),
+                  m_height(m_scene->projector().screen_size()[1]),
                   m_slice_offset(slice_offset_for_slider_positions(initial_slider_positions())),
-                  m_pixels_bgr(make_bgr_images(m_paint_objects->projector().screen_size())),
-                  m_paintbrush(m_paint_objects->projector().screen_size(), PANTBRUSH_WIDTH, -1),
+                  m_pixels_bgr(make_bgr_images(m_scene->projector().screen_size())),
+                  m_paintbrush(m_scene->projector().screen_size(), PANTBRUSH_WIDTH, -1),
                   m_busy_pixels(thread_count, -1)
         {
                 if (N_IMAGE == 3)
@@ -320,8 +317,7 @@ public:
 
                 m_stop = false;
                 m_thread = std::thread([=, this]() {
-                        paint(this, samples_per_pixel, *m_paint_objects, &m_paintbrush, thread_count, &m_stop,
-                              smooth_normal);
+                        paint(this, samples_per_pixel, *m_scene, &m_paintbrush, thread_count, &m_stop, smooth_normal);
                 });
         }
 
@@ -349,13 +345,12 @@ void create_painter_window(
         unsigned thread_count,
         int samples_per_pixel,
         bool smooth_normal,
-        std::unique_ptr<const painter::PaintObjects<N, T>>&& paint_objects)
+        std::unique_ptr<const painter::Scene<N, T>>&& scene)
 {
         namespace impl = painter_window_implementation;
-        std::shared_ptr<const painter::PaintObjects<N, T>> objects = std::move(paint_objects);
-        MainThread::run([=]() {
+        MainThread::run([=, scene = std::shared_ptr<const painter::Scene<N, T>>(std::move(scene))]() {
                 create_and_show_delete_on_close_window<impl::PainterWindow<N, T>>(
-                        name, thread_count, samples_per_pixel, smooth_normal, objects);
+                        name, thread_count, samples_per_pixel, smooth_normal, scene);
         });
 }
 }

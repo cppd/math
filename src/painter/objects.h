@@ -182,17 +182,23 @@ struct Paintbrush
                 double* previous_pass_duration) const = 0;
 };
 
-// Объекты для рисования.
 template <size_t N, typename T>
-struct PaintObjects
+struct Scene
 {
-        virtual ~PaintObjects() = default;
+        virtual ~Scene() = default;
 
-        virtual const std::vector<const GenericObject<N, T>*>& objects() const = 0;
+        virtual T size() const = 0;
+
+        virtual bool intersect(
+                const Ray<N, T>& ray,
+                T* distance,
+                const Surface<N, T>** surface,
+                const void** intersection_data) const = 0;
+
+        virtual bool has_intersection(const Ray<N, T>& ray, const T& distance) const = 0;
+
         virtual const std::vector<const LightSource<N, T>*>& light_sources() const = 0;
-
         virtual const Projector<N, T>& projector() const = 0;
-
         virtual const Color& background_color() const = 0;
         virtual const Color& background_light_source_color() const = 0;
 };

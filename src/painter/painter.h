@@ -45,7 +45,7 @@ template <size_t N, typename T>
 void paint(
         PainterNotifier<N - 1>* painter_notifier,
         int samples_per_pixel,
-        const PaintObjects<N, T>& paint_objects,
+        const Scene<N, T>& scene,
         Paintbrush<N - 1>* paintbrush,
         int thread_count,
         std::atomic_bool* stop,

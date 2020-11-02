@@ -123,7 +123,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 
                 std::string name = mesh_objects.size() != 1 ? "" : mesh_objects[0]->name();
 
-                std::unique_ptr<const painter::PaintObjects<N, T>> scene =
+                std::unique_ptr<const painter::Scene<N, T>> scene =
                         create_painter_scene(painter_mesh_object, scene_info, background_color, lighting_intensity);
 
                 gui::create_painter_window(name, thread_count, samples_per_pixel, !flat_facets, std::move(scene));

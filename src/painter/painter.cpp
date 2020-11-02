@@ -30,12 +30,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/ray.h>
 #include <src/utility/random/engine.h>
 
-#include <algorithm>
 #include <optional>
 #include <random>
 #include <thread>
-#include <tuple>
-#include <type_traits>
 #include <vector>
 
 namespace painter
@@ -143,189 +140,47 @@ public:
 template <size_t N, typename T>
 struct PaintData
 {
-        const std::vector<const GenericObject<N, T>*>& objects;
-        const std::vector<const LightSource<N, T>*>& light_sources;
-        const Color background_color;
-        const Color background_light_source_color;
+        const Scene<N, T>& scene;
         const T ray_offset;
         const bool smooth_normal;
 
-        PaintData(
-                const std::vector<const GenericObject<N, T>*>& objects,
-                const std::vector<const LightSource<N, T>*>& light_sources,
-                const Color& background_color,
-                const Color& background_light_source_color,
-                const T& ray_offset,
-                bool smooth_normal)
-                : objects(objects),
-                  light_sources(light_sources),
-                  background_color(background_color),
-                  background_light_source_color(background_light_source_color),
-                  ray_offset(ray_offset),
+        PaintData(const Scene<N, T>& scene, bool smooth_normal)
+                : scene(scene),
+                  ray_offset(scene.size() * (RAY_OFFSET_IN_EPSILONS * limits<T>::epsilon())),
                   smooth_normal(smooth_normal)
         {
         }
 };
-
-template <size_t N, typename T, typename Object, typename Surface, typename Data>
-bool ray_intersection(
-        const std::vector<const Object*>& objects,
-        const Ray<N, T>& ray,
-        T* intersection_distance,
-        const Surface** intersection_surface,
-        const Data** intersection_data)
-{
-        if (objects.size() == 1)
-        {
-                T approximate_distance;
-                T distance;
-                const Surface* surface;
-                const Data* data;
-
-                if (objects[0]->intersect_approximate(ray, &approximate_distance)
-                    && objects[0]->intersect_precise(ray, approximate_distance, &distance, &surface, &data))
-                {
-                        *intersection_distance = distance;
-                        *intersection_surface = surface;
-                        *intersection_data = data;
-
-                        return true;
-                }
-
-                return false;
-        }
-
-        // Объекты могут быть сложными, поэтому перед поиском точного пересечения
-        // их надо разместить по возрастанию примерного пересечения.
-
-        std::vector<std::tuple<T, const Object*>> approximate_intersections;
-        approximate_intersections.reserve(objects.size());
-
-        for (const Object* obj : objects)
-        {
-                T distance;
-                if (obj->intersect_approximate(ray, &distance))
-                {
-                        approximate_intersections.emplace_back(distance, obj);
-                }
-        }
-
-        if (approximate_intersections.empty())
-        {
-                return false;
-        }
-
-        std::sort(
-                approximate_intersections.begin(), approximate_intersections.end(),
-                [](const std::tuple<T, const Object*>& a, const std::tuple<T, const Object*>& b) {
-                        return std::get<0>(a) < std::get<0>(b);
-                });
-
-        T min_distance = limits<T>::max();
-        bool found = false;
-
-        for (const auto& [approximate_distance, object] : approximate_intersections)
-        {
-                if (min_distance < approximate_distance)
-                {
-                        break;
-                }
-
-                T distance;
-                const Surface* surface;
-                const Data* data;
-
-                if (object->intersect_precise(ray, approximate_distance, &distance, &surface, &data)
-                    && distance < min_distance)
-                {
-                        min_distance = distance;
-                        *intersection_surface = surface;
-                        *intersection_data = data;
-                        found = true;
-                }
-        }
-
-        if (found)
-        {
-                *intersection_distance = min_distance;
-                return true;
-        }
-
-        return false;
-}
 
 bool color_is_zero(const Color& c)
 {
         return c.max_element() < MIN_COLOR_LEVEL;
 }
 
-// все объекты считаются непрозрачными
-template <size_t N, typename T>
-bool object_is_obstacle_to_light(const GenericObject<N, T>* object, const Ray<N, T>& ray, T distance_to_light_source)
-{
-        T distance_to_object;
-        const Surface<N, T>* surface;
-        const void* intersection_data;
-
-        if (!object->intersect_approximate(ray, &distance_to_object))
-        {
-                return false;
-        }
-
-        if (distance_to_object >= distance_to_light_source)
-        {
-                return false;
-        }
-
-        if (!object->intersect_precise(ray, distance_to_object, &distance_to_object, &surface, &intersection_data))
-        {
-                return false;
-        }
-
-        if (distance_to_object >= distance_to_light_source)
-        {
-                return false;
-        }
-
-        return true;
-}
-
 template <size_t N, typename T>
 bool light_source_is_visible(
         Counter* ray_count,
-        const std::vector<const GenericObject<N, T>*>& objects,
+        const PaintData<N, T>& paint_data,
         const Ray<N, T>& ray,
         T distance_to_light_source)
 {
-        for (const GenericObject<N, T>* object : objects)
-        {
-                ray_count->inc();
-
-                if (object_is_obstacle_to_light(object, ray, distance_to_light_source))
-                {
-                        return false;
-                }
-        }
-        return true;
+        ray_count->inc();
+        return !paint_data.scene.has_intersection(ray, distance_to_light_source);
 }
 
-template <size_t N, typename T, typename Object>
-bool ray_intersection_distance(
-        const std::vector<const Object*>& objects,
-        const Ray<N, T>& ray,
-        T* intersection_distance)
+template <size_t N, typename T>
+bool ray_intersection_distance(const PaintData<N, T>& paint_data, const Ray<N, T>& ray, T* intersection_distance)
 {
         const Surface<N, T>* intersection_surface;
         const void* intersection_data;
 
-        return ray_intersection(objects, ray, intersection_distance, &intersection_surface, &intersection_data);
+        return paint_data.scene.intersect(ray, intersection_distance, &intersection_surface, &intersection_data);
 }
 
 template <size_t N, typename T>
 Color direct_diffuse_lighting(
         Counter* ray_count,
-        const std::vector<const GenericObject<N, T>*>& objects,
-        const std::vector<const LightSource<N, T>*> light_sources,
+        const PaintData<N, T>& paint_data,
         const Vector<N, T>& p,
         const Vector<N, T>& geometric_normal,
         const Vector<N, T>& shading_normal,
@@ -334,7 +189,7 @@ Color direct_diffuse_lighting(
 {
         Color color(0);
 
-        for (const LightSource<N, T>* light_source : light_sources)
+        for (const LightSource<N, T>* light_source : paint_data.scene.light_sources())
         {
                 Color light_source_color;
                 Vector<N, T> vector_to_light;
@@ -362,7 +217,7 @@ Color direct_diffuse_lighting(
                         // к источнику света, то напрямую рассчитать видимость источника света.
 
                         ray_to_light.move_along_dir(ray_offset);
-                        if (!light_source_is_visible(ray_count, objects, ray_to_light, vector_to_light.norm()))
+                        if (!light_source_is_visible(ray_count, paint_data, ray_to_light, vector_to_light.norm()))
                         {
                                 continue;
                         }
@@ -380,7 +235,7 @@ Color direct_diffuse_lighting(
                         ray_count->inc();
                         ray_to_light.move_along_dir(ray_offset);
                         T t;
-                        if (!ray_intersection_distance(objects, ray_to_light, &t))
+                        if (!ray_intersection_distance(paint_data, ray_to_light, &t))
                         {
                                 // Если луч к источнику света направлен внутрь поверхности, и нет повторного
                                 // пересечения с поверхностью, то нет освещения в точке.
@@ -399,7 +254,7 @@ Color direct_diffuse_lighting(
                         Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
                         ray_from_light.move_along_dir(2 * ray_offset);
                         T t_reverse;
-                        if (ray_intersection_distance(objects, ray_from_light, &t_reverse) && (t_reverse < t))
+                        if (ray_intersection_distance(paint_data, ray_from_light, &t_reverse) && (t_reverse < t))
                         {
                                 // Если для луча, направленного от поверхности и от источника света,
                                 // имеется пересечение с поверхностью на расстоянии меньше, чем расстояние
@@ -409,7 +264,7 @@ Color direct_diffuse_lighting(
                         }
 
                         ray_to_light.move_along_dir(t + ray_offset);
-                        if (!light_source_is_visible(ray_count, objects, ray_to_light, distance_to_light_source - t))
+                        if (!light_source_is_visible(ray_count, paint_data, ray_to_light, distance_to_light_source - t))
                         {
                                 continue;
                         }
@@ -468,7 +323,7 @@ std::optional<Color> trace_path(
         T t;
         const Surface<N, T>* surface;
         const void* intersection_data;
-        if (!ray_intersection(paint_data.objects, ray, &t, &surface, &intersection_data))
+        if (!paint_data.scene.intersect(ray, &t, &surface, &intersection_data))
         {
                 return std::nullopt;
         }
@@ -507,8 +362,8 @@ std::optional<Color> trace_path(
                 if (new_color_level >= MIN_COLOR_LEVEL)
                 {
                         Color direct = direct_diffuse_lighting(
-                                ray_count, paint_data.objects, paint_data.light_sources, point, geometric_normal,
-                                shading_normal, smooth_normal, paint_data.ray_offset);
+                                ray_count, paint_data, point, geometric_normal, shading_normal, smooth_normal,
+                                paint_data.ray_offset);
 
                         color += surface_color * direct;
 
@@ -521,7 +376,8 @@ std::optional<Color> trace_path(
                                         paint_data, ray_count, random_engine, recursion_level + 1, new_color_level,
                                         new_ray);
 
-                                color += surface_color * diffuse.value_or(paint_data.background_light_source_color);
+                                color += surface_color
+                                         * diffuse.value_or(paint_data.scene.background_light_source_color());
                         }
                 }
         }
@@ -539,7 +395,7 @@ std::optional<Color> trace_path(
                         std::optional<Color> transmitted = trace_path(
                                 paint_data, ray_count, random_engine, recursion_level + 1, new_color_level, new_ray);
 
-                        color += transmission * transmitted.value_or(paint_data.background_color);
+                        color += transmission * transmitted.value_or(paint_data.scene.background_color());
                 }
         }
 
@@ -713,32 +569,10 @@ void check_paintbrush_projector(const Paintbrush<N - 1>& paintbrush, const Proje
 }
 
 template <size_t N, typename T>
-T compute_ray_offset(const std::vector<const GenericObject<N, T>*>& objects)
-{
-        T all_max = limits<T>::lowest();
-
-        for (const GenericObject<N, T>* object : objects)
-        {
-                Vector<N, T> min;
-                Vector<N, T> max;
-                object->min_max(&min, &max);
-
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        all_max = std::max(all_max, std::max(std::abs(min[i]), std::abs(max[i])));
-                }
-        }
-
-        T dist = all_max * (RAY_OFFSET_IN_EPSILONS * limits<T>::epsilon());
-
-        return dist;
-}
-
-template <size_t N, typename T>
 void paint_threads(
         PainterNotifier<N - 1>* painter_notifier,
         int samples_per_pixel,
-        const PaintObjects<N, T>& paint_objects,
+        const Scene<N, T>& scene,
         Paintbrush<N - 1>* paintbrush,
         int thread_count,
         std::atomic_bool* stop,
@@ -746,16 +580,13 @@ void paint_threads(
 
 {
         check_thread_count(thread_count);
-        check_paintbrush_projector(*paintbrush, paint_objects.projector());
+        check_paintbrush_projector(*paintbrush, scene.projector());
 
         const PainterSampler<N - 1, T> sampler(samples_per_pixel);
 
-        const PaintData paint_data(
-                paint_objects.objects(), paint_objects.light_sources(), paint_objects.background_color(),
-                paint_objects.background_light_source_color(), compute_ray_offset(paint_objects.objects()),
-                smooth_normal);
+        const PaintData paint_data(scene, smooth_normal);
 
-        Pixels pixels(paint_objects.projector().screen_size());
+        Pixels pixels(scene.projector().screen_size());
 
         ThreadBarrier barrier(thread_count);
         std::vector<std::thread> threads(thread_count);
@@ -768,7 +599,7 @@ void paint_threads(
         {
                 threads[i] = std::thread([&, i]() {
                         work_thread(
-                                i, &barrier, stop, &error_caught, &stop_painting, paint_objects.projector(), paint_data,
+                                i, &barrier, stop, &error_caught, &stop_painting, scene.projector(), paint_data,
                                 painter_notifier, paintbrush, sampler, &pixels);
                 });
         }
@@ -785,7 +616,7 @@ template <size_t N, typename T>
 void paint(
         PainterNotifier<N - 1>* painter_notifier,
         int samples_per_pixel,
-        const PaintObjects<N, T>& paint_objects,
+        const Scene<N, T>& scene,
         Paintbrush<N - 1>* paintbrush,
         int thread_count,
         std::atomic_bool* stop,
@@ -798,7 +629,7 @@ void paint(
                         ASSERT(painter_notifier && paintbrush && stop);
 
                         paint_threads(
-                                painter_notifier, samples_per_pixel, paint_objects, paintbrush, thread_count, stop,
+                                painter_notifier, samples_per_pixel, scene, paintbrush, thread_count, stop,
                                 smooth_normal);
                 }
                 catch (const std::exception& e)
@@ -819,7 +650,7 @@ void paint(
 template void paint(
         PainterNotifier<2>* painter_notifier,
         int samples_per_pixel,
-        const PaintObjects<3, float>& paint_objects,
+        const Scene<3, float>& scene,
         Paintbrush<2>* paintbrush,
         int thread_count,
         std::atomic_bool* stop,
@@ -827,7 +658,7 @@ template void paint(
 template void paint(
         PainterNotifier<3>* painter_notifier,
         int samples_per_pixel,
-        const PaintObjects<4, float>& paint_objects,
+        const Scene<4, float>& scene,
         Paintbrush<3>* paintbrush,
         int thread_count,
         std::atomic_bool* stop,
@@ -835,7 +666,7 @@ template void paint(
 template void paint(
         PainterNotifier<4>* painter_notifier,
         int samples_per_pixel,
-        const PaintObjects<5, float>& paint_objects,
+        const Scene<5, float>& scene,
         Paintbrush<4>* paintbrush,
         int thread_count,
         std::atomic_bool* stop,
@@ -843,7 +674,7 @@ template void paint(
 template void paint(
         PainterNotifier<5>* painter_notifier,
         int samples_per_pixel,
-        const PaintObjects<6, float>& paint_objects,
+        const Scene<6, float>& scene,
         Paintbrush<5>* paintbrush,
         int thread_count,
         std::atomic_bool* stop,
@@ -852,7 +683,7 @@ template void paint(
 template void paint(
         PainterNotifier<2>* painter_notifier,
         int samples_per_pixel,
-        const PaintObjects<3, double>& paint_objects,
+        const Scene<3, double>& scene,
         Paintbrush<2>* paintbrush,
         int thread_count,
         std::atomic_bool* stop,
@@ -860,7 +691,7 @@ template void paint(
 template void paint(
         PainterNotifier<3>* painter_notifier,
         int samples_per_pixel,
-        const PaintObjects<4, double>& paint_objects,
+        const Scene<4, double>& scene,
         Paintbrush<3>* paintbrush,
         int thread_count,
         std::atomic_bool* stop,
@@ -868,7 +699,7 @@ template void paint(
 template void paint(
         PainterNotifier<4>* painter_notifier,
         int samples_per_pixel,
-        const PaintObjects<5, double>& paint_objects,
+        const Scene<5, double>& scene,
         Paintbrush<4>* paintbrush,
         int thread_count,
         std::atomic_bool* stop,
@@ -876,7 +707,7 @@ template void paint(
 template void paint(
         PainterNotifier<5>* painter_notifier,
         int samples_per_pixel,
-        const PaintObjects<6, double>& paint_objects,
+        const Scene<6, double>& scene,
         Paintbrush<5>* paintbrush,
         int thread_count,
         std::atomic_bool* stop,

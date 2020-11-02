@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "cornell_box.h"
 
+#include "object_functions.h"
+
 #include "../visible_lights.h"
 #include "../visible_projectors.h"
 #include "../visible_shapes.h"
@@ -29,7 +31,7 @@ namespace painter
 namespace
 {
 template <typename T>
-class CornellBoxScene : public PaintObjects<3, T>
+class CornellBoxScene : public Scene<3, T>
 {
         std::vector<const GenericObject<3, T>*> m_objects;
         std::vector<const LightSource<3, T>*> m_light_sources;
@@ -55,11 +57,24 @@ class CornellBoxScene : public PaintObjects<3, T>
         std::unique_ptr<VisibleConstantLight<3, T>> m_constant_light;
         std::unique_ptr<VisiblePointLight<3, T>> m_point_light;
 
+        T m_size;
+
         //
 
-        const std::vector<const GenericObject<3, T>*>& objects() const override
+        T size() const override
         {
-                return m_objects;
+                return m_size;
+        }
+
+        bool intersect(const Ray<3, T>& ray, T* distance, const Surface<3, T>** surface, const void** intersection_data)
+                const override
+        {
+                return ray_intersect(m_objects, ray, distance, surface, intersection_data);
+        }
+
+        bool has_intersection(const Ray<3, T>& ray, const T& distance) const override
+        {
+                return ray_has_intersection(m_objects, ray, distance);
         }
 
         const std::vector<const LightSource<3, T>*>& light_sources() const override
@@ -195,6 +210,8 @@ void CornellBoxScene<T>::create_scene(
         m_objects.push_back(m_rectangle_right.get());
 
         m_objects.push_back(m_box.get());
+
+        m_size = scene_size(m_objects);
 }
 
 template <typename T>
@@ -248,7 +265,7 @@ CornellBoxScene<T>::CornellBoxScene(
 }
 
 template <typename T>
-std::unique_ptr<const PaintObjects<3, T>> cornell_box_scene(
+std::unique_ptr<const Scene<3, T>> cornell_box_scene(
         int width,
         int height,
         const std::string& obj_file_name,
@@ -263,7 +280,7 @@ std::unique_ptr<const PaintObjects<3, T>> cornell_box_scene(
 }
 
 template <typename T>
-std::unique_ptr<const PaintObjects<3, T>> cornell_box_scene(
+std::unique_ptr<const Scene<3, T>> cornell_box_scene(
         int width,
         int height,
         const std::shared_ptr<const MeshObject<3, T>>& mesh,
@@ -276,7 +293,7 @@ std::unique_ptr<const PaintObjects<3, T>> cornell_box_scene(
 
 //
 
-template std::unique_ptr<const PaintObjects<3, float>> cornell_box_scene(
+template std::unique_ptr<const Scene<3, float>> cornell_box_scene(
         int width,
         int height,
         const std::string& obj_file_name,
@@ -286,7 +303,7 @@ template std::unique_ptr<const PaintObjects<3, float>> cornell_box_scene(
         const Vector<3, float>& camera_direction,
         const Vector<3, float>& camera_up);
 
-template std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(
+template std::unique_ptr<const Scene<3, double>> cornell_box_scene(
         int width,
         int height,
         const std::string& obj_file_name,
@@ -296,7 +313,7 @@ template std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(
         const Vector<3, double>& camera_direction,
         const Vector<3, double>& camera_up);
 
-template std::unique_ptr<const PaintObjects<3, float>> cornell_box_scene(
+template std::unique_ptr<const Scene<3, float>> cornell_box_scene(
         int width,
         int height,
         const std::shared_ptr<const MeshObject<3, float>>& mesh,
@@ -304,7 +321,7 @@ template std::unique_ptr<const PaintObjects<3, float>> cornell_box_scene(
         const Vector<3, float>& camera_direction,
         const Vector<3, float>& camera_up);
 
-template std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(
+template std::unique_ptr<const Scene<3, double>> cornell_box_scene(
         int width,
         int height,
         const std::shared_ptr<const MeshObject<3, double>>& mesh,

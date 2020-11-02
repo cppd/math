@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace painter
 {
 template <typename T>
-std::unique_ptr<const PaintObjects<3, T>> cornell_box_scene(
+std::unique_ptr<const Scene<3, T>> cornell_box_scene(
         int width,
         int height,
         const std::string& obj_file_name,
@@ -38,7 +38,7 @@ std::unique_ptr<const PaintObjects<3, T>> cornell_box_scene(
         const Vector<3, T>& camera_up);
 
 template <typename T>
-std::unique_ptr<const PaintObjects<3, T>> cornell_box_scene(
+std::unique_ptr<const Scene<3, T>> cornell_box_scene(
         int width,
         int height,
         const std::shared_ptr<const MeshObject<3, T>>& mesh,
