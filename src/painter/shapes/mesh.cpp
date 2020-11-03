@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "mesh_object.h"
+#include "mesh.h"
 
 #include "../space/shape_intersection.h"
 #include "../space/shape_wrapper.h"
@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <utility>
 
-namespace painter
+namespace painter::shapes
 {
 namespace
 {
@@ -125,7 +125,7 @@ bool ray_intersection(
 }
 
 template <size_t N, typename T>
-void MeshObject<N, T>::create_tree(
+void Mesh<N, T>::create_tree(
         const std::vector<MeshFacet<N, T>>& facets,
         SpatialSubdivisionTree<TreeParallelotope>* tree,
         ProgressRatio* progress)
@@ -166,7 +166,7 @@ void MeshObject<N, T>::create_tree(
 }
 
 template <size_t N, typename T>
-void MeshObject<N, T>::create(const mesh::Reading<N>& mesh_object)
+void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
 {
         const mesh::Mesh<N>& mesh = mesh_object.mesh();
 
@@ -247,7 +247,7 @@ void MeshObject<N, T>::create(const mesh::Reading<N>& mesh_object)
 }
 
 template <size_t N, typename T>
-void MeshObject<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
+void Mesh<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
 {
         if (mesh_objects.empty())
         {
@@ -317,7 +317,7 @@ void MeshObject<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
 }
 
 template <size_t N, typename T>
-MeshObject<N, T>::MeshObject(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* progress)
+Mesh<N, T>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* progress)
 {
         TimePoint start_time = time();
 
@@ -336,14 +336,18 @@ MeshObject<N, T>::MeshObject(const std::vector<const mesh::MeshObject<N>*>& mesh
 }
 
 template <size_t N, typename T>
-bool MeshObject<N, T>::intersect_approximate(const Ray<N, T>& r, T* t) const
+bool Mesh<N, T>::intersect_approximate(const Ray<N, T>& r, T* t) const
 {
         return m_tree.intersect_root(r, t);
 }
 
 template <size_t N, typename T>
-bool MeshObject<N, T>::intersect_precise(const Ray<N, T>& ray, T approximate_t, T* t, const void** intersection_data)
-        const
+bool Mesh<N, T>::intersect_precise(
+        const Ray<N, T>& ray,
+        T approximate_t,
+        T* t,
+        const Surface<N, T>** surface,
+        const void** intersection_data) const
 {
         const MeshFacet<N, T>* facet = nullptr;
 
@@ -359,6 +363,7 @@ bool MeshObject<N, T>::intersect_precise(const Ray<N, T>& ray, T approximate_t, 
                             return false;
                     }))
         {
+                *surface = this;
                 *intersection_data = facet;
                 return true;
         }
@@ -367,7 +372,7 @@ bool MeshObject<N, T>::intersect_precise(const Ray<N, T>& ray, T approximate_t, 
 }
 
 template <size_t N, typename T>
-SurfaceProperties<N, T> MeshObject<N, T>::surface_properties(const Vector<N, T>& p, const void* intersection_data) const
+SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& p, const void* intersection_data) const
 {
         SurfaceProperties<N, T> s;
 
@@ -396,19 +401,21 @@ SurfaceProperties<N, T> MeshObject<N, T>::surface_properties(const Vector<N, T>&
 }
 
 template <size_t N, typename T>
-void MeshObject<N, T>::min_max(Vector<N, T>* min, Vector<N, T>* max) const
+BoundingBox<N, T> Mesh<N, T>::bounding_box() const
 {
-        *min = m_min;
-        *max = m_max;
+        BoundingBox<N, T> bb;
+        bb.min = m_min;
+        bb.max = m_max;
+        return bb;
 }
 
-template class MeshObject<3, float>;
-template class MeshObject<4, float>;
-template class MeshObject<5, float>;
-template class MeshObject<6, float>;
+template class Mesh<3, float>;
+template class Mesh<4, float>;
+template class Mesh<5, float>;
+template class Mesh<6, float>;
 
-template class MeshObject<3, double>;
-template class MeshObject<4, double>;
-template class MeshObject<5, double>;
-template class MeshObject<6, double>;
+template class Mesh<3, double>;
+template class Mesh<4, double>;
+template class Mesh<5, double>;
+template class Mesh<6, double>;
 }

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../objects.h"
+#include "shape.h"
 
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
@@ -29,41 +29,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace painter
 {
 template <size_t N, typename T>
-T scene_size(const std::vector<const GenericObject<N, T>*>& objects)
+T scene_size(const std::vector<const Shape<N, T>*>& shapes)
 {
-        T size = 0;
-
-        for (const GenericObject<N, T>* object : objects)
+        BoundingBox<N, T> bb = shapes[0]->bounding_box();
+        for (size_t i = 1; i < shapes.size(); ++i)
         {
-                Vector<N, T> min;
-                Vector<N, T> max;
-                object->min_max(&min, &max);
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        size = std::max(size, max[i] - min[i]);
-                }
+                bb = join(bb, shapes[i]->bounding_box());
         }
-
-        return size;
+        return (bb.max - bb.min).norm();
 }
 
 template <size_t N, typename T>
 bool ray_intersect(
-        const std::vector<const GenericObject<N, T>*>& objects,
+        const std::vector<const Shape<N, T>*>& shapes,
         const Ray<N, T>& ray,
         T* intersection_distance,
         const Surface<N, T>** intersection_surface,
         const void** intersection_data)
 {
-        if (objects.size() == 1)
+        if (shapes.size() == 1)
         {
                 T approximate_distance;
                 T distance;
                 const Surface<N, T>* surface;
                 const void* data;
 
-                if (objects[0]->intersect_approximate(ray, &approximate_distance)
-                    && objects[0]->intersect_precise(ray, approximate_distance, &distance, &surface, &data))
+                if (shapes[0]->intersect_approximate(ray, &approximate_distance)
+                    && shapes[0]->intersect_precise(ray, approximate_distance, &distance, &surface, &data))
                 {
                         *intersection_distance = distance;
                         *intersection_surface = surface;
@@ -78,15 +70,15 @@ bool ray_intersect(
         // Объекты могут быть сложными, поэтому перед поиском точного пересечения
         // их надо разместить по возрастанию примерного пересечения.
 
-        std::vector<std::tuple<T, const GenericObject<N, T>*>> approximate_intersections;
-        approximate_intersections.reserve(objects.size());
+        std::vector<std::tuple<T, const Shape<N, T>*>> approximate_intersections;
+        approximate_intersections.reserve(shapes.size());
 
-        for (const GenericObject<N, T>* obj : objects)
+        for (const Shape<N, T>* shape : shapes)
         {
                 T distance;
-                if (obj->intersect_approximate(ray, &distance))
+                if (shape->intersect_approximate(ray, &distance))
                 {
-                        approximate_intersections.emplace_back(distance, obj);
+                        approximate_intersections.emplace_back(distance, shape);
                 }
         }
 
@@ -97,8 +89,9 @@ bool ray_intersect(
 
         std::sort(
                 approximate_intersections.begin(), approximate_intersections.end(),
-                [](const std::tuple<T, const GenericObject<N, T>*>& a,
-                   const std::tuple<T, const GenericObject<N, T>*>& b) { return std::get<0>(a) < std::get<0>(b); });
+                [](const std::tuple<T, const Shape<N, T>*>& a, const std::tuple<T, const Shape<N, T>*>& b) {
+                        return std::get<0>(a) < std::get<0>(b);
+                });
 
         T min_distance = limits<T>::max();
         bool found = false;
@@ -134,18 +127,15 @@ bool ray_intersect(
 }
 
 template <size_t N, typename T>
-bool ray_has_intersection(
-        const std::vector<const GenericObject<N, T>*>& objects,
-        const Ray<N, T>& ray,
-        const T& distance)
+bool ray_has_intersection(const std::vector<const Shape<N, T>*>& shapes, const Ray<N, T>& ray, const T& distance)
 {
-        for (const GenericObject<N, T>* object : objects)
+        for (const Shape<N, T>* shape : shapes)
         {
                 T distance_to_object;
                 const Surface<N, T>* surface;
                 const void* intersection_data;
 
-                if (!object->intersect_approximate(ray, &distance_to_object))
+                if (!shape->intersect_approximate(ray, &distance_to_object))
                 {
                         continue;
                 }
@@ -155,7 +145,7 @@ bool ray_has_intersection(
                         continue;
                 }
 
-                if (!object->intersect_precise(
+                if (!shape->intersect_precise(
                             ray, distance_to_object, &distance_to_object, &surface, &intersection_data))
                 {
                         continue;

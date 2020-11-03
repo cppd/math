@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/test/test_eigen.h>
 #include <src/numerical/test/test_normal.h>
 #include <src/numerical/test/test_simplex.h>
-#include <src/painter/mesh/test/test_mesh.h>
+#include <src/painter/shapes/test/test_mesh.h>
 #include <src/painter/space/test/test_parallelotope.h>
 #include <src/utility/string/str.h>
 
@@ -97,13 +97,13 @@ void self_test_essential(ProgressRatios* progress_ratios)
         s = "Self-Test, Mesh in " + space_name_upper(3);
         catch_all(s, [&]() {
                 ProgressRatio progress(progress_ratios, s);
-                painter::test_mesh(3, &progress);
+                painter::shapes::test_mesh(3, &progress);
         });
 
         s = "Self-Test, Mesh in " + space_name_upper(4);
         catch_all(s, [&]() {
                 ProgressRatio progress(progress_ratios, s);
-                painter::test_mesh(4, &progress);
+                painter::shapes::test_mesh(4, &progress);
         });
 
         s = "Self-Test, Convex Hull in " + space_name_upper(2);
@@ -150,13 +150,13 @@ void self_test_extended(ProgressRatios* progress_ratios)
         s = "Self-Test, Mesh in " + space_name_upper(5);
         catch_all(s, [&]() {
                 ProgressRatio progress(progress_ratios, s);
-                painter::test_mesh(5, &progress);
+                painter::shapes::test_mesh(5, &progress);
         });
 
         s = "Self-Test, Mesh in " + space_name_upper(6);
         catch_all(s, [&]() {
                 ProgressRatio progress(progress_ratios, s);
-                painter::test_mesh(6, &progress);
+                painter::shapes::test_mesh(6, &progress);
         });
 
         s = "Self-Test, 3-Manifold Reconstruction in " + space_name_upper(4);

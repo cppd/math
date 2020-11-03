@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/numerical/vec.h>
-#include <src/painter/mesh/mesh_object.h>
 #include <src/painter/objects.h>
 #include <src/painter/scenes/cornell_box.h>
 #include <src/painter/scenes/single_object.h>
+#include <src/painter/shapes/mesh.h>
 #include <src/painter/visible_lights.h>
 #include <src/painter/visible_projectors.h>
 
@@ -81,7 +81,7 @@ std::unique_ptr<const painter::LightSource<3, T>> create_light_source(
 
 template <size_t N, typename T>
 std::unique_ptr<const painter::Scene<N, T>> create_painter_scene(
-        const std::shared_ptr<const painter::MeshObject<N, T>>& mesh,
+        const std::shared_ptr<const painter::Shape<N, T>>& shape,
         const PainterSceneInfo<N, T>& info,
         const Color& background_color,
         const Color::DataType& lighting_intensity)
@@ -94,15 +94,15 @@ std::unique_ptr<const painter::Scene<N, T>> create_painter_scene(
                 {
                         return single_object_scene(
                                 background_color, impl::create_projector(info),
-                                impl::create_light_source(info, lighting_intensity), mesh);
+                                impl::create_light_source(info, lighting_intensity), shape);
                 }
                 return cornell_box_scene(
-                        info.width, info.height, mesh, info.scene_size, info.camera_direction, info.camera_up);
+                        info.width, info.height, shape, info.scene_size, info.camera_direction, info.camera_up);
         }
         else
         {
                 return single_object_scene(
-                        background_color, lighting_intensity, info.min_screen_size, info.max_screen_size, mesh);
+                        background_color, lighting_intensity, info.min_screen_size, info.max_screen_size, shape);
         }
 }
 }

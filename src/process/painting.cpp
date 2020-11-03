@@ -103,7 +103,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         }
 
         return [=](ProgressRatioList* progress_list) {
-                std::shared_ptr<const painter::MeshObject<N, T>> painter_mesh_object;
+                std::shared_ptr<const painter::Shape<N, T>> painter_shape;
                 {
                         std::vector<const mesh::MeshObject<N>*> meshes;
                         meshes.reserve(mesh_objects.size());
@@ -112,10 +112,10 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                                 meshes.push_back(mesh_object.get());
                         }
                         ProgressRatio progress(progress_list);
-                        painter_mesh_object = std::make_shared<painter::MeshObject<N, T>>(meshes, &progress);
+                        painter_shape = std::make_shared<painter::shapes::Mesh<N, T>>(meshes, &progress);
                 }
 
-                if (!painter_mesh_object)
+                if (!painter_shape)
                 {
                         MESSAGE_WARNING("No object to paint");
                         return;
@@ -124,7 +124,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                 std::string name = mesh_objects.size() != 1 ? "" : mesh_objects[0]->name();
 
                 std::unique_ptr<const painter::Scene<N, T>> scene =
-                        create_painter_scene(painter_mesh_object, scene_info, background_color, lighting_intensity);
+                        create_painter_scene(painter_shape, scene_info, background_color, lighting_intensity);
 
                 gui::create_painter_window(name, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
         };

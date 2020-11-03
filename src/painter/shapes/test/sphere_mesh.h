@@ -17,16 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../mesh_object.h"
+#include "../mesh.h"
 
 #include <src/progress/progress.h>
 
 #include <memory>
 
-namespace painter
+namespace painter::shapes
 {
 template <size_t N, typename T>
-std::unique_ptr<const MeshObject<N, T>> simplex_mesh_of_random_sphere(
+std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_random_sphere(
         const Color& color,
         const Color::DataType& diffuse,
         int point_count,

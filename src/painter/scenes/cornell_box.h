@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../mesh/mesh_object.h"
+#include "shape.h"
+
 #include "../objects.h"
 
 #include <src/color/color.h>
@@ -41,7 +42,7 @@ template <typename T>
 std::unique_ptr<const Scene<3, T>> cornell_box_scene(
         int width,
         int height,
-        const std::shared_ptr<const MeshObject<3, T>>& mesh,
+        const std::shared_ptr<const Shape<3, T>>& shape,
         T size,
         const Vector<3, T>& camera_direction,
         const Vector<3, T>& camera_up);

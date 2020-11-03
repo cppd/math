@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_facet.h"
 
 #include "../objects.h"
+#include "../scenes/shape.h"
 #include "../space/parallelotope_aa.h"
 #include "../space/tree.h"
 
@@ -31,10 +32,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace painter
+namespace painter::shapes
 {
 template <size_t N, typename T>
-class MeshObject final
+class Mesh final : public Shape<N, T>, public Surface<N, T>
 {
         using TreeParallelotope = ParallelotopeAA<N, T>;
 
@@ -69,21 +70,24 @@ class MeshObject final
         void create(const std::vector<mesh::Reading<N>>& mesh_objects);
 
 public:
-        MeshObject(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* progress);
+        Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* progress);
 
         // Грани имеют адреса первых элементов векторов вершин,
         // нормалей и текстурных координат, поэтому при копировании
         // объекта надо менять адреса этих векторов в гранях.
-        MeshObject(const MeshObject&) = delete;
-        MeshObject(MeshObject&&) = delete;
-        MeshObject& operator=(const MeshObject&) = delete;
-        MeshObject& operator=(MeshObject&&) = delete;
+        Mesh(const Mesh&) = delete;
+        Mesh(Mesh&&) = delete;
+        Mesh& operator=(const Mesh&) = delete;
+        Mesh& operator=(Mesh&&) = delete;
 
-        bool intersect_approximate(const Ray<N, T>& r, T* t) const;
-        bool intersect_precise(const Ray<N, T>&, T approximate_t, T* t, const void** intersection_data) const;
-
-        SurfaceProperties<N, T> surface_properties(const Vector<N, T>& p, const void* intersection_data) const;
-
-        void min_max(Vector<N, T>* min, Vector<N, T>* max) const;
+        bool intersect_approximate(const Ray<N, T>& r, T* t) const override;
+        bool intersect_precise(
+                const Ray<N, T>&,
+                T approximate_t,
+                T* t,
+                const Surface<N, T>** surface,
+                const void** intersection_data) const override;
+        SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const override;
+        BoundingBox<N, T> bounding_box() const override;
 };
 }

@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <vector>
 
-namespace painter
+namespace painter::shapes
 {
 namespace
 {
@@ -82,26 +82,19 @@ T max_coordinate_modulus(const Vector<N, T>& a, const Vector<N, T>& b)
 }
 
 template <size_t N, typename T>
-void offset_and_rays_for_sphere_mesh(
-        const MeshObject<N, T>& mesh,
-        int ray_count,
-        T* offset,
-        std::vector<Ray<N, T>>* rays)
+void offset_and_rays_for_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, T* offset, std::vector<Ray<N, T>>* rays)
 {
-        Vector<N, T> min;
-        Vector<N, T> max;
+        BoundingBox<N, T> bb = mesh.bounding_box();
 
-        mesh.min_max(&min, &max);
-
-        *offset = max_coordinate_modulus(min, max) * (100 * limits<T>::epsilon());
+        *offset = max_coordinate_modulus(bb.min, bb.max) * (100 * limits<T>::epsilon());
 
         LOG("ray offset = " + to_string(*offset));
 
-        Vector<N, T> center = min + (max - min) / T(2);
+        Vector<N, T> center = bb.min + (bb.max - bb.min) / T(2);
         // Немного сместить центр, чтобы лучи не проходили через центр дерева
         center *= 0.99;
 
-        T radius = ((max - min) / T(2)).norm_infinity();
+        T radius = ((bb.max - bb.min) / T(2)).norm_infinity();
         // При работе со сферой, чтобы начала лучей точно находились вне сферы,
         // достаточно немного увеличить половину максимального расстояния
         radius *= 2;
@@ -114,7 +107,7 @@ void offset_and_rays_for_sphere_mesh(
 
 template <size_t N, typename T>
 void test_sphere_mesh(
-        const MeshObject<N, T>& mesh,
+        const Mesh<N, T>& mesh,
         int ray_count,
         bool with_ray_log,
         bool with_error_log,
@@ -149,6 +142,7 @@ void test_sphere_mesh(
 
                 T approximate;
                 T precise;
+                const Surface<N, T>* surface;
                 const void* intersection_data;
 
                 if (!mesh.intersect_approximate(ray, &approximate))
@@ -165,7 +159,7 @@ void test_sphere_mesh(
                 {
                         LOG("t1_a == " + to_string(approximate));
                 }
-                if (!mesh.intersect_precise(ray, approximate, &precise, &intersection_data))
+                if (!mesh.intersect_precise(ray, approximate, &precise, &surface, &intersection_data))
                 {
                         if (with_error_log)
                         {
@@ -196,7 +190,7 @@ void test_sphere_mesh(
                 {
                         LOG("t2_a == " + to_string(approximate));
                 }
-                if (!mesh.intersect_precise(ray, approximate, &precise, &intersection_data))
+                if (!mesh.intersect_precise(ray, approximate, &precise, &surface, &intersection_data))
                 {
                         if (with_error_log)
                         {
@@ -214,7 +208,7 @@ void test_sphere_mesh(
                 ray.move_along_dir(precise + ray_offset);
 
                 if (mesh.intersect_approximate(ray, &approximate)
-                    && mesh.intersect_precise(ray, approximate, &precise, &intersection_data))
+                    && mesh.intersect_precise(ray, approximate, &precise, &surface, &intersection_data))
                 {
                         if (with_error_log)
                         {

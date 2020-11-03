@@ -17,13 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "object_functions.h"
+#include "functions.h"
+#include "shape.h"
 
-#include "../mesh/mesh_object.h"
 #include "../objects.h"
 #include "../visible_lights.h"
 #include "../visible_projectors.h"
-#include "../visible_shapes.h"
 
 #include <src/color/color.h>
 #include <src/com/type/limit.h>
@@ -37,14 +36,14 @@ namespace single_object_scene_implementation
 template <size_t N, typename T>
 class SingleObjectScene final : public Scene<N, T>
 {
-        VisibleSharedMesh<N, T> m_object;
+        std::shared_ptr<const Shape<N, T>> m_shape;
         std::unique_ptr<const Projector<N, T>> m_projector;
         std::unique_ptr<const LightSource<N, T>> m_light_source;
 
         Color m_background_color;
         Color m_background_light_source_color;
 
-        std::vector<const GenericObject<N, T>*> m_objects;
+        std::vector<const Shape<N, T>*> m_shapes;
         std::vector<const LightSource<N, T>*> m_light_sources;
 
         T m_size;
@@ -59,12 +58,12 @@ class SingleObjectScene final : public Scene<N, T>
         bool intersect(const Ray<N, T>& ray, T* distance, const Surface<N, T>** surface, const void** intersection_data)
                 const override
         {
-                return ray_intersect(m_objects, ray, distance, surface, intersection_data);
+                return ray_intersect(m_shapes, ray, distance, surface, intersection_data);
         }
 
         bool has_intersection(const Ray<N, T>& ray, const T& distance) const override
         {
-                return ray_has_intersection(m_objects, ray, distance);
+                return ray_has_intersection(m_shapes, ray, distance);
         }
 
         const std::vector<const LightSource<N, T>*>& light_sources() const override
@@ -92,16 +91,16 @@ public:
                 const Color& background_color,
                 std::unique_ptr<const Projector<N, T>>&& projector,
                 std::unique_ptr<const LightSource<N, T>>&& light_source,
-                std::shared_ptr<const MeshObject<N, T>>&& mesh)
-                : m_object(std::move(mesh)), m_projector(std::move(projector)), m_light_source(std::move(light_source))
+                std::shared_ptr<const Shape<N, T>>&& shape)
+                : m_shape(std::move(shape)), m_projector(std::move(projector)), m_light_source(std::move(light_source))
         {
                 m_background_color = background_color;
                 m_background_light_source_color = Color(background_color.luminance());
 
                 m_light_sources.push_back(m_light_source.get());
 
-                m_objects.push_back(&m_object);
-                m_size = scene_size(m_objects);
+                m_shapes.push_back(m_shape.get());
+                m_size = scene_size(m_shapes);
         }
 };
 }
@@ -111,14 +110,14 @@ std::unique_ptr<const Scene<N, T>> single_object_scene(
         const Color& background_color,
         std::unique_ptr<const Projector<N, T>>&& projector,
         std::unique_ptr<const LightSource<N, T>>&& light_source,
-        std::shared_ptr<const MeshObject<N, T>> mesh)
+        std::shared_ptr<const Shape<N, T>> shape)
 {
-        ASSERT(projector && light_source && mesh);
+        ASSERT(projector && light_source && shape);
 
         namespace impl = single_object_scene_implementation;
 
         return std::make_unique<impl::SingleObjectScene<N, T>>(
-                background_color, std::move(projector), std::move(light_source), std::move(mesh));
+                background_color, std::move(projector), std::move(light_source), std::move(shape));
 }
 
 template <size_t N, typename T>
@@ -127,9 +126,9 @@ std::unique_ptr<const Scene<N, T>> single_object_scene(
         const Color::DataType& lighting_intensity,
         int min_screen_size,
         int max_screen_size,
-        std::shared_ptr<const MeshObject<N, T>> mesh)
+        std::shared_ptr<const Shape<N, T>> shape)
 {
-        ASSERT(mesh);
+        ASSERT(shape);
 
         if (min_screen_size < 3)
         {
@@ -142,11 +141,9 @@ std::unique_ptr<const Scene<N, T>> single_object_scene(
                       + ", max = " + to_string(max_screen_size));
         }
 
-        Vector<N, T> min;
-        Vector<N, T> max;
-        mesh->min_max(&min, &max);
-        Vector<N, T> object_size = max - min;
-        Vector<N, T> center = min + object_size / T(2);
+        BoundingBox<N, T> bb = shape->bounding_box();
+        Vector<N, T> object_size = bb.max - bb.min;
+        Vector<N, T> center = bb.min + object_size / T(2);
 
         //
 
@@ -168,7 +165,7 @@ std::unique_ptr<const Scene<N, T>> single_object_scene(
         }
 
         Vector<N, T> camera_position(center);
-        camera_position[N - 1] = max[N - 1] + object_size.norm();
+        camera_position[N - 1] = bb.max[N - 1] + object_size.norm();
 
         Vector<N, T> camera_direction(0);
         camera_direction[N - 1] = -1;
@@ -189,7 +186,7 @@ std::unique_ptr<const Scene<N, T>> single_object_scene(
 
         //
 
-        Vector<N, T> light_position(max + T(100) * (max - center));
+        Vector<N, T> light_position(bb.max + T(100) * (bb.max - center));
 
         std::unique_ptr<const LightSource<N, T>> light_source =
                 std::make_unique<const VisibleConstantLight<N, T>>(light_position, Color(lighting_intensity));
@@ -199,6 +196,6 @@ std::unique_ptr<const Scene<N, T>> single_object_scene(
         namespace impl = single_object_scene_implementation;
 
         return std::make_unique<impl::SingleObjectScene<N, T>>(
-                background_color, std::move(projector), std::move(light_source), std::move(mesh));
+                background_color, std::move(projector), std::move(light_source), std::move(shape));
 }
 }
