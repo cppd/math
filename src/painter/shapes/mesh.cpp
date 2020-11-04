@@ -122,47 +122,45 @@ bool ray_intersection(
 
         return false;
 }
-}
 
-template <size_t N, typename T>
-void Mesh<N, T>::create_tree(
+template <size_t N, typename T, typename TreeParallelotope>
+void create_tree(
         const std::vector<MeshFacet<N, T>>& facets,
         SpatialSubdivisionTree<TreeParallelotope>* tree,
         ProgressRatio* progress)
 {
         progress->set_text(to_string(1 << N) + "-tree: %v of %m");
 
-        std::vector<ShapeWrapperForIntersection<MeshFacet<N, T>>> simplex_wrappers;
-        simplex_wrappers.reserve(facets.size());
+        std::vector<ShapeWrapperForIntersection<MeshFacet<N, T>>> wrappers;
+        wrappers.reserve(facets.size());
         for (const MeshFacet<N, T>& t : facets)
         {
-                simplex_wrappers.emplace_back(t);
+                wrappers.emplace_back(t);
         }
 
-        const auto simplex_intersections = [w = std::as_const(simplex_wrappers)](
-                                                   const TreeParallelotope& parallelotope,
-                                                   const std::vector<int>& indices) {
-                ShapeWrapperForIntersection p(parallelotope);
-                std::vector<int> intersections;
-                intersections.reserve(indices.size());
-                for (int object_index : indices)
-                {
-                        if (shape_intersection(p, w[object_index]))
+        const auto facet_intersections =
+                [w = std::as_const(wrappers)](const TreeParallelotope& parallelotope, const std::vector<int>& indices) {
+                        ShapeWrapperForIntersection p(parallelotope);
+                        std::vector<int> intersections;
+                        intersections.reserve(indices.size());
+                        for (int object_index : indices)
                         {
-                                intersections.push_back(object_index);
+                                if (shape_intersection(p, w[object_index]))
+                                {
+                                        intersections.push_back(object_index);
+                                }
                         }
-                }
-                return intersections;
-        };
+                        return intersections;
+                };
 
-        const auto simplex_vertices = [w = std::as_const(simplex_wrappers)](int simplex_index) {
-                return w[simplex_index].vertices();
-        };
+        const auto facet_vertices = [w = std::as_const(wrappers)](int index) { return w[index].vertices(); };
 
         const unsigned thread_count = hardware_concurrency();
+
         tree->decompose(
-                tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, facets.size(), simplex_vertices, simplex_intersections,
+                tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, facets.size(), facet_vertices, facet_intersections,
                 thread_count, progress);
+}
 }
 
 template <size_t N, typename T>
@@ -330,6 +328,7 @@ Mesh<N, T>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, Pr
                 }
                 create(reading);
         }
+
         create_tree(m_facets, &m_tree, progress);
 
         LOG("Painter mesh object created, " + to_string_fixed(duration_from(start_time), 5) + " s");

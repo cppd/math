@@ -61,11 +61,6 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
         SpatialSubdivisionTree<TreeParallelotope> m_tree;
         Vector<N, T> m_min, m_max;
 
-        static void create_tree(
-                const std::vector<MeshFacet<N, T>>& facets,
-                SpatialSubdivisionTree<TreeParallelotope>* tree,
-                ProgressRatio* progress);
-
         void create(const mesh::Reading<N>& mesh_object);
         void create(const std::vector<mesh::Reading<N>>& mesh_objects);
 

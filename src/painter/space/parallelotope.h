@@ -41,6 +41,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace painter
 {
+namespace parallelotope_implementation
+{
+template <size_t N, typename T, size_t... I>
+std::array<Vector<N, T>, N> make_vectors_impl(const Vector<N, T>& d, std::integer_sequence<size_t, I...>)
+{
+        static_assert(N == sizeof...(I));
+        // Заполнение диагонали матрицы NxN значениями из d, остальные элементы 0
+        std::array<Vector<N, T>, N> vectors{(static_cast<void>(I), Vector<N, T>(0))...};
+        ((vectors[I][I] = d[I]), ...);
+        return vectors;
+}
+
+template <size_t N, typename T, size_t... I>
+std::array<Vector<N, T>, N> make_vectors(const Vector<N, T>& d)
+{
+        return make_vectors_impl(d, std::make_integer_sequence<size_t, N>());
+}
+}
+
 template <size_t N, typename T>
 class Parallelotope final
 {
@@ -101,8 +120,8 @@ public:
 
         template <typename... P>
         explicit Parallelotope(const Vector<N, T>& org, const P&... vectors);
-
         Parallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
+        Parallelotope(const Vector<N, T>& min, const Vector<N, T>& max);
 
         Constraints<N, T, 2 * N, 0> constraints() const;
 
@@ -122,7 +141,6 @@ public:
         T length() const;
 
         const Vector<N, T>& org() const;
-
         const Vector<N, T>& e(unsigned n) const;
 };
 
@@ -141,6 +159,12 @@ template <size_t N, typename T>
 Parallelotope<N, T>::Parallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors)
 {
         set_data(org, vectors);
+}
+
+template <size_t N, typename T>
+Parallelotope<N, T>::Parallelotope(const Vector<N, T>& min, const Vector<N, T>& max)
+{
+        set_data(min, parallelotope_implementation::make_vectors(max - min));
 }
 
 template <size_t N, typename T>

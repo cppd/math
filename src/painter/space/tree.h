@@ -146,24 +146,6 @@ std::vector<Box<Parallelotope>> move_boxes_to_vector(Container<Box<Parallelotope
         return vector;
 }
 
-template <typename Parallelotope, size_t... I>
-constexpr Parallelotope create_parallelotope_from_vector(
-        const Vector<sizeof...(I), typename Parallelotope::DataType>& org,
-        const Vector<sizeof...(I), typename Parallelotope::DataType>& d,
-        std::integer_sequence<size_t, I...>)
-{
-        static_assert(Parallelotope::SPACE_DIMENSION == sizeof...(I));
-
-        using T = typename Parallelotope::DataType;
-        constexpr int N = Parallelotope::SPACE_DIMENSION;
-
-        // Заполнение диагонали матрицы NxN значениями из d, остальные элементы 0
-        std::array<Vector<N, T>, N> edges{(static_cast<void>(I), Vector<N, T>(0))...};
-        ((edges[I][I] = d[I]), ...);
-
-        return Parallelotope(org, edges[I]...);
-}
-
 template <size_t N, typename T, typename ObjectVertices>
 void min_max_and_distance(
         int max_divisions,
@@ -228,19 +210,6 @@ void min_max_and_distance(
         *minimum = min;
         *maximum = max;
         *distance = dist;
-}
-
-template <typename Parallelotope>
-Parallelotope root_parallelotope(
-        const Vector<Parallelotope::SPACE_DIMENSION, typename Parallelotope::DataType>& min,
-        const Vector<Parallelotope::SPACE_DIMENSION, typename Parallelotope::DataType>& max)
-{
-        static_assert(std::is_floating_point_v<typename Parallelotope::DataType>);
-
-        const Vector<Parallelotope::SPACE_DIMENSION, typename Parallelotope::DataType>& diagonal = max - min;
-
-        return create_parallelotope_from_vector<Parallelotope>(
-                min, diagonal, std::make_integer_sequence<size_t, Parallelotope::SPACE_DIMENSION>());
 }
 
 template <typename Box>
@@ -520,9 +489,7 @@ public:
                         max_divisions, DISTANCE_FROM_FACET_IN_EPSILONS, object_index_count, object_vertices, &min, &max,
                         &distance_from_facet);
 
-                BoxContainer boxes(
-                        {Box(impl::root_parallelotope<Parallelotope>(min, max),
-                             impl::iota_zero_based_indices(object_index_count))});
+                BoxContainer boxes({Box(Parallelotope(min, max), impl::iota_zero_based_indices(object_index_count))});
 
                 BoxJobs jobs(&boxes.front(), MAX_DEPTH_LEFT_BOUND);
 

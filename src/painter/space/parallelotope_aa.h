@@ -141,8 +141,8 @@ public:
 
         template <typename... P>
         explicit ParallelotopeAA(const Vector<N, T>& org, const P&... vectors);
-
         ParallelotopeAA(const Vector<N, T>& org, const std::array<T, N>& vectors);
+        ParallelotopeAA(const Vector<N, T>& min, const Vector<N, T>& max);
 
         Constraints<N, T, 2 * N, 0> constraints() const;
 
@@ -162,57 +162,24 @@ public:
         T length() const;
 
         Vector<N, T> org() const;
-
         Vector<N, T> e(unsigned n) const;
+
+        Vector<N, T> min() const;
+        Vector<N, T> max() const;
 };
 
 // Параметр vectors — это или все только T, или все только Vector<N, T>
 template <size_t N, typename T>
 template <typename... P>
 ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const P&... vectors)
+        : ParallelotopeAA(org, std::array<T, N>{vectors...})
 {
-        static_assert((std::is_same_v<T, P> && ...) || (std::is_same_v<Vector<N, T>, P> && ...));
+        static_assert((std::is_same_v<T, P> && ...));
         static_assert(sizeof...(P) == N);
-
-        if constexpr ((std::is_same_v<T, P> && ...))
-        {
-                set_data(org, std::array<T, N>{vectors...});
-        }
-        if constexpr ((std::is_same_v<Vector<N, T>, P> && ...))
-        {
-                set_data(org, std::array<Vector<N, T>, N>{vectors...});
-        }
 }
 
 template <size_t N, typename T>
-ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const std::array<T, N>& vectors)
-{
-        set_data(org, vectors);
-}
-
-template <size_t N, typename T>
-void ParallelotopeAA<N, T>::set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors)
-{
-        std::array<T, N> data;
-
-        for (unsigned vector_number = 0; vector_number < N; ++vector_number)
-        {
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        if (i != vector_number && vectors[vector_number][i] != 0)
-                        {
-                                error("Error axis-aligned parallelotope vectors");
-                        }
-                }
-
-                data[vector_number] = vectors[vector_number][vector_number];
-        }
-
-        set_data(org, data);
-}
-
-template <size_t N, typename T>
-void ParallelotopeAA<N, T>::set_data(const Vector<N, T>& org, const std::array<T, N>& sizes)
+ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const std::array<T, N>& sizes)
 {
         for (unsigned i = 0; i < N; ++i)
         {
@@ -221,14 +188,27 @@ void ParallelotopeAA<N, T>::set_data(const Vector<N, T>& org, const std::array<T
                         error("Axis-aligned parallelotope sizes " + to_string(sizes));
                 }
         }
-
-        // Расстояние от точки до плоскости
-        // dot(p - org, normal) = dot(p, normal) - dot(org, normal)
-        // d = dot(org, normal)
         for (unsigned i = 0; i < N; ++i)
         {
                 m_planes[i].d1 = org[i];
                 m_planes[i].d2 = org[i] + sizes[i];
+        }
+}
+
+template <size_t N, typename T>
+ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& min, const Vector<N, T>& max)
+{
+        for (unsigned i = 0; i < N; ++i)
+        {
+                if (!(max[i] - min[i] > 0))
+                {
+                        error("Axis-aligned parallelotope min " + to_string(min) + ", max " + to_string(max));
+                }
+        }
+        for (unsigned i = 0; i < N; ++i)
+        {
+                m_planes[i].d1 = min[i];
+                m_planes[i].d2 = max[i];
         }
 }
 
@@ -531,6 +511,27 @@ Vector<N, T> ParallelotopeAA<N, T>::e(unsigned n) const
         return parallelotope_aa_implementation::index_vector<N, T>(n, size(n));
 }
 
+template <size_t N, typename T>
+Vector<N, T> ParallelotopeAA<N, T>::min() const
+{
+        Vector<N, T> v;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                v[i] = m_planes[i].d1;
+        }
+        return v;
+}
+
+template <size_t N, typename T>
+Vector<N, T> ParallelotopeAA<N, T>::max() const
+{
+        Vector<N, T> v;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                v[i] = m_planes[i].d2;
+        }
+        return v;
+}
 }
 
 template <size_t N, typename T>
