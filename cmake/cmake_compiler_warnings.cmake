@@ -77,6 +77,7 @@ function(SetCompilerWarnings source_files)
                         -Wno-padded
                         -Wno-shadow-field-in-constructor
                         -Wno-weak-vtables
+                        -Wno-weak-template-vtables
 
                         -Wno-undefined-func-template
                         -Wno-ctad-maybe-unsupported
