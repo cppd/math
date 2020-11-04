@@ -21,8 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../scenes/shape.h"
 #include "../space/hyperplane_parallelotope.h"
 
-#include <src/numerical/algorithm.h>
-
 namespace painter::shapes
 {
 template <size_t N, typename T>
@@ -85,9 +83,7 @@ public:
 
         BoundingBox<N, T> bounding_box() const override
         {
-                BoundingBox<N, T> bb;
-                min_max_vector(m_hyperplane_parallelotope.vertices(), &bb.min, &bb.max);
-                return bb;
+                return BoundingBox<N, T>(m_hyperplane_parallelotope.vertices());
         }
 };
 }

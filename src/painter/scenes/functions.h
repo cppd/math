@@ -34,7 +34,9 @@ T scene_size(const std::vector<const Shape<N, T>*>& shapes)
         BoundingBox<N, T> bb = shapes[0]->bounding_box();
         for (size_t i = 1; i < shapes.size(); ++i)
         {
-                bb = join(bb, shapes[i]->bounding_box());
+                BoundingBox<N, T> shape_bb = shapes[i]->bounding_box();
+                bb.min = min_vector(bb.min, shape_bb.min);
+                bb.max = max_vector(bb.max, shape_bb.max);
         }
         return (bb.max - bb.min).norm();
 }

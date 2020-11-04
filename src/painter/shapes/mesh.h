@@ -59,7 +59,7 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
         std::vector<MeshFacet<N, T>> m_facets;
 
         SpatialSubdivisionTree<TreeParallelotope> m_tree;
-        Vector<N, T> m_min, m_max;
+        BoundingBox<N, T> m_bounding_box;
 
         void create(const mesh::Reading<N>& mesh_object);
         void create(const std::vector<mesh::Reading<N>>& mesh_objects);

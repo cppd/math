@@ -203,6 +203,9 @@ void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
                 m_texcoords.insert(m_texcoords.cend(), texcoords.cbegin(), texcoords.cend());
         }
 
+        m_bounding_box.min = Vector<N, T>(limits<T>::max());
+        m_bounding_box.max = Vector<N, T>(limits<T>::lowest());
+
         bool facets_without_material = false;
         int default_material_index = mesh.materials.size();
         for (const typename mesh::Mesh<N>::Facet& facet : mesh.facets)
@@ -222,8 +225,8 @@ void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
 
                 for (int index : vertices)
                 {
-                        m_min = min_vector(m_min, m_vertices[index]);
-                        m_max = max_vector(m_max, m_vertices[index]);
+                        m_bounding_box.min = min_vector(m_bounding_box.min, m_vertices[index]);
+                        m_bounding_box.max = max_vector(m_bounding_box.max, m_vertices[index]);
                 }
         }
 
@@ -288,9 +291,6 @@ void Mesh<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
         m_materials.reserve(material_count);
         m_images.reserve(image_count);
         m_facets.reserve(facet_count);
-
-        m_min = Vector<N, T>(limits<T>::max());
-        m_max = Vector<N, T>(limits<T>::lowest());
 
         for (const mesh::Reading<N>& mesh_object : mesh_objects)
         {
@@ -402,10 +402,7 @@ SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& p, const void
 template <size_t N, typename T>
 BoundingBox<N, T> Mesh<N, T>::bounding_box() const
 {
-        BoundingBox<N, T> bb;
-        bb.min = m_min;
-        bb.max = m_max;
-        return bb;
+        return m_bounding_box;
 }
 
 template class Mesh<3, float>;

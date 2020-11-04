@@ -29,16 +29,26 @@ struct BoundingBox final
 {
         Vector<N, T> min;
         Vector<N, T> max;
-};
 
-template <size_t N, typename T>
-BoundingBox<N, T> join(const BoundingBox<N, T>& bb1, const BoundingBox<N, T>& bb2)
-{
-        BoundingBox<N, T> bb;
-        bb.min = min_vector(bb1.min, bb2.min);
-        bb.max = max_vector(bb1.max, bb2.max);
-        return bb;
-}
+        BoundingBox() = default;
+
+        BoundingBox(const Vector<N, T>& min, const Vector<N, T>& max) : min(min), max(max)
+        {
+        }
+
+        template <size_t Size>
+        explicit BoundingBox(const std::array<Vector<N, T>, Size>& points)
+        {
+                static_assert(Size > 0);
+                min = points[0];
+                max = points[0];
+                for (size_t i = 1; i < Size; ++i)
+                {
+                        min = min_vector(points[i], min);
+                        max = max_vector(points[i], max);
+                }
+        }
+};
 
 // Один объект или структура из объектов, элементами которой
 // могут быть объекты или структуры из объектов и т.д.

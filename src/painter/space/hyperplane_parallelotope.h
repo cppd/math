@@ -50,7 +50,7 @@ class HyperplaneParallelotope final
         Vector<N, T> m_normal;
 
         template <int INDEX, typename F>
-        void vertices_impl(const Vector<N, T>& org, const F& f) const;
+        void vertices_impl(const Vector<N, T>& p, const F& f) const;
 
         template <int INDEX, typename F>
         void vertex_ridges_impl(const Vector<N, T>& p, std::array<bool, N - 1>* dimensions, const F& f) const;
