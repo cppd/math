@@ -39,8 +39,14 @@ std::unique_ptr<const Scene<N, T>> simple_scene(
         std::unique_ptr<const LightSource<N, T>>&& light_source,
         std::unique_ptr<const Shape<N, T>>&& shape)
 {
+        std::vector<std::unique_ptr<const LightSource<N, T>>> light_sources;
+        light_sources.push_back(std::move(light_source));
+
+        std::vector<std::unique_ptr<const Shape<N, T>>> shapes;
+        shapes.push_back(std::move(shape));
+
         return std::make_unique<StorageScene<N, T>>(
-                background_color, std::move(projector), std::move(light_source), std::move(shape));
+                background_color, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 
 template <size_t N, typename T>
@@ -111,12 +117,16 @@ std::unique_ptr<const Scene<N, T>> simple_scene(
 
         Vector<N, T> light_position(bb.max + T(100) * (bb.max - center));
 
-        std::unique_ptr<const LightSource<N, T>> light_source =
-                std::make_unique<const VisibleConstantLight<N, T>>(light_position, Color(lighting_intensity));
+        std::vector<std::unique_ptr<const LightSource<N, T>>> light_sources;
+        light_sources.push_back(
+                std::make_unique<const VisibleConstantLight<N, T>>(light_position, Color(lighting_intensity)));
 
         //
 
+        std::vector<std::unique_ptr<const Shape<N, T>>> shapes;
+        shapes.push_back(std::move(shape));
+
         return std::make_unique<StorageScene<N, T>>(
-                background_color, std::move(projector), std::move(light_source), std::move(shape));
+                background_color, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 }

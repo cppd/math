@@ -32,19 +32,33 @@ namespace painter
 template <size_t N, typename T>
 class StorageScene final : public Scene<N, T>
 {
-        std::unique_ptr<const Shape<N, T>> m_shape;
+        std::vector<std::unique_ptr<const Shape<N, T>>> m_shapes;
+        std::vector<std::unique_ptr<const LightSource<N, T>>> m_light_sources;
+
         std::unique_ptr<const Projector<N, T>> m_projector;
-        std::unique_ptr<const LightSource<N, T>> m_light_source;
 
         Color m_background_color;
         Color m_background_light_source_color;
 
-        std::vector<const Shape<N, T>*> m_shapes;
-        std::vector<const LightSource<N, T>*> m_light_sources;
+        std::vector<const Shape<N, T>*> m_shape_pointers;
+        std::vector<const LightSource<N, T>*> m_light_source_pointers;
 
         T m_size;
 
         //
+
+        template <typename P>
+        static std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
+        {
+                std::vector<P*> result;
+                result.reserve(objects.size());
+                for (const std::unique_ptr<P>& p : objects)
+                {
+                        ASSERT(p);
+                        result.push_back(p.get());
+                }
+                return result;
+        }
 
         T size() const override
         {
@@ -54,17 +68,17 @@ class StorageScene final : public Scene<N, T>
         bool intersect(const Ray<N, T>& ray, T* distance, const Surface<N, T>** surface, const void** intersection_data)
                 const override
         {
-                return ray_intersect(m_shapes, ray, distance, surface, intersection_data);
+                return ray_intersect(m_shape_pointers, ray, distance, surface, intersection_data);
         }
 
         bool has_intersection(const Ray<N, T>& ray, const T& distance) const override
         {
-                return ray_has_intersection(m_shapes, ray, distance);
+                return ray_has_intersection(m_shape_pointers, ray, distance);
         }
 
         const std::vector<const LightSource<N, T>*>& light_sources() const override
         {
-                return m_light_sources;
+                return m_light_source_pointers;
         }
 
         const Projector<N, T>& projector() const override
@@ -86,21 +100,18 @@ public:
         StorageScene(
                 const Color& background_color,
                 std::unique_ptr<const Projector<N, T>>&& projector,
-                std::unique_ptr<const LightSource<N, T>>&& light_source,
-                std::unique_ptr<const Shape<N, T>>&& shape)
-                : m_shape(std::move(shape)),
+                std::vector<std::unique_ptr<const LightSource<N, T>>>&& light_sources,
+                std::vector<std::unique_ptr<const Shape<N, T>>>&& shapes)
+                : m_shapes(std::move(shapes)),
+                  m_light_sources(std::move(light_sources)),
                   m_projector(std::move(projector)),
-                  m_light_source(std::move(light_source)),
-                  m_background_color(background_color)
+                  m_background_color(background_color),
+                  m_background_light_source_color(Color(m_background_color.luminance())),
+                  m_shape_pointers(to_pointers(m_shapes)),
+                  m_light_source_pointers(to_pointers(m_light_sources)),
+                  m_size(scene_size(m_shape_pointers))
         {
-                ASSERT(m_projector && m_light_source && m_shape);
-
-                m_background_light_source_color = Color(background_color.luminance());
-
-                m_light_sources.push_back(m_light_source.get());
-                m_shapes.push_back(m_shape.get());
-
-                m_size = scene_size(m_shapes);
+                ASSERT(m_projector);
         }
 };
 }
