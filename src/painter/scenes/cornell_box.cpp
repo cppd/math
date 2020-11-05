@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "cornell_box.h"
 
 #include "functions.h"
-#include "shape.h"
 
 #include "../shapes/hyperplane_parallelotope.h"
 #include "../shapes/mesh.h"
@@ -56,7 +55,7 @@ class CornellBoxScene : public Scene<3, T>
 
         std::unique_ptr<shapes::HyperplaneParallelotope<3, T>> m_lamp;
 
-        std::shared_ptr<const Shape<3, T>> m_shape;
+        std::unique_ptr<const Shape<3, T>> m_shape;
 
         std::unique_ptr<VisibleConstantLight<3, T>> m_constant_light;
         std::unique_ptr<VisiblePointLight<3, T>> m_point_light;
@@ -126,7 +125,7 @@ public:
         CornellBoxScene(
                 int width,
                 int height,
-                const std::shared_ptr<const Shape<3, T>>& shape,
+                std::unique_ptr<const Shape<3, T>>&& shape,
                 T size,
                 const Vector<3, T>& camera_direction,
                 const Vector<3, T>& camera_up);
@@ -243,7 +242,7 @@ CornellBoxScene<T>::CornellBoxScene(
                 {
                         std::vector<const mesh::MeshObject<3>*> meshes;
                         meshes.emplace_back(&mesh_object);
-                        m_shape = std::make_shared<const shapes::Mesh<3, T>>(meshes, &progress);
+                        m_shape = std::make_unique<const shapes::Mesh<3, T>>(meshes, &progress);
                 }
         }
 
@@ -254,11 +253,11 @@ template <typename T>
 CornellBoxScene<T>::CornellBoxScene(
         int width,
         int height,
-        const std::shared_ptr<const Shape<3, T>>& shape,
+        std::unique_ptr<const Shape<3, T>>&& shape,
         T size,
         const Vector<3, T>& camera_direction,
         const Vector<3, T>& camera_up)
-        : m_shape(shape)
+        : m_shape(std::move(shape))
 {
         create_scene(width, height, size, camera_direction, camera_up);
 }
@@ -283,12 +282,12 @@ template <typename T>
 std::unique_ptr<const Scene<3, T>> cornell_box_scene(
         int width,
         int height,
-        const std::shared_ptr<const Shape<3, T>>& shape,
+        std::unique_ptr<const Shape<3, T>>&& shape,
         T size,
         const Vector<3, T>& camera_direction,
         const Vector<3, T>& camera_up)
 {
-        return std::make_unique<CornellBoxScene<T>>(width, height, shape, size, camera_direction, camera_up);
+        return std::make_unique<CornellBoxScene<T>>(width, height, std::move(shape), size, camera_direction, camera_up);
 }
 
 //
@@ -316,7 +315,7 @@ template std::unique_ptr<const Scene<3, double>> cornell_box_scene(
 template std::unique_ptr<const Scene<3, float>> cornell_box_scene(
         int width,
         int height,
-        const std::shared_ptr<const Shape<3, float>>& shape,
+        std::unique_ptr<const Shape<3, float>>&& shape,
         float size,
         const Vector<3, float>& camera_direction,
         const Vector<3, float>& camera_up);
@@ -324,7 +323,7 @@ template std::unique_ptr<const Scene<3, float>> cornell_box_scene(
 template std::unique_ptr<const Scene<3, double>> cornell_box_scene(
         int width,
         int height,
-        const std::shared_ptr<const Shape<3, double>>& shape,
+        std::unique_ptr<const Shape<3, double>>&& shape,
         double size,
         const Vector<3, double>& camera_direction,
         const Vector<3, double>& camera_up);

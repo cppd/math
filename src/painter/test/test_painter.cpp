@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "test_painter.h"
 
 #include "../painter.h"
-#include "../scenes/single_object.h"
+#include "../scenes/simple.h"
 #include "../shapes/mesh.h"
 #include "../shapes/test/sphere_mesh.h"
 #include "../visible_lights.h"
@@ -128,17 +128,15 @@ void check_application_instance()
 }
 
 template <size_t N, typename T>
-std::shared_ptr<const shapes::Mesh<N, T>> sphere_mesh(int point_count, ProgressRatio* progress)
+std::unique_ptr<const shapes::Mesh<N, T>> sphere_mesh(int point_count, ProgressRatio* progress)
 {
         LOG("Creating mesh...");
-        std::shared_ptr<const shapes::Mesh<N, T>> mesh =
-                shapes::simplex_mesh_of_random_sphere<N, T>(DEFAULT_COLOR, DIFFUSE, point_count, progress);
 
-        return mesh;
+        return shapes::simplex_mesh_of_random_sphere<N, T>(DEFAULT_COLOR, DIFFUSE, point_count, progress);
 }
 
 template <size_t N, typename T>
-std::shared_ptr<const shapes::Mesh<N, T>> file_mesh(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<const shapes::Mesh<N, T>> file_mesh(const std::string& file_name, ProgressRatio* progress)
 {
         LOG("Loading geometry from file...");
         std::unique_ptr<const mesh::Mesh<N>> mesh = mesh::load<N>(file_name, progress);
@@ -150,9 +148,10 @@ std::shared_ptr<const shapes::Mesh<N, T>> file_mesh(const std::string& file_name
                 writing.set_color(DEFAULT_COLOR);
                 writing.set_diffuse(DIFFUSE);
         }
+
         std::vector<const mesh::MeshObject<N>*> meshes;
-        meshes.emplace_back(&mesh_object);
-        return std::make_shared<const shapes::Mesh<N, T>>(meshes, progress);
+        meshes.push_back(&mesh_object);
+        return std::make_unique<const shapes::Mesh<N, T>>(meshes, progress);
 }
 
 template <size_t N, typename T>
@@ -201,14 +200,14 @@ enum class PainterTestOutputType
 
 template <PainterTestOutputType type, size_t N, typename T>
 void test_painter(
-        const std::shared_ptr<const Shape<N, T>>& shape,
+        std::unique_ptr<const Shape<N, T>>&& shape,
         int min_screen_size,
         int max_screen_size,
         int samples_per_pixel,
         int thread_count)
 {
         std::unique_ptr<const Scene<N, T>> scene =
-                single_object_scene(BACKGROUND_COLOR, LIGHTING_INTENSITY, min_screen_size, max_screen_size, shape);
+                simple_scene(BACKGROUND_COLOR, LIGHTING_INTENSITY, min_screen_size, max_screen_size, std::move(shape));
 
         static_assert(type == PainterTestOutputType::File || type == PainterTestOutputType::Window);
 
@@ -229,9 +228,9 @@ void test_painter(int samples_per_pixel, int point_count, int min_screen_size, i
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
 
-        std::shared_ptr<const Shape<N, T>> mesh = sphere_mesh<N, T>(point_count, &progress);
+        std::unique_ptr<const Shape<N, T>> mesh = sphere_mesh<N, T>(point_count, &progress);
 
-        test_painter<type>(mesh, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
+        test_painter<type>(std::move(mesh), min_screen_size, max_screen_size, samples_per_pixel, thread_count);
 }
 
 template <size_t N, typename T, PainterTestOutputType type>
@@ -240,9 +239,9 @@ void test_painter(int samples_per_pixel, const std::string& file_name, int min_s
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
 
-        std::shared_ptr<const Shape<N, T>> mesh = file_mesh<N, T>(file_name, &progress);
+        std::unique_ptr<const Shape<N, T>> mesh = file_mesh<N, T>(file_name, &progress);
 
-        test_painter<type>(mesh, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
+        test_painter<type>(std::move(mesh), min_screen_size, max_screen_size, samples_per_pixel, thread_count);
 }
 }
 

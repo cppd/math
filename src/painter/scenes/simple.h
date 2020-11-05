@@ -17,116 +17,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "functions.h"
-#include "shape.h"
+#include "storage_scene.h"
 
 #include "../objects.h"
+#include "../shapes/shape.h"
 #include "../visible_lights.h"
 #include "../visible_projectors.h"
 
 #include <src/color/color.h>
+#include <src/com/error.h>
 #include <src/com/type/limit.h>
 
 #include <memory>
 
 namespace painter
 {
-namespace single_object_scene_implementation
-{
 template <size_t N, typename T>
-class SingleObjectScene final : public Scene<N, T>
-{
-        std::shared_ptr<const Shape<N, T>> m_shape;
-        std::unique_ptr<const Projector<N, T>> m_projector;
-        std::unique_ptr<const LightSource<N, T>> m_light_source;
-
-        Color m_background_color;
-        Color m_background_light_source_color;
-
-        std::vector<const Shape<N, T>*> m_shapes;
-        std::vector<const LightSource<N, T>*> m_light_sources;
-
-        T m_size;
-
-        //
-
-        T size() const override
-        {
-                return m_size;
-        }
-
-        bool intersect(const Ray<N, T>& ray, T* distance, const Surface<N, T>** surface, const void** intersection_data)
-                const override
-        {
-                return ray_intersect(m_shapes, ray, distance, surface, intersection_data);
-        }
-
-        bool has_intersection(const Ray<N, T>& ray, const T& distance) const override
-        {
-                return ray_has_intersection(m_shapes, ray, distance);
-        }
-
-        const std::vector<const LightSource<N, T>*>& light_sources() const override
-        {
-                return m_light_sources;
-        }
-
-        const Projector<N, T>& projector() const override
-        {
-                return *m_projector;
-        }
-
-        const Color& background_color() const override
-        {
-                return m_background_color;
-        }
-
-        const Color& background_light_source_color() const override
-        {
-                return m_background_light_source_color;
-        }
-
-public:
-        SingleObjectScene(
-                const Color& background_color,
-                std::unique_ptr<const Projector<N, T>>&& projector,
-                std::unique_ptr<const LightSource<N, T>>&& light_source,
-                std::shared_ptr<const Shape<N, T>>&& shape)
-                : m_shape(std::move(shape)), m_projector(std::move(projector)), m_light_source(std::move(light_source))
-        {
-                m_background_color = background_color;
-                m_background_light_source_color = Color(background_color.luminance());
-
-                m_light_sources.push_back(m_light_source.get());
-
-                m_shapes.push_back(m_shape.get());
-                m_size = scene_size(m_shapes);
-        }
-};
-}
-
-template <size_t N, typename T>
-std::unique_ptr<const Scene<N, T>> single_object_scene(
+std::unique_ptr<const Scene<N, T>> simple_scene(
         const Color& background_color,
         std::unique_ptr<const Projector<N, T>>&& projector,
         std::unique_ptr<const LightSource<N, T>>&& light_source,
-        std::shared_ptr<const Shape<N, T>> shape)
+        std::unique_ptr<const Shape<N, T>>&& shape)
 {
-        ASSERT(projector && light_source && shape);
-
-        namespace impl = single_object_scene_implementation;
-
-        return std::make_unique<impl::SingleObjectScene<N, T>>(
+        return std::make_unique<StorageScene<N, T>>(
                 background_color, std::move(projector), std::move(light_source), std::move(shape));
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const Scene<N, T>> single_object_scene(
+std::unique_ptr<const Scene<N, T>> simple_scene(
         const Color& background_color,
         const Color::DataType& lighting_intensity,
         int min_screen_size,
         int max_screen_size,
-        std::shared_ptr<const Shape<N, T>> shape)
+        std::unique_ptr<const Shape<N, T>>&& shape)
 {
         ASSERT(shape);
 
@@ -193,9 +116,7 @@ std::unique_ptr<const Scene<N, T>> single_object_scene(
 
         //
 
-        namespace impl = single_object_scene_implementation;
-
-        return std::make_unique<impl::SingleObjectScene<N, T>>(
+        return std::make_unique<StorageScene<N, T>>(
                 background_color, std::move(projector), std::move(light_source), std::move(shape));
 }
 }
