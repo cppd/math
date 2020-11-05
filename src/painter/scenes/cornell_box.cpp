@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "cornell_box.h"
 
-#include "functions.h"
+#include "storage_scene.h"
 
 #include "../shapes/hyperplane_parallelotope.h"
 #include "../shapes/mesh.h"
@@ -34,114 +34,18 @@ namespace painter
 namespace
 {
 template <typename T>
-class CornellBoxScene : public Scene<3, T>
-{
-        std::vector<const Shape<3, T>*> m_shapes;
-        std::vector<const LightSource<3, T>*> m_light_sources;
-        std::unique_ptr<VisiblePerspectiveProjector<3, T>> m_perspective_projector;
-        std::unique_ptr<VisibleParallelProjector<3, T>> m_parallel_projector;
-        std::unique_ptr<VisibleSphericalProjector<3, T>> m_spherical_projector;
-
-        Color m_background_color;
-        Color m_background_light_source_color;
-
-        std::unique_ptr<shapes::HyperplaneParallelotope<3, T>> m_rectangle_back;
-        std::unique_ptr<shapes::HyperplaneParallelotope<3, T>> m_rectangle_top;
-        std::unique_ptr<shapes::HyperplaneParallelotope<3, T>> m_rectangle_bottom;
-        std::unique_ptr<shapes::HyperplaneParallelotope<3, T>> m_rectangle_left;
-        std::unique_ptr<shapes::HyperplaneParallelotope<3, T>> m_rectangle_right;
-
-        std::unique_ptr<shapes::Parallelotope<3, T>> m_box;
-
-        std::unique_ptr<shapes::HyperplaneParallelotope<3, T>> m_lamp;
-
-        std::unique_ptr<const Shape<3, T>> m_shape;
-
-        std::unique_ptr<VisibleConstantLight<3, T>> m_constant_light;
-        std::unique_ptr<VisiblePointLight<3, T>> m_point_light;
-
-        T m_size;
-
-        //
-
-        T size() const override
-        {
-                return m_size;
-        }
-
-        bool intersect(const Ray<3, T>& ray, T* distance, const Surface<3, T>** surface, const void** intersection_data)
-                const override
-        {
-                return ray_intersect(m_shapes, ray, distance, surface, intersection_data);
-        }
-
-        bool has_intersection(const Ray<3, T>& ray, const T& distance) const override
-        {
-                return ray_has_intersection(m_shapes, ray, distance);
-        }
-
-        const std::vector<const LightSource<3, T>*>& light_sources() const override
-        {
-                return m_light_sources;
-        }
-
-        const Projector<3, T>& projector() const override
-        {
-                return *m_perspective_projector;
-                // return *m_parallel_projector;
-                // return *m_spherical_projector;
-        }
-
-        const Color& background_color() const override
-        {
-                return m_background_color;
-        }
-
-        const Color& background_light_source_color() const override
-        {
-                return m_background_light_source_color;
-        }
-
-        //
-
-        void create_scene(
-                int width,
-                int height,
-                T size,
-                const Vector<3, T>& camera_direction,
-                const Vector<3, T>& camera_up);
-
-public:
-        CornellBoxScene(
-                int width,
-                int height,
-                const std::string& obj_file_name,
-                T size,
-                const Color& default_color,
-                const Color::DataType& diffuse,
-                const Vector<3, T>& camera_direction,
-                const Vector<3, T>& camera_up);
-
-        CornellBoxScene(
-                int width,
-                int height,
-                std::unique_ptr<const Shape<3, T>>&& shape,
-                T size,
-                const Vector<3, T>& camera_direction,
-                const Vector<3, T>& camera_up);
-};
-
-template <typename T>
-void CornellBoxScene<T>::create_scene(
+std::unique_ptr<const Scene<3, T>> create_scene(
         int width,
         int height,
         T size,
         const Vector<3, T>& camera_direction,
-        const Vector<3, T>& camera_up)
+        const Vector<3, T>& camera_up,
+        std::unique_ptr<const Shape<3, T>>&& shape)
 {
-        m_shapes.push_back(m_shape.get());
+        std::vector<std::unique_ptr<const Shape<3, T>>> shapes;
+        std::vector<std::unique_ptr<const LightSource<3, T>>> light_sources;
 
-        //
+        shapes.push_back(std::move(shape));
 
         size *= T(1.5);
 
@@ -159,107 +63,64 @@ void CornellBoxScene<T>::create_scene(
         constexpr Color::DataType DIFFUSE = 1;
         constexpr Color::DataType ALPHA = 1;
 
-        m_rectangle_back = std::make_unique<shapes::HyperplaneParallelotope<3, T>>(
-                colors::WHITE, DIFFUSE, ALPHA, lower_left + size * dir, size * right, size * up);
+        // back
+        shapes.push_back(std::make_unique<shapes::HyperplaneParallelotope<3, T>>(
+                colors::WHITE, DIFFUSE, ALPHA, lower_left + size * dir, size * right, size * up));
 
-        m_rectangle_top = std::make_unique<shapes::HyperplaneParallelotope<3, T>>(
-                colors::WHITE, DIFFUSE, ALPHA, upper_left, size * dir, size * right);
+        // top
+        shapes.push_back(std::make_unique<shapes::HyperplaneParallelotope<3, T>>(
+                colors::WHITE, DIFFUSE, ALPHA, upper_left, size * dir, size * right));
 
-        m_rectangle_bottom = std::make_unique<shapes::HyperplaneParallelotope<3, T>>(
-                colors::WHITE, DIFFUSE, ALPHA, lower_left, size * dir, size * right);
+        // bottom
+        shapes.push_back(std::make_unique<shapes::HyperplaneParallelotope<3, T>>(
+                colors::WHITE, DIFFUSE, ALPHA, lower_left, size * dir, size * right));
 
-        m_rectangle_left = std::make_unique<shapes::HyperplaneParallelotope<3, T>>(
-                colors::RED, DIFFUSE, ALPHA, lower_left, size * dir, size * up);
+        // left
+        shapes.push_back(std::make_unique<shapes::HyperplaneParallelotope<3, T>>(
+                colors::RED, DIFFUSE, ALPHA, lower_left, size * dir, size * up));
 
-        m_rectangle_right = std::make_unique<shapes::HyperplaneParallelotope<3, T>>(
-                colors::GREEN, DIFFUSE, ALPHA, lower_right, size * dir, size * up);
+        // right
+        shapes.push_back(std::make_unique<shapes::HyperplaneParallelotope<3, T>>(
+                colors::GREEN, DIFFUSE, ALPHA, lower_right, size * dir, size * up));
+
+        // box
+        shapes.push_back(std::make_unique<shapes::Parallelotope<3, T>>(
+                colors::MAGENTA, DIFFUSE, ALPHA, lower_left + size * (T(0.7) * dir + T(0.8) * right + T(0.1) * up),
+                T(0.1) * size * right, T(0.8) * size * up, T(0.1) * size * dir));
+
+        const Vector<3, T> upper_center =
+                upper_left - T(0.001) * size * up + T(0.5) * size * right + T(0.5) * size * dir;
+
+        // lamp
+        {
+                std::unique_ptr<shapes::HyperplaneParallelotope<3, T>> lamp =
+                        std::make_unique<shapes::HyperplaneParallelotope<3, T>>(
+                                colors::WHITE, DIFFUSE, ALPHA,
+                                upper_center - T(0.1) * size * dir - T(0.1) * size * right, T(0.2) * size * right,
+                                T(0.2) * size * dir);
+                lamp->set_light_source(Color(50));
+                shapes.push_back(std::move(lamp));
+        }
+
+        // constant_light = std::make_unique<VisibleConstantLight<3, T>>(upper_center, Color(1));
+        // point_light = std::make_unique<VisiblePointLight<3, T>>(upper_center, Color(1), 1);
 
         //
 
         const std::array<int, 2> screen_sizes{width, height};
         const std::array<Vector<3, T>, 2> screen_axes{right, up};
-        m_perspective_projector =
+
+        std::unique_ptr<Projector<3, T>> projector =
                 std::make_unique<VisiblePerspectiveProjector<3, T>>(view_point, dir, screen_axes, 70, screen_sizes);
-        m_parallel_projector = std::make_unique<VisibleParallelProjector<3, T>>(
-                view_point, dir, screen_axes, size / width, screen_sizes);
-        m_spherical_projector =
-                std::make_unique<VisibleSphericalProjector<3, T>>(view_point, dir, screen_axes, 80, screen_sizes);
+        // std::make_unique<VisibleParallelProjector<3, T>>(view_point, dir, screen_axes, size / width, screen_sizes);
+        // std::make_unique<VisibleSphericalProjector<3, T>>(view_point, dir, screen_axes, 80, screen_sizes);
 
-        m_box = std::make_unique<shapes::Parallelotope<3, T>>(
-                colors::MAGENTA, DIFFUSE, ALPHA, lower_left + size * (T(0.7) * dir + T(0.8) * right + T(0.1) * up),
-                T(0.1) * size * right, T(0.8) * size * up, T(0.1) * size * dir);
+        //
 
-        Vector<3, T> upper_center = upper_left - T(0.001) * size * up + T(0.5) * size * right + T(0.5) * size * dir;
+        Color background_color = colors::BLACK;
 
-        m_lamp = std::make_unique<shapes::HyperplaneParallelotope<3, T>>(
-                colors::WHITE, DIFFUSE, ALPHA, upper_center - T(0.1) * size * dir - T(0.1) * size * right,
-                T(0.2) * size * right, T(0.2) * size * dir);
-        m_lamp->set_light_source(Color(50));
-
-        m_constant_light = std::make_unique<VisibleConstantLight<3, T>>(upper_center, Color(1));
-        m_point_light = std::make_unique<VisiblePointLight<3, T>>(upper_center, Color(1), 1);
-
-        m_background_color = colors::BLACK;
-        m_background_light_source_color = colors::BLACK;
-
-        m_shapes.push_back(m_lamp.get());
-        // m_light_sources.push_back(m_constant_light.get());
-        // m_light_sources.push_back(m_point_light.get());
-
-        m_shapes.push_back(m_rectangle_back.get());
-        m_shapes.push_back(m_rectangle_top.get());
-        m_shapes.push_back(m_rectangle_bottom.get());
-        m_shapes.push_back(m_rectangle_left.get());
-        m_shapes.push_back(m_rectangle_right.get());
-
-        m_shapes.push_back(m_box.get());
-
-        m_size = scene_size(m_shapes);
-}
-
-template <typename T>
-CornellBoxScene<T>::CornellBoxScene(
-        int width,
-        int height,
-        const std::string& obj_file_name,
-        T size,
-        const Color& default_color,
-        const Color::DataType& diffuse,
-        const Vector<3, T>& camera_direction,
-        const Vector<3, T>& camera_up)
-{
-        ProgressRatio progress(nullptr);
-
-        {
-                std::unique_ptr<const mesh::Mesh<3>> mesh = mesh::load<3>(obj_file_name, &progress);
-                mat4 vertex_matrix = model_matrix_for_size_and_position(*mesh, size, vec3(0));
-                mesh::MeshObject<3> mesh_object(std::move(mesh), vertex_matrix, "");
-                {
-                        mesh::Writing writing(&mesh_object);
-                        writing.set_color(default_color);
-                        writing.set_diffuse(diffuse);
-                }
-                {
-                        std::vector<const mesh::MeshObject<3>*> meshes;
-                        meshes.emplace_back(&mesh_object);
-                        m_shape = std::make_unique<const shapes::Mesh<3, T>>(meshes, &progress);
-                }
-        }
-
-        create_scene(width, height, size, camera_direction, camera_up);
-}
-
-template <typename T>
-CornellBoxScene<T>::CornellBoxScene(
-        int width,
-        int height,
-        std::unique_ptr<const Shape<3, T>>&& shape,
-        T size,
-        const Vector<3, T>& camera_direction,
-        const Vector<3, T>& camera_up)
-        : m_shape(std::move(shape))
-{
-        create_scene(width, height, size, camera_direction, camera_up);
+        return std::make_unique<StorageScene<3, T>>(
+                background_color, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 }
 
@@ -274,8 +135,26 @@ std::unique_ptr<const Scene<3, T>> cornell_box_scene(
         const Vector<3, T>& camera_direction,
         const Vector<3, T>& camera_up)
 {
-        return std::make_unique<CornellBoxScene<T>>(
-                width, height, obj_file_name, size, default_color, diffuse, camera_direction, camera_up);
+        ProgressRatio progress(nullptr);
+
+        std::unique_ptr<const Shape<3, T>> shape;
+        {
+                std::unique_ptr<const mesh::Mesh<3>> mesh = mesh::load<3>(obj_file_name, &progress);
+                mat4 vertex_matrix = model_matrix_for_size_and_position(*mesh, size, vec3(0));
+                mesh::MeshObject<3> mesh_object(std::move(mesh), vertex_matrix, "");
+                {
+                        mesh::Writing writing(&mesh_object);
+                        writing.set_color(default_color);
+                        writing.set_diffuse(diffuse);
+                }
+                {
+                        std::vector<const mesh::MeshObject<3>*> meshes;
+                        meshes.emplace_back(&mesh_object);
+                        shape = std::make_unique<const shapes::Mesh<3, T>>(meshes, &progress);
+                }
+        }
+
+        return create_scene(width, height, size, camera_direction, camera_up, std::move(shape));
 }
 
 template <typename T>
@@ -287,7 +166,7 @@ std::unique_ptr<const Scene<3, T>> cornell_box_scene(
         const Vector<3, T>& camera_direction,
         const Vector<3, T>& camera_up)
 {
-        return std::make_unique<CornellBoxScene<T>>(width, height, std::move(shape), size, camera_direction, camera_up);
+        return create_scene(width, height, size, camera_direction, camera_up, std::move(shape));
 }
 
 //
