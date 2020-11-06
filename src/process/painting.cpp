@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painting.h"
 
-#include "options.h"
 #include "painter_scene.h"
 
 #include <src/com/log.h>
@@ -81,7 +80,6 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                 scene_info.light_direction = to_vector<T>(camera.lighting);
                 scene_info.view_center = to_vector<T>(camera.view_center);
                 scene_info.view_width = camera.view_width;
-                scene_info.scene_size = SCENE_SIZE;
 
                 if (!gui::dialog::painter_parameters_for_3d(
                             hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,

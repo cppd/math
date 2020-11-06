@@ -43,7 +43,6 @@ struct PainterSceneInfo<3, T>
         Vector<3, T> camera_up;
         Vector<3, T> camera_direction;
         Vector<3, T> light_direction;
-        T scene_size;
         Vector<3, T> view_center;
         T view_width;
         int width;
@@ -54,9 +53,9 @@ struct PainterSceneInfo<3, T>
 namespace painter_scene_implementation
 {
 template <typename T>
-std::unique_ptr<const painter::Projector<3, T>> create_projector(const PainterSceneInfo<3, T>& info)
+std::unique_ptr<const painter::Projector<3, T>> create_projector(const PainterSceneInfo<3, T>& info, T scene_size)
 {
-        Vector<3, T> camera_position = info.view_center - info.camera_direction * T(2) * info.scene_size;
+        Vector<3, T> camera_position = info.view_center - info.camera_direction * T(2) * scene_size;
         Vector<3, T> camera_right = cross(info.camera_direction, info.camera_up);
 
         std::array<Vector<3, T>, 2> screen_axes{camera_right, info.camera_up};
@@ -71,9 +70,10 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(const PainterSc
 template <typename T>
 std::unique_ptr<const painter::LightSource<3, T>> create_light_source(
         const PainterSceneInfo<3, T>& info,
-        const Color::DataType& lighting_intensity)
+        const Color::DataType& lighting_intensity,
+        T scene_size)
 {
-        Vector<3, T> light_position = info.view_center - info.light_direction * info.scene_size * T(1000);
+        Vector<3, T> light_position = info.view_center - info.light_direction * scene_size * T(1000);
 
         return std::make_unique<const painter::VisibleConstantLight<3, T>>(light_position, Color(lighting_intensity));
 }
@@ -92,13 +92,15 @@ std::unique_ptr<const painter::Scene<N, T>> create_painter_scene(
 
                 if (!info.cornell_box)
                 {
+                        const painter::BoundingBox<N, T> bb = shape->bounding_box();
+                        const T scene_size = (bb.max - bb.min).norm();
+
                         return simple_scene(
-                                background_color, impl::create_projector(info),
-                                impl::create_light_source(info, lighting_intensity), std::move(shape));
+                                background_color, impl::create_projector(info, scene_size),
+                                impl::create_light_source(info, lighting_intensity, scene_size), std::move(shape));
                 }
                 return cornell_box_scene(
-                        info.width, info.height, std::move(shape), info.scene_size, info.camera_direction,
-                        info.camera_up);
+                        info.width, info.height, std::move(shape), info.camera_direction, info.camera_up);
         }
         else
         {
