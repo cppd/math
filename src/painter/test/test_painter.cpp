@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../scenes/simple.h"
 #include "../shapes/mesh.h"
 #include "../shapes/test/sphere_mesh.h"
-#include "../visible_projectors.h"
 
 #include <src/com/names.h>
 #include <src/com/time.h>

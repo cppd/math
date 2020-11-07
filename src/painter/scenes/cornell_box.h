@@ -20,10 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "storage_scene.h"
 
 #include "../objects.h"
+#include "../projectors/projector.h"
 #include "../shapes/hyperplane_parallelotope.h"
 #include "../shapes/parallelotope.h"
 #include "../shapes/shape.h"
-#include "../visible_projectors.h"
 
 #include <src/color/colors.h>
 #include <src/numerical/vec.h>
@@ -107,9 +107,9 @@ std::unique_ptr<const Scene<3, T>> cornell_box_scene(
         const std::array<Vector<3, T>, 2> screen_axes{right, up};
         const Vector<3, T> view_point = center - dir;
         std::unique_ptr<Projector<3, T>> projector =
-                std::make_unique<VisiblePerspectiveProjector<3, T>>(view_point, dir, screen_axes, 70, screen_sizes);
-        // std::make_unique<VisibleParallelProjector<3, T>>(view_point, dir, screen_axes, size / width, screen_sizes);
-        // std::make_unique<VisibleSphericalProjector<3, T>>(view_point, dir, screen_axes, 80, screen_sizes);
+                std::make_unique<PerspectiveProjector<3, T>>(view_point, dir, screen_axes, 70, screen_sizes);
+        // std::make_unique<ParallelProjector<3, T>>(view_point, dir, screen_axes, size / width, screen_sizes);
+        // std::make_unique<SphericalProjector<3, T>>(view_point, dir, screen_axes, 80, screen_sizes);
 
         const Color background_color = colors::BLACK;
 

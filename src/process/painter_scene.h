@@ -21,10 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vec.h>
 #include <src/painter/lights/constant_light.h>
 #include <src/painter/objects.h>
+#include <src/painter/projectors/projector.h>
 #include <src/painter/scenes/cornell_box.h>
 #include <src/painter/scenes/simple.h>
 #include <src/painter/shapes/mesh.h>
-#include <src/painter/visible_projectors.h>
 
 #include <memory>
 
@@ -63,7 +63,7 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(const PainterSc
 
         T units_per_pixel = info.view_width / info.width;
 
-        return std::make_unique<const painter::VisibleParallelProjector<3, T>>(
+        return std::make_unique<const painter::ParallelProjector<3, T>>(
                 camera_position, info.camera_direction, screen_axes, units_per_pixel, screen_size);
 }
 

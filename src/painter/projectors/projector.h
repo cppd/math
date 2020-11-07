@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../objects.h"
+
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
@@ -105,7 +107,7 @@ Vector<N, T> compute_screen_dir(
 }
 
 template <size_t N, typename T>
-class PerspectiveProjector
+class PerspectiveProjector final : public Projector<N, T>
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
@@ -143,12 +145,12 @@ public:
                 m_camera_dir *= dir_length;
         }
 
-        const std::array<int, N - 1>& screen_size() const
+        const std::array<int, N - 1>& screen_size() const override
         {
                 return m_screen_size;
         }
 
-        Ray<N, T> ray(const Vector<N - 1, T>& point) const
+        Ray<N, T> ray(const Vector<N - 1, T>& point) const override
         {
                 namespace impl = projector_implementation;
 
@@ -159,7 +161,7 @@ public:
 };
 
 template <size_t N, typename T>
-class ParallelProjector
+class ParallelProjector final : public Projector<N, T>
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
@@ -197,12 +199,12 @@ public:
                 }
         }
 
-        const std::array<int, N - 1>& screen_size() const
+        const std::array<int, N - 1>& screen_size() const override
         {
                 return m_screen_size;
         }
 
-        Ray<N, T> ray(const Vector<N - 1, T>& point) const
+        Ray<N, T> ray(const Vector<N - 1, T>& point) const override
         {
                 namespace impl = projector_implementation;
 
@@ -215,7 +217,7 @@ public:
 // Параллельное проецирование точек экрана на полусферу и создание лучей
 // из центра полусферы в направлении точек на сфере.
 template <size_t N, typename T>
-class SphericalProjector
+class SphericalProjector final : public Projector<N, T>
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
@@ -266,12 +268,12 @@ public:
                 m_square_radius = square(screen_size[0] * T(0.5) / sin_alpha);
         }
 
-        const std::array<int, N - 1>& screen_size() const
+        const std::array<int, N - 1>& screen_size() const override
         {
                 return m_screen_size;
         }
 
-        Ray<N, T> ray(const Vector<N - 1, T>& point) const
+        Ray<N, T> ray(const Vector<N - 1, T>& point) const override
         {
                 namespace impl = projector_implementation;
 

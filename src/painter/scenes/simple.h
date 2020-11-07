@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../lights/constant_light.h"
 #include "../objects.h"
+#include "../projectors/projector.h"
 #include "../shapes/shape.h"
-#include "../visible_projectors.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
@@ -110,7 +110,7 @@ std::unique_ptr<const Scene<N, T>> simple_scene(
 
         T units_per_pixel = max_projected_object_size / max_screen_size;
 
-        std::unique_ptr<const Projector<N, T>> projector = std::make_unique<const VisibleParallelProjector<N, T>>(
+        std::unique_ptr<const Projector<N, T>> projector = std::make_unique<const ParallelProjector<N, T>>(
                 camera_position, camera_direction, screen_axes, units_per_pixel, screen_size);
 
         //
