@@ -113,15 +113,25 @@ public:
         virtual SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const = 0;
 };
 
+//
+
+template <size_t N, typename T>
+struct LightProperties final
+{
+        Color color;
+        Vector<N, T> direction_to_light;
+};
+
 // Источник света, не являющийся видимым объектом.
 template <size_t N, typename T>
 struct LightSource
 {
         virtual ~LightSource() = default;
 
-        virtual void properties(const Vector<N, T>& point, Color* color, Vector<N, T>* vector_from_point_to_light)
-                const = 0;
+        virtual LightProperties<N, T> properties(const Vector<N, T>& point) const = 0;
 };
+
+//
 
 // Преобразование точки на экране в луч в пространстве.
 template <size_t N, typename T>

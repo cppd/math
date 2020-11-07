@@ -191,17 +191,14 @@ Color direct_diffuse_lighting(
 
         for (const LightSource<N, T>* light_source : paint_data.scene.light_sources())
         {
-                Color light_source_color;
-                Vector<N, T> vector_to_light;
+                const LightProperties light_properties = light_source->properties(p);
 
-                light_source->properties(p, &light_source_color, &vector_to_light);
-
-                if (color_is_zero(light_source_color))
+                if (color_is_zero(light_properties.color))
                 {
                         continue;
                 }
 
-                Ray<N, T> ray_to_light = Ray<N, T>(p, vector_to_light);
+                Ray<N, T> ray_to_light = Ray<N, T>(p, light_properties.direction_to_light);
 
                 const T dot_light_and_normal = dot(ray_to_light.dir(), shading_normal);
 
@@ -217,7 +214,8 @@ Color direct_diffuse_lighting(
                         // к источнику света, то напрямую рассчитать видимость источника света.
 
                         ray_to_light.move_along_dir(ray_offset);
-                        if (!light_source_is_visible(ray_count, paint_data, ray_to_light, vector_to_light.norm()))
+                        if (!light_source_is_visible(
+                                    ray_count, paint_data, ray_to_light, light_properties.direction_to_light.norm()))
                         {
                                 continue;
                         }
@@ -242,7 +240,7 @@ Color direct_diffuse_lighting(
                                 continue;
                         }
 
-                        T distance_to_light_source = vector_to_light.norm();
+                        T distance_to_light_source = light_properties.direction_to_light.norm();
 
                         if (t >= distance_to_light_source)
                         {
@@ -272,7 +270,7 @@ Color direct_diffuse_lighting(
 
                 T light_weight = DIFFUSE_LIGHT_COEFFICIENT<N, T> * dot_light_and_normal;
 
-                color += light_source_color * light_weight;
+                color += light_properties.color * light_weight;
         }
 
         return color;

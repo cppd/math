@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../objects.h"
+
 #include <src/color/color.h>
 #include <src/numerical/vec.h>
 
@@ -26,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace painter
 {
 template <size_t N, typename T>
-class PointLight
+class PointLight final : public LightSource<N, T>
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
@@ -41,41 +43,22 @@ public:
         {
         }
 
-        void properties(const Vector<N, T>& point, Color* color, Vector<N, T>* vector_from_point_to_light) const
+        LightProperties<N, T> properties(const Vector<N, T>& point) const override
         {
-                *vector_from_point_to_light = m_location - point;
+                LightProperties<N, T> p;
 
-                T square_distance = dot(*vector_from_point_to_light, *vector_from_point_to_light);
+                p.direction_to_light = m_location - point;
+
+                T square_distance = dot(p.direction_to_light, p.direction_to_light);
 
                 if constexpr (N == 3)
                 {
-                        *color = m_color * (m_coef / square_distance);
+                        p.color = m_color * (m_coef / square_distance);
                 }
                 else
                 {
-                        *color = m_color * (m_coef / std::pow(square_distance, T(N - 1) / 2));
+                        p.color = m_color * (m_coef / std::pow(square_distance, T(N - 1) / 2));
                 }
-        }
-};
-
-template <size_t N, typename T>
-class ConstantLight
-{
-        static_assert(N >= 2);
-        static_assert(std::is_floating_point_v<T>);
-
-        Vector<N, T> m_location;
-        Color m_color;
-
-public:
-        ConstantLight(const Vector<N, T>& location, const Color& color) : m_location(location), m_color(color)
-        {
-        }
-
-        void properties(const Vector<N, T>& point, Color* color, Vector<N, T>* vector_from_point_to_light) const
-        {
-                *vector_from_point_to_light = m_location - point;
-                *color = m_color;
         }
 };
 }

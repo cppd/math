@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "storage_scene.h"
 
+#include "../lights/constant_light.h"
 #include "../objects.h"
 #include "../shapes/shape.h"
-#include "../visible_lights.h"
 #include "../visible_projectors.h"
 
 #include <src/color/color.h>
@@ -118,8 +118,7 @@ std::unique_ptr<const Scene<N, T>> simple_scene(
         Vector<N, T> light_position(bb.max + T(100) * (bb.max - center));
 
         std::vector<std::unique_ptr<const LightSource<N, T>>> light_sources;
-        light_sources.push_back(
-                std::make_unique<const VisibleConstantLight<N, T>>(light_position, Color(lighting_intensity)));
+        light_sources.push_back(std::make_unique<const ConstantLight<N, T>>(light_position, Color(lighting_intensity)));
 
         //
 

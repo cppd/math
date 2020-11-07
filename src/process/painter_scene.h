@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/numerical/vec.h>
+#include <src/painter/lights/constant_light.h>
 #include <src/painter/objects.h>
 #include <src/painter/scenes/cornell_box.h>
 #include <src/painter/scenes/simple.h>
 #include <src/painter/shapes/mesh.h>
-#include <src/painter/visible_lights.h>
 #include <src/painter/visible_projectors.h>
 
 #include <memory>
@@ -75,7 +75,7 @@ std::unique_ptr<const painter::LightSource<3, T>> create_light_source(
 {
         Vector<3, T> light_position = info.view_center - info.light_direction * scene_size * T(1000);
 
-        return std::make_unique<const painter::VisibleConstantLight<3, T>>(light_position, Color(lighting_intensity));
+        return std::make_unique<const painter::ConstantLight<3, T>>(light_position, Color(lighting_intensity));
 }
 }
 
