@@ -17,95 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "functions.h"
+
 #include "../objects.h"
 
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
 namespace painter
 {
-namespace projector_implementation
-{
-template <size_t N, typename T>
-void check_vectors_orthogonal(const Vector<N, T>& camera_dir, const std::array<Vector<N, T>, N - 1>& screen_axes)
-{
-        constexpr T LIMIT_COS = limits<T>::epsilon() * 100;
-
-        for (unsigned i = 0; i < N - 1; ++i)
-        {
-                if (!(std::abs(dot(screen_axes[i], camera_dir)) <= LIMIT_COS))
-                {
-                        error("The screen axis " + to_string(i) + " is not orthogonal to the camera direction");
-                }
-
-                for (unsigned j = i + 1; j < N - 1; ++j)
-                {
-                        if (!(std::abs(dot(screen_axes[i], screen_axes[j])) <= LIMIT_COS))
-                        {
-                                error("The screen axis " + to_string(i) + " is not orthogonal to the screen axes "
-                                      + to_string(j));
-                        }
-                }
-        }
-}
-
-template <typename T, size_t N>
-Vector<N, T> screen_org(const std::array<int, N>& sizes)
-{
-        Vector<N, T> org;
-
-        for (unsigned i = 0; i < N; ++i)
-        {
-                if (sizes[i] < 1)
-                {
-                        error("Projection size " + to_string(i) + " is not positive (" + to_string(sizes[i]) + ")");
-                }
-                org[i] = -sizes[i] * (static_cast<T>(1) / 2);
-        }
-
-        return org;
-}
-
-template <size_t N, typename T>
-std::tuple<Vector<N, T>, std::array<Vector<N, T>, N - 1>> unit_dir_and_axes(
-        const Vector<N, T>& camera_dir,
-        const std::array<Vector<N, T>, N - 1>& screen_axes)
-{
-        std::tuple<Vector<N, T>, std::array<Vector<N, T>, N - 1>> res;
-
-        std::get<0>(res) = camera_dir.normalized();
-
-        for (unsigned i = 0; i < N - 1; ++i)
-        {
-                std::get<1>(res)[i] = screen_axes[i].normalized();
-        }
-
-        check_vectors_orthogonal(std::get<0>(res), std::get<1>(res));
-
-        return res;
-}
-
-template <size_t N, typename T>
-Vector<N, T> compute_screen_dir(
-        const std::array<Vector<N, T>, N - 1>& screen_axes,
-        const Vector<N - 1, T>& screen_point)
-{
-        Vector<N, T> screen_dir;
-
-        screen_dir = screen_axes[0] * screen_point[0];
-        for (unsigned i = 1; i < N - 1; ++i)
-        {
-                screen_dir += screen_axes[i] * screen_point[i];
-        }
-
-        return screen_dir;
-}
-}
-
 template <size_t N, typename T>
 class PerspectiveProjector final : public Projector<N, T>
 {
@@ -115,7 +38,8 @@ class PerspectiveProjector final : public Projector<N, T>
         std::array<int, N - 1> m_screen_size;
         std::array<Vector<N, T>, N - 1> m_screen_axes;
         Vector<N - 1, T> m_screen_org;
-        Vector<N, T> m_camera_org, m_camera_dir;
+        Vector<N, T> m_camera_org;
+        Vector<N, T> m_camera_dir;
 
 public:
         PerspectiveProjector(
@@ -125,12 +49,13 @@ public:
                 T width_view_angle_degrees,
                 const std::array<int, N - 1>& screen_size)
         {
-                namespace impl = projector_implementation;
-
                 m_screen_size = screen_size;
-                m_screen_org = impl::screen_org<T>(screen_size);
+                m_screen_org = projectors_implementation::screen_org<T>(screen_size);
                 m_camera_org = camera_org;
-                std::tie(m_camera_dir, m_screen_axes) = impl::unit_dir_and_axes(camera_dir, screen_axes);
+                m_camera_dir = camera_dir.normalized();
+                m_screen_axes = projectors_implementation::normalize_axes(screen_axes);
+
+                projectors_implementation::check_orthogonality(m_camera_dir, m_screen_axes);
 
                 //
 
@@ -152,10 +77,8 @@ public:
 
         Ray<N, T> ray(const Vector<N - 1, T>& point) const override
         {
-                namespace impl = projector_implementation;
-
                 Vector<N - 1, T> screen_point = m_screen_org + point;
-                Vector<N, T> screen_dir = impl::compute_screen_dir(m_screen_axes, screen_point);
+                Vector<N, T> screen_dir = projectors_implementation::screen_dir(m_screen_axes, screen_point);
                 return Ray<N, T>(m_camera_org, m_camera_dir + screen_dir);
         }
 };
@@ -169,7 +92,8 @@ class ParallelProjector final : public Projector<N, T>
         std::array<int, N - 1> m_screen_size;
         std::array<Vector<N, T>, N - 1> m_screen_axes;
         Vector<N - 1, T> m_screen_org;
-        Vector<N, T> m_camera_org, m_camera_dir;
+        Vector<N, T> m_camera_org;
+        Vector<N, T> m_camera_dir;
 
 public:
         ParallelProjector(
@@ -179,12 +103,13 @@ public:
                 T units_per_pixel,
                 const std::array<int, N - 1>& screen_size)
         {
-                namespace impl = projector_implementation;
-
                 m_screen_size = screen_size;
-                m_screen_org = impl::screen_org<T>(screen_size);
+                m_screen_org = projectors_implementation::screen_org<T>(screen_size);
                 m_camera_org = camera_org;
-                std::tie(m_camera_dir, m_screen_axes) = impl::unit_dir_and_axes(camera_dir, screen_axes);
+                m_camera_dir = camera_dir.normalized();
+                m_screen_axes = projectors_implementation::normalize_axes(screen_axes);
+
+                projectors_implementation::check_orthogonality(m_camera_dir, m_screen_axes);
 
                 //
 
@@ -206,10 +131,8 @@ public:
 
         Ray<N, T> ray(const Vector<N - 1, T>& point) const override
         {
-                namespace impl = projector_implementation;
-
                 Vector<N - 1, T> screen_point = m_screen_org + point;
-                Vector<N, T> screen_dir = impl::compute_screen_dir(m_screen_axes, screen_point);
+                Vector<N, T> screen_dir = projectors_implementation::screen_dir(m_screen_axes, screen_point);
                 return Ray<N, T>(m_camera_org + screen_dir, m_camera_dir);
         }
 };
@@ -225,7 +148,8 @@ class SphericalProjector final : public Projector<N, T>
         std::array<int, N - 1> m_screen_size;
         std::array<Vector<N, T>, N - 1> m_screen_axes;
         Vector<N - 1, T> m_screen_org;
-        Vector<N, T> m_camera_org, m_camera_dir;
+        Vector<N, T> m_camera_org;
+        Vector<N, T> m_camera_dir;
 
         T m_square_radius;
 
@@ -237,12 +161,13 @@ public:
                 T width_view_angle_degrees,
                 const std::array<int, N - 1>& screen_size)
         {
-                namespace impl = projector_implementation;
-
                 m_screen_size = screen_size;
-                m_screen_org = impl::screen_org<T>(screen_size);
+                m_screen_org = projectors_implementation::screen_org<T>(screen_size);
                 m_camera_org = camera_org;
-                std::tie(m_camera_dir, m_screen_axes) = impl::unit_dir_and_axes(camera_dir, screen_axes);
+                m_camera_dir = camera_dir.normalized();
+                m_screen_axes = projectors_implementation::normalize_axes(screen_axes);
+
+                projectors_implementation::check_orthogonality(m_camera_dir, m_screen_axes);
 
                 //
 
@@ -275,8 +200,6 @@ public:
 
         Ray<N, T> ray(const Vector<N - 1, T>& point) const override
         {
-                namespace impl = projector_implementation;
-
                 Vector<N - 1, T> screen_point = m_screen_org + point;
 
                 T radicand = m_square_radius - dot(screen_point, screen_point);
@@ -286,7 +209,7 @@ public:
                 }
                 T z = std::sqrt(radicand);
 
-                Vector<N, T> screen_dir = impl::compute_screen_dir(m_screen_axes, screen_point);
+                Vector<N, T> screen_dir = projectors_implementation::screen_dir(m_screen_axes, screen_point);
                 return Ray<N, T>(m_camera_org, m_camera_dir * z + screen_dir);
         }
 };
