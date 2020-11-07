@@ -424,16 +424,16 @@ void paint_pixels(
         const PainterSampler<N - 1, T>& sampler,
         Pixels<N - 1>* pixels)
 {
-        std::array<int_least16_t, N - 1> pixel;
+        std::optional<std::array<int_least16_t, N - 1>> pixel;
 
         Counter ray_count;
         int sample_count = 0;
 
-        while (!(*stop) && paintbrush->next_pixel(ray_count.value(), sample_count, &pixel))
+        while (!(*stop) && (pixel = paintbrush->next_pixel(ray_count.value(), sample_count)))
         {
-                painter_notifier->painter_pixel_before(thread_number, pixel);
+                painter_notifier->painter_pixel_before(thread_number, *pixel);
 
-                Vector<N - 1, T> screen_point = array_to_vector<T>(pixel);
+                Vector<N - 1, T> screen_point = array_to_vector<T>(*pixel);
 
                 sampler.generate(random_engine, samples);
 
@@ -462,9 +462,9 @@ void paint_pixels(
 
                 Color pixel_color;
                 float coverage;
-                pixels->add_color_and_samples(pixel, color, hit_sample_count, sample_count, &pixel_color, &coverage);
+                pixels->add_color_and_samples(*pixel, color, hit_sample_count, sample_count, &pixel_color, &coverage);
 
-                painter_notifier->painter_pixel_after(thread_number, pixel, pixel_color, coverage);
+                painter_notifier->painter_pixel_after(thread_number, *pixel, pixel_color, coverage);
         }
 }
 

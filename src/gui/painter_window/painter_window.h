@@ -30,8 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/global_index.h>
 #include <src/com/message.h>
 #include <src/image/file.h>
+#include <src/painter/paintbrushes/bar_paintbrush.h>
 #include <src/painter/painter.h>
-#include <src/painter/visible_paintbrush.h>
 #include <src/process/load.h>
 #include <src/utility/file/path.h>
 
@@ -68,7 +68,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
         long long m_slice_offset;
         std::vector<std::uint_least32_t> m_pixels_bgr;
         std::vector<std::byte> m_pixels_bytes_rgba;
-        painter::VisibleBarPaintbrush<N_IMAGE> m_paintbrush;
+        painter::BarPaintbrush<N_IMAGE> m_paintbrush;
         std::vector<long long> m_busy_pixels;
         std::atomic_bool m_stop;
         std::thread m_thread;
@@ -143,14 +143,16 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
         }
 
         // PainterWindow2d
-        void painter_statistics(
-                long long* pass_count,
-                long long* pixel_count,
-                long long* ray_count,
-                long long* sample_count,
-                double* previous_pass_duration) const override
+        Statistics statistics() const override
         {
-                m_paintbrush.statistics(pass_count, pixel_count, ray_count, sample_count, previous_pass_duration);
+                const painter::Statistics sp = m_paintbrush.statistics();
+                Statistics s;
+                s.pass_count = sp.pass_count;
+                s.pixel_count = sp.pixel_count;
+                s.ray_count = sp.ray_count;
+                s.sample_count = sp.sample_count;
+                s.previous_pass_duration = sp.previous_pass_duration;
+                return s;
         }
 
         void slider_positions_change_event(const std::vector<int>& slider_positions) override

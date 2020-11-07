@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../objects.h"
+
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
@@ -26,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace painter
 {
 template <size_t N>
-class BarPaintbrush
+class BarPaintbrush final : public Paintbrush<N>
 {
         static_assert(N >= 2);
 
@@ -118,15 +120,8 @@ class BarPaintbrush
         std::array<int, N> m_screen_size;
         std::vector<Pixel> m_pixels;
         int m_max_pass_count;
-
         unsigned m_current_pixel = 0;
-
-        long long m_pass_count = 1;
-        long long m_pixel_count = 0;
-        long long m_ray_count = 0;
-        long long m_sample_count = 0;
-
-        double m_previous_pass_duration = 0;
+        Statistics m_statistics;
         TimePoint m_pass_start_time;
 
         mutable SpinLock m_lock;
@@ -169,76 +164,69 @@ public:
                                 pixel[1] = m_screen_size[1] - 1 - pixel[1];
                         }
                 }
+
+                m_statistics.pass_count = 1;
+                m_statistics.pixel_count = 0;
+                m_statistics.ray_count = 0;
+                m_statistics.sample_count = 0;
+                m_statistics.previous_pass_duration = 0;
         }
 
-        const std::array<int, N>& screen_size() const
+        const std::array<int, N>& screen_size() const override
         {
                 return m_screen_size;
         }
 
-        void first_pass()
+        void first_pass() override
         {
                 std::lock_guard lg(m_lock);
 
                 m_pass_start_time = time();
         }
 
-        bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count, Pixel* pixel)
+        std::optional<Pixel> next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count) override
         {
                 std::lock_guard lg(m_lock);
 
-                m_ray_count += previous_pixel_ray_count;
-                m_sample_count += previous_pixel_sample_count;
+                m_statistics.ray_count += previous_pixel_ray_count;
+                m_statistics.sample_count += previous_pixel_sample_count;
 
                 if (m_current_pixel < m_pixels.size())
                 {
-                        *pixel = m_pixels[m_current_pixel];
-
-                        ++m_current_pixel;
-                        ++m_pixel_count;
-
-                        return true;
+                        ++m_statistics.pixel_count;
+                        return m_pixels[m_current_pixel++];
                 }
 
-                return false;
+                return std::nullopt;
         }
 
-        bool next_pass()
+        bool next_pass() override
         {
                 std::lock_guard lg(m_lock);
 
                 ASSERT(m_current_pixel == m_pixels.size());
 
                 TimePoint now = time();
-                m_previous_pass_duration = duration(m_pass_start_time, now);
+                m_statistics.previous_pass_duration = duration(m_pass_start_time, now);
                 m_pass_start_time = now;
 
                 m_current_pixel = 0;
 
-                if (m_pass_count == m_max_pass_count)
+                if (m_statistics.pass_count == m_max_pass_count)
                 {
                         return false;
                 }
 
-                ++m_pass_count;
+                ++m_statistics.pass_count;
 
                 return true;
         }
 
-        void statistics(
-                long long* pass_count,
-                long long* pixel_count,
-                long long* ray_count,
-                long long* sample_count,
-                double* previous_pass_duration) const
+        Statistics statistics() const override
         {
                 std::lock_guard lg(m_lock);
 
-                *pass_count = m_pass_count;
-                *pixel_count = m_pixel_count;
-                *ray_count = m_ray_count;
-                *sample_count = m_sample_count;
-                *previous_pass_duration = m_previous_pass_duration;
+                return m_statistics;
         }
 };
 }

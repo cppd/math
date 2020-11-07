@@ -145,6 +145,15 @@ struct Projector
         virtual Ray<N, T> ray(const Vector<N - 1, T>& point) const = 0;
 };
 
+struct Statistics final
+{
+        long long pass_count;
+        long long pixel_count;
+        long long ray_count;
+        long long sample_count;
+        double previous_pass_duration;
+};
+
 // Последовательность пикселов для рисования.
 template <size_t N>
 struct Paintbrush
@@ -152,20 +161,15 @@ struct Paintbrush
         virtual ~Paintbrush() = default;
 
         virtual void first_pass() = 0;
-        virtual bool next_pixel(
+
+        virtual std::optional<std::array<int_least16_t, N>> next_pixel(
                 int previous_pixel_ray_count,
-                int previous_pixel_sample_count,
-                std::array<int_least16_t, N>* pixel) = 0;
+                int previous_pixel_sample_count) = 0;
+
         virtual bool next_pass() = 0;
 
         virtual const std::array<int, N>& screen_size() const = 0;
-
-        virtual void statistics(
-                long long* pass_count,
-                long long* pixel_count,
-                long long* ray_count,
-                long long* sample_count,
-                double* previous_pass_duration) const = 0;
+        virtual Statistics statistics() const = 0;
 };
 
 template <size_t N, typename T>

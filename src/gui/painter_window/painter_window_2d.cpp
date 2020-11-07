@@ -256,25 +256,19 @@ void PainterWindow2d::on_first_shown()
 
 void PainterWindow2d::update_statistics()
 {
-        long long pass_count;
-        long long pixel_count;
-        long long ray_count;
-        long long sample_count;
-        double previous_pass_duration;
-
-        painter_statistics(&pass_count, &pixel_count, &ray_count, &sample_count, &previous_pass_duration);
+        Statistics statistics = this->statistics();
 
         auto [ray_diff, sample_diff, pixel_diff, time_diff] =
-                m_difference->compute({ray_count, sample_count, pixel_count});
+                m_difference->compute({statistics.ray_count, statistics.sample_count, statistics.pixel_count});
 
         long long rays_per_second = time_diff != 0 ? std::llround(ray_diff / time_diff) : 0;
         long long samples_per_pixel = pixel_diff != 0 ? std::llround(static_cast<double>(sample_diff) / pixel_diff) : 0;
 
-        long long milliseconds_per_frame = std::llround(1000 * previous_pass_duration);
+        long long milliseconds_per_frame = std::llround(1000 * statistics.previous_pass_duration);
 
         set_text_and_minimum_width(ui.label_rays_per_second, to_string_digit_groups(rays_per_second));
-        set_text_and_minimum_width(ui.label_ray_count, to_string_digit_groups(ray_count));
-        set_text_and_minimum_width(ui.label_pass_count, to_string_digit_groups(pass_count));
+        set_text_and_minimum_width(ui.label_ray_count, to_string_digit_groups(statistics.ray_count));
+        set_text_and_minimum_width(ui.label_pass_count, to_string_digit_groups(statistics.pass_count));
         set_text_and_minimum_width(ui.label_samples_per_pixel, to_string_digit_groups(samples_per_pixel));
         set_text_and_minimum_width(ui.label_milliseconds_per_frame, to_string_digit_groups(milliseconds_per_frame));
 }

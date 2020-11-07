@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_painter.h"
 
+#include "../paintbrushes/bar_paintbrush.h"
 #include "../painter.h"
 #include "../scenes/simple.h"
 #include "../shapes/mesh.h"
 #include "../shapes/test/sphere_mesh.h"
-#include "../visible_paintbrush.h"
 #include "../visible_projectors.h"
 
 #include <src/com/names.h>
@@ -162,7 +162,7 @@ void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<
 
         Images images(scene->projector().screen_size(), scene->background_color());
 
-        VisibleBarPaintbrush<N - 1> paintbrush(scene->projector().screen_size(), paint_height, max_pass_count);
+        BarPaintbrush<N - 1> paintbrush(scene->projector().screen_size(), paint_height, max_pass_count);
 
         std::atomic_bool stop = false;
 

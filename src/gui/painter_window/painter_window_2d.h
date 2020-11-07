@@ -31,6 +31,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui::painter_window_implementation
 {
+struct Statistics final
+{
+        long long pass_count;
+        long long pixel_count;
+        long long ray_count;
+        long long sample_count;
+        double previous_pass_duration;
+};
+
 class PainterWindow2d : public QWidget
 {
         Q_OBJECT
@@ -74,12 +83,7 @@ private:
         void update_points();
         void update_statistics();
 
-        virtual void painter_statistics(
-                long long* pass_count,
-                long long* pixel_count,
-                long long* ray_count,
-                long long* sample_count,
-                double* previous_pass_duration) const = 0;
+        virtual Statistics statistics() const = 0;
         virtual void slider_positions_change_event(const std::vector<int>& slider_positions) = 0;
         virtual const std::vector<std::uint_least32_t>& pixels_bgr() const = 0;
         virtual long long pixels_offset() const = 0;
