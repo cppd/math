@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vec.h>
 #include <src/painter/lights/constant_light.h>
 #include <src/painter/objects.h>
-#include <src/painter/projectors/projector.h>
+#include <src/painter/projectors/parallel_projector.h>
 #include <src/painter/scenes/cornell_box.h>
 #include <src/painter/scenes/simple.h>
 #include <src/painter/shapes/mesh.h>

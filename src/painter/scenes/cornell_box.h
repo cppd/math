@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "storage_scene.h"
 
 #include "../objects.h"
-#include "../projectors/projector.h"
+#include "../projectors/perspective_projector.h"
 #include "../shapes/hyperplane_parallelotope.h"
 #include "../shapes/parallelotope.h"
 #include "../shapes/shape.h"

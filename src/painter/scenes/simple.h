@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../lights/constant_light.h"
 #include "../objects.h"
-#include "../projectors/projector.h"
+#include "../projectors/parallel_projector.h"
 #include "../shapes/shape.h"
 
 #include <src/color/color.h>
