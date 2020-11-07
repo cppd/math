@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <vector>
 
-namespace painter
+namespace painter::scenes_implementation
 {
 template <size_t N, typename T>
 T scene_size(const std::vector<const Shape<N, T>*>& shapes)

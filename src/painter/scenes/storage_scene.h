@@ -68,12 +68,13 @@ class StorageScene final : public Scene<N, T>
         bool intersect(const Ray<N, T>& ray, T* distance, const Surface<N, T>** surface, const void** intersection_data)
                 const override
         {
-                return ray_intersect(m_shape_pointers, ray, distance, surface, intersection_data);
+                return scenes_implementation::ray_intersect(
+                        m_shape_pointers, ray, distance, surface, intersection_data);
         }
 
         bool has_intersection(const Ray<N, T>& ray, const T& distance) const override
         {
-                return ray_has_intersection(m_shape_pointers, ray, distance);
+                return scenes_implementation::ray_has_intersection(m_shape_pointers, ray, distance);
         }
 
         const std::vector<const LightSource<N, T>*>& light_sources() const override
@@ -109,7 +110,7 @@ public:
                   m_background_light_source_color(Color(m_background_color.luminance())),
                   m_shape_pointers(to_pointers(m_shapes)),
                   m_light_source_pointers(to_pointers(m_light_sources)),
-                  m_size(scene_size(m_shape_pointers))
+                  m_size(scenes_implementation::scene_size(m_shape_pointers))
         {
                 ASSERT(m_projector);
         }
