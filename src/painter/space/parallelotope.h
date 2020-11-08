@@ -129,6 +129,7 @@ public:
 
         bool intersect(const Ray<N, T>& r, T* t) const;
         bool intersect_farthest(const Ray<N, T>& r, T* t) const;
+        bool intersect_volume(const Ray<N, T>& r, T* t) const;
 
         Vector<N, T> normal(const Vector<N, T>& p) const;
 
@@ -283,6 +284,19 @@ bool Parallelotope<N, T>::intersect_farthest(const Ray<N, T>& r, T* t) const
         if (intersect_impl(r, &first, &second))
         {
                 *t = second;
+                return true;
+        }
+        return false;
+}
+
+template <size_t N, typename T>
+bool Parallelotope<N, T>::intersect_volume(const Ray<N, T>& r, T* t) const
+{
+        T first;
+        T second;
+        if (intersect_impl(r, &first, &second))
+        {
+                *t = std::max(first, T(0));
                 return true;
         }
         return false;
