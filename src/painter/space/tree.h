@@ -511,7 +511,7 @@ public:
 
         bool intersect_root(const Ray<N, T>& ray, T* t) const
         {
-                return m_boxes[ROOT_BOX].parallelotope().intersect(ray, t);
+                return m_boxes[ROOT_BOX].parallelotope().intersect_volume(ray, t);
         }
 
         // Вызывается после intersect_root. Если в intersect_root пересечение было найдено,
@@ -521,18 +521,19 @@ public:
         {
                 bool first = true;
 
-                Vector<N, T> interior_point = ray.org();
+                Vector<N, T> point = ray.point(root_t);
 
                 while (true)
                 {
                         T t;
                         const Box* box;
 
-                        if (find_box_for_point(m_boxes[ROOT_BOX], interior_point, &box))
+                        if (find_box_for_point(m_boxes[ROOT_BOX], point, &box))
                         {
-                                Vector<N, T> point;
-                                if (box->object_index_count() > 0 && find_intersection(box->object_indices(), &point)
-                                    && box->parallelotope().inside(point))
+                                Vector<N, T> object_point;
+                                if (box->object_index_count() > 0
+                                    && find_intersection(box->object_indices(), &object_point)
+                                    && box->parallelotope().inside(object_point))
                                 {
                                         return true;
                                 }
@@ -544,10 +545,10 @@ public:
                                         return false;
                                 }
 
-                                Vector<N, T> intersection_point = ray.point(t);
-                                ray.set_org(intersection_point);
-                                Vector<N, T> normal = box->parallelotope().normal(intersection_point);
-                                interior_point = intersection_point + m_distance_from_facet * normal;
+                                point = ray.point(t);
+                                ray.set_org(point);
+                                Vector<N, T> normal = box->parallelotope().normal(point);
+                                point += m_distance_from_facet * normal;
                         }
                         else
                         {
@@ -562,10 +563,9 @@ public:
                                 // Первый проход — начало луча находится снаружи и надо искать
                                 // пересечение с самим деревом. Это пересечение уже должно
                                 // быть найдено ранее при вызове intersect_root.
-                                Vector<N, T> intersection_point = ray.point(root_t);
-                                ray.set_org(intersection_point);
-                                Vector<N, T> normal = m_boxes[ROOT_BOX].parallelotope().normal(intersection_point);
-                                interior_point = intersection_point - m_distance_from_facet * normal;
+                                ray.set_org(point);
+                                Vector<N, T> normal = m_boxes[ROOT_BOX].parallelotope().normal(point);
+                                point -= m_distance_from_facet * normal;
                         }
 
                         first = false;
