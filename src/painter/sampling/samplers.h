@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/error.h>
+#include <src/com/names.h>
+#include <src/com/print.h>
 #include <src/numerical/random.h>
 
 #include <random>
@@ -36,27 +38,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace painter
 {
-// Donald Knuth. The Art of Computer Programming. Second edition. Addison-Wesley, 1981.
-// Volume 2. Seminumerical Algorithms. 3.4.2. Random Sampling and Shuffling.
-// Функция std::shuffle не подходит, так как надо по отдельному измерению.
-template <size_t N, typename T, typename RandomEngine>
-void shuffle_one_dimension(RandomEngine& random_engine, unsigned dimension, std::vector<Vector<N, T>>* v)
-{
-        ASSERT(dimension < N);
-        ASSERT(!v->empty());
-
-        using Distribution = std::uniform_int_distribution<size_t>;
-
-        Distribution distribution;
-        for (size_t i = v->size() - 1; i > 0; --i)
-        {
-                size_t j = distribution(random_engine, Distribution::param_type(0, i));
-                std::swap((*v)[i][dimension], (*v)[j][dimension]);
-        }
-}
-
 template <size_t N, typename T>
-class StratifiedJitteredSampleEngine
+class StratifiedJitteredSampler
 {
         static_assert(std::is_floating_point_v<T>);
         static_assert(N >= 2);
@@ -68,9 +51,33 @@ class StratifiedJitteredSampleEngine
 
         std::vector<T> m_offset;
 
+        static int one_dimension_size(int sample_count)
+        {
+                if (sample_count < 1)
+                {
+                        error("Stratified jittered sample count (" + to_string(sample_count)
+                              + ") is not a positive integer");
+                }
+
+                double v = std::pow(sample_count, 1.0 / N);
+
+                if (unsigned v_floor = std::floor(v); power<N>(v_floor) >= static_cast<unsigned>(sample_count))
+                {
+                        return v_floor;
+                }
+
+                if (unsigned v_ceil = std::ceil(v); power<N>(v_ceil) >= static_cast<unsigned>(sample_count))
+                {
+                        return v_ceil;
+                }
+
+                error("Could not compute one dimension sample count for " + to_string(sample_count) + " samples in "
+                      + space_name(N));
+        }
+
 public:
-        explicit StratifiedJitteredSampleEngine(int one_dimension_sample_count)
-                : m_one_dimension_sample_count(one_dimension_sample_count)
+        explicit StratifiedJitteredSampler(int sample_count)
+                : m_one_dimension_sample_count(one_dimension_size(sample_count))
         {
                 if (m_one_dimension_sample_count < 1)
                 {
@@ -161,7 +168,7 @@ public:
 };
 
 template <size_t N, typename T>
-class LatinHypercubeSampleEngine
+class LatinHypercubeSampler
 {
         static_assert(std::is_floating_point_v<T>);
         static_assert(N >= 2);
@@ -169,8 +176,27 @@ class LatinHypercubeSampleEngine
         const int m_sample_count;
         const T m_reciprocal_sample_count = static_cast<T>(1) / m_sample_count;
 
+        // Donald Knuth. The Art of Computer Programming. Second edition. Addison-Wesley, 1981.
+        // Volume 2. Seminumerical Algorithms. 3.4.2. Random Sampling and Shuffling.
+        // Функция std::shuffle не подходит, так как надо по отдельному измерению.
+        template <typename RandomEngine>
+        static void shuffle_one_dimension(RandomEngine& random_engine, unsigned dimension, std::vector<Vector<N, T>>* v)
+        {
+                ASSERT(dimension < N);
+                ASSERT(!v->empty());
+
+                using Distribution = std::uniform_int_distribution<size_t>;
+
+                Distribution distribution;
+                for (size_t i = v->size() - 1; i > 0; --i)
+                {
+                        size_t j = distribution(random_engine, Distribution::param_type(0, i));
+                        std::swap((*v)[i][dimension], (*v)[j][dimension]);
+                }
+        }
+
 public:
-        explicit LatinHypercubeSampleEngine(int sample_count) : m_sample_count(sample_count)
+        explicit LatinHypercubeSampler(int sample_count) : m_sample_count(sample_count)
         {
                 if (m_sample_count < 1)
                 {
