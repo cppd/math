@@ -300,7 +300,8 @@ void MainWindow::on_graphics_widget_mouse_wheel(QWheelEvent* e)
 {
         if (m_view)
         {
-                m_view->send(view::command::MouseWheel(e->x(), e->y(), e->angleDelta().ry() / 120.0));
+                m_view->send(
+                        view::command::MouseWheel(e->position().x(), e->position().y(), e->angleDelta().y() / 120.0));
         }
 }
 
