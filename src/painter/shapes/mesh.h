@@ -75,13 +75,9 @@ public:
         Mesh& operator=(const Mesh&) = delete;
         Mesh& operator=(Mesh&&) = delete;
 
-        bool intersect_approximate(const Ray<N, T>& r, T* t) const override;
-        bool intersect_precise(
-                const Ray<N, T>&,
-                T approximate_t,
-                T* t,
-                const Surface<N, T>** surface,
-                const void** intersection_data) const override;
+        std::optional<T> intersect_bounding(const Ray<N, T>& r) const override;
+        std::optional<Intersection<N, T>> intersect(const Ray<N, T>&, T bounding_distance) const override;
+
         SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const override;
         BoundingBox<N, T> bounding_box() const override;
 };

@@ -65,11 +65,9 @@ class StorageScene final : public Scene<N, T>
                 return m_size;
         }
 
-        bool intersect(const Ray<N, T>& ray, T* distance, const Surface<N, T>** surface, const void** intersection_data)
-                const override
+        std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray) const override
         {
-                return scenes_implementation::ray_intersect(
-                        m_shape_pointers, ray, distance, surface, intersection_data);
+                return scenes_implementation::ray_intersect(m_shape_pointers, ray);
         }
 
         bool has_intersection(const Ray<N, T>& ray, const T& distance) const override

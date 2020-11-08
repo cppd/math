@@ -52,25 +52,26 @@ public:
                 m_surface_properties.set_light_source_color(color);
         }
 
-        bool intersect_approximate(const Ray<N, T>& r, T* t) const override
+        std::optional<T> intersect_bounding(const Ray<N, T>& r) const override
         {
-                return m_hyperplane_parallelotope.intersect(r, t);
+                T t;
+                if (m_hyperplane_parallelotope.intersect(r, &t))
+                {
+                        return t;
+                }
+                return std::nullopt;
         }
 
-        bool intersect_precise(
-                const Ray<N, T>&,
-                T approximate_t,
-                T* t,
-                const Surface<N, T>** surface,
-                const void** /*intersection_data*/) const override
+        std::optional<Intersection<N, T>> intersect(const Ray<N, T>&, T bounding_distance) const override
         {
-                *t = approximate_t;
-                *surface = this;
+                // всегда есть пересечение, так как прошла проверка intersect_bounding
 
-                // задавать значение для *intersection_data не нужно, так как это один объект
+                std::optional<Intersection<N, T>> intersection(std::in_place);
+                intersection->distance = bounding_distance;
+                intersection->surface = this;
+                // задавать значение для intersection->data не нужно, так как это один объект
 
-                // всегда есть пересечение, так как прошла проверка intersect_approximate
-                return true;
+                return intersection;
         }
 
         SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* /*intersection_data*/) const override

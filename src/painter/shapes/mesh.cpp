@@ -98,7 +98,7 @@ bool ray_intersection(
         const std::vector<int>& object_indices,
         const Ray<N, T>& ray,
         T* intersection_distance,
-        const MeshFacet<N, T>** intersection_object)
+        const MeshFacet<N, T>** intersection_facet)
 {
         T min_distance = limits<T>::max();
         bool found = false;
@@ -109,7 +109,7 @@ bool ray_intersection(
                 if (facets[object_index].intersect(ray, &distance) && distance < min_distance)
                 {
                         min_distance = distance;
-                        *intersection_object = &facets[object_index];
+                        *intersection_facet = &facets[object_index];
                         found = true;
                 }
         }
@@ -335,39 +335,42 @@ Mesh<N, T>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, Pr
 }
 
 template <size_t N, typename T>
-bool Mesh<N, T>::intersect_approximate(const Ray<N, T>& r, T* t) const
+std::optional<T> Mesh<N, T>::intersect_bounding(const Ray<N, T>& r) const
 {
-        return m_tree.intersect_root(r, t);
+        T t;
+        if (m_tree.intersect_root(r, &t))
+        {
+                return t;
+        }
+        return std::nullopt;
 }
 
 template <size_t N, typename T>
-bool Mesh<N, T>::intersect_precise(
-        const Ray<N, T>& ray,
-        T approximate_t,
-        T* t,
-        const Surface<N, T>** surface,
-        const void** intersection_data) const
+std::optional<Intersection<N, T>> Mesh<N, T>::intersect(const Ray<N, T>& ray, T bounding_distance) const
 {
-        const MeshFacet<N, T>* facet = nullptr;
+        const MeshFacet<N, T>* facet;
+        T distance;
 
-        if (m_tree.trace_ray(
-                    ray, approximate_t,
-                    // Пересечение луча с набором граней ячейки дерева
-                    [&](const std::vector<int>& facet_indices, Vector<N, T>* point) -> bool {
-                            if (ray_intersection(m_facets, facet_indices, ray, t, &facet))
-                            {
-                                    *point = ray.point(*t);
-                                    return true;
-                            }
-                            return false;
-                    }))
+        // Пересечение луча с набором граней ячейки дерева
+        auto f = [&](const std::vector<int>& facet_indices, Vector<N, T>* point) -> bool {
+                if (ray_intersection(m_facets, facet_indices, ray, &distance, &facet))
+                {
+                        *point = ray.point(distance);
+                        return true;
+                }
+                return false;
+        };
+
+        if (m_tree.trace_ray(ray, bounding_distance, f))
         {
-                *surface = this;
-                *intersection_data = facet;
-                return true;
+                std::optional<Intersection<N, T>> intersection(std::in_place);
+                intersection->distance = distance;
+                intersection->surface = this;
+                intersection->data = facet;
+                return intersection;
         }
 
-        return false;
+        return std::nullopt;
 }
 
 template <size_t N, typename T>

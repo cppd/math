@@ -173,18 +173,26 @@ struct Paintbrush
 };
 
 template <size_t N, typename T>
+struct Intersection final
+{
+        T distance;
+        const Surface<N, T>* surface;
+        const void* data;
+
+        // Чтобы не было direct-initializing, например в std::optional
+        Intersection() noexcept
+        {
+        }
+};
+
+template <size_t N, typename T>
 struct Scene
 {
         virtual ~Scene() = default;
 
         virtual T size() const = 0;
 
-        virtual bool intersect(
-                const Ray<N, T>& ray,
-                T* distance,
-                const Surface<N, T>** surface,
-                const void** intersection_data) const = 0;
-
+        virtual std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray) const = 0;
         virtual bool has_intersection(const Ray<N, T>& ray, const T& distance) const = 0;
 
         virtual const std::vector<const LightSource<N, T>*>& light_sources() const = 0;

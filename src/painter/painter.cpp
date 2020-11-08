@@ -169,15 +169,6 @@ bool light_source_is_visible(
 }
 
 template <size_t N, typename T>
-bool ray_intersection_distance(const PaintData<N, T>& paint_data, const Ray<N, T>& ray, T* intersection_distance)
-{
-        const Surface<N, T>* intersection_surface;
-        const void* intersection_data;
-
-        return paint_data.scene.intersect(ray, intersection_distance, &intersection_surface, &intersection_data);
-}
-
-template <size_t N, typename T>
 Color direct_diffuse_lighting(
         Counter* ray_count,
         const PaintData<N, T>& paint_data,
@@ -232,8 +223,8 @@ Color direct_diffuse_lighting(
 
                         ray_count->inc();
                         ray_to_light.move_along_dir(ray_offset);
-                        T t;
-                        if (!ray_intersection_distance(paint_data, ray_to_light, &t))
+                        std::optional<Intersection<N, T>> intersection = paint_data.scene.intersect(ray_to_light);
+                        if (!intersection)
                         {
                                 // Если луч к источнику света направлен внутрь поверхности, и нет повторного
                                 // пересечения с поверхностью, то нет освещения в точке.
@@ -242,27 +233,32 @@ Color direct_diffuse_lighting(
 
                         T distance_to_light_source = light_properties.direction_to_light.norm();
 
-                        if (t >= distance_to_light_source)
+                        if (intersection->distance >= distance_to_light_source)
                         {
                                 // Источник света находится внутри поверхности
                                 continue;
                         }
 
-                        ray_count->inc();
-                        Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
-                        ray_from_light.move_along_dir(2 * ray_offset);
-                        T t_reverse;
-                        if (ray_intersection_distance(paint_data, ray_from_light, &t_reverse) && (t_reverse < t))
                         {
-                                // Если для луча, направленного от поверхности и от источника света,
-                                // имеется пересечение с поверхностью на расстоянии меньше, чем расстояние
-                                // до пересечения внутрь поверхности к источнику света, то предполагается,
-                                // что точка находится по другую сторону от источника света.
-                                continue;
+                                ray_count->inc();
+                                Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
+                                ray_from_light.move_along_dir(2 * ray_offset);
+                                std::optional<Intersection<N, T>> from_light =
+                                        paint_data.scene.intersect(ray_from_light);
+                                if (from_light && (from_light->distance < intersection->distance))
+                                {
+                                        // Если для луча, направленного от поверхности и от источника света,
+                                        // имеется пересечение с поверхностью на расстоянии меньше, чем расстояние
+                                        // до пересечения внутрь поверхности к источнику света, то предполагается,
+                                        // что точка находится по другую сторону от источника света.
+                                        continue;
+                                }
                         }
 
-                        ray_to_light.move_along_dir(t + ray_offset);
-                        if (!light_source_is_visible(ray_count, paint_data, ray_to_light, distance_to_light_source - t))
+                        ray_to_light.move_along_dir(intersection->distance + ray_offset);
+                        if (!light_source_is_visible(
+                                    ray_count, paint_data, ray_to_light,
+                                    distance_to_light_source - intersection->distance))
                         {
                                 continue;
                         }
@@ -318,16 +314,14 @@ std::optional<Color> trace_path(
         }
 
         ray_count->inc();
-        T t;
-        const Surface<N, T>* surface;
-        const void* intersection_data;
-        if (!paint_data.scene.intersect(ray, &t, &surface, &intersection_data))
+        std::optional<Intersection<N, T>> intersection = paint_data.scene.intersect(ray);
+        if (!intersection)
         {
                 return std::nullopt;
         }
 
-        Vector<N, T> point = ray.point(t);
-        const SurfaceProperties surface_properties = surface->properties(point, intersection_data);
+        Vector<N, T> point = ray.point(intersection->distance);
+        const SurfaceProperties surface_properties = intersection->surface->properties(point, intersection->data);
         Vector<N, T> geometric_normal = surface_properties.geometric_normal();
 
         bool smooth_normal = paint_data.smooth_normal && surface_properties.shading_normal().has_value();

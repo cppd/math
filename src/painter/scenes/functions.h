@@ -42,90 +42,64 @@ T scene_size(const std::vector<const Shape<N, T>*>& shapes)
 }
 
 template <size_t N, typename T>
-bool ray_intersect(
-        const std::vector<const Shape<N, T>*>& shapes,
-        const Ray<N, T>& ray,
-        T* intersection_distance,
-        const Surface<N, T>** intersection_surface,
-        const void** intersection_data)
+std::optional<Intersection<N, T>> ray_intersect(const std::vector<const Shape<N, T>*>& shapes, const Ray<N, T>& ray)
 {
         if (shapes.size() == 1)
         {
-                T approximate_distance;
-                T distance;
-                const Surface<N, T>* surface;
-                const void* data;
-
-                if (shapes[0]->intersect_approximate(ray, &approximate_distance)
-                    && shapes[0]->intersect_precise(ray, approximate_distance, &distance, &surface, &data))
+                std::optional<T> bounding_distance = shapes[0]->intersect_bounding(ray);
+                if (bounding_distance)
                 {
-                        *intersection_distance = distance;
-                        *intersection_surface = surface;
-                        *intersection_data = data;
-
-                        return true;
+                        return shapes[0]->intersect(ray, *bounding_distance);
                 }
-
-                return false;
+                return std::nullopt;
         }
 
         // Объекты могут быть сложными, поэтому перед поиском точного пересечения
         // их надо разместить по возрастанию примерного пересечения.
 
-        std::vector<std::tuple<T, const Shape<N, T>*>> approximate_intersections;
-        approximate_intersections.reserve(shapes.size());
+        std::vector<std::tuple<T, const Shape<N, T>*>> intersections;
+        intersections.reserve(shapes.size());
 
         for (const Shape<N, T>* shape : shapes)
         {
-                T distance;
-                if (shape->intersect_approximate(ray, &distance))
+                std::optional<T> distance = shape->intersect_bounding(ray);
+                if (distance)
                 {
-                        approximate_intersections.emplace_back(distance, shape);
+                        intersections.emplace_back(*distance, shape);
                 }
         }
 
-        if (approximate_intersections.empty())
+        if (intersections.empty())
         {
-                return false;
+                return std::nullopt;
         }
 
         std::sort(
-                approximate_intersections.begin(), approximate_intersections.end(),
+                intersections.begin(), intersections.end(),
                 [](const std::tuple<T, const Shape<N, T>*>& a, const std::tuple<T, const Shape<N, T>*>& b) {
                         return std::get<0>(a) < std::get<0>(b);
                 });
 
         T min_distance = limits<T>::max();
-        bool found = false;
 
-        for (const auto& [approximate_distance, object] : approximate_intersections)
+        std::optional<Intersection<N, T>> intersection;
+
+        for (const auto& [bounding_distance, object] : intersections)
         {
-                if (min_distance < approximate_distance)
+                if (min_distance < bounding_distance)
                 {
                         break;
                 }
 
-                T distance;
-                const Surface<N, T>* surface;
-                const void* data;
-
-                if (object->intersect_precise(ray, approximate_distance, &distance, &surface, &data)
-                    && distance < min_distance)
+                std::optional<Intersection<N, T>> v = object->intersect(ray, bounding_distance);
+                if (v && (v->distance < min_distance))
                 {
-                        min_distance = distance;
-                        *intersection_surface = surface;
-                        *intersection_data = data;
-                        found = true;
+                        min_distance = v->distance;
+                        intersection = v;
                 }
         }
 
-        if (found)
-        {
-                *intersection_distance = min_distance;
-                return true;
-        }
-
-        return false;
+        return intersection;
 }
 
 template <size_t N, typename T>
@@ -133,27 +107,14 @@ bool ray_has_intersection(const std::vector<const Shape<N, T>*>& shapes, const R
 {
         for (const Shape<N, T>* shape : shapes)
         {
-                T distance_to_object;
-                const Surface<N, T>* surface;
-                const void* intersection_data;
-
-                if (!shape->intersect_approximate(ray, &distance_to_object))
+                std::optional<T> bounding_distance = shape->intersect_bounding(ray);
+                if (!bounding_distance || *bounding_distance >= distance)
                 {
                         continue;
                 }
 
-                if (distance_to_object >= distance)
-                {
-                        continue;
-                }
-
-                if (!shape->intersect_precise(
-                            ray, distance_to_object, &distance_to_object, &surface, &intersection_data))
-                {
-                        continue;
-                }
-
-                if (distance_to_object >= distance)
+                std::optional<Intersection<N, T>> intersection = shape->intersect(ray, *bounding_distance);
+                if (!intersection || intersection->distance >= distance)
                 {
                         continue;
                 }

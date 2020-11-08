@@ -140,16 +140,15 @@ void test_sphere_mesh(
                         LOG("ray #" + to_string(i) + " in " + space_name(N));
                 }
 
-                T approximate;
-                T precise;
-                const Surface<N, T>* surface;
-                const void* intersection_data;
+                std::optional<T> bounding_distance;
+                std::optional<Intersection<N, T>> intersection;
 
-                if (!mesh.intersect_approximate(ray, &approximate))
+                bounding_distance = mesh.intersect_bounding(ray);
+                if (!bounding_distance)
                 {
                         if (with_error_log)
                         {
-                                LOG("No the first approximate intersection with ray #" + to_string(i) + "\n"
+                                LOG("No the first bounding intersection with ray #" + to_string(i) + "\n"
                                     + to_string(ray));
                         }
                         ++error_count;
@@ -157,30 +156,33 @@ void test_sphere_mesh(
                 }
                 if (with_ray_log)
                 {
-                        LOG("t1_a == " + to_string(approximate));
+                        LOG("t1_a == " + to_string(*bounding_distance));
                 }
-                if (!mesh.intersect_precise(ray, approximate, &precise, &surface, &intersection_data))
+
+                intersection = mesh.intersect(ray, *bounding_distance);
+                if (!intersection)
                 {
                         if (with_error_log)
                         {
-                                LOG("No the first precise intersection with ray #" + to_string(i) + "\n"
-                                    + "approximate " + to_string(approximate) + "\n" + to_string(ray));
+                                LOG("No the first intersection with ray #" + to_string(i) + "\n" + "bounding distance "
+                                    + to_string(*bounding_distance) + "\n" + to_string(ray));
                         }
                         ++error_count;
                         continue;
                 }
                 if (with_ray_log)
                 {
-                        LOG("t1_p == " + to_string(precise));
+                        LOG("t1_p == " + to_string(intersection->distance));
                 }
 
-                ray.move_along_dir(precise + ray_offset);
+                ray.move_along_dir(intersection->distance + ray_offset);
 
-                if (!mesh.intersect_approximate(ray, &approximate))
+                bounding_distance = mesh.intersect_bounding(ray);
+                if (!bounding_distance)
                 {
                         if (with_error_log)
                         {
-                                LOG("No the second approximate intersection with ray #" + to_string(i) + "\n"
+                                LOG("No the second bounding intersection with ray #" + to_string(i) + "\n"
                                     + to_string(ray));
                         }
                         ++error_count;
@@ -188,32 +190,34 @@ void test_sphere_mesh(
                 }
                 if (with_ray_log)
                 {
-                        LOG("t2_a == " + to_string(approximate));
+                        LOG("t2_a == " + to_string(*bounding_distance));
                 }
-                if (!mesh.intersect_precise(ray, approximate, &precise, &surface, &intersection_data))
+
+                intersection = mesh.intersect(ray, *bounding_distance);
+                if (!intersection)
                 {
                         if (with_error_log)
                         {
-                                LOG("No the second precise intersection with ray #" + to_string(i) + "\n"
-                                    + "approximate " + to_string(approximate) + "\n" + to_string(ray));
+                                LOG("No the second intersection with ray #" + to_string(i) + "\n" + "bounding "
+                                    + to_string(*bounding_distance) + "\n" + to_string(ray));
                         }
                         ++error_count;
                         continue;
                 }
                 if (with_ray_log)
                 {
-                        LOG("t2_p == " + to_string(precise));
+                        LOG("t2_p == " + to_string(intersection->distance));
                 }
 
-                ray.move_along_dir(precise + ray_offset);
+                ray.move_along_dir(intersection->distance + ray_offset);
 
-                if (mesh.intersect_approximate(ray, &approximate)
-                    && mesh.intersect_precise(ray, approximate, &precise, &surface, &intersection_data))
+                if ((bounding_distance = mesh.intersect_bounding(ray))
+                    && (intersection = mesh.intersect(ray, *bounding_distance)))
                 {
                         if (with_error_log)
                         {
                                 LOG("The third intersection with ray #" + to_string(i) + "\n" + to_string(ray) + "\n"
-                                    + "at point " + to_string(precise));
+                                    + "at point " + to_string(intersection->distance));
                         }
                         ++error_count;
                         continue;
