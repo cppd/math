@@ -40,8 +40,6 @@ public:
                 const V&... e)
                 : m_parallelotope(org, e...)
         {
-                static_assert((std::is_same_v<V, Vector<N, T>> && ...));
-
                 m_surface_properties.set_color(color);
                 m_surface_properties.set_diffuse(diffuse);
                 m_surface_properties.set_alpha(alpha);
