@@ -29,14 +29,13 @@ Pearson Education, 2011.
 
 #include "mst.h"
 
-#include "union_find.h"
-
 #include "../core/ridge.h"
 
 #include <src/com/alg.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/time.h>
+#include <src/com/union_find.h>
 
 namespace geometry
 {

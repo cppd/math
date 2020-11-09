@@ -30,8 +30,6 @@ Pearson Education, 2011.
 #include <type_traits>
 #include <vector>
 
-namespace geometry
-{
 // Weighted quick-union with path compression
 template <typename T>
 class UnionFind
@@ -114,4 +112,3 @@ public:
         //        return find_root(p) == find_root(q);
         //}
 };
-}
