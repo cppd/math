@@ -85,6 +85,8 @@ template <typename... P>
 HyperplaneParallelotope<N, T>::HyperplaneParallelotope(const Vector<N, T>& org, const P&... vectors)
         : HyperplaneParallelotope(org, {vectors...})
 {
+        static_assert((std::is_same_v<Vector<N, T>, P> && ...));
+        static_assert(sizeof...(P) + 1 == N);
 }
 
 template <size_t N, typename T>
