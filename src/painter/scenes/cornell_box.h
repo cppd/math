@@ -170,4 +170,36 @@ std::unique_ptr<const Scene<3, T>> cornell_box_scene(
         return impl::cornell_box_scene({width, height}, std::move(shape), {right, up, dir}, center);
 }
 
+template <size_t N, typename T>
+std::unique_ptr<const Scene<N, T>> cornell_box_scene(int screen_size, std::unique_ptr<const Shape<N, T>>&& shape)
+{
+        namespace impl = cornell_box_scene_implementation;
+
+        const BoundingBox bb = shape->bounding_box();
+        const T size = (bb.max - bb.min).norm() * T(1.1);
+        const Vector<N, T> center = (bb.max + bb.min) * T(0.5);
+
+        std::array<int, N - 1> screen_sizes;
+        for (unsigned i = 0; i < N - 1; ++i)
+        {
+                screen_sizes[i] = screen_size;
+        }
+
+        std::array<Vector<N, T>, N> camera;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                for (unsigned n = 0; n < i; ++n)
+                {
+                        camera[i][n] = 0;
+                }
+                camera[i][i] = size;
+                for (unsigned n = i + 1; n < N; ++n)
+                {
+                        camera[i][n] = 0;
+                }
+        }
+        camera[N - 1][N - 1] = -size;
+
+        return impl::cornell_box_scene(screen_sizes, std::move(shape), camera, center);
+}
 }
