@@ -29,11 +29,10 @@ namespace process
 {
 namespace
 {
-// Количество лучей на один пиксель на одно измерение в одном проходе.
-// Тогда для количества измерений D в пространстве экрана количество
-// лучей равно std::pow(эта_величина, D).
-constexpr int PAINTER_DEFAULT_SAMPLES_PER_DIMENSION = 5;
-constexpr int PAINTER_MAXIMUM_SAMPLES_PER_DIMENSION = 10;
+// Количество лучей на один пиксель в одном проходе
+constexpr int PAINTER_DEFAULT_SAMPLE_COUNT = 25;
+template <size_t N>
+constexpr int PAINTER_MAXIMUM_SAMPLE_COUNT = power<N - 1>(10u);
 
 // Максимальный размер экрана в пикселях для 3 измерений
 constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_3D = 10000;
@@ -62,9 +61,6 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                 return nullptr;
         }
 
-        const unsigned default_samples = power<N - 1>(static_cast<unsigned>(PAINTER_DEFAULT_SAMPLES_PER_DIMENSION));
-        const unsigned max_samples = power<N - 1>(static_cast<unsigned>(PAINTER_MAXIMUM_SAMPLES_PER_DIMENSION));
-
         int thread_count;
         int samples_per_pixel;
         bool flat_facets;
@@ -83,8 +79,9 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 
                 if (!gui::dialog::painter_parameters_for_3d(
                             hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
-                            default_samples, max_samples, &thread_count, &scene_info.width, &scene_info.height,
-                            &samples_per_pixel, &flat_facets, &scene_info.cornell_box))
+                            PAINTER_DEFAULT_SAMPLE_COUNT, PAINTER_MAXIMUM_SAMPLE_COUNT<N>, &thread_count,
+                            &scene_info.width, &scene_info.height, &samples_per_pixel, &flat_facets,
+                            &scene_info.cornell_box))
                 {
                         return nullptr;
                 }
@@ -93,9 +90,9 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         {
                 if (!gui::dialog::painter_parameters_for_nd(
                             N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND, PAINTER_MINIMUM_SCREEN_SIZE_ND,
-                            PAINTER_MAXIMUM_SCREEN_SIZE_ND, default_samples, max_samples, &thread_count,
-                            &scene_info.min_screen_size, &scene_info.max_screen_size, &samples_per_pixel, &flat_facets,
-                            &scene_info.cornell_box))
+                            PAINTER_MAXIMUM_SCREEN_SIZE_ND, PAINTER_DEFAULT_SAMPLE_COUNT,
+                            PAINTER_MAXIMUM_SAMPLE_COUNT<N>, &thread_count, &scene_info.min_screen_size,
+                            &scene_info.max_screen_size, &samples_per_pixel, &flat_facets, &scene_info.cornell_box))
                 {
                         return nullptr;
                 }
