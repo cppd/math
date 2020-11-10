@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/painter/projectors/parallel_projector.h>
 #include <src/painter/scenes/cornell_box.h>
 #include <src/painter/scenes/simple.h>
+#include <src/painter/scenes/storage_scene.h>
 #include <src/painter/shapes/mesh.h>
 
 #include <memory>
@@ -78,6 +79,26 @@ std::unique_ptr<const painter::LightSource<3, T>> create_light_source(
 
         return std::make_unique<const painter::ConstantLight<3, T>>(light_position, Color(lighting_intensity));
 }
+
+template <typename T>
+std::unique_ptr<const painter::Scene<3, T>> create_scene(
+        std::unique_ptr<const painter::Shape<3, T>>&& shape,
+        const PainterSceneInfo<3, T>& info,
+        const Color& background_color,
+        const Color::DataType& lighting_intensity)
+{
+        const painter::BoundingBox<3, T> bb = shape->bounding_box();
+        const T scene_size = (bb.max - bb.min).norm();
+
+        std::vector<std::unique_ptr<const painter::LightSource<3, T>>> light_sources;
+        light_sources.push_back(create_light_source(info, lighting_intensity, scene_size));
+
+        std::vector<std::unique_ptr<const painter::Shape<3, T>>> shapes;
+        shapes.push_back(std::move(shape));
+
+        return std::make_unique<painter::StorageScene<3, T>>(
+                background_color, create_projector(info, scene_size), std::move(light_sources), std::move(shapes));
+}
 }
 
 template <size_t N, typename T>
@@ -93,12 +114,7 @@ std::unique_ptr<const painter::Scene<N, T>> create_painter_scene(
 
                 if (!info.cornell_box)
                 {
-                        const painter::BoundingBox<N, T> bb = shape->bounding_box();
-                        const T scene_size = (bb.max - bb.min).norm();
-
-                        return simple_scene(
-                                background_color, impl::create_projector(info, scene_size),
-                                impl::create_light_source(info, lighting_intensity, scene_size), std::move(shape));
+                        return impl::create_scene(std::move(shape), info, background_color, lighting_intensity);
                 }
                 return cornell_box_scene(
                         info.width, info.height, std::move(shape), info.camera_direction, info.camera_up);

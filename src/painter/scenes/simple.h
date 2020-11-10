@@ -35,23 +35,6 @@ namespace painter
 template <size_t N, typename T>
 std::unique_ptr<const Scene<N, T>> simple_scene(
         const Color& background_color,
-        std::unique_ptr<const Projector<N, T>>&& projector,
-        std::unique_ptr<const LightSource<N, T>>&& light_source,
-        std::unique_ptr<const Shape<N, T>>&& shape)
-{
-        std::vector<std::unique_ptr<const LightSource<N, T>>> light_sources;
-        light_sources.push_back(std::move(light_source));
-
-        std::vector<std::unique_ptr<const Shape<N, T>>> shapes;
-        shapes.push_back(std::move(shape));
-
-        return std::make_unique<StorageScene<N, T>>(
-                background_color, std::move(projector), std::move(light_sources), std::move(shapes));
-}
-
-template <size_t N, typename T>
-std::unique_ptr<const Scene<N, T>> simple_scene(
-        const Color& background_color,
         const Color::DataType& lighting_intensity,
         int min_screen_size,
         int max_screen_size,
