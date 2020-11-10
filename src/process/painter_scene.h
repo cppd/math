@@ -35,6 +35,7 @@ struct PainterSceneInfo
 {
         int min_screen_size;
         int max_screen_size;
+        bool cornell_box;
 };
 
 template <typename T>
@@ -104,9 +105,13 @@ std::unique_ptr<const painter::Scene<N, T>> create_painter_scene(
         }
         else
         {
-                return simple_scene(
-                        background_color, lighting_intensity, info.min_screen_size, info.max_screen_size,
-                        std::move(shape));
+                if (!info.cornell_box)
+                {
+                        return simple_scene(
+                                background_color, lighting_intensity, info.min_screen_size, info.max_screen_size,
+                                std::move(shape));
+                }
+                return cornell_box_scene(info.max_screen_size, std::move(shape));
         }
 }
 }

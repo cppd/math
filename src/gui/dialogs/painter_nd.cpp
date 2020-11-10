@@ -54,7 +54,8 @@ bool PainterParametersForNd::show(
         int* min_size,
         int* max_size,
         int* samples_per_pixel,
-        bool* flat_facets)
+        bool* flat_facets,
+        bool* cornell_box)
 {
         if (!(dimension >= 4))
         {
@@ -99,6 +100,7 @@ bool PainterParametersForNd::show(
         ui.spinBox_samples_per_pixel->setValue(default_samples_per_pixel);
 
         ui.checkBox_flat_facets->setChecked(false);
+        ui.checkBox_cornell_box->setChecked(false);
 
         if (QPointer ptr(this); !this->exec() || ptr.isNull())
         {
@@ -110,6 +112,7 @@ bool PainterParametersForNd::show(
         *max_size = m_max_size;
         *samples_per_pixel = m_samples_per_pixel;
         *flat_facets = m_flat_facets;
+        *cornell_box = m_cornell_box;
 
         return true;
 }
@@ -187,6 +190,7 @@ void PainterParametersForNd::done(int r)
         }
 
         m_flat_facets = ui.checkBox_flat_facets->isChecked();
+        m_cornell_box = ui.checkBox_cornell_box->isChecked();
 
         QDialog::done(r);
 }
@@ -204,7 +208,8 @@ bool painter_parameters_for_nd(
         int* min_size,
         int* max_size,
         int* samples_per_pixel,
-        bool* flat_facets)
+        bool* flat_facets,
+        bool* cornell_box)
 {
         namespace impl = painter_parameters_for_nd_implementation;
 
@@ -212,7 +217,7 @@ bool painter_parameters_for_nd(
 
         return w->show(dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
                        default_samples_per_pixel, max_samples_per_pixel, thread_count, min_size, max_size,
-                       samples_per_pixel, flat_facets)
+                       samples_per_pixel, flat_facets, cornell_box)
                && !w.isNull();
 }
 }

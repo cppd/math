@@ -94,7 +94,8 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                 if (!gui::dialog::painter_parameters_for_nd(
                             N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND, PAINTER_MINIMUM_SCREEN_SIZE_ND,
                             PAINTER_MAXIMUM_SCREEN_SIZE_ND, default_samples, max_samples, &thread_count,
-                            &scene_info.min_screen_size, &scene_info.max_screen_size, &samples_per_pixel, &flat_facets))
+                            &scene_info.min_screen_size, &scene_info.max_screen_size, &samples_per_pixel, &flat_facets,
+                            &scene_info.cornell_box))
                 {
                         return nullptr;
                 }

@@ -42,6 +42,7 @@ private:
         int m_max_size;
         int m_samples_per_pixel;
         bool m_flat_facets;
+        bool m_cornell_box;
 
         void on_min_size_changed(int);
         void on_max_size_changed(int);
@@ -63,7 +64,8 @@ public:
                 int* min_size,
                 int* max_size,
                 int* samples_per_pixel,
-                bool* flat_facets);
+                bool* flat_facets,
+                bool* cornell_box);
 };
 }
 
@@ -79,5 +81,6 @@ public:
         int* min_size,
         int* max_size,
         int* samples_per_pixel,
-        bool* flat_facets);
+        bool* flat_facets,
+        bool* cornell_box);
 }
