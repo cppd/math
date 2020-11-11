@@ -19,8 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 #include "../space/bounding_box.h"
+#include "../space/parallelotope_aa.h"
+#include "../space/shape_wrapper.h"
 
 #include <src/numerical/ray.h>
+
+#include <functional>
+#include <optional>
 
 namespace painter
 {
@@ -34,5 +39,8 @@ struct Shape
         virtual std::optional<Intersection<N, T>> intersect(const Ray<N, T>&, T bounding_distance) const = 0;
 
         virtual BoundingBox<N, T> bounding_box() const = 0;
+
+        virtual std::function<bool(const ShapeWrapperForIntersection<ParallelotopeAA<N, T>>&)> intersection_function()
+                const = 0;
 };
 }

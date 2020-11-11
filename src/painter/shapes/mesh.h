@@ -79,6 +79,9 @@ public:
         std::optional<Intersection<N, T>> intersect(const Ray<N, T>&, T bounding_distance) const override;
 
         SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const override;
+
         BoundingBox<N, T> bounding_box() const override;
+        std::function<bool(const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>&)> intersection_function()
+                const override;
 };
 }

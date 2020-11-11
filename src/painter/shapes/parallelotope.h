@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 #include "../space/parallelotope.h"
+#include "../space/shape_intersection.h"
 
 namespace painter::shapes
 {
@@ -84,6 +85,15 @@ public:
         BoundingBox<N, T> bounding_box() const override
         {
                 return BoundingBox<N, T>(m_parallelotope.vertices());
+        }
+
+        std::function<bool(const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>&)> intersection_function()
+                const override
+        {
+                return [w = ShapeWrapperForIntersection(m_parallelotope)](
+                               const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>& p) {
+                        return shape_intersection(w, p);
+                };
         }
 };
 }

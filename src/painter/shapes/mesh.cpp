@@ -408,6 +408,16 @@ BoundingBox<N, T> Mesh<N, T>::bounding_box() const
         return m_bounding_box;
 }
 
+template <size_t N, typename T>
+std::function<bool(const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>&)> Mesh<N, T>::
+        intersection_function() const
+{
+        return [w = ShapeWrapperForIntersection(m_tree.root())](
+                       const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>& p) {
+                return shape_intersection(w, p);
+        };
+}
+
 template class Mesh<3, float>;
 template class Mesh<4, float>;
 template class Mesh<5, float>;
