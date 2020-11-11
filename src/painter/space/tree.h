@@ -509,6 +509,11 @@ public:
                 m_distance_from_facet = distance_from_facet;
         }
 
+        const Parallelotope& root() const
+        {
+                return m_boxes[ROOT_BOX].parallelotope();
+        }
+
         bool intersect_root(const Ray<N, T>& ray, T* t) const
         {
                 return m_boxes[ROOT_BOX].parallelotope().intersect_volume(ray, t);
