@@ -400,7 +400,7 @@ void create_init_convex_hull(
 
         // Количество рёбер для N-симплекса равно количеству
         // сочетаний по N - 1 вершины из N + 1 вершин.
-        constexpr int ridge_count = binomial(N + 1, N - 1);
+        constexpr int ridge_count = binomial<N + 1, N - 1>();
 
         int ridges = 0;
         std::unordered_map<Ridge<N>, std::tuple<Facet<N, S, C>*, unsigned>> search_map(ridge_count);

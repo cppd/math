@@ -25,44 +25,47 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Количество сочетаний из n по r: C(n, r) = n! / ((n - r)! * r!).
 // Вариант для плавающей точки: std::round(std::exp(std::lgamma(n + 1) - std::lgamma(n - r + 1) - std::lgamma(r + 1))).
-constexpr int binomial(int n, int r)
+template <int N, int R>
+constexpr int binomial()
 {
-        if (n > 29)
-        {
-                // Если больше 29, то первое умножение не помещается в long long.
-                // Для данной программы максимум из 29 достаточен.
-                error("Binomial too big");
-        }
-        if (n < r)
-        {
-                error("Error binomial");
-        }
+        static_assert(N >= R && R >= 0);
 
-        long long maximum = (r <= n / 2) ? (n - r) : r;
-        long long m = 1;
-        for (long long i = n; i > maximum; --i)
+        constexpr unsigned long long K = (R <= N / 2) ? (N - R) : R;
+        unsigned long long m = 1;
+        for (unsigned long long i = N; i > K; --i)
         {
-                m *= i;
+                unsigned long long v = m * i;
+                if ((v / i) != m)
+                {
+                        error("Binomial overflow");
+                }
+                m = v;
         }
-        for (long long i = n - maximum; i > 1; --i)
+        static_assert(N >= K);
+        for (unsigned long long i = N - K; i > 1; --i)
         {
                 m /= i;
         }
+        if (m > std::numeric_limits<int>::max())
+        {
+                error("Binomial result overflow");
+        }
+
         return m;
 }
 
 // Список сочетаний по R из последовательности чисел от 0 <= x < N
 template <int N, int R>
-std::array<std::array<unsigned char, R>, binomial(N, R)> combinations()
+std::array<std::array<unsigned char, R>, binomial<N, R>()> combinations()
 {
         std::array<signed char, N> v;
 
         std::fill(v.begin(), v.begin() + R, 0);
         std::fill(v.begin() + R, v.end(), 1);
 
-        std::array<std::array<unsigned char, R>, binomial(N, R)> res;
+        std::array<std::array<unsigned char, R>, binomial<N, R>()> res;
 
-        for (int row = 0; row < binomial(N, R); ++row, std::next_permutation(v.begin(), v.end()))
+        for (int row = 0; row < binomial<N, R>(); ++row, std::next_permutation(v.begin(), v.end()))
         {
                 int cnt = -1;
                 for (int i = 0; i < N; ++i)
@@ -78,7 +81,7 @@ std::array<std::array<unsigned char, R>, binomial(N, R)> combinations()
 }
 
 template <int N, int R>
-std::array<std::tuple<std::array<unsigned char, R>, std::array<unsigned char, N - R>>, binomial(N, R)>
+std::array<std::tuple<std::array<unsigned char, R>, std::array<unsigned char, N - R>>, binomial<N, R>()>
         combinations_tuple()
 {
         std::array<signed char, N> v;
@@ -86,9 +89,9 @@ std::array<std::tuple<std::array<unsigned char, R>, std::array<unsigned char, N 
         std::fill(v.begin(), v.begin() + R, 0);
         std::fill(v.begin() + R, v.end(), 1);
 
-        std::array<std::tuple<std::array<unsigned char, R>, std::array<unsigned char, N - R>>, binomial(N, R)> res;
+        std::array<std::tuple<std::array<unsigned char, R>, std::array<unsigned char, N - R>>, binomial<N, R>()> res;
 
-        for (int row = 0; row < binomial(N, R); ++row, std::next_permutation(v.begin(), v.end()))
+        for (int row = 0; row < binomial<N, R>(); ++row, std::next_permutation(v.begin(), v.end()))
         {
                 int cnt_1 = -1;
                 int cnt_2 = -1;

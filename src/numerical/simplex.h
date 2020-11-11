@@ -319,7 +319,7 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 
         constexpr unsigned N = N_Source + 1;
 
-        constexpr int MAX_ITERATION_COUNT = binomial(N + M, M);
+        constexpr int MAX_ITERATION_COUNT = binomial<N + M, M>();
 
         //
 
