@@ -126,6 +126,7 @@ bool ray_intersection(
 template <size_t N, typename T, typename TreeParallelotope>
 void create_tree(
         const std::vector<MeshFacet<N, T>>& facets,
+        const BoundingBox<N, T>& bounding_box,
         SpatialSubdivisionTree<TreeParallelotope>* tree,
         ProgressRatio* progress)
 {
@@ -153,12 +154,10 @@ void create_tree(
                         return intersections;
                 };
 
-        const auto facet_vertices = [w = std::as_const(wrappers)](int index) { return w[index].vertices(); };
-
         const unsigned thread_count = hardware_concurrency();
 
         tree->decompose(
-                tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, facets.size(), facet_vertices, facet_intersections,
+                tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, facets.size(), bounding_box, facet_intersections,
                 thread_count, progress);
 }
 }
@@ -202,9 +201,6 @@ void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
                 const std::vector<Vector<N - 1, T>>& texcoords = to_vector<T>(mesh.texcoords);
                 m_texcoords.insert(m_texcoords.cend(), texcoords.cbegin(), texcoords.cend());
         }
-
-        m_bounding_box.min = Vector<N, T>(limits<T>::max());
-        m_bounding_box.max = Vector<N, T>(limits<T>::lowest());
 
         bool facets_without_material = false;
         int default_material_index = mesh.materials.size();
@@ -292,6 +288,9 @@ void Mesh<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
         m_images.reserve(image_count);
         m_facets.reserve(facet_count);
 
+        m_bounding_box.min = Vector<N, T>(limits<T>::max());
+        m_bounding_box.max = Vector<N, T>(limits<T>::lowest());
+
         for (const mesh::Reading<N>& mesh_object : mesh_objects)
         {
                 create(mesh_object);
@@ -329,7 +328,7 @@ Mesh<N, T>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, Pr
                 create(reading);
         }
 
-        create_tree(m_facets, &m_tree, progress);
+        create_tree(m_facets, m_bounding_box, &m_tree, progress);
 
         LOG("Painter mesh object created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 }

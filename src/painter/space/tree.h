@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "bounding_box.h"
+
 #include <src/com/arrays.h>
 #include <src/com/error.h>
 #include <src/com/thread.h>
@@ -146,70 +148,44 @@ std::vector<Box<Parallelotope>> move_boxes_to_vector(Container<Box<Parallelotope
         return vector;
 }
 
-template <size_t N, typename T, typename ObjectVertices>
+template <size_t N, typename T>
 void min_max_and_distance(
         int max_divisions,
         int distance_from_facet_in_epsilons,
-        int object_index_count,
-        const ObjectVertices& object_vertices,
-        Vector<N, T>* minimum,
-        Vector<N, T>* maximum,
+        const BoundingBox<N, T>& bounding_box,
+        Vector<N, T>* min,
+        Vector<N, T>* max,
         T* distance)
 {
         static_assert(std::is_floating_point_v<T>);
-
-        Vector<N, T> min(limits<T>::max());
-        Vector<N, T> max(limits<T>::lowest());
-
-        for (int object_index = 0; object_index < object_index_count; ++object_index)
-        {
-                for (const Vector<N, T>& v : object_vertices(object_index))
-                {
-                        for (unsigned i = 0; i < N; ++i)
-                        {
-                                min[i] = std::min(v[i], min[i]);
-                                max[i] = std::max(v[i], max[i]);
-                        }
-                }
-        }
-
-        for (unsigned i = 0; i < N; ++i)
-        {
-                if (!(min[i] < max[i]))
-                {
-                        error("Objects for (2^N)-tree don't form N-dimensional object");
-                }
-        }
 
         T all_max = limits<T>::lowest();
 
         for (unsigned i = 0; i < N; ++i)
         {
-                T abs_max = std::max(std::abs(min[i]), std::abs(max[i]));
-
-                T guard_region_size = abs_max * (distance_from_facet_in_epsilons * limits<T>::epsilon());
-                min[i] -= guard_region_size;
-                max[i] += guard_region_size;
-
-                all_max = std::max(abs_max, all_max);
+                if (!(bounding_box.min[i] < bounding_box.max[i]))
+                {
+                        error("Objects for (2^N)-tree don't form N-dimensional object");
+                }
+                T length = bounding_box.max[i] - bounding_box.min[i];
+                T guard_region_size = length * (distance_from_facet_in_epsilons * limits<T>::epsilon());
+                (*min)[i] = bounding_box.min[i] - guard_region_size;
+                (*max)[i] = bounding_box.max[i] + guard_region_size;
+                all_max = std::max((*max)[i] - (*min)[i], all_max);
         }
 
-        T dist = all_max * (distance_from_facet_in_epsilons * limits<T>::epsilon());
+        *distance = all_max * (distance_from_facet_in_epsilons * limits<T>::epsilon());
 
         for (unsigned i = 0; i < N; ++i)
         {
-                T one_half_of_min_box_size = (max[i] - min[i]) / max_divisions / 2;
-                if (dist >= one_half_of_min_box_size)
+                T one_half_of_min_box_size = ((*max)[i] - (*min)[i]) / max_divisions / 2;
+                if (*distance >= one_half_of_min_box_size)
                 {
-                        error("The minimal distance from facets " + to_string(dist)
+                        error("The minimal distance from facets " + to_string(*distance)
                               + " is greater than one half of the minimum box size "
                               + to_string(one_half_of_min_box_size) + " (dimension #" + to_string(i) + ")");
                 }
         }
-
-        *minimum = min;
-        *maximum = max;
-        *distance = dist;
 }
 
 template <typename Box>
@@ -441,12 +417,12 @@ class SpatialSubdivisionTree final
         }
 
 public:
-        template <typename ObjectVertices, typename ObjectIntersections>
+        template <typename ObjectIntersections>
         void decompose(
                 int max_depth,
                 int min_objects_per_box,
                 int object_index_count,
-                const ObjectVertices& object_vertices,
+                const BoundingBox<N, T>& bounding_box,
                 const ObjectIntersections& object_intersections,
                 unsigned thread_count,
                 ProgressRatio* progress)
@@ -486,8 +462,7 @@ public:
                 T distance_from_facet;
 
                 impl::min_max_and_distance(
-                        max_divisions, DISTANCE_FROM_FACET_IN_EPSILONS, object_index_count, object_vertices, &min, &max,
-                        &distance_from_facet);
+                        max_divisions, DISTANCE_FROM_FACET_IN_EPSILONS, bounding_box, &min, &max, &distance_from_facet);
 
                 BoxContainer boxes({Box(Parallelotope(min, max), impl::iota_zero_based_indices(object_index_count))});
 
