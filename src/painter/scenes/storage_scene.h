@@ -78,7 +78,7 @@ std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
 }
 
 template <size_t N, typename T>
-T scene_size(const std::vector<const Shape<N, T>*>& shapes)
+BoundingBox<N, T> compute_bounding_box(const std::vector<const Shape<N, T>*>& shapes)
 {
         BoundingBox<N, T> bb = shapes[0]->bounding_box();
         for (size_t i = 1; i < shapes.size(); ++i)
@@ -87,18 +87,21 @@ T scene_size(const std::vector<const Shape<N, T>*>& shapes)
                 bb.min = min_vector(bb.min, shape_bb.min);
                 bb.max = max_vector(bb.max, shape_bb.max);
         }
-        return (bb.max - bb.min).norm();
+        return bb;
 }
 
 template <size_t N, typename T>
-std::optional<Intersection<N, T>> ray_intersect(const std::vector<const Shape<N, T>*>& shapes, const Ray<N, T>& ray)
+std::optional<Intersection<N, T>> ray_intersect(
+        const std::vector<const Shape<N, T>*>& shapes,
+        const std::vector<int>& indices,
+        const Ray<N, T>& ray)
 {
-        if (shapes.size() == 1)
+        if (indices.size() == 1)
         {
-                std::optional<T> bounding_distance = shapes[0]->intersect_bounding(ray);
-                if (bounding_distance)
+                std::optional<T> distance = shapes[indices.front()]->intersect_bounding(ray);
+                if (distance)
                 {
-                        return shapes[0]->intersect(ray, *bounding_distance);
+                        return shapes[indices.front()]->intersect(ray, *distance);
                 }
                 return std::nullopt;
         }
@@ -107,17 +110,15 @@ std::optional<Intersection<N, T>> ray_intersect(const std::vector<const Shape<N,
         // их надо разместить по возрастанию примерного пересечения.
 
         std::vector<std::tuple<T, const Shape<N, T>*>> intersections;
-        intersections.reserve(shapes.size());
-
-        for (const Shape<N, T>* shape : shapes)
+        intersections.reserve(indices.size());
+        for (int index : indices)
         {
-                std::optional<T> distance = shape->intersect_bounding(ray);
+                std::optional<T> distance = shapes[index]->intersect_bounding(ray);
                 if (distance)
                 {
-                        intersections.emplace_back(*distance, shape);
+                        intersections.emplace_back(*distance, shapes[index]);
                 }
         }
-
         if (intersections.empty())
         {
                 return std::nullopt;
@@ -149,29 +150,6 @@ std::optional<Intersection<N, T>> ray_intersect(const std::vector<const Shape<N,
         }
 
         return intersection;
-}
-
-template <size_t N, typename T>
-bool ray_has_intersection(const std::vector<const Shape<N, T>*>& shapes, const Ray<N, T>& ray, const T& distance)
-{
-        for (const Shape<N, T>* shape : shapes)
-        {
-                std::optional<T> bounding_distance = shape->intersect_bounding(ray);
-                if (!bounding_distance || *bounding_distance >= distance)
-                {
-                        continue;
-                }
-
-                std::optional<Intersection<N, T>> intersection = shape->intersect(ray, *bounding_distance);
-                if (!intersection || intersection->distance >= distance)
-                {
-                        continue;
-                }
-
-                return true;
-        }
-
-        return false;
 }
 
 template <size_t N, typename T>
@@ -234,6 +212,8 @@ class StorageScene final : public Scene<N, T>
 
         T m_size;
 
+        std::vector<int> m_shape_indices;
+
         T size() const override
         {
                 return m_size;
@@ -241,12 +221,13 @@ class StorageScene final : public Scene<N, T>
 
         std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray) const override
         {
-                return scene_implementation::ray_intersect(m_shape_pointers, ray);
+                return scene_implementation::ray_intersect(m_shape_pointers, m_shape_indices, ray);
         }
 
         bool has_intersection(const Ray<N, T>& ray, const T& distance) const override
         {
-                return scene_implementation::ray_has_intersection(m_shape_pointers, ray, distance);
+                std::optional<Intersection<N, T>> intersection = intersect(ray);
+                return intersection && intersection->distance <= distance;
         }
 
         const std::vector<const LightSource<N, T>*>& light_sources() const override
@@ -281,10 +262,16 @@ public:
                   m_background_color(background_color),
                   m_background_light_source_color(Color(m_background_color.luminance())),
                   m_shape_pointers(scene_implementation::to_pointers(m_shapes)),
-                  m_light_source_pointers(scene_implementation::to_pointers(m_light_sources)),
-                  m_size(scene_implementation::scene_size(m_shape_pointers))
+                  m_light_source_pointers(scene_implementation::to_pointers(m_light_sources))
         {
                 ASSERT(m_projector);
+
+                const BoundingBox<N, T> bounding_box = scene_implementation::compute_bounding_box(m_shape_pointers);
+
+                m_size = (bounding_box.max - bounding_box.min).norm();
+
+                m_shape_indices.resize(m_shape_pointers.size());
+                std::iota(m_shape_indices.begin(), m_shape_indices.end(), 0);
         }
 };
 }
