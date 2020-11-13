@@ -17,22 +17,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
+
+#include <optional>
 
 namespace painter
 {
 template <size_t N, typename T>
-bool hyperplane_intersect(const Ray<N, T>& ray, const Vector<N, T>& plane_point, const Vector<N, T>& plane_normal, T* t)
+std::optional<T> hyperplane_intersect(
+        const Ray<N, T>& ray,
+        const Vector<N, T>& plane_point,
+        const Vector<N, T>& plane_normal)
 {
         T s = dot(plane_normal, ray.dir());
+        T t = dot(plane_point - ray.org(), plane_normal) / s;
 
-        if (s != 0)
+        if (t > T(0) && t <= limits<T>::max())
         {
-                *t = dot(plane_point - ray.org(), plane_normal) / s;
-                return *t > 0;
+                return t;
         }
-
-        return false;
+        return std::nullopt;
 }
 }

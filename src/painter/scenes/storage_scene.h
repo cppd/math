@@ -232,8 +232,8 @@ class StorageScene final : public Scene<N, T>
 
         std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray) const override
         {
-                T root_distance;
-                if (!m_tree.intersect_root(ray, &root_distance))
+                std::optional<T> root = m_tree.intersect_root(ray);
+                if (!root)
                 {
                         return std::nullopt;
                 }
@@ -250,7 +250,7 @@ class StorageScene final : public Scene<N, T>
                         return false;
                 };
 
-                if (m_tree.trace_ray(ray, root_distance, f))
+                if (m_tree.trace_ray(ray, *root, f))
                 {
                         return intersection;
                 }

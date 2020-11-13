@@ -84,7 +84,7 @@ public:
         bool has_texcoord() const;
         Vector<N - 1, T> texcoord(const Vector<N, T>& point) const;
 
-        bool intersect(const Ray<N, T>& r, T* t) const;
+        std::optional<T> intersect(const Ray<N, T>& r) const;
 
         Vector<N, T> geometric_normal() const;
         Vector<N, T> shading_normal(const Vector<N, T>& point) const;

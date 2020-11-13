@@ -119,9 +119,9 @@ public:
                 return m_shape.inside(p);
         }
 
-        bool intersect(const Ray<N, T>& r, T* t) const
+        std::optional<T> intersect(const Ray<N, T>& r) const
         {
-                return m_shape.intersect(r, t);
+                return m_shape.intersect(r);
         }
 
         const Vertices& vertices() const

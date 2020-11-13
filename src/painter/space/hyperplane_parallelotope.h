@@ -68,7 +68,7 @@ public:
 
         Constraints<N, T, 2 * (N - 1), 1> constraints() const;
 
-        bool intersect(const Ray<N, T>& r, T* t) const;
+        std::optional<T> intersect(const Ray<N, T>& r) const;
 
         const Vector<N, T>& normal(const Vector<N, T>& point) const;
 
@@ -146,11 +146,12 @@ Constraints<N, T, 2 * (N - 1), 1> HyperplaneParallelotope<N, T>::constraints() c
 }
 
 template <size_t N, typename T>
-bool HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& r, T* t) const
+std::optional<T> HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& r) const
 {
-        if (!hyperplane_intersect(r, m_org, m_normal, t))
+        std::optional<T> t = hyperplane_intersect(r, m_org, m_normal);
+        if (!t)
         {
-                return false;
+                return std::nullopt;
         }
 
         Vector<N, T> intersection_point = r.point(*t);
@@ -161,11 +162,11 @@ bool HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& r, T* t) const
                 T d = dot(intersection_point, m_planes[i].n) - m_planes[i].d;
                 if (d <= 0 || d >= 1)
                 {
-                        return false;
+                        return std::nullopt;
                 }
         }
 
-        return true;
+        return t;
 }
 
 template <size_t N, typename T>

@@ -148,9 +148,9 @@ public:
 
         bool inside(const Vector<N, T>& p) const;
 
-        bool intersect(const Ray<N, T>& r, T* t) const;
-        bool intersect_farthest(const Ray<N, T>& r, T* t) const;
-        bool intersect_volume(const Ray<N, T>& r, T* t) const;
+        std::optional<T> intersect(const Ray<N, T>& r) const;
+        std::optional<T> intersect_farthest(const Ray<N, T>& r) const;
+        std::optional<T> intersect_volume(const Ray<N, T>& r) const;
 
         Vector<N, T> normal(const Vector<N, T>& p) const;
 
@@ -292,42 +292,39 @@ bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* seco
 }
 
 template <size_t N, typename T>
-bool ParallelotopeAA<N, T>::intersect(const Ray<N, T>& r, T* t) const
+std::optional<T> ParallelotopeAA<N, T>::intersect(const Ray<N, T>& r) const
 {
         T first;
         T second;
         if (intersect_impl(r, &first, &second))
         {
-                *t = (first > 0) ? first : second;
-                return true;
+                return (first > 0) ? first : second;
         }
-        return false;
+        return std::nullopt;
 }
 
 template <size_t N, typename T>
-bool ParallelotopeAA<N, T>::intersect_farthest(const Ray<N, T>& r, T* t) const
+std::optional<T> ParallelotopeAA<N, T>::intersect_farthest(const Ray<N, T>& r) const
 {
         T first;
         T second;
         if (intersect_impl(r, &first, &second))
         {
-                *t = second;
-                return true;
+                return second;
         }
-        return false;
+        return std::nullopt;
 }
 
 template <size_t N, typename T>
-bool ParallelotopeAA<N, T>::intersect_volume(const Ray<N, T>& r, T* t) const
+std::optional<T> ParallelotopeAA<N, T>::intersect_volume(const Ray<N, T>& r) const
 {
         T first;
         T second;
         if (intersect_impl(r, &first, &second))
         {
-                *t = std::max(first, T(0));
-                return true;
+                return std::max(first, T(0));
         }
-        return false;
+        return std::nullopt;
 }
 
 template <size_t N, typename T>

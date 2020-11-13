@@ -105,10 +105,10 @@ bool ray_intersection(
 
         for (int object_index : object_indices)
         {
-                T distance;
-                if (facets[object_index].intersect(ray, &distance) && distance < min_distance)
+                std::optional<T> distance = facets[object_index].intersect(ray);
+                if (distance && *distance < min_distance)
                 {
-                        min_distance = distance;
+                        min_distance = *distance;
                         *intersection_facet = &facets[object_index];
                         found = true;
                 }
@@ -336,12 +336,7 @@ Mesh<N, T>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, Pr
 template <size_t N, typename T>
 std::optional<T> Mesh<N, T>::intersect_bounding(const Ray<N, T>& r) const
 {
-        T t;
-        if (m_tree.intersect_root(r, &t))
-        {
-                return t;
-        }
-        return std::nullopt;
+        return m_tree.intersect_root(r);
 }
 
 template <size_t N, typename T>

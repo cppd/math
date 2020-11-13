@@ -169,11 +169,13 @@ public:
                 return coords;
         }
 
-        bool intersect(const Ray<N, T>& ray, const Vector<N, T>& any_vertex, const Vector<N, T>& normal, T* t) const
+        std::optional<T> intersect(const Ray<N, T>& ray, const Vector<N, T>& any_vertex, const Vector<N, T>& normal)
+                const
         {
-                if (!hyperplane_intersect(ray, any_vertex, normal, t))
+                std::optional<T> t = hyperplane_intersect(ray, any_vertex, normal);
+                if (!t)
                 {
-                        return false;
+                        return std::nullopt;
                 }
 
                 Vector<N, T> intersection_point = ray.point(*t);
@@ -185,11 +187,15 @@ public:
                         coordinates[i] = barycentric_coordinate(intersection_point, i);
                         if (coordinates[i] <= 0 || coordinates[i] >= 1)
                         {
-                                return false;
+                                return std::nullopt;
                         }
                 }
 
-                return last_coordinate(coordinates) > 0;
+                if (last_coordinate(coordinates) > 0)
+                {
+                        return t;
+                }
+                return std::nullopt;
         }
 
         template <typename InterpolationType>

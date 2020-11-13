@@ -364,41 +364,45 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
 
                 Ray<N, T> ray_orig(origin, direction);
 
-                T t;
+                std::optional<T> t;
                 Ray<N, T> ray;
 
                 ray = ray_orig;
-
-                if (!p.intersect(ray, &t))
+                t = p.intersect(ray);
+                if (!t)
                 {
                         error("Ray must intersect\n" + to_string(ray));
                 }
-                if (t >= length)
+                if (*t >= length)
                 {
-                        error("Intersection out of parallelotope.\ndistance = " + to_string(t) + ", "
+                        error("Intersection out of parallelotope.\ndistance = " + to_string(*t) + ", "
                               + "max distance = " + to_string(length) + "\n" + to_string(ray));
                 }
 
                 ray = Ray<N, T>(ray_orig.point(-10 * length), direction);
-                if (!p.intersect(ray, &t))
+                t = p.intersect(ray);
+                if (!t)
                 {
                         error("Ray must intersect\n" + to_string(ray));
                 }
 
                 ray = Ray<N, T>(ray_orig.point(10 * length), -direction);
-                if (!p.intersect(ray, &t))
+                t = p.intersect(ray);
+                if (!t)
                 {
                         error("Ray must intersect\n" + to_string(ray));
                 }
 
                 ray = Ray<N, T>(ray_orig.point(10 * length), direction);
-                if (p.intersect(ray, &t))
+                t = p.intersect(ray);
+                if (t)
                 {
                         error("Ray must not intersect\n" + to_string(ray));
                 }
 
                 ray = Ray<N, T>(ray_orig.point(-10 * length), -direction);
-                if (p.intersect(ray, &t))
+                t = p.intersect(ray);
+                if (t)
                 {
                         error("Ray must not intersect\n" + to_string(ray));
                 }
@@ -411,20 +415,25 @@ void verify_intersection(const Ray<N, T>& ray, const Parallelotope&... p)
         static_assert(((N == Parallelotope::SPACE_DIMENSION) && ...));
         static_assert(((std::is_same_v<T, typename Parallelotope::DataType>)&&...));
 
-        std::array<T, sizeof...(Parallelotope)> distances;
-        unsigned i = 0;
-        std::array<bool, sizeof...(Parallelotope)> intersections{p.intersect(ray, &distances[i++])...};
+        std::array<std::optional<T>, sizeof...(Parallelotope)> intersections{p.intersect(ray)...};
 
-        for (i = 1; i < sizeof...(Parallelotope); ++i)
+        for (unsigned i = 1; i < sizeof...(Parallelotope); ++i)
         {
-                if (intersections[i] != intersections[0])
+                if (intersections[i].has_value() != intersections[0].has_value())
                 {
                         error("Error intersection comparison\n" + to_string(ray));
                 }
-                if (intersections[i] && !almost_equal(distances[i], distances[0]))
+                if (!intersections[i])
                 {
-                        error("Error intersection distance comparison.\nDistance = " + to_string(distances[i])
-                              + ", first distance  = " + to_string(distances[0]) + "\n" + to_string(ray));
+                        continue;
+                }
+                if (!almost_equal(*intersections[i], *intersections[0]))
+                {
+                        std::string s = "Error intersection distance comparison.\n";
+                        s += "Distance[" + to_string(i) + "] = " + to_string(*intersections[i]) + "\n";
+                        s += "Distance[0] = " + to_string(*intersections[0]) + "\n";
+                        s += "Ray = " + to_string(ray);
+                        error(s);
                 }
         }
 }

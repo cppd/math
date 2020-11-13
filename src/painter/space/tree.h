@@ -489,9 +489,9 @@ public:
                 return m_boxes[ROOT_BOX].parallelotope();
         }
 
-        bool intersect_root(const Ray<N, T>& ray, T* t) const
+        std::optional<T> intersect_root(const Ray<N, T>& ray) const
         {
-                return m_boxes[ROOT_BOX].parallelotope().intersect_volume(ray, t);
+                return m_boxes[ROOT_BOX].parallelotope().intersect_volume(ray);
         }
 
         // Вызывается после intersect_root. Если в intersect_root пересечение было найдено,
@@ -505,7 +505,6 @@ public:
 
                 while (true)
                 {
-                        T t;
                         const Box* box;
 
                         if (find_box_for_point(m_boxes[ROOT_BOX], point, &box))
@@ -520,12 +519,13 @@ public:
 
                                 // Поиск пересечения с дальней границей текущей коробки
                                 // для перехода в соседнюю коробку.
-                                if (!box->parallelotope().intersect_farthest(ray, &t))
+                                std::optional<T> next = box->parallelotope().intersect_farthest(ray);
+                                if (!next)
                                 {
                                         return false;
                                 }
 
-                                point = ray.point(t);
+                                point = ray.point(*next);
                                 ray.set_org(point);
                                 Vector<N, T> normal = box->parallelotope().normal(point);
                                 point += m_distance_from_facet * normal;

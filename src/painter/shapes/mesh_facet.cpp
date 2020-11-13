@@ -152,9 +152,9 @@ MeshFacet<N, T>::MeshFacet(
 }
 
 template <size_t N, typename T>
-bool MeshFacet<N, T>::intersect(const Ray<N, T>& r, T* t) const
+std::optional<T> MeshFacet<N, T>::intersect(const Ray<N, T>& r) const
 {
-        return m_geometry.intersect(r, m_vertices[m_v[0]], m_normal, t);
+        return m_geometry.intersect(r, m_vertices[m_v[0]], m_normal);
 }
 
 template <size_t N, typename T>

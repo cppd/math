@@ -134,9 +134,9 @@ bool line_segment_intersects_shape(const Vector<N, T>& org, const Vector<N, T>& 
         static_assert(N == Shape::SPACE_DIMENSION);
         static_assert(std::is_same_v<T, typename Shape::DataType>);
 
-        Ray<N, T> r(org, direction);
-        T alpha;
-        return shape.intersect(r, &alpha) && (square(alpha) < dot(direction, direction));
+        const Ray<N, T> r(org, direction);
+        const std::optional<T> alpha = shape.intersect(r);
+        return alpha && (square(*alpha) < dot(direction, direction));
 }
 
 template <typename Shape1, typename Shape2>
