@@ -155,21 +155,15 @@ std::optional<Intersection<N, T>> ray_intersect(
 template <size_t N, typename T>
 void create_tree(
         const std::vector<const Shape<N, T>*>& shapes,
+        const BoundingBox<N, T>& bounding_box,
         SpatialSubdivisionTree<ParallelotopeAA<N, T>>* tree,
         ProgressRatio* progress)
 {
-        BoundingBox<N, T> bounding_box;
-        bounding_box.min = Vector<N, T>(limits<T>::max());
-        bounding_box.max = Vector<N, T>(limits<T>::lowest());
-
         std::vector<std::function<bool(const ShapeWrapperForIntersection<ParallelotopeAA<N, T>>&)>> wrappers;
         wrappers.reserve(shapes.size());
         for (const Shape<N, T>* s : shapes)
         {
                 wrappers.push_back(s->intersection_function());
-                BoundingBox<N, T> shape_bb = s->bounding_box();
-                bounding_box.min = min_vector(bounding_box.min, shape_bb.min);
-                bounding_box.max = max_vector(bounding_box.max, shape_bb.max);
         }
 
         const auto shape_intersections = [w = std::as_const(wrappers)](
@@ -212,7 +206,7 @@ class StorageScene final : public Scene<N, T>
 
         T m_size;
 
-        std::vector<int> m_shape_indices;
+        SpatialSubdivisionTree<ParallelotopeAA<N, T>> m_tree;
 
         T size() const override
         {
@@ -221,7 +215,30 @@ class StorageScene final : public Scene<N, T>
 
         std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray) const override
         {
-                return scene_implementation::ray_intersect(m_shape_pointers, m_shape_indices, ray);
+                T root_distance;
+                if (!m_tree.intersect_root(ray, &root_distance))
+                {
+                        return std::nullopt;
+                }
+
+                std::optional<Intersection<N, T>> intersection;
+
+                auto f = [&](const std::vector<int>& shape_indices, Vector<N, T>* point) -> bool {
+                        intersection = scene_implementation::ray_intersect(m_shape_pointers, shape_indices, ray);
+                        if (intersection)
+                        {
+                                *point = ray.point(intersection->distance);
+                                return true;
+                        }
+                        return false;
+                };
+
+                if (m_tree.trace_ray(ray, root_distance, f))
+                {
+                        return intersection;
+                }
+
+                return std::nullopt;
         }
 
         bool has_intersection(const Ray<N, T>& ray, const T& distance) const override
@@ -270,8 +287,8 @@ public:
 
                 m_size = (bounding_box.max - bounding_box.min).norm();
 
-                m_shape_indices.resize(m_shape_pointers.size());
-                std::iota(m_shape_indices.begin(), m_shape_indices.end(), 0);
+                ProgressRatio progress(nullptr);
+                scene_implementation::create_tree(m_shape_pointers, bounding_box, &m_tree, &progress);
         }
 };
 }
