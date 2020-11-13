@@ -91,6 +91,22 @@ BoundingBox<N, T> compute_bounding_box(const std::vector<const Shape<N, T>*>& sh
 }
 
 template <size_t N, typename T>
+struct BoundingIntersection
+{
+        T distance;
+        const Shape<N, T>* shape;
+
+        BoundingIntersection(T distance, const Shape<N, T>* shape) : distance(distance), shape(shape)
+        {
+        }
+
+        bool operator<(const BoundingIntersection& b) const
+        {
+                return distance < b.distance;
+        }
+};
+
+template <size_t N, typename T>
 std::optional<Intersection<N, T>> ray_intersect(
         const std::vector<const Shape<N, T>*>& shapes,
         const std::vector<int>& indices,
@@ -109,7 +125,8 @@ std::optional<Intersection<N, T>> ray_intersect(
         // Объекты могут быть сложными, поэтому перед поиском точного пересечения
         // их надо разместить по возрастанию примерного пересечения.
 
-        std::vector<std::tuple<T, const Shape<N, T>*>> intersections;
+        thread_local std::vector<BoundingIntersection<N, T>> intersections;
+        intersections.clear();
         intersections.reserve(indices.size());
         for (int index : indices)
         {
@@ -124,30 +141,30 @@ std::optional<Intersection<N, T>> ray_intersect(
                 return std::nullopt;
         }
 
-        std::sort(
-                intersections.begin(), intersections.end(),
-                [](const std::tuple<T, const Shape<N, T>*>& a, const std::tuple<T, const Shape<N, T>*>& b) {
-                        return std::get<0>(a) < std::get<0>(b);
-                });
+        std::make_heap(intersections.begin(), intersections.end());
 
         T min_distance = limits<T>::max();
-
         std::optional<Intersection<N, T>> intersection;
 
-        for (const auto& [bounding_distance, object] : intersections)
+        do
         {
-                if (min_distance < bounding_distance)
+                const BoundingIntersection<N, T>& bounding = intersections.front();
+
+                if (min_distance < bounding.distance)
                 {
                         break;
                 }
 
-                std::optional<Intersection<N, T>> v = object->intersect(ray, bounding_distance);
+                std::optional<Intersection<N, T>> v = bounding.shape->intersect(ray, bounding.distance);
                 if (v && (v->distance < min_distance))
                 {
                         min_distance = v->distance;
                         intersection = v;
                 }
-        }
+
+                std::pop_heap(intersections.begin(), intersections.end());
+                intersections.pop_back();
+        } while (!intersections.empty());
 
         return intersection;
 }
