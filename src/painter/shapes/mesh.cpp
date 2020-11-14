@@ -346,13 +346,12 @@ std::optional<Intersection<N, T>> Mesh<N, T>::intersect(const Ray<N, T>& ray, T 
         T distance;
 
         // Пересечение луча с набором граней ячейки дерева
-        auto f = [&](const std::vector<int>& facet_indices, Vector<N, T>* point) -> bool {
+        auto f = [&](const std::vector<int>& facet_indices) -> std::optional<Vector<N, T>> {
                 if (ray_intersection(m_facets, facet_indices, ray, &distance, &facet))
                 {
-                        *point = ray.point(distance);
-                        return true;
+                        return ray.point(distance);
                 }
-                return false;
+                return std::nullopt;
         };
 
         if (m_tree.trace_ray(ray, bounding_distance, f))

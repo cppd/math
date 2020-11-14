@@ -476,13 +476,10 @@ public:
                 {
                         if (box->object_index_count() > 0)
                         {
-                                Vector<N, T> object_point;
-                                if (find_intersection(box->object_indices(), &object_point))
+                                std::optional<Vector<N, T>> intersection = find_intersection(box->object_indices());
+                                if (intersection && box->parallelotope().inside(*intersection))
                                 {
-                                        if (box->parallelotope().inside(object_point))
-                                        {
-                                                return true;
-                                        }
+                                        return true;
                                 }
                         }
 

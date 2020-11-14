@@ -240,14 +240,13 @@ class StorageScene final : public Scene<N, T>
 
                 std::optional<Intersection<N, T>> intersection;
 
-                auto f = [&](const std::vector<int>& shape_indices, Vector<N, T>* point) -> bool {
+                auto f = [&](const std::vector<int>& shape_indices) -> std::optional<Vector<N, T>> {
                         intersection = scene_implementation::ray_intersect(m_shape_pointers, shape_indices, ray);
                         if (intersection)
                         {
-                                *point = ray.point(intersection->distance);
-                                return true;
+                                return ray.point(intersection->distance);
                         }
-                        return false;
+                        return std::nullopt;
                 };
 
                 if (m_tree.trace_ray(ray, *root, f))
