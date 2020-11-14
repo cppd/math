@@ -121,7 +121,7 @@ public:
         }
 };
 
-inline std::vector<int> iota_zero_based_indices(int object_index_count)
+inline std::vector<int> zero_based_indices(int object_index_count)
 {
         std::vector<int> object_indices(object_index_count);
         std::iota(object_indices.begin(), object_indices.end(), 0);
@@ -146,46 +146,6 @@ std::vector<Box<Parallelotope>> move_boxes_to_vector(Container<Box<Parallelotope
         }
 
         return vector;
-}
-
-template <size_t N, typename T>
-void min_max_and_distance(
-        int max_divisions,
-        int distance_from_facet_in_epsilons,
-        const BoundingBox<N, T>& bounding_box,
-        Vector<N, T>* min,
-        Vector<N, T>* max,
-        T* distance)
-{
-        static_assert(std::is_floating_point_v<T>);
-
-        T all_max = limits<T>::lowest();
-
-        for (unsigned i = 0; i < N; ++i)
-        {
-                if (!(bounding_box.min[i] < bounding_box.max[i]))
-                {
-                        error("Objects for (2^N)-tree don't form N-dimensional object");
-                }
-                T length = bounding_box.max[i] - bounding_box.min[i];
-                T guard_region_size = length * (distance_from_facet_in_epsilons * limits<T>::epsilon());
-                (*min)[i] = bounding_box.min[i] - guard_region_size;
-                (*max)[i] = bounding_box.max[i] + guard_region_size;
-                all_max = std::max((*max)[i] - (*min)[i], all_max);
-        }
-
-        *distance = all_max * (distance_from_facet_in_epsilons * limits<T>::epsilon());
-
-        for (unsigned i = 0; i < N; ++i)
-        {
-                T one_half_of_min_box_size = ((*max)[i] - (*min)[i]) / max_divisions / 2;
-                if (*distance >= one_half_of_min_box_size)
-                {
-                        error("The minimal distance from facets " + to_string(*distance)
-                              + " is greater than one half of the minimum box size "
-                              + to_string(one_half_of_min_box_size) + " (dimension #" + to_string(i) + ")");
-                }
-        }
 }
 
 template <typename Box>
@@ -342,24 +302,22 @@ catch (...)
         box_jobs->stop_all();
         throw;
 }
+
+inline double maximum_box_count(int box_count, int max_depth)
+{
+        // Сумма геометрической прогрессии со знаменателем box_count.
+        // Sum = (pow(r, n) - 1) / (r - 1).
+
+        return (std::pow(box_count, max_depth) - 1) / (box_count - 1);
+}
 }
 
 template <typename Parallelotope>
 class SpatialSubdivisionTree final
 {
-        static double maximum_box_count(int box_count, int max_depth)
-        {
-                // Максимальное количество коробок — это сумма геометрической прогрессии
-                // со знаменателем box_count.
-                // Sum = (pow(r, n) - 1) / (r - 1).
-
-                return (std::pow(box_count, max_depth) - 1) / (box_count - 1);
-        }
-
         using Box = spatial_subdivision_tree_implementation::Box<Parallelotope>;
         using BoxJobs = spatial_subdivision_tree_implementation::BoxJobs<Box>;
 
-        // Размерность задачи и тип данных
         static constexpr int N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
 
@@ -367,53 +325,51 @@ class SpatialSubdivisionTree final
         // новых элементов, поэтому требуется std::deque или std::list.
         using BoxContainer = std::deque<Box>;
 
-        // Расстояние от грани, при котором точка считается внутри коробки.
-        static constexpr int DISTANCE_FROM_FACET_IN_EPSILONS = 20;
+        static constexpr T GUARD_REGION_SIZE = 1e-4;
 
-        // Нижняя и верхняя границы для минимального количества объектов в коробке.
-        static constexpr int MIN_OBJECTS_LEFT_BOUND = 2;
-        static constexpr int MIN_OBJECTS_RIGHT_BOUND = 100;
+        static constexpr int MIN_OBJECTS_PER_BOX_MIN = 2;
+        static constexpr int MIN_OBJECTS_PER_BOX_MAX = 100;
 
-        // Нижняя и верхняя границы для глубины дерева.
-        static constexpr int MAX_DEPTH_LEFT_BOUND = 1;
-        static constexpr int MAX_DEPTH_RIGHT_BOUND = 10;
+        static constexpr int MAX_DEPTH = 10;
+
+        static constexpr int BOX_COUNT_LIMIT = (1u << 31) - 1;
+
+        static constexpr int BOX_COUNT_SUBDIVISION = spatial_subdivision_tree_implementation::BOX_COUNT<N>;
 
         // Первым элементом массива является только 0.
         static constexpr int ROOT_BOX = 0;
 
-        // Максимально допустимое количество коробок.
-        static constexpr int MAX_BOX_COUNT_LIMIT = (1u << 31) - 1;
-
-        // Количество коробок при одном делении.
-        static constexpr int BOX_COUNT = spatial_subdivision_tree_implementation::BOX_COUNT<N>;
-
-        // Все коробки хранятся в одном векторе.
         std::vector<Box> m_boxes;
 
-        T m_distance_from_facet;
+        Vector<N, T> m_distance_from_facet;
 
-        bool find_box_for_point(const Box& box, const Vector<N, T>& p, const Box** found_box) const
+        const Box* find_box_for_point(const Box& box, const Vector<N, T>& p) const
         {
                 if (!box.parallelotope().inside(p))
                 {
-                        return false;
+                        return nullptr;
                 }
 
                 if (!box.has_childs())
                 {
-                        *found_box = &box;
-                        return true;
+                        return &box;
                 }
 
                 for (int child_box : box.childs())
                 {
-                        if (find_box_for_point(m_boxes[child_box], p, found_box))
+                        const Box* b = find_box_for_point(m_boxes[child_box], p);
+                        if (b)
                         {
-                                return true;
+                                return b;
                         }
                 }
 
-                return false;
+                return nullptr;
+        }
+
+        const Box* find_box_for_point(const Vector<N, T>& p) const
+        {
+                return find_box_for_point(m_boxes[ROOT_BOX], p);
         }
 
 public:
@@ -421,52 +377,54 @@ public:
         void decompose(
                 int max_depth,
                 int min_objects_per_box,
-                int object_index_count,
+                int object_count,
                 const BoundingBox<N, T>& bounding_box,
                 const ObjectIntersections& object_intersections,
                 unsigned thread_count,
                 ProgressRatio* progress)
 
         {
-                static_assert(MAX_BOX_COUNT_LIMIT <= (1LL << 31) - 1);
+                static_assert(BOX_COUNT_LIMIT <= (1LL << 31) - 1);
 
                 namespace impl = spatial_subdivision_tree_implementation;
 
-                if (!(max_depth >= MAX_DEPTH_LEFT_BOUND && max_depth <= MAX_DEPTH_RIGHT_BOUND)
-                    || !(min_objects_per_box >= MIN_OBJECTS_LEFT_BOUND
-                         && min_objects_per_box <= MIN_OBJECTS_RIGHT_BOUND))
+                if (!(max_depth >= 1 && max_depth <= MAX_DEPTH)
+                    || !(min_objects_per_box >= MIN_OBJECTS_PER_BOX_MIN
+                         && min_objects_per_box <= MIN_OBJECTS_PER_BOX_MAX))
                 {
-                        error("Error limits for spatial subdivision " + to_string(BOX_COUNT) + "-tree. Maximum depth ("
-                              + to_string(max_depth) + ") must be in the interval [" + to_string(MAX_DEPTH_LEFT_BOUND)
-                              + ", " + to_string(MAX_DEPTH_RIGHT_BOUND) + "] and minimum objects per box ("
+                        error("Error limits for spatial subdivision " + to_string(BOX_COUNT_SUBDIVISION)
+                              + "-tree. Maximum depth (" + to_string(max_depth) + ") must be in the interval [1, "
+                              + to_string(MAX_DEPTH) + "] and minimum objects per box ("
                               + to_string(min_objects_per_box) + ") must be in the interval ["
-                              + to_string(MIN_OBJECTS_LEFT_BOUND) + ", " + to_string(MIN_OBJECTS_RIGHT_BOUND) + "].");
+                              + to_string(MIN_OBJECTS_PER_BOX_MIN) + ", " + to_string(MIN_OBJECTS_PER_BOX_MAX) + "].");
                 }
 
                 // Немного прибавить к максимуму для учёта ошибок плавающей точки
-                if (maximum_box_count(BOX_COUNT, max_depth) > MAX_BOX_COUNT_LIMIT + 0.1)
+                if (impl::maximum_box_count(BOX_COUNT_SUBDIVISION, max_depth) > BOX_COUNT_LIMIT + 0.1)
                 {
-                        error("Spatial subdivision " + to_string(BOX_COUNT) + "-tree is too deep. Depth "
+                        error("Spatial subdivision " + to_string(BOX_COUNT_SUBDIVISION) + "-tree is too deep. Depth "
                               + to_string(max_depth) + ", maximum box count "
-                              + to_string(maximum_box_count(BOX_COUNT, max_depth)) + ", maximum box count limit "
-                              + to_string(MAX_BOX_COUNT_LIMIT));
+                              + to_string(impl::maximum_box_count(BOX_COUNT_SUBDIVISION, max_depth))
+                              + ", maximum box count limit " + to_string(BOX_COUNT_LIMIT));
                 }
 
-                const int max_box_count = std::lround(maximum_box_count(BOX_COUNT, max_depth));
+                const Vector<N, T> guard_region(GUARD_REGION_SIZE * (bounding_box.max - bounding_box.min).norm());
+                const BoundingBox<N, T> root(bounding_box.min - guard_region, bounding_box.max + guard_region);
 
                 // Максимальное разделение по одной координате
                 const int max_divisions = 1u << (max_depth - 1);
 
-                Vector<N, T> min;
-                Vector<N, T> max;
-                T distance_from_facet;
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        m_distance_from_facet[i] = (root.max[i] - root.min[i]) / max_divisions / 2;
+                }
 
-                impl::min_max_and_distance(
-                        max_divisions, DISTANCE_FROM_FACET_IN_EPSILONS, bounding_box, &min, &max, &distance_from_facet);
+                const int max_box_count = std::lround(impl::maximum_box_count(BOX_COUNT_SUBDIVISION, max_depth));
 
-                BoxContainer boxes({Box(Parallelotope(min, max), impl::iota_zero_based_indices(object_index_count))});
+                BoxContainer boxes;
+                boxes.emplace_back(Parallelotope(root.min, root.max), impl::zero_based_indices(object_count));
 
-                BoxJobs jobs(&boxes.front(), MAX_DEPTH_LEFT_BOUND);
+                BoxJobs jobs(&boxes.front(), 1 /*depth*/);
 
                 SpinLock boxes_lock;
 
@@ -481,7 +439,6 @@ public:
                 threads.join();
 
                 m_boxes = move_boxes_to_vector(std::move(boxes));
-                m_distance_from_facet = distance_from_facet;
         }
 
         const Parallelotope& root() const
@@ -499,56 +456,49 @@ public:
         template <typename FindIntersection>
         bool trace_ray(Ray<N, T> ray, T root_t, const FindIntersection& find_intersection) const
         {
-                bool first = true;
+                const Box* box;
+                Vector<N, T> point;
 
-                Vector<N, T> point = ray.point(root_t);
+                point = ray.point(root_t);
+                ray.set_org(point);
+                box = find_box_for_point(point);
+                if (!box)
+                {
+                        box = find_box_for_point(
+                                point - m_distance_from_facet * m_boxes[ROOT_BOX].parallelotope().normal(point));
+                        if (!box)
+                        {
+                                return false;
+                        }
+                }
 
                 while (true)
                 {
-                        const Box* box;
-
-                        if (find_box_for_point(m_boxes[ROOT_BOX], point, &box))
+                        if (box->object_index_count() > 0)
                         {
                                 Vector<N, T> object_point;
-                                if (box->object_index_count() > 0
-                                    && find_intersection(box->object_indices(), &object_point)
-                                    && box->parallelotope().inside(object_point))
+                                if (find_intersection(box->object_indices(), &object_point))
                                 {
-                                        return true;
+                                        if (box->parallelotope().inside(object_point))
+                                        {
+                                                return true;
+                                        }
                                 }
-
-                                // Поиск пересечения с дальней границей текущей коробки
-                                // для перехода в соседнюю коробку.
-                                std::optional<T> next = box->parallelotope().intersect_farthest(ray);
-                                if (!next)
-                                {
-                                        return false;
-                                }
-
-                                point = ray.point(*next);
-                                ray.set_org(point);
-                                Vector<N, T> normal = box->parallelotope().normal(point);
-                                point += m_distance_from_facet * normal;
                         }
-                        else
+
+                        std::optional<T> next = box->parallelotope().intersect_farthest(ray);
+                        if (!next)
                         {
-                                // Начало луча не находится в пределах дерева.
-
-                                if (!first)
-                                {
-                                        // Не первый проход — процесс вышел за пределы дерева.
-                                        return false;
-                                }
-
-                                // Первый проход — начало луча находится снаружи и надо искать
-                                // пересечение с самим деревом. Это пересечение уже должно
-                                // быть найдено ранее при вызове intersect_root.
-                                ray.set_org(point);
-                                Vector<N, T> normal = m_boxes[ROOT_BOX].parallelotope().normal(point);
-                                point -= m_distance_from_facet * normal;
+                                return false;
                         }
 
-                        first = false;
+                        point = ray.point(*next);
+                        ray.set_org(point);
+                        box = find_box_for_point(point + m_distance_from_facet * box->parallelotope().normal(point));
+                        if (!box)
+                        {
+                                return false;
+                        }
                 }
         }
 };
