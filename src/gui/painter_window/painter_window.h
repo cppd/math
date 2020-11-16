@@ -134,6 +134,22 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 }
         }
 
+        static std::vector<std::byte> bgra32_to_r8g8b8(const std::vector<std::uint_least32_t>& pixels)
+        {
+                std::vector<std::byte> bytes(3 * pixels.size());
+                std::byte* ptr = bytes.data();
+                for (std::uint_least32_t c : pixels)
+                {
+                        unsigned char b = c & 0xff;
+                        unsigned char g = (c >> 8) & 0xff;
+                        unsigned char r = (c >> 16) & 0xff;
+                        std::memcpy(ptr++, &r, 1);
+                        std::memcpy(ptr++, &g, 1);
+                        std::memcpy(ptr++, &b, 1);
+                }
+                return bytes;
+        }
+
         static void bgra32_to_r8g8b8a8(std::vector<std::byte>* pixels)
         {
                 static_assert(4 * sizeof(std::byte) == sizeof(std::uint_least32_t));
@@ -222,18 +238,6 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 std::vector<std::uint_least32_t> pixels(1ull * width * height);
                 std::memcpy(pixels.data(), &m_pixels_bgr32[m_slice_offset], data_size(pixels));
 
-                std::vector<std::byte> bytes(3ull * width * height);
-                std::byte* ptr = bytes.data();
-                for (std::uint_least32_t c : pixels)
-                {
-                        unsigned char b = c & 0xff;
-                        unsigned char g = (c >> 8) & 0xff;
-                        unsigned char r = (c >> 16) & 0xff;
-                        std::memcpy(ptr++, &r, 1);
-                        std::memcpy(ptr++, &g, 1);
-                        std::memcpy(ptr++, &b, 1);
-                }
-
                 const std::string caption = "Save";
                 dialog::FileFilter filter;
                 filter.name = "Images";
@@ -247,7 +251,8 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
 
                 image::save_image_to_file(
                         path_from_utf8(file_name_string),
-                        image::ImageView<2>({width, height}, image::ColorFormat::R8G8B8_SRGB, bytes));
+                        image::ImageView<2>(
+                                {width, height}, image::ColorFormat::R8G8B8_SRGB, bgra32_to_r8g8b8(pixels)));
         }
 
         void add_volume() const override
