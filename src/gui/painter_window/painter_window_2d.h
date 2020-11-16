@@ -68,8 +68,8 @@ private:
         };
         std::deque<DimensionSlider> m_dimension_sliders;
 
-        void on_save_to_file_clicked();
-        void on_add_volume_clicked();
+        void on_save_to_file();
+        void on_add_volume();
 
         void on_timer_timeout();
         void on_first_shown();
@@ -78,6 +78,7 @@ private:
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;
 
+        void make_menu();
         void init_interface(const std::vector<int>& initial_slider_positions);
         std::vector<int> slider_positions() const;
         void update_points();

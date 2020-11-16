@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/settings/name.h>
 
 #include <QCloseEvent>
+#include <QMenuBar>
 #include <QPointer>
 #include <array>
 #include <cmath>
@@ -118,13 +119,11 @@ PainterWindow2d::PainterWindow2d(
         }
         this->setWindowTitle(QString::fromStdString(title));
 
-        connect(ui.pushButton_save_to_file, &QPushButton::clicked, this, &PainterWindow2d::on_save_to_file_clicked);
-        connect(ui.pushButton_add_volume, &QPushButton::clicked, this, &PainterWindow2d::on_add_volume_clicked);
-
         connect(&m_timer, &QTimer::timeout, this, &PainterWindow2d::on_timer_timeout);
 
         ASSERT(m_image.sizeInBytes() == m_image_byte_count);
 
+        make_menu();
         init_interface(initial_slider_positions);
 }
 
@@ -151,9 +150,37 @@ void PainterWindow2d::closeEvent(QCloseEvent* event)
         event->accept();
 }
 
+void PainterWindow2d::make_menu()
+{
+        QMenuBar* menu_bar = new QMenuBar(this);
+        ui.menu_layout->addWidget(menu_bar);
+
+        QMenu* main_menu = new QMenu("Actions", this);
+        menu_bar->addMenu(main_menu);
+        {
+                QAction* action = main_menu->addAction("Save to file...");
+                QObject::connect(action, &QAction::triggered, this, &PainterWindow2d::on_save_to_file);
+        }
+        if (m_screen_size.size() == 3)
+        {
+                QAction* action = main_menu->addAction("Add volume");
+                QObject::connect(action, &QAction::triggered, this, &PainterWindow2d::on_add_volume);
+        }
+        {
+                main_menu->addSeparator();
+                QAction* action = main_menu->addAction("Close...");
+                QObject::connect(action, &QAction::triggered, this, &PainterWindow2d::close);
+        }
+}
+
 void PainterWindow2d::init_interface(const std::vector<int>& initial_slider_positions)
 {
-        ui.pushButton_add_volume->setVisible(m_screen_size.size() == 3);
+        this->layout()->setContentsMargins(5, 5, 5, 5);
+        this->layout()->setSpacing(0);
+        ui.menu_layout->setContentsMargins(0, 0, 0, 3);
+        ui.menu_layout->setSpacing(0);
+        ui.main_layout->setContentsMargins(0, 0, 0, 0);
+        ui.main_layout->setSpacing(10);
 
         ui.label_points->setText("");
         ui.label_points->resize(m_width, m_height);
@@ -165,7 +192,6 @@ void PainterWindow2d::init_interface(const std::vector<int>& initial_slider_posi
 
         ui.scrollAreaWidgetContents->layout()->setContentsMargins(0, 0, 0, 0);
         ui.scrollAreaWidgetContents->layout()->setSpacing(0);
-        this->layout()->setContentsMargins(5, 5, 5, 5);
 
         ui.checkBox_show_threads->setChecked(SHOW_THREADS);
 
@@ -181,7 +207,7 @@ void PainterWindow2d::init_interface(const std::vector<int>& initial_slider_posi
         m_dimension_sliders.resize(slider_count);
 
         QWidget* layout_widget = new QWidget(this);
-        this->layout()->addWidget(layout_widget);
+        ui.main_layout->addWidget(layout_widget);
 
         QGridLayout* layout = new QGridLayout(layout_widget);
         layout_widget->setLayout(layout);
@@ -300,12 +326,12 @@ void PainterWindow2d::on_timer_timeout()
         update_points();
 }
 
-void PainterWindow2d::on_save_to_file_clicked()
+void PainterWindow2d::on_save_to_file()
 {
         catch_all("Save to file", [&]() { save_to_file(); });
 }
 
-void PainterWindow2d::on_add_volume_clicked()
+void PainterWindow2d::on_add_volume()
 {
         catch_all("Volume", [&]() { add_volume(); });
 }
