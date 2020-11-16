@@ -54,6 +54,8 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
 
         static constexpr const char* SAVE_IMAGE_FILE_FORMAT = "png";
 
+        static constexpr unsigned char ALPHA_FOR_3D_IMAGE = 1;
+
         static constexpr int PANTBRUSH_WIDTH = 20;
         static constexpr std::uint_least32_t COLOR_LIGHT = Srgb8(100, 150, 200).to_uint_bgr();
         static constexpr std::uint_least32_t COLOR_DARK = Srgb8(0, 0, 0).to_uint_bgr();
@@ -67,7 +69,6 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
         const int m_height;
         long long m_slice_offset;
         std::vector<std::uint_least32_t> m_pixels_bgr32;
-        std::vector<std::byte> m_pixels_r8g8b8a8;
         painter::BarPaintbrush<N_IMAGE> m_paintbrush;
         std::vector<long long> m_busy_pixels;
         std::atomic_bool m_stop;
@@ -112,6 +113,44 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
         static std::vector<int> initial_slider_positions()
         {
                 return std::vector<int>(N_IMAGE - 2, 0);
+        }
+
+        static void flip_vertically_2d_images(std::vector<std::byte>* pixels, size_t width, size_t height)
+        {
+                size_t size_2d = width * height;
+                ASSERT(pixels->size() % size_2d == 0);
+                std::vector<std::byte> row(width);
+                for (size_t offset_2d = 0; offset_2d < pixels->size(); offset_2d += size_2d)
+                {
+                        size_t row_1 = offset_2d;
+                        size_t row_2 = offset_2d + width * (height - 1);
+                        size_t row_1_max = offset_2d + width * (height / 2);
+                        for (; row_1 < row_1_max; row_1 += width, row_2 -= width)
+                        {
+                                std::memcpy(row.data(), &(*pixels)[row_1], width);
+                                std::memcpy(&(*pixels)[row_1], &(*pixels)[row_2], width);
+                                std::memcpy(&(*pixels)[row_2], row.data(), width);
+                        }
+                }
+        }
+
+        static void bgra32_to_r8g8b8a8(std::vector<std::byte>* pixels)
+        {
+                static_assert(4 * sizeof(std::byte) == sizeof(std::uint_least32_t));
+                ASSERT(pixels->size() % 4 == 0);
+                for (size_t i = 0; i < pixels->size();)
+                {
+                        std::uint_least32_t c;
+                        std::memcpy(&c, &(*pixels)[i], 4);
+                        unsigned char b = c & 0xff;
+                        unsigned char g = (c >> 8) & 0xff;
+                        unsigned char r = (c >> 16) & 0xff;
+                        unsigned char a = (c >> 24) & 0xff;
+                        std::memcpy(&(*pixels)[i++], &r, 1);
+                        std::memcpy(&(*pixels)[i++], &g, 1);
+                        std::memcpy(&(*pixels)[i++], &b, 1);
+                        std::memcpy(&(*pixels)[i++], &a, 1);
+                }
         }
 
         //
@@ -218,15 +257,20 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                         return;
                 }
 
-                ASSERT(4 * multiply_all<long long>(m_screen_size) == static_cast<long long>(m_pixels_r8g8b8a8.size()));
-
                 image::Image<N_IMAGE> image;
 
                 image.size = m_screen_size;
                 image.color_format = image::ColorFormat::R8G8B8A8_SRGB;
 
-                image.pixels.resize(m_pixels_r8g8b8a8.size());
-                std::memcpy(image.pixels.data(), m_pixels_r8g8b8a8.data(), image.pixels.size());
+                static_assert(4 * sizeof(std::byte) == sizeof(std::uint_least32_t));
+                image.pixels.resize(4 * m_pixels_bgr32.size());
+
+                ASSERT(data_size(image.pixels) == data_size(m_pixels_bgr32));
+                std::memcpy(image.pixels.data(), m_pixels_bgr32.data(), image.pixels.size());
+
+                flip_vertically_2d_images(&image.pixels, 4ull * m_screen_size[0], m_screen_size[1]);
+
+                bgra32_to_r8g8b8a8(&image.pixels);
 
                 process::load_from_volume_image<N_IMAGE>("Painter Volume", std::move(image));
         }
@@ -247,11 +291,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
 
         void set_pixels_rgba(long long pixel_index, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
         {
-                std::byte* ptr = &m_pixels_r8g8b8a8[4 * pixel_index];
-                std::memcpy(ptr + 0, &r, 1);
-                std::memcpy(ptr + 1, &g, 1);
-                std::memcpy(ptr + 2, &b, 1);
-                std::memcpy(ptr + 3, &a, 1);
+                m_pixels_bgr32[pixel_index] = Srgb8(r, g, b).to_uint_bgr() | (a << 24u);
         }
 
         void painter_pixel_after(
@@ -268,10 +308,13 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                         unsigned char r = color_conversion::linear_float_to_srgb_uint8(color.red());
                         unsigned char g = color_conversion::linear_float_to_srgb_uint8(color.green());
                         unsigned char b = color_conversion::linear_float_to_srgb_uint8(color.blue());
-                        set_pixels_rgb(pixel_index(p), r, g, b);
-                        if (N_IMAGE == 3)
+                        if (N_IMAGE != 3)
                         {
-                                set_pixels_rgba(pixel_index(pixel), r, g, b, 1);
+                                set_pixels_rgb(pixel_index(p), r, g, b);
+                        }
+                        else
+                        {
+                                set_pixels_rgba(pixel_index(p), r, g, b, ALPHA_FOR_3D_IMAGE);
                         }
                 }
                 else if (coverage <= 0)
@@ -315,12 +358,6 @@ public:
                   m_paintbrush(m_scene->projector().screen_size(), PANTBRUSH_WIDTH, -1),
                   m_busy_pixels(thread_count, -1)
         {
-                if (N_IMAGE == 3)
-                {
-                        m_pixels_r8g8b8a8.resize(4 * multiply_all<long long>(m_screen_size));
-                        std::memset(m_pixels_r8g8b8a8.data(), 0, m_pixels_r8g8b8a8.size());
-                }
-
                 m_stop = false;
                 m_thread = std::thread([=, this]() {
                         paint(this, samples_per_pixel, *m_scene, &m_paintbrush, thread_count, &m_stop, smooth_normal);
