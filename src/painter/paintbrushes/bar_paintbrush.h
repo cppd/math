@@ -158,11 +158,7 @@ public:
                 for (Pixel& pixel : m_pixels)
                 {
                         std::reverse(pixel.begin(), pixel.end());
-
-                        if (N == 2)
-                        {
-                                pixel[1] = m_screen_size[1] - 1 - pixel[1];
-                        }
+                        pixel[1] = m_screen_size[1] - 1 - pixel[1];
                 }
 
                 m_statistics.pass_count = 1;
