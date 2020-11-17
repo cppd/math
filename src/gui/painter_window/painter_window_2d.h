@@ -69,9 +69,6 @@ private:
         };
         std::deque<DimensionSlider> m_dimension_sliders;
 
-        void on_save_to_file();
-        void on_add_volume();
-
         void on_timer_timeout();
         void on_first_shown();
         void on_slider_changed(int);
@@ -91,7 +88,7 @@ private:
         virtual long long pixels_offset() const = 0;
         virtual const std::vector<long long>& busy_indices_2d() const = 0;
         virtual void save_to_file() const = 0;
-        virtual void add_volume() const = 0;
+        virtual void add_volume(bool without_background) const = 0;
 
 public:
         PainterWindow2d(

@@ -150,6 +150,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 return bytes;
         }
 
+        template <bool WITHOUT_BACKGROUND>
         static void bgra32_to_r8g8b8a8(std::vector<std::byte>* pixels)
         {
                 static_assert(4 * sizeof(std::byte) == sizeof(std::uint_least32_t));
@@ -161,11 +162,23 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                         unsigned char b = c & 0xff;
                         unsigned char g = (c >> 8) & 0xff;
                         unsigned char r = (c >> 16) & 0xff;
-                        unsigned char a = (c >> 24) & 0xff;
+                        unsigned char a = WITHOUT_BACKGROUND ? ((c >> 24) & 0xff) : ALPHA_FOR_3D_IMAGE;
                         std::memcpy(&(*pixels)[i++], &r, 1);
                         std::memcpy(&(*pixels)[i++], &g, 1);
                         std::memcpy(&(*pixels)[i++], &b, 1);
                         std::memcpy(&(*pixels)[i++], &a, 1);
+                }
+        }
+
+        static void bgra32_to_r8g8b8a8(std::vector<std::byte>* pixels, bool without_background)
+        {
+                if (without_background)
+                {
+                        bgra32_to_r8g8b8a8<true>(pixels);
+                }
+                else
+                {
+                        bgra32_to_r8g8b8a8<false>(pixels);
                 }
         }
 
@@ -256,7 +269,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                                 {width, height}, image::ColorFormat::R8G8B8_SRGB, bgra32_to_r8g8b8(pixels)));
         }
 
-        void add_volume() const override
+        void add_volume(bool without_background) const override
         {
                 if (N_IMAGE != 3)
                 {
@@ -276,7 +289,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
 
                 flip_vertically_2d_images(&image.pixels, 4ull * m_screen_size[0], m_screen_size[1]);
 
-                bgra32_to_r8g8b8a8(&image.pixels);
+                bgra32_to_r8g8b8a8(&image.pixels, without_background);
 
                 process::load_from_volume_image<N_IMAGE>("Painter Volume", std::move(image));
         }

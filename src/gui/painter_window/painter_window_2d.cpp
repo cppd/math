@@ -159,15 +159,27 @@ void PainterWindow2d::make_menu()
         menu_bar->addMenu(main_menu);
         {
                 QAction* action = main_menu->addAction("Save to file...");
-                QObject::connect(action, &QAction::triggered, this, &PainterWindow2d::on_save_to_file);
+                QObject::connect(action, &QAction::triggered, this, [this]() {
+                        catch_all("Save to file", [this]() { save_to_file(); });
+                });
         }
         if (m_screen_size.size() == 3)
         {
-                QAction* action = main_menu->addAction("Add volume");
-                QObject::connect(action, &QAction::triggered, this, &PainterWindow2d::on_add_volume);
+                main_menu->addSeparator();
+
+                QAction* action1 = main_menu->addAction("Add volume");
+                QObject::connect(action1, &QAction::triggered, this, [this]() {
+                        catch_all("Volume", [this]() { add_volume(false); });
+                });
+
+                QAction* action2 = main_menu->addAction("Add volume without background");
+                QObject::connect(action2, &QAction::triggered, this, [this]() {
+                        catch_all("Volume", [this]() { add_volume(true); });
+                });
         }
         {
                 main_menu->addSeparator();
+
                 QAction* action = main_menu->addAction("Close...");
                 QObject::connect(action, &QAction::triggered, this, &PainterWindow2d::close);
         }
@@ -332,16 +344,6 @@ void PainterWindow2d::on_timer_timeout()
 {
         update_statistics();
         update_points();
-}
-
-void PainterWindow2d::on_save_to_file()
-{
-        catch_all("Save to file", [&]() { save_to_file(); });
-}
-
-void PainterWindow2d::on_add_volume()
-{
-        catch_all("Volume", [&]() { add_volume(); });
 }
 
 void PainterWindow2d::on_slider_changed(int)
