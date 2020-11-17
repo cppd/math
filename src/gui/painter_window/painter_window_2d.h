@@ -33,7 +33,8 @@ namespace gui::painter_window_implementation
 {
 struct Statistics final
 {
-        long long pass_count;
+        long long pass_number;
+        double pass_progress;
         long long pixel_count;
         long long ray_count;
         long long sample_count;

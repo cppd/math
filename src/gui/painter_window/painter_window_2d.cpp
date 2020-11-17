@@ -292,9 +292,16 @@ void PainterWindow2d::update_statistics()
 
         long long milliseconds_per_frame = std::llround(1000 * statistics.previous_pass_duration);
 
+        int pass_percent = std::floor(statistics.pass_progress * 100.0);
+        pass_percent = (pass_percent < 100) ? pass_percent : 99;
+        std::string pass_progress;
+        pass_progress += ":";
+        pass_progress += pass_percent < 10 ? "0" : "";
+        pass_progress += to_string(pass_percent);
+
         set_text_and_minimum_width(ui.label_rays_per_second, to_string_digit_groups(rays_per_second));
         set_text_and_minimum_width(ui.label_ray_count, to_string_digit_groups(statistics.ray_count));
-        set_text_and_minimum_width(ui.label_pass_count, to_string_digit_groups(statistics.pass_count));
+        set_text_and_minimum_width(ui.label_pass_count, to_string_digit_groups(statistics.pass_number) + pass_progress);
         set_text_and_minimum_width(ui.label_samples_per_pixel, to_string_digit_groups(samples_per_pixel));
         set_text_and_minimum_width(ui.label_milliseconds_per_frame, to_string_digit_groups(milliseconds_per_frame));
 }

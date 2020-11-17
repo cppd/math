@@ -66,6 +66,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
         const std::shared_ptr<const painter::Scene<N, T>> m_scene;
         const GlobalIndex<N_IMAGE, long long> m_global_index;
         const std::array<int, N - 1> m_screen_size;
+        const long long m_pixel_count;
         long long m_slice_offset;
         std::vector<std::uint_least32_t> m_pixels_bgr32;
         painter::BarPaintbrush<N_IMAGE> m_paintbrush;
@@ -201,7 +202,8 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
         {
                 const painter::Statistics sp = m_paintbrush.statistics();
                 Statistics s;
-                s.pass_count = sp.pass_count;
+                s.pass_number = sp.pass_number;
+                s.pass_progress = static_cast<double>(sp.pass_pixel_count) / m_pixel_count;
                 s.pixel_count = sp.pixel_count;
                 s.ray_count = sp.ray_count;
                 s.sample_count = sp.sample_count;
@@ -355,6 +357,7 @@ public:
                   m_scene(scene),
                   m_global_index(m_scene->projector().screen_size()),
                   m_screen_size(m_scene->projector().screen_size()),
+                  m_pixel_count(multiply_all<long long>(m_screen_size)),
                   m_slice_offset(slice_offset_for_slider_positions(initial_slider_positions())),
                   m_pixels_bgr32(make_bgr_images(m_scene->projector().screen_size())),
                   m_paintbrush(m_scene->projector().screen_size(), PANTBRUSH_WIDTH, -1),

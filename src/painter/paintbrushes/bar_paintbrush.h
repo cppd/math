@@ -161,7 +161,7 @@ public:
                         pixel[1] = m_screen_size[1] - 1 - pixel[1];
                 }
 
-                m_statistics.pass_count = 1;
+                m_statistics.pass_number = 1;
                 m_statistics.pixel_count = 0;
                 m_statistics.ray_count = 0;
                 m_statistics.sample_count = 0;
@@ -208,12 +208,12 @@ public:
 
                 m_current_pixel = 0;
 
-                if (m_statistics.pass_count == m_max_pass_count)
+                if (m_statistics.pass_number == m_max_pass_count)
                 {
                         return false;
                 }
 
-                ++m_statistics.pass_count;
+                ++m_statistics.pass_number;
 
                 return true;
         }
@@ -222,7 +222,10 @@ public:
         {
                 std::lock_guard lg(m_lock);
 
-                return m_statistics;
+                Statistics s = m_statistics;
+                s.pass_pixel_count = m_current_pixel;
+
+                return s;
         }
 };
 }
