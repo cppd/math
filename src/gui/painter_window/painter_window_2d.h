@@ -88,7 +88,7 @@ private:
         virtual void slider_positions_change_event(const std::vector<int>& slider_positions) = 0;
         virtual const std::vector<std::uint_least32_t>& pixels_bgr() const = 0;
         virtual long long pixels_offset() const = 0;
-        virtual const std::vector<long long>& pixels_busy() const = 0;
+        virtual const std::vector<long long>& busy_indices_2d() const = 0;
         virtual void save_to_file() const = 0;
         virtual void add_volume() const = 0;
 

@@ -303,16 +303,17 @@ void PainterWindow2d::update_points()
 {
         static_assert(std::is_same_v<quint32, std::uint_least32_t>);
 
-        long long offset = pixels_offset();
-        std::memcpy(m_image.bits(), &pixels_bgr()[offset], m_image_byte_count);
+        quint32* const image_bits = reinterpret_cast<quint32*>(m_image.bits());
+        const long long offset = pixels_offset();
+        std::memcpy(image_bits, &pixels_bgr()[offset], m_image_byte_count);
         if (ui.checkBox_show_threads->isChecked())
         {
-                for (long long index : pixels_busy())
+                for (long long index : busy_indices_2d())
                 {
-                        long long index_in_image = index - offset;
-                        if (index_in_image >= 0 && index_in_image < m_image_pixel_count)
+                        if (index >= 0)
                         {
-                                reinterpret_cast<quint32*>(m_image.bits())[index_in_image] ^= 0x00ff'ffff;
+                                ASSERT(index < m_image_pixel_count);
+                                image_bits[index] ^= 0x00ff'ffff;
                         }
                 }
         }

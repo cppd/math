@@ -66,11 +66,10 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
         const std::shared_ptr<const painter::Scene<N, T>> m_scene;
         const GlobalIndex<N_IMAGE, long long> m_global_index;
         const std::array<int, N - 1> m_screen_size;
-        const int m_height;
         long long m_slice_offset;
         std::vector<std::uint_least32_t> m_pixels_bgr32;
         painter::BarPaintbrush<N_IMAGE> m_paintbrush;
-        std::vector<long long> m_busy_pixels;
+        std::vector<long long> m_busy_indices_2d;
         std::atomic_bool m_stop;
         std::thread m_thread;
 
@@ -225,9 +224,9 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 return m_slice_offset;
         }
 
-        const std::vector<long long>& pixels_busy() const override
+        const std::vector<long long>& busy_indices_2d() const override
         {
-                return m_busy_pixels;
+                return m_busy_indices_2d;
         }
 
         void save_to_file() const override
@@ -283,10 +282,9 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
         // IPainterNotifier
         void painter_pixel_before(unsigned thread_number, const std::array<int_least16_t, N_IMAGE>& pixel) override
         {
-                std::array<int_least16_t, N_IMAGE> p = pixel;
-                p[1] = m_height - 1 - pixel[1];
-
-                m_busy_pixels[thread_number] = pixel_index(p);
+                long long x = pixel[0];
+                long long y = m_screen_size[1] - 1 - pixel[1];
+                m_busy_indices_2d[thread_number] = y * m_screen_size[0] + x;
         }
 
         void set_pixels_rgb(long long pixel_index, unsigned char r, unsigned char g, unsigned char b)
@@ -306,7 +304,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 float coverage) override
         {
                 std::array<int_least16_t, N_IMAGE> p = pixel;
-                p[1] = m_height - 1 - pixel[1];
+                p[1] = m_screen_size[1] - 1 - pixel[1];
 
                 if (coverage >= 1)
                 {
@@ -357,11 +355,10 @@ public:
                   m_scene(scene),
                   m_global_index(m_scene->projector().screen_size()),
                   m_screen_size(m_scene->projector().screen_size()),
-                  m_height(m_scene->projector().screen_size()[1]),
                   m_slice_offset(slice_offset_for_slider_positions(initial_slider_positions())),
                   m_pixels_bgr32(make_bgr_images(m_scene->projector().screen_size())),
                   m_paintbrush(m_scene->projector().screen_size(), PANTBRUSH_WIDTH, -1),
-                  m_busy_pixels(thread_count, -1)
+                  m_busy_indices_2d(thread_count, -1)
         {
                 m_stop = false;
                 m_thread = std::thread([=, this]() {
