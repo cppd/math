@@ -41,7 +41,7 @@ bool exec_dialog_for_single_file(QtObjectInDynamicMemory<QFileDialog>* w, std::s
         QStringList list = (*w)->selectedFiles();
         if (list.size() != 1)
         {
-                error("QFileDialog selected file count (" + to_string(list.size()) + ") is not equal to 1.");
+                error("QFileDialog selected item count (" + to_string(list.size()) + ") is not equal to 1.");
         }
 
         *name = list[0].toStdString();
@@ -204,6 +204,17 @@ bool open_file(const std::string& caption, const std::vector<FileFilter>& filter
         w->setOptions(make_options(read_only));
         w->setAcceptMode(QFileDialog::AcceptOpen);
         w->setFileMode(QFileDialog::ExistingFile);
+
+        return exec_dialog_for_single_file(&w, name);
+}
+
+bool select_directory(const std::string& caption, bool read_only, std::string* name)
+{
+        QtObjectInDynamicMemory<QFileDialog> w(parent_for_dialog(), QString::fromStdString(caption));
+
+        w->setOptions(make_options(read_only));
+        w->setAcceptMode(QFileDialog::AcceptOpen);
+        w->setFileMode(QFileDialog::Directory);
 
         return exec_dialog_for_single_file(&w, name);
 }

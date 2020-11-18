@@ -40,4 +40,6 @@ struct FileFilter
         const std::vector<FileFilter>& filters,
         bool read_only,
         std::string* name);
+
+[[nodiscard]] bool select_directory(const std::string& caption, bool read_only, std::string* name);
 }
