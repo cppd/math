@@ -159,10 +159,36 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 {
                         std::uint_least32_t c;
                         std::memcpy(&c, &(*pixels)[i], 4);
-                        unsigned char b = c & 0xff;
-                        unsigned char g = (c >> 8) & 0xff;
-                        unsigned char r = (c >> 16) & 0xff;
-                        unsigned char a = WITHOUT_BACKGROUND ? ((c >> 24) & 0xff) : ALPHA_FOR_3D_IMAGE;
+
+                        unsigned char b;
+                        unsigned char g;
+                        unsigned char r;
+                        unsigned char a;
+
+                        if (!WITHOUT_BACKGROUND)
+                        {
+                                b = c & 0xff;
+                                g = (c >> 8) & 0xff;
+                                r = (c >> 16) & 0xff;
+                                a = ALPHA_FOR_3D_IMAGE;
+                        }
+                        else
+                        {
+                                a = (c >> 24) & 0xff;
+                                if (a != 0)
+                                {
+                                        b = c & 0xff;
+                                        g = (c >> 8) & 0xff;
+                                        r = (c >> 16) & 0xff;
+                                }
+                                else
+                                {
+                                        b = 0;
+                                        g = 0;
+                                        r = 0;
+                                }
+                        }
+
                         std::memcpy(&(*pixels)[i++], &r, 1);
                         std::memcpy(&(*pixels)[i++], &g, 1);
                         std::memcpy(&(*pixels)[i++], &b, 1);
