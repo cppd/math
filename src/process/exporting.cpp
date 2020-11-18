@@ -46,12 +46,12 @@ std::function<void(ProgressRatioList*)> action_export_function(
                 filter.file_extensions = v.file_name_extensions;
         }
 
-        std::string file_name_string;
-        if (!gui::dialog::save_file(caption, filters, read_only, &file_name_string))
+        std::optional<std::string> file_name_string = gui::dialog::save_file(caption, filters, read_only);
+        if (!file_name_string)
         {
                 return nullptr;
         }
-        std::filesystem::path file_name = path_from_utf8(file_name_string);
+        std::filesystem::path file_name = path_from_utf8(*file_name_string);
 
         mesh::FileType file_type = mesh::file_type_by_name(file_name);
 

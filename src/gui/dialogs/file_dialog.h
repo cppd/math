@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <QWidget>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -29,17 +29,15 @@ struct FileFilter
         std::vector<std::string> file_extensions;
 };
 
-[[nodiscard]] bool save_file(
+[[nodiscard]] std::optional<std::string> save_file(
         const std::string& caption,
         const std::vector<FileFilter>& filters,
-        bool read_only,
-        std::string* name);
+        bool read_only);
 
-[[nodiscard]] bool open_file(
+[[nodiscard]] std::optional<std::string> open_file(
         const std::string& caption,
         const std::vector<FileFilter>& filters,
-        bool read_only,
-        std::string* name);
+        bool read_only);
 
-[[nodiscard]] bool select_directory(const std::string& caption, bool read_only, std::string* name);
+[[nodiscard]] std::optional<std::string> select_directory(const std::string& caption, bool read_only);
 }

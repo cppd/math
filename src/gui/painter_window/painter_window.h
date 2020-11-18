@@ -285,14 +285,14 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 filter.name = "Images";
                 filter.file_extensions = {SAVE_IMAGE_FILE_FORMAT};
                 const bool read_only = true;
-                std::string file_name_string;
-                if (!dialog::save_file(caption, {filter}, read_only, &file_name_string))
+                const std::optional<std::string> file_name_string = dialog::save_file(caption, {filter}, read_only);
+                if (!file_name_string)
                 {
                         return;
                 }
 
                 image::save_image_to_file(
-                        path_from_utf8(file_name_string),
+                        path_from_utf8(*file_name_string),
                         image::ImageView<2>(
                                 {width, height}, image::ColorFormat::R8G8B8_SRGB, bgra32_to_r8g8b8(pixels)));
         }
@@ -314,12 +314,12 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
 
                 const std::string caption = "Save All";
                 const bool read_only = false;
-                std::string directory_string;
-                if (!dialog::select_directory(caption, read_only, &directory_string))
+                const std::optional<std::string> directory_string = dialog::select_directory(caption, read_only);
+                if (!directory_string)
                 {
                         return;
                 }
-                const fs::path path = path_from_utf8(directory_string);
+                const fs::path path = path_from_utf8(*directory_string);
                 if (!fs::is_directory(path))
                 {
                         dialog::message_critical("Directory is not selected");

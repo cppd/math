@@ -28,14 +28,13 @@ namespace gui::dialog
 {
 namespace
 {
-bool exec_dialog_for_single_file(QtObjectInDynamicMemory<QFileDialog>* w, std::string* name)
+std::optional<std::string> exec_dialog_for_single_file(QtObjectInDynamicMemory<QFileDialog>* w)
 {
         ASSERT(!w->isNull());
-        ASSERT(name);
 
         if (!(*w)->exec() || w->isNull())
         {
-                return false;
+                return std::nullopt;
         }
 
         QStringList list = (*w)->selectedFiles();
@@ -44,9 +43,7 @@ bool exec_dialog_for_single_file(QtObjectInDynamicMemory<QFileDialog>* w, std::s
                 error("QFileDialog selected item count (" + to_string(list.size()) + ") is not equal to 1.");
         }
 
-        *name = list[0].toStdString();
-
-        return true;
+        return list[0].toStdString();
 }
 
 QFileDialog::Options make_options(bool read_only)
@@ -157,7 +154,7 @@ void check_filter(const FileFilter& filter)
 }
 }
 
-bool save_file(const std::string& caption, const std::vector<FileFilter>& filters, bool read_only, std::string* name)
+std::optional<std::string> save_file(const std::string& caption, const std::vector<FileFilter>& filters, bool read_only)
 {
         std::map<QString, QString> map;
         std::vector<QString> dialog_filters;
@@ -186,10 +183,10 @@ bool save_file(const std::string& caption, const std::vector<FileFilter>& filter
         w->setAcceptMode(QFileDialog::AcceptSave);
         w->setFileMode(QFileDialog::AnyFile);
 
-        return exec_dialog_for_single_file(&w, name);
+        return exec_dialog_for_single_file(&w);
 }
 
-bool open_file(const std::string& caption, const std::vector<FileFilter>& filters, bool read_only, std::string* name)
+std::optional<std::string> open_file(const std::string& caption, const std::vector<FileFilter>& filters, bool read_only)
 {
         std::vector<QString> dialog_filters;
         for (const FileFilter& v : filters)
@@ -205,10 +202,10 @@ bool open_file(const std::string& caption, const std::vector<FileFilter>& filter
         w->setAcceptMode(QFileDialog::AcceptOpen);
         w->setFileMode(QFileDialog::ExistingFile);
 
-        return exec_dialog_for_single_file(&w, name);
+        return exec_dialog_for_single_file(&w);
 }
 
-bool select_directory(const std::string& caption, bool read_only, std::string* name)
+std::optional<std::string> select_directory(const std::string& caption, bool read_only)
 {
         QtObjectInDynamicMemory<QFileDialog> w(parent_for_dialog(), QString::fromStdString(caption));
 
@@ -216,6 +213,6 @@ bool select_directory(const std::string& caption, bool read_only, std::string* n
         w->setAcceptMode(QFileDialog::AcceptOpen);
         w->setFileMode(QFileDialog::Directory);
 
-        return exec_dialog_for_single_file(&w, name);
+        return exec_dialog_for_single_file(&w);
 }
 }

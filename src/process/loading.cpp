@@ -64,12 +64,12 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
                         f.file_extensions = v.file_name_extensions;
                 }
 
-                std::string file_name_string;
-                if (!gui::dialog::open_file(caption, filters, read_only, &file_name_string))
+                std::optional<std::string> file_name_string = gui::dialog::open_file(caption, filters, read_only);
+                if (!file_name_string)
                 {
                         return nullptr;
                 }
-                file_name = path_from_utf8(file_name_string);
+                file_name = path_from_utf8(*file_name_string);
         }
 
         std::unordered_set<gui::dialog::ComputationType> objects_to_load;
