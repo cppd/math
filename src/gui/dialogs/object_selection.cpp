@@ -84,20 +84,18 @@ void ObjectSelection::on_clear_all_clicked()
 }
 }
 
-bool object_selection(std::unordered_set<ComputationType>* objects_to_load)
+std::optional<std::unordered_set<ComputationType>> object_selection()
 {
-        ASSERT(objects_to_load);
-
         namespace impl = object_selection_implementation;
 
         QtObjectInDynamicMemory<impl::ObjectSelection> w(parent_for_dialog());
 
         if (!w->show(&impl::g_bound_cocone, &impl::g_cocone, &impl::g_convex_hull, &impl::g_mst) || w.isNull())
         {
-                return false;
+                return std::nullopt;
         }
 
-        objects_to_load->clear();
+        std::optional<std::unordered_set<ComputationType>> objects_to_load(std::in_place);
 
         if (impl::g_bound_cocone)
         {
@@ -119,7 +117,7 @@ bool object_selection(std::unordered_set<ComputationType>* objects_to_load)
                 objects_to_load->insert(ComputationType::Mst);
         }
 
-        return true;
+        return objects_to_load;
 }
 
 std::unordered_set<ComputationType> object_selection_current()

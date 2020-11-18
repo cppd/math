@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_object_selection.h"
 
+#include <optional>
 #include <unordered_set>
 #include <vector>
 
@@ -53,6 +54,6 @@ enum class ComputationType
         Mst
 };
 
-[[nodiscard]] bool object_selection(std::unordered_set<ComputationType>* objects_to_load);
+[[nodiscard]] std::optional<std::unordered_set<ComputationType>> object_selection();
 [[nodiscard]] std::unordered_set<ComputationType> object_selection_current();
 }

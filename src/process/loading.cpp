@@ -76,10 +76,13 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
 
         if (use_object_selection_dialog)
         {
-                if (!gui::dialog::object_selection(&objects_to_load))
+                std::optional<std::unordered_set<gui::dialog::ComputationType>> objects =
+                        gui::dialog::object_selection();
+                if (!objects)
                 {
                         return nullptr;
                 }
+                objects_to_load = std::move(*objects);
         }
         else
         {
@@ -127,9 +130,9 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
                 return nullptr;
         }
 
-        std::unordered_set<gui::dialog::ComputationType> objects_to_load;
-
-        if (!gui::dialog::object_selection(&objects_to_load))
+        std::optional<std::unordered_set<gui::dialog::ComputationType>> objects_to_load;
+        objects_to_load = gui::dialog::object_selection();
+        if (!objects_to_load)
         {
                 return nullptr;
         }
@@ -138,10 +141,10 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
         double alpha;
         gui::dialog::bound_cocone_parameters_current(&rho, &alpha);
 
-        bool bound_cocone = objects_to_load.contains(gui::dialog::ComputationType::BoundCocone);
-        bool cocone = objects_to_load.contains(gui::dialog::ComputationType::Cocone);
-        bool convex_hull = objects_to_load.contains(gui::dialog::ComputationType::ConvexHull);
-        bool mst = objects_to_load.contains(gui::dialog::ComputationType::Mst);
+        bool bound_cocone = objects_to_load->contains(gui::dialog::ComputationType::BoundCocone);
+        bool cocone = objects_to_load->contains(gui::dialog::ComputationType::Cocone);
+        bool convex_hull = objects_to_load->contains(gui::dialog::ComputationType::ConvexHull);
+        bool mst = objects_to_load->contains(gui::dialog::ComputationType::Mst);
 
         return [=](ProgressRatioList* progress_list) {
                 apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
