@@ -157,12 +157,21 @@ void PainterWindow2d::make_menu()
 
         QMenu* main_menu = new QMenu("Actions", this);
         menu_bar->addMenu(main_menu);
+
         {
-                QAction* action = main_menu->addAction("Save to file...");
+                QAction* action = main_menu->addAction("Save...");
                 QObject::connect(action, &QAction::triggered, this, [this]() {
                         catch_all("Save to file", [this]() { save_to_file(); });
                 });
         }
+        if (m_screen_size.size() == 3)
+        {
+                QAction* action = main_menu->addAction("Save all...");
+                QObject::connect(action, &QAction::triggered, this, [this]() {
+                        catch_all("Save all to files", [this]() { save_all_to_files(); });
+                });
+        }
+
         if (m_screen_size.size() == 3)
         {
                 main_menu->addSeparator();
@@ -177,6 +186,7 @@ void PainterWindow2d::make_menu()
                         catch_all("Volume", [this]() { add_volume(true); });
                 });
         }
+
         {
                 main_menu->addSeparator();
 
