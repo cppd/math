@@ -161,14 +161,19 @@ void PainterWindow2d::make_menu()
         {
                 QAction* action = main_menu->addAction("Save...");
                 QObject::connect(action, &QAction::triggered, this, [this]() {
-                        catch_all("Save to file", [this]() { save_to_file(); });
+                        catch_all("Saving image", [this]() { save_to_file(); });
                 });
         }
         if (m_screen_size.size() == 3)
         {
-                QAction* action = main_menu->addAction("Save all...");
-                QObject::connect(action, &QAction::triggered, this, [this]() {
-                        catch_all("Save all to files", [this]() { save_all_to_files(); });
+                QAction* action1 = main_menu->addAction("Save all...");
+                QObject::connect(action1, &QAction::triggered, this, [this]() {
+                        catch_all("Saving all images", [this]() { save_all_to_files(false); });
+                });
+
+                QAction* action2 = main_menu->addAction("Save all without background...");
+                QObject::connect(action2, &QAction::triggered, this, [this]() {
+                        catch_all("Saving all images without background", [this]() { save_all_to_files(true); });
                 });
         }
 
@@ -178,12 +183,12 @@ void PainterWindow2d::make_menu()
 
                 QAction* action1 = main_menu->addAction("Add volume");
                 QObject::connect(action1, &QAction::triggered, this, [this]() {
-                        catch_all("Volume", [this]() { add_volume(false); });
+                        catch_all("Adding volume", [this]() { add_volume(false); });
                 });
 
                 QAction* action2 = main_menu->addAction("Add volume without background");
                 QObject::connect(action2, &QAction::triggered, this, [this]() {
-                        catch_all("Volume", [this]() { add_volume(true); });
+                        catch_all("Adding volume without background", [this]() { add_volume(true); });
                 });
         }
 
@@ -334,7 +339,7 @@ void PainterWindow2d::update_points()
 
         quint32* const image_bits = reinterpret_cast<quint32*>(m_image.bits());
         const long long offset = pixels_offset();
-        std::memcpy(image_bits, &pixels_bgr()[offset], m_image_byte_count);
+        std::memcpy(image_bits, &pixels_bgra32()[offset], m_image_byte_count);
         if (ui.checkBox_show_threads->isChecked())
         {
                 for (long long index : busy_indices_2d())

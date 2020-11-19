@@ -84,11 +84,11 @@ private:
 
         virtual Statistics statistics() const = 0;
         virtual void slider_positions_change_event(const std::vector<int>& slider_positions) = 0;
-        virtual const std::vector<std::uint_least32_t>& pixels_bgr() const = 0;
+        virtual const std::vector<std::uint_least32_t>& pixels_bgra32() const = 0;
         virtual long long pixels_offset() const = 0;
         virtual const std::vector<long long>& busy_indices_2d() const = 0;
         virtual void save_to_file() const = 0;
-        virtual void save_all_to_files() const = 0;
+        virtual void save_all_to_files(bool without_background) const = 0;
         virtual void add_volume(bool without_background) const = 0;
 
 public:
