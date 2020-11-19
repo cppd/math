@@ -39,7 +39,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <array>
 #include <atomic>
-#include <filesystem>
 #include <memory>
 #include <string>
 #include <thread>
@@ -310,7 +309,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 std::vector<std::byte> pixels(4 * m_pixels_bgr32.size());
 
                 ASSERT(data_size(pixels) == data_size(m_pixels_bgr32));
-                std::memcpy(pixels.data(), m_pixels_bgr32.data(), pixels.size());
+                std::memcpy(pixels.data(), m_pixels_bgr32.data(), data_size(pixels));
 
                 const std::string caption = "Save All";
                 const bool read_only = false;
@@ -319,38 +318,14 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 {
                         return;
                 }
-                const fs::path path = path_from_utf8(*directory_string);
-                if (!fs::is_directory(path))
-                {
-                        dialog::message_critical("Directory is not selected");
-                        return;
-                }
-                const std::string file_name = generic_utf8_filename(path / "image_");
 
                 bgra32_to_r8g8b8a8(&pixels, false /*without_background*/, 255);
 
-                const int width = m_screen_size[0];
-                const int height = m_screen_size[1];
-                const size_t image_size_bytes = 4ull * width * height;
-                const size_t image_count = m_screen_size[2];
-
-                ASSERT(pixels.size() % image_size_bytes == 0);
-                ASSERT(image_size_bytes * image_count == pixels.size());
-
-                const int image_number_width = std::floor(std::log10(image_count)) + 1;
-                std::ostringstream oss;
-                oss << std::setfill('0');
-                for (size_t offset = 0, i = 0; i < image_count; ++i, offset += image_size_bytes)
-                {
-                        oss.str(std::string());
-                        oss << file_name << std::setw(image_number_width) << i << ".png";
-
-                        image::ImageView<2> image_view(
-                                {width, height}, image::ColorFormat::R8G8B8A8_SRGB,
-                                std::span(&pixels[offset], image_size_bytes));
-
-                        image::save_image_to_file(path_from_utf8(oss.str()), image_view);
-                }
+                image::save_image_to_files(
+                        path_from_utf8(*directory_string), SAVE_IMAGE_FILE_FORMAT,
+                        image::ImageView<3>(
+                                {m_screen_size[0], m_screen_size[1], m_screen_size[2]},
+                                image::ColorFormat::R8G8B8A8_SRGB, pixels));
         }
 
         void add_volume(bool without_background) const override
