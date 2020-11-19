@@ -135,6 +135,35 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 }
         }
 
+        static void set_alpha_brga32(std::vector<std::byte>* pixels, bool without_background, unsigned char alpha)
+        {
+                constexpr size_t PIXEL_SIZE = sizeof(std::uint_least32_t);
+                ASSERT(pixels->size() % PIXEL_SIZE == 0);
+                for (size_t i = 0; i < pixels->size(); i += PIXEL_SIZE)
+                {
+                        std::uint_least32_t c;
+                        std::memcpy(&c, pixels->data() + i, PIXEL_SIZE);
+                        if (!without_background)
+                        {
+                                c &= 0xff'ff'ff;
+                                c |= (alpha << 24u);
+                        }
+                        else
+                        {
+                                if (((c >> 24u) & 0xff) != 0)
+                                {
+                                        c &= 0xff'ff'ff;
+                                        c |= (alpha << 24u);
+                                }
+                                else
+                                {
+                                        c = 0;
+                                }
+                        }
+                        std::memcpy(pixels->data() + i, &c, PIXEL_SIZE);
+                }
+        }
+
         static std::vector<std::byte> bgra32_to_r8g8b8(const std::vector<std::byte>& pixels)
         {
                 constexpr size_t PIXEL_SIZE = sizeof(std::uint_least32_t);
@@ -155,8 +184,7 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 return bytes;
         }
 
-        template <bool WITHOUT_BACKGROUND>
-        static std::vector<std::byte> bgra32_to_r8g8b8a8(const std::vector<std::byte>& pixels, unsigned char alpha)
+        static std::vector<std::byte> bgra32_to_r8g8b8a8(const std::vector<std::byte>& pixels)
         {
                 constexpr size_t PIXEL_SIZE = sizeof(std::uint_least32_t);
                 ASSERT(pixels.size() % PIXEL_SIZE == 0);
@@ -166,55 +194,16 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 {
                         std::uint_least32_t c;
                         std::memcpy(&c, &pixels[i], PIXEL_SIZE);
-                        unsigned char b;
-                        unsigned char g;
-                        unsigned char r;
-                        unsigned char a;
-                        if (!WITHOUT_BACKGROUND)
-                        {
-                                b = c & 0xff;
-                                g = (c >> 8) & 0xff;
-                                r = (c >> 16) & 0xff;
-                                a = alpha;
-                        }
-                        else
-                        {
-                                a = (c >> 24) & 0xff;
-                                if (a != 0)
-                                {
-                                        b = c & 0xff;
-                                        g = (c >> 8) & 0xff;
-                                        r = (c >> 16) & 0xff;
-                                        a = alpha;
-                                }
-                                else
-                                {
-                                        b = 0;
-                                        g = 0;
-                                        r = 0;
-                                }
-                        }
+                        unsigned char b = c & 0xff;
+                        unsigned char g = (c >> 8) & 0xff;
+                        unsigned char r = (c >> 16) & 0xff;
+                        unsigned char a = (c >> 24) & 0xff;
                         std::memcpy(ptr++, &r, 1);
                         std::memcpy(ptr++, &g, 1);
                         std::memcpy(ptr++, &b, 1);
                         std::memcpy(ptr++, &a, 1);
                 }
                 return bytes;
-        }
-
-        static std::vector<std::byte> bgra32_to_r8g8b8a8(
-                const std::vector<std::byte>& pixels,
-                bool without_background,
-                unsigned char alpha)
-        {
-                if (without_background)
-                {
-                        return bgra32_to_r8g8b8a8<true>(pixels, alpha);
-                }
-                else
-                {
-                        return bgra32_to_r8g8b8a8<false>(pixels, alpha);
-                }
         }
 
         //
@@ -335,12 +324,13 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                 }
                 else
                 {
+                        set_alpha_brga32(&pixels_bgra32, true /*without_background*/, 255);
+
                         image::save_image_to_files(
                                 path_from_utf8(*directory_string), SAVE_IMAGE_FILE_FORMAT,
                                 image::ImageView<3>(
                                         {m_screen_size[0], m_screen_size[1], m_screen_size[2]},
-                                        image::ColorFormat::R8G8B8A8_SRGB,
-                                        bgra32_to_r8g8b8a8(pixels_bgra32, true /*without_background*/, 255)));
+                                        image::ColorFormat::R8G8B8A8_SRGB, bgra32_to_r8g8b8a8(pixels_bgra32)));
                 }
         }
 
@@ -351,16 +341,19 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
                         return;
                 }
 
-                std::vector<std::byte> pixels(sizeof(std::uint_least32_t) * m_pixels_bgra32.size());
-                ASSERT(data_size(pixels) == data_size(m_pixels_bgra32));
-                std::memcpy(pixels.data(), m_pixels_bgra32.data(), data_size(pixels));
+                std::vector<std::byte> pixels_bgra32(sizeof(std::uint_least32_t) * m_pixels_bgra32.size());
+                ASSERT(data_size(pixels_bgra32) == data_size(m_pixels_bgra32));
+                std::memcpy(pixels_bgra32.data(), m_pixels_bgra32.data(), data_size(pixels_bgra32));
 
-                flip_vertically_2d_images(&pixels, sizeof(std::uint_least32_t) * m_screen_size[0], m_screen_size[1]);
+                flip_vertically_2d_images(
+                        &pixels_bgra32, sizeof(std::uint_least32_t) * m_screen_size[0], m_screen_size[1]);
+
+                set_alpha_brga32(&pixels_bgra32, without_background, ALPHA_FOR_3D_IMAGE);
 
                 image::Image<N_IMAGE> image;
                 image.size = m_screen_size;
                 image.color_format = image::ColorFormat::R8G8B8A8_SRGB;
-                image.pixels = bgra32_to_r8g8b8a8(pixels, without_background, ALPHA_FOR_3D_IMAGE);
+                image.pixels = bgra32_to_r8g8b8a8(pixels_bgra32);
 
                 process::load_from_volume_image<N_IMAGE>("Painter Volume", std::move(image));
         }
