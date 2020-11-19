@@ -25,8 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QImage>
 #include <QImageWriter>
+#include <cmath>
 #include <cstring>
 #include <set>
+#include <sstream>
 
 namespace image
 {
@@ -210,6 +212,45 @@ void save_image_to_file(const std::filesystem::path& file_name, const ImageView<
         {
                 error("Image format " + format_to_string(image_view.color_format)
                       + " is not supported for saving to file");
+        }
+}
+
+void save_image_to_files(
+        const std::filesystem::path& directory,
+        const std::string& file_format,
+        const ImageView<3>& image_view)
+{
+        if (!std::filesystem::is_directory(directory))
+        {
+                error("Directory required for 3D image saving: " + generic_utf8_filename(directory));
+        }
+
+        const int width = image_view.size[0];
+        const int height = image_view.size[1];
+        const int image_count = image_view.size[2];
+        const size_t image_2d_bytes =
+                static_cast<size_t>(format_pixel_size_in_bytes(image_view.color_format)) * width * height;
+
+        ASSERT(image_2d_bytes * image_count == image_view.pixels.size());
+
+        const int image_number_width = std::floor(std::log10(image_count)) + 1;
+
+        std::ostringstream oss;
+        oss << std::setfill('0');
+        size_t offset = 0;
+        std::string extension = "." + file_format;
+        for (int i = 0; i < image_count; ++i)
+        {
+                oss.str(std::string());
+                oss << std::setw(image_number_width) << i << extension;
+
+                image::ImageView<2> image_view_2d(
+                        {width, height}, image_view.color_format,
+                        std::span(&image_view.pixels[offset], image_2d_bytes));
+
+                image::save_image_to_file(directory / oss.str(), image_view_2d);
+
+                offset += image_2d_bytes;
         }
 }
 
