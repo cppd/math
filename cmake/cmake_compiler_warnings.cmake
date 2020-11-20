@@ -50,7 +50,7 @@ function(SetCompilerWarnings source_files)
                         -Wsuggest-final-types
                         -Wsuggest-override
                         -Wvirtual-inheritance
-                        # GCC 9.1 VK_NULL_HANDLE
+                        # VK_NULL_HANDLE
                         # -Wzero-as-null-pointer-constant
                         >
                         $<$<COMPILE_LANGUAGE:C>:
@@ -84,27 +84,20 @@ function(SetCompilerWarnings source_files)
 
                         # Из-за файлов Qt отключить для всех файлов
                         # с последующим включением для файлов проекта
-                        -Wno-undefined-reinterpret-cast
                         -Wno-redundant-parens
                         -Wno-extra-semi-stmt
                         >
                 >
         )
 
-        # Предупреждения для файлов проекта и не для файлов Qt.
+        # Предупреждения для файлов проекта и не для файлов Qt
         foreach(f ${source_files})
 
                 if (${f} MATCHES "^.+\.cpp$")
 
-                        if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+                        if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
                                 string(CONCAT flags
-                                        "-Wuseless-cast"
-                                )
-                                set_source_files_properties(${f} PROPERTIES COMPILE_FLAGS ${flags})
-                        elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-                                string(CONCAT flags
-                                        "-Wundefined-reinterpret-cast"
-                                        " -Wredundant-parens"
+                                        "-Wredundant-parens"
                                         " -Wextra-semi-stmt"
                                 )
                                 set_source_files_properties(${f} PROPERTIES COMPILE_FLAGS ${flags})
