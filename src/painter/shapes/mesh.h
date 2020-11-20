@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "mesh_facet.h"
+#include "mesh_texture.h"
 #include "shape.h"
 
 #include "../objects.h"
@@ -25,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../space/tree.h"
 
 #include <src/color/color.h>
-#include <src/image/color_image.h>
 #include <src/model/mesh_object.h>
 #include <src/numerical/matrix.h>
 #include <src/progress/progress.h>
@@ -55,7 +55,7 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
         std::vector<Vector<N, T>> m_normals;
         std::vector<Vector<N - 1, T>> m_texcoords;
         std::vector<Material> m_materials;
-        std::vector<image::ColorImage<N - 1>> m_images;
+        std::vector<MeshTexture<N - 1>> m_images;
         std::vector<MeshFacet<N, T>> m_facets;
 
         SpatialSubdivisionTree<TreeParallelotope> m_tree;

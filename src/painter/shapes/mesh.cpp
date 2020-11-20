@@ -383,7 +383,7 @@ SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& p, const void
 
         if (facet->has_texcoord() && m.map_Kd >= 0)
         {
-                s.set_color(m_images[m.map_Kd].texture(facet->texcoord(p)));
+                s.set_color(m_images[m.map_Kd].color(facet->texcoord(p)));
         }
         else
         {

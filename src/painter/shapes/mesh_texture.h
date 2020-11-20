@@ -17,44 +17,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "conversion.h"
-#include "file.h"
-#include "image.h"
-
 #include <src/color/color.h>
-#include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/global_index.h>
 #include <src/com/interpolation.h>
+#include <src/com/print.h>
+#include <src/image/conversion.h>
+#include <src/image/image.h>
 #include <src/numerical/vec.h>
 
 #include <algorithm>
 #include <array>
-#include <filesystem>
-#include <string>
 #include <vector>
 
-namespace image
+namespace painter::shapes
 {
 template <size_t N>
-class ColorImage
+class MeshTexture
 {
         std::vector<Color> m_data;
-
-        std::array<int, N> m_size = []()
-        {
-                std::array<int, N> v;
-                v.fill(-1);
-                return v;
-        }();
-
+        std::array<int, N> m_size;
         std::array<int, N> m_max;
         GlobalIndex<N, long long> m_global_index;
-
-        long long pixel_index(const std::array<int, N>& p) const
-        {
-                return m_global_index.compute(p);
-        }
 
         void resize(const std::array<int, N>& size)
         {
@@ -66,11 +50,6 @@ class ColorImage
                             }))
                 {
                         error("Error image size " + to_string(size));
-                }
-
-                if (m_size == size)
-                {
-                        return;
                 }
 
                 m_size = size;
@@ -88,22 +67,17 @@ class ColorImage
         }
 
 public:
-        explicit ColorImage(const std::array<int, N>& size)
-        {
-                resize(size);
-        }
-
-        explicit ColorImage(const Image<N>& image)
+        explicit MeshTexture(const image::Image<N>& image)
         {
                 resize(image.size);
 
-                format_conversion(
-                        image.color_format, image.pixels, ColorFormat::R32G32B32,
+                image::format_conversion(
+                        image.color_format, image.pixels, image::ColorFormat::R32G32B32,
                         std::as_writable_bytes(std::span(m_data.data(), m_data.size())));
         }
 
         template <typename T>
-        Color texture(const Vector<N, T>& p) const
+        Color color(const Vector<N, T>& p) const
         {
                 // Vulkan: Texel Coordinate Systems, Wrapping Operation.
 
@@ -149,40 +123,5 @@ public:
 
                 return interpolation(pixels, x);
         }
-
-        void set_pixel(const std::array<int, N>& p, const Color& color)
-        {
-                m_data[pixel_index(p)] = color;
-        }
-
-        template <size_t X = N>
-        std::enable_if_t<X == 2> write_to_file(const std::filesystem::path& file_name) const
-        {
-                static_assert(N == X);
-
-                save_image_to_file(
-                        file_name, ImageView<2>(
-                                           {m_size[0], m_size[1]}, ColorFormat::R32G32B32,
-                                           std::as_bytes(std::span(m_data.data(), m_data.size()))));
-        }
-
-        //template <size_t X = N>
-        //std::enable_if_t<X == 2> flip_vertically()
-        //{
-        //       static_assert(N == X);
-        //
-        //        int width = m_size[0];
-        //        int height = m_size[1];
-        //
-        //        for (int y1 = 0, y2 = height - 1; y1 < height / 2; ++y1, --y2)
-        //        {
-        //                for (int x = 0; x < width; ++x)
-        //                {
-        //                        std::array<int, 2> p1{x, y1};
-        //                        std::array<int, 2> p2{x, y2};
-        //                        std::swap(m_data[pixel_index(p1)], m_data[pixel_index(p2)]);
-        //                }
-        //        }
-        //}
 };
 }
