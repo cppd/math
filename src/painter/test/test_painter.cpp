@@ -23,11 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../shapes/mesh.h"
 #include "../shapes/test/sphere_mesh.h"
 
+#include <src/com/global_index.h>
 #include <src/com/names.h>
 #include <src/com/time.h>
 #include <src/gui/com/support.h>
 #include <src/gui/painter_window/painter_window.h>
-#include <src/image/color_image.h>
 #include <src/model/mesh_utility.h>
 #include <src/utility/file/path.h>
 #include <src/utility/string/str.h>
@@ -43,75 +43,80 @@ constexpr Srgb8 DEFAULT_COLOR(150, 170, 150);
 constexpr Color::DataType DIFFUSE = 1;
 constexpr Color::DataType LIGHTING_INTENSITY = 1;
 
-class Images : public PainterNotifier<3>
+template <size_t N>
+class Images : public PainterNotifier<N>
 {
-        static constexpr const char* BEGINNING_OF_FILE_NAME = "painter_";
+        static constexpr const char* DIRECTORY_NAME = "painter_test";
+        static constexpr const char* IMAGE_FILE_FORMAT = "png";
 
-        std::vector<image::ColorImage<2>> m_images;
-        std::array<int, 3> m_size;
-        Color m_background_color;
+        const GlobalIndex<N, long long> m_global_index;
+        const std::array<int, N> m_screen_size;
+        const Color m_background_color;
+
+        std::vector<std::byte> m_pixels;
+        std::filesystem::path m_directory;
 
 public:
-        Images(const std::array<int, 3>& size, const Color& background_color)
-                : m_size(size), m_background_color(background_color)
+        Images(const std::array<int, N>& screen_size, const Color& background_color)
+                : m_global_index(screen_size), m_screen_size(screen_size), m_background_color(background_color)
         {
-                if (std::any_of(
-                            size.cbegin(), size.cend(),
+                if (!std::all_of(
+                            screen_size.cbegin(), screen_size.cend(),
                             [](int v)
                             {
-                                    return v < 1;
+                                    return v > 0;
                             }))
                 {
-                        error("Error size " + to_string(size));
+                        error("Error screen size " + to_string(screen_size));
                 }
 
-                for (int i = 0; i < size[2]; ++i)
+                m_pixels.resize(3 * m_global_index.count(), std::byte(0));
+
+                m_directory = std::filesystem::temp_directory_path() / DIRECTORY_NAME;
+                if (!std::filesystem::create_directory(m_directory))
                 {
-                        m_images.emplace_back(std::array<int, 2>{size[0], size[1]});
+                        error("Error creating directory " + generic_utf8_filename(m_directory));
                 }
         }
 
-        void painter_pixel_before(unsigned, const std::array<int_least16_t, 3>&) override
+        void painter_pixel_before(unsigned, const std::array<int_least16_t, N>&) override
         {
         }
 
         void painter_pixel_after(
                 unsigned,
-                const std::array<int_least16_t, 3>& pixel,
+                const std::array<int_least16_t, N>& pixel,
                 const Color& color,
                 float coverage) override
         {
-                try
-                {
-                        m_images[pixel[2]].set_pixel(
-                                std::array<int, 2>{pixel[0], m_size[1] - 1 - pixel[1]},
-                                interpolation(m_background_color, color, coverage));
-                }
-                catch (...)
-                {
-                        error_fatal("Exception in painter pixel after");
-                }
+                std::array<int_least16_t, N> p = pixel;
+                p[1] = m_screen_size[1] - 1 - pixel[1];
+
+                Color c = interpolation(m_background_color, color, coverage);
+                unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
+                unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
+                unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
+
+                size_t offset = 3 * m_global_index.compute(pixel);
+                ASSERT(offset + 2 < m_pixels.size());
+                std::byte* ptr = m_pixels.data() + offset;
+                std::memcpy(ptr++, &r, 1);
+                std::memcpy(ptr++, &g, 1);
+                std::memcpy(ptr++, &b, 1);
         }
 
         void painter_error_message(const std::string& msg) override
         {
-                LOG("Painter error message");
-                LOG(msg);
+                LOG("Painter error message\n" + msg);
         }
 
         void write_to_files() const
         {
-                int w = std::floor(std::log10(m_images.size())) + 1;
+                static_assert(N == 3);
 
-                std::ostringstream oss;
-                oss << std::setfill('0');
-
-                for (unsigned i = 0; i < m_images.size(); ++i)
-                {
-                        oss.str("");
-                        oss << BEGINNING_OF_FILE_NAME << std::setw(w) << i + 1;
-                        m_images[i].write_to_file(std::filesystem::temp_directory_path() / path_from_utf8(oss.str()));
-                }
+                image::save_image_to_files(
+                        m_directory, IMAGE_FILE_FORMAT,
+                        image::ImageView<3>(m_screen_size, image::ColorFormat::R8G8B8_SRGB, m_pixels));
         }
 };
 
@@ -166,7 +171,7 @@ void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<
 
         Images images(scene->projector().screen_size(), scene->background_color());
 
-        BarPaintbrush<N - 1> paintbrush(scene->projector().screen_size(), paint_height, max_pass_count);
+        BarPaintbrush paintbrush(scene->projector().screen_size(), paint_height, max_pass_count);
 
         std::atomic_bool stop = false;
 
