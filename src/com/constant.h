@@ -19,8 +19,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 template <typename T>
 inline constexpr T PI = 3.1415926535897932384626433832795028841971693993751L;
-
-inline constexpr const char* PI_STR = "3.1415926535897932384626433832795028841971693993751";
-
-template <typename T>
-inline constexpr T TWO_PI = 6.2831853071795864769252867665590057683943387987502L;

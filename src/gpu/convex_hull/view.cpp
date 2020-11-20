@@ -40,7 +40,7 @@ namespace gpu::convex_hull
 {
 namespace
 {
-constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
+constexpr double ANGULAR_FREQUENCY = 5 * (2 * PI<double>);
 
 // clang-format off
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
