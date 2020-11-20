@@ -1,6 +1,7 @@
 AccessModifierOffset: -8
 AlignAfterOpenBracket: AlwaysBreak
 AlignConsecutiveAssignments: false
+AlignConsecutiveBitFields: false
 AlignConsecutiveDeclarations: false
 AlignConsecutiveMacros: false
 AlignEscapedNewlines: Left
@@ -13,7 +14,7 @@ AllowShortBlocksOnASingleLine: Never
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: Never
-AllowShortLambdasOnASingleLine: All
+AllowShortLambdasOnASingleLine: Empty
 AllowShortLoopsOnASingleLine: false
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: true
@@ -32,6 +33,8 @@ BraceWrapping:
         AfterExternBlock: true
         BeforeCatch: true
         BeforeElse: true
+        BeforeLambdaBody: true
+        BeforeWhile: false
         IndentBraces: false
         SplitEmptyFunction: true
         SplitEmptyRecord: true
@@ -64,7 +67,9 @@ IncludeCategories:
     Priority:        40
   - Regex:           '^<.*>$'
     Priority:        50
+IndentCaseBlocks: false
 IndentCaseLabels: false
+IndentExternBlock: NoIndent
 IndentGotoLabels: false
 IndentPPDirectives: None
 IndentWidth: 8
