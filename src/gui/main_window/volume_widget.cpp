@@ -94,7 +94,8 @@ void VolumeWidget::on_levels_changed(double min, double max)
         }
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
+                {
                         volume::Writing writing(volume_object.get());
                         writing.set_levels(min, max);
                 },
@@ -115,7 +116,8 @@ void VolumeWidget::on_transparency_changed(int)
         double alpha_coefficient = std::pow(VOLUME_ALPHA_COEFFICIENT, log_alpha_coefficient);
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
+                {
                         volume::Writing writing(volume_object.get());
                         writing.set_volume_alpha_coefficient(alpha_coefficient);
                 },
@@ -135,7 +137,8 @@ void VolumeWidget::on_isosurface_transparency_changed(int)
         double alpha = 1.0 - slider_position(ui.slider_isosurface_transparency);
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
+                {
                         volume::Writing writing(volume_object.get());
                         writing.set_isosurface_alpha(alpha);
                 },
@@ -156,7 +159,8 @@ void VolumeWidget::on_isosurface_clicked()
         }
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
+                {
                         volume::Writing writing(volume_object.get());
                         writing.set_isosurface(checked);
                 },
@@ -176,7 +180,8 @@ void VolumeWidget::on_isovalue_changed(int)
         float isovalue = slider_position(ui.slider_isovalue);
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
+                {
                         volume::Writing writing(volume_object.get());
                         writing.set_isovalue(isovalue);
                 },
@@ -195,26 +200,31 @@ void VolumeWidget::on_color_clicked()
 
         Color color;
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
+                {
                         volume::Reading reading(*object);
                         color = reading.color();
                 },
                 *object_opt);
 
         QPointer ptr(this);
-        dialog::color_dialog("Volume Color", rgb_to_qcolor(color), [&](const QColor& c) {
-                if (ptr.isNull())
+        dialog::color_dialog(
+                "Volume Color", rgb_to_qcolor(color),
+                [&](const QColor& c)
                 {
-                        return;
-                }
-                std::visit(
-                        [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
-                                set_widget_color(ui.widget_color, c);
-                                volume::Writing writing(object.get());
-                                writing.set_color(qcolor_to_rgb(c));
-                        },
-                        *object_opt);
-        });
+                        if (ptr.isNull())
+                        {
+                                return;
+                        }
+                        std::visit(
+                                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
+                                {
+                                        set_widget_color(ui.widget_color, c);
+                                        volume::Writing writing(object.get());
+                                        writing.set_color(qcolor_to_rgb(c));
+                                },
+                                *object_opt);
+                });
 }
 
 void VolumeWidget::on_ambient_changed(int)
@@ -230,7 +240,8 @@ void VolumeWidget::on_ambient_changed(int)
         double ambient = m_maximum_model_lighting * slider_position(ui.slider_ambient);
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
+                {
                         volume::Writing writing(object.get());
                         writing.set_ambient(ambient);
                 },
@@ -250,7 +261,8 @@ void VolumeWidget::on_diffuse_changed(int)
         double diffuse = m_maximum_model_lighting * slider_position(ui.slider_diffuse);
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
+                {
                         volume::Writing writing(object.get());
                         writing.set_diffuse(diffuse);
                 },
@@ -270,7 +282,8 @@ void VolumeWidget::on_specular_changed(int)
         double specular = m_maximum_model_lighting * slider_position(ui.slider_specular);
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
+                {
                         volume::Writing writing(object.get());
                         writing.set_specular(specular);
                 },
@@ -290,7 +303,8 @@ void VolumeWidget::on_specular_power_changed(int)
         double specular_power = std::pow(m_maximum_specular_power, slider_position(ui.slider_specular_power));
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
+                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
+                {
                         volume::Writing writing(object.get());
                         writing.set_specular_power(specular_power);
                 },
@@ -374,7 +388,8 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
         set_enabled(true);
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<const volume::VolumeObject<N>>& volume_object) {
+                [&]<size_t N>(const std::shared_ptr<const volume::VolumeObject<N>>& volume_object)
+                {
                         double min;
                         double max;
                         double volume_alpha_coefficient;

@@ -244,7 +244,10 @@ class CudaFFT final : public DFT
                 {
                         std::transform(
                                 data->cbegin(), data->cend(), data->begin(),
-                                [k = m_inv_k](const std::complex<float>& v) { return v * k; });
+                                [k = m_inv_k](const std::complex<float>& v)
+                                {
+                                        return v * k;
+                                });
                 }
         }
 

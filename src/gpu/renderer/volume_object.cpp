@@ -173,7 +173,8 @@ class Impl final : public VolumeObject
 
         std::optional<int> m_version;
 
-        const volume::Update::Flags UPDATE_PARAMETERS = []() {
+        const volume::Update::Flags UPDATE_PARAMETERS = []()
+        {
                 volume::Update::Flags flags;
                 flags.set(volume::Update::Color);
                 flags.set(volume::Update::Levels);
@@ -184,7 +185,8 @@ class Impl final : public VolumeObject
                 return flags;
         }();
 
-        const volume::Update::Flags UPDATE_LIGHTING = []() {
+        const volume::Update::Flags UPDATE_LIGHTING = []()
+        {
                 volume::Update::Flags flags;
                 flags.set(volume::Update::Ambient);
                 flags.set(volume::Update::Diffuse);

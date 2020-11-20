@@ -33,9 +33,12 @@ void sort_facets_by_material(
         std::vector<int>* facet_offset,
         std::vector<int>* facet_count)
 {
-        ASSERT(std::all_of(std::cbegin(mesh.facets), std::cend(mesh.facets), [&](const typename Mesh<N>::Facet& facet) {
-                return facet.material < static_cast<int>(mesh.materials.size());
-        }));
+        ASSERT(std::all_of(
+                std::cbegin(mesh.facets), std::cend(mesh.facets),
+                [&](const typename Mesh<N>::Facet& facet)
+                {
+                        return facet.material < static_cast<int>(mesh.materials.size());
+                }));
 
         // Robert Sedgewick, Kevin Wayne.
         // Algorithms. Fourth edition.
@@ -48,7 +51,10 @@ void sort_facets_by_material(
         int max_material_index = mesh.materials.size();
         int new_material_size = mesh.materials.size() + 1;
 
-        auto material_index = [&](int i) { return i >= 0 ? i : max_material_index; };
+        auto material_index = [&](int i)
+        {
+                return i >= 0 ? i : max_material_index;
+        };
 
         // Количество граней с заданным материалом
         *facet_count = std::vector<int>(new_material_size, 0);
@@ -83,10 +89,13 @@ void sort_facets_by_material(
         ASSERT(facet_count->size() == mesh.materials.size() + 1);
         ASSERT(sorted_facet_indices->size() == mesh.facets.size());
         ASSERT(sorted_facet_indices->size() == unique_elements(*sorted_facet_indices).size());
-        ASSERT(std::is_sorted(std::cbegin(*sorted_facet_indices), std::cend(*sorted_facet_indices), [&](int a, int b) {
-                int m_a = material_index(mesh.facets[a].material);
-                int m_b = material_index(mesh.facets[b].material);
-                return m_a < m_b;
-        }));
+        ASSERT(std::is_sorted(
+                std::cbegin(*sorted_facet_indices), std::cend(*sorted_facet_indices),
+                [&](int a, int b)
+                {
+                        int m_a = material_index(mesh.facets[a].material);
+                        int m_b = material_index(mesh.facets[b].material);
+                        return m_a < m_b;
+                }));
 }
 }

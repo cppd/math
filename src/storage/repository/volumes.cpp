@@ -126,21 +126,24 @@ std::unique_ptr<volume::Volume<N>> scalar_cube(unsigned size)
         std::byte* ptr = volume.image.pixels.data();
 
         const Vector<N, float> center(0.5f);
-        image_coordinates<N>(volume.image.size, [&](const Vector<N, float>& coordinates) {
-                Vector<N, float> p = coordinates - center;
-                bool cube = true;
-                for (unsigned i = 0; i < N; ++i)
+        image_coordinates<N>(
+                volume.image.size,
+                [&](const Vector<N, float>& coordinates)
                 {
-                        if (std::abs(p[i]) > 0.4f)
+                        Vector<N, float> p = coordinates - center;
+                        bool cube = true;
+                        for (unsigned i = 0; i < N; ++i)
                         {
-                                cube = false;
-                                break;
+                                if (std::abs(p[i]) > 0.4f)
+                                {
+                                        cube = false;
+                                        break;
+                                }
                         }
-                }
-                DATA_TYPE value = cube ? VALUE : MIN;
-                std::memcpy(ptr, &value, sizeof(value));
-                ptr += sizeof(value);
-        });
+                        DATA_TYPE value = cube ? VALUE : MIN;
+                        std::memcpy(ptr, &value, sizeof(value));
+                        ptr += sizeof(value);
+                });
 
         ASSERT(ptr = volume.image.pixels.data() + volume.image.pixels.size());
 
@@ -175,13 +178,17 @@ std::unique_ptr<volume::Volume<N>> scalar_ellipsoid(unsigned size)
         std::byte* ptr = volume.image.pixels.data();
 
         const Vector<N, float> center(0.5f);
-        image_coordinates<N>(volume.image.size, [&](const Vector<N, float>& coordinates) {
-                Vector<N, float> p = coordinates - center;
-                float distance = 2 * p.norm();
-                DATA_TYPE value = std::max(MIN, float_to_uint<DATA_TYPE>(1.0f - std::clamp(distance, 0.0f, 1.0f)));
-                std::memcpy(ptr, &value, sizeof(value));
-                ptr += sizeof(value);
-        });
+        image_coordinates<N>(
+                volume.image.size,
+                [&](const Vector<N, float>& coordinates)
+                {
+                        Vector<N, float> p = coordinates - center;
+                        float distance = 2 * p.norm();
+                        DATA_TYPE value =
+                                std::max(MIN, float_to_uint<DATA_TYPE>(1.0f - std::clamp(distance, 0.0f, 1.0f)));
+                        std::memcpy(ptr, &value, sizeof(value));
+                        ptr += sizeof(value);
+                });
 
         ASSERT(ptr = volume.image.pixels.data() + volume.image.pixels.size());
 
@@ -212,15 +219,18 @@ std::unique_ptr<volume::Volume<N>> color_cube(unsigned size)
 
         std::byte* ptr = volume.image.pixels.data();
 
-        image_coordinates<N>(volume.image.size, [&](const Vector<N, float>& coordinates) {
-                for (size_t n = 0; n < N; ++n)
+        image_coordinates<N>(
+                volume.image.size,
+                [&](const Vector<N, float>& coordinates)
                 {
-                        float c = coordinates[n] / (1 << (n / 3));
-                        color[n % 3] = float_to_uint<uint8_t>(c);
-                }
-                std::memcpy(ptr, color.data(), color.size());
-                ptr += color.size();
-        });
+                        for (size_t n = 0; n < N; ++n)
+                        {
+                                float c = coordinates[n] / (1 << (n / 3));
+                                color[n % 3] = float_to_uint<uint8_t>(c);
+                        }
+                        std::memcpy(ptr, color.data(), color.size());
+                        ptr += color.size();
+                });
 
         ASSERT(ptr = volume.image.pixels.data() + volume.image.pixels.size());
 

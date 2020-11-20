@@ -72,10 +72,13 @@ std::array<Vector<N, double>, (1 << N)> vertices(const Volume<N>& volume)
         std::array<Vector<N, double>, (1 << N)> result;
         unsigned vertex_count = 0;
 
-        impl::vertices(org, vectors, [&vertex_count, &result](const Vector<N, double>& p) {
-                ASSERT(vertex_count < result.size());
-                result[vertex_count++] = p;
-        });
+        impl::vertices(
+                org, vectors,
+                [&vertex_count, &result](const Vector<N, double>& p)
+                {
+                        ASSERT(vertex_count < result.size());
+                        result[vertex_count++] = p;
+                });
 
         ASSERT(vertex_count == result.size());
 

@@ -97,7 +97,10 @@ void read_points(
         for (int i = 0; i < thread_count; ++i)
         {
                 threads.add(
-                        [&, i]() { read_points_thread(i, thread_count, &file_data, line_begin, vertices, progress); });
+                        [&, i]()
+                        {
+                                read_points_thread(i, thread_count, &file_data, line_begin, vertices, progress);
+                        });
         }
         threads.join();
 }

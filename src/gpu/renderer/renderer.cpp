@@ -702,7 +702,8 @@ class Impl final : public Renderer
                 info.framebuffers = &m_render_buffers->framebuffers_clear();
                 info.command_pool = m_graphics_command_pool;
 
-                info.before_render_pass_commands = [this](VkCommandBuffer command_buffer) {
+                info.before_render_pass_commands = [this](VkCommandBuffer command_buffer)
+                {
                         commands_init_uint32_storage_image(command_buffer, *m_object_image, OBJECTS_CLEAR_VALUE);
                 };
 
@@ -719,10 +720,12 @@ class Impl final : public Renderer
                 m_mesh_renderer.create_render_command_buffers(
                         m_mesh_storage.visible_objects(), m_graphics_command_pool, m_clip_plane.has_value(),
                         m_show_normals,
-                        [this](VkCommandBuffer command_buffer) {
+                        [this](VkCommandBuffer command_buffer)
+                        {
                                 m_transparency_buffers->commands_init(command_buffer);
                         },
-                        [this](VkCommandBuffer command_buffer) {
+                        [this](VkCommandBuffer command_buffer)
+                        {
                                 m_transparency_buffers->commands_read(command_buffer);
                         });
         }
@@ -748,7 +751,8 @@ class Impl final : public Renderer
                 {
                         return;
                 }
-                auto copy_depth = [this](VkCommandBuffer command_buffer) {
+                auto copy_depth = [this](VkCommandBuffer command_buffer)
+                {
                         m_render_buffers->commands_depth_copy(
                                 command_buffer, m_depth_copy_image->image(), DEPTH_COPY_IMAGE_LAYOUT, m_viewport,
                                 0 /*image_index*/);
@@ -805,8 +809,16 @@ public:
                   m_mesh_renderer(m_device, sample_shading, sampler_anisotropy, m_shader_buffers),
                   m_volume_renderer_signal_semaphore(m_device),
                   m_volume_renderer(m_device, sample_shading, m_shader_buffers),
-                  m_mesh_storage([this]() { mesh_visibility_changed(); }),
-                  m_volume_storage([this]() { volume_visibility_changed(); }),
+                  m_mesh_storage(
+                          [this]()
+                          {
+                                  mesh_visibility_changed();
+                          }),
+                  m_volume_storage(
+                          [this]()
+                          {
+                                  volume_visibility_changed();
+                          }),
                   m_clear_signal_semaphore(m_device),
                   m_render_transparent_as_opaque_signal_semaphore(m_device)
         {

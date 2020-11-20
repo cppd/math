@@ -79,8 +79,14 @@ LogEvents::LogEvents()
                 error_fatal("Log events must be called once");
         }
 
-        m_log_events = [this](LogEvent&& event) { log_event(std::move(event)); };
-        m_msg_events = [this](MessageEvent&& event) { message_event(std::move(event)); };
+        m_log_events = [this](LogEvent&& event)
+        {
+                log_event(std::move(event));
+        };
+        m_msg_events = [this](MessageEvent&& event)
+        {
+                message_event(std::move(event));
+        };
 
         set_log_events(&m_log_events);
         set_message_events(&m_msg_events);

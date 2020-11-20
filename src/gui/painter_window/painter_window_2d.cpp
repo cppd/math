@@ -160,21 +160,45 @@ void PainterWindow2d::make_menu()
 
         {
                 QAction* action = main_menu->addAction("Save...");
-                QObject::connect(action, &QAction::triggered, this, [this]() {
-                        catch_all("Saving image", [this]() { save_to_file(); });
-                });
+                QObject::connect(
+                        action, &QAction::triggered, this,
+                        [this]()
+                        {
+                                catch_all(
+                                        "Saving image",
+                                        [this]()
+                                        {
+                                                save_to_file();
+                                        });
+                        });
         }
         if (m_screen_size.size() == 3)
         {
                 QAction* action1 = main_menu->addAction("Save all...");
-                QObject::connect(action1, &QAction::triggered, this, [this]() {
-                        catch_all("Saving all images", [this]() { save_all_to_files(false); });
-                });
+                QObject::connect(
+                        action1, &QAction::triggered, this,
+                        [this]()
+                        {
+                                catch_all(
+                                        "Saving all images",
+                                        [this]()
+                                        {
+                                                save_all_to_files(false);
+                                        });
+                        });
 
                 QAction* action2 = main_menu->addAction("Save all without background...");
-                QObject::connect(action2, &QAction::triggered, this, [this]() {
-                        catch_all("Saving all images without background", [this]() { save_all_to_files(true); });
-                });
+                QObject::connect(
+                        action2, &QAction::triggered, this,
+                        [this]()
+                        {
+                                catch_all(
+                                        "Saving all images without background",
+                                        [this]()
+                                        {
+                                                save_all_to_files(true);
+                                        });
+                        });
         }
 
         if (m_screen_size.size() == 3)
@@ -182,14 +206,30 @@ void PainterWindow2d::make_menu()
                 main_menu->addSeparator();
 
                 QAction* action1 = main_menu->addAction("Add volume");
-                QObject::connect(action1, &QAction::triggered, this, [this]() {
-                        catch_all("Adding volume", [this]() { add_volume(false); });
-                });
+                QObject::connect(
+                        action1, &QAction::triggered, this,
+                        [this]()
+                        {
+                                catch_all(
+                                        "Adding volume",
+                                        [this]()
+                                        {
+                                                add_volume(false);
+                                        });
+                        });
 
                 QAction* action2 = main_menu->addAction("Add volume without background");
-                QObject::connect(action2, &QAction::triggered, this, [this]() {
-                        catch_all("Adding volume without background", [this]() { add_volume(true); });
-                });
+                QObject::connect(
+                        action2, &QAction::triggered, this,
+                        [this]()
+                        {
+                                catch_all(
+                                        "Adding volume without background",
+                                        [this]()
+                                        {
+                                                add_volume(true);
+                                        });
+                        });
         }
 
         {

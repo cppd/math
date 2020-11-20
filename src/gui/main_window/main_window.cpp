@@ -225,20 +225,23 @@ void MainWindow::showEvent(QShowEvent* /*event*/)
         m_first_show = false;
 
         // Окно ещё не видно, поэтому небольшая задержка, чтобы окно реально появилось.
-        QTimer::singleShot(WINDOW_SHOW_DELAY_MSEC, this, [this]() {
-                try
+        QTimer::singleShot(
+                WINDOW_SHOW_DELAY_MSEC, this,
+                [this]()
                 {
-                        first_shown();
-                }
-                catch (const std::exception& e)
-                {
-                        MESSAGE_ERROR_FATAL(e.what());
-                }
-                catch (...)
-                {
-                        MESSAGE_ERROR_FATAL("Error first show");
-                }
-        });
+                        try
+                        {
+                                first_shown();
+                        }
+                        catch (const std::exception& e)
+                        {
+                                MESSAGE_ERROR_FATAL(e.what());
+                        }
+                        catch (...)
+                        {
+                                MESSAGE_ERROR_FATAL("Error first show");
+                        }
+                });
 }
 
 void MainWindow::first_shown()

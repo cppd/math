@@ -31,12 +31,15 @@ void color_dialog(const std::string& title, const QColor& current_color, const s
         dialog->setWindowTitle(title.c_str());
         dialog->setOptions(QColorDialog::NoButtons | QColorDialog::DontUseNativeDialog);
 
-        QObject::connect(dialog, &QColorDialog::currentColorChanged, [&](const QColor& color) {
-                if (color.isValid())
+        QObject::connect(
+                dialog, &QColorDialog::currentColorChanged,
+                [&](const QColor& color)
                 {
-                        f(color);
-                }
-        });
+                        if (color.isValid())
+                        {
+                                f(color);
+                        }
+                });
 
         dialog->exec();
 }

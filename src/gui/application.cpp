@@ -93,7 +93,14 @@ int run_application(int argc, char** argv)
 
         MainThread ui_thread;
         application::MessageEventsObserver message_observer(
-                [](const MessageEvent& event) { MainThread::run([event]() { message_event(event); }); });
+                [](const MessageEvent& event)
+                {
+                        MainThread::run(
+                                [event]()
+                                {
+                                        message_event(event);
+                                });
+                });
 
         LOG(command_line_description());
 

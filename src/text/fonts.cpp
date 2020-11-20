@@ -50,7 +50,12 @@ const Fonts& Fonts::instance()
 
 Fonts::Fonts()
 {
-        m_fonts.emplace("DejaVuSans", []() { return std::vector(std::cbegin(DEJA_VU_SANS), std::cend(DEJA_VU_SANS)); });
+        m_fonts.emplace(
+                "DejaVuSans",
+                []()
+                {
+                        return std::vector(std::cbegin(DEJA_VU_SANS), std::cend(DEJA_VU_SANS));
+                });
 }
 
 std::vector<std::string> Fonts::names() const

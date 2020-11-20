@@ -183,9 +183,10 @@ void create_tree(
                 wrappers.push_back(s->intersection_function());
         }
 
-        const auto shape_intersections = [w = std::as_const(wrappers)](
-                                                 const ParallelotopeAA<N, T>& parallelotope,
-                                                 const std::vector<int>& indices) {
+        const auto shape_intersections =
+                [w = std::as_const(wrappers)](
+                        const ParallelotopeAA<N, T>& parallelotope, const std::vector<int>& indices)
+        {
                 ShapeWrapperForIntersection p(parallelotope);
                 std::vector<int> intersections;
                 intersections.reserve(indices.size());
@@ -240,7 +241,8 @@ class StorageScene final : public Scene<N, T>
 
                 std::optional<Intersection<N, T>> intersection;
 
-                auto f = [&](const std::vector<int>& shape_indices) -> std::optional<Vector<N, T>> {
+                auto f = [&](const std::vector<int>& shape_indices) -> std::optional<Vector<N, T>>
+                {
                         intersection = scene_implementation::ray_intersect(m_shape_pointers, shape_indices, ray);
                         if (intersection)
                         {

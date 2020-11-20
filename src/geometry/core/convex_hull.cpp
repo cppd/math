@@ -604,7 +604,12 @@ void create_horizon_facets(
 template <typename T>
 unsigned calculate_facet_count(const std::vector<T>& facets)
 {
-        return std::accumulate(facets.cbegin(), facets.cend(), 0, [](unsigned a, const T& b) { return a + b.size(); });
+        return std::accumulate(
+                facets.cbegin(), facets.cend(), 0,
+                [](unsigned a, const T& b)
+                {
+                        return a + b.size();
+                });
 }
 
 template <size_t N, typename S, typename C>
@@ -638,11 +643,13 @@ void add_point_to_convex_hull(
         // Добавление граней, состоящих из рёбер горизонта и заданной точки.
         if (thread_pool->thread_count() > 1)
         {
-                thread_pool->run([&](unsigned thread_id, unsigned thread_count) {
-                        create_horizon_facets(
-                                thread_id, thread_count, &points, point, point_conflicts, unique_points_work,
-                                &new_facets, thread_barrier);
-                });
+                thread_pool->run(
+                        [&](unsigned thread_id, unsigned thread_count)
+                        {
+                                create_horizon_facets(
+                                        thread_id, thread_count, &points, point, point_conflicts, unique_points_work,
+                                        &new_facets, thread_barrier);
+                        });
         }
         else
         {
@@ -741,9 +748,12 @@ void create_convex_hull(
                         points, i, facets, &point_conflicts, &thread_pool, &thread_barrier, &unique_points_work);
         }
 
-        ASSERT(std::all_of(facets->cbegin(), facets->cend(), [](const Facet<N, S, C>& facet) -> bool {
-                return facet.conflict_points().empty();
-        }));
+        ASSERT(std::all_of(
+                facets->cbegin(), facets->cend(),
+                [](const Facet<N, S, C>& facet) -> bool
+                {
+                        return facet.conflict_points().empty();
+                }));
 }
 
 template <size_t N>

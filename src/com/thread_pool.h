@@ -79,7 +79,12 @@ class ThreadPool
                         try
                         {
                                 std::unique_lock<std::mutex> lock(m_mutex_run);
-                                m_cv_run.wait(lock, [this] { return m_enable || m_exit; });
+                                m_cv_run.wait(
+                                        lock,
+                                        [this]
+                                        {
+                                                return m_enable || m_exit;
+                                        });
                                 return !m_exit;
                         }
                         catch (const std::exception& e)
@@ -113,7 +118,12 @@ class ThreadPool
                                 }
                                 else
                                 {
-                                        m_cv_finish.wait(lock, [this, g] { return g != m_generation; });
+                                        m_cv_finish.wait(
+                                                lock,
+                                                [this, g]
+                                                {
+                                                        return g != m_generation;
+                                                });
                                 }
                         }
                         catch (const std::exception& e)
@@ -203,7 +213,12 @@ class ThreadPool
                                 // Ожидание завершения потоков
                                 {
                                         std::unique_lock<std::mutex> lock(m_mutex_finish);
-                                        m_cv_finish.wait(lock, [this, g] { return g != m_generation; });
+                                        m_cv_finish.wait(
+                                                lock,
+                                                [this, g]
+                                                {
+                                                        return g != m_generation;
+                                                });
                                 }
                         }
                         catch (const std::exception& e)
@@ -260,7 +275,11 @@ public:
 
                 for (unsigned i = 0; i < THREAD_COUNT; ++i)
                 {
-                        m_threads.add([&, i]() { thread(i); });
+                        m_threads.add(
+                                [&, i]()
+                                {
+                                        thread(i);
+                                });
                 }
         }
 

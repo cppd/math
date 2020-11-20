@@ -98,15 +98,19 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
         bool convex_hull = objects_to_load.contains(gui::dialog::ComputationType::ConvexHull);
         bool mst = objects_to_load.contains(gui::dialog::ComputationType::Mst);
 
-        return [=](ProgressRatioList* progress_list) {
+        return [=](ProgressRatioList* progress_list)
+        {
                 unsigned dimension = mesh::file_dimension(file_name);
 
-                apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
-                        std::shared_ptr<mesh::MeshObject<N>> mesh = load_from_file<N>(
-                                generic_utf8_filename(file_name.filename()), progress_list, file_name);
+                apply_for_dimension(
+                        dimension,
+                        [&]<size_t N>(const Dimension<N>&)
+                        {
+                                std::shared_ptr<mesh::MeshObject<N>> mesh = load_from_file<N>(
+                                        generic_utf8_filename(file_name.filename()), progress_list, file_name);
 
-                        compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
-                });
+                                compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
+                        });
         };
 }
 
@@ -146,13 +150,17 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
         bool convex_hull = objects_to_load->contains(gui::dialog::ComputationType::ConvexHull);
         bool mst = objects_to_load->contains(gui::dialog::ComputationType::Mst);
 
-        return [=](ProgressRatioList* progress_list) {
-                apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
-                        std::shared_ptr<mesh::MeshObject<N>> mesh =
-                                load_from_mesh_repository<N>(object_name, point_count, *repository);
+        return [=](ProgressRatioList* progress_list)
+        {
+                apply_for_dimension(
+                        dimension,
+                        [&]<size_t N>(const Dimension<N>&)
+                        {
+                                std::shared_ptr<mesh::MeshObject<N>> mesh =
+                                        load_from_mesh_repository<N>(object_name, point_count, *repository);
 
-                        compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
-                });
+                                compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
+                        });
         };
 }
 
@@ -176,10 +184,14 @@ std::function<void(ProgressRatioList*)> action_load_from_volume_repository(
                 return nullptr;
         }
 
-        return [=](ProgressRatioList* /*progress_list*/) {
-                apply_for_dimension(dimension, [&]<size_t N>(const Dimension<N>&) {
-                        load_from_volume_repository<N>(object_name, image_size, *repository);
-                });
+        return [=](ProgressRatioList* /*progress_list*/)
+        {
+                apply_for_dimension(
+                        dimension,
+                        [&]<size_t N>(const Dimension<N>&)
+                        {
+                                load_from_volume_repository<N>(object_name, image_size, *repository);
+                        });
         };
 }
 }

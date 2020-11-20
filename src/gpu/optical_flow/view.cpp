@@ -166,7 +166,10 @@ class Impl final : public View
                 info.render_pass = render_buffers->render_pass();
                 info.framebuffers = &render_buffers->framebuffers();
                 info.command_pool = m_graphics_command_pool;
-                info.render_pass_commands = [this](VkCommandBuffer command_buffer) { draw_commands(command_buffer); };
+                info.render_pass_commands = [this](VkCommandBuffer command_buffer)
+                {
+                        draw_commands(command_buffer);
+                };
                 m_command_buffers = vulkan::create_command_buffers(info);
         }
 

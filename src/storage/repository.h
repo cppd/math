@@ -60,9 +60,11 @@ public:
                 std::vector<ObjectNames> names;
 
                 std::apply(
-                        [&]<size_t... N>(const Repositories<N>&... v) {
+                        [&]<size_t... N>(const Repositories<N>&... v)
+                        {
                                 (
-                                        [&]() {
+                                        [&]()
+                                        {
                                                 names.resize(names.size() + 1);
                                                 names.back().dimension = N;
                                                 names.back().mesh_names = v.meshes->object_names();

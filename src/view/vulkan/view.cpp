@@ -740,7 +740,8 @@ public:
 
                         const std::vector<vulkan::PhysicalDeviceFeatures> optional_features = {};
 
-                        const std::function<VkSurfaceKHR(VkInstance)> surface_function = [&](VkInstance instance) {
+                        const std::function<VkSurfaceKHR(VkInstance)> surface_function = [&](VkInstance instance)
+                        {
                                 return vulkan_create_surface(window, instance);
                         };
 
@@ -840,7 +841,10 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                const auto visitor = [this](const auto& c) { command(c); };
+                const auto visitor = [this](const auto& c)
+                {
+                        command(c);
+                };
                 for (const view::Command& command : commands)
                 {
                         std::visit(visitor, command.data());
@@ -851,7 +855,10 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                const auto visitor = [this](const auto& d) { this->info(d); };
+                const auto visitor = [this](const auto& d)
+                {
+                        this->info(d);
+                };
                 for (const Info& v : info)
                 {
                         std::visit(visitor, v.data());

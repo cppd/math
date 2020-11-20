@@ -74,7 +74,8 @@ QString file_filter(const std::string& name, const T&... extensions)
 
         bool first = true;
 
-        auto add_string = [&](const std::string& ext) {
+        auto add_string = [&](const std::string& ext)
+        {
                 if (std::count(ext.cbegin(), ext.cend(), '*') > 0)
                 {
                         error("Character * in file filter extension " + ext);
@@ -87,7 +88,8 @@ QString file_filter(const std::string& name, const T&... extensions)
                 filter += "*." + ext;
         };
 
-        auto add = [&](const auto& ext) {
+        auto add = [&](const auto& ext)
+        {
                 if constexpr (has_begin_end<decltype(ext)>)
                 {
                         if constexpr (!std::is_same_v<char, std::remove_cvref_t<decltype(*std::cbegin(ext))>>)
@@ -169,10 +171,13 @@ std::optional<std::string> save_file(const std::string& caption, const std::vect
         QtObjectInDynamicMemory<QFileDialog> w(
                 parent_for_dialog(), QString::fromStdString(caption), QString(), join_filters(dialog_filters));
 
-        QObject::connect(w.data(), &QFileDialog::filterSelected, [&](const QString& filter) {
-                ASSERT(map.count(filter) == 1);
-                w->setDefaultSuffix(map[filter]);
-        });
+        QObject::connect(
+                w.data(), &QFileDialog::filterSelected,
+                [&](const QString& filter)
+                {
+                        ASSERT(map.count(filter) == 1);
+                        w->setDefaultSuffix(map[filter]);
+                });
 
         if (!dialog_filters.empty())
         {

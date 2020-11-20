@@ -98,78 +98,99 @@ void ColorsWidget::on_lighting_intensity_changed(int)
 void ColorsWidget::on_background_color_clicked()
 {
         QPointer ptr(this);
-        dialog::color_dialog("Background Color", m_background_color, [&](const QColor& c) {
-                if (!ptr.isNull())
+        dialog::color_dialog(
+                "Background Color", m_background_color,
+                [&](const QColor& c)
                 {
-                        ptr->set_background_color(c);
-                }
-        });
+                        if (!ptr.isNull())
+                        {
+                                ptr->set_background_color(c);
+                        }
+                });
 }
 
 void ColorsWidget::on_wireframe_color_clicked()
 {
         QPointer ptr(this);
-        dialog::color_dialog("Wireframe Color", m_wireframe_color, [&](const QColor& c) {
-                if (!ptr.isNull())
+        dialog::color_dialog(
+                "Wireframe Color", m_wireframe_color,
+                [&](const QColor& c)
                 {
-                        set_wireframe_color(c);
-                }
-        });
+                        if (!ptr.isNull())
+                        {
+                                set_wireframe_color(c);
+                        }
+                });
 }
 
 void ColorsWidget::on_clip_plane_color_clicked()
 {
         QPointer ptr(this);
-        dialog::color_dialog("Clip Plane Color", m_clip_plane_color, [&](const QColor& c) {
-                if (!ptr.isNull())
+        dialog::color_dialog(
+                "Clip Plane Color", m_clip_plane_color,
+                [&](const QColor& c)
                 {
-                        set_clip_plane_color(c);
-                }
-        });
+                        if (!ptr.isNull())
+                        {
+                                set_clip_plane_color(c);
+                        }
+                });
 }
 
 void ColorsWidget::on_normal_color_positive_clicked()
 {
         QPointer ptr(this);
-        dialog::color_dialog("Positive Normal Color", m_normal_color_positive, [&](const QColor& c) {
-                if (!ptr.isNull())
+        dialog::color_dialog(
+                "Positive Normal Color", m_normal_color_positive,
+                [&](const QColor& c)
                 {
-                        set_normal_color_positive(c);
-                }
-        });
+                        if (!ptr.isNull())
+                        {
+                                set_normal_color_positive(c);
+                        }
+                });
 }
 
 void ColorsWidget::on_normal_color_negative_clicked()
 {
         QPointer ptr(this);
-        dialog::color_dialog("Negative Normal Color", m_normal_color_negative, [&](const QColor& c) {
-                if (!ptr.isNull())
+        dialog::color_dialog(
+                "Negative Normal Color", m_normal_color_negative,
+                [&](const QColor& c)
                 {
-                        set_normal_color_negative(c);
-                }
-        });
+                        if (!ptr.isNull())
+                        {
+                                set_normal_color_negative(c);
+                        }
+                });
 }
 
 void ColorsWidget::on_dft_background_color_clicked()
 {
         QPointer ptr(this);
-        dialog::color_dialog("DFT Background Color", m_dft_background_color, [&](const QColor& c) {
-                if (!ptr.isNull())
+        dialog::color_dialog(
+                "DFT Background Color", m_dft_background_color,
+                [&](const QColor& c)
                 {
-                        set_dft_background_color(c);
-                }
-        });
+                        if (!ptr.isNull())
+                        {
+                                set_dft_background_color(c);
+                        }
+                });
 }
 
 void ColorsWidget::on_dft_color_clicked()
 {
         QPointer ptr(this);
-        dialog::color_dialog("DFT Color", m_dft_color, [&](const QColor& c) {
-                if (!ptr.isNull())
+        dialog::color_dialog(
+                "DFT Color", m_dft_color,
+                [&](const QColor& c)
                 {
-                        set_dft_color(c);
-                }
-        });
+                        if (!ptr.isNull())
+                        {
+                                set_dft_color(c);
+                        }
+                });
 }
 
 void ColorsWidget::set_background_color(const QColor& c)

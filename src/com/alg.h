@@ -80,19 +80,34 @@ bool all_true(const T& v)
 template <typename T>
 bool all_non_negative(const T& data)
 {
-        return std::all_of(data.cbegin(), data.cend(), [](const auto& v) { return v >= 0; });
+        return std::all_of(
+                data.cbegin(), data.cend(),
+                [](const auto& v)
+                {
+                        return v >= 0;
+                });
 }
 
 template <typename T>
 bool all_positive(const T& data)
 {
-        return std::all_of(data.cbegin(), data.cend(), [](const auto& v) { return v > 0; });
+        return std::all_of(
+                data.cbegin(), data.cend(),
+                [](const auto& v)
+                {
+                        return v > 0;
+                });
 }
 
 template <typename T>
 bool all_negative(const T& data)
 {
-        return std::all_of(data.cbegin(), data.cend(), [](const auto& v) { return v < 0; });
+        return std::all_of(
+                data.cbegin(), data.cend(),
+                [](const auto& v)
+                {
+                        return v < 0;
+                });
 }
 
 // Вместо std::accumulate(v.cbegin(), v.cend(), static_cast<T>(1), std::multiplies<void>())

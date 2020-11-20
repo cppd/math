@@ -1146,11 +1146,13 @@ void read_obj(
         ThreadsWithCatch threads(thread_count);
         for (int i = 0; i < thread_count; ++i)
         {
-                threads.add([&, i]() {
-                        read_obj_thread(
-                                i, thread_count, &counters, &barrier, &error_found, &data, &line_begin, &line_prop,
-                                progress, material_index, library_names, mesh);
-                });
+                threads.add(
+                        [&, i]()
+                        {
+                                read_obj_thread(
+                                        i, thread_count, &counters, &barrier, &error_found, &data, &line_begin,
+                                        &line_prop, progress, material_index, library_names, mesh);
+                        });
         }
         threads.join();
 }

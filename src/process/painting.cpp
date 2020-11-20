@@ -98,7 +98,8 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                 }
         }
 
-        return [=](ProgressRatioList* progress_list) {
+        return [=](ProgressRatioList* progress_list)
+        {
                 std::unique_ptr<const painter::Shape<N, T>> shape;
                 {
                         std::vector<const mesh::MeshObject<N>*> meshes;
@@ -138,7 +139,8 @@ std::function<void(ProgressRatioList*)> action_painter(
         for (const storage::MeshObjectConst& storage_object : objects)
         {
                 std::visit(
-                        [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& object) {
+                        [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& object)
+                        {
                                 if (object->visible())
                                 {
                                         dimensions.insert(N);
@@ -158,20 +160,24 @@ std::function<void(ProgressRatioList*)> action_painter(
                 return nullptr;
         }
 
-        return apply_for_dimension(*dimensions.cbegin(), [&]<size_t N>(const Dimension<N>&) {
-                std::vector<std::shared_ptr<const mesh::MeshObject<N>>> meshes;
-                for (storage::MeshObjectConst& visible_object : visible_objects)
+        return apply_for_dimension(
+                *dimensions.cbegin(),
+                [&]<size_t N>(const Dimension<N>&)
                 {
-                        std::visit(
-                                [&]<size_t M>(std::shared_ptr<const mesh::MeshObject<M>>&& object) {
-                                        if constexpr (N == M)
+                        std::vector<std::shared_ptr<const mesh::MeshObject<N>>> meshes;
+                        for (storage::MeshObjectConst& visible_object : visible_objects)
+                        {
+                                std::visit(
+                                        [&]<size_t M>(std::shared_ptr<const mesh::MeshObject<M>>&& object)
                                         {
-                                                meshes.push_back(std::move(object));
-                                        }
-                                },
-                                std::move(visible_object));
-                }
-                return action_painter_function(meshes, camera, background_color, lighting_intensity);
-        });
+                                                if constexpr (N == M)
+                                                {
+                                                        meshes.push_back(std::move(object));
+                                                }
+                                        },
+                                        std::move(visible_object));
+                        }
+                        return action_painter_function(meshes, camera, background_color, lighting_intensity);
+                });
 }
 }

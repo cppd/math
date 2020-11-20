@@ -160,7 +160,8 @@ void load_vertices(
 
         std::vector<Face> faces(sorted_face_indices.size());
 
-        const auto function = [&](std::atomic_size_t& task) {
+        const auto function = [&](std::atomic_size_t& task)
+        {
                 size_t size = sorted_face_indices.size();
                 size_t index = 0;
                 while ((index = task++) < size)
@@ -191,10 +192,13 @@ void load_vertices(
                                 {
                                         dots[i] = dot(mesh.normals[f.normals[i]], geometric_normal);
                                 }
-                                if (std::all_of(dots.cbegin(), dots.cend(), [](float d) {
-                                            static_assert(LIMIT_COSINE > 0);
-                                            return is_finite(d) && std::abs(d) >= LIMIT_COSINE;
-                                    }))
+                                if (std::all_of(
+                                            dots.cbegin(), dots.cend(),
+                                            [](float d)
+                                            {
+                                                    static_assert(LIMIT_COSINE > 0);
+                                                    return is_finite(d) && std::abs(d) >= LIMIT_COSINE;
+                                            }))
                                 {
                                         for (int i = 0; i < 3; ++i)
                                         {
@@ -508,7 +512,8 @@ class Impl final : public MeshObject
 
         std::optional<int> m_version;
 
-        const mesh::Update::Flags UPDATE_LIGHTING = []() {
+        const mesh::Update::Flags UPDATE_LIGHTING = []()
+        {
                 mesh::Update::Flags flags;
                 flags.set(mesh::Update::Ambient);
                 flags.set(mesh::Update::Diffuse);
@@ -632,7 +637,8 @@ class Impl final : public MeshObject
                         ASSERT(material_face_offset.size() == material_face_count.size());
                         ASSERT(std::all_of(
                                 m_material_descriptor_sets.cbegin(), m_material_descriptor_sets.cend(),
-                                [&](const auto& v) {
+                                [&](const auto& v)
+                                {
                                         return material_face_offset.size() == v.second.descriptor_set_count();
                                 }));
 

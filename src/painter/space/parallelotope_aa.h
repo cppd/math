@@ -410,7 +410,8 @@ std::array<ParallelotopeAA<N, T>, ParallelotopeAA<N, T>::DIVISIONS> Parallelotop
 
         unsigned count = 0;
         std::array<Planes, N> p;
-        auto f = [&count, &result, &p]() {
+        auto f = [&count, &result, &p]()
+        {
                 ASSERT(count < result.size());
                 result[count++].m_planes = p;
         };
@@ -446,7 +447,8 @@ std::array<Vector<N, T>, ParallelotopeAA<N, T>::VERTEX_COUNT> ParallelotopeAA<N,
 
         unsigned count = 0;
         Vector<N, T> p;
-        auto f = [&count, &result, &p]() {
+        auto f = [&count, &result, &p]()
+        {
                 ASSERT(count < result.size());
                 result[count++] = p;
         };
@@ -472,7 +474,8 @@ std::array<std::array<Vector<N, T>, 2>, ParallelotopeAA<N, T>::VERTEX_RIDGE_COUN
 
         unsigned count = 0;
         Vector<N, T> p;
-        auto f = [this, &count, &result, &p, &vectors]() {
+        auto f = [this, &count, &result, &p, &vectors]()
+        {
                 for (unsigned i = 0; i < N; ++i)
                 {
                         if (p[i] == m_planes[i].d1)

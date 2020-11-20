@@ -466,9 +466,12 @@ uint32_t PhysicalDevice::presentation_family_index() const
 
 bool PhysicalDevice::supports_extensions(const std::vector<std::string>& extensions) const
 {
-        return std::all_of(extensions.cbegin(), extensions.cend(), [&](const std::string& e) {
-                return m_supported_extensions.count(e) >= 1;
-        });
+        return std::all_of(
+                extensions.cbegin(), extensions.cend(),
+                [&](const std::string& e)
+                {
+                        return m_supported_extensions.count(e) >= 1;
+                });
 }
 
 bool PhysicalDevice::queue_family_supports_presentation(uint32_t index) const
@@ -589,13 +592,24 @@ Device create_device(
         const std::vector<PhysicalDeviceFeatures>& required_features,
         const std::vector<PhysicalDeviceFeatures>& optional_features)
 {
-        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(), [&](const auto& v) {
-                return v.first < physical_device.queue_families().size();
-        }));
-        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(), [](const auto& v) { return v.second > 0; }));
-        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(), [&](const auto& v) {
-                return v.second <= physical_device.queue_families()[v.first].queueCount;
-        }));
+        ASSERT(std::all_of(
+                queue_families.cbegin(), queue_families.cend(),
+                [&](const auto& v)
+                {
+                        return v.first < physical_device.queue_families().size();
+                }));
+        ASSERT(std::all_of(
+                queue_families.cbegin(), queue_families.cend(),
+                [](const auto& v)
+                {
+                        return v.second > 0;
+                }));
+        ASSERT(std::all_of(
+                queue_families.cbegin(), queue_families.cend(),
+                [&](const auto& v)
+                {
+                        return v.second <= physical_device.queue_families()[v.first].queueCount;
+                }));
 
         if (queue_families.empty())
         {

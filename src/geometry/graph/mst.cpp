@@ -211,7 +211,10 @@ std::vector<std::array<int, 2>> minimum_spanning_tree(
         // Сортировка рёбер графа по возрастанию веса.
         std::sort(
                 weighted_edges.begin(), weighted_edges.end(),
-                [](const WeightedEdge& a, const WeightedEdge& b) -> bool { return a.weight() < b.weight(); });
+                [](const WeightedEdge& a, const WeightedEdge& b) -> bool
+                {
+                        return a.weight() < b.weight();
+                });
 
         progress->set(4, 5);
 

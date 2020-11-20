@@ -56,46 +56,64 @@ void check_buffers(
                 error("No depth attachment");
         }
 
-        if (!std::all_of(color.cbegin(), color.cend(), [&](const vulkan::ColorAttachment& c) {
-                    return c.sample_count() == color[0].sample_count();
-            }))
+        if (!std::all_of(
+                    color.cbegin(), color.cend(),
+                    [&](const vulkan::ColorAttachment& c)
+                    {
+                            return c.sample_count() == color[0].sample_count();
+                    }))
         {
                 error("Color attachments must have the same sample count");
         }
 
-        if (!std::all_of(color.cbegin(), color.cend(), [&](const vulkan::ColorAttachment& c) {
-                    return c.format() == color[0].format();
-            }))
+        if (!std::all_of(
+                    color.cbegin(), color.cend(),
+                    [&](const vulkan::ColorAttachment& c)
+                    {
+                            return c.format() == color[0].format();
+                    }))
         {
                 error("Color attachments must have the same format");
         }
 
-        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthImageWithMemory& d) {
-                    return d.sample_count() == depth[0].sample_count();
-            }))
+        if (!std::all_of(
+                    depth.cbegin(), depth.cend(),
+                    [&](const vulkan::DepthImageWithMemory& d)
+                    {
+                            return d.sample_count() == depth[0].sample_count();
+                    }))
         {
                 error("Depth attachments must have the same sample count");
         }
 
-        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthImageWithMemory& d) {
-                    return d.format() == depth[0].format();
-            }))
+        if (!std::all_of(
+                    depth.cbegin(), depth.cend(),
+                    [&](const vulkan::DepthImageWithMemory& d)
+                    {
+                            return d.format() == depth[0].format();
+                    }))
         {
                 error("Depth attachments must have the same format");
         }
 
-        if (!std::all_of(color.cbegin(), color.cend(), [&](const vulkan::ColorAttachment& c) {
-                    return c.sample_count() == depth[0].sample_count();
-            }))
+        if (!std::all_of(
+                    color.cbegin(), color.cend(),
+                    [&](const vulkan::ColorAttachment& c)
+                    {
+                            return c.sample_count() == depth[0].sample_count();
+                    }))
         {
                 error("Color attachment sample count is not equal to depth attachment sample count");
         }
 
         if (color.empty())
         {
-                if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthImageWithMemory& d) {
-                            return d.sample_count() == VK_SAMPLE_COUNT_1_BIT;
-                    }))
+                if (!std::all_of(
+                            depth.cbegin(), depth.cend(),
+                            [&](const vulkan::DepthImageWithMemory& d)
+                            {
+                                    return d.sample_count() == VK_SAMPLE_COUNT_1_BIT;
+                            }))
                 {
                         error("There are no color attachments, but depth attachment sample count is not equal to 1");
                 }
@@ -436,7 +454,10 @@ void Impl::create_color_buffer_rendering(
         ASSERT(m_depth_attachments.size() == 1
                || std::all_of(
                        m_depth_attachments.cbegin(), m_depth_attachments.cend(),
-                       [&](const vulkan::DepthImageWithMemory& d) { return d.format() == depth_format; }));
+                       [&](const vulkan::DepthImageWithMemory& d)
+                       {
+                               return d.format() == depth_format;
+                       }));
 
         //
 

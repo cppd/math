@@ -589,11 +589,13 @@ void paint_threads(
 
         for (unsigned i = 0; i < threads.size(); ++i)
         {
-                threads[i] = std::thread([&, i]() {
-                        work_thread(
-                                i, &barrier, stop, &error_caught, &stop_painting, scene.projector(), paint_data,
-                                painter_notifier, paintbrush, sampler, &pixels);
-                });
+                threads[i] = std::thread(
+                        [&, i]()
+                        {
+                                work_thread(
+                                        i, &barrier, stop, &error_caught, &stop_painting, scene.projector(), paint_data,
+                                        painter_notifier, paintbrush, sampler, &pixels);
+                        });
         }
 
         for (std::thread& t : threads)

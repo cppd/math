@@ -119,7 +119,12 @@ int count_numbers_in_file(const std::filesystem::path& file_name)
 // Чтение числа из строки с проверкой, что строка содержит только целое число без других символов
 int read_dimension_number(const std::string& s)
 {
-        if (!std::all_of(s.cbegin(), s.cend(), [](char c) { return ascii::is_digit(c); }))
+        if (!std::all_of(
+                    s.cbegin(), s.cend(),
+                    [](char c)
+                    {
+                            return ascii::is_digit(c);
+                    }))
         {
                 error("Wrong dimension number string \"" + s + "\"");
         }

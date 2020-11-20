@@ -441,9 +441,12 @@ public:
                   m_busy_indices_2d(thread_count, -1)
         {
                 m_stop = false;
-                m_thread = std::thread([=, this]() {
-                        paint(this, samples_per_pixel, *m_scene, &m_paintbrush, thread_count, &m_stop, smooth_normal);
-                });
+                m_thread = std::thread(
+                        [=, this]()
+                        {
+                                paint(this, samples_per_pixel, *m_scene, &m_paintbrush, thread_count, &m_stop,
+                                      smooth_normal);
+                        });
         }
 
         ~PainterWindow() override
@@ -473,9 +476,11 @@ void create_painter_window(
         std::unique_ptr<const painter::Scene<N, T>>&& scene)
 {
         namespace impl = painter_window_implementation;
-        MainThread::run([=, scene = std::shared_ptr<const painter::Scene<N, T>>(std::move(scene))]() {
-                create_and_show_delete_on_close_window<impl::PainterWindow<N, T>>(
-                        name, thread_count, samples_per_pixel, smooth_normal, scene);
-        });
+        MainThread::run(
+                [=, scene = std::shared_ptr<const painter::Scene<N, T>>(std::move(scene))]()
+                {
+                        create_and_show_delete_on_close_window<impl::PainterWindow<N, T>>(
+                                name, thread_count, samples_per_pixel, smooth_normal, scene);
+                });
 }
 }

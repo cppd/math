@@ -41,7 +41,11 @@ class Storage final
                 static_assert(!std::is_same_v<std::remove_cvref_t<From>, std::remove_cvref_t<To>>);
 
                 return std::visit(
-                        [](auto&& v) { return To(std::forward<decltype(v)>(v)); }, std::forward<From>(object));
+                        [](auto&& v)
+                        {
+                                return To(std::forward<decltype(v)>(v));
+                        },
+                        std::forward<From>(object));
         }
 
 public:

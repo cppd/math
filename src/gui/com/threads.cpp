@@ -88,17 +88,24 @@ public:
                 ASSERT(!m_working);
 
                 m_working = true;
-                m_thread = std::thread([this, func = std::forward<F>(function), description]() noexcept {
-                        try
+                m_thread = std::thread(
+                        [this, func = std::forward<F>(function), description]() noexcept
                         {
-                                catch_all(description, [&]() { func(&m_progress_list); });
-                                m_working = false;
-                        }
-                        catch (...)
-                        {
-                                error_fatal("Exception in thread");
-                        }
-                });
+                                try
+                                {
+                                        catch_all(
+                                                description,
+                                                [&]()
+                                                {
+                                                        func(&m_progress_list);
+                                                });
+                                        m_working = false;
+                                }
+                                catch (...)
+                                {
+                                        error_fatal("Exception in thread");
+                                }
+                        });
         }
 
         void terminate_quietly()
@@ -213,14 +220,17 @@ class Impl final : public WorkerThreads
                 override
         {
                 bool result = false;
-                catch_all(description, [&]() {
-                        if (!terminate_with_dialog(id))
+                catch_all(
+                        description,
+                        [&]()
                         {
-                                return;
-                        }
-                        start(id, description, function());
-                        result = true;
-                });
+                                if (!terminate_with_dialog(id))
+                                {
+                                        return;
+                                }
+                                start(id, description, function());
+                                result = true;
+                        });
                 return result;
         }
 
@@ -255,7 +265,8 @@ class Impl final : public WorkerThreads
 
                         QObject::connect(
                                 &bar, &QProgressBar::customContextMenuRequested,
-                                [this, id, bar_ptr = QPointer(&bar)](const QPoint&) {
+                                [this, id, bar_ptr = QPointer(&bar)](const QPoint&)
+                                {
                                         QtObjectInDynamicMemory<QMenu> menu(bar_ptr);
                                         menu->addAction("Terminate");
 
@@ -343,9 +354,12 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                if (std::any_of(m_threads.cbegin(), m_threads.cend(), [](const auto& t) {
-                            return t.working() || t.joinable();
-                    }))
+                if (std::any_of(
+                            m_threads.cbegin(), m_threads.cend(),
+                            [](const auto& t)
+                            {
+                                    return t.working() || t.joinable();
+                            }))
                 {
                         error_fatal("Working threads in the work thread class destructor");
                 }

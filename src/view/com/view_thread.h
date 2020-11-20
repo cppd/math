@@ -101,7 +101,12 @@ public:
                 m_receive_queue.push(&v);
 
                 std::unique_lock<std::mutex> lock(v.mutex);
-                v.cv.wait(lock, [&] { return v.received; });
+                v.cv.wait(
+                        lock,
+                        [&]
+                        {
+                                return v.received;
+                        });
         }
 
         void dispatch_events(T* view)
@@ -153,7 +158,8 @@ class ViewThread final : public View
                                 m_started = true;
 
                                 view.loop(
-                                        [&]() {
+                                        [&]()
+                                        {
                                                 ASSERT(std::this_thread::get_id() == thread_id);
                                                 m_event_queues.dispatch_events(&view);
                                         },
@@ -197,16 +203,18 @@ public:
         {
                 try
                 {
-                        m_thread = std::thread([=, this]() {
-                                try
+                        m_thread = std::thread(
+                                [=, this]()
                                 {
-                                        thread_function(parent_window, parent_window_ppi);
-                                }
-                                catch (...)
-                                {
-                                        error_fatal("Exception in the view thread function");
-                                }
-                        });
+                                        try
+                                        {
+                                                thread_function(parent_window, parent_window_ppi);
+                                        }
+                                        catch (...)
+                                        {
+                                                error_fatal("Exception in the view thread function");
+                                        }
+                                });
 
                         do
                         {

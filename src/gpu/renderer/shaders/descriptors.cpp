@@ -300,9 +300,12 @@ vulkan::Descriptors MeshMemory::create(
         const std::vector<const vulkan::Buffer*>& coordinates)
 {
         ASSERT(!coordinates.empty());
-        ASSERT(std::all_of(coordinates.cbegin(), coordinates.cend(), [](const vulkan::Buffer* buffer) {
-                return buffer != nullptr;
-        }));
+        ASSERT(std::all_of(
+                coordinates.cbegin(), coordinates.cend(),
+                [](const vulkan::Buffer* buffer)
+                {
+                        return buffer != nullptr;
+                }));
 
         vulkan::Descriptors descriptors(
                 vulkan::Descriptors(device, coordinates.size(), descriptor_set_layout, descriptor_set_layout_bindings));

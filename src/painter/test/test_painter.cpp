@@ -55,7 +55,12 @@ public:
         Images(const std::array<int, 3>& size, const Color& background_color)
                 : m_size(size), m_background_color(background_color)
         {
-                if (std::any_of(size.cbegin(), size.cend(), [](int v) { return v < 1; }))
+                if (std::any_of(
+                            size.cbegin(), size.cend(),
+                            [](int v)
+                            {
+                                    return v < 1;
+                            }))
                 {
                         error("Error size " + to_string(size));
                 }

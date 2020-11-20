@@ -220,7 +220,8 @@ std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, Progre
         std::unordered_map<Vector<N, float>, unsigned> unique_vertices;
         Mesh<N> mesh;
 
-        const auto yield_facet = [&](const std::array<Vector<N, float>, N>& facet_vertices) {
+        const auto yield_facet = [&](const std::array<Vector<N, float>, N>& facet_vertices)
+        {
                 typename Mesh<N>::Facet& facet = mesh.facets.emplace_back();
                 for (unsigned i = 0; i < N; ++i)
                 {

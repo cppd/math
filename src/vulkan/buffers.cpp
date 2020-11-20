@@ -573,7 +573,8 @@ void write_pixels_to_image(
         image::ColorFormat color_format,
         const std::span<const std::byte>& pixels)
 {
-        auto write = [&](image::ColorFormat required_format) {
+        auto write = [&](image::ColorFormat required_format)
+        {
                 if (color_format == required_format)
                 {
                         check_buffer_size(pixels, color_format, extent);

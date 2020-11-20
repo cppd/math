@@ -1233,7 +1233,10 @@ CommandBuffers::CommandBuffers(VkDevice device, VkCommandPool command_pool, uint
 
         ASSERT(std::all_of(
                 m_command_buffers.cbegin(), m_command_buffers.cend(),
-                [](const VkCommandBuffer& command_buffer) { return command_buffer != VK_NULL_HANDLE; }));
+                [](const VkCommandBuffer& command_buffer)
+                {
+                        return command_buffer != VK_NULL_HANDLE;
+                }));
 
         m_device = device;
         m_command_pool = command_pool;
@@ -1518,7 +1521,8 @@ DescriptorSets::DescriptorSets(
         ASSERT(!descriptor_set_layouts.empty());
         ASSERT(std::all_of(
                 descriptor_set_layouts.cbegin(), descriptor_set_layouts.cend(),
-                [](const VkDescriptorSetLayout& descriptor_set_layout) {
+                [](const VkDescriptorSetLayout& descriptor_set_layout)
+                {
                         return descriptor_set_layout != VK_NULL_HANDLE;
                 }));
 
@@ -1536,7 +1540,10 @@ DescriptorSets::DescriptorSets(
 
         ASSERT(std::all_of(
                 m_descriptor_sets.cbegin(), m_descriptor_sets.cend(),
-                [](const VkDescriptorSet& descriptor_set) { return descriptor_set != VK_NULL_HANDLE; }));
+                [](const VkDescriptorSet& descriptor_set)
+                {
+                        return descriptor_set != VK_NULL_HANDLE;
+                }));
 
         m_device = device;
         m_descriptor_pool = descriptor_pool;

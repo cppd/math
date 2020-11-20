@@ -443,9 +443,12 @@ void properties(const PhysicalDevice& device, size_t device_node, StringTree* tr
                 ADD_VALUE_12(shaderStorageImageArrayNonUniformIndexingNative);
                 ADD_VALUE_12(shaderUniformBufferArrayNonUniformIndexingNative);
 
-                std::sort(properties.begin(), properties.end(), [](const auto& v1, const auto& v2) {
-                        return std::get<0>(v1) < std::get<0>(v2);
-                });
+                std::sort(
+                        properties.begin(), properties.end(),
+                        [](const auto& v1, const auto& v2)
+                        {
+                                return std::get<0>(v1) < std::get<0>(v2);
+                        });
 
                 for (const auto& [name, value] : properties)
                 {

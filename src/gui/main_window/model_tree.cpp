@@ -43,11 +43,18 @@ ModelTree::ModelTree() : QWidget(nullptr), m_thread_id(std::this_thread::get_id(
 
         m_connections.emplace_back(QObject::connect(
                 ui.model_tree, &QTreeWidget::currentItemChanged,
-                [this](QTreeWidgetItem*, QTreeWidgetItem*) { Q_EMIT item_update(); }));
+                [this](QTreeWidgetItem*, QTreeWidgetItem*)
+                {
+                        Q_EMIT item_update();
+                }));
 
         ui.model_tree->setContextMenuPolicy(Qt::CustomContextMenu);
         m_connections.emplace_back(QObject::connect(
-                ui.model_tree, &QTreeWidget::customContextMenuRequested, [this](const QPoint& p) { make_menu(p); }));
+                ui.model_tree, &QTreeWidget::customContextMenuRequested,
+                [this](const QPoint& p)
+                {
+                        make_menu(p);
+                }));
 }
 
 ModelTree::~ModelTree()
@@ -62,84 +69,100 @@ ModelTreeEvents* ModelTree::events()
 
 void ModelTree::clear()
 {
-        m_thread_queue.push([this]() {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+        m_thread_queue.push(
+                [this]()
+                {
+                        ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_map_item_id.clear();
-                m_map_id_item.clear();
-                m_storage.clear();
-                ui.model_tree->clear();
-        });
+                        m_map_item_id.clear();
+                        m_map_id_item.clear();
+                        m_storage.clear();
+                        ui.model_tree->clear();
+                });
 }
 
 void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id)
 {
-        m_thread_queue.push([this, object = std::move(object), parent_object_id]() {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+        m_thread_queue.push(
+                [this, object = std::move(object), parent_object_id]()
+                {
+                        ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                std::visit(
-                        [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh) {
-                                insert_into_tree(mesh->id(), N, mesh->name(), mesh->visible(), parent_object_id);
-                                m_storage.set_mesh_object(mesh);
-                        },
-                        object);
-        });
+                        std::visit(
+                                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh)
+                                {
+                                        insert_into_tree(
+                                                mesh->id(), N, mesh->name(), mesh->visible(), parent_object_id);
+                                        m_storage.set_mesh_object(mesh);
+                                },
+                                object);
+                });
 }
 
 void ModelTree::insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id)
 {
-        m_thread_queue.push([this, object = std::move(object), parent_object_id]() {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+        m_thread_queue.push(
+                [this, object = std::move(object), parent_object_id]()
+                {
+                        ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                std::visit(
-                        [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume) {
-                                insert_into_tree(volume->id(), N, volume->name(), volume->visible(), parent_object_id);
-                                m_storage.set_volume_object(volume);
-                        },
-                        object);
-        });
+                        std::visit(
+                                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume)
+                                {
+                                        insert_into_tree(
+                                                volume->id(), N, volume->name(), volume->visible(), parent_object_id);
+                                        m_storage.set_volume_object(volume);
+                                },
+                                object);
+                });
 }
 
 void ModelTree::erase(ObjectId id)
 {
-        m_thread_queue.push([this, id]() {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+        m_thread_queue.push(
+                [this, id]()
+                {
+                        ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_storage.delete_object(id);
-                erase_from_tree(id);
-        });
+                        m_storage.delete_object(id);
+                        erase_from_tree(id);
+                });
 }
 
 void ModelTree::update(ObjectId id)
 {
-        m_thread_queue.push([this, id]() {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+        m_thread_queue.push(
+                [this, id]()
+                {
+                        ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                std::optional<ObjectId> current_id = current_item();
-                if (!current_id)
-                {
-                        return;
-                }
-                if (id != *current_id)
-                {
-                        return;
-                }
-                Q_EMIT item_update();
-        });
+                        std::optional<ObjectId> current_id = current_item();
+                        if (!current_id)
+                        {
+                                return;
+                        }
+                        if (id != *current_id)
+                        {
+                                return;
+                        }
+                        Q_EMIT item_update();
+                });
 }
 
 void ModelTree::show(ObjectId id, bool visible)
 {
-        m_thread_queue.push([this, id, visible]() {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                auto iter = m_map_id_item.find(id);
-                if (iter == m_map_id_item.cend())
+        m_thread_queue.push(
+                [this, id, visible]()
                 {
-                        return;
-                }
-                set_item_color(iter->second, visible);
-        });
+                        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                        auto iter = m_map_id_item.find(id);
+                        if (iter == m_map_id_item.cend())
+                        {
+                                return;
+                        }
+                        set_item_color(iter->second, visible);
+                });
 }
 
 void ModelTree::insert_into_tree(
@@ -239,7 +262,8 @@ void ModelTree::show_object(ObjectId id, bool show)
         if (v)
         {
                 std::visit(
-                        [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object) {
+                        [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
+                        {
                                 volume_object->set_visible(show);
                         },
                         *v);
@@ -247,7 +271,8 @@ void ModelTree::show_object(ObjectId id, bool show)
         else if (m)
         {
                 std::visit(
-                        [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh_object) {
+                        [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh_object)
+                        {
                                 mesh_object->set_visible(show);
                         },
                         *m);
@@ -443,33 +468,49 @@ void ModelTree::make_menu_for_object(QMenu* menu, const std::shared_ptr<T>& obje
 
         {
                 QAction* action = menu->addAction("Show only it");
-                QObject::connect(action, &QAction::triggered, [&]() { show_only_this_object(object->id()); });
+                QObject::connect(
+                        action, &QAction::triggered,
+                        [&]()
+                        {
+                                show_only_this_object(object->id());
+                        });
         }
         {
                 bool visible = object->visible();
                 QAction* action = visible ? menu->addAction("Hide") : menu->addAction("Show");
-                QObject::connect(action, &QAction::triggered, [&, visible]() { object->set_visible(!visible); });
+                QObject::connect(
+                        action, &QAction::triggered,
+                        [&, visible]()
+                        {
+                                object->set_visible(!visible);
+                        });
         }
         menu->addSeparator();
         {
                 QAction* action = menu->addAction("Delete");
-                QObject::connect(action, &QAction::triggered, [&]() {
-                        bool yes;
-                        if (dialog::message_question_default_no("Delete?", &yes) && yes)
+                QObject::connect(
+                        action, &QAction::triggered,
+                        [&]()
                         {
-                                object->erase();
-                        }
-                });
+                                bool yes;
+                                if (dialog::message_question_default_no("Delete?", &yes) && yes)
+                                {
+                                        object->erase();
+                                }
+                        });
         }
         {
                 QAction* action = menu->addAction("Delete All");
-                QObject::connect(action, &QAction::triggered, [&]() {
-                        bool yes;
-                        if (dialog::message_question_default_no("Delete All?", &yes) && yes)
+                QObject::connect(
+                        action, &QAction::triggered,
+                        [&]()
                         {
-                                clear();
-                        }
-                });
+                                bool yes;
+                                if (dialog::message_question_default_no("Delete All?", &yes) && yes)
+                                {
+                                        clear();
+                                }
+                        });
         }
 }
 
@@ -496,7 +537,8 @@ void ModelTree::make_menu(const QPoint& pos)
         if (volume)
         {
                 std::visit(
-                        [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object) {
+                        [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
+                        {
                                 make_menu_for_object(menu.get(), object);
                         },
                         *volume);
@@ -504,7 +546,8 @@ void ModelTree::make_menu(const QPoint& pos)
         else if (mesh)
         {
                 std::visit(
-                        [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object) {
+                        [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
+                        {
                                 make_menu_for_object(menu.get(), object);
                         },
                         *mesh);

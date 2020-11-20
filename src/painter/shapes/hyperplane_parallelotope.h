@@ -86,7 +86,8 @@ public:
                 const override
         {
                 return [w = ShapeWrapperForIntersection(m_hyperplane_parallelotope)](
-                               const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>& p) {
+                               const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>& p)
+                {
                         return shape_intersection(w, p);
                 };
         }

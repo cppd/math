@@ -93,7 +93,12 @@ public:
                                 }
                                 else
                                 {
-                                        m_cv.wait(lock, [this, g] { return g != m_generation; });
+                                        m_cv.wait(
+                                                lock,
+                                                [this, g]
+                                                {
+                                                        return g != m_generation;
+                                                });
                                 }
                         }
                         catch (const std::exception& e)
@@ -239,8 +244,9 @@ public:
                         ASSERT(m_thread_id == std::this_thread::get_id());
                         try
                         {
-                                auto lambda = [&, thread_num = m_threads.size(),
-                                               f = std::forward<F>(function)]() noexcept {
+                                auto lambda =
+                                        [&, thread_num = m_threads.size(), f = std::forward<F>(function)]() noexcept
+                                {
                                         try
                                         {
                                                 try
@@ -304,7 +310,11 @@ inline void run_in_threads(const std::function<void(std::atomic_size_t&)>& funct
                 ThreadsWithCatch threads(thread_count);
                 for (unsigned i = 0; i < thread_count; ++i)
                 {
-                        threads.add([&]() { function(task); });
+                        threads.add(
+                                [&]()
+                                {
+                                        function(task);
+                                });
                 }
                 threads.join();
         }

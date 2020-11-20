@@ -32,6 +32,9 @@ std::function<void(ProgressRatioList*)> action_self_test(test::SelfTestType test
                 }
         }
 
-        return [=](ProgressRatioList* progress_list) { test::self_test(test_type, progress_list); };
+        return [=](ProgressRatioList* progress_list)
+        {
+                test::self_test(test_type, progress_list);
+        };
 }
 }

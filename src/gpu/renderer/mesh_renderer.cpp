@@ -33,7 +33,11 @@ void find_opaque_and_transparent(
         std::vector<const MeshObject*>* transparent_meshes)
 {
         const unsigned transparent_count = std::count_if(
-                meshes.cbegin(), meshes.cend(), [](const MeshObject* mesh) { return mesh->transparent(); });
+                meshes.cbegin(), meshes.cend(),
+                [](const MeshObject* mesh)
+                {
+                        return mesh->transparent();
+                });
 
         opaque_meshes->clear();
         opaque_meshes->reserve(meshes.size() - transparent_count);
@@ -294,13 +298,15 @@ void MeshRenderer::draw_commands(
                         CommonMemory::set_number(), 1 /*set count*/, &m_triangles_common_memory.descriptor_set(), 0,
                         nullptr);
 
-                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
+                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
+                {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_program.pipeline_layout(),
                                 MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
-                auto bind_descriptor_set_material = [&](VkDescriptorSet descriptor_set) {
+                auto bind_descriptor_set_material = [&](VkDescriptorSet descriptor_set)
+                {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_program.pipeline_layout(),
                                 TrianglesMaterialMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
@@ -323,7 +329,8 @@ void MeshRenderer::draw_commands(
                         CommonMemory::set_number(), 1 /*set count*/, &m_triangles_depth_common_memory.descriptor_set(),
                         0, nullptr);
 
-                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
+                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
+                {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 m_triangles_depth_program.pipeline_layout(), MeshMemory::set_number(), 1 /*set count*/,
@@ -348,7 +355,8 @@ void MeshRenderer::draw_commands(
                         CommonMemory::set_number(), 1 /*set count*/, &m_points_common_memory.descriptor_set(), 0,
                         nullptr);
 
-                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
+                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
+                {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_program.pipeline_layout(),
                                 MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
@@ -372,7 +380,8 @@ void MeshRenderer::draw_commands(
                         CommonMemory::set_number(), 1 /*set count*/, &m_points_common_memory.descriptor_set(), 0,
                         nullptr);
 
-                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
+                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
+                {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_program.pipeline_layout(),
                                 MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
@@ -396,7 +405,8 @@ void MeshRenderer::draw_commands(
                         CommonMemory::set_number(), 1 /*set count*/, &m_triangle_lines_common_memory.descriptor_set(),
                         0, nullptr);
 
-                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
+                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
+                {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 m_triangle_lines_program.pipeline_layout(), MeshMemory::set_number(), 1 /*set count*/,
@@ -421,7 +431,8 @@ void MeshRenderer::draw_commands(
                         CommonMemory::set_number(), 1 /*set count*/, &m_normals_common_memory.descriptor_set(), 0,
                         nullptr);
 
-                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set) {
+                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
+                {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_normals_program.pipeline_layout(),
                                 MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
@@ -475,7 +486,8 @@ void MeshRenderer::create_render_command_buffers(
 
         info.before_render_pass_commands =
                 !transparent_meshes.empty() ? before_transparency_render_pass_commands : nullptr;
-        info.render_pass_commands = [&](VkCommandBuffer command_buffer) {
+        info.render_pass_commands = [&](VkCommandBuffer command_buffer)
+        {
                 if (!opaque_meshes.empty())
                 {
                         draw_commands(
@@ -496,7 +508,8 @@ void MeshRenderer::create_render_command_buffers(
         if (!transparent_meshes.empty())
         {
                 info.before_render_pass_commands = nullptr;
-                info.render_pass_commands = [&](VkCommandBuffer command_buffer) {
+                info.render_pass_commands = [&](VkCommandBuffer command_buffer)
+                {
                         draw_commands(
                                 transparent_meshes, command_buffer, clip_plane, normals, false /*depth*/,
                                 false /*transparent_pipeline*/);
@@ -543,7 +556,8 @@ void MeshRenderer::create_depth_command_buffers(
         info.framebuffers = &m_depth_buffers->framebuffers();
         info.command_pool = graphics_command_pool;
         info.clear_values = &m_depth_buffers->clear_values();
-        info.render_pass_commands = [&](VkCommandBuffer command_buffer) {
+        info.render_pass_commands = [&](VkCommandBuffer command_buffer)
+        {
                 draw_commands(
                         meshes, command_buffer, clip_plane, normals, true /*depth*/, false /*transparent_pipeline*/);
         };

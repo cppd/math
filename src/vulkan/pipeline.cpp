@@ -233,7 +233,8 @@ Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
         ASSERT(!info.constants.has_value()
                || std::all_of(
                        info.constants.value()->entries().cbegin(), info.constants.value()->entries().cend(),
-                       [&](const VkSpecializationMapEntry& entry) {
+                       [&](const VkSpecializationMapEntry& entry)
+                       {
                                return entry.offset + entry.size <= info.constants.value()->size();
                        }));
 

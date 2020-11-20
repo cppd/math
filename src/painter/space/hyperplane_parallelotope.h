@@ -196,7 +196,8 @@ std::array<Vector<N, T>, HyperplaneParallelotope<N, T>::VERTEX_COUNT> Hyperplane
         std::array<Vector<N, T>, VERTEX_COUNT> result;
 
         unsigned count = 0;
-        auto f = [&count, &result](const Vector<N, T>& p) {
+        auto f = [&count, &result](const Vector<N, T>& p)
+        {
                 ASSERT(count < result.size());
                 result[count++] = p;
         };
@@ -238,7 +239,8 @@ std::array<std::array<Vector<N, T>, 2>, HyperplaneParallelotope<N, T>::VERTEX_RI
 
         unsigned count = 0;
         std::array<bool, N - 1> dimensions;
-        auto f = [this, &dimensions, &count, &result](const Vector<N, T>& p) {
+        auto f = [this, &dimensions, &count, &result](const Vector<N, T>& p)
+        {
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
                         if (dimensions[i])

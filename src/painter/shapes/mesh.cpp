@@ -139,19 +139,20 @@ void create_tree(
         }
 
         const auto facet_intersections =
-                [w = std::as_const(wrappers)](const TreeParallelotope& parallelotope, const std::vector<int>& indices) {
-                        ShapeWrapperForIntersection p(parallelotope);
-                        std::vector<int> intersections;
-                        intersections.reserve(indices.size());
-                        for (int object_index : indices)
+                [w = std::as_const(wrappers)](const TreeParallelotope& parallelotope, const std::vector<int>& indices)
+        {
+                ShapeWrapperForIntersection p(parallelotope);
+                std::vector<int> intersections;
+                intersections.reserve(indices.size());
+                for (int object_index : indices)
+                {
+                        if (shape_intersection(p, w[object_index]))
                         {
-                                if (shape_intersection(p, w[object_index]))
-                                {
-                                        intersections.push_back(object_index);
-                                }
+                                intersections.push_back(object_index);
                         }
-                        return intersections;
-                };
+                }
+                return intersections;
+        };
 
         const unsigned thread_count = hardware_concurrency();
 
@@ -344,7 +345,8 @@ std::optional<Intersection<N, T>> Mesh<N, T>::intersect(const Ray<N, T>& ray, T 
         std::optional<Intersection<N, T>> intersection;
 
         // Пересечение луча с набором граней ячейки дерева
-        auto f = [&](const std::vector<int>& facet_indices) -> std::optional<Vector<N, T>> {
+        auto f = [&](const std::vector<int>& facet_indices) -> std::optional<Vector<N, T>>
+        {
                 intersection = ray_intersection(m_facets, facet_indices, ray);
                 if (intersection)
                 {
@@ -402,7 +404,8 @@ std::function<bool(const ShapeWrapperForIntersection<painter::ParallelotopeAA<N,
         intersection_function() const
 {
         return [w = ShapeWrapperForIntersection(m_tree.root())](
-                       const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>& p) {
+                       const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>& p)
+        {
                 return shape_intersection(w, p);
         };
 }

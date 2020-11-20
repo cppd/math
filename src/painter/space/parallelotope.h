@@ -402,7 +402,8 @@ std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N,
         Vector<N, T> d1;
         Vector<N, T> d2;
         unsigned count = 0;
-        auto f = [&count, &result, &d1, &d2](const Vector<N, T>& org) {
+        auto f = [&count, &result, &d1, &d2](const Vector<N, T>& org)
+        {
                 ASSERT(count < result.size());
                 result[count].m_org = org;
                 for (unsigned i = 0; i < N; ++i)
@@ -441,7 +442,8 @@ std::array<Vector<N, T>, Parallelotope<N, T>::VERTEX_COUNT> Parallelotope<N, T>:
         std::array<Vector<N, T>, VERTEX_COUNT> result;
 
         unsigned count = 0;
-        auto f = [&count, &result](const Vector<N, T>& p) {
+        auto f = [&count, &result](const Vector<N, T>& p)
+        {
                 ASSERT(count < result.size());
                 result[count++] = p;
         };
@@ -479,7 +481,8 @@ std::array<std::array<Vector<N, T>, 2>, Parallelotope<N, T>::VERTEX_RIDGE_COUNT>
 
         unsigned count = 0;
         std::array<bool, N> dimensions;
-        auto f = [this, &dimensions, &count, &result](const Vector<N, T>& p) {
+        auto f = [this, &dimensions, &count, &result](const Vector<N, T>& p)
+        {
                 for (unsigned i = 0; i < N; ++i)
                 {
                         if (dimensions[i])
@@ -524,7 +527,8 @@ T Parallelotope<N, T>::length() const
 
         unsigned count = 0;
 
-        auto f = [&max_squared, &count](const Vector<N, T>& d) {
+        auto f = [&max_squared, &count](const Vector<N, T>& d)
+        {
                 ++count;
                 max_squared = std::max(max_squared, d.norm_squared());
         };

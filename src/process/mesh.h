@@ -243,18 +243,29 @@ void manifold_constructor(
         {
                 if (build_cocone)
                 {
-                        threads.add([&]() { cocone(progress_list, id, *manifold_constructor, matrix); });
+                        threads.add(
+                                [&]()
+                                {
+                                        cocone(progress_list, id, *manifold_constructor, matrix);
+                                });
                 }
 
                 if (build_bound_cocone)
                 {
                         threads.add(
-                                [&]() { bound_cocone(progress_list, id, *manifold_constructor, matrix, rho, alpha); });
+                                [&]()
+                                {
+                                        bound_cocone(progress_list, id, *manifold_constructor, matrix, rho, alpha);
+                                });
                 }
 
                 if (build_mst)
                 {
-                        threads.add([&]() { mst(progress_list, id, *manifold_constructor, matrix); });
+                        threads.add(
+                                [&]()
+                                {
+                                        mst(progress_list, id, *manifold_constructor, matrix);
+                                });
                 }
         }
         catch (...)
@@ -284,29 +295,34 @@ void compute(
         {
                 if (build_convex_hull)
                 {
-                        threads.add([&]() {
-                                mesh::Reading reading(mesh_object);
-                                impl::convex_hull(progress_list, reading);
-                        });
+                        threads.add(
+                                [&]()
+                                {
+                                        mesh::Reading reading(mesh_object);
+                                        impl::convex_hull(progress_list, reading);
+                                });
                 }
 
                 if (build_cocone || build_bound_cocone || build_mst)
                 {
-                        threads.add([&]() {
-                                std::optional<Matrix<N + 1, N + 1, double>> matrix;
-                                std::optional<ObjectId> id;
-                                std::vector<Vector<N, float>> points;
+                        threads.add(
+                                [&]()
                                 {
-                                        mesh::Reading reading(mesh_object);
-                                        points = !reading.mesh().facets.empty() ? unique_facet_vertices(reading.mesh())
-                                                                                : unique_point_vertices(reading.mesh());
-                                        matrix = reading.matrix();
-                                        id = reading.id();
-                                }
-                                impl::manifold_constructor(
-                                        progress_list, build_cocone, build_bound_cocone, build_mst, *matrix, *id,
-                                        points, rho, alpha);
-                        });
+                                        std::optional<Matrix<N + 1, N + 1, double>> matrix;
+                                        std::optional<ObjectId> id;
+                                        std::vector<Vector<N, float>> points;
+                                        {
+                                                mesh::Reading reading(mesh_object);
+                                                points = !reading.mesh().facets.empty()
+                                                                 ? unique_facet_vertices(reading.mesh())
+                                                                 : unique_point_vertices(reading.mesh());
+                                                matrix = reading.matrix();
+                                                id = reading.id();
+                                        }
+                                        impl::manifold_constructor(
+                                                progress_list, build_cocone, build_bound_cocone, build_mst, *matrix,
+                                                *id, points, rho, alpha);
+                                });
                 }
         }
         catch (...)

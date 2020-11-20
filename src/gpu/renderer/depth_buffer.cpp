@@ -97,28 +97,40 @@ vulkan::RenderPass create_render_pass_depth(VkDevice device, VkFormat depth_form
 
 void check_buffers(const std::vector<vulkan::DepthImageWithMemory>& depth)
 {
-        ASSERT(std::all_of(depth.cbegin(), depth.cend(), [](const vulkan::DepthImageWithMemory& d) {
-                return d.usage() & VK_IMAGE_USAGE_SAMPLED_BIT;
-        }));
-        ASSERT(std::all_of(depth.cbegin(), depth.cend(), [](const vulkan::DepthImageWithMemory& d) {
-                return d.sample_count() == SAMPLE_COUNT;
-        }));
+        ASSERT(std::all_of(
+                depth.cbegin(), depth.cend(),
+                [](const vulkan::DepthImageWithMemory& d)
+                {
+                        return d.usage() & VK_IMAGE_USAGE_SAMPLED_BIT;
+                }));
+        ASSERT(std::all_of(
+                depth.cbegin(), depth.cend(),
+                [](const vulkan::DepthImageWithMemory& d)
+                {
+                        return d.sample_count() == SAMPLE_COUNT;
+                }));
 
         if (depth.empty())
         {
                 error("No depth attachment");
         }
 
-        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthImageWithMemory& d) {
-                    return d.format() == depth[0].format();
-            }))
+        if (!std::all_of(
+                    depth.cbegin(), depth.cend(),
+                    [&](const vulkan::DepthImageWithMemory& d)
+                    {
+                            return d.format() == depth[0].format();
+                    }))
         {
                 error("Depth attachments must have the same format");
         }
 
-        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthImageWithMemory& d) {
-                    return d.width() == depth[0].width() && d.height() == depth[0].height();
-            }))
+        if (!std::all_of(
+                    depth.cbegin(), depth.cend(),
+                    [&](const vulkan::DepthImageWithMemory& d)
+                    {
+                            return d.width() == depth[0].width() && d.height() == depth[0].height();
+                    }))
         {
                 error("Depth attachments must have the same size");
         }

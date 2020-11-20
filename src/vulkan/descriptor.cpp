@@ -73,12 +73,14 @@ VkWriteDescriptorSet create_write_descriptor_set(
         write.descriptorType = descriptor_set_layout_binding.descriptorType;
         write.descriptorCount = descriptor_set_layout_binding.descriptorCount;
 
-        auto buffer = [&](const VkDescriptorBufferInfo& info) {
+        auto buffer = [&](const VkDescriptorBufferInfo& info)
+        {
                 ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
                        || descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
                 write.pBufferInfo = &info;
         };
-        auto image = [&](const VkDescriptorImageInfo& info) {
+        auto image = [&](const VkDescriptorImageInfo& info)
+        {
                 ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
                        || descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
                 write.pImageInfo = &info;

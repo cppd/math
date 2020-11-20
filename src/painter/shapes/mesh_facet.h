@@ -159,10 +159,13 @@ public:
                         dots[i] = dot(m_normals[m_n[i]], m_normal);
                 }
 
-                if (!std::all_of(dots.cbegin(), dots.cend(), [](const T& d) {
-                            static_assert(LIMIT_COSINE > 0);
-                            return is_finite(d) && std::abs(d) >= LIMIT_COSINE;
-                    }))
+                if (!std::all_of(
+                            dots.cbegin(), dots.cend(),
+                            [](const T& d)
+                            {
+                                    static_assert(LIMIT_COSINE > 0);
+                                    return is_finite(d) && std::abs(d) >= LIMIT_COSINE;
+                            }))
                 {
                         // «Перпендикуляры» на вершинах совсем не перпендикуляры,
                         // поэтому симплекс считать плоским.

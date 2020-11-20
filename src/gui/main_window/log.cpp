@@ -70,16 +70,20 @@ public:
 }
 
 Log::Log(QPlainTextEdit* text_edit)
-        : m_text_edit(text_edit), m_messages_ptr(&m_messages[0]), m_observer([this](const LogEvent& event) {
-                  Srgb8 color = event_color(event.type);
-                  if (!(*m_messages_ptr).empty() && (*m_messages_ptr).back().color == color)
+        : m_text_edit(text_edit),
+          m_messages_ptr(&m_messages[0]),
+          m_observer(
+                  [this](const LogEvent& event)
                   {
-                          (*m_messages_ptr).back().text += '\n';
-                          (*m_messages_ptr).back().text += event.text;
-                          return;
-                  }
-                  (*m_messages_ptr).emplace_back(event.text, color);
-          })
+                          Srgb8 color = event_color(event.type);
+                          if (!(*m_messages_ptr).empty() && (*m_messages_ptr).back().color == color)
+                          {
+                                  (*m_messages_ptr).back().text += '\n';
+                                  (*m_messages_ptr).back().text += event.text;
+                                  return;
+                          }
+                          (*m_messages_ptr).emplace_back(event.text, color);
+                  })
 {
 }
 

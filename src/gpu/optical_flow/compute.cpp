@@ -68,7 +68,12 @@ void image_barrier(
 {
         ASSERT(!images.empty());
         ASSERT(command_buffer != VK_NULL_HANDLE);
-        ASSERT(std::all_of(images.cbegin(), images.cend(), [](VkImage image) { return image != VK_NULL_HANDLE; }));
+        ASSERT(std::all_of(
+                images.cbegin(), images.cend(),
+                [](VkImage image)
+                {
+                        return image != VK_NULL_HANDLE;
+                }));
 
         std::vector<VkImageMemoryBarrier> barriers(images.size());
 
@@ -286,7 +291,8 @@ class Impl final : public Compute
                 ASSERT(dy.size() == size);
 
                 ASSERT(flow_buffers.size() + 1 == size);
-                const auto flow_index = [&](size_t i) {
+                const auto flow_index = [&](size_t i)
+                {
                         ASSERT(i > 0 && i < size);
                         return i - 1; // буферы начинаются с уровня 1
                 };

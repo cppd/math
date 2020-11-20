@@ -431,10 +431,12 @@ public:
                 ThreadsWithCatch threads(thread_count);
                 for (unsigned i = 0; i < thread_count; ++i)
                 {
-                        threads.add([&]() {
-                                extend(max_depth, min_objects_per_box, max_box_count, &boxes_lock, &boxes, &jobs,
-                                       object_intersections, progress);
-                        });
+                        threads.add(
+                                [&]()
+                                {
+                                        extend(max_depth, min_objects_per_box, max_box_count, &boxes_lock, &boxes,
+                                               &jobs, object_intersections, progress);
+                                });
                 }
                 threads.join();
 

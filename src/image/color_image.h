@@ -41,7 +41,8 @@ class ColorImage
 {
         std::vector<Color> m_data;
 
-        std::array<int, N> m_size = []() {
+        std::array<int, N> m_size = []()
+        {
                 std::array<int, N> v;
                 v.fill(-1);
                 return v;
@@ -57,7 +58,12 @@ class ColorImage
 
         void resize(const std::array<int, N>& size)
         {
-                if (!std::all_of(size.cbegin(), size.cend(), [](int v) { return v > 0; }))
+                if (!std::all_of(
+                            size.cbegin(), size.cend(),
+                            [](int v)
+                            {
+                                    return v > 0;
+                            }))
                 {
                         error("Error image size " + to_string(size));
                 }

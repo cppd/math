@@ -44,97 +44,142 @@ void self_test_essential(ProgressRatios* progress_ratios)
         std::string s;
 
         s = "Self-Test, Complement";
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                numerical::test_complement(&progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        numerical::test_complement(&progress);
+                });
 
         s = "Self-Test, Eigen";
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                numerical::test_eigen(&progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        numerical::test_eigen(&progress);
+                });
 
         s = "Self-Test, Normal";
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                numerical::test_normal(&progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        numerical::test_normal(&progress);
+                });
 
         s = "Self-Test, Simplex";
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                numerical::test_simplex(&progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        numerical::test_simplex(&progress);
+                });
 
         s = "Self-Test, DFT in " + space_name_upper(2);
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                gpu::dft::test(&progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        gpu::dft::test(&progress);
+                });
 
         s = "Self-Test, Parallelotope in " + space_name_upper(2);
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                progress.set(0);
-                painter::test_parallelotope(2);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        progress.set(0);
+                        painter::test_parallelotope(2);
+                });
 
         s = "Self-Test, Parallelotope in " + space_name_upper(3);
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                progress.set(0);
-                painter::test_parallelotope(3);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        progress.set(0);
+                        painter::test_parallelotope(3);
+                });
 
         s = "Self-Test, Parallelotope in " + space_name_upper(4);
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                progress.set(0);
-                painter::test_parallelotope(4);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        progress.set(0);
+                        painter::test_parallelotope(4);
+                });
 
         s = "Self-Test, Mesh in " + space_name_upper(3);
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                painter::shapes::test_mesh(3, &progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        painter::shapes::test_mesh(3, &progress);
+                });
 
         s = "Self-Test, Mesh in " + space_name_upper(4);
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                painter::shapes::test_mesh(4, &progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        painter::shapes::test_mesh(4, &progress);
+                });
 
         s = "Self-Test, Convex Hull in " + space_name_upper(2);
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                geometry::test_convex_hull(2, &progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        geometry::test_convex_hull(2, &progress);
+                });
 
         s = "Self-Test, Convex Hull in " + space_name_upper(3);
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                geometry::test_convex_hull(3, &progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        geometry::test_convex_hull(3, &progress);
+                });
 
         s = "Self-Test, Convex Hull in " + space_name_upper(4);
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                geometry::test_convex_hull(4, &progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        geometry::test_convex_hull(4, &progress);
+                });
 
         s = "Self-Test, 1-Manifold Reconstruction in " + space_name_upper(2);
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                geometry::test_reconstruction(2, &progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        geometry::test_reconstruction(2, &progress);
+                });
 
         s = "Self-Test, 2-Manifold Reconstruction in " + space_name_upper(3);
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                geometry::test_reconstruction(3, &progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        geometry::test_reconstruction(3, &progress);
+                });
 }
 
 void self_test_extended(ProgressRatios* progress_ratios)
@@ -142,28 +187,40 @@ void self_test_extended(ProgressRatios* progress_ratios)
         std::string s;
 
         s = "Self-Test, Convex Hull in " + space_name_upper(5);
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                geometry::test_convex_hull(5, &progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        geometry::test_convex_hull(5, &progress);
+                });
 
         s = "Self-Test, Mesh in " + space_name_upper(5);
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                painter::shapes::test_mesh(5, &progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        painter::shapes::test_mesh(5, &progress);
+                });
 
         s = "Self-Test, Mesh in " + space_name_upper(6);
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                painter::shapes::test_mesh(6, &progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        painter::shapes::test_mesh(6, &progress);
+                });
 
         s = "Self-Test, 3-Manifold Reconstruction in " + space_name_upper(4);
-        catch_all(s, [&]() {
-                ProgressRatio progress(progress_ratios, s);
-                geometry::test_reconstruction(4, &progress);
-        });
+        catch_all(
+                s,
+                [&]()
+                {
+                        ProgressRatio progress(progress_ratios, s);
+                        geometry::test_reconstruction(4, &progress);
+                });
 }
 }
 
