@@ -206,16 +206,14 @@ void PainterWindow2d::init_interface(const std::string& name)
 
 void PainterWindow2d::make_sliders(const std::vector<int>& initial_slider_positions)
 {
-        const int slider_count = static_cast<int>(m_screen_size.size()) - 2;
+        const unsigned slider_count = static_cast<int>(m_screen_size.size()) - 2;
 
-        ASSERT(static_cast<int>(initial_slider_positions.size()) == slider_count);
+        ASSERT(initial_slider_positions.size() == slider_count);
 
         if (slider_count <= 0)
         {
                 return;
         }
-
-        m_dimension_sliders.resize(slider_count);
 
         QWidget* layout_widget = new QWidget(this);
         ui.main_widget->layout()->addWidget(layout_widget);
@@ -224,44 +222,39 @@ void PainterWindow2d::make_sliders(const std::vector<int>& initial_slider_positi
         layout_widget->setLayout(layout);
         layout->setContentsMargins(0, 0, 0, 0);
 
-        for (int i = 0; i < slider_count; ++i)
+        for (unsigned number = 0; number < slider_count; ++number)
         {
-                int dimension = i + 2;
-                int dimension_max_value = m_screen_size[dimension] - 1;
+                const int dimension = number + 2;
+                const int dimension_max_value = m_screen_size[dimension] - 1;
 
-                m_dimension_sliders[i].slider.setOrientation(Qt::Horizontal);
-                m_dimension_sliders[i].slider.setMinimum(0);
-                m_dimension_sliders[i].slider.setMaximum(dimension_max_value);
+                ASSERT(initial_slider_positions[number] >= 0
+                       && initial_slider_positions[number] <= dimension_max_value);
 
-                ASSERT(initial_slider_positions[i] >= 0 && initial_slider_positions[i] <= dimension_max_value);
-                m_dimension_sliders[i].slider.setValue(initial_slider_positions[i]);
+                QSlider* slider = new QSlider(layout_widget);
+                slider->setOrientation(Qt::Horizontal);
+                slider->setMinimum(0);
+                slider->setMaximum(dimension_max_value);
+                slider->setValue(initial_slider_positions[number]);
 
-                set_label_minimum_width_for_text(
-                        &m_dimension_sliders[i].label, to_string_digit_groups(dimension_max_value));
-                m_dimension_sliders[i].label.setText(to_string_digit_groups(initial_slider_positions[i]).c_str());
+                QLabel* label = new QLabel(layout_widget);
+                set_label_minimum_width_for_text(label, to_string_digit_groups(dimension_max_value));
+                label->setText(QString::fromStdString(to_string_digit_groups(initial_slider_positions[number])));
 
-                QLabel* label_d = new QLabel(QString("d[") + to_string(dimension + 1).c_str() + "]", layout_widget);
+                QString label_d_text = QString::fromStdString("d[" + to_string(dimension + 1) + "]");
+                QLabel* label_d = new QLabel(label_d_text, layout_widget);
                 QLabel* label_e = new QLabel("=", layout_widget);
 
-                layout->addWidget(label_d, i, 0);
-                layout->addWidget(label_e, i, 1);
-                layout->addWidget(&m_dimension_sliders[i].label, i, 2);
-                layout->addWidget(&m_dimension_sliders[i].slider, i, 3);
+                layout->addWidget(label_d, number, 0);
+                layout->addWidget(label_e, number, 1);
+                layout->addWidget(label, number, 2);
+                layout->addWidget(slider, number, 3);
 
-                connect(&m_dimension_sliders[i].slider, &QSlider::valueChanged, this,
-                        &PainterWindow2d::on_slider_changed);
-        }
-}
+                m_sliders.emplace(slider, Slider{.label = label, .number = number});
+                m_slider_positions.push_back(slider->value());
+                ASSERT(m_slider_positions.back() == initial_slider_positions[number]);
 
-std::vector<int> PainterWindow2d::slider_positions() const
-{
-        std::vector<int> positions;
-        positions.reserve(m_dimension_sliders.size());
-        for (const DimensionSlider& s : m_dimension_sliders)
-        {
-                positions.push_back(s.slider.value());
+                connect(slider, &QSlider::valueChanged, this, &PainterWindow2d::on_slider_changed);
         }
-        return positions;
 }
 
 void PainterWindow2d::showEvent(QShowEvent* /*event*/)
@@ -349,19 +342,15 @@ void PainterWindow2d::on_timer_timeout()
 
 void PainterWindow2d::on_slider_changed(int)
 {
-        ASSERT(qobject_cast<const QSlider*>(sender()));
+        const auto iter = m_sliders.find(qobject_cast<const QSlider*>(sender()));
+        ASSERT(iter != m_sliders.cend());
+        ASSERT(iter->second.number < m_slider_positions.size());
 
-        const QSlider* const slider = qobject_cast<const QSlider*>(sender());
-        for (DimensionSlider& dm : m_dimension_sliders)
-        {
-                if (&dm.slider == slider)
-                {
-                        set_text_and_minimum_width(&dm.label, to_string_digit_groups(dm.slider.value()));
-                        slider_positions_change_event(slider_positions());
-                        return;
-                }
-        }
-        error_fatal("Failed to find sender in sliders");
+        const int value = iter->first->value();
+        set_text_and_minimum_width(iter->second.label, to_string_digit_groups(value));
+        m_slider_positions[iter->second.number] = value;
+
+        slider_positions_change_event(m_slider_positions);
 }
 
 void PainterWindow2d::on_save()

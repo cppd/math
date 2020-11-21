@@ -25,10 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QLabel>
 #include <QSlider>
 #include <QTimer>
-#include <deque>
 #include <memory>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 namespace gui::painter_window_implementation
@@ -65,12 +65,13 @@ private:
         struct Counters;
         std::unique_ptr<Difference<Counters>> m_difference;
 
-        struct DimensionSlider
+        struct Slider
         {
-                QLabel label;
-                QSlider slider;
+                QLabel* label;
+                unsigned number;
         };
-        std::deque<DimensionSlider> m_dimension_sliders;
+        std::unordered_map<const QSlider*, Slider> m_sliders;
+        std::vector<int> m_slider_positions;
 
         QAction* m_show_threads = nullptr;
 
@@ -91,7 +92,6 @@ private:
         void init_interface(const std::string& name);
         void make_sliders(const std::vector<int>& initial_slider_positions);
 
-        std::vector<int> slider_positions() const;
         void update_points();
         void update_statistics();
         void adjust_window_size();
