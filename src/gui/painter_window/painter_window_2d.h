@@ -41,7 +41,7 @@ struct Statistics final
         double previous_pass_duration;
 };
 
-class PainterWindow2d : public QWidget
+class PainterWindow2d : public QMainWindow
 {
         Q_OBJECT
 
@@ -69,9 +69,17 @@ private:
         };
         std::deque<DimensionSlider> m_dimension_sliders;
 
+        QAction* m_show_threads = nullptr;
+
         void on_timer_timeout();
         void on_first_shown();
         void on_slider_changed(int);
+
+        void on_save();
+        void on_save_all_with_background();
+        void on_save_all_without_background();
+        void on_add_volume_with_background();
+        void on_add_volume_without_background();
 
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;
@@ -81,6 +89,7 @@ private:
         std::vector<int> slider_positions() const;
         void update_points();
         void update_statistics();
+        void adjust_window_size();
 
         virtual Statistics statistics() const = 0;
         virtual void slider_positions_change_event(const std::vector<int>& slider_positions) = 0;

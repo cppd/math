@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/settings/name.h>
 
 #include <QCloseEvent>
-#include <QMenuBar>
 #include <QPointer>
 #include <array>
 #include <cmath>
@@ -54,6 +53,18 @@ void set_text_and_minimum_width(QLabel* label, const std::string& text)
 {
         label->setText(text.c_str());
         label->setMinimumWidth(std::max(label->width(), label->fontMetrics().boundingRect(text.c_str()).width()));
+}
+
+std::string action_name(const QObject* action)
+{
+        ASSERT(qobject_cast<const QAction*>(action));
+
+        std::string s = qobject_cast<const QAction*>(action)->text().toStdString();
+        while (!s.empty() && s.back() == '.')
+        {
+                s.pop_back();
+        }
+        return s;
 }
 }
 
@@ -152,102 +163,49 @@ void PainterWindow2d::closeEvent(QCloseEvent* event)
 
 void PainterWindow2d::make_menu()
 {
-        QMenuBar* menu_bar = new QMenuBar(this);
-        ui.menu_layout->addWidget(menu_bar);
-
-        QMenu* main_menu = new QMenu("Actions", this);
-        menu_bar->addMenu(main_menu);
-
-        {
-                QAction* action = main_menu->addAction("Save...");
-                QObject::connect(
-                        action, &QAction::triggered, this,
-                        [this]()
-                        {
-                                catch_all(
-                                        "Saving image",
-                                        [this]()
-                                        {
-                                                save_to_file();
-                                        });
-                        });
-        }
-        if (m_screen_size.size() == 3)
-        {
-                QAction* action1 = main_menu->addAction("Save all...");
-                QObject::connect(
-                        action1, &QAction::triggered, this,
-                        [this]()
-                        {
-                                catch_all(
-                                        "Saving all images",
-                                        [this]()
-                                        {
-                                                save_all_to_files(false);
-                                        });
-                        });
-
-                QAction* action2 = main_menu->addAction("Save all without background...");
-                QObject::connect(
-                        action2, &QAction::triggered, this,
-                        [this]()
-                        {
-                                catch_all(
-                                        "Saving all images without background",
-                                        [this]()
-                                        {
-                                                save_all_to_files(true);
-                                        });
-                        });
-        }
+        QObject::connect(ui.menu_actions->addAction("Save..."), &QAction::triggered, this, &PainterWindow2d::on_save);
 
         if (m_screen_size.size() == 3)
         {
-                main_menu->addSeparator();
-
-                QAction* action1 = main_menu->addAction("Add volume");
                 QObject::connect(
-                        action1, &QAction::triggered, this,
-                        [this]()
-                        {
-                                catch_all(
-                                        "Adding volume",
-                                        [this]()
-                                        {
-                                                add_volume(false);
-                                        });
-                        });
+                        ui.menu_actions->addAction("Save all..."), &QAction::triggered, this,
+                        &PainterWindow2d::on_save_all_with_background);
 
-                QAction* action2 = main_menu->addAction("Add volume without background");
                 QObject::connect(
-                        action2, &QAction::triggered, this,
-                        [this]()
-                        {
-                                catch_all(
-                                        "Adding volume without background",
-                                        [this]()
-                                        {
-                                                add_volume(true);
-                                        });
-                        });
+                        ui.menu_actions->addAction("Save all without background..."), &QAction::triggered, this,
+                        &PainterWindow2d::on_save_all_without_background);
+
+                ui.menu_actions->addSeparator();
+
+                QObject::connect(
+                        ui.menu_actions->addAction("Add volume"), &QAction::triggered, this,
+                        &PainterWindow2d::on_add_volume_with_background);
+
+                QObject::connect(
+                        ui.menu_actions->addAction("Add volume without background"), &QAction::triggered, this,
+                        &PainterWindow2d::on_add_volume_without_background);
         }
 
-        {
-                main_menu->addSeparator();
+        ui.menu_actions->addSeparator();
 
-                QAction* action = main_menu->addAction("Close...");
-                QObject::connect(action, &QAction::triggered, this, &PainterWindow2d::close);
-        }
+        QObject::connect(ui.menu_actions->addAction("Close..."), &QAction::triggered, this, &PainterWindow2d::close);
+
+        //
+
+        m_show_threads = ui.menu_view->addAction("Show threads");
+        m_show_threads->setCheckable(true);
+        m_show_threads->setChecked(SHOW_THREADS);
+
+        //
+
+        QObject::connect(
+                ui.menu_window->addAction("Adjust size"), &QAction::triggered, this,
+                &PainterWindow2d::adjust_window_size);
 }
 
 void PainterWindow2d::init_interface(const std::vector<int>& initial_slider_positions)
 {
-        this->layout()->setContentsMargins(5, 5, 5, 5);
-        this->layout()->setSpacing(0);
-        ui.menu_layout->setContentsMargins(0, 0, 0, 3);
-        ui.menu_layout->setSpacing(0);
-        ui.main_layout->setContentsMargins(0, 0, 0, 0);
-        ui.main_layout->setSpacing(10);
+        ui.status_bar->setFixedHeight(ui.status_bar->height());
 
         ui.label_points->setText("");
         ui.label_points->resize(m_width, m_height);
@@ -259,8 +217,6 @@ void PainterWindow2d::init_interface(const std::vector<int>& initial_slider_posi
 
         ui.scrollAreaWidgetContents->layout()->setContentsMargins(0, 0, 0, 0);
         ui.scrollAreaWidgetContents->layout()->setSpacing(0);
-
-        ui.checkBox_show_threads->setChecked(SHOW_THREADS);
 
         const int slider_count = static_cast<int>(m_screen_size.size()) - 2;
 
@@ -274,7 +230,7 @@ void PainterWindow2d::init_interface(const std::vector<int>& initial_slider_posi
         m_dimension_sliders.resize(slider_count);
 
         QWidget* layout_widget = new QWidget(this);
-        ui.main_layout->addWidget(layout_widget);
+        ui.main_widget->layout()->addWidget(layout_widget);
 
         QGridLayout* layout = new QGridLayout(layout_widget);
         layout_widget->setLayout(layout);
@@ -321,10 +277,8 @@ std::vector<int> PainterWindow2d::slider_positions() const
         return positions;
 }
 
-void PainterWindow2d::showEvent(QShowEvent* e)
+void PainterWindow2d::showEvent(QShowEvent* /*event*/)
 {
-        QWidget::showEvent(e);
-
         if (!m_first_show)
         {
                 return;
@@ -336,15 +290,20 @@ void PainterWindow2d::showEvent(QShowEvent* e)
 
 void PainterWindow2d::on_first_shown()
 {
-        ui.scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        ui.scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-        resize(QSize(2 + m_width, 2 + m_height) + (geometry().size() - ui.scrollArea->size()));
-
-        ui.scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-        ui.scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        adjust_window_size();
 
         m_timer.start(UPDATE_INTERVAL_MILLISECONDS);
+}
+
+void PainterWindow2d::adjust_window_size()
+{
+        ui.scroll_area->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        ui.scroll_area->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+        resize(QSize(2 + m_width, 2 + m_height) + (geometry().size() - ui.scroll_area->size()));
+
+        ui.scroll_area->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        ui.scroll_area->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 }
 
 void PainterWindow2d::update_statistics()
@@ -380,7 +339,7 @@ void PainterWindow2d::update_points()
         quint32* const image_bits = reinterpret_cast<quint32*>(m_image.bits());
         const long long offset = pixels_offset();
         std::memcpy(image_bits, &pixels_bgra32()[offset], m_image_byte_count);
-        if (ui.checkBox_show_threads->isChecked())
+        if (m_show_threads->isChecked())
         {
                 for (long long index : busy_indices_2d())
                 {
@@ -403,10 +362,12 @@ void PainterWindow2d::on_timer_timeout()
 
 void PainterWindow2d::on_slider_changed(int)
 {
-        QObject* s = sender();
+        ASSERT(qobject_cast<const QSlider*>(sender()));
+
+        const QSlider* const slider = qobject_cast<const QSlider*>(sender());
         for (DimensionSlider& dm : m_dimension_sliders)
         {
-                if (&dm.slider == s)
+                if (&dm.slider == slider)
                 {
                         set_text_and_minimum_width(&dm.label, to_string_digit_groups(dm.slider.value()));
                         slider_positions_change_event(slider_positions());
@@ -414,5 +375,55 @@ void PainterWindow2d::on_slider_changed(int)
                 }
         }
         error_fatal("Failed to find sender in sliders");
+}
+
+void PainterWindow2d::on_save()
+{
+        catch_all(
+                action_name(sender()),
+                [this]()
+                {
+                        save_to_file();
+                });
+}
+
+void PainterWindow2d::on_save_all_with_background()
+{
+        catch_all(
+                action_name(sender()),
+                [this]()
+                {
+                        save_all_to_files(false);
+                });
+}
+
+void PainterWindow2d::on_save_all_without_background()
+{
+        catch_all(
+                action_name(sender()),
+                [this]()
+                {
+                        save_all_to_files(true);
+                });
+}
+
+void PainterWindow2d::on_add_volume_with_background()
+{
+        catch_all(
+                action_name(sender()),
+                [this]()
+                {
+                        add_volume(false);
+                });
+}
+
+void PainterWindow2d::on_add_volume_without_background()
+{
+        catch_all(
+                action_name(sender()),
+                [this]()
+                {
+                        add_volume(true);
+                });
 }
 }
