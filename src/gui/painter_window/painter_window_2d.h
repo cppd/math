@@ -49,7 +49,7 @@ protected:
         };
 
 private:
-        const std::thread::id m_window_thread_id = std::this_thread::get_id();
+        const std::thread::id m_thread_id = std::this_thread::get_id();
         bool m_first_show = true;
 
         Ui::PainterWindow ui;

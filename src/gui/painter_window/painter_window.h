@@ -237,6 +237,8 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
         // PainterWindow2d
         Statistics statistics() const override
         {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
                 const painter::Statistics sp = m_paintbrush.statistics();
                 Statistics s;
                 s.pass_number = sp.pass_number;
@@ -250,26 +252,36 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
 
         void slider_positions_change_event(const std::vector<int>& slider_positions) override
         {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
                 m_slice_offset = slice_offset_for_slider_positions(slider_positions);
         }
 
         const std::vector<std::uint_least32_t>& pixels_bgra32() const override
         {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
                 return m_pixels_bgra32;
         }
 
         long long pixels_offset() const override
         {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
                 return m_slice_offset;
         }
 
         const std::vector<long long>& busy_indices_2d() const override
         {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
                 return m_busy_indices_2d;
         }
 
         void save_to_file() const override
         {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
                 int width = m_screen_size[0];
                 int height = m_screen_size[1];
 
@@ -295,6 +307,8 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
 
         void save_all_to_files(bool without_background) const override
         {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
                 namespace fs = std::filesystem;
 
                 if (N_IMAGE != 3)
@@ -336,6 +350,8 @@ class PainterWindow final : public PainterWindow2d, public painter::PainterNotif
 
         void add_volume(bool without_background) const override
         {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
                 if (N_IMAGE != 3)
                 {
                         return;

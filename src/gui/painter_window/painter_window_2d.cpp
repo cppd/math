@@ -113,10 +113,15 @@ PainterWindow2d::PainterWindow2d(
         make_sliders(initial_slider_positions);
 }
 
-PainterWindow2d::~PainterWindow2d() = default;
+PainterWindow2d::~PainterWindow2d()
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+}
 
 void PainterWindow2d::closeEvent(QCloseEvent* event)
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         QPointer ptr(this);
         bool yes;
         if (!dialog::message_question_default_no("Do you want to close the painter window?", &yes) || ptr.isNull()
@@ -259,6 +264,8 @@ void PainterWindow2d::make_sliders(const std::vector<int>& initial_slider_positi
 
 void PainterWindow2d::showEvent(QShowEvent* /*event*/)
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         if (!m_first_show)
         {
                 return;
@@ -270,6 +277,8 @@ void PainterWindow2d::showEvent(QShowEvent* /*event*/)
 
 void PainterWindow2d::on_first_shown()
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         adjust_window_size();
 
         m_timer.start(UPDATE_INTERVAL_MILLISECONDS);
@@ -277,6 +286,8 @@ void PainterWindow2d::on_first_shown()
 
 void PainterWindow2d::adjust_window_size()
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         ui.scroll_area->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         ui.scroll_area->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
@@ -288,6 +299,8 @@ void PainterWindow2d::adjust_window_size()
 
 void PainterWindow2d::update_statistics()
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         Statistics statistics = this->statistics();
 
         auto [difference, duration] =
@@ -314,6 +327,8 @@ void PainterWindow2d::update_statistics()
 
 void PainterWindow2d::update_points()
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         static_assert(std::is_same_v<quint32, std::uint_least32_t>);
 
         quint32* const image_bits = reinterpret_cast<quint32*>(m_image.bits());
@@ -336,12 +351,16 @@ void PainterWindow2d::update_points()
 
 void PainterWindow2d::on_timer_timeout()
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         update_statistics();
         update_points();
 }
 
 void PainterWindow2d::on_slider_changed(int)
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         const auto iter = m_sliders.find(qobject_cast<const QSlider*>(sender()));
         ASSERT(iter != m_sliders.cend());
         ASSERT(iter->second.number < m_slider_positions.size());
@@ -355,6 +374,8 @@ void PainterWindow2d::on_slider_changed(int)
 
 void PainterWindow2d::on_save()
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         catch_all(
                 action_name(sender()),
                 [this]()
@@ -365,6 +386,8 @@ void PainterWindow2d::on_save()
 
 void PainterWindow2d::on_save_all_with_background()
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         catch_all(
                 action_name(sender()),
                 [this]()
@@ -375,6 +398,8 @@ void PainterWindow2d::on_save_all_with_background()
 
 void PainterWindow2d::on_save_all_without_background()
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         catch_all(
                 action_name(sender()),
                 [this]()
@@ -385,6 +410,8 @@ void PainterWindow2d::on_save_all_without_background()
 
 void PainterWindow2d::on_add_volume_with_background()
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         catch_all(
                 action_name(sender()),
                 [this]()
@@ -395,6 +422,8 @@ void PainterWindow2d::on_add_volume_with_background()
 
 void PainterWindow2d::on_add_volume_without_background()
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         catch_all(
                 action_name(sender()),
                 [this]()

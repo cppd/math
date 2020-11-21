@@ -25,15 +25,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace gui::painter_window_implementation
 {
 template <typename T>
-class Difference
+class Difference final
 {
-        struct Point
+        struct Point final
         {
                 T data;
                 TimePoint time;
 
                 template <typename V>
-                Point(V&& data, const TimePoint& time) : data(std::move(data)), time(time)
+                Point(V&& data, const TimePoint& time) : data(std::forward<V>(data)), time(time)
                 {
                 }
         };
@@ -46,7 +46,8 @@ public:
         {
         }
 
-        std::tuple<T, double> compute(const T& data)
+        template <typename V>
+        std::tuple<T, double> compute(V&& data)
         {
                 TimePoint now = time();
                 TimePoint front_time = now - m_interval;
@@ -56,7 +57,7 @@ public:
                         m_deque.pop_front();
                 }
 
-                m_deque.emplace_back(data, now);
+                m_deque.emplace_back(std::forward<V>(data), now);
 
                 return std::make_tuple(
                         m_deque.back().data - m_deque.front().data,
