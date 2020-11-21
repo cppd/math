@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "difference.h"
+
 #include "ui_painter_window_2d.h"
 
 #include <QImage>
@@ -31,19 +33,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui::painter_window_implementation
 {
-struct Statistics final
-{
-        long long pass_number;
-        double pass_progress;
-        long long pixel_count;
-        long long ray_count;
-        long long sample_count;
-        double previous_pass_duration;
-};
-
 class PainterWindow2d : public QMainWindow
 {
         Q_OBJECT
+
+protected:
+        struct Statistics final
+        {
+                long long pass_number;
+                double pass_progress;
+                long long pixel_count;
+                long long ray_count;
+                long long sample_count;
+                double previous_pass_duration;
+        };
 
 private:
         const std::thread::id m_window_thread_id = std::this_thread::get_id();
@@ -59,8 +62,8 @@ private:
         QImage m_image;
         QTimer m_timer;
 
-        class Difference;
-        std::unique_ptr<Difference> m_difference;
+        struct Counters;
+        std::unique_ptr<Difference<Counters>> m_difference;
 
         struct DimensionSlider
         {
@@ -85,7 +88,9 @@ private:
         void closeEvent(QCloseEvent* event) override;
 
         void make_menu();
-        void init_interface(const std::vector<int>& initial_slider_positions);
+        void init_interface(const std::string& name);
+        void make_sliders(const std::vector<int>& initial_slider_positions);
+
         std::vector<int> slider_positions() const;
         void update_points();
         void update_statistics();
@@ -103,8 +108,9 @@ private:
 public:
         PainterWindow2d(
                 const std::string& name,
-                std::vector<int>&& m_screen_size,
+                const std::vector<int>& m_screen_size,
                 const std::vector<int>& initial_slider_positions);
+
         ~PainterWindow2d() override;
 };
 }
