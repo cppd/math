@@ -104,7 +104,7 @@ int run_application(int argc, char** argv)
 
         LOG(command_line_description());
 
-        create_delete_on_close_window<MainWindow>()->show();
+        create_delete_on_close_window<gui::main_window::MainWindow>()->show();
 
         int r = Application::exec();
 

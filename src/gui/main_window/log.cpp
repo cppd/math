@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/support.h"
 
-namespace gui
+namespace gui::main_window
 {
 namespace
 {

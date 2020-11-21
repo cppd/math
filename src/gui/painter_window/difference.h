@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <deque>
 #include <tuple>
 
-namespace gui::painter_window_implementation
+namespace gui::painter_window
 {
 template <typename T>
 class Difference final

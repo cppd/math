@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <vector>
 
-namespace gui
+namespace gui::main_window
 {
 class VolumeWidget final : public QWidget
 {

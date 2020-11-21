@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace gui
+namespace gui::main_window
 {
 MeshWidget::MeshWidget(double maximum_specular_power, double maximum_model_lighting)
         : QWidget(nullptr),

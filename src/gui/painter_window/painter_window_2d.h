@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <vector>
 
-namespace gui::painter_window_implementation
+namespace gui::painter_window::painter_window_implementation
 {
 class PainterWindow2d : public QMainWindow
 {

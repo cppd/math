@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/process/painting.h>
 #include <src/process/testing.h>
 
-namespace gui
+namespace gui::main_window
 {
 namespace
 {

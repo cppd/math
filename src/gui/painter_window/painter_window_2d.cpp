@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstring>
 
-namespace gui::painter_window_implementation
+namespace gui::painter_window::painter_window_implementation
 {
 namespace
 {

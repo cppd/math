@@ -45,12 +45,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <vector>
 
-namespace gui
-{
-namespace painter_window_implementation
+namespace gui::painter_window
 {
 template <size_t N, typename T>
-class PainterWindow final : public PainterWindow2d, public painter::PainterNotifier<N - 1>
+class PainterWindow final : public painter_window_implementation::PainterWindow2d,
+                            public painter::PainterNotifier<N - 1>
 {
         static_assert(N >= 3);
 
@@ -446,7 +445,6 @@ public:
         PainterWindow& operator=(const PainterWindow&) = delete;
         PainterWindow& operator=(PainterWindow&&) = delete;
 };
-}
 
 template <size_t N, typename T>
 void create_painter_window(
@@ -456,11 +454,10 @@ void create_painter_window(
         bool smooth_normal,
         std::unique_ptr<const painter::Scene<N, T>>&& scene)
 {
-        namespace impl = painter_window_implementation;
         MainThread::run(
                 [=, scene = std::shared_ptr<const painter::Scene<N, T>>(std::move(scene))]()
                 {
-                        create_and_show_delete_on_close_window<impl::PainterWindow<N, T>>(
+                        create_and_show_delete_on_close_window<PainterWindow<N, T>>(
                                 name, thread_count, samples_per_pixel, smooth_normal, scene);
                 });
 }

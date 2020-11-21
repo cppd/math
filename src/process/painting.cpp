@@ -123,7 +123,8 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                 std::unique_ptr<const painter::Scene<N, T>> scene =
                         create_painter_scene(std::move(shape), scene_info, background_color, lighting_intensity);
 
-                gui::create_painter_window(name, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
+                gui::painter_window::create_painter_window(
+                        name, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
         };
 }
 }

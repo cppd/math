@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDesktopWidget>
 #include <QPointer>
 
-namespace gui
+namespace gui::main_window
 {
 namespace
 {
