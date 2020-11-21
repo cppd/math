@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "conversion.h"
+#include "image.h"
 #include "painter_window_2d.h"
 
 #include "../com/main_thread.h"
@@ -26,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dialogs/message.h"
 
 #include <src/color/conversion.h>
-#include <src/com/alg.h>
 #include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/global_index.h>
@@ -40,6 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <thread>
@@ -58,8 +59,6 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
         static constexpr unsigned char ALPHA_FOR_3D_IMAGE = 1;
 
         static constexpr int PANTBRUSH_WIDTH = 20;
-        static constexpr std::uint_least32_t COLOR_LIGHT = Srgb8(100, 150, 200).to_uint_bgr();
-        static constexpr std::uint_least32_t COLOR_DARK = Srgb8(0, 0, 0).to_uint_bgr();
 
         static constexpr size_t N_IMAGE = N - 1;
 
@@ -67,7 +66,6 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
         const std::shared_ptr<const painter::Scene<N, T>> m_scene;
         const GlobalIndex<N_IMAGE, long long> m_global_index;
         const std::array<int, N - 1> m_screen_size;
-        const long long m_pixel_count;
         long long m_slice_offset;
         std::vector<std::uint_least32_t> m_pixels_bgra32;
         painter::BarPaintbrush<N_IMAGE> m_paintbrush;
@@ -83,32 +81,6 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                 std::vector<Type> vector(Size);
                 std::copy(array.cbegin(), array.cend(), vector.begin());
                 return vector;
-        }
-
-        static std::vector<std::uint_least32_t> make_bgr_images(const std::array<int, N - 1>& screen_size)
-        {
-                int width = screen_size[0];
-                int height = screen_size[1];
-                int count = multiply_all<long long>(screen_size) / (width * height);
-
-                std::vector<std::uint_least32_t> images(width * height * count);
-
-                long long index = 0;
-                for (int i = 0; i < count; ++i)
-                {
-                        for (int y = 0; y < height; ++y)
-                        {
-                                for (int x = 0; x < width; ++x)
-                                {
-                                        images[index] = ((x + y) & 1) ? COLOR_LIGHT : COLOR_DARK;
-                                        ++index;
-                                }
-                        }
-                }
-
-                ASSERT(index == static_cast<long long>(images.size()));
-
-                return images;
         }
 
         static std::vector<int> initial_slider_positions()
@@ -200,7 +172,7 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                 const painter::Statistics sp = m_paintbrush.statistics();
                 Statistics s;
                 s.pass_number = sp.pass_number;
-                s.pass_progress = static_cast<double>(sp.pass_pixel_count) / m_pixel_count;
+                s.pass_progress = static_cast<double>(sp.pass_pixel_count) / m_pixels_bgra32.size();
                 s.pixel_count = sp.pixel_count;
                 s.ray_count = sp.ray_count;
                 s.sample_count = sp.sample_count;
@@ -414,9 +386,8 @@ public:
                   m_scene(scene),
                   m_global_index(m_scene->projector().screen_size()),
                   m_screen_size(m_scene->projector().screen_size()),
-                  m_pixel_count(multiply_all<long long>(m_screen_size)),
                   m_slice_offset(slice_offset_for_slider_positions(initial_slider_positions())),
-                  m_pixels_bgra32(make_bgr_images(m_scene->projector().screen_size())),
+                  m_pixels_bgra32(make_bgra32_images(m_scene->projector().screen_size())),
                   m_paintbrush(m_scene->projector().screen_size(), PANTBRUSH_WIDTH, -1),
                   m_busy_indices_2d(thread_count, -1)
         {
