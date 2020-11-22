@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/com/type/trait.h>
 #include <src/image/file.h>
+#include <src/image/flip.h>
 #include <src/utility/file/path.h>
 #include <src/utility/string/ascii.h>
 #include <src/utility/string/str.h>

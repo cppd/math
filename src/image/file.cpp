@@ -296,27 +296,4 @@ void load_image_from_file_rgba(const std::filesystem::path& file_name, Image<2>*
 
         image->color_format = ColorFormat::R8G8B8A8_SRGB;
 }
-
-void flip_image_vertically(Image<2>* image)
-{
-        size_t pixel_size = format_pixel_size_in_bytes(image->color_format);
-
-        size_t width = image->size[0];
-        size_t height = image->size[1];
-
-        if (image->pixels.size() != pixel_size * width * height)
-        {
-                error("Error image size");
-        }
-
-        size_t row_size = pixel_size * width;
-        size_t row_end = (height / 2) * row_size;
-        for (size_t row1 = 0, row2 = (height - 1) * row_size; row1 < row_end; row1 += row_size, row2 -= row_size)
-        {
-                for (size_t i = 0; i < row_size; ++i)
-                {
-                        std::swap(image->pixels[row1 + i], image->pixels[row2 + i]);
-                }
-        }
-}
 }

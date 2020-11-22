@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/global_index.h>
 #include <src/com/message.h>
 #include <src/image/file.h>
+#include <src/image/flip.h>
 #include <src/painter/paintbrushes/bar_paintbrush.h>
 #include <src/painter/painter.h>
 #include <src/process/load.h>
@@ -86,25 +87,6 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
         static std::vector<int> initial_slider_positions()
         {
                 return std::vector<int>(N_IMAGE - 2, 0);
-        }
-
-        static void flip_vertically_2d_images(std::vector<std::byte>* pixels, size_t width, size_t height)
-        {
-                size_t size_2d = width * height;
-                ASSERT(pixels->size() % size_2d == 0);
-                std::vector<std::byte> row(width);
-                for (size_t offset_2d = 0; offset_2d < pixels->size(); offset_2d += size_2d)
-                {
-                        size_t row_1 = offset_2d;
-                        size_t row_2 = offset_2d + width * (height - 1);
-                        size_t row_1_max = offset_2d + width * (height / 2);
-                        for (; row_1 < row_1_max; row_1 += width, row_2 -= width)
-                        {
-                                std::memcpy(row.data(), &(*pixels)[row_1], width);
-                                std::memcpy(&(*pixels)[row_1], &(*pixels)[row_2], width);
-                                std::memcpy(&(*pixels)[row_2], row.data(), width);
-                        }
-                }
         }
 
         static void set_alpha_brga32(std::vector<std::byte>* pixels, bool without_background, unsigned char alpha)
@@ -297,15 +279,14 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                 ASSERT(data_size(pixels_bgra32) == data_size(m_pixels_bgra32));
                 std::memcpy(pixels_bgra32.data(), m_pixels_bgra32.data(), data_size(pixels_bgra32));
 
-                flip_vertically_2d_images(
-                        &pixels_bgra32, sizeof(std::uint_least32_t) * m_screen_size[0], m_screen_size[1]);
-
                 set_alpha_brga32(&pixels_bgra32, without_background, ALPHA_FOR_3D_IMAGE);
 
                 image::Image<N_IMAGE> image;
                 image.size = m_screen_size;
                 image.color_format = image::ColorFormat::R8G8B8A8_SRGB;
                 image.pixels = format_conversion_from_bgra32(pixels_bgra32, image.color_format);
+
+                image::flip_image_vertically(&image);
 
                 process::load_from_volume_image<N_IMAGE>("Painter Volume", std::move(image));
         }
