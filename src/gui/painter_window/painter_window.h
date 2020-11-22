@@ -234,7 +234,7 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
 
                 namespace fs = std::filesystem;
 
-                if constexpr (N_IMAGE == 3)
+                if constexpr (N_IMAGE >= 3)
                 {
                         std::vector<std::byte> pixels_bgra(m_pixels_bgra.size());
                         std::memcpy(pixels_bgra.data(), m_pixels_bgra.data(), data_size(pixels_bgra));

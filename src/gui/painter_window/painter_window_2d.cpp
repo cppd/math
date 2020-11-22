@@ -152,7 +152,7 @@ void PainterWindow2d::make_menu()
                 ui.menu_actions->addAction("Save without background..."), &QAction::triggered, this,
                 &PainterWindow2d::on_save_without_background);
 
-        if (m_screen_size.size() == 3)
+        if (m_screen_size.size() >= 3)
         {
                 QObject::connect(
                         ui.menu_actions->addAction("Save all..."), &QAction::triggered, this,
