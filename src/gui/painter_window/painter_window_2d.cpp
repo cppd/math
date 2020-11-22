@@ -144,7 +144,13 @@ void PainterWindow2d::closeEvent(QCloseEvent* event)
 
 void PainterWindow2d::make_menu()
 {
-        QObject::connect(ui.menu_actions->addAction("Save..."), &QAction::triggered, this, &PainterWindow2d::on_save);
+        QObject::connect(
+                ui.menu_actions->addAction("Save..."), &QAction::triggered, this,
+                &PainterWindow2d::on_save_with_background);
+
+        QObject::connect(
+                ui.menu_actions->addAction("Save without background..."), &QAction::triggered, this,
+                &PainterWindow2d::on_save_without_background);
 
         if (m_screen_size.size() == 3)
         {
@@ -378,7 +384,7 @@ void PainterWindow2d::on_slider_changed(int)
         slider_positions_change_event(m_slider_positions);
 }
 
-void PainterWindow2d::on_save()
+void PainterWindow2d::on_save_with_background()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -386,7 +392,19 @@ void PainterWindow2d::on_save()
                 action_name(sender()),
                 [this]()
                 {
-                        save_to_file();
+                        save_to_file(false);
+                });
+}
+
+void PainterWindow2d::on_save_without_background()
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        catch_all(
+                action_name(sender()),
+                [this]()
+                {
+                        save_to_file(true);
                 });
 }
 

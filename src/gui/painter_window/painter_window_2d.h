@@ -80,7 +80,8 @@ private:
         void on_first_shown();
         void on_slider_changed(int);
 
-        void on_save();
+        void on_save_with_background();
+        void on_save_without_background();
         void on_save_all_with_background();
         void on_save_all_without_background();
         void on_add_volume_with_background();
@@ -101,7 +102,7 @@ private:
         virtual void slider_positions_change_event(const std::vector<int>& slider_positions) = 0;
         virtual std::span<const std::byte> pixels_bgra_2d() const = 0;
         virtual const std::vector<long long>& busy_indices_2d() const = 0;
-        virtual void save_to_file() const = 0;
+        virtual void save_to_file(bool without_background) const = 0;
         virtual void save_all_to_files(bool without_background) const = 0;
         virtual void add_volume(bool without_background) const = 0;
 

@@ -191,7 +191,7 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                 return m_busy_indices_2d;
         }
 
-        void save_to_file() const override
+        void save_to_file(bool without_background) const override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -212,11 +212,20 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                         return;
                 }
 
-                constexpr image::ColorFormat FORMAT = image::ColorFormat::R8G8B8_SRGB;
+                image::ColorFormat format;
+                if (without_background)
+                {
+                        correct_alpha_brga(&pixels_bgra, ALPHA_FOR_FILES);
+                        format = image::ColorFormat::R8G8B8A8_SRGB;
+                }
+                else
+                {
+                        format = image::ColorFormat::R8G8B8_SRGB;
+                }
 
                 image::save_image_to_file(
                         path_from_utf8(*file_name_string),
-                        image::ImageView<2>({width, height}, FORMAT, format_conversion_from_bgra(pixels_bgra, FORMAT)));
+                        image::ImageView<2>({width, height}, format, format_conversion_from_bgra(pixels_bgra, format)));
         }
 
         void save_all_to_files(bool without_background) const override
@@ -249,6 +258,7 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                         {
                                 format = image::ColorFormat::R8G8B8_SRGB;
                         }
+
                         image::save_image_to_files(
                                 path_from_utf8(*directory_string), SAVE_IMAGE_FILE_FORMAT,
                                 image::ImageView<N_IMAGE>(
