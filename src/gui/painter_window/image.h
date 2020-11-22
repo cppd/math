@@ -27,32 +27,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace gui::painter_window
 {
 template <size_t N>
-std::vector<std::uint_least32_t> make_bgra32_images(const std::array<int, N>& screen_size)
+std::vector<std::byte> make_bgra_image(const std::array<int, N>& screen_size)
 {
-        constexpr std::uint_least32_t COLOR_LIGHT = Srgb8(100, 150, 200).to_uint_bgr();
-        constexpr std::uint_least32_t COLOR_DARK = Srgb8(0, 0, 0).to_uint_bgr();
+        constexpr Srgb8 LIGHT = Srgb8(100, 150, 200);
+        constexpr Srgb8 DARK = Srgb8(0, 0, 0);
+
+        constexpr std::array<unsigned char, 4> LIGHT_BGR = {LIGHT.blue, LIGHT.green, LIGHT.red, 0};
+        constexpr std::array<unsigned char, 4> DARK_BGR = {DARK.blue, DARK.green, DARK.red, 0};
 
         const int count = multiply_all<long long>(screen_size)
                           / (static_cast<long long>(screen_size[0]) * static_cast<long long>(screen_size[1]));
 
-        std::vector<std::uint_least32_t> images(static_cast<long long>(count) * screen_size[0] * screen_size[1]);
+        std::vector<std::byte> image(4 * multiply_all<long long>(screen_size));
 
-        long long index = 0;
+        size_t index = 0;
         for (int i = 0; i < count; ++i)
         {
                 for (int y = 0; y < screen_size[1]; ++y)
                 {
                         for (int x = 0; x < screen_size[0]; ++x)
                         {
-                                images[index] = ((x + y) & 1) ? COLOR_LIGHT : COLOR_DARK;
-                                ++index;
+                                std::memcpy(&image[index], ((x + y) & 1) ? LIGHT_BGR.data() : DARK_BGR.data(), 4);
+                                index += 4;
                         }
                 }
         }
 
-        ASSERT(index == static_cast<long long>(images.size()));
+        ASSERT(index == image.size());
 
-        return images;
+        return image;
 }
 
 }

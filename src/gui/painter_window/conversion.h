@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui::painter_window
 {
-std::vector<std::byte> format_conversion_from_bgra32(
+std::vector<std::byte> format_conversion_from_bgra(
         const std::span<const std::byte>& pixels,
         image::ColorFormat to_format);
 }

@@ -56,21 +56,26 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
         static_assert(N >= 3);
 
         static constexpr const char* SAVE_IMAGE_FILE_FORMAT = "png";
-
-        static constexpr unsigned char ALPHA_FOR_3D_IMAGE = 1;
-
+        static constexpr unsigned char ALPHA_FOR_FILES = 255;
+        static constexpr unsigned char ALPHA_FOR_VOLUME = 1;
+        static constexpr unsigned char ALPHA_FOR_FULL_COVERAGE = 1;
         static constexpr int PANTBRUSH_WIDTH = 20;
-
         static constexpr size_t N_IMAGE = N - 1;
 
         const std::thread::id m_thread_id;
+
         const std::shared_ptr<const painter::Scene<N, T>> m_scene;
         const GlobalIndex<N_IMAGE, long long> m_global_index;
         const std::array<int, N - 1> m_screen_size;
+        const long long m_pixel_count;
+
+        const size_t m_slice_size;
         long long m_slice_offset;
-        std::vector<std::uint_least32_t> m_pixels_bgra32;
+
+        std::vector<std::byte> m_pixels_bgra;
         painter::BarPaintbrush<N_IMAGE> m_paintbrush;
         std::vector<long long> m_busy_indices_2d;
+
         std::atomic_bool m_stop;
         std::thread m_thread;
 
@@ -89,32 +94,35 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                 return std::vector<int>(N_IMAGE - 2, 0);
         }
 
-        static void set_alpha_brga32(std::vector<std::byte>* pixels, bool without_background, unsigned char alpha)
+        static void set_alpha_brga(std::vector<std::byte>* pixels, unsigned char alpha)
         {
-                constexpr size_t PIXEL_SIZE = sizeof(std::uint_least32_t);
-                ASSERT(pixels->size() % PIXEL_SIZE == 0);
-                for (size_t i = 0; i < pixels->size(); i += PIXEL_SIZE)
+                ASSERT(pixels->size() % 4 == 0);
+                ASSERT(alpha > 0);
+
+                for (auto iter = pixels->begin(); iter != pixels->end(); std::advance(iter, 4))
                 {
-                        std::uint_least32_t c;
-                        std::memcpy(&c, pixels->data() + i, PIXEL_SIZE);
-                        if (!without_background)
+                        std::memcpy(&(*(iter + 3)), &alpha, 1);
+                }
+        }
+
+        static void correct_alpha_brga(std::vector<std::byte>* pixels, unsigned char alpha)
+        {
+                ASSERT(pixels->size() % 4 == 0);
+                ASSERT(alpha > 0);
+
+                for (auto iter = pixels->begin(); iter != pixels->end(); std::advance(iter, 4))
+                {
+                        unsigned char a;
+                        std::memcpy(&a, &(*(iter + 3)), 1);
+                        if (a != 0)
                         {
-                                c &= 0xff'ff'ff;
-                                c |= (alpha << 24u);
+                                std::memcpy(&(*(iter + 3)), &alpha, 1);
                         }
                         else
                         {
-                                if (((c >> 24u) & 0xff) != 0)
-                                {
-                                        c &= 0xff'ff'ff;
-                                        c |= (alpha << 24u);
-                                }
-                                else
-                                {
-                                        c = 0;
-                                }
+                                std::array<unsigned char, 4> c{0, 0, 0, 0};
+                                std::memcpy(&(*iter), c.data(), 4);
                         }
-                        std::memcpy(pixels->data() + i, &c, PIXEL_SIZE);
                 }
         }
 
@@ -125,7 +133,7 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                 return m_global_index.compute(pixel);
         }
 
-        long long slice_offset_for_slider_positions(const std::vector<int>& slider_positions) const
+        long long pixel_index_for_slider_positions(const std::vector<int>& slider_positions) const
         {
                 ASSERT(slider_positions.size() + 2 == N_IMAGE);
 
@@ -154,7 +162,7 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                 const painter::Statistics sp = m_paintbrush.statistics();
                 Statistics s;
                 s.pass_number = sp.pass_number;
-                s.pass_progress = static_cast<double>(sp.pass_pixel_count) / m_pixels_bgra32.size();
+                s.pass_progress = static_cast<double>(sp.pass_pixel_count) / m_pixel_count;
                 s.pixel_count = sp.pixel_count;
                 s.ray_count = sp.ray_count;
                 s.sample_count = sp.sample_count;
@@ -166,21 +174,14 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_slice_offset = slice_offset_for_slider_positions(slider_positions);
+                m_slice_offset = 4 * pixel_index_for_slider_positions(slider_positions);
         }
 
-        const std::vector<std::uint_least32_t>& pixels_bgra32() const override
+        std::span<const std::byte> pixels_bgra_2d() const override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                return m_pixels_bgra32;
-        }
-
-        long long pixels_offset() const override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                return m_slice_offset;
+                return std::span(&m_pixels_bgra[m_slice_offset], m_slice_size);
         }
 
         const std::vector<long long>& busy_indices_2d() const override
@@ -197,8 +198,8 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                 int width = m_screen_size[0];
                 int height = m_screen_size[1];
 
-                std::vector<std::byte> pixels_bgra32(sizeof(std::uint_least32_t) * width * height);
-                std::memcpy(pixels_bgra32.data(), &m_pixels_bgra32[m_slice_offset], data_size(pixels_bgra32));
+                std::vector<std::byte> pixels_bgra(m_slice_size);
+                std::memcpy(pixels_bgra.data(), &m_pixels_bgra[m_slice_offset], data_size(pixels_bgra));
 
                 const std::string caption = "Save";
                 dialog::FileFilter filter;
@@ -215,8 +216,7 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
 
                 image::save_image_to_file(
                         path_from_utf8(*file_name_string),
-                        image::ImageView<2>(
-                                {width, height}, FORMAT, format_conversion_from_bgra32(pixels_bgra32, FORMAT)));
+                        image::ImageView<2>({width, height}, FORMAT, format_conversion_from_bgra(pixels_bgra, FORMAT)));
         }
 
         void save_all_to_files(bool without_background) const override
@@ -225,44 +225,34 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
 
                 namespace fs = std::filesystem;
 
-                if (N_IMAGE != 3)
+                if constexpr (N_IMAGE == 3)
                 {
-                        return;
-                }
+                        std::vector<std::byte> pixels_bgra(m_pixels_bgra.size());
+                        std::memcpy(pixels_bgra.data(), m_pixels_bgra.data(), data_size(pixels_bgra));
 
-                std::vector<std::byte> pixels_bgra32(sizeof(std::uint_least32_t) * m_pixels_bgra32.size());
-                ASSERT(data_size(pixels_bgra32) == data_size(m_pixels_bgra32));
-                std::memcpy(pixels_bgra32.data(), m_pixels_bgra32.data(), data_size(pixels_bgra32));
+                        const std::string caption = "Save All";
+                        const bool read_only = false;
+                        const std::optional<std::string> directory_string =
+                                dialog::select_directory(caption, read_only);
+                        if (!directory_string)
+                        {
+                                return;
+                        }
 
-                const std::string caption = "Save All";
-                const bool read_only = false;
-                const std::optional<std::string> directory_string = dialog::select_directory(caption, read_only);
-                if (!directory_string)
-                {
-                        return;
-                }
-
-                if (!without_background)
-                {
-                        constexpr image::ColorFormat FORMAT = image::ColorFormat::R8G8B8_SRGB;
-
+                        image::ColorFormat format;
+                        if (without_background)
+                        {
+                                correct_alpha_brga(&pixels_bgra, ALPHA_FOR_FILES);
+                                format = image::ColorFormat::R8G8B8A8_SRGB;
+                        }
+                        else
+                        {
+                                format = image::ColorFormat::R8G8B8_SRGB;
+                        }
                         image::save_image_to_files(
                                 path_from_utf8(*directory_string), SAVE_IMAGE_FILE_FORMAT,
-                                image::ImageView<3>(
-                                        {m_screen_size[0], m_screen_size[1], m_screen_size[2]}, FORMAT,
-                                        format_conversion_from_bgra32(pixels_bgra32, FORMAT)));
-                }
-                else
-                {
-                        set_alpha_brga32(&pixels_bgra32, true /*without_background*/, 255);
-
-                        constexpr image::ColorFormat FORMAT = image::ColorFormat::R8G8B8A8_SRGB;
-
-                        image::save_image_to_files(
-                                path_from_utf8(*directory_string), SAVE_IMAGE_FILE_FORMAT,
-                                image::ImageView<3>(
-                                        {m_screen_size[0], m_screen_size[1], m_screen_size[2]}, FORMAT,
-                                        format_conversion_from_bgra32(pixels_bgra32, FORMAT)));
+                                image::ImageView<N_IMAGE>(
+                                        m_screen_size, format, format_conversion_from_bgra(pixels_bgra, format)));
                 }
         }
 
@@ -270,21 +260,22 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                if (N_IMAGE != 3)
+                std::vector<std::byte> pixels_bgra(m_pixels_bgra.size());
+                std::memcpy(pixels_bgra.data(), m_pixels_bgra.data(), data_size(pixels_bgra));
+
+                if (without_background)
                 {
-                        return;
+                        correct_alpha_brga(&pixels_bgra, ALPHA_FOR_VOLUME);
                 }
-
-                std::vector<std::byte> pixels_bgra32(sizeof(std::uint_least32_t) * m_pixels_bgra32.size());
-                ASSERT(data_size(pixels_bgra32) == data_size(m_pixels_bgra32));
-                std::memcpy(pixels_bgra32.data(), m_pixels_bgra32.data(), data_size(pixels_bgra32));
-
-                set_alpha_brga32(&pixels_bgra32, without_background, ALPHA_FOR_3D_IMAGE);
+                else
+                {
+                        set_alpha_brga(&pixels_bgra, ALPHA_FOR_VOLUME);
+                }
 
                 image::Image<N_IMAGE> image;
                 image.size = m_screen_size;
                 image.color_format = image::ColorFormat::R8G8B8A8_SRGB;
-                image.pixels = format_conversion_from_bgra32(pixels_bgra32, image.color_format);
+                image.pixels = format_conversion_from_bgra(pixels_bgra, image.color_format);
 
                 image::flip_image_vertically(&image);
 
@@ -299,14 +290,10 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                 m_busy_indices_2d[thread_number] = y * m_screen_size[0] + x;
         }
 
-        void set_pixels_rgb(long long pixel_index, unsigned char r, unsigned char g, unsigned char b)
+        void set_pixel(long long pixel_index, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
         {
-                m_pixels_bgra32[pixel_index] = Srgb8(r, g, b).to_uint_bgr();
-        }
-
-        void set_pixels_rgba(long long pixel_index, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
-        {
-                m_pixels_bgra32[pixel_index] = Srgb8(r, g, b).to_uint_bgr() | (a << 24u);
+                const std::array<unsigned char, 4> c{b, g, r, a};
+                std::memcpy(&m_pixels_bgra[4 * pixel_index], c.data(), 4);
         }
 
         void painter_pixel_after(
@@ -323,14 +310,7 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                         unsigned char r = color_conversion::linear_float_to_srgb_uint8(color.red());
                         unsigned char g = color_conversion::linear_float_to_srgb_uint8(color.green());
                         unsigned char b = color_conversion::linear_float_to_srgb_uint8(color.blue());
-                        if (N_IMAGE != 3)
-                        {
-                                set_pixels_rgb(pixel_index(p), r, g, b);
-                        }
-                        else
-                        {
-                                set_pixels_rgba(pixel_index(p), r, g, b, ALPHA_FOR_3D_IMAGE);
-                        }
+                        set_pixel(pixel_index(p), r, g, b, ALPHA_FOR_FULL_COVERAGE);
                 }
                 else if (coverage <= 0)
                 {
@@ -338,7 +318,7 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                         unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
                         unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
                         unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
-                        set_pixels_rgb(pixel_index(p), r, g, b);
+                        set_pixel(pixel_index(p), r, g, b, 0);
                 }
                 else
                 {
@@ -346,7 +326,7 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                         unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
                         unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
                         unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
-                        set_pixels_rgb(pixel_index(p), r, g, b);
+                        set_pixel(pixel_index(p), r, g, b, 0);
                 }
         }
 
@@ -367,8 +347,10 @@ public:
                   m_scene(scene),
                   m_global_index(m_scene->projector().screen_size()),
                   m_screen_size(m_scene->projector().screen_size()),
-                  m_slice_offset(slice_offset_for_slider_positions(initial_slider_positions())),
-                  m_pixels_bgra32(make_bgra32_images(m_scene->projector().screen_size())),
+                  m_pixel_count(multiply_all<long long>(m_screen_size)),
+                  m_slice_size(4ull * m_screen_size[0] * m_screen_size[1]),
+                  m_slice_offset(4ull * pixel_index_for_slider_positions(initial_slider_positions())),
+                  m_pixels_bgra(make_bgra_image(m_scene->projector().screen_size())),
                   m_paintbrush(m_scene->projector().screen_size(), PANTBRUSH_WIDTH, -1),
                   m_busy_indices_2d(thread_count, -1)
         {

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../dialogs/message.h"
 
+#include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/exception.h>
 #include <src/com/print.h>
@@ -329,11 +330,15 @@ void PainterWindow2d::update_points()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        static_assert(std::is_same_v<quint32, std::uint_least32_t>);
+        static_assert(std::endian::native == std::endian::little);
+        static_assert(sizeof(quint32) == 4 * sizeof(std::byte));
 
+        const std::span<const std::byte> pixels = pixels_bgra_2d();
         quint32* const image_bits = reinterpret_cast<quint32*>(m_image.bits());
-        const long long offset = pixels_offset();
-        std::memcpy(image_bits, &pixels_bgra32()[offset], m_image_byte_count);
+
+        ASSERT(data_size(pixels) == static_cast<size_t>(m_image_byte_count));
+        std::memcpy(image_bits, pixels.data(), m_image_byte_count);
+
         if (m_show_threads->isChecked())
         {
                 for (long long index : busy_indices_2d())
@@ -345,6 +350,7 @@ void PainterWindow2d::update_points()
                         }
                 }
         }
+
         ui.label_points->setPixmap(QPixmap::fromImage(m_image));
         ui.label_points->update();
 }
