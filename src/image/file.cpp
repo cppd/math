@@ -19,16 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "conversion.h"
 
-#include <src/com/error.h>
-#include <src/utility/file/path.h>
 #include <src/utility/string/str.h>
 
 #include <QImage>
 #include <QImageWriter>
-#include <cmath>
 #include <cstring>
 #include <set>
-#include <sstream>
 
 namespace image
 {
@@ -233,7 +229,7 @@ void save_image_to_files(
 
         ASSERT(image_2d_bytes * image_count == image_view.pixels.size());
 
-        const int image_number_width = std::floor(std::log10(image_count)) + 1;
+        const int image_number_width = std::floor(std::log10(std::max(image_count - 1, 1))) + 1;
 
         std::ostringstream oss;
         oss << std::setfill('0');
@@ -248,7 +244,7 @@ void save_image_to_files(
                         {width, height}, image_view.color_format,
                         std::span(&image_view.pixels[offset], image_2d_bytes));
 
-                image::save_image_to_file(directory / oss.str(), image_view_2d);
+                image::save_image_to_file(directory / path_from_utf8(oss.str()), image_view_2d);
 
                 offset += image_2d_bytes;
         }
