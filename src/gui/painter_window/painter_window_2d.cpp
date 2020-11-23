@@ -139,6 +139,8 @@ void PainterWindow2d::closeEvent(QCloseEvent* event)
                 return;
         }
 
+        m_timer.stop();
+
         event->accept();
 }
 
@@ -273,6 +275,11 @@ void PainterWindow2d::make_sliders(const std::vector<int>& initial_slider_positi
         }
 }
 
+QStatusBar* PainterWindow2d::status_bar() const
+{
+        return ui.status_bar;
+}
+
 void PainterWindow2d::showEvent(QShowEvent* /*event*/)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -371,6 +378,7 @@ void PainterWindow2d::on_timer_timeout()
 
         update_statistics();
         update_points();
+        timer_event();
 }
 
 void PainterWindow2d::on_slider_changed(int)

@@ -49,6 +49,8 @@ protected:
                 double previous_pass_duration;
         };
 
+        QStatusBar* status_bar() const;
+
 private:
         const std::thread::id m_thread_id = std::this_thread::get_id();
         bool m_first_show = true;
@@ -94,9 +96,10 @@ private:
         void init_interface(const std::string& name);
         void make_sliders(const std::vector<int>& initial_slider_positions);
 
+        void adjust_window_size();
+
         void update_points();
         void update_statistics();
-        void adjust_window_size();
 
         virtual Statistics statistics() const = 0;
         virtual void slider_positions_change_event(const std::vector<int>& slider_positions) = 0;
@@ -105,6 +108,7 @@ private:
         virtual void save_to_file(bool without_background) const = 0;
         virtual void save_all_to_files(bool without_background) const = 0;
         virtual void add_volume(bool without_background) const = 0;
+        virtual void timer_event() = 0;
 
 public:
         PainterWindow2d(

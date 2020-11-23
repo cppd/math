@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/main_thread.h"
 #include "../com/support.h"
+#include "../com/threads.h"
 #include "../dialogs/file_dialog.h"
 #include "../dialogs/message.h"
 
@@ -78,6 +79,8 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
 
         std::atomic_bool m_stop;
         std::thread m_thread;
+
+        std::unique_ptr<WorkerThreads> m_worker_threads;
 
         //
 
@@ -155,6 +158,7 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
         }
 
         // PainterWindow2d
+
         Statistics statistics() const override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -195,37 +199,54 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                int width = m_screen_size[0];
-                int height = m_screen_size[1];
+                std::shared_ptr<std::vector<std::byte>> pixels_bgra =
+                        std::make_shared<std::vector<std::byte>>(m_slice_size);
 
-                std::vector<std::byte> pixels_bgra(m_slice_size);
-                std::memcpy(pixels_bgra.data(), &m_pixels_bgra[m_slice_offset], data_size(pixels_bgra));
+                std::memcpy(pixels_bgra->data(), &m_pixels_bgra[m_slice_offset], data_size(*pixels_bgra));
 
-                const std::string caption = "Save";
-                dialog::FileFilter filter;
-                filter.name = "Images";
-                filter.file_extensions = {SAVE_IMAGE_FILE_FORMAT};
-                const bool read_only = true;
-                const std::optional<std::string> file_name_string = dialog::save_file(caption, {filter}, read_only);
-                if (!file_name_string)
-                {
-                        return;
-                }
+                m_worker_threads->terminate_and_start(
+                        0, "Saving to file",
+                        [&]() -> std::function<void(ProgressRatioList*)>
+                        {
+                                const std::string caption = "Save";
+                                dialog::FileFilter filter;
+                                filter.name = "Images";
+                                filter.file_extensions = {SAVE_IMAGE_FILE_FORMAT};
+                                const bool read_only = true;
+                                std::optional<std::string> file_name_string =
+                                        dialog::save_file(caption, {filter}, read_only);
+                                if (!file_name_string)
+                                {
+                                        return nullptr;
+                                }
 
-                image::ColorFormat format;
-                if (without_background)
-                {
-                        correct_alpha_brga(&pixels_bgra, ALPHA_FOR_FILES);
-                        format = image::ColorFormat::R8G8B8A8_SRGB;
-                }
-                else
-                {
-                        format = image::ColorFormat::R8G8B8_SRGB;
-                }
+                                std::function<void(ProgressRatioList*)> f =
+                                        [pixels_bgra = std::move(pixels_bgra),
+                                         file_name_string = std::move(file_name_string), screen_size = m_screen_size,
+                                         without_background](ProgressRatioList* progress_list)
+                                {
+                                        ProgressRatio progress(progress_list, "Saving");
+                                        progress.set(0);
 
-                image::save_image_to_file(
-                        path_from_utf8(*file_name_string),
-                        image::ImageView<2>({width, height}, format, format_conversion_from_bgra(pixels_bgra, format)));
+                                        image::ColorFormat format;
+                                        if (without_background)
+                                        {
+                                                correct_alpha_brga(pixels_bgra.get(), ALPHA_FOR_FILES);
+                                                format = image::ColorFormat::R8G8B8A8_SRGB;
+                                        }
+                                        else
+                                        {
+                                                format = image::ColorFormat::R8G8B8_SRGB;
+                                        }
+
+                                        image::save_image_to_file(
+                                                path_from_utf8(*file_name_string),
+                                                image::ImageView<2>(
+                                                        {screen_size[0], screen_size[1]}, format,
+                                                        format_conversion_from_bgra(*pixels_bgra, format)));
+                                };
+                                return f;
+                        });
         }
 
         void save_all_to_files(bool without_background) const override
@@ -236,33 +257,50 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
 
                 if constexpr (N_IMAGE >= 3)
                 {
-                        std::vector<std::byte> pixels_bgra(m_pixels_bgra.size());
-                        std::memcpy(pixels_bgra.data(), m_pixels_bgra.data(), data_size(pixels_bgra));
+                        std::shared_ptr<std::vector<std::byte>> pixels_bgra =
+                                std::make_shared<std::vector<std::byte>>(m_pixels_bgra);
 
-                        const std::string caption = "Save All";
-                        const bool read_only = false;
-                        const std::optional<std::string> directory_string =
-                                dialog::select_directory(caption, read_only);
-                        if (!directory_string)
-                        {
-                                return;
-                        }
+                        m_worker_threads->terminate_and_start(
+                                0, "Saving all to files",
+                                [&]() -> std::function<void(ProgressRatioList*)>
+                                {
+                                        const std::string caption = "Save All";
+                                        const bool read_only = false;
+                                        std::optional<std::string> directory_string =
+                                                dialog::select_directory(caption, read_only);
+                                        if (!directory_string)
+                                        {
+                                                return nullptr;
+                                        }
 
-                        image::ColorFormat format;
-                        if (without_background)
-                        {
-                                correct_alpha_brga(&pixels_bgra, ALPHA_FOR_FILES);
-                                format = image::ColorFormat::R8G8B8A8_SRGB;
-                        }
-                        else
-                        {
-                                format = image::ColorFormat::R8G8B8_SRGB;
-                        }
+                                        std::function<void(ProgressRatioList*)> f =
+                                                [pixels_bgra = std::move(pixels_bgra),
+                                                 directory_string = std::move(directory_string),
+                                                 screen_size = m_screen_size,
+                                                 without_background](ProgressRatioList* progress_list)
+                                        {
+                                                ProgressRatio progress(progress_list, "Saving");
+                                                progress.set(0);
 
-                        image::save_image_to_files(
-                                path_from_utf8(*directory_string), SAVE_IMAGE_FILE_FORMAT,
-                                image::ImageView<N_IMAGE>(
-                                        m_screen_size, format, format_conversion_from_bgra(pixels_bgra, format)));
+                                                image::ColorFormat format;
+                                                if (without_background)
+                                                {
+                                                        correct_alpha_brga(pixels_bgra.get(), ALPHA_FOR_FILES);
+                                                        format = image::ColorFormat::R8G8B8A8_SRGB;
+                                                }
+                                                else
+                                                {
+                                                        format = image::ColorFormat::R8G8B8_SRGB;
+                                                }
+
+                                                image::save_image_to_files(
+                                                        path_from_utf8(*directory_string), SAVE_IMAGE_FILE_FORMAT,
+                                                        image::ImageView<N_IMAGE>(
+                                                                screen_size, format,
+                                                                format_conversion_from_bgra(*pixels_bgra, format)));
+                                        };
+                                        return f;
+                                });
                 }
         }
 
@@ -270,29 +308,49 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                std::vector<std::byte> pixels_bgra(m_pixels_bgra.size());
-                std::memcpy(pixels_bgra.data(), m_pixels_bgra.data(), data_size(pixels_bgra));
+                std::shared_ptr<std::vector<std::byte>> pixels_bgra =
+                        std::make_shared<std::vector<std::byte>>(m_pixels_bgra);
 
-                if (without_background)
-                {
-                        correct_alpha_brga(&pixels_bgra, ALPHA_FOR_VOLUME);
-                }
-                else
-                {
-                        set_alpha_brga(&pixels_bgra, ALPHA_FOR_VOLUME);
-                }
+                m_worker_threads->terminate_and_start(
+                        0, "Adding volume",
+                        [&]() -> std::function<void(ProgressRatioList*)>
+                        {
+                                std::function<void(ProgressRatioList*)> f =
+                                        [pixels_bgra = std::move(pixels_bgra), screen_size = m_screen_size,
+                                         without_background](ProgressRatioList* progress_list)
+                                {
+                                        ProgressRatio progress(progress_list, "Adding volume");
+                                        progress.set(0);
 
-                image::Image<N_IMAGE> image;
-                image.size = m_screen_size;
-                image.color_format = image::ColorFormat::R8G8B8A8_SRGB;
-                image.pixels = format_conversion_from_bgra(pixels_bgra, image.color_format);
+                                        if (without_background)
+                                        {
+                                                correct_alpha_brga(pixels_bgra.get(), ALPHA_FOR_VOLUME);
+                                        }
+                                        else
+                                        {
+                                                set_alpha_brga(pixels_bgra.get(), ALPHA_FOR_VOLUME);
+                                        }
 
-                image::flip_image_vertically(&image);
+                                        image::Image<N_IMAGE> image;
+                                        image.size = screen_size;
+                                        image.color_format = image::ColorFormat::R8G8B8A8_SRGB;
+                                        image.pixels = format_conversion_from_bgra(*pixels_bgra, image.color_format);
 
-                process::load_from_volume_image<N_IMAGE>("Painter Volume", std::move(image));
+                                        image::flip_image_vertically(&image);
+
+                                        process::load_from_volume_image<N_IMAGE>("Painter Volume", std::move(image));
+                                };
+                                return f;
+                        });
+        }
+
+        void timer_event() override
+        {
+                m_worker_threads->set_progresses();
         }
 
         // IPainterNotifier
+
         void painter_pixel_before(unsigned thread_number, const std::array<int_least16_t, N_IMAGE>& pixel) override
         {
                 long long x = pixel[0];
@@ -362,7 +420,8 @@ public:
                   m_slice_offset(4ull * pixel_index_for_slider_positions(initial_slider_positions())),
                   m_pixels_bgra(make_bgra_image(m_scene->projector().screen_size())),
                   m_paintbrush(m_scene->projector().screen_size(), PANTBRUSH_WIDTH, -1),
-                  m_busy_indices_2d(thread_count, -1)
+                  m_busy_indices_2d(thread_count, -1),
+                  m_worker_threads(create_worker_threads(1, 0, status_bar()))
         {
                 m_stop = false;
                 m_thread = std::thread(
@@ -376,6 +435,8 @@ public:
         ~PainterWindow() override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                m_worker_threads->terminate_all();
 
                 m_stop = true;
                 if (m_thread.joinable())
