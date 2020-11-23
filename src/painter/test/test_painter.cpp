@@ -112,11 +112,9 @@ public:
 
         void write_to_files() const
         {
-                static_assert(N == 3);
-
                 image::save_image_to_files(
                         m_directory, IMAGE_FILE_FORMAT,
-                        image::ImageView<3>(m_screen_size, image::ColorFormat::R8G8B8_SRGB, m_pixels));
+                        image::ImageView<N>(m_screen_size, image::ColorFormat::R8G8B8_SRGB, m_pixels));
         }
 };
 
