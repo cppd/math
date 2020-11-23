@@ -200,6 +200,8 @@ void PainterWindow2d::init_interface(const std::string& name)
         }
         this->setWindowTitle(QString::fromStdString(title));
 
+        ui.main_widget->layout()->setContentsMargins(5, 5, 5, 5);
+
         ui.status_bar->setFixedHeight(ui.status_bar->height());
 
         ui.label_points->setText("");
@@ -228,7 +230,9 @@ void PainterWindow2d::make_sliders(const std::vector<int>& initial_slider_positi
         }
 
         QWidget* layout_widget = new QWidget(this);
-        ui.main_widget->layout()->addWidget(layout_widget);
+
+        ASSERT(qobject_cast<QVBoxLayout*>(ui.main_widget->layout()));
+        qobject_cast<QVBoxLayout*>(ui.main_widget->layout())->insertWidget(1, layout_widget);
 
         QGridLayout* layout = new QGridLayout(layout_widget);
         layout_widget->setLayout(layout);
