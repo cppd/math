@@ -51,11 +51,11 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
         const std::shared_ptr<const painter::Scene<N, T>> m_scene;
-        const GlobalIndex<N_IMAGE, long long> m_global_index;
-        const std::array<int, N - 1> m_screen_size;
-        const long long m_pixel_count;
-
         painter::BarPaintbrush<N_IMAGE> m_paintbrush;
+        const GlobalIndex<N_IMAGE, long long> m_global_index;
+
+        const std::vector<int> m_screen_size;
+        const long long m_pixel_count;
         std::vector<long long> m_busy_indices_2d;
         Pixels m_pixels;
 
@@ -95,8 +95,7 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                 for (unsigned dimension = 2; dimension < N_IMAGE; ++dimension)
                 {
                         pixel[dimension] = slider_positions[dimension - 2];
-                        ASSERT(pixel[dimension] >= 0);
-                        ASSERT(pixel[dimension] < m_scene->projector().screen_size()[dimension]);
+                        ASSERT(pixel[dimension] >= 0 && pixel[dimension] < m_screen_size[dimension]);
                 }
                 return pixel_index(pixel);
         }
@@ -180,16 +179,16 @@ public:
                 const std::shared_ptr<const painter::Scene<N, T>>& scene)
                 : PainterWindow2d(name, array_to_vector(scene->projector().screen_size()), initial_slider_positions()),
                   m_scene(scene),
-                  m_global_index(m_scene->projector().screen_size()),
-                  m_screen_size(m_scene->projector().screen_size()),
-                  m_pixel_count(multiply_all<long long>(m_screen_size)),
                   m_paintbrush(m_scene->projector().screen_size(), PANTBRUSH_WIDTH, -1),
+                  m_global_index(m_scene->projector().screen_size()),
+                  m_screen_size(array_to_vector(m_scene->projector().screen_size())),
+                  m_pixel_count(multiply_all<long long>(m_screen_size)),
                   m_busy_indices_2d(thread_count, -1),
                   m_pixels(
-                          array_to_vector(m_screen_size),
+                          m_screen_size,
                           m_scene->background_color(),
                           pixel_index_for_sliders(initial_slider_positions())),
-                  m_actions(std::make_unique<Actions>(array_to_vector(m_screen_size), &m_pixels, menu(), status_bar()))
+                  m_actions(std::make_unique<Actions>(m_screen_size, &m_pixels, menu(), status_bar()))
         {
                 m_painting_stop = false;
                 m_painting_thread = std::thread(
