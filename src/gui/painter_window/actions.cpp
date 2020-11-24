@@ -272,6 +272,16 @@ std::function<void(ProgressRatioList*)> process_add_volume(
                         });
         };
 }
+
+std::string action_name(const QAction* action)
+{
+        std::string s = action->text().toStdString();
+        while (!s.empty() && s.back() == '.')
+        {
+                s.pop_back();
+        }
+        return s;
+}
 }
 
 Actions::Actions(
@@ -279,6 +289,7 @@ Actions::Actions(
         const std::vector<std::byte>* pixels_bgra,
         size_t slice_size,
         const long long* slice_offset,
+        QMenu* menu,
         QStatusBar* status_bar)
         : m_screen_size(std::move(screen_size)),
           m_pixels_bgra(pixels_bgra),
@@ -286,10 +297,72 @@ Actions::Actions(
           m_slice_offset(slice_offset),
           m_worker_threads(create_worker_threads(REQUIRED_THREAD_COUNT, PERMANENT_THREAD_ID, status_bar))
 {
+        {
+                QAction* action = menu->addAction("Save...");
+                m_connections.emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [this, name = action_name(action)]()
+                        {
+                                save_to_file(false, name);
+                        }));
+        }
+        {
+                QAction* action = menu->addAction("Save without background...");
+                m_connections.emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [this, name = action_name(action)]()
+                        {
+                                save_to_file(true, name);
+                        }));
+        }
+
+        if (m_screen_size.size() >= 3)
+        {
+                {
+                        QAction* action = menu->addAction("Save all...");
+                        m_connections.emplace_back(QObject::connect(
+                                action, &QAction::triggered,
+                                [this, name = action_name(action)]()
+                                {
+                                        save_all_to_files(false, name);
+                                }));
+                }
+                {
+                        QAction* action = menu->addAction("Save all without background...");
+                        m_connections.emplace_back(QObject::connect(
+                                action, &QAction::triggered,
+                                [this, name = action_name(action)]()
+                                {
+                                        save_all_to_files(true, name);
+                                }));
+                }
+
+                menu->addSeparator();
+
+                {
+                        QAction* action = menu->addAction("Add volume");
+                        m_connections.emplace_back(QObject::connect(
+                                action, &QAction::triggered,
+                                [this, name = action_name(action)]()
+                                {
+                                        add_volume(false, name);
+                                }));
+                }
+                {
+                        QAction* action = menu->addAction("Add volume without background");
+                        m_connections.emplace_back(QObject::connect(
+                                action, &QAction::triggered,
+                                [this, name = action_name(action)]()
+                                {
+                                        add_volume(true, name);
+                                }));
+                }
+        }
 }
 
 Actions::~Actions()
 {
+        m_connections.clear();
         m_worker_threads->terminate_all();
 }
 
@@ -298,38 +371,38 @@ void Actions::set_progresses()
         m_worker_threads->set_progresses();
 }
 
-void Actions::save_to_file(bool without_background) const
+void Actions::save_to_file(bool without_background, const std::string& name) const
 {
         const std::byte* begin = m_pixels_bgra->data() + *m_slice_offset;
         const std::byte* end = begin + m_slice_size;
         std::vector<std::byte> pixels(begin, end);
 
         m_worker_threads->terminate_and_start(
-                SAVE_THREAD_ID, "Saving to file",
+                SAVE_THREAD_ID, name,
                 [&]()
                 {
                         return process_save_to_file(m_screen_size, without_background, std::move(pixels));
                 });
 }
 
-void Actions::save_all_to_files(bool without_background) const
+void Actions::save_all_to_files(bool without_background, const std::string& name) const
 {
         std::vector<std::byte> pixels(*m_pixels_bgra);
 
         m_worker_threads->terminate_and_start(
-                SAVE_THREAD_ID, "Saving all to files",
+                SAVE_THREAD_ID, name,
                 [&]()
                 {
                         return process_save_all_to_files(m_screen_size, without_background, std::move(pixels));
                 });
 }
 
-void Actions::add_volume(bool without_background) const
+void Actions::add_volume(bool without_background, const std::string& name) const
 {
         std::vector<std::byte> pixels(*m_pixels_bgra);
 
         m_worker_threads->terminate_and_start(
-                ADD_THREAD_ID, "Adding volume",
+                ADD_THREAD_ID, name,
                 [&]()
                 {
                         return process_add_volume(m_screen_size, without_background, std::move(pixels));

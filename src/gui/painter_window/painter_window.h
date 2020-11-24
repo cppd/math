@@ -149,27 +149,6 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                 return m_busy_indices_2d;
         }
 
-        void save_to_file(bool without_background) const override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_actions->save_to_file(without_background);
-        }
-
-        void save_all_to_files(bool without_background) const override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_actions->save_all_to_files(without_background);
-        }
-
-        void add_volume(bool without_background) const override
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_actions->add_volume(without_background);
-        }
-
         void timer_event() override
         {
                 m_actions->set_progresses();
@@ -251,6 +230,7 @@ public:
                           &m_pixels_bgra,
                           m_slice_size,
                           &m_slice_offset,
+                          menu(),
                           status_bar()))
         {
                 m_paint_stop = false;

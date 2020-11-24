@@ -53,18 +53,6 @@ void set_text_and_minimum_width(QLabel* label, const std::string& text)
         label->setMinimumWidth(std::max(label->width(), label->fontMetrics().boundingRect(text.c_str()).width()));
 }
 
-std::string action_name(const QObject* action)
-{
-        ASSERT(qobject_cast<const QAction*>(action));
-
-        std::string s = qobject_cast<const QAction*>(action)->text().toStdString();
-        while (!s.empty() && s.back() == '.')
-        {
-                s.pop_back();
-        }
-        return s;
-}
-
 std::string progress_to_string(const char* prefix, double progress)
 {
         int percent = std::floor(progress * 100.0);
@@ -146,46 +134,9 @@ void PainterWindow2d::closeEvent(QCloseEvent* event)
 
 void PainterWindow2d::make_menu()
 {
-        QObject::connect(
-                ui.menu_actions->addAction("Save..."), &QAction::triggered, this,
-                &PainterWindow2d::on_save_with_background);
-
-        QObject::connect(
-                ui.menu_actions->addAction("Save without background..."), &QAction::triggered, this,
-                &PainterWindow2d::on_save_without_background);
-
-        if (m_screen_size.size() >= 3)
-        {
-                QObject::connect(
-                        ui.menu_actions->addAction("Save all..."), &QAction::triggered, this,
-                        &PainterWindow2d::on_save_all_with_background);
-
-                QObject::connect(
-                        ui.menu_actions->addAction("Save all without background..."), &QAction::triggered, this,
-                        &PainterWindow2d::on_save_all_without_background);
-
-                ui.menu_actions->addSeparator();
-
-                QObject::connect(
-                        ui.menu_actions->addAction("Add volume"), &QAction::triggered, this,
-                        &PainterWindow2d::on_add_volume_with_background);
-
-                QObject::connect(
-                        ui.menu_actions->addAction("Add volume without background"), &QAction::triggered, this,
-                        &PainterWindow2d::on_add_volume_without_background);
-        }
-
-        ui.menu_actions->addSeparator();
-
-        QObject::connect(ui.menu_actions->addAction("Close..."), &QAction::triggered, this, &PainterWindow2d::close);
-
-        //
-
         m_show_threads = ui.menu_view->addAction("Show threads");
         m_show_threads->setCheckable(true);
         m_show_threads->setChecked(SHOW_THREADS);
-
-        //
 
         QObject::connect(
                 ui.menu_window->addAction("Adjust size"), &QAction::triggered, this,
@@ -273,6 +224,11 @@ void PainterWindow2d::make_sliders(const std::vector<int>& initial_slider_positi
 
                 connect(slider, &QSlider::valueChanged, this, &PainterWindow2d::on_slider_changed);
         }
+}
+
+QMenu* PainterWindow2d::menu() const
+{
+        return ui.menu_actions;
 }
 
 QStatusBar* PainterWindow2d::status_bar() const
@@ -394,77 +350,5 @@ void PainterWindow2d::on_slider_changed(int)
         m_slider_positions[iter->second.number] = value;
 
         slider_positions_change_event(m_slider_positions);
-}
-
-void PainterWindow2d::on_save_with_background()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        catch_all(
-                action_name(sender()),
-                [this]()
-                {
-                        save_to_file(false);
-                });
-}
-
-void PainterWindow2d::on_save_without_background()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        catch_all(
-                action_name(sender()),
-                [this]()
-                {
-                        save_to_file(true);
-                });
-}
-
-void PainterWindow2d::on_save_all_with_background()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        catch_all(
-                action_name(sender()),
-                [this]()
-                {
-                        save_all_to_files(false);
-                });
-}
-
-void PainterWindow2d::on_save_all_without_background()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        catch_all(
-                action_name(sender()),
-                [this]()
-                {
-                        save_all_to_files(true);
-                });
-}
-
-void PainterWindow2d::on_add_volume_with_background()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        catch_all(
-                action_name(sender()),
-                [this]()
-                {
-                        add_volume(false);
-                });
-}
-
-void PainterWindow2d::on_add_volume_without_background()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        catch_all(
-                action_name(sender()),
-                [this]()
-                {
-                        add_volume(true);
-                });
 }
 }
