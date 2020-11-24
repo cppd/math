@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace gui::painter_window
 {
 template <size_t N>
-std::vector<std::byte> make_bgra_image(const std::array<int, N>& screen_size)
+std::vector<std::byte> make_initial_bgra_image(const std::array<int, N>& screen_size)
 {
         constexpr Srgb8 LIGHT = Srgb8(100, 150, 200);
         constexpr Srgb8 DARK = Srgb8(0, 0, 0);
@@ -57,5 +57,4 @@ std::vector<std::byte> make_bgra_image(const std::array<int, N>& screen_size)
 
         return image;
 }
-
 }

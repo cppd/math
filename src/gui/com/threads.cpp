@@ -336,7 +336,6 @@ public:
                 : m_permanent_thread_id(permanent_thread_id), m_status_bar(status_bar)
         {
                 ASSERT(thread_count > 0);
-                ASSERT(m_permanent_thread_id < thread_count);
 
                 m_threads.resize(thread_count);
 

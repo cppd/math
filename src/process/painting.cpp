@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painting.h"
 
+#include "dimension.h"
 #include "painter_scene.h"
 
 #include <src/com/log.h>
@@ -24,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gui/dialogs/painter_nd.h>
 #include <src/gui/painter_window/painter_window.h>
 #include <src/settings/painter.h>
+
+#include <set>
 
 namespace process
 {
