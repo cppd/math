@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "pixels.h"
+
 #include "../com/connection.h"
 #include "../com/threads.h"
 
@@ -30,13 +32,8 @@ namespace gui::painter_window
 class Actions final
 {
         std::vector<int> m_screen_size;
-
-        const std::vector<std::byte>* m_pixels_bgra;
-        size_t m_slice_size;
-        const long long* m_slice_offset;
-
+        const Pixels* m_pixels;
         std::unique_ptr<WorkerThreads> m_worker_threads;
-
         std::vector<Connection> m_connections;
 
         void save_to_file(bool without_background, const std::string& name) const;
@@ -44,12 +41,7 @@ class Actions final
         void add_volume(bool without_background, const std::string& name) const;
 
 public:
-        Actions(std::vector<int> screen_size,
-                const std::vector<std::byte>* pixels_bgra,
-                size_t slice_size,
-                const long long* slice_offset,
-                QMenu* menu,
-                QStatusBar* status_bar);
+        Actions(std::vector<int> screen_size, const Pixels* pixels, QMenu* menu, QStatusBar* status_bar);
 
         ~Actions();
 

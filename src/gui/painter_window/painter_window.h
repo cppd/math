@@ -18,28 +18,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "actions.h"
-#include "initial_image.h"
 #include "painter_window_2d.h"
+#include "pixels.h"
 
 #include "../com/main_thread.h"
 #include "../com/support.h"
 #include "../com/threads.h"
-#include "../dialogs/file_dialog.h"
-#include "../dialogs/message.h"
 
-#include <src/color/conversion.h>
 #include <src/com/error.h>
 #include <src/com/global_index.h>
 #include <src/com/message.h>
 #include <src/painter/paintbrushes/bar_paintbrush.h>
 #include <src/painter/painter.h>
 
-#include <algorithm>
 #include <array>
 #include <atomic>
-#include <cstring>
 #include <memory>
-#include <string>
 #include <thread>
 #include <vector>
 
@@ -51,7 +45,6 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
 {
         static_assert(N >= 3);
 
-        static constexpr unsigned char ALPHA_FOR_FULL_COVERAGE = 1;
         static constexpr int PANTBRUSH_WIDTH = 20;
         static constexpr size_t N_IMAGE = N - 1;
 
@@ -62,15 +55,12 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
         const std::array<int, N - 1> m_screen_size;
         const long long m_pixel_count;
 
-        std::vector<std::byte> m_pixels_bgra;
-        const size_t m_slice_size;
-        long long m_slice_offset;
-
         painter::BarPaintbrush<N_IMAGE> m_paintbrush;
         std::vector<long long> m_busy_indices_2d;
+        Pixels m_pixels;
 
-        std::atomic_bool m_paint_stop;
-        std::thread m_paint_thread;
+        std::atomic_bool m_painting_stop;
+        std::thread m_painting_thread;
 
         std::unique_ptr<Actions> m_actions;
 
@@ -96,7 +86,7 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                 return m_global_index.compute(pixel);
         }
 
-        long long pixel_index_for_slider_positions(const std::vector<int>& slider_positions) const
+        long long pixel_index_for_sliders(const std::vector<int>& slider_positions) const
         {
                 ASSERT(slider_positions.size() + 2 == N_IMAGE);
                 std::array<int_least16_t, N_IMAGE> pixel;
@@ -105,8 +95,8 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                 for (unsigned dimension = 2; dimension < N_IMAGE; ++dimension)
                 {
                         pixel[dimension] = slider_positions[dimension - 2];
-                        ASSERT(pixel[dimension] >= 0
-                               && pixel[dimension] < m_scene->projector().screen_size()[dimension]);
+                        ASSERT(pixel[dimension] >= 0);
+                        ASSERT(pixel[dimension] < m_scene->projector().screen_size()[dimension]);
                 }
                 return pixel_index(pixel);
         }
@@ -132,14 +122,14 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_slice_offset = 4 * pixel_index_for_slider_positions(slider_positions);
+                m_pixels.set_slice_offset(pixel_index_for_sliders(slider_positions));
         }
 
         std::span<const std::byte> pixels_bgra_2d() const override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                return std::span(&m_pixels_bgra[m_slice_offset], m_slice_size);
+                return m_pixels.slice();
         }
 
         const std::vector<long long>& busy_indices_2d() const override
@@ -151,6 +141,8 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
 
         void timer_event() override
         {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
                 m_actions->set_progresses();
         }
 
@@ -163,12 +155,6 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
                 m_busy_indices_2d[thread_number] = y * m_screen_size[0] + x;
         }
 
-        void set_pixel(long long pixel_index, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
-        {
-                const std::array<unsigned char, 4> c{b, g, r, a};
-                std::memcpy(&m_pixels_bgra[4 * pixel_index], c.data(), 4);
-        }
-
         void painter_pixel_after(
                 unsigned /*thread_number*/,
                 const std::array<int_least16_t, N_IMAGE>& pixel,
@@ -177,30 +163,7 @@ class PainterWindow final : public painter_window_implementation::PainterWindow2
         {
                 std::array<int_least16_t, N_IMAGE> p = pixel;
                 p[1] = m_screen_size[1] - 1 - pixel[1];
-
-                if (coverage >= 1)
-                {
-                        unsigned char r = color_conversion::linear_float_to_srgb_uint8(color.red());
-                        unsigned char g = color_conversion::linear_float_to_srgb_uint8(color.green());
-                        unsigned char b = color_conversion::linear_float_to_srgb_uint8(color.blue());
-                        set_pixel(pixel_index(p), r, g, b, ALPHA_FOR_FULL_COVERAGE);
-                }
-                else if (coverage <= 0)
-                {
-                        Color c = m_scene->background_color();
-                        unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
-                        unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
-                        unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
-                        set_pixel(pixel_index(p), r, g, b, 0);
-                }
-                else
-                {
-                        Color c = interpolation(m_scene->background_color(), color, coverage);
-                        unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
-                        unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
-                        unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
-                        set_pixel(pixel_index(p), r, g, b, 0);
-                }
+                m_pixels.set(pixel_index(p), color, coverage);
         }
 
         void painter_error_message(const std::string& msg) override
@@ -220,24 +183,19 @@ public:
                   m_global_index(m_scene->projector().screen_size()),
                   m_screen_size(m_scene->projector().screen_size()),
                   m_pixel_count(multiply_all<long long>(m_screen_size)),
-                  m_pixels_bgra(make_initial_bgra_image(m_scene->projector().screen_size())),
-                  m_slice_size(4ull * m_screen_size[0] * m_screen_size[1]),
-                  m_slice_offset(4ull * pixel_index_for_slider_positions(initial_slider_positions())),
                   m_paintbrush(m_scene->projector().screen_size(), PANTBRUSH_WIDTH, -1),
                   m_busy_indices_2d(thread_count, -1),
-                  m_actions(std::make_unique<Actions>(
+                  m_pixels(
                           array_to_vector(m_screen_size),
-                          &m_pixels_bgra,
-                          m_slice_size,
-                          &m_slice_offset,
-                          menu(),
-                          status_bar()))
+                          m_scene->background_color(),
+                          pixel_index_for_sliders(initial_slider_positions())),
+                  m_actions(std::make_unique<Actions>(array_to_vector(m_screen_size), &m_pixels, menu(), status_bar()))
         {
-                m_paint_stop = false;
-                m_paint_thread = std::thread(
+                m_painting_stop = false;
+                m_painting_thread = std::thread(
                         [=, this]()
                         {
-                                paint(this, samples_per_pixel, *m_scene, &m_paintbrush, thread_count, &m_paint_stop,
+                                paint(this, samples_per_pixel, *m_scene, &m_paintbrush, thread_count, &m_painting_stop,
                                       smooth_normal);
                         });
         }
@@ -248,10 +206,10 @@ public:
 
                 m_actions.reset();
 
-                m_paint_stop = true;
-                if (m_paint_thread.joinable())
+                m_painting_stop = true;
+                if (m_painting_thread.joinable())
                 {
-                        m_paint_thread.join();
+                        m_painting_thread.join();
                 }
         }
 

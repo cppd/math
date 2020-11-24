@@ -284,17 +284,9 @@ std::string action_name(const QAction* action)
 }
 }
 
-Actions::Actions(
-        std::vector<int> screen_size,
-        const std::vector<std::byte>* pixels_bgra,
-        size_t slice_size,
-        const long long* slice_offset,
-        QMenu* menu,
-        QStatusBar* status_bar)
+Actions::Actions(std::vector<int> screen_size, const Pixels* pixels, QMenu* menu, QStatusBar* status_bar)
         : m_screen_size(std::move(screen_size)),
-          m_pixels_bgra(pixels_bgra),
-          m_slice_size(slice_size),
-          m_slice_offset(slice_offset),
+          m_pixels(pixels),
           m_worker_threads(create_worker_threads(REQUIRED_THREAD_COUNT, PERMANENT_THREAD_ID, status_bar))
 {
         {
@@ -373,9 +365,8 @@ void Actions::set_progresses()
 
 void Actions::save_to_file(bool without_background, const std::string& name) const
 {
-        const std::byte* begin = m_pixels_bgra->data() + *m_slice_offset;
-        const std::byte* end = begin + m_slice_size;
-        std::vector<std::byte> pixels(begin, end);
+        std::span slice = m_pixels->slice();
+        std::vector<std::byte> pixels(slice.begin(), slice.end());
 
         m_worker_threads->terminate_and_start(
                 SAVE_THREAD_ID, name,
@@ -387,7 +378,7 @@ void Actions::save_to_file(bool without_background, const std::string& name) con
 
 void Actions::save_all_to_files(bool without_background, const std::string& name) const
 {
-        std::vector<std::byte> pixels(*m_pixels_bgra);
+        std::vector<std::byte> pixels(m_pixels->pixels());
 
         m_worker_threads->terminate_and_start(
                 SAVE_THREAD_ID, name,
@@ -399,7 +390,7 @@ void Actions::save_all_to_files(bool without_background, const std::string& name
 
 void Actions::add_volume(bool without_background, const std::string& name) const
 {
-        std::vector<std::byte> pixels(*m_pixels_bgra);
+        std::vector<std::byte> pixels(m_pixels->pixels());
 
         m_worker_threads->terminate_and_start(
                 ADD_THREAD_ID, name,
