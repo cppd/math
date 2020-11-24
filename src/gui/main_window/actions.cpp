@@ -142,18 +142,9 @@ void self_test(WorkerThreads* threads, test::SelfTestType test_type, bool with_c
 }
 }
 
-unsigned Actions::required_thread_count()
-{
-        return REQUIRED_THREAD_COUNT;
-}
-
-unsigned Actions::permanent_thread_id()
-{
-        return SELF_TEST_THREAD_ID;
-}
-
 Actions::Actions(
         const CommandLineOptions& options,
+        QStatusBar* status_bar,
         QAction* action_load,
         QAction* action_export,
         QAction* action_self_test,
@@ -161,30 +152,29 @@ Actions::Actions(
         QMenu* menu_edit,
         QMenu* menu_rendering,
         const storage::Repository* repository,
-        WorkerThreads* threads,
         view::View* view,
         ModelTree* model_tree,
         const ColorsWidget* colors)
 {
-        ASSERT(threads->count() >= required_thread_count());
+        m_worker_threads = create_worker_threads(REQUIRED_THREAD_COUNT, SELF_TEST_THREAD_ID, status_bar);
 
         m_connections.emplace_back(QObject::connect(
                 action_load, &QAction::triggered,
-                [threads]()
+                [threads = m_worker_threads.get()]()
                 {
                         load_file(threads, "", true);
                 }));
 
         m_connections.emplace_back(QObject::connect(
                 action_export, &QAction::triggered,
-                [threads, model_tree]()
+                [threads = m_worker_threads.get(), model_tree]()
                 {
                         export_mesh(threads, model_tree);
                 }));
 
         m_connections.emplace_back(QObject::connect(
                 action_self_test, &QAction::triggered,
-                [threads]()
+                [threads = m_worker_threads.get()]()
                 {
                         self_test(threads, test::SelfTestType::Extended, true);
                 }));
@@ -193,7 +183,7 @@ Actions::Actions(
                 QAction* action = menu_rendering->addAction("Painter...");
                 m_connections.emplace_back(QObject::connect(
                         action, &QAction::triggered,
-                        [threads, model_tree, view, colors]()
+                        [threads = m_worker_threads.get(), model_tree, view, colors]()
                         {
                                 painter(threads, model_tree, view, colors);
                         }));
@@ -202,7 +192,7 @@ Actions::Actions(
                 QAction* action = menu_edit->addAction("BoundCocone...");
                 m_connections.emplace_back(QObject::connect(
                         action, &QAction::triggered,
-                        [threads, model_tree]()
+                        [threads = m_worker_threads.get(), model_tree]()
                         {
                                 bound_cocone(threads, model_tree);
                         }));
@@ -229,7 +219,7 @@ Actions::Actions(
 
                         std::string action_text = object_name + "...";
                         QAction* action = sub_menu->addAction(action_text.c_str());
-                        auto f = [threads, repository, dimension, object_name]()
+                        auto f = [threads = m_worker_threads.get(), repository, dimension, object_name]()
                         {
                                 load_mesh(threads, repository, dimension, object_name);
                         };
@@ -247,7 +237,7 @@ Actions::Actions(
 
                                 std::string action_text = object_name + "...";
                                 QAction* action = sub_menu->addAction(action_text.c_str());
-                                auto f = [threads, repository, dimension, object_name]()
+                                auto f = [threads = m_worker_threads.get(), repository, dimension, object_name]()
                                 {
                                         load_volume(threads, repository, dimension, object_name);
                                 };
@@ -256,11 +246,21 @@ Actions::Actions(
                 }
         }
 
-        self_test(threads, test::SelfTestType::Essential, false);
+        self_test(m_worker_threads.get(), test::SelfTestType::Essential, false);
 
         if (!options.file_name.empty())
         {
-                load_file(threads, options.file_name, !options.no_object_selection_dialog);
+                load_file(m_worker_threads.get(), options.file_name, !options.no_object_selection_dialog);
         }
+}
+
+Actions::~Actions()
+{
+        m_worker_threads->terminate_all();
+}
+
+void Actions::set_progresses()
+{
+        m_worker_threads->set_progresses();
 }
 }

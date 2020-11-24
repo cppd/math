@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QAction>
 #include <QMenu>
+#include <QStatusBar>
 #include <string>
 #include <vector>
 
@@ -36,13 +37,12 @@ namespace gui::main_window
 {
 class Actions final
 {
+        std::unique_ptr<WorkerThreads> m_worker_threads;
         std::vector<Connection> m_connections;
 
 public:
-        static unsigned required_thread_count();
-        static unsigned permanent_thread_id();
-
         Actions(const CommandLineOptions& options,
+                QStatusBar* status_bar,
                 QAction* action_load,
                 QAction* action_export,
                 QAction* action_self_test,
@@ -50,9 +50,12 @@ public:
                 QMenu* menu_edit,
                 QMenu* menu_rendering,
                 const storage::Repository* repository,
-                WorkerThreads* threads,
                 view::View* view,
                 ModelTree* model_tree,
                 const ColorsWidget* colors);
+
+        ~Actions();
+
+        void set_progresses();
 };
 }

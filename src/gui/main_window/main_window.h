@@ -26,8 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view_widget.h"
 #include "volume_widget.h"
 
-#include "../com/threads.h"
-
 #include "ui_main_window.h"
 
 #include <src/application/model_events.h>
@@ -54,8 +52,6 @@ private:
         Ui::MainWindow ui;
 
         std::unique_ptr<Log> m_log;
-
-        std::unique_ptr<WorkerThreads> m_worker_threads;
 
         GraphicsWidget* m_graphics_widget;
         std::unique_ptr<view::View> m_view;

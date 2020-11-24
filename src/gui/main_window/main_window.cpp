@@ -100,9 +100,6 @@ void MainWindow::constructor_objects()
         // QMenu* menu_create = new QMenu("Create", this);
         // ui.menu_bar->insertMenu(ui.menu_help->menuAction(), menu_create);
 
-        m_worker_threads =
-                create_worker_threads(Actions::required_thread_count(), Actions::permanent_thread_id(), ui.status_bar);
-
         m_repository = std::make_unique<storage::Repository>();
 
         m_model_tree = std::make_unique<ModelTree>();
@@ -200,8 +197,6 @@ void MainWindow::terminate_all_threads()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        m_worker_threads->terminate_all();
-
         m_timer.stop();
 
         m_actions.reset();
@@ -271,8 +266,8 @@ void MainWindow::first_shown()
         m_volume_widget->set_model_tree(m_model_tree.get());
         m_model_events = std::make_unique<application::ModelEvents>(m_model_tree->events(), m_view.get());
         m_actions = std::make_unique<Actions>(
-                options, ui.action_load, ui.action_export, ui.action_self_test, ui.menu_create, ui.menu_edit,
-                ui.menu_rendering, m_repository.get(), m_worker_threads.get(), m_view.get(), m_model_tree.get(),
+                options, ui.status_bar, ui.action_load, ui.action_export, ui.action_self_test, ui.menu_create,
+                ui.menu_edit, ui.menu_rendering, m_repository.get(), m_view.get(), m_model_tree.get(),
                 m_colors_widget.get());
 
         m_timer.start(TIMER_INTERVAL);
@@ -281,7 +276,7 @@ void MainWindow::first_shown()
 void MainWindow::on_timer()
 {
         m_log->write();
-        m_worker_threads->set_progresses();
+        m_actions->set_progresses();
 }
 
 void MainWindow::on_exit_triggered()
