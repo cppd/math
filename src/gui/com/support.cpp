@@ -324,12 +324,13 @@ void add_widget(QWidget* dst, QWidget* src)
 
 void set_label_minimum_width_for_text(QLabel* label, const std::string& text)
 {
-        label->setMinimumWidth(label->fontMetrics().boundingRect(text.c_str()).width());
+        label->setMinimumWidth(label->fontMetrics().boundingRect(QString::fromStdString(text)).width());
 }
 
-void set_text_and_minimum_width(QLabel* label, const std::string& text)
+void set_label_text_and_minimum_width(QLabel* label, const std::string& text)
 {
-        label->setText(text.c_str());
-        label->setMinimumWidth(std::max(label->width(), label->fontMetrics().boundingRect(text.c_str()).width()));
+        QString s = QString::fromStdString(text);
+        label->setText(s);
+        label->setMinimumWidth(std::max(label->width(), label->fontMetrics().boundingRect(s).width()));
 }
 }

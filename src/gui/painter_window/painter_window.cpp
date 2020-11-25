@@ -239,13 +239,14 @@ void PainterWindow::update_statistics()
 
         double pass_progress = static_cast<double>(s.pass_pixel_count) / m_pixel_count;
 
-        set_text_and_minimum_width(ui.label_rays_per_second, to_string_digit_groups(rays_per_second));
-        set_text_and_minimum_width(ui.label_ray_count, to_string_digit_groups(s.ray_count));
-        set_text_and_minimum_width(
+        set_label_text_and_minimum_width(ui.label_rays_per_second, to_string_digit_groups(rays_per_second));
+        set_label_text_and_minimum_width(ui.label_ray_count, to_string_digit_groups(s.ray_count));
+        set_label_text_and_minimum_width(
                 ui.label_pass_count,
                 to_string_digit_groups(s.pass_number).append(progress_to_string(":", pass_progress)));
-        set_text_and_minimum_width(ui.label_samples_per_pixel, to_string_digit_groups(samples_per_pixel));
-        set_text_and_minimum_width(ui.label_milliseconds_per_frame, to_string_digit_groups(milliseconds_per_frame));
+        set_label_text_and_minimum_width(ui.label_samples_per_pixel, to_string_digit_groups(samples_per_pixel));
+        set_label_text_and_minimum_width(
+                ui.label_milliseconds_per_frame, to_string_digit_groups(milliseconds_per_frame));
 }
 
 void PainterWindow::update_points()

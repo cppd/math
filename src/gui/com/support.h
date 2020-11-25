@@ -112,5 +112,5 @@ void set_slider_position(QSlider* slider, double v);
 void add_widget(QWidget* dst, QWidget* src);
 
 void set_label_minimum_width_for_text(QLabel* label, const std::string& text);
-void set_text_and_minimum_width(QLabel* label, const std::string& text);
+void set_label_text_and_minimum_width(QLabel* label, const std::string& text);
 }

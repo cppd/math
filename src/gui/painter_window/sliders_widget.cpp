@@ -81,7 +81,7 @@ void SlidersWidget::on_slider_changed(int)
         ASSERT(iter->second.number < m_slider_positions.size());
 
         const int value = iter->first->value();
-        set_text_and_minimum_width(iter->second.label, to_string_digit_groups(value));
+        set_label_text_and_minimum_width(iter->second.label, to_string_digit_groups(value));
         m_slider_positions[iter->second.number] = value;
 
         Q_EMIT changed(m_slider_positions);
