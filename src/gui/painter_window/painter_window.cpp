@@ -191,7 +191,6 @@ void PainterWindow::make_sliders(const std::vector<int>& screen_size)
         qobject_cast<QVBoxLayout*>(ui.main_widget->layout())->insertWidget(1, layout_widget);
 
         QGridLayout* layout = new QGridLayout(layout_widget);
-        layout_widget->setLayout(layout);
         layout->setContentsMargins(0, 0, 0, 0);
 
         for (int number = 0; number < slider_count; ++number)
