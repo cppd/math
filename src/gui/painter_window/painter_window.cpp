@@ -40,19 +40,6 @@ constexpr int DIFFERENCE_INTERVAL_MILLISECONDS = 10 * UPDATE_INTERVAL_MILLISECON
 static_assert(DIFFERENCE_INTERVAL_MILLISECONDS > UPDATE_INTERVAL_MILLISECONDS);
 constexpr bool SHOW_THREADS = true;
 
-//
-
-void set_label_minimum_width_for_text(QLabel* label, const std::string& text)
-{
-        label->setMinimumWidth(label->fontMetrics().boundingRect(text.c_str()).width());
-}
-
-void set_text_and_minimum_width(QLabel* label, const std::string& text)
-{
-        label->setText(text.c_str());
-        label->setMinimumWidth(std::max(label->width(), label->fontMetrics().boundingRect(text.c_str()).width()));
-}
-
 std::string progress_to_string(const char* prefix, double progress)
 {
         int percent = std::floor(progress * 100.0);
@@ -95,7 +82,7 @@ PainterWindow::PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& 
 
         make_menu();
         init_interface(name);
-        make_sliders(m_pixels->screen_size());
+        create_sliders(m_pixels->screen_size());
 
         m_actions = std::make_unique<Actions>(m_pixels.get(), ui.menu_actions, ui.status_bar);
 }
@@ -175,58 +162,26 @@ void PainterWindow::init_interface(const std::string& name)
         connect(&m_timer, &QTimer::timeout, this, &PainterWindow::on_timer_timeout);
 }
 
-void PainterWindow::make_sliders(const std::vector<int>& screen_size)
+void PainterWindow::create_sliders(const std::vector<int>& screen_size)
 {
-        const int slider_count = static_cast<int>(screen_size.size()) - 2;
-        if (slider_count <= 0)
+        const int count = static_cast<int>(screen_size.size()) - 2;
+        if (count <= 0)
         {
                 return;
         }
 
-        const std::vector<int> positions(slider_count, 0);
-
-        QWidget* layout_widget = new QWidget(this);
+        m_sliders_widget = std::make_unique<SlidersWidget>(screen_size);
 
         ASSERT(qobject_cast<QVBoxLayout*>(ui.main_widget->layout()));
-        qobject_cast<QVBoxLayout*>(ui.main_widget->layout())->insertWidget(1, layout_widget);
+        qobject_cast<QVBoxLayout*>(ui.main_widget->layout())->insertWidget(1, m_sliders_widget.get());
 
-        QGridLayout* layout = new QGridLayout(layout_widget);
-        layout->setContentsMargins(0, 0, 0, 0);
+        connect(m_sliders_widget.get(), &SlidersWidget::changed, this,
+                [this](const std::vector<int>& positions)
+                {
+                        m_pixels->set_slice_offset(positions);
+                });
 
-        for (int number = 0; number < slider_count; ++number)
-        {
-                const int dimension = number + 2;
-                const int dimension_max_value = screen_size[dimension] - 1;
-
-                ASSERT(positions[number] >= 0 && positions[number] <= dimension_max_value);
-
-                QSlider* slider = new QSlider(layout_widget);
-                slider->setOrientation(Qt::Horizontal);
-                slider->setMinimum(0);
-                slider->setMaximum(dimension_max_value);
-                slider->setValue(positions[number]);
-
-                QLabel* label = new QLabel(layout_widget);
-                set_label_minimum_width_for_text(label, to_string_digit_groups(dimension_max_value));
-                label->setText(QString::fromStdString(to_string_digit_groups(positions[number])));
-
-                QString label_d_text = QString::fromStdString("d[" + to_string(dimension + 1) + "]");
-                QLabel* label_d = new QLabel(label_d_text, layout_widget);
-                QLabel* label_e = new QLabel("=", layout_widget);
-
-                layout->addWidget(label_d, number, 0);
-                layout->addWidget(label_e, number, 1);
-                layout->addWidget(label, number, 2);
-                layout->addWidget(slider, number, 3);
-
-                m_sliders.emplace(slider, Slider{.label = label, .number = static_cast<unsigned>(number)});
-                m_slider_positions.push_back(slider->value());
-                ASSERT(m_slider_positions.back() == positions[number]);
-
-                connect(slider, &QSlider::valueChanged, this, &PainterWindow::on_slider_changed);
-        }
-
-        m_pixels->set_slice_offset(m_slider_positions);
+        m_sliders_widget->set(std::vector<int>(count, 0));
 }
 
 void PainterWindow::showEvent(QShowEvent* /*event*/)
@@ -329,20 +284,5 @@ void PainterWindow::on_timer_timeout()
         update_statistics();
         update_points();
         m_actions->set_progresses();
-}
-
-void PainterWindow::on_slider_changed(int)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        const auto iter = m_sliders.find(qobject_cast<const QSlider*>(sender()));
-        ASSERT(iter != m_sliders.cend());
-        ASSERT(iter->second.number < m_slider_positions.size());
-
-        const int value = iter->first->value();
-        set_text_and_minimum_width(iter->second.label, to_string_digit_groups(value));
-        m_slider_positions[iter->second.number] = value;
-
-        m_pixels->set_slice_offset(m_slider_positions);
 }
 }

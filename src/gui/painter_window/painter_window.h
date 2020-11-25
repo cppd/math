@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "actions.h"
 #include "difference.h"
 #include "pixels.h"
+#include "sliders_widget.h"
 
 #include "../com/main_thread.h"
 #include "../com/support.h"
@@ -33,7 +34,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 #include <thread>
-#include <unordered_map>
 #include <vector>
 
 namespace gui::painter_window
@@ -55,18 +55,12 @@ private:
         struct Counters;
         std::unique_ptr<Difference<Counters>> m_difference;
 
-        struct Slider
-        {
-                QLabel* label;
-                unsigned number;
-        };
-        std::unordered_map<const QSlider*, Slider> m_sliders;
-        std::vector<int> m_slider_positions;
-
         QAction* m_show_threads_action = nullptr;
 
         std::unique_ptr<Pixels> m_pixels;
         const long long m_pixel_count;
+
+        std::unique_ptr<SlidersWidget> m_sliders_widget;
 
         std::unique_ptr<Actions> m_actions;
 
@@ -74,14 +68,13 @@ private:
 
         void on_timer_timeout();
         void on_first_shown();
-        void on_slider_changed(int);
 
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;
 
         void make_menu();
         void init_interface(const std::string& name);
-        void make_sliders(const std::vector<int>& screen_size);
+        void create_sliders(const std::vector<int>& screen_size);
 
         void adjust_window_size();
 
