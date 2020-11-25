@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vec.h>
 #include <src/window/handle.h>
 
+#include <QLabel>
 #include <QLayout>
 #include <QMainWindow>
 #include <QPlainTextEdit>
@@ -109,4 +110,7 @@ double slider_position(const QSlider* slider);
 void set_slider_position(QSlider* slider, double v);
 
 void add_widget(QWidget* dst, QWidget* src);
+
+void set_label_minimum_width_for_text(QLabel* label, const std::string& text);
+void set_text_and_minimum_width(QLabel* label, const std::string& text);
 }
