@@ -103,19 +103,19 @@ void MainWindow::constructor_objects()
         m_repository = std::make_unique<storage::Repository>();
 
         m_model_tree = std::make_unique<ModelTree>();
-        ui.tab_models->setLayout(m_model_tree->layout());
+        add_widget(ui.tab_models, m_model_tree.get());
 
         m_colors_widget = std::make_unique<ColorsWidget>();
-        ui.tab_color->setLayout(m_colors_widget->layout());
+        add_widget(ui.tab_color, m_colors_widget.get());
 
         m_view_widget = std::make_unique<ViewWidget>();
-        ui.tab_view->setLayout(m_view_widget->layout());
+        add_widget(ui.tab_view, m_view_widget.get());
 
         m_mesh_widget = std::make_unique<MeshWidget>(MAXIMUM_SPECULAR_POWER, MAXIMUM_MODEL_LIGHTING);
-        ui.tab_mesh->setLayout(m_mesh_widget->layout());
+        add_widget(ui.tab_mesh, m_mesh_widget.get());
 
         m_volume_widget = std::make_unique<VolumeWidget>(MAXIMUM_SPECULAR_POWER, MAXIMUM_MODEL_LIGHTING);
-        ui.tab_volume->setLayout(m_volume_widget->layout());
+        add_widget(ui.tab_volume, m_volume_widget.get());
 
         //
 
