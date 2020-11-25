@@ -107,4 +107,6 @@ void resize_window_widget(QMainWindow* window, QWidget* widget, const QSize& wid
 
 double slider_position(const QSlider* slider);
 void set_slider_position(QSlider* slider, double v);
+
+void add_widget(QWidget* dst, QWidget* src);
 }

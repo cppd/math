@@ -310,4 +310,15 @@ void set_slider_position(QSlider* slider, double v)
         ASSERT(max > min);
         slider->setValue(std::lround(std::lerp(min, max, std::clamp(v, 0.0, 1.0))));
 }
+
+void add_widget(QWidget* dst, QWidget* src)
+{
+        if (dst->layout())
+        {
+                error("Error setting widget: there already is a layout manager");
+        }
+        QVBoxLayout* l = new QVBoxLayout(dst);
+        l->setContentsMargins(0, 0, 0, 0);
+        l->addWidget(src);
+}
 }
