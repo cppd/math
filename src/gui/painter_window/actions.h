@@ -41,7 +41,7 @@ class Actions final
         void add_volume(bool without_background, const std::string& name) const;
 
 public:
-        Actions(std::vector<int> screen_size, const Pixels* pixels, QMenu* menu, QStatusBar* status_bar);
+        Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar);
 
         ~Actions();
 

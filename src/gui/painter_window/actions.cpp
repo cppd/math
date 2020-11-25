@@ -284,8 +284,8 @@ std::string action_name(const QAction* action)
 }
 }
 
-Actions::Actions(std::vector<int> screen_size, const Pixels* pixels, QMenu* menu, QStatusBar* status_bar)
-        : m_screen_size(std::move(screen_size)),
+Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar)
+        : m_screen_size(pixels->screen_size()),
           m_pixels(pixels),
           m_worker_threads(create_worker_threads(REQUIRED_THREAD_COUNT, PERMANENT_THREAD_ID, status_bar))
 {
