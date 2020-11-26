@@ -55,12 +55,12 @@ struct StatisticsWidget::Counters final
         }
 };
 
-StatisticsWidget::StatisticsWidget(const Pixels* pixels, int update_interval_milliseconds)
+StatisticsWidget::StatisticsWidget(const Pixels* pixels, std::chrono::milliseconds update_interval)
         : QWidget(nullptr),
           m_pixels(pixels),
           m_pixel_count(multiply_all<long long>(m_pixels->screen_size())),
           // Здесь интервал должен быть больше update_interval_milliseconds
-          m_difference(std::make_unique<Difference<Counters>>(10 * update_interval_milliseconds))
+          m_difference(std::make_unique<Difference<Counters>>(10 * update_interval))
 {
         ui.setupUi(this);
 

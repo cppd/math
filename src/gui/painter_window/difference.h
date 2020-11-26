@@ -42,7 +42,7 @@ class Difference final
         std::deque<Point> m_deque;
 
 public:
-        explicit Difference(int interval_milliseconds) : m_interval(std::chrono::milliseconds(interval_milliseconds))
+        explicit Difference(std::chrono::milliseconds interval) : m_interval(interval)
         {
         }
 

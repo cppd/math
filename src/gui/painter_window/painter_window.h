@@ -34,7 +34,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 #include <thread>
-#include <vector>
 
 namespace gui::painter_window
 {
@@ -66,9 +65,9 @@ private:
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;
 
-        void make_menu();
-        void init_interface(const std::string& name);
-        void create_sliders(const std::vector<int>& screen_size);
+        void create_menu();
+        void create_interface();
+        void create_sliders();
 
         void adjust_window_size();
 

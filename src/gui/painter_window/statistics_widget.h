@@ -41,7 +41,7 @@ private:
         std::unique_ptr<Difference<Counters>> m_difference;
 
 public:
-        StatisticsWidget(const Pixels* pixels, int update_interval_milliseconds);
+        StatisticsWidget(const Pixels* pixels, std::chrono::milliseconds update_interval);
         ~StatisticsWidget() override;
 
         void update();

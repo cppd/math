@@ -41,7 +41,7 @@ private:
         void on_slider_changed(int);
 
 public:
-        SlidersWidget(const std::vector<int>& screen_size);
+        explicit SlidersWidget(const std::vector<int>& screen_size);
 
         void set(const std::vector<int>& positions);
 

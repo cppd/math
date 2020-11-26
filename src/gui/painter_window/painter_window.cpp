@@ -29,7 +29,7 @@ namespace gui::painter_window
 {
 namespace
 {
-constexpr int UPDATE_INTERVAL_MILLISECONDS = 100;
+constexpr std::chrono::milliseconds UPDATE_INTERVAL{100};
 constexpr bool SHOW_THREADS = true;
 }
 
@@ -37,9 +37,17 @@ PainterWindow::PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& 
 {
         ui.setupUi(this);
 
-        make_menu();
-        init_interface(name);
-        create_sliders(m_pixels->screen_size());
+        std::string title = std::string(settings::APPLICATION_NAME);
+        if (!name.empty())
+        {
+                title += " - ";
+                title += name;
+        }
+        this->setWindowTitle(QString::fromStdString(title));
+
+        create_menu();
+        create_interface();
+        create_sliders();
 
         m_actions = std::make_unique<Actions>(m_pixels.get(), ui.menu_actions, ui.status_bar);
 }
@@ -79,7 +87,7 @@ void PainterWindow::closeEvent(QCloseEvent* event)
         event->accept();
 }
 
-void PainterWindow::make_menu()
+void PainterWindow::create_menu()
 {
         m_show_threads_action = ui.menu_view->addAction("Show threads");
         m_show_threads_action->setCheckable(true);
@@ -90,16 +98,8 @@ void PainterWindow::make_menu()
                 &PainterWindow::adjust_window_size);
 }
 
-void PainterWindow::init_interface(const std::string& name)
+void PainterWindow::create_interface()
 {
-        std::string title = std::string(settings::APPLICATION_NAME);
-        if (!name.empty())
-        {
-                title += " - ";
-                title += name;
-        }
-        this->setWindowTitle(QString::fromStdString(title));
-
         ASSERT(!ui.main_widget->layout());
         ui.main_widget->setLayout(new QVBoxLayout(ui.main_widget));
         ui.main_widget->layout()->setContentsMargins(5, 5, 5, 5);
@@ -109,21 +109,21 @@ void PainterWindow::init_interface(const std::string& name)
         m_image_widget = std::make_unique<ImageWidget>(m_pixels.get());
         ui.main_widget->layout()->addWidget(m_image_widget.get());
 
-        m_statistics_widget = std::make_unique<StatisticsWidget>(m_pixels.get(), UPDATE_INTERVAL_MILLISECONDS);
+        m_statistics_widget = std::make_unique<StatisticsWidget>(m_pixels.get(), UPDATE_INTERVAL);
         ui.main_widget->layout()->addWidget(m_statistics_widget.get());
 
         connect(&m_timer, &QTimer::timeout, this, &PainterWindow::on_timer_timeout);
 }
 
-void PainterWindow::create_sliders(const std::vector<int>& screen_size)
+void PainterWindow::create_sliders()
 {
-        const int count = static_cast<int>(screen_size.size()) - 2;
+        const int count = static_cast<int>(m_pixels->screen_size().size()) - 2;
         if (count <= 0)
         {
                 return;
         }
 
-        m_sliders_widget = std::make_unique<SlidersWidget>(screen_size);
+        m_sliders_widget = std::make_unique<SlidersWidget>(m_pixels->screen_size());
 
         ASSERT(qobject_cast<QVBoxLayout*>(ui.main_widget->layout()));
         qobject_cast<QVBoxLayout*>(ui.main_widget->layout())->insertWidget(1, m_sliders_widget.get());
@@ -133,7 +133,6 @@ void PainterWindow::create_sliders(const std::vector<int>& screen_size)
                 {
                         m_pixels->set_slice_offset(positions);
                 });
-
         m_sliders_widget->set(std::vector<int>(count, 0));
 }
 
@@ -156,7 +155,7 @@ void PainterWindow::on_first_shown()
 
         adjust_window_size();
 
-        m_timer.start(UPDATE_INTERVAL_MILLISECONDS);
+        m_timer.start(UPDATE_INTERVAL);
 }
 
 void PainterWindow::adjust_window_size()
