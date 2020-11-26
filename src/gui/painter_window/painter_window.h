@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "actions.h"
-#include "difference.h"
 #include "pixels.h"
 #include "sliders_widget.h"
+#include "statistics_widget.h"
 
 #include "../com/main_thread.h"
 #include "../com/support.h"
@@ -52,14 +52,11 @@ private:
         const long long m_image_2d_byte_count;
         QImage m_image_2d;
 
-        struct Counters;
-        std::unique_ptr<Difference<Counters>> m_difference;
-
         QAction* m_show_threads_action = nullptr;
 
         std::unique_ptr<Pixels> m_pixels;
-        const long long m_pixel_count;
 
+        std::unique_ptr<StatisticsWidget> m_statistics_widget;
         std::unique_ptr<SlidersWidget> m_sliders_widget;
 
         std::unique_ptr<Actions> m_actions;
@@ -79,7 +76,6 @@ private:
         void adjust_window_size();
 
         void update_points();
-        void update_statistics();
 
 public:
         PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels);

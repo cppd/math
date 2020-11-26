@@ -21,13 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/container.h>
 #include <src/com/error.h>
-#include <src/com/exception.h>
-#include <src/com/print.h>
 #include <src/settings/name.h>
 
 #include <QCloseEvent>
 #include <QPointer>
-#include <cmath>
 #include <cstring>
 
 namespace gui::painter_window
@@ -35,46 +32,14 @@ namespace gui::painter_window
 namespace
 {
 constexpr int UPDATE_INTERVAL_MILLISECONDS = 100;
-// Этот интервал должен быть больше интервала UPDATE_INTERVAL_MILLISECONDS
-constexpr int DIFFERENCE_INTERVAL_MILLISECONDS = 10 * UPDATE_INTERVAL_MILLISECONDS;
-static_assert(DIFFERENCE_INTERVAL_MILLISECONDS > UPDATE_INTERVAL_MILLISECONDS);
 constexpr bool SHOW_THREADS = true;
-
-std::string progress_to_string(const char* prefix, double progress)
-{
-        int percent = std::floor(progress * 100.0);
-        percent = (percent < 100) ? percent : 99;
-        std::string progress_str = prefix;
-        progress_str += percent < 10 ? "0" : "";
-        progress_str += std::to_string(percent);
-        return progress_str;
 }
-}
-
-struct PainterWindow::Counters final
-{
-        const long long pixel_count;
-        const long long ray_count;
-        const long long sample_count;
-
-        Counters(long long pixel_count, long long ray_count, long long sample_count)
-                : pixel_count(pixel_count), ray_count(ray_count), sample_count(sample_count)
-        {
-        }
-
-        Counters operator-(const Counters& c) const
-        {
-                return Counters(pixel_count - c.pixel_count, ray_count - c.ray_count, sample_count - c.sample_count);
-        }
-};
 
 PainterWindow::PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels)
         : m_image_2d_pixel_count(1ull * pixels->screen_size()[0] * pixels->screen_size()[1]),
           m_image_2d_byte_count(sizeof(quint32) * m_image_2d_pixel_count),
           m_image_2d(pixels->screen_size()[0], pixels->screen_size()[1], QImage::Format_RGB32),
-          m_difference(std::make_unique<Difference<Counters>>(DIFFERENCE_INTERVAL_MILLISECONDS)),
-          m_pixels(std::move(pixels)),
-          m_pixel_count(multiply_all<long long>(m_pixels->screen_size()))
+          m_pixels(std::move(pixels))
 {
         ASSERT(m_image_2d.sizeInBytes() == m_image_2d_byte_count);
 
@@ -150,14 +115,11 @@ void PainterWindow::init_interface(const std::string& name)
         ui.label_points->setText("");
         ui.label_points->resize(m_image_2d.width(), m_image_2d.height());
 
-        ui.label_rays_per_second->setText("");
-        ui.label_ray_count->setText("");
-        ui.label_pass_count->setText("");
-        ui.label_samples_per_pixel->setText("");
-        ui.label_milliseconds_per_frame->setText("");
-
         ui.scrollAreaWidgetContents->layout()->setContentsMargins(0, 0, 0, 0);
         ui.scrollAreaWidgetContents->layout()->setSpacing(0);
+
+        m_statistics_widget = std::make_unique<StatisticsWidget>(m_pixels.get(), UPDATE_INTERVAL_MILLISECONDS);
+        ui.main_widget->layout()->addWidget(m_statistics_widget.get());
 
         connect(&m_timer, &QTimer::timeout, this, &PainterWindow::on_timer_timeout);
 }
@@ -219,36 +181,6 @@ void PainterWindow::adjust_window_size()
         ui.scroll_area->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 }
 
-void PainterWindow::update_statistics()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        const painter::Statistics s = m_pixels->statistics();
-
-        auto [difference, duration] = m_difference->compute(Counters(s.pixel_count, s.ray_count, s.sample_count));
-
-        long long rays_per_second =
-                (duration != 0) ? std::llround(static_cast<double>(difference.ray_count) / duration) : 0;
-
-        long long samples_per_pixel =
-                (difference.pixel_count != 0)
-                        ? std::llround(static_cast<double>(difference.sample_count) / difference.pixel_count)
-                        : 0;
-
-        long long milliseconds_per_frame = std::llround(1000 * s.previous_pass_duration);
-
-        double pass_progress = static_cast<double>(s.pass_pixel_count) / m_pixel_count;
-
-        set_label_text_and_minimum_width(ui.label_rays_per_second, to_string_digit_groups(rays_per_second));
-        set_label_text_and_minimum_width(ui.label_ray_count, to_string_digit_groups(s.ray_count));
-        set_label_text_and_minimum_width(
-                ui.label_pass_count,
-                to_string_digit_groups(s.pass_number).append(progress_to_string(":", pass_progress)));
-        set_label_text_and_minimum_width(ui.label_samples_per_pixel, to_string_digit_groups(samples_per_pixel));
-        set_label_text_and_minimum_width(
-                ui.label_milliseconds_per_frame, to_string_digit_groups(milliseconds_per_frame));
-}
-
 void PainterWindow::update_points()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -282,7 +214,7 @@ void PainterWindow::on_timer_timeout()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        update_statistics();
+        m_statistics_widget->update();
         update_points();
         m_actions->set_progresses();
 }
