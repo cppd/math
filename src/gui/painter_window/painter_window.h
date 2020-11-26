@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "actions.h"
+#include "image_widget.h"
 #include "pixels.h"
 #include "sliders_widget.h"
 #include "statistics_widget.h"
@@ -29,7 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/painter/painter.h>
 
-#include <QImage>
 #include <QTimer>
 #include <memory>
 #include <string>
@@ -48,14 +48,11 @@ private:
 
         Ui::PainterWindow ui;
 
-        const long long m_image_2d_pixel_count;
-        const long long m_image_2d_byte_count;
-        QImage m_image_2d;
-
         QAction* m_show_threads_action = nullptr;
 
         std::unique_ptr<Pixels> m_pixels;
 
+        std::unique_ptr<ImageWidget> m_image_widget;
         std::unique_ptr<StatisticsWidget> m_statistics_widget;
         std::unique_ptr<SlidersWidget> m_sliders_widget;
 
@@ -74,8 +71,6 @@ private:
         void create_sliders(const std::vector<int>& screen_size);
 
         void adjust_window_size();
-
-        void update_points();
 
 public:
         PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels);

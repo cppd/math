@@ -19,13 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../dialogs/message.h"
 
-#include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/settings/name.h>
 
 #include <QCloseEvent>
 #include <QPointer>
-#include <cstring>
 
 namespace gui::painter_window
 {
@@ -35,14 +33,8 @@ constexpr int UPDATE_INTERVAL_MILLISECONDS = 100;
 constexpr bool SHOW_THREADS = true;
 }
 
-PainterWindow::PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels)
-        : m_image_2d_pixel_count(1ull * pixels->screen_size()[0] * pixels->screen_size()[1]),
-          m_image_2d_byte_count(sizeof(quint32) * m_image_2d_pixel_count),
-          m_image_2d(pixels->screen_size()[0], pixels->screen_size()[1], QImage::Format_RGB32),
-          m_pixels(std::move(pixels))
+PainterWindow::PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels) : m_pixels(std::move(pixels))
 {
-        ASSERT(m_image_2d.sizeInBytes() == m_image_2d_byte_count);
-
         ui.setupUi(this);
 
         make_menu();
@@ -108,15 +100,14 @@ void PainterWindow::init_interface(const std::string& name)
         }
         this->setWindowTitle(QString::fromStdString(title));
 
+        ASSERT(!ui.main_widget->layout());
+        ui.main_widget->setLayout(new QVBoxLayout(ui.main_widget));
         ui.main_widget->layout()->setContentsMargins(5, 5, 5, 5);
 
         ui.status_bar->setFixedHeight(ui.status_bar->height());
 
-        ui.label_points->setText("");
-        ui.label_points->resize(m_image_2d.width(), m_image_2d.height());
-
-        ui.scrollAreaWidgetContents->layout()->setContentsMargins(0, 0, 0, 0);
-        ui.scrollAreaWidgetContents->layout()->setSpacing(0);
+        m_image_widget = std::make_unique<ImageWidget>(m_pixels.get());
+        ui.main_widget->layout()->addWidget(m_image_widget.get());
 
         m_statistics_widget = std::make_unique<StatisticsWidget>(m_pixels.get(), UPDATE_INTERVAL_MILLISECONDS);
         ui.main_widget->layout()->addWidget(m_statistics_widget.get());
@@ -172,42 +163,7 @@ void PainterWindow::adjust_window_size()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        ui.scroll_area->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        ui.scroll_area->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-        resize(QSize(2, 2) + m_image_2d.size() + (geometry().size() - ui.scroll_area->size()));
-
-        ui.scroll_area->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-        ui.scroll_area->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-}
-
-void PainterWindow::update_points()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        static_assert(std::endian::native == std::endian::little);
-        static_assert(sizeof(quint32) == 4 * sizeof(std::byte));
-
-        const std::span<const std::byte> pixels = m_pixels->slice();
-        quint32* const image_bits = reinterpret_cast<quint32*>(m_image_2d.bits());
-
-        ASSERT(data_size(pixels) == static_cast<size_t>(m_image_2d_byte_count));
-        std::memcpy(image_bits, pixels.data(), m_image_2d_byte_count);
-
-        if (m_show_threads_action->isChecked())
-        {
-                for (long long index : m_pixels->busy_indices_2d())
-                {
-                        if (index >= 0)
-                        {
-                                ASSERT(index < m_image_2d_pixel_count);
-                                image_bits[index] ^= 0x00ff'ffff;
-                        }
-                }
-        }
-
-        ui.label_points->setPixmap(QPixmap::fromImage(m_image_2d));
-        ui.label_points->update();
+        resize(QSize(2, 2) + geometry().size() + m_image_widget->size_difference());
 }
 
 void PainterWindow::on_timer_timeout()
@@ -215,7 +171,7 @@ void PainterWindow::on_timer_timeout()
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         m_statistics_widget->update();
-        update_points();
+        m_image_widget->update(m_show_threads_action->isChecked());
         m_actions->set_progresses();
 }
 }
