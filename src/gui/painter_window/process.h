@@ -17,34 +17,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "pixels.h"
+#include <src/progress/progress_list.h>
 
-#include "../com/connection.h"
-#include "../com/threads.h"
-
-#include <QMenu>
-#include <QStatusBar>
-#include <memory>
-#include <string>
+#include <functional>
 #include <vector>
 
 namespace gui::painter_window
 {
-class Actions final
-{
-        const Pixels* m_pixels;
-        std::unique_ptr<WorkerThreads> m_worker_threads;
-        std::vector<Connection> m_connections;
+std::function<void(ProgressRatioList*)> save_to_file(
+        const std::vector<int>& screen_size,
+        bool without_background,
+        std::vector<std::byte>&& pixels_bgra);
 
-        void save_to_file(bool without_background, const std::string& name) const;
-        void save_all_to_files(bool without_background, const std::string& name) const;
-        void add_volume(bool without_background, const std::string& name) const;
+std::function<void(ProgressRatioList*)> save_all_to_files(
+        const std::vector<int>& screen_size,
+        bool without_background,
+        std::vector<std::byte>&& pixels_bgra);
 
-public:
-        Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar);
-
-        ~Actions();
-
-        void set_progresses();
-};
+std::function<void(ProgressRatioList*)> add_volume(
+        const std::vector<int>& screen_size,
+        bool without_background,
+        std::vector<std::byte>&& pixels_bgra);
 }
