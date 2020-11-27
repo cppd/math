@@ -52,7 +52,7 @@ void message_warning(const std::string& message)
         w->exec();
 }
 
-bool message_question_default_yes(const std::string& message, bool* yes)
+std::optional<bool> message_question_default_yes(const std::string& message)
 {
         QtObjectInDynamicMemory<QMessageBox> w(
                 QMessageBox::Question, settings::APPLICATION_NAME, message.c_str(), QMessageBox::Yes | QMessageBox::No,
@@ -62,14 +62,13 @@ bool message_question_default_yes(const std::string& message, bool* yes)
 
         if (w->exec() && !w.isNull())
         {
-                *yes = (w->result() == QMessageBox::Yes);
-                return true;
+                return (w->result() == QMessageBox::Yes);
         }
 
-        return false;
+        return std::nullopt;
 }
 
-bool message_question_default_no(const std::string& message, bool* yes)
+std::optional<bool> message_question_default_no(const std::string& message)
 {
         QtObjectInDynamicMemory<QMessageBox> w(
                 QMessageBox::Question, settings::APPLICATION_NAME, message.c_str(), QMessageBox::Yes | QMessageBox::No,
@@ -79,10 +78,9 @@ bool message_question_default_no(const std::string& message, bool* yes)
 
         if (w->exec() && !w.isNull())
         {
-                *yes = (w->result() == QMessageBox::Yes);
-                return true;
+                return (w->result() == QMessageBox::Yes);
         }
 
-        return false;
+        return std::nullopt;
 }
 }

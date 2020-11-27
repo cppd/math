@@ -181,10 +181,9 @@ class Impl final : public WorkerThreads
 
                 if (is_working(id))
                 {
-                        bool yes;
-                        if (!dialog::message_question_default_no(
-                                    "There is work in progress.\nDo you want to continue?", &yes)
-                            || !yes)
+                        std::optional<bool> yes = dialog::message_question_default_no(
+                                "There is work in progress.\nDo you want to continue?");
+                        if (!yes || !*yes)
                         {
                                 return false;
                         }

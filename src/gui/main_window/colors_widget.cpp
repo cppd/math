@@ -81,8 +81,8 @@ void ColorsWidget::set_view(view::View* view)
 
 void ColorsWidget::on_reset_lighting_clicked()
 {
-        bool yes;
-        if (!dialog::message_question_default_yes("Reset lighting?", &yes) || !yes)
+        std::optional<bool> yes = dialog::message_question_default_yes("Reset lighting?");
+        if (!yes || !*yes)
         {
                 return;
         }

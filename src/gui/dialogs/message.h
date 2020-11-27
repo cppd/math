@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <QWidget>
+#include <optional>
 #include <string>
 
 namespace gui::dialog
@@ -25,6 +25,6 @@ namespace gui::dialog
 void message_critical(const std::string& message, bool with_parent = true);
 void message_information(const std::string& message);
 void message_warning(const std::string& message);
-[[nodiscard]] bool message_question_default_yes(const std::string& message, bool* yes);
-[[nodiscard]] bool message_question_default_no(const std::string& message, bool* yes);
+[[nodiscard]] std::optional<bool> message_question_default_yes(const std::string& message);
+[[nodiscard]] std::optional<bool> message_question_default_no(const std::string& message);
 }

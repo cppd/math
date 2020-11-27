@@ -492,8 +492,8 @@ void ModelTree::make_menu_for_object(QMenu* menu, const std::shared_ptr<T>& obje
                         action, &QAction::triggered,
                         [&]()
                         {
-                                bool yes;
-                                if (dialog::message_question_default_no("Delete?", &yes) && yes)
+                                std::optional<bool> yes = dialog::message_question_default_no("Delete?");
+                                if (yes && *yes)
                                 {
                                         object->erase();
                                 }
@@ -505,8 +505,8 @@ void ModelTree::make_menu_for_object(QMenu* menu, const std::shared_ptr<T>& obje
                         action, &QAction::triggered,
                         [&]()
                         {
-                                bool yes;
-                                if (dialog::message_question_default_no("Delete All?", &yes) && yes)
+                                std::optional<bool> yes = dialog::message_question_default_no("Delete All?");
+                                if (yes && *yes)
                                 {
                                         clear();
                                 }

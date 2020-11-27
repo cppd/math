@@ -25,8 +25,8 @@ std::function<void(ProgressRatioList*)> action_self_test(test::SelfTestType test
 {
         if (with_confirmation)
         {
-                bool yes;
-                if (!gui::dialog::message_question_default_yes("Run the Self-Test?", &yes) || !yes)
+                std::optional<bool> yes = gui::dialog::message_question_default_yes("Run the Self-Test?");
+                if (!yes || !*yes)
                 {
                         return nullptr;
                 }
