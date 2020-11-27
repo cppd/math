@@ -113,9 +113,10 @@ public:
 
         void write_to_files() const
         {
+                ProgressRatio progress(nullptr);
                 image::save_image_to_files(
                         m_directory, IMAGE_FILE_FORMAT,
-                        image::ImageView<N>(m_screen_size, image::ColorFormat::R8G8B8_SRGB, m_pixels));
+                        image::ImageView<N>(m_screen_size, image::ColorFormat::R8G8B8_SRGB, m_pixels), &progress);
         }
 };
 

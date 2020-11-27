@@ -211,10 +211,15 @@ void save_image_to_file(const std::filesystem::path& file_name, const ImageView<
         }
 }
 
+namespace implementation
+{
 void save_image_to_files(
         const std::filesystem::path& directory,
         const std::string& file_format,
-        const ImageView<3>& image_view)
+        const ImageView<3>& image_view,
+        ProgressRatio* progress,
+        unsigned* current,
+        unsigned count)
 {
         if (!std::filesystem::is_directory(directory))
         {
@@ -247,7 +252,10 @@ void save_image_to_files(
                 image::save_image_to_file(directory / path_from_utf8(oss.str()), image_view_2d);
 
                 offset += image_2d_bytes;
+
+                progress->set(++(*current), count);
         }
+}
 }
 
 void load_image_from_file_rgba(const std::filesystem::path& file_name, Image<2>* image)

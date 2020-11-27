@@ -221,7 +221,8 @@ std::function<void(ProgressRatioList*)> process_save_all_to_files(
                                                 path_from_utf8(*directory_string), IMAGE_FILE_FORMAT,
                                                 image::ImageView<N - 1>(
                                                         to_array<N - 1, int>(screen_size), format,
-                                                        conv_bgra(*pixels_bgra, format)));
+                                                        conv_bgra(*pixels_bgra, format)),
+                                                &progress);
                                 }
                         });
         };
