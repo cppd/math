@@ -47,8 +47,6 @@ private:
 
         Ui::PainterWindow ui;
 
-        QAction* m_show_threads_action = nullptr;
-
         std::unique_ptr<Pixels> m_pixels;
 
         std::unique_ptr<ImageWidget> m_image_widget;
@@ -65,9 +63,9 @@ private:
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;
 
-        void create_menu();
         void create_interface();
         void create_sliders();
+        void create_actions();
 
         void adjust_window_size();
 

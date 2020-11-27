@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_image_widget.h"
 
 #include <QImage>
+#include <QMenu>
 
 namespace gui::painter_window
 {
@@ -38,11 +39,13 @@ private:
         const size_t m_image_2d_byte_count;
         QImage m_image_2d;
 
+        QAction* m_show_threads_action = nullptr;
+
 public:
-        explicit ImageWidget(const Pixels* pixels);
+        ImageWidget(const Pixels* pixels, QMenu* menu);
 
         QSize size_difference() const;
 
-        void update(bool show_threads);
+        void update();
 };
 }

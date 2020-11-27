@@ -21,7 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui::painter_window
 {
-ImageWidget::ImageWidget(const Pixels* pixels)
+namespace
+{
+constexpr bool SHOW_THREADS = true;
+}
+
+ImageWidget::ImageWidget(const Pixels* pixels, QMenu* menu)
         : QWidget(nullptr),
           m_pixels(pixels),
           m_image_2d_pixel_count(1ull * pixels->screen_size()[0] * pixels->screen_size()[1]),
@@ -42,6 +47,10 @@ ImageWidget::ImageWidget(const Pixels* pixels)
 
         ui.scroll_area->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         ui.scroll_area->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+
+        m_show_threads_action = menu->addAction("Show threads");
+        m_show_threads_action->setCheckable(true);
+        m_show_threads_action->setChecked(SHOW_THREADS);
 }
 
 QSize ImageWidget::size_difference() const
@@ -54,7 +63,7 @@ QSize ImageWidget::size_difference() const
         return size;
 }
 
-void ImageWidget::update(bool show_threads)
+void ImageWidget::update()
 {
         static_assert(std::endian::native == std::endian::little);
         static_assert(sizeof(quint32) == 4 * sizeof(std::byte));
@@ -65,7 +74,7 @@ void ImageWidget::update(bool show_threads)
         ASSERT(pixels.size_bytes() == m_image_2d_byte_count);
         std::memcpy(image_bits, pixels.data(), m_image_2d_byte_count);
 
-        if (show_threads)
+        if (m_show_threads_action->isChecked())
         {
                 for (long long index : m_pixels->busy_indices_2d())
                 {
