@@ -19,43 +19,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_volume_object.h"
 
+#include <optional>
 #include <string>
 
 namespace gui::dialog
 {
-namespace volume_object_parameters_implementation
+struct VolumeObjectParameters final
 {
-class VolumeObjectParameters final : public QDialog
+        int image_size;
+};
+
+class VolumeObjectParametersDialog final : public QDialog
 {
         Q_OBJECT
 
 private:
-        Ui::VolumeObjectParameters ui;
+        Ui::VolumeObjectParametersDialog ui;
 
-        int m_min_image_size;
-        int m_max_image_size;
-        int m_image_size;
+        const int m_min_image_size;
+        const int m_max_image_size;
 
-        void done(int r) override;
+        std::optional<VolumeObjectParameters>& m_parameters;
 
-public:
-        explicit VolumeObjectParameters(QWidget* parent = nullptr);
-
-        [[nodiscard]] bool show(
+        VolumeObjectParametersDialog(
                 int dimension,
                 const std::string& volume_object_name,
                 int default_image_size,
                 int min_image_size,
                 int max_image_size,
-                int* image_size);
-};
-}
+                std::optional<VolumeObjectParameters>& parameters);
 
-[[nodiscard]] bool volume_object_parameters(
-        int dimension,
-        const std::string& volume_object_name,
-        int default_image_size,
-        int min_image_size,
-        int max_image_size,
-        int* image_size);
+        void done(int r) override;
+
+public:
+        [[nodiscard]] static std::optional<VolumeObjectParameters> show(
+                int dimension,
+                const std::string& volume_object_name,
+                int default_image_size,
+                int min_image_size,
+                int max_image_size);
+};
 }

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>VolumeObjectParameters</class>
- <widget class="QDialog" name="VolumeObjectParameters">
+ <class>VolumeObjectParametersDialog</class>
+ <widget class="QDialog" name="VolumeObjectParametersDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>184</width>
-    <height>135</height>
+    <width>266</width>
+    <height>211</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -135,7 +135,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>VolumeObjectParameters</receiver>
+   <receiver>VolumeObjectParametersDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -151,7 +151,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>VolumeObjectParameters</receiver>
+   <receiver>VolumeObjectParametersDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

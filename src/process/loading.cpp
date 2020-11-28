@@ -174,11 +174,11 @@ std::function<void(ProgressRatioList*)> action_load_from_volume_repository(
                 return nullptr;
         }
 
-        int image_size;
+        std::optional<gui::dialog::VolumeObjectParameters> parameters = gui::dialog::VolumeObjectParametersDialog::show(
+                dimension, object_name, VOLUME_IMAGE_SIZE_DEFAULT, VOLUME_IMAGE_SIZE_MINIMUM,
+                VOLUME_IMAGE_SIZE_MAXIMUM);
 
-        if (!gui::dialog::volume_object_parameters(
-                    dimension, object_name, VOLUME_IMAGE_SIZE_DEFAULT, VOLUME_IMAGE_SIZE_MINIMUM,
-                    VOLUME_IMAGE_SIZE_MAXIMUM, &image_size))
+        if (!parameters)
         {
                 return nullptr;
         }
@@ -189,7 +189,7 @@ std::function<void(ProgressRatioList*)> action_load_from_volume_repository(
                         dimension,
                         [&]<size_t N>(const Dimension<N>&)
                         {
-                                load_from_volume_repository<N>(object_name, image_size, *repository);
+                                load_from_volume_repository<N>(object_name, parameters->image_size, *repository);
                         });
         };
 }

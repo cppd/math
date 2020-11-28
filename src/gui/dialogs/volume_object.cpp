@@ -29,22 +29,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui::dialog
 {
-namespace volume_object_parameters_implementation
-{
-VolumeObjectParameters::VolumeObjectParameters(QWidget* parent) : QDialog(parent)
-{
-        ui.setupUi(this);
-        setWindowTitle("Create Object");
-}
-
-bool VolumeObjectParameters::show(
+VolumeObjectParametersDialog::VolumeObjectParametersDialog(
         int dimension,
         const std::string& volume_object_name,
         int default_image_size,
         int min_image_size,
         int max_image_size,
-        int* image_size)
+        std::optional<VolumeObjectParameters>& parameters)
+        : QDialog(parent_for_dialog()),
+          m_min_image_size(min_image_size),
+          m_max_image_size(max_image_size),
+          m_parameters(parameters)
 {
+        ui.setupUi(this);
+        setWindowTitle("Create Object");
+
         if (!(dimension >= 2))
         {
                 error("Error dimension parameter: " + to_string(dimension));
@@ -59,9 +58,6 @@ bool VolumeObjectParameters::show(
                       + ", max = " + to_string(max_image_size) + ", default = " + to_string(default_image_size));
         }
 
-        m_min_image_size = min_image_size;
-        m_max_image_size = max_image_size;
-
         ui.label_space->setText(space_name(dimension).c_str());
         ui.label_object->setText(volume_object_name.c_str());
 
@@ -69,18 +65,9 @@ bool VolumeObjectParameters::show(
         ui.spinBox_image_size->setMaximum(max_image_size);
         ui.spinBox_image_size->setValue(default_image_size);
         ui.spinBox_image_size->setSingleStep(std::max(1, max_image_size / 1000));
-
-        if (QPointer ptr(this); !this->exec() || ptr.isNull())
-        {
-                return false;
-        }
-
-        *image_size = m_image_size;
-
-        return true;
 }
 
-void VolumeObjectParameters::done(int r)
+void VolumeObjectParametersDialog::done(int r)
 {
         if (r != QDialog::Accepted)
         {
@@ -88,8 +75,8 @@ void VolumeObjectParameters::done(int r)
                 return;
         }
 
-        m_image_size = ui.spinBox_image_size->value();
-        if (!(m_image_size >= m_min_image_size && m_image_size <= m_max_image_size))
+        int image_size = ui.spinBox_image_size->value();
+        if (!(image_size >= m_min_image_size && image_size <= m_max_image_size))
         {
                 std::string msg = "Error image size. It must be in the range [" + to_string(m_min_image_size) + ", "
                                   + to_string(m_max_image_size) + "].";
@@ -97,23 +84,28 @@ void VolumeObjectParameters::done(int r)
                 return;
         }
 
+        m_parameters.emplace();
+        m_parameters->image_size = image_size;
+
         QDialog::done(r);
 }
-}
 
-bool volume_object_parameters(
+std::optional<VolumeObjectParameters> VolumeObjectParametersDialog::show(
         int dimension,
         const std::string& volume_object_name,
         int default_image_size,
         int min_image_size,
-        int max_image_size,
-        int* image_size)
+        int max_image_size)
 {
-        namespace impl = volume_object_parameters_implementation;
+        std::optional<VolumeObjectParameters> parameters;
 
-        QtObjectInDynamicMemory<impl::VolumeObjectParameters> w(parent_for_dialog());
+        QtObjectInDynamicMemory w(new VolumeObjectParametersDialog(
+                dimension, volume_object_name, default_image_size, min_image_size, max_image_size, parameters));
 
-        return w->show(dimension, volume_object_name, default_image_size, min_image_size, max_image_size, image_size)
-               && !w.isNull();
+        if (!w->exec() || w.isNull())
+        {
+                return std::nullopt;
+        }
+        return parameters;
 }
 }
