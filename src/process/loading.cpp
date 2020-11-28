@@ -125,11 +125,10 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
                 return nullptr;
         }
 
-        int point_count;
+        std::optional<gui::dialog::PointObjectParameters> parameters = gui::dialog::PointObjectParametersDialog::show(
+                dimension, object_name, POINT_COUNT_DEFAULT, POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM);
 
-        if (!gui::dialog::point_object_parameters(
-                    dimension, object_name, POINT_COUNT_DEFAULT, POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM,
-                    &point_count))
+        if (!parameters)
         {
                 return nullptr;
         }
@@ -157,7 +156,7 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
                         [&]<size_t N>(const Dimension<N>&)
                         {
                                 std::shared_ptr<mesh::MeshObject<N>> mesh =
-                                        load_from_mesh_repository<N>(object_name, point_count, *repository);
+                                        load_from_mesh_repository<N>(object_name, parameters->point_count, *repository);
 
                                 compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
                         });

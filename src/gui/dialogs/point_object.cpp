@@ -29,22 +29,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui::dialog
 {
-namespace point_object_parameters_implementation
-{
-PointObjectParameters::PointObjectParameters(QWidget* parent) : QDialog(parent)
-{
-        ui.setupUi(this);
-        setWindowTitle("Create Object");
-}
-
-bool PointObjectParameters::show(
+PointObjectParametersDialog::PointObjectParametersDialog(
         int dimension,
         const std::string& point_object_name,
         int default_point_count,
         int min_point_count,
-        int max_point_count,
-        int* point_count)
+        int max_point_count)
+        : QDialog(parent_for_dialog()), m_min_point_count(min_point_count), m_max_point_count(max_point_count)
 {
+        ui.setupUi(this);
+        setWindowTitle("Create Object");
+
         if (!(dimension >= 2))
         {
                 error("Error dimension parameter: " + to_string(dimension));
@@ -59,9 +54,6 @@ bool PointObjectParameters::show(
                       + ", max = " + to_string(max_point_count) + ", default = " + to_string(default_point_count));
         }
 
-        m_min_point_count = min_point_count;
-        m_max_point_count = max_point_count;
-
         ui.label_space->setText(space_name(dimension).c_str());
         ui.label_object->setText(point_object_name.c_str());
 
@@ -69,18 +61,19 @@ bool PointObjectParameters::show(
         ui.spinBox_point_count->setMaximum(max_point_count);
         ui.spinBox_point_count->setValue(default_point_count);
         ui.spinBox_point_count->setSingleStep(std::max(1, max_point_count / 1000));
-
-        if (QPointer ptr(this); !this->exec() || ptr.isNull())
-        {
-                return false;
-        }
-
-        *point_count = m_point_count;
-
-        return true;
 }
 
-void PointObjectParameters::done(int r)
+std::optional<PointObjectParameters> PointObjectParametersDialog::show_dialog()
+{
+        if (QPointer ptr(this); !this->exec() || ptr.isNull())
+        {
+                return std::nullopt;
+        }
+
+        return std::move(m_parameters);
+}
+
+void PointObjectParametersDialog::done(int r)
 {
         if (r != QDialog::Accepted)
         {
@@ -88,32 +81,28 @@ void PointObjectParameters::done(int r)
                 return;
         }
 
-        m_point_count = ui.spinBox_point_count->value();
-        if (!(m_point_count >= 1 && m_point_count <= m_max_point_count))
+        m_parameters.point_count = ui.spinBox_point_count->value();
+        if (!(m_parameters.point_count >= m_min_point_count && m_parameters.point_count <= m_max_point_count))
         {
-                std::string msg =
-                        "Error point count. It must be in the range [1, " + to_string(m_max_point_count) + "].";
+                std::string msg = "Error point count. It must be in the range [" + to_string(m_min_point_count) + ", "
+                                  + to_string(m_max_point_count) + "].";
                 dialog::message_critical(msg);
                 return;
         }
 
         QDialog::done(r);
 }
-}
 
-bool point_object_parameters(
+std::optional<PointObjectParameters> PointObjectParametersDialog::show(
         int dimension,
         const std::string& point_object_name,
         int default_point_count,
         int min_point_count,
-        int max_point_count,
-        int* point_count)
+        int max_point_count)
 {
-        namespace impl = point_object_parameters_implementation;
-
-        QtObjectInDynamicMemory<impl::PointObjectParameters> w(parent_for_dialog());
-
-        return w->show(dimension, point_object_name, default_point_count, min_point_count, max_point_count, point_count)
-               && !w.isNull();
+        return QtObjectInDynamicMemory(
+                       new PointObjectParametersDialog(
+                               dimension, point_object_name, default_point_count, min_point_count, max_point_count))
+                ->show_dialog();
 }
 }

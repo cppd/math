@@ -19,43 +19,45 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_point_object.h"
 
+#include <optional>
 #include <string>
 
 namespace gui::dialog
 {
-namespace point_object_parameters_implementation
+struct PointObjectParameters final
 {
-class PointObjectParameters final : public QDialog
+        int point_count;
+};
+
+class PointObjectParametersDialog final : public QDialog
 {
         Q_OBJECT
 
 private:
-        Ui::PointObjectParameters ui;
+        Ui::PointObjectParametersDialog ui;
 
-        int m_min_point_count;
-        int m_max_point_count;
-        int m_point_count;
+        const int m_min_point_count;
+        const int m_max_point_count;
 
-        void done(int r) override;
+        PointObjectParameters m_parameters;
 
-public:
-        explicit PointObjectParameters(QWidget* parent = nullptr);
-
-        [[nodiscard]] bool show(
+        PointObjectParametersDialog(
                 int dimension,
                 const std::string& point_object_name,
                 int default_point_count,
                 int min_point_count,
-                int max_point_count,
-                int* point_count);
-};
-}
+                int max_point_count);
 
-[[nodiscard]] bool point_object_parameters(
-        int dimension,
-        const std::string& point_object_name,
-        int default_point_count,
-        int min_point_count,
-        int max_point_count,
-        int* point_count);
+        [[nodiscard]] std::optional<PointObjectParameters> show_dialog();
+
+        void done(int r) override;
+
+public:
+        [[nodiscard]] static std::optional<PointObjectParameters> show(
+                int dimension,
+                const std::string& point_object_name,
+                int default_point_count,
+                int min_point_count,
+                int max_point_count);
+};
 }
