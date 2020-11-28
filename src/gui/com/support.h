@@ -70,9 +70,13 @@ public:
         {
         }
 
+        explicit QtObjectInDynamicMemory(T* ptr) : QPointer<T>(ptr)
+        {
+        }
+
         ~QtObjectInDynamicMemory()
         {
-                delete *static_cast<QPointer<T>*>(this);
+                delete this->data();
         }
 };
 
