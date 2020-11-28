@@ -43,7 +43,7 @@ private:
 
         VolumeObjectParametersDialog(
                 int dimension,
-                const std::string& volume_object_name,
+                const std::string& object_name,
                 int default_image_size,
                 int min_image_size,
                 int max_image_size,
@@ -54,7 +54,7 @@ private:
 public:
         [[nodiscard]] static std::optional<VolumeObjectParameters> show(
                 int dimension,
-                const std::string& volume_object_name,
+                const std::string& object_name,
                 int default_image_size,
                 int min_image_size,
                 int max_image_size);

@@ -25,13 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 
-#include <QPointer>
-
 namespace gui::dialog
 {
 VolumeObjectParametersDialog::VolumeObjectParametersDialog(
         int dimension,
-        const std::string& volume_object_name,
+        const std::string& object_name,
         int default_image_size,
         int min_image_size,
         int max_image_size,
@@ -48,7 +46,7 @@ VolumeObjectParametersDialog::VolumeObjectParametersDialog(
         {
                 error("Error dimension parameter: " + to_string(dimension));
         }
-        if (volume_object_name.empty())
+        if (object_name.empty())
         {
                 error("No volume object name parameter");
         }
@@ -58,8 +56,8 @@ VolumeObjectParametersDialog::VolumeObjectParametersDialog(
                       + ", max = " + to_string(max_image_size) + ", default = " + to_string(default_image_size));
         }
 
-        ui.label_space->setText(space_name(dimension).c_str());
-        ui.label_object->setText(volume_object_name.c_str());
+        ui.label_space->setText(QString::fromStdString(space_name(dimension)));
+        ui.label_object->setText(QString::fromStdString(object_name));
 
         ui.spinBox_image_size->setMinimum(min_image_size);
         ui.spinBox_image_size->setMaximum(max_image_size);
@@ -92,7 +90,7 @@ void VolumeObjectParametersDialog::done(int r)
 
 std::optional<VolumeObjectParameters> VolumeObjectParametersDialog::show(
         int dimension,
-        const std::string& volume_object_name,
+        const std::string& object_name,
         int default_image_size,
         int min_image_size,
         int max_image_size)
@@ -100,7 +98,7 @@ std::optional<VolumeObjectParameters> VolumeObjectParametersDialog::show(
         std::optional<VolumeObjectParameters> parameters;
 
         QtObjectInDynamicMemory w(new VolumeObjectParametersDialog(
-                dimension, volume_object_name, default_image_size, min_image_size, max_image_size, parameters));
+                dimension, object_name, default_image_size, min_image_size, max_image_size, parameters));
 
         if (!w->exec() || w.isNull())
         {
