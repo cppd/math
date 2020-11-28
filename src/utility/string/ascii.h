@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <algorithm>
+
 namespace ascii
 {
 constexpr char to_upper(char c)
@@ -58,5 +60,16 @@ constexpr bool is_print(char c)
 constexpr int char_to_int(char c)
 {
         return c - '0';
+}
+
+template <typename T>
+std::enable_if_t<std::is_same_v<std::remove_cvref_t<typename T::value_type>, char>, bool> is_ascii(const T& s)
+{
+        return std::all_of(
+                s.cbegin(), s.cend(),
+                [](char c)
+                {
+                        return static_cast<char8_t>(c) <= 0x7F;
+                });
 }
 }
