@@ -108,4 +108,6 @@ std::enable_if_t<N >= 3> save_image_to_files(
 //
 
 void load_image_from_file_rgba(const std::filesystem::path& file_name, Image<2>* image);
+
+void load_image_from_files_rgba(const std::filesystem::path& directory, Image<3>* image);
 }

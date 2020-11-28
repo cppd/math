@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "conversion.h"
 
+#include <src/utility/string/ascii.h>
 #include <src/utility/string/str.h>
 
 #include <QImage>
@@ -74,6 +75,41 @@ std::filesystem::path file_name_with_extension(std::filesystem::path file_name)
 
         check_write_format_support(DEFAULT_WRITE_FORMAT);
         return file_name.replace_extension(DEFAULT_WRITE_FORMAT);
+}
+
+std::vector<std::string> read_sorted_file_names_from_directory(const std::filesystem::path& directory)
+{
+        if (!std::filesystem::is_directory(directory))
+        {
+                error("Directory not found " + generic_utf8_filename(directory));
+        }
+        std::vector<std::string> files;
+        for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directory))
+        {
+                if (!entry.is_regular_file())
+                {
+                        error("Non-regular file found " + generic_utf8_filename(entry.path()));
+                }
+                files.push_back(generic_utf8_filename(entry.path().filename()));
+                // Проверка для сортировки
+                if (!ascii::is_ascii(files.back()))
+                {
+                        error("File name does not have only ASCII encoding " + generic_utf8_filename(entry.path()));
+                }
+        }
+        std::sort(files.begin(), files.end());
+        return files;
+}
+
+std::tuple<int, int> image_size(const std::filesystem::path& file_name)
+{
+        std::string f = generic_utf8_filename(file_name);
+        QImage q_image;
+        if (!q_image.load(QString::fromStdString(f)) || q_image.width() < 1 || q_image.height() < 1)
+        {
+                error("Error loading image from the file " + f);
+        }
+        return std::tuple<int, int>(q_image.width(), q_image.height());
 }
 
 void save_1(const std::string& file_name, const ImageView<2>& image_view)
@@ -178,6 +214,35 @@ void save_4(const std::string& file_name, const ImageView<2>& image_view)
                 error("Error saving pixels to the file " + file_name);
         }
 }
+
+void load_4(QImage&& image, const std::span<std::byte>& pixels)
+{
+        ASSERT(pixels.size() == 4ull * image.width() * image.height());
+
+        if (image.format() != QImage::Format_ARGB32)
+        {
+                image = image.convertToFormat(QImage::Format_ARGB32);
+        }
+
+        int width = image.width();
+        int height = image.height();
+
+        std::byte* ptr = pixels.data();
+        for (int row = 0; row < height; ++row)
+        {
+                const QRgb* image_line = reinterpret_cast<const QRgb*>(image.constScanLine(row));
+                for (int col = 0; col < width; ++col, ptr += 4)
+                {
+                        const QRgb& c = image_line[col];
+                        std::array<uint8_t, 4> rgba;
+                        rgba[0] = qRed(c);
+                        rgba[1] = qGreen(c);
+                        rgba[2] = qBlue(c);
+                        rgba[3] = qAlpha(c);
+                        std::memcpy(ptr, rgba.data(), 4);
+                }
+        }
+}
 }
 
 void save_image_to_file(const std::filesystem::path& file_name, const ImageView<2>& image_view)
@@ -267,37 +332,48 @@ void load_image_from_file_rgba(const std::filesystem::path& file_name, Image<2>*
                 error("Error loading image from the file " + f);
         }
 
-        if (q_image.format() != QImage::Format_ARGB32)
-        {
-                q_image = q_image.convertToFormat(QImage::Format_ARGB32);
-        }
-
+        image->color_format = ColorFormat::R8G8B8A8_SRGB;
         image->size[0] = q_image.width();
         image->size[1] = q_image.height();
+        image->pixels.resize(4ull * image->size[0] * image->size[1]);
 
-        int width = q_image.width();
-        int height = q_image.height();
+        load_4(std::move(q_image), image->pixels);
+}
 
-        image->pixels.resize(4ull * width * height);
-
-        size_t pixel = 0;
-        for (int row = 0; row < height; ++row)
+void load_image_from_files_rgba(const std::filesystem::path& directory, Image<3>* image)
+{
+        const std::vector<std::string> files = read_sorted_file_names_from_directory(directory);
+        if (files.empty())
         {
-                const QRgb* image_line = reinterpret_cast<const QRgb*>(q_image.constScanLine(row));
-                for (int col = 0; col < width; ++col)
-                {
-                        const QRgb& c = image_line[col];
-                        uint8_t r = qRed(c);
-                        uint8_t g = qGreen(c);
-                        uint8_t b = qBlue(c);
-                        uint8_t a = qAlpha(c);
-                        std::memcpy(&(image->pixels)[pixel++], &r, 1);
-                        std::memcpy(&(image->pixels)[pixel++], &g, 1);
-                        std::memcpy(&(image->pixels)[pixel++], &b, 1);
-                        std::memcpy(&(image->pixels)[pixel++], &a, 1);
-                }
+                error("No files found in directory " + generic_utf8_filename(directory));
         }
 
         image->color_format = ColorFormat::R8G8B8A8_SRGB;
+        std::tie(image->size[0], image->size[1]) = image_size(directory / path_from_utf8(files.front()));
+        image->size[2] = files.size();
+        image->pixels.resize(4 * multiply_all<long long>(image->size));
+
+        const size_t size_2d = image->pixels.size() / image->size[2];
+        std::byte* ptr_2d = image->pixels.data();
+        ASSERT(image->pixels.size() == size_2d * image->size[2]);
+
+        for (const std::string& file : files)
+        {
+                std::string f = generic_utf8_filename(directory / path_from_utf8(file));
+                QImage q_image;
+                if (!q_image.load(QString::fromStdString(f)))
+                {
+                        error("Error loading image from the file " + f);
+                }
+                if (q_image.width() != image->size[0] || q_image.height() != image->size[1])
+                {
+                        error("Different image sizes in directory: " + files.front() + " (" + to_string(image->size[0])
+                              + ", " + to_string(image->size[1]) + ") and " + file + " (" + to_string(q_image.width())
+                              + ", " + to_string(q_image.height()) + ")");
+                }
+
+                load_4(std::move(q_image), std::span(ptr_2d, size_2d));
+                ptr_2d += size_2d;
+        }
 }
 }
