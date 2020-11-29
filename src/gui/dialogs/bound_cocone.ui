@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>BoundCoconeParameters</class>
- <widget class="QDialog" name="BoundCoconeParameters">
+ <class>BoundCoconeParametersDialog</class>
+ <widget class="QDialog" name="BoundCoconeParametersDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>184</width>
-    <height>110</height>
+    <width>231</width>
+    <height>173</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -74,7 +74,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>BoundCoconeParameters</receiver>
+   <receiver>BoundCoconeParametersDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -90,7 +90,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>BoundCoconeParameters</receiver>
+   <receiver>BoundCoconeParametersDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

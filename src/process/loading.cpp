@@ -89,9 +89,8 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
                 objects_to_load = gui::dialog::object_selection_current();
         }
 
-        double rho;
-        double alpha;
-        gui::dialog::bound_cocone_parameters_current(&rho, &alpha);
+        gui::dialog::BoundCoconeParameters bound_cocone_parameters =
+                gui::dialog::BoundCoconeParametersDialog::current();
 
         bool bound_cocone = objects_to_load.contains(gui::dialog::ComputationType::BoundCocone);
         bool cocone = objects_to_load.contains(gui::dialog::ComputationType::Cocone);
@@ -109,7 +108,9 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
                                 std::shared_ptr<mesh::MeshObject<N>> mesh = load_from_file<N>(
                                         generic_utf8_filename(file_name.filename()), progress_list, file_name);
 
-                                compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
+                                compute<N>(
+                                        progress_list, convex_hull, cocone, bound_cocone, mst, *mesh,
+                                        bound_cocone_parameters.rho, bound_cocone_parameters.alpha);
                         });
         };
 }
@@ -125,10 +126,11 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
                 return nullptr;
         }
 
-        std::optional<gui::dialog::PointObjectParameters> parameters = gui::dialog::PointObjectParametersDialog::show(
-                dimension, object_name, POINT_COUNT_DEFAULT, POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM);
+        std::optional<gui::dialog::PointObjectParameters> point_object_parameters =
+                gui::dialog::PointObjectParametersDialog::show(
+                        dimension, object_name, POINT_COUNT_DEFAULT, POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM);
 
-        if (!parameters)
+        if (!point_object_parameters)
         {
                 return nullptr;
         }
@@ -140,9 +142,8 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
                 return nullptr;
         }
 
-        double rho;
-        double alpha;
-        gui::dialog::bound_cocone_parameters_current(&rho, &alpha);
+        gui::dialog::BoundCoconeParameters bound_cocone_parameters =
+                gui::dialog::BoundCoconeParametersDialog::current();
 
         bool bound_cocone = objects_to_load->contains(gui::dialog::ComputationType::BoundCocone);
         bool cocone = objects_to_load->contains(gui::dialog::ComputationType::Cocone);
@@ -155,10 +156,12 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
                         dimension,
                         [&]<size_t N>(const Dimension<N>&)
                         {
-                                std::shared_ptr<mesh::MeshObject<N>> mesh =
-                                        load_from_mesh_repository<N>(object_name, parameters->point_count, *repository);
+                                std::shared_ptr<mesh::MeshObject<N>> mesh = load_from_mesh_repository<N>(
+                                        object_name, point_object_parameters->point_count, *repository);
 
-                                compute<N>(progress_list, convex_hull, cocone, bound_cocone, mst, *mesh, rho, alpha);
+                                compute<N>(
+                                        progress_list, convex_hull, cocone, bound_cocone, mst, *mesh,
+                                        bound_cocone_parameters.rho, bound_cocone_parameters.alpha);
                         });
         };
 }

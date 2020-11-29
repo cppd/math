@@ -19,34 +19,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_bound_cocone.h"
 
+#include <optional>
+
 namespace gui::dialog
 {
-namespace bound_cocone_parameters_implementation
+struct BoundCoconeParameters final
 {
-class BoundCoconeParameters final : public QDialog
+        double rho;
+        double alpha;
+};
+
+class BoundCoconeParametersDialog final : public QDialog
 {
         Q_OBJECT
 
 private:
-        Ui::BoundCoconeParameters ui;
+        Ui::BoundCoconeParametersDialog ui;
 
         double m_min_rho;
         double m_max_rho;
         double m_min_alpha;
         double m_max_alpha;
 
-        double m_rho;
-        double m_alpha;
+        std::optional<BoundCoconeParameters>& m_parameters;
+
+        BoundCoconeParametersDialog(
+                int minimum_rho_exponent,
+                int minimum_alpha_exponent,
+                const BoundCoconeParameters& input,
+                std::optional<BoundCoconeParameters>& parameters);
 
         void done(int r) override;
 
 public:
-        explicit BoundCoconeParameters(QWidget* parent = nullptr);
-
-        [[nodiscard]] bool show(int minimum_rho_exponent, int minimum_alpha_exponent, double* rho, double* alpha);
+        [[nodiscard]] static std::optional<BoundCoconeParameters> show();
+        [[nodiscard]] static BoundCoconeParameters current();
 };
-}
-
-[[nodiscard]] bool bound_cocone_parameters(double* rho, double* alpha);
-void bound_cocone_parameters_current(double* rho, double* alpha);
 }

@@ -24,32 +24,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 
-#include <QPointer>
 #include <cmath>
+#include <mutex>
 
 namespace gui::dialog
-{
-namespace bound_cocone_parameters_implementation
 {
 namespace
 {
 constexpr int MINIMUM_RHO_EXPONENT = -3;
 constexpr int MINIMUM_ALPHA_EXPONENT = -3;
-constexpr double DEFAULT_RHO = 0.3;
-constexpr double DEFAULT_ALPHA = 0.14;
 
-double g_rho = DEFAULT_RHO;
-double g_alpha = DEFAULT_ALPHA;
+std::mutex g_mutex;
+BoundCoconeParameters g_parameters{.rho = 0.3, .alpha = 0.14};
 }
 
-BoundCoconeParameters::BoundCoconeParameters(QWidget* parent) : QDialog(parent)
+BoundCoconeParametersDialog::BoundCoconeParametersDialog(
+        int minimum_rho_exponent,
+        int minimum_alpha_exponent,
+        const BoundCoconeParameters& input,
+        std::optional<BoundCoconeParameters>& parameters)
+        : QDialog(parent_for_dialog()), m_parameters(parameters)
 {
         ui.setupUi(this);
         setWindowTitle("BoundCocone Parameters");
-}
 
-bool BoundCoconeParameters::show(int minimum_rho_exponent, int minimum_alpha_exponent, double* rho, double* alpha)
-{
         if (!(-10 <= minimum_rho_exponent && minimum_rho_exponent < 0))
         {
                 error(reinterpret_cast<const char*>(u8"Error BoundCocone minimum ρ exponent: ")
@@ -66,15 +64,16 @@ bool BoundCoconeParameters::show(int minimum_rho_exponent, int minimum_alpha_exp
         double min_alpha = std::pow(10, minimum_alpha_exponent);
         double max_alpha = 1 - min_alpha;
 
-        if (!(min_rho <= *rho && *rho <= max_rho))
+        if (!(min_rho <= input.rho && input.rho <= max_rho))
         {
-                error(reinterpret_cast<const char*>(u8"BoundCocone parameter ρ range error: ρ = ") + to_string(*rho)
-                      + ", range = (" + to_string(min_rho) + ", " + to_string(max_rho) + ")");
+                error(reinterpret_cast<const char*>(u8"BoundCocone parameter ρ range error: ρ = ")
+                      + to_string(input.rho) + ", range = (" + to_string(min_rho) + ", " + to_string(max_rho) + ")");
         }
-        if (!(min_alpha <= *alpha && *alpha <= max_alpha))
+        if (!(min_alpha <= input.alpha && input.alpha <= max_alpha))
         {
-                error(reinterpret_cast<const char*>(u8"BoundCocone parameter α range error: α = ") + to_string(*alpha)
-                      + ", range = (" + to_string(min_alpha) + ", " + to_string(max_alpha) + ")");
+                error(reinterpret_cast<const char*>(u8"BoundCocone parameter α range error: α = ")
+                      + to_string(input.alpha) + ", range = (" + to_string(min_alpha) + ", " + to_string(max_alpha)
+                      + ")");
         }
 
         m_min_rho = min_rho;
@@ -86,26 +85,16 @@ bool BoundCoconeParameters::show(int minimum_rho_exponent, int minimum_alpha_exp
         ui.doubleSpinBox_rho->setMinimum(min_rho);
         ui.doubleSpinBox_rho->setMaximum(max_rho);
         ui.doubleSpinBox_rho->setSingleStep(min_rho);
-        ui.doubleSpinBox_rho->setValue(*rho);
+        ui.doubleSpinBox_rho->setValue(input.rho);
 
         ui.doubleSpinBox_alpha->setDecimals(std::abs(minimum_alpha_exponent));
         ui.doubleSpinBox_alpha->setMinimum(min_alpha);
         ui.doubleSpinBox_alpha->setMaximum(max_alpha);
         ui.doubleSpinBox_alpha->setSingleStep(min_alpha);
-        ui.doubleSpinBox_alpha->setValue(*alpha);
-
-        if (QPointer ptr(this); !this->exec() || ptr.isNull())
-        {
-                return false;
-        }
-
-        *rho = m_rho;
-        *alpha = m_alpha;
-
-        return true;
+        ui.doubleSpinBox_alpha->setValue(input.alpha);
 }
 
-void BoundCoconeParameters::done(int r)
+void BoundCoconeParametersDialog::done(int r)
 {
         if (r != QDialog::Accepted)
         {
@@ -113,8 +102,8 @@ void BoundCoconeParameters::done(int r)
                 return;
         }
 
-        m_rho = ui.doubleSpinBox_rho->value();
-        if (!(m_min_rho <= m_rho && m_rho <= m_max_rho))
+        double rho = ui.doubleSpinBox_rho->value();
+        if (!(m_min_rho <= rho && rho <= m_max_rho))
         {
                 std::string msg = reinterpret_cast<const char*>(u8"ρ range error (") + to_string(m_min_rho) + ", "
                                   + to_string(m_max_rho) + ")";
@@ -122,8 +111,8 @@ void BoundCoconeParameters::done(int r)
                 return;
         }
 
-        m_alpha = ui.doubleSpinBox_alpha->value();
-        if (!(m_min_alpha <= m_alpha && m_alpha <= m_max_alpha))
+        double alpha = ui.doubleSpinBox_alpha->value();
+        if (!(m_min_alpha <= alpha && alpha <= m_max_alpha))
         {
                 std::string msg = reinterpret_cast<const char*>(u8"α range error (") + to_string(m_min_alpha) + ", "
                                   + to_string(m_max_alpha) + ")";
@@ -131,33 +120,40 @@ void BoundCoconeParameters::done(int r)
                 return;
         }
 
+        m_parameters.emplace();
+        m_parameters->rho = rho;
+        m_parameters->alpha = alpha;
+
         QDialog::done(r);
 }
-}
 
-bool bound_cocone_parameters(double* rho, double* alpha)
+std::optional<BoundCoconeParameters> BoundCoconeParametersDialog::show()
 {
-        namespace impl = bound_cocone_parameters_implementation;
+        std::optional<BoundCoconeParameters> parameters;
 
-        QtObjectInDynamicMemory<impl::BoundCoconeParameters> w(parent_for_dialog());
-
-        if (!w->show(impl::MINIMUM_RHO_EXPONENT, impl::MINIMUM_ALPHA_EXPONENT, &impl::g_rho, &impl::g_alpha)
-            || w.isNull())
+        BoundCoconeParameters current;
         {
-                return false;
+                std::lock_guard lg(g_mutex);
+                current = g_parameters;
         }
 
-        *rho = impl::g_rho;
-        *alpha = impl::g_alpha;
+        QtObjectInDynamicMemory w(
+                new BoundCoconeParametersDialog(MINIMUM_RHO_EXPONENT, MINIMUM_ALPHA_EXPONENT, current, parameters));
 
-        return true;
+        if (!w->exec() || w.isNull())
+        {
+                return std::nullopt;
+        }
+        {
+                std::lock_guard lg(g_mutex);
+                g_parameters = *parameters;
+        }
+        return parameters;
 }
 
-void bound_cocone_parameters_current(double* rho, double* alpha)
+BoundCoconeParameters BoundCoconeParametersDialog::current()
 {
-        namespace impl = bound_cocone_parameters_implementation;
-
-        *rho = impl::g_rho;
-        *alpha = impl::g_alpha;
+        std::lock_guard lg(g_mutex);
+        return g_parameters;
 }
 }

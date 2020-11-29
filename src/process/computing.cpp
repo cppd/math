@@ -25,10 +25,8 @@ namespace process
 {
 std::function<void(ProgressRatioList*)> action_bound_cocone(const storage::MeshObjectConst& object)
 {
-        double rho;
-        double alpha;
-
-        if (!gui::dialog::bound_cocone_parameters(&rho, &alpha))
+        std::optional<gui::dialog::BoundCoconeParameters> parameters = gui::dialog::BoundCoconeParametersDialog::show();
+        if (!parameters)
         {
                 return nullptr;
         }
@@ -39,7 +37,7 @@ std::function<void(ProgressRatioList*)> action_bound_cocone(const storage::MeshO
                         std::function<void(ProgressRatioList*)> f = [=](ProgressRatioList* progress_list)
                         {
                                 compute(progress_list, false /*convex hull*/, false /*cocone*/, true /*bound cocone*/,
-                                        false /*mst*/, *mesh_object, rho, alpha);
+                                        false /*mst*/, *mesh_object, parameters->rho, parameters->alpha);
                         };
                         return f;
                 },
