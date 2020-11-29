@@ -25,11 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 
-#include <QPointer>
-
 namespace gui::dialog
-{
-namespace painter_parameters_for_3d_implementation
 {
 namespace
 {
@@ -37,31 +33,24 @@ namespace
 constexpr int DIMENSION = 3;
 }
 
-PainterParametersFor3d::PainterParametersFor3d(QWidget* parent) : QDialog(parent)
-{
-        ui.setupUi(this);
-        setWindowTitle("Painter");
-
-        connect(ui.spinBox_width, QOverload<int>::of(&QSpinBox::valueChanged), this,
-                &PainterParametersFor3d::on_width_value_changed);
-        connect(ui.spinBox_height, QOverload<int>::of(&QSpinBox::valueChanged), this,
-                &PainterParametersFor3d::on_height_value_changed);
-}
-
-bool PainterParametersFor3d::show(
+Painter3dParametersDialog::Painter3dParametersDialog(
         int max_thread_count,
         int width,
         int height,
         int max_screen_size,
         int default_samples_per_pixel,
         int max_samples_per_pixel,
-        int* thread_count,
-        int* paint_width,
-        int* paint_height,
-        int* samples_per_pixel,
-        bool* flat_facets,
-        bool* cornell_box)
+        std::optional<Painter3dParameters>& parameters)
+        : QDialog(parent_for_dialog()), m_parameters(parameters)
 {
+        ui.setupUi(this);
+        setWindowTitle("Painter");
+
+        connect(ui.spinBox_width, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                &Painter3dParametersDialog::on_width_value_changed);
+        connect(ui.spinBox_height, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                &Painter3dParametersDialog::on_height_value_changed);
+
         if (!(max_thread_count >= 1))
         {
                 error("Error max thread count parameter: " + to_string(max_thread_count));
@@ -112,73 +101,9 @@ bool PainterParametersFor3d::show(
 
         ui.checkBox_flat_facets->setChecked(false);
         ui.checkBox_cornell_box->setChecked(false);
-
-        if (QPointer ptr(this); !this->exec() || ptr.isNull())
-        {
-                return false;
-        }
-
-        *thread_count = m_thread_count;
-        *paint_width = m_width;
-        *paint_height = m_height;
-        *samples_per_pixel = m_samples_per_pixel;
-        *flat_facets = m_flat_facets;
-        *cornell_box = m_cornell_box;
-
-        return true;
 }
 
-void PainterParametersFor3d::done(int r)
-{
-        if (r != QDialog::Accepted)
-        {
-                QDialog::done(r);
-                return;
-        }
-
-        m_thread_count = ui.spinBox_thread_count->value();
-        if (!(m_thread_count >= 1 && m_thread_count <= m_max_thread_count))
-        {
-                std::string msg =
-                        "Error thread count. Must be in the range [1, " + to_string(m_max_thread_count) + "].";
-                dialog::message_critical(msg);
-                return;
-        }
-
-        m_samples_per_pixel = ui.spinBox_samples_per_pixel->value();
-        if (!(m_samples_per_pixel >= 1 && m_samples_per_pixel <= m_max_samples_per_pixel))
-        {
-                std::string msg = "Error samples per pixel. Must be in the range [1, "
-                                  + to_string(m_max_samples_per_pixel) + "].";
-                dialog::message_critical(msg);
-                return;
-        }
-
-        m_width = ui.spinBox_width->value();
-        if (!(m_min_width <= m_width && m_width <= m_max_width))
-        {
-                std::string msg = "Error width " + to_string(m_width) + ", min = " + to_string(m_min_width)
-                                  + ", max = " + to_string(m_max_width);
-                dialog::message_critical(msg);
-                return;
-        }
-
-        m_height = ui.spinBox_height->value();
-        if (!(m_min_height <= m_height && m_height <= m_max_height))
-        {
-                std::string msg = "Error height " + to_string(m_height) + ", min = " + to_string(m_min_height)
-                                  + ", max = " + to_string(m_max_height);
-                dialog::message_critical(msg);
-                return;
-        }
-
-        m_flat_facets = ui.checkBox_flat_facets->isChecked();
-        m_cornell_box = ui.checkBox_cornell_box->isChecked();
-
-        QDialog::done(r);
-}
-
-void PainterParametersFor3d::on_width_value_changed(int)
+void Painter3dParametersDialog::on_width_value_changed(int)
 {
         int height = std::lround(ui.spinBox_width->value() / m_aspect_ratio);
 
@@ -186,36 +111,87 @@ void PainterParametersFor3d::on_width_value_changed(int)
         ui.spinBox_height->setValue(std::clamp(height, m_min_height, m_max_height));
 }
 
-void PainterParametersFor3d::on_height_value_changed(int)
+void Painter3dParametersDialog::on_height_value_changed(int)
 {
         int width = std::lround(ui.spinBox_height->value() * m_aspect_ratio);
 
         QSignalBlocker blocker(ui.spinBox_width);
         ui.spinBox_width->setValue(std::clamp(width, m_min_width, m_max_width));
 }
+
+void Painter3dParametersDialog::done(int r)
+{
+        if (r != QDialog::Accepted)
+        {
+                QDialog::done(r);
+                return;
+        }
+
+        int thread_count = ui.spinBox_thread_count->value();
+        if (!(thread_count >= 1 && thread_count <= m_max_thread_count))
+        {
+                std::string msg =
+                        "Error thread count. Must be in the range [1, " + to_string(m_max_thread_count) + "].";
+                dialog::message_critical(msg);
+                return;
+        }
+
+        int samples_per_pixel = ui.spinBox_samples_per_pixel->value();
+        if (!(samples_per_pixel >= 1 && samples_per_pixel <= m_max_samples_per_pixel))
+        {
+                std::string msg = "Error samples per pixel. Must be in the range [1, "
+                                  + to_string(m_max_samples_per_pixel) + "].";
+                dialog::message_critical(msg);
+                return;
+        }
+
+        int width = ui.spinBox_width->value();
+        if (!(m_min_width <= width && width <= m_max_width))
+        {
+                std::string msg = "Error width " + to_string(width) + ", min = " + to_string(m_min_width)
+                                  + ", max = " + to_string(m_max_width);
+                dialog::message_critical(msg);
+                return;
+        }
+
+        int height = ui.spinBox_height->value();
+        if (!(m_min_height <= height && height <= m_max_height))
+        {
+                std::string msg = "Error height " + to_string(height) + ", min = " + to_string(m_min_height)
+                                  + ", max = " + to_string(m_max_height);
+                dialog::message_critical(msg);
+                return;
+        }
+
+        m_parameters.emplace();
+        m_parameters->thread_count = thread_count;
+        m_parameters->samples_per_pixel = samples_per_pixel;
+        m_parameters->width = width;
+        m_parameters->height = height;
+        m_parameters->flat_facets = ui.checkBox_flat_facets->isChecked();
+        m_parameters->cornell_box = ui.checkBox_cornell_box->isChecked();
+
+        QDialog::done(r);
 }
 
-bool painter_parameters_for_3d(
+std::optional<Painter3dParameters> Painter3dParametersDialog::show(
         int max_thread_count,
         int width,
         int height,
         int max_screen_size,
         int default_samples_per_pixel,
-        int max_samples_per_pixel,
-        int* thread_count,
-        int* paint_width,
-        int* paint_height,
-        int* samples_per_pixel,
-        bool* flat_facets,
-        bool* cornell_box)
+        int max_samples_per_pixel)
 {
-        namespace impl = painter_parameters_for_3d_implementation;
+        std::optional<Painter3dParameters> parameters;
 
-        QtObjectInDynamicMemory<impl::PainterParametersFor3d> w(parent_for_dialog());
+        QtObjectInDynamicMemory w(new Painter3dParametersDialog(
+                max_thread_count, width, height, max_screen_size, default_samples_per_pixel, max_samples_per_pixel,
+                parameters));
 
-        return w->show(max_thread_count, width, height, max_screen_size, default_samples_per_pixel,
-                       max_samples_per_pixel, thread_count, paint_width, paint_height, samples_per_pixel, flat_facets,
-                       cornell_box)
-               && !w.isNull();
+        if (!w->exec() || w.isNull())
+        {
+                return std::nullopt;
+        }
+        return parameters;
 }
 }

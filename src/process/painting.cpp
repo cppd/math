@@ -80,14 +80,22 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                 scene_info.view_center = to_vector<T>(camera.view_center);
                 scene_info.view_width = camera.view_width;
 
-                if (!gui::dialog::painter_parameters_for_3d(
-                            hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
-                            PAINTER_DEFAULT_SAMPLE_COUNT, PAINTER_MAXIMUM_SAMPLE_COUNT<N>, &thread_count,
-                            &scene_info.width, &scene_info.height, &samples_per_pixel, &flat_facets,
-                            &scene_info.cornell_box))
+                std::optional<gui::dialog::Painter3dParameters> parameters =
+                        gui::dialog::Painter3dParametersDialog::show(
+                                hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
+                                PAINTER_DEFAULT_SAMPLE_COUNT, PAINTER_MAXIMUM_SAMPLE_COUNT<N>);
+                if (!parameters)
                 {
                         return nullptr;
                 }
+
+                scene_info.width = parameters->width;
+                scene_info.height = parameters->height;
+                scene_info.cornell_box = parameters->cornell_box;
+
+                thread_count = parameters->thread_count;
+                samples_per_pixel = parameters->samples_per_pixel;
+                flat_facets = parameters->flat_facets;
         }
         else
         {

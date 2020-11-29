@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>PainterParametersFor3d</class>
- <widget class="QDialog" name="PainterParametersFor3d">
+ <class>Painter3dParametersDialog</class>
+ <widget class="QDialog" name="Painter3dParametersDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>184</width>
-    <height>271</height>
+    <width>268</width>
+    <height>415</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -190,7 +190,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>PainterParametersFor3d</receiver>
+   <receiver>Painter3dParametersDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -206,7 +206,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>PainterParametersFor3d</receiver>
+   <receiver>Painter3dParametersDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

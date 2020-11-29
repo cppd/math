@@ -19,19 +19,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_painter_3d.h"
 
+#include <optional>
+
 namespace gui::dialog
 {
-namespace painter_parameters_for_3d_implementation
+struct Painter3dParameters final
 {
-class PainterParametersFor3d final : public QDialog
+        int thread_count;
+        int width;
+        int height;
+        int samples_per_pixel;
+        bool flat_facets;
+        bool cornell_box;
+};
+
+class Painter3dParametersDialog final : public QDialog
 {
         Q_OBJECT
 
 private:
-        Ui::PainterParametersFor3d ui;
+        Ui::Painter3dParametersDialog ui;
 
-        int m_width;
-        int m_height;
         int m_min_width;
         int m_max_width;
         int m_min_height;
@@ -40,11 +48,16 @@ private:
         int m_max_thread_count;
         int m_max_samples_per_pixel;
 
-        int m_thread_count;
-        double m_size_coef;
-        int m_samples_per_pixel;
-        bool m_flat_facets;
-        bool m_cornell_box;
+        std::optional<Painter3dParameters>& m_parameters;
+
+        Painter3dParametersDialog(
+                int max_thread_count,
+                int width,
+                int height,
+                int max_screen_size,
+                int default_samples_per_pixel,
+                int max_samples_per_pixel,
+                std::optional<Painter3dParameters>& parameters);
 
         void on_width_value_changed(int);
         void on_height_value_changed(int);
@@ -52,35 +65,12 @@ private:
         void done(int r) override;
 
 public:
-        explicit PainterParametersFor3d(QWidget* parent = nullptr);
-
-        [[nodiscard]] bool show(
+        [[nodiscard]] static std::optional<Painter3dParameters> show(
                 int max_thread_count,
                 int width,
                 int height,
                 int max_screen_size,
                 int default_samples_per_pixel,
-                int max_samples_per_pixel,
-                int* thread_count,
-                int* paint_width,
-                int* paint_height,
-                int* samples_per_pixel,
-                bool* flat_facets,
-                bool* cornell_box);
+                int max_samples_per_pixel);
 };
-}
-
-[[nodiscard]] bool painter_parameters_for_3d(
-        int max_thread_count,
-        int width,
-        int height,
-        int max_screen_size,
-        int default_samples_per_pixel,
-        int max_samples_per_pixel,
-        int* thread_count,
-        int* paint_width,
-        int* paint_height,
-        int* samples_per_pixel,
-        bool* flat_facets,
-        bool* cornell_box);
 }
