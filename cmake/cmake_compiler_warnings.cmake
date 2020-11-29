@@ -2,6 +2,7 @@ function(SetCompilerWarnings source_files)
 
         target_compile_options(${PROJECT_NAME} PRIVATE
                 $<$<CXX_COMPILER_ID:GNU>:
+                        -Werror
                         -Wall
                         -Wextra
                         -Wcast-align
@@ -66,6 +67,7 @@ function(SetCompilerWarnings source_files)
                         >
                 >
                 $<$<CXX_COMPILER_ID:Clang>:
+                        -Werror
                         -Weverything
                         $<$<COMPILE_LANGUAGE:CXX>:
                         -Wno-c++98-compat
