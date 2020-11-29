@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_object_selection.h"
 
 #include <optional>
-#include <vector>
 
 namespace gui::dialog
 {
@@ -39,14 +38,14 @@ class ObjectSelectionParametersDialog final : public QDialog
 private:
         Ui::ObjectSelectionParametersDialog ui;
 
-        std::vector<QCheckBox*> m_boxes;
-
         std::optional<ObjectSelectionParameters>& m_parameters;
 
         ObjectSelectionParametersDialog(
                 const ObjectSelectionParameters& input,
                 std::optional<ObjectSelectionParameters>& parameters);
+
         void set_all(bool checked);
+
         void done(int r) override;
 
 public:

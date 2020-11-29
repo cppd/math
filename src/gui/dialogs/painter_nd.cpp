@@ -165,7 +165,6 @@ void PainterNdParametersDialog::done(int r)
         }
 
         m_parameters.emplace();
-
         m_parameters->thread_count = thread_count;
         m_parameters->samples_per_pixel = samples_per_pixel;
         m_parameters->min_size = min_size;

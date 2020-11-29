@@ -23,14 +23,14 @@
          <item>
           <layout class="QVBoxLayout" name="verticalLayout">
            <item>
-            <widget class="QCheckBox" name="checkBox_model_convex_hull">
+            <widget class="QCheckBox" name="checkBox_convex_hull">
              <property name="text">
               <string>Convex Hull</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QCheckBox" name="checkBox_model_minumum_spanning_tree">
+            <widget class="QCheckBox" name="checkBox_minumum_spanning_tree">
              <property name="text">
               <string>Minimum Spanning Tree</string>
              </property>
