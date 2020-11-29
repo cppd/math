@@ -19,40 +19,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_painter_nd.h"
 
-#include <string>
+#include <optional>
 
 namespace gui::dialog
 {
-namespace painter_parameters_for_nd_implementation
+struct PainterNdParameters final
 {
-class PainterParametersForNd final : public QDialog
+        int thread_count;
+        int min_size;
+        int max_size;
+        int samples_per_pixel;
+        bool flat_facets;
+        bool cornell_box;
+};
+
+class PainterNdParametersDialog final : public QDialog
 {
         Q_OBJECT
 
 private:
-        Ui::PainterParametersForNd ui;
+        Ui::PainterNdParametersDialog ui;
 
         int m_max_thread_count;
         int m_min_screen_size;
         int m_max_screen_size;
         int m_max_samples_per_pixel;
 
-        int m_thread_count;
-        int m_min_size;
-        int m_max_size;
-        int m_samples_per_pixel;
-        bool m_flat_facets;
-        bool m_cornell_box;
+        std::optional<PainterNdParameters>& m_parameters;
 
-        void on_min_size_changed(int);
-        void on_max_size_changed(int);
-
-        void done(int r) override;
-
-public:
-        explicit PainterParametersForNd(QWidget* parent = nullptr);
-
-        [[nodiscard]] bool show(
+        PainterNdParametersDialog(
                 int dimension,
                 int max_thread_count,
                 int default_screen_size,
@@ -60,27 +55,21 @@ public:
                 int max_screen_size,
                 int default_samples_per_pixel,
                 int max_samples_per_pixel,
-                int* thread_count,
-                int* min_size,
-                int* max_size,
-                int* samples_per_pixel,
-                bool* flat_facets,
-                bool* cornell_box);
-};
-}
+                std::optional<PainterNdParameters>& parameters);
 
-[[nodiscard]] bool painter_parameters_for_nd(
-        int dimension,
-        int max_thread_count,
-        int default_screen_size,
-        int min_screen_size,
-        int max_screen_size,
-        int default_samples_per_pixel,
-        int max_samples_per_pixel,
-        int* thread_count,
-        int* min_size,
-        int* max_size,
-        int* samples_per_pixel,
-        bool* flat_facets,
-        bool* cornell_box);
+        void on_min_size_changed(int);
+        void on_max_size_changed(int);
+
+        void done(int r) override;
+
+public:
+        [[nodiscard]] static std::optional<PainterNdParameters> show(
+                int dimension,
+                int max_thread_count,
+                int default_screen_size,
+                int min_screen_size,
+                int max_screen_size,
+                int default_samples_per_pixel,
+                int max_samples_per_pixel);
+};
 }

@@ -99,14 +99,23 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         }
         else
         {
-                if (!gui::dialog::painter_parameters_for_nd(
-                            N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND, PAINTER_MINIMUM_SCREEN_SIZE_ND,
-                            PAINTER_MAXIMUM_SCREEN_SIZE_ND, PAINTER_DEFAULT_SAMPLE_COUNT,
-                            PAINTER_MAXIMUM_SAMPLE_COUNT<N>, &thread_count, &scene_info.min_screen_size,
-                            &scene_info.max_screen_size, &samples_per_pixel, &flat_facets, &scene_info.cornell_box))
+                std::optional<gui::dialog::PainterNdParameters> parameters =
+                        gui::dialog::PainterNdParametersDialog::show(
+                                N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND,
+                                PAINTER_MINIMUM_SCREEN_SIZE_ND, PAINTER_MAXIMUM_SCREEN_SIZE_ND,
+                                PAINTER_DEFAULT_SAMPLE_COUNT, PAINTER_MAXIMUM_SAMPLE_COUNT<N>);
+                if (!parameters)
                 {
                         return nullptr;
                 }
+
+                scene_info.min_screen_size = parameters->min_size;
+                scene_info.max_screen_size = parameters->max_size;
+                scene_info.cornell_box = parameters->cornell_box;
+
+                thread_count = parameters->thread_count;
+                samples_per_pixel = parameters->samples_per_pixel;
+                flat_facets = parameters->flat_facets;
         }
 
         return [=](ProgressRatioList* progress_list)

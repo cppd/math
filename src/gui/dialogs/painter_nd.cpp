@@ -25,24 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 
-#include <QPointer>
-
 namespace gui::dialog
 {
-namespace painter_parameters_for_nd_implementation
-{
-PainterParametersForNd::PainterParametersForNd(QWidget* parent) : QDialog(parent)
-{
-        ui.setupUi(this);
-        setWindowTitle("Painter");
-
-        connect(ui.spinBox_min_size, QOverload<int>::of(&QSpinBox::valueChanged), this,
-                &PainterParametersForNd::on_min_size_changed);
-        connect(ui.spinBox_max_size, QOverload<int>::of(&QSpinBox::valueChanged), this,
-                &PainterParametersForNd::on_max_size_changed);
-}
-
-bool PainterParametersForNd::show(
+PainterNdParametersDialog::PainterNdParametersDialog(
         int dimension,
         int max_thread_count,
         int default_screen_size,
@@ -50,13 +35,17 @@ bool PainterParametersForNd::show(
         int max_screen_size,
         int default_samples_per_pixel,
         int max_samples_per_pixel,
-        int* thread_count,
-        int* min_size,
-        int* max_size,
-        int* samples_per_pixel,
-        bool* flat_facets,
-        bool* cornell_box)
+        std::optional<PainterNdParameters>& parameters)
+        : QDialog(parent_for_dialog()), m_parameters(parameters)
 {
+        ui.setupUi(this);
+        setWindowTitle("Painter");
+
+        connect(ui.spinBox_min_size, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                &PainterNdParametersDialog::on_min_size_changed);
+        connect(ui.spinBox_max_size, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                &PainterNdParametersDialog::on_max_size_changed);
+
         if (!(dimension >= 4))
         {
                 error("Error dimension parameter: " + to_string(dimension));
@@ -101,23 +90,9 @@ bool PainterParametersForNd::show(
 
         ui.checkBox_flat_facets->setChecked(false);
         ui.checkBox_cornell_box->setChecked(false);
-
-        if (QPointer ptr(this); !this->exec() || ptr.isNull())
-        {
-                return false;
-        }
-
-        *thread_count = m_thread_count;
-        *min_size = m_min_size;
-        *max_size = m_max_size;
-        *samples_per_pixel = m_samples_per_pixel;
-        *flat_facets = m_flat_facets;
-        *cornell_box = m_cornell_box;
-
-        return true;
 }
 
-void PainterParametersForNd::on_min_size_changed(int)
+void PainterNdParametersDialog::on_min_size_changed(int)
 {
         int min = ui.spinBox_min_size->value();
         if (min > ui.spinBox_max_size->value())
@@ -127,7 +102,7 @@ void PainterParametersForNd::on_min_size_changed(int)
         }
 }
 
-void PainterParametersForNd::on_max_size_changed(int)
+void PainterNdParametersDialog::on_max_size_changed(int)
 {
         int max = ui.spinBox_max_size->value();
         if (max < ui.spinBox_min_size->value())
@@ -137,7 +112,7 @@ void PainterParametersForNd::on_max_size_changed(int)
         }
 }
 
-void PainterParametersForNd::done(int r)
+void PainterNdParametersDialog::done(int r)
 {
         if (r != QDialog::Accepted)
         {
@@ -145,8 +120,8 @@ void PainterParametersForNd::done(int r)
                 return;
         }
 
-        m_thread_count = ui.spinBox_threads->value();
-        if (!(m_thread_count >= 1 && m_thread_count <= m_max_thread_count))
+        int thread_count = ui.spinBox_threads->value();
+        if (!(thread_count >= 1 && thread_count <= m_max_thread_count))
         {
                 std::string msg =
                         "Error thread count. Must be in the range [1, " + to_string(m_max_thread_count) + "].";
@@ -154,8 +129,8 @@ void PainterParametersForNd::done(int r)
                 return;
         }
 
-        m_samples_per_pixel = ui.spinBox_samples_per_pixel->value();
-        if (!(m_samples_per_pixel >= 1 && m_samples_per_pixel <= m_max_samples_per_pixel))
+        int samples_per_pixel = ui.spinBox_samples_per_pixel->value();
+        if (!(samples_per_pixel >= 1 && samples_per_pixel <= m_max_samples_per_pixel))
         {
                 std::string msg = "Error samples per pixel. Must be in the range [1, "
                                   + to_string(m_max_samples_per_pixel) + "].";
@@ -163,8 +138,8 @@ void PainterParametersForNd::done(int r)
                 return;
         }
 
-        m_min_size = ui.spinBox_min_size->value();
-        if (!(m_min_size >= m_min_screen_size && m_min_size <= m_max_screen_size))
+        int min_size = ui.spinBox_min_size->value();
+        if (!(min_size >= m_min_screen_size && min_size <= m_max_screen_size))
         {
                 std::string msg = "Error min size. Must be in the range [" + to_string(m_min_screen_size) + ", "
                                   + to_string(m_max_screen_size) + "].";
@@ -172,8 +147,8 @@ void PainterParametersForNd::done(int r)
                 return;
         }
 
-        m_max_size = ui.spinBox_max_size->value();
-        if (!(m_max_size >= m_min_screen_size && m_max_size <= m_max_screen_size))
+        int max_size = ui.spinBox_max_size->value();
+        if (!(max_size >= m_min_screen_size && max_size <= m_max_screen_size))
         {
                 std::string msg = "Error max size. Must be in the range [" + to_string(m_min_screen_size) + ", "
                                   + to_string(m_max_screen_size) + "].";
@@ -181,7 +156,7 @@ void PainterParametersForNd::done(int r)
                 return;
         }
 
-        if (!(m_min_size <= m_max_size))
+        if (!(min_size <= max_size))
         {
                 std::string msg =
                         "Error min and max sizes. The min size must be less than the max size or equal to the max size";
@@ -189,35 +164,37 @@ void PainterParametersForNd::done(int r)
                 return;
         }
 
-        m_flat_facets = ui.checkBox_flat_facets->isChecked();
-        m_cornell_box = ui.checkBox_cornell_box->isChecked();
+        m_parameters.emplace();
+
+        m_parameters->thread_count = thread_count;
+        m_parameters->samples_per_pixel = samples_per_pixel;
+        m_parameters->min_size = min_size;
+        m_parameters->max_size = max_size;
+        m_parameters->flat_facets = ui.checkBox_flat_facets->isChecked();
+        m_parameters->cornell_box = ui.checkBox_cornell_box->isChecked();
 
         QDialog::done(r);
 }
-}
 
-bool painter_parameters_for_nd(
+std::optional<PainterNdParameters> PainterNdParametersDialog::show(
         int dimension,
         int max_thread_count,
         int default_screen_size,
         int min_screen_size,
         int max_screen_size,
         int default_samples_per_pixel,
-        int max_samples_per_pixel,
-        int* thread_count,
-        int* min_size,
-        int* max_size,
-        int* samples_per_pixel,
-        bool* flat_facets,
-        bool* cornell_box)
+        int max_samples_per_pixel)
 {
-        namespace impl = painter_parameters_for_nd_implementation;
+        std::optional<PainterNdParameters> parameters;
 
-        QtObjectInDynamicMemory<impl::PainterParametersForNd> w(parent_for_dialog());
+        QtObjectInDynamicMemory w(new PainterNdParametersDialog(
+                dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
+                default_samples_per_pixel, max_samples_per_pixel, parameters));
 
-        return w->show(dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
-                       default_samples_per_pixel, max_samples_per_pixel, thread_count, min_size, max_size,
-                       samples_per_pixel, flat_facets, cornell_box)
-               && !w.isNull();
+        if (!w->exec() || w.isNull())
+        {
+                return std::nullopt;
+        }
+        return parameters;
 }
 }
