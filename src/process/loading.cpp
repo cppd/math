@@ -72,30 +72,27 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
                 file_name = path_from_utf8(*file_name_string);
         }
 
-        std::unordered_set<gui::dialog::ComputationType> objects_to_load;
-
+        gui::dialog::ObjectSelection object_selection;
         if (use_object_selection_dialog)
         {
-                std::optional<std::unordered_set<gui::dialog::ComputationType>> objects =
-                        gui::dialog::object_selection();
+                std::optional<gui::dialog::ObjectSelection> objects = gui::dialog::ObjectSelectionDialog::show();
                 if (!objects)
                 {
                         return nullptr;
                 }
-                objects_to_load = std::move(*objects);
+                object_selection = std::move(*objects);
         }
         else
         {
-                objects_to_load = gui::dialog::object_selection_current();
+                object_selection = gui::dialog::ObjectSelectionDialog::current();
         }
+        bool bound_cocone = object_selection.types.contains(gui::dialog::ObjectSelection::Type::BoundCocone);
+        bool cocone = object_selection.types.contains(gui::dialog::ObjectSelection::Type::Cocone);
+        bool convex_hull = object_selection.types.contains(gui::dialog::ObjectSelection::Type::ConvexHull);
+        bool mst = object_selection.types.contains(gui::dialog::ObjectSelection::Type::Mst);
 
         gui::dialog::BoundCoconeParameters bound_cocone_parameters =
                 gui::dialog::BoundCoconeParametersDialog::current();
-
-        bool bound_cocone = objects_to_load.contains(gui::dialog::ComputationType::BoundCocone);
-        bool cocone = objects_to_load.contains(gui::dialog::ComputationType::Cocone);
-        bool convex_hull = objects_to_load.contains(gui::dialog::ComputationType::ConvexHull);
-        bool mst = objects_to_load.contains(gui::dialog::ComputationType::Mst);
 
         return [=](ProgressRatioList* progress_list)
         {
@@ -129,26 +126,23 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
         std::optional<gui::dialog::PointObjectParameters> point_object_parameters =
                 gui::dialog::PointObjectParametersDialog::show(
                         dimension, object_name, POINT_COUNT_DEFAULT, POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM);
-
         if (!point_object_parameters)
         {
                 return nullptr;
         }
 
-        std::optional<std::unordered_set<gui::dialog::ComputationType>> objects_to_load;
-        objects_to_load = gui::dialog::object_selection();
-        if (!objects_to_load)
+        std::optional<gui::dialog::ObjectSelection> object_selection = gui::dialog::ObjectSelectionDialog::show();
+        if (!object_selection)
         {
                 return nullptr;
         }
+        bool bound_cocone = object_selection->types.contains(gui::dialog::ObjectSelection::Type::BoundCocone);
+        bool cocone = object_selection->types.contains(gui::dialog::ObjectSelection::Type::Cocone);
+        bool convex_hull = object_selection->types.contains(gui::dialog::ObjectSelection::Type::ConvexHull);
+        bool mst = object_selection->types.contains(gui::dialog::ObjectSelection::Type::Mst);
 
         gui::dialog::BoundCoconeParameters bound_cocone_parameters =
                 gui::dialog::BoundCoconeParametersDialog::current();
-
-        bool bound_cocone = objects_to_load->contains(gui::dialog::ComputationType::BoundCocone);
-        bool cocone = objects_to_load->contains(gui::dialog::ComputationType::Cocone);
-        bool convex_hull = objects_to_load->contains(gui::dialog::ComputationType::ConvexHull);
-        bool mst = objects_to_load->contains(gui::dialog::ComputationType::Mst);
 
         return [=](ProgressRatioList* progress_list)
         {
@@ -180,7 +174,6 @@ std::function<void(ProgressRatioList*)> action_load_from_volume_repository(
         std::optional<gui::dialog::VolumeObjectParameters> parameters = gui::dialog::VolumeObjectParametersDialog::show(
                 dimension, object_name, VOLUME_IMAGE_SIZE_DEFAULT, VOLUME_IMAGE_SIZE_MINIMUM,
                 VOLUME_IMAGE_SIZE_MAXIMUM);
-
         if (!parameters)
         {
                 return nullptr;

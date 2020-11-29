@@ -25,35 +25,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui::dialog
 {
-namespace object_selection_implementation
+struct ObjectSelection final
 {
-class ObjectSelection final : public QDialog
+        enum class Type
+        {
+                BoundCocone,
+                Cocone,
+                ConvexHull,
+                Mst
+        };
+        std::unordered_set<Type> types;
+};
+
+class ObjectSelectionDialog final : public QDialog
 {
         Q_OBJECT
 
 private:
-        Ui::ObjectSelection ui;
+        Ui::ObjectSelectionDialog ui;
 
         std::vector<QCheckBox*> m_boxes;
 
-        void on_set_all_clicked();
-        void on_clear_all_clicked();
+        std::optional<ObjectSelection>& m_parameters;
+
+        ObjectSelectionDialog(const ObjectSelection& input, std::optional<ObjectSelection>& parameters);
+        void set_all(bool checked);
+        void done(int r) override;
 
 public:
-        explicit ObjectSelection(QWidget* parent = nullptr);
-
-        [[nodiscard]] bool show(bool* bound_cocone, bool* cocone, bool* convex_hull, bool* mst);
+        [[nodiscard]] static std::optional<ObjectSelection> show();
+        [[nodiscard]] static ObjectSelection current();
 };
-}
-
-enum class ComputationType
-{
-        BoundCocone,
-        Cocone,
-        ConvexHull,
-        Mst
-};
-
-[[nodiscard]] std::optional<std::unordered_set<ComputationType>> object_selection();
-[[nodiscard]] std::unordered_set<ComputationType> object_selection_current();
 }
