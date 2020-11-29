@@ -20,40 +20,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_object_selection.h"
 
 #include <optional>
-#include <unordered_set>
 #include <vector>
 
 namespace gui::dialog
 {
-struct ObjectSelection final
+struct ObjectSelectionParameters final
 {
-        enum class Type
-        {
-                BoundCocone,
-                Cocone,
-                ConvexHull,
-                Mst
-        };
-        std::unordered_set<Type> types;
+        bool bound_cocone;
+        bool cocone;
+        bool convex_hull;
+        bool mst;
 };
 
-class ObjectSelectionDialog final : public QDialog
+class ObjectSelectionParametersDialog final : public QDialog
 {
         Q_OBJECT
 
 private:
-        Ui::ObjectSelectionDialog ui;
+        Ui::ObjectSelectionParametersDialog ui;
 
         std::vector<QCheckBox*> m_boxes;
 
-        std::optional<ObjectSelection>& m_parameters;
+        std::optional<ObjectSelectionParameters>& m_parameters;
 
-        ObjectSelectionDialog(const ObjectSelection& input, std::optional<ObjectSelection>& parameters);
+        ObjectSelectionParametersDialog(
+                const ObjectSelectionParameters& input,
+                std::optional<ObjectSelectionParameters>& parameters);
         void set_all(bool checked);
         void done(int r) override;
 
 public:
-        [[nodiscard]] static std::optional<ObjectSelection> show();
-        [[nodiscard]] static ObjectSelection current();
+        [[nodiscard]] static std::optional<ObjectSelectionParameters> show();
+        [[nodiscard]] static ObjectSelectionParameters current();
 };
 }

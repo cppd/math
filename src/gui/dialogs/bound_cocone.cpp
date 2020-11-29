@@ -36,6 +36,18 @@ constexpr int MINIMUM_ALPHA_EXPONENT = -3;
 
 std::mutex g_mutex;
 BoundCoconeParameters g_parameters{.rho = 0.3, .alpha = 0.14};
+
+BoundCoconeParameters read_current()
+{
+        std::lock_guard lg(g_mutex);
+        return g_parameters;
+}
+
+void write_current(const BoundCoconeParameters& parameters)
+{
+        std::lock_guard lg(g_mutex);
+        g_parameters = parameters;
+}
 }
 
 BoundCoconeParametersDialog::BoundCoconeParametersDialog(
@@ -131,29 +143,21 @@ std::optional<BoundCoconeParameters> BoundCoconeParametersDialog::show()
 {
         std::optional<BoundCoconeParameters> parameters;
 
-        BoundCoconeParameters current;
-        {
-                std::lock_guard lg(g_mutex);
-                current = g_parameters;
-        }
-
-        QtObjectInDynamicMemory w(
-                new BoundCoconeParametersDialog(MINIMUM_RHO_EXPONENT, MINIMUM_ALPHA_EXPONENT, current, parameters));
+        QtObjectInDynamicMemory w(new BoundCoconeParametersDialog(
+                MINIMUM_RHO_EXPONENT, MINIMUM_ALPHA_EXPONENT, read_current(), parameters));
 
         if (!w->exec() || w.isNull())
         {
                 return std::nullopt;
         }
-        {
-                std::lock_guard lg(g_mutex);
-                g_parameters = *parameters;
-        }
+
+        write_current(*parameters);
+
         return parameters;
 }
 
 BoundCoconeParameters BoundCoconeParametersDialog::current()
 {
-        std::lock_guard lg(g_mutex);
-        return g_parameters;
+        return read_current();
 }
 }

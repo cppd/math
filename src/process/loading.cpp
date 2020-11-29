@@ -72,24 +72,21 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
                 file_name = path_from_utf8(*file_name_string);
         }
 
-        gui::dialog::ObjectSelection object_selection;
+        gui::dialog::ObjectSelectionParameters selection_parameters;
         if (use_object_selection_dialog)
         {
-                std::optional<gui::dialog::ObjectSelection> objects = gui::dialog::ObjectSelectionDialog::show();
-                if (!objects)
+                std::optional<gui::dialog::ObjectSelectionParameters> selection =
+                        gui::dialog::ObjectSelectionParametersDialog::show();
+                if (!selection)
                 {
                         return nullptr;
                 }
-                object_selection = std::move(*objects);
+                selection_parameters = std::move(*selection);
         }
         else
         {
-                object_selection = gui::dialog::ObjectSelectionDialog::current();
+                selection_parameters = gui::dialog::ObjectSelectionParametersDialog::current();
         }
-        bool bound_cocone = object_selection.types.contains(gui::dialog::ObjectSelection::Type::BoundCocone);
-        bool cocone = object_selection.types.contains(gui::dialog::ObjectSelection::Type::Cocone);
-        bool convex_hull = object_selection.types.contains(gui::dialog::ObjectSelection::Type::ConvexHull);
-        bool mst = object_selection.types.contains(gui::dialog::ObjectSelection::Type::Mst);
 
         gui::dialog::BoundCoconeParameters bound_cocone_parameters =
                 gui::dialog::BoundCoconeParametersDialog::current();
@@ -106,7 +103,8 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
                                         generic_utf8_filename(file_name.filename()), progress_list, file_name);
 
                                 compute<N>(
-                                        progress_list, convex_hull, cocone, bound_cocone, mst, *mesh,
+                                        progress_list, selection_parameters.convex_hull, selection_parameters.cocone,
+                                        selection_parameters.bound_cocone, selection_parameters.mst, *mesh,
                                         bound_cocone_parameters.rho, bound_cocone_parameters.alpha);
                         });
         };
@@ -131,15 +129,12 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
                 return nullptr;
         }
 
-        std::optional<gui::dialog::ObjectSelection> object_selection = gui::dialog::ObjectSelectionDialog::show();
-        if (!object_selection)
+        std::optional<gui::dialog::ObjectSelectionParameters> selection_parameters =
+                gui::dialog::ObjectSelectionParametersDialog::show();
+        if (!selection_parameters)
         {
                 return nullptr;
         }
-        bool bound_cocone = object_selection->types.contains(gui::dialog::ObjectSelection::Type::BoundCocone);
-        bool cocone = object_selection->types.contains(gui::dialog::ObjectSelection::Type::Cocone);
-        bool convex_hull = object_selection->types.contains(gui::dialog::ObjectSelection::Type::ConvexHull);
-        bool mst = object_selection->types.contains(gui::dialog::ObjectSelection::Type::Mst);
 
         gui::dialog::BoundCoconeParameters bound_cocone_parameters =
                 gui::dialog::BoundCoconeParametersDialog::current();
@@ -154,7 +149,8 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
                                         object_name, point_object_parameters->point_count, *repository);
 
                                 compute<N>(
-                                        progress_list, convex_hull, cocone, bound_cocone, mst, *mesh,
+                                        progress_list, selection_parameters->convex_hull, selection_parameters->cocone,
+                                        selection_parameters->bound_cocone, selection_parameters->mst, *mesh,
                                         bound_cocone_parameters.rho, bound_cocone_parameters.alpha);
                         });
         };

@@ -26,46 +26,24 @@ namespace gui::dialog
 namespace
 {
 std::mutex g_mutex;
+ObjectSelectionParameters g_parameters{.bound_cocone = true, .cocone = true, .convex_hull = true, .mst = true};
 
-bool g_bound_cocone = true;
-bool g_cocone = true;
-bool g_convex_hull = true;
-bool g_mst = true;
-
-ObjectSelection read_current()
-{
-        ObjectSelection current;
-        std::lock_guard lg(g_mutex);
-        if (g_bound_cocone)
-        {
-                current.types.insert(ObjectSelection::Type::BoundCocone);
-        }
-        if (g_cocone)
-        {
-                current.types.insert(ObjectSelection::Type::Cocone);
-        }
-        if (g_convex_hull)
-        {
-                current.types.insert(ObjectSelection::Type::ConvexHull);
-        }
-        if (g_mst)
-        {
-                current.types.insert(ObjectSelection::Type::Mst);
-        }
-        return current;
-}
-
-void write_current(const ObjectSelection& current)
+ObjectSelectionParameters read_current()
 {
         std::lock_guard lg(g_mutex);
-        g_bound_cocone = current.types.contains(ObjectSelection::Type::BoundCocone);
-        g_cocone = current.types.contains(ObjectSelection::Type::Cocone);
-        g_convex_hull = current.types.contains(ObjectSelection::Type::ConvexHull);
-        g_mst = current.types.contains(ObjectSelection::Type::Mst);
+        return g_parameters;
+}
+
+void write_current(const ObjectSelectionParameters& parameters)
+{
+        std::lock_guard lg(g_mutex);
+        g_parameters = parameters;
 }
 }
 
-ObjectSelectionDialog::ObjectSelectionDialog(const ObjectSelection& input, std::optional<ObjectSelection>& parameters)
+ObjectSelectionParametersDialog::ObjectSelectionParametersDialog(
+        const ObjectSelectionParameters& input,
+        std::optional<ObjectSelectionParameters>& parameters)
         : QDialog(parent_for_dialog()), m_parameters(parameters)
 {
         ui.setupUi(this);
@@ -87,13 +65,13 @@ ObjectSelectionDialog::ObjectSelectionDialog(const ObjectSelection& input, std::
                         set_all(false);
                 });
 
-        ui.checkBox_bound_cocone->setChecked(input.types.contains(ObjectSelection::Type::BoundCocone));
-        ui.checkBox_cocone->setChecked(input.types.contains(ObjectSelection::Type::Cocone));
-        ui.checkBox_model_convex_hull->setChecked(input.types.contains(ObjectSelection::Type::ConvexHull));
-        ui.checkBox_model_minumum_spanning_tree->setChecked(input.types.contains(ObjectSelection::Type::Mst));
+        ui.checkBox_bound_cocone->setChecked(input.bound_cocone);
+        ui.checkBox_cocone->setChecked(input.cocone);
+        ui.checkBox_model_convex_hull->setChecked(input.convex_hull);
+        ui.checkBox_model_minumum_spanning_tree->setChecked(input.mst);
 }
 
-void ObjectSelectionDialog::set_all(bool checked)
+void ObjectSelectionParametersDialog::set_all(bool checked)
 {
         for (QCheckBox* c : m_boxes)
         {
@@ -101,7 +79,7 @@ void ObjectSelectionDialog::set_all(bool checked)
         }
 }
 
-void ObjectSelectionDialog::done(int r)
+void ObjectSelectionParametersDialog::done(int r)
 {
         if (r != QDialog::Accepted)
         {
@@ -110,32 +88,19 @@ void ObjectSelectionDialog::done(int r)
         }
 
         m_parameters.emplace();
-
-        if (ui.checkBox_bound_cocone->isChecked())
-        {
-                m_parameters->types.insert(ObjectSelection::Type::BoundCocone);
-        }
-        if (ui.checkBox_cocone->isChecked())
-        {
-                m_parameters->types.insert(ObjectSelection::Type::Cocone);
-        }
-        if (ui.checkBox_model_convex_hull->isChecked())
-        {
-                m_parameters->types.insert(ObjectSelection::Type::ConvexHull);
-        }
-        if (ui.checkBox_model_minumum_spanning_tree->isChecked())
-        {
-                m_parameters->types.insert(ObjectSelection::Type::Mst);
-        }
+        m_parameters->bound_cocone = ui.checkBox_bound_cocone->isChecked();
+        m_parameters->cocone = ui.checkBox_cocone->isChecked();
+        m_parameters->convex_hull = ui.checkBox_model_convex_hull->isChecked();
+        m_parameters->mst = ui.checkBox_model_minumum_spanning_tree->isChecked();
 
         QDialog::done(r);
 }
 
-std::optional<ObjectSelection> ObjectSelectionDialog::show()
+std::optional<ObjectSelectionParameters> ObjectSelectionParametersDialog::show()
 {
-        std::optional<ObjectSelection> parameters;
+        std::optional<ObjectSelectionParameters> parameters;
 
-        QtObjectInDynamicMemory w(new ObjectSelectionDialog(read_current(), parameters));
+        QtObjectInDynamicMemory w(new ObjectSelectionParametersDialog(read_current(), parameters));
 
         if (!w->exec() || w.isNull())
         {
@@ -147,7 +112,7 @@ std::optional<ObjectSelection> ObjectSelectionDialog::show()
         return parameters;
 }
 
-ObjectSelection ObjectSelectionDialog::current()
+ObjectSelectionParameters ObjectSelectionParametersDialog::current()
 {
         return read_current();
 }
