@@ -27,13 +27,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace volume
 {
 template <size_t N>
-void center_and_length(const Volume<N>& volume, Vector<N, double>* center, double* length)
+std::tuple<Vector<N, double>, double> center_and_length(const Volume<N>& volume)
 {
         std::optional<BoundingBox<N>> box = bounding_box(volume);
         if (!box)
         {
                 error("Volume has no geometry");
         }
-        std::tie(*center, *length) = model::center_and_length_for_min_max(box->min, box->max);
+        return model::center_and_length_for_min_max(box->min, box->max);
 }
 }
