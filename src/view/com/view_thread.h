@@ -145,7 +145,7 @@ class ViewThread final : public View
                 m_event_queues.receive(info);
         }
 
-        void thread_function(WindowID parent_window, double parent_window_ppi)
+        void thread_function(window::WindowID parent_window, double parent_window_ppi)
         {
                 try
                 {
@@ -198,7 +198,7 @@ class ViewThread final : public View
         }
 
 public:
-        ViewThread(WindowID parent_window, double parent_window_ppi, std::vector<Command>&& initial_commands)
+        ViewThread(window::WindowID parent_window, double parent_window_ppi, std::vector<Command>&& initial_commands)
                 : m_event_queues(std::move(initial_commands))
         {
                 try

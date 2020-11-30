@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+namespace window
+{
 #if defined(__linux__)
 
 using WindowID = unsigned long;
@@ -29,3 +31,4 @@ using WindowID = HWND__*;
 #else
 #error This operating system is not supported
 #endif
+}

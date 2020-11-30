@@ -708,7 +708,7 @@ class Impl final
         }
 
 public:
-        Impl(const WindowID& window, double window_ppi) : m_window_ppi(window_ppi)
+        Impl(const window::WindowID& window, double window_ppi) : m_window_ppi(window_ppi)
         {
                 if (window_ppi <= 0)
                 {
@@ -722,7 +722,7 @@ public:
 
                 {
                         const std::vector<std::string> instance_extensions =
-                                merge<std::string>(vulkan_create_surface_required_extensions());
+                                merge<std::string>(window::vulkan_create_surface_required_extensions());
 
                         const std::vector<std::string> device_extensions = {};
 
@@ -742,7 +742,7 @@ public:
 
                         const std::function<VkSurfaceKHR(VkInstance)> surface_function = [&](VkInstance instance)
                         {
-                                return vulkan_create_surface(window, instance);
+                                return window::vulkan_create_surface(window, instance);
                         };
 
                         m_instance = std::make_unique<vulkan::VulkanInstance>(
@@ -868,7 +868,7 @@ public:
 }
 
 std::unique_ptr<View> create_view_impl(
-        WindowID parent_window,
+        window::WindowID parent_window,
         double parent_window_ppi,
         std::vector<Command>&& initial_commands)
 {

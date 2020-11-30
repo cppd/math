@@ -237,16 +237,16 @@ void disable_radio_button(QRadioButton* button)
 }
 #endif
 
-WindowID widget_window_id(const QWidget* widget)
+window::WindowID widget_window_id(const QWidget* widget)
 {
         ASSERT(widget);
 
-        static_assert(sizeof(WindowID) == sizeof(WId));
-        static_assert(std::is_integral_v<WindowID> || std::is_pointer_v<WindowID>);
+        static_assert(sizeof(window::WindowID) == sizeof(WId));
+        static_assert(std::is_integral_v<window::WindowID> || std::is_pointer_v<window::WindowID>);
         static_assert(std::is_integral_v<WId> || std::is_pointer_v<WId>);
 
         const WId w_id = widget->winId();
-        WindowID window_id;
+        window::WindowID window_id;
         std::memcpy(&window_id, &w_id, sizeof(window_id));
         return window_id;
 }

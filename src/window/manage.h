@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <vulkan/vulkan.h>
 
+namespace window
+{
 std::vector<std::string> vulkan_create_surface_required_extensions();
 VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance);
 
@@ -37,3 +39,4 @@ public:
         WindowInit& operator=(const WindowInit&) = delete;
         WindowInit& operator=(WindowInit&&) = delete;
 };
+}

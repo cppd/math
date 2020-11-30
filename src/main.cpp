@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "application/model_events.h"
 #include "com/error.h"
 #include "gui/application.h"
-#include "window/manage.h"
 
 #include <exception>
 
@@ -29,7 +28,6 @@ int main(int argc, char** argv)
         {
                 try
                 {
-                        WindowInit window_init;
                         application::LogEvents log_events;
                         application::ModelEvents model_events;
 

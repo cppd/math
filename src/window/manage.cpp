@@ -31,6 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 #include <vulkan/vulkan_xlib.h>
 
+namespace window
+{
 namespace
 {
 int error_handler(Display*, XErrorEvent* e)
@@ -181,6 +183,7 @@ VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
         }
         return surface;
 }
+}
 
 #elif defined(_WIN32)
 
@@ -191,6 +194,8 @@ VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 
+namespace window
+{
 WindowInit::WindowInit()
 {
 }
@@ -257,6 +262,7 @@ VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
                 vulkan::vulkan_function_error("vkCreateWin32SurfaceKHR", result);
         }
         return surface;
+}
 }
 
 #pragma GCC diagnostic pop
