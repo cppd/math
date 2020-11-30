@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/process/dimension.h>
 #include <src/process/load.h>
 #include <src/progress/progress.h>
+#include <src/utility/file/path.h>
 
 #include <cstring>
 
