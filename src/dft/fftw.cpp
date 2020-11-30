@@ -28,28 +28,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <atomic>
 #include <fftw3.h>
+#include <mutex>
 
 namespace
 {
-std::atomic_int global_fftw_counter = 0;
-
 class FFTPlanThreads final
 {
+        inline static std::mutex m_mutex;
+        inline static int m_counter = 0;
+
 public:
         FFTPlanThreads()
         {
-                if (++global_fftw_counter != 1)
+                std::lock_guard lg(m_mutex);
+                if (++m_counter == 1)
                 {
-                        --global_fftw_counter;
-                        error("Error FFTW init threads");
+                        fftwf_init_threads();
                 }
-                fftwf_init_threads();
         }
 
         ~FFTPlanThreads()
         {
-                fftwf_cleanup_threads();
-                --global_fftw_counter;
+                std::lock_guard lg(m_mutex);
+                if (--m_counter == 0)
+                {
+                        fftwf_cleanup_threads();
+                }
         }
 
         FFTPlanThreads(const FFTPlanThreads&) = delete;

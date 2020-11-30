@@ -25,13 +25,13 @@ namespace gui
 {
 namespace
 {
-std::atomic_int global_call_counter = 0;
 const MainThread* global_main_thread = nullptr;
 }
 
 MainThread::MainThread()
 {
-        if (++global_call_counter != 1)
+        static std::atomic_int call_counter = 0;
+        if (++call_counter != 1)
         {
                 error_fatal("MainThread must be called once");
         }

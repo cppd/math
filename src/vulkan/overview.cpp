@@ -762,7 +762,7 @@ void required_surface_extensions(StringTree* tree)
         size_t required_surface_extensions_node = tree->add("Required Surface Extensions");
         try
         {
-                for (const std::string& extension : sorted(vulkan_create_surface_extensions()))
+                for (const std::string& extension : sorted(vulkan_create_surface_required_extensions()))
                 {
                         tree->add(required_surface_extensions_node, extension);
                 }

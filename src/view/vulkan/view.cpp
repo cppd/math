@@ -722,7 +722,7 @@ public:
 
                 {
                         const std::vector<std::string> instance_extensions =
-                                merge<std::string>(vulkan_create_surface_extensions());
+                                merge<std::string>(vulkan_create_surface_required_extensions());
 
                         const std::vector<std::string> device_extensions = {};
 

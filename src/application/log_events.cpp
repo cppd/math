@@ -27,7 +27,6 @@ namespace application
 namespace
 {
 LogEvents* global_log_events = nullptr;
-std::atomic_int global_call_counter = 0;
 
 LogEvent::Type message_type_to_log_type(MessageEvent::Type type)
 {
@@ -74,7 +73,8 @@ void write_log_event(LogEvent* event)
 
 LogEvents::LogEvents()
 {
-        if (++global_call_counter != 1)
+        static std::atomic_int call_counter = 0;
+        if (++call_counter != 1)
         {
                 error_fatal("Log events must be called once");
         }

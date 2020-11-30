@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <array>
+#include <atomic>
 #include <cstdlib>
 //
 #include <vulkan/vulkan_xlib.h>
@@ -40,7 +41,7 @@ int error_handler(Display*, XErrorEvent* e)
         error_fatal("X error handler: " + std::string(buf.data()));
 }
 
-Display* global_display = nullptr;
+Display* g_display = nullptr;
 
 // constexpr Atom xa_atom()
 //{
@@ -51,8 +52,14 @@ Display* global_display = nullptr;
 //}
 }
 
-void xlib_init()
+WindowInit::WindowInit()
 {
+        static std::atomic_int call_counter = 0;
+        if (++call_counter != 1)
+        {
+                error_fatal("WindowInit must be called once");
+        }
+
         if (!XInitThreads())
         {
                 error_fatal("Error XInitThreads");
@@ -60,20 +67,20 @@ void xlib_init()
 
         XSetErrorHandler(error_handler);
 
-        global_display = XOpenDisplay(nullptr); // getenv("DISPLAY")
-        if (global_display == nullptr)
+        g_display = XOpenDisplay(nullptr); // getenv("DISPLAY")
+        if (g_display == nullptr)
         {
                 error("Error XOpenDiplay");
         }
 
-        XSynchronize(global_display, False);
+        XSynchronize(g_display, False);
 }
 
-void xlib_exit()
+WindowInit::~WindowInit()
 {
-        if (global_display)
+        if (g_display)
         {
-                XCloseDisplay(global_display);
+                XCloseDisplay(g_display);
         }
         XSetErrorHandler(nullptr);
 }
@@ -82,7 +89,7 @@ void xlib_exit()
 //{
 //        // https://standards.freedesktop.org/wm-spec/wm-spec-1.5.html
 
-//        Display* display = global_display;
+//        Display* display = g_display;
 
 //        // В SFML окно уже показано, но свойства изменяются только перед mapping,
 //        // поэтому убрать окно, изменить свойства, показать окно.
@@ -118,7 +125,7 @@ void xlib_exit()
 //{
 //        // https://standards.freedesktop.org/wm-spec/wm-spec-1.5.html
 
-//        Display* display = global_display;
+//        Display* display = g_display;
 
 //        // В SFML окно уже показано, но свойства изменяются только перед mapping,
 //        // поэтому убрать окно, изменить свойства, показать окно.
@@ -138,28 +145,28 @@ void xlib_exit()
 
 // void set_focus(WindowID window)
 //{
-//        Display* display = global_display;
+//        Display* display = g_display;
 
 //        XSetInputFocus(display, window, RevertToParent, CurrentTime);
 //}
 
 // void set_size_to_parent(WindowID window, WindowID parent)
 //{
-//        Display* display = global_display;
+//        Display* display = g_display;
 
 //        XWindowAttributes parent_attr;
 //        XGetWindowAttributes(display, parent, &parent_attr);
 //        XResizeWindow(display, window, parent_attr.width, parent_attr.height);
 //}
 
-std::vector<std::string> vulkan_create_surface_extensions()
+std::vector<std::string> vulkan_create_surface_required_extensions()
 {
         return {"VK_KHR_surface", "VK_KHR_xlib_surface"};
 }
 
 VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
 {
-        Display* display = global_display;
+        Display* display = g_display;
 
         VkXlibSurfaceCreateInfoKHR info = {};
         info.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
@@ -183,6 +190,14 @@ VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
+
+WindowInit::WindowInit()
+{
+}
+
+WindowInit::~WindowInit()
+{
+}
 
 // void move_window_to_parent(WindowID window, WindowID parent)
 //{
@@ -223,7 +238,7 @@ VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
 //        SetWindowPos(window, HWND_TOP, 0, 0, rect.right - rect.left, rect.bottom - rect.top, 0);
 //}
 
-std::vector<std::string> vulkan_create_surface_extensions()
+std::vector<std::string> vulkan_create_surface_required_extensions()
 {
         return {"VK_KHR_surface", "VK_KHR_win32_surface"};
 }
