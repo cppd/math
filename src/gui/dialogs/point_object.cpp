@@ -44,16 +44,25 @@ PointObjectParametersDialog::PointObjectParametersDialog(
 
         if (!(dimension >= 2))
         {
-                error("Error dimension parameter: " + to_string(dimension));
+                error("Dimension " + to_string(dimension) + " must be greater than or equal to 2");
         }
         if (object_name.empty())
         {
                 error("No point object name parameter");
         }
-        if (!(1 <= min_point_count && min_point_count <= default_point_count && default_point_count <= max_point_count))
+        if (!(1 <= min_point_count))
         {
-                error("Error point count parameters: min = " + to_string(min_point_count)
-                      + ", max = " + to_string(max_point_count) + ", default = " + to_string(default_point_count));
+                error("Minumum point count " + to_string(min_point_count) + " must be greater than or equal to 1");
+        }
+        if (!(min_point_count <= max_point_count))
+        {
+                error("Maximum point count " + to_string(max_point_count)
+                      + " must be greater than or equal to minimum point count " + to_string(min_point_count));
+        }
+        if (!(min_point_count <= default_point_count && default_point_count <= max_point_count))
+        {
+                error("Initial point count must be in the range [" + to_string(min_point_count) + ", "
+                      + to_string(max_point_count) + "]");
         }
 
         ui.label_space->setText(QString::fromStdString(space_name(dimension)));
@@ -76,7 +85,7 @@ void PointObjectParametersDialog::done(int r)
         int point_count = ui.spinBox_point_count->value();
         if (!(point_count >= m_min_point_count && point_count <= m_max_point_count))
         {
-                std::string msg = "Error point count. It must be in the range [" + to_string(m_min_point_count) + ", "
+                std::string msg = "Point count must be in the range [" + to_string(m_min_point_count) + ", "
                                   + to_string(m_max_point_count) + "].";
                 dialog::message_critical(msg);
                 return;

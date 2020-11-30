@@ -22,9 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/support.h"
 
 #include <src/com/error.h>
+#include <src/com/math.h>
 #include <src/com/print.h>
 
-#include <cmath>
 #include <mutex>
 
 namespace gui::dialog
@@ -62,48 +62,33 @@ BoundCoconeParametersDialog::BoundCoconeParametersDialog(
 
         if (!(-10 <= minimum_rho_exponent && minimum_rho_exponent < 0))
         {
-                error(reinterpret_cast<const char*>(u8"Error BoundCocone minimum ρ exponent: ")
-                      + to_string(minimum_rho_exponent));
+                error(reinterpret_cast<const char*>(u8"BoundCocone minimum ρ exponent ")
+                      + to_string(minimum_rho_exponent) + " must be in the range [-10, 0]");
         }
         if (!(-10 <= minimum_alpha_exponent && minimum_alpha_exponent < 0))
         {
-                error(reinterpret_cast<const char*>(u8"Error BoundCocone minimum α exponent: ")
-                      + to_string(minimum_alpha_exponent));
+                error(reinterpret_cast<const char*>(u8"BoundCocone minimum α exponent ")
+                      + to_string(minimum_alpha_exponent) + " must be in the range [-10, 0]");
         }
 
-        double min_rho = std::pow(10, minimum_rho_exponent);
-        double max_rho = 1 - min_rho;
-        double min_alpha = std::pow(10, minimum_alpha_exponent);
-        double max_alpha = 1 - min_alpha;
+        m_min_rho = std::pow(10, minimum_rho_exponent);
+        m_max_rho = 1 - m_min_rho;
+        m_min_alpha = std::pow(10, minimum_alpha_exponent);
+        m_max_alpha = 1 - m_min_alpha;
 
-        if (!(min_rho <= input.rho && input.rho <= max_rho))
-        {
-                error(reinterpret_cast<const char*>(u8"BoundCocone parameter ρ range error: ρ = ")
-                      + to_string(input.rho) + ", range = (" + to_string(min_rho) + ", " + to_string(max_rho) + ")");
-        }
-        if (!(min_alpha <= input.alpha && input.alpha <= max_alpha))
-        {
-                error(reinterpret_cast<const char*>(u8"BoundCocone parameter α range error: α = ")
-                      + to_string(input.alpha) + ", range = (" + to_string(min_alpha) + ", " + to_string(max_alpha)
-                      + ")");
-        }
-
-        m_min_rho = min_rho;
-        m_max_rho = max_rho;
-        m_min_alpha = min_alpha;
-        m_max_alpha = max_alpha;
-
+        double rho = is_finite(input.rho) ? std::clamp(input.rho, m_min_rho, m_max_rho) : m_min_rho;
         ui.doubleSpinBox_rho->setDecimals(std::abs(minimum_rho_exponent));
-        ui.doubleSpinBox_rho->setMinimum(min_rho);
-        ui.doubleSpinBox_rho->setMaximum(max_rho);
-        ui.doubleSpinBox_rho->setSingleStep(min_rho);
-        ui.doubleSpinBox_rho->setValue(input.rho);
+        ui.doubleSpinBox_rho->setMinimum(m_min_rho);
+        ui.doubleSpinBox_rho->setMaximum(m_max_rho);
+        ui.doubleSpinBox_rho->setSingleStep(m_min_rho);
+        ui.doubleSpinBox_rho->setValue(rho);
 
+        double alpha = is_finite(input.alpha) ? std::clamp(input.alpha, m_min_alpha, m_max_alpha) : m_min_alpha;
         ui.doubleSpinBox_alpha->setDecimals(std::abs(minimum_alpha_exponent));
-        ui.doubleSpinBox_alpha->setMinimum(min_alpha);
-        ui.doubleSpinBox_alpha->setMaximum(max_alpha);
-        ui.doubleSpinBox_alpha->setSingleStep(min_alpha);
-        ui.doubleSpinBox_alpha->setValue(input.alpha);
+        ui.doubleSpinBox_alpha->setMinimum(m_min_alpha);
+        ui.doubleSpinBox_alpha->setMaximum(m_max_alpha);
+        ui.doubleSpinBox_alpha->setSingleStep(m_min_alpha);
+        ui.doubleSpinBox_alpha->setValue(alpha);
 }
 
 void BoundCoconeParametersDialog::done(int r)
@@ -117,8 +102,8 @@ void BoundCoconeParametersDialog::done(int r)
         double rho = ui.doubleSpinBox_rho->value();
         if (!(m_min_rho <= rho && rho <= m_max_rho))
         {
-                std::string msg = reinterpret_cast<const char*>(u8"ρ range error (") + to_string(m_min_rho) + ", "
-                                  + to_string(m_max_rho) + ")";
+                std::string msg = reinterpret_cast<const char*>(u8"ρ must be in the range [") + to_string(m_min_rho)
+                                  + ", " + to_string(m_max_rho) + "]";
                 dialog::message_critical(msg);
                 return;
         }
@@ -126,8 +111,8 @@ void BoundCoconeParametersDialog::done(int r)
         double alpha = ui.doubleSpinBox_alpha->value();
         if (!(m_min_alpha <= alpha && alpha <= m_max_alpha))
         {
-                std::string msg = reinterpret_cast<const char*>(u8"α range error (") + to_string(m_min_alpha) + ", "
-                                  + to_string(m_max_alpha) + ")";
+                std::string msg = reinterpret_cast<const char*>(u8"α must be in the range [") + to_string(m_min_alpha)
+                                  + ", " + to_string(m_max_alpha) + "]";
                 dialog::message_critical(msg);
                 return;
         }

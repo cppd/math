@@ -48,21 +48,35 @@ PainterNdParametersDialog::PainterNdParametersDialog(
 
         if (!(dimension >= 4))
         {
-                error("Error dimension parameter: " + to_string(dimension));
+                error("Dimension " + to_string(dimension) + " must be greater than or equal to 4");
         }
         if (!(max_thread_count >= 1))
         {
-                error("Error max thread count parameter: " + to_string(max_thread_count));
+                error("Maximum thread count " + to_string(max_thread_count) + " must be greater than or equal to 1");
         }
-        if (!(1 <= min_screen_size && min_screen_size <= default_screen_size && default_screen_size <= max_screen_size))
+        if (!(1 <= min_screen_size))
         {
-                error("Error screen size parameters: min = " + to_string(min_screen_size)
-                      + ", max = " + to_string(max_screen_size) + ", default = " + to_string(default_screen_size));
+                error("Minumum screen size " + to_string(min_screen_size) + +" must be greater than or equal to 1");
+        }
+        if (!(min_screen_size <= max_screen_size))
+        {
+                error("Maximum screen size " + to_string(max_screen_size)
+                      + " must be greater than or equal to minimum screen size " + to_string(min_screen_size));
+        }
+        if (!(min_screen_size <= default_screen_size && default_screen_size <= max_screen_size))
+        {
+                error("Initial screen size " + to_string(default_screen_size) + +" must be in the range ["
+                      + to_string(min_screen_size) + ", " + to_string(max_screen_size) + "]");
+        }
+        if (!(1 <= max_samples_per_pixel))
+        {
+                error("Maximum samples per pixel " + to_string(max_samples_per_pixel)
+                      + " must be greater than or equal to 1");
         }
         if (!(1 <= default_samples_per_pixel && default_samples_per_pixel <= max_samples_per_pixel))
         {
-                error("Error samples per pixel parameters: max = " + to_string(max_samples_per_pixel)
-                      + ", default = " + to_string(default_samples_per_pixel));
+                error("Initial samples per pixel " + to_string(default_samples_per_pixel) + " must be in the range [1, "
+                      + to_string(max_samples_per_pixel) + "]");
         }
 
         m_max_thread_count = max_thread_count;
@@ -123,8 +137,7 @@ void PainterNdParametersDialog::done(int r)
         int thread_count = ui.spinBox_threads->value();
         if (!(thread_count >= 1 && thread_count <= m_max_thread_count))
         {
-                std::string msg =
-                        "Error thread count. Must be in the range [1, " + to_string(m_max_thread_count) + "].";
+                std::string msg = "Thread count must be in the range [1, " + to_string(m_max_thread_count) + "].";
                 dialog::message_critical(msg);
                 return;
         }
@@ -132,8 +145,8 @@ void PainterNdParametersDialog::done(int r)
         int samples_per_pixel = ui.spinBox_samples_per_pixel->value();
         if (!(samples_per_pixel >= 1 && samples_per_pixel <= m_max_samples_per_pixel))
         {
-                std::string msg = "Error samples per pixel. Must be in the range [1, "
-                                  + to_string(m_max_samples_per_pixel) + "].";
+                std::string msg =
+                        "Samples per pixel must be in the range [1, " + to_string(m_max_samples_per_pixel) + "].";
                 dialog::message_critical(msg);
                 return;
         }
@@ -141,7 +154,7 @@ void PainterNdParametersDialog::done(int r)
         int min_size = ui.spinBox_min_size->value();
         if (!(min_size >= m_min_screen_size && min_size <= m_max_screen_size))
         {
-                std::string msg = "Error min size. Must be in the range [" + to_string(m_min_screen_size) + ", "
+                std::string msg = "Minimum size must be in the range [" + to_string(m_min_screen_size) + ", "
                                   + to_string(m_max_screen_size) + "].";
                 dialog::message_critical(msg);
                 return;
@@ -150,7 +163,7 @@ void PainterNdParametersDialog::done(int r)
         int max_size = ui.spinBox_max_size->value();
         if (!(max_size >= m_min_screen_size && max_size <= m_max_screen_size))
         {
-                std::string msg = "Error max size. Must be in the range [" + to_string(m_min_screen_size) + ", "
+                std::string msg = "Maximum size must be in the range [" + to_string(m_min_screen_size) + ", "
                                   + to_string(m_max_screen_size) + "].";
                 dialog::message_critical(msg);
                 return;

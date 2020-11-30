@@ -50,10 +50,19 @@ VolumeObjectParametersDialog::VolumeObjectParametersDialog(
         {
                 error("No volume object name parameter");
         }
-        if (!(1 <= min_image_size && min_image_size <= default_image_size && default_image_size <= max_image_size))
+        if (!(1 <= min_image_size))
         {
-                error("Error image size parameters: min = " + to_string(min_image_size)
-                      + ", max = " + to_string(max_image_size) + ", default = " + to_string(default_image_size));
+                error("Minumum image size " + to_string(min_image_size) + " must be greater than or equal to 1");
+        }
+        if (!(min_image_size <= max_image_size))
+        {
+                error("Maximum image size " + to_string(max_image_size)
+                      + " must be greater than or equal to minimum image size " + to_string(min_image_size));
+        }
+        if (!(min_image_size <= default_image_size && default_image_size <= max_image_size))
+        {
+                error("Initial image size must be in the range [" + to_string(min_image_size) + ", "
+                      + to_string(max_image_size) + "]");
         }
 
         ui.label_space->setText(QString::fromStdString(space_name(dimension)));

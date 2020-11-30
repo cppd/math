@@ -53,21 +53,26 @@ Painter3dParametersDialog::Painter3dParametersDialog(
 
         if (!(max_thread_count >= 1))
         {
-                error("Error max thread count parameter: " + to_string(max_thread_count));
+                error("Maximum thread count " + to_string(max_thread_count) + " must be greater than or equal to 1");
         }
         if (!(width >= 1 && height >= 1))
         {
-                error("Error width and height parameters: width = " + to_string(width)
-                      + ", height = " + to_string(height));
+                error("Width " + to_string(width) + " and height " + to_string(height)
+                      + " must be greater than or equal to 1");
         }
         if (!(max_screen_size >= 1))
         {
-                error("Error max screen size parameter:  " + to_string(max_screen_size));
+                error("Maximum screen size " + to_string(max_screen_size) + " must be greater than or equal to 1");
+        }
+        if (!(1 <= max_samples_per_pixel))
+        {
+                error("Maximum samples per pixel " + to_string(max_samples_per_pixel)
+                      + " must be greater than or equal to 1");
         }
         if (!(1 <= default_samples_per_pixel && default_samples_per_pixel <= max_samples_per_pixel))
         {
-                error("Error samples per pixel parameters: max = " + to_string(max_samples_per_pixel)
-                      + ", default = " + to_string(default_samples_per_pixel));
+                error("Initial samples per pixel " + to_string(default_samples_per_pixel) + " must be in the range [1, "
+                      + to_string(max_samples_per_pixel) + "]");
         }
 
         m_aspect_ratio = static_cast<double>(width) / height;
@@ -130,8 +135,7 @@ void Painter3dParametersDialog::done(int r)
         int thread_count = ui.spinBox_thread_count->value();
         if (!(thread_count >= 1 && thread_count <= m_max_thread_count))
         {
-                std::string msg =
-                        "Error thread count. Must be in the range [1, " + to_string(m_max_thread_count) + "].";
+                std::string msg = "Thread count must be in the range [1, " + to_string(m_max_thread_count) + "].";
                 dialog::message_critical(msg);
                 return;
         }
@@ -139,8 +143,8 @@ void Painter3dParametersDialog::done(int r)
         int samples_per_pixel = ui.spinBox_samples_per_pixel->value();
         if (!(samples_per_pixel >= 1 && samples_per_pixel <= m_max_samples_per_pixel))
         {
-                std::string msg = "Error samples per pixel. Must be in the range [1, "
-                                  + to_string(m_max_samples_per_pixel) + "].";
+                std::string msg =
+                        "Samples per pixel must be in the range [1, " + to_string(m_max_samples_per_pixel) + "].";
                 dialog::message_critical(msg);
                 return;
         }
@@ -148,8 +152,8 @@ void Painter3dParametersDialog::done(int r)
         int width = ui.spinBox_width->value();
         if (!(m_min_width <= width && width <= m_max_width))
         {
-                std::string msg = "Error width " + to_string(width) + ", min = " + to_string(m_min_width)
-                                  + ", max = " + to_string(m_max_width);
+                std::string msg =
+                        "Width must be in the range [" + to_string(m_min_width) + ", " + to_string(m_max_width) + "]";
                 dialog::message_critical(msg);
                 return;
         }
@@ -157,8 +161,8 @@ void Painter3dParametersDialog::done(int r)
         int height = ui.spinBox_height->value();
         if (!(m_min_height <= height && height <= m_max_height))
         {
-                std::string msg = "Error height " + to_string(height) + ", min = " + to_string(m_min_height)
-                                  + ", max = " + to_string(m_max_height);
+                std::string msg = "Height must be in the range [" + to_string(m_min_height) + ", "
+                                  + to_string(m_max_height) + "]";
                 dialog::message_critical(msg);
                 return;
         }
