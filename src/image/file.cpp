@@ -19,13 +19,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "conversion.h"
 
+#include <src/com/alg.h>
+#include <src/com/arrays.h>
+#include <src/com/error.h>
+#include <src/com/print.h>
+#include <src/com/type/limit.h>
+#include <src/utility/file/path.h>
 #include <src/utility/string/ascii.h>
 #include <src/utility/string/str.h>
 
 #include <QImage>
 #include <QImageWriter>
+#include <cmath>
 #include <cstring>
 #include <set>
+#include <sstream>
 
 namespace image
 {
@@ -243,41 +251,7 @@ void load_4(QImage&& image, const std::span<std::byte>& pixels)
                 }
         }
 }
-}
 
-void save_image_to_file(const std::filesystem::path& file_name, const ImageView<2>& image_view)
-{
-        std::string f = generic_utf8_filename(file_name_with_extension(file_name));
-
-        int width = image_view.size[0];
-        int height = image_view.size[1];
-
-        if (image_view.pixels.size() != 1ull * width * height * format_pixel_size_in_bytes(image_view.color_format))
-        {
-                error("Error image data size");
-        }
-
-        if (format_component_count(image_view.color_format) == 1)
-        {
-                save_1(f, image_view);
-        }
-        else if (format_component_count(image_view.color_format) == 3)
-        {
-                save_3(f, image_view);
-        }
-        else if (format_component_count(image_view.color_format) == 4)
-        {
-                save_4(f, image_view);
-        }
-        else
-        {
-                error("Image format " + format_to_string(image_view.color_format)
-                      + " is not supported for saving to file");
-        }
-}
-
-namespace implementation
-{
 void save_image_to_files(
         const std::filesystem::path& directory,
         const std::string& file_format,
@@ -321,9 +295,101 @@ void save_image_to_files(
                 progress->set(++(*current), count);
         }
 }
+
+template <size_t N>
+std::enable_if_t<N >= 4> save_image_to_files(
+        const std::filesystem::path& directory,
+        const std::string& file_format,
+        const ImageView<N>& image_view,
+        ProgressRatio* progress,
+        unsigned* current,
+        unsigned count)
+{
+        static_assert(N >= 4);
+
+        const int image_n_1_count = image_view.size[N - 1];
+
+        const std::array<int, N - 1> image_n_1_size = del_elem(image_view.size, N - 1);
+        const size_t image_n_1_size_in_bytes =
+                format_pixel_size_in_bytes(image_view.color_format) * (multiply_all<long long>(image_n_1_size));
+
+        const int number_width = std::floor(std::log10(std::max(image_n_1_count - 1, 1))) + 1;
+
+        ASSERT(image_n_1_size_in_bytes * image_n_1_count == image_view.pixels.size());
+
+        std::ostringstream oss;
+        oss << std::setfill('0');
+        size_t offset = 0;
+        for (int i = 0; i < image_n_1_count; ++i)
+        {
+                oss.str(std::string());
+                oss << std::setw(number_width) << i;
+
+                const std::filesystem::path directory_n_1 = directory / path_from_utf8(oss.str());
+                std::filesystem::create_directory(directory_n_1);
+
+                std::span pixels(image_view.pixels.data() + offset, image_n_1_size_in_bytes);
+                save_image_to_files(
+                        directory_n_1, file_format, ImageView<N - 1>(image_n_1_size, image_view.color_format, pixels),
+                        progress, current, count);
+
+                offset += image_n_1_size_in_bytes;
+        }
+}
 }
 
-void load_image_from_file_rgba(const std::filesystem::path& file_name, Image<2>* image)
+void save_image_to_file(const std::filesystem::path& file_name, const ImageView<2>& image_view)
+{
+        std::string f = generic_utf8_filename(file_name_with_extension(file_name));
+
+        int width = image_view.size[0];
+        int height = image_view.size[1];
+
+        if (image_view.pixels.size() != 1ull * width * height * format_pixel_size_in_bytes(image_view.color_format))
+        {
+                error("Error image data size");
+        }
+
+        if (format_component_count(image_view.color_format) == 1)
+        {
+                save_1(f, image_view);
+        }
+        else if (format_component_count(image_view.color_format) == 3)
+        {
+                save_3(f, image_view);
+        }
+        else if (format_component_count(image_view.color_format) == 4)
+        {
+                save_4(f, image_view);
+        }
+        else
+        {
+                error("Image format " + format_to_string(image_view.color_format)
+                      + " is not supported for saving to file");
+        }
+}
+
+template <size_t N>
+std::enable_if_t<N >= 3> save_image_to_files(
+        const std::filesystem::path& directory,
+        const std::string& file_format,
+        const ImageView<N>& image_view,
+        ProgressRatio* progress)
+{
+        if (!all_positive(image_view.size))
+        {
+                error("Image size is not positive: " + to_string(image_view.size));
+        }
+        long long count = multiply_all<long long>(image_view.size) / image_view.size[0] / image_view.size[1];
+        if (static_cast<unsigned long long>(count) > limits<unsigned>::max())
+        {
+                error("Too many images to save, image size " + to_string(image_view.size));
+        }
+        unsigned current = 0;
+        save_image_to_files(directory, file_format, image_view, progress, &current, count);
+}
+
+Image<2> load_image_from_file_rgba(const std::filesystem::path& file_name)
 {
         std::string f = generic_utf8_filename(file_name);
         QImage q_image;
@@ -332,31 +398,41 @@ void load_image_from_file_rgba(const std::filesystem::path& file_name, Image<2>*
                 error("Error loading image from the file " + f);
         }
 
-        image->color_format = ColorFormat::R8G8B8A8_SRGB;
-        image->size[0] = q_image.width();
-        image->size[1] = q_image.height();
-        image->pixels.resize(4ull * image->size[0] * image->size[1]);
+        Image<2> image;
+        image.color_format = ColorFormat::R8G8B8A8_SRGB;
+        image.size[0] = q_image.width();
+        image.size[1] = q_image.height();
+        image.pixels.resize(4ull * image.size[0] * image.size[1]);
 
-        load_4(std::move(q_image), image->pixels);
+        load_4(std::move(q_image), image.pixels);
+
+        return image;
 }
 
-void load_image_from_files_rgba(const std::filesystem::path& directory, Image<3>* image)
+Image<3> load_image_from_files_rgba(const std::filesystem::path& directory, ProgressRatio* progress)
 {
         const std::vector<std::string> files = read_sorted_file_names_from_directory(directory);
         if (files.empty())
         {
                 error("No files found in directory " + generic_utf8_filename(directory));
         }
+        if (files.size() > limits<unsigned>::max())
+        {
+                error("Too many images to load: " + to_string(files.size()));
+        }
 
-        image->color_format = ColorFormat::R8G8B8A8_SRGB;
-        std::tie(image->size[0], image->size[1]) = image_size(directory / path_from_utf8(files.front()));
-        image->size[2] = files.size();
-        image->pixels.resize(4 * multiply_all<long long>(image->size));
+        Image<3> image;
+        image.color_format = ColorFormat::R8G8B8A8_SRGB;
+        std::tie(image.size[0], image.size[1]) = image_size(directory / path_from_utf8(files.front()));
+        image.size[2] = files.size();
+        image.pixels.resize(4 * multiply_all<long long>(image.size));
 
-        const size_t size_2d = image->pixels.size() / image->size[2];
-        std::byte* ptr_2d = image->pixels.data();
-        ASSERT(image->pixels.size() == size_2d * image->size[2]);
+        const size_t size_2d = image.pixels.size() / image.size[2];
+        std::byte* ptr_2d = image.pixels.data();
+        ASSERT(image.pixels.size() == size_2d * image.size[2]);
 
+        unsigned current = 0;
+        unsigned count = files.size();
         for (const std::string& file : files)
         {
                 std::string f = generic_utf8_filename(directory / path_from_utf8(file));
@@ -365,15 +441,30 @@ void load_image_from_files_rgba(const std::filesystem::path& directory, Image<3>
                 {
                         error("Error loading image from the file " + f);
                 }
-                if (q_image.width() != image->size[0] || q_image.height() != image->size[1])
+                if (q_image.width() != image.size[0] || q_image.height() != image.size[1])
                 {
-                        error("Different image sizes in directory: " + files.front() + " (" + to_string(image->size[0])
-                              + ", " + to_string(image->size[1]) + ") and " + file + " (" + to_string(q_image.width())
+                        error("Different image sizes in directory: " + files.front() + " (" + to_string(image.size[0])
+                              + ", " + to_string(image.size[1]) + ") and " + file + " (" + to_string(q_image.width())
                               + ", " + to_string(q_image.height()) + ")");
                 }
 
                 load_4(std::move(q_image), std::span(ptr_2d, size_2d));
                 ptr_2d += size_2d;
+
+                progress->set(++current, count);
         }
+
+        return image;
 }
+
+template void save_image_to_files(
+        const std::filesystem::path&,
+        const std::string&,
+        const ImageView<3>&,
+        ProgressRatio*);
+template void save_image_to_files(
+        const std::filesystem::path&,
+        const std::string&,
+        const ImageView<4>&,
+        ProgressRatio*);
 }
