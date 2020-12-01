@@ -85,7 +85,7 @@ std::filesystem::path file_name_with_extension(std::filesystem::path file_name)
         return file_name.replace_extension(DEFAULT_WRITE_FORMAT);
 }
 
-std::vector<std::string> read_sorted_file_names_from_directory(const std::filesystem::path& directory)
+std::vector<std::string> read_ascii_file_names_from_directory(const std::filesystem::path& directory)
 {
         if (!std::filesystem::is_directory(directory))
         {
@@ -99,13 +99,11 @@ std::vector<std::string> read_sorted_file_names_from_directory(const std::filesy
                         error("Non-regular file found " + generic_utf8_filename(entry.path()));
                 }
                 files.push_back(generic_utf8_filename(entry.path().filename()));
-                // Проверка для сортировки
                 if (!ascii::is_ascii(files.back()))
                 {
                         error("File name does not have only ASCII encoding " + generic_utf8_filename(entry.path()));
                 }
         }
-        std::sort(files.begin(), files.end());
         return files;
 }
 
@@ -145,7 +143,7 @@ void save_1(const std::string& file_name, const ImageView<2>& image_view)
                         image_line[col] = qRgb(c, c, c);
                 }
         }
-        if (!q_image.save(file_name.c_str()))
+        if (!q_image.save(QString::fromStdString(file_name)))
         {
                 error("Error saving pixels to the file " + file_name);
         }
@@ -180,7 +178,7 @@ void save_3(const std::string& file_name, const ImageView<2>& image_view)
                         image_line[col] = qRgb(r, g, b);
                 }
         }
-        if (!q_image.save(file_name.c_str()))
+        if (!q_image.save(QString::fromStdString(file_name)))
         {
                 error("Error saving pixels to the file " + file_name);
         }
@@ -217,13 +215,13 @@ void save_4(const std::string& file_name, const ImageView<2>& image_view)
                         image_line[col] = qRgba(r, g, b, a);
                 }
         }
-        if (!q_image.save(file_name.c_str()))
+        if (!q_image.save(QString::fromStdString(file_name)))
         {
                 error("Error saving pixels to the file " + file_name);
         }
 }
 
-void load_4(QImage&& image, const std::span<std::byte>& pixels)
+void load_r8g8b8a8(QImage&& image, const std::span<std::byte>& pixels)
 {
         ASSERT(pixels.size() == 4ull * image.width() * image.height());
 
@@ -336,6 +334,53 @@ std::enable_if_t<N >= 4> save_image_to_files(
                 offset += image_n_1_size_in_bytes;
         }
 }
+
+void load_r8g8b8a8_from_files(
+        const std::filesystem::path& directory,
+        unsigned image_count,
+        int width,
+        int height,
+        const std::span<std::byte>& image_bytes,
+        ProgressRatio* progress,
+        unsigned* current,
+        unsigned count)
+{
+        std::vector<std::string> files = read_ascii_file_names_from_directory(directory);
+        if (files.empty())
+        {
+                error("No files found in directory " + generic_utf8_filename(directory));
+        }
+        if (files.size() != image_count)
+        {
+                error("Expected image count " + to_string(image_count) + ", found " + to_string(files.size()));
+        }
+        std::sort(files.begin(), files.end());
+
+        ASSERT(image_bytes.size() == 4ull * image_count * width * height);
+        const size_t size_2d = image_bytes.size() / image_count;
+        std::byte* ptr_2d = image_bytes.data();
+
+        for (const std::string& file : files)
+        {
+                std::string f = generic_utf8_filename(directory / path_from_utf8(file));
+                QImage q_image;
+                if (!q_image.load(QString::fromStdString(f)))
+                {
+                        error("Error loading image from the file " + f);
+                }
+                if (q_image.width() != width || q_image.height() != height)
+                {
+                        error("Expected image size " + files.front() + " (" + to_string(width) + ", "
+                              + to_string(height) + "), found size (" + to_string(q_image.width()) + ", "
+                              + to_string(q_image.height()) + ") in file " + f);
+                }
+
+                load_r8g8b8a8(std::move(q_image), std::span(ptr_2d, size_2d));
+                ptr_2d += size_2d;
+
+                progress->set(++(*current), count);
+        }
+}
 }
 
 void save_image_to_file(const std::filesystem::path& file_name, const ImageView<2>& image_view)
@@ -393,7 +438,7 @@ Image<2> load_image_from_file_rgba(const std::filesystem::path& file_name)
 {
         std::string f = generic_utf8_filename(file_name);
         QImage q_image;
-        if (!q_image.load(f.c_str()) || q_image.width() < 1 || q_image.height() < 1)
+        if (!q_image.load(QString::fromStdString(f)) || q_image.width() < 1 || q_image.height() < 1)
         {
                 error("Error loading image from the file " + f);
         }
@@ -404,14 +449,14 @@ Image<2> load_image_from_file_rgba(const std::filesystem::path& file_name)
         image.size[1] = q_image.height();
         image.pixels.resize(4ull * image.size[0] * image.size[1]);
 
-        load_4(std::move(q_image), image.pixels);
+        load_r8g8b8a8(std::move(q_image), image.pixels);
 
         return image;
 }
 
 Image<3> load_image_from_files_rgba(const std::filesystem::path& directory, ProgressRatio* progress)
 {
-        const std::vector<std::string> files = read_sorted_file_names_from_directory(directory);
+        std::vector<std::string> files = read_ascii_file_names_from_directory(directory);
         if (files.empty())
         {
                 error("No files found in directory " + generic_utf8_filename(directory));
@@ -423,36 +468,17 @@ Image<3> load_image_from_files_rgba(const std::filesystem::path& directory, Prog
 
         Image<3> image;
         image.color_format = ColorFormat::R8G8B8A8_SRGB;
-        std::tie(image.size[0], image.size[1]) = image_size(directory / path_from_utf8(files.front()));
+        std::tie(image.size[0], image.size[1]) =
+                image_size(directory / path_from_utf8(*std::min_element(files.cbegin(), files.cend())));
         image.size[2] = files.size();
         image.pixels.resize(4 * multiply_all<long long>(image.size));
 
-        const size_t size_2d = image.pixels.size() / image.size[2];
-        std::byte* ptr_2d = image.pixels.data();
-        ASSERT(image.pixels.size() == size_2d * image.size[2]);
-
         unsigned current = 0;
         unsigned count = files.size();
-        for (const std::string& file : files)
-        {
-                std::string f = generic_utf8_filename(directory / path_from_utf8(file));
-                QImage q_image;
-                if (!q_image.load(QString::fromStdString(f)))
-                {
-                        error("Error loading image from the file " + f);
-                }
-                if (q_image.width() != image.size[0] || q_image.height() != image.size[1])
-                {
-                        error("Different image sizes in directory: " + files.front() + " (" + to_string(image.size[0])
-                              + ", " + to_string(image.size[1]) + ") and " + file + " (" + to_string(q_image.width())
-                              + ", " + to_string(q_image.height()) + ")");
-                }
 
-                load_4(std::move(q_image), std::span(ptr_2d, size_2d));
-                ptr_2d += size_2d;
-
-                progress->set(++current, count);
-        }
+        load_r8g8b8a8_from_files(
+                directory, files.size(), image.size[0], image.size[1],
+                std::span(image.pixels.data(), image.pixels.size()), progress, &current, count);
 
         return image;
 }
