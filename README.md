@@ -79,7 +79,7 @@ C++ compilers             | GCC 10, Clang 11
 Platforms                 | Linux, Windows
 Graphics and compute APIs | Vulkan 1.2
 Frameworks                | Qt 5
-Libraries                 | FreeType, GMP, Xlib
+Libraries                 | FreeType, GMP
 Optional libraries        | cuFFT (for DFT tests), FFTW (for DFT tests)
 Build systems             | CMake
 
