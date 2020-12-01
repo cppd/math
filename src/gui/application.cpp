@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/log.h>
-#include <src/window/manage.h>
 
 namespace gui
 {
@@ -90,8 +89,6 @@ void message_event(const MessageEvent& event)
 
 int run_application(int argc, char** argv)
 {
-        window::WindowInit window_init;
-
         Application a(argc, argv);
 
         MainThread ui_thread;

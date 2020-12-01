@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/print.h>
 #include <src/com/string_tree.h>
-#include <src/window/manage.h>
+#include <src/window/surface.h>
 
 #include <algorithm>
 #include <unordered_set>

@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if 0
+
 #include "manage.h"
 
 #include <src/vulkan/error.h>
@@ -269,4 +271,6 @@ VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
 
 #else
 #error This operating system is not supported
+#endif
+
 #endif

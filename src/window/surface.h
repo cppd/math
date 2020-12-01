@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if 0
-
 #include "handle.h"
 
 #include <string>
@@ -29,18 +27,4 @@ namespace window
 {
 std::vector<std::string> vulkan_create_surface_required_extensions();
 VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance);
-
-class WindowInit final
-{
-public:
-        WindowInit();
-        ~WindowInit();
-
-        WindowInit(const WindowInit&) = delete;
-        WindowInit(WindowInit&&) = delete;
-        WindowInit& operator=(const WindowInit&) = delete;
-        WindowInit& operator=(WindowInit&&) = delete;
-};
 }
-
-#endif

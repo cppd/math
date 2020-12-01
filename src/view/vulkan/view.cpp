@@ -42,7 +42,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/objects.h>
 #include <src/vulkan/queue.h>
 #include <src/vulkan/sync.h>
-#include <src/window/manage.h>
+#include <src/window/surface.h>
 
 #include <chrono>
 
