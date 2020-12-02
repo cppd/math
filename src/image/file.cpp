@@ -115,18 +115,18 @@ enum class ContentType
 
 struct DirectoryContent final
 {
-        std::optional<ContentType> type;
+        ContentType type;
         std::vector<std::string> entries;
 };
 
-DirectoryContent read_directory_ascii_content(const std::filesystem::path& directory)
+std::optional<DirectoryContent> read_directory_ascii_content(const std::filesystem::path& directory)
 {
         if (!std::filesystem::is_directory(directory))
         {
                 error("Directory not found " + generic_utf8_filename(directory));
         }
 
-        DirectoryContent content;
+        std::vector<std::string> entries;
 
         bool files = false;
         bool directories = false;
@@ -152,25 +152,26 @@ DirectoryContent read_directory_ascii_content(const std::filesystem::path& direc
                 {
                         error("Neither directory nor regular file found " + generic_utf8_filename(entry.path()));
                 }
-                content.entries.push_back(generic_utf8_filename(entry.path().filename()));
-                if (!ascii::is_ascii(content.entries.back()))
+                entries.push_back(generic_utf8_filename(entry.path().filename()));
+                if (!ascii::is_ascii(entries.back()))
                 {
                         error("Directory entry does not have only ASCII encoding "
                               + generic_utf8_filename(entry.path()));
                 }
         }
-
-        ASSERT(content.entries.empty() || (files != directories));
-        if (files)
+        if (entries.empty())
         {
-                content.type = ContentType::Files;
+                return std::nullopt;
         }
-        else if (directories)
+        ASSERT(files != directories);
+        if (files == directories)
         {
-                content.type = ContentType::Directories;
+                return std::nullopt;
         }
 
-        return content;
+        return DirectoryContent{
+                .type = (files ? ContentType::Files : ContentType::Directories),
+                .entries = std::move(entries)};
 }
 
 std::tuple<int, int> image_size(const std::filesystem::path& file_name)
@@ -522,31 +523,31 @@ Image<2> load_image_from_file_rgba(const std::filesystem::path& file_name)
 
 Image<3> load_image_from_files_rgba(const std::filesystem::path& directory, ProgressRatio* progress)
 {
-        const DirectoryContent content = read_directory_ascii_content(directory);
-        ASSERT(content.type.has_value() != content.entries.empty());
+        const std::optional<DirectoryContent> content = read_directory_ascii_content(directory);
+        ASSERT(!content || !content->entries.empty());
 
-        if (!content.type || *content.type != ContentType::Files || content.entries.empty())
+        if (!content || content->type != ContentType::Files || content->entries.empty())
         {
                 error("No files found in directory " + generic_utf8_filename(directory));
         }
 
-        if (content.entries.size() > limits<unsigned>::max())
+        if (content->entries.size() > limits<unsigned>::max())
         {
-                error("Too many images to load: " + to_string(content.entries.size()));
+                error("Too many images to load: " + to_string(content->entries.size()));
         }
 
         Image<3> image;
         image.color_format = ColorFormat::R8G8B8A8_SRGB;
         std::tie(image.size[0], image.size[1]) = image_size(
-                directory / path_from_utf8(*std::min_element(content.entries.cbegin(), content.entries.cend())));
-        image.size[2] = content.entries.size();
+                directory / path_from_utf8(*std::min_element(content->entries.cbegin(), content->entries.cend())));
+        image.size[2] = content->entries.size();
         image.pixels.resize(4 * multiply_all<long long>(image.size));
 
         unsigned current = 0;
-        unsigned count = content.entries.size();
+        unsigned count = content->entries.size();
 
         load_r8g8b8a8_from_files(
-                directory, content.entries.size(), image.size[0], image.size[1],
+                directory, content->entries.size(), image.size[0], image.size[1],
                 std::span(image.pixels.data(), image.pixels.size()), progress, &current, count);
 
         return image;
