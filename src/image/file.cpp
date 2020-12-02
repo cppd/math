@@ -174,7 +174,7 @@ std::optional<DirectoryContent> read_directory_ascii_content(const std::filesyst
                 .entries = std::move(entries)};
 }
 
-std::tuple<int, int> image_size(const std::filesystem::path& file_name)
+std::tuple<int, int> image_width_height(const std::filesystem::path& file_name)
 {
         std::string f = generic_utf8_filename(file_name);
         QImage q_image;
@@ -404,9 +404,9 @@ std::enable_if_t<N >= 4> save_image_to_files(
 
 void load_r8g8b8a8_from_files(
         const std::filesystem::path& directory,
-        unsigned image_count,
         int width,
         int height,
+        unsigned image_count,
         const std::span<std::byte>& image_bytes,
         ProgressRatio* progress,
         unsigned* current,
@@ -447,6 +447,38 @@ void load_r8g8b8a8_from_files(
 
                 progress->set(++(*current), count);
         }
+}
+
+void find_image_size(const std::filesystem::path& directory, std::vector<int>* size)
+{
+        std::optional<DirectoryContent> content = read_directory_ascii_content(directory);
+        if (!content || content->entries.empty())
+        {
+                error("Image files or directories not found in " + generic_utf8_filename(directory));
+        }
+
+        const std::filesystem::path first =
+                directory / path_from_utf8(*std::min_element(content->entries.cbegin(), content->entries.cend()));
+
+        switch (content->type)
+        {
+        case ContentType::Directories:
+        {
+                size->push_back(content->entries.size());
+                content.reset();
+                find_image_size(first, size);
+                return;
+        }
+        case ContentType::Files:
+        {
+                const auto [width, height] = image_width_height(first);
+                size->push_back(content->entries.size());
+                size->push_back(height);
+                size->push_back(width);
+                return;
+        }
+        }
+        error_fatal("Unknown content type " + to_string(static_cast<long long>(content->type)));
 }
 }
 
@@ -521,33 +553,43 @@ Image<2> load_image_from_file_rgba(const std::filesystem::path& file_name)
         return image;
 }
 
+std::vector<int> find_image_size(const std::filesystem::path& directory)
+{
+        std::vector<int> size;
+        find_image_size(directory, &size);
+        if (size.size() < 3)
+        {
+                error("Image dimension " + to_string(size.size()) + " is less than 3");
+        }
+        std::reverse(size.begin(), size.end());
+        if (!all_positive(size))
+        {
+                error("Image dimensions " + to_string(size) + " are not positive");
+        }
+        return size;
+}
+
 Image<3> load_image_from_files_rgba(const std::filesystem::path& directory, ProgressRatio* progress)
 {
-        const std::optional<DirectoryContent> content = read_directory_ascii_content(directory);
-        ASSERT(!content || !content->entries.empty());
-
-        if (!content || content->type != ContentType::Files || content->entries.empty())
+        const std::vector<int> image_size = find_image_size(directory);
+        if (image_size.size() != 3)
         {
-                error("No files found in directory " + generic_utf8_filename(directory));
-        }
-
-        if (content->entries.size() > limits<unsigned>::max())
-        {
-                error("Too many images to load: " + to_string(content->entries.size()));
+                error("Error loading 3-image, found image dimension " + to_string(image_size.size()) + " in "
+                      + generic_utf8_filename(directory));
         }
 
         Image<3> image;
         image.color_format = ColorFormat::R8G8B8A8_SRGB;
-        std::tie(image.size[0], image.size[1]) = image_size(
-                directory / path_from_utf8(*std::min_element(content->entries.cbegin(), content->entries.cend())));
-        image.size[2] = content->entries.size();
+        image.size[0] = image_size[0];
+        image.size[1] = image_size[1];
+        image.size[2] = image_size[2];
         image.pixels.resize(4 * multiply_all<long long>(image.size));
 
         unsigned current = 0;
-        unsigned count = content->entries.size();
+        unsigned count = image_size[2];
 
         load_r8g8b8a8_from_files(
-                directory, content->entries.size(), image.size[0], image.size[1],
+                directory, image.size[0], image.size[1], image_size[2],
                 std::span(image.pixels.data(), image.pixels.size()), progress, &current, count);
 
         return image;

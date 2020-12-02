@@ -37,5 +37,6 @@ std::enable_if_t<N >= 3> save_image_to_files(
 
 Image<2> load_image_from_file_rgba(const std::filesystem::path& file_name);
 
+std::vector<int> find_image_size(const std::filesystem::path& directory);
 Image<3> load_image_from_files_rgba(const std::filesystem::path& directory, ProgressRatio* progress);
 }
