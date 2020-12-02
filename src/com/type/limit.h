@@ -79,14 +79,19 @@ constexpr T binary_exponent(int e)
         return r;
 }
 
+template <typename T>
+constexpr bool INTEGRAL_SPECIALIZED = std::is_integral_v<T>&& std::numeric_limits<T>::is_specialized;
+
+template <typename T>
+constexpr bool FLOATING_POINT_SPECIALIZED = std::is_floating_point_v<T>&& std::numeric_limits<T>::is_specialized;
+
 template <typename T, typename = void>
 class limits;
 
 template <typename T>
-class limits<T, std::enable_if_t<std::is_integral_v<T>>>
+class limits<T, std::enable_if_t<INTEGRAL_SPECIALIZED<T>>>
 {
-        static_assert(std::numeric_limits<T>::is_specialized);
-        static_assert(std::is_integral_v<T>);
+        static_assert(INTEGRAL_SPECIALIZED<T>);
 
 public:
         static constexpr T max()
@@ -103,10 +108,9 @@ public:
 };
 
 template <typename T>
-class limits<T, std::enable_if_t<std::is_floating_point_v<T>>>
+class limits<T, std::enable_if_t<FLOATING_POINT_SPECIALIZED<T>>>
 {
-        static_assert(std::numeric_limits<T>::is_specialized);
-        static_assert(std::is_floating_point_v<T>);
+        static_assert(FLOATING_POINT_SPECIALIZED<T>);
 
 public:
         static constexpr T epsilon()
@@ -128,13 +132,10 @@ public:
 };
 
 template <typename T>
-class limits<
-        T,
-        std::enable_if_t<
-                std::is_same_v<T, unsigned __int128> && !std::numeric_limits<unsigned __int128>::is_specialized>>
+class limits<T, std::enable_if_t<std::is_same_v<T, unsigned __int128> && !INTEGRAL_SPECIALIZED<T>>>
 {
-        static_assert(!std::numeric_limits<T>::is_specialized);
         static_assert(std::is_same_v<T, unsigned __int128>);
+        static_assert(!INTEGRAL_SPECIALIZED<T>);
 
 public:
         static constexpr T max()
@@ -151,12 +152,10 @@ public:
 };
 
 template <typename T>
-class limits<
-        T,
-        std::enable_if_t<std::is_same_v<T, signed __int128> && !std::numeric_limits<signed __int128>::is_specialized>>
+class limits<T, std::enable_if_t<std::is_same_v<T, signed __int128> && !INTEGRAL_SPECIALIZED<T>>>
 {
-        static_assert(!std::numeric_limits<T>::is_specialized);
         static_assert(std::is_same_v<T, signed __int128>);
+        static_assert(!INTEGRAL_SPECIALIZED<T>);
 
 public:
         static constexpr T max()
@@ -173,10 +172,10 @@ public:
 };
 
 template <typename T>
-class limits<T, std::enable_if_t<std::is_same_v<T, __float128> && !std::numeric_limits<__float128>::is_specialized>>
+class limits<T, std::enable_if_t<std::is_same_v<T, __float128> && !FLOATING_POINT_SPECIALIZED<T>>>
 {
-        static_assert(!std::numeric_limits<T>::is_specialized);
         static_assert(std::is_same_v<T, __float128>);
+        static_assert(!FLOATING_POINT_SPECIALIZED<T>);
 
         // epsilon = strtoflt128("1.92592994438723585305597794258492732e-34", nullptr)
         // max = strtoflt128("1.18973149535723176508575932662800702e4932", nullptr)
