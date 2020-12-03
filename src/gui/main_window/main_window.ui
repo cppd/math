@@ -113,8 +113,6 @@
     </property>
     <addaction name="action_load"/>
     <addaction name="action_export"/>
-    <addaction name="separator"/>
-    <addaction name="action_exit"/>
    </widget>
    <widget class="QMenu" name="menu_help">
     <property name="title">
@@ -150,11 +148,6 @@
   <action name="action_load">
    <property name="text">
     <string>Open...</string>
-   </property>
-  </action>
-  <action name="action_exit">
-   <property name="text">
-    <string>Exit</string>
    </property>
   </action>
   <action name="action_about">

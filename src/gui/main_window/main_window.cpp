@@ -119,8 +119,8 @@ void MainWindow::constructor_objects()
 
         //
 
-        ui.main_widget->layout()->setContentsMargins(3, 3, 3, 3);
-        ui.main_widget->layout()->setSpacing(3);
+        ui.main_widget->layout()->setContentsMargins(0, 0, 0, 0);
+        ui.main_widget->layout()->setSpacing(0);
 
         ui.tab_widget->setCurrentWidget(ui.tab_models);
 
@@ -133,9 +133,14 @@ void MainWindow::constructor_objects()
         //
 
         connect(ui.action_about, &QAction::triggered, this, &MainWindow::on_about_triggered);
-        connect(ui.action_exit, &QAction::triggered, this, &MainWindow::on_exit_triggered);
         connect(ui.action_help, &QAction::triggered, this, &MainWindow::on_help_triggered);
         connect(&m_timer, &QTimer::timeout, this, &MainWindow::on_timer);
+
+        if (!ui.menu_file->actions().empty())
+        {
+                ui.menu_file->addSeparator();
+        }
+        connect(ui.menu_file->addAction("Exit..."), &QAction::triggered, this, &MainWindow::close);
 }
 
 std::vector<view::Command> MainWindow::view_initial_commands() const
@@ -278,11 +283,6 @@ void MainWindow::on_timer()
 {
         m_log->write();
         m_actions->set_progresses();
-}
-
-void MainWindow::on_exit_triggered()
-{
-        close();
 }
 
 void MainWindow::on_help_triggered()

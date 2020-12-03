@@ -71,7 +71,6 @@ private:
         QTimer m_timer;
 
         void on_about_triggered();
-        void on_exit_triggered();
         void on_graphics_widget_mouse_move(QMouseEvent*);
         void on_graphics_widget_mouse_press(QMouseEvent*);
         void on_graphics_widget_mouse_release(QMouseEvent*);
