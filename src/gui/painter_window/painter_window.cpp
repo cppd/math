@@ -86,7 +86,8 @@ void PainterWindow::create_interface()
 
         ASSERT(!ui.main_widget->layout());
         ui.main_widget->setLayout(new QVBoxLayout(ui.main_widget));
-        ui.main_widget->layout()->setContentsMargins(5, 5, 5, 5);
+        ui.main_widget->layout()->setContentsMargins(0, 0, 0, 0);
+        ui.main_widget->layout()->setSpacing(0);
 
         m_image_widget = std::make_unique<ImageWidget>(m_pixels.get(), ui.menu_view);
         ui.main_widget->layout()->addWidget(m_image_widget.get());
@@ -94,8 +95,7 @@ void PainterWindow::create_interface()
         m_statistics_widget = std::make_unique<StatisticsWidget>(m_pixels.get(), UPDATE_INTERVAL);
         ui.main_widget->layout()->addWidget(m_statistics_widget.get());
 
-        QObject::connect(
-                ui.menu_window->addAction("Adjust size"), &QAction::triggered, this,
+        connect(ui.menu_window->addAction("Adjust size"), &QAction::triggered, this,
                 &PainterWindow::adjust_window_size);
 
         connect(&m_timer, &QTimer::timeout, this, &PainterWindow::on_timer_timeout);
@@ -132,7 +132,7 @@ void PainterWindow::create_actions()
         {
                 menu->addSeparator();
         }
-        QObject::connect(menu->addAction("Exit"), &QAction::triggered, this, &PainterWindow::close);
+        connect(menu->addAction("Exit..."), &QAction::triggered, this, &PainterWindow::close);
 }
 
 void PainterWindow::showEvent(QShowEvent* /*event*/)

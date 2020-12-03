@@ -64,7 +64,7 @@ StatisticsWidget::StatisticsWidget(const Pixels* pixels, std::chrono::millisecon
 {
         ui.setupUi(this);
 
-        layout()->setContentsMargins(0, 0, 0, 0);
+        layout()->setContentsMargins(5, 5, 5, 5);
 
         ui.label_rays_per_second->setText("");
         ui.label_ray_count->setText("");

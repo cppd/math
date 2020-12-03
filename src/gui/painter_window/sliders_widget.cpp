@@ -38,7 +38,7 @@ SlidersWidget::SlidersWidget(const std::vector<int>& screen_size)
         const std::vector<int> positions(slider_count, 0);
 
         QGridLayout* layout = new QGridLayout(this);
-        layout->setContentsMargins(0, 0, 0, 0);
+        layout->setContentsMargins(5, 5, 5, 5);
 
         for (int number = 0; number < slider_count; ++number)
         {
