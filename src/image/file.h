@@ -28,6 +28,12 @@ namespace image
 {
 void save_image_to_file(const std::filesystem::path& file_name, const ImageView<2>& image_view);
 
+Image<2> load_image_from_file_rgba(const std::filesystem::path& file_name);
+
+//
+
+std::vector<int> find_image_size(const std::filesystem::path& directory);
+
 template <size_t N>
 std::enable_if_t<N >= 3> save_image_to_files(
         const std::filesystem::path& directory,
@@ -35,8 +41,8 @@ std::enable_if_t<N >= 3> save_image_to_files(
         const ImageView<N>& image_view,
         ProgressRatio* progress);
 
-Image<2> load_image_from_file_rgba(const std::filesystem::path& file_name);
-
-std::vector<int> find_image_size(const std::filesystem::path& directory);
-Image<3> load_image_from_files_rgba(const std::filesystem::path& directory, ProgressRatio* progress);
+template <size_t N>
+std::enable_if_t<N >= 3, Image<N>> load_image_from_files_rgba(
+        const std::filesystem::path& directory,
+        ProgressRatio* progress);
 }
