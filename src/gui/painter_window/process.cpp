@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/image/file.h>
 #include <src/image/flip.h>
+#include <src/model/volume_utility.h>
 #include <src/process/dimension.h>
 #include <src/process/load.h>
 #include <src/progress/progress.h>
@@ -164,7 +165,7 @@ std::function<void(ProgressRatioList*)> save_to_file(
                         format = image::ColorFormat::R8G8B8_SRGB;
                 }
 
-                image::save_image_to_file(
+                image::save(
                         path_from_utf8(*file_name_string),
                         image::ImageView<2>({screen_size[0], screen_size[1]}, format, conv_bgra(*pixels_bgra, format)));
         };
@@ -214,7 +215,7 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                                 constexpr int N_IMAGE = N - 1;
                                 if constexpr (N_IMAGE >= 3)
                                 {
-                                        image::save_image_to_files(
+                                        volume::save_to_images(
                                                 path_from_utf8(*directory_string), IMAGE_FILE_FORMAT,
                                                 image::ImageView<N - 1>(
                                                         to_array<N - 1, int>(screen_size), format,
@@ -263,7 +264,7 @@ std::function<void(ProgressRatioList*)> add_volume(
                                         image.color_format = image::ColorFormat::R8G8B8A8_SRGB;
                                         image.pixels = conv_bgra(*pixels_bgra, image.color_format);
 
-                                        image::flip_image_vertically(&image);
+                                        image::flip_vertically(&image);
 
                                         process::load_from_volume_image<N_IMAGE>("Painter Volume", std::move(image));
                                 }

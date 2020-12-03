@@ -153,7 +153,7 @@ void save_to_file(char32_t code_point, const std::optional<Font::Char>& data)
 
         oss << ".png";
 
-        save_image_to_file(
+        image::save(
                 path_from_utf8(oss.str()),
                 image::ImageView<2>(
                         {data->width, data->height}, image::ColorFormat::R8_SRGB,

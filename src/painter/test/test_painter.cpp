@@ -28,8 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/gui/com/support.h>
 #include <src/gui/painter_window/painter_window.h>
-#include <src/image/file.h>
 #include <src/model/mesh_utility.h>
+#include <src/model/volume_utility.h>
 #include <src/utility/file/path.h>
 #include <src/utility/string/str.h>
 
@@ -114,7 +114,7 @@ public:
         void write_to_files() const
         {
                 ProgressRatio progress(nullptr);
-                image::save_image_to_files(
+                volume::save_to_images(
                         m_directory, IMAGE_FILE_FORMAT,
                         image::ImageView<N>(m_screen_size, image::ColorFormat::R8G8B8_SRGB, m_pixels), &progress);
         }

@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace image
 {
 template <size_t N>
-void flip_image_vertically(Image<N>* image)
+void flip_vertically(Image<N>* image)
 {
         if (image->size[0] < 1 || image->size[1] < 1)
         {

@@ -1,0 +1,348 @@
+/*
+Copyright (C) 2017-2020 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include "file.h"
+
+#include <src/com/alg.h>
+#include <src/com/arrays.h>
+#include <src/com/error.h>
+#include <src/com/print.h>
+#include <src/image/file.h>
+#include <src/utility/file/path.h>
+#include <src/utility/string/ascii.h>
+
+#include <cmath>
+#include <optional>
+#include <sstream>
+#include <vector>
+
+namespace volume
+{
+namespace
+{
+int max_digit_count_zero_based(int count)
+{
+        const int max_number = count - 1;
+        return std::floor(std::log10(std::max(max_number, 1))) + 1;
+}
+
+std::vector<std::string> read_ascii_file_names_from_directory(const std::filesystem::path& directory)
+{
+        if (!std::filesystem::is_directory(directory))
+        {
+                error("Directory not found " + generic_utf8_filename(directory));
+        }
+        std::vector<std::string> files;
+        for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directory))
+        {
+                if (!entry.is_regular_file())
+                {
+                        error("Non-regular file found " + generic_utf8_filename(entry.path()));
+                }
+                files.push_back(generic_utf8_filename(entry.path().filename()));
+                if (!ascii::is_ascii(files.back()))
+                {
+                        error("File name does not have only ASCII encoding " + generic_utf8_filename(entry.path()));
+                }
+        }
+        return files;
+}
+
+enum class ContentType
+{
+        Files,
+        Directories
+};
+
+struct DirectoryContent final
+{
+        ContentType type;
+        std::vector<std::string> entries;
+};
+
+std::optional<DirectoryContent> read_directory_ascii_content(const std::filesystem::path& directory)
+{
+        if (!std::filesystem::is_directory(directory))
+        {
+                error("Directory not found " + generic_utf8_filename(directory));
+        }
+
+        std::vector<std::string> entries;
+
+        bool files = false;
+        bool directories = false;
+        for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directory))
+        {
+                if (entry.is_directory())
+                {
+                        if (files)
+                        {
+                                error("Mixed content found in directory " + generic_utf8_filename(directory));
+                        }
+                        directories = true;
+                }
+                else if (entry.is_regular_file())
+                {
+                        if (directories)
+                        {
+                                error("Mixed content found in directory " + generic_utf8_filename(directory));
+                        }
+                        files = true;
+                }
+                else
+                {
+                        error("Neither directory nor regular file found " + generic_utf8_filename(entry.path()));
+                }
+                entries.push_back(generic_utf8_filename(entry.path().filename()));
+                if (!ascii::is_ascii(entries.back()))
+                {
+                        error("Directory entry does not have only ASCII encoding "
+                              + generic_utf8_filename(entry.path()));
+                }
+        }
+        if (entries.empty())
+        {
+                return std::nullopt;
+        }
+        ASSERT(files != directories);
+        if (files == directories)
+        {
+                return std::nullopt;
+        }
+
+        return DirectoryContent{
+                .type = (files ? ContentType::Files : ContentType::Directories),
+                .entries = std::move(entries)};
+}
+
+template <size_t N>
+std::enable_if_t<N >= 3> save_to_images(
+        const std::filesystem::path& directory,
+        const std::string& file_format,
+        const image::ImageView<N>& image_view,
+        ProgressRatio* progress,
+        unsigned* current,
+        unsigned count)
+{
+        static_assert(N >= 3);
+
+        const int digit_count = max_digit_count_zero_based(image_view.size[N - 1]);
+
+        const size_t size_in_bytes = image_view.pixels.size() / image_view.size[N - 1];
+        const std::byte* ptr = image_view.pixels.data();
+
+        ASSERT(image_view.pixels.size() == size_in_bytes * image_view.size[N - 1]);
+        ASSERT(static_cast<long long>(image_view.pixels.size())
+               == format_pixel_size_in_bytes(image_view.color_format) * multiply_all<long long>(image_view.size));
+
+        std::ostringstream oss;
+        oss << std::setfill('0');
+
+        std::array<int, N - 1> image_size_n_1 = del_elem(image_view.size, N - 1);
+
+        for (int i = 0; i < image_view.size[N - 1]; ++i, ptr += size_in_bytes)
+        {
+                oss.str(std::string());
+                oss << std::setw(digit_count) << i;
+
+                image::ImageView<N - 1> image_view_n_1(
+                        image_size_n_1, image_view.color_format, std::span(ptr, size_in_bytes));
+
+                if constexpr (N >= 4)
+                {
+                        const std::filesystem::path directory_n_1 = directory / path_from_utf8(oss.str());
+                        std::filesystem::create_directory(directory_n_1);
+                        save_to_images(directory_n_1, file_format, image_view_n_1, progress, current, count);
+                }
+                else
+                {
+                        oss << "." << file_format;
+                        image::save(directory / path_from_utf8(oss.str()), image_view_n_1);
+
+                        progress->set(++(*current), count);
+                }
+        }
+}
+
+template <size_t N>
+std::enable_if_t<N >= 3> load_rgba_from_images(
+        const std::filesystem::path& directory,
+        const std::array<int, N>& image_size,
+        const std::span<std::byte>& image_bytes,
+        ProgressRatio* progress,
+        unsigned* current,
+        unsigned count)
+{
+        static_assert(N >= 3);
+
+        std::vector<std::string> names = read_ascii_file_names_from_directory(directory);
+        if (names.empty())
+        {
+                std::string s = N >= 4 ? "directories" : "files";
+                error("No " + s + " found in directory " + generic_utf8_filename(directory));
+        }
+        if (names.size() != static_cast<unsigned>(image_size[N - 1]))
+        {
+                std::string s = N >= 4 ? "directory" : "file";
+                error("Expected " + s + " count " + to_string(image_size[N - 1]) + ", found " + to_string(names.size())
+                      + " in " + generic_utf8_filename(directory));
+        }
+        std::sort(names.begin(), names.end());
+
+        const size_t size_in_bytes = image_bytes.size() / names.size();
+        std::byte* ptr = image_bytes.data();
+
+        ASSERT(image_bytes.size() == size_in_bytes * names.size());
+        ASSERT(image_bytes.size() == 4ull * multiply_all<long long>(image_size));
+
+        std::array<int, N - 1> image_size_n_1 = del_elem(image_size, N - 1);
+
+        for (size_t i = 0; i < names.size(); ++i, ptr += size_in_bytes)
+        {
+                std::filesystem::path entry_path = directory / path_from_utf8(names[i]);
+                std::span span(ptr, size_in_bytes);
+                if constexpr (N >= 4)
+                {
+                        if (!std::filesystem::is_directory(entry_path))
+                        {
+                                error("Path expected to be a directory " + generic_utf8_filename(entry_path));
+                        }
+                        load_rgba_from_images(entry_path, image_size_n_1, span, progress, current, count);
+                }
+                else
+                {
+                        image::load_rgba(entry_path, image_size_n_1, span);
+
+                        progress->set(++(*current), count);
+                }
+        }
+}
+
+void find_size(const std::filesystem::path& directory, std::vector<int>* size)
+{
+        std::optional<DirectoryContent> content = read_directory_ascii_content(directory);
+        if (!content || content->entries.empty())
+        {
+                error("Image files or directories not found in " + generic_utf8_filename(directory));
+        }
+
+        const std::filesystem::path first =
+                directory / path_from_utf8(*std::min_element(content->entries.cbegin(), content->entries.cend()));
+
+        switch (content->type)
+        {
+        case ContentType::Directories:
+        {
+                size->push_back(content->entries.size());
+                content.reset();
+                find_size(first, size);
+                return;
+        }
+        case ContentType::Files:
+        {
+                const auto [width, height] = image::find_size(first);
+                size->push_back(content->entries.size());
+                size->push_back(height);
+                size->push_back(width);
+                return;
+        }
+        }
+        error_fatal("Unknown content type " + to_string(static_cast<long long>(content->type)));
+}
+}
+
+std::vector<int> find_size(const std::filesystem::path& path)
+{
+        std::vector<int> size;
+        find_size(path, &size);
+        if (size.size() < 3)
+        {
+                error("Image dimension " + to_string(size.size()) + " is less than 3");
+        }
+        std::reverse(size.begin(), size.end());
+        if (!all_positive(size))
+        {
+                error("Image dimensions " + to_string(size) + " are not positive");
+        }
+        return size;
+}
+
+template <size_t N>
+std::enable_if_t<N >= 3> save_to_images(
+        const std::filesystem::path& path,
+        const std::string& file_format,
+        const image::ImageView<N>& image_view,
+        ProgressRatio* progress)
+{
+        if (!all_positive(image_view.size))
+        {
+                error("Image size is not positive: " + to_string(image_view.size));
+        }
+        long long image_count = multiply_all<long long>(image_view.size) / image_view.size[0] / image_view.size[1];
+        if (static_cast<unsigned long long>(image_count) > limits<unsigned>::max())
+        {
+                error("Too many images to save, image size " + to_string(image_view.size));
+        }
+        unsigned current = 0;
+        save_to_images(path, file_format, image_view, progress, &current, image_count);
+}
+
+template <size_t N>
+std::enable_if_t<N >= 3, image::Image<N>> load_rgba(const std::filesystem::path& path, ProgressRatio* progress)
+{
+        const std::vector<int> image_size = find_size(path);
+        if (image_size.size() != N)
+        {
+                error("Error loading " + to_string(N) + "-image, found image dimension " + to_string(image_size.size())
+                      + " in " + generic_utf8_filename(path));
+        }
+
+        long long pixel_count = multiply_all<long long>(image_size);
+
+        image::Image<N> image;
+        image.color_format = image::ColorFormat::R8G8B8A8_SRGB;
+        for (size_t i = 0; i < N; ++i)
+        {
+                image.size[i] = image_size[i];
+        }
+        image.pixels.resize(4 * pixel_count);
+
+        long long image_count = pixel_count / image.size[0] / image.size[1];
+        if (static_cast<unsigned long long>(image_count) > limits<unsigned>::max())
+        {
+                error("Too many images to load, image size " + to_string(image_size));
+        }
+        unsigned current = 0;
+        load_rgba_from_images(path, image.size, image.pixels, progress, &current, image_count);
+
+        return image;
+}
+
+template void save_to_images(
+        const std::filesystem::path&,
+        const std::string&,
+        const image::ImageView<3>&,
+        ProgressRatio*);
+template void save_to_images(
+        const std::filesystem::path&,
+        const std::string&,
+        const image::ImageView<4>&,
+        ProgressRatio*);
+
+template image::Image<3> load_rgba<3>(const std::filesystem::path&, ProgressRatio*);
+template image::Image<4> load_rgba<4>(const std::filesystem::path&, ProgressRatio*);
+}

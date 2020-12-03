@@ -17,19 +17,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "image.h"
+#include <src/image/image.h>
+#include <src/progress/progress.h>
 
-#include <array>
 #include <filesystem>
-#include <span>
+#include <string>
 
-namespace image
+namespace volume
 {
-std::array<int, 2> find_size(const std::filesystem::path& path);
+std::vector<int> find_size(const std::filesystem::path& path);
 
-void save(const std::filesystem::path& path, const ImageView<2>& image_view);
+template <size_t N>
+std::enable_if_t<N >= 3> save_to_images(
+        const std::filesystem::path& path,
+        const std::string& file_format,
+        const image::ImageView<N>& image_view,
+        ProgressRatio* progress);
 
-Image<2> load_rgba(const std::filesystem::path& path);
-
-void load_rgba(const std::filesystem::path& path, const std::array<int, 2>& size, const std::span<std::byte>& pixels);
+template <size_t N>
+std::enable_if_t<N >= 3, image::Image<N>> load_rgba(const std::filesystem::path& path, ProgressRatio* progress);
 }

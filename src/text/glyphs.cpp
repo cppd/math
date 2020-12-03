@@ -252,7 +252,7 @@ void create_font_glyphs(
 
         if ((false))
         {
-                save_image_to_file(path_from_utf8("font_texture.png"), image::ImageView<2>(*image));
+                image::save(path_from_utf8("font_texture.png"), image::ImageView<2>(*image));
         }
 }
 }
