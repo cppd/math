@@ -27,16 +27,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace process
 {
-std::function<void(ProgressRatioList*)> action_load_from_file(
+std::function<void(ProgressRatioList*)> action_load_mesh_from_file(
         std::filesystem::path file_name,
         bool use_object_selection_dialog);
 
-std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
+std::function<void(ProgressRatioList*)> action_load_mesh_from_repository(
         const storage::Repository* repository,
         int dimension,
         const std::string& object_name);
 
-std::function<void(ProgressRatioList*)> action_load_from_volume_repository(
+std::function<void(ProgressRatioList*)> action_load_volume_from_repository(
         const storage::Repository* repository,
         int dimension,
         const std::string& object_name);

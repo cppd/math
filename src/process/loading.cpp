@@ -45,7 +45,7 @@ constexpr int VOLUME_IMAGE_SIZE_DEFAULT = 500;
 constexpr int VOLUME_IMAGE_SIZE_MAXIMUM = 1000;
 }
 
-std::function<void(ProgressRatioList*)> action_load_from_file(
+std::function<void(ProgressRatioList*)> action_load_mesh_from_file(
         std::filesystem::path file_name,
         bool use_object_selection_dialog)
 {
@@ -110,7 +110,7 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
         };
 }
 
-std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
+std::function<void(ProgressRatioList*)> action_load_mesh_from_repository(
         const storage::Repository* repository,
         int dimension,
         const std::string& object_name)
@@ -156,7 +156,7 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
         };
 }
 
-std::function<void(ProgressRatioList*)> action_load_from_volume_repository(
+std::function<void(ProgressRatioList*)> action_load_volume_from_repository(
         const storage::Repository* repository,
         int dimension,
         const std::string& object_name)

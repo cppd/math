@@ -45,7 +45,7 @@ void load_mesh(
                 [&]()
                 {
                         WorkerThreads::Function f =
-                                process::action_load_from_mesh_repository(repository, dimension, object_name);
+                                process::action_load_mesh_from_repository(repository, dimension, object_name);
                         //model_tree->clear();
                         //view->send(view::command::ResetView());
                         return f;
@@ -62,7 +62,7 @@ void load_volume(
                 WORKER_THREAD_ID, "Load from volume repository",
                 [&]()
                 {
-                        return process::action_load_from_volume_repository(repository, dimension, object_name);
+                        return process::action_load_volume_from_repository(repository, dimension, object_name);
                 });
 }
 
@@ -73,7 +73,7 @@ void load_file(WorkerThreads* threads, const std::filesystem::path& file_name, b
                 [&]()
                 {
                         WorkerThreads::Function f =
-                                process::action_load_from_file(file_name, use_object_selection_dialog);
+                                process::action_load_mesh_from_file(file_name, use_object_selection_dialog);
                         //model_tree->clear();
                         //view->send(view::command::ResetView());
                         return f;
