@@ -41,11 +41,25 @@ void load_mesh(
         const std::string& object_name)
 {
         threads->terminate_and_start(
-                WORKER_THREAD_ID, "Load from mesh repository",
+                WORKER_THREAD_ID, "Load mesh from repository",
                 [&]()
                 {
                         WorkerThreads::Function f =
                                 process::action_load_mesh_from_repository(repository, dimension, object_name);
+                        //model_tree->clear();
+                        //view->send(view::command::ResetView());
+                        return f;
+                });
+}
+
+void load_mesh(WorkerThreads* threads, const std::filesystem::path& file_name, bool use_object_selection_dialog)
+{
+        threads->terminate_and_start(
+                WORKER_THREAD_ID, "Load mesh from filesystem",
+                [&]()
+                {
+                        WorkerThreads::Function f =
+                                process::action_load_mesh_from_file(file_name, use_object_selection_dialog);
                         //model_tree->clear();
                         //view->send(view::command::ResetView());
                         return f;
@@ -59,24 +73,20 @@ void load_volume(
         const std::string& object_name)
 {
         threads->terminate_and_start(
-                WORKER_THREAD_ID, "Load from volume repository",
+                WORKER_THREAD_ID, "Load volume from repository",
                 [&]()
                 {
                         return process::action_load_volume_from_repository(repository, dimension, object_name);
                 });
 }
 
-void load_file(WorkerThreads* threads, const std::filesystem::path& file_name, bool use_object_selection_dialog)
+void load_volume(WorkerThreads* threads, const std::filesystem::path& path)
 {
         threads->terminate_and_start(
-                WORKER_THREAD_ID, "Loading from file",
+                WORKER_THREAD_ID, "Load volume from filesystem",
                 [&]()
                 {
-                        WorkerThreads::Function f =
-                                process::action_load_mesh_from_file(file_name, use_object_selection_dialog);
-                        //model_tree->clear();
-                        //view->send(view::command::ResetView());
-                        return f;
+                        return process::action_load_volume_from_file(path);
                 });
 }
 
@@ -158,10 +168,17 @@ Actions::Actions(
         m_worker_threads = create_worker_threads(REQUIRED_THREAD_COUNT, SELF_TEST_THREAD_ID, status_bar);
 
         m_connections.emplace_back(QObject::connect(
-                menu_file->addAction("Load..."), &QAction::triggered,
+                menu_file->addAction("Load Mesh..."), &QAction::triggered,
                 [threads = m_worker_threads.get()]()
                 {
-                        load_file(threads, "", true);
+                        load_mesh(threads, "", true);
+                }));
+
+        m_connections.emplace_back(QObject::connect(
+                menu_file->addAction("Load Volume..."), &QAction::triggered,
+                [threads = m_worker_threads.get()]()
+                {
+                        load_volume(threads, "");
                 }));
 
         m_connections.emplace_back(QObject::connect(
@@ -244,7 +261,7 @@ Actions::Actions(
 
         if (!options.file_name.empty())
         {
-                load_file(m_worker_threads.get(), options.file_name, !options.no_object_selection_dialog);
+                load_mesh(m_worker_threads.get(), options.file_name, !options.no_object_selection_dialog);
         }
 }
 
