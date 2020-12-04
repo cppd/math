@@ -36,6 +36,8 @@ std::function<void(ProgressRatioList*)> action_load_mesh_from_repository(
         int dimension,
         const std::string& object_name);
 
+std::function<void(ProgressRatioList*)> action_load_volume_from_file(std::filesystem::path path);
+
 std::function<void(ProgressRatioList*)> action_load_volume_from_repository(
         const storage::Repository* repository,
         int dimension,

@@ -156,6 +156,34 @@ std::function<void(ProgressRatioList*)> action_load_mesh_from_repository(
         };
 }
 
+std::function<void(ProgressRatioList*)> action_load_volume_from_file(std::filesystem::path path)
+{
+        if (path.empty())
+        {
+                std::string caption = "Open";
+                bool read_only = true;
+
+                std::optional<std::string> directory_string = gui::dialog::select_directory(caption, read_only);
+                if (!directory_string)
+                {
+                        return nullptr;
+                }
+                path = path_from_utf8(*directory_string);
+        }
+
+        return [=](ProgressRatioList* progress_list)
+        {
+                std::vector<int> image_size = volume::find_size(path);
+
+                apply_for_dimension(
+                        image_size.size(),
+                        [&]<size_t N>(const Dimension<N>&)
+                        {
+                                load_volume_from_file<N>(generic_utf8_filename(path.filename()), progress_list, path);
+                        });
+        };
+}
+
 std::function<void(ProgressRatioList*)> action_load_volume_from_repository(
         const storage::Repository* repository,
         int dimension,

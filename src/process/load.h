@@ -110,4 +110,29 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume_from_image(const std::strin
 
         return volume_object;
 }
+
+template <size_t N>
+std::shared_ptr<volume::VolumeObject<N>> load_volume_from_file(
+        const std::string& object_name,
+        ProgressRatioList* progress_list,
+        const std::filesystem::path& path)
+{
+        std::unique_ptr<volume::Volume<N>> volume = std::make_unique<volume::Volume<N>>();
+
+        {
+                ProgressRatio progress(progress_list);
+                progress.set_text("Loading file: %p%");
+                volume->image = volume::load_rgba<N>(path, &progress);
+        }
+
+        volume->matrix = volume::matrix_for_image_size(volume->image.size);
+
+        std::shared_ptr<volume::VolumeObject<N>> volume_object = std::make_shared<volume::VolumeObject<N>>(
+                std::move(volume),
+                volume::model_matrix_for_size_and_position(*volume, SCENE_SIZE, SCENE_CENTER<N, double>), object_name);
+
+        volume_object->insert();
+
+        return volume_object;
+}
 }
