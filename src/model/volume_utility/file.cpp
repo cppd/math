@@ -40,28 +40,6 @@ int max_digit_count_zero_based(int count)
         return std::floor(std::log10(std::max(max_number, 1))) + 1;
 }
 
-std::vector<std::string> read_ascii_file_names_from_directory(const std::filesystem::path& directory)
-{
-        if (!std::filesystem::is_directory(directory))
-        {
-                error("Directory not found " + generic_utf8_filename(directory));
-        }
-        std::vector<std::string> files;
-        for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directory))
-        {
-                if (!entry.is_regular_file())
-                {
-                        error("Non-regular file found " + generic_utf8_filename(entry.path()));
-                }
-                files.push_back(generic_utf8_filename(entry.path().filename()));
-                if (!ascii::is_ascii(files.back()))
-                {
-                        error("File name does not have only ASCII encoding " + generic_utf8_filename(entry.path()));
-                }
-        }
-        return files;
-}
-
 enum class ContentType
 {
         Files,
@@ -129,6 +107,34 @@ std::optional<DirectoryContent> read_directory_ascii_content(const std::filesyst
                 .entries = std::move(entries)};
 }
 
+std::vector<std::string> read_directories(const std::filesystem::path& directory)
+{
+        std::optional<DirectoryContent> content = read_directory_ascii_content(directory);
+        if (!content || content->entries.empty())
+        {
+                error("Directories not found in " + generic_utf8_filename(directory));
+        }
+        if (content->type != ContentType::Directories)
+        {
+                error("Directory " + generic_utf8_filename(directory) + " does not contain only directories");
+        }
+        return std::move(content->entries);
+}
+
+std::vector<std::string> read_files(const std::filesystem::path& directory)
+{
+        std::optional<DirectoryContent> content = read_directory_ascii_content(directory);
+        if (!content || content->entries.empty())
+        {
+                error("Files not found in " + generic_utf8_filename(directory));
+        }
+        if (content->type != ContentType::Files)
+        {
+                error("Directory " + generic_utf8_filename(directory) + " does not contain only files");
+        }
+        return std::move(content->entries);
+}
+
 template <size_t N>
 std::enable_if_t<N >= 3> save_to_images(
         const std::filesystem::path& directory,
@@ -189,11 +195,20 @@ std::enable_if_t<N >= 3> load_rgba_from_images(
 {
         static_assert(N >= 3);
 
-        std::vector<std::string> names = read_ascii_file_names_from_directory(directory);
+        std::vector<std::string> names;
+        if (N >= 4)
+        {
+                names = read_directories(directory);
+        }
+        else
+        {
+                names = read_files(directory);
+        }
+
         if (names.empty())
         {
-                std::string s = N >= 4 ? "directories" : "files";
-                error("No " + s + " found in directory " + generic_utf8_filename(directory));
+                std::string s = N >= 4 ? "Directories" : "Files";
+                error(s + " not found in directory " + generic_utf8_filename(directory));
         }
         if (names.size() != static_cast<unsigned>(image_size[N - 1]))
         {
@@ -201,6 +216,7 @@ std::enable_if_t<N >= 3> load_rgba_from_images(
                 error("Expected " + s + " count " + to_string(image_size[N - 1]) + ", found " + to_string(names.size())
                       + " in " + generic_utf8_filename(directory));
         }
+
         std::sort(names.begin(), names.end());
 
         const size_t size_in_bytes = image_bytes.size() / names.size();
@@ -342,7 +358,13 @@ template void save_to_images(
         const std::string&,
         const image::ImageView<4>&,
         ProgressRatio*);
+template void save_to_images(
+        const std::filesystem::path&,
+        const std::string&,
+        const image::ImageView<5>&,
+        ProgressRatio*);
 
 template image::Image<3> load_rgba<3>(const std::filesystem::path&, ProgressRatio*);
 template image::Image<4> load_rgba<4>(const std::filesystem::path&, ProgressRatio*);
+template image::Image<5> load_rgba<5>(const std::filesystem::path&, ProgressRatio*);
 }
