@@ -99,7 +99,7 @@ std::function<void(ProgressRatioList*)> action_load_from_file(
                         dimension,
                         [&]<size_t N>(const Dimension<N>&)
                         {
-                                std::shared_ptr<mesh::MeshObject<N>> mesh = load_from_file<N>(
+                                std::shared_ptr<mesh::MeshObject<N>> mesh = load_mesh_from_file<N>(
                                         generic_utf8_filename(file_name.filename()), progress_list, file_name);
 
                                 compute<N>(
@@ -145,7 +145,7 @@ std::function<void(ProgressRatioList*)> action_load_from_mesh_repository(
                         dimension,
                         [&]<size_t N>(const Dimension<N>&)
                         {
-                                std::shared_ptr<mesh::MeshObject<N>> mesh = load_from_mesh_repository<N>(
+                                std::shared_ptr<mesh::MeshObject<N>> mesh = load_mesh_from_repository<N>(
                                         object_name, point_object_parameters->point_count, *repository);
 
                                 compute<N>(
@@ -181,7 +181,7 @@ std::function<void(ProgressRatioList*)> action_load_from_volume_repository(
                         dimension,
                         [&]<size_t N>(const Dimension<N>&)
                         {
-                                load_from_volume_repository<N>(object_name, parameters->image_size, *repository);
+                                load_volume_from_repository<N>(object_name, parameters->image_size, *repository);
                         });
         };
 }

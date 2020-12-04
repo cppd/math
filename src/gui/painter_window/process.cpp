@@ -266,7 +266,7 @@ std::function<void(ProgressRatioList*)> add_volume(
 
                                         image::flip_vertically(&image);
 
-                                        process::load_from_volume_image<N_IMAGE>("Painter Volume", std::move(image));
+                                        process::load_volume_from_image<N_IMAGE>("Painter Volume", std::move(image));
                                 }
                         });
         };
