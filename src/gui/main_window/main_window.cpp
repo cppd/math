@@ -124,23 +124,17 @@ void MainWindow::constructor_objects()
 
         ui.tab_widget->setCurrentWidget(ui.tab_models);
 
-        ui.action_help->setText(QString(settings::APPLICATION_NAME) + " Help");
-        ui.action_about->setText("About " + QString(settings::APPLICATION_NAME));
-
         // Чтобы добавление и удаление QProgressBar не меняло высоту ui.statusBar
         ui.status_bar->setFixedHeight(ui.status_bar->height());
 
         //
 
+        ui.action_about->setText("About " + QString(settings::APPLICATION_NAME));
         connect(ui.action_about, &QAction::triggered, this, &MainWindow::on_about_triggered);
-        connect(ui.action_help, &QAction::triggered, this, &MainWindow::on_help_triggered);
-        connect(&m_timer, &QTimer::timeout, this, &MainWindow::on_timer);
 
-        if (!ui.menu_file->actions().empty())
-        {
-                ui.menu_file->addSeparator();
-        }
-        connect(ui.menu_file->addAction("Exit..."), &QAction::triggered, this, &MainWindow::close);
+        connect(ui.action_help, &QAction::triggered, this, &MainWindow::on_help_triggered);
+
+        connect(&m_timer, &QTimer::timeout, this, &MainWindow::on_timer);
 }
 
 std::vector<view::Command> MainWindow::view_initial_commands() const
@@ -272,9 +266,14 @@ void MainWindow::first_shown()
         m_volume_widget->set_model_tree(m_model_tree.get());
         m_model_events = std::make_unique<application::ModelEvents>(m_model_tree->events(), m_view.get());
         m_actions = std::make_unique<Actions>(
-                options, ui.status_bar, ui.action_load, ui.action_export, ui.action_self_test, ui.menu_create,
-                ui.menu_edit, ui.menu_rendering, m_repository.get(), m_view.get(), m_model_tree.get(),
-                m_colors_widget.get());
+                options, ui.status_bar, ui.action_self_test, ui.menu_file, ui.menu_create, ui.menu_edit,
+                ui.menu_rendering, m_repository.get(), m_view.get(), m_model_tree.get(), m_colors_widget.get());
+
+        if (!ui.menu_file->actions().empty())
+        {
+                ui.menu_file->addSeparator();
+        }
+        connect(ui.menu_file->addAction("Exit..."), &QAction::triggered, this, &MainWindow::close);
 
         m_timer.start(TIMER_INTERVAL);
 }

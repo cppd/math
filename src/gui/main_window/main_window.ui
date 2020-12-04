@@ -111,8 +111,6 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="action_load"/>
-    <addaction name="action_export"/>
    </widget>
    <widget class="QMenu" name="menu_help">
     <property name="title">
@@ -145,11 +143,6 @@
    <addaction name="menu_help"/>
   </widget>
   <widget class="QStatusBar" name="status_bar"/>
-  <action name="action_load">
-   <property name="text">
-    <string>Open...</string>
-   </property>
-  </action>
   <action name="action_about">
    <property name="text">
     <string>About</string>
@@ -157,17 +150,12 @@
   </action>
   <action name="action_help">
    <property name="text">
-    <string>Help</string>
-   </property>
-  </action>
-  <action name="action_export">
-   <property name="text">
-    <string>Export...</string>
+    <string>Contents</string>
    </property>
   </action>
   <action name="action_self_test">
    <property name="text">
-    <string>Self-Test</string>
+    <string>Self-Test...</string>
    </property>
   </action>
  </widget>

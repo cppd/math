@@ -145,9 +145,8 @@ void self_test(WorkerThreads* threads, test::SelfTestType test_type, bool with_c
 Actions::Actions(
         const CommandLineOptions& options,
         QStatusBar* status_bar,
-        QAction* action_load,
-        QAction* action_export,
         QAction* action_self_test,
+        QMenu* menu_file,
         QMenu* menu_create,
         QMenu* menu_edit,
         QMenu* menu_rendering,
@@ -159,14 +158,14 @@ Actions::Actions(
         m_worker_threads = create_worker_threads(REQUIRED_THREAD_COUNT, SELF_TEST_THREAD_ID, status_bar);
 
         m_connections.emplace_back(QObject::connect(
-                action_load, &QAction::triggered,
+                menu_file->addAction("Load..."), &QAction::triggered,
                 [threads = m_worker_threads.get()]()
                 {
                         load_file(threads, "", true);
                 }));
 
         m_connections.emplace_back(QObject::connect(
-                action_export, &QAction::triggered,
+                menu_file->addAction("Export..."), &QAction::triggered,
                 [threads = m_worker_threads.get(), model_tree]()
                 {
                         export_mesh(threads, model_tree);
@@ -179,24 +178,19 @@ Actions::Actions(
                         self_test(threads, test::SelfTestType::Extended, true);
                 }));
 
-        {
-                QAction* action = menu_rendering->addAction("Painter...");
-                m_connections.emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [threads = m_worker_threads.get(), model_tree, view, colors]()
-                        {
-                                painter(threads, model_tree, view, colors);
-                        }));
-        }
-        {
-                QAction* action = menu_edit->addAction("BoundCocone...");
-                m_connections.emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [threads = m_worker_threads.get(), model_tree]()
-                        {
-                                bound_cocone(threads, model_tree);
-                        }));
-        }
+        m_connections.emplace_back(QObject::connect(
+                menu_rendering->addAction("Painter..."), &QAction::triggered,
+                [threads = m_worker_threads.get(), model_tree, view, colors]()
+                {
+                        painter(threads, model_tree, view, colors);
+                }));
+
+        m_connections.emplace_back(QObject::connect(
+                menu_edit->addAction("BoundCocone..."), &QAction::triggered,
+                [threads = m_worker_threads.get(), model_tree]()
+                {
+                        bound_cocone(threads, model_tree);
+                }));
 
         std::vector<storage::Repository::ObjectNames> repository_objects = repository->object_names();
         std::sort(

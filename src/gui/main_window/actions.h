@@ -43,9 +43,8 @@ class Actions final
 public:
         Actions(const CommandLineOptions& options,
                 QStatusBar* status_bar,
-                QAction* action_load,
-                QAction* action_export,
                 QAction* action_self_test,
+                QMenu* menu_file,
                 QMenu* menu_create,
                 QMenu* menu_edit,
                 QMenu* menu_rendering,
