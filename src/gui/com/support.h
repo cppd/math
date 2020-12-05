@@ -39,23 +39,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gui
 {
-template <typename Window, typename... Args>
-void create_and_show_delete_on_close_window(Args&&... args)
-{
-        std::unique_ptr<Window> window = std::make_unique<Window>(std::forward<Args>(args)...);
-        window->show();
-        window->setAttribute(Qt::WA_DeleteOnClose);
-        static_cast<void>(window.release());
-}
-
-template <typename Window, typename... Args>
-Window* create_delete_on_close_window(Args&&... args)
-{
-        std::unique_ptr<Window> window = std::make_unique<Window>(std::forward<Args>(args)...);
-        window->setAttribute(Qt::WA_DeleteOnClose);
-        return window.release();
-}
-
 // Чтобы объект Qt, имеющий родителя, не удалялся два и более раз, нужно использовать
 // динамическую память и класс QPointer.
 // Такие возможные многократные удаления могут происходить, например, когда родительское
@@ -80,11 +63,30 @@ public:
         }
 };
 
+template <typename Window, typename... Args>
+void create_and_show_delete_on_close_window(Args&&... args)
+{
+        QtObjectInDynamicMemory<Window> window(std::forward<Args>(args)...);
+        window->show();
+        window->setAttribute(Qt::WA_DeleteOnClose);
+        window.clear();
+}
+
+template <typename Window, typename... Args>
+Window* create_delete_on_close_window(Args&&... args)
+{
+        QtObjectInDynamicMemory<Window> window(std::forward<Args>(args)...);
+        window->setAttribute(Qt::WA_DeleteOnClose);
+        Window* ptr = window;
+        window.clear();
+        return ptr;
+}
+
 QWidget* parent_for_dialog();
 
-std::string main_window_title();
+// std::string main_window_title();
 
-void set_widgets_enabled(QLayout* layout, bool v);
+// void set_widgets_enabled(QLayout* layout, bool v);
 
 QSplitter* find_widget_splitter(QObject* object, QWidget* widget);
 
@@ -96,7 +98,7 @@ QColor rgb_to_qcolor(const Color& c);
 void set_widget_color(QWidget* widget, const QColor& c);
 void set_widget_color(QWidget* widget, const Color& c);
 
-void button_strike_out(QRadioButton* button, bool strike_out);
+// void button_strike_out(QRadioButton* button, bool strike_out);
 
 void set_slider_to_middle(QSlider* slider);
 

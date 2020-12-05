@@ -32,25 +32,25 @@ namespace gui
 {
 namespace
 {
-bool is_child_widget_of_any_layout(QLayout* layout, QWidget* widget)
-{
-        if (layout == nullptr || widget == nullptr)
-        {
-                return false;
-        }
-        if (layout->indexOf(widget) >= 0)
-        {
-                return true;
-        }
-        for (QObject* object : layout->children())
-        {
-                if (is_child_widget_of_any_layout(static_cast<QLayout*>(object), widget))
-                {
-                        return true;
-                }
-        }
-        return false;
-}
+//bool is_child_widget_of_any_layout(QLayout* layout, QWidget* widget)
+//{
+//        if (layout == nullptr || widget == nullptr)
+//        {
+//                return false;
+//        }
+//        if (layout->indexOf(widget) >= 0)
+//        {
+//                return true;
+//        }
+//        for (QObject* object : layout->children())
+//        {
+//                if (is_child_widget_of_any_layout(qobject_cast<QLayout*>(object), widget))
+//                {
+//                        return true;
+//                }
+//        }
+//        return false;
+//}
 
 void append_text(QPlainTextEdit* text_edit, const std::string& text, const Srgb8& color)
 {
@@ -78,42 +78,42 @@ QWidget* parent_for_dialog()
         return qApp->activeWindow();
 }
 
-std::string main_window_title()
-{
-        QMainWindow* main_window = nullptr;
-        for (QWidget* widget : qApp->topLevelWidgets())
-        {
-                QMainWindow* window = qobject_cast<QMainWindow*>(widget);
-                if (window)
-                {
-                        ASSERT(!main_window);
-                        main_window = window;
-                }
-        }
-        if (main_window)
-        {
-                return main_window->windowTitle().toStdString();
-        }
-        return std::string();
-}
+//std::string main_window_title()
+//{
+//        QMainWindow* main_window = nullptr;
+//        for (QWidget* widget : qApp->topLevelWidgets())
+//        {
+//                QMainWindow* window = qobject_cast<QMainWindow*>(widget);
+//                if (window)
+//                {
+//                        ASSERT(!main_window);
+//                        main_window = window;
+//                }
+//        }
+//        if (main_window)
+//        {
+//                return main_window->windowTitle().toStdString();
+//        }
+//        return std::string();
+//}
 
-void set_widgets_enabled(QLayout* layout, bool v)
-{
-        ASSERT(layout);
+//void set_widgets_enabled(QLayout* layout, bool v)
+//{
+//        ASSERT(layout);
 
-        QWidget* parent_widget = layout->parentWidget();
-        if (!parent_widget)
-        {
-                return;
-        }
-        for (QWidget* widget : parent_widget->findChildren<QWidget*>())
-        {
-                if (is_child_widget_of_any_layout(layout, widget))
-                {
-                        widget->setEnabled(v);
-                }
-        }
-}
+//        QWidget* parent_widget = layout->parentWidget();
+//        if (!parent_widget)
+//        {
+//                return;
+//        }
+//        for (QWidget* widget : parent_widget->findChildren<QWidget*>())
+//        {
+//                if (is_child_widget_of_any_layout(layout, widget))
+//                {
+//                        widget->setEnabled(v);
+//                }
+//        }
+//}
 
 QSplitter* find_widget_splitter(QObject* object, QWidget* widget)
 {
@@ -169,14 +169,14 @@ void set_widget_color(QWidget* widget, const Color& c)
         set_widget_color(widget, rgb_to_qcolor(c));
 }
 
-void button_strike_out(QRadioButton* button, bool strike_out)
-{
-        ASSERT(button);
+//void button_strike_out(QRadioButton* button, bool strike_out)
+//{
+//        ASSERT(button);
 
-        QFont f = button->font();
-        f.setStrikeOut(strike_out);
-        button->setFont(f);
-}
+//        QFont f = button->font();
+//        f.setStrikeOut(strike_out);
+//        button->setFont(f);
+//}
 
 void set_slider_to_middle(QSlider* slider)
 {
