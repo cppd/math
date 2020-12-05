@@ -35,7 +35,7 @@ std::function<void(ProgressRatioList*)> action_export_function(
 {
         std::string name = mesh_object->name();
 
-        std::string caption = "Export " + name + " to file";
+        std::string caption = "Export " + name;
         bool read_only = true;
 
         std::vector<gui::dialog::FileFilter> filters;
