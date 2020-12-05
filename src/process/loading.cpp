@@ -45,11 +45,9 @@ constexpr int VOLUME_IMAGE_SIZE_DEFAULT = 500;
 constexpr int VOLUME_IMAGE_SIZE_MAXIMUM = 1000;
 }
 
-std::function<void(ProgressRatioList*)> action_load_mesh_from_file(
-        std::filesystem::path file_name,
-        bool use_object_selection_dialog)
+std::function<void(ProgressRatioList*)> action_load_mesh(std::filesystem::path path, bool use_object_selection_dialog)
 {
-        if (file_name.empty())
+        if (path.empty())
         {
                 ASSERT(use_object_selection_dialog);
 
@@ -69,7 +67,7 @@ std::function<void(ProgressRatioList*)> action_load_mesh_from_file(
                 {
                         return nullptr;
                 }
-                file_name = path_from_utf8(*file_name_string);
+                path = path_from_utf8(*file_name_string);
         }
 
         gui::dialog::ObjectSelectionParameters selection_parameters;
@@ -93,14 +91,14 @@ std::function<void(ProgressRatioList*)> action_load_mesh_from_file(
 
         return [=](ProgressRatioList* progress_list)
         {
-                unsigned dimension = mesh::file_dimension(file_name);
+                unsigned dimension = mesh::file_dimension(path);
 
                 apply_for_dimension(
                         dimension,
                         [&]<size_t N>(const Dimension<N>&)
                         {
-                                std::shared_ptr<mesh::MeshObject<N>> mesh = load_mesh_from_file<N>(
-                                        generic_utf8_filename(file_name.filename()), progress_list, file_name);
+                                std::shared_ptr<mesh::MeshObject<N>> mesh =
+                                        load_mesh<N>(generic_utf8_filename(path.filename()), progress_list, path);
 
                                 compute<N>(
                                         progress_list, selection_parameters.convex_hull, selection_parameters.cocone,
@@ -110,7 +108,7 @@ std::function<void(ProgressRatioList*)> action_load_mesh_from_file(
         };
 }
 
-std::function<void(ProgressRatioList*)> action_load_mesh_from_repository(
+std::function<void(ProgressRatioList*)> action_load_mesh(
         const storage::Repository* repository,
         int dimension,
         const std::string& object_name)
@@ -145,8 +143,8 @@ std::function<void(ProgressRatioList*)> action_load_mesh_from_repository(
                         dimension,
                         [&]<size_t N>(const Dimension<N>&)
                         {
-                                std::shared_ptr<mesh::MeshObject<N>> mesh = load_mesh_from_repository<N>(
-                                        object_name, point_object_parameters->point_count, *repository);
+                                std::shared_ptr<mesh::MeshObject<N>> mesh =
+                                        load_mesh<N>(object_name, point_object_parameters->point_count, *repository);
 
                                 compute<N>(
                                         progress_list, selection_parameters->convex_hull, selection_parameters->cocone,
@@ -156,7 +154,7 @@ std::function<void(ProgressRatioList*)> action_load_mesh_from_repository(
         };
 }
 
-std::function<void(ProgressRatioList*)> action_load_volume_from_file(std::filesystem::path path)
+std::function<void(ProgressRatioList*)> action_load_volume(std::filesystem::path path)
 {
         if (path.empty())
         {
@@ -179,12 +177,12 @@ std::function<void(ProgressRatioList*)> action_load_volume_from_file(std::filesy
                         image_size.size(),
                         [&]<size_t N>(const Dimension<N>&)
                         {
-                                load_volume_from_file<N>(generic_utf8_filename(path.filename()), progress_list, path);
+                                load_volume<N>(generic_utf8_filename(path.filename()), progress_list, path);
                         });
         };
 }
 
-std::function<void(ProgressRatioList*)> action_load_volume_from_repository(
+std::function<void(ProgressRatioList*)> action_load_volume(
         const storage::Repository* repository,
         int dimension,
         const std::string& object_name)
@@ -209,7 +207,7 @@ std::function<void(ProgressRatioList*)> action_load_volume_from_repository(
                         dimension,
                         [&]<size_t N>(const Dimension<N>&)
                         {
-                                load_volume_from_repository<N>(object_name, parameters->image_size, *repository);
+                                load_volume<N>(object_name, parameters->image_size, *repository);
                         });
         };
 }

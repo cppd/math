@@ -38,17 +38,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace process
 {
 template <size_t N>
-std::shared_ptr<mesh::MeshObject<N>> load_mesh_from_file(
+std::shared_ptr<mesh::MeshObject<N>> load_mesh(
         const std::string& object_name,
         ProgressRatioList* progress_list,
-        const std::filesystem::path& file_name)
+        const std::filesystem::path& path)
 {
         std::unique_ptr<mesh::Mesh<N>> mesh;
 
         {
                 ProgressRatio progress(progress_list);
-                progress.set_text("Loading file: %p%");
-                mesh = mesh::load<N>(file_name, &progress);
+                progress.set_text("Loading: %p%");
+                mesh = mesh::load<N>(path, &progress);
         }
 
         std::shared_ptr<mesh::MeshObject<N>> mesh_object = std::make_shared<mesh::MeshObject<N>>(
@@ -61,7 +61,7 @@ std::shared_ptr<mesh::MeshObject<N>> load_mesh_from_file(
 }
 
 template <size_t N>
-std::shared_ptr<mesh::MeshObject<N>> load_mesh_from_repository(
+std::shared_ptr<mesh::MeshObject<N>> load_mesh(
         const std::string& object_name,
         int point_count,
         const storage::Repository& repository)
@@ -78,7 +78,7 @@ std::shared_ptr<mesh::MeshObject<N>> load_mesh_from_repository(
 }
 
 template <size_t N>
-std::shared_ptr<volume::VolumeObject<N>> load_volume_from_repository(
+std::shared_ptr<volume::VolumeObject<N>> load_volume(
         const std::string& object_name,
         int image_size,
         const storage::Repository& repository)
@@ -95,7 +95,7 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume_from_repository(
 }
 
 template <size_t N, typename Image>
-std::shared_ptr<volume::VolumeObject<N>> load_volume_from_image(const std::string& object_name, Image&& image)
+std::shared_ptr<volume::VolumeObject<N>> load_volume(const std::string& object_name, Image&& image)
 {
         std::unique_ptr<volume::Volume<N>> volume = std::make_unique<volume::Volume<N>>();
 
@@ -112,7 +112,7 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume_from_image(const std::strin
 }
 
 template <size_t N>
-std::shared_ptr<volume::VolumeObject<N>> load_volume_from_file(
+std::shared_ptr<volume::VolumeObject<N>> load_volume(
         const std::string& object_name,
         ProgressRatioList* progress_list,
         const std::filesystem::path& path)
@@ -121,7 +121,7 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume_from_file(
 
         {
                 ProgressRatio progress(progress_list);
-                progress.set_text("Loading file: %p%");
+                progress.set_text("Loading: %p%");
                 volume->image = volume::load_rgba<N>(path, &progress);
         }
 

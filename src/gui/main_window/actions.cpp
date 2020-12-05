@@ -44,22 +44,20 @@ void load_mesh(
                 WORKER_THREAD_ID, "Load mesh from repository",
                 [&]()
                 {
-                        WorkerThreads::Function f =
-                                process::action_load_mesh_from_repository(repository, dimension, object_name);
+                        WorkerThreads::Function f = process::action_load_mesh(repository, dimension, object_name);
                         //model_tree->clear();
                         //view->send(view::command::ResetView());
                         return f;
                 });
 }
 
-void load_mesh(WorkerThreads* threads, const std::filesystem::path& file_name, bool use_object_selection_dialog)
+void load_mesh(WorkerThreads* threads, const std::filesystem::path& path, bool use_object_selection_dialog)
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, "Load mesh from filesystem",
                 [&]()
                 {
-                        WorkerThreads::Function f =
-                                process::action_load_mesh_from_file(file_name, use_object_selection_dialog);
+                        WorkerThreads::Function f = process::action_load_mesh(path, use_object_selection_dialog);
                         //model_tree->clear();
                         //view->send(view::command::ResetView());
                         return f;
@@ -76,7 +74,7 @@ void load_volume(
                 WORKER_THREAD_ID, "Load volume from repository",
                 [&]()
                 {
-                        return process::action_load_volume_from_repository(repository, dimension, object_name);
+                        return process::action_load_volume(repository, dimension, object_name);
                 });
 }
 
@@ -86,7 +84,7 @@ void load_volume(WorkerThreads* threads, const std::filesystem::path& path)
                 WORKER_THREAD_ID, "Load volume from filesystem",
                 [&]()
                 {
-                        return process::action_load_volume_from_file(path);
+                        return process::action_load_volume(path);
                 });
 }
 
