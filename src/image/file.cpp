@@ -210,6 +210,15 @@ void load_4(QImage&& image, const std::span<std::byte>& pixels)
                 }
         }
 }
+
+void check_colors(const QImage& image, const std::string& file_name)
+{
+        if (image.format() == QImage::Format_Invalid || image.format() == QImage::Format_Alpha8
+            || image.pixelFormat().colorModel() == QPixelFormat::Alpha)
+        {
+                error("Colors not found in the file " + file_name);
+        }
+}
 }
 
 std::array<int, 2> find_size(const std::filesystem::path& path)
@@ -265,8 +274,9 @@ void load_rgba(const std::filesystem::path& path, const std::array<int, 2>& size
         if (q_image.width() != size[0] || q_image.height() != size[1])
         {
                 error("Expected image size (" + to_string(size[0]) + ", " + to_string(size[1]) + "), found size ("
-                      + to_string(q_image.width()) + ", " + to_string(q_image.height()) + ") in file " + file_name);
+                      + to_string(q_image.width()) + ", " + to_string(q_image.height()) + ") in the file " + file_name);
         }
+        check_colors(q_image, file_name);
 
         load_4(std::move(q_image), pixels);
 }
@@ -275,10 +285,16 @@ Image<2> load_rgba(const std::filesystem::path& path)
 {
         std::string file_name = generic_utf8_filename(path);
         QImage q_image;
-        if (!q_image.load(QString::fromStdString(file_name)) || q_image.width() < 1 || q_image.height() < 1)
+        if (!q_image.load(QString::fromStdString(file_name)))
         {
                 error("Error loading image from the file " + file_name);
         }
+        if (q_image.width() < 1 || q_image.height() < 1)
+        {
+                error("Error image size (" + to_string(q_image.width()) + ", " + to_string(q_image.height())
+                      + ") in the file " + file_name);
+        }
+        check_colors(q_image, file_name);
 
         Image<2> image;
         image.color_format = ColorFormat::R8G8B8A8_SRGB;
