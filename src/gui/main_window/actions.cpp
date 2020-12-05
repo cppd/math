@@ -34,14 +34,25 @@ constexpr unsigned WORKER_THREAD_ID = 0;
 constexpr unsigned SELF_TEST_THREAD_ID = 1;
 constexpr unsigned REQUIRED_THREAD_COUNT = 2;
 
+std::string action_name(const QAction* action)
+{
+        std::string s = action->text().toStdString();
+        while (!s.empty() && s.back() == '.')
+        {
+                s.pop_back();
+        }
+        return s;
+}
+
 void load_mesh(
         WorkerThreads* threads,
         const storage::Repository* repository,
         int dimension,
-        const std::string& object_name)
+        const std::string& object_name,
+        const std::string& action)
 {
         threads->terminate_and_start(
-                WORKER_THREAD_ID, "Load mesh from repository",
+                WORKER_THREAD_ID, action,
                 [&]()
                 {
                         WorkerThreads::Function f = process::action_load_mesh(repository, dimension, object_name);
@@ -51,10 +62,14 @@ void load_mesh(
                 });
 }
 
-void load_mesh(WorkerThreads* threads, const std::filesystem::path& path, bool use_object_selection_dialog)
+void load_mesh(
+        WorkerThreads* threads,
+        const std::filesystem::path& path,
+        bool use_object_selection_dialog,
+        const std::string& action)
 {
         threads->terminate_and_start(
-                WORKER_THREAD_ID, "Load mesh from filesystem",
+                WORKER_THREAD_ID, action,
                 [&]()
                 {
                         WorkerThreads::Function f = process::action_load_mesh(path, use_object_selection_dialog);
@@ -68,30 +83,31 @@ void load_volume(
         WorkerThreads* threads,
         const storage::Repository* repository,
         int dimension,
-        const std::string& object_name)
+        const std::string& object_name,
+        const std::string& action)
 {
         threads->terminate_and_start(
-                WORKER_THREAD_ID, "Load volume from repository",
+                WORKER_THREAD_ID, action,
                 [&]()
                 {
                         return process::action_load_volume(repository, dimension, object_name);
                 });
 }
 
-void load_volume(WorkerThreads* threads, const std::filesystem::path& path)
+void load_volume(WorkerThreads* threads, const std::filesystem::path& path, const std::string& action)
 {
         threads->terminate_and_start(
-                WORKER_THREAD_ID, "Load volume from filesystem",
+                WORKER_THREAD_ID, action,
                 [&]()
                 {
                         return process::action_load_volume(path);
                 });
 }
 
-void export_mesh(WorkerThreads* threads, const ModelTree* model_tree)
+void export_mesh(WorkerThreads* threads, const ModelTree* model_tree, const std::string& action)
 {
         threads->terminate_and_start(
-                WORKER_THREAD_ID, "Export",
+                WORKER_THREAD_ID, action,
                 [&]()
                 {
                         std::optional<storage::MeshObjectConst> object = model_tree->current_mesh_const();
@@ -104,10 +120,15 @@ void export_mesh(WorkerThreads* threads, const ModelTree* model_tree)
                 });
 }
 
-void painter(WorkerThreads* threads, const ModelTree* model_tree, view::View* view, const ColorsWidget* colors)
+void painter(
+        WorkerThreads* threads,
+        const ModelTree* model_tree,
+        view::View* view,
+        const ColorsWidget* colors,
+        const std::string& action)
 {
         threads->terminate_and_start(
-                WORKER_THREAD_ID, "Painter",
+                WORKER_THREAD_ID, action,
                 [&]()
                 {
                         std::vector<storage::MeshObjectConst> objects = model_tree->const_mesh_objects();
@@ -123,10 +144,10 @@ void painter(WorkerThreads* threads, const ModelTree* model_tree, view::View* vi
                 });
 }
 
-void bound_cocone(WorkerThreads* threads, const ModelTree* model_tree)
+void bound_cocone(WorkerThreads* threads, const ModelTree* model_tree, const std::string& action)
 {
         threads->terminate_and_start(
-                WORKER_THREAD_ID, "BoundCocone",
+                WORKER_THREAD_ID, action,
                 [&]()
                 {
                         std::optional<storage::MeshObjectConst> object = model_tree->current_mesh_const();
@@ -139,10 +160,10 @@ void bound_cocone(WorkerThreads* threads, const ModelTree* model_tree)
                 });
 }
 
-void self_test(WorkerThreads* threads, test::SelfTestType test_type, bool with_confirmation)
+void self_test(WorkerThreads* threads, test::SelfTestType test_type, bool with_confirmation, const std::string& action)
 {
         threads->terminate_and_start(
-                SELF_TEST_THREAD_ID, "Self-Test",
+                SELF_TEST_THREAD_ID, action,
                 [&]()
                 {
                         return process::action_self_test(test_type, with_confirmation);
@@ -162,50 +183,64 @@ Actions::Actions(
         view::View* view,
         ModelTree* model_tree,
         const ColorsWidget* colors)
+        : m_worker_threads(create_worker_threads(REQUIRED_THREAD_COUNT, SELF_TEST_THREAD_ID, status_bar))
 {
-        m_worker_threads = create_worker_threads(REQUIRED_THREAD_COUNT, SELF_TEST_THREAD_ID, status_bar);
+        WorkerThreads* threads = m_worker_threads.get();
 
-        m_connections.emplace_back(QObject::connect(
-                menu_file->addAction("Load Mesh..."), &QAction::triggered,
-                [threads = m_worker_threads.get()]()
-                {
-                        load_mesh(threads, "", true);
-                }));
-
-        m_connections.emplace_back(QObject::connect(
-                menu_file->addAction("Load Volume..."), &QAction::triggered,
-                [threads = m_worker_threads.get()]()
-                {
-                        load_volume(threads, "");
-                }));
-
-        m_connections.emplace_back(QObject::connect(
-                menu_file->addAction("Export..."), &QAction::triggered,
-                [threads = m_worker_threads.get(), model_tree]()
-                {
-                        export_mesh(threads, model_tree);
-                }));
-
-        m_connections.emplace_back(QObject::connect(
-                action_self_test, &QAction::triggered,
-                [threads = m_worker_threads.get()]()
-                {
-                        self_test(threads, test::SelfTestType::Extended, true);
-                }));
-
-        m_connections.emplace_back(QObject::connect(
-                menu_rendering->addAction("Painter..."), &QAction::triggered,
-                [threads = m_worker_threads.get(), model_tree, view, colors]()
-                {
-                        painter(threads, model_tree, view, colors);
-                }));
-
-        m_connections.emplace_back(QObject::connect(
-                menu_edit->addAction("BoundCocone..."), &QAction::triggered,
-                [threads = m_worker_threads.get(), model_tree]()
-                {
-                        bound_cocone(threads, model_tree);
-                }));
+        {
+                QAction* action = menu_file->addAction("Load Mesh...");
+                m_connections.emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [=]()
+                        {
+                                load_mesh(threads, "", true, action_name(action));
+                        }));
+        }
+        {
+                QAction* action = menu_file->addAction("Load Volume...");
+                m_connections.emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [=]()
+                        {
+                                load_volume(threads, "", action_name(action));
+                        }));
+        }
+        {
+                QAction* action = menu_file->addAction("Export...");
+                m_connections.emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [=]()
+                        {
+                                export_mesh(threads, model_tree, action_name(action));
+                        }));
+        }
+        {
+                QAction* action = action_self_test;
+                m_connections.emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [=]()
+                        {
+                                self_test(threads, test::SelfTestType::Extended, true, action_name(action));
+                        }));
+        }
+        {
+                QAction* action = menu_rendering->addAction("Painter...");
+                m_connections.emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [=]()
+                        {
+                                painter(threads, model_tree, view, colors, action_name(action));
+                        }));
+        }
+        {
+                QAction* action = menu_edit->addAction("BoundCocone...");
+                m_connections.emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [=]()
+                        {
+                                bound_cocone(threads, model_tree, action_name(action));
+                        }));
+        }
 
         std::vector<storage::Repository::ObjectNames> repository_objects = repository->object_names();
         std::sort(
@@ -219,20 +254,20 @@ Actions::Actions(
                 const int dimension = objects.dimension;
                 ASSERT(dimension > 0);
 
-                QMenu* sub_menu = menu_create->addMenu(space_name(dimension).c_str());
+                QMenu* sub_menu = menu_create->addMenu(QString::fromStdString(space_name(dimension)));
 
                 std::sort(objects.mesh_names.begin(), objects.mesh_names.end());
                 for (const std::string& object_name : objects.mesh_names)
                 {
                         ASSERT(!object_name.empty());
 
-                        std::string action_text = object_name + "...";
-                        QAction* action = sub_menu->addAction(action_text.c_str());
-                        auto f = [threads = m_worker_threads.get(), repository, dimension, object_name]()
-                        {
-                                load_mesh(threads, repository, dimension, object_name);
-                        };
-                        m_connections.emplace_back(QObject::connect(action, &QAction::triggered, std::move(f)));
+                        QAction* action = sub_menu->addAction(QString::fromStdString(object_name + "..."));
+                        m_connections.emplace_back(QObject::connect(
+                                action, &QAction::triggered,
+                                [=]()
+                                {
+                                        load_mesh(threads, repository, dimension, object_name, action_name(action));
+                                }));
                 }
 
                 if (dimension == 3)
@@ -244,22 +279,24 @@ Actions::Actions(
                         {
                                 ASSERT(!object_name.empty());
 
-                                std::string action_text = object_name + "...";
-                                QAction* action = sub_menu->addAction(action_text.c_str());
-                                auto f = [threads = m_worker_threads.get(), repository, dimension, object_name]()
-                                {
-                                        load_volume(threads, repository, dimension, object_name);
-                                };
-                                m_connections.emplace_back(QObject::connect(action, &QAction::triggered, std::move(f)));
+                                QAction* action = sub_menu->addAction(QString::fromStdString(object_name + "..."));
+                                m_connections.emplace_back(QObject::connect(
+                                        action, &QAction::triggered,
+                                        [=]()
+                                        {
+                                                load_volume(
+                                                        threads, repository, dimension, object_name,
+                                                        action_name(action));
+                                        }));
                         }
                 }
         }
 
-        self_test(m_worker_threads.get(), test::SelfTestType::Essential, false);
+        self_test(m_worker_threads.get(), test::SelfTestType::Essential, false, "Self-Test");
 
         if (!options.file_name.empty())
         {
-                load_mesh(m_worker_threads.get(), options.file_name, !options.no_object_selection_dialog);
+                load_mesh(m_worker_threads.get(), options.file_name, !options.no_object_selection_dialog, "Load Mesh");
         }
 }
 
