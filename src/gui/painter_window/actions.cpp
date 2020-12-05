@@ -47,18 +47,18 @@ Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar)
                 QAction* action = menu->addAction("Save...");
                 m_connections.emplace_back(QObject::connect(
                         action, &QAction::triggered,
-                        [this, name = action_name(action)]()
+                        [=, this]()
                         {
-                                save_to_file(false, name);
+                                save_to_file(false, action_name(action));
                         }));
         }
         {
                 QAction* action = menu->addAction("Save without background...");
                 m_connections.emplace_back(QObject::connect(
                         action, &QAction::triggered,
-                        [this, name = action_name(action)]()
+                        [=, this]()
                         {
-                                save_to_file(true, name);
+                                save_to_file(true, action_name(action));
                         }));
         }
 
@@ -68,18 +68,18 @@ Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar)
                         QAction* action = menu->addAction("Save all...");
                         m_connections.emplace_back(QObject::connect(
                                 action, &QAction::triggered,
-                                [this, name = action_name(action)]()
+                                [=, this]()
                                 {
-                                        save_all_to_files(false, name);
+                                        save_all_to_files(false, action_name(action));
                                 }));
                 }
                 {
                         QAction* action = menu->addAction("Save all without background...");
                         m_connections.emplace_back(QObject::connect(
                                 action, &QAction::triggered,
-                                [this, name = action_name(action)]()
+                                [=, this]()
                                 {
-                                        save_all_to_files(true, name);
+                                        save_all_to_files(true, action_name(action));
                                 }));
                 }
 
@@ -89,18 +89,18 @@ Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar)
                         QAction* action = menu->addAction("Add volume");
                         m_connections.emplace_back(QObject::connect(
                                 action, &QAction::triggered,
-                                [this, name = action_name(action)]()
+                                [=, this]()
                                 {
-                                        add_volume(false, name);
+                                        add_volume(false, action_name(action));
                                 }));
                 }
                 {
                         QAction* action = menu->addAction("Add volume without background");
                         m_connections.emplace_back(QObject::connect(
                                 action, &QAction::triggered,
-                                [this, name = action_name(action)]()
+                                [=, this]()
                                 {
-                                        add_volume(true, name);
+                                        add_volume(true, action_name(action));
                                 }));
                 }
         }
@@ -117,13 +117,13 @@ void Actions::set_progresses()
         m_worker_threads->set_progresses();
 }
 
-void Actions::save_to_file(bool without_background, const std::string& name) const
+void Actions::save_to_file(bool without_background, const std::string& action) const
 {
         std::span slice = m_pixels->slice();
         std::vector<std::byte> pixels(slice.begin(), slice.end());
 
         m_worker_threads->terminate_and_start(
-                SAVE_THREAD_ID, name,
+                SAVE_THREAD_ID, action,
                 [&]()
                 {
                         return painter_window::save_to_file(
@@ -131,12 +131,12 @@ void Actions::save_to_file(bool without_background, const std::string& name) con
                 });
 }
 
-void Actions::save_all_to_files(bool without_background, const std::string& name) const
+void Actions::save_all_to_files(bool without_background, const std::string& action) const
 {
         std::vector<std::byte> pixels(m_pixels->pixels());
 
         m_worker_threads->terminate_and_start(
-                SAVE_THREAD_ID, name,
+                SAVE_THREAD_ID, action,
                 [&]()
                 {
                         return painter_window::save_all_to_files(
@@ -144,12 +144,12 @@ void Actions::save_all_to_files(bool without_background, const std::string& name
                 });
 }
 
-void Actions::add_volume(bool without_background, const std::string& name) const
+void Actions::add_volume(bool without_background, const std::string& action) const
 {
         std::vector<std::byte> pixels(m_pixels->pixels());
 
         m_worker_threads->terminate_and_start(
-                ADD_THREAD_ID, name,
+                ADD_THREAD_ID, action,
                 [&]()
                 {
                         return painter_window::add_volume(
