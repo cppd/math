@@ -25,9 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace image
 {
-std::array<int, 2> find_size(const std::filesystem::path& path);
-
 void save(const std::filesystem::path& path, const ImageView<2>& image_view);
+
+//
+
+std::array<int, 2> find_size(const std::filesystem::path& path);
 
 Image<2> load_rgba(const std::filesystem::path& path);
 
