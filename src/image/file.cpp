@@ -81,19 +81,29 @@ std::filesystem::path file_name_with_extension(std::filesystem::path path)
 }
 
 template <typename T>
-std::vector<std::byte> add_alpha(const std::span<const std::byte>& bytes3)
+void add_alpha(const std::span<const std::byte>& bytes3, const std::span<std::byte>& bytes4)
 {
-        std::vector<std::byte> bytes;
-        bytes.resize((bytes3.size() / 3) * 4);
-        ASSERT((bytes.size() / 4) * 3 == bytes3.size());
+        if (bytes3.size() % (3 * sizeof(T)) != 0)
+        {
+                error("Error RGB data size " + to_string(bytes3.size()) + " for adding alpha");
+        }
+        if (bytes4.size() % (4 * sizeof(T)) != 0)
+        {
+                error("Error RGBA data size " + to_string(bytes4.size()) + " for adding alpha");
+        }
+        if ((bytes4.size() / 4) * 3 != bytes3.size())
+        {
+                error("Error sizes for adding alpha: RGB data size = " + to_string(bytes3.size())
+                      + ", RGBA data size = " + to_string(bytes4.size()));
+        }
 
         static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
         const T alpha = std::is_integral_v<T> ? limits<T>::max() : T(1);
-        const size_t pixel_count = bytes3.size() / sizeof(T) / 3;
-        ASSERT(pixel_count * sizeof(T) * 3 == bytes3.size());
+        const size_t pixel_count = bytes3.size() / (3 * sizeof(T));
+        ASSERT(pixel_count * (3 * sizeof(T)) == bytes3.size());
 
         const std::byte* src = bytes3.data();
-        std::byte* dst = bytes.data();
+        std::byte* dst = bytes4.data();
         for (size_t i = 0; i < pixel_count; ++i)
         {
                 std::memcpy(dst, src, 3 * sizeof(T));
@@ -102,28 +112,38 @@ std::vector<std::byte> add_alpha(const std::span<const std::byte>& bytes3)
                 dst += sizeof(T);
                 src += 3 * sizeof(T);
         }
-        return bytes;
 }
 
-std::vector<std::byte> add_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes)
+void add_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes3, const std::span<std::byte>& bytes4)
 {
         if (format_component_count(color_format) != 3)
         {
-                error("Error image format " + format_to_string(color_format) + " for adding alpha value");
+                error("Error image format " + format_to_string(color_format) + " for adding alpha");
         }
         if (color_format == ColorFormat::R16G16B16)
         {
-                return add_alpha<uint16_t>(bytes);
+                add_alpha<uint16_t>(bytes3, bytes4);
         }
-        if (color_format == ColorFormat::R32G32B32)
+        else if (color_format == ColorFormat::R32G32B32)
         {
-                return add_alpha<float>(bytes);
+                add_alpha<float>(bytes3, bytes4);
         }
-        if (color_format == ColorFormat::R8G8B8_SRGB)
+        else if (color_format == ColorFormat::R8G8B8_SRGB)
         {
-                return add_alpha<uint8_t>(bytes);
+                add_alpha<uint8_t>(bytes3, bytes4);
         }
-        error("Unsupported image format " + format_to_string(color_format) + " for adding alpha value");
+        else
+        {
+                error("Unsupported image format " + format_to_string(color_format) + " for adding alpha");
+        }
+}
+
+std::vector<std::byte> add_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes3)
+{
+        std::vector<std::byte> bytes4;
+        bytes4.resize((bytes3.size() / 3) * 4);
+        add_alpha(color_format, bytes3, bytes4);
+        return bytes4;
 }
 
 void save_image(
