@@ -72,18 +72,21 @@ class Pixels final
                 CounterType m_all_sample_sum = 0;
 
         public:
-                void add_color_and_samples(
-                        const Color& color,
-                        CounterType hit_samples,
-                        CounterType all_samples,
-                        Color* result_color,
-                        float* coverage)
+                void add_color_and_samples(const Color& color, CounterType hit_samples, CounterType all_samples)
                 {
                         m_all_sample_sum += all_samples;
                         m_hit_sample_sum += hit_samples;
-                        *coverage = static_cast<float>(m_hit_sample_sum) / m_all_sample_sum;
                         m_color_sum += color;
-                        *result_color = m_hit_sample_sum > 0 ? m_color_sum / m_hit_sample_sum : m_color_sum;
+                }
+
+                Color color() const
+                {
+                        return m_hit_sample_sum > 0 ? m_color_sum / m_hit_sample_sum : m_color_sum;
+                }
+
+                float coverage() const
+                {
+                        return static_cast<float>(m_hit_sample_sum) / m_all_sample_sum;
                 }
         };
 
@@ -96,16 +99,23 @@ public:
                 m_pixels.resize(m_global_index.count());
         }
 
-        void add_color_and_samples(
+        struct Info final
+        {
+                Color color;
+                float coverage;
+        };
+
+        Info add_color_and_samples(
                 const std::array<int_least16_t, N>& pixel,
                 const Color& color,
                 CounterType hit_samples,
-                CounterType all_samples,
-                Color* result_color,
-                float* coverage)
+                CounterType all_samples)
         {
-                m_pixels[m_global_index.compute(pixel)].add_color_and_samples(
-                        color, hit_samples, all_samples, result_color, coverage);
+                const long long index = m_global_index.compute(pixel);
+
+                m_pixels[index].add_color_and_samples(color, hit_samples, all_samples);
+
+                return {.color = m_pixels[index].color(), .coverage = m_pixels[index].coverage()};
         }
 };
 
@@ -454,11 +464,10 @@ void paint_pixels(
                         }
                 }
 
-                Color pixel_color;
-                float coverage;
-                pixels->add_color_and_samples(*pixel, color, hit_sample_count, sample_count, &pixel_color, &coverage);
+                typename Pixels<N - 1>::Info info =
+                        pixels->add_color_and_samples(*pixel, color, hit_sample_count, sample_count);
 
-                painter_notifier->painter_pixel_after(thread_number, *pixel, pixel_color, coverage);
+                painter_notifier->painter_pixel_after(thread_number, *pixel, info.color, info.coverage);
         }
 }
 
