@@ -270,7 +270,7 @@ void find_size(const std::filesystem::path& directory, std::vector<int>* size)
         }
         case ContentType::Files:
         {
-                const auto [width, height] = image::find_size(first);
+                const auto [width, height] = image::file_info(first).size;
                 size->push_back(content->entries.size());
                 size->push_back(height);
                 size->push_back(width);

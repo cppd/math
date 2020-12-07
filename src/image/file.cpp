@@ -282,6 +282,57 @@ std::enable_if_t<std::is_same_v<T, std::filesystem::path>, QImage> open_image(co
         }
         return image;
 }
+
+ColorFormat color_format(const QImage& image)
+{
+        switch (image.format())
+        {
+        case QImage::Format_Alpha8:
+        case QImage::Format_Invalid:
+        case QImage::NImageFormats:
+                error("Colors not found in image, format " + to_string(static_cast<long long>(image.format())));
+        case QImage::Format_Mono:
+        case QImage::Format_MonoLSB:
+                return ColorFormat::R8G8B8_SRGB;
+        case QImage::Format_Indexed8:
+                return ColorFormat::R8G8B8A8_SRGB;
+        case QImage::Format_BGR888:
+        case QImage::Format_RGB16:
+        case QImage::Format_RGB32:
+        case QImage::Format_RGB444:
+        case QImage::Format_RGB555:
+        case QImage::Format_RGB666:
+        case QImage::Format_RGB888:
+        case QImage::Format_RGBX8888:
+                return ColorFormat::R8G8B8_SRGB;
+        case QImage::Format_ARGB32:
+        case QImage::Format_ARGB32_Premultiplied:
+        case QImage::Format_ARGB4444_Premultiplied:
+        case QImage::Format_ARGB6666_Premultiplied:
+        case QImage::Format_ARGB8555_Premultiplied:
+        case QImage::Format_ARGB8565_Premultiplied:
+        case QImage::Format_RGBA8888:
+        case QImage::Format_RGBA8888_Premultiplied:
+                return ColorFormat::R8G8B8A8_SRGB;
+        case QImage::Format_BGR30:
+        case QImage::Format_RGB30:
+                return ColorFormat::R8G8B8_SRGB;
+        case QImage::Format_A2BGR30_Premultiplied:
+        case QImage::Format_A2RGB30_Premultiplied:
+                return ColorFormat::R8G8B8A8_SRGB;
+        case QImage::Format_Grayscale8:
+                return ColorFormat::R8_SRGB;
+        case QImage::Format_Grayscale16:
+                return ColorFormat::R16;
+        case QImage::Format_RGBX64:
+                return ColorFormat::R16G16B16;
+        case QImage::Format_RGBA64:
+        case QImage::Format_RGBA64_Premultiplied:
+                return ColorFormat::R16G16B16A16;
+        }
+
+        error("Unknown QImage format " + to_string(static_cast<long long>(image.format())));
+}
 }
 
 void save(const std::filesystem::path& path, const ImageView<2>& image_view)
@@ -315,25 +366,29 @@ void save(const std::filesystem::path& path, const ImageView<2>& image_view)
         }
 }
 
-std::array<int, 2> find_size(const std::filesystem::path& path)
+Info file_info(const std::filesystem::path& path)
 {
-        QImage q_image = open_image(path);
-        return {q_image.width(), q_image.height()};
+        QImage image = open_image(path);
+        Info info;
+        info.size[0] = image.width();
+        info.size[1] = image.height();
+        info.format = color_format(image);
+        return info;
 }
 
 void load_rgba(const std::filesystem::path& path, const std::array<int, 2>& size, const std::span<std::byte>& pixels)
 {
-        QImage q_image = open_image(path);
+        QImage image = open_image(path);
 
-        if (q_image.width() != size[0] || q_image.height() != size[1])
+        if (image.width() != size[0] || image.height() != size[1])
         {
                 std::string expected = "(" + to_string(size[0]) + ", " + to_string(size[1]) + ")";
-                std::string found = "(" + to_string(q_image.width()) + ", " + to_string(q_image.height()) + ")";
+                std::string found = "(" + to_string(image.width()) + ", " + to_string(image.height()) + ")";
                 error("Expected image size " + expected + ", found size " + found + " in the file "
                       + generic_utf8_filename(path));
         }
 
-        load_4(std::move(q_image), pixels);
+        load_4(std::move(image), pixels);
 }
 
 Image<2> load_rgba(const std::filesystem::path& path)

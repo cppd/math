@@ -29,7 +29,13 @@ void save(const std::filesystem::path& path, const ImageView<2>& image_view);
 
 //
 
-std::array<int, 2> find_size(const std::filesystem::path& path);
+struct Info final
+{
+        std::array<int, 2> size;
+        ColorFormat format;
+};
+
+Info file_info(const std::filesystem::path& path);
 
 Image<2> load_rgba(const std::filesystem::path& path);
 
