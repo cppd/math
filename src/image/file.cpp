@@ -80,72 +80,6 @@ std::filesystem::path file_name_with_extension(std::filesystem::path path)
         return path.replace_extension(DEFAULT_WRITE_FORMAT);
 }
 
-template <typename T>
-void add_alpha(const std::span<const std::byte>& bytes3, const std::span<std::byte>& bytes4)
-{
-        if (bytes3.size() % (3 * sizeof(T)) != 0)
-        {
-                error("Error RGB data size " + to_string(bytes3.size()) + " for adding alpha");
-        }
-        if (bytes4.size() % (4 * sizeof(T)) != 0)
-        {
-                error("Error RGBA data size " + to_string(bytes4.size()) + " for adding alpha");
-        }
-        if ((bytes4.size() / 4) * 3 != bytes3.size())
-        {
-                error("Error sizes for adding alpha: RGB data size = " + to_string(bytes3.size())
-                      + ", RGBA data size = " + to_string(bytes4.size()));
-        }
-
-        static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
-        const T alpha = std::is_integral_v<T> ? limits<T>::max() : T(1);
-        const size_t pixel_count = bytes3.size() / (3 * sizeof(T));
-        ASSERT(pixel_count * (3 * sizeof(T)) == bytes3.size());
-
-        const std::byte* src = bytes3.data();
-        std::byte* dst = bytes4.data();
-        for (size_t i = 0; i < pixel_count; ++i)
-        {
-                std::memcpy(dst, src, 3 * sizeof(T));
-                dst += 3 * sizeof(T);
-                std::memcpy(dst, &alpha, sizeof(T));
-                dst += sizeof(T);
-                src += 3 * sizeof(T);
-        }
-}
-
-void add_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes3, const std::span<std::byte>& bytes4)
-{
-        if (format_component_count(color_format) != 3)
-        {
-                error("Error image format " + format_to_string(color_format) + " for adding alpha");
-        }
-        if (color_format == ColorFormat::R16G16B16)
-        {
-                add_alpha<uint16_t>(bytes3, bytes4);
-        }
-        else if (color_format == ColorFormat::R32G32B32)
-        {
-                add_alpha<float>(bytes3, bytes4);
-        }
-        else if (color_format == ColorFormat::R8G8B8_SRGB)
-        {
-                add_alpha<uint8_t>(bytes3, bytes4);
-        }
-        else
-        {
-                error("Unsupported image format " + format_to_string(color_format) + " for adding alpha");
-        }
-}
-
-std::vector<std::byte> add_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes3)
-{
-        std::vector<std::byte> bytes4;
-        bytes4.resize((bytes3.size() / 3) * 4);
-        add_alpha(color_format, bytes3, bytes4);
-        return bytes4;
-}
-
 void save_image(
         size_t width,
         size_t height,
@@ -154,19 +88,58 @@ void save_image(
         const std::span<const std::byte>& bytes,
         const std::string& file_name)
 {
-        QImage q_image(width, height, q_format);
+        QImage image(width, height, q_format);
 
-        const size_t row_size = format_pixel_size_in_bytes(format) * width;
+        const size_t pixel_size = format_pixel_size_in_bytes(format);
+        const size_t row_size = pixel_size * width;
         ASSERT(row_size * height == bytes.size());
-        ASSERT(row_size <= static_cast<size_t>(q_image.bytesPerLine()));
+        ASSERT(row_size <= static_cast<size_t>(image.bytesPerLine()));
 
         const std::byte* ptr = bytes.data();
         for (unsigned row = 0; row < height; ++row, ptr += row_size)
         {
-                std::memcpy(q_image.scanLine(row), ptr, row_size);
+                std::memcpy(image.scanLine(row), ptr, row_size);
         }
 
-        if (!q_image.save(QString::fromStdString(file_name)))
+        if (!image.save(QString::fromStdString(file_name)))
+        {
+                error("Error saving pixels to the file " + file_name);
+        }
+}
+
+void save_image_alpha(
+        size_t width,
+        size_t height,
+        QImage::Format q_format,
+        ColorFormat format,
+        const std::span<const std::byte>& bytes,
+        const std::string& file_name)
+{
+        ASSERT(format == ColorFormat::R16G16B16);
+
+        const uint16_t ALPHA = 65535;
+
+        QImage image(width, height, q_format);
+
+        const size_t pixel_size = format_pixel_size_in_bytes(format);
+        ASSERT(pixel_size * width * height == bytes.size());
+        ASSERT((pixel_size + sizeof(ALPHA)) * width <= static_cast<size_t>(image.bytesPerLine()));
+
+        const std::byte* ptr = bytes.data();
+        for (unsigned row = 0; row < height; ++row)
+        {
+                unsigned char* image_ptr = image.scanLine(row);
+                for (unsigned col = 0; col < width; ++col)
+                {
+                        std::memcpy(image_ptr, ptr, pixel_size);
+                        image_ptr += pixel_size;
+                        std::memcpy(image_ptr, &ALPHA, sizeof(ALPHA));
+                        image_ptr += sizeof(ALPHA);
+                        ptr += pixel_size;
+                }
+        }
+
+        if (!image.save(QString::fromStdString(file_name)))
         {
                 error("Error saving pixels to the file " + file_name);
         }
@@ -214,17 +187,14 @@ void save_3(const std::string& file_name, const ImageView<2>& image_view)
         }
         else if (image_view.color_format == ColorFormat::R16G16B16)
         {
-                save_image(
-                        width, height, QImage::Format_RGBX64, ColorFormat::R16G16B16A16,
-                        add_alpha(ColorFormat::R16G16B16, image_view.pixels), file_name);
+                save_image_alpha(
+                        width, height, QImage::Format_RGBX64, ColorFormat::R16G16B16, image_view.pixels, file_name);
         }
         else if (image_view.color_format == ColorFormat::R32G32B32)
         {
                 std::vector<std::byte> bytes;
                 format_conversion(image_view.color_format, image_view.pixels, ColorFormat::R16G16B16, &bytes);
-                save_image(
-                        width, height, QImage::Format_RGBX64, ColorFormat::R16G16B16A16,
-                        add_alpha(ColorFormat::R16G16B16, bytes), file_name);
+                save_image_alpha(width, height, QImage::Format_RGBX64, ColorFormat::R16G16B16, bytes, file_name);
         }
         else
         {
@@ -254,7 +224,7 @@ void save_4(const std::string& file_name, const ImageView<2>& image_view)
         {
                 std::vector<std::byte> bytes;
                 format_conversion(image_view.color_format, image_view.pixels, ColorFormat::R16G16B16A16, &bytes);
-                save_image(width, height, QImage::Format_RGBX64, ColorFormat::R16G16B16A16, bytes, file_name);
+                save_image(width, height, QImage::Format_RGBA64, ColorFormat::R16G16B16A16, bytes, file_name);
         }
         else
         {
