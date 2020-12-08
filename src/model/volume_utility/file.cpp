@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/image/file.h>
+#include <src/image/flip.h>
 #include <src/utility/file/path.h>
 #include <src/utility/string/ascii.h>
 
@@ -185,8 +186,9 @@ std::enable_if_t<N >= 3> save_to_images(
 }
 
 template <size_t N>
-std::enable_if_t<N >= 3> load_rgba_from_images(
+std::enable_if_t<N >= 3> load_from_images(
         const std::filesystem::path& directory,
+        const image::ColorFormat& image_format,
         const std::array<int, N>& image_size,
         const std::span<std::byte>& image_bytes,
         ProgressRatio* progress,
@@ -223,7 +225,8 @@ std::enable_if_t<N >= 3> load_rgba_from_images(
         std::byte* ptr = image_bytes.data();
 
         ASSERT(image_bytes.size() == size_in_bytes * names.size());
-        ASSERT(image_bytes.size() == 4ull * multiply_all<long long>(image_size));
+        ASSERT(static_cast<long long>(image_bytes.size())
+               == image::format_pixel_size_in_bytes(image_format) * multiply_all<long long>(image_size));
 
         std::array<int, N - 1> image_size_n_1 = del_elem(image_size, N - 1);
 
@@ -237,18 +240,18 @@ std::enable_if_t<N >= 3> load_rgba_from_images(
                         {
                                 error("Path expected to be a directory " + generic_utf8_filename(entry_path));
                         }
-                        load_rgba_from_images(entry_path, image_size_n_1, span, progress, current, count);
+                        load_from_images(entry_path, image_format, image_size_n_1, span, progress, current, count);
                 }
                 else
                 {
-                        image::load_rgba(entry_path, image_size_n_1, span);
+                        image::load(entry_path, image_format, image_size_n_1, span);
 
                         progress->set(++(*current), count);
                 }
         }
 }
 
-void find_size(const std::filesystem::path& directory, std::vector<int>* size)
+void find_info(const std::filesystem::path& directory, std::vector<int>* size, image::ColorFormat* format)
 {
         std::optional<DirectoryContent> content = read_directory_ascii_content(directory);
         if (!content || content->entries.empty())
@@ -265,15 +268,17 @@ void find_size(const std::filesystem::path& directory, std::vector<int>* size)
         {
                 size->push_back(content->entries.size());
                 content.reset();
-                find_size(first, size);
+                find_info(first, size, format);
                 return;
         }
         case ContentType::Files:
         {
-                const auto [width, height] = image::file_info(first).size;
+                image::Info info = image::file_info(first);
+                const auto [width, height] = info.size;
                 size->push_back(content->entries.size());
                 size->push_back(height);
                 size->push_back(width);
+                *format = info.format;
                 return;
         }
         }
@@ -281,20 +286,20 @@ void find_size(const std::filesystem::path& directory, std::vector<int>* size)
 }
 }
 
-std::vector<int> find_size(const std::filesystem::path& path)
+VolumeInfo volume_info(const std::filesystem::path& path)
 {
-        std::vector<int> size;
-        find_size(path, &size);
-        if (size.size() < 3)
+        VolumeInfo info;
+        find_info(path, &info.size, &info.format);
+        if (info.size.size() < 3)
         {
-                error("Image dimension " + to_string(size.size()) + " is less than 3");
+                error("Image dimension " + to_string(info.size.size()) + " is less than 3");
         }
-        std::reverse(size.begin(), size.end());
-        if (!all_positive(size))
+        std::reverse(info.size.begin(), info.size.end());
+        if (!all_positive(info.size))
         {
-                error("Image dimensions " + to_string(size) + " are not positive");
+                error("Image dimensions " + to_string(info.size) + " are not positive");
         }
-        return size;
+        return info;
 }
 
 template <size_t N>
@@ -318,32 +323,34 @@ std::enable_if_t<N >= 3> save_to_images(
 }
 
 template <size_t N>
-std::enable_if_t<N >= 3, image::Image<N>> load_rgba(const std::filesystem::path& path, ProgressRatio* progress)
+std::enable_if_t<N >= 3, image::Image<N>> load(const std::filesystem::path& path, ProgressRatio* progress)
 {
-        const std::vector<int> image_size = find_size(path);
-        if (image_size.size() != N)
+        const VolumeInfo info = volume_info(path);
+        if (info.size.size() != N)
         {
-                error("Error loading " + to_string(N) + "-image, found image dimension " + to_string(image_size.size())
+                error("Error loading " + to_string(N) + "-image, found image dimension " + to_string(info.size.size())
                       + " in " + generic_utf8_filename(path));
         }
 
-        long long pixel_count = multiply_all<long long>(image_size);
+        long long pixel_count = multiply_all<long long>(info.size);
 
         image::Image<N> image;
-        image.color_format = image::ColorFormat::R8G8B8A8_SRGB;
+        image.color_format = info.format;
         for (size_t i = 0; i < N; ++i)
         {
-                image.size[i] = image_size[i];
+                image.size[i] = info.size[i];
         }
-        image.pixels.resize(4 * pixel_count);
+        image.pixels.resize(image::format_pixel_size_in_bytes(info.format) * pixel_count);
 
         long long image_count = pixel_count / image.size[0] / image.size[1];
         if (static_cast<unsigned long long>(image_count) > limits<unsigned>::max())
         {
-                error("Too many images to load, image size " + to_string(image_size));
+                error("Too many images to load, image size " + to_string(info.size));
         }
         unsigned current = 0;
-        load_rgba_from_images(path, image.size, image.pixels, progress, &current, image_count);
+        load_from_images(path, image.color_format, image.size, image.pixels, progress, &current, image_count);
+
+        image::flip_vertically(&image);
 
         return image;
 }
@@ -364,7 +371,7 @@ template void save_to_images(
         const image::ImageView<5>&,
         ProgressRatio*);
 
-template image::Image<3> load_rgba<3>(const std::filesystem::path&, ProgressRatio*);
-template image::Image<4> load_rgba<4>(const std::filesystem::path&, ProgressRatio*);
-template image::Image<5> load_rgba<5>(const std::filesystem::path&, ProgressRatio*);
+template image::Image<3> load<3>(const std::filesystem::path&, ProgressRatio*);
+template image::Image<4> load<4>(const std::filesystem::path&, ProgressRatio*);
+template image::Image<5> load<5>(const std::filesystem::path&, ProgressRatio*);
 }

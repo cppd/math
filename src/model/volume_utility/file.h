@@ -25,7 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace volume
 {
-std::vector<int> find_size(const std::filesystem::path& path);
+struct VolumeInfo final
+{
+        std::vector<int> size;
+        image::ColorFormat format;
+};
+VolumeInfo volume_info(const std::filesystem::path& path);
 
 template <size_t N>
 std::enable_if_t<N >= 3> save_to_images(
@@ -35,5 +40,5 @@ std::enable_if_t<N >= 3> save_to_images(
         ProgressRatio* progress);
 
 template <size_t N>
-std::enable_if_t<N >= 3, image::Image<N>> load_rgba(const std::filesystem::path& path, ProgressRatio* progress);
+std::enable_if_t<N >= 3, image::Image<N>> load(const std::filesystem::path& path, ProgressRatio* progress);
 }

@@ -34,10 +34,13 @@ struct Info final
         std::array<int, 2> size;
         ColorFormat format;
 };
-
 Info file_info(const std::filesystem::path& path);
 
 Image<2> load_rgba(const std::filesystem::path& path);
 
-void load_rgba(const std::filesystem::path& path, const std::array<int, 2>& size, const std::span<std::byte>& pixels);
+void load(
+        const std::filesystem::path& path,
+        ColorFormat color_format,
+        const std::array<int, 2>& size,
+        const std::span<std::byte>& pixels);
 }

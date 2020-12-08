@@ -171,10 +171,10 @@ std::function<void(ProgressRatioList*)> action_load_volume(std::filesystem::path
 
         return [=](ProgressRatioList* progress_list)
         {
-                std::vector<int> image_size = volume::find_size(path);
+                unsigned dimension = volume::volume_info(path).size.size();
 
                 apply_for_dimension(
-                        image_size.size(),
+                        dimension,
                         [&]<size_t N>(const Dimension<N>&)
                         {
                                 load_volume<N>(generic_utf8_filename(path.filename()), progress_list, path);

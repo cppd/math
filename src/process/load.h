@@ -122,7 +122,7 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume(
         {
                 ProgressRatio progress(progress_list);
                 progress.set_text("Loading: %p%");
-                volume->image = volume::load_rgba<N>(path, &progress);
+                volume->image = volume::load<N>(path, &progress);
         }
 
         volume->matrix = volume::matrix_for_image_size(volume->image.size);
