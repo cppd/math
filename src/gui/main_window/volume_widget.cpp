@@ -25,7 +25,7 @@ namespace gui::main_window
 namespace
 {
 // Максимальный коэффициент для умножения и деления α на него.
-constexpr double VOLUME_ALPHA_COEFFICIENT = 20;
+constexpr double VOLUME_ALPHA_COEFFICIENT = 50;
 }
 
 VolumeWidget::VolumeWidget(double maximum_specular_power, double maximum_model_lighting)
