@@ -48,4 +48,6 @@ void add_alpha(image::Image<N>* image, float alpha)
                 error("Unsupported image format " + format_to_string(image->color_format) + " for adding alpha");
         }
 }
+
+std::vector<std::byte> delete_alpha(image::ColorFormat color_format, const std::span<const std::byte>& bytes);
 }
