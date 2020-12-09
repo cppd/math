@@ -119,7 +119,15 @@ void Actions::set_progresses()
 
 void Actions::save_to_file(bool without_background, const std::string& action) const
 {
-        std::span slice = m_pixels->slice();
+        std::span<const std::byte> slice;
+        if (without_background)
+        {
+                slice = m_pixels->slice_r8g8b8a8_without_background();
+        }
+        else
+        {
+                slice = m_pixels->slice_r8g8b8a8_with_background();
+        }
         std::vector<std::byte> pixels(slice.begin(), slice.end());
 
         m_worker_threads->terminate_and_start(
@@ -133,7 +141,15 @@ void Actions::save_to_file(bool without_background, const std::string& action) c
 
 void Actions::save_all_to_files(bool without_background, const std::string& action) const
 {
-        std::vector<std::byte> pixels(m_pixels->pixels());
+        std::vector<std::byte> pixels;
+        if (without_background)
+        {
+                pixels = m_pixels->pixels_r8g8b8a8_without_background();
+        }
+        else
+        {
+                pixels = m_pixels->pixels_r8g8b8a8_with_background();
+        }
 
         m_worker_threads->terminate_and_start(
                 SAVE_THREAD_ID, action,
@@ -146,14 +162,21 @@ void Actions::save_all_to_files(bool without_background, const std::string& acti
 
 void Actions::add_volume(bool without_background, const std::string& action) const
 {
-        std::vector<std::byte> pixels(m_pixels->pixels());
+        std::vector<std::byte> pixels;
+        if (without_background)
+        {
+                pixels = m_pixels->pixels_r8g8b8a8_without_background();
+        }
+        else
+        {
+                pixels = m_pixels->pixels_r8g8b8a8_with_background();
+        }
 
         m_worker_threads->terminate_and_start(
                 ADD_THREAD_ID, action,
                 [&]()
                 {
-                        return painter_window::add_volume(
-                                m_pixels->screen_size(), without_background, std::move(pixels));
+                        return painter_window::add_volume(m_pixels->screen_size(), std::move(pixels));
                 });
 }
 }

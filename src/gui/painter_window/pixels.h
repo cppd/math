@@ -38,8 +38,10 @@ struct Pixels
         virtual ~Pixels() = default;
 
         virtual void set_slice_offset(const std::vector<int>& slider_positions) = 0;
-        virtual std::span<const std::byte> slice() const = 0;
-        virtual const std::vector<std::byte>& pixels() const = 0;
+        virtual std::span<const std::byte> slice_r8g8b8a8_with_background() const = 0;
+        virtual std::span<const std::byte> slice_r8g8b8a8_without_background() const = 0;
+        virtual const std::vector<std::byte>& pixels_r8g8b8a8_with_background() const = 0;
+        virtual const std::vector<std::byte>& pixels_r8g8b8a8_without_background() const = 0;
         virtual const std::vector<long long>& busy_indices_2d() const = 0;
         virtual painter::Statistics statistics() const = 0;
         virtual const std::vector<int>& screen_size() const = 0;
@@ -48,7 +50,6 @@ struct Pixels
 template <size_t N, typename T>
 class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1>
 {
-        static constexpr unsigned char ALPHA_FOR_FULL_COVERAGE = 1;
         static constexpr int PANTBRUSH_WIDTH = 20;
 
         const std::shared_ptr<const painter::Scene<N, T>> m_scene;
@@ -57,7 +58,8 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
         const std::vector<int> m_screen_size;
         const Color m_background_color;
 
-        std::vector<std::byte> m_pixels_bgra;
+        std::vector<std::byte> m_pixels_with_background;
+        std::vector<std::byte> m_pixels_without_background;
         const size_t m_slice_size;
         long long m_slice_offset;
         std::vector<long long> m_busy_indices_2d;
@@ -75,13 +77,13 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
                 return vector;
         }
 
-        static std::vector<std::byte> make_initial_bgra_image(const std::vector<int>& screen_size)
+        static std::vector<std::byte> make_initial_image(const std::vector<int>& screen_size)
         {
                 constexpr Srgb8 LIGHT = Srgb8(100, 150, 200);
                 constexpr Srgb8 DARK = Srgb8(0, 0, 0);
 
-                constexpr std::array<unsigned char, 4> LIGHT_BGR = {LIGHT.blue, LIGHT.green, LIGHT.red, 0};
-                constexpr std::array<unsigned char, 4> DARK_BGR = {DARK.blue, DARK.green, DARK.red, 0};
+                constexpr std::array<unsigned char, 4> LIGHT_RGB = {LIGHT.red, LIGHT.green, LIGHT.blue, 255};
+                constexpr std::array<unsigned char, 4> DARK_RGB = {DARK.red, DARK.green, DARK.blue, 255};
 
                 const int count = multiply_all<long long>(screen_size)
                                   / (static_cast<long long>(screen_size[0]) * static_cast<long long>(screen_size[1]));
@@ -96,7 +98,7 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
                                 for (int x = 0; x < screen_size[0]; ++x)
                                 {
                                         std::memcpy(
-                                                &image[index], ((x + y) & 1) ? LIGHT_BGR.data() : DARK_BGR.data(), 4);
+                                                &image[index], ((x + y) & 1) ? LIGHT_RGB.data() : DARK_RGB.data(), 4);
                                         index += 4;
                                 }
                         }
@@ -107,10 +109,21 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
                 return image;
         }
 
-        void set(long long pixel_index, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+        void set_with_background(long long pixel_index, unsigned char r, unsigned char g, unsigned char b)
         {
-                const std::array<unsigned char, 4> c{b, g, r, a};
-                std::memcpy(&m_pixels_bgra[4 * pixel_index], c.data(), 4);
+                const std::array<unsigned char, 4> c{r, g, b, 255};
+                std::memcpy(&m_pixels_with_background[4 * pixel_index], c.data(), 4);
+        }
+
+        void set_without_background(
+                long long pixel_index,
+                unsigned char r,
+                unsigned char g,
+                unsigned char b,
+                unsigned char a)
+        {
+                const std::array<unsigned char, 4> c{r, g, b, a};
+                std::memcpy(&m_pixels_without_background[4 * pixel_index], c.data(), 4);
         }
 
         // PainterNotifier
@@ -130,12 +143,14 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
         {
                 std::array<int_least16_t, N - 1> p = pixel;
                 p[1] = m_screen_size[1] - 1 - pixel[1];
+                long long index = m_global_index.compute(p);
                 if (coverage >= 1)
                 {
                         unsigned char r = color_conversion::linear_float_to_srgb_uint8(color.red());
                         unsigned char g = color_conversion::linear_float_to_srgb_uint8(color.green());
                         unsigned char b = color_conversion::linear_float_to_srgb_uint8(color.blue());
-                        set(m_global_index.compute(p), r, g, b, ALPHA_FOR_FULL_COVERAGE);
+                        set_with_background(index, r, g, b);
+                        set_without_background(index, r, g, b, 255);
                 }
                 else if (coverage <= 0)
                 {
@@ -143,15 +158,25 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
                         unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
                         unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
                         unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
-                        set(m_global_index.compute(p), r, g, b, 0);
+                        set_with_background(index, r, g, b);
+                        set_without_background(index, 0, 0, 0, 0);
                 }
                 else
                 {
-                        const Color& c = interpolation(m_background_color, color, coverage);
-                        unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
-                        unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
-                        unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
-                        set(m_global_index.compute(p), r, g, b, 0);
+                        {
+                                const Color& c = interpolation(m_background_color, color, coverage);
+                                unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
+                                unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
+                                unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
+                                set_with_background(index, r, g, b);
+                        }
+                        {
+                                unsigned char r = color_conversion::linear_float_to_srgb_uint8(color.red());
+                                unsigned char g = color_conversion::linear_float_to_srgb_uint8(color.green());
+                                unsigned char b = color_conversion::linear_float_to_srgb_uint8(color.blue());
+                                unsigned char a = color_conversion::linear_float_to_linear_uint8(coverage);
+                                set_without_background(index, r, g, b, a);
+                        }
                 }
         }
 
@@ -176,14 +201,24 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
                 m_slice_offset = 4 * m_global_index.compute(p);
         }
 
-        std::span<const std::byte> slice() const override
+        std::span<const std::byte> slice_r8g8b8a8_with_background() const override
         {
-                return std::span(&m_pixels_bgra[m_slice_offset], m_slice_size);
+                return std::span(&m_pixels_with_background[m_slice_offset], m_slice_size);
         }
 
-        const std::vector<std::byte>& pixels() const override
+        std::span<const std::byte> slice_r8g8b8a8_without_background() const override
         {
-                return m_pixels_bgra;
+                return std::span(&m_pixels_without_background[m_slice_offset], m_slice_size);
+        }
+
+        const std::vector<std::byte>& pixels_r8g8b8a8_with_background() const override
+        {
+                return m_pixels_with_background;
+        }
+
+        const std::vector<std::byte>& pixels_r8g8b8a8_without_background() const override
+        {
+                return m_pixels_without_background;
         }
 
         const std::vector<long long>& busy_indices_2d() const override
@@ -211,7 +246,8 @@ public:
                   m_paintbrush(m_scene->projector().screen_size(), PANTBRUSH_WIDTH, -1),
                   m_screen_size(array_to_vector(m_scene->projector().screen_size())),
                   m_background_color(m_scene->background_color()),
-                  m_pixels_bgra(make_initial_bgra_image(m_screen_size)),
+                  m_pixels_with_background(make_initial_image(m_screen_size)),
+                  m_pixels_without_background(4 * multiply_all<long long>(m_screen_size), std::byte(0)),
                   m_slice_size(4ull * m_screen_size[0] * m_screen_size[1]),
                   m_slice_offset(0),
                   m_busy_indices_2d(thread_count, -1),

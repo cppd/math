@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/image/alpha.h>
 #include <src/image/file.h>
 #include <src/image/flip.h>
 #include <src/model/volume_utility.h>
@@ -38,9 +39,6 @@ namespace
 {
 constexpr const char* IMAGE_FILE_FORMAT = "png";
 
-constexpr unsigned char ALPHA_FOR_FILES = 255;
-constexpr unsigned char ALPHA_FOR_VOLUME = 1;
-
 template <size_t N, typename T>
 std::array<T, N> to_array(const std::vector<T>& vector)
 {
@@ -52,89 +50,12 @@ std::array<T, N> to_array(const std::vector<T>& vector)
         }
         return array;
 }
-
-void set_alpha_bgra(std::vector<std::byte>* pixels, unsigned char alpha)
-{
-        ASSERT(pixels->size() % 4 == 0);
-        ASSERT(alpha > 0);
-
-        for (auto iter = pixels->begin(); iter != pixels->end(); std::advance(iter, 4))
-        {
-                std::memcpy(&(*(iter + 3)), &alpha, 1);
-        }
-}
-
-void correct_alpha_bgra(std::vector<std::byte>* pixels, unsigned char alpha)
-{
-        ASSERT(pixels->size() % 4 == 0);
-        ASSERT(alpha > 0);
-
-        for (auto iter = pixels->begin(); iter != pixels->end(); std::advance(iter, 4))
-        {
-                unsigned char a;
-                std::memcpy(&a, &(*(iter + 3)), 1);
-                if (a != 0)
-                {
-                        std::memcpy(&(*(iter + 3)), &alpha, 1);
-                }
-                else
-                {
-                        std::array<unsigned char, 4> c{0, 0, 0, 0};
-                        std::memcpy(&(*iter), c.data(), 4);
-                }
-        }
-}
-
-std::vector<std::byte> conv_bgra_to_rgb(const std::span<const std::byte>& pixels)
-{
-        if (pixels.size() % 4 != 0)
-        {
-                error("Error byte count (" + to_string(pixels.size()) + " for format BGRA");
-        }
-        std::vector<std::byte> result(3 * (pixels.size() / 4));
-        auto src = pixels.begin();
-        auto dst = result.begin();
-        for (; src != pixels.end(); std::advance(src, 4), std::advance(dst, 3))
-        {
-                std::memcpy(&(*dst), &(*src), 3);
-                std::swap(*dst, *(dst + 2));
-        }
-        return result;
-}
-
-std::vector<std::byte> conv_bgra_to_rgba(const std::span<const std::byte>& pixels)
-{
-        if (pixels.size() % 4 != 0)
-        {
-                error("Error byte count (" + to_string(pixels.size()) + " for format BGRA");
-        }
-        std::vector<std::byte> result(pixels.size());
-        std::memcpy(result.data(), pixels.data(), data_size(result));
-        for (auto dst = result.begin(); dst != result.end(); std::advance(dst, 4))
-        {
-                std::swap(*dst, *(dst + 2));
-        }
-        return result;
-}
-
-std::vector<std::byte> conv_bgra(const std::span<const std::byte>& pixels, image::ColorFormat to_format)
-{
-        if (to_format == image::ColorFormat::R8G8B8_SRGB)
-        {
-                return conv_bgra_to_rgb(pixels);
-        }
-        if (to_format == image::ColorFormat::R8G8B8A8_SRGB)
-        {
-                return conv_bgra_to_rgba(pixels);
-        }
-        error("Unsupported format conversion from BGRA to " + image::format_to_string(to_format));
-}
 }
 
 std::function<void(ProgressRatioList*)> save_to_file(
         const std::vector<int>& screen_size,
         bool without_background,
-        std::vector<std::byte>&& pixels_bgra)
+        std::vector<std::byte>&& pixels_rgba)
 {
         const std::string caption = "Save";
         dialog::FileFilter filter;
@@ -147,7 +68,7 @@ std::function<void(ProgressRatioList*)> save_to_file(
                 return nullptr;
         }
 
-        return [pixels_bgra = std::make_shared<std::vector<std::byte>>(std::move(pixels_bgra)),
+        return [pixels = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgba)),
                 file_name_string = std::move(file_name_string), screen_size,
                 without_background](ProgressRatioList* progress_list)
         {
@@ -157,24 +78,24 @@ std::function<void(ProgressRatioList*)> save_to_file(
                 image::ColorFormat format;
                 if (without_background)
                 {
-                        correct_alpha_bgra(pixels_bgra.get(), ALPHA_FOR_FILES);
                         format = image::ColorFormat::R8G8B8A8_SRGB;
                 }
                 else
                 {
+                        *pixels = image::delete_alpha(image::ColorFormat::R8G8B8A8_SRGB, *pixels);
                         format = image::ColorFormat::R8G8B8_SRGB;
                 }
 
                 image::save(
                         path_from_utf8(*file_name_string),
-                        image::ImageView<2>({screen_size[0], screen_size[1]}, format, conv_bgra(*pixels_bgra, format)));
+                        image::ImageView<2>({screen_size[0], screen_size[1]}, format, *pixels));
         };
 }
 
 std::function<void(ProgressRatioList*)> save_all_to_files(
         const std::vector<int>& screen_size,
         bool without_background,
-        std::vector<std::byte>&& pixels_bgra)
+        std::vector<std::byte>&& pixels_rgba)
 {
         if (screen_size.size() < 3)
         {
@@ -189,7 +110,7 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                 return nullptr;
         }
 
-        return [pixels_bgra = std::make_shared<std::vector<std::byte>>(std::move(pixels_bgra)),
+        return [pixels = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgba)),
                 directory_string = std::move(directory_string), screen_size,
                 without_background](ProgressRatioList* progress_list)
         {
@@ -199,11 +120,11 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                 image::ColorFormat format;
                 if (without_background)
                 {
-                        correct_alpha_bgra(pixels_bgra.get(), ALPHA_FOR_FILES);
                         format = image::ColorFormat::R8G8B8A8_SRGB;
                 }
                 else
                 {
+                        *pixels = image::delete_alpha(image::ColorFormat::R8G8B8A8_SRGB, *pixels);
                         format = image::ColorFormat::R8G8B8_SRGB;
                 }
 
@@ -218,8 +139,7 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                                         volume::save_to_images(
                                                 path_from_utf8(*directory_string), IMAGE_FILE_FORMAT,
                                                 image::ImageView<N - 1>(
-                                                        to_array<N - 1, int>(screen_size), format,
-                                                        conv_bgra(*pixels_bgra, format)),
+                                                        to_array<N - 1, int>(screen_size), format, *pixels),
                                                 &progress);
                                 }
                         });
@@ -228,28 +148,18 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
 
 std::function<void(ProgressRatioList*)> add_volume(
         const std::vector<int>& screen_size,
-        bool without_background,
-        std::vector<std::byte>&& pixels_bgra)
+        std::vector<std::byte>&& pixels_rgba)
 {
         if (screen_size.size() < 3)
         {
                 return nullptr;
         }
 
-        return [pixels_bgra = std::make_shared<std::vector<std::byte>>(std::move(pixels_bgra)), screen_size,
-                without_background](ProgressRatioList* progress_list)
+        return [pixels = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgba)),
+                screen_size](ProgressRatioList* progress_list)
         {
                 ProgressRatio progress(progress_list, "Adding volume");
                 progress.set(0);
-
-                if (without_background)
-                {
-                        correct_alpha_bgra(pixels_bgra.get(), ALPHA_FOR_VOLUME);
-                }
-                else
-                {
-                        set_alpha_bgra(pixels_bgra.get(), ALPHA_FOR_VOLUME);
-                }
 
                 const int N = screen_size.size() + 1;
                 process::apply_for_dimension(
@@ -262,7 +172,7 @@ std::function<void(ProgressRatioList*)> add_volume(
                                         image::Image<N_IMAGE> image;
                                         image.size = to_array<N - 1, int>(screen_size);
                                         image.color_format = image::ColorFormat::R8G8B8A8_SRGB;
-                                        image.pixels = conv_bgra(*pixels_bgra, image.color_format);
+                                        image.pixels = std::move(*pixels);
 
                                         image::flip_vertically(&image);
 

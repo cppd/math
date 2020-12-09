@@ -24,14 +24,15 @@ namespace gui::painter_window
 namespace
 {
 constexpr bool SHOW_THREADS = true;
+constexpr long long PIXEL_SIZE_BYTES = 4;
 }
 
 ImageWidget::ImageWidget(const Pixels* pixels, QMenu* menu)
         : QWidget(nullptr),
           m_pixels(pixels),
           m_image_2d_pixel_count(1ull * pixels->screen_size()[0] * pixels->screen_size()[1]),
-          m_image_2d_byte_count(sizeof(quint32) * m_image_2d_pixel_count),
-          m_image_2d(pixels->screen_size()[0], pixels->screen_size()[1], QImage::Format_RGB32)
+          m_image_2d_byte_count(PIXEL_SIZE_BYTES * m_image_2d_pixel_count),
+          m_image_2d(pixels->screen_size()[0], pixels->screen_size()[1], QImage::Format_RGBX8888)
 {
         ASSERT(static_cast<size_t>(m_image_2d.sizeInBytes()) == m_image_2d_byte_count);
 
@@ -65,11 +66,8 @@ QSize ImageWidget::size_difference() const
 
 void ImageWidget::update()
 {
-        static_assert(std::endian::native == std::endian::little);
-        static_assert(sizeof(quint32) == 4 * sizeof(std::byte));
-
-        const std::span<const std::byte> pixels = m_pixels->slice();
-        quint32* const image_bits = reinterpret_cast<quint32*>(m_image_2d.bits());
+        const std::span<const std::byte> pixels = m_pixels->slice_r8g8b8a8_with_background();
+        unsigned char* const image_bits = m_image_2d.bits();
 
         ASSERT(pixels.size_bytes() == m_image_2d_byte_count);
         std::memcpy(image_bits, pixels.data(), m_image_2d_byte_count);
@@ -81,7 +79,11 @@ void ImageWidget::update()
                         if (index >= 0)
                         {
                                 ASSERT(index < m_image_2d_pixel_count);
-                                image_bits[index] ^= 0x00ff'ffff;
+                                index *= PIXEL_SIZE_BYTES;
+                                static_assert(PIXEL_SIZE_BYTES >= 3);
+                                image_bits[index++] ^= 0xff;
+                                image_bits[index++] ^= 0xff;
+                                image_bits[index] ^= 0xff;
                         }
                 }
         }
