@@ -24,30 +24,61 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace image
 {
 std::vector<std::byte> add_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes, float alpha);
+std::vector<std::byte> delete_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes);
 
 template <size_t N>
-void add_alpha(image::Image<N>* image, float alpha)
+Image<N> add_alpha(const Image<N>& image, float alpha)
 {
-        if (image->color_format == image::ColorFormat::R8G8B8_SRGB)
+        Image<N> result;
+
+        if (image.color_format == ColorFormat::R8G8B8_SRGB)
         {
-                image->pixels = image::add_alpha(image->color_format, image->pixels, alpha);
-                image->color_format = image::ColorFormat::R8G8B8A8_SRGB;
+                result.color_format = ColorFormat::R8G8B8A8_SRGB;
         }
-        else if (image->color_format == image::ColorFormat::R16G16B16)
+        else if (image.color_format == ColorFormat::R16G16B16)
         {
-                image->pixels = image::add_alpha(image->color_format, image->pixels, alpha);
-                image->color_format = image::ColorFormat::R16G16B16A16;
+                result.color_format = ColorFormat::R16G16B16A16;
         }
-        else if (image->color_format == image::ColorFormat::R32G32B32)
+        else if (image.color_format == ColorFormat::R32G32B32)
         {
-                image->pixels = image::add_alpha(image->color_format, image->pixels, alpha);
-                image->color_format = image::ColorFormat::R32G32B32A32;
+                result.color_format = ColorFormat::R32G32B32A32;
         }
         else
         {
-                error("Unsupported image format " + format_to_string(image->color_format) + " for adding alpha");
+                error("Unsupported image format " + format_to_string(image.color_format) + " for adding alpha");
         }
+
+        result.size = image.size;
+        result.pixels = add_alpha(image.color_format, image.pixels, alpha);
+
+        return result;
 }
 
-std::vector<std::byte> delete_alpha(image::ColorFormat color_format, const std::span<const std::byte>& bytes);
+template <size_t N>
+Image<N> delete_alpha(const Image<N>& image)
+{
+        Image<N> result;
+
+        if (image.color_format == ColorFormat::R8G8B8A8_SRGB)
+        {
+                result.color_format = ColorFormat::R8G8B8_SRGB;
+        }
+        else if (image.color_format == ColorFormat::R16G16B16A16)
+        {
+                result.color_format = ColorFormat::R16G16B16;
+        }
+        else if (image.color_format == ColorFormat::R32G32B32A32)
+        {
+                result.color_format = ColorFormat::R32G32B32;
+        }
+        else
+        {
+                error("Unsupported image format " + format_to_string(image.color_format) + " for deleting alpha");
+        }
+
+        result.size = image.size;
+        result.pixels = delete_alpha(image.color_format, image.pixels);
+
+        return result;
+}
 }

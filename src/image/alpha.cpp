@@ -101,19 +101,19 @@ std::vector<std::byte> add_alpha(ColorFormat color_format, const std::span<const
         return bytes4;
 }
 
-std::vector<std::byte> delete_alpha(image::ColorFormat color_format, const std::span<const std::byte>& bytes)
+std::vector<std::byte> delete_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes)
 {
-        if (!(color_format == image::ColorFormat::R8G8B8A8_SRGB || color_format == image::ColorFormat::R16G16B16A16
-              || color_format == image::ColorFormat::R32G32B32A32))
+        if (!(color_format == ColorFormat::R8G8B8A8_SRGB || color_format == ColorFormat::R16G16B16A16
+              || color_format == ColorFormat::R32G32B32A32))
         {
-                error("Unsupported image format " + image::format_to_string(color_format) + " for deleting alpha");
+                error("Unsupported image format " + format_to_string(color_format) + " for deleting alpha");
         }
 
-        size_t src_pixel_size = image::format_pixel_size_in_bytes(color_format);
+        size_t src_pixel_size = format_pixel_size_in_bytes(color_format);
         if (bytes.size() % src_pixel_size != 0)
         {
                 error("Error byte count (" + to_string(bytes.size()) + ") for format "
-                      + image::format_to_string(color_format));
+                      + format_to_string(color_format));
         }
 
         ASSERT(bytes.size() % 4 == 0);

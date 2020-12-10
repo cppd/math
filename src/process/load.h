@@ -89,7 +89,7 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume(
         if (image::format_component_count(volume->image.color_format) == 3)
         {
                 constexpr float alpha = 1.0f;
-                image::add_alpha(&volume->image, alpha);
+                volume->image = image::add_alpha(volume->image, alpha);
         }
 
         std::shared_ptr<volume::VolumeObject<N>> volume_object = std::make_shared<volume::VolumeObject<N>>(
@@ -110,7 +110,7 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume(const std::string& object_n
         if (image::format_component_count(volume->image.color_format) == 3)
         {
                 constexpr float alpha = 1.0f;
-                image::add_alpha(&volume->image, alpha);
+                volume->image = image::add_alpha(volume->image, alpha);
         }
 
         volume->matrix = volume::matrix_for_image_size(volume->image.size);
@@ -140,7 +140,7 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume(
         if (image::format_component_count(volume->image.color_format) == 3)
         {
                 constexpr float alpha = 1.0f;
-                image::add_alpha(&volume->image, alpha);
+                volume->image = image::add_alpha(volume->image, alpha);
         }
 
         volume->matrix = volume::matrix_for_image_size(volume->image.size);
