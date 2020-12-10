@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/global_index.h>
 #include <src/com/message.h>
+#include <src/image/format.h>
 #include <src/painter/paintbrushes/bar_paintbrush.h>
 #include <src/painter/painter.h>
 
@@ -38,19 +39,23 @@ struct Pixels
         virtual ~Pixels() = default;
 
         virtual void set_slice_offset(const std::vector<int>& slider_positions) = 0;
-        virtual std::span<const std::byte> slice_r8g8b8a8_with_background() const = 0;
-        virtual std::span<const std::byte> slice_r8g8b8a8_without_background() const = 0;
-        virtual const std::vector<std::byte>& pixels_r8g8b8a8_with_background() const = 0;
-        virtual const std::vector<std::byte>& pixels_r8g8b8a8_without_background() const = 0;
         virtual const std::vector<long long>& busy_indices_2d() const = 0;
         virtual painter::Statistics statistics() const = 0;
         virtual const std::vector<int>& screen_size() const = 0;
+        virtual image::ColorFormat color_format() const = 0;
+
+        virtual std::span<const std::byte> slice_r8g8b8a8_with_background() const = 0;
+
+        virtual std::vector<std::byte> slice(bool without_background) const = 0;
+        virtual std::vector<std::byte> pixels(bool without_background) const = 0;
 };
 
 template <size_t N, typename T>
 class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1>
 {
         static constexpr int PANTBRUSH_WIDTH = 20;
+
+        static constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R8G8B8A8_SRGB;
 
         const std::shared_ptr<const painter::Scene<N, T>> m_scene;
         painter::BarPaintbrush<N - 1> m_paintbrush;
@@ -206,19 +211,26 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
                 return std::span(&m_pixels_with_background[m_slice_offset], m_slice_size);
         }
 
-        std::span<const std::byte> slice_r8g8b8a8_without_background() const override
+        std::vector<std::byte> slice(bool without_background) const override
         {
-                return std::span(&m_pixels_without_background[m_slice_offset], m_slice_size);
+                if (without_background)
+                {
+                        return std::vector<std::byte>(
+                                m_pixels_without_background.data() + m_slice_offset,
+                                m_pixels_without_background.data() + m_slice_offset + m_slice_size);
+                }
+                return std::vector<std::byte>(
+                        m_pixels_with_background.data() + m_slice_offset,
+                        m_pixels_with_background.data() + m_slice_offset + m_slice_size);
         }
 
-        const std::vector<std::byte>& pixels_r8g8b8a8_with_background() const override
+        std::vector<std::byte> pixels(bool without_background) const override
         {
+                if (without_background)
+                {
+                        return m_pixels_without_background;
+                }
                 return m_pixels_with_background;
-        }
-
-        const std::vector<std::byte>& pixels_r8g8b8a8_without_background() const override
-        {
-                return m_pixels_without_background;
         }
 
         const std::vector<long long>& busy_indices_2d() const override
@@ -234,6 +246,11 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
         const std::vector<int>& screen_size() const override
         {
                 return m_screen_size;
+        }
+
+        image::ColorFormat color_format() const override
+        {
+                return COLOR_FORMAT;
         }
 
 public:

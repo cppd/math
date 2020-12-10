@@ -55,7 +55,8 @@ std::array<T, N> to_array(const std::vector<T>& vector)
 std::function<void(ProgressRatioList*)> save_to_file(
         const std::vector<int>& screen_size,
         bool without_background,
-        std::vector<std::byte>&& pixels_rgba)
+        image::ColorFormat color_format,
+        std::vector<std::byte>&& pixels)
 {
         const std::string caption = "Save";
         dialog::FileFilter filter;
@@ -68,34 +69,32 @@ std::function<void(ProgressRatioList*)> save_to_file(
                 return nullptr;
         }
 
-        return [pixels = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgba)),
-                file_name_string = std::move(file_name_string), screen_size,
-                without_background](ProgressRatioList* progress_list)
+        return [=, pixels_ptr = std::make_shared<std::vector<std::byte>>(std::move(pixels)),
+                file_name_string = std::move(*file_name_string)](ProgressRatioList* progress_list)
         {
                 ProgressRatio progress(progress_list, "Saving");
                 progress.set(0);
 
-                image::ColorFormat format;
-                if (without_background)
+                image::Image<2> image;
+                image.size = {screen_size[0], screen_size[1]};
+                image.color_format = color_format;
+                image.pixels = std::move(*pixels_ptr);
+
+                ASSERT(!without_background || image::format_component_count(color_format) == 4);
+                if (!without_background && image::format_component_count(color_format) == 4)
                 {
-                        format = image::ColorFormat::R8G8B8A8_SRGB;
-                }
-                else
-                {
-                        *pixels = image::delete_alpha(image::ColorFormat::R8G8B8A8_SRGB, *pixels);
-                        format = image::ColorFormat::R8G8B8_SRGB;
+                        image = image::delete_alpha(image);
                 }
 
-                image::save(
-                        path_from_utf8(*file_name_string),
-                        image::ImageView<2>({screen_size[0], screen_size[1]}, format, *pixels));
+                image::save(path_from_utf8(file_name_string), image::ImageView<2>(image));
         };
 }
 
 std::function<void(ProgressRatioList*)> save_all_to_files(
         const std::vector<int>& screen_size,
         bool without_background,
-        std::vector<std::byte>&& pixels_rgba)
+        image::ColorFormat color_format,
+        std::vector<std::byte>&& pixels)
 {
         if (screen_size.size() < 3)
         {
@@ -110,23 +109,11 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                 return nullptr;
         }
 
-        return [pixels = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgba)),
-                directory_string = std::move(directory_string), screen_size,
-                without_background](ProgressRatioList* progress_list)
+        return [=, pixels_ptr = std::make_shared<std::vector<std::byte>>(std::move(pixels)),
+                directory_string = std::move(*directory_string)](ProgressRatioList* progress_list)
         {
                 ProgressRatio progress(progress_list, "Saving");
                 progress.set(0);
-
-                image::ColorFormat format;
-                if (without_background)
-                {
-                        format = image::ColorFormat::R8G8B8A8_SRGB;
-                }
-                else
-                {
-                        *pixels = image::delete_alpha(image::ColorFormat::R8G8B8A8_SRGB, *pixels);
-                        format = image::ColorFormat::R8G8B8_SRGB;
-                }
 
                 const int N = screen_size.size() + 1;
                 process::apply_for_dimension(
@@ -136,11 +123,20 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                                 constexpr int N_IMAGE = N - 1;
                                 if constexpr (N_IMAGE >= 3)
                                 {
+                                        image::Image<N_IMAGE> image;
+                                        image.size = to_array<N_IMAGE, int>(screen_size);
+                                        image.color_format = color_format;
+                                        image.pixels = std::move(*pixels_ptr);
+
+                                        ASSERT(!without_background || image::format_component_count(color_format) == 4);
+                                        if (!without_background && image::format_component_count(color_format) == 4)
+                                        {
+                                                image = image::delete_alpha(image);
+                                        }
+
                                         volume::save_to_images(
-                                                path_from_utf8(*directory_string), IMAGE_FILE_FORMAT,
-                                                image::ImageView<N - 1>(
-                                                        to_array<N - 1, int>(screen_size), format, *pixels),
-                                                &progress);
+                                                path_from_utf8(directory_string), IMAGE_FILE_FORMAT,
+                                                image::ImageView<N_IMAGE>(image), &progress);
                                 }
                         });
         };
@@ -148,15 +144,16 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
 
 std::function<void(ProgressRatioList*)> add_volume(
         const std::vector<int>& screen_size,
-        std::vector<std::byte>&& pixels_rgba)
+        image::ColorFormat color_format,
+        std::vector<std::byte>&& pixels)
 {
         if (screen_size.size() < 3)
         {
                 return nullptr;
         }
 
-        return [pixels = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgba)),
-                screen_size](ProgressRatioList* progress_list)
+        return [=, pixels_ptr = std::make_shared<std::vector<std::byte>>(std::move(pixels))](
+                       ProgressRatioList* progress_list)
         {
                 ProgressRatio progress(progress_list, "Adding volume");
                 progress.set(0);
@@ -170,9 +167,9 @@ std::function<void(ProgressRatioList*)> add_volume(
                                 if constexpr (N_IMAGE >= 3)
                                 {
                                         image::Image<N_IMAGE> image;
-                                        image.size = to_array<N - 1, int>(screen_size);
-                                        image.color_format = image::ColorFormat::R8G8B8A8_SRGB;
-                                        image.pixels = std::move(*pixels);
+                                        image.size = to_array<N_IMAGE, int>(screen_size);
+                                        image.color_format = color_format;
+                                        image.pixels = std::move(*pixels_ptr);
 
                                         image::flip_vertically(&image);
 
