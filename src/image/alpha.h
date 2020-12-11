@@ -19,12 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image.h"
 
+#include <src/color/color.h>
 #include <src/com/error.h>
 
 namespace image
 {
 std::vector<std::byte> add_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes, float alpha);
 std::vector<std::byte> delete_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes);
+void blend_alpha(ColorFormat color_format, const std::span<std::byte>& bytes, const Color& color);
 
 template <size_t N>
 Image<N> add_alpha(const Image<N>& image, float alpha)
