@@ -192,9 +192,9 @@ VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, con
                 if (format == VK_FORMAT_R8G8B8A8_UNORM || format == VK_FORMAT_B8G8R8A8_UNORM)
                 {
                         VkClearValue clear_value;
-                        clear_value.color.float32[0] = color_conversion::linear_float_to_srgb_float(color.red());
-                        clear_value.color.float32[1] = color_conversion::linear_float_to_srgb_float(color.green());
-                        clear_value.color.float32[2] = color_conversion::linear_float_to_srgb_float(color.blue());
+                        clear_value.color.float32[0] = color::linear_float_to_srgb_float(color.red());
+                        clear_value.color.float32[1] = color::linear_float_to_srgb_float(color.green());
+                        clear_value.color.float32[2] = color::linear_float_to_srgb_float(color.blue());
                         clear_value.color.float32[3] = 1;
                         return clear_value;
                 }

@@ -151,18 +151,18 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
                 long long index = m_global_index.compute(p);
                 if (coverage >= 1)
                 {
-                        unsigned char r = color_conversion::linear_float_to_srgb_uint8(color.red());
-                        unsigned char g = color_conversion::linear_float_to_srgb_uint8(color.green());
-                        unsigned char b = color_conversion::linear_float_to_srgb_uint8(color.blue());
+                        unsigned char r = color::linear_float_to_srgb_uint8(color.red());
+                        unsigned char g = color::linear_float_to_srgb_uint8(color.green());
+                        unsigned char b = color::linear_float_to_srgb_uint8(color.blue());
                         set_with_background(index, r, g, b);
                         set_without_background(index, r, g, b, 255);
                 }
                 else if (coverage <= 0)
                 {
                         const Color& c = m_background_color;
-                        unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
-                        unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
-                        unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
+                        unsigned char r = color::linear_float_to_srgb_uint8(c.red());
+                        unsigned char g = color::linear_float_to_srgb_uint8(c.green());
+                        unsigned char b = color::linear_float_to_srgb_uint8(c.blue());
                         set_with_background(index, r, g, b);
                         set_without_background(index, 0, 0, 0, 0);
                 }
@@ -170,16 +170,16 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
                 {
                         {
                                 const Color& c = interpolation(m_background_color, color, coverage);
-                                unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
-                                unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
-                                unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
+                                unsigned char r = color::linear_float_to_srgb_uint8(c.red());
+                                unsigned char g = color::linear_float_to_srgb_uint8(c.green());
+                                unsigned char b = color::linear_float_to_srgb_uint8(c.blue());
                                 set_with_background(index, r, g, b);
                         }
                         {
-                                unsigned char r = color_conversion::linear_float_to_srgb_uint8(color.red());
-                                unsigned char g = color_conversion::linear_float_to_srgb_uint8(color.green());
-                                unsigned char b = color_conversion::linear_float_to_srgb_uint8(color.blue());
-                                unsigned char a = color_conversion::linear_float_to_linear_uint8(coverage);
+                                unsigned char r = color::linear_float_to_srgb_uint8(color.red());
+                                unsigned char g = color::linear_float_to_srgb_uint8(color.green());
+                                unsigned char b = color::linear_float_to_srgb_uint8(color.blue());
+                                unsigned char a = color::linear_float_to_linear_uint8(coverage);
                                 set_without_background(index, r, g, b, a);
                         }
                 }

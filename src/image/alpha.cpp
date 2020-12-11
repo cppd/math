@@ -26,20 +26,6 @@ namespace image
 namespace
 {
 template <typename T>
-std::uint16_t float_to_uint16(T c)
-{
-        static_assert(std::is_same_v<T, float>);
-        return c * float(limits<uint16_t>::max()) + 0.5f;
-}
-
-template <typename T>
-float uint16_to_float(T c)
-{
-        static_assert(std::is_same_v<T, std::uint16_t>);
-        return float(c) / float(limits<uint16_t>::max());
-}
-
-template <typename T>
 void add_alpha(const std::span<const std::byte>& bytes3, const std::span<std::byte>& bytes4, T alpha)
 {
         if (bytes3.size() % (3 * sizeof(T)) != 0)
@@ -117,9 +103,9 @@ void blend_alpha_r8g8b8a8(const std::span<std::byte>& bytes, const Color& blend_
         }
 
         std::array<T, 3> blend_pixel;
-        blend_pixel[0] = color_conversion::linear_float_to_srgb_uint8(blend_color.data()[0]);
-        blend_pixel[1] = color_conversion::linear_float_to_srgb_uint8(blend_color.data()[1]);
-        blend_pixel[2] = color_conversion::linear_float_to_srgb_uint8(blend_color.data()[2]);
+        blend_pixel[0] = color::linear_float_to_srgb_uint8(blend_color.data()[0]);
+        blend_pixel[1] = color::linear_float_to_srgb_uint8(blend_color.data()[1]);
+        blend_pixel[2] = color::linear_float_to_srgb_uint8(blend_color.data()[2]);
 
         std::byte* ptr = bytes.data();
         for (size_t i = 0; i < pixel_count; ++i, ptr += pixel_size)
@@ -132,17 +118,17 @@ void blend_alpha_r8g8b8a8(const std::span<std::byte>& bytes, const Color& blend_
                 }
                 else if (pixel[3] < limits<T>::max())
                 {
-                        float alpha = color_conversion::linear_uint8_to_linear_float<float>(pixel[3]);
+                        float alpha = color::linear_uint8_to_linear_float<float>(pixel[3]);
                         std::array<float, 3> c;
-                        c[0] = color_conversion::srgb_uint8_to_linear_float<float>(pixel[0]);
-                        c[1] = color_conversion::srgb_uint8_to_linear_float<float>(pixel[1]);
-                        c[2] = color_conversion::srgb_uint8_to_linear_float<float>(pixel[2]);
+                        c[0] = color::srgb_uint8_to_linear_float<float>(pixel[0]);
+                        c[1] = color::srgb_uint8_to_linear_float<float>(pixel[1]);
+                        c[2] = color::srgb_uint8_to_linear_float<float>(pixel[2]);
                         c[0] = interpolation(blend_color.data()[0], c[0], alpha);
                         c[1] = interpolation(blend_color.data()[1], c[1], alpha);
                         c[2] = interpolation(blend_color.data()[2], c[2], alpha);
-                        pixel[0] = color_conversion::linear_float_to_srgb_uint8(c[0]);
-                        pixel[1] = color_conversion::linear_float_to_srgb_uint8(c[1]);
-                        pixel[2] = color_conversion::linear_float_to_srgb_uint8(c[2]);
+                        pixel[0] = color::linear_float_to_srgb_uint8(c[0]);
+                        pixel[1] = color::linear_float_to_srgb_uint8(c[1]);
+                        pixel[2] = color::linear_float_to_srgb_uint8(c[2]);
                         std::memcpy(ptr, pixel.data(), 3 * sizeof(T));
                 }
         }
@@ -160,9 +146,9 @@ void blend_alpha_r16g16b16a16(const std::span<std::byte>& bytes, const Color& bl
         }
 
         std::array<T, 3> blend_pixel;
-        blend_pixel[0] = float_to_uint16(blend_color.data()[0]);
-        blend_pixel[1] = float_to_uint16(blend_color.data()[1]);
-        blend_pixel[2] = float_to_uint16(blend_color.data()[2]);
+        blend_pixel[0] = color::float_to_uint16(blend_color.data()[0]);
+        blend_pixel[1] = color::float_to_uint16(blend_color.data()[1]);
+        blend_pixel[2] = color::float_to_uint16(blend_color.data()[2]);
 
         std::byte* ptr = bytes.data();
         for (size_t i = 0; i < pixel_count; ++i, ptr += pixel_size)
@@ -175,17 +161,17 @@ void blend_alpha_r16g16b16a16(const std::span<std::byte>& bytes, const Color& bl
                 }
                 else if (pixel[3] < limits<T>::max())
                 {
-                        float alpha = uint16_to_float(pixel[3]);
+                        float alpha = color::uint16_to_float(pixel[3]);
                         std::array<float, 3> c;
-                        c[0] = uint16_to_float(pixel[0]);
-                        c[1] = uint16_to_float(pixel[1]);
-                        c[2] = uint16_to_float(pixel[2]);
+                        c[0] = color::uint16_to_float(pixel[0]);
+                        c[1] = color::uint16_to_float(pixel[1]);
+                        c[2] = color::uint16_to_float(pixel[2]);
                         c[0] = interpolation(blend_color.data()[0], c[0], alpha);
                         c[1] = interpolation(blend_color.data()[1], c[1], alpha);
                         c[2] = interpolation(blend_color.data()[2], c[2], alpha);
-                        pixel[0] = float_to_uint16(c[0]);
-                        pixel[1] = float_to_uint16(c[1]);
-                        pixel[2] = float_to_uint16(c[2]);
+                        pixel[0] = color::float_to_uint16(c[0]);
+                        pixel[1] = color::float_to_uint16(c[1]);
+                        pixel[2] = color::float_to_uint16(c[2]);
                         std::memcpy(ptr, pixel.data(), 3 * sizeof(T));
                 }
         }

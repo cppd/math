@@ -94,9 +94,9 @@ public:
                 p[1] = m_screen_size[1] - 1 - pixel[1];
 
                 Color c = interpolation(m_background_color, color, coverage);
-                unsigned char r = color_conversion::linear_float_to_srgb_uint8(c.red());
-                unsigned char g = color_conversion::linear_float_to_srgb_uint8(c.green());
-                unsigned char b = color_conversion::linear_float_to_srgb_uint8(c.blue());
+                unsigned char r = color::linear_float_to_srgb_uint8(c.red());
+                unsigned char g = color::linear_float_to_srgb_uint8(c.green());
+                unsigned char b = color::linear_float_to_srgb_uint8(c.blue());
 
                 size_t offset = 3 * m_global_index.compute(pixel);
                 ASSERT(offset + 2 < m_pixels.size());

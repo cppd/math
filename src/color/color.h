@@ -66,9 +66,9 @@ public:
 
         Color(const Srgb8& c)
                 : m_data(
-                        color_conversion::srgb_uint8_to_linear_float<T>(c.red),
-                        color_conversion::srgb_uint8_to_linear_float<T>(c.green),
-                        color_conversion::srgb_uint8_to_linear_float<T>(c.blue))
+                        color::srgb_uint8_to_linear_float<T>(c.red),
+                        color::srgb_uint8_to_linear_float<T>(c.green),
+                        color::srgb_uint8_to_linear_float<T>(c.blue))
         {
         }
 
@@ -87,15 +87,15 @@ public:
 
         Srgb8 to_srgb8() const
         {
-                unsigned char r = color_conversion::linear_float_to_srgb_uint8<Color::DataType>(red());
-                unsigned char g = color_conversion::linear_float_to_srgb_uint8<Color::DataType>(green());
-                unsigned char b = color_conversion::linear_float_to_srgb_uint8<Color::DataType>(blue());
+                unsigned char r = color::linear_float_to_srgb_uint8<Color::DataType>(red());
+                unsigned char g = color::linear_float_to_srgb_uint8<Color::DataType>(green());
+                unsigned char b = color::linear_float_to_srgb_uint8<Color::DataType>(blue());
                 return Srgb8(r, g, b);
         }
 
         T luminance() const
         {
-                return color_conversion::linear_float_to_linear_luminance(m_data[0], m_data[1], m_data[2]);
+                return color::linear_float_to_linear_luminance(m_data[0], m_data[1], m_data[2]);
         }
 
         T max_element() const
