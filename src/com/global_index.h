@@ -54,7 +54,7 @@ class GlobalIndex
                 // Все размеры должны быть положительными, все координаты неотрицательными,
                 // поэтому не требуется, чтобы типы были или оба знаковые, или оба беззнаковые.
 
-                static_assert((is_array<T> && T().size() == N) || is_vector<T>);
+                static_assert((is_array<T> && std::tuple_size_v<T> == N) || is_vector<T>);
                 static_assert(is_native_integral<typename T::value_type>);
                 static_assert(
                         limits<IndexType>::digits >= limits<typename T::value_type>::digits

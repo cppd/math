@@ -55,7 +55,7 @@ public:
 template <typename T>
 constexpr size_t size()
 {
-        return std::remove_reference_t<T>().size();
+        return std::tuple_size_v<T>;
 }
 
 template <typename Shape>

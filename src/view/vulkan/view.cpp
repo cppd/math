@@ -642,7 +642,9 @@ class Impl final
 
         bool render() const
         {
-                static_assert(std::remove_reference_t<decltype(m_instance->graphics_compute_queues())>().size() >= 2);
+                static_assert(
+                        2
+                        <= std::tuple_size_v<std::remove_reference_t<decltype(m_instance->graphics_compute_queues())>>);
 
                 uint32_t image_index;
                 if (!vulkan::acquire_next_image(
