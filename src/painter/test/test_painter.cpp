@@ -39,8 +39,8 @@ namespace painter
 {
 namespace
 {
-constexpr Srgb8 BACKGROUND_COLOR(50, 100, 150);
-constexpr Srgb8 DEFAULT_COLOR(150, 170, 150);
+constexpr Color BACKGROUND_COLOR = Color(Srgb8(50, 100, 150));
+constexpr Color DEFAULT_COLOR = Color(Srgb8(150, 170, 150));
 constexpr Color::DataType DIFFUSE = 1;
 constexpr Color::DataType LIGHTING_INTENSITY = 1;
 

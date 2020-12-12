@@ -53,7 +53,7 @@ std::unique_ptr<const Scene<N, T>> cornell_box_scene(
         constexpr Color::DataType DIFFUSE = 1;
         constexpr Color::DataType ALPHA = 1;
 
-        constexpr Srgb8 BACKGROUND_COLOR = colors::BLACK;
+        constexpr Color BACKGROUND_COLOR = colors::BLACK;
 
         std::vector<std::unique_ptr<const Shape<N, T>>> shapes;
         std::vector<std::unique_ptr<const LightSource<N, T>>> light_sources;

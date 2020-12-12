@@ -23,20 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 struct Srgb8
 {
-        unsigned char red, green, blue;
+        const unsigned char red, green, blue;
 
         constexpr Srgb8(unsigned char r, unsigned char g, unsigned char b) : red(r), green(g), blue(b)
         {
-        }
-
-        constexpr std::uint_least32_t to_uint_rgb() const
-        {
-                return red | (green << 8u) | (blue << 16u);
-        }
-
-        constexpr std::uint_least32_t to_uint_bgr() const
-        {
-                return blue | (green << 8u) | (red << 16u);
         }
 
         bool operator==(const Srgb8& v) const
@@ -64,7 +54,7 @@ public:
         {
         }
 
-        Color(const Srgb8& c)
+        constexpr explicit Color(const Srgb8& c)
                 : m_data(
                         color::srgb_uint8_to_linear_float(c.red),
                         color::srgb_uint8_to_linear_float(c.green),

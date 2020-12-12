@@ -716,7 +716,7 @@ public:
                 }
 
                 // Этот цвет меняется в set_background_color
-                constexpr Srgb8 text_color(255, 255, 255);
+                constexpr Color TEXT_COLOR = Color(Srgb8(255, 255, 255));
 
                 m_present_mode = VULKAN_DEFAULT_PRESENT_MODE;
 
@@ -772,7 +772,7 @@ public:
 
                 m_text = gpu::text_writer::create_view(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
-                        transfer_queue, VULKAN_SAMPLE_SHADING, m_frame_rate.text_size(), text_color);
+                        transfer_queue, VULKAN_SAMPLE_SHADING, m_frame_rate.text_size(), TEXT_COLOR);
 
                 m_convex_hull = gpu::convex_hull::create_view(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, VULKAN_SAMPLE_SHADING);

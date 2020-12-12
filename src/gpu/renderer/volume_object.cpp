@@ -78,8 +78,8 @@ bool is_scalar_volume(image::ColorFormat color_format)
 
 image::Image<1> transfer_function()
 {
-        const int size = 256;
-        const Color color(Srgb8(230, 255, 230));
+        constexpr int size = 256;
+        constexpr Color color = Color(Srgb8(230, 255, 230));
 
         std::vector<float> pixels;
         const float max = size - 1;
