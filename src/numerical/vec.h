@@ -39,7 +39,9 @@ class Vector
         }
 
 public:
-        Vector() = default;
+        Vector()
+        {
+        }
 
         template <typename Arg1, typename Arg2, typename... Args>
         constexpr Vector(Arg1&& arg1, Arg2&& arg2, Args&&... args)
