@@ -66,9 +66,9 @@ public:
 
         Color(const Srgb8& c)
                 : m_data(
-                        color::srgb_uint8_to_linear_float<T>(c.red),
-                        color::srgb_uint8_to_linear_float<T>(c.green),
-                        color::srgb_uint8_to_linear_float<T>(c.blue))
+                        color::srgb_uint8_to_linear_float(c.red),
+                        color::srgb_uint8_to_linear_float(c.green),
+                        color::srgb_uint8_to_linear_float(c.blue))
         {
         }
 
