@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/global_index.h>
 #include <src/com/message.h>
+#include <src/image/conversion.h>
 #include <src/image/format.h>
 #include <src/painter/paintbrushes/bar_paintbrush.h>
 #include <src/painter/painter.h>
@@ -56,6 +57,7 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
         static constexpr int PANTBRUSH_WIDTH = 20;
 
         static constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R8G8B8A8_SRGB;
+        static constexpr size_t PIXEL_SIZE = image::format_pixel_size_in_bytes(COLOR_FORMAT);
 
         const std::shared_ptr<const painter::Scene<N, T>> m_scene;
         painter::BarPaintbrush<N - 1> m_paintbrush;
@@ -82,29 +84,38 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
                 return vector;
         }
 
-        static std::vector<std::byte> make_initial_image(const std::vector<int>& screen_size)
+        static std::vector<std::byte> make_initial_image(
+                const std::vector<int>& screen_size,
+                image::ColorFormat color_format)
         {
-                constexpr Srgb8 LIGHT = Srgb8(100, 150, 200);
-                constexpr Srgb8 DARK = Srgb8(0, 0, 0);
+                constexpr std::array<uint8_t, 4> LIGHT = {100, 150, 200, 255};
+                constexpr std::array<uint8_t, 4> DARK = {0, 0, 0, 255};
 
-                constexpr std::array<unsigned char, 4> LIGHT_RGB = {LIGHT.red, LIGHT.green, LIGHT.blue, 255};
-                constexpr std::array<unsigned char, 4> DARK_RGB = {DARK.red, DARK.green, DARK.blue, 255};
+                const size_t pixel_size = image::format_pixel_size_in_bytes(color_format);
 
-                const int count = multiply_all<long long>(screen_size)
-                                  / (static_cast<long long>(screen_size[0]) * static_cast<long long>(screen_size[1]));
+                std::vector<std::byte> light;
+                std::vector<std::byte> dark;
+                image::format_conversion(
+                        image::ColorFormat::R8G8B8A8_SRGB, std::as_bytes(std::span(LIGHT)), color_format, &light);
+                image::format_conversion(
+                        image::ColorFormat::R8G8B8A8_SRGB, std::as_bytes(std::span(DARK)), color_format, &dark);
+                ASSERT(pixel_size == light.size());
+                ASSERT(pixel_size == dark.size());
 
-                std::vector<std::byte> image(4 * multiply_all<long long>(screen_size));
+                const int slice_count = multiply_all<long long>(screen_size) / screen_size[0] / screen_size[1];
+
+                std::vector<std::byte> image(pixel_size * multiply_all<long long>(screen_size));
 
                 size_t index = 0;
-                for (int i = 0; i < count; ++i)
+                for (int i = 0; i < slice_count; ++i)
                 {
                         for (int y = 0; y < screen_size[1]; ++y)
                         {
                                 for (int x = 0; x < screen_size[0]; ++x)
                                 {
-                                        std::memcpy(
-                                                &image[index], ((x + y) & 1) ? LIGHT_RGB.data() : DARK_RGB.data(), 4);
-                                        index += 4;
+                                        const std::byte* pixel = ((x + y) & 1) ? light.data() : dark.data();
+                                        std::memcpy(&image[index], pixel, pixel_size);
+                                        index += pixel_size;
                                 }
                         }
                 }
@@ -116,8 +127,11 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
 
         void set_with_background(long long pixel_index, unsigned char r, unsigned char g, unsigned char b)
         {
+                static_assert(COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
+
                 const std::array<unsigned char, 4> c{r, g, b, 255};
-                std::memcpy(&m_pixels_with_background[4 * pixel_index], c.data(), 4);
+                static_assert(std::span(c).size_bytes() == PIXEL_SIZE);
+                std::memcpy(&m_pixels_with_background[PIXEL_SIZE * pixel_index], c.data(), PIXEL_SIZE);
         }
 
         void set_without_background(
@@ -127,8 +141,11 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
                 unsigned char b,
                 unsigned char a)
         {
+                static_assert(COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
+
                 const std::array<unsigned char, 4> c{r, g, b, a};
-                std::memcpy(&m_pixels_without_background[4 * pixel_index], c.data(), 4);
+                static_assert(std::span(c).size_bytes() == PIXEL_SIZE);
+                std::memcpy(&m_pixels_without_background[PIXEL_SIZE * pixel_index], c.data(), PIXEL_SIZE);
         }
 
         // PainterNotifier
@@ -203,7 +220,7 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
                         p[dimension] = slider_positions[dimension - 2];
                         ASSERT(p[dimension] >= 0 && p[dimension] < m_screen_size[dimension]);
                 }
-                m_slice_offset = 4 * m_global_index.compute(p);
+                m_slice_offset = PIXEL_SIZE * m_global_index.compute(p);
         }
 
         std::span<const std::byte> slice_r8g8b8a8_with_background() const override
@@ -263,9 +280,9 @@ public:
                   m_paintbrush(m_scene->projector().screen_size(), PANTBRUSH_WIDTH, -1),
                   m_screen_size(array_to_vector(m_scene->projector().screen_size())),
                   m_background_color(m_scene->background_color()),
-                  m_pixels_with_background(make_initial_image(m_screen_size)),
-                  m_pixels_without_background(4 * multiply_all<long long>(m_screen_size), std::byte(0)),
-                  m_slice_size(4ull * m_screen_size[0] * m_screen_size[1]),
+                  m_pixels_with_background(make_initial_image(m_screen_size, COLOR_FORMAT)),
+                  m_pixels_without_background(make_initial_image(m_screen_size, COLOR_FORMAT)),
+                  m_slice_size(image::format_pixel_size_in_bytes(COLOR_FORMAT) * m_screen_size[0] * m_screen_size[1]),
                   m_slice_offset(0),
                   m_busy_indices_2d(thread_count, -1),
                   m_global_index(m_scene->projector().screen_size())
