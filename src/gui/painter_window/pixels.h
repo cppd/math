@@ -47,8 +47,9 @@ struct Pixels
 
         virtual std::span<const std::byte> slice_r8g8b8a8_with_background() const = 0;
 
-        virtual std::vector<std::byte> slice(bool without_background) const = 0;
-        virtual std::vector<std::byte> pixels(bool without_background) const = 0;
+        virtual Color background_color() const = 0;
+        virtual std::vector<std::byte> slice() const = 0;
+        virtual std::vector<std::byte> pixels() const = 0;
 };
 
 template <size_t N, typename T>
@@ -65,8 +66,8 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
         const std::vector<int> m_screen_size;
         const Color m_background_color;
 
-        std::vector<std::byte> m_pixels_with_background;
-        std::vector<std::byte> m_pixels_without_background;
+        std::vector<std::byte> m_pixels_r8g8b8a8_with_background;
+        std::vector<std::byte> m_pixels;
         const size_t m_slice_size;
         long long m_slice_offset;
         std::vector<long long> m_busy_indices_2d;
@@ -131,7 +132,7 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
 
                 const std::array<unsigned char, 4> c{r, g, b, 255};
                 static_assert(std::span(c).size_bytes() == PIXEL_SIZE);
-                std::memcpy(&m_pixels_with_background[PIXEL_SIZE * pixel_index], c.data(), PIXEL_SIZE);
+                std::memcpy(&m_pixels_r8g8b8a8_with_background[PIXEL_SIZE * pixel_index], c.data(), PIXEL_SIZE);
         }
 
         void set_without_background(
@@ -145,7 +146,7 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
 
                 const std::array<unsigned char, 4> c{r, g, b, a};
                 static_assert(std::span(c).size_bytes() == PIXEL_SIZE);
-                std::memcpy(&m_pixels_without_background[PIXEL_SIZE * pixel_index], c.data(), PIXEL_SIZE);
+                std::memcpy(&m_pixels[PIXEL_SIZE * pixel_index], c.data(), PIXEL_SIZE);
         }
 
         // PainterNotifier
@@ -225,29 +226,23 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
 
         std::span<const std::byte> slice_r8g8b8a8_with_background() const override
         {
-                return std::span(&m_pixels_with_background[m_slice_offset], m_slice_size);
+                return std::span(&m_pixels_r8g8b8a8_with_background[m_slice_offset], m_slice_size);
         }
 
-        std::vector<std::byte> slice(bool without_background) const override
+        Color background_color() const override
         {
-                if (without_background)
-                {
-                        return std::vector<std::byte>(
-                                m_pixels_without_background.data() + m_slice_offset,
-                                m_pixels_without_background.data() + m_slice_offset + m_slice_size);
-                }
+                return m_background_color;
+        }
+
+        std::vector<std::byte> slice() const override
+        {
                 return std::vector<std::byte>(
-                        m_pixels_with_background.data() + m_slice_offset,
-                        m_pixels_with_background.data() + m_slice_offset + m_slice_size);
+                        m_pixels.data() + m_slice_offset, m_pixels.data() + m_slice_offset + m_slice_size);
         }
 
-        std::vector<std::byte> pixels(bool without_background) const override
+        std::vector<std::byte> pixels() const override
         {
-                if (without_background)
-                {
-                        return m_pixels_without_background;
-                }
-                return m_pixels_with_background;
+                return m_pixels;
         }
 
         const std::vector<long long>& busy_indices_2d() const override
@@ -280,8 +275,8 @@ public:
                   m_paintbrush(m_scene->projector().screen_size(), PANTBRUSH_WIDTH, -1),
                   m_screen_size(array_to_vector(m_scene->projector().screen_size())),
                   m_background_color(m_scene->background_color()),
-                  m_pixels_with_background(make_initial_image(m_screen_size, COLOR_FORMAT)),
-                  m_pixels_without_background(make_initial_image(m_screen_size, COLOR_FORMAT)),
+                  m_pixels_r8g8b8a8_with_background(make_initial_image(m_screen_size, COLOR_FORMAT)),
+                  m_pixels(make_initial_image(m_screen_size, COLOR_FORMAT)),
                   m_slice_size(image::format_pixel_size_in_bytes(COLOR_FORMAT) * m_screen_size[0] * m_screen_size[1]),
                   m_slice_offset(0),
                   m_busy_indices_2d(thread_count, -1),

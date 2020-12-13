@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/color/color.h>
 #include <src/image/format.h>
 #include <src/progress/progress_list.h>
 
@@ -28,17 +29,21 @@ namespace gui::painter_window
 std::function<void(ProgressRatioList*)> save_to_file(
         const std::vector<int>& screen_size,
         bool without_background,
+        const Color& background,
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels);
 
 std::function<void(ProgressRatioList*)> save_all_to_files(
         const std::vector<int>& screen_size,
         bool without_background,
+        const Color& background,
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels);
 
 std::function<void(ProgressRatioList*)> add_volume(
         const std::vector<int>& screen_size,
+        bool without_background,
+        const Color& background,
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels);
 }

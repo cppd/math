@@ -55,6 +55,7 @@ std::array<T, N> to_array(const std::vector<T>& vector)
 std::function<void(ProgressRatioList*)> save_to_file(
         const std::vector<int>& screen_size,
         bool without_background,
+        const Color& background,
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels)
 {
@@ -80,9 +81,10 @@ std::function<void(ProgressRatioList*)> save_to_file(
                 image.color_format = color_format;
                 image.pixels = std::move(*pixels_ptr);
 
-                ASSERT(!without_background || image::format_component_count(color_format) == 4);
-                if (!without_background && image::format_component_count(color_format) == 4)
+                ASSERT(image::format_component_count(color_format) == 4);
+                if (!without_background)
                 {
+                        image::blend_alpha(color_format, image.pixels, background);
                         image = image::delete_alpha(image);
                 }
 
@@ -93,6 +95,7 @@ std::function<void(ProgressRatioList*)> save_to_file(
 std::function<void(ProgressRatioList*)> save_all_to_files(
         const std::vector<int>& screen_size,
         bool without_background,
+        const Color& background,
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels)
 {
@@ -128,9 +131,10 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                                         image.color_format = color_format;
                                         image.pixels = std::move(*pixels_ptr);
 
-                                        ASSERT(!without_background || image::format_component_count(color_format) == 4);
-                                        if (!without_background && image::format_component_count(color_format) == 4)
+                                        ASSERT(image::format_component_count(color_format) == 4);
+                                        if (!without_background)
                                         {
+                                                image::blend_alpha(color_format, image.pixels, background);
                                                 image = image::delete_alpha(image);
                                         }
 
@@ -144,6 +148,8 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
 
 std::function<void(ProgressRatioList*)> add_volume(
         const std::vector<int>& screen_size,
+        bool without_background,
+        const Color& background,
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels)
 {
@@ -172,6 +178,14 @@ std::function<void(ProgressRatioList*)> add_volume(
                                         image.pixels = std::move(*pixels_ptr);
 
                                         image::flip_vertically(&image);
+
+                                        ASSERT(image::format_component_count(color_format) == 4);
+                                        if (!without_background)
+                                        {
+                                                image::blend_alpha(color_format, image.pixels, background);
+                                                constexpr float ALPHA = 1;
+                                                image::set_alpha(color_format, image.pixels, ALPHA);
+                                        }
 
                                         process::load_volume<N_IMAGE>("Painter Image", std::move(image));
                                 }
