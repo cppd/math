@@ -28,6 +28,8 @@ namespace
 template <typename T>
 void add_alpha(const std::span<const std::byte>& bytes3, const std::span<std::byte>& bytes4, T alpha)
 {
+        static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
+
         if (bytes3.size() % (3 * sizeof(T)) != 0)
         {
                 error("Error RGB data size " + to_string(bytes3.size()) + " for adding alpha");
@@ -44,7 +46,6 @@ void add_alpha(const std::span<const std::byte>& bytes3, const std::span<std::by
                       + ", RGBA data size = " + to_string(bytes4.size()));
         }
 
-        static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
         const size_t pixel_count = bytes3.size() / (3 * sizeof(T));
         ASSERT(pixel_count * (3 * sizeof(T)) == bytes3.size());
 
@@ -91,6 +92,26 @@ void add_alpha(
         }
 }
 
+template <typename T>
+void set_alpha(const std::span<std::byte>& bytes, T alpha)
+{
+        static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
+
+        if (bytes.size() % (4 * sizeof(T)) != 0)
+        {
+                error("Error RGBA data size " + to_string(bytes.size()) + " for setting alpha");
+        }
+
+        const size_t pixel_count = bytes.size() / (4 * sizeof(T));
+
+        std::byte* ptr = bytes.data() + 3 * sizeof(T);
+        for (size_t i = 0; i < pixel_count; ++i)
+        {
+                std::memcpy(ptr, &alpha, sizeof(T));
+                ptr += 4 * sizeof(T);
+        }
+}
+
 void blend_alpha_r8g8b8a8(const std::span<std::byte>& bytes, const Color& blend_color)
 {
         using T = uint8_t;
@@ -111,7 +132,7 @@ void blend_alpha_r8g8b8a8(const std::span<std::byte>& bytes, const Color& blend_
         for (size_t i = 0; i < pixel_count; ++i, ptr += pixel_size)
         {
                 std::array<T, 4> pixel;
-                std::memcpy(pixel.data(), ptr, sizeof(pixel));
+                std::memcpy(pixel.data(), ptr, 4 * sizeof(T));
                 if (pixel[3] == 0)
                 {
                         std::memcpy(ptr, blend_pixel.data(), 3 * sizeof(T));
@@ -154,7 +175,7 @@ void blend_alpha_r16g16b16a16(const std::span<std::byte>& bytes, const Color& bl
         for (size_t i = 0; i < pixel_count; ++i, ptr += pixel_size)
         {
                 std::array<T, 4> pixel;
-                std::memcpy(pixel.data(), ptr, sizeof(pixel));
+                std::memcpy(pixel.data(), ptr, 4 * sizeof(T));
                 if (pixel[3] == 0)
                 {
                         std::memcpy(ptr, blend_pixel.data(), 3 * sizeof(T));
@@ -197,7 +218,7 @@ void blend_alpha_r32g32b32a32(const std::span<std::byte>& bytes, const Color& bl
         for (size_t i = 0; i < pixel_count; ++i, ptr += pixel_size)
         {
                 std::array<T, 4> pixel;
-                std::memcpy(pixel.data(), ptr, sizeof(pixel));
+                std::memcpy(pixel.data(), ptr, 4 * sizeof(T));
                 if (pixel[3] == 0.0f)
                 {
                         std::memcpy(ptr, blend_pixel.data(), 3 * sizeof(T));
@@ -271,6 +292,33 @@ void blend_alpha(ColorFormat color_format, const std::span<std::byte>& bytes, co
         else
         {
                 error("Unsupported image format " + format_to_string(color_format) + " for blending alpha");
+        }
+}
+
+void set_alpha(ColorFormat color_format, const std::span<std::byte>& bytes, float alpha)
+{
+        if (format_component_count(color_format) != 4)
+        {
+                error("Error image format " + format_to_string(color_format) + " for setting alpha");
+        }
+
+        alpha = std::clamp(alpha, 0.0f, 1.0f);
+
+        if (color_format == ColorFormat::R16G16B16A16)
+        {
+                set_alpha<uint16_t>(bytes, std::lround(alpha * limits<uint16_t>::max()));
+        }
+        else if (color_format == ColorFormat::R32G32B32A32)
+        {
+                set_alpha<float>(bytes, alpha);
+        }
+        else if (color_format == ColorFormat::R8G8B8A8_SRGB)
+        {
+                set_alpha<uint8_t>(bytes, std::lround(alpha * limits<uint8_t>::max()));
+        }
+        else
+        {
+                error("Unsupported image format " + format_to_string(color_format) + " for setting alpha");
         }
 }
 }
