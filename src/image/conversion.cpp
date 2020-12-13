@@ -29,19 +29,6 @@ namespace
 {
 static_assert(sizeof(float) == sizeof(uint32_t));
 
-template <typename T>
-std::string enum_to_string(T e)
-{
-        static_assert(sizeof(e) <= sizeof(long long));
-
-        return to_string(static_cast<long long>(e));
-}
-
-[[noreturn]] void unknown_color_format_error(ColorFormat format)
-{
-        error_fatal("Unknown color format " + enum_to_string(format));
-}
-
 [[noreturn]] void component_count_error(ColorFormat from_format, ColorFormat to_format)
 {
         error("Conversion between " + format_to_string(from_format) + " and " + format_to_string(to_format)

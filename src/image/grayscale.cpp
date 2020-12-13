@@ -114,6 +114,6 @@ std::vector<std::byte> convert_to_grayscale(ColorFormat color_format, const std:
         case ColorFormat::R32G32B32A32:
                 return convert_to_grayscale<float>(color_format, bytes);
         }
-        error_fatal("Unknown image format " + format_to_string(color_format));
+        unknown_color_format_error(color_format);
 }
 }

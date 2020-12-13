@@ -49,7 +49,7 @@ Image<N> convert_to_grayscale(const Image<N>& image)
                 case ColorFormat::R32G32B32A32:
                         return ColorFormat::R32;
                 }
-                error_fatal("Unknown image format " + format_to_string(image.color_format));
+                unknown_color_format_error(image.color_format);
         }();
 
         result.size = image.size;
