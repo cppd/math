@@ -47,8 +47,8 @@ class Camera final
 
         void set_vectors(const vec3& right, const vec3& up);
 
-        void main_volume(double* left, double* right, double* bottom, double* top, double* near, double* far) const;
-        void shadow_volume(double* left, double* right, double* bottom, double* top, double* near, double* far) const;
+        gpu::renderer::CameraInfo::Volume main_volume() const;
+        gpu::renderer::CameraInfo::Volume shadow_volume() const;
         mat4 main_view_matrix() const;
         mat4 shadow_view_matrix() const;
 

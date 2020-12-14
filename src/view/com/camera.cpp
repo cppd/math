@@ -58,26 +58,34 @@ void Camera::set_vectors(const vec3& right, const vec3& up)
         m_light_direction = cross(m_light_up, light_right);
 }
 
-void Camera::main_volume(double* left, double* right, double* bottom, double* top, double* near, double* far) const
+gpu::renderer::CameraInfo::Volume Camera::main_volume() const
 {
         double scale = m_default_scale / std::pow(SCALE_BASE, m_scale_exponent);
 
-        *left = scale * (m_window_center[0] - 0.5 * m_width);
-        *right = scale * (m_window_center[0] + 0.5 * m_width);
-        *bottom = scale * (m_window_center[1] - 0.5 * m_height);
-        *top = scale * (m_window_center[1] + 0.5 * m_height);
-        *near = 1;
-        *far = -1;
+        gpu::renderer::CameraInfo::Volume volume;
+
+        volume.left = scale * (m_window_center[0] - 0.5 * m_width);
+        volume.right = scale * (m_window_center[0] + 0.5 * m_width);
+        volume.bottom = scale * (m_window_center[1] - 0.5 * m_height);
+        volume.top = scale * (m_window_center[1] + 0.5 * m_height);
+        volume.near = 1;
+        volume.far = -1;
+
+        return volume;
 }
 
-void Camera::shadow_volume(double* left, double* right, double* bottom, double* top, double* near, double* far) const
+gpu::renderer::CameraInfo::Volume Camera::shadow_volume() const
 {
-        *left = -1;
-        *right = 1;
-        *bottom = -1;
-        *top = 1;
-        *near = 1;
-        *far = -1;
+        gpu::renderer::CameraInfo::Volume volume;
+
+        volume.left = -1;
+        volume.right = 1;
+        volume.bottom = -1;
+        volume.top = 1;
+        volume.near = 1;
+        volume.far = -1;
+
+        return volume;
 }
 
 mat4 Camera::main_view_matrix() const
@@ -174,13 +182,18 @@ info::Camera Camera::view_info() const
         v.width = m_width;
         v.height = m_height;
 
-        double left, right, bottom, top, near, far;
-        main_volume(&left, &right, &bottom, &top, &near, &far);
-        vec4 volume_center((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
+        gpu::renderer::CameraInfo::Volume volume = main_volume();
+
+        vec4 volume_center;
+        volume_center[0] = (volume.right + volume.left) * 0.5;
+        volume_center[1] = (volume.top + volume.bottom) * 0.5;
+        volume_center[2] = (volume.far + volume.near) * 0.5;
+        volume_center[3] = 1.0;
+
         vec4 view_center = main_view_matrix().inverse() * volume_center;
 
         v.view_center = vec3(view_center[0], view_center[1], view_center[2]);
-        v.view_width = right - left;
+        v.view_width = volume.right - volume.left;
 
         return v;
 }
@@ -191,14 +204,8 @@ gpu::renderer::CameraInfo Camera::renderer_info() const
 
         gpu::renderer::CameraInfo v;
 
-        main_volume(
-                &v.main_volume.left, &v.main_volume.right, &v.main_volume.bottom, &v.main_volume.top,
-                &v.main_volume.near, &v.main_volume.far);
-
-        shadow_volume(
-                &v.shadow_volume.left, &v.shadow_volume.right, &v.shadow_volume.bottom, &v.shadow_volume.top,
-                &v.shadow_volume.near, &v.shadow_volume.far);
-
+        v.main_volume = main_volume();
+        v.shadow_volume = shadow_volume();
         v.main_view_matrix = main_view_matrix();
         v.shadow_view_matrix = shadow_view_matrix();
         v.light_direction = m_light_direction;
