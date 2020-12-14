@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-std::mutex global_lock;
+std::mutex g_lock;
 
 #if defined(__clang__)
 #pragma GCC diagnostic push
@@ -150,13 +150,13 @@ std::string write(const std::string_view& text, const std::string_view& descript
 
 std::string write_log(const std::string_view& text, const std::string_view& description) noexcept
 {
-        std::lock_guard lg(global_lock);
+        std::lock_guard lg(g_lock);
         return write(text, description);
 }
 
 void write_log_fatal_error_and_exit(const char* text) noexcept
 {
-        std::lock_guard lg(global_lock);
+        std::lock_guard lg(g_lock);
         write(text, "fatal error");
         std::_Exit(EXIT_FAILURE);
 }

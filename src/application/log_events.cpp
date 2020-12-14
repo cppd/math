@@ -26,7 +26,7 @@ namespace application
 {
 namespace
 {
-LogEvents* global_log_events = nullptr;
+LogEvents* g_log_events = nullptr;
 
 LogEvent::Type message_type_to_log_type(MessageEvent::Type type)
 {
@@ -91,14 +91,14 @@ LogEvents::LogEvents()
         set_log_events(&m_log_events);
         set_message_events(&m_msg_events);
 
-        global_log_events = this;
+        g_log_events = this;
 }
 
 LogEvents::~LogEvents()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        global_log_events = nullptr;
+        g_log_events = nullptr;
 
         set_message_events(nullptr);
         set_log_events(nullptr);
@@ -191,22 +191,22 @@ void LogEvents::erase(const std::function<void(const MessageEvent&)>* observer)
 
 LogEventsObserver::LogEventsObserver(std::function<void(const LogEvent&)> observer) : m_observer(std::move(observer))
 {
-        global_log_events->insert(&m_observer);
+        g_log_events->insert(&m_observer);
 }
 
 LogEventsObserver::~LogEventsObserver()
 {
-        global_log_events->erase(&m_observer);
+        g_log_events->erase(&m_observer);
 }
 
 MessageEventsObserver::MessageEventsObserver(std::function<void(const MessageEvent&)> observer)
         : m_observer(std::move(observer))
 {
-        global_log_events->insert(&m_observer);
+        g_log_events->insert(&m_observer);
 }
 
 MessageEventsObserver::~MessageEventsObserver()
 {
-        global_log_events->erase(&m_observer);
+        g_log_events->erase(&m_observer);
 }
 }

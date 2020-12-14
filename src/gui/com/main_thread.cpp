@@ -25,7 +25,7 @@ namespace gui
 {
 namespace
 {
-const MainThread* global_main_thread = nullptr;
+const MainThread* g_main_thread = nullptr;
 }
 
 MainThread::MainThread()
@@ -40,12 +40,12 @@ MainThread::MainThread()
 
         connect(this, &MainThread::signal, this, &MainThread::slot, Qt::AutoConnection);
 
-        global_main_thread = this;
+        g_main_thread = this;
 }
 
 MainThread::~MainThread()
 {
-        global_main_thread = nullptr;
+        g_main_thread = nullptr;
 }
 
 void MainThread::slot(const std::function<void()>& f) const
@@ -55,6 +55,6 @@ void MainThread::slot(const std::function<void()>& f) const
 
 void MainThread::run(const std::function<void()>& f)
 {
-        Q_EMIT global_main_thread->signal(f);
+        Q_EMIT g_main_thread->signal(f);
 }
 }

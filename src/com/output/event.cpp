@@ -23,18 +23,18 @@ namespace
 {
 // Установка этих переменных происходит в основном потоке при отсутствии
 // работы других потоков, поэтому с ними можно работать без блокировок.
-const std::function<void(LogEvent&&)>* global_log_events = nullptr;
-const std::function<void(MessageEvent&&)>* global_message_events = nullptr;
+const std::function<void(LogEvent&&)>* g_log_events = nullptr;
+const std::function<void(MessageEvent&&)>* g_message_events = nullptr;
 }
 
 void set_log_events(const std::function<void(LogEvent&&)>* events)
 {
-        global_log_events = events;
+        g_log_events = events;
 }
 
 void set_message_events(const std::function<void(MessageEvent&&)>* events)
 {
-        global_message_events = events;
+        g_message_events = events;
 }
 
 void log_impl(const std::string& msg, LogEvent::Type type) noexcept
@@ -43,7 +43,7 @@ void log_impl(const std::string& msg, LogEvent::Type type) noexcept
         {
                 try
                 {
-                        (*global_log_events)(LogEvent(msg, type));
+                        (*g_log_events)(LogEvent(msg, type));
                 }
                 catch (const std::exception& e)
                 {
@@ -62,7 +62,7 @@ void message_impl(const std::string& msg, MessageEvent::Type type) noexcept
         {
                 try
                 {
-                        (*global_message_events)(MessageEvent(msg, type));
+                        (*g_message_events)(MessageEvent(msg, type));
                 }
                 catch (const std::exception& e)
                 {

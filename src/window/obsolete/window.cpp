@@ -44,7 +44,7 @@ namespace
 {
 // В один момент времени допускается существование только одного окна,
 // поэтому можно использовать глобальную переменную
-WindowEvent* global_event_interface = nullptr;
+WindowEvent* g_event_interface = nullptr;
 
 void callback_error(int /*error*/, const char* description)
 {
@@ -53,7 +53,7 @@ void callback_error(int /*error*/, const char* description)
 
 void callback_framebuffer_size(GLFWwindow* /*window*/, int width, int height)
 {
-        global_event_interface->window_resized(width, height);
+        g_event_interface->window_resized(width, height);
 }
 
 void callback_key(GLFWwindow* /*window*/, int key, int /*scancode*/, int action, int /*mods*/)
@@ -62,23 +62,23 @@ void callback_key(GLFWwindow* /*window*/, int key, int /*scancode*/, int action,
         {
                 if (key == GLFW_KEY_F11)
                 {
-                        global_event_interface->window_keyboard_pressed(WindowEvent::KeyboardButton::F11);
+                        g_event_interface->window_keyboard_pressed(WindowEvent::KeyboardButton::F11);
                 }
                 if (key == GLFW_KEY_ESCAPE)
                 {
-                        global_event_interface->window_keyboard_pressed(WindowEvent::KeyboardButton::Escape);
+                        g_event_interface->window_keyboard_pressed(WindowEvent::KeyboardButton::Escape);
                 }
         }
 }
 
 void callback_cursor_pos(GLFWwindow* /*window*/, double x, double y)
 {
-        global_event_interface->window_mouse_moved(x, y);
+        g_event_interface->window_mouse_moved(x, y);
 }
 
 void callback_scroll(GLFWwindow* /*window*/, double /*xoffset*/, double yoffset)
 {
-        global_event_interface->window_mouse_wheel(yoffset);
+        g_event_interface->window_mouse_wheel(yoffset);
 }
 
 void callback_mouse_button(GLFWwindow* /*window*/, int button, int action, int /*mods*/)
@@ -87,22 +87,22 @@ void callback_mouse_button(GLFWwindow* /*window*/, int button, int action, int /
         {
                 if (button == GLFW_MOUSE_BUTTON_LEFT)
                 {
-                        global_event_interface->window_mouse_pressed(WindowEvent::MouseButton::Left);
+                        g_event_interface->window_mouse_pressed(WindowEvent::MouseButton::Left);
                 }
                 else if (button == GLFW_MOUSE_BUTTON_RIGHT)
                 {
-                        global_event_interface->window_mouse_pressed(WindowEvent::MouseButton::Right);
+                        g_event_interface->window_mouse_pressed(WindowEvent::MouseButton::Right);
                 }
         }
         else if (action == GLFW_RELEASE)
         {
                 if (button == GLFW_MOUSE_BUTTON_LEFT)
                 {
-                        global_event_interface->window_mouse_released(WindowEvent::MouseButton::Left);
+                        g_event_interface->window_mouse_released(WindowEvent::MouseButton::Left);
                 }
                 else if (button == GLFW_MOUSE_BUTTON_RIGHT)
                 {
-                        global_event_interface->window_mouse_released(WindowEvent::MouseButton::Right);
+                        g_event_interface->window_mouse_released(WindowEvent::MouseButton::Right);
                 }
         }
 }
@@ -182,7 +182,7 @@ class Impl final : public Window
                 //        return;
                 //}
 
-                global_event_interface = &window_event;
+                g_event_interface = &window_event;
                 glfwPollEvents();
         }
 
