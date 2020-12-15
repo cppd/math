@@ -1,0 +1,162 @@
+/*
+Copyright (C) 2017-2020 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include "painter_image.h"
+
+#include "file_dialog.h"
+#include "message.h"
+
+#include "../com/support.h"
+
+#include <src/com/error.h>
+#include <src/com/print.h>
+#include <src/utility/file/path.h>
+
+namespace gui::dialog
+{
+namespace
+{
+constexpr const char* IMAGE_FILE_FORMAT = "png";
+}
+
+PainterImageDialog::PainterImageDialog(
+        const std::string& title,
+        PainterImagePathType path_type,
+        std::optional<PainterImageParameters>& parameters)
+        : QDialog(parent_for_dialog()), m_path_type(path_type), m_parameters(parameters)
+{
+        ui.setupUi(this);
+        setWindowTitle(QString::fromStdString(title));
+        set_path();
+}
+
+void PainterImageDialog::set_path()
+{
+        switch (m_path_type)
+        {
+        case PainterImagePathType::None:
+                ui.label_path_name->setVisible(false);
+                ui.lineEdit_path->setVisible(false);
+                ui.toolButton_select_path->setVisible(false);
+                this->adjustSize();
+                return;
+        case PainterImagePathType::Directory:
+                ui.label_path_name->setText("Directory:");
+                ui.lineEdit_path->setReadOnly(true);
+                connect(ui.toolButton_select_path, &QToolButton::clicked, this,
+                        &PainterImageDialog::on_select_path_clicked);
+                return;
+        case PainterImagePathType::File:
+                ui.label_path_name->setText("File:");
+                ui.lineEdit_path->setReadOnly(true);
+                connect(ui.toolButton_select_path, &QToolButton::clicked, this,
+                        &PainterImageDialog::on_select_path_clicked);
+                return;
+        }
+        error("Unknown path type " + to_string(static_cast<long long>(m_path_type)));
+}
+
+void PainterImageDialog::done(int r)
+{
+        if (r != QDialog::Accepted)
+        {
+                QDialog::done(r);
+                return;
+        }
+
+        std::optional<std::string> path_string;
+
+        if (m_path_type == PainterImagePathType::Directory)
+        {
+                path_string = ui.lineEdit_path->text().toStdString();
+                std::filesystem::path path = path_from_utf8(*path_string);
+                if (!std::filesystem::is_directory(path))
+                {
+                        std::string msg = "Directory is not selected";
+                        dialog::message_critical(msg);
+                        return;
+                }
+        }
+        else if (m_path_type == PainterImagePathType::File)
+        {
+                path_string = ui.lineEdit_path->text().toStdString();
+                std::filesystem::path path = path_from_utf8(*path_string);
+                if (!std::filesystem::is_directory(path.parent_path()) || path.filename().empty())
+                {
+                        std::string msg = "File is not selected";
+                        dialog::message_critical(msg);
+                        return;
+                }
+        }
+
+        m_parameters.emplace();
+
+        m_parameters->path_string = path_string;
+        m_parameters->with_background = ui.checkBox_with_background->isChecked();
+
+        QDialog::done(r);
+}
+
+void PainterImageDialog::on_select_path_clicked()
+{
+        if (m_path_type == PainterImagePathType::None)
+        {
+                return;
+        }
+
+        QPointer ptr(this);
+        std::optional<std::string> path;
+
+        if (m_path_type == PainterImagePathType::Directory)
+        {
+                const std::string caption = "Directory";
+                const bool read_only = false;
+                path = dialog::select_directory(caption, read_only);
+        }
+        else if (m_path_type == PainterImagePathType::File)
+        {
+                const std::string caption = "File";
+                dialog::FileFilter filter;
+                filter.name = "Images";
+                filter.file_extensions = {IMAGE_FILE_FORMAT};
+                const bool read_only = true;
+                path = dialog::save_file(caption, {filter}, read_only);
+        }
+        else
+        {
+                return;
+        }
+
+        if (path && !ptr.isNull())
+        {
+                ui.lineEdit_path->setText(QString::fromStdString(*path));
+        }
+}
+
+std::optional<PainterImageParameters> PainterImageDialog::show(const std::string& title, PainterImagePathType path_type)
+{
+        std::optional<PainterImageParameters> parameters;
+
+        QtObjectInDynamicMemory w(new PainterImageDialog(title, path_type, parameters));
+
+        if (!w->exec() || w.isNull())
+        {
+                return std::nullopt;
+        }
+        return parameters;
+}
+}
