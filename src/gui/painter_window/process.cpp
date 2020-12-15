@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "process.h"
 
-#include "../dialogs/file_dialog.h"
+#include "../dialogs/painter_image.h"
 
 #include <src/com/container.h>
 #include <src/com/error.h>
@@ -54,24 +54,19 @@ std::array<T, N> to_array(const std::vector<T>& vector)
 
 std::function<void(ProgressRatioList*)> save_to_file(
         const std::vector<int>& screen_size,
-        bool without_background,
         const Color& background,
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels)
 {
-        const std::string caption = "Save";
-        dialog::FileFilter filter;
-        filter.name = "Images";
-        filter.file_extensions = {IMAGE_FILE_FORMAT};
-        const bool read_only = true;
-        std::optional<std::string> file_name_string = dialog::save_file(caption, {filter}, read_only);
-        if (!file_name_string)
+        std::optional<dialog::PainterImageParameters> parameters =
+                dialog::PainterImageDialog::show("Save", dialog::PainterImagePathType::File);
+        if (!parameters)
         {
                 return nullptr;
         }
 
         return [=, pixels_ptr = std::make_shared<std::vector<std::byte>>(std::move(pixels)),
-                file_name_string = std::move(*file_name_string)](ProgressRatioList* progress_list)
+                parameters = std::move(*parameters)](ProgressRatioList* progress_list)
         {
                 ProgressRatio progress(progress_list, "Saving");
                 progress.set(0);
@@ -82,19 +77,18 @@ std::function<void(ProgressRatioList*)> save_to_file(
                 image.pixels = std::move(*pixels_ptr);
 
                 ASSERT(image::format_component_count(color_format) == 4);
-                if (!without_background)
+                if (parameters.with_background)
                 {
                         image::blend_alpha(color_format, image.pixels, background);
                         image = image::delete_alpha(image);
                 }
 
-                image::save(path_from_utf8(file_name_string), image::ImageView<2>(image));
+                image::save(path_from_utf8(*parameters.path_string), image::ImageView<2>(image));
         };
 }
 
 std::function<void(ProgressRatioList*)> save_all_to_files(
         const std::vector<int>& screen_size,
-        bool without_background,
         const Color& background,
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels)
@@ -104,16 +98,15 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                 return nullptr;
         }
 
-        const std::string caption = "Save All";
-        const bool read_only = false;
-        std::optional<std::string> directory_string = dialog::select_directory(caption, read_only);
-        if (!directory_string)
+        std::optional<dialog::PainterImageParameters> parameters =
+                dialog::PainterImageDialog::show("Save all", dialog::PainterImagePathType::Directory);
+        if (!parameters)
         {
                 return nullptr;
         }
 
         return [=, pixels_ptr = std::make_shared<std::vector<std::byte>>(std::move(pixels)),
-                directory_string = std::move(*directory_string)](ProgressRatioList* progress_list)
+                parameters = std::move(*parameters)](ProgressRatioList* progress_list)
         {
                 ProgressRatio progress(progress_list, "Saving");
                 progress.set(0);
@@ -132,14 +125,14 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                                         image.pixels = std::move(*pixels_ptr);
 
                                         ASSERT(image::format_component_count(color_format) == 4);
-                                        if (!without_background)
+                                        if (parameters.with_background)
                                         {
                                                 image::blend_alpha(color_format, image.pixels, background);
                                                 image = image::delete_alpha(image);
                                         }
 
                                         volume::save_to_images(
-                                                path_from_utf8(directory_string), IMAGE_FILE_FORMAT,
+                                                path_from_utf8(*parameters.path_string), IMAGE_FILE_FORMAT,
                                                 image::ImageView<N_IMAGE>(image), &progress);
                                 }
                         });
@@ -148,7 +141,6 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
 
 std::function<void(ProgressRatioList*)> add_volume(
         const std::vector<int>& screen_size,
-        bool without_background,
         const Color& background,
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels)
@@ -158,8 +150,15 @@ std::function<void(ProgressRatioList*)> add_volume(
                 return nullptr;
         }
 
-        return [=, pixels_ptr = std::make_shared<std::vector<std::byte>>(std::move(pixels))](
-                       ProgressRatioList* progress_list)
+        std::optional<dialog::PainterImageParameters> parameters =
+                dialog::PainterImageDialog::show("Add volume", dialog::PainterImagePathType::None);
+        if (!parameters)
+        {
+                return nullptr;
+        }
+
+        return [=, pixels_ptr = std::make_shared<std::vector<std::byte>>(std::move(pixels)),
+                parameters = std::move(*parameters)](ProgressRatioList* progress_list)
         {
                 ProgressRatio progress(progress_list, "Adding volume");
                 progress.set(0);
@@ -180,7 +179,7 @@ std::function<void(ProgressRatioList*)> add_volume(
                                         image::flip_vertically(&image);
 
                                         ASSERT(image::format_component_count(color_format) == 4);
-                                        if (!without_background)
+                                        if (parameters.with_background)
                                         {
                                                 image::blend_alpha(color_format, image.pixels, background);
                                                 constexpr float ALPHA = 1;

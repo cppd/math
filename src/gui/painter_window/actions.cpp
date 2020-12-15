@@ -49,16 +49,7 @@ Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar)
                         action, &QAction::triggered,
                         [=, this]()
                         {
-                                save_to_file(false, action_name(action));
-                        }));
-        }
-        {
-                QAction* action = menu->addAction("Save without background...");
-                m_connections.emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=, this]()
-                        {
-                                save_to_file(true, action_name(action));
+                                save_to_file(action_name(action));
                         }));
         }
 
@@ -70,37 +61,19 @@ Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar)
                                 action, &QAction::triggered,
                                 [=, this]()
                                 {
-                                        save_all_to_files(false, action_name(action));
-                                }));
-                }
-                {
-                        QAction* action = menu->addAction("Save all without background...");
-                        m_connections.emplace_back(QObject::connect(
-                                action, &QAction::triggered,
-                                [=, this]()
-                                {
-                                        save_all_to_files(true, action_name(action));
+                                        save_all_to_files(action_name(action));
                                 }));
                 }
 
                 menu->addSeparator();
 
                 {
-                        QAction* action = menu->addAction("Add volume");
+                        QAction* action = menu->addAction("Add volume...");
                         m_connections.emplace_back(QObject::connect(
                                 action, &QAction::triggered,
                                 [=, this]()
                                 {
-                                        add_volume(false, action_name(action));
-                                }));
-                }
-                {
-                        QAction* action = menu->addAction("Add volume without background");
-                        m_connections.emplace_back(QObject::connect(
-                                action, &QAction::triggered,
-                                [=, this]()
-                                {
-                                        add_volume(true, action_name(action));
+                                        add_volume(action_name(action));
                                 }));
                 }
         }
@@ -117,7 +90,7 @@ void Actions::set_progresses()
         m_worker_threads->set_progresses();
 }
 
-void Actions::save_to_file(bool without_background, const std::string& action) const
+void Actions::save_to_file(const std::string& action) const
 {
         std::vector<std::byte> slice = m_pixels->slice();
 
@@ -126,12 +99,12 @@ void Actions::save_to_file(bool without_background, const std::string& action) c
                 [&]()
                 {
                         return painter_window::save_to_file(
-                                m_pixels->screen_size(), without_background, m_pixels->background_color(),
-                                m_pixels->color_format(), std::move(slice));
+                                m_pixels->screen_size(), m_pixels->background_color(), m_pixels->color_format(),
+                                std::move(slice));
                 });
 }
 
-void Actions::save_all_to_files(bool without_background, const std::string& action) const
+void Actions::save_all_to_files(const std::string& action) const
 {
         std::vector<std::byte> pixels = m_pixels->pixels();
 
@@ -140,12 +113,12 @@ void Actions::save_all_to_files(bool without_background, const std::string& acti
                 [&]()
                 {
                         return painter_window::save_all_to_files(
-                                m_pixels->screen_size(), without_background, m_pixels->background_color(),
-                                m_pixels->color_format(), std::move(pixels));
+                                m_pixels->screen_size(), m_pixels->background_color(), m_pixels->color_format(),
+                                std::move(pixels));
                 });
 }
 
-void Actions::add_volume(bool without_background, const std::string& action) const
+void Actions::add_volume(const std::string& action) const
 {
         std::vector<std::byte> pixels = m_pixels->pixels();
 
@@ -154,8 +127,8 @@ void Actions::add_volume(bool without_background, const std::string& action) con
                 [&]()
                 {
                         return painter_window::add_volume(
-                                m_pixels->screen_size(), without_background, m_pixels->background_color(),
-                                m_pixels->color_format(), std::move(pixels));
+                                m_pixels->screen_size(), m_pixels->background_color(), m_pixels->color_format(),
+                                std::move(pixels));
                 });
 }
 }
