@@ -36,12 +36,17 @@ constexpr const char* IMAGE_FILE_FORMAT = "png";
 PainterImageDialog::PainterImageDialog(
         const std::string& title,
         PainterImagePathType path_type,
+        bool use_grayscale,
         std::optional<PainterImageParameters>& parameters)
         : QDialog(parent_for_dialog()), m_path_type(path_type), m_parameters(parameters)
 {
         ui.setupUi(this);
         setWindowTitle(QString::fromStdString(title));
+
         set_path();
+        ui.checkBox_grayscale->setVisible(use_grayscale);
+
+        this->adjustSize();
 }
 
 void PainterImageDialog::set_path()
@@ -52,7 +57,6 @@ void PainterImageDialog::set_path()
                 ui.label_path_name->setVisible(false);
                 ui.lineEdit_path->setVisible(false);
                 ui.toolButton_select_path->setVisible(false);
-                this->adjustSize();
                 return;
         case PainterImagePathType::Directory:
                 ui.label_path_name->setText("Directory:");
@@ -107,6 +111,10 @@ void PainterImageDialog::done(int r)
 
         m_parameters->path_string = path_string;
         m_parameters->with_background = ui.checkBox_with_background->isChecked();
+        if (ui.checkBox_grayscale->isVisible())
+        {
+                m_parameters->grayscale = ui.checkBox_grayscale->isChecked();
+        }
 
         QDialog::done(r);
 }
@@ -147,11 +155,14 @@ void PainterImageDialog::on_select_path_clicked()
         }
 }
 
-std::optional<PainterImageParameters> PainterImageDialog::show(const std::string& title, PainterImagePathType path_type)
+std::optional<PainterImageParameters> PainterImageDialog::show(
+        const std::string& title,
+        PainterImagePathType path_type,
+        bool use_grayscale)
 {
         std::optional<PainterImageParameters> parameters;
 
-        QtObjectInDynamicMemory w(new PainterImageDialog(title, path_type, parameters));
+        QtObjectInDynamicMemory w(new PainterImageDialog(title, path_type, use_grayscale, parameters));
 
         if (!w->exec() || w.isNull())
         {

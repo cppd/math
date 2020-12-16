@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/alpha.h>
 #include <src/image/file.h>
 #include <src/image/flip.h>
+#include <src/image/grayscale.h>
 #include <src/model/volume_utility.h>
 #include <src/process/dimension.h>
 #include <src/process/load.h>
@@ -59,11 +60,13 @@ std::function<void(ProgressRatioList*)> save_to_file(
         std::vector<std::byte>&& pixels)
 {
         std::optional<dialog::PainterImageParameters> parameters =
-                dialog::PainterImageDialog::show("Save", dialog::PainterImagePathType::File);
+                dialog::PainterImageDialog::show("Save", dialog::PainterImagePathType::File, false /*use_grayscale*/);
         if (!parameters)
         {
                 return nullptr;
         }
+        ASSERT(parameters->path_string.has_value());
+        ASSERT(!parameters->grayscale.has_value());
 
         return [=, pixels_ptr = std::make_shared<std::vector<std::byte>>(std::move(pixels)),
                 parameters = std::move(*parameters)](ProgressRatioList* progress_list)
@@ -98,12 +101,14 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                 return nullptr;
         }
 
-        std::optional<dialog::PainterImageParameters> parameters =
-                dialog::PainterImageDialog::show("Save all", dialog::PainterImagePathType::Directory);
+        std::optional<dialog::PainterImageParameters> parameters = dialog::PainterImageDialog::show(
+                "Save all", dialog::PainterImagePathType::Directory, true /*use_grayscale*/);
         if (!parameters)
         {
                 return nullptr;
         }
+        ASSERT(parameters->path_string.has_value());
+        ASSERT(parameters->grayscale.has_value());
 
         return [=, pixels_ptr = std::make_shared<std::vector<std::byte>>(std::move(pixels)),
                 parameters = std::move(*parameters)](ProgressRatioList* progress_list)
@@ -128,7 +133,14 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                                         if (parameters.with_background)
                                         {
                                                 image::blend_alpha(color_format, image.pixels, background);
-                                                image = image::delete_alpha(image);
+                                                if (!*parameters.grayscale)
+                                                {
+                                                        image = image::delete_alpha(image);
+                                                }
+                                        }
+                                        if (*parameters.grayscale)
+                                        {
+                                                image = image::convert_to_grayscale(image);
                                         }
 
                                         volume::save_to_images(
@@ -150,12 +162,14 @@ std::function<void(ProgressRatioList*)> add_volume(
                 return nullptr;
         }
 
-        std::optional<dialog::PainterImageParameters> parameters =
-                dialog::PainterImageDialog::show("Add volume", dialog::PainterImagePathType::None);
+        std::optional<dialog::PainterImageParameters> parameters = dialog::PainterImageDialog::show(
+                "Add volume", dialog::PainterImagePathType::None, true /*use_grayscale*/);
         if (!parameters)
         {
                 return nullptr;
         }
+        ASSERT(!parameters->path_string.has_value());
+        ASSERT(parameters->grayscale.has_value());
 
         return [=, pixels_ptr = std::make_shared<std::vector<std::byte>>(std::move(pixels)),
                 parameters = std::move(*parameters)](ProgressRatioList* progress_list)
@@ -182,8 +196,15 @@ std::function<void(ProgressRatioList*)> add_volume(
                                         if (parameters.with_background)
                                         {
                                                 image::blend_alpha(color_format, image.pixels, background);
-                                                constexpr float ALPHA = 1;
-                                                image::set_alpha(color_format, image.pixels, ALPHA);
+                                                if (!*parameters.grayscale)
+                                                {
+                                                        constexpr float ALPHA = 1;
+                                                        image::set_alpha(color_format, image.pixels, ALPHA);
+                                                }
+                                        }
+                                        if (*parameters.grayscale)
+                                        {
+                                                image = image::convert_to_grayscale(image);
                                         }
 
                                         process::load_volume<N_IMAGE>("Painter Image", std::move(image));

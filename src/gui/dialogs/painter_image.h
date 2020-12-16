@@ -34,6 +34,7 @@ struct PainterImageParameters final
 {
         std::optional<std::string> path_string;
         bool with_background;
+        std::optional<bool> grayscale;
 };
 
 class PainterImageDialog final : public QDialog
@@ -50,6 +51,7 @@ private:
         PainterImageDialog(
                 const std::string& title,
                 PainterImagePathType path_type,
+                bool use_grayscale,
                 std::optional<PainterImageParameters>& parameters);
 
         void set_path();
@@ -61,6 +63,7 @@ private:
 public:
         [[nodiscard]] static std::optional<PainterImageParameters> show(
                 const std::string& title,
-                PainterImagePathType path_type);
+                PainterImagePathType path_type,
+                bool use_grayscale);
 };
 }
