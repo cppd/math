@@ -84,7 +84,7 @@ Painter3dParametersDialog::Painter3dParametersDialog(
         m_max_thread_count = max_thread_count;
         m_max_samples_per_pixel = max_samples_per_pixel;
 
-        ui.label_space->setText(space_name(DIMENSION).c_str());
+        ui.label_space->setText(QString::fromStdString(space_name(DIMENSION)));
 
         ui.spinBox_thread_count->setMinimum(1);
         ui.spinBox_thread_count->setMaximum(max_thread_count);

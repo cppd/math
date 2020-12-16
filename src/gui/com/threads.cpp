@@ -295,7 +295,7 @@ class Impl final : public WorkerThreads
                                 bar->show();
                         }
 
-                        bar->setFormat(std::get<2>(ratios[i]).c_str());
+                        bar->setFormat(QString::fromStdString(std::get<2>(ratios[i])));
 
                         unsigned v = std::get<0>(ratios[i]);
                         unsigned m = std::get<1>(ratios[i]);

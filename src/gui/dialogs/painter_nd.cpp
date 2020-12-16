@@ -84,7 +84,7 @@ PainterNdParametersDialog::PainterNdParametersDialog(
         m_max_screen_size = max_screen_size;
         m_max_samples_per_pixel = max_samples_per_pixel;
 
-        ui.label_space->setText(space_name(dimension).c_str());
+        ui.label_space->setText(QString::fromStdString(space_name(dimension)));
 
         ui.spinBox_threads->setMinimum(1);
         ui.spinBox_threads->setMaximum(max_thread_count);
