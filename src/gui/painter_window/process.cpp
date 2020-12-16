@@ -60,8 +60,8 @@ std::function<void(ProgressRatioList*)> save_to_file(
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels)
 {
-        std::optional<dialog::PainterImageParameters> parameters =
-                dialog::PainterImageDialog::show("Save", dialog::PainterImagePathType::File, false /*use_grayscale*/);
+        std::optional<dialog::PainterImageParameters> parameters = dialog::PainterImageDialog::show(
+                "Save Image", dialog::PainterImagePathType::File, false /*use_grayscale*/);
         if (!parameters)
         {
                 return nullptr;
@@ -108,7 +108,7 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
         }
 
         std::optional<dialog::PainterImageParameters> parameters = dialog::PainterImageDialog::show(
-                "Save all", dialog::PainterImagePathType::Directory, true /*use_grayscale*/);
+                "Save All Images", dialog::PainterImagePathType::Directory, true /*use_grayscale*/);
         if (!parameters)
         {
                 return nullptr;
@@ -175,7 +175,7 @@ std::function<void(ProgressRatioList*)> add_volume(
         }
 
         std::optional<dialog::PainterImageParameters> parameters = dialog::PainterImageDialog::show(
-                "Add volume", dialog::PainterImagePathType::None, true /*use_grayscale*/);
+                "Add Volume", dialog::PainterImagePathType::None, true /*use_grayscale*/);
         if (!parameters)
         {
                 return nullptr;
