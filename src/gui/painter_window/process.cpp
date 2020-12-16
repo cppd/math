@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/image/alpha.h>
+#include <src/image/depth.h>
 #include <src/image/file.h>
 #include <src/image/flip.h>
 #include <src/image/grayscale.h>
@@ -86,6 +87,11 @@ std::function<void(ProgressRatioList*)> save_to_file(
                         image = image::delete_alpha(image);
                 }
 
+                if (parameters.convert_to_8_bit)
+                {
+                        image = image::convert_to_8_bit(image);
+                }
+
                 image::save(path_from_utf8(*parameters.path_string), image::ImageView<2>(image));
         };
 }
@@ -141,6 +147,12 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                                         if (*parameters.grayscale)
                                         {
                                                 image = image::convert_to_grayscale(image);
+                                        }
+
+                                        ASSERT(!(*parameters.grayscale && parameters.convert_to_8_bit));
+                                        if (parameters.convert_to_8_bit)
+                                        {
+                                                image = image::convert_to_8_bit(image);
                                         }
 
                                         volume::save_to_images(
@@ -205,6 +217,12 @@ std::function<void(ProgressRatioList*)> add_volume(
                                         if (*parameters.grayscale)
                                         {
                                                 image = image::convert_to_grayscale(image);
+                                        }
+
+                                        ASSERT(!(*parameters.grayscale && parameters.convert_to_8_bit));
+                                        if (parameters.convert_to_8_bit)
+                                        {
+                                                image = image::convert_to_8_bit(image);
                                         }
 
                                         process::load_volume<N_IMAGE>("Painter Image", std::move(image));

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>600</width>
-    <height>235</height>
+    <height>275</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -44,7 +44,7 @@
    <item>
     <widget class="QCheckBox" name="checkBox_with_background">
      <property name="text">
-      <string>With Background</string>
+      <string>With background</string>
      </property>
     </widget>
    </item>
@@ -52,6 +52,13 @@
     <widget class="QCheckBox" name="checkBox_grayscale">
      <property name="text">
       <string>Grayscale</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="checkBox_8_bit">
+     <property name="text">
+      <string>8-bit depth</string>
      </property>
     </widget>
    </item>

@@ -44,7 +44,7 @@ PainterImageDialog::PainterImageDialog(
         setWindowTitle(QString::fromStdString(title));
 
         set_path();
-        ui.checkBox_grayscale->setVisible(use_grayscale);
+        set_grayscale(use_grayscale);
 
         this->adjustSize();
 }
@@ -72,6 +72,19 @@ void PainterImageDialog::set_path()
                 return;
         }
         error("Unknown path type " + to_string(static_cast<long long>(m_path_type)));
+}
+
+void PainterImageDialog::set_grayscale(bool use_grayscale)
+{
+        if (use_grayscale)
+        {
+                ui.checkBox_grayscale->setVisible(true);
+                connect(ui.checkBox_grayscale, &QCheckBox::toggled, this, &PainterImageDialog::on_grayscale_toggled);
+        }
+        else
+        {
+                ui.checkBox_grayscale->setVisible(false);
+        }
 }
 
 void PainterImageDialog::done(int r)
@@ -115,6 +128,9 @@ void PainterImageDialog::done(int r)
         {
                 m_parameters->grayscale = ui.checkBox_grayscale->isChecked();
         }
+        m_parameters->convert_to_8_bit = ui.checkBox_8_bit->isEnabled() && ui.checkBox_8_bit->isChecked();
+
+        ASSERT(!(m_parameters->grayscale && *m_parameters->grayscale && m_parameters->convert_to_8_bit));
 
         QDialog::done(r);
 }
@@ -152,6 +168,19 @@ void PainterImageDialog::on_select_path_clicked()
         if (path && !ptr.isNull())
         {
                 ui.lineEdit_path->setText(QString::fromStdString(*path));
+        }
+}
+
+void PainterImageDialog::on_grayscale_toggled()
+{
+        if (ui.checkBox_grayscale->isChecked())
+        {
+                ui.checkBox_8_bit->setEnabled(false);
+                ui.checkBox_8_bit->setChecked(false);
+        }
+        else
+        {
+                ui.checkBox_8_bit->setEnabled(true);
         }
 }
 
