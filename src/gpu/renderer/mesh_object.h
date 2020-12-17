@@ -72,7 +72,7 @@ std::unique_ptr<MeshObject> create_mesh_object(
         const vulkan::Queue& graphics_queue,
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
-        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& mesh_layouts,
-        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& material_layouts,
+        std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts,
+        std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts,
         VkSampler texture_sampler);
 }

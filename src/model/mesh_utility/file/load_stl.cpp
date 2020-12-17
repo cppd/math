@@ -71,15 +71,12 @@ bool is_binary(const std::string& data)
                 return false;
         }
 
-        for (char c : data)
-        {
-                if (!(ascii::is_print(c) || ascii::is_space(c)))
+        return std::any_of(
+                data.cbegin(), data.cend(),
+                [](char c)
                 {
-                        return true;
-                }
-        }
-
-        return false;
+                        return !ascii::is_print(c) && !ascii::is_space(c);
+                });
 }
 
 template <typename Data, typename Word>

@@ -33,11 +33,11 @@ char to_lower(char c)
 }
 bool is_space(char c)
 {
-        return std::isspace(static_cast<unsigned char>(c));
+        return std::isspace(static_cast<unsigned char>(c)) != 0;
 }
 bool is_alpha(char c)
 {
-        return std::isalpha(static_cast<unsigned char>(c));
+        return std::isalpha(static_cast<unsigned char>(c)) != 0;
 }
 }
 

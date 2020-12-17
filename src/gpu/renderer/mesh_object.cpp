@@ -482,7 +482,7 @@ class Impl final : public MeshObject
 
         MeshBuffer m_mesh_buffer;
         std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_mesh_descriptor_sets;
-        std::vector<vulkan::DescriptorSetLayoutAndBindings> m_mesh_layouts;
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings> m_mesh_layouts;
 
         struct MaterialVertices
         {
@@ -499,7 +499,7 @@ class Impl final : public MeshObject
         std::vector<vulkan::ImageWithMemory> m_textures;
         std::vector<MaterialBuffer> m_material_buffers;
         std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_material_descriptor_sets;
-        std::vector<vulkan::DescriptorSetLayoutAndBindings> m_material_layouts;
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings> m_material_layouts;
         VkSampler m_texture_sampler;
 
         std::unique_ptr<vulkan::BufferWithMemory> m_lines_vertex_buffer;
@@ -867,15 +867,15 @@ public:
              const vulkan::Queue& graphics_queue,
              const vulkan::CommandPool& /*transfer_command_pool*/,
              const vulkan::Queue& /*transfer_queue*/,
-             const std::vector<vulkan::DescriptorSetLayoutAndBindings>& mesh_layouts,
-             const std::vector<vulkan::DescriptorSetLayoutAndBindings>& material_layouts,
+             std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts,
+             std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts,
              VkSampler texture_sampler)
                 : m_device(device),
                   m_graphics_command_pool(graphics_command_pool),
                   m_graphics_queue(graphics_queue),
                   m_mesh_buffer(device, {m_graphics_queue.family_index()}),
-                  m_mesh_layouts(mesh_layouts),
-                  m_material_layouts(material_layouts),
+                  m_mesh_layouts(std::move(mesh_layouts)),
+                  m_material_layouts(std::move(material_layouts)),
                   m_texture_sampler(texture_sampler)
         {
                 create_mesh_descriptor_sets();
@@ -889,12 +889,12 @@ std::unique_ptr<MeshObject> create_mesh_object(
         const vulkan::Queue& graphics_queue,
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
-        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& mesh_layouts,
-        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& material_layouts,
+        std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts,
+        std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts,
         VkSampler texture_sampler)
 {
         return std::make_unique<Impl>(
-                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, mesh_layouts,
-                material_layouts, texture_sampler);
+                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                std::move(mesh_layouts), std::move(material_layouts), texture_sampler);
 }
 }

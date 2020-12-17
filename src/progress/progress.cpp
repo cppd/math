@@ -87,8 +87,8 @@ public:
 
         static_assert(LOCK_FREE);
 
-        Impl(ProgressRatios* ratios, const std::string& permanent_text)
-                : m_ratios(ratios), m_permanent_text(permanent_text)
+        Impl(ProgressRatios* ratios, std::string permanent_text)
+                : m_ratios(ratios), m_permanent_text(std::move(permanent_text))
         {
                 set_undefined();
 

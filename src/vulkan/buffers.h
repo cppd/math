@@ -195,7 +195,7 @@ public:
                 const Device& device,
                 const CommandPool& command_pool,
                 const Queue& queue,
-                const std::unordered_set<uint32_t>& family_indices,
+                std::unordered_set<uint32_t> family_indices,
                 const std::vector<VkFormat>& format_candidates,
                 VkSampleCountFlagBits sample_count,
                 VkImageType type,

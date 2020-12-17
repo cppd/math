@@ -712,14 +712,13 @@ bool is_depth_formats(const std::vector<VkFormat>& formats)
         const std::unordered_set<VkFormat> depth_formats{
                 VK_FORMAT_D16_UNORM, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT,
                 VK_FORMAT_D32_SFLOAT_S8_UINT};
-        for (VkFormat format : formats)
-        {
-                if (depth_formats.count(format) == 0)
+
+        return std::all_of(
+                formats.cbegin(), formats.cend(),
+                [&](VkFormat format)
                 {
-                        return false;
-                }
-        }
-        return true;
+                        return depth_formats.contains(format);
+                });
 }
 }
 
@@ -851,7 +850,7 @@ ImageWithMemory::ImageWithMemory(
         const Device& device,
         const CommandPool& command_pool,
         const Queue& queue,
-        const std::unordered_set<uint32_t>& family_indices,
+        std::unordered_set<uint32_t> family_indices,
         const std::vector<VkFormat>& format_candidates,
         VkSampleCountFlagBits sample_count,
         VkImageType type,
@@ -861,7 +860,7 @@ ImageWithMemory::ImageWithMemory(
         : m_extent(correct_image_extent(type, extent)),
           m_device(device),
           m_physical_device(device.physical_device()),
-          m_family_indices(family_indices),
+          m_family_indices(std::move(family_indices)),
           m_type(type),
           m_sample_count(sample_count),
           m_usage(usage),

@@ -269,7 +269,7 @@ class Impl final : public WorkerThreads
                                         QtObjectInDynamicMemory<QMenu> menu(bar_ptr);
                                         menu->addAction("Terminate");
 
-                                        if (!menu->exec(QCursor::pos()) || menu.isNull() || bar_ptr.isNull())
+                                        if (menu->exec(QCursor::pos()) == nullptr || menu.isNull() || bar_ptr.isNull())
                                         {
                                                 return;
                                         }

@@ -79,7 +79,7 @@ void test_distribution(int count, T discrepancy_limit)
 
         RandomEngineWithSeed<RandomEngine> random_engine;
 
-        std::map<T, T, std::greater<T>> buckets;
+        std::map<T, T, std::greater<>> buckets;
 
         std::uniform_real_distribution<T> urd(-1, 1);
         Vector<N, T> normal = random_vector<N, T>(random_engine, urd).normalized();

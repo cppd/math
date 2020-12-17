@@ -79,7 +79,7 @@ std::function<void(ProgressRatioList*)> action_load_mesh(std::filesystem::path p
                 {
                         return nullptr;
                 }
-                selection_parameters = std::move(*selection);
+                selection_parameters = *selection;
         }
         else
         {

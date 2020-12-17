@@ -29,20 +29,20 @@ StringTree::StringTree()
         m_nodes.emplace_back("");
 }
 
-size_t StringTree::add(const std::string& s)
+size_t StringTree::add(std::string s)
 {
-        m_nodes.emplace_back(s);
+        m_nodes.emplace_back(std::move(s));
         m_nodes[ROOT_NODE].children.push_back(m_nodes.size() - 1);
         return m_nodes.size() - 1;
 }
 
-size_t StringTree::add(size_t parent, const std::string& s)
+size_t StringTree::add(size_t parent, std::string s)
 {
         if (parent >= m_nodes.size())
         {
                 error("Node parent out of range");
         }
-        m_nodes.emplace_back(s);
+        m_nodes.emplace_back(std::move(s));
         m_nodes[parent].children.push_back(m_nodes.size() - 1);
         return m_nodes.size() - 1;
 }

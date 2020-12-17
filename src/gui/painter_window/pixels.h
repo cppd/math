@@ -112,13 +112,11 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
         static constexpr image::ColorFormat COLOR_FORMAT_16 = image::ColorFormat::R16G16B16A16;
         static constexpr size_t PIXEL_SIZE_16 = image::format_pixel_size_in_bytes(COLOR_FORMAT_16);
 
-        const std::shared_ptr<const painter::Scene<N, T>> m_scene;
+        const GlobalIndex<N - 1, long long> m_global_index;
+        const std::vector<int> m_screen_size;
+        const Color m_background_color;
 
-        const GlobalIndex<N - 1, long long> m_global_index{m_scene->projector().screen_size()};
-        const std::vector<int> m_screen_size = array_to_vector(m_scene->projector().screen_size());
-        const Color m_background_color = m_scene->background_color();
-
-        painter::BarPaintbrush<N - 1> m_paintbrush{m_scene->projector().screen_size(), PANTBRUSH_WIDTH, -1};
+        painter::BarPaintbrush<N - 1> m_paintbrush;
 
         std::vector<std::byte> m_pixels_8 = make_initial_image(m_screen_size, COLOR_FORMAT_8);
         const size_t m_slice_size_8 = PIXEL_SIZE_8 * m_screen_size[0] * m_screen_size[1];
@@ -257,17 +255,21 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
 
 public:
         PainterPixels(
-                const std::shared_ptr<const painter::Scene<N, T>>& scene,
+                std::shared_ptr<const painter::Scene<N, T>> scene,
                 unsigned thread_count,
                 int samples_per_pixel,
                 bool smooth_normal)
-                : m_scene(scene), m_busy_indices_2d(thread_count, -1)
+                : m_global_index(scene->projector().screen_size()),
+                  m_screen_size(array_to_vector(scene->projector().screen_size())),
+                  m_background_color(scene->background_color()),
+                  m_paintbrush(scene->projector().screen_size(), PANTBRUSH_WIDTH, -1),
+                  m_busy_indices_2d(thread_count, -1)
         {
                 m_painting_stop = false;
                 m_painting_thread = std::thread(
-                        [=, this]()
+                        [=, this, scene = std::move(scene)]()
                         {
-                                paint(this, samples_per_pixel, *m_scene, &m_paintbrush, thread_count, &m_painting_stop,
+                                paint(this, samples_per_pixel, *scene, &m_paintbrush, thread_count, &m_painting_stop,
                                       smooth_normal);
                         });
         }

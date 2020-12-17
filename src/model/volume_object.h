@@ -310,8 +310,8 @@ public:
         VolumeObject(
                 std::unique_ptr<const Volume<N>>&& volume,
                 const Matrix<N + 1, N + 1, double>& matrix,
-                const std::string& name)
-                : m_volume(std::move(volume)), m_matrix(matrix), m_name(name)
+                std::string name)
+                : m_volume(std::move(volume)), m_matrix(matrix), m_name(std::move(name))
         {
                 ASSERT(m_volume);
         }
@@ -403,7 +403,7 @@ public:
                 {
                         return;
                 }
-                m_object->m_versions.add(std::move(m_updates));
+                m_object->m_versions.add(m_updates);
                 if (m_object->m_inserted)
                 {
                         m_object->send_event(typename VolumeEvent<N>::Update(m_object->weak_from_this()));

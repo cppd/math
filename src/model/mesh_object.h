@@ -246,11 +246,8 @@ public:
                 return events;
         }
 
-        MeshObject(
-                std::unique_ptr<const Mesh<N>>&& mesh,
-                const Matrix<N + 1, N + 1, double>& matrix,
-                const std::string& name)
-                : m_mesh(std::move(mesh)), m_matrix(matrix), m_name(name)
+        MeshObject(std::unique_ptr<const Mesh<N>>&& mesh, const Matrix<N + 1, N + 1, double>& matrix, std::string name)
+                : m_mesh(std::move(mesh)), m_matrix(matrix), m_name(std::move(name))
         {
                 ASSERT(m_mesh);
         }
@@ -345,7 +342,7 @@ public:
                 {
                         return;
                 }
-                m_object->m_versions.add(std::move(m_updates));
+                m_object->m_versions.add(m_updates);
                 if (m_object->m_inserted)
                 {
                         m_object->send_event(typename MeshEvent<N>::Update(m_object->weak_from_this()));

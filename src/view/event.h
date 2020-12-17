@@ -39,7 +39,7 @@ enum class MouseButton
 struct UpdateMeshObject final
 {
         std::weak_ptr<const mesh::MeshObject<3>> object;
-        explicit UpdateMeshObject(const std::weak_ptr<const mesh::MeshObject<3>>& object) : object(object)
+        explicit UpdateMeshObject(std::weak_ptr<const mesh::MeshObject<3>> object) : object(std::move(object))
         {
         }
 };
@@ -47,7 +47,7 @@ struct UpdateMeshObject final
 struct UpdateVolumeObject final
 {
         std::weak_ptr<const volume::VolumeObject<3>> object;
-        explicit UpdateVolumeObject(const std::weak_ptr<const volume::VolumeObject<3>>& object) : object(object)
+        explicit UpdateVolumeObject(std::weak_ptr<const volume::VolumeObject<3>> object) : object(std::move(object))
         {
         }
 };

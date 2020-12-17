@@ -41,6 +41,8 @@ class Color
 
         Vector<3, T> m_data;
 
+        static_assert(std::is_trivially_copyable_v<Vector<3, T>>);
+
 public:
         using DataType = T;
 
@@ -50,7 +52,7 @@ public:
         {
         }
 
-        constexpr explicit Color(Vector<3, T>&& rgb) : m_data(std::move(rgb))
+        constexpr explicit Color(Vector<3, T>&& rgb) : m_data(rgb)
         {
         }
 

@@ -168,7 +168,7 @@ class Impl final : public VolumeObject
         std::unique_ptr<vulkan::ImageWithMemory> m_transfer_function;
 
         std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_descriptor_sets;
-        std::vector<vulkan::DescriptorSetLayoutAndBindings> m_image_layouts;
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings> m_image_layouts;
         VkSampler m_image_sampler;
 
         std::optional<int> m_version;
@@ -425,13 +425,13 @@ public:
              const vulkan::Queue& graphics_queue,
              const vulkan::CommandPool& /*transfer_command_pool*/,
              const vulkan::Queue& /*transfer_queue*/,
-             const std::vector<vulkan::DescriptorSetLayoutAndBindings>& image_layouts,
+             std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts,
              VkSampler image_sampler)
                 : m_device(device),
                   m_graphics_command_pool(graphics_command_pool),
                   m_graphics_queue(graphics_queue),
                   m_buffer(m_device, {m_graphics_queue.family_index()}),
-                  m_image_layouts(image_layouts),
+                  m_image_layouts(std::move(image_layouts)),
                   m_image_sampler(image_sampler)
         {
         }
@@ -444,11 +444,11 @@ std::unique_ptr<VolumeObject> create_volume_object(
         const vulkan::Queue& graphics_queue,
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
-        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& image_layouts,
+        std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts,
         VkSampler image_sampler)
 {
         return std::make_unique<Impl>(
-                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, image_layouts,
-                image_sampler);
+                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                std::move(image_layouts), image_sampler);
 }
 }
