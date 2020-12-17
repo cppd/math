@@ -17,34 +17,50 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/error.h>
 #include <src/com/type/limit.h>
 
 #include <array>
 #include <cmath>
+#include <cstdint>
 
 namespace color
 {
 namespace implementation
 {
-template <typename T, typename UInt8>
-constexpr T uint8_to_float(UInt8 c)
+template <typename UInt>
+constexpr float uint_to_float(UInt c)
 {
-        static_assert(std::is_same_v<UInt8, std::uint8_t>);
-        static_assert(std::is_floating_point_v<T>);
+        static_assert(std::is_same_v<UInt, std::uint8_t> || std::is_same_v<UInt, std::uint16_t>);
 
-        constexpr T MAX = limits<std::uint8_t>::max();
+        constexpr float MAX = limits<UInt>::max();
         return c / MAX;
 }
 
-template <typename T>
-constexpr std::uint8_t float_to_uint8(T c)
+template <typename UInt, typename T>
+constexpr UInt float_to_uint(T c)
 {
-        static_assert(std::is_floating_point_v<T>);
+        static_assert(std::is_same_v<UInt, std::uint8_t> || std::is_same_v<UInt, std::uint16_t>);
+        static_assert(std::is_same_v<T, float>);
 
-        constexpr T MAX = limits<std::uint8_t>::max();
-        ASSERT(c >= 0 && c <= 1);
-        return c * MAX + T(0.5);
+        constexpr float MAX = limits<UInt>::max();
+        return c * MAX + 0.5f;
+}
+
+template <typename UInt, typename T>
+constexpr UInt float_clamp_to_uint(T c)
+{
+        static_assert(std::is_same_v<UInt, std::uint8_t> || std::is_same_v<UInt, std::uint16_t>);
+        static_assert(std::is_same_v<T, float>);
+
+        if (c < 1)
+        {
+                if (c > 0)
+                {
+                        return float_to_uint<UInt>(c);
+                }
+                return 0;
+        }
+        return limits<UInt>::max();
 }
 
 // clang-format off
@@ -134,7 +150,7 @@ constexpr float linear_uint8_to_linear_float(UInt8 c)
 {
         static_assert(std::is_same_v<UInt8, std::uint8_t>);
 
-        return implementation::uint8_to_float<float>(c);
+        return implementation::uint_to_float(c);
 }
 
 //
@@ -164,7 +180,7 @@ std::uint8_t linear_float_to_srgb_uint8(T c)
 {
         static_assert(std::is_same_v<T, float>);
 
-        return implementation::float_to_uint8(linear_float_to_srgb_float(c));
+        return implementation::float_to_uint<std::uint8_t>(linear_float_to_srgb_float(c));
 }
 
 template <typename T>
@@ -172,7 +188,7 @@ constexpr std::uint8_t linear_float_to_linear_uint8(T c)
 {
         static_assert(std::is_same_v<T, float>);
 
-        return implementation::float_to_uint8(c);
+        return implementation::float_clamp_to_uint<std::uint8_t>(c);
 }
 
 //
@@ -182,9 +198,7 @@ constexpr std::uint16_t linear_float_to_linear_uint16(T c)
 {
         static_assert(std::is_same_v<T, float>);
 
-        constexpr float MAX = limits<std::uint16_t>::max();
-        ASSERT(c >= 0.0f && c <= 1.0f);
-        return c * MAX + 0.5f;
+        return implementation::float_clamp_to_uint<std::uint16_t>(c);
 }
 
 template <typename T>
@@ -192,8 +206,7 @@ constexpr float linear_uint16_to_linear_float(T c)
 {
         static_assert(std::is_same_v<T, std::uint16_t>);
 
-        constexpr float MAX = limits<std::uint16_t>::max();
-        return c / MAX;
+        return implementation::uint_to_float(c);
 }
 
 //
