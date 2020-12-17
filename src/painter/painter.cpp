@@ -60,6 +60,12 @@ using PainterSampler = StratifiedJitteredSampler<N, T>;
 
 static_assert(std::is_floating_point_v<Color::DataType>);
 
+struct PixelInfo final
+{
+        Color color;
+        float coverage;
+};
+
 template <size_t N>
 class Pixels final
 {
@@ -71,22 +77,36 @@ class Pixels final
                 CounterType m_hit_sample_sum = 0;
                 CounterType m_all_sample_sum = 0;
 
+                Color compute_color() const
+                {
+                        if (m_hit_sample_sum > 0)
+                        {
+                                Color c = m_color_sum / m_hit_sample_sum;
+                                for (unsigned i = 0; i < 3; ++i)
+                                {
+                                        if (c.data()[i] > 1)
+                                        {
+                                                c.data()[i] = 1;
+                                        }
+                                }
+                                return c;
+                        }
+                        return Color(0);
+                }
+
+                float compute_coverage() const
+                {
+                        return static_cast<float>(m_hit_sample_sum) / m_all_sample_sum;
+                }
+
         public:
-                void add_color_and_samples(const Color& color, CounterType hit_samples, CounterType all_samples)
+                PixelInfo add(const Color& color, CounterType hit_samples, CounterType all_samples)
                 {
                         m_all_sample_sum += all_samples;
                         m_hit_sample_sum += hit_samples;
                         m_color_sum += color;
-                }
 
-                Color color() const
-                {
-                        return m_hit_sample_sum > 0 ? m_color_sum / m_hit_sample_sum : m_color_sum;
-                }
-
-                float coverage() const
-                {
-                        return static_cast<float>(m_hit_sample_sum) / m_all_sample_sum;
+                        return {.color = compute_color(), .coverage = compute_coverage()};
                 }
         };
 
@@ -99,23 +119,13 @@ public:
                 m_pixels.resize(m_global_index.count());
         }
 
-        struct Info final
-        {
-                Color color;
-                float coverage;
-        };
-
-        Info add_color_and_samples(
+        PixelInfo add(
                 const std::array<int_least16_t, N>& pixel,
                 const Color& color,
                 CounterType hit_samples,
                 CounterType all_samples)
         {
-                const long long index = m_global_index.compute(pixel);
-
-                m_pixels[index].add_color_and_samples(color, hit_samples, all_samples);
-
-                return {.color = m_pixels[index].color(), .coverage = m_pixels[index].coverage()};
+                return m_pixels[m_global_index.compute(pixel)].add(color, hit_samples, all_samples);
         }
 };
 
@@ -464,8 +474,7 @@ void paint_pixels(
                         }
                 }
 
-                typename Pixels<N - 1>::Info info =
-                        pixels->add_color_and_samples(*pixel, color, hit_sample_count, sample_count);
+                PixelInfo info = pixels->add(*pixel, color, hit_sample_count, sample_count);
 
                 painter_notifier->painter_pixel_after(thread_number, *pixel, info.color, info.coverage);
         }
