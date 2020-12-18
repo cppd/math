@@ -125,9 +125,20 @@ public:
                 m_oss_line_beginning << std::right;
                 m_oss_line_beginning << std::setprecision(6);
 
-                std::string name = std::string(settings::APPLICATION_NAME) + " log.txt";
-                std::filesystem::path path = std::filesystem::temp_directory_path() / name;
-                m_file = std::ofstream(path);
+                std::string directory_name = std::string(settings::APPLICATION_NAME) + " Log";
+                std::filesystem::path directory = std::filesystem::temp_directory_path() / directory_name;
+                std::filesystem::create_directory(directory);
+                std::filesystem::permissions(directory, std::filesystem::perms::owner_all);
+
+                std::chrono::duration<double> duration = std::chrono::system_clock::now().time_since_epoch();
+                std::ostringstream name;
+                name << std::fixed;
+                name << duration.count();
+
+                std::filesystem::path file = directory / name.str();
+                m_file = std::ofstream(file);
+                std::filesystem::permissions(
+                        file, std::filesystem::perms::owner_read | std::filesystem::perms::owner_write);
                 m_file << std::unitbuf;
         }
 
