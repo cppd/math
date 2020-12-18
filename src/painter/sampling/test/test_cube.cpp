@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_samplers.h"
+#include "test_cube.h"
 
-#include "../samplers.h"
+#include "../cube.h"
 
 #include <src/com/log.h>
 #include <src/com/print.h>

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter.h"
 
 #include "coefficient/cosine_sphere.h"
-#include "sampling/samplers.h"
+#include "sampling/cube.h"
 #include "sampling/sphere.h"
 
 #include <src/color/color.h>
