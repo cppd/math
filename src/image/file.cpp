@@ -292,7 +292,7 @@ void load_1(QImage&& image, ColorFormat color_format, const std::span<std::byte>
                 {
                         image = image.convertToFormat(QImage::Format_Grayscale16);
                 }
-                load_image_alpha(&image, color_format, bytes);
+                load_image(&image, color_format, bytes);
         }
         else
         {
