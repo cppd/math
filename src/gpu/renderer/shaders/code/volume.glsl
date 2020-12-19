@@ -531,7 +531,6 @@ void draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir, float
 void draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, float depth_org)
 {
         const float length_in_samples = ceil(length(textureSize(image, 0) * image_dir));
-        const float length_in_samples_r = 1.0 / length_in_samples;
         const float sample_count = 1 + length_in_samples;
 
         image_dir /= length_in_samples;
