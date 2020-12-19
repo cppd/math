@@ -392,7 +392,8 @@ class Impl final : public Renderer
                                         create_volume_object(
                                                 m_device, m_graphics_command_pool, m_graphics_queue,
                                                 m_transfer_command_pool, m_transfer_queue,
-                                                m_volume_renderer.image_layouts(), m_volume_renderer.image_sampler()));
+                                                m_volume_renderer.image_layouts(), m_volume_renderer.image_sampler(),
+                                                m_volume_renderer.transfer_function_sampler()));
 
                                 created = true;
                         }

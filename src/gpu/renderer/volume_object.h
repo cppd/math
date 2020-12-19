@@ -51,5 +51,6 @@ std::unique_ptr<VolumeObject> create_volume_object(
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
         std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts,
-        VkSampler image_sampler);
+        VkSampler image_sampler,
+        VkSampler transfer_function_sampler);
 }

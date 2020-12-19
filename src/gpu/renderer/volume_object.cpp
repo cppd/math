@@ -169,7 +169,9 @@ class Impl final : public VolumeObject
 
         std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_descriptor_sets;
         const std::vector<vulkan::DescriptorSetLayoutAndBindings> m_image_layouts;
+
         VkSampler m_image_sampler;
+        VkSampler m_transfer_function_sampler;
 
         std::optional<int> m_version;
 
@@ -266,7 +268,7 @@ class Impl final : public VolumeObject
                 for (const vulkan::DescriptorSetLayoutAndBindings& layout : m_image_layouts)
                 {
                         vulkan::Descriptors sets = VolumeImageMemory::create(
-                                m_device, m_image_sampler, m_image_sampler, layout.descriptor_set_layout,
+                                m_device, m_image_sampler, m_transfer_function_sampler, layout.descriptor_set_layout,
                                 layout.descriptor_set_layout_bindings, info);
 
                         ASSERT(sets.descriptor_set_count() == 1);
@@ -426,13 +428,15 @@ public:
              const vulkan::CommandPool& /*transfer_command_pool*/,
              const vulkan::Queue& /*transfer_queue*/,
              std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts,
-             VkSampler image_sampler)
+             VkSampler image_sampler,
+             VkSampler transfer_function_sampler)
                 : m_device(device),
                   m_graphics_command_pool(graphics_command_pool),
                   m_graphics_queue(graphics_queue),
                   m_buffer(m_device, {m_graphics_queue.family_index()}),
                   m_image_layouts(std::move(image_layouts)),
-                  m_image_sampler(image_sampler)
+                  m_image_sampler(image_sampler),
+                  m_transfer_function_sampler(transfer_function_sampler)
         {
         }
 };
@@ -445,10 +449,11 @@ std::unique_ptr<VolumeObject> create_volume_object(
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
         std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts,
-        VkSampler image_sampler)
+        VkSampler image_sampler,
+        VkSampler transfer_function_sampler)
 {
         return std::make_unique<Impl>(
                 device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                std::move(image_layouts), image_sampler);
+                std::move(image_layouts), image_sampler, transfer_function_sampler);
 }
 }

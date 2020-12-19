@@ -35,8 +35,9 @@ VolumeRenderer::VolumeRenderer(const vulkan::Device& device, bool sample_shading
                   m_program.descriptor_set_layout_shared_bindings(),
                   buffers.drawing_buffer()),
           //
-          m_volume_sampler(create_volume_sampler(m_device)),
-          m_depth_sampler(create_volume_depth_image_sampler(m_device))
+          m_image_sampler(create_volume_image_sampler(m_device)),
+          m_depth_sampler(create_volume_depth_image_sampler(m_device)),
+          m_transfer_function_sampler(create_volume_transfer_function_sampler(m_device))
 {
 }
 
@@ -95,7 +96,12 @@ std::vector<vulkan::DescriptorSetLayoutAndBindings> VolumeRenderer::image_layout
 
 VkSampler VolumeRenderer::image_sampler() const
 {
-        return m_volume_sampler;
+        return m_image_sampler;
+}
+
+VkSampler VolumeRenderer::transfer_function_sampler() const
+{
+        return m_transfer_function_sampler;
 }
 
 void VolumeRenderer::draw_commands_fragments(VkCommandBuffer command_buffer) const

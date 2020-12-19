@@ -47,8 +47,9 @@ class VolumeRenderer
         std::optional<vulkan::CommandBuffers> m_command_buffers_image_fragments;
         std::optional<vulkan::CommandBuffers> m_command_buffers_fragments;
 
-        vulkan::Sampler m_volume_sampler;
+        vulkan::Sampler m_image_sampler;
         vulkan::Sampler m_depth_sampler;
+        vulkan::Sampler m_transfer_function_sampler;
 
         void draw_commands_fragments(VkCommandBuffer command_buffer) const;
         void draw_commands_image(const VolumeObject* volume, VkCommandBuffer command_buffer) const;
@@ -61,6 +62,7 @@ public:
 
         std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts() const;
         VkSampler image_sampler() const;
+        VkSampler transfer_function_sampler() const;
 
         void create_buffers(
                 const RenderBuffers3D* render_buffers,
