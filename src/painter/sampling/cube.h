@@ -44,12 +44,8 @@ class StratifiedJitteredSampler
         static_assert(std::is_floating_point_v<T>);
         static_assert(N >= 2);
 
-        const int m_one_dimension_sample_count;
-        const T m_reciprocal_1d_sample_count = static_cast<T>(1) / m_one_dimension_sample_count;
-
-        const int m_sample_count = power<N>(static_cast<unsigned>(m_one_dimension_sample_count));
-
-        std::vector<T> m_offset;
+        std::vector<Vector<N, T>> m_offsets;
+        T m_reciprocal_1d_sample_count;
 
         static int one_dimension_size(int sample_count)
         {
@@ -75,22 +71,54 @@ class StratifiedJitteredSampler
                       + space_name(N));
         }
 
+        template <size_t M>
+        static void product(const std::vector<T>& values, Vector<N, T>* tuple, std::vector<Vector<N, T>>* result)
+        {
+                static_assert(N > 0 && M >= 0 && M < N);
+
+                for (T v : values)
+                {
+                        (*tuple)[M] = v;
+                        if constexpr (M == 0)
+                        {
+                                result->push_back(*tuple);
+                        }
+                        else
+                        {
+                                product<M - 1>(values, tuple, result);
+                        }
+                }
+        }
+
+        static std::vector<Vector<N, T>> product(const std::vector<T>& values)
+        {
+                std::vector<Vector<N, T>> result;
+                Vector<N, T> tuple;
+                product<N - 1>(values, &tuple, &result);
+                ASSERT(result.size() == std::pow(values.size(), N));
+                return result;
+        }
+
 public:
         explicit StratifiedJitteredSampler(int sample_count)
-                : m_one_dimension_sample_count(one_dimension_size(sample_count))
         {
-                if (m_one_dimension_sample_count < 1)
+                int one_dimension_sample_count = one_dimension_size(sample_count);
+
+                if (one_dimension_sample_count < 1)
                 {
-                        error("Stratified jittered one dimension sample count ("
-                              + to_string(m_one_dimension_sample_count) + ") is not a positive integer");
+                        error("Stratified jittered one dimension sample count (" + to_string(one_dimension_sample_count)
+                              + ") is not a positive integer");
                 }
 
-                m_offset.resize(m_one_dimension_sample_count);
-
-                for (int i = 0; i < m_one_dimension_sample_count; ++i)
+                std::vector<T> values;
+                values.reserve(one_dimension_sample_count);
+                for (int i = 0; i < one_dimension_sample_count; ++i)
                 {
-                        m_offset[i] = static_cast<T>(i) / m_one_dimension_sample_count;
+                        values.push_back(static_cast<T>(i) / one_dimension_sample_count);
                 }
+
+                m_offsets = product(values);
+                m_reciprocal_1d_sample_count = static_cast<T>(1) / one_dimension_sample_count;
         }
 
         template <typename RandomEngine>
@@ -98,71 +126,11 @@ public:
         {
                 std::uniform_real_distribution<T> urd(0, m_reciprocal_1d_sample_count);
 
-                samples->resize(m_sample_count);
+                samples->resize(m_offsets.size());
 
-                if constexpr (N == 2)
+                for (size_t i = 0; i < m_offsets.size(); ++i)
                 {
-                        int sample_num = 0;
-                        Vector<N, T> sample;
-
-                        for (int i = 0; i < m_one_dimension_sample_count; ++i)
-                        {
-                                sample[1] = m_offset[i];
-
-                                for (int j = 0; j < m_one_dimension_sample_count; ++j)
-                                {
-                                        sample[0] = m_offset[j];
-
-                                        (*samples)[sample_num++] = sample + random_vector<N, T>(random_engine, urd);
-                                }
-                        }
-
-                        ASSERT(sample_num == m_sample_count);
-
-                        return;
-                }
-
-                if constexpr (N >= 3)
-                {
-                        int sample_num = 0;
-                        Vector<N, T> sample(0);
-                        Vector<N, int> digits(0);
-
-                        while (true)
-                        {
-                                for (int i = 0; i < m_one_dimension_sample_count; ++i)
-                                {
-                                        sample[1] = m_offset[i];
-
-                                        for (int j = 0; j < m_one_dimension_sample_count; ++j)
-                                        {
-                                                sample[0] = m_offset[j];
-
-                                                (*samples)[sample_num++] =
-                                                        sample + random_vector<N, T>(random_engine, urd);
-                                        }
-                                }
-
-                                for (unsigned i = 2; i < N; ++i)
-                                {
-                                        if (digits[i] < m_one_dimension_sample_count - 1)
-                                        {
-                                                ++digits[i];
-                                                sample[i] = m_offset[digits[i]];
-                                                break;
-                                        }
-
-                                        if (i == N - 1)
-                                        {
-                                                ASSERT(sample_num == m_sample_count);
-
-                                                return;
-                                        }
-
-                                        digits[i] = 0;
-                                        sample[i] = 0;
-                                }
-                        }
+                        (*samples)[i] = m_offsets[i] + random_vector<N, T>(random_engine, urd);
                 }
         }
 };
