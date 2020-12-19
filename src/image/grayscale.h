@@ -19,14 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image.h"
 
-#include <src/com/error.h>
-
 namespace image
 {
-std::vector<std::byte> convert_to_grayscale(ColorFormat color_format, const std::span<const std::byte>& bytes);
+void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes);
+std::vector<std::byte> convert_to_r_component_format(ColorFormat color_format, const std::span<const std::byte>& bytes);
 
 template <size_t N>
-Image<N> convert_to_grayscale(const Image<N>& image)
+Image<N> convert_to_r_component_format(const Image<N>& image)
 {
         Image<N> result;
 
@@ -38,7 +37,7 @@ Image<N> convert_to_grayscale(const Image<N>& image)
                 case ColorFormat::R16:
                 case ColorFormat::R32:
                         error("Unsupported image format " + format_to_string(image.color_format)
-                              + " for converting image to grayscale");
+                              + " for converting image to R component format");
                 case ColorFormat::R8G8B8_SRGB:
                 case ColorFormat::R8G8B8A8_SRGB:
                         return ColorFormat::R8_SRGB;
@@ -53,7 +52,7 @@ Image<N> convert_to_grayscale(const Image<N>& image)
         }();
 
         result.size = image.size;
-        result.pixels = convert_to_grayscale(image.color_format, image.pixels);
+        result.pixels = convert_to_r_component_format(image.color_format, image.pixels);
 
         return result;
 }

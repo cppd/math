@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "grayscale.h"
 
 #include <src/color/conversion.h>
+#include <src/com/error.h>
 #include <src/com/print.h>
 
 namespace image
@@ -48,54 +49,92 @@ float rgb_to_grayscale(const std::array<float, 3>& rgb)
 }
 
 template <typename T>
-void convert_to_grayscale(
+void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes)
+{
+        int component_count = format_component_count(color_format);
+        if (component_count < 3)
+        {
+                error("Color component count " + to_string(bytes.size())
+                      + " must be greater than or equal to 3 for grayscaling, format "
+                      + format_to_string(color_format));
+        }
+
+        const size_t pixel_size = component_count * sizeof(T);
+        ASSERT(pixel_size == format_pixel_size_in_bytes(color_format));
+        if (bytes.size() % pixel_size != 0)
+        {
+                error("Error color byte count " + to_string(bytes.size()) + " for grayscaling, format "
+                      + format_to_string(color_format));
+        }
+
+        std::byte* ptr = bytes.data();
+        const std::byte* end = ptr + bytes.size();
+        while (ptr != end)
+        {
+                std::array<T, 3> rgb;
+                std::memcpy(rgb.data(), ptr, 3 * sizeof(T));
+                T grayscale = rgb_to_grayscale(rgb);
+                rgb[0] = grayscale;
+                rgb[1] = grayscale;
+                rgb[2] = grayscale;
+                std::memcpy(ptr, rgb.data(), 3 * sizeof(T));
+                ptr += pixel_size;
+        }
+}
+
+template <typename T>
+void convert_to_r_component_format(
         ColorFormat color_format,
         const std::span<const std::byte>& bytes_color,
-        const std::span<std::byte>& bytes_grayscale)
+        const std::span<std::byte>& bytes_r)
 {
-        ASSERT(format_component_count(color_format) >= 3);
+        int component_count = format_component_count(color_format);
+        if (component_count < 3)
+        {
+                error("Color component count " + to_string(bytes_color.size())
+                      + " must be greater than or equal to 3 for converting to R component format, format "
+                      + format_to_string(color_format));
+        }
 
-        const size_t src_pixel_size = format_component_count(color_format) * sizeof(T);
+        const size_t src_pixel_size = component_count * sizeof(T);
         ASSERT(src_pixel_size == format_pixel_size_in_bytes(color_format));
         if (bytes_color.size() % src_pixel_size != 0)
         {
-                error("Error color byte count " + to_string(bytes_color.size()) + " for grayscaling "
-                      + to_string(sizeof(T) * limits<unsigned char>::digits) + "-bit");
+                error("Error color byte count " + to_string(bytes_color.size())
+                      + " for converting to R component format, format " + format_to_string(color_format));
         }
+
         const size_t dst_pixel_size = sizeof(T);
-        if (bytes_grayscale.size() % dst_pixel_size != 0)
+        if (bytes_r.size() % dst_pixel_size != 0)
         {
-                error("Error grayscale byte count " + to_string(bytes_grayscale.size()) + " for grayscaling "
-                      + to_string(sizeof(T) * limits<unsigned char>::digits) + "-bit");
+                error("Error R byte count " + to_string(bytes_r.size())
+                      + " for converting to R component format, format " + format_to_string(color_format));
         }
 
         const std::byte* src = bytes_color.data();
         const std::byte* end = src + bytes_color.size();
-        std::byte* dst = bytes_grayscale.data();
+        std::byte* dst = bytes_r.data();
         while (src != end)
         {
-                std::array<T, 3> rgb;
-                std::memcpy(rgb.data(), src, sizeof(rgb));
-
-                T grayscale = rgb_to_grayscale(rgb);
-                std::memcpy(dst, &grayscale, sizeof(grayscale));
-
+                T r;
+                std::memcpy(&r, src, sizeof(T));
+                std::memcpy(dst, &r, sizeof(T));
                 src += src_pixel_size;
                 dst += dst_pixel_size;
         }
 }
 
 template <typename T>
-std::vector<std::byte> convert_to_grayscale(ColorFormat color_format, const std::span<const std::byte>& bytes)
+std::vector<std::byte> convert_to_r_component_format(ColorFormat color_format, const std::span<const std::byte>& bytes)
 {
-        std::vector<std::byte> bytes_grayscale;
-        bytes_grayscale.resize(bytes.size() / format_component_count(color_format));
-        convert_to_grayscale<T>(color_format, bytes, bytes_grayscale);
-        return bytes_grayscale;
+        std::vector<std::byte> bytes_r;
+        bytes_r.resize(bytes.size() / format_component_count(color_format));
+        convert_to_r_component_format<T>(color_format, bytes, bytes_r);
+        return bytes_r;
 }
 }
 
-std::vector<std::byte> convert_to_grayscale(ColorFormat color_format, const std::span<const std::byte>& bytes)
+void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes)
 {
         switch (color_format)
         {
@@ -106,13 +145,35 @@ std::vector<std::byte> convert_to_grayscale(ColorFormat color_format, const std:
                       + " for converting image to grayscale");
         case ColorFormat::R8G8B8_SRGB:
         case ColorFormat::R8G8B8A8_SRGB:
-                return convert_to_grayscale<uint8_t>(color_format, bytes);
+                return make_grayscale<uint8_t>(color_format, bytes);
         case ColorFormat::R16G16B16:
         case ColorFormat::R16G16B16A16:
-                return convert_to_grayscale<uint16_t>(color_format, bytes);
+                return make_grayscale<uint16_t>(color_format, bytes);
         case ColorFormat::R32G32B32:
         case ColorFormat::R32G32B32A32:
-                return convert_to_grayscale<float>(color_format, bytes);
+                return make_grayscale<float>(color_format, bytes);
+        }
+        unknown_color_format_error(color_format);
+}
+
+std::vector<std::byte> convert_to_r_component_format(ColorFormat color_format, const std::span<const std::byte>& bytes)
+{
+        switch (color_format)
+        {
+        case ColorFormat::R8_SRGB:
+        case ColorFormat::R16:
+        case ColorFormat::R32:
+                error("Unsupported image format " + format_to_string(color_format)
+                      + " for converting to R component format");
+        case ColorFormat::R8G8B8_SRGB:
+        case ColorFormat::R8G8B8A8_SRGB:
+                return convert_to_r_component_format<uint8_t>(color_format, bytes);
+        case ColorFormat::R16G16B16:
+        case ColorFormat::R16G16B16A16:
+                return convert_to_r_component_format<uint16_t>(color_format, bytes);
+        case ColorFormat::R32G32B32:
+        case ColorFormat::R32G32B32A32:
+                return convert_to_r_component_format<float>(color_format, bytes);
         }
         unknown_color_format_error(color_format);
 }

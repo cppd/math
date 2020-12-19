@@ -136,17 +136,23 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                                         image.pixels = std::move(*pixels_ptr);
 
                                         ASSERT(image::format_component_count(color_format) == 4);
-                                        if (parameters.with_background)
+
+                                        if (parameters.with_background && !*parameters.grayscale)
                                         {
                                                 image::blend_alpha(color_format, image.pixels, background);
-                                                if (!*parameters.grayscale)
-                                                {
-                                                        image = image::delete_alpha(image);
-                                                }
+                                                image = image::delete_alpha(image);
                                         }
-                                        if (*parameters.grayscale)
+                                        else if (parameters.with_background && *parameters.grayscale)
                                         {
-                                                image = image::convert_to_grayscale(image);
+                                                image::blend_alpha(color_format, image.pixels, background);
+                                                image::make_grayscale(image.color_format, image.pixels);
+                                                image = image::convert_to_r_component_format(image);
+                                        }
+                                        else if (!parameters.with_background && *parameters.grayscale)
+                                        {
+                                                image::make_grayscale(image.color_format, image.pixels);
+                                                image::blend_alpha(color_format, image.pixels, Color(0));
+                                                image = image::convert_to_r_component_format(image);
                                         }
 
                                         ASSERT(!(*parameters.grayscale && parameters.convert_to_8_bit));
@@ -205,18 +211,24 @@ std::function<void(ProgressRatioList*)> add_volume(
                                         image::flip_vertically(&image);
 
                                         ASSERT(image::format_component_count(color_format) == 4);
-                                        if (parameters.with_background)
+
+                                        if (parameters.with_background && !*parameters.grayscale)
                                         {
                                                 image::blend_alpha(color_format, image.pixels, background);
-                                                if (!*parameters.grayscale)
-                                                {
-                                                        constexpr float ALPHA = 1;
-                                                        image::set_alpha(color_format, image.pixels, ALPHA);
-                                                }
+                                                constexpr float ALPHA = 1;
+                                                image::set_alpha(color_format, image.pixels, ALPHA);
                                         }
-                                        if (*parameters.grayscale)
+                                        else if (parameters.with_background && *parameters.grayscale)
                                         {
-                                                image = image::convert_to_grayscale(image);
+                                                image::blend_alpha(color_format, image.pixels, background);
+                                                image::make_grayscale(image.color_format, image.pixels);
+                                                image = image::convert_to_r_component_format(image);
+                                        }
+                                        else if (!parameters.with_background && *parameters.grayscale)
+                                        {
+                                                image::make_grayscale(image.color_format, image.pixels);
+                                                image::blend_alpha(color_format, image.pixels, Color(0));
+                                                image = image::convert_to_r_component_format(image);
                                         }
 
                                         ASSERT(!(*parameters.grayscale && parameters.convert_to_8_bit));
