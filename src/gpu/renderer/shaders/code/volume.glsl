@@ -469,14 +469,14 @@ vec4 isosurface_color(vec3 p)
 void draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir, float depth_org)
 {
         const float length_in_samples = length(textureSize(image, 0) * image_dir);
-        const float sample_count = trunc(length_in_samples);
+        const float sample_end = length_in_samples;
 
         image_dir /= length_in_samples;
         depth_dir /= length_in_samples;
 
         float s = 0.5;
 
-        if (!fragments_empty() && s < sample_count)
+        if (!fragments_empty() && s < sample_end)
         {
                 Fragment fragment = fragments_top();
                 float volume_depth = depth_org + s * depth_dir;
@@ -487,14 +487,14 @@ void draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir, float
                         {
                                 vec3 p = image_org + s * image_dir;
                                 COLOR_ADD(volume_color(p));
-                                if (++s >= sample_count)
+                                if (++s >= sample_end)
                                 {
                                         break;
                                 }
                                 volume_depth = depth_org + s * depth_dir;
                         }
 
-                        if (s >= sample_count)
+                        if (s >= sample_end)
                         {
                                 break;
                         }
@@ -516,7 +516,7 @@ void draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir, float
                 }
         }
 
-        for (; s < sample_count; ++s)
+        for (; s < sample_end; ++s)
         {
                 vec3 p = image_org + s * image_dir;
                 COLOR_ADD(volume_color(p));
@@ -531,14 +531,14 @@ void draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir, float
 void draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, float depth_org)
 {
         const float length_in_samples = ceil(length(textureSize(image, 0) * image_dir));
-        const float sample_count = 1 + length_in_samples;
+        const float sample_end = length_in_samples + 1;
 
         image_dir /= length_in_samples;
         depth_dir /= length_in_samples;
 
         float s = 1;
 
-        if (!fragments_empty() && s < sample_count)
+        if (!fragments_empty() && s < sample_end)
         {
                 Fragment fragment = fragments_top();
 
@@ -553,9 +553,9 @@ void draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
                 }
         }
 
-        float prev_sign = sample_count > 1 ? sign(scalar_volume_value(image_org) - volume.isovalue) : 0;
+        float prev_sign = s < sample_end ? sign(scalar_volume_value(image_org) - volume.isovalue) : 0;
 
-        if (!fragments_empty() && s < sample_count)
+        if (!fragments_empty() && s < sample_end)
         {
                 Fragment fragment = fragments_top();
 
@@ -576,7 +576,7 @@ void draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
                                         COLOR_ADD(isosurface_color(p));
                                 }
 
-                                if (++s >= sample_count)
+                                if (++s >= sample_end)
                                 {
                                         break;
                                 }
@@ -584,7 +584,7 @@ void draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
                                 volume_depth = depth_org + s * depth_dir;
                         }
 
-                        if (s >= sample_count)
+                        if (s >= sample_end)
                         {
                                 break;
                         }
@@ -623,7 +623,7 @@ void draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
                                 }
                         }
 
-                        if (++s >= sample_count)
+                        if (++s >= sample_end)
                         {
                                 break;
                         }
@@ -642,7 +642,7 @@ void draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, f
                 COLOR_ADD(fragments_top());
         }
 
-        for (; s < sample_count; ++s)
+        for (; s < sample_end; ++s)
         {
                 vec3 p = image_org + s * image_dir;
                 float next_sign = sign(scalar_volume_value(p) - volume.isovalue);
