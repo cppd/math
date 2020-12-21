@@ -314,19 +314,19 @@ vec3 world_normal(vec3 p)
         return normalize(coordinates.normal_matrix * gradient(p));
 }
 
-bool intersect(vec3 ray_org, vec3 ray_dir, out float first, out float second)
+bool intersect(vec3 ray_org, vec3 ray_dir, vec3 planes_min, vec3 planes_max, out float first, out float second)
 {
         float f_max = -1e38;
         float b_min = 1e38;
 
-        // На основе функции из ParallelotopeOrtho для случая единичного куба текстурных координат
+        // На основе функции из ParallelotopeAA
         for (int i = 0; i < 3; ++i)
         {
                 float s = ray_dir[i]; // dot(ray_dir, planes[i].n);
                 if (s == 0)
                 {
                         float d = ray_org[i]; // dot(ray_org, planes[i].n);
-                        if (d > 1 || d < 0)
+                        if (d < planes_min[i] || d > planes_max[i])
                         {
                                 // параллельно плоскостям и снаружи
                                 return false;
@@ -336,11 +336,10 @@ bool intersect(vec3 ray_org, vec3 ray_dir, out float first, out float second)
                 }
 
                 float d = ray_org[i]; // dot(ray_org, planes[i].n);
-                float alpha1 = (1 - d) / s;
-                // d и s имеют противоположный знак для другой плоскости
-                float alpha2 = d / -s;
+                float alpha1 = (planes_min[i] - d) / s;
+                float alpha2 = (planes_max[i] - d) / s;
 
-                if (s < 0)
+                if (s > 0)
                 {
                         // пересечение снаружи для первой плоскости
                         // пересечение внутри для второй плоскости
@@ -401,7 +400,7 @@ bool intersect(vec3 ray_org, vec3 ray_dir, out float first, out float second)
                 } while (false);
         }
 
-        first = f_max;
+        first = max(0, f_max);
         second = b_min;
 
         return true;
@@ -675,6 +674,16 @@ void draw_fragments()
 
 #if defined(IMAGE)
 
+bool intersect(bool exact, vec3 ray_org, vec3 ray_dir, out float first, out float second)
+{
+        if (exact)
+        {
+                return intersect(ray_org, ray_dir, vec3(0), vec3(1), first, second);
+        }
+        vec3 region = vec3(0.5) / textureSize(image, 0);
+        return intersect(ray_org, ray_dir, -region, vec3(1) + region, first, second);
+}
+
 void main(void)
 {
         fragments_build();
@@ -684,9 +693,11 @@ void main(void)
         vec3 ray_org = (coordinates.inverse_mvp_matrix * vec4(device_coordinates, 0, 1)).xyz;
         vec3 ray_dir = normalize(mat3(coordinates.inverse_mvp_matrix) * vec3(0, 0, 1));
 
+        const bool draw_as_volume = volume.color_volume || !volume.isosurface;
+
         float first;
         float second;
-        if (!intersect(ray_org, ray_dir, first, second))
+        if (!intersect(draw_as_volume, ray_org, ray_dir, first, second))
         {
 #if defined(FRAGMENTS)
                 color_init();
@@ -694,10 +705,10 @@ void main(void)
                 color_set();
                 return;
 #else
-                discard;
+                out_color = vec4(vec3(0), 1);
+                return;
 #endif
         }
-        first = max(0, first);
 
         vec3 image_dir = ray_dir * (second - first);
         vec3 image_org = ray_org + ray_dir * first;
@@ -713,7 +724,8 @@ void main(void)
                 color_set();
                 return;
 #else
-                discard;
+                out_color = vec4(vec3(0), 1);
+                return;
 #endif
         }
         float depth_dir = dot(coordinates.third_row_of_mvp.xyz, image_dir);
@@ -724,22 +736,15 @@ void main(void)
                 depth_dir = depth_dir_limit;
         }
 
-        if (volume.color_volume)
-        {
-                color_init();
-                draw_image_as_volume(image_dir, image_org, depth_dir, depth_org);
-                color_set();
-                return;
-        }
-        if (!volume.isosurface)
-        {
-                color_init();
-                draw_image_as_volume(image_dir, image_org, depth_dir, depth_org);
-                color_set();
-                return;
-        }
         color_init();
-        draw_image_as_isosurface(image_dir, image_org, depth_dir, depth_org);
+        if (draw_as_volume)
+        {
+                draw_image_as_volume(image_dir, image_org, depth_dir, depth_org);
+        }
+        else
+        {
+                draw_image_as_isosurface(image_dir, image_org, depth_dir, depth_org);
+        }
         color_set();
 }
 
