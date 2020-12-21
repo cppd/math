@@ -396,12 +396,12 @@ target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
 AddIncludeFiles(VULKAN_SHADERS
                         OUTPUT_EXTENSION "spr"
                         SOURCE
-                                "src/gpu/convex_hull/shaders/code"
-                                "src/gpu/dft/shaders/code"
-                                "src/gpu/optical_flow/shaders/code"
-                                "src/gpu/pencil_sketch/shaders/code"
-                                "src/gpu/renderer/shaders/code"
-                                "src/gpu/text_writer/shaders/code"
+                                "src/gpu/convex_hull/code"
+                                "src/gpu/dft/code"
+                                "src/gpu/optical_flow/code"
+                                "src/gpu/pencil_sketch/code"
+                                "src/gpu/renderer/code"
+                                "src/gpu/text_writer/code"
                         EXTENSIONS ${extensions_shaders}
                         EXTENSIONS_INCLUDE ${extensions_shaders_include})
 
