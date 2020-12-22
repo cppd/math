@@ -149,14 +149,14 @@ class ViewThread final : public View
         {
                 try
                 {
+                        const std::thread::id thread_id = std::this_thread::get_id();
+
+                        T view(parent_window, parent_window_ppi);
+
+                        m_started = true;
+
                         try
                         {
-                                const std::thread::id thread_id = std::this_thread::get_id();
-
-                                T view(parent_window, parent_window_ppi);
-
-                                m_started = true;
-
                                 view.loop(
                                         [&]()
                                         {
@@ -170,19 +170,24 @@ class ViewThread final : public View
                                         error("Thread ended without stop.");
                                 }
                         }
+                        catch (const std::exception& e)
+                        {
+                                MESSAGE_ERROR_FATAL(std::string("Error from view\n") + e.what());
+                        }
                         catch (...)
                         {
-                                m_started = true;
-                                throw;
+                                MESSAGE_ERROR_FATAL("Unknown error from view");
                         }
                 }
                 catch (const std::exception& e)
                 {
-                        MESSAGE_ERROR_FATAL(std::string("Error from view: ") + e.what());
+                        m_started = true;
+                        MESSAGE_ERROR_FATAL(std::string("Error from view\n") + e.what());
                 }
                 catch (...)
                 {
-                        MESSAGE_ERROR_FATAL("Unknown error from view.");
+                        m_started = true;
+                        MESSAGE_ERROR_FATAL("Unknown error from view");
                 }
         }
 
