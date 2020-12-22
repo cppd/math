@@ -18,13 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter.h"
 
 #include "coefficient/cosine_sphere.h"
+#include "painter/pixels.h"
 #include "sampling/cube.h"
 #include "sampling/sphere.h"
 
 #include <src/color/color.h>
 #include <src/com/alg.h>
 #include <src/com/error.h>
-#include <src/com/global_index.h>
 #include <src/com/thread.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
@@ -46,9 +46,7 @@ template <typename T>
 constexpr T DOT_PRODUCT_EPSILON = 0;
 
 constexpr Color::DataType MIN_COLOR_LEVEL = 1e-4;
-
 constexpr int MAX_RECURSION_LEVEL = 100;
-
 constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
 
 template <typename T>
@@ -59,103 +57,6 @@ using PainterSampler = StratifiedJitteredSampler<N, T>;
 // using PainterSampler = LatinHypercubeSampler<N, T>;
 
 static_assert(std::is_floating_point_v<Color::DataType>);
-
-struct PixelInfo final
-{
-        Color color;
-        float coverage;
-};
-
-template <size_t N>
-class Pixels final
-{
-        using CounterType = std::uint_least16_t;
-
-        class Pixel
-        {
-                Color m_color_sum{0};
-                CounterType m_hit_sample_sum = 0;
-                CounterType m_all_sample_sum = 0;
-
-                Color compute_color() const
-                {
-                        if (m_hit_sample_sum > 0)
-                        {
-                                Color c = m_color_sum / m_hit_sample_sum;
-                                for (unsigned i = 0; i < 3; ++i)
-                                {
-                                        if (c.data()[i] > 1)
-                                        {
-                                                c.data()[i] = 1;
-                                        }
-                                }
-                                return c;
-                        }
-                        return Color(0);
-                }
-
-                float compute_coverage() const
-                {
-                        return static_cast<float>(m_hit_sample_sum) / m_all_sample_sum;
-                }
-
-        public:
-                PixelInfo add(const Color& color, CounterType hit_samples, CounterType all_samples)
-                {
-                        m_all_sample_sum += all_samples;
-                        m_hit_sample_sum += hit_samples;
-                        m_color_sum += color;
-
-                        return {.color = compute_color(), .coverage = compute_coverage()};
-                }
-        };
-
-        const GlobalIndex<N, long long> m_global_index;
-        std::vector<Pixel> m_pixels;
-
-public:
-        explicit Pixels(const std::array<int, N>& screen_size) : m_global_index(screen_size)
-        {
-                m_pixels.resize(m_global_index.count());
-        }
-
-        PixelInfo add(
-                const std::array<int_least16_t, N>& pixel,
-                const Color& color,
-                CounterType hit_samples,
-                CounterType all_samples)
-        {
-                return m_pixels[m_global_index.compute(pixel)].add(color, hit_samples, all_samples);
-        }
-};
-
-class Counter final
-{
-        int m_counter = 0;
-
-public:
-        Counter() = default;
-
-        Counter& operator=(const Counter&) = delete;
-        Counter& operator=(Counter&&) = delete;
-        Counter(const Counter&) = delete;
-        Counter(Counter&&) = delete;
-
-        void reset()
-        {
-                m_counter = 0;
-        }
-
-        void inc()
-        {
-                ++m_counter;
-        }
-
-        int value() const
-        {
-                return m_counter;
-        }
-};
 
 template <size_t N, typename T>
 struct PaintData
@@ -179,18 +80,18 @@ bool color_is_zero(const Color& c)
 
 template <size_t N, typename T>
 bool light_source_is_visible(
-        Counter* ray_count,
+        int* ray_count,
         const PaintData<N, T>& paint_data,
         const Ray<N, T>& ray,
         T distance_to_light_source)
 {
-        ray_count->inc();
+        ++(*ray_count);
         return !paint_data.scene.has_intersection(ray, distance_to_light_source);
 }
 
 template <size_t N, typename T>
 Color direct_diffuse_lighting(
-        Counter* ray_count,
+        int* ray_count,
         const PaintData<N, T>& paint_data,
         const Vector<N, T>& p,
         const Vector<N, T>& geometric_normal,
@@ -241,7 +142,7 @@ Color direct_diffuse_lighting(
                         // самого первого пересечения в предположении, что оно произошло с этой самой
                         // окрестностью точки.
 
-                        ray_count->inc();
+                        ++(*ray_count);
                         ray_to_light.move_along_dir(ray_offset);
                         std::optional<Intersection<N, T>> intersection = paint_data.scene.intersect(ray_to_light);
                         if (!intersection)
@@ -260,7 +161,7 @@ Color direct_diffuse_lighting(
                         }
 
                         {
-                                ray_count->inc();
+                                ++(*ray_count);
                                 Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
                                 ray_from_light.move_along_dir(2 * ray_offset);
                                 std::optional<Intersection<N, T>> from_light =
@@ -322,7 +223,7 @@ bool diffuse_weighted_ray(
 template <size_t N, typename T>
 std::optional<Color> trace_path(
         const PaintData<N, T>& paint_data,
-        Counter* ray_count,
+        int* ray_count,
         PainterRandomEngine<T>& random_engine,
         int recursion_level,
         Color::DataType color_level,
@@ -333,7 +234,7 @@ std::optional<Color> trace_path(
                 return std::nullopt;
         }
 
-        ray_count->inc();
+        ++(*ray_count);
         std::optional<Intersection<N, T>> intersection = paint_data.scene.intersect(ray);
         if (!intersection)
         {
@@ -428,8 +329,6 @@ Vector<N, VectorType> array_to_vector(const std::array<ArrayType, N>& array)
 template <size_t N, typename T>
 void paint_pixels(
         unsigned thread_number,
-        PainterRandomEngine<T>& random_engine,
-        std::vector<Vector<N - 1, T>>* samples,
         std::atomic_bool* stop,
         const Projector<N, T>& projector,
         const PaintData<N, T>& paint_data,
@@ -438,26 +337,28 @@ void paint_pixels(
         const PainterSampler<N - 1, T>& sampler,
         Pixels<N - 1>* pixels)
 {
+        thread_local RandomEngineWithSeed<PainterRandomEngine<T>> random_engine;
+        thread_local std::vector<Vector<N - 1, T>> samples;
+
         std::optional<std::array<int_least16_t, N - 1>> pixel;
 
-        Counter ray_count;
+        int ray_count = 0;
         int sample_count = 0;
 
-        while (!(*stop) && (pixel = paintbrush->next_pixel(ray_count.value(), sample_count)))
+        while (!(*stop) && (pixel = paintbrush->next_pixel(ray_count, sample_count)))
         {
                 painter_notifier->painter_pixel_before(thread_number, *pixel);
 
                 Vector<N - 1, T> screen_point = array_to_vector<T>(*pixel);
 
-                sampler.generate(random_engine, samples);
+                sampler.generate(random_engine, &samples);
 
-                sample_count = samples->size();
+                sample_count = samples.size();
                 int hit_sample_count = 0;
-
-                ray_count.reset();
+                ray_count = 0;
                 Color color(0);
 
-                for (const Vector<N - 1, T>& sample_point : *samples)
+                for (const Vector<N - 1, T>& sample_point : samples)
                 {
                         constexpr int recursion_level = 0;
                         constexpr Color::DataType color_level = 1;
@@ -498,15 +399,11 @@ void work_thread(
         {
                 try
                 {
-                        RandomEngineWithSeed<PainterRandomEngine<T>> random_engine;
-
-                        std::vector<Vector<N - 1, T>> samples;
-
                         while (true)
                         {
                                 paint_pixels(
-                                        thread_number, random_engine, &samples, stop, projector, paint_data,
-                                        painter_notifier, paintbrush, sampler, pixels);
+                                        thread_number, stop, projector, paint_data, painter_notifier, paintbrush,
+                                        sampler, pixels);
 
                                 barrier->wait();
 
@@ -587,7 +484,6 @@ void paint_threads(
         int thread_count,
         std::atomic_bool* stop,
         bool smooth_normal)
-
 {
         check_thread_count(thread_count);
         check_paintbrush_projector(*paintbrush, scene.projector());
