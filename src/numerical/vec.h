@@ -372,6 +372,17 @@ std::enable_if_t<std::is_same_v<Dst, Src>, const Vector<N, Dst>&> to_vector(cons
 }
 
 template <typename Dst, size_t N, typename Src>
+Vector<N, Dst> to_vector(const std::array<Src, N>& array)
+{
+        Vector<N, Dst> res;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                res[i] = array[i];
+        }
+        return res;
+}
+
+template <typename Dst, size_t N, typename Src>
 std::enable_if_t<!std::is_same_v<Dst, Src>, std::vector<Vector<N, Dst>>> to_vector(const std::vector<Vector<N, Src>>& v)
 {
         std::vector<Vector<N, Dst>> res(v.size());

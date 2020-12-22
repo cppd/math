@@ -95,6 +95,11 @@ public:
                 return std::max(m_data[2], std::max(m_data[0], m_data[1]));
         }
 
+        bool below(T v) const
+        {
+                return m_data[0] < v && m_data[1] < v && m_data[2] < v;
+        }
+
         Vector<3, T>& data()
         {
                 return m_data;

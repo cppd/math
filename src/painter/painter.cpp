@@ -73,11 +73,6 @@ struct PaintData
         }
 };
 
-bool color_is_zero(const Color& c)
-{
-        return c.max_element() < MIN_COLOR_LEVEL;
-}
-
 template <size_t N, typename T>
 bool light_source_is_visible(
         int* ray_count,
@@ -105,7 +100,7 @@ Color direct_diffuse_lighting(
         {
                 const LightProperties light_properties = light_source->properties(p);
 
-                if (color_is_zero(light_properties.color))
+                if (light_properties.color.below(MIN_COLOR_LEVEL))
                 {
                         continue;
                 }
@@ -315,17 +310,6 @@ std::optional<Color> trace_path(
         return color;
 }
 
-template <typename VectorType, size_t N, typename ArrayType>
-Vector<N, VectorType> array_to_vector(const std::array<ArrayType, N>& array)
-{
-        Vector<N, VectorType> res;
-        for (unsigned i = 0; i < N; ++i)
-        {
-                res[i] = array[i];
-        }
-        return res;
-}
-
 template <size_t N, typename T>
 void paint_pixels(
         unsigned thread_number,
@@ -342,31 +326,29 @@ void paint_pixels(
 
         std::optional<std::array<int_least16_t, N - 1>> pixel;
 
+        samples.clear();
         int ray_count = 0;
-        int sample_count = 0;
 
-        while (!(*stop) && (pixel = paintbrush->next_pixel(ray_count, sample_count)))
+        while (!(*stop) && (pixel = paintbrush->next_pixel(ray_count, samples.size())))
         {
                 painter_notifier->painter_pixel_before(thread_number, *pixel);
 
-                Vector<N - 1, T> screen_point = array_to_vector<T>(*pixel);
-
                 sampler.generate(random_engine, &samples);
-
-                sample_count = samples.size();
-                int hit_sample_count = 0;
                 ray_count = 0;
+
+                Vector<N - 1, T> screen_point = to_vector<T>(*pixel);
+                int hit_sample_count = 0;
                 Color color(0);
 
                 for (const Vector<N - 1, T>& sample_point : samples)
                 {
-                        constexpr int recursion_level = 0;
-                        constexpr Color::DataType color_level = 1;
+                        constexpr int RECURSION_LEVEL = 0;
+                        constexpr Color::DataType COLOR_LEVEL = 1;
 
                         Ray<N, T> ray = projector.ray(screen_point + sample_point);
 
                         std::optional<Color> sample_color =
-                                trace_path(paint_data, &ray_count, random_engine, recursion_level, color_level, ray);
+                                trace_path(paint_data, &ray_count, random_engine, RECURSION_LEVEL, COLOR_LEVEL, ray);
 
                         if (sample_color)
                         {
@@ -375,7 +357,7 @@ void paint_pixels(
                         }
                 }
 
-                PixelInfo info = pixels->add(*pixel, color, hit_sample_count, sample_count);
+                PixelInfo info = pixels->add(*pixel, color, hit_sample_count, samples.size());
 
                 painter_notifier->painter_pixel_after(thread_number, *pixel, info.color, info.coverage);
         }
@@ -457,24 +439,6 @@ void work_thread(
         }
 }
 
-void check_thread_count(int thread_count)
-{
-        if (thread_count < 1)
-        {
-                error("Painter thread count (" + to_string(thread_count) + ") must be greater than 0");
-        }
-}
-
-template <size_t N, typename T>
-void check_paintbrush_projector(const Paintbrush<N - 1>& paintbrush, const Projector<N, T>& projector)
-{
-        if (paintbrush.screen_size() != projector.screen_size())
-        {
-                error("The paintbrush screen size (" + to_string(paintbrush.screen_size())
-                      + ") are not equal to the projector screen size (" + to_string(projector.screen_size()) + ")");
-        }
-}
-
 template <size_t N, typename T>
 void paint_threads(
         PainterNotifier<N - 1>* painter_notifier,
@@ -485,8 +449,15 @@ void paint_threads(
         std::atomic_bool* stop,
         bool smooth_normal)
 {
-        check_thread_count(thread_count);
-        check_paintbrush_projector(*paintbrush, scene.projector());
+        if (thread_count < 1)
+        {
+                error("Painter thread count (" + to_string(thread_count) + ") must be greater than 0");
+        }
+        if (paintbrush->screen_size() != scene.projector().screen_size())
+        {
+                error("The paintbrush size (" + to_string(paintbrush->screen_size())
+                      + ") are not equal to the projector size (" + to_string(scene.projector().screen_size()) + ")");
+        }
 
         const PainterSampler<N - 1, T> sampler(samples_per_pixel);
 
