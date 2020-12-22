@@ -29,17 +29,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <random>
 #include <sstream>
+#include <version>
 
 namespace painter
 {
 namespace
 {
-#if !(defined(__clang__) && defined(STD_BETA_FUNCTION_NOT_FOUND))
+#if defined(__cpp_lib_math_special_functions) && __cpp_lib_math_special_functions >= 201603L
 long double betal(long double x, long double y)
 {
         return std::betal(x, y);
 }
 #else
+#if !defined(__clang__)
+#error __cpp_lib_math_special_functions
+#endif
 long double betal(long double x, long double y)
 {
         // Β(x, y) = Γ(x) * Γ(y) / Γ(x + y)

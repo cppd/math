@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path.h"
 
 #include <string_view>
+#include <version>
 
 template <typename T>
 std::string generic_utf8_filename(const T& path)
@@ -25,16 +26,23 @@ std::string generic_utf8_filename(const T& path)
         return reinterpret_cast<const char*>(path.generic_u8string().c_str());
 }
 
+#if defined(__cpp_lib_char8_t) && __cpp_lib_char8_t >= 201907L
 template <typename T>
 std::filesystem::path path_from_utf8(const T& filename)
 {
-#if !defined(__clang__)
         const char8_t* data = reinterpret_cast<const char8_t*>(filename.data());
         return std::filesystem::path(data, data + filename.size());
-#else
-        return std::filesystem::u8path(filename);
-#endif
 }
+#else
+#if !defined(__clang__)
+#error __cpp_lib_char8_t
+#endif
+template <typename T>
+std::filesystem::path path_from_utf8(const T& filename)
+{
+        return std::filesystem::u8path(filename);
+}
+#endif
 
 template std::string generic_utf8_filename(const std::filesystem::path& path);
 template std::filesystem::path path_from_utf8(const std::string& filename);

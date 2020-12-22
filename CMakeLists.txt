@@ -329,20 +329,6 @@ function(Check_CXX_Has_Int128)
         endif()
 endfunction()
 
-# libc++ 9 не имеет std::beta
-function(Check_CXX_Beta_Function_Works)
-        unset(CXX_BETA_FUNCTION_WORKS CACHE)
-        check_cxx_source_compiles(
-                "
-                #include <cmath>
-                int main()
-                {
-                        std::beta(1, 1);
-                }
-                "
-                CXX_BETA_FUNCTION_WORKS)
-endfunction()
-
 ##################################################
 
 project(create_str C CXX)
@@ -379,13 +365,6 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE -DQT_NO_KEYWORDS)
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}")
 
 #target_compile_options(${PROJECT_NAME} PRIVATE -S -masm=intel)
-
-##################################################
-
-Check_CXX_Beta_Function_Works()
-if (NOT CXX_BETA_FUNCTION_WORKS)
-        target_compile_definitions(${PROJECT_NAME} PRIVATE -DSTD_BETA_FUNCTION_NOT_FOUND)
-endif()
 
 ##################################################
 
