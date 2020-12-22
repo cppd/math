@@ -35,7 +35,10 @@ namespace painter
 namespace
 {
 #if !(defined(__clang__) && defined(STD_BETA_FUNCTION_NOT_FOUND))
-using std::betal;
+long double betal(long double x, long double y)
+{
+        return std::betal(x, y);
+}
 #else
 long double betal(long double x, long double y)
 {
