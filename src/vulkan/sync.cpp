@@ -23,24 +23,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-void wait_for_fence_and_reset(VkDevice device, VkFence fence)
+void reset_fence(VkDevice device, VkFence fence)
 {
-        constexpr VkBool32 wait_all = VK_TRUE;
-        constexpr uint64_t timeout = limits<uint64_t>::max();
-
-        VkResult result;
-
-        result = vkWaitForFences(device, 1, &fence, wait_all, timeout);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkWaitForFences", result);
-        }
-
-        result = vkResetFences(device, 1, &fence);
+        VkResult result = vkResetFences(device, 1, &fence);
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkResetFences", result);
         }
+}
+
+bool wait_for_fence(VkDevice device, VkFence fence, uint64_t timeout_nanoseconds)
+{
+        constexpr VkBool32 wait_all = VK_TRUE;
+
+        VkResult result = vkWaitForFences(device, 1, &fence, wait_all, timeout_nanoseconds);
+        if (result == VK_SUCCESS)
+        {
+                return true;
+        }
+        if (result == VK_TIMEOUT)
+        {
+                return false;
+        }
+        vulkan::vulkan_function_error("vkWaitForFences", result);
 }
 
 void queue_wait_idle(VkQueue queue)
