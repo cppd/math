@@ -40,4 +40,6 @@ void queue_submit(
 void queue_submit(VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, VkQueue queue);
 
 void queue_submit(VkCommandBuffer command_buffer, VkQueue queue);
+
+void queue_submit(VkQueue queue, VkFence fence);
 }

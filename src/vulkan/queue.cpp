@@ -104,6 +104,15 @@ void queue_submit(VkCommandBuffer command_buffer, VkQueue queue)
         }
 }
 
+void queue_submit(VkQueue queue, VkFence fence)
+{
+        VkResult result = vkQueueSubmit(queue, 0, nullptr, fence);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkQueueSubmit", result);
+        }
+}
+
 template void queue_submit(
         const std::array<VkSemaphore, 2>& wait_semaphores,
         const std::array<VkPipelineStageFlags, 2>& wait_stages,
