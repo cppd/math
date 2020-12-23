@@ -44,25 +44,6 @@ std::vector<std::string> sorted(const T& s)
         return res;
 }
 
-template <class T>
-T value(const T& v)
-{
-        return v;
-}
-
-template <class T, std::size_t N>
-std::vector<T> value(const T (&data)[N])
-{
-        static_assert(N > 0);
-        std::vector<T> r;
-        r.reserve(N);
-        for (size_t i = 0; i < N; ++i)
-        {
-                r.push_back(data[i]);
-        }
-        return r;
-}
-
 #define ADD_FLAG(s, flags, flag, name)            \
         do                                        \
         {                                         \
@@ -255,16 +236,16 @@ void extensions(const PhysicalDevice& device, size_t device_node, StringTree* tr
         }
 }
 
-#define ADD_VALUE_10(v) properties.emplace_back(#v, to_string(value(device.properties().properties_10.limits.v)))
+#define ADD_VALUE_10(v) properties.emplace_back(#v, to_string(device.properties().properties_10.limits.v))
 #define ADD_SAMPLE_10(v) properties.emplace_back(#v, samples(device.properties().properties_10.limits.v))
 
-#define ADD_VALUE_11(v) properties.emplace_back(#v, to_string(value(device.properties().properties_11.v)))
+#define ADD_VALUE_11(v) properties.emplace_back(#v, to_string(device.properties().properties_11.v))
 #define ADD_SHADER_STAGE_11(v) properties.emplace_back(#v, shader_stages(device.properties().properties_11.v))
 #define ADD_POINT_CLIPPING_BEHAVIOR_11(v) \
         properties.emplace_back(#v, point_clipping_behavior(device.properties().properties_11.v))
 #define ADD_SUBGROUP_FEATURE_11(v) properties.emplace_back(#v, subgroup_features(device.properties().properties_11.v))
 
-#define ADD_VALUE_12(v) properties.emplace_back(#v, to_string(value(device.properties().properties_12.v)))
+#define ADD_VALUE_12(v) properties.emplace_back(#v, to_string(device.properties().properties_12.v))
 #define ADD_SAMPLE_12(v) properties.emplace_back(#v, samples(device.properties().properties_12.v))
 #define ADD_RESOLVE_MODE_12(v) properties.emplace_back(#v, resolve_modes(device.properties().properties_12.v))
 #define ADD_SHADER_FLOAT_CONTROLS_INDEPENDENCE_12(v) \
@@ -450,9 +431,11 @@ void properties(const PhysicalDevice& device, size_t device_node, StringTree* tr
                                 return std::get<0>(v1) < std::get<0>(v2);
                         });
 
-                for (const auto& [name, value] : properties)
+                for (auto& [name, value] : properties)
                 {
-                        tree->add(properties_node, name + " = " + value);
+                        name += " = ";
+                        name += value;
+                        tree->add(properties_node, std::move(name));
                 }
         }
         catch (const std::exception& e)
@@ -796,7 +779,7 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
         {
                 PhysicalDevice device(d, surface);
 
-                if (!uuids.emplace(to_string(value(device.properties().properties_10.pipelineCacheUUID))).second)
+                if (!uuids.emplace(to_string(device.properties().properties_10.pipelineCacheUUID)).second)
                 {
                         continue;
                 }
