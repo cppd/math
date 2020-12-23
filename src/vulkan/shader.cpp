@@ -23,15 +23,15 @@ namespace vulkan
 {
 Shader::Shader(
         VkDevice device,
-        const std::vector<uint32_t>& code,
+        const std::span<const uint32_t>& code,
         VkShaderStageFlagBits stage,
-        const std::string_view& entry_point_name)
-        : m_module(device, code), m_stage(stage), m_entry_point_name(entry_point_name)
+        std::string entry_point_name)
+        : m_module(device, code), m_stage(stage), m_entry_point_name(std::move(entry_point_name))
 {
         ASSERT(stage == VK_SHADER_STAGE_VERTEX_BIT || stage == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT
                || stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT || stage == VK_SHADER_STAGE_GEOMETRY_BIT
                || stage == VK_SHADER_STAGE_FRAGMENT_BIT || stage == VK_SHADER_STAGE_COMPUTE_BIT);
-        ASSERT(!entry_point_name.empty());
+        ASSERT(!m_entry_point_name.empty());
 }
 
 VkShaderModule Shader::module() const
@@ -51,48 +51,39 @@ const char* Shader::entry_point_name() const
 
 //
 
-VertexShader::VertexShader(VkDevice device, const std::vector<uint32_t>& code, const std::string_view& entry_point_name)
-        : Shader(device, code, VK_SHADER_STAGE_VERTEX_BIT, entry_point_name)
+VertexShader::VertexShader(VkDevice device, const std::span<const uint32_t>& code, std::string entry_point_name)
+        : Shader(device, code, VK_SHADER_STAGE_VERTEX_BIT, std::move(entry_point_name))
 {
 }
 
 TesselationControlShader::TesselationControlShader(
         VkDevice device,
-        const std::vector<uint32_t>& code,
-        const std::string_view& entry_point_name)
-        : Shader(device, code, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT, entry_point_name)
+        const std::span<const uint32_t>& code,
+        std::string entry_point_name)
+        : Shader(device, code, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT, std::move(entry_point_name))
 {
 }
 
 TesselationEvaluationShader ::TesselationEvaluationShader(
         VkDevice device,
-        const std::vector<uint32_t>& code,
-        const std::string_view& entry_point_name)
-        : Shader(device, code, VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT, entry_point_name)
+        const std::span<const uint32_t>& code,
+        std::string entry_point_name)
+        : Shader(device, code, VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT, std::move(entry_point_name))
 {
 }
 
-GeometryShader::GeometryShader(
-        VkDevice device,
-        const std::vector<uint32_t>& code,
-        const std::string_view& entry_point_name)
-        : Shader(device, code, VK_SHADER_STAGE_GEOMETRY_BIT, entry_point_name)
+GeometryShader::GeometryShader(VkDevice device, const std::span<const uint32_t>& code, std::string entry_point_name)
+        : Shader(device, code, VK_SHADER_STAGE_GEOMETRY_BIT, std::move(entry_point_name))
 {
 }
 
-FragmentShader::FragmentShader(
-        VkDevice device,
-        const std::vector<uint32_t>& code,
-        const std::string_view& entry_point_name)
-        : Shader(device, code, VK_SHADER_STAGE_FRAGMENT_BIT, entry_point_name)
+FragmentShader::FragmentShader(VkDevice device, const std::span<const uint32_t>& code, std::string entry_point_name)
+        : Shader(device, code, VK_SHADER_STAGE_FRAGMENT_BIT, std::move(entry_point_name))
 {
 }
 
-ComputeShader::ComputeShader(
-        VkDevice device,
-        const std::vector<uint32_t>& code,
-        const std::string_view& entry_point_name)
-        : Shader(device, code, VK_SHADER_STAGE_COMPUTE_BIT, entry_point_name)
+ComputeShader::ComputeShader(VkDevice device, const std::span<const uint32_t>& code, std::string entry_point_name)
+        : Shader(device, code, VK_SHADER_STAGE_COMPUTE_BIT, std::move(entry_point_name))
 {
 }
 }

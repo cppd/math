@@ -19,9 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
+#include <span>
 #include <string>
-#include <string_view>
-#include <vector>
 
 namespace vulkan
 {
@@ -33,9 +32,13 @@ class Shader
 
 protected:
         Shader(VkDevice device,
-               const std::vector<uint32_t>& code,
+               const std::span<const uint32_t>& code,
                VkShaderStageFlagBits stage,
-               const std::string_view& entry_point_name);
+               std::string entry_point_name);
+
+        Shader(Shader&&) = default;
+        Shader& operator=(Shader&&) = default;
+        ~Shader() = default;
 
 public:
         VkShaderModule module() const;
@@ -46,16 +49,13 @@ public:
 class VertexShader final : public Shader
 {
 public:
-        VertexShader(VkDevice device, const std::vector<uint32_t>& code, const std::string_view& entry_point_name);
+        VertexShader(VkDevice device, const std::span<const uint32_t>& code, std::string entry_point_name);
 };
 
 class TesselationControlShader final : public Shader
 {
 public:
-        TesselationControlShader(
-                VkDevice device,
-                const std::vector<uint32_t>& code,
-                const std::string_view& entry_point_name);
+        TesselationControlShader(VkDevice device, const std::span<const uint32_t>& code, std::string entry_point_name);
 };
 
 class TesselationEvaluationShader final : public Shader
@@ -63,25 +63,25 @@ class TesselationEvaluationShader final : public Shader
 public:
         TesselationEvaluationShader(
                 VkDevice device,
-                const std::vector<uint32_t>& code,
-                const std::string_view& entry_point_name);
+                const std::span<const uint32_t>& code,
+                std::string entry_point_name);
 };
 
 class GeometryShader final : public Shader
 {
 public:
-        GeometryShader(VkDevice device, const std::vector<uint32_t>& code, const std::string_view& entry_point_name);
+        GeometryShader(VkDevice device, const std::span<const uint32_t>& code, std::string entry_point_name);
 };
 
 class FragmentShader final : public Shader
 {
 public:
-        FragmentShader(VkDevice device, const std::vector<uint32_t>& code, const std::string_view& entry_point_name);
+        FragmentShader(VkDevice device, const std::span<const uint32_t>& code, std::string entry_point_name);
 };
 
 class ComputeShader final : public Shader
 {
 public:
-        ComputeShader(VkDevice device, const std::vector<uint32_t>& code, const std::string_view& entry_point_name);
+        ComputeShader(VkDevice device, const std::span<const uint32_t>& code, std::string entry_point_name);
 };
 }
