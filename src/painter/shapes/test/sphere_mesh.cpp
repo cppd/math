@@ -155,7 +155,7 @@ std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_random_sphere(
         }
         ASSERT(exponents);
 
-        RandomEngineWithSeed<std::mt19937_64> random_engine;
+        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
         float radius = random_exponent<float>(random_engine, (*exponents)[0], (*exponents)[1]);
 
         Vector<N, float> center(-radius / 2);

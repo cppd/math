@@ -77,7 +77,7 @@ void test_distribution(int count, T discrepancy_limit)
 
         constexpr T DISCRETIZATION = 100;
 
-        RandomEngineWithSeed<RandomEngine> random_engine;
+        RandomEngine random_engine = create_engine<RandomEngine>();
 
         std::map<T, T, std::greater<>> buckets;
 
@@ -131,7 +131,7 @@ void test_speed(int count)
 {
         LOG("Test Speed...");
 
-        RandomEngineWithSeed<RandomEngine> random_engine;
+        RandomEngine random_engine = create_engine<RandomEngine>();
 
         std::uniform_real_distribution<T> urd(-1, 1);
 

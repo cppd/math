@@ -434,7 +434,7 @@ void all_tests(
 template <size_t N>
 void test(int low, int high, ProgressRatio* progress)
 {
-        thread_local RandomEngineWithSeed<std::mt19937_64> engine;
+        thread_local std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
         int point_count = std::uniform_int_distribution<int>(low, high)(engine);
 

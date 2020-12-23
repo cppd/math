@@ -68,7 +68,7 @@ bool vector_is_unit(const Vector<N, T>& v)
 template <size_t N, typename T>
 std::vector<Vector<N, T>> random_vectors(int count)
 {
-        RandomEngineWithSeed<std::mt19937_64> random_engine;
+        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
         std::uniform_real_distribution<T> urd(-1, 1);
 
         std::vector<Vector<N, T>> res;

@@ -257,7 +257,7 @@ void test_mesh(
         int ray_count;
 
         {
-                RandomEngineWithSeed<std::mt19937_64> random_engine;
+                std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
                 point_count = random_integer(random_engine, point_low, point_high);
                 ray_count = random_integer(random_engine, ray_low, ray_high);
         }

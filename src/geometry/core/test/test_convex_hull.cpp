@@ -182,7 +182,7 @@ void test(size_t low, size_t high, ProgressRatio* progress)
 {
         constexpr bool on_sphere = false;
 
-        RandomEngineWithSeed<std::mt19937_64> engine;
+        std::mt19937_64 engine = create_engine<std::mt19937_64>();
         int size = std::uniform_int_distribution<int>(low, high)(engine);
 
         {

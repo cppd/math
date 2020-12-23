@@ -58,7 +58,7 @@ struct MatrixWithDeterminant
 template <size_t N, typename T>
 std::vector<MatrixWithDeterminant<N, T>> random_symmetric_matrices(unsigned count, T min, T max)
 {
-        RandomEngineWithSeed<std::mt19937_64> random_engine;
+        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
         std::uniform_real_distribution<T> urd(min, max);
 
         std::vector<MatrixWithDeterminant<N, T>> matrices;

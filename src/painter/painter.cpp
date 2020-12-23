@@ -321,7 +321,7 @@ void paint_pixels(
         const PainterSampler<N - 1, T>& sampler,
         Pixels<N - 1>* pixels)
 {
-        thread_local RandomEngineWithSeed<PainterRandomEngine<T>> random_engine;
+        thread_local PainterRandomEngine<T> random_engine = create_engine<PainterRandomEngine<T>>();
         thread_local std::vector<Vector<N - 1, T>> samples;
 
         std::optional<std::array<int_least16_t, N - 1>> pixel;

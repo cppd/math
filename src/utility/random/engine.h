@@ -19,47 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "system.h"
 
-#include <type_traits>
+#include <array>
+#include <random>
 
-// T == std::some_random_number_engine
 template <typename T>
-class RandomEngineWithSeed
+T create_engine()
 {
-        T m_random_engine;
-
-        static typename T::result_type random_seed()
-        {
-                static_assert(std::is_integral_v<result_type> && std::is_unsigned_v<result_type>);
-
-                result_type v;
-                read_system_random(&v, sizeof(v));
-                return v;
-        }
-
-public:
-        using result_type = typename T::result_type;
-
-        RandomEngineWithSeed() : m_random_engine(random_seed())
-        {
-        }
-
-        operator T&()
-        {
-                return m_random_engine;
-        }
-
-        typename T::result_type operator()()
-        {
-                return m_random_engine();
-        }
-
-        static constexpr typename T::result_type min()
-        {
-                return T::min();
-        }
-
-        static constexpr typename T::result_type max()
-        {
-                return T::max();
-        }
-};
+        std::array<std::uint_least32_t, 16> data;
+        read_system_random(data.data(), data.size() * sizeof(data[0]));
+        std::seed_seq seed_seq(data.cbegin(), data.cend());
+        return T(seed_seq);
+}

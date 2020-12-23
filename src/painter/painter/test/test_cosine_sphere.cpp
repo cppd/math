@@ -100,7 +100,7 @@ void test()
 
         constexpr int count = 10000000;
 
-        RandomEngineWithSeed<std::mt19937_64> engine;
+        std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
         long double sum = 0;
 

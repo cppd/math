@@ -198,7 +198,7 @@ std::string time_string(const TimePoint& start_time)
 void compute_vulkan(ComputeVector* dft, bool inverse, int n1, int n2, std::vector<complex>* data)
 {
         {
-                RandomEngineWithSeed<std::mt19937_64> engine;
+                std::mt19937_64 engine = create_engine<std::mt19937_64>();
                 std::uniform_int_distribution<int> uid(1, 3000);
                 dft->create_buffers(uid(engine), uid(engine));
                 dft->create_buffers(1, 1);
@@ -408,7 +408,7 @@ enum class TestSize
 
 TestSize find_test_size()
 {
-        RandomEngineWithSeed<std::mt19937_64> engine;
+        std::mt19937_64 engine = create_engine<std::mt19937_64>();
         std::uniform_int_distribution<int> uid(1, 10);
         return (uid(engine) != 1) ? TestSize::Small : TestSize::Big;
 }
@@ -419,7 +419,7 @@ std::array<int, 2> find_dimensions(TestSize test_size)
         {
         case TestSize::Small:
         {
-                RandomEngineWithSeed<std::mt19937_64> engine;
+                std::mt19937_64 engine = create_engine<std::mt19937_64>();
                 std::uniform_int_distribution<int> uid(1, 100);
                 return {uid(engine), uid(engine)};
         }

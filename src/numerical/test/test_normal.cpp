@@ -95,7 +95,7 @@ void test_normal_random(unsigned test_count)
 {
         constexpr unsigned POINT_COUNT = 100;
 
-        RandomEngineWithSeed<std::mt19937_64> random_engine;
+        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
 
         std::uniform_real_distribution<T> urd_for_normal(T(0.0), T(0.01));
         std::uniform_real_distribution<T> urd_for_complement(T(0.1), T(1.0));

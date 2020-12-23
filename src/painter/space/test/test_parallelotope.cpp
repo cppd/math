@@ -552,7 +552,7 @@ std::array<Vector<N + 1, T>, N> to_edge_vector_hyper(const std::array<T, N>& edg
 template <size_t N, typename T>
 void test_points(int point_count)
 {
-        RandomEngineWithSeed<std::mt19937_64> engine;
+        std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
         std::uniform_real_distribution<T> urd_org(-10, 10);
 

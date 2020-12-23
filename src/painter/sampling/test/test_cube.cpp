@@ -153,7 +153,7 @@ void test_performance(RandomEngine& random_engine, const Sampler& sampler, int i
 template <size_t N, typename T, typename RandomEngine>
 void write_samples_to_files()
 {
-        RandomEngineWithSeed<RandomEngine> random_engine;
+        RandomEngine random_engine = create_engine<RandomEngine>();
 
         constexpr int pass_count = 10;
 
@@ -165,7 +165,7 @@ void write_samples_to_files()
 template <size_t N, typename T, typename RandomEngine>
 void test_performance()
 {
-        RandomEngineWithSeed<RandomEngine> random_engine;
+        RandomEngine random_engine = create_engine<RandomEngine>();
 
         constexpr int iter_count = 1e6;
 
