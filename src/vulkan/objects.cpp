@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "error.h"
 #include "extensions.h"
 
-#include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
@@ -497,7 +496,7 @@ void ShaderModule::move(ShaderModule* from) noexcept
 
 ShaderModule::ShaderModule() = default;
 
-ShaderModule::ShaderModule(VkDevice device, const std::vector<uint32_t>& code)
+ShaderModule::ShaderModule(VkDevice device, const std::span<const uint32_t>& code)
 {
         static_assert(sizeof(uint32_t) == 4);
 
@@ -508,8 +507,8 @@ ShaderModule::ShaderModule(VkDevice device, const std::vector<uint32_t>& code)
 
         VkShaderModuleCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        create_info.codeSize = data_size(code);
-        create_info.pCode = data_pointer(code);
+        create_info.codeSize = code.size_bytes();
+        create_info.pCode = code.data();
 
         //
 

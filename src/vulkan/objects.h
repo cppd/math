@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 
 #include <functional>
+#include <span>
 #include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -269,7 +270,7 @@ class ShaderModule final
 
 public:
         ShaderModule();
-        ShaderModule(VkDevice device, const std::vector<uint32_t>& code);
+        ShaderModule(VkDevice device, const std::span<const uint32_t>& code);
         ~ShaderModule();
 
         ShaderModule(const ShaderModule&) = delete;
