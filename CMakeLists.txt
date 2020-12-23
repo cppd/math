@@ -125,26 +125,14 @@ function(AddSourceFiles TARGET_TYPE)
                 message(FATAL_ERROR "Unknown target type ${TARGET_TYPE}")
         endif()
 
-        #target_link_libraries(${PROJECT_NAME} -static-libgcc -static-libstdc++)
-        #target_link_libraries(${PROJECT_NAME} -s)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE NDEBUG)
 
-        if (WIN32)
-                target_compile_definitions(${PROJECT_NAME} PRIVATE -D__USE_MINGW_ANSI_STDIO=1)
-        endif()
-
-        target_compile_definitions(${PROJECT_NAME} PRIVATE -DNDEBUG)
-
-        #-fopt-info-missed -fopt-info-vec-missed
-
-        target_link_libraries(${PROJECT_NAME} -pthread)
-        target_compile_options(${PROJECT_NAME} PRIVATE -pthread)
-
+        target_compile_options(${PROJECT_NAME} PRIVATE -march=native)
         if (DEBUG_BUILD)
-                target_compile_options(${PROJECT_NAME} PRIVATE -Og -ggdb -march=native)
+                target_compile_options(${PROJECT_NAME} PRIVATE -Og -ggdb)
         else()
-                target_compile_options(${PROJECT_NAME} PRIVATE -O3 -march=native)
+                target_compile_options(${PROJECT_NAME} PRIVATE -O3)
         endif()
-
         target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>: -fno-rtti -fstrict-enums >)
         target_compile_options(${PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:Clang>: -mllvm -inline-threshold=10000 >)
 
@@ -359,19 +347,6 @@ AddIncludeFiles(BINARY_FILES
                         SOURCE "font"
                         EXTENSIONS ${extensions_binary})
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE -DQT_NO_KEYWORDS)
-
-# CMake при использовании target_include_directories вставляет -I
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}")
-
-#target_compile_options(${PROJECT_NAME} PRIVATE -S -masm=intel)
-
-##################################################
-
-find_package(Vulkan REQUIRED)
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
-
 AddIncludeFiles(VULKAN_SHADERS
                         OUTPUT_EXTENSION "spr"
                         SOURCE
@@ -384,7 +359,22 @@ AddIncludeFiles(VULKAN_SHADERS
                         EXTENSIONS ${extensions_shaders}
                         EXTENSIONS_INCLUDE ${extensions_shaders_include})
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE QT_NO_KEYWORDS)
+target_compile_definitions(${PROJECT_NAME} PRIVATE QT_DISABLE_DEPRECATED_BEFORE=0x050F00)
+
+# CMake при использовании target_include_directories вставляет -I
+target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}")
+
+#target_compile_options(${PROJECT_NAME} PRIVATE -S -masm=intel)
+
 ##################################################
+
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
+target_link_libraries(${PROJECT_NAME} Threads::Threads)
+
+find_package(Vulkan REQUIRED)
+target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/GMP")
 find_package(GMP REQUIRED)
@@ -392,37 +382,27 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GMP_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${GMP_C_LIBRARIES} ${GMP_CXX_LIBRARIES})
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-        find_package(Qt5 REQUIRED COMPONENTS Widgets X11Extras)
+        find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets X11Extras)
         target_link_libraries(${PROJECT_NAME} Qt5::Widgets Qt5::X11Extras)
 else()
-        find_package(Qt5 REQUIRED COMPONENTS Widgets)
+        find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets)
         target_link_libraries(${PROJECT_NAME} Qt5::Widgets)
 endif()
 
 find_package(Freetype REQUIRED)
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${FREETYPE_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} Freetype::Freetype)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/FFTW")
 find_package(FFTW)
 if (FFTW_FOUND)
-        target_compile_definitions(${PROJECT_NAME} PRIVATE -DFFTW_FOUND)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE FFTW_FOUND)
         target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${FFTW_INCLUDE_DIRS})
         target_link_libraries(${PROJECT_NAME} ${FFTW_LIBRARIES} ${FFTW_THREAD_LIBRARIES})
 endif()
 
 find_package(CUDA)
 if (CUDA_FOUND)
-        target_compile_definitions(${PROJECT_NAME} PRIVATE -DCUDA_FOUND)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE CUDA_FOUND)
         target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS})
         target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} ${CUDA_CUFFT_LIBRARIES})
 endif()
-
-#set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/GLFW")
-#find_package(GLFW REQUIRED)
-#target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GLFW_INCLUDE_DIRS})
-#target_link_libraries(${PROJECT_NAME} ${GLFW_LIBRARIES})
-
-#if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
-#target_link_libraries(${PROJECT_NAME} quadmath)
-#endif()
