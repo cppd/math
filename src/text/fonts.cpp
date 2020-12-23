@@ -23,10 +23,6 @@ namespace text
 {
 namespace
 {
-constexpr unsigned char DEJA_VU_SANS[]{
-#include "DejaVuSans.ttf.bin"
-};
-
 template <typename T>
 std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 {
@@ -54,7 +50,10 @@ Fonts::Fonts()
                 "DejaVuSans",
                 []()
                 {
-                        return std::vector(std::cbegin(DEJA_VU_SANS), std::cend(DEJA_VU_SANS));
+                        static constexpr unsigned char FONT[] = {
+#include "DejaVuSans.ttf.bin"
+                        };
+                        return std::vector<unsigned char>(std::cbegin(FONT), std::cend(FONT));
                 });
 }
 

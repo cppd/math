@@ -21,36 +21,41 @@ namespace gpu::convex_hull
 {
 std::vector<uint32_t> code_prepare_comp()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "convex_hull_prepare.comp.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_merge_comp()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "convex_hull_merge.comp.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_filter_comp()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "convex_hull_filter.comp.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_view_frag()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "convex_hull_view.frag.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_view_vert()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "convex_hull_view.vert.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 }

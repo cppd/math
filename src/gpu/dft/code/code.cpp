@@ -21,64 +21,73 @@ namespace gpu::dft
 {
 std::vector<uint32_t> code_fft_global_comp()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "dft_fft_global.comp.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_fft_shared_comp()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "dft_fft_shared.comp.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_bit_reverse_comp()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "dft_bit_reverse.comp.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_copy_input_comp()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "dft_copy_input.comp.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_copy_output_comp()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "dft_copy_output.comp.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_mul_comp()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "dft_mul.comp.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_mul_d_comp()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "dft_mul_d.comp.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_view_vert()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "dft_view.vert.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_view_frag()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "dft_view.frag.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 }

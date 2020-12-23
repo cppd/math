@@ -21,15 +21,17 @@ namespace gpu::text_writer
 {
 std::vector<uint32_t> code_view_vert()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "text_writer_view.vert.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_view_frag()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "text_writer_view.frag.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 }

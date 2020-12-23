@@ -21,22 +21,25 @@ namespace gpu::pencil_sketch
 {
 std::vector<uint32_t> code_compute_comp()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "pencil_sketch_compute.comp.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_view_vert()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "pencil_sketch_view.vert.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_view_frag()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "pencil_sketch_view.frag.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 }

@@ -21,57 +21,65 @@ namespace gpu::optical_flow
 {
 std::vector<uint32_t> code_sobel_comp()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "optical_flow_sobel.comp.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_flow_comp()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "optical_flow_flow.comp.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_downsample_comp()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "optical_flow_downsample.comp.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_grayscale_comp()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "optical_flow_grayscale.comp.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_view_vert()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "optical_flow_view.vert.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_view_frag()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "optical_flow_view.frag.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_view_debug_vert()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "optical_flow_view_debug.vert.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 
 std::vector<uint32_t> code_view_debug_frag()
 {
-        return {
+        static constexpr uint32_t CODE[] = {
 #include "optical_flow_view_debug.frag.spr"
         };
+        return {std::cbegin(CODE), std::cend(CODE)};
 }
 }
