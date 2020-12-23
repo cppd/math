@@ -27,9 +27,10 @@ void color_dialog(const std::string& title, const QColor& current_color, const s
 {
         QtObjectInDynamicMemory<QColorDialog> dialog(parent_for_dialog());
 
-        dialog->setCurrentColor(current_color);
         dialog->setWindowTitle(QString::fromStdString(title));
         dialog->setOptions(QColorDialog::NoButtons | QColorDialog::DontUseNativeDialog);
+
+        dialog->setCurrentColor(current_color);
 
         QObject::connect(
                 dialog, &QColorDialog::currentColorChanged,

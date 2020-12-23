@@ -29,7 +29,8 @@ namespace gui::painter_window
 {
 namespace
 {
-constexpr std::chrono::milliseconds UPDATE_INTERVAL{100};
+constexpr std::chrono::milliseconds UPDATE_INTERVAL{200};
+constexpr std::chrono::milliseconds WINDOW_SHOW_DELAY{50};
 }
 
 PainterWindow::PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels) : m_pixels(std::move(pixels))
@@ -145,7 +146,7 @@ void PainterWindow::showEvent(QShowEvent* /*event*/)
         }
         m_first_show = false;
 
-        QTimer::singleShot(50, this, &PainterWindow::on_first_shown);
+        QTimer::singleShot(WINDOW_SHOW_DELAY, this, &PainterWindow::on_first_shown);
 }
 
 void PainterWindow::on_first_shown()

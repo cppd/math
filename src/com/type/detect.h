@@ -57,13 +57,7 @@ template <typename Container>
 class HasBeginEnd
 {
         template <typename T>
-        static decltype(
-                std::begin(std::declval<T>()),
-                std::end(std::declval<T>()),
-                std::cbegin(std::declval<T>()),
-                std::cend(std::declval<T>()),
-                std::true_type())
-                f(int);
+        static decltype(std::cbegin(std::declval<T>()), std::cend(std::declval<T>()), std::true_type()) f(int);
         template <typename>
         static std::false_type f(...);
 
@@ -94,6 +88,6 @@ template <typename T>
 inline constexpr bool is_vector = type_detect_implementation::IsVector::S<std::remove_cv_t<T>>::value;
 
 template <typename T>
-inline constexpr bool has_begin_end = type_detect_implementation::HasBeginEnd<T>::value;
+inline constexpr bool has_cbegin_cend = type_detect_implementation::HasBeginEnd<T>::value;
 template <typename T>
 inline constexpr bool has_data_and_size = type_detect_implementation::HasDataAndSize<T>::value;

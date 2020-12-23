@@ -43,12 +43,8 @@ constexpr double WINDOW_SIZE_COEF = 0.7;
 // Если true, то размер для графики, если false, то размер всего окна.
 constexpr bool WINDOW_SIZE_GRAPHICS = true;
 
-// Интервал таймера отображения лога и хода расчётов.
-constexpr std::chrono::milliseconds TIMER_INTERVAL{200};
-
-// Задержка в миллисекундах после showEvent для вызова по таймеру
-// функции обработки появления окна.
-constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
+constexpr std::chrono::milliseconds UPDATE_INTERVAL{200};
+constexpr std::chrono::milliseconds WINDOW_SHOW_DELAY{50};
 
 constexpr double MAXIMUM_SPECULAR_POWER = 1000.0;
 constexpr double MAXIMUM_MODEL_LIGHTING = 2.0;
@@ -221,7 +217,7 @@ void MainWindow::showEvent(QShowEvent* /*event*/)
 
         // Окно ещё не видно, поэтому небольшая задержка, чтобы окно реально появилось.
         QTimer::singleShot(
-                WINDOW_SHOW_DELAY_MSEC, this,
+                WINDOW_SHOW_DELAY, this,
                 [this]()
                 {
                         try
@@ -275,7 +271,7 @@ void MainWindow::first_shown()
         }
         connect(ui.menu_file->addAction("Exit..."), &QAction::triggered, this, &MainWindow::close);
 
-        m_timer.start(TIMER_INTERVAL);
+        m_timer.start(UPDATE_INTERVAL);
 }
 
 void MainWindow::on_timer()

@@ -90,7 +90,7 @@ QString file_filter(const std::string& name, const T&... extensions)
 
         auto add = [&](const auto& ext)
         {
-                if constexpr (has_begin_end<decltype(ext)>)
+                if constexpr (has_cbegin_cend<decltype(ext)>)
                 {
                         if constexpr (!std::is_same_v<char, std::remove_cvref_t<decltype(*std::cbegin(ext))>>)
                         {

@@ -23,10 +23,11 @@ static_assert(is_vector<const std::vector<int>>);
 static_assert(!is_array<const std::vector<int>>);
 static_assert(!is_vector<const std::array<int, 1>>);
 
-static_assert(has_begin_end<const std::array<int, 1>>);
-static_assert(has_begin_end<std::vector<double>&>);
-static_assert(!has_begin_end<int>);
-static_assert(!has_begin_end<double*>);
+static_assert(has_cbegin_cend<const std::array<int, 1>>);
+static_assert(has_cbegin_cend<std::vector<double>&>);
+static_assert(has_cbegin_cend<int[1]>);
+static_assert(!has_cbegin_cend<int>);
+static_assert(!has_cbegin_cend<double*>);
 
 static_assert(has_data_and_size<const std::array<int, 1>>);
 static_assert(has_data_and_size<std::vector<double>&>);

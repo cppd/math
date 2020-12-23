@@ -198,17 +198,19 @@ std::enable_if_t<is_native_integral<T>, std::string> to_string_digit_groups(T v,
 
 std::string to_string(char) = delete;
 std::string to_string(wchar_t) = delete;
+std::string to_string(char8_t) = delete;
 std::string to_string(char16_t) = delete;
 std::string to_string(char32_t) = delete;
-std::string to_string_digit_groups(char v, char s = '\x20') = delete;
-std::string to_string_digit_groups(wchar_t v, char s = '\x20') = delete;
-std::string to_string_digit_groups(char16_t v, char s = '\x20') = delete;
-std::string to_string_digit_groups(char32_t v, char s = '\x20') = delete;
+std::string to_string_digit_groups(char v, char) = delete;
+std::string to_string_digit_groups(wchar_t v, char) = delete;
+std::string to_string_digit_groups(char8_t v, char) = delete;
+std::string to_string_digit_groups(char16_t v, char) = delete;
+std::string to_string_digit_groups(char32_t v, char) = delete;
 
 //
 
 template <typename T>
-std::enable_if_t<has_begin_end<T>, std::string> to_string(const T& data)
+std::enable_if_t<has_cbegin_cend<T>, std::string> to_string(const T& data)
 {
         std::string res;
 
@@ -225,15 +227,11 @@ std::enable_if_t<has_begin_end<T>, std::string> to_string(const T& data)
         return res;
 }
 
+template <typename T>
+std::enable_if_t<std::is_pointer_v<T>> to_string(const T&) = delete;
+
 //
 
-template <typename T>
-std::string to_string(const T*) = delete;
-
-std::string to_string(const char*) = delete;
-std::string to_string(const wchar_t*) = delete;
-std::string to_string(const char16_t*) = delete;
-std::string to_string(const char32_t*) = delete;
 template <typename T>
 std::string to_string(std::basic_string<T>) = delete;
 template <typename T>
