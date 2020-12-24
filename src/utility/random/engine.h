@@ -26,7 +26,7 @@ template <typename T>
 T create_engine()
 {
         std::array<std::uint_least32_t, 16> data;
-        read_system_random(data.data(), data.size() * sizeof(data[0]));
+        read_system_random(std::as_writable_bytes(std::span(data)));
         std::seed_seq seed_seq(data.cbegin(), data.cend());
         return T(seed_seq);
 }

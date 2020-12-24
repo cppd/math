@@ -23,21 +23,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <fstream>
 
-// Взять случайные данные из файла ОС вместо использования std::random_device
-void read_system_random(void* p, unsigned count)
+// Вместо использования std::random_device
+void read_system_random(const std::span<std::byte>& bytes)
 {
         constexpr const char* DEV_RANDOM = "/dev/urandom";
 
         std::ifstream rnd(DEV_RANDOM, std::ios_base::binary);
         if (!rnd)
         {
-                error(std::string("error open file ") + DEV_RANDOM);
+                error(std::string("error opening file ") + DEV_RANDOM);
         }
 
-        rnd.read(reinterpret_cast<char*>(p), count);
+        rnd.read(reinterpret_cast<char*>(bytes.data()), bytes.size());
         if (!rnd)
         {
-                error(std::string("error read from file ") + DEV_RANDOM);
+                error(std::string("error reading from file ") + DEV_RANDOM);
         }
 }
 
@@ -50,6 +50,8 @@ void read_system_random(void* p, unsigned count)
 // Потом wincrypt.h
 #include <wincrypt.h>
 
+namespace
+{
 class Provider
 {
         HCRYPTPROV m_hProvider;
@@ -76,11 +78,12 @@ public:
                 return m_hProvider;
         }
 };
+}
 
-void read_system_random(void* p, unsigned count)
+void read_system_random(const std::span<std::byte>& bytes)
 {
         Provider provider;
-        if (!::CryptGenRandom(provider, count, reinterpret_cast<BYTE*>(p)))
+        if (!::CryptGenRandom(provider, bytes.size(), reinterpret_cast<BYTE*>(bytes.data())))
         {
                 error("error CryptGenRandom");
         }

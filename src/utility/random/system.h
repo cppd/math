@@ -17,4 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-void read_system_random(void* p, unsigned count);
+#include <span>
+
+void read_system_random(const std::span<std::byte>& bytes);
