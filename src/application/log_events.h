@@ -17,25 +17,59 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/output/event.h>
-
 #include <functional>
 #include <mutex>
-#include <thread>
+#include <string>
 #include <vector>
 
 namespace application
 {
+struct LogEvent final
+{
+        enum class Type
+        {
+                Normal,
+                Error,
+                Warning,
+                Information
+        };
+
+        std::string text;
+        Type type;
+
+        template <typename T>
+        LogEvent(T&& text, Type type) : text(std::forward<T>(text)), type(type)
+        {
+        }
+};
+
+struct MessageEvent final
+{
+        enum class Type
+        {
+                Error,
+                ErrorFatal,
+                Warning,
+                Information
+        };
+
+        std::string text;
+        Type type;
+
+        template <typename T>
+        MessageEvent(T&& text, Type type) : text(std::forward<T>(text)), type(type)
+        {
+        }
+};
+
 class LogEvents final
 {
         friend class LogEventsObserver;
         friend class MessageEventsObserver;
-
-        const std::thread::id m_thread_id = std::this_thread::get_id();
+        friend void log_impl(LogEvent&&) noexcept;
+        friend void log_impl(MessageEvent&&) noexcept;
 
         std::mutex m_lock;
-        std::function<void(LogEvent&&)> m_log_events;
-        std::function<void(MessageEvent&&)> m_msg_events;
         std::vector<const std::function<void(const LogEvent&)>*> m_log_observers;
         std::vector<const std::function<void(const MessageEvent&)>*> m_msg_observers;
 
@@ -45,8 +79,8 @@ class LogEvents final
         void insert(const std::function<void(const MessageEvent&)>* observer);
         void erase(const std::function<void(const MessageEvent&)>* observer);
 
-        void log_event(LogEvent&& event);
-        void message_event(MessageEvent&& event);
+        void log_event(LogEvent&& event) noexcept;
+        void log_event(MessageEvent&& event) noexcept;
 
 public:
         LogEvents();
@@ -86,4 +120,6 @@ public:
         MessageEventsObserver& operator=(MessageEventsObserver&&) = delete;
 };
 
+void log_impl(LogEvent&& event) noexcept;
+void log_impl(MessageEvent&& event) noexcept;
 }

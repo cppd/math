@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "write.h"
+#include "log.h"
 
 #include <src/settings/name.h>
 
@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <unordered_map>
 
+namespace application
+{
 namespace
 {
 std::mutex g_lock;
@@ -170,4 +172,5 @@ void write_log_fatal_error_and_exit(const char* text) noexcept
         std::lock_guard lg(g_lock);
         write(text, "fatal error");
         std::_Exit(EXIT_FAILURE);
+}
 }

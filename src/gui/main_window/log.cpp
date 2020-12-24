@@ -23,23 +23,23 @@ namespace gui::main_window
 {
 namespace
 {
-Srgb8 event_color(LogEvent::Type type)
+Srgb8 event_color(application::LogEvent::Type type)
 {
         switch (type)
         {
-        case LogEvent::Type::Normal:
+        case application::LogEvent::Type::Normal:
         {
                 return Srgb8(0, 0, 0);
         }
-        case LogEvent::Type::Error:
+        case application::LogEvent::Type::Error:
         {
                 return Srgb8(255, 0, 0);
         }
-        case LogEvent::Type::Warning:
+        case application::LogEvent::Type::Warning:
         {
                 return Srgb8(200, 150, 0);
         }
-        case LogEvent::Type::Information:
+        case application::LogEvent::Type::Information:
         {
                 return Srgb8(0, 0, 255);
         }
@@ -73,7 +73,7 @@ Log::Log(QPlainTextEdit* text_edit)
         : m_text_edit(text_edit),
           m_messages_ptr(&m_messages[0]),
           m_observer(
-                  [this](const LogEvent& event)
+                  [this](const application::LogEvent& event)
                   {
                           Srgb8 color = event_color(event.type);
                           if (!(*m_messages_ptr).empty() && (*m_messages_ptr).back().color == color)

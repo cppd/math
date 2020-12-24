@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "log_events.h"
 
-#include <src/com/error.h>
-#include <src/com/output/write.h>
+#include "log.h"
 
 #include <atomic>
 
@@ -76,35 +75,18 @@ LogEvents::LogEvents()
         static std::atomic_int call_counter = 0;
         if (++call_counter != 1)
         {
-                error_fatal("Log events must be called once");
+                write_log_fatal_error_and_exit("Log events must be called once");
         }
-
-        m_log_events = [this](LogEvent&& event)
-        {
-                log_event(std::move(event));
-        };
-        m_msg_events = [this](MessageEvent&& event)
-        {
-                message_event(std::move(event));
-        };
-
-        set_log_events(&m_log_events);
-        set_message_events(&m_msg_events);
 
         g_log_events = this;
 }
 
 LogEvents::~LogEvents()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
         g_log_events = nullptr;
-
-        set_message_events(nullptr);
-        set_log_events(nullptr);
 }
 
-void LogEvents::log_event(LogEvent&& event)
+void LogEvents::log_event(LogEvent&& event) noexcept
 {
         try
         {
@@ -119,15 +101,16 @@ void LogEvents::log_event(LogEvent&& event)
         }
         catch (const std::exception& e)
         {
-                error_fatal(std::string("Error in log observer: ") + e.what());
+                std::string msg = std::string("Error in log observer: ") + e.what();
+                write_log_fatal_error_and_exit(msg.c_str());
         }
         catch (...)
         {
-                error_fatal("Unknown error in log observer");
+                write_log_fatal_error_and_exit("Unknown error in log observer");
         }
 }
 
-void LogEvents::message_event(MessageEvent&& event)
+void LogEvents::log_event(MessageEvent&& event) noexcept
 {
         try
         {
@@ -149,41 +132,44 @@ void LogEvents::message_event(MessageEvent&& event)
         }
         catch (const std::exception& e)
         {
-                error_fatal(std::string("Error in message observer: ") + e.what());
+                std::string msg = std::string("Error in message observer: ") + e.what();
+                write_log_fatal_error_and_exit(msg.c_str());
         }
         catch (...)
         {
-                error_fatal("Unknown error in message observer");
+                write_log_fatal_error_and_exit("Unknown error in message observer");
         }
 }
 
 void LogEvents::insert(const std::function<void(const LogEvent&)>* observer)
 {
         std::lock_guard lg(m_lock);
-        ASSERT(std::find(m_log_observers.cbegin(), m_log_observers.cend(), observer) == m_log_observers.cend());
-        m_log_observers.push_back(observer);
+        if (std::find(m_log_observers.cbegin(), m_log_observers.cend(), observer) == m_log_observers.cend())
+        {
+                m_log_observers.push_back(observer);
+        }
 }
 
 void LogEvents::erase(const std::function<void(const LogEvent&)>* observer)
 {
         std::lock_guard lg(m_lock);
         auto iter = std::remove(m_log_observers.begin(), m_log_observers.end(), observer);
-        ASSERT(iter != m_log_observers.cend());
         m_log_observers.erase(iter, m_log_observers.cend());
 }
 
 void LogEvents::insert(const std::function<void(const MessageEvent&)>* observer)
 {
         std::lock_guard lg(m_lock);
-        ASSERT(std::find(m_msg_observers.cbegin(), m_msg_observers.cend(), observer) == m_msg_observers.cend());
-        m_msg_observers.push_back(observer);
+        if (std::find(m_msg_observers.cbegin(), m_msg_observers.cend(), observer) == m_msg_observers.cend())
+        {
+                m_msg_observers.push_back(observer);
+        }
 }
 
 void LogEvents::erase(const std::function<void(const MessageEvent&)>* observer)
 {
         std::lock_guard lg(m_lock);
         auto iter = std::remove(m_msg_observers.begin(), m_msg_observers.end(), observer);
-        ASSERT(iter != m_msg_observers.cend());
         m_msg_observers.erase(iter, m_msg_observers.cend());
 }
 
@@ -208,5 +194,17 @@ MessageEventsObserver::MessageEventsObserver(std::function<void(const MessageEve
 MessageEventsObserver::~MessageEventsObserver()
 {
         g_log_events->erase(&m_observer);
+}
+
+//
+
+void log_impl(LogEvent&& event) noexcept
+{
+        g_log_events->log_event(std::move(event));
+}
+
+void log_impl(MessageEvent&& event) noexcept
+{
+        g_log_events->log_event(std::move(event));
 }
 }

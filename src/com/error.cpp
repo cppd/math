@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
-#include "output/write.h"
+#include <src/application/log.h>
 
 void error(std::string text)
 {
@@ -28,8 +28,8 @@ void error_fatal(const char* text) noexcept
 {
         // Только запись в лог, без вызовов других функций программы,
         // так как они могут вызвать эту же функцию.
-        static_assert(noexcept(write_log_fatal_error_and_exit(text)));
-        write_log_fatal_error_and_exit(text);
+        static_assert(noexcept(application::write_log_fatal_error_and_exit(text)));
+        application::write_log_fatal_error_and_exit(text);
 }
 
 void error_fatal(const std::string& text) noexcept

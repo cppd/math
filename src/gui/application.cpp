@@ -67,20 +67,20 @@ public:
         }
 };
 
-void message_event(const MessageEvent& event)
+void message_event(const application::MessageEvent& event)
 {
         switch (event.type)
         {
-        case MessageEvent::Type::Error:
+        case application::MessageEvent::Type::Error:
                 dialog::message_critical(event.text);
                 return;
-        case MessageEvent::Type::ErrorFatal:
+        case application::MessageEvent::Type::ErrorFatal:
                 dialog::message_critical(event.text, false /*with_parent*/);
                 error_fatal("Exit after error message\n" + event.text);
-        case MessageEvent::Type::Information:
+        case application::MessageEvent::Type::Information:
                 dialog::message_information(event.text);
                 return;
-        case MessageEvent::Type::Warning:
+        case application::MessageEvent::Type::Warning:
                 dialog::message_warning(event.text);
                 return;
         }
@@ -94,7 +94,7 @@ int run_application(int argc, char** argv)
         MainThread ui_thread;
 
         application::MessageEventsObserver message_observer(
-                [](const MessageEvent& event)
+                [](const application::MessageEvent& event)
                 {
                         MainThread::run(
                                 [event]()

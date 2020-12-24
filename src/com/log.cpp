@@ -17,24 +17,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "log.h"
 
-#include "output/event.h"
+#include <src/application/log_events.h>
 
 void LOG(const std::string& msg) noexcept
 {
-        log_impl(msg, LogEvent::Type::Normal);
+        application::log_impl(application::LogEvent(msg, application::LogEvent::Type::Normal));
 }
 
 void LOG_ERROR(const std::string& msg) noexcept
 {
-        log_impl(msg, LogEvent::Type::Error);
+        application::log_impl(application::LogEvent(msg, application::LogEvent::Type::Error));
 }
 
 void LOG_WARNING(const std::string& msg) noexcept
 {
-        log_impl(msg, LogEvent::Type::Warning);
+        application::log_impl(application::LogEvent(msg, application::LogEvent::Type::Warning));
 }
 
 void LOG_INFORMATION(const std::string& msg) noexcept
 {
-        log_impl(msg, LogEvent::Type::Information);
+        application::log_impl(application::LogEvent(msg, application::LogEvent::Type::Information));
 }
