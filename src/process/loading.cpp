@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dimension.h"
 #include "load.h"
 
+#include <src/com/file/path.h>
 #include <src/com/message.h>
 #include <src/gui/dialogs/bound_cocone.h>
 #include <src/gui/dialogs/file_dialog.h>
@@ -28,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gui/dialogs/volume_object.h>
 #include <src/model/mesh_utility.h>
 #include <src/settings/utility.h>
-#include <src/utility/file/path.h>
 
 namespace process
 {

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "file_lines.h"
 
 #include <src/com/error.h>
-#include <src/utility/file/read.h>
+#include <src/com/file/read.h>
 
 namespace mesh::file
 {

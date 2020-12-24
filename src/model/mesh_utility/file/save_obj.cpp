@@ -22,12 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../unique.h"
 #include "../vertices.h"
 
+#include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/com/string/str.h>
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
-#include <src/utility/file/path.h>
-#include <src/utility/string/str.h>
 
 #include <fstream>
 

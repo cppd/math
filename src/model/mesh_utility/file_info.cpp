@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "file/file_type.h"
 
 #include <src/com/error.h>
+#include <src/com/file/path.h>
 #include <src/com/print.h>
-#include <src/utility/file/path.h>
 
 namespace mesh
 {

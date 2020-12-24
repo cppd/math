@@ -20,11 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/alg.h>
 #include <src/com/arrays.h>
 #include <src/com/error.h>
+#include <src/com/file/path.h>
 #include <src/com/print.h>
+#include <src/com/string/ascii.h>
 #include <src/image/file.h>
 #include <src/image/flip.h>
-#include <src/utility/file/path.h>
-#include <src/utility/string/ascii.h>
 
 #include <cmath>
 #include <optional>

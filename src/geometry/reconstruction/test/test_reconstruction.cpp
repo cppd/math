@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../cocone.h"
 
 #include <src/com/error.h>
+#include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/math.h>
 #include <src/com/names.h>
@@ -28,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/model/mesh_utility.h>
 #include <src/numerical/random.h>
-#include <src/utility/file/path.h>
 
 #include <cmath>
 #include <filesystem>

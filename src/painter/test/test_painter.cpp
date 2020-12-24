@@ -23,15 +23,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../shapes/mesh.h"
 #include "../shapes/test/sphere_mesh.h"
 
+#include <src/com/file/path.h>
 #include <src/com/global_index.h>
 #include <src/com/names.h>
+#include <src/com/string/str.h>
 #include <src/com/time.h>
 #include <src/gui/com/support.h>
 #include <src/gui/painter_window/painter_window.h>
 #include <src/model/mesh_utility.h>
 #include <src/model/volume_utility.h>
-#include <src/utility/file/path.h>
-#include <src/utility/string/str.h>
 
 #include <filesystem>
 

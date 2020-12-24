@@ -21,11 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../position.h"
 
+#include <src/com/file/read.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/com/string/ascii.h>
 #include <src/com/time.h>
-#include <src/utility/file/read.h>
-#include <src/utility/string/ascii.h>
 
 #include <bit>
 #include <cstring>

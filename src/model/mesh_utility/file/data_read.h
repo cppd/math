@@ -18,11 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/error.h>
+#include <src/com/string/ascii.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/com/type/trait.h>
 #include <src/numerical/vec.h>
-#include <src/utility/string/ascii.h>
 
 #include <string>
 
