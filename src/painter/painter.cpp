@@ -25,10 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/alg.h>
 #include <src/com/error.h>
+#include <src/com/random/engine.h>
 #include <src/com/thread.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
-#include <src/utility/random/engine.h>
 
 #include <optional>
 #include <random>

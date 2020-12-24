@@ -15,11 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "system.h"
+#include "device.h"
 
 #if defined(__linux__)
 
-#include <src/com/error.h>
+#include "../error.h"
 
 #include <fstream>
 
@@ -43,7 +43,7 @@ void read_system_random(const std::span<std::byte>& bytes)
 
 #elif defined(_WIN32)
 
-#include <src/com/error.h>
+#include "../error.h"
 
 // Вначале windows.h
 #include <windows.h>

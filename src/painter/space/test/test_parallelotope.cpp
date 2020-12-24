@@ -28,10 +28,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
+#include <src/com/random/engine.h>
 #include <src/numerical/random.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
-#include <src/utility/random/engine.h>
 
 #include <algorithm>
 #include <memory>
