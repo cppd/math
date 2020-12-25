@@ -17,14 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sphere_mesh.h"
 
-#include "../../sampling/sphere.h"
-
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/random/engine.h>
 #include <src/com/time.h>
 #include <src/geometry/core/convex_hull.h>
 #include <src/model/mesh_utility.h>
+#include <src/random/sphere.h>
 
 #include <array>
 #include <random>
@@ -58,7 +57,7 @@ std::vector<Vector<N, T>> generate_random_points_on_sphere(const Vector<N, T>& c
 
         for (int i = 0; i < count; ++i)
         {
-                random_in_sphere(random_engine, v, length_square);
+                random::random_in_sphere(random_engine, v, length_square);
                 v /= std::sqrt(length_square);
                 points[i] = v * radius + center;
         }

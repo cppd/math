@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-namespace ns::painter
+namespace ns::random
 {
-void write_samples_to_files_and_test_performance();
+void test_cosine_hemisphere();
 }

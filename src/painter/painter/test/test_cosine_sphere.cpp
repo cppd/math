@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_cosine_sphere.h"
 
-#include "../../sampling/sphere.h"
 #include "../cosine_sphere.h"
 
 #include <src/com/log.h>
@@ -25,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/numerical/vec.h>
+#include <src/random/sphere.h>
 
 #include <cmath>
 #include <random>
@@ -108,7 +108,7 @@ void test()
         {
                 Vector<N, T> v;
                 T length_square;
-                random_in_sphere(engine, v, length_square);
+                random::random_in_sphere(engine, v, length_square);
 
                 // косинус угла между вектором и последней координатной осью
                 T c = v[N - 1] / std::sqrt(length_square);

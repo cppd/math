@@ -39,7 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <random>
 
-namespace ns::painter
+namespace ns::random
 {
 template <typename RandomEngine, std::size_t N, typename T>
 void random_in_sphere_by_rejection(RandomEngine& random_engine, Vector<N, T>& v, T& v_length_square)
@@ -117,22 +117,6 @@ Vector<N, T> random_cosine_weighted_on_hemisphere(RandomEngine& random_engine, c
 }
 
 #if 0
-template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_in_sphere(RandomEngine& random_engine)
-{
-        std::uniform_real_distribution<T> urd(-1, 1);
-
-        while (true)
-        {
-                Vector<N, T> v = random_vector<N, T>(random_engine, urd);
-                T length_square = dot(v, v);
-                if (length_square <= 1 && length_square > 0)
-                {
-                        return v;
-                }
-        }
-}
-
 template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> random_in_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal)
 {

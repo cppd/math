@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sphere_mesh.h"
 
-#include "../../sampling/sphere.h"
-
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
@@ -30,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/numerical/vec.h>
+#include <src/random/sphere.h>
 
 #include <random>
 #include <vector>
@@ -61,7 +60,7 @@ std::vector<Ray<N, T>> generate_random_rays_for_sphere(const Vector<N, TS>& cent
 
         for (int i = 0; i < count; ++i)
         {
-                random_in_sphere(random_engine, v, length_square);
+                random::random_in_sphere(random_engine, v, length_square);
                 v /= std::sqrt(length_square);
 
                 rays[i] = Ray<N, T>(T(radius) * v + to_vector<T>(center), -v);

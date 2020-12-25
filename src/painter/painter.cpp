@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter/cosine_sphere.h"
 #include "painter/pixels.h"
-#include "sampling/cube.h"
-#include "sampling/sphere.h"
 
 #include <src/color/color.h>
 #include <src/com/alg.h>
@@ -29,6 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
+#include <src/random/sj_sampler.h>
+#include <src/random/sphere.h>
 
 #include <optional>
 #include <random>
@@ -53,7 +53,7 @@ template <typename T>
 using PainterRandomEngine = std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
 
 template <std::size_t N, typename T>
-using PainterSampler = StratifiedJitteredSampler<N, T>;
+using PainterSampler = random::StratifiedJitteredSampler<N, T>;
 // using PainterSampler = LatinHypercubeSampler<N, T>;
 
 static_assert(std::is_floating_point_v<Color::DataType>);
@@ -201,7 +201,7 @@ bool diffuse_weighted_ray(
         // Распределение случайного луча с вероятностью по косинусу угла между нормалью и случайным вектором.
 
         // Случайный вектор диффузного освещения надо определять от видимой нормали.
-        *ray = Ray<N, T>(point, random_cosine_weighted_on_hemisphere(random_engine, shading_normal));
+        *ray = Ray<N, T>(point, random::random_cosine_weighted_on_hemisphere(random_engine, shading_normal));
 
         if (smooth_normal && dot(ray->dir(), geometric_normal) <= DOT_PRODUCT_EPSILON<T>)
         {
