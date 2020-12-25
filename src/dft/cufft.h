@@ -23,6 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
+namespace ns
+{
 std::unique_ptr<DFT> create_cufft(int x, int y);
+}
 
 #endif

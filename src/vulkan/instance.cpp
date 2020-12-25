@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/string/vector.h>
 
-namespace vulkan
+namespace ns::vulkan
 {
 constexpr uint32_t NO_FAMILY_INDEX = -1;
 namespace

@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stack>
 #include <vector>
 
-namespace geometry
+namespace ns::geometry
 {
 namespace extract_manifold_implementation
 {

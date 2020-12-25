@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string_view>
 #include <version>
 
+namespace ns
+{
 template <typename T>
 std::string generic_utf8_filename(const T& path)
 {
@@ -47,3 +49,4 @@ std::filesystem::path path_from_utf8(const T& filename)
 template std::string generic_utf8_filename(const std::filesystem::path& path);
 template std::filesystem::path path_from_utf8(const std::string& filename);
 template std::filesystem::path path_from_utf8(const std::string_view& filename);
+}

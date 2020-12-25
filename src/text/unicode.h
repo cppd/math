@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace text::unicode
+namespace ns::text::unicode
 {
 template <typename T>
 std::string utf32_to_number_string(T code_point);

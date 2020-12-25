@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <vector>
 
-namespace gpu::renderer
+namespace ns::gpu::renderer
 {
 std::vector<uint32_t> code_triangles_vert();
 std::vector<uint32_t> code_triangles_geom();

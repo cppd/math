@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ascii.h"
 
+namespace ns
+{
 static_assert(ascii::to_upper('a') == 'A');
 static_assert(ascii::to_upper('z') == 'Z');
 static_assert(ascii::to_lower('A') == 'a');
@@ -53,3 +55,4 @@ static_assert(ascii::char_to_int('6') == 6);
 static_assert(ascii::char_to_int('7') == 7);
 static_assert(ascii::char_to_int('8') == 8);
 static_assert(ascii::char_to_int('9') == 9);
+}

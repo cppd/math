@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Если число указано, то используется оно. Если только txt,
 // то подсчитывается количество чисел в первой строке файла.
 
-namespace mesh::file
+namespace ns::mesh::file
 {
 namespace
 {

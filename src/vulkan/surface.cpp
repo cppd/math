@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+namespace ns::vulkan
+{
 namespace
 {
 std::vector<VkSurfaceFormatKHR> find_surface_formats(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
@@ -78,8 +80,6 @@ std::vector<VkPresentModeKHR> find_present_modes(VkPhysicalDevice physical_devic
 }
 }
 
-namespace vulkan
-{
 bool find_surface_details(
         VkSurfaceKHR surface,
         VkPhysicalDevice device,

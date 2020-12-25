@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cmath>
 
+namespace ns
+{
 template <typename T, typename F>
 T interpolation(T v0, T v1, F x)
 {
@@ -150,4 +152,5 @@ T interpolation(const std::array<T, (1 << N)>& data, const std::array<F, N>& p)
 
                 return interpolation(tmp_data, tmp_p);
         }
+}
 }

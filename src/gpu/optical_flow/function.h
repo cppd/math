@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu::optical_flow
+namespace ns::gpu::optical_flow
 {
 std::vector<vec2i> pyramid_sizes(int width, int height, int min_size);
 

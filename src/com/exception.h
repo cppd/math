@@ -20,4 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <functional>
 #include <string>
 
+namespace ns
+{
 void catch_all(const std::string& description, const std::function<void()>& f) noexcept;
+}

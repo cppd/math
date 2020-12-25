@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#include <string_view>
 //#include <type_traits>
 
+namespace ns
+{
 #if 0
 constexpr uint32_t jenkins_one_at_a_time_hash(const char* key, int len)
 {
@@ -75,4 +77,5 @@ size_t pack_hash(const T& v, const Ts&... vs)
         size_t seed = hasher(v);
         ((seed ^= hasher(vs) + 0x9e3779b9 + (seed << 6) + (seed >> 2)), ...);
         return seed;
+}
 }

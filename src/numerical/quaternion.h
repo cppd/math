@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/type/trait.h>
 
+namespace ns
+{
 template <typename T>
 class Quaternion
 {
@@ -126,4 +128,5 @@ Vector<3, T> rotate_vector(const Vector<3, T>& axis, T angle, const Vector<3, T>
 {
         Quaternion q = quaternion_for_rotation(axis, angle);
         return (q * Quaternion<T>(static_cast<T>(0), v) * conjugate(q)).imag();
+}
 }

@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fftw3.h>
 #include <mutex>
 
+namespace ns
+{
 namespace
 {
 class FFTPlanThreads final
@@ -161,6 +163,7 @@ public:
 std::unique_ptr<DFT> create_fftw(int x, int y)
 {
         return std::make_unique<FFTW>(x, y);
+}
 }
 
 #endif

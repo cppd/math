@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "groups.h"
 
-namespace gpu
+namespace ns::gpu
 {
 static_assert(group_count(11, 4) == 3);
 static_assert(group_count(12, 4) == 3);

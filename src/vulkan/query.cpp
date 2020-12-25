@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <sstream>
 
+namespace ns::vulkan
+{
 namespace
 {
 std::string vulkan_formats_to_string(const std::vector<VkFormat>& formats)
@@ -44,8 +46,6 @@ std::string vulkan_formats_to_string(const std::vector<VkFormat>& formats)
 }
 }
 
-namespace vulkan
-{
 std::unordered_set<std::string> supported_instance_extensions()
 {
         uint32_t extension_count;

@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace gui::main_window
+namespace ns::gui::main_window
 {
 class Actions final
 {

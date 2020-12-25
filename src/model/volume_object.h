@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <variant>
 
-namespace volume
+namespace ns::volume
 {
 template <size_t N>
 class VolumeObject;

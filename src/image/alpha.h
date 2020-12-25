@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/error.h>
 
-namespace image
+namespace ns::image
 {
 std::vector<std::byte> add_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes, float alpha);
 std::vector<std::byte> delete_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes);

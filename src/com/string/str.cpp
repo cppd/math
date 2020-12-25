@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cctype>
 
+namespace ns
+{
 namespace
 {
 char to_upper(char c)
@@ -120,4 +122,5 @@ std::string to_upper_first_letters(const std::string_view& s)
                 }
         }
         return result;
+}
 }

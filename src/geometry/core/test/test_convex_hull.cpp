@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <unordered_set>
 
-namespace geometry
+namespace ns::geometry
 {
 namespace
 {

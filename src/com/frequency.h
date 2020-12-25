@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <deque>
 #include <vector>
 
+namespace ns
+{
 class Frequency
 {
         struct Events
@@ -50,3 +52,4 @@ public:
         Frequency(double interval_length, int sample_count);
         double calculate();
 };
+}

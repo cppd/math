@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace painter
+namespace ns::painter
 {
 void test_painter_file();
 void test_painter_file(const std::string& file_name);

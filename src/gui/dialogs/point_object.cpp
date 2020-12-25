@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 
-namespace gui::dialog
+namespace ns::gui::dialog
 {
 PointObjectParametersDialog::PointObjectParametersDialog(
         int dimension,

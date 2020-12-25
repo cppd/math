@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "code.h"
 
-namespace gpu::optical_flow
+namespace ns::gpu::optical_flow
 {
 std::vector<uint32_t> code_sobel_comp()
 {

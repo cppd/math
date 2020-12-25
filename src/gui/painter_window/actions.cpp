@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "process.h"
 
-namespace gui::painter_window
+namespace ns::gui::painter_window
 {
 namespace
 {

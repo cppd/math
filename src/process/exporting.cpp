@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gui/dialogs/file_dialog.h>
 #include <src/model/mesh_utility.h>
 
-namespace process
+namespace ns::process
 {
 namespace
 {

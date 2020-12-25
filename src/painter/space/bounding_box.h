@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 
-namespace painter
+namespace ns::painter
 {
 template <size_t N, typename T>
 struct BoundingBox final

@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility>
 #include <vector>
 
+namespace ns
+{
 //   В одномерном массиве хранятся данные по множеству измерений.
 // Требуется найти индекс элемента с заданными координатами.
 //   Например, имеется 4 измерения с размерами S0, S1, S2, S3
@@ -151,3 +153,4 @@ public:
                 return global_index;
         }
 };
+}

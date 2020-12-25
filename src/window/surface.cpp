@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 #include <vulkan/vulkan_xcb.h>
 
-namespace window
+namespace ns::window
 {
 std::vector<std::string> vulkan_create_surface_required_extensions()
 {
@@ -58,7 +58,7 @@ VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 
-namespace window
+namespace ns::window
 {
 std::vector<std::string> vulkan_create_surface_required_extensions()
 {

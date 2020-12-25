@@ -31,6 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <utility>
 
+namespace ns
+{
 namespace complement_implementation
 {
 template <size_t ValueIndex, typename T, int... I>
@@ -197,4 +199,5 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector(const Vecto
         {
                 return orthogonal_complement_of_unit_vector_by_gram_schmidt(unit_vector);
         }
+}
 }

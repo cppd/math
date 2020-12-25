@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <tuple>
 
-namespace mesh::file
+namespace ns::mesh::file
 {
 enum class MeshFileType
 {

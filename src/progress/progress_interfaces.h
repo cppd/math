@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
+namespace ns
+{
 class ProgressRatioControl
 {
 protected:
@@ -40,3 +42,4 @@ public:
         virtual void add_progress_ratio(ProgressRatioControl* ratio) = 0;
         virtual void delete_progress_ratio(const ProgressRatioControl* ratio) noexcept = 0;
 };
+}

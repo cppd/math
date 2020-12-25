@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace gui::main_window
+namespace ns::gui::main_window
 {
 namespace
 {

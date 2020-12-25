@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iterator>
 #include <utility>
 
+namespace ns
+{
 template <typename T>
 constexpr auto storage_size(const T& c) -> decltype(std::size(c))
 {
@@ -61,4 +63,5 @@ std::enable_if_t<!has_data_and_size<T>, std::conditional_t<std::is_const_v<T>, c
         static_assert(!std::is_pointer_v<T>);
         static_assert(std::is_standard_layout_v<T>);
         return &data;
+}
 }

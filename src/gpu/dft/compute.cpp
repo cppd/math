@@ -66,7 +66,7 @@ Chapter 13: FFTs for Arbitrary N.
 #include <optional>
 #include <thread>
 
-namespace gpu::dft
+namespace ns::gpu::dft
 {
 namespace
 {

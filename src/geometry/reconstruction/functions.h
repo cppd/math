@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace geometry
+namespace ns::geometry
 {
 namespace functions_implementation
 {

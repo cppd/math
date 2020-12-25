@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <span>
 #include <vector>
 
-namespace image
+namespace ns::image
 {
 void format_conversion(
         ColorFormat from_format,

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/view/interface.h>
 
-namespace gui::main_window
+namespace ns::gui::main_window
 {
 class ViewWidget final : public QWidget
 {

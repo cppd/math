@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <thread>
 
-namespace gpu::pencil_sketch
+namespace ns::gpu::pencil_sketch
 {
 namespace
 {

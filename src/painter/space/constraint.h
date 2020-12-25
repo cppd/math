@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vec.h>
 
-namespace painter
+namespace ns::painter
 {
 // a * x + b
 template <size_t N, typename T>

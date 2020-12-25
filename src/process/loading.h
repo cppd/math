@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <functional>
 #include <string>
 
-namespace process
+namespace ns::process
 {
 std::function<void(ProgressRatioList*)> action_load_mesh(std::filesystem::path path, bool use_object_selection_dialog);
 

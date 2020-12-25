@@ -40,7 +40,7 @@ Cambridge University Press, 2007.
 
 #include <unordered_set>
 
-namespace geometry
+namespace ns::geometry
 {
 namespace
 {

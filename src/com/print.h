@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <string_view>
 
+namespace ns
+{
 std::string to_string(__float128 t);
 
 template <typename T>
@@ -236,3 +238,4 @@ template <typename T>
 std::string to_string(std::basic_string<T>) = delete;
 template <typename T>
 std::string to_string(std::basic_string_view<T>) = delete;
+}

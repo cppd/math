@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "type/limit.h"
 #include "type/trait.h"
 
+namespace ns
+{
 template <typename T>
 constexpr T square(const T& v)
 {
@@ -98,4 +100,5 @@ constexpr T power([[maybe_unused]] T base)
 
                 return res;
         }
+}
 }

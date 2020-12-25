@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <sstream>
 
-namespace gpu::renderer
+namespace ns::gpu::renderer
 {
 namespace
 {

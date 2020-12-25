@@ -19,7 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
+namespace ns
+{
 void LOG(const std::string& msg) noexcept;
 void LOG_ERROR(const std::string& msg) noexcept;
 void LOG_WARNING(const std::string& msg) noexcept;
 void LOG_INFORMATION(const std::string& msg) noexcept;
+}

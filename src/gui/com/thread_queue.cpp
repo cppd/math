@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "thread_queue.h"
 
-namespace gui
+namespace ns::gui
 {
 ThreadQueue::ThreadQueue()
 {

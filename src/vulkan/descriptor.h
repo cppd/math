@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <variant>
 #include <vector>
 
-namespace vulkan
+namespace ns::vulkan
 {
 DescriptorSetLayout create_descriptor_set_layout(
         VkDevice device,

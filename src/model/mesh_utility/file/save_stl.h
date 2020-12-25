@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <filesystem>
 #include <string_view>
 
-namespace mesh::file
+namespace ns::mesh::file
 {
 template <size_t N>
 std::filesystem::path save_to_stl_file(

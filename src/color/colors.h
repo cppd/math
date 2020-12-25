@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "color.h"
 
-namespace colors
+namespace ns::colors
 {
 inline constexpr Color BLACK = Color(Srgb8(0, 0, 0));
 inline constexpr Color BLUE = Color(Srgb8(0, 0, 255));

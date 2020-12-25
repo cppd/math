@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+namespace ns
+{
 // Для работы в потоках расчётов
 void ProgressRatioList::add_progress_ratio(ProgressRatioControl* ratio)
 {
@@ -122,4 +124,5 @@ std::vector<std::tuple<unsigned, unsigned, std::string>> ProgressRatioList::rati
                 result.emplace_back(v, m, ratio->text());
         }
         return result;
+}
 }

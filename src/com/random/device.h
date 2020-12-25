@@ -19,4 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <span>
 
+namespace ns
+{
 void read_system_random(const std::span<std::byte>& bytes);
+}

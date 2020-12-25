@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "global_index.h"
 
+namespace ns
+{
 // compute
 
 static_assert(GlobalIndex<1, long long>(std::array<unsigned, 1>{100}).compute(std::array<unsigned char, 1>{10}) == 10);
@@ -76,3 +78,4 @@ static_assert(
 static_assert(
         GlobalIndex<5, unsigned __int128>(std::array<long long, 5>{11111, 22222, 33333, 44444, 55555}).stride(4)
         == static_cast<unsigned __int128>(11111) * 22222 * 33333 * 44444);
+}

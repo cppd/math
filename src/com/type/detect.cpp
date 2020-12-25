@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "detect.h"
 
+namespace ns
+{
 static_assert(is_array<const std::array<int, 1>>);
 static_assert(is_vector<const std::vector<int>>);
 
@@ -33,3 +35,4 @@ static_assert(has_data_and_size<const std::array<int, 1>>);
 static_assert(has_data_and_size<std::vector<double>&>);
 static_assert(!has_data_and_size<int>);
 static_assert(!has_data_and_size<double*>);
+}

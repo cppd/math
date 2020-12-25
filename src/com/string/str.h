@@ -20,7 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <string_view>
 
+namespace ns
+{
 std::string trim(const std::string_view& s);
 std::string to_upper(const std::string_view& s);
 std::string to_lower(const std::string_view& s);
 std::string to_upper_first_letters(const std::string_view& s);
+}

@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <vector>
 
-namespace gpu::pencil_sketch
+namespace ns::gpu::pencil_sketch
 {
 std::vector<uint32_t> code_compute_comp();
 std::vector<uint32_t> code_view_vert();

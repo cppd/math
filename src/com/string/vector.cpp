@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vector.h"
 
+namespace ns
+{
 std::vector<const char*> const_char_pointer_vector(const std::vector<std::string>& v)
 {
         std::vector<const char*> res;
@@ -33,4 +35,5 @@ std::vector<const char*> const_char_pointer_vector(const std::vector<std::string
 std::vector<std::string> string_vector(const std::vector<const char*>& v)
 {
         return std::vector<std::string>(std::cbegin(v), std::cend(v));
+}
 }

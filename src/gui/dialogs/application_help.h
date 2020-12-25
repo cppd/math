@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QWidget>
 
-namespace gui::dialog
+namespace ns::gui::dialog
 {
 void application_help();
 }

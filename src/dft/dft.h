@@ -20,8 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <complex>
 #include <vector>
 
+namespace ns
+{
 struct DFT
 {
         virtual ~DFT() = default;
         virtual void exec(bool inverse, std::vector<std::complex<float>>* data) = 0;
 };
+}

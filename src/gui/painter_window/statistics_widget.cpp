@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace gui::painter_window
+namespace ns::gui::painter_window
 {
 namespace
 {

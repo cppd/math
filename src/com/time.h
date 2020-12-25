@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <chrono>
 
+namespace ns
+{
 using TimePoint = std::chrono::steady_clock::time_point;
 using TimeDuration = std::chrono::steady_clock::duration;
 
@@ -35,4 +37,5 @@ inline double duration_from(const TimePoint& t) noexcept
 inline double duration(const TimePoint& t1, const TimePoint& t2) noexcept
 {
         return std::chrono::duration<double>(t2 - t1).count();
+}
 }

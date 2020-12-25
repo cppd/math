@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <deque>
 #include <optional>
 
+namespace ns
+{
 template <size_t N>
 class Versions
 {
@@ -85,3 +87,4 @@ public:
                 *version = m_versions.back().version;
         }
 };
+}

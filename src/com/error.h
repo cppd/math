@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <utility>
 
+namespace ns
+{
 class ErrorException final : public std::exception
 {
         std::string m_text;
@@ -43,6 +45,7 @@ public:
 namespace error_implementation
 {
 [[noreturn]] void error_assert(const char* expr, const char* file, int line) noexcept;
+}
 }
 
 #if 1

@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-namespace gpu::renderer
+namespace ns::gpu::renderer
 {
 struct MeshObject
 {

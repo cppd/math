@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace mesh::file
+namespace ns::mesh::file
 {
 constexpr bool is_hyphen_minus(char c)
 {

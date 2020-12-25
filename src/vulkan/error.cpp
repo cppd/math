@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace vulkan
+namespace ns::vulkan
 {
 [[noreturn]] void vulkan_function_error(const std::string_view& function_name, VkResult code)
 {

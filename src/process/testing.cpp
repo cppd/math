@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/gui/dialogs/message.h>
 
-namespace process
+namespace ns::process
 {
 std::function<void(ProgressRatioList*)> action_self_test(test::SelfTestType test_type, bool with_confirmation)
 {

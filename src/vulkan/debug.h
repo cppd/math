@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-namespace vulkan
+namespace ns::vulkan
 {
 DebugReportCallback create_debug_report_callback(VkInstance instance);
 }

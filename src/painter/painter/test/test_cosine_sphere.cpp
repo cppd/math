@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <version>
 
-namespace painter
+namespace ns::painter
 {
 namespace
 {

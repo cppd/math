@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <unordered_map>
 
-namespace gui::main_window
+namespace ns::gui::main_window
 {
 class ModelTree final : public QWidget, private ModelTreeEvents
 {

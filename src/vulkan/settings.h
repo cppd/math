@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace vulkan
+namespace ns::vulkan
 {
 constexpr int API_VERSION_MAJOR = 1;
 constexpr int API_VERSION_MINOR = 2;

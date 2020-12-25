@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-namespace painter
+namespace ns::painter
 {
 void test_parallelotope(int number_of_dimensions);
 }

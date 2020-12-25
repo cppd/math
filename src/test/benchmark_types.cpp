@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <gmpxx.h>
 #include <vector>
 
+namespace ns
+{
 constexpr int N = 1 << 27;
 
 namespace
@@ -126,4 +128,5 @@ void benchmark_types()
                 std::vector<unsigned __int128> v(N, 1e16);
                 LOG("unsigned __int128 " + to_string(computation(&v)));
         }
+}
 }

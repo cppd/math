@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <fstream>
 
+namespace ns
+{
 // Вместо использования std::random_device
 void read_system_random(const std::span<std::byte>& bytes)
 {
@@ -40,6 +42,7 @@ void read_system_random(const std::span<std::byte>& bytes)
                 error(std::string("error reading from file ") + DEV_RANDOM);
         }
 }
+}
 
 #elif defined(_WIN32)
 
@@ -50,6 +53,8 @@ void read_system_random(const std::span<std::byte>& bytes)
 // Потом wincrypt.h
 #include <wincrypt.h>
 
+namespace ns
+{
 namespace
 {
 class Provider
@@ -87,6 +92,7 @@ void read_system_random(const std::span<std::byte>& bytes)
         {
                 error("error CryptGenRandom");
         }
+}
 }
 
 #else

@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <vector>
 
+namespace ns
+{
 // Нужно целое число со знаком, больше или равное 1
 inline int hardware_concurrency()
 {
@@ -363,3 +365,4 @@ public:
                 m_counter.fetch_add(v, std::memory_order_relaxed);
         }
 };
+}

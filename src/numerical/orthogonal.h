@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vector>
 
+namespace ns
+{
 // Вектор из ортогонального дополнения (n-1)-мерного подпространства
 template <size_t N, typename T>
 Vector<N, T> ortho_nn(const std::array<Vector<N, T>, N - 1>& vectors)
@@ -189,4 +191,5 @@ void ortho_e0_e1(
         vectors[N - 2] = *e1;
 
         *e2 = ortho_nn(vectors).normalized();
+}
 }

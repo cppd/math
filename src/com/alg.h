@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <type_traits>
 
+namespace ns
+{
 template <typename T>
 void sort_and_unique(T* v)
 {
@@ -209,4 +211,5 @@ bool there_is_intersection(T1 t1, T2 t2)
                         return true;
                 }
         }
+}
 }

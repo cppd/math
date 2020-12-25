@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QGridLayout>
 #include <QSignalBlocker>
 
-namespace gui::painter_window
+namespace ns::gui::painter_window
 {
 SlidersWidget::SlidersWidget(const std::vector<int>& screen_size)
 {

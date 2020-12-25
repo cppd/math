@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <random>
 
+namespace ns
+{
 template <typename T>
 T create_engine()
 {
@@ -29,4 +31,5 @@ T create_engine()
         read_system_random(std::as_writable_bytes(std::span(data)));
         std::seed_seq seed_seq(data.cbegin(), data.cend());
         return T(seed_seq);
+}
 }

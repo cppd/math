@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <utility>
 
-namespace settings
+namespace ns::settings
 {
 using Dimensions = std::index_sequence<3, 4, 5>;
 }

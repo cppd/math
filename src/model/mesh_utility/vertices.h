@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace mesh
+namespace ns::mesh
 {
 // Приведение координат к [-1, 1] с сохранением пропорций в заданном пространстве
 template <size_t N>

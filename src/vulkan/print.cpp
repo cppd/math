@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <sstream>
 
+namespace ns::vulkan
+{
 namespace
 {
 template <typename T>
@@ -32,8 +34,6 @@ std::string enum_to_string(T e)
 }
 }
 
-namespace vulkan
-{
 std::string api_version_to_string(uint32_t api_version)
 {
         std::ostringstream oss;

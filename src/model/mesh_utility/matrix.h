@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/transform.h>
 #include <src/numerical/vec.h>
 
-namespace mesh
+namespace ns::mesh
 {
 template <size_t N>
 Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(

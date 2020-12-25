@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <vector>
 
-namespace gpu::text_writer
+namespace ns::gpu::text_writer
 {
 std::vector<uint32_t> code_view_vert();
 std::vector<uint32_t> code_view_frag();

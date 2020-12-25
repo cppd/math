@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace vulkan
+namespace ns::vulkan
 {
 std::unordered_set<std::string> supported_instance_extensions();
 std::unordered_set<std::string> supported_validation_layers();

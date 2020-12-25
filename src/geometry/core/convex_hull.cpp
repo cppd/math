@@ -80,7 +80,7 @@ Chapman & Hall/CRC, 2004.
 #include <unordered_map>
 #include <unordered_set>
 
-namespace geometry
+namespace ns::geometry
 {
 namespace
 {

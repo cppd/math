@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "code.h"
 
-namespace gpu::dft
+namespace ns::gpu::dft
 {
 std::vector<uint32_t> code_fft_global_comp()
 {

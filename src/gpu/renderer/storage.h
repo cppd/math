@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <unordered_set>
 
-namespace gpu::renderer
+namespace ns::gpu::renderer
 {
 template <typename T>
 class ObjectStorage final

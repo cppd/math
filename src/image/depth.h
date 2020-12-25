@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "conversion.h"
 #include "image.h"
 
-namespace image
+namespace ns::image
 {
 template <size_t N>
 Image<N> convert_to_8_bit(const Image<N>& image)

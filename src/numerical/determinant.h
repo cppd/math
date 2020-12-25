@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 
+namespace ns
+{
 namespace determinant_implementation
 {
 template <size_t N_V, size_t N_H, typename T, size_t DET_SIZE>
@@ -128,4 +130,5 @@ bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
         }
 
         return false;
+}
 }

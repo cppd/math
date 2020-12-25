@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <array>
 
+namespace ns
+{
 template <typename T, size_t N>
 std::array<T, N>&& sort(std::array<T, N>&& v)
 {
@@ -96,4 +98,5 @@ std::array<T, 5>&& sort(std::array<T, 5>&& v)
         swap_sort(v[1], v[2]);
 
         return std::move(v);
+}
 }

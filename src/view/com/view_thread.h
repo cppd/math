@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <mutex>
 #include <thread>
 
-namespace view
+namespace ns::view
 {
 namespace implementation
 {

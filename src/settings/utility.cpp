@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dimensions.h"
 
-namespace settings
+namespace ns::settings
 {
 std::set<unsigned> supported_dimensions()
 {

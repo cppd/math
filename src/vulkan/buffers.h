@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <span>
 #include <unordered_set>
 
-namespace vulkan
+namespace ns::vulkan
 {
 enum class BufferMemoryType
 {

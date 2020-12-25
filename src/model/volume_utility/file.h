@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <filesystem>
 #include <string>
 
-namespace volume
+namespace ns::volume
 {
 struct VolumeInfo final
 {

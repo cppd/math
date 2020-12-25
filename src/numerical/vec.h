@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cmath>
 
+namespace ns
+{
 template <size_t N, typename T>
 class Vector
 {
@@ -206,18 +208,6 @@ public:
                 return true;
         }
 };
-
-namespace std
-{
-template <size_t N, typename T>
-struct hash<Vector<N, T>>
-{
-        size_t operator()(const Vector<N, T>& v) const
-        {
-                return v.hash();
-        }
-};
-}
 
 template <size_t N, typename T>
 Vector<N, T> operator+(const Vector<N, T>& a, const Vector<N, T>& b)
@@ -457,3 +447,16 @@ using vec4f = Vector<4, float>;
 using vec2i = Vector<2, int>;
 using vec3i = Vector<3, int>;
 using vec4i = Vector<4, int>;
+}
+
+namespace std
+{
+template <size_t N, typename T>
+struct hash<::ns::Vector<N, T>>
+{
+        size_t operator()(const ::ns::Vector<N, T>& v) const
+        {
+                return v.hash();
+        }
+};
+}

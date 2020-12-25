@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/math.h>
 #include <src/numerical/vec.h>
 
-namespace painter
+namespace ns::painter
 {
 namespace optics_implementation
 {

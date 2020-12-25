@@ -46,7 +46,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using complex = std::complex<float>;
 
-namespace gpu::dft
+namespace ns::gpu::dft
 {
 namespace
 {

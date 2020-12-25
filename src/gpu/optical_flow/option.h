@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vec.h>
 
-namespace gpu::optical_flow
+namespace ns::gpu::optical_flow
 {
 // Размеры групп потоков вычислительных шейдеров
 constexpr vec2i GROUP_SIZE(16, 16);

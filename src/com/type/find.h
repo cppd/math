@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <gmpxx.h>
 #include <type_traits>
 
+namespace ns
+{
 // clang-format off
 template<int BITS>
 using LeastSignedInteger =
@@ -39,3 +41,4 @@ using LeastUnsignedInteger =
         std::conditional_t<BITS <= 128, unsigned __int128,
         mpz_class>>>>>;
 // clang-format on
+}

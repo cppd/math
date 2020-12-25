@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <filesystem>
 #include <memory>
 
-namespace mesh::file
+namespace ns::mesh::file
 {
 template <size_t N>
 std::unique_ptr<Mesh<N>> load_from_stl_file(const std::filesystem::path& file_name, ProgressRatio* progress);

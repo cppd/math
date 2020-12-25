@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <fstream>
 
+namespace ns
+{
 template <typename T>
 void read_text_file(const std::filesystem::path& file_name, T* s)
 {
@@ -89,3 +91,4 @@ template void read_text_file(const std::filesystem::path& file_name, std::vector
 
 template void read_binary_file(const std::filesystem::path& file_name, std::string* s);
 template void read_binary_file(const std::filesystem::path& file_name, std::vector<char>* s);
+}

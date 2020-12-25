@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "error.h"
 #include "print.h"
 
+namespace ns
+{
 template <typename T>
 constexpr T log_2(T n)
 {
@@ -64,4 +66,5 @@ constexpr T binary_size(T n)
                 error("Binary size error. " + to_string(n) + " is not a power of 2.");
         }
         return b;
+}
 }

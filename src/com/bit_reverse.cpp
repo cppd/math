@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iomanip>
 #include <sstream>
 
+namespace ns
+{
 namespace
 {
 std::string bit_reverse_255_table()
@@ -107,6 +109,7 @@ void create_bit_reverse_lookup_table(int N, std::vector<int>* data)
         {
                 (*data)[i] = bit_reverse(bin_size, i);
         }
+}
 }
 
 #endif

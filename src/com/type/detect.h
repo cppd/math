@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <vector>
 
+namespace ns
+{
 namespace type_detect_implementation
 {
 struct IsArray
@@ -91,3 +93,4 @@ template <typename T>
 inline constexpr bool has_cbegin_cend = type_detect_implementation::HasBeginEnd<T>::value;
 template <typename T>
 inline constexpr bool has_data_and_size = type_detect_implementation::HasDataAndSize<T>::value;
+}

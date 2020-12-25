@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 
-namespace mesh
+namespace ns::mesh
 {
 std::vector<FileFormat> save_formats(unsigned dimension)
 {

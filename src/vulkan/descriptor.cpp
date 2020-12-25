@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/variant.h>
 
+namespace ns::vulkan
+{
 namespace
 {
 vulkan::DescriptorPool create_descriptor_pool(
@@ -107,8 +109,6 @@ std::unordered_map<uint32_t, uint32_t> create_binding_map(const std::vector<VkDe
 }
 }
 
-namespace vulkan
-{
 DescriptorSetLayout create_descriptor_set_layout(
         VkDevice device,
         const std::vector<VkDescriptorSetLayoutBinding>& bindings)

@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vec.h>
 
+namespace ns
+{
 struct Srgb8
 {
         const unsigned char red, green, blue;
@@ -166,4 +168,5 @@ inline Color operator+(const Color& a, const Color& b)
 inline Color operator*(const Color& a, const Color& b)
 {
         return Color(a.data() * b.data());
+}
 }

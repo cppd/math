@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <exception>
 
+namespace ns
+{
 namespace
 {
 void exception_handler(const std::exception_ptr& ptr, const std::string& description) noexcept
@@ -63,4 +65,5 @@ void catch_all(const std::string& description, const std::function<void()>& f) n
         {
                 exception_handler(std::current_exception(), description);
         }
+}
 }

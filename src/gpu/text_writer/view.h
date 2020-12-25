@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vulkan/vulkan.h>
 
-namespace gpu::text_writer
+namespace ns::gpu::text_writer
 {
 struct View
 {

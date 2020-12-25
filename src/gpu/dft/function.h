@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <complex>
 #include <vector>
 
-namespace gpu::dft
+namespace ns::gpu::dft
 {
 int compute_m(int n);
 std::vector<std::complex<double>> compute_h(int n, bool inverse, double coef);

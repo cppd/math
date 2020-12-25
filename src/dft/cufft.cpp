@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cufft.h>
 #include <type_traits>
 
+namespace ns
+{
 namespace
 {
 void cuda_check_errors()
@@ -262,6 +264,7 @@ std::unique_ptr<DFT> create_cufft(int x, int y)
 {
         cuda_select_device();
         return std::make_unique<CudaFFT>(x, y);
+}
 }
 
 #endif

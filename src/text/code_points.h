@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace text
+namespace ns::text
 {
 std::vector<char32_t> supported_code_points();
 }

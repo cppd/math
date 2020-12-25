@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // U+0800  .. U+FFFF    1110xxxx 10xxxxxx 10xxxxxx
 // U+10000 .. U+10FFFF  11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
 
-namespace text::unicode
+namespace ns::text::unicode
 {
 template <typename T>
 std::string utf32_to_number_string(T code_point)

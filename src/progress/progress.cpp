@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cmath>
 
+namespace ns
+{
 class AtomicTerminate
 {
         // Для одного обращения к атомарным данным вместо двух обращений к std::atomic_bool
@@ -193,4 +195,5 @@ void ProgressRatio::set_text(const std::string& text)
 bool ProgressRatio::lock_free()
 {
         return Impl::LOCK_FREE;
+}
 }

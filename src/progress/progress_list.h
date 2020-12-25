@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <vector>
 
+namespace ns
+{
 class ProgressRatioList final : public ProgressRatios
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
@@ -45,3 +47,4 @@ public:
         void enable();
         std::vector<std::tuple<unsigned, unsigned, std::string>> ratios() const;
 };
+}

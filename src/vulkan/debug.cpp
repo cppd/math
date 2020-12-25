@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 
+namespace ns::vulkan
+{
 namespace
 {
 void add_to_debug_message(std::string* str, const char* text)
@@ -77,8 +79,6 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
 }
 }
 
-namespace vulkan
-{
 DebugReportCallback create_debug_report_callback(VkInstance instance)
 {
         if (instance == VK_NULL_HANDLE)

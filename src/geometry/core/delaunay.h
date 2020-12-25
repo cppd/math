@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <vector>
 
-namespace geometry
+namespace ns::geometry
 {
 template <size_t N>
 class DelaunayFacet

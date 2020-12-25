@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace gui::dialog
+namespace ns::gui::dialog
 {
 struct ObjectSelectionParameters final
 {

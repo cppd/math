@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "determinant.h"
 
+namespace ns
+{
 namespace determinant_implementation
 {
 // clang-format off
@@ -40,4 +42,5 @@ static_assert
         )
 );
 // clang-format on
+}
 }

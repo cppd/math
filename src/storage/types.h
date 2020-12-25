@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <variant>
 
-namespace storage
+namespace ns::storage
 {
 namespace types_implementation
 {

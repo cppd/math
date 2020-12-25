@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
-namespace vulkan
+namespace ns::vulkan
 {
 CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
 {

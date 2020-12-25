@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/com/time.h>
 
-namespace painter
+namespace ns::painter
 {
 template <size_t N>
 class BarPaintbrush final : public Paintbrush<N>

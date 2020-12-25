@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <functional>
 #include <vector>
 
-namespace gui::painter_window
+namespace ns::gui::painter_window
 {
 std::function<void(ProgressRatioList*)> save_to_file(
         const std::vector<int>& screen_size,

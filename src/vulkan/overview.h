@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vulkan/vulkan.h>
 
-namespace vulkan
+namespace ns::vulkan
 {
 std::string overview();
 std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface);

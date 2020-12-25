@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vulkan/vulkan.h>
 
-namespace vulkan
+namespace ns::vulkan
 {
 std::string api_version_to_string(uint32_t api_version);
 std::array<std::string, 2> result_to_strings(const VkResult& code);

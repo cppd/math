@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 
-namespace gpu::convex_hull
+namespace ns::gpu::convex_hull
 {
 int points_buffer_size(int height)
 {

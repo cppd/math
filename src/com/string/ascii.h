@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 
-namespace ascii
+namespace ns::ascii
 {
 constexpr char to_upper(char c)
 {

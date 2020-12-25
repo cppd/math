@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <utility>
 
+namespace ns
+{
 template <size_t Rows, size_t Columns, typename T>
 class Matrix
 {
@@ -301,3 +303,4 @@ using mat3 = Matrix<3, 3, double>;
 using mat3f = Matrix<3, 3, float>;
 using mat4 = Matrix<4, 4, double>;
 using mat4f = Matrix<4, 4, float>;
+}

@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "math.h"
 
+namespace ns
+{
 using U128 = unsigned __int128;
 
 static_assert(power<0>(10u) == 1);
@@ -45,3 +47,4 @@ static_assert(power<22>(U128(10)) == 100 * square(square(U128(100000))));
 static_assert(power<23>(U128(10)) == 1000 * square(square(U128(100000))));
 static_assert(power<24>(U128(10)) == 10000 * square(square(U128(100000))));
 static_assert(power<25>(U128(10)) == 100000 * square(square(U128(100000))));
+}

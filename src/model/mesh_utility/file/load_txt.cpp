@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/com/time.h>
 
-namespace mesh::file
+namespace ns::mesh::file
 {
 namespace
 {

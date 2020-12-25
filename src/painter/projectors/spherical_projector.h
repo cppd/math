@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
-namespace painter
+namespace ns::painter
 {
 // Параллельное проецирование точек экрана на полусферу и создание лучей
 // из центра полусферы в направлении точек на сфере.

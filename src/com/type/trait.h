@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <gmpxx.h>
 #include <type_traits>
 
+namespace ns
+{
 template <typename T>
 inline constexpr bool is_native_integral =
         std::is_same_v<
@@ -42,3 +44,4 @@ inline constexpr bool is_signed =
 
 template <typename T>
 inline constexpr bool is_unsigned = std::is_same_v<std::remove_cv_t<T>, unsigned __int128> || std::is_unsigned_v<T>;
+}

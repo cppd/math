@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <utility>
 
+namespace ns
+{
 namespace sequence_implementation
 {
 template <
@@ -83,3 +85,4 @@ template <
         typename... SequenceTypeParameters>
 using Sequence = std::remove_pointer_t<decltype(
         sequence_implementation::sequence<Type, SequenceType, SequenceTypeParameters...>(IntegerSequence()))>;
+}

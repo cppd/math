@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "combinatorics.h"
 
+namespace ns
+{
 static_assert(binomial<0, 0>() == 1);
 static_assert(binomial<1, 0>() == 1);
 static_assert(binomial<1, 1>() == 1);
@@ -29,3 +31,4 @@ static_assert(binomial<30, 20>() == 30045015);
 static_assert(binomial<30, 10>() == 30045015);
 static_assert(binomial<40, 30>() == 847660528);
 static_assert(binomial<40, 10>() == 847660528);
+}

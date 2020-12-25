@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <limits>
 #include <type_traits>
 
+namespace ns
+{
 namespace types_implementation
 {
 template <typename T>
@@ -218,3 +220,4 @@ template <typename T>
 class limits<const volatile T> : public types_implementation::limits<T>
 {
 };
+}

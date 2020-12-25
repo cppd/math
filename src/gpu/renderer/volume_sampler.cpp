@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "volume_sampler.h"
 
-namespace gpu::renderer
+namespace ns::gpu::renderer
 {
 vulkan::Sampler create_volume_image_sampler(VkDevice device)
 {

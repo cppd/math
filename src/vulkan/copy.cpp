@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace vulkan
+namespace ns::vulkan
 {
 void commands_image_resolve(
         VkCommandBuffer command_buffer,

@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/normal.h>
 #include <src/numerical/orthogonal.h>
 
-namespace mesh
+namespace ns::mesh
 {
 namespace
 {

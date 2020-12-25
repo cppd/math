@@ -36,7 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <thread>
 
-namespace gpu::convex_hull
+namespace ns::gpu::convex_hull
 {
 namespace
 {

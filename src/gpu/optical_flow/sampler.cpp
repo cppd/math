@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sampler.h"
 
-namespace gpu::optical_flow
+namespace ns::gpu::optical_flow
 {
 vulkan::Sampler create_sampler(VkDevice device)
 {

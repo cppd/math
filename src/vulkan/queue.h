@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vulkan/vulkan.h>
 
-namespace vulkan
+namespace ns::vulkan
 {
 template <size_t N>
 void queue_submit(

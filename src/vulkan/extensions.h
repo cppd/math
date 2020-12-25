@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vulkan/vulkan.h>
 
-namespace vulkan
+namespace ns::vulkan
 {
 PFN_vkVoidFunction proc_addr(VkInstance instance, const char* name);
 }
@@ -28,7 +28,7 @@ inline VkResult vkCreateDebugReportCallbackEXT(
         const VkAllocationCallbacks* pAllocator,
         VkDebugReportCallbackEXT* pCallback)
 {
-        auto a = vulkan::proc_addr(instance, "vkCreateDebugReportCallbackEXT");
+        auto a = ns::vulkan::proc_addr(instance, "vkCreateDebugReportCallbackEXT");
         auto f = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(a);
         return f(instance, pCreateInfo, pAllocator, pCallback);
 }
@@ -38,7 +38,7 @@ inline void vkDestroyDebugReportCallbackEXT(
         VkDebugReportCallbackEXT callback,
         const VkAllocationCallbacks* pAllocator)
 {
-        auto a = vulkan::proc_addr(instance, "vkDestroyDebugReportCallbackEXT");
+        auto a = ns::vulkan::proc_addr(instance, "vkDestroyDebugReportCallbackEXT");
         auto f = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(a);
         f(instance, callback, pAllocator);
 }
@@ -53,7 +53,7 @@ inline void vkDebugReportMessageEXT(
         const char* pLayerPrefix,
         const char* pMessage)
 {
-        auto a = vulkan::proc_addr(instance, "vkDebugReportMessageEXT");
+        auto a = ns::vulkan::proc_addr(instance, "vkDebugReportMessageEXT");
         auto f = reinterpret_cast<PFN_vkDebugReportMessageEXT>(a);
         f(instance, flags, objectType, object, location, messageCode, pLayerPrefix, pMessage);
 }

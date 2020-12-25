@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vulkan/vulkan.h>
 
-namespace vulkan
+namespace ns::vulkan
 {
 void reset_fence(VkDevice device, VkFence fence);
 bool wait_for_fence(VkDevice device, VkFence fence, uint64_t timeout_nanoseconds);

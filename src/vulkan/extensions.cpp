@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace vulkan
+namespace ns::vulkan
 {
 PFN_vkVoidFunction proc_addr(VkInstance instance, const char* name)
 {

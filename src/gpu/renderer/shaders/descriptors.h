@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu::renderer
+namespace ns::gpu::renderer
 {
 class CommonConstants final : public vulkan::SpecializationConstant
 {

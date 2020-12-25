@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace numerical
+namespace ns::numerical
 {
 template <typename T>
 bool quadratic_equation(T a, T b, T c, T* r1, T* r2)

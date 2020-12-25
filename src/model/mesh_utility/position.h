@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace mesh
+namespace ns::mesh
 {
 template <size_t N>
 void set_center_and_length(Mesh<N>* mesh)

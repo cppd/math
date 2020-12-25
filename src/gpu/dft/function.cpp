@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/bits.h>
 #include <src/com/constant.h>
 
-namespace gpu::dft
+namespace ns::gpu::dft
 {
 // Или само число степень двух,
 // или минимальная степень двух, равная или больше 2N-2

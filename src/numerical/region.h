@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+namespace ns
+{
 template <size_t N, typename T>
 class Region final
 {
@@ -162,3 +164,4 @@ public:
                 return true;
         }
 };
+}

@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "limit.h"
 
+namespace ns
+{
 namespace types_implementation
 {
 static_assert(binary_epsilon<float>() == std::numeric_limits<float>::epsilon());
@@ -68,3 +70,4 @@ static_assert(
         (static_cast<unsigned __int128>(1) << 127)
         == static_cast<unsigned __int128>(limits<signed __int128>::max()) + 1);
 static_assert(limits<signed __int128>::lowest() + 1 + limits<signed __int128>::max() == 0);
+}

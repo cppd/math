@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/application/log_events.h>
 
+namespace ns
+{
 void LOG(const std::string& msg) noexcept
 {
         application::log_impl(application::LogEvent(msg, application::LogEvent::Type::Normal));
@@ -37,4 +39,5 @@ void LOG_WARNING(const std::string& msg) noexcept
 void LOG_INFORMATION(const std::string& msg) noexcept
 {
         application::log_impl(application::LogEvent(msg, application::LogEvent::Type::Information));
+}
 }

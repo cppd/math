@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <vector>
 
-namespace gui::main_window
+namespace ns::gui::main_window
 {
 class MeshWidget final : public QWidget
 {

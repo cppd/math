@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace gpu
+namespace ns::gpu
 {
 class RenderBuffers3D
 {

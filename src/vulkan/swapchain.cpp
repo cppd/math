@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <unordered_set>
 
+namespace ns::vulkan
+{
 namespace
 {
 VkSurfaceFormatKHR choose_surface_format(
@@ -244,8 +246,6 @@ std::string swapchain_info_string(const VkSurfaceFormatKHR& surface_format, int 
 }
 }
 
-namespace vulkan
-{
 bool acquire_next_image(VkDevice device, VkSwapchainKHR swapchain, VkSemaphore semaphore, uint32_t* image_index)
 {
         constexpr uint64_t timeout = limits<uint64_t>::max();

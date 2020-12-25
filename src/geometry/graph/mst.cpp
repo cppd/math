@@ -37,7 +37,7 @@ Pearson Education, 2011.
 #include <src/com/time.h>
 #include <src/com/union_find.h>
 
-namespace geometry
+namespace ns::geometry
 {
 namespace
 {

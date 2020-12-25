@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <vector>
 
+namespace ns
+{
 constexpr int bit_reverse(int bin_size, int v)
 {
         int r = 0;
@@ -76,6 +78,7 @@ void bit_reverse(std::vector<T>* data)
                         std::swap((*data)[i], (*data)[r]);
                 }
         }
+}
 }
 
 #endif

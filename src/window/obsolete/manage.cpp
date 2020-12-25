@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 #include <vulkan/vulkan_xlib.h>
 
-namespace window
+namespace ns::window
 {
 namespace
 {
@@ -196,7 +196,7 @@ VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 
-namespace window
+namespace ns::window
 {
 WindowInit::WindowInit()
 {

@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <variant>
 
-namespace storage
+namespace ns::storage
 {
 class Storage final
 {

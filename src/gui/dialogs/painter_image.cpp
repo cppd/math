@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/file/path.h>
 #include <src/com/print.h>
 
-namespace gui::dialog
+namespace ns::gui::dialog
 {
 namespace
 {

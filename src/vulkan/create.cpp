@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <unordered_set>
 
-namespace vulkan
+namespace ns::vulkan
 {
 std::vector<Semaphore> create_semaphores(VkDevice device, int count)
 {

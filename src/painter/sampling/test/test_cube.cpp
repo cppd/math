@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <string_view>
 
-namespace painter
+namespace ns::painter
 {
 namespace
 {

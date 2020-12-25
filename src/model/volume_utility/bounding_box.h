@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace volume
+namespace ns::volume
 {
 template <size_t N>
 struct BoundingBox

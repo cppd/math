@@ -46,7 +46,7 @@ Chapter 5. Tracking Objects in Videos.
 
 #include <thread>
 
-namespace gpu::optical_flow
+namespace ns::gpu::optical_flow
 {
 namespace
 {

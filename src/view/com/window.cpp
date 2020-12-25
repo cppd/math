@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace view
+namespace ns::view
 {
 bool window_position_and_size(
         bool two_windows,

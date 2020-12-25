@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+namespace ns
+{
 template <typename... T>
 struct Visitors : T...
 {
@@ -24,3 +26,4 @@ struct Visitors : T...
 };
 template <typename... T>
 Visitors(T...) -> Visitors<T...>;
+}

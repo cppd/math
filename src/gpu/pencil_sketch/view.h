@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
-namespace gpu::pencil_sketch
+namespace ns::gpu::pencil_sketch
 {
 struct View
 {

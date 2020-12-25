@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <filesystem>
 #include <span>
 
-namespace image
+namespace ns::image
 {
 void save(const std::filesystem::path& path, const ImageView<2>& image_view);
 

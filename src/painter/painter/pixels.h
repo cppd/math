@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vector>
 
+namespace ns::painter
+{
 struct PixelInfo final
 {
         Color color;
@@ -91,3 +93,4 @@ public:
                 return m_pixels[m_global_index.compute(pixel)].add(color, hit_samples, all_samples);
         }
 };
+}

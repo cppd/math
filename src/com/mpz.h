@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
+namespace ns
+{
 inline unsigned long long mpz_to_ull(mpz_t z)
 {
         if (mpz_cmp(z, mpz_class("18446744073709551615").get_mpz_t()) > 0)
@@ -34,9 +36,12 @@ inline unsigned long long mpz_to_ull(mpz_t z)
         mpz_export(&result, nullptr, -1, sizeof(result), 0, 0, z);
         return result;
 }
+}
 
 #endif
 
+namespace ns
+{
 namespace mpz_implementation
 {
 inline void mpz_from_llong(mpz_t z, unsigned long long v)
@@ -138,3 +143,4 @@ public:
         }
 };
 #endif
+}

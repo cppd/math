@@ -30,7 +30,7 @@ Cambridge University Press.
 
 #include <cmath>
 
-namespace numerical
+namespace ns::numerical
 {
 namespace gauss_implementation
 {

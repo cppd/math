@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpu::dft
+namespace ns::gpu::dft
 {
 class FftGlobalMemory final
 {

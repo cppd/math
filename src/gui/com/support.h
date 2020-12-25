@@ -37,7 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <vector>
 
-namespace gui
+namespace ns::gui
 {
 // Чтобы объект Qt, имеющий родителя, не удалялся два и более раз, нужно использовать
 // динамическую память и класс QPointer.

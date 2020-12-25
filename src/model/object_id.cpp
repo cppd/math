@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <atomic>
 
+namespace ns
+{
 namespace
 {
 static_assert(std::is_unsigned_v<ObjectId::T>);
@@ -30,4 +32,5 @@ AtomicType g_current_id = 0;
 ObjectId::ObjectId()
 {
         m_id = 1 + g_current_id.fetch_add(1, std::memory_order_relaxed);
+}
 }

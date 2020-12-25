@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace volume
+namespace ns::volume
 {
 template <size_t N>
 std::tuple<Vector<N, double>, double> center_and_length(const Volume<N>& volume)

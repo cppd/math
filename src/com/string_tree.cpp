@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stack>
 #include <tuple>
 
+namespace ns
+{
 constexpr size_t ROOT_NODE = 0;
 
 StringTree::StringTree()
@@ -76,4 +78,5 @@ std::string StringTree::text(unsigned indent) const
         }
 
         return s;
+}
 }

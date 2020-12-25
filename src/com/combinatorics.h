@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <tuple>
 
+namespace ns
+{
 // Количество сочетаний из n по r: C(n, r) = n! / ((n - r)! * r!).
 // Вариант для плавающей точки: std::round(std::exp(std::lgamma(n + 1) - std::lgamma(n - r + 1) - std::lgamma(r + 1))).
 template <int N, int R>
@@ -109,4 +111,5 @@ std::array<std::tuple<std::array<unsigned char, R>, std::array<unsigned char, N 
         }
 
         return res;
+}
 }

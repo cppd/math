@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "code.h"
 
-namespace gpu::convex_hull
+namespace ns::gpu::convex_hull
 {
 std::vector<uint32_t> code_prepare_comp()
 {

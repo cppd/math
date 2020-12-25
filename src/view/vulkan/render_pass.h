@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/vulkan/objects.h>
 
-namespace view
+namespace ns::view
 {
 #if 0
 vulkan::RenderPass render_pass_swapchain_depth(VkDevice device, VkFormat color_format, VkFormat depth_format);

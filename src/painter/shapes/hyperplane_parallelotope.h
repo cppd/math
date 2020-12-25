@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../space/hyperplane_parallelotope.h"
 #include "../space/shape_intersection.h"
 
-namespace painter::shapes
+namespace ns::painter::shapes
 {
 template <size_t N, typename T>
 class HyperplaneParallelotope final : public Shape<N, T>, public Surface<N, T>

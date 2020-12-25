@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <numeric>
 
-namespace painter
+namespace ns::painter
 {
 /*
  Фихтенгольц Г. М.

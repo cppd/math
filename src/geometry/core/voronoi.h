@@ -64,7 +64,7 @@ Princeton University Press, 2011.
 #include <Eigen/LU>
 #endif
 
-namespace geometry
+namespace ns::geometry
 {
 // Для вершин объекта Делоне найти вершину Вороного, соответствующую этому объекту Делоне
 template <size_t N, typename T>

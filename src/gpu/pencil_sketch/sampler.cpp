@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sampler.h"
 
-namespace gpu::pencil_sketch
+namespace ns::gpu::pencil_sketch
 {
 vulkan::Sampler create_sampler(VkDevice device)
 {

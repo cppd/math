@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMenu>
 #include <memory>
 
-namespace gui::main_window
+namespace ns::gui::main_window
 {
 namespace
 {

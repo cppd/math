@@ -20,8 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <filesystem>
 #include <string>
 
+namespace ns
+{
 template <typename T>
 std::string generic_utf8_filename(const T& path);
 
 template <typename T>
 std::filesystem::path path_from_utf8(const T& filename);
+}

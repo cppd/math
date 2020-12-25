@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 
-namespace gpu::renderer
+namespace ns::gpu::renderer
 {
 vulkan::Sampler create_mesh_texture_sampler(const vulkan::Device& device, bool anisotropy)
 {

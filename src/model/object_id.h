@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <functional>
 
+namespace ns
+{
 class ObjectId final
 {
         using Type = std::uint_least32_t;
@@ -41,13 +43,14 @@ public:
                 return std::hash<Type>()(m_id);
         }
 };
+}
 
 namespace std
 {
 template <>
-struct hash<ObjectId>
+struct hash<::ns::ObjectId>
 {
-        size_t operator()(const ObjectId& id) const noexcept
+        size_t operator()(const ::ns::ObjectId& id) const noexcept
         {
                 return id.hash();
         }

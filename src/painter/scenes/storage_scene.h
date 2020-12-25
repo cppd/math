@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <vector>
 
-namespace painter
+namespace ns::painter
 {
 namespace scene_implementation
 {

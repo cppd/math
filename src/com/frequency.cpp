@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
+namespace ns
+{
 namespace
 {
 // Richard G. Lyons.
@@ -94,4 +96,5 @@ double Frequency::calculate()
         }
 
         return sum * m_sample_frequency;
+}
 }

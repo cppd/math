@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/mesh_utility.h>
 #include <src/settings/utility.h>
 
-namespace process
+namespace ns::process
 {
 namespace
 {

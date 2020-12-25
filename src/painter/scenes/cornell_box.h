@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-namespace painter
+namespace ns::painter
 {
 namespace cornell_box_scene_implementation
 {

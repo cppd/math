@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-namespace gui::painter_window
+namespace ns::gui::painter_window
 {
 class StatisticsWidget final : public QWidget
 {

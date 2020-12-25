@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress_interfaces.h>
 
-namespace test
+namespace ns::test
 {
 enum class SelfTestType
 {

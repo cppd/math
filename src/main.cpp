@@ -28,22 +28,22 @@ int main(int argc, char** argv)
         {
                 try
                 {
-                        application::LogEvents log_events;
-                        application::ModelEvents model_events;
+                        ns::application::LogEvents log_events;
+                        ns::application::ModelEvents model_events;
 
-                        return gui::run_application(argc, argv);
+                        return ns::gui::run_application(argc, argv);
                 }
                 catch (const std::exception& e)
                 {
-                        error_fatal(std::string("Error in the main function\n") + e.what());
+                        ns::error_fatal(std::string("Error in the main function\n") + e.what());
                 }
                 catch (...)
                 {
-                        error_fatal("Unknown error in the main function");
+                        ns::error_fatal("Unknown error in the main function");
                 }
         }
         catch (...)
         {
-                error_fatal("Exception in the main function exception handlers");
+                ns::error_fatal("Exception in the main function exception handlers");
         }
 }

@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <utility>
 
+namespace ns
+{
 namespace arrays_implementation
 {
 template <typename T, T... I>
@@ -170,4 +172,5 @@ constexpr std::array<T, 4> del_elem(const std::array<T, 5>& a, unsigned pos)
         default:
                 error("pos > 4");
         }
+}
 }

@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <vector>
 
-namespace mesh
+namespace ns::mesh
 {
 template <size_t N>
 void sort_facets_by_material(

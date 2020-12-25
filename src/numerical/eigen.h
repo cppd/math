@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <exception>
 
-namespace numerical
+namespace ns::numerical
 {
 namespace jacobi_method_implementation
 {

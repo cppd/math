@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <quadmath.h>
 #endif
 
+namespace ns
+{
 #if 0 && !defined(__clang__)
 std::string to_string(__float128 t)
 {
@@ -32,3 +34,4 @@ std::string to_string(__float128 t)
         return buf.data();
 }
 #endif
+}

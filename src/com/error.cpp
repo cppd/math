@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/application/log.h>
 
+namespace ns
+{
 void error(std::string text)
 {
         throw ErrorException(std::move(text));
@@ -49,5 +51,6 @@ void error_assert(const char* expr, const char* file, int line) noexcept
         {
                 error_fatal("Exception when creating assert message");
         }
+}
 }
 }

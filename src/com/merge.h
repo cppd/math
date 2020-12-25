@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
+namespace ns
+{
 namespace merge_implementation
 {
 template <typename T1, typename T2>
@@ -45,4 +47,5 @@ std::vector<R> merge(const T&... data)
         std::vector<R> res;
         (merge_implementation::add(&res, data), ...);
         return unique_elements(std::move(res));
+}
 }

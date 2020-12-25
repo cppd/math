@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
+namespace ns
+{
 template <size_t N, typename T>
 class Ray
 {
@@ -79,4 +81,5 @@ template <size_t N, typename T>
 std::string to_string(const Ray<N, T>& data)
 {
         return "(org " + to_string(data.org()) + ", dir " + to_string(data.dir()) + ")";
+}
 }

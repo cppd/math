@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
-namespace vulkan
+namespace ns::vulkan
 {
 template <size_t N>
 void queue_submit(

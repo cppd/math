@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <functional>
 
-namespace process
+namespace ns::process
 {
 std::function<void(ProgressRatioList*)> action_bound_cocone(const storage::MeshObjectConst& object);
 }

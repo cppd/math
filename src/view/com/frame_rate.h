@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/frequency.h>
 #include <src/text/text_data.h>
 
-namespace view
+namespace ns::view
 {
 class FrameRate
 {

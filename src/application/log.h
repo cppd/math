@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace application
+namespace ns::application
 {
 std::string write_log(const std::string_view& text, const std::string_view& description) noexcept;
 

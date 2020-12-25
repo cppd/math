@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 
+namespace ns
+{
 // Для работы в потоках расчётов
 class ProgressRatio
 {
@@ -39,3 +41,4 @@ public:
 
         static bool lock_free();
 };
+}

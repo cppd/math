@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/vulkan/objects.h>
 
-namespace gpu::renderer
+namespace ns::gpu::renderer
 {
 vulkan::Sampler create_volume_image_sampler(VkDevice device);
 vulkan::Sampler create_volume_depth_image_sampler(VkDevice device);

@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QObject>
 #include <functional>
 
-namespace gui
+namespace ns::gui
 {
 class MainThread final : public QObject
 {

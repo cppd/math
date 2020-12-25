@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vec.h>
 
-namespace gpu
+namespace ns::gpu
 {
 constexpr int group_count(int size, int group_size)
 {

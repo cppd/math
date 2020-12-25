@@ -17,5 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+namespace ns
+{
 template <typename T>
 inline constexpr T PI = 3.1415926535897932384626433832795028841971693993751L;
+}

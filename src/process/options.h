@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vec.h>
 
-namespace process
+namespace ns::process
 {
 inline constexpr double SCENE_SIZE = 2;
 

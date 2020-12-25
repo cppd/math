@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
-namespace view
+namespace ns::view
 {
 std::unique_ptr<View> create_view(
         window::WindowID parent_window,

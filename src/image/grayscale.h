@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image.h"
 
-namespace image
+namespace ns::image
 {
 void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes);
 std::vector<std::byte> convert_to_r_component_format(ColorFormat color_format, const std::span<const std::byte>& bytes);

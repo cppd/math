@@ -36,7 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace numerical
+namespace ns::numerical
 {
 template <size_t N, typename T>
 Vector<N, T> point_normal(const std::vector<Vector<N, T>>& points)
