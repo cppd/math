@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class Region final
 {
         Vector<N, T> m_offset0;
@@ -63,63 +63,63 @@ public:
                 return m_extent;
         }
 
-        template <size_t X = N>
+        template <std::size_t X = N>
         std::enable_if_t<X == 2 || X == 3, T> x0() const
         {
                 static_assert(X == N);
                 return m_offset0[0];
         }
 
-        template <size_t X = N>
+        template <std::size_t X = N>
         std::enable_if_t<X == 2 || X == 3, T> y0() const
         {
                 static_assert(X == N);
                 return m_offset0[1];
         }
 
-        template <size_t X = N>
+        template <std::size_t X = N>
         std::enable_if_t<X == 3, T> z0() const
         {
                 static_assert(X == N);
                 return m_offset0[2];
         }
 
-        template <size_t X = N>
+        template <std::size_t X = N>
         std::enable_if_t<X == 2 || X == 3, T> x1() const
         {
                 static_assert(X == N);
                 return m_offset1[0];
         }
 
-        template <size_t X = N>
+        template <std::size_t X = N>
         std::enable_if_t<X == 2 || X == 3, T> y1() const
         {
                 static_assert(X == N);
                 return m_offset1[1];
         }
 
-        template <size_t X = N>
+        template <std::size_t X = N>
         std::enable_if_t<X == 3, T> z1() const
         {
                 static_assert(X == N);
                 return m_offset1[2];
         }
 
-        template <size_t X = N>
+        template <std::size_t X = N>
         std::enable_if_t<X == 2 || X == 3, T> width() const
         {
                 static_assert(X == N);
                 return m_extent[0];
         }
 
-        template <size_t X = N>
+        template <std::size_t X = N>
         std::enable_if_t<X == 2 || X == 3, T> height() const
         {
                 static_assert(X == N);
                 return m_extent[1];
         }
 
-        template <size_t X = N>
+        template <std::size_t X = N>
         std::enable_if_t<X == 3, T> depth() const
         {
                 static_assert(X == N);

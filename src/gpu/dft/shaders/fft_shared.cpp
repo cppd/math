@@ -169,7 +169,7 @@ const void* FftSharedConstant::data() const
         return &m_data;
 }
 
-size_t FftSharedConstant::size() const
+std::size_t FftSharedConstant::size() const
 {
         return sizeof(m_data);
 }

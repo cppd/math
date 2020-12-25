@@ -188,7 +188,7 @@ const void* MulConstant::data() const
         return &m_data;
 }
 
-size_t MulConstant::size() const
+std::size_t MulConstant::size() const
 {
         return sizeof(m_data);
 }

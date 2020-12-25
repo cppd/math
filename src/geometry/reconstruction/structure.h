@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-template <size_t N>
+template <std::size_t N>
 struct ManifoldVertex
 {
         const vec<N> positive_norm;
@@ -41,7 +41,7 @@ struct ManifoldVertex
         }
 };
 
-template <size_t N>
+template <std::size_t N>
 struct ManifoldFacet
 {
         std::array<bool, N> cocone_vertex;
@@ -51,7 +51,7 @@ struct ManifoldFacet
         }
 };
 
-template <size_t N>
+template <std::size_t N>
 void vertex_and_facet_data(
         bool find_all_vertex_data,
         const std::vector<vec<N>>& points,

@@ -28,7 +28,7 @@ std::string utf8_to_number_string(const std::string& s);
 template <typename T>
 std::string utf32_to_utf8(T code_point);
 
-char32_t utf8_to_utf32(const std::string& s, size_t* i);
+char32_t utf8_to_utf32(const std::string& s, std::size_t* i);
 char32_t utf8_to_utf32(const std::string& s);
 
 //

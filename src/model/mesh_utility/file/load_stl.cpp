@@ -40,12 +40,12 @@ static_assert(std::endian::native == std::endian::little, "Binary STL numbers mu
 constexpr std::uintmax_t BINARY_HEADER_SIZE = 80 * sizeof(uint8_t);
 constexpr std::uintmax_t BINARY_NUMBER_OF_TRIANGLES_SIZE = sizeof(uint32_t);
 constexpr std::uintmax_t BINARY_BEGIN_SIZE = BINARY_HEADER_SIZE + BINARY_NUMBER_OF_TRIANGLES_SIZE;
-template <size_t N>
+template <std::size_t N>
 constexpr std::uintmax_t BINARY_NORMAL_SIZE = N * sizeof(float);
-template <size_t N>
+template <std::size_t N>
 constexpr std::uintmax_t BINARY_FACETS_SIZE = N* N * sizeof(float);
 
-template <size_t N>
+template <std::size_t N>
 bool is_binary(const std::string& data)
 {
         if (data.size() <= BINARY_BEGIN_SIZE)
@@ -101,7 +101,7 @@ void read_keyword(const Data& data, long long data_size, const Word& word, long 
         error("Keyword " + word + " not found in STL file when expected");
 }
 
-template <size_t N>
+template <std::size_t N>
 void read_ascii_stl(
         const std::string& file_data,
         ProgressRatio* progress,
@@ -175,7 +175,7 @@ void read_ascii_stl(
         LOG("STL facet count: " + to_string(facet_count));
 }
 
-template <size_t N>
+template <std::size_t N>
 void read_binary_stl(
         const std::string& file_data,
         ProgressRatio* progress,
@@ -211,7 +211,7 @@ void read_binary_stl(
         LOG("STL facet count: " + to_string(facet_count));
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, ProgressRatio* progress)
 {
         std::unordered_map<Vector<N, float>, unsigned> unique_vertices;
@@ -265,7 +265,7 @@ std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, Progre
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<Mesh<N>> load_from_stl_file(const std::filesystem::path& file_name, ProgressRatio* progress)
 {
         TimePoint start_time = time();

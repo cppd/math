@@ -34,7 +34,7 @@ class ModelEvents final
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
-        template <size_t N>
+        template <std::size_t N>
         struct Events
         {
                 const std::function<void(mesh::MeshEvent<N>&&)>* saved_mesh_events;

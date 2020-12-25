@@ -124,7 +124,7 @@ VulkanInstance::VulkanInstance(
 
         index = m_graphics_compute_family_index;
         s += "Graphics compute queues, family index = " + to_string(index);
-        for (size_t i = 0; i < m_graphics_compute_queues.size(); ++i)
+        for (std::size_t i = 0; i < m_graphics_compute_queues.size(); ++i)
         {
                 m_graphics_compute_queues[i] = m_device.queue(index, queue_count[index]);
                 s += "\n  queue = " + to_string(i) + ", device queue = " + to_string(queue_count[index]);
@@ -138,7 +138,7 @@ VulkanInstance::VulkanInstance(
         s += '\n';
         index = m_compute_family_index;
         s += "Compute queues, family index = " + to_string(index);
-        for (size_t i = 0; i < m_compute_queues.size(); ++i)
+        for (std::size_t i = 0; i < m_compute_queues.size(); ++i)
         {
                 m_compute_queues[i] = m_device.queue(index, queue_count[index]);
                 s += "\n  queue = " + to_string(i) + ", device queue = " + to_string(queue_count[index]);
@@ -152,7 +152,7 @@ VulkanInstance::VulkanInstance(
         s += '\n';
         index = m_transfer_family_index;
         s += "Transfer queues, family index = " + to_string(index);
-        for (size_t i = 0; i < m_transfer_queues.size(); ++i)
+        for (std::size_t i = 0; i < m_transfer_queues.size(); ++i)
         {
                 m_transfer_queues[i] = m_device.queue(index, queue_count[index]);
                 s += "\n  queue = " + to_string(i) + ", device queue = " + to_string(queue_count[index]);
@@ -168,7 +168,7 @@ VulkanInstance::VulkanInstance(
                 s += '\n';
                 index = m_presentation_family_index;
                 s += "Presentation queues, family index = " + to_string(index);
-                for (size_t i = 0; i < m_presentation_queues.size(); ++i)
+                for (std::size_t i = 0; i < m_presentation_queues.size(); ++i)
                 {
                         m_presentation_queues[i] = m_device.queue(index, queue_count[index]);
                         s += "\n  queue = " + to_string(i) + ", device queue = " + to_string(queue_count[index]);

@@ -302,9 +302,9 @@ public:
         }
 };
 
-inline void run_in_threads(const std::function<void(std::atomic_size_t&)>& function, size_t count)
+inline void run_in_threads(const std::function<void(std::atomic_size_t&)>& function, std::size_t count)
 {
-        size_t concurrency = hardware_concurrency();
+        std::size_t concurrency = hardware_concurrency();
         unsigned thread_count = std::min(count, concurrency);
         std::atomic_size_t task = 0;
         if (thread_count > 1)

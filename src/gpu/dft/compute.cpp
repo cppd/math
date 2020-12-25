@@ -907,7 +907,7 @@ class DftVector final : public ComputeVector
                 {
                         error("No DFT buffers");
                 }
-                if (!(src && (src->size() == static_cast<size_t>(m_width) * m_height)))
+                if (!(src && (src->size() == static_cast<std::size_t>(m_width) * m_height)))
                 {
                         error("Wrong DFT buffer size");
                 }

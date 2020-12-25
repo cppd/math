@@ -24,21 +24,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-constexpr size_t ROOT_NODE = 0;
+constexpr std::size_t ROOT_NODE = 0;
 
 StringTree::StringTree()
 {
         m_nodes.emplace_back("");
 }
 
-size_t StringTree::add(std::string s)
+std::size_t StringTree::add(std::string s)
 {
         m_nodes.emplace_back(std::move(s));
         m_nodes[ROOT_NODE].children.push_back(m_nodes.size() - 1);
         return m_nodes.size() - 1;
 }
 
-size_t StringTree::add(size_t parent, std::string s)
+std::size_t StringTree::add(std::size_t parent, std::string s)
 {
         if (parent >= m_nodes.size())
         {
@@ -53,7 +53,7 @@ std::string StringTree::text(unsigned indent) const
 {
         std::string s;
 
-        std::stack<std::tuple<size_t, unsigned>> stack({{ROOT_NODE, 0}});
+        std::stack<std::tuple<std::size_t, unsigned>> stack({{ROOT_NODE, 0}});
 
         while (!stack.empty())
         {

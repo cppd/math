@@ -41,7 +41,7 @@ T cos_to_angle(T cosine)
         return std::acos(cosine) / PI<T> * 180;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 T component_sum(const Vector<N, T>& v)
 {
         T sum = 0;
@@ -70,7 +70,7 @@ void normalize(Map* map)
         }
 }
 
-template <size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T, typename RandomEngine>
 void test_distribution(int count, T discrepancy_limit)
 {
         LOG("Test Distribution...");
@@ -126,7 +126,7 @@ void test_distribution(int count, T discrepancy_limit)
         }
 }
 
-template <size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T, typename RandomEngine>
 void test_speed(int count)
 {
         LOG("Test Speed...");
@@ -155,7 +155,7 @@ void test_speed(int count)
             + " seconds, sum = " + to_string(component_sum(sum)));
 }
 
-template <size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T, typename RandomEngine>
 void test_cosine_hemisphere(int count, T discrepancy_limit)
 {
         LOG("Test in " + space_name(N) + ", " + to_string_digit_groups(count) + ", " + type_name<T>());

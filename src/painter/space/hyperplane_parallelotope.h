@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class HyperplaneParallelotope final
 {
         static_assert(N <= 30);
@@ -56,8 +56,8 @@ class HyperplaneParallelotope final
         void vertex_ridges_impl(const Vector<N, T>& p, std::array<bool, N - 1>* dimensions, const F& f) const;
 
 public:
-        static constexpr size_t SPACE_DIMENSION = N;
-        static constexpr size_t SHAPE_DIMENSION = N - 1;
+        static constexpr std::size_t SPACE_DIMENSION = N;
+        static constexpr std::size_t SHAPE_DIMENSION = N - 1;
 
         using DataType = T;
 
@@ -80,7 +80,7 @@ public:
         const Vector<N, T>& e(unsigned n) const;
 };
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 template <typename... P>
 HyperplaneParallelotope<N, T>::HyperplaneParallelotope(const Vector<N, T>& org, const P&... vectors)
         : HyperplaneParallelotope(org, {vectors...})
@@ -89,7 +89,7 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(const Vector<N, T>& org, 
         static_assert(sizeof...(P) + 1 == N);
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N - 1>& vectors)
@@ -120,7 +120,7 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
 }
 
 // 2*(N-1) неравенств в виде b + a * x >= 0 и одно равенство в виде b + a * x = 0
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Constraints<N, T, 2 * (N - 1), 1> HyperplaneParallelotope<N, T>::constraints() const
 {
         Constraints<N, T, 2 * (N - 1), 1> result;
@@ -145,7 +145,7 @@ Constraints<N, T, 2 * (N - 1), 1> HyperplaneParallelotope<N, T>::constraints() c
         return result;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::optional<T> HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& r) const
 {
         std::optional<T> t = hyperplane_intersect(r, m_org, m_normal);
@@ -169,13 +169,13 @@ std::optional<T> HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& r) co
         return t;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 const Vector<N, T>& HyperplaneParallelotope<N, T>::normal(const Vector<N, T>&) const
 {
         return m_normal;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 template <int INDEX, typename F>
 void HyperplaneParallelotope<N, T>::vertices_impl(const Vector<N, T>& p, const F& f) const
 {
@@ -190,7 +190,7 @@ void HyperplaneParallelotope<N, T>::vertices_impl(const Vector<N, T>& p, const F
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<Vector<N, T>, HyperplaneParallelotope<N, T>::VERTEX_COUNT> HyperplaneParallelotope<N, T>::vertices() const
 {
         std::array<Vector<N, T>, VERTEX_COUNT> result;
@@ -209,7 +209,7 @@ std::array<Vector<N, T>, HyperplaneParallelotope<N, T>::VERTEX_COUNT> Hyperplane
         return result;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 template <int INDEX, typename F>
 void HyperplaneParallelotope<N, T>::vertex_ridges_impl(
         const Vector<N, T>& p,
@@ -230,7 +230,7 @@ void HyperplaneParallelotope<N, T>::vertex_ridges_impl(
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<std::array<Vector<N, T>, 2>, HyperplaneParallelotope<N, T>::VERTEX_RIDGE_COUNT> HyperplaneParallelotope<
         N,
         T>::vertex_ridges() const
@@ -263,13 +263,13 @@ std::array<std::array<Vector<N, T>, 2>, HyperplaneParallelotope<N, T>::VERTEX_RI
         return result;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 const Vector<N, T>& HyperplaneParallelotope<N, T>::org() const
 {
         return m_org;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 const Vector<N, T>& HyperplaneParallelotope<N, T>::e(unsigned n) const
 {
         ASSERT(n < N - 1);

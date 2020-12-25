@@ -35,7 +35,7 @@ namespace ns::painter
 {
 namespace cornell_box_scene_implementation
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::unique_ptr<const Scene<N, T>> cornell_box_scene(
         const std::array<int, N - 1>& screen_sizes,
         std::unique_ptr<const Shape<N, T>>&& shape,
@@ -170,7 +170,7 @@ std::unique_ptr<const Scene<3, T>> cornell_box_scene(
         return impl::cornell_box_scene({width, height}, std::move(shape), {right, up, dir}, center);
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::unique_ptr<const Scene<N, T>> cornell_box_scene(int screen_size, std::unique_ptr<const Shape<N, T>>&& shape)
 {
         namespace impl = cornell_box_scene_implementation;

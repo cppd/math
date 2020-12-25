@@ -164,7 +164,7 @@ const void* FftGlobalConstant::data() const
         return &m_data;
 }
 
-size_t FftGlobalConstant::size() const
+std::size_t FftGlobalConstant::size() const
 {
         return sizeof(m_data);
 }

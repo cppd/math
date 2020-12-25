@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class StratifiedJitteredSampler
 {
         static_assert(std::is_floating_point_v<T>);
@@ -71,7 +71,7 @@ class StratifiedJitteredSampler
                       + space_name(N));
         }
 
-        template <size_t M>
+        template <std::size_t M>
         static void product(const std::vector<T>& values, Vector<N, T>* tuple, std::vector<Vector<N, T>>* result)
         {
                 static_assert(N > 0 && M >= 0 && M < N);
@@ -128,14 +128,14 @@ public:
 
                 samples->resize(m_offsets.size());
 
-                for (size_t i = 0; i < m_offsets.size(); ++i)
+                for (std::size_t i = 0; i < m_offsets.size(); ++i)
                 {
                         (*samples)[i] = m_offsets[i] + random_vector<N, T>(random_engine, urd);
                 }
         }
 };
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class LatinHypercubeSampler
 {
         static_assert(std::is_floating_point_v<T>);
@@ -153,12 +153,12 @@ class LatinHypercubeSampler
                 ASSERT(dimension < N);
                 ASSERT(!v->empty());
 
-                using Distribution = std::uniform_int_distribution<size_t>;
+                using Distribution = std::uniform_int_distribution<std::size_t>;
 
                 Distribution distribution;
-                for (size_t i = v->size() - 1; i > 0; --i)
+                for (std::size_t i = v->size() - 1; i > 0; --i)
                 {
-                        size_t j = distribution(random_engine, Distribution::param_type(0, i));
+                        std::size_t j = distribution(random_engine, Distribution::param_type(0, i));
                         std::swap((*v)[i][dimension], (*v)[j][dimension]);
                 }
         }

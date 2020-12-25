@@ -35,12 +35,12 @@ namespace
 {
 constexpr double CHECK_EPSILON = 0.01;
 
-template <size_t N>
+template <std::size_t N>
 using RidgeData = RidgeData2<ConvexHullFacet<N>>;
-template <size_t N>
+template <std::size_t N>
 using RidgeMap = std::unordered_map<Ridge<N>, RidgeData<N>>;
 
-template <size_t N>
+template <std::size_t N>
 void generate_random_data(bool zero, int count, std::vector<Vector<N, float>>* points, bool on_sphere)
 {
         std::mt19937_64 gen(count);
@@ -75,7 +75,7 @@ void generate_random_data(bool zero, int count, std::vector<Vector<N, float>>* p
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void check_visible_from_point(const std::vector<Vector<N, float>>& points, const ConvexHullFacet<N>& facet, int point)
 {
         if (points[point] == points[facet.vertices()[0]])
@@ -111,7 +111,7 @@ void check_visible_from_point(const std::vector<Vector<N, float>>& points, const
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void check_convex_hull(const std::vector<Vector<N, float>>& points, std::vector<ConvexHullFacet<N>>* facets)
 {
         if (points.size() < N + 1 || facets->empty())
@@ -142,7 +142,7 @@ void check_convex_hull(const std::vector<Vector<N, float>>& points, std::vector<
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 int point_count(const std::vector<ConvexHullFacet<N>>& facets)
 {
         std::unordered_set<int> v;
@@ -156,7 +156,7 @@ int point_count(const std::vector<ConvexHullFacet<N>>& facets)
         return v.size();
 }
 
-template <size_t N>
+template <std::size_t N>
 void create_convex_hull(std::vector<Vector<N, float>>& points, bool with_check, ProgressRatio* progress)
 {
         std::vector<ConvexHullFacet<N>> facets;
@@ -177,8 +177,8 @@ void create_convex_hull(std::vector<Vector<N, float>>& points, bool with_check, 
         }
 }
 
-template <size_t N>
-void test(size_t low, size_t high, ProgressRatio* progress)
+template <std::size_t N>
+void test(std::size_t low, std::size_t high, ProgressRatio* progress)
 {
         constexpr bool on_sphere = false;
 
@@ -206,7 +206,7 @@ void test_convex_hull_speed()
 {
         // При N=4, параллельно, 100000 точек, внутри сферы, примерное время: 1.7 сек, 0.4 сек.
 
-        constexpr size_t N = 4;
+        constexpr std::size_t N = 4;
 
         constexpr bool on_sphere = false;
 

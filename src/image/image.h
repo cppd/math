@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::image
 {
-template <size_t N>
+template <std::size_t N>
 struct Image
 {
         std::array<int, N> size;
@@ -34,7 +34,7 @@ struct Image
         std::vector<std::byte> pixels;
 };
 
-template <size_t N>
+template <std::size_t N>
 struct ImageView
 {
         std::array<int, N> size;

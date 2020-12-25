@@ -106,7 +106,7 @@ std::vector<vec2i> flow_groups(
 
         groups.push_back(group_count(top_point_count_x, top_point_count_y, group_size));
 
-        for (size_t i = 1; i < sizes.size(); ++i)
+        for (std::size_t i = 1; i < sizes.size(); ++i)
         {
                 groups.push_back(group_count(sizes[i][0], sizes[i][1], group_size));
         }
@@ -165,6 +165,6 @@ void create_top_level_points(
         }
 
         ASSERT(index == point_count);
-        ASSERT(static_cast<size_t>(*point_count_x) * *point_count_y == points->size());
+        ASSERT(static_cast<std::size_t>(*point_count_x) * *point_count_y == points->size());
 }
 }

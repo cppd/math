@@ -164,7 +164,7 @@ const void* PrepareConstant::data() const
         return &m_data;
 }
 
-size_t PrepareConstant::size() const
+std::size_t PrepareConstant::size() const
 {
         return sizeof(m_data);
 }

@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::storage
 {
-template <size_t N>
+template <std::size_t N>
 struct MeshObjectRepository
 {
         virtual ~MeshObjectRepository() = default;
@@ -34,6 +34,6 @@ struct MeshObjectRepository
         virtual std::unique_ptr<mesh::Mesh<N>> object(const std::string& object_name, unsigned point_count) const = 0;
 };
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<MeshObjectRepository<N>> create_mesh_object_repository();
 }

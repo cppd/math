@@ -97,7 +97,7 @@ vulkan::Descriptors TrianglesMaterialMemory::create(
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
-        for (size_t i = 0; i < materials.size(); ++i)
+        for (std::size_t i = 0; i < materials.size(); ++i)
         {
                 const MaterialInfo& material = materials[i];
 

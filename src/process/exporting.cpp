@@ -29,7 +29,7 @@ namespace
 {
 constexpr bool STL_EXPORT_FORMAT_ASCII = true;
 
-template <size_t N>
+template <std::size_t N>
 std::function<void(ProgressRatioList*)> action_export_function(
         const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
 {
@@ -77,7 +77,7 @@ std::function<void(ProgressRatioList*)> action_export_function(
 std::function<void(ProgressRatioList*)> action_export(const storage::MeshObjectConst& object)
 {
         return std::visit(
-                [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
+                [&]<std::size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
                 {
                         return action_export_function(mesh_object);
                 },

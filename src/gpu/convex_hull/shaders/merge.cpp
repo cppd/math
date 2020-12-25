@@ -125,7 +125,7 @@ const void* MergeConstant::data() const
         return &m_data;
 }
 
-size_t MergeConstant::size() const
+std::size_t MergeConstant::size() const
 {
         return sizeof(m_data);
 }

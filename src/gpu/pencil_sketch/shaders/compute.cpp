@@ -176,7 +176,7 @@ const void* ComputeConstant::data() const
         return &m_data;
 }
 
-size_t ComputeConstant::size() const
+std::size_t ComputeConstant::size() const
 {
         return sizeof(m_data);
 }

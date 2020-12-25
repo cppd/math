@@ -35,7 +35,7 @@ namespace ns::mesh
 {
 namespace
 {
-template <size_t N>
+template <std::size_t N>
 Vector<N, double> facet_normal(const std::vector<Vector<N, double>>& points, const std::array<int, N>& facet)
 {
         return ortho_nn(points, facet).normalized();
@@ -95,7 +95,7 @@ double spherical_triangle_area(const std::array<Vector<4, double>, 3>& vectors, 
         return std::max(0.0, area);
 }
 
-template <size_t N>
+template <std::size_t N>
 double facet_normat_weight_at_vertex(
         const std::vector<Vector<N, double>>& points,
         const std::array<int, N>& facet,
@@ -139,7 +139,7 @@ double facet_normat_weight_at_vertex(
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> average_of_normals(const Vector<N, T>& normal, const std::vector<Vector<N, T>>& normals)
 {
         Vector<N, T> sum(0);
@@ -163,12 +163,12 @@ struct VertexFacet
         unsigned facet_vertex; // [0, N)
 };
 
-template <size_t N>
+template <std::size_t N>
 Vector<N, double> compute_normal(
         const std::vector<Vector<N, double>>& vertices,
         const std::vector<Vector<N, double>>& facet_normals,
         const std::vector<typename Mesh<N>::Facet>& mesh_facets,
-        size_t vertex_index,
+        std::size_t vertex_index,
         const std::vector<VertexFacet>& vertex_facets)
 {
         thread_local std::vector<int> vicinity_int;
@@ -215,7 +215,7 @@ Vector<N, double> compute_normal(
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 void compute_normals(Mesh<N>* mesh)
 {
         if (mesh->facets.empty())
@@ -229,7 +229,7 @@ void compute_normals(Mesh<N>* mesh)
 
         std::vector<Vector<N, double>> facet_normals(mesh->facets.size());
         std::vector<std::vector<VertexFacet>> vertex_facets(mesh->vertices.size());
-        for (size_t f = 0; f < mesh->facets.size(); ++f)
+        for (std::size_t f = 0; f < mesh->facets.size(); ++f)
         {
                 const typename Mesh<N>::Facet& facet = mesh->facets[f];
 
@@ -245,7 +245,7 @@ void compute_normals(Mesh<N>* mesh)
                 }
         }
 
-        for (size_t v = 0; v < vertex_facets.size(); ++v)
+        for (std::size_t v = 0; v < vertex_facets.size(); ++v)
         {
                 mesh->normals[v] =
                         to_vector<float>(compute_normal(vertices, facet_normals, mesh->facets, v, vertex_facets[v]));

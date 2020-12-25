@@ -136,7 +136,7 @@ std::vector<std::string> read_files(const std::filesystem::path& directory)
         return std::move(content->entries);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::enable_if_t<N >= 3> save_to_images(
         const std::filesystem::path& directory,
         const std::string& file_format,
@@ -149,7 +149,7 @@ std::enable_if_t<N >= 3> save_to_images(
 
         const int digit_count = max_digit_count_zero_based(image_view.size[N - 1]);
 
-        const size_t size_in_bytes = image_view.pixels.size() / image_view.size[N - 1];
+        const std::size_t size_in_bytes = image_view.pixels.size() / image_view.size[N - 1];
         const std::byte* ptr = image_view.pixels.data();
 
         ASSERT(image_view.pixels.size() == size_in_bytes * image_view.size[N - 1]);
@@ -185,7 +185,7 @@ std::enable_if_t<N >= 3> save_to_images(
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 std::enable_if_t<N >= 3> load_from_images(
         const std::filesystem::path& directory,
         const image::ColorFormat& image_format,
@@ -221,7 +221,7 @@ std::enable_if_t<N >= 3> load_from_images(
 
         std::sort(names.begin(), names.end());
 
-        const size_t size_in_bytes = image_bytes.size() / names.size();
+        const std::size_t size_in_bytes = image_bytes.size() / names.size();
         std::byte* ptr = image_bytes.data();
 
         ASSERT(image_bytes.size() == size_in_bytes * names.size());
@@ -230,7 +230,7 @@ std::enable_if_t<N >= 3> load_from_images(
 
         std::array<int, N - 1> image_size_n_1 = del_elem(image_size, N - 1);
 
-        for (size_t i = 0; i < names.size(); ++i, ptr += size_in_bytes)
+        for (std::size_t i = 0; i < names.size(); ++i, ptr += size_in_bytes)
         {
                 std::filesystem::path entry_path = directory / path_from_utf8(names[i]);
                 std::span span(ptr, size_in_bytes);
@@ -302,7 +302,7 @@ VolumeInfo volume_info(const std::filesystem::path& path)
         return info;
 }
 
-template <size_t N>
+template <std::size_t N>
 std::enable_if_t<N >= 3> save_to_images(
         const std::filesystem::path& path,
         const std::string& file_format,
@@ -322,7 +322,7 @@ std::enable_if_t<N >= 3> save_to_images(
         save_to_images(path, file_format, image_view, progress, &current, image_count);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::enable_if_t<N >= 3, image::Image<N>> load(const std::filesystem::path& path, ProgressRatio* progress)
 {
         const VolumeInfo info = volume_info(path);
@@ -336,7 +336,7 @@ std::enable_if_t<N >= 3, image::Image<N>> load(const std::filesystem::path& path
 
         image::Image<N> image;
         image.color_format = info.format;
-        for (size_t i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 image.size[i] = info.size[i];
         }

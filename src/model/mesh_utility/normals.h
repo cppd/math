@@ -21,6 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::mesh
 {
-template <size_t N>
+template <std::size_t N>
 void compute_normals(Mesh<N>* mesh);
 }

@@ -27,7 +27,7 @@ class StringTree
         struct Node
         {
                 std::string name;
-                std::vector<size_t> children;
+                std::vector<std::size_t> children;
                 explicit Node(std::string s) : name(std::move(s))
                 {
                 }
@@ -38,8 +38,8 @@ class StringTree
 public:
         StringTree();
 
-        size_t add(std::string s);
-        size_t add(size_t parent, std::string s);
+        std::size_t add(std::string s);
+        std::size_t add(std::size_t parent, std::string s);
 
         std::string text(unsigned indent) const;
 };

@@ -47,7 +47,7 @@ T random_integer(RandomEngine& random_engine, T low, T high)
         return std::uniform_int_distribution<T>(low, high)(random_engine);
 }
 
-template <size_t N, typename T, typename TS>
+template <std::size_t N, typename T, typename TS>
 std::vector<Ray<N, T>> generate_random_rays_for_sphere(const Vector<N, TS>& center, TS radius, int count)
 {
         LOG("random rays...");
@@ -70,7 +70,7 @@ std::vector<Ray<N, T>> generate_random_rays_for_sphere(const Vector<N, TS>& cent
         return rays;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 T max_coordinate_modulus(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         T all_max = limits<T>::lowest();
@@ -81,7 +81,7 @@ T max_coordinate_modulus(const Vector<N, T>& a, const Vector<N, T>& b)
         return all_max;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void offset_and_rays_for_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, T* offset, std::vector<Ray<N, T>>* rays)
 {
         const BoundingBox<N, T> bb = mesh.bounding_box();
@@ -105,7 +105,7 @@ void offset_and_rays_for_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, T* o
         *rays = generate_random_rays_for_sphere<N, T>(center, radius, ray_count);
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void test_sphere_mesh(
         const Mesh<N, T>& mesh,
         int ray_count,
@@ -241,7 +241,7 @@ void test_sphere_mesh(
 
 namespace
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void test_mesh(
         int point_low,
         int point_high,

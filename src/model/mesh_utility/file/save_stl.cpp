@@ -102,7 +102,7 @@ void write_end_binary(std::ostream& file)
         file.write(reinterpret_cast<const char*>(&end), sizeof(end));
 }
 
-template <bool ascii, size_t N>
+template <bool ascii, std::size_t N>
 void write_facet(
         std::ostream& file,
         const Vector<N, double>& normal,
@@ -149,7 +149,7 @@ void write_facet(
         }
 }
 
-template <bool ascii, size_t N>
+template <bool ascii, std::size_t N>
 void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vector<N, float>>& vertices)
 {
         // Вершины граней надо записывать в трёхмерный STL таким образом,
@@ -198,7 +198,7 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vec
         }
 }
 
-template <bool ascii, size_t N>
+template <bool ascii, std::size_t N>
 void write_facets(std::ostream& file, const Mesh<N>& mesh)
 {
         if (NORMALIZE_VERTEX_COORDINATES)
@@ -216,12 +216,12 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh)
         }
 }
 
-std::string stl_type_name(size_t N)
+std::string stl_type_name(std::size_t N)
 {
         return "STL-" + to_string(N);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::filesystem::path file_name_with_extension(std::filesystem::path file_name)
 {
         if (file_name.has_extension())
@@ -238,7 +238,7 @@ std::filesystem::path file_name_with_extension(std::filesystem::path file_name)
         return file_name.replace_extension(path_from_utf8(stl_file_extension(N)));
 }
 
-template <size_t N>
+template <std::size_t N>
 void check_facets(const Mesh<N>& mesh)
 {
         if (mesh.facets.empty())
@@ -259,7 +259,7 @@ void check_facets(const Mesh<N>& mesh)
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void write(bool ascii, std::ostream& file, const Mesh<N>& mesh, const std::string_view& comment)
 {
         if (ascii)
@@ -278,7 +278,7 @@ void write(bool ascii, std::ostream& file, const Mesh<N>& mesh, const std::strin
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 std::filesystem::path save_to_stl_file(
         const Mesh<N>& mesh,
         const std::filesystem::path& file_name,

@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 struct BoundingBox final
 {
         Vector<N, T> min;
@@ -35,13 +35,13 @@ struct BoundingBox final
         {
         }
 
-        template <size_t Size>
+        template <std::size_t Size>
         explicit BoundingBox(const std::array<Vector<N, T>, Size>& points)
         {
                 static_assert(Size > 0);
                 min = points[0];
                 max = points[0];
-                for (size_t i = 1; i < Size; ++i)
+                for (std::size_t i = 1; i < Size; ++i)
                 {
                         min = min_vector(points[i], min);
                         max = max_vector(points[i], max);

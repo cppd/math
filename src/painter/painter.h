@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <size_t N>
+template <std::size_t N>
 struct PainterNotifier
 {
 protected:
@@ -41,7 +41,7 @@ public:
         virtual void painter_error_message(const std::string& msg) = 0;
 };
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void paint(
         PainterNotifier<N - 1>* painter_notifier,
         int samples_per_pixel,

@@ -69,7 +69,7 @@ public:
                 m_map.clear();
         }
 
-        template <size_t N>
+        template <std::size_t N>
         void set_mesh_object(const std::shared_ptr<mesh::MeshObject<N>>& object)
         {
                 if (!object)
@@ -91,7 +91,7 @@ public:
                 ASSERT(object == std::get<std::shared_ptr<mesh::MeshObject<N>>>(std::get<MeshObject>(iter->second)));
         }
 
-        template <size_t N>
+        template <std::size_t N>
         void set_volume_object(const std::shared_ptr<volume::VolumeObject<N>>& object)
         {
                 if (!object)

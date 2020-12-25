@@ -50,7 +50,7 @@ std::string bound_cocone_text_rho_alpha(T rho, T alpha)
         return text;
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh, ProgressRatio* progress)
 {
         std::vector<Vector<N, float>> points;
@@ -86,7 +86,7 @@ std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh,
         return mesh::create_mesh_for_facets(points, facets);
 }
 
-template <size_t N>
+template <std::size_t N>
 void convex_hull(ProgressRatioList* progress_list, const mesh::Reading<N>& object)
 {
         std::unique_ptr<const mesh::Mesh<N>> ch_mesh;
@@ -107,7 +107,7 @@ void convex_hull(ProgressRatioList* progress_list, const mesh::Reading<N>& objec
         obj->insert(object.id());
 }
 
-template <size_t N>
+template <std::size_t N>
 void cocone(
         ProgressRatioList* progress_list,
         ObjectId parent_id,
@@ -140,7 +140,7 @@ void cocone(
         obj->insert(parent_id);
 }
 
-template <size_t N>
+template <std::size_t N>
 void bound_cocone(
         ProgressRatioList* progress_list,
         ObjectId parent_id,
@@ -176,7 +176,7 @@ void bound_cocone(
         obj->insert(parent_id);
 }
 
-template <size_t N>
+template <std::size_t N>
 void mst(
         ProgressRatioList* progress_list,
         ObjectId parent_id,
@@ -202,7 +202,7 @@ void mst(
         obj->insert(parent_id);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<geometry::ManifoldConstructor<N>> create_manifold_constructor(
         ProgressRatioList* progress_list,
         const std::vector<Vector<N, float>>& points)
@@ -218,7 +218,7 @@ std::unique_ptr<geometry::ManifoldConstructor<N>> create_manifold_constructor(
         return manifold_constructor;
 }
 
-template <size_t N>
+template <std::size_t N>
 void manifold_constructor(
         ProgressRatioList* progress_list,
         bool build_cocone,
@@ -277,7 +277,7 @@ void manifold_constructor(
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 void compute(
         ProgressRatioList* progress_list,
         bool build_convex_hull,

@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::volume
 {
-template <size_t N>
+template <std::size_t N>
 struct BoundingBox
 {
         Vector<N, double> min;
@@ -34,14 +34,14 @@ struct BoundingBox
 
 namespace bounding_box_implementation
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void init_min_max(Vector<N, T>* min, Vector<N, T>* max)
 {
         *min = Vector<N, T>(limits<T>::max());
         *max = Vector<N, T>(limits<T>::lowest());
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 bool min_max_found(const Vector<N, T>& min, const Vector<N, T>& max)
 {
         for (unsigned i = 0; i < N; ++i)
@@ -63,7 +63,7 @@ bool min_max_found(const Vector<N, T>& min, const Vector<N, T>& max)
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 std::optional<BoundingBox<N>> bounding_box(const Volume<N>& volume)
 {
         namespace impl = bounding_box_implementation;

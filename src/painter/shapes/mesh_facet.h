@@ -34,7 +34,7 @@ namespace ns::painter::shapes
 {
 namespace mesh_facet_implementation
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::string vertices_to_string(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& v)
 {
         std::string res;
@@ -49,7 +49,7 @@ std::string vertices_to_string(const std::vector<Vector<N, T>>& vertices, const 
         return res;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<Vector<N, T>, N> vertices_to_array(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& v)
 {
         std::array<Vector<N, T>, N> res;
@@ -61,7 +61,7 @@ std::array<Vector<N, T>, N> vertices_to_array(const std::vector<Vector<N, T>>& v
 }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class MeshFacet
 {
         static_assert(N >= 3);
@@ -101,8 +101,8 @@ class MeshFacet
         std::array<bool, N> m_reverse_normal;
 
 public:
-        static constexpr size_t SPACE_DIMENSION = N;
-        static constexpr size_t SHAPE_DIMENSION = N - 1;
+        static constexpr std::size_t SPACE_DIMENSION = N;
+        static constexpr std::size_t SHAPE_DIMENSION = N - 1;
 
         using DataType = T;
 

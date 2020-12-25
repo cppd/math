@@ -29,7 +29,7 @@ std::vector<std::byte> delete_alpha(ColorFormat color_format, const std::span<co
 void blend_alpha(ColorFormat color_format, const std::span<std::byte>& bytes, const Color& color);
 void set_alpha(ColorFormat color_format, const std::span<std::byte>& bytes, float alpha);
 
-template <size_t N>
+template <std::size_t N>
 Image<N> add_alpha(const Image<N>& image, float alpha)
 {
         Image<N> result;
@@ -57,7 +57,7 @@ Image<N> add_alpha(const Image<N>& image, float alpha)
         return result;
 }
 
-template <size_t N>
+template <std::size_t N>
 Image<N> delete_alpha(const Image<N>& image)
 {
         Image<N> result;

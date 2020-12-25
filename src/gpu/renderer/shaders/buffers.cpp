@@ -134,8 +134,8 @@ void ShaderBuffers::set_clip_plane(const vec4& equation, bool enabled) const
                 offsetof(Drawing, clip_plane_equation) + sizeof(Drawing::clip_plane_equation)
                 == offsetof(Drawing, clip_plane_enabled));
 
-        constexpr size_t offset = offsetof(Drawing, clip_plane_equation);
-        constexpr size_t size = sizeof(Drawing::clip_plane_equation) + sizeof(Drawing::clip_plane_enabled);
+        constexpr std::size_t offset = offsetof(Drawing, clip_plane_equation);
+        constexpr std::size_t size = sizeof(Drawing::clip_plane_equation) + sizeof(Drawing::clip_plane_enabled);
 
         vulkan::BufferMapper map(m_uniform_buffers[m_drawing_buffer_index], offset, size);
 
@@ -152,8 +152,8 @@ void ShaderBuffers::set_viewport(const vec2& center, const vec2& factor) const
                 offsetof(Drawing, viewport_center) + sizeof(Drawing::viewport_factor)
                 == offsetof(Drawing, viewport_factor));
 
-        constexpr size_t offset = offsetof(Drawing, viewport_center);
-        constexpr size_t size = sizeof(Drawing::viewport_center) + sizeof(Drawing::viewport_factor);
+        constexpr std::size_t offset = offsetof(Drawing, viewport_center);
+        constexpr std::size_t size = sizeof(Drawing::viewport_center) + sizeof(Drawing::viewport_factor);
 
         vulkan::BufferMapper map(m_uniform_buffers[m_drawing_buffer_index], offset, size);
 
@@ -298,8 +298,8 @@ void MeshBuffer::set_coordinates(const mat4& model_matrix, const mat3& normal_ma
 {
         static_assert(offsetof(Mesh, model_matrix) + sizeof(Mesh::model_matrix) == offsetof(Mesh, normal_matrix));
 
-        constexpr size_t offset = offsetof(Mesh, model_matrix);
-        constexpr size_t size = offsetof(Mesh, normal_matrix) + sizeof(Mesh::normal_matrix) - offset;
+        constexpr std::size_t offset = offsetof(Mesh, model_matrix);
+        constexpr std::size_t size = offsetof(Mesh, normal_matrix) + sizeof(Mesh::normal_matrix) - offset;
 
         vulkan::BufferMapper map(m_uniform_buffer, offset, size);
 
@@ -326,8 +326,8 @@ void MeshBuffer::set_lighting(float ambient, float diffuse, float specular, floa
 {
         static_assert(offsetof(Mesh, specular_power) - offsetof(Mesh, ambient) == 3 * sizeof(float));
 
-        constexpr size_t offset = offsetof(Mesh, ambient);
-        constexpr size_t size = offsetof(Mesh, specular_power) + sizeof(Mesh::specular_power) - offset;
+        constexpr std::size_t offset = offsetof(Mesh, ambient);
+        constexpr std::size_t size = offsetof(Mesh, specular_power) + sizeof(Mesh::specular_power) - offset;
 
         vulkan::BufferMapper map(m_uniform_buffer, offset, size);
 
@@ -420,8 +420,8 @@ void VolumeBuffer::set_parameters(
 
         static_assert(offsetof(Volume, color) - offsetof(Volume, window_offset) == 8 * sizeof(float));
 
-        constexpr size_t offset = offsetof(Volume, window_offset);
-        constexpr size_t size = offsetof(Volume, color) + sizeof(Volume::color) - offset;
+        constexpr std::size_t offset = offsetof(Volume, window_offset);
+        constexpr std::size_t size = offsetof(Volume, color) + sizeof(Volume::color) - offset;
 
         Volume volume;
 
@@ -457,8 +457,8 @@ void VolumeBuffer::set_lighting(
 {
         static_assert(offsetof(Volume, specular_power) - offsetof(Volume, ambient) == 3 * sizeof(float));
 
-        constexpr size_t offset = offsetof(Volume, ambient);
-        constexpr size_t size = offsetof(Volume, specular_power) + sizeof(Volume::specular_power) - offset;
+        constexpr std::size_t offset = offsetof(Volume, ambient);
+        constexpr std::size_t size = offsetof(Volume, specular_power) + sizeof(Volume::specular_power) - offset;
 
         Volume volume;
 

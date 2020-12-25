@@ -49,7 +49,7 @@ namespace ns::mesh::file
 {
 namespace
 {
-template <size_t N>
+template <std::size_t N>
 constexpr int MAX_FACETS_PER_LINE = 1;
 template <>
 constexpr int MAX_FACETS_PER_LINE<3> = 5;
@@ -94,7 +94,7 @@ static_assert(
         str_equal("ab", "ab") && str_equal("", "") && !str_equal("", "ab") && !str_equal("ab", "")
         && !str_equal("ab", "ac") && !str_equal("ba", "ca") && !str_equal("a", "xyz"));
 
-std::string obj_type_name(size_t N)
+std::string obj_type_name(std::size_t N)
 {
         return "OBJ-" + to_string(N);
 }
@@ -128,7 +128,7 @@ bool check_color(const Color& v)
         return v.red() >= 0 && v.red() <= 1 && v.green() >= 0 && v.green() <= 1 && v.blue() >= 0 && v.blue() <= 1;
 }
 
-template <size_t N>
+template <std::size_t N>
 image::Image<N> read_image_from_file(const std::filesystem::path& file_name)
 {
         if constexpr (N != 2)
@@ -144,7 +144,7 @@ image::Image<N> read_image_from_file(const std::filesystem::path& file_name)
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void load_image(
         const std::filesystem::path& dir_name,
         const std::filesystem::path& image_name,
@@ -173,7 +173,7 @@ void load_image(
 }
 
 // Варианты данных: "x/x/x ...", "x//x ...", "x// ...", "x/x/ ...", "x/x ...", "x ...".
-template <typename T, size_t MaxGroupCount, size_t GroupSize, typename IndexType>
+template <typename T, std::size_t MaxGroupCount, std::size_t GroupSize, typename IndexType>
 void read_digit_groups(
         const T& line,
         long long begin,
@@ -257,7 +257,7 @@ void read_digit_groups(
 
 // 0 означает, что нет индекса.
 // Индексы находятся в порядке facet, texture, normal.
-template <typename T, size_t MaxGroupCount>
+template <typename T, std::size_t MaxGroupCount>
 void check_index_consistent(const std::array<std::array<T, 3>, MaxGroupCount>& groups, int group_count)
 {
         ASSERT(group_count <= static_cast<int>(groups.size()));
@@ -282,7 +282,7 @@ void check_index_consistent(const std::array<std::array<T, 3>, MaxGroupCount>& g
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void read_facets(
         const T& data,
         long long begin,
@@ -328,7 +328,7 @@ void read_facets(
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void read_float_texture(const char* str, Vector<N, T>* v)
 {
         T tmp;
@@ -499,7 +499,7 @@ void split_line(
         (*data)[*second_e] = 0; // символ комментария '#' или символ '\n'
 }
 
-template <size_t N>
+template <std::size_t N>
 bool facet_dimension_is_correct(const std::vector<Vector<N, float>>& vertices, const std::array<int, N>& indices)
 {
         static_assert(N == 3);
@@ -540,7 +540,7 @@ enum class ObjLineType
         NotSupported
 };
 
-template <size_t N>
+template <std::size_t N>
 struct ObjLine
 {
         ObjLineType type;
@@ -567,7 +567,7 @@ struct Counters
         }
 };
 
-template <size_t N>
+template <std::size_t N>
 void check_facet_indices(const Mesh<N>& mesh)
 {
         int vertex_count = mesh.vertices.size();
@@ -619,7 +619,7 @@ void check_facet_indices(const Mesh<N>& mesh)
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 bool remove_facets_with_incorrect_dimension([[maybe_unused]] Mesh<N>* mesh)
 {
         if constexpr (N != 3)
@@ -632,7 +632,7 @@ bool remove_facets_with_incorrect_dimension([[maybe_unused]] Mesh<N>* mesh)
 
                 int wrong_facet_count = 0;
 
-                for (size_t i = 0; i < mesh->facets.size(); ++i)
+                for (std::size_t i = 0; i < mesh->facets.size(); ++i)
                 {
                         if (!facet_dimension_is_correct(mesh->vertices, mesh->facets[i].vertices))
                         {
@@ -649,7 +649,7 @@ bool remove_facets_with_incorrect_dimension([[maybe_unused]] Mesh<N>* mesh)
                 std::vector<typename Mesh<N>::Facet> facets;
                 facets.reserve(mesh->facets.size() - wrong_facet_count);
 
-                for (size_t i = 0; i < mesh->facets.size(); ++i)
+                for (std::size_t i = 0; i < mesh->facets.size(); ++i)
                 {
                         if (!wrong_facets[i])
                         {
@@ -663,7 +663,7 @@ bool remove_facets_with_incorrect_dimension([[maybe_unused]] Mesh<N>* mesh)
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void read_obj_stage_one(
         unsigned thread_num,
         unsigned thread_count,
@@ -770,7 +770,7 @@ void read_obj_stage_one(
 //   начинаются с 1 для абсолютных значений,
 //   начинаются с -1 для относительных значений назад.
 // Преобразование в абсолютные значения с началом от 0.
-template <size_t N>
+template <std::size_t N>
 void correct_indices(typename Mesh<N>::Facet* facet, int vertices_size, int texcoords_size, int normals_size)
 {
         for (unsigned i = 0; i < N; ++i)
@@ -790,7 +790,7 @@ void correct_indices(typename Mesh<N>::Facet* facet, int vertices_size, int texc
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void read_obj_stage_two(
         const Counters& counters,
         std::vector<char>* data_ptr,
@@ -888,7 +888,7 @@ Counters sum_counters(const std::vector<Counters>& counters)
         return sum;
 }
 
-template <size_t N>
+template <std::size_t N>
 void read_obj_thread(
         unsigned thread_num,
         unsigned thread_count,
@@ -934,7 +934,7 @@ void read_obj_thread(
         read_obj_stage_two(sum_counters(*counters), data_ptr, line_prop, progress, material_index, library_names, mesh);
 }
 
-template <size_t N>
+template <std::size_t N>
 void read_lib(
         const std::filesystem::path& dir_name,
         const std::filesystem::path& file_name,
@@ -1099,7 +1099,7 @@ void read_lib(
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void read_libs(
         const std::filesystem::path& dir_name,
         ProgressRatio* progress,
@@ -1109,7 +1109,7 @@ void read_libs(
 {
         std::map<std::string, int> image_index;
 
-        for (size_t i = 0; (i < library_names.size()) && !material_index->empty(); ++i)
+        for (std::size_t i = 0; (i < library_names.size()) && !material_index->empty(); ++i)
         {
                 read_lib(dir_name, library_names[i], progress, material_index, &image_index, mesh);
         }
@@ -1123,7 +1123,7 @@ void read_libs(
         mesh->images.shrink_to_fit();
 }
 
-template <size_t N>
+template <std::size_t N>
 void read_obj(
         const std::filesystem::path& file_name,
         ProgressRatio* progress,
@@ -1157,7 +1157,7 @@ void read_obj(
         threads.join();
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::filesystem::path& file_name, ProgressRatio* progress)
 {
         progress->set_undefined();
@@ -1193,7 +1193,7 @@ std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::filesystem::path& file_name
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<Mesh<N>> load_from_obj_file(const std::filesystem::path& file_name, ProgressRatio* progress)
 {
         TimePoint start_time = time();

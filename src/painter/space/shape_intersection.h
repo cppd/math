@@ -54,13 +54,14 @@ public:
 #endif
 
 template <typename T>
-constexpr size_t size()
+constexpr std::size_t size()
 {
         return std::tuple_size_v<T>;
 }
 
 template <typename Shape>
-constexpr std::enable_if_t<(size<decltype(std::declval<Shape>().constraints().c_eq)>() >= 0), size_t> constraint_count()
+constexpr std::enable_if_t<(size<decltype(std::declval<Shape>().constraints().c_eq)>() >= 0), std::size_t>
+        constraint_count()
 {
         static_assert(size<decltype(std::declval<Shape>().constraints().c)>() > 0);
         static_assert(size<decltype(std::declval<Shape>().constraints().c_eq)>() > 0);
@@ -72,7 +73,7 @@ constexpr std::enable_if_t<(size<decltype(std::declval<Shape>().constraints().c_
 }
 
 template <typename Shape>
-constexpr std::enable_if_t<Shape::SPACE_DIMENSION == Shape::SHAPE_DIMENSION, size_t> constraint_count()
+constexpr std::enable_if_t<Shape::SPACE_DIMENSION == Shape::SHAPE_DIMENSION, std::size_t> constraint_count()
 {
         static_assert(size<decltype(std::declval<Shape>().constraints().c)>() > 0);
         return size<decltype(std::declval<Shape>().constraints().c)>();
@@ -101,7 +102,7 @@ const Constraint<Shape1::SPACE_DIMENSION, typename Shape1::DataType>& constraint
 template <typename Shape1, typename Shape2>
 bool shapes_intersect_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
 {
-        constexpr size_t N = Shape1::SPACE_DIMENSION;
+        constexpr std::size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
 
         if constexpr (Shape2::SPACE_DIMENSION == Shape2::SHAPE_DIMENSION)
@@ -129,7 +130,7 @@ bool shapes_intersect_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
         return false;
 }
 
-template <size_t N, typename T, typename Shape>
+template <std::size_t N, typename T, typename Shape>
 bool line_segment_intersects_shape(const Vector<N, T>& org, const Vector<N, T>& direction, const Shape& shape)
 {
         static_assert(N == Shape::SPACE_DIMENSION);
@@ -143,7 +144,7 @@ bool line_segment_intersects_shape(const Vector<N, T>& org, const Vector<N, T>& 
 template <typename Shape1, typename Shape2>
 bool shapes_intersect_by_vertex_ridges(const Shape1& shape_1, const Shape2& shape_2)
 {
-        constexpr size_t N = Shape1::SPACE_DIMENSION;
+        constexpr std::size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
 
         for (const std::array<Vector<N, T>, 2>& ridge : shape_1.vertex_ridges())
@@ -165,7 +166,7 @@ bool shapes_intersect_by_vertex_ridges(const Shape1& shape_1, const Shape2& shap
         return false;
 }
 
-template <size_t N, size_t V, typename T>
+template <std::size_t N, std::size_t V, typename T>
 bool all_vertices_are_on_negative_side(const std::array<Vector<N, T>, V>& vertices, const Constraint<N, T>& c)
 {
         for (const Vector<N, T>& v : vertices)
@@ -178,7 +179,7 @@ bool all_vertices_are_on_negative_side(const std::array<Vector<N, T>, V>& vertic
         return true;
 }
 
-template <size_t N, size_t V, typename T>
+template <std::size_t N, std::size_t V, typename T>
 bool all_vertices_are_on_the_same_side(const std::array<Vector<N, T>, V>& vertices, const Constraint<N, T>& c)
 {
         bool negative = false;
@@ -199,7 +200,7 @@ bool all_vertices_are_on_the_same_side(const std::array<Vector<N, T>, V>& vertic
 template <typename Shape1, typename Shape2>
 bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2)
 {
-        constexpr size_t N = Shape1::SPACE_DIMENSION;
+        constexpr std::size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
 
         for (const Constraint<N, T>& constraint : shape_1.constraints().c)
@@ -246,13 +247,13 @@ bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2
 template <typename Shape1, typename Shape2>
 bool shapes_intersect_by_spaces(const Shape1& shape_1, const Shape2& shape_2)
 {
-        constexpr size_t N = Shape1::SPACE_DIMENSION;
+        constexpr std::size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
 
         static_assert(size<decltype(shape_1.constraints().c)>() > 0);
         static_assert(size<decltype(shape_2.constraints().c)>() > 0);
 
-        constexpr size_t CONSTRAINT_COUNT = constraint_count<Shape1>() + constraint_count<Shape2>();
+        constexpr std::size_t CONSTRAINT_COUNT = constraint_count<Shape1>() + constraint_count<Shape2>();
 
         const Vector<N, T> min = min_vector(shape_1.min(), shape_2.min());
 
@@ -322,7 +323,7 @@ void static_checks(const Shape1& shape_1, const Shape2& shape_2)
         static_assert(Shape1::SPACE_DIMENSION == Shape2::SPACE_DIMENSION);
         static_assert(std::is_same_v<typename Shape1::DataType, typename Shape2::DataType>);
 
-        constexpr size_t N = Shape1::SPACE_DIMENSION;
+        constexpr std::size_t N = Shape1::SPACE_DIMENSION;
 
         static_assert(Shape1::SHAPE_DIMENSION == N || Shape1::SHAPE_DIMENSION + 1 == N);
         static_assert(Shape2::SHAPE_DIMENSION == N || Shape2::SHAPE_DIMENSION + 1 == N);
@@ -366,7 +367,7 @@ bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2)
 
         impl::static_checks(shape_1, shape_2);
 
-        constexpr size_t N = Shape1::SPACE_DIMENSION;
+        constexpr std::size_t N = Shape1::SPACE_DIMENSION;
 
         if (impl::shapes_intersect_by_vertices(shape_1, shape_2))
         {

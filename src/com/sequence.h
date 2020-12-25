@@ -27,18 +27,18 @@ namespace sequence_implementation
 template <
         template <typename...>
         typename Type,
-        template <size_t, typename...>
+        template <std::size_t, typename...>
         typename SequenceType,
         typename... SequenceTypeParameters>
 struct Sequence
 {
-        template <int first, int N, size_t... I>
+        template <int first, int N, std::size_t... I>
         struct S
         {
                 static_assert(N > 0);
                 using T = typename S<first, N - 1, N - 1, I...>::T;
         };
-        template <int first, size_t... I>
+        template <int first, std::size_t... I>
         struct S<first, 0, I...>
         {
                 static_assert(sizeof...(I) > 0);
@@ -49,13 +49,13 @@ struct Sequence
 template <
         template <typename...>
         typename Type,
-        template <size_t, typename...>
+        template <std::size_t, typename...>
         typename SequenceType,
         typename... SequenceTypeParameters,
-        template <typename, size_t...>
+        template <typename, std::size_t...>
         typename IntegerSequence,
         typename IntegerType,
-        size_t... I>
+        std::size_t... I>
 auto sequence(IntegerSequence<IntegerType, I...>&&)
 {
         return std::add_pointer_t<Type<SequenceType<I, SequenceTypeParameters...>...>>();
@@ -68,7 +68,7 @@ template <
         typename Type,
         int From,
         int To,
-        template <size_t, typename...>
+        template <std::size_t, typename...>
         typename SequenceType,
         typename... SequenceTypeParameters>
 using SequenceRange = typename sequence_implementation::Sequence<Type, SequenceType, SequenceTypeParameters...>::
@@ -80,7 +80,7 @@ template <
         typename IntegerSequence,
         template <typename...>
         typename Type,
-        template <size_t, typename...>
+        template <std::size_t, typename...>
         typename SequenceType,
         typename... SequenceTypeParameters>
 using Sequence = std::remove_pointer_t<decltype(

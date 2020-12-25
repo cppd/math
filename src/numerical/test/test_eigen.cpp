@@ -48,14 +48,14 @@ bool equal(const Vector<3, double>& a, const Vector<3, double>& b)
         return true;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 struct MatrixWithDeterminant
 {
         Matrix<N, N, T> matrix;
         T determinant;
 };
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::vector<MatrixWithDeterminant<N, T>> random_symmetric_matrices(unsigned count, T min, T max)
 {
         std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
@@ -63,7 +63,7 @@ std::vector<MatrixWithDeterminant<N, T>> random_symmetric_matrices(unsigned coun
 
         std::vector<MatrixWithDeterminant<N, T>> matrices;
         matrices.reserve(count);
-        for (size_t n = 0; n < count; ++n)
+        for (std::size_t n = 0; n < count; ++n)
         {
                 MatrixWithDeterminant<N, T>& m = matrices.emplace_back();
                 do
@@ -124,7 +124,7 @@ void test_eigen_defined()
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void test_eigen_random(unsigned count)
 {
         constexpr T TOLERANCE = limits<T>::epsilon() * 100;

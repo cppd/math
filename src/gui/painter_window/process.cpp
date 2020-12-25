@@ -41,12 +41,12 @@ namespace
 {
 constexpr const char* IMAGE_FILE_FORMAT = "png";
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<T, N> to_array(const std::vector<T>& vector)
 {
         ASSERT(vector.size() == N);
         std::array<T, N> array;
-        for (size_t i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 array[i] = vector[i];
         }
@@ -125,7 +125,7 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                 const int N = screen_size.size() + 1;
                 process::apply_for_dimension(
                         N,
-                        [&]<size_t N>(const process::Dimension<N>&)
+                        [&]<std::size_t N>(const process::Dimension<N>&)
                         {
                                 constexpr int N_IMAGE = N - 1;
                                 if constexpr (N_IMAGE >= 3)
@@ -198,7 +198,7 @@ std::function<void(ProgressRatioList*)> add_volume(
                 const int N = screen_size.size() + 1;
                 process::apply_for_dimension(
                         N,
-                        [&]<size_t N>(const process::Dimension<N>&)
+                        [&]<std::size_t N>(const process::Dimension<N>&)
                         {
                                 constexpr int N_IMAGE = N - 1;
                                 if constexpr (N_IMAGE >= 3)

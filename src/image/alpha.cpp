@@ -46,12 +46,12 @@ void add_alpha(const std::span<const std::byte>& bytes3, const std::span<std::by
                       + ", RGBA data size = " + to_string(bytes4.size()));
         }
 
-        const size_t pixel_count = bytes3.size() / (3 * sizeof(T));
+        const std::size_t pixel_count = bytes3.size() / (3 * sizeof(T));
         ASSERT(pixel_count * (3 * sizeof(T)) == bytes3.size());
 
         const std::byte* src = bytes3.data();
         std::byte* dst = bytes4.data();
-        for (size_t i = 0; i < pixel_count; ++i)
+        for (std::size_t i = 0; i < pixel_count; ++i)
         {
                 std::memcpy(dst, src, 3 * sizeof(T));
                 dst += 3 * sizeof(T);
@@ -102,10 +102,10 @@ void set_alpha(const std::span<std::byte>& bytes, T alpha)
                 error("Error RGBA data size " + to_string(bytes.size()) + " for setting alpha");
         }
 
-        const size_t pixel_count = bytes.size() / (4 * sizeof(T));
+        const std::size_t pixel_count = bytes.size() / (4 * sizeof(T));
 
         std::byte* ptr = bytes.data() + 3 * sizeof(T);
-        for (size_t i = 0; i < pixel_count; ++i)
+        for (std::size_t i = 0; i < pixel_count; ++i)
         {
                 std::memcpy(ptr, &alpha, sizeof(T));
                 ptr += 4 * sizeof(T);
@@ -116,8 +116,8 @@ void blend_alpha_r8g8b8a8(const std::span<std::byte>& bytes, const Color& blend_
 {
         using T = uint8_t;
 
-        const size_t pixel_size = 4 * sizeof(T);
-        const size_t pixel_count = bytes.size() / pixel_size;
+        const std::size_t pixel_size = 4 * sizeof(T);
+        const std::size_t pixel_count = bytes.size() / pixel_size;
         if (pixel_count * pixel_size != bytes.size())
         {
                 error("Error size " + to_string(bytes.size()) + " for blending R8G8B8A8");
@@ -129,7 +129,7 @@ void blend_alpha_r8g8b8a8(const std::span<std::byte>& bytes, const Color& blend_
         blend_pixel[2] = color::linear_float_to_srgb_uint8(blend_color.data()[2]);
 
         std::byte* ptr = bytes.data();
-        for (size_t i = 0; i < pixel_count; ++i, ptr += pixel_size)
+        for (std::size_t i = 0; i < pixel_count; ++i, ptr += pixel_size)
         {
                 std::array<T, 4> pixel;
                 std::memcpy(pixel.data(), ptr, 4 * sizeof(T));
@@ -159,8 +159,8 @@ void blend_alpha_r16g16b16a16(const std::span<std::byte>& bytes, const Color& bl
 {
         using T = uint16_t;
 
-        const size_t pixel_size = 4 * sizeof(T);
-        const size_t pixel_count = bytes.size() / pixel_size;
+        const std::size_t pixel_size = 4 * sizeof(T);
+        const std::size_t pixel_count = bytes.size() / pixel_size;
         if (pixel_count * pixel_size != bytes.size())
         {
                 error("Error size " + to_string(bytes.size()) + " for blending R16G16B16A16");
@@ -172,7 +172,7 @@ void blend_alpha_r16g16b16a16(const std::span<std::byte>& bytes, const Color& bl
         blend_pixel[2] = color::linear_float_to_linear_uint16(blend_color.data()[2]);
 
         std::byte* ptr = bytes.data();
-        for (size_t i = 0; i < pixel_count; ++i, ptr += pixel_size)
+        for (std::size_t i = 0; i < pixel_count; ++i, ptr += pixel_size)
         {
                 std::array<T, 4> pixel;
                 std::memcpy(pixel.data(), ptr, 4 * sizeof(T));
@@ -202,8 +202,8 @@ void blend_alpha_r32g32b32a32(const std::span<std::byte>& bytes, const Color& bl
 {
         using T = float;
 
-        const size_t pixel_size = 4 * sizeof(T);
-        const size_t pixel_count = bytes.size() / pixel_size;
+        const std::size_t pixel_size = 4 * sizeof(T);
+        const std::size_t pixel_count = bytes.size() / pixel_size;
         if (pixel_count * pixel_size != bytes.size())
         {
                 error("Error size " + to_string(bytes.size()) + " for blending R32G32B32A32");
@@ -215,7 +215,7 @@ void blend_alpha_r32g32b32a32(const std::span<std::byte>& bytes, const Color& bl
         blend_pixel[2] = blend_color.data()[2];
 
         std::byte* ptr = bytes.data();
-        for (size_t i = 0; i < pixel_count; ++i, ptr += pixel_size)
+        for (std::size_t i = 0; i < pixel_count; ++i, ptr += pixel_size)
         {
                 std::array<T, 4> pixel;
                 std::memcpy(pixel.data(), ptr, 4 * sizeof(T));
@@ -253,7 +253,7 @@ std::vector<std::byte> delete_alpha(ColorFormat color_format, const std::span<co
                 error("Unsupported image format " + format_to_string(color_format) + " for deleting alpha");
         }
 
-        size_t src_pixel_size = format_pixel_size_in_bytes(color_format);
+        std::size_t src_pixel_size = format_pixel_size_in_bytes(color_format);
         if (bytes.size() % src_pixel_size != 0)
         {
                 error("Error byte count (" + to_string(bytes.size()) + ") for format "
@@ -263,7 +263,7 @@ std::vector<std::byte> delete_alpha(ColorFormat color_format, const std::span<co
         ASSERT(bytes.size() % 4 == 0);
         ASSERT(src_pixel_size % 4 == 0);
         std::vector<std::byte> result(3 * (bytes.size() / 4));
-        size_t dst_pixel_size = 3 * (src_pixel_size / 4);
+        std::size_t dst_pixel_size = 3 * (src_pixel_size / 4);
 
         auto src = bytes.begin();
         auto dst = result.begin();

@@ -71,7 +71,7 @@ void test_utf8_replacement_character_and_self_synchronizing()
 
                 ASSERT(s.size() == 5);
 
-                size_t i = 0;
+                std::size_t i = 0;
 
                 if (0xFFFD != unicode::utf8_to_utf32(s, &i))
                 {
@@ -107,7 +107,7 @@ void test_utf8_replacement_character_and_self_synchronizing()
 
                 ASSERT(s.size() == 5);
 
-                size_t i = 0;
+                std::size_t i = 0;
 
                 if (0xFFFD != unicode::utf8_to_utf32(s, &i))
                 {

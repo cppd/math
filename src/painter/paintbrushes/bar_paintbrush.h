@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <size_t N>
+template <std::size_t N>
 class BarPaintbrush final : public Paintbrush<N>
 {
         static_assert(N >= 2);

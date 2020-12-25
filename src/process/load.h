@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::process
 {
-template <size_t N>
+template <std::size_t N>
 std::shared_ptr<mesh::MeshObject<N>> load_mesh(
         const std::string& object_name,
         ProgressRatioList* progress_list,
@@ -61,7 +61,7 @@ std::shared_ptr<mesh::MeshObject<N>> load_mesh(
         return mesh_object;
 }
 
-template <size_t N>
+template <std::size_t N>
 std::shared_ptr<mesh::MeshObject<N>> load_mesh(
         const std::string& object_name,
         int point_count,
@@ -78,7 +78,7 @@ std::shared_ptr<mesh::MeshObject<N>> load_mesh(
         return mesh_object;
 }
 
-template <size_t N>
+template <std::size_t N>
 std::shared_ptr<volume::VolumeObject<N>> load_volume(
         const std::string& object_name,
         int image_size,
@@ -101,7 +101,7 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume(
         return volume_object;
 }
 
-template <size_t N, typename Image>
+template <std::size_t N, typename Image>
 std::shared_ptr<volume::VolumeObject<N>> load_volume(const std::string& object_name, Image&& image)
 {
         std::unique_ptr<volume::Volume<N>> volume = std::make_unique<volume::Volume<N>>();
@@ -124,7 +124,7 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume(const std::string& object_n
         return volume_object;
 }
 
-template <size_t N>
+template <std::size_t N>
 std::shared_ptr<volume::VolumeObject<N>> load_volume(
         const std::string& object_name,
         ProgressRatioList* progress_list,

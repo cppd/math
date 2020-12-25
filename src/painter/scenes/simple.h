@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::unique_ptr<const Scene<N, T>> simple_scene(
         const Color& background_color,
         const Color::DataType& lighting_intensity,

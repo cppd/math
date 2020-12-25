@@ -75,7 +75,7 @@ public:
         ~PainterWindow() override;
 };
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void create_painter_window(
         const std::string& name,
         unsigned thread_count,

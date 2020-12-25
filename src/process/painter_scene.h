@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::process
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 struct PainterSceneInfo
 {
         int min_screen_size;
@@ -101,7 +101,7 @@ std::unique_ptr<const painter::Scene<3, T>> create_scene(
 }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::unique_ptr<const painter::Scene<N, T>> create_painter_scene(
         std::unique_ptr<const painter::Shape<N, T>>&& shape,
         const PainterSceneInfo<N, T>& info,

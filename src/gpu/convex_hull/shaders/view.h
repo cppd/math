@@ -45,7 +45,7 @@ class ViewMemory final
                 float brightness;
         };
 
-        size_t m_data_buffer_index;
+        std::size_t m_data_buffer_index;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();

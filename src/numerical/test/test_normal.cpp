@@ -33,7 +33,7 @@ namespace ns::numerical
 {
 namespace
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void compare_normals(const Vector<N, T>& real_normal, const Vector<N, T>& computed_normal, T min_dot_product)
 {
         const T d = std::abs(dot(real_normal, computed_normal));
@@ -45,7 +45,7 @@ void compare_normals(const Vector<N, T>& real_normal, const Vector<N, T>& comput
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void test_normal_defined()
 {
         std::vector<Vector<N, T>> points;
@@ -69,7 +69,7 @@ void test_normal_defined()
         compare_normals(real_normal, computed_normal, T(0.9999999));
 }
 
-template <size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T, typename RandomEngine>
 std::vector<Vector<N, T>> random_unit_vectors(unsigned count, RandomEngine& random_engine)
 {
         std::uniform_real_distribution<T> urd(-1, 1);
@@ -90,7 +90,7 @@ std::vector<Vector<N, T>> random_unit_vectors(unsigned count, RandomEngine& rand
         return vectors;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void test_normal_random(unsigned test_count)
 {
         constexpr unsigned POINT_COUNT = 100;

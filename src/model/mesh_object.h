@@ -34,10 +34,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::mesh
 {
-template <size_t N>
+template <std::size_t N>
 class MeshObject;
 
-template <size_t N>
+template <std::size_t N>
 struct MeshEvent final
 {
         struct Insert final
@@ -107,13 +107,13 @@ enum Flag
 using Flags = std::bitset<Flag::SpecularPower + 1>;
 }
 
-template <size_t N>
+template <std::size_t N>
 class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
 {
-        template <size_t>
+        template <std::size_t>
         friend class Writing;
 
-        template <size_t>
+        template <std::size_t>
         friend class Reading;
 
         //
@@ -318,7 +318,7 @@ public:
 
 //
 
-template <size_t N>
+template <std::size_t N>
 class Writing final
 {
         MeshObject<N>* m_object;
@@ -442,7 +442,7 @@ public:
         }
 };
 
-template <size_t N>
+template <std::size_t N>
 class Reading final
 {
         const MeshObject<N>* m_object;

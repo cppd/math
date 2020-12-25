@@ -154,7 +154,7 @@ int string_to_floats(const char** str, T*... floats)
 }
 }
 
-template <size_t N, typename T, unsigned... I>
+template <std::size_t N, typename T, unsigned... I>
 std::pair<int, const char*> read_vector(const char* str, Vector<N, T>* v, std::integer_sequence<unsigned, I...>&&)
 {
         static_assert(N == sizeof...(I));
@@ -164,7 +164,7 @@ std::pair<int, const char*> read_vector(const char* str, Vector<N, T>* v, std::i
         return {cnt, str};
 }
 
-template <size_t N, typename T, unsigned... I>
+template <std::size_t N, typename T, unsigned... I>
 std::pair<int, const char*> read_vector(const char* str, Vector<N, T>* v, T* n, std::integer_sequence<unsigned, I...>&&)
 {
         static_assert(N == sizeof...(I));
@@ -174,7 +174,7 @@ std::pair<int, const char*> read_vector(const char* str, Vector<N, T>* v, T* n, 
         return {cnt, str};
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 const char* read_float(const char* str, Vector<N, T>* v)
 {
         const auto [cnt, ptr] = read_vector(str, v, std::make_integer_sequence<unsigned, N>());

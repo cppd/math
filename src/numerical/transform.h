@@ -65,7 +65,7 @@ constexpr Matrix<4, 4, T> ortho_vulkan(T1 left, T2 right, T3 bottom, T4 top, T5 
         return m;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 constexpr Matrix<N + 1, N + 1, T> scale(const Vector<N, T>& v)
 {
         Matrix<N + 1, N + 1, T> m(1);
@@ -82,7 +82,7 @@ constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> scale(V... v)
         return scale(Vector<sizeof...(V), T>(v...));
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 constexpr Matrix<N + 1, N + 1, T> translate(const Vector<N, T>& v)
 {
         Matrix<N + 1, N + 1, T> m(1);
@@ -100,7 +100,7 @@ constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> translate(V... v)
 }
 
 // Для случаев, когда последняя строка матрицы состоит из нулей с последней единицей.
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class MatrixVectorMultiplier
 {
         Matrix<N, N, T> m_matrix;

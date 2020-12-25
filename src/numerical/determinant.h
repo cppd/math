@@ -28,7 +28,7 @@ namespace ns
 {
 namespace determinant_implementation
 {
-template <size_t N_V, size_t N_H, typename T, size_t DET_SIZE>
+template <std::size_t N_V, std::size_t N_H, typename T, std::size_t DET_SIZE>
 constexpr T determinant_by_cofactor_expansion(
         const std::array<Vector<N_H, T>, N_V>& vectors,
         const std::array<unsigned char, DET_SIZE>& v_map,
@@ -100,7 +100,7 @@ constexpr T determinant_by_cofactor_expansion(
 }
 }
 
-template <size_t N_V, size_t N_H, typename T, size_t DET_SIZE>
+template <std::size_t N_V, std::size_t N_H, typename T, std::size_t DET_SIZE>
 constexpr T determinant(
         const std::array<Vector<N_H, T>, N_V>& vectors,
         const std::array<unsigned char, DET_SIZE>& v_map,
@@ -111,7 +111,7 @@ constexpr T determinant(
 
 // Тип данных передаваемых векторов и диапазон значений рассчитаны только на определители
 // из этих чисел, поэтому нельзя использовать скалярные произведения, матрицы Грама и т.п.
-template <int COUNT, size_t N, typename T>
+template <int COUNT, std::size_t N, typename T>
 bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
 {
         static_assert(is_integral<T>);

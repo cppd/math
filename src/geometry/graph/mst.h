@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-template <size_t N>
+template <std::size_t N>
 std::vector<std::array<int, 2>> minimum_spanning_tree(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, N + 1>>& delaunay_objects,

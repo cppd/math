@@ -31,7 +31,7 @@ namespace ns::painter
 {
 // Параллельное проецирование точек экрана на полусферу и создание лучей
 // из центра полусферы в направлении точек на сфере.
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class SphericalProjector final : public Projector<N, T>
 {
         static_assert(N >= 2);

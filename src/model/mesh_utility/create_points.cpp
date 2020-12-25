@@ -28,7 +28,7 @@ namespace ns::mesh
 {
 namespace
 {
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<Mesh<N>> create_mesh(std::vector<Vector<N, float>>&& points)
 {
         std::unique_ptr<Mesh<N>> mesh = std::make_unique<Mesh<N>>();
@@ -52,7 +52,7 @@ std::unique_ptr<Mesh<N>> create_mesh(std::vector<Vector<N, float>>&& points)
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<Mesh<N>> create_mesh_for_points(std::vector<Vector<N, float>>&& points)
 {
         TimePoint start_time = time();

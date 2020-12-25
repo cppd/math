@@ -32,7 +32,7 @@ struct IsArray
         {
                 static constexpr bool value = false;
         };
-        template <typename T, size_t N>
+        template <typename T, std::size_t N>
         struct S<std::array<T, N>>
         {
                 static constexpr bool value = true;

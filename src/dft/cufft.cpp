@@ -113,11 +113,11 @@ public:
 template <typename T>
 class CudaMemory final
 {
-        size_t m_size;
+        std::size_t m_size;
         T* d_mem;
 
 public:
-        explicit CudaMemory(size_t s) : m_size(s)
+        explicit CudaMemory(std::size_t s) : m_size(s)
         {
                 if (m_size < 1)
                 {
@@ -144,12 +144,12 @@ public:
                 return d_mem;
         }
 
-        size_t size() const
+        std::size_t size() const
         {
                 return m_size;
         }
 
-        size_t bytes() const
+        std::size_t bytes() const
         {
                 return m_size * sizeof(T);
         }

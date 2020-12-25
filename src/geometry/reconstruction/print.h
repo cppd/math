@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-template <size_t N>
+template <std::size_t N>
 void print_delaunay_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets)
 {
         LOG("--delaunay facets--");
@@ -41,7 +41,7 @@ void print_delaunay_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets)
         LOG("--");
 }
 
-template <size_t N>
+template <std::size_t N>
 void print_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<bool>& cocone_facets)
 {
         LOG("--cocone facets--");
@@ -55,7 +55,7 @@ void print_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, c
         LOG("--");
 }
 
-template <size_t N>
+template <std::size_t N>
 void print_not_cocone_facets(
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         const std::vector<bool>& cocone_facets)
@@ -71,11 +71,11 @@ void print_not_cocone_facets(
         LOG("--");
 }
 
-template <size_t N>
+template <std::size_t N>
 void print_vertex_data(const std::vector<ManifoldVertex<N>>& vertices)
 {
         LOG("--vertices--");
-        for (size_t i = 0; i < vertices.size(); ++i)
+        for (std::size_t i = 0; i < vertices.size(); ++i)
         {
                 LOG("pole " + to_string(i) + ": " + to_string(vertices[i].positive_norm));
         }

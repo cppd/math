@@ -41,41 +41,41 @@ constexpr unsigned DISCRETIZATION = 100000;
 constexpr double COS_FOR_BOUND = -0.3;
 constexpr double MOBIUS_STRIP_WIDTH = 1;
 
-template <typename T, size_t... I, typename V>
-constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_sequence<size_t, I...>&&)
+template <typename T, std::size_t... I, typename V>
+constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_sequence<std::size_t, I...>&&)
 {
         return {(static_cast<void>(I), 0)..., std::forward<V>(value)};
 }
 
-template <size_t N, typename T>
-constexpr Vector<N, T> LAST_AXIS = make_last_axis<T>(1, std::make_integer_sequence<size_t, N - 1>());
+template <std::size_t N, typename T>
+constexpr Vector<N, T> LAST_AXIS = make_last_axis<T>(1, std::make_integer_sequence<std::size_t, N - 1>());
 
 #if 0
-template <typename T, size_t... I, typename V>
+template <typename T, std::size_t... I, typename V>
 constexpr Vector<sizeof...(I) + 1, T> add_axis(
         const Vector<sizeof...(I), T>& vector,
         V&& value,
-        std::integer_sequence<size_t, I...>&&)
+        std::integer_sequence<std::size_t, I...>&&)
 {
         return {vector[I]..., std::forward<V>(value)};
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 constexpr Vector<N + 1, T> add_dimension_with_zero(const Vector<N, T>& v)
 {
-        return add_axis(v, 0, std::make_integer_sequence<size_t, N>());
+        return add_axis(v, 0, std::make_integer_sequence<std::size_t, N>());
 }
 
-template <size_t N, typename T, typename V>
+template <std::size_t N, typename T, typename V>
 constexpr Vector<N, T> vector_with_last_dimension(V&& v)
 {
         static_assert(N >= 2);
 
-        return make_last_axis<T>(std::forward<V>(v), std::make_integer_sequence<size_t, N - 1>());
+        return make_last_axis<T>(std::forward<V>(v), std::make_integer_sequence<std::size_t, N - 1>());
 }
 #endif
 
-template <size_t N>
+template <std::size_t N>
 class DiscretePoints
 {
         std::vector<Vector<N, float>> m_points;
@@ -137,7 +137,7 @@ public:
         }
 };
 
-template <size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> random_on_sphere(RandomEngine& engine)
 {
         static_assert(std::is_floating_point_v<T>);
@@ -150,7 +150,7 @@ Vector<N, T> random_on_sphere(RandomEngine& engine)
         return v.normalized();
 }
 
-template <size_t N, typename T, typename V, typename RandomEngine>
+template <std::size_t N, typename T, typename V, typename RandomEngine>
 Vector<N, T> random_on_sphere_bound(RandomEngine& engine, V cos_alpha)
 {
         Vector<N, T> v;
@@ -187,7 +187,7 @@ std::vector<Vector<2, float>> generate_points_semicircle(unsigned point_count)
 }
 #endif
 
-template <size_t N>
+template <std::size_t N>
 std::vector<Vector<N, float>> generate_points_ellipsoid(unsigned point_count, bool bound)
 {
         DiscretePoints<N> points(point_count);
@@ -209,7 +209,7 @@ std::vector<Vector<N, float>> generate_points_ellipsoid(unsigned point_count, bo
 
 // Точки на сфере с углублением со стороны последней оси
 // в положительном направлении этой оси
-template <size_t N>
+template <std::size_t N>
 std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_count, bool bound)
 {
         DiscretePoints<N> points(point_count);
@@ -278,7 +278,7 @@ std::vector<Vector<3, float>> generate_points_mobius_strip(unsigned point_count)
  5.1 Finite Products of Spaces.
  14.4 Regarding Classification of CW-Complexes and Higher Dimensional Manifolds.
 */
-template <size_t N, typename T, typename Engine>
+template <std::size_t N, typename T, typename Engine>
 Vector<N, T> torus_point(Engine& engine)
 {
         static_assert(N >= 3);
@@ -290,7 +290,7 @@ Vector<N, T> torus_point(Engine& engine)
         v[0] = 2;
         v_length = 2;
 
-        for (size_t n = 1; n < N; ++n)
+        for (std::size_t n = 1; n < N; ++n)
         {
                 Vector<N, T> ortho(0);
                 ortho[n] = v_length;
@@ -306,7 +306,7 @@ Vector<N, T> torus_point(Engine& engine)
 }
 
 // Точки на торе без равномерного распределения по его поверхности
-template <size_t N>
+template <std::size_t N>
 std::vector<Vector<N, float>> generate_points_torus(unsigned point_count, bool bound)
 {
         static_assert(N >= 3);
@@ -332,25 +332,25 @@ std::vector<Vector<N, float>> generate_points_torus(unsigned point_count, bool b
 
 //
 
-template <size_t N>
+template <std::size_t N>
 std::vector<Vector<N, float>> ellipsoid(unsigned point_count)
 {
         return generate_points_ellipsoid<N>(point_count, false);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::vector<Vector<N, float>> ellipsoid_bound(unsigned point_count)
 {
         return generate_points_ellipsoid<N>(point_count, true);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::vector<Vector<N, float>> sphere_with_notch(unsigned point_count)
 {
         return generate_points_sphere_with_notch<N>(point_count, false);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::vector<Vector<N, float>> sphere_with_notch_bound(unsigned point_count)
 {
         return generate_points_sphere_with_notch<N>(point_count, true);
@@ -361,13 +361,13 @@ std::vector<Vector<3, float>> mobius_strip(unsigned point_count)
         return generate_points_mobius_strip(point_count);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::vector<Vector<N, float>> torus(unsigned point_count)
 {
         return generate_points_torus<N>(point_count, false);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::vector<Vector<N, float>> torus_bound(unsigned point_count)
 {
         return generate_points_torus<N>(point_count, true);
@@ -389,7 +389,7 @@ std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
         return names;
 }
 
-template <size_t N>
+template <std::size_t N>
 class Impl final : public MeshObjectRepository<N>
 {
         std::map<std::string, std::function<std::vector<Vector<N, float>>(unsigned)>> m_map;
@@ -432,7 +432,7 @@ public:
 };
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<MeshObjectRepository<N>> create_mesh_object_repository()
 {
         return std::make_unique<Impl<N>>();

@@ -58,35 +58,35 @@ constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, std::mt19937_64>,
         return "std::mt19937_64";
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 const std::string_view& sampler_name(const StratifiedJitteredSampler<N, T>&)
 {
         static constexpr std::string_view s = "Stratified Jittered Sampler";
         return s;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 const std::string_view& sampler_name(const LatinHypercubeSampler<N, T>&)
 {
         static constexpr std::string_view s = "Latin Hypercube Sampler";
         return s;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 const std::string_view& short_sampler_name(const StratifiedJitteredSampler<N, T>&)
 {
         static constexpr std::string_view s = "sjs";
         return s;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 const std::string_view& short_sampler_name(const LatinHypercubeSampler<N, T>&)
 {
         static constexpr std::string_view s = "lhc";
         return s;
 }
 
-template <template <size_t, typename> typename S, size_t N, typename T>
+template <template <std::size_t, typename> typename S, std::size_t N, typename T>
 std::filesystem::path sampler_file_name(const S<N, T>& sampler)
 {
         return path_from_utf8(
@@ -94,7 +94,7 @@ std::filesystem::path sampler_file_name(const S<N, T>& sampler)
                 + replace_space(type_name<T>()) + ".txt");
 }
 
-template <size_t N>
+template <std::size_t N>
 constexpr int sample_count()
 {
         static_assert(N >= 2);
@@ -113,7 +113,7 @@ constexpr int sample_count()
         }
 }
 
-template <size_t N, typename T, typename Sampler, typename RandomEngine>
+template <std::size_t N, typename T, typename Sampler, typename RandomEngine>
 void write_samples_to_file(RandomEngine& random_engine, const Sampler& sampler, int pass_count)
 {
         std::ofstream file(std::filesystem::temp_directory_path() / sampler_file_name(sampler));
@@ -134,7 +134,7 @@ void write_samples_to_file(RandomEngine& random_engine, const Sampler& sampler, 
         }
 }
 
-template <size_t N, typename T, typename Sampler, typename RandomEngine>
+template <std::size_t N, typename T, typename Sampler, typename RandomEngine>
 void test_performance(RandomEngine& random_engine, const Sampler& sampler, int iter_count)
 {
         std::vector<Vector<N, T>> data;
@@ -150,7 +150,7 @@ void test_performance(RandomEngine& random_engine, const Sampler& sampler, int i
             + " seconds, size = " + to_string(data.size()));
 }
 
-template <size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T, typename RandomEngine>
 void write_samples_to_files()
 {
         RandomEngine random_engine = create_engine<RandomEngine>();
@@ -162,7 +162,7 @@ void write_samples_to_files()
         write_samples_to_file<N, T>(random_engine, LatinHypercubeSampler<N, T>(sample_count<N>()), pass_count);
 }
 
-template <size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T, typename RandomEngine>
 void test_performance()
 {
         RandomEngine random_engine = create_engine<RandomEngine>();

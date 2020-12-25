@@ -71,7 +71,7 @@ class BitReverseConstant final : public vulkan::SpecializationConstant
 
         const std::vector<VkSpecializationMapEntry>& entries() const override;
         const void* data() const override;
-        size_t size() const override;
+        std::size_t size() const override;
 
 public:
         BitReverseConstant();

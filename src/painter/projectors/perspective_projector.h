@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class PerspectiveProjector final : public Projector<N, T>
 {
         static_assert(N >= 2);

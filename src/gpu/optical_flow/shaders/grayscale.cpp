@@ -172,7 +172,7 @@ const void* GrayscaleConstant::data() const
         return &m_data;
 }
 
-size_t GrayscaleConstant::size() const
+std::size_t GrayscaleConstant::size() const
 {
         return sizeof(m_data);
 }

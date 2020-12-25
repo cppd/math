@@ -128,7 +128,7 @@ constexpr T multiply_all(const V& v)
         }
 
         T value = v[0];
-        for (size_t i = 1; i < v.size(); ++i)
+        for (std::size_t i = 1; i < v.size(); ++i)
         {
                 value *= v[i];
         }
@@ -151,7 +151,7 @@ constexpr T add_all(const V& v)
         }
 
         T value = v[0];
-        for (size_t i = 1; i < v.size(); ++i)
+        for (std::size_t i = 1; i < v.size(); ++i)
         {
                 value += v[i];
         }

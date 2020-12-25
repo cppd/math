@@ -25,10 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-template <size_t N>
+template <std::size_t N>
 class Versions
 {
-        static constexpr size_t MAX_VERSION_COUNT = 10;
+        static constexpr std::size_t MAX_VERSION_COUNT = 10;
 
         struct Version
         {

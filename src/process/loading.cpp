@@ -95,7 +95,7 @@ std::function<void(ProgressRatioList*)> action_load_mesh(std::filesystem::path p
 
                 apply_for_dimension(
                         dimension,
-                        [&]<size_t N>(const Dimension<N>&)
+                        [&]<std::size_t N>(const Dimension<N>&)
                         {
                                 std::shared_ptr<mesh::MeshObject<N>> mesh =
                                         load_mesh<N>(generic_utf8_filename(path.filename()), progress_list, path);
@@ -141,7 +141,7 @@ std::function<void(ProgressRatioList*)> action_load_mesh(
         {
                 apply_for_dimension(
                         dimension,
-                        [&]<size_t N>(const Dimension<N>&)
+                        [&]<std::size_t N>(const Dimension<N>&)
                         {
                                 std::shared_ptr<mesh::MeshObject<N>> mesh =
                                         load_mesh<N>(object_name, point_object_parameters->point_count, *repository);
@@ -175,7 +175,7 @@ std::function<void(ProgressRatioList*)> action_load_volume(std::filesystem::path
 
                 apply_for_dimension(
                         dimension,
-                        [&]<size_t N>(const Dimension<N>&)
+                        [&]<std::size_t N>(const Dimension<N>&)
                         {
                                 load_volume<N>(generic_utf8_filename(path.filename()), progress_list, path);
                         });
@@ -205,7 +205,7 @@ std::function<void(ProgressRatioList*)> action_load_volume(
         {
                 apply_for_dimension(
                         dimension,
-                        [&]<size_t N>(const Dimension<N>&)
+                        [&]<std::size_t N>(const Dimension<N>&)
                         {
                                 load_volume<N>(object_name, parameters->image_size, *repository);
                         });

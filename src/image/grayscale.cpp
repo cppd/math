@@ -59,7 +59,7 @@ void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes)
                       + format_to_string(color_format));
         }
 
-        const size_t pixel_size = component_count * sizeof(T);
+        const std::size_t pixel_size = component_count * sizeof(T);
         ASSERT(pixel_size == format_pixel_size_in_bytes(color_format));
         if (bytes.size() % pixel_size != 0)
         {
@@ -96,7 +96,7 @@ void convert_to_r_component_format(
                       + format_to_string(color_format));
         }
 
-        const size_t src_pixel_size = component_count * sizeof(T);
+        const std::size_t src_pixel_size = component_count * sizeof(T);
         ASSERT(src_pixel_size == format_pixel_size_in_bytes(color_format));
         if (bytes_color.size() % src_pixel_size != 0)
         {
@@ -104,7 +104,7 @@ void convert_to_r_component_format(
                       + " for converting to R component format, format " + format_to_string(color_format));
         }
 
-        const size_t dst_pixel_size = sizeof(T);
+        const std::size_t dst_pixel_size = sizeof(T);
         if (bytes_r.size() % dst_pixel_size != 0)
         {
                 error("Error R byte count " + to_string(bytes_r.size())

@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::storage
 {
-template <size_t N>
+template <std::size_t N>
 struct VolumeObjectRepository
 {
         virtual ~VolumeObjectRepository() = default;
@@ -34,6 +34,6 @@ struct VolumeObjectRepository
         virtual std::unique_ptr<volume::Volume<N>> object(const std::string& object_name, unsigned size) const = 0;
 };
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<VolumeObjectRepository<N>> create_volume_object_repository();
 }

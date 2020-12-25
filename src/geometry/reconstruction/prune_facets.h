@@ -32,14 +32,14 @@ namespace ns::geometry
 {
 namespace prune_facets_implementation
 {
-template <size_t N>
+template <std::size_t N>
 using RidgeData = RidgeDataN<DelaunayFacet<N>>;
-template <size_t N>
+template <std::size_t N>
 using RidgeMap = std::unordered_map<Ridge<N>, RidgeData<N>>;
-template <size_t N>
+template <std::size_t N>
 using RidgeSet = std::unordered_set<Ridge<N>>;
 
-template <size_t N>
+template <std::size_t N>
 bool boundary_ridge(const std::vector<bool>& interior_vertices, const Ridge<N>& ridge)
 {
         for (int v : ridge.vertices())
@@ -52,7 +52,7 @@ bool boundary_ridge(const std::vector<bool>& interior_vertices, const Ridge<N>& 
         return false;
 }
 
-template <size_t N>
+template <std::size_t N>
 bool sharp_ridge(
         const std::vector<vec<N>>& points,
         const std::vector<bool>& interior_vertices,
@@ -140,7 +140,7 @@ bool sharp_ridge(
 // Ребро считается острым, если угол между его двумя последовательными гранями больше 3 * PI / 2
 // или, что тоже самое, все грани находятся внутри угла PI / 2. Ребро с одной гранью считается
 // острым. Образующиеся после удаления грани новые острые рёбра тоже должны обрабатываться.
-template <size_t N>
+template <std::size_t N>
 void prune_facets_incident_to_sharp_ridges(
         const std::vector<vec<N>>& points,
         const std::vector<DelaunayFacet<N>>& delaunay_facets,

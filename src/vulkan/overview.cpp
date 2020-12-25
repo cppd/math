@@ -170,32 +170,32 @@ std::string point_clipping_behavior(VkPointClippingBehavior v)
         return "UNKNOWN";
 }
 
-void conformance_version(const PhysicalDevice& device, size_t device_node, StringTree* tree)
+void conformance_version(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
 {
         std::ostringstream oss;
         VkConformanceVersion v = device.properties().properties_12.conformanceVersion;
         oss << static_cast<int>(v.major) << "." << static_cast<int>(v.minor) << "." << static_cast<int>(v.subminor)
             << "." << static_cast<int>(v.patch);
-        size_t node = tree->add(device_node, "Conformance Version");
+        std::size_t node = tree->add(device_node, "Conformance Version");
         tree->add(node, oss.str());
 }
 
-void device_name(const PhysicalDevice& device, size_t device_node, StringTree* tree)
+void device_name(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
 {
-        size_t type_node = tree->add(device_node, "Device Name");
+        std::size_t type_node = tree->add(device_node, "Device Name");
         tree->add(type_node, device.properties().properties_10.deviceName);
 }
 
-void driver_info(const PhysicalDevice& device, size_t device_node, StringTree* tree)
+void driver_info(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
 {
-        size_t node = tree->add(device_node, "Driver");
+        std::size_t node = tree->add(device_node, "Driver");
         tree->add(node, std::string("Name = ") + device.properties().properties_12.driverName);
         tree->add(node, std::string("Info = ") + device.properties().properties_12.driverInfo);
 }
 
-void device_type(const PhysicalDevice& device, size_t device_node, StringTree* tree)
+void device_type(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
 {
-        size_t type_node = tree->add(device_node, "Device Type");
+        std::size_t type_node = tree->add(device_node, "Device Type");
         try
         {
                 tree->add(type_node, physical_device_type_to_string(device.properties().properties_10.deviceType));
@@ -206,9 +206,9 @@ void device_type(const PhysicalDevice& device, size_t device_node, StringTree* t
         }
 }
 
-void api_version(const PhysicalDevice& device, size_t device_node, StringTree* tree)
+void api_version(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
 {
-        size_t api_node = tree->add(device_node, "API Version");
+        std::size_t api_node = tree->add(device_node, "API Version");
         try
         {
                 tree->add(api_node, api_version_to_string(device.properties().properties_10.apiVersion));
@@ -219,9 +219,9 @@ void api_version(const PhysicalDevice& device, size_t device_node, StringTree* t
         }
 }
 
-void extensions(const PhysicalDevice& device, size_t device_node, StringTree* tree)
+void extensions(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
 {
-        size_t extensions_node = tree->add(device_node, "Extensions");
+        std::size_t extensions_node = tree->add(device_node, "Extensions");
 
         try
         {
@@ -251,9 +251,9 @@ void extensions(const PhysicalDevice& device, size_t device_node, StringTree* tr
 #define ADD_SHADER_FLOAT_CONTROLS_INDEPENDENCE_12(v) \
         properties.emplace_back(#v, shader_float_controls_independence(device.properties().properties_12.v))
 
-void properties(const PhysicalDevice& device, size_t device_node, StringTree* tree)
+void properties(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
 {
-        size_t properties_node = tree->add(device_node, "Properties");
+        std::size_t properties_node = tree->add(device_node, "Properties");
 
         try
         {
@@ -483,11 +483,11 @@ void properties(const PhysicalDevice& device, size_t device_node, StringTree* tr
                 }                                               \
         } while (false)
 
-void features(const PhysicalDevice& device, size_t device_node, StringTree* tree)
+void features(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
 {
-        size_t features_node = tree->add(device_node, "Features");
-        size_t supported_node = tree->add(features_node, "Supported");
-        size_t not_supported_node = tree->add(features_node, "Not Supported");
+        std::size_t features_node = tree->add(device_node, "Features");
+        std::size_t supported_node = tree->add(features_node, "Supported");
+        std::size_t not_supported_node = tree->add(features_node, "Not Supported");
 
         try
         {
@@ -630,11 +630,11 @@ void features(const PhysicalDevice& device, size_t device_node, StringTree* tree
 void queues(
         const PhysicalDevice& device,
         const VkQueueFamilyProperties& family_properties,
-        size_t family_index,
-        size_t queue_families_node,
+        std::size_t family_index,
+        std::size_t queue_families_node,
         StringTree* tree)
 {
-        size_t queue_family_node = tree->add(queue_families_node, "Family " + to_string(family_index));
+        std::size_t queue_family_node = tree->add(queue_families_node, "Family " + to_string(family_index));
 
         try
         {
@@ -677,13 +677,13 @@ void queues(
         }
 }
 
-void queue_families(const PhysicalDevice& device, size_t device_node, StringTree* tree)
+void queue_families(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
 {
-        size_t queue_families_node = tree->add(device_node, "QueueFamilies");
+        std::size_t queue_families_node = tree->add(device_node, "QueueFamilies");
 
         try
         {
-                for (size_t index = 0; const VkQueueFamilyProperties& properties : device.queue_families())
+                for (std::size_t index = 0; const VkQueueFamilyProperties& properties : device.queue_families())
                 {
                         queues(device, properties, index++, queue_families_node, tree);
                 }
@@ -698,7 +698,7 @@ void queue_families(const PhysicalDevice& device, size_t device_node, StringTree
 
 void api_version(StringTree* tree)
 {
-        size_t api_node = tree->add("API Version");
+        std::size_t api_node = tree->add("API Version");
         try
         {
                 tree->add(api_node, api_version_to_string(supported_instance_api_version()));
@@ -710,7 +710,7 @@ void api_version(StringTree* tree)
 }
 void extensions(StringTree* tree)
 {
-        size_t extensions_node = tree->add("Extensions");
+        std::size_t extensions_node = tree->add("Extensions");
         try
         {
                 for (const std::string& extension : sorted(supported_instance_extensions()))
@@ -726,7 +726,7 @@ void extensions(StringTree* tree)
 
 void validation_layers(StringTree* tree)
 {
-        size_t validation_layers_node = tree->add("Validation Layers");
+        std::size_t validation_layers_node = tree->add("Validation Layers");
         try
         {
                 for (const std::string& layer : sorted(supported_validation_layers()))
@@ -742,7 +742,7 @@ void validation_layers(StringTree* tree)
 
 void required_surface_extensions(StringTree* tree)
 {
-        size_t required_surface_extensions_node = tree->add("Required Surface Extensions");
+        std::size_t required_surface_extensions_node = tree->add("Required Surface Extensions");
         try
         {
                 for (const std::string& extension : sorted(window::vulkan_create_surface_required_extensions()))
@@ -784,7 +784,7 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
                         continue;
                 }
 
-                size_t node = tree.add("Physical Device");
+                std::size_t node = tree.add("Physical Device");
 
                 device_name(device, node, &tree);
                 device_type(device, node, &tree);

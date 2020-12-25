@@ -34,7 +34,7 @@ ImageWidget::ImageWidget(const Pixels* pixels, QMenu* menu)
           m_image_2d_byte_count(PIXEL_SIZE_BYTES * m_image_2d_pixel_count),
           m_image_2d(pixels->screen_size()[0], pixels->screen_size()[1], QImage::Format_RGBX8888)
 {
-        ASSERT(static_cast<size_t>(m_image_2d.sizeInBytes()) == m_image_2d_byte_count);
+        ASSERT(static_cast<std::size_t>(m_image_2d.sizeInBytes()) == m_image_2d_byte_count);
 
         ui.setupUi(this);
 

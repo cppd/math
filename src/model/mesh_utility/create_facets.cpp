@@ -31,7 +31,7 @@ namespace ns::mesh
 {
 namespace
 {
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<Mesh<N>> create_mesh(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, N>>& facets)
@@ -92,7 +92,7 @@ std::unique_ptr<Mesh<N>> create_mesh(
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<Mesh<N>> create_mesh_for_facets(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, N>>& facets)

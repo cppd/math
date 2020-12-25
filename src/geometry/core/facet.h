@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-template <size_t N, typename Derived, template <typename> typename FacetIter>
+template <std::size_t N, typename Derived, template <typename> typename FacetIter>
 class FacetBase
 {
         static_assert(N > 1);
@@ -124,7 +124,7 @@ public:
         }
 };
 
-template <size_t N, typename DataType, typename ComputeType, template <typename> typename FacetIter>
+template <std::size_t N, typename DataType, typename ComputeType, template <typename> typename FacetIter>
 class FacetInteger final : public FacetBase<N, FacetInteger<N, DataType, ComputeType, FacetIter>, FacetIter>
 {
         using Base = FacetBase<N, FacetInteger, FacetIter>;
@@ -226,7 +226,7 @@ public:
         }
 };
 
-template <size_t N, typename DataType, template <typename> typename FacetIter>
+template <std::size_t N, typename DataType, template <typename> typename FacetIter>
 class FacetInteger<N, DataType, mpz_class, FacetIter> final
         : public FacetBase<N, FacetInteger<N, DataType, mpz_class, FacetIter>, FacetIter>
 {

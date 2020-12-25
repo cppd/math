@@ -52,10 +52,10 @@ struct Pixels
         virtual std::vector<std::byte> pixels() const = 0;
 };
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1>
 {
-        template <typename Type, size_t Size>
+        template <typename Type, std::size_t Size>
         static std::vector<Type> array_to_vector(const std::array<Type, Size>& array)
         {
                 std::vector<Type> vector(Size);
@@ -70,7 +70,7 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
                 constexpr std::array<uint8_t, 4> LIGHT = {100, 150, 200, 255};
                 constexpr std::array<uint8_t, 4> DARK = {0, 0, 0, 255};
 
-                const size_t pixel_size = image::format_pixel_size_in_bytes(color_format);
+                const std::size_t pixel_size = image::format_pixel_size_in_bytes(color_format);
 
                 std::vector<std::byte> light;
                 std::vector<std::byte> dark;
@@ -85,7 +85,7 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
 
                 std::vector<std::byte> image(pixel_size * multiply_all<long long>(screen_size));
 
-                size_t index = 0;
+                std::size_t index = 0;
                 for (int i = 0; i < slice_count; ++i)
                 {
                         for (int y = 0; y < screen_size[1]; ++y)
@@ -107,10 +107,10 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
         static constexpr int PANTBRUSH_WIDTH = 20;
 
         static constexpr image::ColorFormat COLOR_FORMAT_8 = image::ColorFormat::R8G8B8A8_SRGB;
-        static constexpr size_t PIXEL_SIZE_8 = image::format_pixel_size_in_bytes(COLOR_FORMAT_8);
+        static constexpr std::size_t PIXEL_SIZE_8 = image::format_pixel_size_in_bytes(COLOR_FORMAT_8);
 
         static constexpr image::ColorFormat COLOR_FORMAT_16 = image::ColorFormat::R16G16B16A16;
-        static constexpr size_t PIXEL_SIZE_16 = image::format_pixel_size_in_bytes(COLOR_FORMAT_16);
+        static constexpr std::size_t PIXEL_SIZE_16 = image::format_pixel_size_in_bytes(COLOR_FORMAT_16);
 
         const GlobalIndex<N - 1, long long> m_global_index;
         const std::vector<int> m_screen_size;
@@ -119,11 +119,11 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
         painter::BarPaintbrush<N - 1> m_paintbrush;
 
         std::vector<std::byte> m_pixels_8 = make_initial_image(m_screen_size, COLOR_FORMAT_8);
-        const size_t m_slice_size_8 = PIXEL_SIZE_8 * m_screen_size[0] * m_screen_size[1];
+        const std::size_t m_slice_size_8 = PIXEL_SIZE_8 * m_screen_size[0] * m_screen_size[1];
         long long m_slice_offset_8 = 0;
 
         std::vector<std::byte> m_pixels_16 = make_initial_image(m_screen_size, COLOR_FORMAT_16);
-        const size_t m_slice_size_16 = PIXEL_SIZE_16 * m_screen_size[0] * m_screen_size[1];
+        const std::size_t m_slice_size_16 = PIXEL_SIZE_16 * m_screen_size[0] * m_screen_size[1];
         long long m_slice_offset_16 = 0;
 
         std::vector<long long> m_busy_indices_2d;

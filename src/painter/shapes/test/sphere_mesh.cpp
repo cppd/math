@@ -44,7 +44,7 @@ T random_exponent(RandomEngine& random_engine, T1 exponent_low, T2 exponent_high
         return std::pow(10, std::uniform_real_distribution<T>(exponent_low, exponent_high)(random_engine));
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::vector<Vector<N, T>> generate_random_points_on_sphere(const Vector<N, T>& center, T radius, int count)
 {
         LOG("random points...");
@@ -66,7 +66,7 @@ std::vector<Vector<N, T>> generate_random_points_on_sphere(const Vector<N, T>& c
         return points;
 }
 
-template <size_t N>
+template <std::size_t N>
 void create_spherical_convex_hull(
         const Vector<N, float>& center,
         float radius,
@@ -93,7 +93,7 @@ void create_spherical_convex_hull(
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_sphere(
         const Color& color,
         const Color::DataType& diffuse,
@@ -129,7 +129,7 @@ std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_sphere(
 }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_random_sphere(
         const Color& color,
         const Color::DataType& diffuse,

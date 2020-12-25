@@ -31,7 +31,7 @@ struct PixelInfo final
         float coverage;
 };
 
-template <size_t N>
+template <std::size_t N>
 class Pixels final
 {
         using CounterType = std::uint_least16_t;

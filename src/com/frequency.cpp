@@ -32,7 +32,7 @@ namespace
 //
 // 5.3.2 Windows Used in FIR Filter Design.
 // Blackman window function.
-std::vector<double> lowpass_filter_window_function(size_t tap_count)
+std::vector<double> lowpass_filter_window_function(std::size_t tap_count)
 {
         if (tap_count < 1)
         {
@@ -42,7 +42,7 @@ std::vector<double> lowpass_filter_window_function(size_t tap_count)
         std::vector<double> window(tap_count);
 
         double sum = 0;
-        for (size_t i = 1; i < tap_count + 1; ++i)
+        for (std::size_t i = 1; i < tap_count + 1; ++i)
         {
                 double x = static_cast<double>(i) / (tap_count + 1);
                 double v = 0.42 - 0.5 * std::cos(2 * PI<double> * x) + 0.08 * std::cos(4 * PI<double> * x);

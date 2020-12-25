@@ -22,21 +22,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 // a * x + b
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 struct Constraint final
 {
         Vector<N, T> a;
         T b;
 };
 
-template <size_t N, typename T, size_t Count, size_t CountEq>
+template <std::size_t N, typename T, std::size_t Count, std::size_t CountEq>
 struct Constraints final
 {
         std::array<Constraint<N, T>, Count> c;
         std::array<Constraint<N, T>, CountEq> c_eq;
 };
 
-template <size_t N, typename T, size_t Count>
+template <std::size_t N, typename T, std::size_t Count>
 struct Constraints<N, T, Count, 0> final
 {
         std::array<Constraint<N, T>, Count> c;

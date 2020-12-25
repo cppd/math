@@ -31,7 +31,7 @@ constexpr auto storage_size(const T& c) -> decltype(std::size(c))
 }
 
 template <typename T>
-std::enable_if_t<has_data_and_size<T>, size_t> data_size(const T& data)
+std::enable_if_t<has_data_and_size<T>, std::size_t> data_size(const T& data)
 {
         static_assert(!std::is_pointer_v<T>);
         static_assert(std::is_standard_layout_v<typename T::value_type>);
@@ -39,7 +39,7 @@ std::enable_if_t<has_data_and_size<T>, size_t> data_size(const T& data)
 }
 
 template <typename T>
-std::enable_if_t<!has_data_and_size<T>, size_t> data_size(const T&)
+std::enable_if_t<!has_data_and_size<T>, std::size_t> data_size(const T&)
 {
         static_assert(!std::is_pointer_v<T>);
         static_assert(std::is_standard_layout_v<T>);

@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::numerical
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> point_normal(const std::vector<Vector<N, T>>& points)
 {
         if (points.size() < N)
@@ -54,16 +54,16 @@ Vector<N, T> point_normal(const std::vector<Vector<N, T>>& points)
         p0 /= points.size();
 
         Matrix<N, N, T> covariance_matrix;
-        for (size_t i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 covariance_matrix.row(i) = Vector<N, T>(0);
         }
         for (Vector<N, T> p : points)
         {
                 p -= p0;
-                for (size_t i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
-                        for (size_t j = i; j < N; ++j)
+                        for (std::size_t j = i; j < N; ++j)
                         {
                                 covariance_matrix(i, j) += p[i] * p[j];
                         }
@@ -71,9 +71,9 @@ Vector<N, T> point_normal(const std::vector<Vector<N, T>>& points)
         }
 
         T max = limits<T>::lowest();
-        for (size_t i = 0; i < N - 1; ++i)
+        for (std::size_t i = 0; i < N - 1; ++i)
         {
-                for (size_t j = i + 1; j < N; ++j)
+                for (std::size_t j = i + 1; j < N; ++j)
                 {
                         max = std::max(max, std::abs(covariance_matrix(i, j)));
                 }
@@ -84,9 +84,9 @@ Vector<N, T> point_normal(const std::vector<Vector<N, T>>& points)
         std::array<Vector<N, T>, N> eigenvectors;
         eigen_symmetric_upper_triangular(covariance_matrix, tolerance, &eigenvalues, &eigenvectors);
 
-        size_t min_i = 0;
+        std::size_t min_i = 0;
         T min = eigenvalues[0];
-        for (size_t i = 1; i < N; ++i)
+        for (std::size_t i = 1; i < N; ++i)
         {
                 if (min > eigenvalues[i])
                 {
@@ -95,12 +95,12 @@ Vector<N, T> point_normal(const std::vector<Vector<N, T>>& points)
                 }
         }
         std::array<Vector<N, T>, N - 1> vectors;
-        size_t n = 0;
-        for (size_t i = 0; i < min_i; ++i)
+        std::size_t n = 0;
+        for (std::size_t i = 0; i < min_i; ++i)
         {
                 vectors[n++] = eigenvectors[i];
         }
-        for (size_t i = min_i + 1; i < N; ++i)
+        for (std::size_t i = min_i + 1; i < N; ++i)
         {
                 vectors[n++] = eigenvectors[i];
         }

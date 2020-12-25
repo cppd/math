@@ -45,7 +45,7 @@ std::vector<std::complex<Dst>> conv(const std::vector<std::complex<Src>>& data)
         else
         {
                 std::vector<std::complex<Dst>> res(data.size());
-                for (size_t i = 0; i < data.size(); ++i)
+                for (std::size_t i = 0; i < data.size(); ++i)
                 {
                         res[i] = {static_cast<Dst>(data[i].real()), static_cast<Dst>(data[i].imag())};
                 }

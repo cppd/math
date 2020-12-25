@@ -166,7 +166,7 @@ const void* CopyInputConstant::data() const
         return &m_data;
 }
 
-size_t CopyInputConstant::size() const
+std::size_t CopyInputConstant::size() const
 {
         return sizeof(m_data);
 }

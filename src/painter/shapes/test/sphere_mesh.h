@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::shapes
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_random_sphere(
         const Color& color,
         const Color::DataType& diffuse,

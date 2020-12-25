@@ -38,7 +38,7 @@ public:
                 return m_id == id.m_id;
         }
 
-        size_t hash() const noexcept
+        std::size_t hash() const noexcept
         {
                 return std::hash<Type>()(m_id);
         }
@@ -50,7 +50,7 @@ namespace std
 template <>
 struct hash<::ns::ObjectId>
 {
-        size_t operator()(const ::ns::ObjectId& id) const noexcept
+        std::size_t operator()(const ::ns::ObjectId& id) const noexcept
         {
                 return id.hash();
         }

@@ -37,7 +37,7 @@ std::string vulkan_formats_to_string(const std::vector<VkFormat>& formats)
                 return std::string();
         }
         std::string s = vulkan::format_to_string(formats[0]);
-        for (size_t i = 1; i < formats.size(); ++i)
+        for (std::size_t i = 1; i < formats.size(); ++i)
         {
                 s += ", ";
                 s += vulkan::format_to_string(formats[i]);

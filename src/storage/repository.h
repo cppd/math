@@ -32,7 +32,7 @@ namespace ns::storage
 {
 class Repository final
 {
-        template <size_t N>
+        template <std::size_t N>
         struct Repositories
         {
                 std::unique_ptr<const MeshObjectRepository<N>> meshes;
@@ -60,7 +60,7 @@ public:
                 std::vector<ObjectNames> names;
 
                 std::apply(
-                        [&]<size_t... N>(const Repositories<N>&... v)
+                        [&]<std::size_t... N>(const Repositories<N>&... v)
                         {
                                 (
                                         [&]()
@@ -77,13 +77,13 @@ public:
                 return names;
         }
 
-        template <size_t N>
+        template <std::size_t N>
         std::unique_ptr<mesh::Mesh<N>> mesh(const std::string& name, unsigned point_count) const
         {
                 return std::get<Repositories<N>>(m_data).meshes->object(name, point_count);
         }
 
-        template <size_t N>
+        template <std::size_t N>
         std::unique_ptr<volume::Volume<N>> volume(const std::string& name, unsigned size) const
         {
                 return std::get<Repositories<N>>(m_data).volumes->object(name, size);

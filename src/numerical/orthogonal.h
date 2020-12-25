@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 // Вектор из ортогонального дополнения (n-1)-мерного подпространства
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> ortho_nn(const std::array<Vector<N, T>, N - 1>& vectors)
 {
         static_assert(N > 1);
@@ -150,7 +150,7 @@ inline Vector<4, mpz_class> ortho_nn(const std::array<Vector<4, mpz_class>, 3>& 
 #endif
 
 // Вектор из ортогонального дополнения (n-1)-мерного пространства, определяемого n точками
-template <size_t N, typename T, typename CalculationType = T>
+template <std::size_t N, typename T, typename CalculationType = T>
 Vector<N, CalculationType> ortho_nn(const std::vector<Vector<N, T>>& points, const std::array<int, N>& indices)
 {
         static_assert(N > 1);
@@ -167,7 +167,7 @@ Vector<N, CalculationType> ortho_nn(const std::vector<Vector<N, T>>& points, con
 
 // Единичный вектор e1 из ортогонального дополнения (n-1)-мерного пространства, определяемого n-1 точками и ещё одной точкой.
 // Единичный вектор e2 из ортогонального дополнения (n-1)-мерного пространства, определяемого n-1 точками и вектором e1.
-template <size_t N, typename T, typename CalculationType>
+template <std::size_t N, typename T, typename CalculationType>
 void ortho_e0_e1(
         const std::vector<Vector<N, T>>& points,
         const std::array<int, N - 1>& indices,

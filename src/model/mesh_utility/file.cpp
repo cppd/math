@@ -69,7 +69,7 @@ std::vector<FileFormat> load_formats(const std::set<unsigned>& dimensions)
 
 //
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<Mesh<N>> load(const std::filesystem::path& file_name, ProgressRatio* progress)
 {
         auto [dimension, file_type] = file::file_dimension_and_type(file_name);
@@ -93,7 +93,7 @@ std::unique_ptr<Mesh<N>> load(const std::filesystem::path& file_name, ProgressRa
         error_fatal("Unknown file type");
 }
 
-template <size_t N>
+template <std::size_t N>
 std::filesystem::path save_to_obj(
         const Mesh<N>& mesh,
         const std::filesystem::path& file_name,
@@ -107,7 +107,7 @@ std::filesystem::path save_to_obj(
         return file::save_to_obj_file(mesh, file_name, comment);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::filesystem::path save_to_stl(
         const Mesh<N>& mesh,
         const std::filesystem::path& file_name,

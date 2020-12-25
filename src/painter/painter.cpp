@@ -39,7 +39,7 @@ namespace ns::painter
 {
 namespace
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 constexpr T DIFFUSE_LIGHT_COEFFICIENT = cosine_sphere_coefficient(N);
 
 template <typename T>
@@ -52,13 +52,13 @@ constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
 template <typename T>
 using PainterRandomEngine = std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 using PainterSampler = StratifiedJitteredSampler<N, T>;
 // using PainterSampler = LatinHypercubeSampler<N, T>;
 
 static_assert(std::is_floating_point_v<Color::DataType>);
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 struct PaintData
 {
         const Scene<N, T>& scene;
@@ -73,7 +73,7 @@ struct PaintData
         }
 };
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 bool light_source_is_visible(
         int* ray_count,
         const PaintData<N, T>& paint_data,
@@ -84,7 +84,7 @@ bool light_source_is_visible(
         return !paint_data.scene.has_intersection(ray, distance_to_light_source);
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Color direct_diffuse_lighting(
         int* ray_count,
         const PaintData<N, T>& paint_data,
@@ -188,7 +188,7 @@ Color direct_diffuse_lighting(
         return color;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 bool diffuse_weighted_ray(
         const PaintData<N, T>& paint_data,
         PainterRandomEngine<T>& random_engine,
@@ -215,7 +215,7 @@ bool diffuse_weighted_ray(
         return true;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::optional<Color> trace_path(
         const PaintData<N, T>& paint_data,
         int* ray_count,
@@ -310,7 +310,7 @@ std::optional<Color> trace_path(
         return color;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void paint_pixels(
         unsigned thread_number,
         std::atomic_bool* stop,
@@ -363,7 +363,7 @@ void paint_pixels(
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void work_thread(
         unsigned thread_number,
         ThreadBarrier* barrier,
@@ -439,7 +439,7 @@ void work_thread(
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void paint_threads(
         PainterNotifier<N - 1>* painter_notifier,
         int samples_per_pixel,
@@ -491,7 +491,7 @@ void paint_threads(
 }
 
 // Без выдачи исключений. Про проблемы сообщать через painter_notifier.
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void paint(
         PainterNotifier<N - 1>* painter_notifier,
         int samples_per_pixel,

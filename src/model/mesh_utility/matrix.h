@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::mesh
 {
-template <size_t N>
+template <std::size_t N>
 Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(
         const Mesh<N>& mesh,
         double size,

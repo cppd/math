@@ -89,7 +89,7 @@ void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectI
                         ASSERT(std::this_thread::get_id() == m_thread_id);
 
                         std::visit(
-                                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh)
+                                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh)
                                 {
                                         insert_into_tree(
                                                 mesh->id(), N, mesh->name(), mesh->visible(), parent_object_id);
@@ -107,7 +107,7 @@ void ModelTree::insert(storage::VolumeObject&& object, const std::optional<Objec
                         ASSERT(std::this_thread::get_id() == m_thread_id);
 
                         std::visit(
-                                [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume)
+                                [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume)
                                 {
                                         insert_into_tree(
                                                 volume->id(), N, volume->name(), volume->visible(), parent_object_id);
@@ -262,7 +262,7 @@ void ModelTree::show_object(ObjectId id, bool show)
         if (v)
         {
                 std::visit(
-                        [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
+                        [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
                         {
                                 volume_object->set_visible(show);
                         },
@@ -271,7 +271,7 @@ void ModelTree::show_object(ObjectId id, bool show)
         else if (m)
         {
                 std::visit(
-                        [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh_object)
+                        [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh_object)
                         {
                                 mesh_object->set_visible(show);
                         },
@@ -537,7 +537,7 @@ void ModelTree::make_menu(const QPoint& pos)
         if (volume)
         {
                 std::visit(
-                        [&]<size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
+                        [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
                         {
                                 make_menu_for_object(menu.get(), object);
                         },
@@ -546,7 +546,7 @@ void ModelTree::make_menu(const QPoint& pos)
         else if (mesh)
         {
                 std::visit(
-                        [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
+                        [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
                         {
                                 make_menu_for_object(menu.get(), object);
                         },

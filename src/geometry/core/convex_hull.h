@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-template <size_t N>
+template <std::size_t N>
 class ConvexHullFacet
 {
         const std::array<int, N> m_indices;
@@ -46,7 +46,7 @@ public:
         }
 };
 
-template <size_t N>
+template <std::size_t N>
 class DelaunaySimplex
 {
         const std::array<int, N + 1> m_indices;
@@ -68,13 +68,13 @@ public:
         }
 };
 
-template <size_t N>
+template <std::size_t N>
 void compute_delaunay(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<vec<N>>* points,
         std::vector<DelaunaySimplex<N>>* simplices,
         ProgressRatio* progress);
-template <size_t N>
+template <std::size_t N>
 void compute_convex_hull(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<ConvexHullFacet<N>>* ch_facets,

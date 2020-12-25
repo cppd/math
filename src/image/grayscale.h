@@ -24,7 +24,7 @@ namespace ns::image
 void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes);
 std::vector<std::byte> convert_to_r_component_format(ColorFormat color_format, const std::span<const std::byte>& bytes);
 
-template <size_t N>
+template <std::size_t N>
 Image<N> convert_to_r_component_format(const Image<N>& image)
 {
         Image<N> result;

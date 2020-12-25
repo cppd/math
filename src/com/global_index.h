@@ -44,7 +44,7 @@ namespace ns
 //   Эти варианты имеют одинаковое количество арифметических действий
 // (после предварительного умножения), но второй вариант позволяет
 // параллельно умножать, поэтому используется он.
-template <size_t N, typename IndexType>
+template <std::size_t N, typename IndexType>
 class GlobalIndex
 {
         static_assert(N > 0);

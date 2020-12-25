@@ -149,7 +149,7 @@ const void* MulDConstant::data() const
         return &m_data;
 }
 
-size_t MulDConstant::size() const
+std::size_t MulDConstant::size() const
 {
         return sizeof(m_data);
 }

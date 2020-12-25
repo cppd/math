@@ -163,7 +163,7 @@ const void* SobelConstant::data() const
         return &m_data;
 }
 
-size_t SobelConstant::size() const
+std::size_t SobelConstant::size() const
 {
         return sizeof(m_data);
 }

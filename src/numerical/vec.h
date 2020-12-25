@@ -27,15 +27,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class Vector
 {
         static_assert(N > 0);
 
         std::array<T, N> m_data;
 
-        template <size_t... I>
-        constexpr Vector(std::integer_sequence<size_t, I...>&&, const T& v) : m_data{(static_cast<void>(I), v)...}
+        template <std::size_t... I>
+        constexpr Vector(std::integer_sequence<std::size_t, I...>&&, const T& v) : m_data{(static_cast<void>(I), v)...}
         {
                 static_assert(sizeof...(I) == N);
         }
@@ -54,7 +54,7 @@ public:
                 static_assert(sizeof...(args) + 2 == N);
         }
 
-        constexpr explicit Vector(const T& v) : Vector(std::make_integer_sequence<size_t, N>(), v)
+        constexpr explicit Vector(const T& v) : Vector(std::make_integer_sequence<std::size_t, N>(), v)
         {
         }
 
@@ -74,7 +74,7 @@ public:
                 return m_data.data();
         }
 
-        size_t hash() const
+        std::size_t hash() const
         {
                 return array_hash(m_data);
         }
@@ -209,7 +209,7 @@ public:
         }
 };
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> operator+(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
@@ -220,7 +220,7 @@ Vector<N, T> operator+(const Vector<N, T>& a, const Vector<N, T>& b)
         return res;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> operator-(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
@@ -231,7 +231,7 @@ Vector<N, T> operator-(const Vector<N, T>& a, const Vector<N, T>& b)
         return res;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> operator*(const Vector<N, T>& a, T b)
 {
         Vector<N, T> res;
@@ -242,7 +242,7 @@ Vector<N, T> operator*(const Vector<N, T>& a, T b)
         return res;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> operator*(T b, const Vector<N, T>& a)
 {
         Vector<N, T> res;
@@ -253,7 +253,7 @@ Vector<N, T> operator*(T b, const Vector<N, T>& a)
         return res;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> operator*(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
@@ -264,7 +264,7 @@ Vector<N, T> operator*(const Vector<N, T>& a, const Vector<N, T>& b)
         return res;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> operator/(const Vector<N, T>& a, T b)
 {
         Vector<N, T> res;
@@ -275,7 +275,7 @@ Vector<N, T> operator/(const Vector<N, T>& a, T b)
         return res;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> operator-(const Vector<N, T>& a)
 {
         Vector<N, T> res;
@@ -286,7 +286,7 @@ Vector<N, T> operator-(const Vector<N, T>& a)
         return res;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> max_vector(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
@@ -297,7 +297,7 @@ Vector<N, T> max_vector(const Vector<N, T>& a, const Vector<N, T>& b)
         return res;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> min_vector(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
@@ -308,7 +308,7 @@ Vector<N, T> min_vector(const Vector<N, T>& a, const Vector<N, T>& b)
         return res;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 T dot(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         T result = a[0] * b[0];
@@ -319,7 +319,7 @@ T dot(const Vector<N, T>& a, const Vector<N, T>& b)
         return result;
 }
 
-template <size_t N, typename T, typename F>
+template <std::size_t N, typename T, typename F>
 Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, F x)
 {
         Vector<N, T> result;
@@ -330,7 +330,7 @@ Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, F x)
         return result;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 bool is_finite(const Vector<N, T>& data)
 {
         for (unsigned i = 0; i < N; ++i)
@@ -344,7 +344,7 @@ bool is_finite(const Vector<N, T>& data)
         return true;
 }
 
-template <typename Dst, size_t N, typename Src>
+template <typename Dst, std::size_t N, typename Src>
 std::enable_if_t<!std::is_same_v<Dst, Src>, Vector<N, Dst>> to_vector(const Vector<N, Src>& v)
 {
         Vector<N, Dst> res;
@@ -355,13 +355,13 @@ std::enable_if_t<!std::is_same_v<Dst, Src>, Vector<N, Dst>> to_vector(const Vect
         return res;
 }
 
-template <typename Dst, size_t N, typename Src>
+template <typename Dst, std::size_t N, typename Src>
 std::enable_if_t<std::is_same_v<Dst, Src>, const Vector<N, Dst>&> to_vector(const Vector<N, Src>& v)
 {
         return v;
 }
 
-template <typename Dst, size_t N, typename Src>
+template <typename Dst, std::size_t N, typename Src>
 Vector<N, Dst> to_vector(const std::array<Src, N>& array)
 {
         Vector<N, Dst> res;
@@ -372,7 +372,7 @@ Vector<N, Dst> to_vector(const std::array<Src, N>& array)
         return res;
 }
 
-template <typename Dst, size_t N, typename Src>
+template <typename Dst, std::size_t N, typename Src>
 std::enable_if_t<!std::is_same_v<Dst, Src>, std::vector<Vector<N, Dst>>> to_vector(const std::vector<Vector<N, Src>>& v)
 {
         std::vector<Vector<N, Dst>> res(v.size());
@@ -383,20 +383,20 @@ std::enable_if_t<!std::is_same_v<Dst, Src>, std::vector<Vector<N, Dst>>> to_vect
         return res;
 }
 
-template <typename Dst, size_t N, typename Src>
+template <typename Dst, std::size_t N, typename Src>
 std::enable_if_t<std::is_same_v<Dst, Src>, const std::vector<Vector<N, Dst>>&> to_vector(
         const std::vector<Vector<N, Src>>& v)
 {
         return v;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::string to_string(const Vector<N, T>& data)
 {
         std::string s;
         s += "(";
         s += to_string(data[0]);
-        for (size_t i = 1; i < N; ++i)
+        for (std::size_t i = 1; i < N; ++i)
         {
                 s += ", ";
                 s += to_string(data[i]);
@@ -451,10 +451,10 @@ using vec4i = Vector<4, int>;
 
 namespace std
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 struct hash<::ns::Vector<N, T>>
 {
-        size_t operator()(const ::ns::Vector<N, T>& v) const
+        std::size_t operator()(const ::ns::Vector<N, T>& v) const
         {
                 return v.hash();
         }

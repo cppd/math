@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-template <size_t N>
+template <std::size_t N>
 void queue_submit(
         const std::array<VkSemaphore, N>& wait_semaphores,
         const std::array<VkPipelineStageFlags, N>& wait_stages,

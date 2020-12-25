@@ -357,7 +357,7 @@ const void* FlowConstant::data() const
         return &m_data;
 }
 
-size_t FlowConstant::size() const
+std::size_t FlowConstant::size() const
 {
         return sizeof(m_data);
 }

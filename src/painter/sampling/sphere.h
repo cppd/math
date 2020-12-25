@@ -41,7 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <typename RandomEngine, size_t N, typename T>
+template <typename RandomEngine, std::size_t N, typename T>
 void random_in_sphere_by_rejection(RandomEngine& random_engine, Vector<N, T>& v, T& v_length_square)
 {
         static_assert(N >= 2);
@@ -58,7 +58,7 @@ void random_in_sphere_by_rejection(RandomEngine& random_engine, Vector<N, T>& v,
         }
 }
 
-template <typename RandomEngine, size_t N, typename T>
+template <typename RandomEngine, std::size_t N, typename T>
 void random_in_sphere_by_normal_distribution(RandomEngine& random_engine, Vector<N, T>& v, T& v_length_square)
 {
         static_assert(N >= 2);
@@ -72,7 +72,7 @@ void random_in_sphere_by_normal_distribution(RandomEngine& random_engine, Vector
         v_length_square = k * k;
 }
 
-template <typename RandomEngine, size_t N, typename T>
+template <typename RandomEngine, std::size_t N, typename T>
 void random_in_sphere(RandomEngine& random_engine, Vector<N, T>& v, T& v_length_square)
 {
         if constexpr (N <= 5)
@@ -85,7 +85,7 @@ void random_in_sphere(RandomEngine& random_engine, Vector<N, T>& v, T& v_length_
         }
 }
 
-template <typename RandomEngine, size_t N, typename T>
+template <typename RandomEngine, std::size_t N, typename T>
 Vector<N, T> random_cosine_weighted_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal)
 {
         static_assert(N > 2);
@@ -117,7 +117,7 @@ Vector<N, T> random_cosine_weighted_on_hemisphere(RandomEngine& random_engine, c
 }
 
 #if 0
-template <size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> random_in_sphere(RandomEngine& random_engine)
 {
         std::uniform_real_distribution<T> urd(-1, 1);
@@ -133,7 +133,7 @@ Vector<N, T> random_in_sphere(RandomEngine& random_engine)
         }
 }
 
-template <size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> random_in_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal)
 {
         Vector<N, T> v = random_in_sphere<N, T>(random_engine);

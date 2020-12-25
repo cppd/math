@@ -42,53 +42,53 @@ namespace ns::painter
 namespace parallelotope_aa_implementation
 {
 // Вспомогательная функция для следующей после неё функции
-template <typename T, size_t ValueIndex, size_t... I>
-constexpr Vector<sizeof...(I), T> index_vector_impl(T value, std::integer_sequence<size_t, I...>)
+template <typename T, std::size_t ValueIndex, std::size_t... I>
+constexpr Vector<sizeof...(I), T> index_vector_impl(T value, std::integer_sequence<std::size_t, I...>)
 {
         return Vector<sizeof...(I), T>((I == ValueIndex ? value : 0)...);
 }
 // Вектор, в котором координата с индексом ValueIndex равна value, а остальные координаты равны 0
-template <size_t N, typename T, size_t ValueIndex>
+template <std::size_t N, typename T, std::size_t ValueIndex>
 constexpr Vector<N, T> index_vector(T value)
 {
-        return index_vector_impl<T, ValueIndex>(value, std::make_integer_sequence<size_t, N>());
+        return index_vector_impl<T, ValueIndex>(value, std::make_integer_sequence<std::size_t, N>());
 }
 
 //
 
 // Вспомогательная функция для следующей после неё функции
-template <typename T, size_t... I>
-constexpr Vector<sizeof...(I), T> index_vector_impl(unsigned index, T value, std::integer_sequence<size_t, I...>)
+template <typename T, std::size_t... I>
+constexpr Vector<sizeof...(I), T> index_vector_impl(unsigned index, T value, std::integer_sequence<std::size_t, I...>)
 {
         return Vector<sizeof...(I), T>((I == index ? value : 0)...);
 }
 // Вектор, в котором координата с индексом index равна value, а остальные координаты равны 0
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 constexpr Vector<N, T> index_vector(unsigned index, T value)
 {
-        return index_vector_impl<T>(index, value, std::make_integer_sequence<size_t, N>());
+        return index_vector_impl<T>(index, value, std::make_integer_sequence<std::size_t, N>());
 }
 
 //
 
 // Вспомогательная функция для следующей после неё функции
-template <typename T, size_t... I>
+template <typename T, std::size_t... I>
 constexpr std::array<Vector<sizeof...(I), T>, sizeof...(I)> index_vectors_impl(
         T value,
-        std::integer_sequence<size_t, I...>)
+        std::integer_sequence<std::size_t, I...>)
 {
         return {index_vector<sizeof...(I), T, I>(value)...};
 }
 // Массив векторов, в котором вектор с индексом i имеет координату с индексом i, равную value.
 // Пример: {( value, 0, 0), (0,  value, 0), (0, 0,  value)},
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 constexpr std::array<Vector<N, T>, N> index_vectors(T value)
 {
-        return index_vectors_impl<T>(value, std::make_integer_sequence<size_t, N>());
+        return index_vectors_impl<T>(value, std::make_integer_sequence<std::size_t, N>());
 }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class ParallelotopeAA final
 {
         static_assert(N >= 2);
@@ -132,8 +132,8 @@ class ParallelotopeAA final
         void vertices_impl(Vector<N, T>* p, const F& f) const;
 
 public:
-        static constexpr size_t SPACE_DIMENSION = N;
-        static constexpr size_t SHAPE_DIMENSION = N;
+        static constexpr std::size_t SPACE_DIMENSION = N;
+        static constexpr std::size_t SHAPE_DIMENSION = N;
 
         using DataType = T;
 
@@ -169,7 +169,7 @@ public:
         Vector<N, T> max() const;
 };
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 template <typename... P>
 ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const P&... sizes)
         : ParallelotopeAA(org, std::array<T, N>{sizes...})
@@ -178,7 +178,7 @@ ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const P&... size
         static_assert(sizeof...(P) == N);
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const std::array<T, N>& sizes)
 {
         for (unsigned i = 0; i < N; ++i)
@@ -195,7 +195,7 @@ ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const std::array
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& min, const Vector<N, T>& max)
 {
         for (unsigned i = 0; i < N; ++i)
@@ -212,14 +212,14 @@ ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& min, const Vector<N, 
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 T ParallelotopeAA<N, T>::size(unsigned i) const
 {
         return m_planes[i].d2 - m_planes[i].d1;
 }
 
 // Неравенства в виде b + a * x >= 0, задающие множество точек параллелотопа.
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Constraints<N, T, 2 * N, 0> ParallelotopeAA<N, T>::constraints() const
 {
         Constraints<N, T, 2 * N, 0> result;
@@ -239,7 +239,7 @@ Constraints<N, T, 2 * N, 0> ParallelotopeAA<N, T>::constraints() const
         return result;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second) const
 {
         T f_max = limits<T>::lowest();
@@ -291,7 +291,7 @@ bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* seco
         return true;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::optional<T> ParallelotopeAA<N, T>::intersect(const Ray<N, T>& r) const
 {
         T first;
@@ -303,7 +303,7 @@ std::optional<T> ParallelotopeAA<N, T>::intersect(const Ray<N, T>& r) const
         return std::nullopt;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::optional<T> ParallelotopeAA<N, T>::intersect_farthest(const Ray<N, T>& r) const
 {
         T first;
@@ -315,7 +315,7 @@ std::optional<T> ParallelotopeAA<N, T>::intersect_farthest(const Ray<N, T>& r) c
         return std::nullopt;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::optional<T> ParallelotopeAA<N, T>::intersect_volume(const Ray<N, T>& r) const
 {
         T first;
@@ -327,7 +327,7 @@ std::optional<T> ParallelotopeAA<N, T>::intersect_volume(const Ray<N, T>& r) con
         return std::nullopt;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& p) const
 {
         // К какой плоскости точка ближе, такой и перпендикуляр в точке
@@ -359,7 +359,7 @@ Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& p) const
         return n;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 bool ParallelotopeAA<N, T>::inside(const Vector<N, T>& p) const
 {
         for (unsigned i = 0; i < N; ++i)
@@ -377,7 +377,7 @@ bool ParallelotopeAA<N, T>::inside(const Vector<N, T>& p) const
         return true;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 template <int INDEX, typename F>
 void ParallelotopeAA<N, T>::binary_division_impl(std::array<Planes, N>* p, const Vector<N, T>& middle_d, const F& f)
         const
@@ -397,7 +397,7 @@ void ParallelotopeAA<N, T>::binary_division_impl(std::array<Planes, N>* p, const
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<ParallelotopeAA<N, T>, ParallelotopeAA<N, T>::DIVISIONS> ParallelotopeAA<N, T>::binary_division() const
 {
         std::array<ParallelotopeAA, DIVISIONS> result;
@@ -423,7 +423,7 @@ std::array<ParallelotopeAA<N, T>, ParallelotopeAA<N, T>::DIVISIONS> Parallelotop
         return result;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 template <int INDEX, typename F>
 void ParallelotopeAA<N, T>::vertices_impl(Vector<N, T>* p, const F& f) const
 {
@@ -440,7 +440,7 @@ void ParallelotopeAA<N, T>::vertices_impl(Vector<N, T>* p, const F& f) const
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<Vector<N, T>, ParallelotopeAA<N, T>::VERTEX_COUNT> ParallelotopeAA<N, T>::vertices() const
 {
         std::array<Vector<N, T>, VERTEX_COUNT> result;
@@ -460,7 +460,7 @@ std::array<Vector<N, T>, ParallelotopeAA<N, T>::VERTEX_COUNT> ParallelotopeAA<N,
         return result;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<std::array<Vector<N, T>, 2>, ParallelotopeAA<N, T>::VERTEX_RIDGE_COUNT> ParallelotopeAA<N, T>::
         vertex_ridges() const
 {
@@ -495,7 +495,7 @@ std::array<std::array<Vector<N, T>, 2>, ParallelotopeAA<N, T>::VERTEX_RIDGE_COUN
         return result;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 T ParallelotopeAA<N, T>::length() const
 {
         Vector<N, T> s;
@@ -506,7 +506,7 @@ T ParallelotopeAA<N, T>::length() const
         return s.norm();
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> ParallelotopeAA<N, T>::org() const
 {
         Vector<N, T> v;
@@ -517,14 +517,14 @@ Vector<N, T> ParallelotopeAA<N, T>::org() const
         return v;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> ParallelotopeAA<N, T>::e(unsigned n) const
 {
         ASSERT(n < N);
         return parallelotope_aa_implementation::index_vector<N, T>(n, size(n));
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> ParallelotopeAA<N, T>::min() const
 {
         Vector<N, T> v;
@@ -535,7 +535,7 @@ Vector<N, T> ParallelotopeAA<N, T>::min() const
         return v;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> ParallelotopeAA<N, T>::max() const
 {
         Vector<N, T> v;
@@ -549,7 +549,7 @@ Vector<N, T> ParallelotopeAA<N, T>::max() const
 
 namespace ns
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::string to_string(const painter::ParallelotopeAA<N, T>& p)
 {
         std::string s;

@@ -39,7 +39,7 @@ namespace scene_implementation
 {
 constexpr int TREE_MIN_OBJECTS_PER_BOX = 10;
 
-template <size_t N>
+template <std::size_t N>
 int tree_max_depth()
 {
         static_assert(N >= 3);
@@ -77,11 +77,11 @@ std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
         return result;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 BoundingBox<N, T> compute_bounding_box(const std::vector<const Shape<N, T>*>& shapes)
 {
         BoundingBox<N, T> bb = shapes[0]->bounding_box();
-        for (size_t i = 1; i < shapes.size(); ++i)
+        for (std::size_t i = 1; i < shapes.size(); ++i)
         {
                 BoundingBox<N, T> shape_bb = shapes[i]->bounding_box();
                 bb.min = min_vector(bb.min, shape_bb.min);
@@ -90,7 +90,7 @@ BoundingBox<N, T> compute_bounding_box(const std::vector<const Shape<N, T>*>& sh
         return bb;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 struct BoundingIntersection
 {
         T distance;
@@ -106,7 +106,7 @@ struct BoundingIntersection
         }
 };
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::optional<Intersection<N, T>> ray_intersect(
         const std::vector<const Shape<N, T>*>& shapes,
         const std::vector<int>& indices,
@@ -169,7 +169,7 @@ std::optional<Intersection<N, T>> ray_intersect(
         return intersection;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void create_tree(
         const std::vector<const Shape<N, T>*>& shapes,
         const BoundingBox<N, T>& bounding_box,
@@ -208,7 +208,7 @@ void create_tree(
 }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class StorageScene final : public Scene<N, T>
 {
         std::vector<std::unique_ptr<const Shape<N, T>>> m_shapes;

@@ -34,7 +34,7 @@ namespace
 {
 // Количество лучей на один пиксель в одном проходе
 constexpr int PAINTER_DEFAULT_SAMPLE_COUNT = 25;
-template <size_t N>
+template <std::size_t N>
 constexpr int PAINTER_MAXIMUM_SAMPLE_COUNT = power<N - 1>(10u);
 
 // Максимальный размер экрана в пикселях для 3 измерений
@@ -45,7 +45,7 @@ constexpr int PAINTER_DEFAULT_SCREEN_SIZE_ND = 500;
 constexpr int PAINTER_MINIMUM_SCREEN_SIZE_ND = 50;
 constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_ND = 5000;
 
-template <size_t N>
+template <std::size_t N>
 std::function<void(ProgressRatioList*)> action_painter_function(
         const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
         const view::info::Camera& camera,
@@ -155,12 +155,12 @@ std::function<void(ProgressRatioList*)> action_painter(
         const Color& background_color,
         const Color::DataType& lighting_intensity)
 {
-        std::set<size_t> dimensions;
+        std::set<std::size_t> dimensions;
         std::vector<storage::MeshObjectConst> visible_objects;
         for (const storage::MeshObjectConst& storage_object : objects)
         {
                 std::visit(
-                        [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& object)
+                        [&]<std::size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& object)
                         {
                                 if (object->visible())
                                 {
@@ -183,13 +183,13 @@ std::function<void(ProgressRatioList*)> action_painter(
 
         return apply_for_dimension(
                 *dimensions.cbegin(),
-                [&]<size_t N>(const Dimension<N>&)
+                [&]<std::size_t N>(const Dimension<N>&)
                 {
                         std::vector<std::shared_ptr<const mesh::MeshObject<N>>> meshes;
                         for (storage::MeshObjectConst& visible_object : visible_objects)
                         {
                                 std::visit(
-                                        [&]<size_t M>(std::shared_ptr<const mesh::MeshObject<M>>&& object)
+                                        [&]<std::size_t M>(std::shared_ptr<const mesh::MeshObject<M>>&& object)
                                         {
                                                 if constexpr (N == M)
                                                 {

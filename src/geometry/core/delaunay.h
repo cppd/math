@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-template <size_t N>
+template <std::size_t N>
 class DelaunayFacet
 {
         // Для пространства размерности N грань имеет N вершин
@@ -64,7 +64,7 @@ public:
         }
 };
 
-template <size_t N>
+template <std::size_t N>
 class DelaunayObject
 {
         // Для пространства размерности N объект имеет N + 1 вершин
@@ -85,7 +85,7 @@ public:
         }
 };
 
-template <size_t N>
+template <std::size_t N>
 void create_delaunay_objects_and_facets(
         const std::vector<vec<N>>& points,
         const std::vector<DelaunaySimplex<N>>& simplices,

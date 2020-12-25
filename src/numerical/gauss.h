@@ -34,7 +34,7 @@ namespace ns::numerical
 {
 namespace gauss_implementation
 {
-template <size_t N, typename T, template <size_t, size_t, typename> typename Matrix>
+template <std::size_t N, typename T, template <std::size_t, std::size_t, typename> typename Matrix>
 int find_pivot(const Matrix<N, N, T>& A, int column, int from_row)
 {
         T max = std::abs(A(from_row, column));
@@ -55,11 +55,11 @@ int find_pivot(const Matrix<N, N, T>& A, int column, int from_row)
 // input: A * x = b.
 // output: b = x; A = upper triangular.
 template <
-        size_t Size,
+        std::size_t Size,
         typename T,
-        template <size_t, size_t, typename>
+        template <std::size_t, std::size_t, typename>
         typename Matrix,
-        template <size_t, typename>
+        template <std::size_t, typename>
         typename Vector>
 void solve_gauss(Matrix<Size, Size, T>* A_p, Vector<Size, T>* b_p)
 {
@@ -106,7 +106,12 @@ void solve_gauss(Matrix<Size, Size, T>* A_p, Vector<Size, T>* b_p)
 
 // Тоже самое, что и для одного столбца b, только сразу для SizeB столбцов B.
 // Если B является единичной матрицей, то в B будет обратная к A матрица.
-template <size_t SizeA, size_t SizeB, typename T, template <size_t, size_t, typename> typename Matrix>
+template <
+        std::size_t SizeA,
+        std::size_t SizeB,
+        typename T,
+        template <std::size_t, std::size_t, typename>
+        typename Matrix>
 void solve_gauss(Matrix<SizeA, SizeA, T>* A_p, Matrix<SizeA, SizeB, T>* B_p)
 {
         static_assert(is_floating_point<T>);
@@ -164,7 +169,7 @@ void solve_gauss(Matrix<SizeA, SizeA, T>* A_p, Matrix<SizeA, SizeB, T>* B_p)
         }
 }
 
-template <size_t Size, typename T, template <size_t, size_t, typename> typename Matrix>
+template <std::size_t Size, typename T, template <std::size_t, std::size_t, typename> typename Matrix>
 T determinant_gauss(Matrix<Size, Size, T>* A_p)
 {
         static_assert(is_floating_point<T>);

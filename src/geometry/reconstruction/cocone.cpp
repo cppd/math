@@ -47,7 +47,7 @@ namespace
 constexpr double RHO_MIN = 0, RHO_MAX = 1;
 constexpr double ALPHA_MIN = 0, ALPHA_MAX = 1;
 
-template <size_t N>
+template <std::size_t N>
 bool cocone_facet(const std::vector<ManifoldFacet<N>>& facet_data, int facet)
 {
         // Грань считается cocone, если соответствующее ей ребро Вороного пересекает cocone всех N вершин
@@ -61,7 +61,7 @@ bool cocone_facet(const std::vector<ManifoldFacet<N>>& facet_data, int facet)
         return true;
 }
 
-template <size_t N>
+template <std::size_t N>
 void find_cocone_facets(const std::vector<ManifoldFacet<N>>& facet_data, std::vector<bool>* cocone_facets)
 {
         cocone_facets->clear();
@@ -74,14 +74,14 @@ void find_cocone_facets(const std::vector<ManifoldFacet<N>>& facet_data, std::ve
 }
 
 // В книге это Definition 5.4 (i)
-template <size_t N>
+template <std::size_t N>
 bool ratio_condition(const ManifoldVertex<N>& vertex, double rho)
 {
         return vertex.radius <= rho * vertex.height;
 }
 
 // В книге это Definition 5.4 (ii)
-template <size_t N>
+template <std::size_t N>
 bool normal_condition(const ManifoldVertex<N>& v1, const ManifoldVertex<N>& v2, double cos_of_alpha)
 {
         double cos_of_angle = dot(v1.positive_norm, v2.positive_norm);
@@ -92,7 +92,7 @@ bool normal_condition(const ManifoldVertex<N>& v1, const ManifoldVertex<N>& v2, 
         return std::abs(cos_of_angle) >= cos_of_alpha;
 }
 
-template <size_t N>
+template <std::size_t N>
 void find_interior_vertices(
         double rho,
         double cosine_of_alpha,
@@ -183,7 +183,7 @@ void find_interior_vertices(
             + ")");
 }
 
-template <size_t N>
+template <std::size_t N>
 bool cocone_interior_facet(
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         const std::vector<ManifoldFacet<N>>& facet_data,
@@ -210,7 +210,7 @@ bool cocone_interior_facet(
         return found;
 }
 
-template <size_t N>
+template <std::size_t N>
 void find_cocone_interior_facets(
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         const std::vector<ManifoldFacet<N>>& facet_data,
@@ -228,7 +228,7 @@ void find_cocone_interior_facets(
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void create_normals_and_facets(
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         const std::vector<bool>& cocone_facets,
@@ -264,7 +264,7 @@ void create_normals_and_facets(
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void create_voronoi_delaunay(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<vec<N>>* points,
@@ -294,7 +294,7 @@ void check_rho_and_aplha(double rho, double alpha)
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldConstructorCocone<N>
 {
         const bool m_cocone_only;
@@ -443,7 +443,7 @@ public:
 };
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(
         const std::vector<Vector<N, float>>& source_points,
         ProgressRatio* progress)
@@ -451,7 +451,7 @@ std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(
         return std::make_unique<ManifoldConstructorImpl<N>>(source_points, false, progress);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone(
         const std::vector<Vector<N, float>>& source_points,
         ProgressRatio* progress)

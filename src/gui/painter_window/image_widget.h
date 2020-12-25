@@ -36,7 +36,7 @@ private:
         const Pixels* m_pixels;
 
         const long long m_image_2d_pixel_count;
-        const size_t m_image_2d_byte_count;
+        const std::size_t m_image_2d_byte_count;
         QImage m_image_2d;
 
         QAction* m_show_threads_action = nullptr;

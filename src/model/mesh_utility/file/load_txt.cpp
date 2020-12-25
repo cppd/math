@@ -35,7 +35,7 @@ namespace
 // Чтение вершин из текстового файла. Одна вершина на строку. Координаты через пробел.
 // x0 x1 x2 x3 ...
 // x0 x1 x2 x3 ...
-template <size_t N>
+template <std::size_t N>
 void read_points_thread(
         unsigned thread_num,
         unsigned thread_count,
@@ -78,7 +78,7 @@ void read_points_thread(
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void read_points(
         std::vector<Vector<N, float>>* vertices,
         const std::filesystem::path& file_name,
@@ -105,7 +105,7 @@ void read_points(
         threads.join();
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<Mesh<N>> read_text(const std::filesystem::path& file_name, ProgressRatio* progress)
 {
         progress->set_undefined();
@@ -131,7 +131,7 @@ std::unique_ptr<Mesh<N>> read_text(const std::filesystem::path& file_name, Progr
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<Mesh<N>> load_from_txt_file(const std::filesystem::path& file_name, ProgressRatio* progress)
 {
         TimePoint start_time = time();

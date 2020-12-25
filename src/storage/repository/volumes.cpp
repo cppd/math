@@ -33,7 +33,7 @@ namespace
 {
 constexpr unsigned MAXIMUM_VOLUME_SIZE = 1'000'000'000;
 
-template <size_t N>
+template <std::size_t N>
 void check_volume_size(unsigned size)
 {
         if (size < 2)
@@ -50,12 +50,12 @@ void check_volume_size(unsigned size)
         }
 }
 
-template <size_t N, size_t Level, typename F>
+template <std::size_t N, std::size_t Level, typename F>
 void image_coordinates(const std::array<int, N>& size, Vector<N, float>* coordinates, const F& f)
 {
         static_assert(Level < N);
 
-        constexpr size_t D = N - Level - 1;
+        constexpr std::size_t D = N - Level - 1;
 
         ASSERT(size[D] > 0);
         ASSERT(size[D] <= 1e6);
@@ -78,14 +78,14 @@ void image_coordinates(const std::array<int, N>& size, Vector<N, float>* coordin
         }
 }
 
-template <size_t N, typename F>
+template <std::size_t N, typename F>
 void image_coordinates(const std::array<int, N>& size, const F& f)
 {
         Vector<N, float> coordinates;
         image_coordinates<N, 0>(size, &coordinates, f);
 }
 
-template <size_t N>
+template <std::size_t N>
 void init_volume(const std::array<int, N>& size, image::ColorFormat color_format, volume::Volume<N>* volume)
 {
         volume->image.size = size;
@@ -103,7 +103,7 @@ I float_to_uint(F v)
         return v * F(limits<I>::max()) + F(0.5);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<volume::Volume<N>> scalar_cube(unsigned size)
 {
         constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R16;
@@ -150,7 +150,7 @@ std::unique_ptr<volume::Volume<N>> scalar_cube(unsigned size)
         return std::make_unique<volume::Volume<N>>(std::move(volume));
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<volume::Volume<N>> scalar_ellipsoid(unsigned size)
 {
         constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R16;
@@ -195,7 +195,7 @@ std::unique_ptr<volume::Volume<N>> scalar_ellipsoid(unsigned size)
         return std::make_unique<volume::Volume<N>>(std::move(volume));
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<volume::Volume<N>> color_cube(unsigned size)
 {
         static_assert(N >= 3);
@@ -223,7 +223,7 @@ std::unique_ptr<volume::Volume<N>> color_cube(unsigned size)
                 volume.image.size,
                 [&](const Vector<N, float>& coordinates)
                 {
-                        for (size_t n = 0; n < N; ++n)
+                        for (std::size_t n = 0; n < N; ++n)
                         {
                                 float c = coordinates[n] / (1 << (n / 3));
                                 color[n % 3] = float_to_uint<uint8_t>(c);
@@ -251,7 +251,7 @@ std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
         return names;
 }
 
-template <size_t N>
+template <std::size_t N>
 class Impl final : public VolumeObjectRepository<N>
 {
         std::map<std::string, std::function<std::unique_ptr<volume::Volume<N>>(unsigned)>> m_map;
@@ -281,7 +281,7 @@ public:
 };
 }
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<VolumeObjectRepository<N>> create_volume_object_repository()
 {
         return std::make_unique<Impl<N>>();

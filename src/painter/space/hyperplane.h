@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::optional<T> hyperplane_intersect(
         const Ray<N, T>& ray,
         const Vector<N, T>& plane_point,

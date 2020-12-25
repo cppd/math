@@ -69,7 +69,7 @@ void compare(
 
         double sum = 0;
         double sum2 = 0;
-        for (size_t i = 0; i < x_compute.size(); ++i)
+        for (std::size_t i = 0; i < x_compute.size(); ++i)
         {
                 sum += std::abs(x_compute[i] - x_library[i]);
                 sum2 += std::abs(x_compute[i]);

@@ -31,7 +31,7 @@ class ShapeWrapperForIntersection final
         // Для меньшего количества измерений есть второй класс
         static_assert(Shape::SPACE_DIMENSION >= 4);
 
-        static constexpr size_t N = Shape::SPACE_DIMENSION;
+        static constexpr std::size_t N = Shape::SPACE_DIMENSION;
 
         using T = typename Shape::DataType;
         using Vertices = decltype(std::declval<Shape>().vertices());
@@ -42,12 +42,12 @@ class ShapeWrapperForIntersection final
         Constraints m_constraints;
         Vector<N, T> m_min;
 
-        template <size_t ArraySize, typename T, size_t N>
+        template <std::size_t ArraySize, typename T, std::size_t N>
         static Vector<N, T> find_min_vector(const std::array<Vector<N, T>, ArraySize>& vectors)
         {
                 static_assert(ArraySize > 0);
                 Vector<N, T> min = vectors[0];
-                for (size_t i = 1; i < ArraySize; ++i)
+                for (std::size_t i = 1; i < ArraySize; ++i)
                 {
                         min = min_vector(vectors[i], min);
                 }
@@ -55,8 +55,8 @@ class ShapeWrapperForIntersection final
         }
 
 public:
-        static constexpr size_t SPACE_DIMENSION = Shape::SPACE_DIMENSION;
-        static constexpr size_t SHAPE_DIMENSION = Shape::SHAPE_DIMENSION;
+        static constexpr std::size_t SPACE_DIMENSION = Shape::SPACE_DIMENSION;
+        static constexpr std::size_t SHAPE_DIMENSION = Shape::SHAPE_DIMENSION;
         using DataType = T;
 
         explicit ShapeWrapperForIntersection(const Shape& s)
@@ -94,7 +94,7 @@ class ShapeWrapperForIntersection<Shape, std::enable_if_t<Shape::SPACE_DIMENSION
 {
         static_assert(Shape::SPACE_DIMENSION == 3 || Shape::SPACE_DIMENSION == 2);
 
-        static constexpr size_t N = Shape::SPACE_DIMENSION;
+        static constexpr std::size_t N = Shape::SPACE_DIMENSION;
 
         using T = typename Shape::DataType;
         using Vertices = decltype(std::declval<Shape>().vertices());
@@ -105,8 +105,8 @@ class ShapeWrapperForIntersection<Shape, std::enable_if_t<Shape::SPACE_DIMENSION
         VertexRidges m_vertex_ridges;
 
 public:
-        static constexpr size_t SPACE_DIMENSION = Shape::SPACE_DIMENSION;
-        static constexpr size_t SHAPE_DIMENSION = Shape::SHAPE_DIMENSION;
+        static constexpr std::size_t SPACE_DIMENSION = Shape::SPACE_DIMENSION;
+        static constexpr std::size_t SHAPE_DIMENSION = Shape::SHAPE_DIMENSION;
         using DataType = T;
 
         explicit ShapeWrapperForIntersection(const Shape& s)

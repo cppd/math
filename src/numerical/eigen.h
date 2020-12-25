@@ -37,14 +37,14 @@ namespace ns::numerical
 {
 namespace jacobi_method_implementation
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 T threshold(const Matrix<N, N, T>& a)
 {
         static_assert(N > 0);
         T sum = 0;
-        for (size_t i = 0; i < N - 1; ++i)
+        for (std::size_t i = 0; i < N - 1; ++i)
         {
-                for (size_t j = i + 1; j < N; ++j)
+                for (std::size_t j = i + 1; j < N; ++j)
                 {
                         sum += std::abs(a(i, j));
                 }
@@ -52,7 +52,7 @@ T threshold(const Matrix<N, N, T>& a)
         return T(0.5) * sum / (N * (N - 1));
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void rotate(unsigned k, unsigned l, Matrix<N, N, T>* m, std::array<Vector<N, T>, N>* eigenvectors)
 {
         Matrix<N, N, T>& a = *m;
@@ -112,7 +112,7 @@ void rotate(unsigned k, unsigned l, Matrix<N, N, T>* m, std::array<Vector<N, T>,
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void set_identity_matrix(std::array<Vector<N, T>, N>* eigenvectors)
 {
         for (unsigned i = 0; i < N; ++i)
@@ -137,7 +137,7 @@ public:
         }
 };
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void eigen_symmetric_upper_triangular(
         Matrix<N, N, T> a,
         T tolerance,

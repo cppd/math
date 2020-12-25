@@ -77,7 +77,7 @@ void image_barrier(
 
         std::vector<VkImageMemoryBarrier> barriers(images.size());
 
-        for (size_t i = 0; i < images.size(); ++i)
+        for (std::size_t i = 0; i < images.size(); ++i)
         {
                 barriers[i] = {};
 
@@ -209,7 +209,7 @@ class Impl final : public Compute
                 buffers.reserve(sizes.size() - 1);
 
                 const std::unordered_set<uint32_t> family_indices({family_index});
-                for (size_t i = 1; i < sizes.size(); ++i)
+                for (std::size_t i = 1; i < sizes.size(); ++i)
                 {
                         const int buffer_size = sizes[i][0] * sizes[i][1] * sizeof(vec2f);
                         buffers.emplace_back(
@@ -252,7 +252,7 @@ class Impl final : public Compute
 
                 std::vector<SobelMemory> sobel_images;
 
-                for (size_t i = 0; i < images[0].size(); ++i)
+                for (std::size_t i = 0; i < images[0].size(); ++i)
                 {
                         sobel_images.emplace_back(device, descriptor_set_layout);
                         sobel_images.back().set_i(images[0][i], images[1][i]);
@@ -278,7 +278,7 @@ class Impl final : public Compute
                 const std::vector<vulkan::ImageWithMemory>& dx,
                 const std::vector<vulkan::ImageWithMemory>& dy)
         {
-                const size_t size = sizes.size();
+                const std::size_t size = sizes.size();
 
                 if (size <= 1)
                 {
@@ -291,7 +291,7 @@ class Impl final : public Compute
                 ASSERT(dy.size() == size);
 
                 ASSERT(flow_buffers.size() + 1 == size);
-                const auto flow_index = [&](size_t i)
+                const auto flow_index = [&](std::size_t i)
                 {
                         ASSERT(i > 0 && i < size);
                         return i - 1; // буферы начинаются с уровня 1
@@ -301,7 +301,7 @@ class Impl final : public Compute
 
                 std::vector<FlowMemory> flow_memory;
 
-                for (size_t i = 0; i < size; ++i)
+                for (std::size_t i = 0; i < size; ++i)
                 {
                         const vulkan::BufferWithMemory* top_points_ptr;
                         const vulkan::BufferWithMemory* flow_ptr;

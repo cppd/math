@@ -23,6 +23,6 @@ namespace ns::process
 {
 inline constexpr double SCENE_SIZE = 2;
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 inline constexpr Vector<N, T> SCENE_CENTER = Vector<N, T>(0);
 }

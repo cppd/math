@@ -52,16 +52,16 @@ enum class Algorithms
         BoundCocone
 };
 
-template <typename T, size_t... I, typename V>
-constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_sequence<size_t, I...>&&)
+template <typename T, std::size_t... I, typename V>
+constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_sequence<std::size_t, I...>&&)
 {
         return {(static_cast<void>(I), 0)..., std::forward<V>(value)};
 }
 
-template <size_t N, typename T>
-constexpr Vector<N, T> LAST_AXIS = make_last_axis<T>(1, std::make_integer_sequence<size_t, N - 1>());
+template <std::size_t N, typename T>
+constexpr Vector<N, T> LAST_AXIS = make_last_axis<T>(1, std::make_integer_sequence<std::size_t, N - 1>());
 
-template <size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> random_on_sphere(RandomEngine& engine)
 {
         static_assert(std::is_floating_point_v<T>);
@@ -74,7 +74,7 @@ Vector<N, T> random_on_sphere(RandomEngine& engine)
         return v.normalized();
 }
 
-template <size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> random_on_sphere(RandomEngine& engine, bool bound)
 {
         if (!bound)
@@ -91,7 +91,7 @@ Vector<N, T> random_on_sphere(RandomEngine& engine, bool bound)
 
 // Точки на сфере с углублением со стороны последней оси
 // в положительном направлении этой оси
-template <size_t N>
+template <std::size_t N>
 std::vector<Vector<N, float>> points_sphere_with_notch(unsigned point_count, bool bound)
 {
         std::mt19937_64 engine(point_count);
@@ -114,7 +114,7 @@ std::vector<Vector<N, float>> points_sphere_with_notch(unsigned point_count, boo
         return points;
 }
 
-template <size_t N>
+template <std::size_t N>
 constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
 {
         static_assert(2 <= N && N <= 4);
@@ -150,7 +150,7 @@ constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void test_obj_file(
         const mesh::Mesh<N>& mesh,
         std::filesystem::path file_name,
@@ -202,7 +202,7 @@ void test_obj_file(
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void test_stl_file(
         const mesh::Mesh<N>& mesh,
         std::filesystem::path file_name,
@@ -233,7 +233,7 @@ void test_stl_file(
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void test_geometry_files(
         const std::string& name,
         const std::vector<Vector<N, float>>& points,
@@ -273,7 +273,7 @@ void test_geometry_files(
 {
 }
 
-template <size_t N>
+template <std::size_t N>
 std::vector<Vector<N, float>> clone_object(
         const std::vector<Vector<N, float>>& points,
         unsigned new_object_count,
@@ -305,7 +305,7 @@ std::vector<Vector<N, float>> clone_object(
         return clones;
 }
 
-template <size_t N>
+template <std::size_t N>
 void test_algorithms(
         const std::string& name,
         const std::unordered_set<Algorithms>& algorithms,
@@ -382,7 +382,7 @@ void test_algorithms(
         LOG("Successful manifold reconstruction in " + space_name(N));
 }
 
-template <size_t N>
+template <std::size_t N>
 void all_tests(
         const std::string& name,
         const std::unordered_set<Algorithms>& algorithms,
@@ -431,7 +431,7 @@ void all_tests(
                 facets_max, bound_facets_min, bound_facets_max, progress);
 }
 
-template <size_t N>
+template <std::size_t N>
 void test(int low, int high, ProgressRatio* progress)
 {
         thread_local std::mt19937_64 engine = create_engine<std::mt19937_64>();

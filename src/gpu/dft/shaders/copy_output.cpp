@@ -138,7 +138,7 @@ const void* CopyOutputConstant::data() const
         return &m_data;
 }
 
-size_t CopyOutputConstant::size() const
+std::size_t CopyOutputConstant::size() const
 {
         return sizeof(m_data);
 }

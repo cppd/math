@@ -71,7 +71,7 @@ std::string time_string(double time)
 
 class Face
 {
-        static size_t hash(const vec3f& p, const vec3f& n, const vec2f& t)
+        static std::size_t hash(const vec3f& p, const vec3f& n, const vec2f& t)
         {
                 return pack_hash(p[0], p[1], p[2], n[0], n[1], n[2], t[0], t[1]);
         }
@@ -86,7 +86,7 @@ public:
         struct VertexWithHash
         {
                 Vertex v;
-                size_t hash;
+                std::size_t hash;
         };
 
         std::array<VertexWithHash, 3> vertices;
@@ -112,7 +112,7 @@ public:
         {
         }
 
-        size_t hash() const noexcept
+        std::size_t hash() const noexcept
         {
                 return m_data->hash;
         }
@@ -124,7 +124,7 @@ public:
 
         struct Hash
         {
-                size_t operator()(const MapVertex& v) const
+                std::size_t operator()(const MapVertex& v) const
                 {
                         return v.hash();
                 }
@@ -162,8 +162,8 @@ void load_vertices(
 
         const auto function = [&](std::atomic_size_t& task)
         {
-                size_t size = sorted_face_indices.size();
-                size_t index = 0;
+                std::size_t size = sorted_face_indices.size();
+                std::size_t index = 0;
                 while ((index = task++) < size)
                 {
                         std::array<vec3f, 3> p;

@@ -95,7 +95,7 @@ T interpolation(
         return interpolation(t0, t1, t2, t3, t4, t5, t6, t7, y, z, w);
 }
 
-template <size_t N, typename T, typename F>
+template <std::size_t N, typename T, typename F>
 T interpolation(const std::array<T, (1 << N)>& data, const std::array<F, N>& p)
 {
         static_assert(N > 0);
@@ -136,16 +136,16 @@ T interpolation(const std::array<T, (1 << N)>& data, const std::array<F, N>& p)
 
         if constexpr (N >= 5)
         {
-                constexpr size_t next_n = N - 1;
+                constexpr std::size_t next_n = N - 1;
                 std::array<T, (1 << next_n)> tmp_data;
                 std::array<F, next_n> tmp_p;
 
-                for (size_t i = 0; i < data.size(); i += 2)
+                for (std::size_t i = 0; i < data.size(); i += 2)
                 {
                         tmp_data[i >> 1] = interpolation(data[i], data[i + 1], p[0]);
                 }
 
-                for (size_t i = 1; i < p.size(); ++i)
+                for (std::size_t i = 1; i < p.size(); ++i)
                 {
                         tmp_p[i - 1] = p[i];
                 }

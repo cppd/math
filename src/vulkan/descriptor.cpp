@@ -97,7 +97,7 @@ VkWriteDescriptorSet create_write_descriptor_set(
 std::unordered_map<uint32_t, uint32_t> create_binding_map(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
         std::unordered_map<uint32_t, uint32_t> map;
-        for (size_t index = 0; index < bindings.size(); ++index)
+        for (std::size_t index = 0; index < bindings.size(); ++index)
         {
                 if (!map.emplace(bindings[index].binding, index).second)
                 {
@@ -196,7 +196,7 @@ void Descriptors::update_descriptor_set(
         VkDescriptorSet descriptor_set = m_descriptor_sets[index];
 
         std::vector<VkWriteDescriptorSet> write(bindings.size());
-        for (size_t i = 0; i < bindings.size(); ++i)
+        for (std::size_t i = 0; i < bindings.size(); ++i)
         {
                 write[i] =
                         create_write_descriptor_set(descriptor_set, layout_binding(bindings[i]), descriptor_infos[i]);

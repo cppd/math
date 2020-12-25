@@ -49,7 +49,7 @@ namespace ns::painter
 {
 namespace spatial_subdivision_tree_implementation
 {
-template <size_t DIMENSION>
+template <std::size_t DIMENSION>
 inline constexpr int BOX_COUNT = 1u << DIMENSION;
 
 template <typename Parallelotope>

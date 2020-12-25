@@ -90,7 +90,7 @@ bool cocone_inside_or_equal(T... cos_n_p)
         + t⁰ × ((a⋅n)² - a²×cos²(alpha))
           = 0
 */
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 bool intersect_cocone(
         const Vector<N, T>& normalized_cone_axis,
         const Vector<N, T>& from_apex_to_point_a,

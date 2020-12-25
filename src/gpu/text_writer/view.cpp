@@ -219,7 +219,7 @@ class Impl final : public View
                 static_assert(std::is_same_v<decltype(text::TextVertex::v), decltype(Vertex::window_coordinates)>);
                 static_assert(std::is_same_v<decltype(text::TextVertex::t), decltype(Vertex::texture_coordinates)>);
 
-                const size_t data_size = storage_size(vertices);
+                const std::size_t data_size = storage_size(vertices);
 
                 if (m_vertex_buffer->size() < data_size)
                 {

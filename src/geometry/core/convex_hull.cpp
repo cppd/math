@@ -96,7 +96,7 @@ constexpr int ORDINARY_BITS = 30;
 constexpr int PARABOLOID_BITS = 24;
 
 // Максимальное значение определителя с размещением последней координаты на параболоиде по значениям других координат
-template <size_t N, size_t BITS>
+template <std::size_t N, std::size_t BITS>
 constexpr int max_paraboloid_determinant()
 {
         // Например, при N = 4
@@ -122,7 +122,7 @@ constexpr int max_paraboloid_determinant()
 }
 
 // Максимальное значение исходных данных, размещаемых на параболоиде
-template <size_t N, size_t BITS>
+template <std::size_t N, std::size_t BITS>
 constexpr int max_paraboloid_source()
 {
         // Например, при N = 4
@@ -137,7 +137,7 @@ constexpr int max_paraboloid_source()
 }
 
 // Максимальное значение определителя
-template <size_t N, size_t BITS>
+template <std::size_t N, std::size_t BITS>
 constexpr int max_determinant()
 {
         // Например, при N = 4
@@ -160,18 +160,18 @@ constexpr int max_determinant()
         return BITS * N + log_2(f) + 1;
 }
 
-template <size_t N>
+template <std::size_t N>
 using ComputeTypeOrdinary = LeastSignedInteger<max_determinant<N, ORDINARY_BITS>()>;
-template <size_t N>
+template <std::size_t N>
 using DataTypeOrdinary = LeastSignedInteger<ORDINARY_BITS>;
 
-template <size_t N>
+template <std::size_t N>
 using ComputeTypeParaboloid = LeastSignedInteger<max_paraboloid_determinant<N, PARABOLOID_BITS>()>;
-template <size_t N>
+template <std::size_t N>
 using DataTypeParaboloid = LeastSignedInteger<max_paraboloid_source<N, PARABOLOID_BITS>()>;
-template <size_t N>
+template <std::size_t N>
 using ComputeTypeAfterParaboloid = LeastSignedInteger<max_determinant<N, PARABOLOID_BITS>()>;
-template <size_t N>
+template <std::size_t N>
 using DataTypeAfterParaboloid = LeastSignedInteger<PARABOLOID_BITS>;
 
 // Не надо медленный mpz_class на основных измерениях
@@ -188,7 +188,7 @@ template <typename F>
 using FacetList = std::list<F>;
 template <typename F>
 using FacetListConstIterator = typename FacetList<F>::const_iterator;
-template <size_t N, typename DataType, typename ComputeType>
+template <std::size_t N, typename DataType, typename ComputeType>
 using Facet = FacetInteger<N, DataType, ComputeType, FacetListConstIterator>;
 
 template <typename T>
@@ -272,7 +272,7 @@ public:
                 }
                 error("facet not found in facets of point");
         }
-        size_t size() const
+        std::size_t size() const
         {
                 return m_data.size();
         }
@@ -291,7 +291,7 @@ public:
         }
 };
 
-template <unsigned simplex_i, size_t N, typename SourceType, typename ComputeType>
+template <unsigned simplex_i, std::size_t N, typename SourceType, typename ComputeType>
 void find_simplex_points(
         const std::vector<Vector<N, SourceType>>& points,
         std::array<int, N + 1>* simplex_points,
@@ -325,7 +325,7 @@ void find_simplex_points(
         }
 };
 
-template <size_t N, typename SourceType, typename ComputeType>
+template <std::size_t N, typename SourceType, typename ComputeType>
 void find_simplex_points(const std::vector<Vector<N, SourceType>>& points, std::array<int, N + 1>* simplex_points)
 {
         static_assert(N > 1);
@@ -342,7 +342,7 @@ void find_simplex_points(const std::vector<Vector<N, SourceType>>& points, std::
         find_simplex_points<1>(points, simplex_points, &simplex_vectors, 1);
 }
 
-template <size_t N, typename Facet, template <typename...> typename Map>
+template <std::size_t N, typename Facet, template <typename...> typename Map>
 void connect_facets(
         Facet* facet,
         int exclude_point,
@@ -381,7 +381,7 @@ void connect_facets(
 }
 
 // Найти N + 1 вершин N-симплекса — начальной выпуклой оболочки N-мерного пространства.
-template <size_t N, typename S, typename C>
+template <std::size_t N, typename S, typename C>
 void create_init_convex_hull(
         const std::vector<Vector<N, S>>& points,
         std::array<int, N + 1>* vertices,
@@ -570,7 +570,7 @@ void create_facets(
 
 // Используются указатели "const type*", так как при ссылках "const type&" происходит копирование данных
 // при работе с std::function и std::thread
-template <size_t N, typename S, typename C>
+template <std::size_t N, typename S, typename C>
 void create_horizon_facets(
         unsigned thread_id,
         unsigned thread_count,
@@ -612,7 +612,7 @@ unsigned calculate_facet_count(const std::vector<T>& facets)
                 });
 }
 
-template <size_t N, typename S, typename C>
+template <std::size_t N, typename S, typename C>
 void add_point_to_convex_hull(
         const std::vector<Vector<N, S>>& points,
         int point,
@@ -690,7 +690,7 @@ void add_point_to_convex_hull(
         }
 }
 
-template <size_t N, typename S, typename C>
+template <std::size_t N, typename S, typename C>
 void create_convex_hull(
         const std::vector<Vector<N, S>>& points,
         FacetList<Facet<N, S, C>>* facets,
@@ -756,7 +756,7 @@ void create_convex_hull(
                 }));
 }
 
-template <size_t N>
+template <std::size_t N>
 void find_min_max(const std::vector<Vector<N, float>>& points, Vector<N, float>* min, Vector<N, float>* max)
 {
         ASSERT(!points.empty());
@@ -775,7 +775,7 @@ void find_min_max(const std::vector<Vector<N, float>>& points, Vector<N, float>*
 // Для алгоритма принципиально не нужны одинаковые точки - разность между ними даст нулевой вектор.
 // Для алгоритма со списками конфликтов принципиально нужен случайный порядок обработки точек.
 // Масштабирование и перевод в целые числа с сохранением пропорций.
-template <size_t N>
+template <std::size_t N>
 void shuffle_and_convert_to_unique_integer(
         const std::vector<Vector<N, float>>& source_points,
         long long max_value,
@@ -834,7 +834,7 @@ void shuffle_and_convert_to_unique_integer(
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 std::array<int, N> restore_indices(const std::array<int, N>& vertices, const std::vector<int>& points_map)
 {
         std::array<int, N> res;
@@ -845,7 +845,7 @@ std::array<int, N> restore_indices(const std::array<int, N>& vertices, const std
         return res;
 }
 
-template <size_t N>
+template <std::size_t N>
 void paraboloid_convex_hull(
         const std::vector<Vector<N, long long>>& points,
         const std::vector<int>& points_map,
@@ -922,7 +922,7 @@ void paraboloid_convex_hull(
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void ordinary_convex_hull(
         const std::vector<Vector<N, long long>>& points,
         const std::vector<int>& points_map,
@@ -961,7 +961,7 @@ void ordinary_convex_hull(
 // Подготовка данных для выпуклой оболочки
 //
 
-template <size_t N>
+template <std::size_t N>
 void delaunay_integer(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<vec<N>>* points,
@@ -989,7 +989,7 @@ void delaunay_integer(
         LOG("convex hull paraboloid in " + space_name(N + 1) + " integer done");
 }
 
-template <size_t N>
+template <std::size_t N>
 void convex_hull_integer(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<ConvexHullFacet<N>>* facets,
@@ -1010,7 +1010,7 @@ void convex_hull_integer(
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 void compute_delaunay(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<vec<N>>* points,
@@ -1025,7 +1025,7 @@ void compute_delaunay(
         delaunay_integer(source_points, points, simplices, progress);
 }
 
-template <size_t N>
+template <std::size_t N>
 void compute_convex_hull(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<ConvexHullFacet<N>>* ch_facets,

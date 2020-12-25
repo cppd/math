@@ -83,8 +83,8 @@ std::filesystem::path file_name_with_extension(std::filesystem::path path)
 }
 
 void save_image(
-        size_t width,
-        size_t height,
+        std::size_t width,
+        std::size_t height,
         QImage::Format q_format,
         ColorFormat format,
         const std::span<const std::byte>& bytes,
@@ -92,10 +92,10 @@ void save_image(
 {
         QImage image(width, height, q_format);
 
-        const size_t pixel_size = format_pixel_size_in_bytes(format);
-        const size_t row_size = pixel_size * width;
+        const std::size_t pixel_size = format_pixel_size_in_bytes(format);
+        const std::size_t row_size = pixel_size * width;
         ASSERT(row_size * height == bytes.size());
-        ASSERT(row_size <= static_cast<size_t>(image.bytesPerLine()));
+        ASSERT(row_size <= static_cast<std::size_t>(image.bytesPerLine()));
 
         const std::byte* ptr = bytes.data();
         for (unsigned row = 0; row < height; ++row, ptr += row_size)
@@ -110,8 +110,8 @@ void save_image(
 }
 
 void save_image_alpha(
-        size_t width,
-        size_t height,
+        std::size_t width,
+        std::size_t height,
         QImage::Format q_format,
         ColorFormat format,
         const std::span<const std::byte>& bytes,
@@ -123,9 +123,9 @@ void save_image_alpha(
 
         QImage image(width, height, q_format);
 
-        const size_t pixel_size = format_pixel_size_in_bytes(format);
+        const std::size_t pixel_size = format_pixel_size_in_bytes(format);
         ASSERT(pixel_size * width * height == bytes.size());
-        ASSERT((pixel_size + sizeof(ALPHA)) * width <= static_cast<size_t>(image.bytesPerLine()));
+        ASSERT((pixel_size + sizeof(ALPHA)) * width <= static_cast<std::size_t>(image.bytesPerLine()));
 
         const std::byte* ptr = bytes.data();
         for (unsigned row = 0; row < height; ++row)
@@ -151,8 +151,8 @@ void save_1(const std::string& file_name, const ImageView<2>& image_view)
 {
         ASSERT(1 == format_component_count(image_view.color_format));
 
-        size_t width = image_view.size[0];
-        size_t height = image_view.size[1];
+        std::size_t width = image_view.size[0];
+        std::size_t height = image_view.size[1];
 
         if (image_view.color_format == ColorFormat::R8_SRGB)
         {
@@ -179,8 +179,8 @@ void save_3(const std::string& file_name, const ImageView<2>& image_view)
 {
         ASSERT(3 == format_component_count(image_view.color_format));
 
-        size_t width = image_view.size[0];
-        size_t height = image_view.size[1];
+        std::size_t width = image_view.size[0];
+        std::size_t height = image_view.size[1];
 
         if (image_view.color_format == ColorFormat::R8G8B8_SRGB)
         {
@@ -208,8 +208,8 @@ void save_4(const std::string& file_name, const ImageView<2>& image_view)
 {
         ASSERT(4 == format_component_count(image_view.color_format));
 
-        size_t width = image_view.size[0];
-        size_t height = image_view.size[1];
+        std::size_t width = image_view.size[0];
+        std::size_t height = image_view.size[1];
 
         if (image_view.color_format == ColorFormat::R8G8B8A8_SRGB)
         {
@@ -236,10 +236,10 @@ void save_4(const std::string& file_name, const ImageView<2>& image_view)
 
 void load_image(QImage* image, ColorFormat format, const std::span<std::byte>& bytes)
 {
-        const size_t pixel_size = format_pixel_size_in_bytes(format);
-        const size_t row_size = pixel_size * image->width();
+        const std::size_t pixel_size = format_pixel_size_in_bytes(format);
+        const std::size_t row_size = pixel_size * image->width();
         ASSERT(row_size * image->height() == bytes.size());
-        ASSERT(row_size <= static_cast<size_t>(image->bytesPerLine()));
+        ASSERT(row_size <= static_cast<std::size_t>(image->bytesPerLine()));
 
         std::byte* ptr = bytes.data();
         for (int row = 0, height = image->height(); row < height; ++row, ptr += row_size)
@@ -252,10 +252,10 @@ void load_image_alpha(QImage* image, ColorFormat format, const std::span<std::by
 {
         ASSERT(format == ColorFormat::R16G16B16);
 
-        const size_t pixel_size = format_pixel_size_in_bytes(format);
-        const size_t image_pixel_size = pixel_size + sizeof(uint16_t);
+        const std::size_t pixel_size = format_pixel_size_in_bytes(format);
+        const std::size_t image_pixel_size = pixel_size + sizeof(uint16_t);
         ASSERT(pixel_size * image->width() * image->height() == bytes.size());
-        ASSERT(image_pixel_size * image->width() <= static_cast<size_t>(image->bytesPerLine()));
+        ASSERT(image_pixel_size * image->width() <= static_cast<std::size_t>(image->bytesPerLine()));
 
         int width = image->width();
         int height = image->height();
@@ -276,7 +276,7 @@ void load_image_alpha(QImage* image, ColorFormat format, const std::span<std::by
 void load_1(QImage&& image, ColorFormat color_format, const std::span<std::byte>& bytes)
 {
         ASSERT(bytes.size()
-               == static_cast<size_t>(format_pixel_size_in_bytes(color_format)) * image.width() * image.height());
+               == static_cast<std::size_t>(format_pixel_size_in_bytes(color_format)) * image.width() * image.height());
 
         if (color_format == ColorFormat::R8_SRGB)
         {
@@ -303,7 +303,7 @@ void load_1(QImage&& image, ColorFormat color_format, const std::span<std::byte>
 void load_3(QImage&& image, ColorFormat color_format, const std::span<std::byte>& bytes)
 {
         ASSERT(bytes.size()
-               == static_cast<size_t>(format_pixel_size_in_bytes(color_format)) * image.width() * image.height());
+               == static_cast<std::size_t>(format_pixel_size_in_bytes(color_format)) * image.width() * image.height());
 
         if (color_format == ColorFormat::R8G8B8_SRGB)
         {
@@ -330,7 +330,7 @@ void load_3(QImage&& image, ColorFormat color_format, const std::span<std::byte>
 void load_4(QImage&& image, ColorFormat color_format, const std::span<std::byte>& bytes)
 {
         ASSERT(bytes.size()
-               == static_cast<size_t>(format_pixel_size_in_bytes(color_format)) * image.width() * image.height());
+               == static_cast<std::size_t>(format_pixel_size_in_bytes(color_format)) * image.width() * image.height());
 
         if (color_format == ColorFormat::R8G8B8A8_SRGB)
         {
@@ -493,7 +493,7 @@ void load(
         const std::array<int, 2>& size,
         const std::span<std::byte>& pixels)
 {
-        if (pixels.size() != static_cast<size_t>(format_pixel_size_in_bytes(color_format)) * size[0] * size[1])
+        if (pixels.size() != static_cast<std::size_t>(format_pixel_size_in_bytes(color_format)) * size[0] * size[1])
         {
                 error("Error image data size");
         }

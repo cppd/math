@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-template <typename T, size_t N>
+template <typename T, std::size_t N>
 std::array<T, N>&& sort(std::array<T, N>&& v)
 {
         std::sort(v.begin(), v.end());

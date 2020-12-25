@@ -38,16 +38,16 @@ struct FileFormat
 std::vector<FileFormat> save_formats(unsigned dimension);
 std::vector<FileFormat> load_formats(const std::set<unsigned>& dimensions);
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<Mesh<N>> load(const std::filesystem::path& file_name, ProgressRatio* progress);
 
-template <size_t N>
+template <std::size_t N>
 std::filesystem::path save_to_obj(
         const Mesh<N>& mesh,
         const std::filesystem::path& file_name,
         const std::string_view& comment);
 
-template <size_t N>
+template <std::size_t N>
 std::filesystem::path save_to_stl(
         const Mesh<N>& mesh,
         const std::filesystem::path& file_name,

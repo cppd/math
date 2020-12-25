@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-template <size_t N>
+template <std::size_t N>
 struct ManifoldConstructorCocone
 {
         virtual ~ManifoldConstructorCocone() = default;
@@ -41,7 +41,7 @@ struct ManifoldConstructorCocone
                 ProgressRatio* progress) const = 0;
 };
 
-template <size_t N>
+template <std::size_t N>
 struct ManifoldConstructor
 {
         virtual ~ManifoldConstructor() = default;
@@ -62,12 +62,12 @@ struct ManifoldConstructor
                 ProgressRatio* progress) const = 0;
 };
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(
         const std::vector<Vector<N, float>>& source_points,
         ProgressRatio* progress);
 
-template <size_t N>
+template <std::size_t N>
 std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone(
         const std::vector<Vector<N, float>>& source_points,
         ProgressRatio* progress);

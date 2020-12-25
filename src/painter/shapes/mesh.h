@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::shapes
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class Mesh final : public Shape<N, T>, public Surface<N, T>
 {
         using TreeParallelotope = ParallelotopeAA<N, T>;

@@ -35,14 +35,14 @@ namespace ns
 {
 namespace complement_implementation
 {
-template <size_t ValueIndex, typename T, int... I>
+template <std::size_t ValueIndex, typename T, int... I>
 constexpr Vector<sizeof...(I), T> make_vector_one_value(std::integer_sequence<int, I...>, const T& v)
 {
         static_assert(ValueIndex >= 0 && ValueIndex < sizeof...(I));
 
         return Vector<sizeof...(I), T>((I == ValueIndex ? v : 0)...);
 }
-template <size_t N, typename T, size_t ValueIndex>
+template <std::size_t N, typename T, std::size_t ValueIndex>
 constexpr Vector<N, T> make_vector_one_value(const T& v)
 {
         return make_vector_one_value<ValueIndex>(std::make_integer_sequence<int, N>(), v);
@@ -55,7 +55,7 @@ constexpr std::array<Vector<sizeof...(I), T>, sizeof...(I)> make_array_of_vector
         return {make_vector_one_value<sizeof...(I), T, I>(v)...};
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 inline constexpr std::array<Vector<N, T>, N> orthonormal_set =
         make_array_of_vectors_one_value(std::make_integer_sequence<int, N>(), static_cast<T>(1));
 
@@ -70,7 +70,7 @@ inline constexpr T LIMIT = static_cast<T>(0.1);
 
 // N - 1 ортогональных единичных вектора, ортогональных заданному единичному вектору
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_subspace(const Vector<N, T>& unit_vector)
 {
         static_assert(N > 1);
@@ -127,7 +127,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_subspace
         return subspace_basis;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_gram_schmidt(const Vector<N, T>& unit_vector)
 {
         static_assert(N > 1);
@@ -188,7 +188,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_gram_sch
         return res;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector(const Vector<N, T>& unit_vector)
 {
         if constexpr (N <= 4)

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::image
 {
-template <size_t N>
+template <std::size_t N>
 Image<N> convert_to_8_bit(const Image<N>& image)
 {
         ColorFormat color_format = [&]()

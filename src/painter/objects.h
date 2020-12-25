@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 // Свойства поверхности в точке.
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class SurfaceProperties
 {
         // Реальный перпендикуляр.
@@ -103,7 +103,7 @@ public:
 
 // Свойства поверхности надо находить только для ближайшей точки персечения,
 // поэтому свойства определяются не сразу, а через этот интерфейс.
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class Surface
 {
 protected:
@@ -115,7 +115,7 @@ public:
 
 //
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 struct LightProperties final
 {
         Color color;
@@ -123,7 +123,7 @@ struct LightProperties final
 };
 
 // Источник света, не являющийся видимым объектом.
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 struct LightSource
 {
         virtual ~LightSource() = default;
@@ -134,7 +134,7 @@ struct LightSource
 //
 
 // Преобразование точки на экране в луч в пространстве.
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 struct Projector
 {
         virtual ~Projector() = default;
@@ -156,7 +156,7 @@ struct Statistics final
 };
 
 // Последовательность пикселов для рисования.
-template <size_t N>
+template <std::size_t N>
 struct Paintbrush
 {
         virtual ~Paintbrush() = default;
@@ -173,7 +173,7 @@ struct Paintbrush
         virtual Statistics statistics() const = 0;
 };
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 struct Intersection final
 {
         T distance;
@@ -186,7 +186,7 @@ struct Intersection final
         }
 };
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 struct Scene
 {
         virtual ~Scene() = default;

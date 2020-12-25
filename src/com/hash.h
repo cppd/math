@@ -44,24 +44,24 @@ constexpr uint32_t jenkins_one_at_a_time_hash(const char* key, int len)
 #endif
 
 #if 0
-template <typename T, size_t N>
-size_t hash_as_string(const std::array<T, N>& v)
+template <typename T, std::size_t N>
+std::size_t hash_as_string(const std::array<T, N>& v)
 {
         static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
         const char* s = reinterpret_cast<const char*>(v.data());
-        size_t size = storage_size(v);
+        std::size_t size = storage_size(v);
 
         // return jenkins_one_at_a_time_hash(s, size);
         return std::hash<std::string_view>()(std::string_view(s, size));
 }
 #endif
 
-template <typename T, size_t N>
-size_t array_hash(const std::array<T, N>& v)
+template <typename T, std::size_t N>
+std::size_t array_hash(const std::array<T, N>& v)
 {
         std::hash<T> hasher;
-        size_t seed = hasher(v[0]);
+        std::size_t seed = hasher(v[0]);
         for (unsigned i = 1; i < N; ++i)
         {
                 seed ^= hasher(v[i]) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
@@ -70,11 +70,11 @@ size_t array_hash(const std::array<T, N>& v)
 }
 
 template <typename T, typename... Ts>
-size_t pack_hash(const T& v, const Ts&... vs)
+std::size_t pack_hash(const T& v, const Ts&... vs)
 {
         static_assert((std::is_same_v<T, Ts> && ...));
         std::hash<T> hasher;
-        size_t seed = hasher(v);
+        std::size_t seed = hasher(v);
         ((seed ^= hasher(vs) + 0x9e3779b9 + (seed << 6) + (seed >> 2)), ...);
         return seed;
 }

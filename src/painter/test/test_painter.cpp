@@ -44,7 +44,7 @@ constexpr Color DEFAULT_COLOR = Color(Srgb8(150, 170, 150));
 constexpr Color::DataType DIFFUSE = 1;
 constexpr Color::DataType LIGHTING_INTENSITY = 1;
 
-template <size_t N>
+template <std::size_t N>
 class Images : public PainterNotifier<N>
 {
         static constexpr const char* DIRECTORY_NAME = "painter_test";
@@ -98,7 +98,7 @@ public:
                 unsigned char g = color::linear_float_to_srgb_uint8(c.green());
                 unsigned char b = color::linear_float_to_srgb_uint8(c.blue());
 
-                size_t offset = 3 * m_global_index.compute(pixel);
+                std::size_t offset = 3 * m_global_index.compute(pixel);
                 ASSERT(offset + 2 < m_pixels.size());
                 std::byte* ptr = m_pixels.data() + offset;
                 std::memcpy(ptr++, &r, 1);
@@ -135,7 +135,7 @@ void check_application_instance()
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::unique_ptr<const shapes::Mesh<N, T>> sphere_mesh(int point_count, ProgressRatio* progress)
 {
         LOG("Creating mesh...");
@@ -143,7 +143,7 @@ std::unique_ptr<const shapes::Mesh<N, T>> sphere_mesh(int point_count, ProgressR
         return shapes::simplex_mesh_of_random_sphere<N, T>(DEFAULT_COLOR, DIFFUSE, point_count, progress);
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::unique_ptr<const shapes::Mesh<N, T>> file_mesh(const std::string& file_name, ProgressRatio* progress)
 {
         LOG("Loading geometry from file...");
@@ -162,7 +162,7 @@ std::unique_ptr<const shapes::Mesh<N, T>> file_mesh(const std::string& file_name
         return std::make_unique<const shapes::Mesh<N, T>>(meshes, progress);
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<const Scene<N, T>>&& scene)
 {
         constexpr int paint_height = 2;
@@ -186,7 +186,7 @@ void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<
         LOG("Done");
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void test_painter_window(int samples_per_pixel, int thread_count, std::unique_ptr<const Scene<N, T>>&& scene)
 {
         constexpr bool smooth_normal = true;
@@ -207,7 +207,7 @@ enum class PainterTestOutputType
         Window
 };
 
-template <PainterTestOutputType type, size_t N, typename T>
+template <PainterTestOutputType type, std::size_t N, typename T>
 void test_painter(
         std::unique_ptr<const Shape<N, T>>&& shape,
         int min_screen_size,
@@ -231,7 +231,7 @@ void test_painter(
         }
 }
 
-template <size_t N, typename T, PainterTestOutputType type>
+template <std::size_t N, typename T, PainterTestOutputType type>
 void test_painter(int samples_per_pixel, int point_count, int min_screen_size, int max_screen_size)
 {
         const int thread_count = hardware_concurrency();
@@ -242,7 +242,7 @@ void test_painter(int samples_per_pixel, int point_count, int min_screen_size, i
         test_painter<type>(std::move(mesh), min_screen_size, max_screen_size, samples_per_pixel, thread_count);
 }
 
-template <size_t N, typename T, PainterTestOutputType type>
+template <std::size_t N, typename T, PainterTestOutputType type>
 void test_painter(int samples_per_pixel, const std::string& file_name, int min_screen_size, int max_screen_size)
 {
         const int thread_count = hardware_concurrency();

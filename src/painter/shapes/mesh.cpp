@@ -36,7 +36,7 @@ namespace
 {
 constexpr int TREE_MIN_OBJECTS_PER_BOX = 10;
 
-template <size_t N>
+template <std::size_t N>
 int tree_max_depth()
 {
         static_assert(N >= 3);
@@ -61,7 +61,7 @@ int tree_max_depth()
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 std::array<int, N> add_offset(const std::array<int, N>& src, int offset, bool add)
 {
         std::array<int, N> r;
@@ -81,7 +81,7 @@ std::array<int, N> add_offset(const std::array<int, N>& src, int offset, bool ad
         }
         return r;
 }
-template <size_t N>
+template <std::size_t N>
 std::array<int, N> add_offset(const std::array<int, N>& src, int offset)
 {
         std::array<int, N> r;
@@ -92,7 +92,7 @@ std::array<int, N> add_offset(const std::array<int, N>& src, int offset)
         return r;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::optional<Intersection<N, T>> ray_intersection(
         const std::vector<MeshFacet<N, T>>& facets,
         const std::vector<int>& indices,
@@ -122,7 +122,7 @@ std::optional<Intersection<N, T>> ray_intersection(
         return std::nullopt;
 }
 
-template <size_t N, typename T, typename TreeParallelotope>
+template <std::size_t N, typename T, typename TreeParallelotope>
 void create_tree(
         const std::vector<MeshFacet<N, T>>& facets,
         const BoundingBox<N, T>& bounding_box,
@@ -162,7 +162,7 @@ void create_tree(
 }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
 {
         const mesh::Mesh<N>& mesh = mesh_object.mesh();
@@ -243,7 +243,7 @@ void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void Mesh<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
 {
         if (mesh_objects.empty())
@@ -257,12 +257,12 @@ void Mesh<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
         m_materials.clear();
         m_images.clear();
         m_facets.clear();
-        size_t vertex_count = 0;
-        size_t normal_count = 0;
-        size_t texcoord_count = 0;
-        size_t material_count = 0;
-        size_t image_count = 0;
-        size_t facet_count = 0;
+        std::size_t vertex_count = 0;
+        std::size_t normal_count = 0;
+        std::size_t texcoord_count = 0;
+        std::size_t material_count = 0;
+        std::size_t image_count = 0;
+        std::size_t facet_count = 0;
         for (const mesh::Reading<N>& mesh : mesh_objects)
         {
                 vertex_count += mesh.mesh().vertices.size();
@@ -313,7 +313,7 @@ void Mesh<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
         ASSERT(facet_count == m_facets.size());
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Mesh<N, T>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* progress)
 {
         TimePoint start_time = time();
@@ -333,13 +333,13 @@ Mesh<N, T>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, Pr
         LOG("Painter mesh object created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::optional<T> Mesh<N, T>::intersect_bounding(const Ray<N, T>& r) const
 {
         return m_tree.intersect_root(r);
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::optional<Intersection<N, T>> Mesh<N, T>::intersect(const Ray<N, T>& ray, T bounding_distance) const
 {
         std::optional<Intersection<N, T>> intersection;
@@ -364,7 +364,7 @@ std::optional<Intersection<N, T>> Mesh<N, T>::intersect(const Ray<N, T>& ray, T 
         return std::nullopt;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& p, const void* intersection_data) const
 {
         SurfaceProperties<N, T> s;
@@ -393,13 +393,13 @@ SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& p, const void
         return s;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 BoundingBox<N, T> Mesh<N, T>::bounding_box() const
 {
         return m_bounding_box;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::function<bool(const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>&)> Mesh<N, T>::
         intersection_function() const
 {

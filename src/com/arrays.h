@@ -32,14 +32,14 @@ constexpr std::array<T, sizeof...(I)> make_array_sequence(std::integer_sequence<
         return {I...};
 }
 
-template <typename T, size_t... I>
-constexpr std::array<T, sizeof...(I)> make_array_value(std::integer_sequence<size_t, I...>, const T& v)
+template <typename T, std::size_t... I>
+constexpr std::array<T, sizeof...(I)> make_array_value(std::integer_sequence<std::size_t, I...>, const T& v)
 {
         return {(static_cast<void>(I), v)...};
 }
 
-template <size_t ValueIndex, typename T, size_t... I>
-constexpr std::array<T, sizeof...(I)> make_array_one_value(std::integer_sequence<size_t, I...>, const T& v)
+template <std::size_t ValueIndex, typename T, std::size_t... I>
+constexpr std::array<T, sizeof...(I)> make_array_one_value(std::integer_sequence<std::size_t, I...>, const T& v)
 {
         static_assert(ValueIndex >= 0 && ValueIndex < sizeof...(I));
 
@@ -48,11 +48,11 @@ constexpr std::array<T, sizeof...(I)> make_array_one_value(std::integer_sequence
 
 //
 
-template <typename T, size_t... I>
+template <typename T, std::size_t... I>
 constexpr std::array<T, sizeof...(I)> del_elem(
         const std::array<T, sizeof...(I) + 1>& a,
         unsigned pos,
-        std::integer_sequence<size_t, I...>)
+        std::integer_sequence<std::size_t, I...>)
 {
         static_assert(((I < sizeof...(I)) && ...));
 
@@ -62,30 +62,30 @@ constexpr std::array<T, sizeof...(I)> del_elem(
 
 //
 
-template <typename T, size_t N>
+template <typename T, std::size_t N>
 constexpr std::array<T, N> make_array_sequence()
 {
         return arrays_implementation::make_array_sequence(std::make_integer_sequence<T, N>());
 }
 
-template <typename T, size_t N>
+template <typename T, std::size_t N>
 constexpr std::array<T, N> make_array_value(const T& v)
 {
-        return arrays_implementation::make_array_value(std::make_integer_sequence<size_t, N>(), v);
+        return arrays_implementation::make_array_value(std::make_integer_sequence<std::size_t, N>(), v);
 }
 
-template <typename T, size_t N, size_t ValueIndex>
+template <typename T, std::size_t N, std::size_t ValueIndex>
 constexpr std::array<T, N> make_array_one_value(const T& v)
 {
-        return arrays_implementation::make_array_one_value<ValueIndex>(std::make_integer_sequence<size_t, N>(), v);
+        return arrays_implementation::make_array_one_value<ValueIndex>(std::make_integer_sequence<std::size_t, N>(), v);
 }
 
-template <size_t N>
+template <std::size_t N>
 inline constexpr std::array<unsigned char, N> sequence_uchar_array = make_array_sequence<unsigned char, N>();
 
 //
 
-template <typename T, size_t N>
+template <typename T, std::size_t N>
 constexpr std::array<T, N> set_elem(const std::array<T, N>& a, unsigned pos, const T& v)
 {
         static_assert(N >= 1);
@@ -97,13 +97,13 @@ constexpr std::array<T, N> set_elem(const std::array<T, N>& a, unsigned pos, con
         return res;
 }
 
-template <typename T, size_t N>
+template <typename T, std::size_t N>
 constexpr std::array<T, N - 1> del_elem(const std::array<T, N>& a, unsigned pos)
 {
         static_assert(N > 1);
         ASSERT(pos < N);
 
-        return arrays_implementation::del_elem<T>(a, pos, std::make_integer_sequence<size_t, N - 1>());
+        return arrays_implementation::del_elem<T>(a, pos, std::make_integer_sequence<std::size_t, N - 1>());
 }
 
 template <typename T>

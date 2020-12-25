@@ -47,25 +47,25 @@ constexpr T COS_LIMIT_PARALLEL = 1 - limits<T>::epsilon() * 100;
 template <typename T>
 constexpr T MAX_LENGTH_DISCREPANCY = limits<T>::epsilon() * 100;
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 constexpr bool vectors_are_orthogonal(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         return std::abs(dot(a, b)) <= COS_LIMIT_ORTHOGONAL<T>;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 constexpr bool vectors_are_parallel(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         return std::abs(dot(a, b)) >= COS_LIMIT_PARALLEL<T>;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 bool vector_is_unit(const Vector<N, T>& v)
 {
         return std::abs(1 - v.norm()) <= MAX_LENGTH_DISCREPANCY<T>;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::vector<Vector<N, T>> random_vectors(int count)
 {
         std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
@@ -90,7 +90,7 @@ std::vector<Vector<N, T>> random_vectors(int count)
         return res;
 }
 
-template <bool GramSchmidt, size_t N, typename T>
+template <bool GramSchmidt, std::size_t N, typename T>
 std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vector<Vector<N, T>>& vectors)
 {
         std::vector<std::array<Vector<N, T>, N - 1>> res;
@@ -112,7 +112,7 @@ std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vecto
         return res;
 }
 
-template <size_t N, typename T, bool GramSchmidt>
+template <std::size_t N, typename T, bool GramSchmidt>
 void test_complement(int count)
 {
         ASSERT(count > 0);
@@ -183,7 +183,7 @@ void test_complement(int count)
         LOG("Test passed");
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void test_complement(int vector_count)
 {
         test_complement<N, T, false>(vector_count);

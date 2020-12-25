@@ -33,24 +33,24 @@ namespace ns::text
 {
 namespace
 {
-template <size_t... I>
+template <std::size_t... I>
 [[maybe_unused]] bool check(
         const std::array<int, sizeof...(I)>& offset,
         const std::array<int, sizeof...(I)>& copy_size,
         const std::array<int, sizeof...(I)>& size,
-        std::integer_sequence<size_t, I...>&&)
+        std::integer_sequence<std::size_t, I...>&&)
 {
         return ((offset[I] >= 0) && ...) && ((copy_size[I] >= 0) && ...) && ((size[I] >= 0) && ...)
                && ((offset[I] + copy_size[I] <= size[I]) && ...);
 }
 
-template <size_t N>
+template <std::size_t N>
 [[maybe_unused]] bool check(
         const std::array<int, N>& offset,
         const std::array<int, N>& copy_size,
         const std::array<int, N>& size)
 {
-        return check(offset, copy_size, size, std::make_integer_sequence<size_t, N>());
+        return check(offset, copy_size, size, std::make_integer_sequence<std::size_t, N>());
 }
 
 //

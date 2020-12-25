@@ -51,8 +51,8 @@ class Memory final
                 vec3f color;
         };
 
-        size_t m_matrices_buffer_index;
-        size_t m_drawing_buffer_index;
+        std::size_t m_matrices_buffer_index;
+        std::size_t m_drawing_buffer_index;
 
         template <typename T>
         void copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const;

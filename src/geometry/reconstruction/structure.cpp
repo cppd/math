@@ -59,7 +59,7 @@ struct VertexConnections
 //   Если вершина не находится на краю объекта, то вектором положительного полюса
 // считается вектор от вершины к наиболее удалённой вершине ячейки Вороного.
 //   В книге это Definition 4.1 (Poles).
-template <size_t N>
+template <std::size_t N>
 vec<N> voronoi_positive_norm(
         const vec<N>& vertex,
         const std::vector<DelaunayObject<N>>& delaunay_objects,
@@ -123,7 +123,7 @@ vec<N> voronoi_positive_norm(
 // и вектором к положительному полюсу составляет более 90 градусов.
 //   Высотой ячейки Вороного является длина отрицательного полюса.
 //   В книге это Definition 4.1 (Poles) и Definition 5.3.
-template <size_t N>
+template <std::size_t N>
 double voronoi_height(
         const vec<N>& vertex,
         const std::vector<DelaunayObject<N>>& delaunay_objects,
@@ -168,7 +168,7 @@ double voronoi_height(
         return len;
 }
 
-template <size_t N>
+template <std::size_t N>
 double voronoi_edge_radius(
         const std::vector<DelaunayObject<N>>& delaunay_objects,
         const DelaunayFacet<N>& facet,
@@ -238,7 +238,7 @@ double voronoi_edge_radius(
 
 // Радиус ячейки Вороного равен максимальному расстоянию от вершины то границ ячейки Вороного в границах cocone.
 // В книге это Definition 5.3.
-template <size_t N>
+template <std::size_t N>
 void cocone_facets_and_voronoi_radius(
         const vec<N>& vertex,
         const std::vector<DelaunayObject<N>>& delaunay_objects,
@@ -299,7 +299,7 @@ void cocone_facets_and_voronoi_radius(
         ASSERT(!find_radius || (*radius > 0 && *radius <= limits<double>::max()));
 }
 
-template <size_t N>
+template <std::size_t N>
 void cocone_neighbors(
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         const std::vector<ManifoldFacet<N>>& facet_data,
@@ -340,7 +340,7 @@ void cocone_neighbors(
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void vertex_connections(
         int vertex_count,
         const std::vector<DelaunayObject<N>>& objects,
@@ -369,7 +369,7 @@ void vertex_connections(
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 void vertex_and_facet_data(
         bool find_all_vertex_data,
         const std::vector<vec<N>>& points,

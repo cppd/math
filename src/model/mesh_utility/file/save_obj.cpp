@@ -70,7 +70,7 @@ void write_comment(std::ostream& file, const std::string_view& comment)
         file << str;
 }
 
-template <size_t N>
+template <std::size_t N>
 void write_vertex(std::ostream& file, const Vector<N, float>& vertex)
 {
         file << OBJ_v;
@@ -81,7 +81,7 @@ void write_vertex(std::ostream& file, const Vector<N, float>& vertex)
         file << '\n';
 }
 
-template <size_t N>
+template <std::size_t N>
 void write_normal(std::ostream& file, const Vector<N, float>& normal)
 {
         file << OBJ_v << OBJ_n;
@@ -92,7 +92,7 @@ void write_normal(std::ostream& file, const Vector<N, float>& normal)
         file << '\n';
 }
 
-template <size_t N>
+template <std::size_t N>
 void write_face(std::ostream& file, const std::array<int, N>& vertices)
 {
         file << OBJ_f;
@@ -104,7 +104,7 @@ void write_face(std::ostream& file, const std::array<int, N>& vertices)
         file << '\n';
 }
 
-template <size_t N>
+template <std::size_t N>
 void write_face(std::ostream& file, const std::array<int, N>& vertices, const std::array<int, N>& normals)
 {
         file << OBJ_f;
@@ -127,7 +127,7 @@ void write_line(std::ostream& file, const std::array<int, 2>& vertices)
         file << '\n';
 }
 
-template <size_t N>
+template <std::size_t N>
 void write_vertices(std::ostream& file, const std::vector<Vector<N, float>>& vertices)
 {
         for (const Vector<N, float>& v : vertices)
@@ -136,7 +136,7 @@ void write_vertices(std::ostream& file, const std::vector<Vector<N, float>>& ver
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void write_vertices(std::ostream& file, const Mesh<N>& mesh)
 {
         if (NORMALIZE_VERTEX_COORDINATES)
@@ -154,7 +154,7 @@ void write_vertices(std::ostream& file, const Mesh<N>& mesh)
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void write_normals(std::ostream& file, const Mesh<N>& mesh)
 {
         for (const Vector<N, float>& vn : mesh.normals)
@@ -168,7 +168,7 @@ void write_normals(std::ostream& file, const Mesh<N>& mesh)
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void write_facets(std::ostream& file, const Mesh<N>& mesh)
 {
         // Вершины граней надо записывать в трёхмерный OBJ таким образом,
@@ -216,7 +216,7 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh)
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void write_lines(std::ostream& file, const Mesh<N>& mesh)
 {
         for (const typename Mesh<N>::Line& l : mesh.lines)
@@ -225,12 +225,12 @@ void write_lines(std::ostream& file, const Mesh<N>& mesh)
         }
 }
 
-std::string obj_type_name(size_t N)
+std::string obj_type_name(std::size_t N)
 {
         return "OBJ-" + to_string(N);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::filesystem::path file_name_with_extension(std::filesystem::path file_name)
 {
         if (file_name.has_extension())
@@ -247,7 +247,7 @@ std::filesystem::path file_name_with_extension(std::filesystem::path file_name)
         return file_name.replace_extension(path_from_utf8(obj_file_extension(N)));
 }
 
-template <size_t N>
+template <std::size_t N>
 void check_facets_and_lines(const Mesh<N>& mesh)
 {
         if (mesh.facets.empty() && mesh.lines.empty())
@@ -274,7 +274,7 @@ void check_facets_and_lines(const Mesh<N>& mesh)
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 std::filesystem::path save_to_obj_file(
         const Mesh<N>& mesh,
         const std::filesystem::path& file_name,

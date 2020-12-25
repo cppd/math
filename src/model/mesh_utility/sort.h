@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::mesh
 {
-template <size_t N>
+template <std::size_t N>
 void sort_facets_by_material(
         const Mesh<N>& mesh,
         std::vector<int>* sorted_facet_indices,
@@ -79,7 +79,7 @@ void sort_facets_by_material(
 
         // Текущие начала расположения граней с заданным материалом
         std::vector<int> starting_indices = *facet_offset;
-        for (size_t i = 0; i < mesh.facets.size(); ++i)
+        for (std::size_t i = 0; i < mesh.facets.size(); ++i)
         {
                 int m = material_index(mesh.facets[i].material);
                 (*sorted_facet_indices)[starting_indices[m]++] = i;

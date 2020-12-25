@@ -25,14 +25,14 @@ void ModelEvents::set(Sequence<settings::Dimensions, std::tuple, Events>* all_ev
 {
         ASSERT(all_events);
 
-        const auto f = []<size_t N>(Events<N>& events)
+        const auto f = []<std::size_t N>(Events<N>& events)
         {
                 events.saved_mesh_events = mesh::MeshObject<N>::set_events(&events.mesh_events);
                 events.saved_volume_events = volume::VolumeObject<N>::set_events(&events.volume_events);
         };
 
         std::apply(
-                [&f]<size_t... N>(Events<N> & ... events)
+                [&f]<std::size_t... N>(Events<N> & ... events)
                 {
                         (f(events), ...);
                 },
@@ -41,7 +41,7 @@ void ModelEvents::set(Sequence<settings::Dimensions, std::tuple, Events>* all_ev
 
 void ModelEvents::unset(const Sequence<settings::Dimensions, std::tuple, Events>& all_events)
 {
-        const auto f = []<size_t N>(const Events<N>& events)
+        const auto f = []<std::size_t N>(const Events<N>& events)
         {
                 const std::function<void(mesh::MeshEvent<N> &&)>* m =
                         mesh::MeshObject<N>::set_events(events.saved_mesh_events);
@@ -56,7 +56,7 @@ void ModelEvents::unset(const Sequence<settings::Dimensions, std::tuple, Events>
         };
 
         std::apply(
-                [&f]<size_t... N>(const Events<N>&... events)
+                [&f]<std::size_t... N>(const Events<N>&... events)
                 {
                         (f(events), ...);
                 },
@@ -68,7 +68,7 @@ ModelEvents::ModelEvents(gui::ModelTreeEvents* tree, view::View* view)
         ASSERT(tree);
         ASSERT(view);
 
-        const auto f = [&]<size_t N>(Events<N>& events)
+        const auto f = [&]<std::size_t N>(Events<N>& events)
         {
                 auto mesh_visitors = Visitors{
                         [=](const typename mesh::MeshEvent<N>::Insert& v)
@@ -169,7 +169,7 @@ ModelEvents::ModelEvents(gui::ModelTreeEvents* tree, view::View* view)
         };
 
         std::apply(
-                [&f]<size_t... N>(Events<N> & ... events)
+                [&f]<std::size_t... N>(Events<N> & ... events)
                 {
                         (f(events), ...);
                 },
@@ -180,14 +180,14 @@ ModelEvents::ModelEvents(gui::ModelTreeEvents* tree, view::View* view)
 
 ModelEvents::ModelEvents()
 {
-        const auto f = []<size_t N>(Events<N>& events)
+        const auto f = []<std::size_t N>(Events<N>& events)
         {
                 events.mesh_events = [](mesh::MeshEvent<N>&&) {};
                 events.volume_events = [](volume::VolumeEvent<N>&&) {};
         };
 
         std::apply(
-                [&f]<size_t... N>(Events<N> & ... events)
+                [&f]<std::size_t... N>(Events<N> & ... events)
                 {
                         (f(events), ...);
                 },

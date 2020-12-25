@@ -54,7 +54,7 @@ void text_vertices(
         int* y,
         std::vector<TextVertex>* vertices)
 {
-        size_t i = 0;
+        std::size_t i = 0;
         while (i < text.size())
         {
                 if (text[i] == '\n')

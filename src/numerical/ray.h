@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class Ray
 {
         Vector<N, T> m_org;
@@ -77,7 +77,7 @@ public:
         }
 };
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::string to_string(const Ray<N, T>& data)
 {
         return "(org " + to_string(data.org()) + ", dir " + to_string(data.dir()) + ")";

@@ -50,8 +50,8 @@ std::string trim(const std::string_view& s)
                 return std::string();
         }
 
-        size_t n = s.size();
-        size_t i = 0;
+        std::size_t n = s.size();
+        std::size_t i = 0;
         while (i < n && is_space(s[i]))
         {
                 ++i;
@@ -61,7 +61,7 @@ std::string trim(const std::string_view& s)
                 return std::string();
         }
 
-        size_t ri = s.size() - 1;
+        std::size_t ri = s.size() - 1;
         while (is_space(s[ri]))
         {
                 if (ri == 0)

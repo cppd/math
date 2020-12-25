@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-template <size_t N, typename T, typename ResultType>
+template <std::size_t N, typename T, typename ResultType>
 void difference(Vector<N, ResultType>* result, const Vector<N, T>& a, const Vector<N, T>& b)
 {
         for (unsigned i = 0; i < N; ++i)
@@ -32,7 +32,7 @@ void difference(Vector<N, ResultType>* result, const Vector<N, T>& a, const Vect
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void difference(Vector<N, mpz_class>* result, const Vector<N, T>& a, const Vector<N, T>& b)
 {
         for (unsigned i = 0; i < N; ++i)
@@ -41,7 +41,7 @@ void difference(Vector<N, mpz_class>* result, const Vector<N, T>& a, const Vecto
         }
 }
 
-template <size_t N>
+template <std::size_t N>
 void difference(Vector<N, mpz_class>* result, const Vector<N, mpz_class>& a, const Vector<N, mpz_class>& b)
 {
         for (unsigned i = 0; i < N; ++i)

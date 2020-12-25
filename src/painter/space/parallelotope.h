@@ -43,8 +43,8 @@ namespace ns::painter
 {
 namespace parallelotope_implementation
 {
-template <size_t N, typename T, size_t... I>
-std::array<Vector<N, T>, N> make_vectors_impl(const Vector<N, T>& d, std::integer_sequence<size_t, I...>)
+template <std::size_t N, typename T, std::size_t... I>
+std::array<Vector<N, T>, N> make_vectors_impl(const Vector<N, T>& d, std::integer_sequence<std::size_t, I...>)
 {
         static_assert(N == sizeof...(I));
         // Заполнение диагонали матрицы NxN значениями из d, остальные элементы 0
@@ -53,14 +53,14 @@ std::array<Vector<N, T>, N> make_vectors_impl(const Vector<N, T>& d, std::intege
         return vectors;
 }
 
-template <size_t N, typename T, size_t... I>
+template <std::size_t N, typename T, std::size_t... I>
 std::array<Vector<N, T>, N> make_vectors(const Vector<N, T>& d)
 {
-        return make_vectors_impl(d, std::make_integer_sequence<size_t, N>());
+        return make_vectors_impl(d, std::make_integer_sequence<std::size_t, N>());
 }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class Parallelotope final
 {
         static_assert(N >= 2);
@@ -111,8 +111,8 @@ class Parallelotope final
         void length_impl(const Vector<N, T>& sum, const F& f) const;
 
 public:
-        static constexpr size_t SPACE_DIMENSION = N;
-        static constexpr size_t SHAPE_DIMENSION = N;
+        static constexpr std::size_t SPACE_DIMENSION = N;
+        static constexpr std::size_t SHAPE_DIMENSION = N;
 
         using DataType = T;
 
@@ -146,7 +146,7 @@ public:
 };
 
 // Параметр vectors — это все только Vector<N, T>
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 template <typename... P>
 Parallelotope<N, T>::Parallelotope(const Vector<N, T>& org, const P&... vectors)
 {
@@ -156,19 +156,19 @@ Parallelotope<N, T>::Parallelotope(const Vector<N, T>& org, const P&... vectors)
         set_data(org, {vectors...});
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Parallelotope<N, T>::Parallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors)
 {
         set_data(org, vectors);
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Parallelotope<N, T>::Parallelotope(const Vector<N, T>& min, const Vector<N, T>& max)
 {
         set_data(min, parallelotope_implementation::make_vectors(max - min));
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void Parallelotope<N, T>::set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors)
 {
         m_org = org;
@@ -191,7 +191,7 @@ void Parallelotope<N, T>::set_data(const Vector<N, T>& org, const std::array<Vec
 }
 
 // Неравенства в виде b + a * x >= 0, задающие множество точек параллелотопа.
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Constraints<N, T, 2 * N, 0> Parallelotope<N, T>::constraints() const
 {
         Constraints<N, T, 2 * N, 0> result;
@@ -211,7 +211,7 @@ Constraints<N, T, 2 * N, 0> Parallelotope<N, T>::constraints() const
         return result;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second) const
 {
         T f_max = limits<T>::lowest();
@@ -263,7 +263,7 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second
         return true;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::optional<T> Parallelotope<N, T>::intersect(const Ray<N, T>& r) const
 {
         T first;
@@ -275,7 +275,7 @@ std::optional<T> Parallelotope<N, T>::intersect(const Ray<N, T>& r) const
         return std::nullopt;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::optional<T> Parallelotope<N, T>::intersect_farthest(const Ray<N, T>& r) const
 {
         T first;
@@ -287,7 +287,7 @@ std::optional<T> Parallelotope<N, T>::intersect_farthest(const Ray<N, T>& r) con
         return std::nullopt;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::optional<T> Parallelotope<N, T>::intersect_volume(const Ray<N, T>& r) const
 {
         T first;
@@ -299,7 +299,7 @@ std::optional<T> Parallelotope<N, T>::intersect_volume(const Ray<N, T>& r) const
         return std::nullopt;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& p) const
 {
         // К какой плоскости точка ближе, такой и перпендикуляр в точке
@@ -332,7 +332,7 @@ Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& p) const
         return n;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 bool Parallelotope<N, T>::inside(const Vector<N, T>& p) const
 {
         for (unsigned i = 0; i < N; ++i)
@@ -352,7 +352,7 @@ bool Parallelotope<N, T>::inside(const Vector<N, T>& p) const
         return true;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 template <int INDEX, typename F>
 void Parallelotope<N, T>::binary_division_impl(
         const Vector<N, T>& org,
@@ -377,7 +377,7 @@ void Parallelotope<N, T>::binary_division_impl(
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N, T>::binary_division() const
 {
         std::array<Parallelotope, DIVISIONS> result;
@@ -421,7 +421,7 @@ std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N,
         return result;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 template <int INDEX, typename F>
 void Parallelotope<N, T>::vertices_impl(const Vector<N, T>& p, const F& f) const
 {
@@ -436,7 +436,7 @@ void Parallelotope<N, T>::vertices_impl(const Vector<N, T>& p, const F& f) const
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<Vector<N, T>, Parallelotope<N, T>::VERTEX_COUNT> Parallelotope<N, T>::vertices() const
 {
         std::array<Vector<N, T>, VERTEX_COUNT> result;
@@ -455,7 +455,7 @@ std::array<Vector<N, T>, Parallelotope<N, T>::VERTEX_COUNT> Parallelotope<N, T>:
         return result;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 template <int INDEX, typename F>
 void Parallelotope<N, T>::vertex_ridges_impl(const Vector<N, T>& p, std::array<bool, N>* dimensions, const F& f) const
 {
@@ -473,7 +473,7 @@ void Parallelotope<N, T>::vertex_ridges_impl(const Vector<N, T>& p, std::array<b
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<std::array<Vector<N, T>, 2>, Parallelotope<N, T>::VERTEX_RIDGE_COUNT> Parallelotope<N, T>::vertex_ridges()
         const
 {
@@ -505,7 +505,7 @@ std::array<std::array<Vector<N, T>, 2>, Parallelotope<N, T>::VERTEX_RIDGE_COUNT>
         return result;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 template <int INDEX, typename F>
 void Parallelotope<N, T>::length_impl(const Vector<N, T>& sum, const F& f) const
 {
@@ -520,7 +520,7 @@ void Parallelotope<N, T>::length_impl(const Vector<N, T>& sum, const F& f) const
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 T Parallelotope<N, T>::length() const
 {
         T max_squared = limits<T>::lowest();
@@ -545,13 +545,13 @@ T Parallelotope<N, T>::length() const
         return std::sqrt(max_squared);
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 const Vector<N, T>& Parallelotope<N, T>::org() const
 {
         return m_org;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 const Vector<N, T>& Parallelotope<N, T>::e(unsigned n) const
 {
         ASSERT(n < N);
@@ -561,7 +561,7 @@ const Vector<N, T>& Parallelotope<N, T>::e(unsigned n) const
 
 namespace ns
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::string to_string(const painter::Parallelotope<N, T>& p)
 {
         std::string s;

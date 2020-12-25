@@ -51,7 +51,7 @@ struct WeightedEdge
         Edge2 m_edge;
 
 public:
-        template <size_t N>
+        template <std::size_t N>
         WeightedEdge(const std::vector<Vector<N, float>>& points, const Edge2& edge) : m_edge(edge)
         {
                 // Вес определяется как расстояние между двумя точками.
@@ -71,7 +71,7 @@ public:
         }
 };
 
-template <size_t N>
+template <std::size_t N>
 std::vector<Edge2> all_edges_from_delaunay_objects(const std::vector<std::array<int, N>>& delaunay_objects)
 {
         static_assert(N >= 3);
@@ -105,7 +105,7 @@ std::vector<Edge2> all_edges_from_delaunay_objects(const std::vector<std::array<
         return edges;
 }
 
-template <size_t N>
+template <std::size_t N>
 std::vector<WeightedEdge> weight_edges(const std::vector<Vector<N, float>>& points, const std::vector<Edge2>& edges)
 {
         std::vector<WeightedEdge> weighted_edges;
@@ -154,7 +154,7 @@ std::vector<std::array<int, 2>> kruskal(
         return mst;
 }
 
-template <size_t N>
+template <std::size_t N>
 unsigned unique_vertex_count(const std::vector<std::array<int, N>>& delaunay_objects)
 {
         static_assert(N >= 3);
@@ -175,7 +175,7 @@ unsigned unique_vertex_count(const std::vector<std::array<int, N>>& delaunay_obj
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 std::vector<std::array<int, 2>> minimum_spanning_tree(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, N + 1>>& delaunay_objects,

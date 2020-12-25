@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::shapes
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 class HyperplaneParallelotope final : public Shape<N, T>, public Surface<N, T>
 {
         painter::HyperplaneParallelotope<N, T> m_hyperplane_parallelotope;

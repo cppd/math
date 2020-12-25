@@ -29,16 +29,16 @@ namespace ns::storage
 {
 namespace types_implementation
 {
-template <size_t N>
+template <std::size_t N>
 using MeshObjectPtr = std::shared_ptr<mesh::MeshObject<N>>;
 
-template <size_t N>
+template <std::size_t N>
 using MeshObjectConstPtr = std::shared_ptr<const mesh::MeshObject<N>>;
 
-template <size_t N>
+template <std::size_t N>
 using VolumeObjectPtr = std::shared_ptr<volume::VolumeObject<N>>;
 
-template <size_t N>
+template <std::size_t N>
 using VolumeObjectConstPtr = std::shared_ptr<const volume::VolumeObject<N>>;
 }
 

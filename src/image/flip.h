@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::image
 {
-template <size_t N>
+template <std::size_t N>
 void flip_vertically(Image<N>* image)
 {
         if (image->size[0] < 1 || image->size[1] < 1)
@@ -34,20 +34,21 @@ void flip_vertically(Image<N>* image)
                 error("Error image size");
         }
 
-        size_t pixel_size = format_pixel_size_in_bytes(image->color_format);
-        size_t row_size = pixel_size * image->size[0];
-        size_t size_2d = row_size * image->size[1];
+        std::size_t pixel_size = format_pixel_size_in_bytes(image->color_format);
+        std::size_t row_size = pixel_size * image->size[0];
+        std::size_t size_2d = row_size * image->size[1];
         if (image->pixels.size() % size_2d != 0)
         {
                 error("Error image pixels size");
         }
 
         std::vector<std::byte> row(row_size);
-        size_t r1_end = row_size * (image->size[1] / 2);
-        size_t r2_init = row_size * (image->size[1] - 1);
-        for (size_t offset = 0; offset < image->pixels.size(); offset += size_2d)
+        std::size_t r1_end = row_size * (image->size[1] / 2);
+        std::size_t r2_init = row_size * (image->size[1] - 1);
+        for (std::size_t offset = 0; offset < image->pixels.size(); offset += size_2d)
         {
-                for (size_t r1 = offset, r2 = offset + r2_init; r1 < offset + r1_end; r1 += row_size, r2 -= row_size)
+                for (std::size_t r1 = offset, r2 = offset + r2_init; r1 < offset + r1_end; r1 += row_size, r2 -=
+                                                                                                           row_size)
                 {
                         std::memcpy(row.data(), &(image->pixels)[r1], row_size);
                         std::memcpy(&(image->pixels)[r1], &(image->pixels)[r2], row_size);

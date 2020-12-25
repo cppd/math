@@ -85,7 +85,7 @@ void MeshWidget::on_ambient_changed(int)
         double ambient = m_maximum_model_lighting * slider_position(ui.slider_ambient);
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
+                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
                 {
                         mesh::Writing writing(object.get());
                         writing.set_ambient(ambient);
@@ -106,7 +106,7 @@ void MeshWidget::on_diffuse_changed(int)
         double diffuse = m_maximum_model_lighting * slider_position(ui.slider_diffuse);
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
+                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
                 {
                         mesh::Writing writing(object.get());
                         writing.set_diffuse(diffuse);
@@ -127,7 +127,7 @@ void MeshWidget::on_specular_changed(int)
         double specular = m_maximum_model_lighting * slider_position(ui.slider_specular);
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
+                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
                 {
                         mesh::Writing writing(object.get());
                         writing.set_specular(specular);
@@ -148,7 +148,7 @@ void MeshWidget::on_specular_power_changed(int)
         double specular_power = std::pow(m_maximum_specular_power, slider_position(ui.slider_specular_power));
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
+                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
                 {
                         mesh::Writing writing(object.get());
                         writing.set_specular_power(specular_power);
@@ -169,7 +169,7 @@ void MeshWidget::on_transparency_changed(int)
         double alpha = 1.0 - slider_position(ui.slider_transparency);
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
+                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
                 {
                         mesh::Writing writing(object.get());
                         writing.set_alpha(alpha);
@@ -189,7 +189,7 @@ void MeshWidget::on_color_clicked()
 
         Color color;
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
+                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
                 {
                         mesh::Reading reading(*object);
                         color = reading.color();
@@ -206,7 +206,7 @@ void MeshWidget::on_color_clicked()
                                 return;
                         }
                         std::visit(
-                                [&]<size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
+                                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
                                 {
                                         set_widget_color(ui.widget_color, c);
                                         mesh::Writing writing(object.get());
@@ -277,7 +277,7 @@ void MeshWidget::ui_set(const storage::MeshObjectConst& object)
         set_enabled(true);
 
         std::visit(
-                [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
+                [&]<std::size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
                 {
                         double alpha;
                         Color color;

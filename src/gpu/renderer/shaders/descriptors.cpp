@@ -43,7 +43,7 @@ const void* CommonConstants::data() const
         return &m_data;
 }
 
-size_t CommonConstants::size() const
+std::size_t CommonConstants::size() const
 {
         return sizeof(m_data);
 }
@@ -313,7 +313,7 @@ vulkan::Descriptors MeshMemory::create(
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
-        for (size_t i = 0; i < coordinates.size(); ++i)
+        for (std::size_t i = 0; i < coordinates.size(); ++i)
         {
                 infos.clear();
                 bindings.clear();

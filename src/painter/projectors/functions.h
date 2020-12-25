@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter::projectors_implementation
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void check_orthogonality(const Vector<N, T>& camera_dir, const std::array<Vector<N, T>, N - 1>& screen_axes)
 {
         constexpr T LIMIT_COS = limits<T>::epsilon() * 100;
@@ -49,7 +49,7 @@ void check_orthogonality(const Vector<N, T>& camera_dir, const std::array<Vector
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<Vector<N, T>, N - 1> normalize_axes(const std::array<Vector<N, T>, N - 1>& axes)
 {
         std::array<Vector<N, T>, N - 1> result;
@@ -60,7 +60,7 @@ std::array<Vector<N, T>, N - 1> normalize_axes(const std::array<Vector<N, T>, N 
         return result;
 }
 
-template <typename T, size_t N>
+template <typename T, std::size_t N>
 Vector<N, T> screen_org(const std::array<int, N>& screen_size)
 {
         Vector<N, T> org;
@@ -75,7 +75,7 @@ Vector<N, T> screen_org(const std::array<int, N>& screen_size)
         return org;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 Vector<N, T> screen_dir(const std::array<Vector<N, T>, N - 1>& screen_axes, const Vector<N - 1, T>& screen_point)
 {
         Vector<N, T> dir = screen_axes[0] * screen_point[0];

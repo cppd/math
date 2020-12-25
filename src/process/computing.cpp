@@ -32,7 +32,7 @@ std::function<void(ProgressRatioList*)> action_bound_cocone(const storage::MeshO
         }
 
         return std::visit(
-                [&]<size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
+                [&]<std::size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
                 {
                         std::function<void(ProgressRatioList*)> f = [=](ProgressRatioList* progress_list)
                         {

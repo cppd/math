@@ -93,7 +93,7 @@ void test_compare_with_beta()
         LOG("Check passed");
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void test()
 {
         static_assert(std::is_floating_point_v<T>);
@@ -135,8 +135,8 @@ void test()
         }
 }
 
-template <typename T, size_t... I>
-void test(std::integer_sequence<size_t, I...>)
+template <typename T, std::size_t... I>
+void test(std::integer_sequence<std::size_t, I...>)
 {
         (test<I + 2, T>(), ...);
 }
@@ -146,7 +146,7 @@ void test()
 {
         LOG(std::string("Compare with data, ") + type_name<T>());
 
-        test<T>(std::make_integer_sequence<size_t, 19>());
+        test<T>(std::make_integer_sequence<std::size_t, 19>());
 
         LOG("Check passed");
 }

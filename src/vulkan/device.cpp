@@ -43,7 +43,7 @@ bool find_family(
         ASSERT(flags != 0);
         ASSERT((flags & no_flags) == 0);
 
-        for (size_t i = 0; i < families.size(); ++i)
+        for (std::size_t i = 0; i < families.size(); ++i)
         {
                 const VkQueueFamilyProperties& p = families[i];
 
@@ -454,7 +454,7 @@ uint32_t PhysicalDevice::family_index(VkQueueFlags set_flags, VkQueueFlags not_s
 
 uint32_t PhysicalDevice::presentation_family_index() const
 {
-        for (size_t i = 0; i < m_presentation_supported.size(); ++i)
+        for (std::size_t i = 0; i < m_presentation_supported.size(); ++i)
         {
                 if (m_presentation_supported[i])
                 {

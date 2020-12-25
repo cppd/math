@@ -28,7 +28,7 @@ namespace ns::volume
 {
 namespace vertices_implementation
 {
-template <int n, typename F, size_t N, typename T>
+template <int n, typename F, std::size_t N, typename T>
 void vertices_impl(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors, const F& f)
 {
         if constexpr (n >= 0)
@@ -41,7 +41,7 @@ void vertices_impl(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& v
                 f(org);
         }
 }
-template <typename F, size_t N, typename T>
+template <typename F, std::size_t N, typename T>
 void vertices(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors, const F& f)
 {
         constexpr int last_index = N - 1;
@@ -52,7 +52,7 @@ void vertices(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vector
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 std::array<Vector<N, double>, (1 << N)> vertices(const Volume<N>& volume)
 {
         namespace impl = vertices_implementation;

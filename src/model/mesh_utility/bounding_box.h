@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::mesh
 {
-template <size_t N>
+template <std::size_t N>
 struct BoundingBox
 {
         Vector<N, float> min;
@@ -35,14 +35,14 @@ struct BoundingBox
 
 namespace bounding_box_implementation
 {
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void init_min_max(Vector<N, T>* min, Vector<N, T>* max)
 {
         *min = Vector<N, T>(limits<T>::max());
         *max = Vector<N, T>(limits<T>::lowest());
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 bool min_max_found(const Vector<N, T>& min, const Vector<N, T>& max)
 {
         for (unsigned i = 0; i < N; ++i)
@@ -63,7 +63,7 @@ bool min_max_found(const Vector<N, T>& min, const Vector<N, T>& max)
         return true;
 }
 
-template <size_t N>
+template <std::size_t N>
 std::optional<BoundingBox<N>> bounding_box_for_vector(const std::vector<std::optional<BoundingBox<N>>>& boxes)
 {
         Vector<N, float> min;
@@ -92,7 +92,7 @@ std::optional<BoundingBox<N>> bounding_box_for_vector(const std::vector<std::opt
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 std::optional<BoundingBox<N>> bounding_box_by_facets(const Mesh<N>& mesh)
 {
         namespace impl = bounding_box_implementation;
@@ -135,7 +135,7 @@ std::optional<BoundingBox<N>> bounding_box_by_facets(const Mesh<N>& mesh)
         return b;
 }
 
-template <size_t N>
+template <std::size_t N>
 std::optional<BoundingBox<N>> bounding_box_by_lines(const Mesh<N>& mesh)
 {
         namespace impl = bounding_box_implementation;
@@ -178,7 +178,7 @@ std::optional<BoundingBox<N>> bounding_box_by_lines(const Mesh<N>& mesh)
         return b;
 }
 
-template <size_t N>
+template <std::size_t N>
 std::optional<BoundingBox<N>> bounding_box_by_points(const Mesh<N>& mesh)
 {
         namespace impl = bounding_box_implementation;
@@ -219,7 +219,7 @@ std::optional<BoundingBox<N>> bounding_box_by_points(const Mesh<N>& mesh)
         return b;
 }
 
-template <size_t N>
+template <std::size_t N>
 std::optional<BoundingBox<N>> bounding_box_by_facets_and_lines(const Mesh<N>& mesh)
 {
         std::vector<std::optional<BoundingBox<N>>> boxes;
@@ -230,7 +230,7 @@ std::optional<BoundingBox<N>> bounding_box_by_facets_and_lines(const Mesh<N>& me
         return bounding_box_implementation::bounding_box_for_vector(boxes);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::optional<BoundingBox<N>> bounding_box(const Mesh<N>& mesh)
 {
         std::vector<std::optional<BoundingBox<N>>> boxes;

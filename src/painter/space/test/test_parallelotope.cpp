@@ -86,13 +86,13 @@ bool almost_equal(T a, T b)
         return std::abs(a - b) <= EQUALITY_EPSILON<T>;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 bool almost_equal(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         return (a - b).norm() <= EQUALITY_EPSILON<T>;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 bool test_edge_angles(const std::array<Vector<N, T>, N>& unit_edges)
 {
         for (unsigned i = 0; i < N; ++i)
@@ -108,7 +108,7 @@ bool test_edge_angles(const std::array<Vector<N, T>, N>& unit_edges)
         return true;
 }
 
-template <size_t N, typename T, typename RandomEngine, typename Distribution>
+template <std::size_t N, typename T, typename RandomEngine, typename Distribution>
 std::array<Vector<N, T>, N> random_edges(RandomEngine& engine, Distribution& distribution)
 {
         std::array<Vector<N, T>, N> edges;
@@ -125,7 +125,7 @@ std::array<Vector<N, T>, N> random_edges(RandomEngine& engine, Distribution& dis
         return edges;
 }
 
-template <size_t N, typename T, typename RandomEngine, typename Distribution>
+template <std::size_t N, typename T, typename RandomEngine, typename Distribution>
 std::array<T, N> random_aa_edges(RandomEngine& engine, Distribution& distribution)
 {
         std::array<T, N> edges;
@@ -136,14 +136,14 @@ std::array<T, N> random_aa_edges(RandomEngine& engine, Distribution& distributio
         return edges;
 }
 
-template <typename Parallelotope, typename RandomEngine, size_t... I>
+template <typename Parallelotope, typename RandomEngine, std::size_t... I>
 std::vector<VectorP<Parallelotope>> external_points(
         RandomEngine& engine,
         int count,
         const Parallelotope& p,
-        std::integer_sequence<size_t, I...>)
+        std::integer_sequence<std::size_t, I...>)
 {
-        constexpr size_t N = Parallelotope::SPACE_DIMENSION;
+        constexpr std::size_t N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
 
         static_assert(sizeof...(I) == N);
@@ -171,14 +171,14 @@ std::vector<VectorP<Parallelotope>> external_points(
         return points;
 }
 
-template <typename Parallelotope, typename RandomEngine, size_t... I>
+template <typename Parallelotope, typename RandomEngine, std::size_t... I>
 std::vector<VectorP<Parallelotope>> internal_points(
         RandomEngine& engine,
         int count,
         const Parallelotope& p,
-        std::integer_sequence<size_t, I...>)
+        std::integer_sequence<std::size_t, I...>)
 {
-        constexpr size_t N = Parallelotope::SPACE_DIMENSION;
+        constexpr std::size_t N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
 
         static_assert(sizeof...(I) == N);
@@ -202,14 +202,14 @@ std::vector<VectorP<Parallelotope>> internal_points(
         return points;
 }
 
-template <typename Parallelotope, typename RandomEngine, size_t... I>
+template <typename Parallelotope, typename RandomEngine, std::size_t... I>
 std::vector<VectorP<Parallelotope>> cover_points(
         RandomEngine& engine,
         int count,
         const Parallelotope& p,
-        std::integer_sequence<size_t, I...>)
+        std::integer_sequence<std::size_t, I...>)
 {
-        constexpr size_t N = Parallelotope::SPACE_DIMENSION;
+        constexpr std::size_t N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
 
         static_assert(sizeof...(I) == N);
@@ -260,7 +260,7 @@ std::vector<VectorP<Parallelotope>> cover_points(
         return points;
 }
 
-template <size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> random_direction(RandomEngine& engine)
 {
         std::uniform_real_distribution<T> urd_dir(-1, 1);
@@ -277,7 +277,7 @@ Vector<N, T> random_direction(RandomEngine& engine)
         }
 }
 
-template <size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> random_direction_for_parallelotope_comparison(RandomEngine& engine)
 {
         std::uniform_real_distribution<T> urd_dir(-1, 1);
@@ -301,7 +301,7 @@ Vector<N, T> random_direction_for_parallelotope_comparison(RandomEngine& engine)
         }
 }
 
-template <size_t N, size_t Count, typename T>
+template <std::size_t N, std::size_t Count, typename T>
 bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Constraint<N, T>, Count>& c)
 {
         for (unsigned i = 0; i < Count; ++i)
@@ -326,7 +326,7 @@ bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Con
 template <typename RandomEngine, typename Parallelotope>
 void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
 {
-        constexpr size_t N = Parallelotope::SPACE_DIMENSION;
+        constexpr std::size_t N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
 
         T length = p.length();
@@ -334,7 +334,7 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
         const Constraints<N, T, 2 * N, 0> constraints = p.constraints();
 
         for (const Vector<N, T>& point :
-             external_points(engine, point_count, p, std::make_integer_sequence<size_t, N>()))
+             external_points(engine, point_count, p, std::make_integer_sequence<std::size_t, N>()))
         {
                 if (p.inside(point))
                 {
@@ -348,7 +348,7 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
         }
 
         for (const Vector<N, T>& origin :
-             internal_points(engine, point_count, p, std::make_integer_sequence<size_t, N>()))
+             internal_points(engine, point_count, p, std::make_integer_sequence<std::size_t, N>()))
         {
                 if (!p.inside(origin))
                 {
@@ -409,7 +409,7 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
         }
 }
 
-template <size_t N, typename T, typename... Parallelotope>
+template <std::size_t N, typename T, typename... Parallelotope>
 void verify_intersection(const Ray<N, T>& ray, const Parallelotope&... p)
 {
         static_assert(((N == Parallelotope::SPACE_DIMENSION) && ...));
@@ -438,7 +438,7 @@ void verify_intersection(const Ray<N, T>& ray, const Parallelotope&... p)
         }
 }
 
-template <size_t N, typename T, size_t Count>
+template <std::size_t N, typename T, std::size_t Count>
 void verify_vectors(const std::array<Vector<N, T>, Count>& vectors, const std::string& name)
 {
         for (unsigned i = 1; i < Count; ++i)
@@ -456,7 +456,7 @@ void compare_parallelotopes(RandomEngine& engine, int point_count, const Paralle
 {
         static_assert(sizeof...(Parallelotope) >= 2);
 
-        constexpr size_t N = std::get<0>(std::make_tuple(Parallelotope::SPACE_DIMENSION...));
+        constexpr std::size_t N = std::get<0>(std::make_tuple(Parallelotope::SPACE_DIMENSION...));
         using T = typename std::tuple_element_t<0, std::tuple<Parallelotope...>>::DataType;
 
         static_assert(((N == Parallelotope::SPACE_DIMENSION) && ...));
@@ -482,7 +482,8 @@ void compare_parallelotopes(RandomEngine& engine, int point_count, const Paralle
         }
 
         for (Vector<N, T> origin : cover_points(
-                     engine, point_count, std::get<0>(std::make_tuple(p...)), std::make_integer_sequence<size_t, N>()))
+                     engine, point_count, std::get<0>(std::make_tuple(p...)),
+                     std::make_integer_sequence<std::size_t, N>()))
         {
                 std::array<bool, sizeof...(Parallelotope)> inside{p.inside(origin)...};
                 for (unsigned i = 1; i < sizeof...(Parallelotope); ++i)
@@ -521,7 +522,7 @@ void compare_parallelotopes(RandomEngine& engine, int point_count, const Paralle
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<Vector<N, T>, N> to_edge_vector(const std::array<T, N>& edges)
 {
         std::array<Vector<N, T>, N> edge_vector;
@@ -535,7 +536,7 @@ std::array<Vector<N, T>, N> to_edge_vector(const std::array<T, N>& edges)
         return edge_vector;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<Vector<N + 1, T>, N> to_edge_vector_hyper(const std::array<T, N>& edges)
 {
         std::array<Vector<N + 1, T>, N> edge_vector;
@@ -549,7 +550,7 @@ std::array<Vector<N + 1, T>, N> to_edge_vector_hyper(const std::array<T, N>& edg
         return edge_vector;
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void test_points(int point_count)
 {
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
@@ -629,7 +630,7 @@ void test_algorithms(const Parallelotope& p)
         }
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void test_algorithms()
 {
         constexpr std::array<T, N> edges = make_array_value<T, N>(1);
@@ -679,7 +680,7 @@ std::unique_ptr<ShapeWrapperForIntersection<Parallelotope>> make_unique_wrapper(
         return std::make_unique<ShapeWrapperForIntersection<Parallelotope>>(p);
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void test_intersections()
 {
         std::array<T, N> edges = make_array_value<T, N>(1);
@@ -743,7 +744,7 @@ void test_intersections()
         LOG("Check passed");
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void test_intersections_hyperplane()
 {
         Vector<N, T> org(5);
@@ -858,7 +859,7 @@ void test_intersections_hyperplane()
         LOG("Check passed");
 }
 
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 void all_tests(int point_count)
 {
         test_points<N, T>(point_count);

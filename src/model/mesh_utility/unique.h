@@ -41,7 +41,7 @@ std::vector<T> to_vector(const std::unordered_set<T>& set)
 }
 }
 
-template <size_t N>
+template <std::size_t N>
 std::vector<int> unique_facet_indices(const Mesh<N>& mesh)
 {
         int vertex_count = mesh.vertices.size();
@@ -64,7 +64,7 @@ std::vector<int> unique_facet_indices(const Mesh<N>& mesh)
         return unique_implementation::to_vector(vertices);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::vector<int> unique_line_indices(const Mesh<N>& mesh)
 {
         int vertex_count = mesh.vertices.size();
@@ -87,7 +87,7 @@ std::vector<int> unique_line_indices(const Mesh<N>& mesh)
         return unique_implementation::to_vector(vertices);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::vector<int> unique_point_indices(const Mesh<N>& mesh)
 {
         int vertex_count = mesh.vertices.size();
@@ -109,7 +109,7 @@ std::vector<int> unique_point_indices(const Mesh<N>& mesh)
         return unique_implementation::to_vector(vertices);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::vector<Vector<N, float>> unique_facet_vertices(const Mesh<N>& mesh)
 {
         int vertex_count = mesh.vertices.size();
@@ -132,7 +132,7 @@ std::vector<Vector<N, float>> unique_facet_vertices(const Mesh<N>& mesh)
         return unique_implementation::to_vector(vertices);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::vector<Vector<N, float>> unique_line_vertices(const Mesh<N>& mesh)
 {
         int vertex_count = mesh.vertices.size();
@@ -155,7 +155,7 @@ std::vector<Vector<N, float>> unique_line_vertices(const Mesh<N>& mesh)
         return unique_implementation::to_vector(vertices);
 }
 
-template <size_t N>
+template <std::size_t N>
 std::vector<Vector<N, float>> unique_point_vertices(const Mesh<N>& mesh)
 {
         int vertex_count = mesh.vertices.size();

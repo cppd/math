@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-template <size_t Rows, size_t Columns, typename T>
+template <std::size_t Rows, std::size_t Columns, typename T>
 class Matrix
 {
         static_assert(is_floating_point<T>);
@@ -38,8 +38,8 @@ class Matrix
 
         //
 
-        // template <size_t... I>
-        // constexpr Vector<Rows, T> column_impl(int column, std::integer_sequence<size_t, I...>) const
+        // template <std::size_t... I>
+        // constexpr Vector<Rows, T> column_impl(int column, std::integer_sequence<std::size_t, I...>) const
         //{
         //        static_assert(sizeof...(I) == Rows);
         //        static_assert(((I >= 0 && I < Rows) && ...));
@@ -49,13 +49,14 @@ class Matrix
         //
         // constexpr Vector<Rows, T> column_impl(int column) const
         //{
-        //        return column_impl(column, std::make_integer_sequence<size_t, Rows>());
+        //        return column_impl(column, std::make_integer_sequence<std::size_t, Rows>());
         //}
 
         //
 
-        template <size_t Column, size_t... I>
-        constexpr Vector<Columns, T> make_vector_one_value_impl(const T& v, std::integer_sequence<size_t, I...>) const
+        template <std::size_t Column, std::size_t... I>
+        constexpr Vector<Columns, T> make_vector_one_value_impl(const T& v, std::integer_sequence<std::size_t, I...>)
+                const
         {
                 static_assert(sizeof...(I) == Columns);
                 static_assert(((I >= 0 && I < Columns) && ...));
@@ -64,20 +65,20 @@ class Matrix
                 return {(I == Column ? v : 0)...};
         }
 
-        template <size_t... I>
+        template <std::size_t... I>
         constexpr std::array<Vector<Columns, T>, Rows> make_one_value_rows_impl(
                 const T& v,
-                std::integer_sequence<size_t, I...>) const
+                std::integer_sequence<std::size_t, I...>) const
         {
                 static_assert(sizeof...(I) == Rows);
                 static_assert(((I >= 0 && I < Rows) && ...));
 
-                return {make_vector_one_value_impl<I>(v, std::make_integer_sequence<size_t, Columns>())...};
+                return {make_vector_one_value_impl<I>(v, std::make_integer_sequence<std::size_t, Columns>())...};
         }
 
         constexpr std::array<Vector<Columns, T>, Rows> make_diagonal_matrix(const T& v) const
         {
-                return make_one_value_rows_impl(v, std::make_integer_sequence<size_t, Rows>());
+                return make_one_value_rows_impl(v, std::make_integer_sequence<std::size_t, Rows>());
         }
 
 public:
@@ -135,7 +136,7 @@ public:
                 return res;
         }
 
-        template <size_t R = Rows, size_t C = Columns>
+        template <std::size_t R = Rows, std::size_t C = Columns>
         std::enable_if_t<R == C, T> determinant() const
         {
                 static_assert(R == Rows && C == Columns && Rows == Columns);
@@ -145,7 +146,7 @@ public:
                 return numerical::determinant_gauss(&m);
         }
 
-        template <size_t R = Rows, size_t C = Columns>
+        template <std::size_t R = Rows, std::size_t C = Columns>
         std::enable_if_t<R == C, Matrix<Rows, Rows, T>> inverse() const
         {
                 static_assert(R == Rows && C == Columns && Rows == Columns);
@@ -158,7 +159,7 @@ public:
                 return b;
         }
 
-        template <size_t R = Rows, size_t C = Columns>
+        template <std::size_t R = Rows, std::size_t C = Columns>
         std::enable_if_t<R == C, Vector<Rows, T>> solve(const Vector<Rows, T>& b) const
         {
                 static_assert(R == Rows && C == Columns && Rows == Columns);
@@ -171,7 +172,7 @@ public:
                 return x;
         }
 
-        template <size_t R, size_t C>
+        template <std::size_t R, std::size_t C>
         Matrix<R, C, T> top_left() const
         {
                 static_assert(R <= Rows && C <= Columns && (R < Rows || C < Columns));
@@ -188,7 +189,7 @@ public:
 
         T trace() const
         {
-                constexpr size_t N = std::min(Rows, Columns);
+                constexpr std::size_t N = std::min(Rows, Columns);
                 T s = 0;
                 for (unsigned i = 0; i < N; ++i)
                 {
@@ -199,7 +200,7 @@ public:
 
         Vector<std::min(Rows, Columns), T> diagonal() const
         {
-                constexpr size_t N = std::min(Rows, Columns);
+                constexpr std::size_t N = std::min(Rows, Columns);
                 Vector<N, T> d;
                 for (unsigned i = 0; i < N; ++i)
                 {
@@ -209,7 +210,7 @@ public:
         }
 };
 
-template <size_t Rows, size_t Inner, size_t Columns, typename T>
+template <std::size_t Rows, std::size_t Inner, std::size_t Columns, typename T>
 Matrix<Rows, Columns, T> operator*(const Matrix<Rows, Inner, T>& m1, const Matrix<Inner, Columns, T>& m2)
 {
         Matrix<Rows, Columns, T> res;
@@ -231,7 +232,7 @@ Matrix<Rows, Columns, T> operator*(const Matrix<Rows, Inner, T>& m1, const Matri
         return res;
 }
 
-template <size_t Rows, size_t Columns, typename T>
+template <std::size_t Rows, std::size_t Columns, typename T>
 Vector<Columns, T> operator*(const Vector<Rows, T>& v, const Matrix<Rows, Columns, T>& m)
 {
         Vector<Columns, T> res;
@@ -249,7 +250,7 @@ Vector<Columns, T> operator*(const Vector<Rows, T>& v, const Matrix<Rows, Column
         return res;
 }
 
-template <size_t Rows, size_t Columns, typename T>
+template <std::size_t Rows, std::size_t Columns, typename T>
 Vector<Rows, T> operator*(const Matrix<Rows, Columns, T>& m, const Vector<Columns, T>& v)
 {
         Vector<Rows, T> res;
@@ -264,7 +265,7 @@ Vector<Rows, T> operator*(const Matrix<Rows, Columns, T>& m, const Vector<Column
         return res;
 }
 
-template <typename Dst, size_t Rows, size_t Columns, typename Src>
+template <typename Dst, std::size_t Rows, std::size_t Columns, typename Src>
 std::enable_if_t<!std::is_same_v<Dst, Src>, Matrix<Rows, Columns, Dst>> to_matrix(const Matrix<Rows, Columns, Src>& m)
 {
         Matrix<Rows, Columns, Dst> res;
@@ -278,14 +279,14 @@ std::enable_if_t<!std::is_same_v<Dst, Src>, Matrix<Rows, Columns, Dst>> to_matri
         return res;
 }
 
-template <typename Dst, size_t Rows, size_t Columns, typename Src>
+template <typename Dst, std::size_t Rows, std::size_t Columns, typename Src>
 std::enable_if_t<std::is_same_v<Dst, Src>, const Matrix<Rows, Columns, Src>&> to_matrix(
         const Matrix<Rows, Columns, Src>& m)
 {
         return m;
 }
 
-template <size_t Rows, size_t Columns, typename T>
+template <std::size_t Rows, std::size_t Columns, typename T>
 std::string to_string(const Matrix<Rows, Columns, T>& m)
 {
         std::string s;

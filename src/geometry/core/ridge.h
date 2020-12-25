@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-template <size_t N>
+template <std::size_t N>
 class Ridge
 {
         static_assert(N > 1);
@@ -71,7 +71,7 @@ public:
                 return m_vertices;
         }
 
-        size_t hash() const
+        std::size_t hash() const
         {
                 return array_hash(m_vertices);
         }
@@ -219,7 +219,7 @@ public:
         }
 };
 
-template <size_t N, typename Facet, template <typename...> typename Map, typename MapData>
+template <std::size_t N, typename Facet, template <typename...> typename Map, typename MapData>
 void add_to_ridges(const Facet& facet, Map<Ridge<N>, MapData>* m)
 {
         for (unsigned r = 0; r < N; ++r)
@@ -238,7 +238,7 @@ void add_to_ridges(const Facet& facet, Map<Ridge<N>, MapData>* m)
         }
 }
 
-template <size_t N, typename Facet, template <typename...> typename Map, typename MapData>
+template <std::size_t N, typename Facet, template <typename...> typename Map, typename MapData>
 void remove_from_ridges(const Facet& facet, Map<Ridge<N>, MapData>* m)
 {
         for (unsigned r = 0; r < N; ++r)
@@ -256,7 +256,7 @@ void remove_from_ridges(const Facet& facet, Map<Ridge<N>, MapData>* m)
         }
 }
 
-template <size_t N, typename Facet, template <typename...> typename Set>
+template <std::size_t N, typename Facet, template <typename...> typename Set>
 void add_to_ridges(const Facet& facet, int exclude_point, Set<Ridge<N>>* ridges)
 {
         const std::array<int, N>& vertices = facet.vertices();
@@ -272,10 +272,10 @@ void add_to_ridges(const Facet& facet, int exclude_point, Set<Ridge<N>>* ridges)
 
 namespace std
 {
-template <size_t N>
+template <std::size_t N>
 struct hash<::ns::geometry::Ridge<N>>
 {
-        size_t operator()(const ::ns::geometry::Ridge<N>& v) const
+        std::size_t operator()(const ::ns::geometry::Ridge<N>& v) const
         {
                 return v.hash();
         }

@@ -25,7 +25,7 @@ std::set<unsigned> supported_dimensions()
 {
         std::set<unsigned> v;
 
-        [&]<size_t... N>(const std::index_sequence<N...>&)
+        [&]<std::size_t... N>(const std::index_sequence<N...>&)
         {
                 (v.insert(N), ...);
         }

@@ -141,7 +141,7 @@ const void* FilterConstant::data() const
         return &m_data;
 }
 
-size_t FilterConstant::size() const
+std::size_t FilterConstant::size() const
 {
         return sizeof(m_data);
 }

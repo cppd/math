@@ -37,7 +37,7 @@ void pipeline_shader_stage_create_info(
         create_info->resize(shaders.size());
         specialization_info->clear();
 
-        for (size_t i = 0; i < shaders.size(); ++i)
+        for (std::size_t i = 0; i < shaders.size(); ++i)
         {
                 const Shader* shader = shaders[i];
                 ASSERT(shader);
