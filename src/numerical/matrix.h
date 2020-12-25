@@ -39,7 +39,7 @@ class Matrix
         //
 
         // template <std::size_t... I>
-        // constexpr Vector<Rows, T> column_impl(int column, std::integer_sequence<std::size_t, I...>) const
+        // constexpr Vector<Rows, T> column_impl(std::size_t column, std::integer_sequence<std::size_t, I...>) const
         //{
         //        static_assert(sizeof...(I) == Rows);
         //        static_assert(((I >= 0 && I < Rows) && ...));
@@ -47,7 +47,7 @@ class Matrix
         //        return Vector<Rows, T>{m_data[I][column]...};
         //}
         //
-        // constexpr Vector<Rows, T> column_impl(int column) const
+        // constexpr Vector<Rows, T> column_impl(std::size_t column) const
         //{
         //        return column_impl(column, std::make_integer_sequence<std::size_t, Rows>());
         //}
@@ -97,22 +97,22 @@ public:
                 static_assert(Columns == Rows);
         }
 
-        constexpr const Vector<Columns, T>& row(int r) const
+        constexpr const Vector<Columns, T>& row(std::size_t r) const
         {
                 return m_data[r];
         }
 
-        constexpr Vector<Columns, T>& row(int r)
+        constexpr Vector<Columns, T>& row(std::size_t r)
         {
                 return m_data[r];
         }
 
-        constexpr const T& operator()(int r, int c) const
+        constexpr const T& operator()(std::size_t r, std::size_t c) const
         {
                 return m_data[r][c];
         }
 
-        constexpr T& operator()(int r, int c)
+        constexpr T& operator()(std::size_t r, std::size_t c)
         {
                 return m_data[r][c];
         }
@@ -126,9 +126,9 @@ public:
         Matrix<Columns, Rows, T> transpose() const
         {
                 Matrix<Columns, Rows, T> res;
-                for (unsigned r = 0; r < Rows; ++r)
+                for (std::size_t r = 0; r < Rows; ++r)
                 {
-                        for (unsigned c = 0; c < Columns; ++c)
+                        for (std::size_t c = 0; c < Columns; ++c)
                         {
                                 res(c, r) = m_data[r][c];
                         }
@@ -177,9 +177,9 @@ public:
         {
                 static_assert(R <= Rows && C <= Columns && (R < Rows || C < Columns));
                 Matrix<R, C, T> res;
-                for (unsigned r = 0; r < R; ++r)
+                for (std::size_t r = 0; r < R; ++r)
                 {
-                        for (unsigned c = 0; c < C; ++c)
+                        for (std::size_t c = 0; c < C; ++c)
                         {
                                 res(r, c) = m_data[r][c];
                         }
@@ -191,7 +191,7 @@ public:
         {
                 constexpr std::size_t N = std::min(Rows, Columns);
                 T s = 0;
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         s += m_data[i][i];
                 }
@@ -202,7 +202,7 @@ public:
         {
                 constexpr std::size_t N = std::min(Rows, Columns);
                 Vector<N, T> d;
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         d[i] = m_data[i][i];
                 }
@@ -214,16 +214,16 @@ template <std::size_t Rows, std::size_t Inner, std::size_t Columns, typename T>
 Matrix<Rows, Columns, T> operator*(const Matrix<Rows, Inner, T>& m1, const Matrix<Inner, Columns, T>& m2)
 {
         Matrix<Rows, Columns, T> res;
-        for (unsigned r = 0; r < Rows; ++r)
+        for (std::size_t r = 0; r < Rows; ++r)
         {
                 Vector<Columns, T>& row = res.row(r);
-                for (unsigned c = 0; c < Columns; ++c)
+                for (std::size_t c = 0; c < Columns; ++c)
                 {
                         row[c] = m1(r, 0) * m2(0, c);
                 }
-                for (unsigned i = 1; i < Inner; ++i)
+                for (std::size_t i = 1; i < Inner; ++i)
                 {
-                        for (unsigned c = 0; c < Columns; ++c)
+                        for (std::size_t c = 0; c < Columns; ++c)
                         {
                                 row[c] = std::fma(m1(r, i), m2(i, c), row[c]);
                         }
@@ -236,13 +236,13 @@ template <std::size_t Rows, std::size_t Columns, typename T>
 Vector<Columns, T> operator*(const Vector<Rows, T>& v, const Matrix<Rows, Columns, T>& m)
 {
         Vector<Columns, T> res;
-        for (unsigned c = 0; c < Columns; ++c)
+        for (std::size_t c = 0; c < Columns; ++c)
         {
                 res[c] = v[0] * m(0, c);
         }
-        for (unsigned r = 1; r < Rows; ++r)
+        for (std::size_t r = 1; r < Rows; ++r)
         {
-                for (unsigned c = 0; c < Columns; ++c)
+                for (std::size_t c = 0; c < Columns; ++c)
                 {
                         res[c] = std::fma(v[r], m(r, c), res[c]);
                 }
@@ -254,10 +254,10 @@ template <std::size_t Rows, std::size_t Columns, typename T>
 Vector<Rows, T> operator*(const Matrix<Rows, Columns, T>& m, const Vector<Columns, T>& v)
 {
         Vector<Rows, T> res;
-        for (unsigned r = 0; r < Rows; ++r)
+        for (std::size_t r = 0; r < Rows; ++r)
         {
                 res[r] = m(r, 0) * v[0];
-                for (unsigned c = 1; c < Columns; ++c)
+                for (std::size_t c = 1; c < Columns; ++c)
                 {
                         res[r] = std::fma(m(r, c), v[c], res[r]);
                 }
@@ -269,9 +269,9 @@ template <typename Dst, std::size_t Rows, std::size_t Columns, typename Src>
 std::enable_if_t<!std::is_same_v<Dst, Src>, Matrix<Rows, Columns, Dst>> to_matrix(const Matrix<Rows, Columns, Src>& m)
 {
         Matrix<Rows, Columns, Dst> res;
-        for (unsigned r = 0; r < Rows; ++r)
+        for (std::size_t r = 0; r < Rows; ++r)
         {
-                for (unsigned c = 0; c < Columns; ++c)
+                for (std::size_t c = 0; c < Columns; ++c)
                 {
                         res(r, c) = m(r, c);
                 }
@@ -291,7 +291,7 @@ std::string to_string(const Matrix<Rows, Columns, T>& m)
 {
         std::string s;
         s += to_string(m.row(0));
-        for (unsigned r = 1; r < Rows; ++r)
+        for (std::size_t r = 1; r < Rows; ++r)
         {
                 s += '\n';
                 s += to_string(m.row(r));

@@ -47,8 +47,9 @@ void flip_vertically(Image<N>* image)
         std::size_t r2_init = row_size * (image->size[1] - 1);
         for (std::size_t offset = 0; offset < image->pixels.size(); offset += size_2d)
         {
-                for (std::size_t r1 = offset, r2 = offset + r2_init; r1 < offset + r1_end; r1 += row_size, r2 -=
-                                                                                                           row_size)
+                std::size_t r1 = offset;
+                std::size_t r2 = offset + r2_init;
+                for (; r1 < offset + r1_end; r1 += row_size, r2 -= row_size)
                 {
                         std::memcpy(row.data(), &(image->pixels)[r1], row_size);
                         std::memcpy(&(image->pixels)[r1], &(image->pixels)[r2], row_size);

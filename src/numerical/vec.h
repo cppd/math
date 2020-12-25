@@ -58,12 +58,12 @@ public:
         {
         }
 
-        constexpr const T& operator[](unsigned i) const
+        constexpr const T& operator[](std::size_t i) const
         {
                 return m_data[i];
         }
 
-        constexpr T& operator[](unsigned i)
+        constexpr T& operator[](std::size_t i)
         {
                 return m_data[i];
         }
@@ -81,7 +81,7 @@ public:
 
         constexpr bool operator==(const Vector<N, T>& a) const
         {
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         if (m_data[i] != a.m_data[i])
                         {
@@ -93,7 +93,7 @@ public:
 
         Vector<N, T>& operator+=(const Vector<N, T>& a)
         {
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         m_data[i] += a[i];
                 }
@@ -102,7 +102,7 @@ public:
 
         Vector<N, T>& operator-=(const Vector<N, T>& a)
         {
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         m_data[i] -= a[i];
                 }
@@ -111,7 +111,7 @@ public:
 
         Vector<N, T>& operator*=(const T& v)
         {
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         m_data[i] *= v;
                 }
@@ -120,7 +120,7 @@ public:
 
         Vector<N, T>& operator/=(const T& v)
         {
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         m_data[i] /= v;
                 }
@@ -134,7 +134,7 @@ public:
         [[nodiscard]] T norm_1() const
         {
                 T sum = std::abs(m_data[0]);
-                for (unsigned i = 1; i < N; ++i)
+                for (std::size_t i = 1; i < N; ++i)
                 {
                         sum += std::abs(m_data[i]);
                 }
@@ -143,7 +143,7 @@ public:
         [[nodiscard]] T norm_infinity() const
         {
                 T max = std::abs(m_data[0]);
-                for (unsigned i = 1; i < N; ++i)
+                for (std::size_t i = 1; i < N; ++i)
                 {
                         max = std::max(std::abs(m_data[i]), max);
                 }
@@ -152,7 +152,7 @@ public:
         [[nodiscard]] T norm_squared() const
         {
                 T s = m_data[0] * m_data[0];
-                for (unsigned i = 1; i < N; ++i)
+                for (std::size_t i = 1; i < N; ++i)
                 {
                         s = std::fma(m_data[i], m_data[i], s);
                 }
@@ -168,7 +168,7 @@ public:
 
                 T k = m_data[0] / max;
                 T s = k * k;
-                for (unsigned i = 1; i < N; ++i)
+                for (std::size_t i = 1; i < N; ++i)
                 {
                         k = m_data[i] / max;
                         s = std::fma(k, k, s);
@@ -179,7 +179,7 @@ public:
         void normalize()
         {
                 T n = norm();
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         m_data[i] /= n;
                 }
@@ -188,7 +188,7 @@ public:
         {
                 T n = norm();
                 Vector<N, T> res;
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         res[i] = m_data[i] / n;
                 }
@@ -197,7 +197,7 @@ public:
 
         bool is_zero() const
         {
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         if (m_data[i] == 0)
                         {
@@ -213,7 +213,7 @@ template <std::size_t N, typename T>
 Vector<N, T> operator+(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = a[i] + b[i];
         }
@@ -224,7 +224,7 @@ template <std::size_t N, typename T>
 Vector<N, T> operator-(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = a[i] - b[i];
         }
@@ -235,7 +235,7 @@ template <std::size_t N, typename T>
 Vector<N, T> operator*(const Vector<N, T>& a, T b)
 {
         Vector<N, T> res;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = a[i] * b;
         }
@@ -246,7 +246,7 @@ template <std::size_t N, typename T>
 Vector<N, T> operator*(T b, const Vector<N, T>& a)
 {
         Vector<N, T> res;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = b * a[i];
         }
@@ -257,7 +257,7 @@ template <std::size_t N, typename T>
 Vector<N, T> operator*(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = a[i] * b[i];
         }
@@ -268,7 +268,7 @@ template <std::size_t N, typename T>
 Vector<N, T> operator/(const Vector<N, T>& a, T b)
 {
         Vector<N, T> res;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = a[i] / b;
         }
@@ -279,7 +279,7 @@ template <std::size_t N, typename T>
 Vector<N, T> operator-(const Vector<N, T>& a)
 {
         Vector<N, T> res;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = -a[i];
         }
@@ -290,7 +290,7 @@ template <std::size_t N, typename T>
 Vector<N, T> max_vector(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = std::max(a[i], b[i]);
         }
@@ -301,7 +301,7 @@ template <std::size_t N, typename T>
 Vector<N, T> min_vector(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = std::min(a[i], b[i]);
         }
@@ -312,7 +312,7 @@ template <std::size_t N, typename T>
 T dot(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         T result = a[0] * b[0];
-        for (unsigned i = 1; i < N; ++i)
+        for (std::size_t i = 1; i < N; ++i)
         {
                 result = std::fma(a[i], b[i], result);
         }
@@ -323,7 +323,7 @@ template <std::size_t N, typename T, typename F>
 Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, F x)
 {
         Vector<N, T> result;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 result[i] = interpolation(a[i], b[i], x);
         }
@@ -333,7 +333,7 @@ Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, F x)
 template <std::size_t N, typename T>
 bool is_finite(const Vector<N, T>& data)
 {
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 if (is_finite(data[i]))
                 {
@@ -348,7 +348,7 @@ template <typename Dst, std::size_t N, typename Src>
 std::enable_if_t<!std::is_same_v<Dst, Src>, Vector<N, Dst>> to_vector(const Vector<N, Src>& v)
 {
         Vector<N, Dst> res;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = v[i];
         }
@@ -365,7 +365,7 @@ template <typename Dst, std::size_t N, typename Src>
 Vector<N, Dst> to_vector(const std::array<Src, N>& array)
 {
         Vector<N, Dst> res;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = array[i];
         }
@@ -375,10 +375,11 @@ Vector<N, Dst> to_vector(const std::array<Src, N>& array)
 template <typename Dst, std::size_t N, typename Src>
 std::enable_if_t<!std::is_same_v<Dst, Src>, std::vector<Vector<N, Dst>>> to_vector(const std::vector<Vector<N, Src>>& v)
 {
-        std::vector<Vector<N, Dst>> res(v.size());
-        for (unsigned i = 0; i < v.size(); ++i)
+        std::vector<Vector<N, Dst>> res;
+        res.reserve(v.size());
+        for (const Vector<N, Src>& src : v)
         {
-                res[i] = to_vector<Dst>(v[i]);
+                res.push_back(to_vector<Dst>(src));
         }
         return res;
 }
