@@ -29,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
-#include <src/numerical/random.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
@@ -64,6 +63,18 @@ constexpr double MAX_DOT_PRODUCT_OF_EDGES<double> = 0.9;
 template <typename Parallelotope>
 using VectorP = Vector<Parallelotope::SPACE_DIMENSION, typename Parallelotope::DataType>;
 
+template <typename T, std::size_t... I>
+constexpr Vector<sizeof...(I), T> last_coord_impl(T v, T last, std::integer_sequence<std::size_t, I...>&&)
+{
+        return Vector<sizeof...(I), T>((I + 1 < sizeof...(I) ? v : last)...);
+}
+
+template <std::size_t N, typename T>
+constexpr Vector<N, T> last_coord(T v, T last)
+{
+        return last_coord_impl(v, last, std::make_integer_sequence<std::size_t, N>());
+}
+
 void print_separator()
 {
         if (PRINT_ALL)
@@ -93,47 +104,81 @@ bool almost_equal(const Vector<N, T>& a, const Vector<N, T>& b)
 }
 
 template <std::size_t N, typename T>
-bool test_edge_angles(const std::array<Vector<N, T>, N>& unit_edges)
+bool test_edges(T edge_min_length, T edge_max_length, const std::array<Vector<N, T>, N>& edges)
 {
-        for (unsigned i = 0; i < N; ++i)
+        std::array<Vector<N, T>, N> unit_edges = edges;
+        for (Vector<N, T>& v : unit_edges)
         {
-                for (unsigned j = i + 1; j < N; ++j)
+                T length = v.norm();
+                if (!(length >= edge_min_length && length <= edge_max_length))
                 {
-                        if (std::abs(dot(unit_edges[i], unit_edges[j])) >= MAX_DOT_PRODUCT_OF_EDGES<T>)
+                        return false;
+                }
+                v /= length;
+        }
+
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                for (std::size_t j = i + 1; j < N; ++j)
+                {
+                        if (!(std::abs(dot(unit_edges[i], unit_edges[j])) < MAX_DOT_PRODUCT_OF_EDGES<T>))
                         {
                                 return false;
                         }
                 }
         }
+
         return true;
 }
 
-template <std::size_t N, typename T, typename RandomEngine, typename Distribution>
-std::array<Vector<N, T>, N> random_edges(RandomEngine& engine, Distribution& distribution)
+template <std::size_t N, typename T, typename Engine>
+std::array<Vector<N, T>, N> generate_edges(T edge_min_length, T edge_max_length, Engine& engine)
 {
-        std::array<Vector<N, T>, N> edges;
+        ASSERT(edge_min_length > 0 && edge_min_length <= edge_max_length);
 
+        std::uniform_real_distribution<T> urd(-edge_max_length, edge_max_length);
+
+        std::array<Vector<N, T>, N> edges;
         do
         {
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
-                        edges[i] = random_vector<N, T>(engine, distribution).normalized();
+                        for (std::size_t j = 0; j < N; ++j)
+                        {
+                                edges[i][j] = urd(engine);
+                        }
                 }
 
-        } while (!test_edge_angles(edges));
-
+        } while (!test_edges(edge_min_length, edge_max_length, edges));
         return edges;
 }
 
-template <std::size_t N, typename T, typename RandomEngine, typename Distribution>
-std::array<T, N> random_aa_edges(RandomEngine& engine, Distribution& distribution)
+template <std::size_t N, typename T, typename Engine>
+std::array<T, N> generate_aa_edges(T edge_min_length, T edge_max_length, Engine& engine)
 {
+        ASSERT(edge_min_length > 0 && edge_min_length <= edge_max_length);
+
+        std::uniform_real_distribution<T> urd(edge_min_length, edge_max_length);
         std::array<T, N> edges;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
-                edges[i] = distribution(engine);
+                edges[i] = urd(engine);
         }
         return edges;
+}
+
+template <std::size_t N, typename T, typename Engine>
+Vector<N, T> generate_org(T org_size, Engine& engine)
+{
+        ASSERT(org_size >= 0);
+
+        std::uniform_real_distribution<T> urd(-org_size, org_size);
+        Vector<N, T> org;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                org[i] = urd(engine);
+        }
+        return org;
 }
 
 template <typename Parallelotope, typename RandomEngine, std::size_t... I>
@@ -265,12 +310,17 @@ Vector<N, T> random_direction(RandomEngine& engine)
 {
         std::uniform_real_distribution<T> urd_dir(-1, 1);
 
-        // Равновероятность всех направлений не нужна
         while (true)
         {
-                Vector<N, T> direction = random_vector<N, T>(engine, urd_dir);
+                Vector<N, T> direction;
 
-                if (direction.norm_squared() > 0)
+                // Равновероятность всех направлений не нужна
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        direction[i] = urd_dir(engine);
+                }
+
+                if (direction.norm() > 0)
                 {
                         return direction;
                 }
@@ -294,7 +344,7 @@ Vector<N, T> random_direction_for_parallelotope_comparison(RandomEngine& engine)
                         direction[i] = uid_select(engine) != 0 ? urd_dir(engine) : uid_dir(engine);
                 }
 
-                if (direction.norm_squared() > 0)
+                if (direction.norm() > 0)
                 {
                         return direction;
                 }
@@ -523,7 +573,7 @@ void compare_parallelotopes(RandomEngine& engine, int point_count, const Paralle
 }
 
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N> to_edge_vector(const std::array<T, N>& edges)
+constexpr std::array<Vector<N, T>, N> to_edge_vector(const std::array<T, N>& edges)
 {
         std::array<Vector<N, T>, N> edge_vector;
         for (unsigned i = 0; i < N; ++i)
@@ -537,7 +587,7 @@ std::array<Vector<N, T>, N> to_edge_vector(const std::array<T, N>& edges)
 }
 
 template <std::size_t N, typename T>
-std::array<Vector<N + 1, T>, N> to_edge_vector_hyper(const std::array<T, N>& edges)
+constexpr std::array<Vector<N + 1, T>, N> to_edge_vector_hyper(const std::array<T, N>& edges)
 {
         std::array<Vector<N + 1, T>, N> edge_vector;
         for (unsigned i = 0; i < N; ++i)
@@ -555,7 +605,9 @@ void test_points(int point_count)
 {
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
-        std::uniform_real_distribution<T> urd_org(-10, 10);
+        constexpr T ORG_SIZE = 10;
+        constexpr T MIN_LENGTH = 0.1;
+        constexpr T MAX_LENGTH = 20;
 
         LOG("------------------------------");
         LOG("Parallelotope points in " + space_name(N));
@@ -564,9 +616,8 @@ void test_points(int point_count)
         LOG("ParallelotopeAA");
 
         {
-                Vector<N, T> org = random_vector<N, T>(engine, urd_org);
-                std::uniform_real_distribution<T> urd(0.1, 20);
-                std::array<T, N> edges = random_aa_edges<N, T>(engine, urd);
+                Vector<N, T> org = generate_org<N, T>(ORG_SIZE, engine);
+                std::array<T, N> edges = generate_aa_edges<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
                 ParallelotopeAA<N, T> p(org, edges);
 
                 print_message(to_string(p));
@@ -578,9 +629,8 @@ void test_points(int point_count)
         LOG("Parallelotope");
 
         {
-                Vector<N, T> org = random_vector<N, T>(engine, urd_org);
-                std::uniform_real_distribution<T> urd(-20.0, 20.0);
-                std::array<Vector<N, T>, N> edges = random_edges<N, T>(engine, urd);
+                Vector<N, T> org = generate_org<N, T>(ORG_SIZE, engine);
+                std::array<Vector<N, T>, N> edges = generate_edges<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
                 Parallelotope<N, T> p(org, edges);
 
                 print_message(to_string(p));
@@ -592,9 +642,8 @@ void test_points(int point_count)
         LOG("Parallelotope comparison");
 
         {
-                Vector<N, T> org = random_vector<N, T>(engine, urd_org);
-                std::uniform_real_distribution<T> urd(0.1, 20);
-                std::array<T, N> edges = random_aa_edges<N, T>(engine, urd);
+                Vector<N, T> org = generate_org<N, T>(ORG_SIZE, engine);
+                std::array<T, N> edges = generate_aa_edges<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
 
                 ParallelotopeAA<N, T> p_aa(org, edges);
                 Parallelotope<N, T> p(org, to_edge_vector(edges));
@@ -633,8 +682,8 @@ void test_algorithms(const Parallelotope& p)
 template <std::size_t N, typename T>
 void test_algorithms()
 {
-        constexpr std::array<T, N> edges = make_array_value<T, N>(1);
-        constexpr Vector<N, T> org(0);
+        constexpr std::array<T, N> EDGES = make_array_value<T, N>(1);
+        constexpr Vector<N, T> ORG(0);
 
         LOG("------------------------------");
         LOG("Parallelotope algorithms in " + space_name(N));
@@ -643,7 +692,7 @@ void test_algorithms()
         LOG("ParallelotopeAA");
 
         {
-                ParallelotopeAA<N, T> p(org, edges);
+                ParallelotopeAA<N, T> p(ORG, EDGES);
                 test_algorithms(p);
         }
 
@@ -651,7 +700,7 @@ void test_algorithms()
         LOG("Parallelotope");
 
         {
-                Parallelotope<N, T> p(org, to_edge_vector(edges));
+                Parallelotope<N, T> p(ORG, to_edge_vector(EDGES));
                 test_algorithms(p);
         }
 
@@ -683,13 +732,13 @@ std::unique_ptr<ShapeWrapperForIntersection<Parallelotope>> make_unique_wrapper(
 template <std::size_t N, typename T>
 void test_intersections()
 {
-        std::array<T, N> edges = make_array_value<T, N>(1);
-        Vector<N, T> org0(0.0);
-        Vector<N, T> org1(0.75);
-        Vector<N, T> org2(1.5);
+        constexpr std::array<T, N> EDGES = make_array_value<T, N>(1);
+        constexpr Vector<N, T> ORG_0(0.0);
+        constexpr Vector<N, T> ORG_1(0.75);
+        constexpr Vector<N, T> ORG_2(1.5);
 
-        Vector<N, T> org_big(-5);
-        std::array<T, N> edges_big = make_array_value<T, N>(10);
+        constexpr Vector<N, T> ORG_BIG(-5);
+        constexpr std::array<T, N> EDGES_BIG = make_array_value<T, N>(10);
 
         LOG("------------------------------");
         LOG("Parallelotope intersections in " + space_name(N));
@@ -698,10 +747,10 @@ void test_intersections()
         LOG("ParallelotopeAA");
 
         {
-                ParallelotopeAA<N, T> p1(org0, edges);
-                ParallelotopeAA<N, T> p2(org1, edges);
-                ParallelotopeAA<N, T> p3(org2, edges);
-                ParallelotopeAA<N, T> p_big(org_big, edges_big);
+                ParallelotopeAA<N, T> p1(ORG_0, EDGES);
+                ParallelotopeAA<N, T> p2(ORG_1, EDGES);
+                ParallelotopeAA<N, T> p3(ORG_2, EDGES);
+                ParallelotopeAA<N, T> p_big(ORG_BIG, EDGES_BIG);
 
                 std::unique_ptr w1 = make_unique_wrapper(p1);
                 std::unique_ptr w2 = make_unique_wrapper(p2);
@@ -721,10 +770,10 @@ void test_intersections()
         LOG("Parallelotope");
 
         {
-                Parallelotope<N, T> p1(org0, to_edge_vector(edges));
-                Parallelotope<N, T> p2(org1, to_edge_vector(edges));
-                Parallelotope<N, T> p3(org2, to_edge_vector(edges));
-                Parallelotope<N, T> p_big(org_big, to_edge_vector(edges_big));
+                Parallelotope<N, T> p1(ORG_0, to_edge_vector(EDGES));
+                Parallelotope<N, T> p2(ORG_1, to_edge_vector(EDGES));
+                Parallelotope<N, T> p3(ORG_2, to_edge_vector(EDGES));
+                Parallelotope<N, T> p_big(ORG_BIG, to_edge_vector(EDGES_BIG));
 
                 std::unique_ptr w1 = make_unique_wrapper(p1);
                 std::unique_ptr w2 = make_unique_wrapper(p2);
@@ -747,52 +796,50 @@ void test_intersections()
 template <std::size_t N, typename T>
 void test_intersections_hyperplane()
 {
-        Vector<N, T> org(5);
-        std::array<T, N> edges = make_array_value<T, N>(1);
+        constexpr Vector<N, T> ORG(5);
+        constexpr T SIZE = 1;
 
-        std::array<Vector<N, T>, N - 1> edges_hyper_big = to_edge_vector_hyper(make_array_value<T, N - 1>(3));
-        Vector<N, T> org1(4);
-        Vector<N, T> org2(4);
-        Vector<N, T> org3(4);
-        org1[N - 1] = 4.9;
-        org2[N - 1] = 5.5;
-        org3[N - 1] = 6.1;
+        constexpr T SIZE_BIG = 3;
 
-        std::array<Vector<N, T>, N - 1> edges_hyper_small = to_edge_vector_hyper(make_array_value<T, N - 1>(0.2));
-        Vector<N, T> org4(4.9);
-        Vector<N, T> org5(4.9);
-        Vector<N, T> org6(4.9);
-        org4[N - 1] = 4.9;
-        org5[N - 1] = 5.5;
-        org6[N - 1] = 6.1;
-        Vector<N, T> org7(4);
-        Vector<N, T> org8(4);
-        Vector<N, T> org9(4);
-        org7[N - 1] = 4.9;
-        org8[N - 1] = 5.5;
-        org9[N - 1] = 6.1;
-        Vector<N, T> org10(5.5);
-        Vector<N, T> org11(5.5);
-        Vector<N, T> org12(5.5);
-        org10[N - 1] = 4.9;
-        org11[N - 1] = 5.5;
-        org12[N - 1] = 6.1;
+        constexpr Vector<N, T> BIG_1 = last_coord<N, T>(4.0, 4.9);
+        constexpr Vector<N, T> BIG_2 = last_coord<N, T>(4.0, 5.5);
+        constexpr Vector<N, T> BIG_3 = last_coord<N, T>(4.0, 6.1);
+
+        constexpr T SIZE_SMALL = 0.2;
+
+        constexpr Vector<N, T> SMALL_1 = last_coord<N, T>(4.9, 4.9);
+        constexpr Vector<N, T> SMALL_2 = last_coord<N, T>(4.9, 5.5);
+        constexpr Vector<N, T> SMALL_3 = last_coord<N, T>(4.9, 6.1);
+
+        constexpr Vector<N, T> SMALL_4 = last_coord<N, T>(4.0, 4.9);
+        constexpr Vector<N, T> SMALL_5 = last_coord<N, T>(4.0, 5.5);
+        constexpr Vector<N, T> SMALL_6 = last_coord<N, T>(4.0, 6.1);
+
+        constexpr Vector<N, T> SMALL_7 = last_coord<N, T>(5.5, 4.9);
+        constexpr Vector<N, T> SMALL_8 = last_coord<N, T>(5.5, 5.5);
+        constexpr Vector<N, T> SMALL_9 = last_coord<N, T>(5.5, 6.1);
 
         LOG("------------------------------");
         LOG("Hyperplane parallelotope intersections in " + space_name(N));
 
-        HyperplaneParallelotope<N, T> p1(org1, edges_hyper_big);
-        HyperplaneParallelotope<N, T> p2(org2, edges_hyper_big);
-        HyperplaneParallelotope<N, T> p3(org3, edges_hyper_big);
-        HyperplaneParallelotope<N, T> p4(org4, edges_hyper_small);
-        HyperplaneParallelotope<N, T> p5(org5, edges_hyper_small);
-        HyperplaneParallelotope<N, T> p6(org6, edges_hyper_small);
-        HyperplaneParallelotope<N, T> p7(org7, edges_hyper_small);
-        HyperplaneParallelotope<N, T> p8(org8, edges_hyper_small);
-        HyperplaneParallelotope<N, T> p9(org9, edges_hyper_small);
-        HyperplaneParallelotope<N, T> p10(org10, edges_hyper_small);
-        HyperplaneParallelotope<N, T> p11(org11, edges_hyper_small);
-        HyperplaneParallelotope<N, T> p12(org12, edges_hyper_small);
+        constexpr std::array<Vector<N, T>, N - 1> EDGES_HYPER_BIG =
+                to_edge_vector_hyper(make_array_value<T, N - 1>(SIZE_BIG));
+
+        constexpr std::array<Vector<N, T>, N - 1> EDGES_HYPER_SMALL =
+                to_edge_vector_hyper(make_array_value<T, N - 1>(SIZE_SMALL));
+
+        HyperplaneParallelotope<N, T> p1(BIG_1, EDGES_HYPER_BIG);
+        HyperplaneParallelotope<N, T> p2(BIG_2, EDGES_HYPER_BIG);
+        HyperplaneParallelotope<N, T> p3(BIG_3, EDGES_HYPER_BIG);
+        HyperplaneParallelotope<N, T> p4(SMALL_1, EDGES_HYPER_SMALL);
+        HyperplaneParallelotope<N, T> p5(SMALL_2, EDGES_HYPER_SMALL);
+        HyperplaneParallelotope<N, T> p6(SMALL_3, EDGES_HYPER_SMALL);
+        HyperplaneParallelotope<N, T> p7(SMALL_4, EDGES_HYPER_SMALL);
+        HyperplaneParallelotope<N, T> p8(SMALL_5, EDGES_HYPER_SMALL);
+        HyperplaneParallelotope<N, T> p9(SMALL_6, EDGES_HYPER_SMALL);
+        HyperplaneParallelotope<N, T> p10(SMALL_7, EDGES_HYPER_SMALL);
+        HyperplaneParallelotope<N, T> p11(SMALL_8, EDGES_HYPER_SMALL);
+        HyperplaneParallelotope<N, T> p12(SMALL_9, EDGES_HYPER_SMALL);
 
         std::unique_ptr w1 = make_unique_wrapper(p1);
         std::unique_ptr w2 = make_unique_wrapper(p2);
@@ -807,12 +854,9 @@ void test_intersections_hyperplane()
         std::unique_ptr w11 = make_unique_wrapper(p11);
         std::unique_ptr w12 = make_unique_wrapper(p12);
 
-        print_separator();
-        LOG("ParallelotopeAA");
-
+        auto test = [&](const auto& parallelotope)
         {
-                ParallelotopeAA<N, T> p(org, edges);
-                std::unique_ptr w = make_unique_wrapper(p);
+                std::unique_ptr w = make_unique_wrapper(parallelotope);
 
                 test_intersection(*w1, *w, false, "1-p");
                 test_intersection(*w2, *w, true, "2-p");
@@ -829,31 +873,19 @@ void test_intersections_hyperplane()
                 test_intersection(*w10, *w, false, "10-p");
                 test_intersection(*w11, *w, true, "11-p");
                 test_intersection(*w12, *w, false, "12-p");
-        }
+        };
+
+        constexpr std::array<T, N> EDGES = make_array_value<T, N>(SIZE);
+
+        print_separator();
+        LOG("ParallelotopeAA");
+
+        test(ParallelotopeAA<N, T>(ORG, EDGES));
 
         print_separator();
         LOG("Parallelotope");
 
-        {
-                Parallelotope<N, T> p(org, to_edge_vector(edges));
-                std::unique_ptr w = make_unique_wrapper(p);
-
-                test_intersection(*w1, *w, false, "1-p");
-                test_intersection(*w2, *w, true, "2-p");
-                test_intersection(*w3, *w, false, "3-p");
-
-                test_intersection(*w4, *w, false, "4-p");
-                test_intersection(*w5, *w, true, "5-p");
-                test_intersection(*w6, *w, false, "6-p");
-
-                test_intersection(*w7, *w, false, "7-p");
-                test_intersection(*w8, *w, false, "8-p");
-                test_intersection(*w9, *w, false, "9-p");
-
-                test_intersection(*w10, *w, false, "10-p");
-                test_intersection(*w11, *w, true, "11-p");
-                test_intersection(*w12, *w, false, "12-p");
-        }
+        test(Parallelotope<N, T>(ORG, to_edge_vector(EDGES)));
 
         print_separator();
         LOG("Check passed");
