@@ -41,7 +41,7 @@ class Vector
         }
 
 public:
-        Vector()
+        constexpr Vector()
         {
         }
 
@@ -311,23 +311,23 @@ Vector<N, T> min_vector(const Vector<N, T>& a, const Vector<N, T>& b)
 template <std::size_t N, typename T>
 T dot(const Vector<N, T>& a, const Vector<N, T>& b)
 {
-        T result = a[0] * b[0];
+        T res = a[0] * b[0];
         for (std::size_t i = 1; i < N; ++i)
         {
-                result = std::fma(a[i], b[i], result);
+                res = std::fma(a[i], b[i], res);
         }
-        return result;
+        return res;
 }
 
 template <std::size_t N, typename T, typename F>
 Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, F x)
 {
-        Vector<N, T> result;
+        Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                result[i] = interpolation(a[i], b[i], x);
+                res[i] = interpolation(a[i], b[i], x);
         }
-        return result;
+        return res;
 }
 
 template <std::size_t N, typename T>
