@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/numerical/random.h>
 #include <src/numerical/vec.h>
 
 #include <random>
@@ -40,9 +39,6 @@ class LatinHypercubeSampler
 {
         static_assert(std::is_floating_point_v<T>);
         static_assert(N >= 2);
-
-        const int m_sample_count;
-        const T m_reciprocal_sample_count = static_cast<T>(1) / m_sample_count;
 
         // Donald Knuth. The Art of Computer Programming. Second edition. Addison-Wesley, 1981.
         // Volume 2. Seminumerical Algorithms. 3.4.2. Random Sampling and Shuffling.
@@ -63,14 +59,24 @@ class LatinHypercubeSampler
                 }
         }
 
+        std::vector<Vector<N, T>> m_offsets;
+        T m_reciprocal_sample_count;
+
 public:
-        explicit LatinHypercubeSampler(int sample_count) : m_sample_count(sample_count)
+        explicit LatinHypercubeSampler(int sample_count)
         {
-                if (m_sample_count < 1)
+                if (sample_count < 1)
                 {
-                        error("Latin hypercube sample count (" + to_string(m_sample_count)
+                        error("Latin hypercube sampler: sample count (" + to_string(sample_count)
                               + ") is not a positive integer");
                 }
+
+                m_offsets.reserve(sample_count);
+                for (int i = 0; i < sample_count; ++i)
+                {
+                        m_offsets.emplace_back(static_cast<T>(i) / sample_count);
+                }
+                m_reciprocal_sample_count = static_cast<T>(1) / sample_count;
         }
 
         template <typename RandomEngine>
@@ -78,17 +84,17 @@ public:
         {
                 std::uniform_real_distribution<T> urd(0, m_reciprocal_sample_count);
 
-                samples->resize(m_sample_count);
-
-                // Случайные числа по диагонали
-                for (int i = 0; i < m_sample_count; ++i)
+                samples->resize(m_offsets.size());
+                for (std::size_t i = 0; i < m_offsets.size(); ++i)
                 {
-                        (*samples)[i] =
-                                Vector<N, T>(i * m_reciprocal_sample_count) + random_vector<N, T>(random_engine, urd);
+                        for (std::size_t n = 0; n < N; ++n)
+                        {
+                                (*samples)[i][n] = m_offsets[i][n] + urd(random_engine);
+                        }
                 }
 
                 // Достаточно со второго измерения
-                for (unsigned i = 1; i < N; ++i)
+                for (std::size_t i = 1; i < N; ++i)
                 {
                         shuffle_one_dimension(random_engine, i, samples);
                 }

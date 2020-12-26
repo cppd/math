@@ -28,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
-#include <src/numerical/random.h>
 #include <src/numerical/vec.h>
 
 #include <cmath>
@@ -43,14 +42,11 @@ class StratifiedJitteredSampler
         static_assert(std::is_floating_point_v<T>);
         static_assert(N >= 2);
 
-        std::vector<Vector<N, T>> m_offsets;
-        T m_reciprocal_1d_sample_count;
-
         static int one_dimension_size(int sample_count)
         {
                 if (sample_count < 1)
                 {
-                        error("Stratified jittered sample count (" + to_string(sample_count)
+                        error("Stratified jittered sampler: sample count (" + to_string(sample_count)
                               + ") is not a positive integer");
                 }
 
@@ -66,8 +62,8 @@ class StratifiedJitteredSampler
                         return v_ceil;
                 }
 
-                error("Could not compute one dimension sample count for " + to_string(sample_count) + " samples in "
-                      + space_name(N));
+                error("Stratified jittered sampler: failed to compute one dimension sample count for "
+                      + to_string(sample_count) + " samples in " + space_name(N));
         }
 
         template <std::size_t M>
@@ -98,6 +94,9 @@ class StratifiedJitteredSampler
                 return result;
         }
 
+        std::vector<Vector<N, T>> m_offsets;
+        T m_reciprocal_1d_sample_count;
+
 public:
         explicit StratifiedJitteredSampler(int sample_count)
         {
@@ -105,8 +104,8 @@ public:
 
                 if (one_dimension_sample_count < 1)
                 {
-                        error("Stratified jittered one dimension sample count (" + to_string(one_dimension_sample_count)
-                              + ") is not a positive integer");
+                        error("Stratified jittered sampler: one dimension sample count ("
+                              + to_string(one_dimension_sample_count) + ") is not a positive integer");
                 }
 
                 std::vector<T> values;
@@ -126,10 +125,12 @@ public:
                 std::uniform_real_distribution<T> urd(0, m_reciprocal_1d_sample_count);
 
                 samples->resize(m_offsets.size());
-
                 for (std::size_t i = 0; i < m_offsets.size(); ++i)
                 {
-                        (*samples)[i] = m_offsets[i] + random_vector<N, T>(random_engine, urd);
+                        for (std::size_t n = 0; n < N; ++n)
+                        {
+                                (*samples)[i][n] = m_offsets[i][n] + urd(random_engine);
+                        }
                 }
         }
 };
