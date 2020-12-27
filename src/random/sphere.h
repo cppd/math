@@ -33,14 +33,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/numerical/complement.h>
-#include <src/numerical/random.h>
 #include <src/numerical/vec.h>
 
 #include <cmath>
 #include <random>
+#include <utility>
 
 namespace ns::random
 {
+namespace sphere_implementation
+{
+template <typename T, typename RandomEngine, typename Distribution, std::size_t... I>
+Vector<sizeof...(I), T> random_vector(
+        RandomEngine& engine,
+        Distribution& distribution,
+        std::integer_sequence<std::size_t, I...>)
+{
+        return Vector<sizeof...(I), T>((static_cast<void>(I), distribution(engine))...);
+}
+
+template <std::size_t N, typename T, typename RandomEngine, typename Distribution>
+Vector<N, T> random_vector(RandomEngine& engine, Distribution& distribution)
+{
+        return random_vector<T>(engine, distribution, std::make_integer_sequence<std::size_t, N>());
+}
+
+//
+
 template <typename RandomEngine, std::size_t N, typename T>
 void random_in_sphere_by_rejection(RandomEngine& random_engine, Vector<N, T>& v, T& v_length_square)
 {
@@ -75,18 +94,7 @@ void random_in_sphere_by_normal_distribution(RandomEngine& random_engine, Vector
         v_length_square = k * k;
 }
 
-template <typename RandomEngine, std::size_t N, typename T>
-void random_in_sphere(RandomEngine& random_engine, Vector<N, T>& v, T& v_length_square)
-{
-        if constexpr (N <= 5)
-        {
-                random_in_sphere_by_rejection(random_engine, v, v_length_square);
-        }
-        else
-        {
-                random_in_sphere_by_normal_distribution(random_engine, v, v_length_square);
-        }
-}
+//
 
 template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> random_on_sphere_by_rejection(RandomEngine& random_engine)
@@ -121,17 +129,35 @@ Vector<N, T> random_on_sphere_by_normal_distribution(RandomEngine& random_engine
 
         return random_vector<N, T>(random_engine, nd).normalized();
 }
+}
+
+template <typename RandomEngine, std::size_t N, typename T>
+void random_in_sphere(RandomEngine& random_engine, Vector<N, T>& v, T& v_length_square)
+{
+        namespace impl = sphere_implementation;
+
+        if constexpr (N <= 5)
+        {
+                impl::random_in_sphere_by_rejection(random_engine, v, v_length_square);
+        }
+        else
+        {
+                impl::random_in_sphere_by_normal_distribution(random_engine, v, v_length_square);
+        }
+}
 
 template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> random_on_sphere(RandomEngine& random_engine)
 {
+        namespace impl = sphere_implementation;
+
         if constexpr (N <= 4)
         {
-                return random_in_sphere_by_rejection<N, T>(random_engine);
+                return impl::random_on_sphere_by_rejection<N, T>(random_engine);
         }
         else
         {
-                return random_in_sphere_by_normal_distribution<N, T>(random_engine);
+                return impl::random_on_sphere_by_normal_distribution<N, T>(random_engine);
         }
 }
 
@@ -165,16 +191,6 @@ Vector<N, T> random_cosine_weighted_on_hemisphere(RandomEngine& random_engine, c
 
         return res;
 }
-
-#if 0
-template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_in_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal)
-{
-        Vector<N, T> v = random_in_sphere<N, T>(random_engine);
-
-        return (dot(v, normal) >= 0) ? v : -v;
-}
-#endif
 
 // Вариант алгоритма для равномерных точек на диске.
 // Работает медленнее алгоритма с выбрасыванием значений.

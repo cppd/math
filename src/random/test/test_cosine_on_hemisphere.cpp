@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
-#include <src/numerical/random.h>
 
 #include <map>
 
@@ -70,16 +69,15 @@ void test_distribution(int count, T discrepancy_limit)
 
         std::map<T, T, std::greater<>> buckets;
 
-        std::uniform_real_distribution<T> urd(-1, 1);
-        Vector<N, T> normal = random_vector<N, T>(random_engine, urd).normalized();
+        Vector<N, T> normal = random::random_on_sphere<N, T>(random_engine);
 
         for (int i = 0; i < count; ++i)
         {
-                Vector<N, T> random_vector = random_cosine_weighted_on_hemisphere(random_engine, normal).normalized();
+                Vector<N, T> v = random_cosine_weighted_on_hemisphere(random_engine, normal).normalized();
 
                 T cosine;
 
-                cosine = dot(random_vector, normal);
+                cosine = dot(v, normal);
                 cosine = std::ceil(cosine * DISCRETIZATION) / DISCRETIZATION;
                 cosine = std::min(static_cast<T>(1), cosine);
 
@@ -122,22 +120,20 @@ void test_speed(int count)
 
         RandomEngine random_engine = create_engine<RandomEngine>();
 
-        std::uniform_real_distribution<T> urd(-1, 1);
-
-        std::vector<Vector<N, T>> data;
-        data.reserve(count);
+        std::vector<Vector<N, T>> normals;
+        normals.reserve(count);
         for (int i = 0; i < count; ++i)
         {
-                data.push_back(random_vector<N, T>(random_engine, urd).normalized());
+                normals.push_back(random::random_on_sphere<N, T>(random_engine));
         }
 
         static Vector<N, T> v;
 
         TimePoint start_time = time();
 
-        for (const Vector<N, T>& n : data)
+        for (const Vector<N, T>& normal : normals)
         {
-                v = random_cosine_weighted_on_hemisphere(random_engine, n);
+                v = random_cosine_weighted_on_hemisphere(random_engine, normal);
         }
 
         LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " seconds");
