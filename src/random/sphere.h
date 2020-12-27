@@ -46,7 +46,8 @@ void random_in_sphere_by_rejection(RandomEngine& random_engine, Vector<N, T>& v,
 {
         static_assert(N >= 2);
 
-        std::uniform_real_distribution<T> urd(-1, 1);
+        thread_local std::uniform_real_distribution<T> urd(-1, 1);
+
         while (true)
         {
                 v = random_vector<N, T>(random_engine, urd);
@@ -63,10 +64,12 @@ void random_in_sphere_by_normal_distribution(RandomEngine& random_engine, Vector
 {
         static_assert(N >= 2);
 
-        std::normal_distribution<T> nd(0, 1);
+        thread_local std::normal_distribution<T> nd(0, 1);
+
         v = random_vector<N, T>(random_engine, nd).normalized();
 
-        std::uniform_real_distribution<T> urd(0, 1);
+        thread_local std::uniform_real_distribution<T> urd(0, 1);
+
         T k = std::pow(urd(random_engine), 1.0 / N);
         v *= k;
         v_length_square = k * k;
@@ -79,9 +82,56 @@ void random_in_sphere(RandomEngine& random_engine, Vector<N, T>& v, T& v_length_
         {
                 random_in_sphere_by_rejection(random_engine, v, v_length_square);
         }
-        if constexpr (N >= 6)
+        else
         {
                 random_in_sphere_by_normal_distribution(random_engine, v, v_length_square);
+        }
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_on_sphere_by_rejection(RandomEngine& random_engine)
+{
+        static_assert(N >= 2);
+
+        thread_local std::uniform_real_distribution<T> urd(-1, 1);
+
+        Vector<N, T> v;
+        while (true)
+        {
+                v = random_vector<N, T>(random_engine, urd);
+                T length_square = dot(v, v);
+                if (length_square <= 1)
+                {
+                        T length = std::sqrt(length_square);
+                        if (length > 0)
+                        {
+                                v /= length;
+                                return v;
+                        }
+                }
+        }
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_on_sphere_by_normal_distribution(RandomEngine& random_engine)
+{
+        static_assert(N >= 2);
+
+        thread_local std::normal_distribution<T> nd(0, 1);
+
+        return random_vector<N, T>(random_engine, nd).normalized();
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_on_sphere(RandomEngine& random_engine)
+{
+        if constexpr (N <= 4)
+        {
+                return random_in_sphere_by_rejection<N, T>(random_engine);
+        }
+        else
+        {
+                return random_in_sphere_by_normal_distribution<N, T>(random_engine);
         }
 }
 
