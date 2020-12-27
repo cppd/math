@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_sphere.h"
+#include "test_cosine_on_hemisphere.h"
 
 #include "../sphere.h"
 
@@ -39,17 +39,6 @@ template <typename T>
 T cos_to_angle(T cosine)
 {
         return std::acos(cosine) / PI<T> * 180;
-}
-
-template <std::size_t N, typename T>
-T component_sum(const Vector<N, T>& v)
-{
-        T sum = 0;
-        for (unsigned i = 0; i < N; ++i)
-        {
-                sum += v[i];
-        }
-        return sum;
 }
 
 template <typename Map>
@@ -142,21 +131,20 @@ void test_speed(int count)
                 data.push_back(random_vector<N, T>(random_engine, urd).normalized());
         }
 
+        static Vector<N, T> v;
+
         TimePoint start_time = time();
 
-        // Сумма для того, чтобы избежать оптимизаций компилятора из-за неиспользуемого значения функции
-        Vector<N, T> sum(0);
         for (const Vector<N, T>& n : data)
         {
-                sum += random_cosine_weighted_on_hemisphere(random_engine, n);
+                v = random_cosine_weighted_on_hemisphere(random_engine, n);
         }
 
-        LOG("Time = " + to_string_fixed(duration_from(start_time), 5)
-            + " seconds, sum = " + to_string(component_sum(sum)));
+        LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " seconds");
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-void test_cosine_hemisphere(int count, T discrepancy_limit)
+void test_cosine_on_hemisphere(int count, T discrepancy_limit)
 {
         LOG("Test in " + space_name(N) + ", " + to_string_digit_groups(count) + ", " + type_name<T>());
 
@@ -166,26 +154,26 @@ void test_cosine_hemisphere(int count, T discrepancy_limit)
 }
 
 template <typename T, typename RandomEngine>
-void test_cosine_hemisphere(int count, T discrepancy_limit)
+void test_cosine_on_hemisphere(int count, T discrepancy_limit)
 {
-        test_cosine_hemisphere<3, T, RandomEngine>(count, discrepancy_limit);
+        test_cosine_on_hemisphere<3, T, RandomEngine>(count, discrepancy_limit);
         LOG("");
-        test_cosine_hemisphere<4, T, RandomEngine>(count, discrepancy_limit);
+        test_cosine_on_hemisphere<4, T, RandomEngine>(count, discrepancy_limit);
         LOG("");
-        test_cosine_hemisphere<5, T, RandomEngine>(count, discrepancy_limit);
+        test_cosine_on_hemisphere<5, T, RandomEngine>(count, discrepancy_limit);
         LOG("");
-        test_cosine_hemisphere<6, T, RandomEngine>(count, discrepancy_limit);
+        test_cosine_on_hemisphere<6, T, RandomEngine>(count, discrepancy_limit);
         LOG("");
-        test_cosine_hemisphere<7, T, RandomEngine>(count, discrepancy_limit);
+        test_cosine_on_hemisphere<7, T, RandomEngine>(count, discrepancy_limit);
         LOG("");
-        test_cosine_hemisphere<8, T, RandomEngine>(count, discrepancy_limit);
+        test_cosine_on_hemisphere<8, T, RandomEngine>(count, discrepancy_limit);
         LOG("");
-        test_cosine_hemisphere<9, T, RandomEngine>(count, discrepancy_limit);
+        test_cosine_on_hemisphere<9, T, RandomEngine>(count, discrepancy_limit);
 }
 }
 
-void test_cosine_hemisphere()
+void test_cosine_on_hemisphere()
 {
-        test_cosine_hemisphere<double, std::mt19937_64>(10'000'000, 0.02);
+        test_cosine_on_hemisphere<double, std::mt19937_64>(10'000'000, 0.02);
 }
 }

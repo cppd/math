@@ -19,5 +19,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::random
 {
-void test_cosine_hemisphere();
+void test_on_sphere();
 }
