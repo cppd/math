@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/model/mesh_utility.h>
 #include <src/numerical/quaternion.h>
-#include <src/numerical/random.h>
+#include <src/random/sphere.h>
 
 #include <functional>
 #include <map>
@@ -138,26 +138,17 @@ public:
 };
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_on_sphere(RandomEngine& engine)
+Vector<N, T> random_on_sphere(RandomEngine& engine, bool bound)
 {
-        static_assert(std::is_floating_point_v<T>);
-        std::uniform_real_distribution<T> urd(-1.0, 1.0);
+        if (!bound)
+        {
+                return random::random_on_sphere<N, T>(engine);
+        }
         Vector<N, T> v;
         do
         {
-                v = random_vector<N, T>(engine, urd);
-        } while (dot(v, v) > 1);
-        return v.normalized();
-}
-
-template <std::size_t N, typename T, typename V, typename RandomEngine>
-Vector<N, T> random_on_sphere_bound(RandomEngine& engine, V cos_alpha)
-{
-        Vector<N, T> v;
-        do
-        {
-                v = random_on_sphere<N, T>(engine);
-        } while (dot(v, LAST_AXIS<N, T>) < cos_alpha);
+                v = random::random_on_sphere<N, T>(engine);
+        } while (dot(v, LAST_AXIS<N, T>) < COS_FOR_BOUND);
         return v;
 }
 
@@ -196,11 +187,8 @@ std::vector<Vector<N, float>> generate_points_ellipsoid(unsigned point_count, bo
 
         while (points.size() < point_count)
         {
-                Vector<N, double> v = (!bound) ? random_on_sphere<N, double>(engine)
-                                               : random_on_sphere_bound<N, double>(engine, COS_FOR_BOUND);
-
+                Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
                 v[0] *= 2;
-
                 points.add(v);
         }
 
@@ -218,15 +206,12 @@ std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_c
 
         while (points.size() < point_count)
         {
-                Vector<N, double> v = (!bound) ? random_on_sphere<N, double>(engine)
-                                               : random_on_sphere_bound<N, double>(engine, COS_FOR_BOUND);
-
+                Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
                 double dot_z = dot(LAST_AXIS<N, double>, v);
                 if (dot_z > 0)
                 {
                         v[N - 1] *= 1 - std::abs(0.5 * std::pow(dot_z, 5));
                 }
-
                 points.add(v);
         }
 
@@ -295,7 +280,7 @@ Vector<N, T> torus_point(Engine& engine)
                 Vector<N, T> ortho(0);
                 ortho[n] = v_length;
 
-                Vector<2, T> s = random_on_sphere<2, T>(engine);
+                Vector<2, T> s = random::random_on_sphere<2, T>(engine);
                 Vector<N, T> vn = T(0.5) * (s[0] * v + s[1] * ortho);
                 sum += vn;
 

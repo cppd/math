@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/com/time.h>
 #include <src/model/mesh_utility.h>
-#include <src/numerical/random.h>
+#include <src/random/sphere.h>
 
 #include <cmath>
 #include <filesystem>
@@ -62,29 +62,16 @@ template <std::size_t N, typename T>
 constexpr Vector<N, T> LAST_AXIS = make_last_axis<T>(1, std::make_integer_sequence<std::size_t, N - 1>());
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_on_sphere(RandomEngine& engine)
-{
-        static_assert(std::is_floating_point_v<T>);
-        std::uniform_real_distribution<T> urd(-1.0, 1.0);
-        Vector<N, T> v;
-        do
-        {
-                v = random_vector<N, T>(engine, urd);
-        } while (dot(v, v) > 1);
-        return v.normalized();
-}
-
-template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> random_on_sphere(RandomEngine& engine, bool bound)
 {
         if (!bound)
         {
-                return random_on_sphere<N, T>(engine);
+                return random::random_on_sphere<N, T>(engine);
         }
         Vector<N, T> v;
         do
         {
-                v = random_on_sphere<N, T>(engine);
+                v = random::random_on_sphere<N, T>(engine);
         } while (dot(v, LAST_AXIS<N, T>) < COS_FOR_BOUND);
         return v;
 }

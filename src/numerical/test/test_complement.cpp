@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../complement.h"
 #include "../orthogonal.h"
-#include "../random.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -29,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
+#include <src/random/sphere.h>
 
 #include <random>
 
@@ -69,24 +69,12 @@ template <std::size_t N, typename T>
 std::vector<Vector<N, T>> random_vectors(int count)
 {
         std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
-        std::uniform_real_distribution<T> urd(-1, 1);
-
         std::vector<Vector<N, T>> res;
         res.reserve(count);
-
         for (int i = 0; i < count; ++i)
         {
-                while (true)
-                {
-                        Vector<N, T> v = random_vector<N, T>(random_engine, urd).normalized();
-                        if (is_finite(v))
-                        {
-                                res.push_back(v);
-                                break;
-                        }
-                }
+                res.push_back(random::random_on_sphere<N, T>(random_engine));
         }
-
         return res;
 }
 

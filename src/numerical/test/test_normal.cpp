@@ -19,13 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../complement.h"
 #include "../normal.h"
-#include "../random.h"
 
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
+#include <src/random/sphere.h>
 
 #include <random>
 
@@ -70,24 +70,15 @@ void test_normal_defined()
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> random_unit_vectors(unsigned count, RandomEngine& random_engine)
+std::vector<Vector<N, T>> random_vectors(unsigned count, RandomEngine& random_engine)
 {
-        std::uniform_real_distribution<T> urd(-1, 1);
-        std::vector<Vector<N, T>> vectors;
-        vectors.reserve(count);
+        std::vector<Vector<N, T>> res;
+        res.reserve(count);
         for (unsigned i = 0; i < count; ++i)
         {
-                Vector<N, T>& v = vectors.emplace_back();
-                while (true)
-                {
-                        v = random_vector<N, T>(random_engine, urd).normalized();
-                        if (is_finite(v))
-                        {
-                                break;
-                        }
-                }
+                res.push_back(random::random_on_sphere<N, T>(random_engine));
         }
-        return vectors;
+        return res;
 }
 
 template <std::size_t N, typename T>
@@ -100,7 +91,7 @@ void test_normal_random(unsigned test_count)
         std::uniform_real_distribution<T> urd_for_normal(T(0.0), T(0.01));
         std::uniform_real_distribution<T> urd_for_complement(T(0.1), T(1.0));
 
-        for (const Vector<N, T>& real_normal : random_unit_vectors<N, T>(test_count, random_engine))
+        for (const Vector<N, T>& real_normal : random_vectors<N, T>(test_count, random_engine))
         {
                 const std::array<Vector<N, T>, N - 1> vectors = orthogonal_complement_of_unit_vector(real_normal);
 
