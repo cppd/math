@@ -58,6 +58,20 @@ using PainterSampler = random::StratifiedJitteredSampler<N, T>;
 
 static_assert(std::is_floating_point_v<Color::DataType>);
 
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> surface_ray_direction(const Vector<N, T>& normal, RandomEngine& engine)
+{
+        // Распределение случайного луча с вероятностью по косинусу
+        // угла между нормалью и случайным вектором.
+        return random::random_cosine_weighted_on_hemisphere(engine, normal);
+}
+
+template <std::size_t N, typename T>
+T surface_lighting(const Vector<N, T>& normal, const Vector<N, T>& /*dir_to_point*/, const Vector<N, T>& dir_to_light)
+{
+        return DIFFUSE_LIGHT_COEFFICIENT<N, T> * dot(normal, dir_to_light);
+}
+
 template <std::size_t N, typename T>
 struct PaintData
 {
@@ -85,42 +99,52 @@ bool light_source_is_visible(
 }
 
 template <std::size_t N, typename T>
-Color direct_diffuse_lighting(
+struct Light
+{
+        Color color;
+        Vector<N, T> dir_to;
+        Light(const Color& color, const Vector<N, T>& dir_to) : color(color), dir_to(dir_to)
+        {
+        }
+};
+
+template <std::size_t N, typename T>
+void find_visible_lights(
         int* ray_count,
         const PaintData<N, T>& paint_data,
-        const Vector<N, T>& p,
+        const Vector<N, T>& point,
         const Vector<N, T>& geometric_normal,
         const Vector<N, T>& shading_normal,
-        bool smooth_normal,
-        const T& ray_offset)
+        bool use_smooth_normal,
+        std::vector<Light<N, T>>* lights)
 {
-        Color color(0);
+        lights->clear();
 
         for (const LightSource<N, T>* light_source : paint_data.scene.light_sources())
         {
-                const LightProperties light_properties = light_source->properties(p);
+                const LightProperties light_properties = light_source->properties(point);
 
                 if (light_properties.color.below(MIN_COLOR_LEVEL))
                 {
                         continue;
                 }
 
-                Ray<N, T> ray_to_light = Ray<N, T>(p, light_properties.direction_to_light);
+                Ray<N, T> ray_to_light = Ray<N, T>(point, light_properties.direction_to_light);
 
-                const T dot_light_and_normal = dot(ray_to_light.dir(), shading_normal);
+                const T dot_light_and_shading_normal = dot(ray_to_light.dir(), shading_normal);
 
-                if (dot_light_and_normal <= DOT_PRODUCT_EPSILON<T>)
+                if (dot_light_and_shading_normal <= DOT_PRODUCT_EPSILON<T>)
                 {
                         // Свет находится по другую сторону поверхности
                         continue;
                 }
 
-                if (!smooth_normal || dot(ray_to_light.dir(), geometric_normal) >= 0)
+                if (!use_smooth_normal || dot(ray_to_light.dir(), geometric_normal) >= 0)
                 {
                         // Если объект не состоит из симплексов или геометрическая сторона обращена
                         // к источнику света, то напрямую рассчитать видимость источника света.
 
-                        ray_to_light.move_along_dir(ray_offset);
+                        ray_to_light.move_along_dir(paint_data.ray_offset);
                         if (!light_source_is_visible(
                                     ray_count, paint_data, ray_to_light, light_properties.direction_to_light.norm()))
                         {
@@ -138,7 +162,7 @@ Color direct_diffuse_lighting(
                         // окрестностью точки.
 
                         ++(*ray_count);
-                        ray_to_light.move_along_dir(ray_offset);
+                        ray_to_light.move_along_dir(paint_data.ray_offset);
                         std::optional<Intersection<N, T>> intersection = paint_data.scene.intersect(ray_to_light);
                         if (!intersection)
                         {
@@ -158,7 +182,7 @@ Color direct_diffuse_lighting(
                         {
                                 ++(*ray_count);
                                 Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
-                                ray_from_light.move_along_dir(2 * ray_offset);
+                                ray_from_light.move_along_dir(2 * paint_data.ray_offset);
                                 std::optional<Intersection<N, T>> from_light =
                                         paint_data.scene.intersect(ray_from_light);
                                 if (from_light && (from_light->distance < intersection->distance))
@@ -171,7 +195,7 @@ Color direct_diffuse_lighting(
                                 }
                         }
 
-                        ray_to_light.move_along_dir(intersection->distance + ray_offset);
+                        ray_to_light.move_along_dir(intersection->distance + paint_data.ray_offset);
                         if (!light_source_is_visible(
                                     ray_count, paint_data, ray_to_light,
                                     distance_to_light_source - intersection->distance))
@@ -180,39 +204,8 @@ Color direct_diffuse_lighting(
                         }
                 }
 
-                T light_weight = DIFFUSE_LIGHT_COEFFICIENT<N, T> * dot_light_and_normal;
-
-                color += light_properties.color * light_weight;
+                lights->emplace_back(light_properties.color, ray_to_light.dir());
         }
-
-        return color;
-}
-
-template <std::size_t N, typename T>
-bool diffuse_weighted_ray(
-        const PaintData<N, T>& paint_data,
-        PainterRandomEngine<T>& random_engine,
-        const Vector<N, T>& point,
-        const Vector<N, T>& shading_normal,
-        const Vector<N, T>& geometric_normal,
-        bool smooth_normal,
-        Ray<N, T>* ray)
-{
-        // Распределение случайного луча с вероятностью по косинусу угла между нормалью и случайным вектором.
-
-        // Случайный вектор диффузного освещения надо определять от видимой нормали.
-        *ray = Ray<N, T>(point, random::random_cosine_weighted_on_hemisphere(random_engine, shading_normal));
-
-        if (smooth_normal && dot(ray->dir(), geometric_normal) <= DOT_PRODUCT_EPSILON<T>)
-        {
-                // Если получившийся случайный вектор диффузного отражения показывает
-                // в другую сторону от поверхности, то диффузного освещения нет.
-                return false;
-        }
-
-        ray->move_along_dir(paint_data.ray_offset);
-
-        return true;
 }
 
 template <std::size_t N, typename T>
@@ -240,9 +233,9 @@ std::optional<Color> trace_path(
         const SurfaceProperties surface_properties = intersection->surface->properties(point, intersection->data);
         Vector<N, T> geometric_normal = surface_properties.geometric_normal();
 
-        bool smooth_normal = paint_data.smooth_normal && surface_properties.shading_normal().has_value();
+        bool use_smooth_normal = paint_data.smooth_normal && surface_properties.shading_normal().has_value();
 
-        Vector<N, T> shading_normal = smooth_normal ? *surface_properties.shading_normal() : geometric_normal;
+        Vector<N, T> shading_normal = use_smooth_normal ? *surface_properties.shading_normal() : geometric_normal;
 
         ASSERT(dot(geometric_normal, shading_normal) > 0);
 
@@ -269,23 +262,35 @@ std::optional<Color> trace_path(
                 Color::DataType new_color_level = color_level * surface_color.max_element();
                 if (new_color_level >= MIN_COLOR_LEVEL)
                 {
-                        Color direct = direct_diffuse_lighting(
-                                ray_count, paint_data, point, geometric_normal, shading_normal, smooth_normal,
-                                paint_data.ray_offset);
-
-                        color += surface_color * direct;
-
-                        Ray<N, T> new_ray;
-                        if (diffuse_weighted_ray(
-                                    paint_data, random_engine, point, shading_normal, geometric_normal, smooth_normal,
-                                    &new_ray))
+                        thread_local std::vector<Light<N, T>> lights;
+                        find_visible_lights(
+                                ray_count, paint_data, point, geometric_normal, shading_normal, use_smooth_normal,
+                                &lights);
+                        if (!lights.empty())
                         {
-                                std::optional<Color> diffuse = trace_path(
+                                Color direct(0);
+                                for (const Light<N, T>& light : lights)
+                                {
+                                        direct +=
+                                                light.color * surface_lighting(shading_normal, ray.dir(), light.dir_to);
+                                }
+                                color += surface_color * direct;
+                        }
+
+                        // Случайный вектор отражения надо определять от видимой нормали.
+                        // Если получившийся случайный вектор отражения показывает
+                        // в другую сторону от поверхности, то освещения нет.
+                        Ray<N, T> new_ray = Ray<N, T>(point, surface_ray_direction(shading_normal, random_engine));
+                        if (!use_smooth_normal || dot(new_ray.dir(), geometric_normal) > DOT_PRODUCT_EPSILON<T>)
+                        {
+                                new_ray.move_along_dir(paint_data.ray_offset);
+
+                                std::optional<Color> reflected = trace_path(
                                         paint_data, ray_count, random_engine, recursion_level + 1, new_color_level,
                                         new_ray);
 
                                 color += surface_color
-                                         * diffuse.value_or(paint_data.scene.background_light_source_color());
+                                         * reflected.value_or(paint_data.scene.background_light_source_color());
                         }
                 }
         }
