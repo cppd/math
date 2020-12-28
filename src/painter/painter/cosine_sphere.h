@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/constant.h>
 #include <src/com/error.h>
+#include <src/com/math.h>
 
 #include <array>
 #include <numeric>
@@ -161,5 +162,44 @@ constexpr long double cosine_sphere_coefficient(const unsigned N)
         }
 
         return p;
+}
+
+// 2 * pow(π, n/2) / gamma(n/2)
+template <unsigned N>
+constexpr long double sphere_area()
+{
+        static_assert(N >= 2);
+
+        if ((N & 1) == 0)
+        {
+                constexpr int n = N / 2;
+                // 2 * pow(π, n) / gamma(n)
+                // gamma(n) = (n - 1)!
+                long double res = 2;
+                res *= PI<long double>;
+                if (n >= 2)
+                {
+                        res *= PI<long double>;
+                }
+                for (int i = n - 1; i > 1; --i)
+                {
+                        res /= i;
+                        res *= PI<long double>;
+                }
+                return res;
+        }
+
+        constexpr int n = N / 2;
+        // 2 * pow(π, 1/2 + n) / gamma(1/2 + n)
+        // 2 * pow(π, 1/2 + n) / pow(π, 1/2) / (2n!) * pow(4, n) * n!
+        // 2 * pow(π, n) / (2n!) * pow(4, n) * n!
+        long double res = 2;
+        for (int i = 2 * n; i > n; --i)
+        {
+                res /= i;
+                res *= 4;
+                res *= PI<long double>;
+        }
+        return res;
 }
 }
