@@ -19,9 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/constant.h>
 #include <src/com/error.h>
-#include <src/com/math.h>
 
-#include <array>
 #include <numeric>
 
 namespace ns::painter
@@ -95,8 +93,6 @@ namespace ns::painter
 // ----------------------------------
 //  (n-2) (n-4) ...   (int(n)/2 раз, включая умножение на единицу)
 //
-// Функция предназначена для использования только в константах constexpr,
-// поэтому не нужно быстродействие вроде таблиц готовых значений и прочего.
 constexpr long double cosine_sphere_coefficient(const unsigned N)
 {
         ASSERT(N >= 2);
@@ -165,14 +161,13 @@ constexpr long double cosine_sphere_coefficient(const unsigned N)
 }
 
 // 2 * pow(π, n/2) / gamma(n/2)
-template <unsigned N>
-constexpr long double sphere_area()
+constexpr long double sphere_area(unsigned N)
 {
-        static_assert(N >= 2);
+        ASSERT(N >= 2);
 
         if ((N & 1) == 0)
         {
-                constexpr int n = N / 2;
+                int n = N / 2;
                 // 2 * pow(π, n) / gamma(n)
                 // gamma(n) = (n - 1)!
                 long double res = 2;
@@ -189,7 +184,7 @@ constexpr long double sphere_area()
                 return res;
         }
 
-        constexpr int n = N / 2;
+        int n = N / 2;
         // 2 * pow(π, 1/2 + n) / gamma(1/2 + n)
         // 2 * pow(π, 1/2 + n) / pow(π, 1/2) / (2n!) * pow(4, n) * n!
         // 2 * pow(π, n) / (2n!) * pow(4, n) * n!

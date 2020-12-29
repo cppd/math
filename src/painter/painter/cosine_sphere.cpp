@@ -28,22 +28,21 @@ template <typename T>
 constexpr bool compare(int epsilon_count, T v1, T v2)
 {
         static_assert(std::is_floating_point_v<T>);
-
-        T k = (v1 - v2) / v2;
-        k = (k >= 0) ? k : -k;
-        return is_finite(v1) && is_finite(v2) && (v1 > 0) && (v2 > 0) && (k < epsilon_count * limits<T>::epsilon());
+        return is_finite(v1) && is_finite(v2) && (v1 > 0) && (v2 > 0)
+               && v2 > (v1 - v1 * (epsilon_count * limits<T>::epsilon()))
+               && v2 < (v1 + v1 * (epsilon_count * limits<T>::epsilon()))
+               && v1 > (v2 - v2 * (epsilon_count * limits<T>::epsilon()))
+               && v1 < (v2 + v2 * (epsilon_count * limits<T>::epsilon()));
 }
 
-constexpr long double pi_pow(unsigned n)
-{
-        long double r = PI<long double>;
-        for (unsigned i = 2; i <= n; ++i)
-        {
-                r *= PI<long double>;
-        }
-        return r;
+template <unsigned N>
+constexpr long double pi_pow = power<N>(PI<long double>);
 }
-}
+
+static_assert(compare(1, 1.1, 1.1));
+static_assert(compare(1000, 10000.100000001, 10000.100000002));
+static_assert(!compare(1, 10000.100000001, 10000.100000002));
+static_assert(!compare(1, 10000.100000002, 10000.100000001));
 
 static_assert(cosine_sphere_coefficient(2) == PI<long double> / 2);
 static_assert(cosine_sphere_coefficient(3) == 2.0L);
@@ -72,17 +71,24 @@ static_assert(compare(100, cosine_sphere_coefficient(11111), 132.107276887108415
 static_assert(compare(100, cosine_sphere_coefficient(100000), 396.33173893001525509395803345305504249366537658804L));
 static_assert(compare(100, cosine_sphere_coefficient(111111), 417.77023023440949387785892293393789130459621662998L));
 
-static_assert(compare(100, sphere_area<2>(), 2 * pi_pow(1)));
-static_assert(compare(100, sphere_area<3>(), 4 * pi_pow(1)));
-static_assert(compare(100, sphere_area<4>(), 2 * pi_pow(2)));
-static_assert(compare(100, sphere_area<5>(), 8 * pi_pow(2) / 3));
-static_assert(compare(100, sphere_area<6>(), pi_pow(3)));
-static_assert(compare(100, sphere_area<7>(), 16 * pi_pow(3) / 15));
-static_assert(compare(100, sphere_area<8>(), pi_pow(4) / 3));
-static_assert(compare(100, sphere_area<9>(), 32 * pi_pow(4) / 105));
-static_assert(compare(100, sphere_area<10>(), pi_pow(5) / 12));
-static_assert(compare(100, sphere_area<15>(), 256 * pi_pow(7) / 135135));
-static_assert(compare(100, sphere_area<20>(), pi_pow(10) / 181440));
-static_assert(compare(100, sphere_area<25>(), 8192 * pi_pow(12) / 316234143225));
-static_assert(compare(100, sphere_area<30>(), pi_pow(15) / 43589145600));
+static_assert(compare(10, sphere_area(2), 2 * pi_pow<1>));
+static_assert(compare(10, sphere_area(3), 4 * pi_pow<1>));
+static_assert(compare(10, sphere_area(4), 2 * pi_pow<2>));
+static_assert(compare(10, sphere_area(5), 8 * pi_pow<2> / 3));
+static_assert(compare(10, sphere_area(6), pi_pow<3>));
+static_assert(compare(10, sphere_area(7), 16 * pi_pow<3> / 15));
+static_assert(compare(10, sphere_area(8), pi_pow<4> / 3));
+static_assert(compare(10, sphere_area(9), 32 * pi_pow<4> / 105));
+static_assert(compare(10, sphere_area(10), pi_pow<5> / 12));
+static_assert(compare(10, sphere_area(15), 256 * pi_pow<7> / 135135));
+static_assert(compare(10, sphere_area(20), pi_pow<10> / 181440));
+static_assert(compare(10, sphere_area(25), 8192 * pi_pow<12> / 316234143225));
+static_assert(compare(10, sphere_area(30), pi_pow<15> / 43589145600));
+static_assert(compare(10, sphere_area(35), 262144 * pi_pow<17> / 6332659870762850625));
+static_assert(compare(10, sphere_area(40), pi_pow<20> / 60822550204416000));
+
+static_assert(compare(10, sphere_area(45), 1.2876986762598652169610927230442052274087372377085e-9L));
+static_assert(compare(10, sphere_area(50), 8.6510962291805538057726365290958840196659212205551e-12L));
+static_assert(compare(10, sphere_area(100), 2.3682021018828339613111743245754170110390710827884e-38L));
+static_assert(compare(10, sphere_area(111), 4.5744152213753183840687985785233817617533382664144e-45L));
 }

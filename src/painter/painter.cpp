@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter.h"
 
-#include "painter/cosine_sphere.h"
 #include "painter/pixels.h"
 
 #include <src/color/color.h>
@@ -39,9 +38,6 @@ namespace ns::painter
 {
 namespace
 {
-template <std::size_t N, typename T>
-constexpr T DIFFUSE_LIGHT_COEFFICIENT = cosine_sphere_coefficient(N);
-
 template <typename T>
 constexpr T DOT_PRODUCT_EPSILON = 0;
 
@@ -69,7 +65,7 @@ Vector<N, T> surface_ray_direction(const Vector<N, T>& normal, RandomEngine& eng
 template <std::size_t N, typename T>
 T surface_lighting(const Vector<N, T>& normal, const Vector<N, T>& /*dir_to_point*/, const Vector<N, T>& dir_to_light)
 {
-        return DIFFUSE_LIGHT_COEFFICIENT<N, T> * dot(normal, dir_to_light);
+        return dot(normal, dir_to_light);
 }
 
 template <std::size_t N, typename T>
