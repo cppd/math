@@ -164,32 +164,4 @@ Vector<N, CalculationType> ortho_nn(const std::vector<Vector<N, T>>& points, con
 
         return ortho_nn(vectors);
 }
-
-// Единичный вектор e1 из ортогонального дополнения (n-1)-мерного пространства, определяемого n-1 точками и ещё одной точкой.
-// Единичный вектор e2 из ортогонального дополнения (n-1)-мерного пространства, определяемого n-1 точками и вектором e1.
-template <std::size_t N, typename T, typename CalculationType>
-void ortho_e0_e1(
-        const std::vector<Vector<N, T>>& points,
-        const std::array<int, N - 1>& indices,
-        int point,
-        Vector<N, CalculationType>* e1,
-        Vector<N, CalculationType>* e2)
-{
-        static_assert(N > 1);
-
-        std::array<Vector<N, CalculationType>, N - 1> vectors;
-
-        for (unsigned i = 0; i < N - 2; ++i)
-        {
-                difference(&vectors[i], points[indices[i + 1]], points[indices[0]]);
-        }
-
-        difference(&vectors[N - 2], points[point], points[indices[0]]);
-
-        *e1 = ortho_nn(vectors).normalized();
-
-        vectors[N - 2] = *e1;
-
-        *e2 = ortho_nn(vectors).normalized();
-}
 }

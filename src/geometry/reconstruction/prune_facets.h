@@ -39,6 +39,36 @@ using RidgeMap = std::unordered_map<Ridge<N>, RidgeData<N>>;
 template <std::size_t N>
 using RidgeSet = std::unordered_set<Ridge<N>>;
 
+// Единичный вектор e1 из ортогонального дополнения (n-1)-мерного
+// пространства, определяемого n-1 точками и ещё одной точкой.
+// Единичный вектор e2 из ортогонального дополнения (n-1)-мерного
+// пространства, определяемого n-1 точками и вектором e1.
+template <std::size_t N, typename T>
+void ortho_e0_e1(
+        const std::vector<Vector<N, T>>& points,
+        const std::array<int, N - 1>& indices,
+        int point,
+        Vector<N, T>* e1,
+        Vector<N, T>* e2)
+{
+        static_assert(N > 1);
+
+        std::array<Vector<N, T>, N - 1> vectors;
+
+        for (unsigned i = 0; i < N - 2; ++i)
+        {
+                vectors[i] = points[indices[i + 1]] - points[indices[0]];
+        }
+
+        vectors[N - 2] = points[point] - points[indices[0]];
+
+        *e1 = numerical::ortho_nn(vectors).normalized();
+
+        vectors[N - 2] = *e1;
+
+        *e2 = numerical::ortho_nn(vectors).normalized();
+}
+
 template <std::size_t N>
 bool boundary_ridge(const std::vector<bool>& interior_vertices, const Ridge<N>& ridge)
 {
@@ -75,7 +105,7 @@ bool sharp_ridge(
         // Ортонормированный базис размерности 2 в ортогональном дополнении ребра ridge
         vec<N> e0;
         vec<N> e1;
-        numerical::ortho_e0_e1(points, ridge.vertices(), ridge_data.cbegin()->point(), &e0, &e1);
+        ortho_e0_e1(points, ridge.vertices(), ridge_data.cbegin()->point(), &e0, &e1);
 
         // Координаты вектора первой грани при проецировании в пространство базиса e0, e1.
         vec<N> base_vec = points[ridge_data.cbegin()->point()] - points[ridge.vertices()[0]];
