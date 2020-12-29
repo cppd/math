@@ -182,7 +182,7 @@ public:
                 const FacetInteger* convex_hull_facet)
                 : Base(std::move(vertices))
         {
-                m_ortho = ortho_nn<N, DataType, ComputeType>(points, Base::vertices());
+                m_ortho = numerical::ortho_nn<N, DataType, ComputeType>(points, Base::vertices());
 
                 ASSERT(!m_ortho.is_zero());
 
@@ -363,7 +363,7 @@ public:
                 const FacetInteger* convex_hull_facet)
                 : Base(std::move(vertices))
         {
-                m_ortho = ortho_nn<N, DataType, mpz_class>(points, Base::vertices());
+                m_ortho = numerical::ortho_nn<N, DataType, mpz_class>(points, Base::vertices());
 
                 ASSERT(!m_ortho.is_zero());
 

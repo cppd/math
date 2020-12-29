@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "determinant.h"
 
-namespace ns
+namespace ns::numerical
 {
 namespace determinant_implementation
 {

@@ -180,7 +180,7 @@ Vector<N, T> random_cosine_weighted_on_hemisphere(RandomEngine& random_engine, c
 
         T n = std::sqrt(1 - v_length_square);
 
-        std::array<Vector<N, T>, N - 1> basis = orthogonal_complement_of_unit_vector(normal);
+        std::array<Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
 
         Vector<N, T> res = n * normal;
 

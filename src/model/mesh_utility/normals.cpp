@@ -38,7 +38,7 @@ namespace
 template <std::size_t N>
 Vector<N, double> facet_normal(const std::vector<Vector<N, double>>& points, const std::array<int, N>& facet)
 {
-        return ortho_nn(points, facet).normalized();
+        return numerical::ortho_nn(points, facet).normalized();
 }
 
 double spherical_triangle_area(const std::array<Vector<4, double>, 3>& vectors, const Vector<4, double>& normal)
@@ -48,7 +48,7 @@ double spherical_triangle_area(const std::array<Vector<4, double>, 3>& vectors, 
 
         v[0] = vectors[0];
         v[1] = vectors[1];
-        Vector<4, double> ridge_01_normal = ortho_nn(v);
+        Vector<4, double> ridge_01_normal = numerical::ortho_nn(v);
         {
                 double norm = ridge_01_normal.norm();
                 if (norm == 0)
@@ -60,7 +60,7 @@ double spherical_triangle_area(const std::array<Vector<4, double>, 3>& vectors, 
 
         v[0] = vectors[1];
         v[1] = vectors[2];
-        Vector<4, double> ridge_12_normal = ortho_nn(v);
+        Vector<4, double> ridge_12_normal = numerical::ortho_nn(v);
         {
                 double norm = ridge_12_normal.norm();
                 if (norm == 0)
@@ -72,7 +72,7 @@ double spherical_triangle_area(const std::array<Vector<4, double>, 3>& vectors, 
 
         v[0] = vectors[2];
         v[1] = vectors[0];
-        Vector<4, double> ridge_20_normal = ortho_nn(v);
+        Vector<4, double> ridge_20_normal = numerical::ortho_nn(v);
         {
                 double norm = ridge_20_normal.norm();
                 if (norm == 0)

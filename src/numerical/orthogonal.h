@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vector>
 
-namespace ns
+namespace ns::numerical
 {
 // Вектор из ортогонального дополнения (n-1)-мерного подпространства
 template <std::size_t N, typename T>

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/mpz.h>
 
-namespace ns
+namespace ns::numerical
 {
 template <std::size_t N, typename T, typename ResultType>
 void difference(Vector<N, ResultType>* result, const Vector<N, T>& a, const Vector<N, T>& b)

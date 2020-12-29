@@ -303,9 +303,10 @@ void find_simplex_points(
 
         for (; point_i < points.size(); ++point_i)
         {
-                difference(&(*simplex_vectors)[simplex_i - 1], points[point_i], points[(*simplex_points)[0]]);
+                numerical::difference(
+                        &(*simplex_vectors)[simplex_i - 1], points[point_i], points[(*simplex_points)[0]]);
 
-                if (linearly_independent<simplex_i>(*simplex_vectors))
+                if (numerical::linearly_independent<simplex_i>(*simplex_vectors))
                 {
                         break;
                 }
@@ -323,7 +324,7 @@ void find_simplex_points(
         {
                 find_simplex_points<simplex_i + 1>(points, simplex_points, simplex_vectors, point_i + 1);
         }
-};
+}
 
 template <std::size_t N, typename SourceType, typename ComputeType>
 void find_simplex_points(const std::vector<Vector<N, SourceType>>& points, std::array<int, N + 1>* simplex_points)

@@ -163,12 +163,12 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vec
         {
                 if (!f.has_normal)
                 {
-                        Vector<N, double> normal = ortho_nn<N, float, double>(vertices, f.vertices);
+                        Vector<N, double> normal = numerical::ortho_nn<N, float, double>(vertices, f.vertices);
                         write_facet<ascii>(file, normal, f.vertices, vertices);
                 }
                 else if constexpr (N != 3)
                 {
-                        Vector<N, double> normal = ortho_nn<N, float, double>(vertices, f.vertices);
+                        Vector<N, double> normal = numerical::ortho_nn<N, float, double>(vertices, f.vertices);
                         write_facet<ascii>(file, normal, f.vertices, vertices);
                 }
                 else

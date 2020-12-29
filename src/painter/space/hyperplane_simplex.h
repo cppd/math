@@ -73,7 +73,7 @@ public:
                 std::array<Vector<N, T>, N - 1> vectors;
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        difference(&vectors[i], vertices[i], vertices[N - 1]);
+                        numerical::difference(&vectors[i], vertices[i], vertices[N - 1]);
                 }
 
                 // Перпендикуляр к симплексу берётся готовым в параметре normal
@@ -87,7 +87,7 @@ public:
                         // Перпендикуляр от точки к грани — это перпендикуляр к пространству,
                         // образуемому перпендикуляром к симплексу и пространством грани
                         std::swap(normal, vectors[i]);
-                        m_planes[i].n = ortho_nn(vectors);
+                        m_planes[i].n = numerical::ortho_nn(vectors);
                         std::swap(normal, vectors[i]);
 
                         // Уравнение плоскости
@@ -128,11 +128,11 @@ public:
                 std::array<Vector<N, T>, N - 1> vectors;
                 for (unsigned i = 0; i < N - 2; ++i)
                 {
-                        difference(&vectors[i], vertices[i + 1], vertices[0]);
+                        numerical::difference(&vectors[i], vertices[i + 1], vertices[0]);
                 }
 
                 vectors[N - 2] = normal;
-                Vector<N, T> n = ortho_nn(vectors).normalized();
+                Vector<N, T> n = numerical::ortho_nn(vectors).normalized();
                 T d = dot(vertices[0], n);
 
                 // Нормаль нужна в направлении вершины N - 1

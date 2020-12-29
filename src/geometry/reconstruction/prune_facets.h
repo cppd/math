@@ -75,7 +75,7 @@ bool sharp_ridge(
         // Ортонормированный базис размерности 2 в ортогональном дополнении ребра ridge
         vec<N> e0;
         vec<N> e1;
-        ortho_e0_e1(points, ridge.vertices(), ridge_data.cbegin()->point(), &e0, &e1);
+        numerical::ortho_e0_e1(points, ridge.vertices(), ridge_data.cbegin()->point(), &e0, &e1);
 
         // Координаты вектора первой грани при проецировании в пространство базиса e0, e1.
         vec<N> base_vec = points[ridge_data.cbegin()->point()] - points[ridge.vertices()[0]];
