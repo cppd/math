@@ -38,8 +38,6 @@ constexpr bool is_finite(T v)
 template <unsigned Exp, typename T>
 constexpr T power([[maybe_unused]] T base)
 {
-        static_assert(is_native_integral<T> && is_unsigned<T>);
-
         if constexpr (Exp == 0)
         {
                 return 1;
