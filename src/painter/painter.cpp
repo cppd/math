@@ -51,20 +51,6 @@ using PainterSampler = random::StratifiedJitteredSampler<N, T>;
 
 static_assert(std::is_floating_point_v<Color::DataType>);
 
-template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> surface_ray_direction(const Vector<N, T>& normal, RandomEngine& engine)
-{
-        // Распределение случайного луча с вероятностью по косинусу
-        // угла между нормалью и случайным вектором.
-        return random::random_cosine_weighted_on_hemisphere(engine, normal);
-}
-
-template <std::size_t N, typename T>
-T surface_lighting(const Vector<N, T>& normal, const Vector<N, T>& /*dir_to_point*/, const Vector<N, T>& dir_to_light)
-{
-        return dot(normal, dir_to_light);
-}
-
 template <std::size_t N, typename T>
 struct PaintData
 {
@@ -258,30 +244,33 @@ std::optional<Color> trace_path(
                         Color direct(0);
                         for (const Light<N, T>& light : lights)
                         {
-                                direct += light.color * surface_lighting(shading_normal, ray.dir(), light.dir_to);
+                                direct += light.color
+                                          * intersection->surface->direct_lighting(
+                                                  point, intersection->data, shading_normal, ray.dir(), light.dir_to);
                         }
-                        color += reflection * surface_properties.color() * direct;
+                        color += reflection * direct;
                 }
 
-                Color surface_color = reflection * surface_properties.color();
+                // Случайный вектор отражения надо определять от видимой нормали.
+                // Если получившийся случайный вектор отражения показывает
+                // в другую сторону от поверхности, то освещения нет.
+
+                const SurfaceReflection<N, T> surface_ray =
+                        intersection->surface->reflection(point, intersection->data, shading_normal, random_engine);
+
+                Color surface_color = reflection * surface_ray.color;
                 Color::DataType new_color_level = color_level * surface_color.max_element();
-                if (new_color_level >= MIN_COLOR_LEVEL)
+                if (new_color_level >= MIN_COLOR_LEVEL
+                    && (!use_smooth_normal || dot(surface_ray.direction, geometric_normal) > DOT_PRODUCT_EPSILON<T>))
                 {
-                        // Случайный вектор отражения надо определять от видимой нормали.
-                        // Если получившийся случайный вектор отражения показывает
-                        // в другую сторону от поверхности, то освещения нет.
-                        Ray<N, T> new_ray = Ray<N, T>(point, surface_ray_direction(shading_normal, random_engine));
-                        if (!use_smooth_normal || dot(new_ray.dir(), geometric_normal) > DOT_PRODUCT_EPSILON<T>)
-                        {
-                                new_ray.move_along_dir(paint_data.ray_offset);
+                        Ray<N, T> new_ray = Ray<N, T>(point, surface_ray.direction);
 
-                                std::optional<Color> reflected = trace_path(
-                                        paint_data, ray_count, random_engine, recursion_level + 1, new_color_level,
-                                        new_ray);
+                        new_ray.move_along_dir(paint_data.ray_offset);
 
-                                color += surface_color
-                                         * reflected.value_or(paint_data.scene.background_light_source_color());
-                        }
+                        std::optional<Color> reflected = trace_path(
+                                paint_data, ray_count, random_engine, recursion_level + 1, new_color_level, new_ray);
+
+                        color += surface_color * reflected.value_or(paint_data.scene.background_light_source_color());
                 }
         }
 

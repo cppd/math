@@ -80,6 +80,19 @@ public:
 
         SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const override;
 
+        Color direct_lighting(
+                const Vector<N, T>& p,
+                const void* intersection_data,
+                const Vector<N, T>& shading_normal,
+                const Vector<N, T>& dir_to_point,
+                const Vector<N, T>& dir_to_light) const override;
+
+        SurfaceReflection<N, T> reflection(
+                const Vector<N, T>& p,
+                const void* intersection_data,
+                const Vector<N, T>& shading_normal,
+                RandomEngine<T>& random_engine) const override;
+
         BoundingBox<N, T> bounding_box() const override;
         std::function<bool(const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>&)> intersection_function()
                 const override;

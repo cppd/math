@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh.h"
 
+#include "shading.h"
+
 #include "../space/shape_intersection.h"
 #include "../space/shape_wrapper.h"
 
@@ -381,16 +383,62 @@ SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& p, const void
 
         s.set_alpha(m.alpha);
 
+        return s;
+}
+
+template <std::size_t N, typename T>
+Color Mesh<N, T>::direct_lighting(
+        const Vector<N, T>& p,
+        const void* intersection_data,
+        const Vector<N, T>& shading_normal,
+        const Vector<N, T>& dir_to_point,
+        const Vector<N, T>& dir_to_light) const
+{
+        const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
+
+        ASSERT(facet->material() >= 0);
+
+        const Material& m = m_materials[facet->material()];
+
+        Color color;
+
         if (facet->has_texcoord() && m.map_Kd >= 0)
         {
-                s.set_color(m.diffuse * m_images[m.map_Kd].color(facet->texcoord(p)));
+                color = m.diffuse * m_images[m.map_Kd].color(facet->texcoord(p));
         }
         else
         {
-                s.set_color(m.diffuse * m.Kd);
+                color = m.diffuse * m.Kd;
         }
 
-        return s;
+        return color * surface_lighting(shading_normal, dir_to_point, dir_to_light);
+}
+
+template <std::size_t N, typename T>
+SurfaceReflection<N, T> Mesh<N, T>::reflection(
+        const Vector<N, T>& p,
+        const void* intersection_data,
+        const Vector<N, T>& shading_normal,
+        RandomEngine<T>& random_engine) const
+{
+        const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
+
+        ASSERT(facet->material() >= 0);
+
+        const Material& m = m_materials[facet->material()];
+
+        Color color;
+
+        if (facet->has_texcoord() && m.map_Kd >= 0)
+        {
+                color = m.diffuse * m_images[m.map_Kd].color(facet->texcoord(p));
+        }
+        else
+        {
+                color = m.diffuse * m.Kd;
+        }
+
+        return {color, surface_ray_direction(shading_normal, random_engine)};
 }
 
 template <std::size_t N, typename T>

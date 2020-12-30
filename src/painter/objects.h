@@ -31,7 +31,6 @@ namespace ns::painter
 template <typename T>
 using RandomEngine = std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
 
-// Свойства поверхности в точке.
 template <std::size_t N, typename T>
 class SurfaceProperties
 {
@@ -40,8 +39,6 @@ class SurfaceProperties
         // Видимый перпендикуляр к поверхности. Например, при интерполяции
         // перпендикуляра по перпендикулярам в вершинах симплексов.
         std::optional<Vector<N, T>> m_shading_normal;
-        // Цвет поверхности.
-        Color m_color;
         // Если поверхность является источником света, то цвет этого источника.
         std::optional<Color> m_light_source_color;
         // Коэффициент для прозрачности.
@@ -66,15 +63,6 @@ public:
                 return m_shading_normal;
         }
 
-        void set_color(const Color& color)
-        {
-                m_color = color;
-        }
-        const Color& color() const
-        {
-                return m_color;
-        }
-
         void set_light_source_color(const Color& light_source_color)
         {
                 m_light_source_color = light_source_color;
@@ -94,6 +82,17 @@ public:
         }
 };
 
+template <std::size_t N, typename T>
+struct SurfaceReflection
+{
+        Color color;
+        Vector<N, T> direction;
+
+        SurfaceReflection(const Color& color, const Vector<N, T>& direction) : color(color), direction(direction)
+        {
+        }
+};
+
 // Свойства поверхности надо находить только для ближайшей точки персечения,
 // поэтому свойства определяются не сразу, а через этот интерфейс.
 template <std::size_t N, typename T>
@@ -104,6 +103,19 @@ protected:
 
 public:
         virtual SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const = 0;
+
+        virtual Color direct_lighting(
+                const Vector<N, T>& p,
+                const void* intersection_data,
+                const Vector<N, T>& shading_normal,
+                const Vector<N, T>& dir_to_point,
+                const Vector<N, T>& dir_to_light) const = 0;
+
+        virtual SurfaceReflection<N, T> reflection(
+                const Vector<N, T>& p,
+                const void* intersection_data,
+                const Vector<N, T>& shading_normal,
+                RandomEngine<T>& random_engine) const = 0;
 };
 
 //

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "shading.h"
 #include "shape.h"
 
 #include "../objects.h"
@@ -30,6 +31,7 @@ class Parallelotope final : public Shape<N, T>, public Surface<N, T>
 {
         painter::Parallelotope<N, T> m_parallelotope;
         SurfaceProperties<N, T> m_surface_properties;
+        Color m_color;
 
 public:
         template <typename... V>
@@ -39,9 +41,9 @@ public:
                 const Color::DataType& alpha,
                 const Vector<N, T>& org,
                 const V&... e)
-                : m_parallelotope(org, e...)
+                : m_parallelotope(org, e...),
+                  m_color(color * std::clamp(diffuse, Color::DataType(0), Color::DataType(1)))
         {
-                m_surface_properties.set_color(color * std::clamp(diffuse, Color::DataType(0), Color::DataType(1)));
                 m_surface_properties.set_alpha(alpha);
         }
 
@@ -74,6 +76,25 @@ public:
                 s.set_geometric_normal(m_parallelotope.normal(p));
 
                 return s;
+        }
+
+        Color direct_lighting(
+                const Vector<N, T>& /*p*/,
+                const void* /*intersection_data*/,
+                const Vector<N, T>& shading_normal,
+                const Vector<N, T>& dir_to_point,
+                const Vector<N, T>& dir_to_light) const override
+        {
+                return m_color * surface_lighting(shading_normal, dir_to_point, dir_to_light);
+        }
+
+        SurfaceReflection<N, T> reflection(
+                const Vector<N, T>& /*p*/,
+                const void* /*intersection_data*/,
+                const Vector<N, T>& shading_normal,
+                RandomEngine<T>& random_engine) const override
+        {
+                return {m_color, surface_ray_direction(shading_normal, random_engine)};
         }
 
         BoundingBox<N, T> bounding_box() const override
