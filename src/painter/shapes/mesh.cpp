@@ -226,15 +226,16 @@ void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
                 }
         }
 
+        const Color::DataType diffuse = std::clamp(mesh_object.diffuse(), Color::DataType(0), Color::DataType(1));
         for (const typename mesh::Mesh<N>::Material& m : mesh.materials)
         {
                 int map_Kd = m.map_Kd < 0 ? -1 : (images_offset + m.map_Kd);
-                m_materials.emplace_back(m.Kd, mesh_object.diffuse(), map_Kd, mesh_object.alpha());
+                m_materials.emplace_back(m.Kd, diffuse, map_Kd, mesh_object.alpha());
         }
         if (facets_without_material)
         {
                 ASSERT(materials_offset + default_material_index == static_cast<int>(m_materials.size()));
-                m_materials.emplace_back(mesh_object.color(), mesh_object.diffuse(), -1, mesh_object.alpha());
+                m_materials.emplace_back(mesh_object.color(), diffuse, -1, mesh_object.alpha());
         }
 
         for (const image::Image<N - 1>& image : mesh.images)
@@ -378,16 +379,15 @@ SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& p, const void
 
         const Material& m = m_materials[facet->material()];
 
-        s.set_diffuse(m.diffuse);
         s.set_alpha(m.alpha);
 
         if (facet->has_texcoord() && m.map_Kd >= 0)
         {
-                s.set_color(m_images[m.map_Kd].color(facet->texcoord(p)));
+                s.set_color(m.diffuse * m_images[m.map_Kd].color(facet->texcoord(p)));
         }
         else
         {
-                s.set_color(m.Kd);
+                s.set_color(m.diffuse * m.Kd);
         }
 
         return s;

@@ -41,8 +41,7 @@ public:
                 const V&... e)
                 : m_hyperplane_parallelotope(org, e...)
         {
-                m_surface_properties.set_color(color);
-                m_surface_properties.set_diffuse(diffuse);
+                m_surface_properties.set_color(color * std::clamp(diffuse, Color::DataType(0), Color::DataType(1)));
                 m_surface_properties.set_alpha(alpha);
         }
 

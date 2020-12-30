@@ -23,10 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <optional>
+#include <random>
 #include <vector>
 
 namespace ns::painter
 {
+template <typename T>
+using RandomEngine = std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
+
 // Свойства поверхности в точке.
 template <std::size_t N, typename T>
 class SurfaceProperties
@@ -40,8 +44,6 @@ class SurfaceProperties
         Color m_color;
         // Если поверхность является источником света, то цвет этого источника.
         std::optional<Color> m_light_source_color;
-        // Коэффициент для диффузного отражения.
-        Color::DataType m_diffuse;
         // Коэффициент для прозрачности.
         Color::DataType m_alpha;
 
@@ -80,15 +82,6 @@ public:
         const std::optional<Color>& light_source_color() const
         {
                 return m_light_source_color;
-        }
-
-        void set_diffuse(const Color::DataType& diffuse)
-        {
-                m_diffuse = std::clamp(diffuse, Color::DataType(0), Color::DataType(1));
-        }
-        const Color::DataType& diffuse() const
-        {
-                return m_diffuse;
         }
 
         void set_alpha(const Color::DataType& alpha)

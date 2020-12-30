@@ -45,9 +45,6 @@ constexpr Color::DataType MIN_COLOR_LEVEL = 1e-4;
 constexpr int MAX_RECURSION_LEVEL = 100;
 constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
 
-template <typename T>
-using PainterRandomEngine = std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
-
 template <std::size_t N, typename T>
 using PainterSampler = random::StratifiedJitteredSampler<N, T>;
 // using PainterSampler = LatinHypercubeSampler<N, T>;
@@ -208,7 +205,7 @@ template <std::size_t N, typename T>
 std::optional<Color> trace_path(
         const PaintData<N, T>& paint_data,
         int* ray_count,
-        PainterRandomEngine<T>& random_engine,
+        RandomEngine<T>& random_engine,
         int recursion_level,
         Color::DataType color_level,
         const Ray<N, T>& ray)
@@ -250,29 +247,26 @@ std::optional<Color> trace_path(
                 color += *surface_properties.light_source_color() * surface_properties.alpha();
         }
 
-        Color::DataType reflection = surface_properties.diffuse() * surface_properties.alpha();
+        Color::DataType reflection = surface_properties.alpha();
         if (reflection > 0)
         {
-                Color surface_color = reflection * surface_properties.color();
+                thread_local std::vector<Light<N, T>> lights;
+                find_visible_lights(
+                        ray_count, paint_data, point, geometric_normal, shading_normal, use_smooth_normal, &lights);
+                if (!lights.empty())
+                {
+                        Color direct(0);
+                        for (const Light<N, T>& light : lights)
+                        {
+                                direct += light.color * surface_lighting(shading_normal, ray.dir(), light.dir_to);
+                        }
+                        color += reflection * surface_properties.color() * direct;
+                }
 
+                Color surface_color = reflection * surface_properties.color();
                 Color::DataType new_color_level = color_level * surface_color.max_element();
                 if (new_color_level >= MIN_COLOR_LEVEL)
                 {
-                        thread_local std::vector<Light<N, T>> lights;
-                        find_visible_lights(
-                                ray_count, paint_data, point, geometric_normal, shading_normal, use_smooth_normal,
-                                &lights);
-                        if (!lights.empty())
-                        {
-                                Color direct(0);
-                                for (const Light<N, T>& light : lights)
-                                {
-                                        direct +=
-                                                light.color * surface_lighting(shading_normal, ray.dir(), light.dir_to);
-                                }
-                                color += surface_color * direct;
-                        }
-
                         // Случайный вектор отражения надо определять от видимой нормали.
                         // Если получившийся случайный вектор отражения показывает
                         // в другую сторону от поверхности, то освещения нет.
@@ -322,7 +316,7 @@ void paint_pixels(
         const PainterSampler<N - 1, T>& sampler,
         Pixels<N - 1>* pixels)
 {
-        thread_local PainterRandomEngine<T> random_engine = create_engine<PainterRandomEngine<T>>();
+        thread_local RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
         thread_local std::vector<Vector<N - 1, T>> samples;
 
         std::optional<std::array<int_least16_t, N - 1>> pixel;

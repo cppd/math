@@ -29,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/type/trait.h>
-#include <src/numerical/difference.h>
 #include <src/numerical/orthogonal.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
@@ -73,7 +72,7 @@ public:
                 std::array<Vector<N, T>, N - 1> vectors;
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        numerical::difference(&vectors[i], vertices[i], vertices[N - 1]);
+                        vectors[i] = vertices[i] - vertices[N - 1];
                 }
 
                 // Перпендикуляр к симплексу берётся готовым в параметре normal
@@ -128,7 +127,7 @@ public:
                 std::array<Vector<N, T>, N - 1> vectors;
                 for (unsigned i = 0; i < N - 2; ++i)
                 {
-                        numerical::difference(&vectors[i], vertices[i + 1], vertices[0]);
+                        vectors[i] = vertices[i + 1] - vertices[0];
                 }
 
                 vectors[N - 2] = normal;
