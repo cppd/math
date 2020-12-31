@@ -32,8 +32,6 @@ set(extensions_shaders_include "glsl")
 set(extensions_all "h;c;cpp;ui" ${extensions_shaders} ${extensions_shaders_include})
 set(extensions_binary "ttf")
 
-set(include_output_directory "include")
-
 ##################################################
 
 enable_language(C CXX)
@@ -144,13 +142,16 @@ function(AddIncludeFiles FILE_TYPE)
 
         cmake_parse_arguments(PARSE_ARGV 1 ARG
                 ""
-                "HEADER_FILE;OUTPUT_EXTENSION"
+                "GLSLANG_VALIDATOR;HEADER_FILE;OUTPUT_EXTENSION;OUTPUT_DIRECTORY"
                 "EXTENSIONS;EXTENSIONS_INCLUDE;SOURCE;MACROS")
         if (NOT ARG_OUTPUT_EXTENSION)
-                message(FATAL_ERROR "No output extension")
+                message(FATAL_ERROR "OUTPUT_EXTENSION is not specified")
         endif()
         if (NOT ARG_SOURCE)
-                message(FATAL_ERROR "No source")
+                message(FATAL_ERROR "SOURCE is not specified")
+        endif()
+        if (NOT ARG_OUTPUT_DIRECTORY)
+                message(FATAL_ERROR "OUTPUT_DIRECTORY is not specified")
         endif()
         if (ARG_UNPARSED_ARGUMENTS)
                 message(FATAL_ERROR "Unparsed arguments ${ARG_UNPARSED_ARGUMENTS}")
@@ -173,19 +174,20 @@ function(AddIncludeFiles FILE_TYPE)
                 endif()
                 set(BINARY_FILES TRUE)
                 set(custom_target_prefix "custom_target_binary_files")
-                set(output_directory "${PROJECT_BINARY_DIR}/${include_output_directory}/binary_files")
         elseif ("${FILE_TYPE}" STREQUAL "VULKAN_SHADERS")
+                if (NOT ARG_GLSLANG_VALIDATOR)
+                        message(FATAL_ERROR "GLSLANG_VALIDATOR is not specified")
+                endif()
                 set(VULKAN_SHADERS TRUE)
                 set(custom_target_prefix "custom_target_vulkan_shaders")
-                set(output_directory "${PROJECT_BINARY_DIR}/${include_output_directory}/vulkan_shaders")
         else()
                 message(FATAL_ERROR "Unknown file type ${FILE_TYPE}")
         endif()
 
         #
 
-        file(MAKE_DIRECTORY "${output_directory}")
-        target_include_directories(${PROJECT_NAME} PRIVATE "${output_directory}")
+        file(MAKE_DIRECTORY "${ARG_OUTPUT_DIRECTORY}")
+        target_include_directories(${PROJECT_NAME} PRIVATE "${ARG_OUTPUT_DIRECTORY}")
 
         #
 
@@ -217,7 +219,7 @@ function(AddIncludeFiles FILE_TYPE)
                         endif()
 
                         set(target_name "${custom_target_prefix}_${file_name}")
-                        set(output_file "${output_directory}/${file_name}.${ARG_OUTPUT_EXTENSION}")
+                        set(output_file "${ARG_OUTPUT_DIRECTORY}/${file_name}.${ARG_OUTPUT_EXTENSION}")
 
                         add_custom_target(${target_name} DEPENDS "${output_file}")
                         add_dependencies(${target_name} create_str)
@@ -264,10 +266,10 @@ function(AddIncludeFiles FILE_TYPE)
 
                                 get_filename_component(file_ext "${long_file_name}" EXT)
                                 string(RANDOM LENGTH 10 random_string_glsl)
-                                set(output_glsl "${output_directory}/${file_name}_${random_string_glsl}${file_ext}")
+                                set(output_glsl "${ARG_OUTPUT_DIRECTORY}/${file_name}_${random_string_glsl}${file_ext}")
 
                                 string(RANDOM LENGTH 10 random_string_sprv)
-                                set(output_sprv "${output_directory}/${file_name}_${random_string_sprv}.sprv")
+                                set(output_sprv "${ARG_OUTPUT_DIRECTORY}/${file_name}_${random_string_sprv}.sprv")
 
                                 add_custom_command(
                                         OUTPUT
@@ -276,7 +278,7 @@ function(AddIncludeFiles FILE_TYPE)
                                                 "${PROJECT_BINARY_DIR}/create_str"
                                                 "cat" ${header} "${long_file_name}" "${output_glsl}"
                                         COMMAND
-                                                "glslangValidator"
+                                                "${ARG_GLSLANG_VALIDATOR}"
                                                 "-I${include_directory}"
                                                 "-V"
                                                 ${macro_list}
@@ -327,7 +329,10 @@ AddSourceFiles(EXECUTABLE DIRECTORIES "src_str" EXTENSIONS ${extensions_all})
 
 project(math C CXX)
 
-file(REMOVE_RECURSE "${PROJECT_BINARY_DIR}/${include_output_directory}")
+find_program(GLSLANG_VALIDATOR "glslangValidator" REQUIRED)
+
+set(output_headers_directory "${PROJECT_BINARY_DIR}/output_headers")
+file(REMOVE_RECURSE "${output_headers_directory}")
 
 # Qt
 set(CMAKE_AUTOMOC ON)
@@ -343,11 +348,14 @@ AddSourceFiles(EXECUTABLE
                         EXTENSIONS ${extensions_all})
 
 AddIncludeFiles(BINARY_FILES
+                        OUTPUT_DIRECTORY "${output_headers_directory}/fonts"
                         OUTPUT_EXTENSION "bin"
                         SOURCE "font"
                         EXTENSIONS ${extensions_binary})
 
 AddIncludeFiles(VULKAN_SHADERS
+                        OUTPUT_DIRECTORY "${output_headers_directory}/shaders"
+                        GLSLANG_VALIDATOR "${GLSLANG_VALIDATOR}"
                         OUTPUT_EXTENSION "spr"
                         SOURCE
                                 "src/gpu/convex_hull/code"
