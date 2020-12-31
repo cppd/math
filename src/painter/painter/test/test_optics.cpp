@@ -21,111 +21,118 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/com/names.h>
 #include <src/com/random/engine.h>
 #include <src/com/time.h>
 #include <src/com/type/name.h>
+#include <src/random/sphere.h>
 
+#include <cstddef>
 #include <random>
+#include <span>
 #include <vector>
 
 namespace ns::painter
 {
 namespace
 {
-constexpr int COUNT = 10000000;
-
-template <typename T>
-constexpr T ETA = T(1) / T(1.5);
-
-template <typename T>
-constexpr Vector<3, T> VECTOR(0.1, -0.2, 0.3);
-
-template <typename T>
-std::vector<Vector<3, T>> random_data(int count)
+template <std::size_t N, typename T>
+std::vector<Vector<N, T>> random_data(int count, std::mt19937_64& engine)
 {
-        using RandomEngine =
-                std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
-
-        RandomEngine engine = create_engine<RandomEngine>();
-        std::uniform_real_distribution<T> urd(-1, 1);
-
-        std::vector<Vector<3, T>> data;
-
+        std::vector<Vector<N, T>> data;
+        data.reserve(count);
         for (int i = 0; i < count; ++i)
         {
-                Vector<3, T> v;
-
-                do
-                {
-                        v = Vector<3, T>(urd(engine), urd(engine), urd(engine)).normalized();
-                } while (!is_finite(v));
-
-                data.push_back(v);
+                data.push_back(random::random_on_sphere<N, T>(engine));
         }
-
         return data;
 }
 
 template <typename T>
-T abs_sum(const Vector<3, T>& v)
+long long byte_sum(const T& data)
 {
-        return std::abs(v[0]) + std::abs(v[1]) + std::abs(v[2]);
+        long long s = 0;
+        for (std::byte v : std::as_bytes(std::span(data)))
+        {
+                s += std::to_integer<int>(v);
+        }
+        return s;
 }
 
-template <typename T>
-void test_optics_performance(int count, const Vector<3, T>& normal_vector, T eta)
+template <std::size_t N, typename T, typename F>
+void test(std::string text, const std::vector<Vector<N, T>> data, const F& f)
 {
-        const std::vector<Vector<3, T>> data = random_data<T>(count);
-
-        const Vector<3, T> normal = normal_vector.normalized();
-
-        ASSERT(is_finite(normal));
-
+        static_assert(std::is_trivially_copyable_v<decltype(f(data[0]))>);
+        std::vector<decltype(f(data[0]))> result(data.size());
+        TimePoint start_time = time();
+        for (std::size_t i = 0; i < data.size(); ++i)
         {
-                TimePoint start_time = time();
-
-                Vector<3, T> t;
-                T sum = 0;
-                for (const Vector<3, T>& v : data)
-                {
-                        if (refract(v, normal, eta, &t))
-                        {
-                                sum += abs_sum(t);
-                        }
-                }
-
-                LOG("refract  : " + to_string_fixed(duration_from(start_time), 5) + ", sum = " + to_string(sum));
+                result[i] = f(data[i]);
         }
-
-        {
-                TimePoint start_time = time();
-
-                Vector<3, T> t;
-                T sum = 0;
-                for (const Vector<3, T>& v : data)
-                {
-                        if (refract2(v, normal, eta, &t))
-                        {
-                                sum += abs_sum(t);
-                        }
-                }
-
-                LOG("refract 2: " + to_string_fixed(duration_from(start_time), 5) + ", sum = " + to_string(sum));
-        }
+        text += ": " + to_string_fixed(duration_from(start_time), 5);
+        text += ", byte sum = " + to_string(byte_sum(result));
+        LOG(text);
 }
 
-template <typename T>
+template <std::size_t N, typename T>
 void test_optics_performance()
 {
-        LOG(std::string("<") + type_name<T>() + ">");
-        test_optics_performance<T>(COUNT, VECTOR<T>, ETA<T>);
+        constexpr int DATA_SIZE = 10'000'000;
+        constexpr T N_1 = 1;
+        constexpr T N_2 = 1.5;
+        constexpr T ETA = N_1 / N_2;
+        constexpr T K = T(0.5);
+
+        LOG(space_name(N) + ", <" + type_name<T>() + ">");
+
+        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+
+        const Vector<N, T> normal = random::random_on_sphere<N, T>(engine);
+        const std::vector<Vector<N, T>> data = random_data<N, T>(DATA_SIZE, engine);
+
+        test("  reflect  ", data,
+             [&](const Vector<N, T>& v)
+             {
+                     return reflect(v, normal);
+             });
+        test("  refract  ", data,
+             [&](const Vector<N, T>& v)
+             {
+                     return refract(v, normal, ETA);
+             });
+
+        test("  refract 2", data,
+             [&](const Vector<N, T>& v)
+             {
+                     return refract2(v, normal, ETA);
+             });
+
+        test("  fresnel d", data,
+             [&](const Vector<N, T>& v)
+             {
+                     return fresnel_dielectric(v, normal, N_1, N_2);
+             });
+
+        test("  fresnel c", data,
+             [&](const Vector<N, T>& v)
+             {
+                     return fresnel_conductor(v, normal, ETA, K);
+             });
+}
+
+template <std::size_t N>
+void test_optics_performance()
+{
+        test_optics_performance<N, float>();
+        test_optics_performance<N, double>();
 }
 }
 
 void test_optics_performance()
 {
-        test_optics_performance<float>();
-        test_optics_performance<double>();
-        test_optics_performance<long double>();
+        test_optics_performance<2>();
+        test_optics_performance<3>();
+        test_optics_performance<4>();
+        test_optics_performance<5>();
 }
 }

@@ -32,12 +32,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/math.h>
 #include <src/numerical/vec.h>
 
+#include <array>
+#include <optional>
+
 namespace ns::painter
 {
 namespace optics_implementation
 {
-template <typename T>
-bool cos1_cos2(const Vector<3, T>& v, const Vector<3, T>& normal, T eta, T* cos1, T* cos2)
+template <std::size_t N, typename T>
+std::optional<T> cos2(const Vector<N, T>& v, const Vector<N, T>& normal, T eta)
 {
         T dot1 = dot(normal, v);
 
@@ -46,18 +49,33 @@ bool cos1_cos2(const Vector<3, T>& v, const Vector<3, T>& normal, T eta, T* cos1
 
         if (cos2_square > 0)
         {
-                *cos1 = std::abs(dot1);
-                *cos2 = std::sqrt(cos2_square);
-                return true;
+                return std::sqrt(cos2_square);
         }
 
         // полное внутреннее отражение
-        return false;
+        return std::nullopt;
+}
+
+template <std::size_t N, typename T>
+std::optional<std::array<T, 2>> cos1_cos2(const Vector<N, T>& v, const Vector<N, T>& normal, T eta)
+{
+        T dot1 = dot(normal, v);
+
+        // sin2 = eta * sin1
+        T cos2_square = 1 - square(eta) * (1 - square(dot1));
+
+        if (cos2_square > 0)
+        {
+                return {{std::abs(dot1), std::sqrt(cos2_square)}};
+        }
+
+        // полное внутреннее отражение
+        return std::nullopt;
 }
 }
 
-template <typename T>
-Vector<3, T> reflect(const Vector<3, T>& v, const Vector<3, T>& normal)
+template <std::size_t N, typename T>
+Vector<N, T> reflect(const Vector<N, T>& v, const Vector<N, T>& normal)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -65,72 +83,78 @@ Vector<3, T> reflect(const Vector<3, T>& v, const Vector<3, T>& normal)
 }
 
 // The OpenGL® Shading Language, Geometric Functions, Description.
-template <typename T>
-bool refract(const Vector<3, T>& v, const Vector<3, T>& normal, T eta, Vector<3, T>* t)
+template <std::size_t N, typename T>
+std::optional<Vector<N, T>> refract(const Vector<N, T>& v, const Vector<N, T>& normal, T eta)
 {
         static_assert(std::is_floating_point_v<T>);
 
         namespace impl = optics_implementation;
 
-        T cos1;
-        T cos2;
-        if (impl::cos1_cos2(v, normal, eta, &cos1, &cos2))
+        std::optional<T> cos2 = impl::cos2(v, normal, eta);
+        if (cos2)
         {
-                *t = v * eta - normal * (eta * dot(v, normal) + cos2);
-                //*t = eta * (v  - normal * dot(v, normal)) - normal * cos2;
-                return true;
+                return v * eta - normal * (eta * dot(v, normal) + *cos2);
+                // return eta * (v  - normal * dot(v, normal)) - normal * *cos2;
         }
-        return false;
+        return std::nullopt;
 }
 
 // 3D Computer Graphics. A Mathematical Introduction with OpenGL.
 // Для GCC работает медленнее функции из документации GLSL, где косинус
 // второго угла определяется через косинус первого угла, а не через синус
 // второго угла, как в этой функции.
-template <typename T>
-bool refract2(const Vector<3, T>& v, const Vector<3, T>& normal, T eta, Vector<3, T>* t)
+template <std::size_t N, typename T>
+std::optional<Vector<N, T>> refract2(const Vector<N, T>& v, const Vector<N, T>& normal, T eta)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        Vector<3, T> t_lat = eta * (v - normal * dot(v, normal));
+        Vector<N, T> t_lat = eta * (v - normal * dot(v, normal));
         T sin_square = dot(t_lat, t_lat);
         if (sin_square < 1)
         {
-                *t = t_lat - normal * std::sqrt(1 - sin_square);
-                return true;
+                return t_lat - normal * std::sqrt(1 - sin_square);
         }
-        return false;
+        return std::nullopt;
 }
 
 // Physically Based Rendering, 8.2.1 Fresnel reflectance.
 template <typename T>
-bool fresnel_dielectric(const Vector<3, T>& v, const Vector<3, T>& normal, T n1, T n2, T* reflected, T* transmitted)
+struct FresnelDielectric
+{
+        T reflected;
+        T transmitted;
+        FresnelDielectric(T reflected, T transmitted) : reflected(reflected), transmitted(transmitted)
+        {
+        }
+};
+template <std::size_t N, typename T>
+std::optional<FresnelDielectric<T>> fresnel_dielectric(const Vector<N, T>& v, const Vector<N, T>& normal, T n1, T n2)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        T cos1;
-        T cos2;
+        namespace impl = optics_implementation;
 
-        if (!cos1_cos2(v, normal, n1 / n2, &cos1, &cos2))
+        std::optional<std::array<T, 2>> cos1_cos2 = impl::cos1_cos2(v, normal, n1 / n2);
+        if (!cos1_cos2)
         {
-                *reflected = 1;
-                *transmitted = 0;
-                return false;
+                return std::nullopt;
         }
+
+        const auto [cos1, cos2] = *cos1_cos2;
 
         T r_parallel = (n2 * cos1 - n1 * cos2) / (n2 * cos1 + n1 * cos2);
         T r_perpendicular = (n1 * cos1 - n2 * cos2) / (n1 * cos1 + n2 * cos2);
 
-        *reflected = T(0.5) * (square(r_parallel) + square(r_perpendicular));
-        *transmitted = 1 - *reflected;
+        T reflected = T(0.5) * (square(r_parallel) + square(r_perpendicular));
+        T transmitted = 1 - reflected;
 
-        return true;
+        return FresnelDielectric<T>(reflected, transmitted);
 }
 
 // Physically Based Rendering, 8.2.1 Fresnel reflectance.
 // η — the index of refraction of the conductor, k — its absorption coefficient.
-template <typename T>
-T fresnel_conductor(const Vector<3, T>& v, const Vector<3, T>& normal, T eta, T k)
+template <std::size_t N, typename T>
+T fresnel_conductor(const Vector<N, T>& v, const Vector<N, T>& normal, T eta, T k)
 {
         static_assert(std::is_floating_point_v<T>);
 
