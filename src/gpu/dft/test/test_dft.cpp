@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/dft/fftw.h>
 #endif
 
+#include "test_data.h"
+
 #include "../compute.h"
 
 #include <src/com/error.h>
@@ -38,9 +40,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <complex>
 #include <filesystem>
-#include <fstream>
-#include <random>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -79,124 +78,31 @@ void compare(
 
         LOG("Discrepancy " + name_compute + ": " + to_string(d));
 
-        // Для NaN не работает if (!(d <= DISCREPANCY_LIMIT))
-        // Для NaN работает if (d <= DISCREPANCY_LIMIT); else
         if (d <= DISCREPANCY_LIMIT)
         {
                 return;
         }
 
-        std::ostringstream oss;
-        oss << "DFT failed (comparison " << name_compute << " with " << name_library << ")";
-        error(oss.str());
+        error("DFT failed (comparison " + name_compute + " with " + name_library + ")");
 }
 #endif
 
-template <typename T>
-void load_data(const std::filesystem::path& file_name, int* n1, int* n2, std::vector<std::complex<T>>* data)
+std::string time_string(const std::string& name, const TimePoint& start_time)
 {
-        constexpr int MAX_DIMENSION_SIZE = 1e9;
-
-        std::fstream file(file_name);
-
-        long long v1;
-        long long v2;
-
-        file >> v1 >> v2;
-        if (!file)
-        {
-                error("Data dimensions read error");
-        }
-
-        if (v1 < 1 || v2 < 1)
-        {
-                error("Dimensions must be positive numbers");
-        }
-        if (v1 > MAX_DIMENSION_SIZE || v2 > MAX_DIMENSION_SIZE)
-        {
-                error("Dimensions are too big");
-        }
-
-        const long long count = v1 * v2;
-
-        LOG("Loading " + to_string(v1) + "x" + to_string(v2) + ", total number count " + to_string(count));
-
-        std::vector<std::complex<T>> x(count);
-
-        for (long long i = 0; i < count; ++i)
-        {
-                T real;
-                T imag;
-                file >> real >> imag;
-                if (!file)
-                {
-                        error("Error read number № " + to_string(i));
-                }
-                x[i] = std::complex<T>(real, imag);
-        }
-
-        *n1 = v1;
-        *n2 = v2;
-        *data = std::move(x);
-}
-
-template <typename T>
-void save_data(const std::filesystem::path& file_name, const std::vector<std::complex<T>>& x)
-{
-        if (file_name.empty())
-        {
-                LOG("Data: " + to_string(x));
-                return;
-        }
-
-        std::ofstream file(file_name);
-
-        file << std::scientific;
-        file << std::setprecision(limits<T>::max_digits10);
-        file << std::showpos;
-        file << std::showpoint;
-
-        for (const std::complex<T>& c : x)
-        {
-                file << c.real() << ' ' << c.imag() << '\n';
-        }
-}
-
-template <typename T>
-void generate_random_data(const std::filesystem::path& file_name, int n1, int n2)
-{
-        if (n1 < 1 || n2 < 1)
-        {
-                error("Wrong size " + to_string(n1) + " " + to_string(n2));
-        }
-
-        LOG("Generating " + to_string(n1) + "x" + to_string(n2) + ", total number count " + to_string(n1 * n2));
-
-        std::mt19937_64 gen((static_cast<unsigned long long>(n1) << 32) + n2);
-        std::uniform_real_distribution<T> urd(-1, 1);
-
-        std::ofstream file(file_name);
-
-        file << n1 << ' ' << n2 << '\n';
-
-        file << std::scientific;
-        file << std::setprecision(limits<T>::max_digits10);
-        file << std::showpos;
-        file << std::showpoint;
-
-        for (int i = 0; i < n1 * n2; ++i)
-        {
-                file << urd(gen) << ' ' << urd(gen) << '\n';
-        }
-}
-
-std::string time_string(const TimePoint& start_time)
-{
-        return to_string_fixed(1000.0 * duration_from(start_time), 5) + " ms";
+        return name + " time: " + to_string_fixed(1000.0 * duration_from(start_time), 5) + " ms";
 }
 
 void compute_vulkan(ComputeVector* dft, bool inverse, int n1, int n2, std::vector<complex>* data)
 {
+        if (inverse)
+        {
+                LOG("----- Vulkan inverse -----");
+        }
+        else
+        {
+                LOG("----- Vulkan forward -----");
+        }
+
         {
                 std::mt19937_64 engine = create_engine<std::mt19937_64>();
                 std::uniform_int_distribution<int> uid(1, 3000);
@@ -214,7 +120,7 @@ void compute_vulkan(ComputeVector* dft, bool inverse, int n1, int n2, std::vecto
         dft->create_buffers(n1, n2);
         dft->exec(inverse, data);
 
-        LOG((inverse ? "Vulkan inverse time: " : "Vulkan forward time: ") + time_string(start_time));
+        LOG(time_string("Vulkan", start_time));
 }
 
 #if defined(CUDA_FOUND)
@@ -234,7 +140,7 @@ void compute_cuda(bool inverse, int n1, int n2, std::vector<complex>* data)
         std::unique_ptr<ns::dft::DFT> cufft = ns::dft::create_cufft(n1, n2);
         cufft->exec(inverse, data);
 
-        LOG("cuFFT time: " + time_string(start_time));
+        LOG(time_string("cuFFT", start_time));
 }
 #endif
 
@@ -255,22 +161,165 @@ void compute_fftw(bool inverse, int n1, int n2, std::vector<complex>* data)
         std::unique_ptr<ns::dft::DFT> fftw = ns::dft::create_fftw(n1, n2);
         fftw->exec(inverse, data);
 
-        LOG("FFTW time: " + time_string(start_time));
+        LOG(time_string("FFTW", start_time));
 }
 #endif
 
-void dft_test(
+std::filesystem::path make_path(const std::string_view& name)
+{
+        return std::filesystem::temp_directory_path() / path_from_utf8(name);
+}
+
+struct DftData
+{
+        std::vector<complex> forward;
+        std::vector<complex> inverse;
+};
+
+DftData run_vulkan(
+        const std::string& test_name,
         ComputeVector* dft,
         const int n1,
         const int n2,
         const std::vector<complex>& source_data,
         ProgressRatio* progress,
-        const std::string& output_vulkan_file_name,
-        const std::string& output_inverse_vulkan_file_name,
-        [[maybe_unused]] const std::string& output_cuda_file_name,
-        [[maybe_unused]] const std::string& output_inverse_cuda_file_name,
-        [[maybe_unused]] const std::string& output_fftw_file_name,
-        [[maybe_unused]] const std::string& output_inverse_fftw_file_name)
+        int* computation,
+        int computation_count)
+{
+        DftData dft_data;
+
+        dft_data.forward = source_data;
+        compute_vulkan(dft, false, n1, n2, &dft_data.forward);
+        save_data(make_path(test_name + "_dft_output_forward_vulkan.txt"), dft_data.forward);
+
+        progress->set(++(*computation), computation_count);
+
+        dft_data.inverse = dft_data.forward;
+        compute_vulkan(dft, true, n1, n2, &dft_data.inverse);
+        save_data(make_path(test_name + "_dft_output_inverse_vulkan.txt"), dft_data.inverse);
+
+        progress->set(++(*computation), computation_count);
+
+        return dft_data;
+}
+
+#if defined(CUDA_FOUND)
+void run_cuda(
+        const std::string& test_name,
+        const int n1,
+        const int n2,
+        const std::vector<complex>& source_data,
+        ProgressRatio* progress,
+        int* computation,
+        int computation_count,
+        const DftData& vulkan_data)
+{
+        std::vector<complex> data(source_data);
+
+        try
+        {
+                compute_cuda(false, n1, n2, &data);
+        }
+        catch (const std::exception& e)
+        {
+                LOG(std::string("CUDA forward DFT error\n") + e.what());
+                return;
+        }
+        catch (...)
+        {
+                LOG("CUDA forward DFT unknown error");
+                return;
+        }
+
+        save_data(make_path(test_name + "_dft_output_forward_cuda.txt"), data);
+        compare("Vulkan", "cuFFT", vulkan_data.forward, data);
+
+        progress->set(++(*computation), computation_count);
+
+        try
+        {
+                compute_cuda(true, n1, n2, &data);
+        }
+        catch (const std::exception& e)
+        {
+                LOG(std::string("CUDA inverse DFT error\n") + e.what());
+                return;
+        }
+        catch (...)
+        {
+                LOG("CUDA inverse DFT unknown error");
+                return;
+        }
+
+        save_data(make_path(test_name + "_dft_output_inverse_cuda.txt"), data);
+        compare("Vulkan", "cuFFT", vulkan_data.inverse, data);
+
+        progress->set(++(*computation), computation_count);
+}
+#endif
+
+#if defined(FFTW_FOUND)
+void run_fftw(
+        const std::string& test_name,
+        const int n1,
+        const int n2,
+        const std::vector<complex>& source_data,
+        ProgressRatio* progress,
+        int* computation,
+        int computation_count,
+        const DftData& vulkan_data)
+{
+        std::vector<complex> data(source_data);
+
+        try
+        {
+                compute_fftw(false, n1, n2, &data);
+        }
+        catch (const std::exception& e)
+        {
+                LOG(std::string("FFTW forward DFT error\n") + e.what());
+                return;
+        }
+        catch (...)
+        {
+                LOG("FFTW forward DFT unknown error");
+                return;
+        }
+
+        save_data(make_path(test_name + "_dft_output_forward_fftw.txt"), data);
+        compare("Vulkan", "FFTW", vulkan_data.forward, data);
+
+        progress->set(++(*computation), computation_count);
+
+        try
+        {
+                compute_fftw(true, n1, n2, &data);
+        }
+        catch (const std::exception& e)
+        {
+                LOG(std::string("FFTW inverse DFT error\n") + e.what());
+                return;
+        }
+        catch (...)
+        {
+                LOG("FFTW inverse DFT unknown error");
+                return;
+        }
+
+        save_data(make_path(test_name + "_dft_output_inverse_fftw.txt"), data);
+        compare("Vulkan", "FFTW", vulkan_data.inverse, data);
+
+        progress->set(++(*computation), computation_count);
+}
+#endif
+
+void dft_test(
+        const std::string& test_name,
+        ComputeVector* dft,
+        const int n1,
+        const int n2,
+        const std::vector<complex>& source_data,
+        ProgressRatio* progress)
 {
         int computation_count = 2;
 
@@ -284,56 +333,15 @@ void dft_test(
         int computation = 0;
         progress->set(0, computation_count);
 
-        //
-
-        std::vector<complex> data_vulkan(source_data);
-        compute_vulkan(dft, false, n1, n2, &data_vulkan);
-        save_data(output_vulkan_file_name, data_vulkan);
-
-        progress->set(++computation, computation_count);
-
-        std::vector<complex> data_vulkan_inverse(data_vulkan);
-        compute_vulkan(dft, true, n1, n2, &data_vulkan_inverse);
-        save_data(output_inverse_vulkan_file_name, data_vulkan_inverse);
-
-        progress->set(++computation, computation_count);
-
-        //
+        const DftData vulkan_data =
+                run_vulkan(test_name, dft, n1, n2, source_data, progress, &computation, computation_count);
 
 #if defined(CUDA_FOUND)
-        {
-                std::vector<complex> data(source_data);
-
-                compute_cuda(false, n1, n2, &data);
-                save_data(output_cuda_file_name, data);
-                compare("Vulkan", "cuFFT", data_vulkan, data);
-
-                progress->set(++computation, computation_count);
-
-                compute_cuda(true, n1, n2, &data);
-                save_data(output_inverse_cuda_file_name, data);
-                compare("Vulkan", "cuFFT", data_vulkan_inverse, data);
-
-                progress->set(++computation, computation_count);
-        }
+        run_cuda(test_name, n1, n2, source_data, progress, &computation, computation_count, vulkan_data);
 #endif
 
 #if defined(FFTW_FOUND)
-        {
-                std::vector<complex> data(source_data);
-
-                compute_fftw(false, n1, n2, &data);
-                save_data(output_fftw_file_name, data);
-                compare("Vulkan", "FFTW", data_vulkan, data);
-
-                progress->set(++computation, computation_count);
-
-                compute_fftw(true, n1, n2, &data);
-                save_data(output_inverse_fftw_file_name, data);
-                compare("Vulkan", "FFTW", data_vulkan_inverse, data);
-
-                progress->set(++computation, computation_count);
-        }
+        run_fftw(test_name, n1, n2, source_data, progress, &computation, computation_count, vulkan_data);
 #endif
 }
 
@@ -353,31 +361,16 @@ void constant_data_test(ComputeVector* dft, ProgressRatio* progress)
 
         LOG("--- Source Data ---\n" + to_string(source_data));
 
-        dft_test(dft, N, K, source_data, progress, "", "", "", "", "", "");
+        dft_test("constant", dft, N, K, source_data, progress);
 
         LOG("---\nDFT check passed");
-}
-
-std::filesystem::path make_path(const std::filesystem::path& tmp, const std::string_view& name)
-{
-        return tmp / path_from_utf8(name);
 }
 
 void random_data_test(ComputeVector* dft, const std::array<int, 2>& dimensions, ProgressRatio* progress)
 {
         LOG("\n----- Random Data DFT Tests -----");
 
-        const std::filesystem::path tmp_dir = std::filesystem::temp_directory_path();
-
-        const std::filesystem::path input_file_name = make_path(tmp_dir, "dft_input.txt");
-
-        const std::filesystem::path vulkan_file_name = make_path(tmp_dir, "dft_output_vulkan.txt");
-        const std::filesystem::path cuda_file_name = make_path(tmp_dir, "dft_output_cuda.txt");
-        const std::filesystem::path fftw_file_name = make_path(tmp_dir, "dft_output_fftw.txt");
-
-        const std::filesystem::path inverse_vulkan_file_name = make_path(tmp_dir, "dft_output_inverse_vulkan.txt");
-        const std::filesystem::path inverse_cuda_file_name = make_path(tmp_dir, "dft_output_inverse_cuda.txt");
-        const std::filesystem::path inverse_fftw_file_name = make_path(tmp_dir, "dft_output_inverse_fftw.txt");
+        const std::filesystem::path input_file_name = make_path("dft_input.txt");
 
         generate_random_data<complex::value_type>(input_file_name, dimensions[0], dimensions[1]);
 
@@ -393,9 +386,7 @@ void random_data_test(ComputeVector* dft, const std::array<int, 2>& dimensions, 
                       + ")");
         }
 
-        dft_test(
-                dft, n1, n2, source_data, progress, vulkan_file_name, inverse_vulkan_file_name, cuda_file_name,
-                inverse_cuda_file_name, fftw_file_name, inverse_fftw_file_name);
+        dft_test("random", dft, n1, n2, source_data, progress);
 
         LOG("---\nDFT check passed");
 }
