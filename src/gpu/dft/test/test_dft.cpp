@@ -231,7 +231,7 @@ void compute_cuda(bool inverse, int n1, int n2, std::vector<complex>* data)
 
         TimePoint start_time = time();
 
-        std::unique_ptr<DFT> cufft = create_cufft(n1, n2);
+        std::unique_ptr<ns::dft::DFT> cufft = ns::dft::create_cufft(n1, n2);
         cufft->exec(inverse, data);
 
         LOG("cuFFT time: " + time_string(start_time));
@@ -252,7 +252,7 @@ void compute_fftw(bool inverse, int n1, int n2, std::vector<complex>* data)
 
         TimePoint start_time = time();
 
-        std::unique_ptr<DFT> fftw = create_fftw(n1, n2);
+        std::unique_ptr<ns::dft::DFT> fftw = ns::dft::create_fftw(n1, n2);
         fftw->exec(inverse, data);
 
         LOG("FFTW time: " + time_string(start_time));

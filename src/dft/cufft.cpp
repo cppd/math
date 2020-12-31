@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cufft.h>
 #include <type_traits>
 
-namespace ns
+namespace ns::dft
 {
 namespace
 {

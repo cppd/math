@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-namespace ns
+namespace ns::dft
 {
 std::unique_ptr<DFT> create_fftw(int x, int y);
 }
