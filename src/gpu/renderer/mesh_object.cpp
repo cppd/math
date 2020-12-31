@@ -443,7 +443,7 @@ std::vector<TrianglesMaterialMemory::MaterialInfo> materials_info(
         // Буферов имеется больше на один для его указания, но не использования в вершинах, не имеющих материала
         ASSERT(material_buffers.size() == mesh.materials.size() + 1);
 
-        const VkImageView no_texture = textures.back().image_view();
+        VkImageView no_texture = textures.back().image_view();
 
         std::vector<TrianglesMaterialMemory::MaterialInfo> materials;
         materials.reserve(mesh.materials.size() + 1);

@@ -80,7 +80,7 @@ void cuda_device_sync()
         }
 }
 
-class CudaPlan2D
+class CudaPlan2D final
 {
         cufftHandle m_plan;
 

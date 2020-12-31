@@ -183,14 +183,17 @@ void conformance_version(const PhysicalDevice& device, std::size_t device_node, 
 void device_name(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
 {
         std::size_t type_node = tree->add(device_node, "Device Name");
-        tree->add(type_node, device.properties().properties_10.deviceName);
+        const char* device_name = static_cast<const char*>(device.properties().properties_10.deviceName);
+        tree->add(type_node, device_name);
 }
 
 void driver_info(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
 {
         std::size_t node = tree->add(device_node, "Driver");
-        tree->add(node, std::string("Name = ") + device.properties().properties_12.driverName);
-        tree->add(node, std::string("Info = ") + device.properties().properties_12.driverInfo);
+        const char* driver_name = static_cast<const char*>(device.properties().properties_12.driverName);
+        tree->add(node, std::string("Name = ") + driver_name);
+        const char* driver_info = static_cast<const char*>(device.properties().properties_12.driverInfo);
+        tree->add(node, std::string("Info = ") + driver_info);
 }
 
 void device_type(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)

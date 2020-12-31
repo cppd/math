@@ -28,24 +28,29 @@ namespace ns
 namespace merge_implementation
 {
 template <typename T1, typename T2>
-void add(std::vector<T1>* v, const T2& e)
+void add(std::vector<T1>* v, const std::vector<T2>& e)
 {
-        if constexpr (is_vector<T2> || is_array<T2>)
-        {
-                v->insert(v->end(), e.cbegin(), e.cend());
-        }
-        else
-        {
-                v->insert(v->end(), e);
-        }
+        v->insert(v->end(), e.cbegin(), e.cend());
+}
+
+template <typename T1, typename T2, std::size_t N>
+void add(std::vector<T1>* v, const std::array<T2, N>& e)
+{
+        v->insert(v->end(), e.cbegin(), e.cend());
+}
+
+template <typename T>
+void add(std::vector<T>* v, std::type_identity_t<T> e)
+{
+        v->push_back(std::move(e));
 }
 }
 
 template <typename R, typename... T>
-std::vector<R> merge(const T&... data)
+std::vector<R> merge(T&&... data)
 {
         std::vector<R> res;
-        (merge_implementation::add(&res, data), ...);
+        (merge_implementation::add(&res, std::forward<T>(data)), ...);
         return unique_elements(std::move(res));
 }
 }
