@@ -171,13 +171,6 @@ Vector<N, T> random_cosine_weighted_on_hemisphere(RandomEngine& random_engine, c
 
         random_in_sphere(random_engine, v, v_length_square);
 
-        if constexpr (N >= 4)
-        {
-                T k = std::pow(v_length_square, 0.5 * (0.5 * N - 1.5));
-                v *= k;
-                v_length_square *= k * k;
-        }
-
         T n = std::sqrt(1 - v_length_square);
 
         std::array<Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
