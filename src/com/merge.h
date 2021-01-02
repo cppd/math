@@ -40,7 +40,13 @@ void add(std::vector<T1>* v, const std::array<T2, N>& e)
 }
 
 template <typename T>
-void add(std::vector<T>* v, std::type_identity_t<T> e)
+void add(std::vector<T>* v, const std::type_identity_t<T>& e)
+{
+        v->push_back(e);
+}
+
+template <typename T>
+void add(std::vector<T>* v, std::type_identity_t<T>&& e)
 {
         v->push_back(std::move(e));
 }
