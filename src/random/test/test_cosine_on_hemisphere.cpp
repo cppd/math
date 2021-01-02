@@ -80,13 +80,45 @@ void print(const std::map<T, Sum>& buckets)
         std::ostringstream oss;
         oss << std::fixed;
         oss << std::setprecision(1);
+        bool new_line = false;
         for (const auto& [angle, sum] : buckets)
         {
+                if (new_line)
+                {
+                        oss << '\n';
+                }
+                else
+                {
+                        new_line = true;
+                }
                 oss << std::setw(5) << angle;
                 oss << ": " << std::string(sum.distribution * 100, '*');
-                oss << '\n';
         }
         LOG(oss.str());
+}
+
+template <std::size_t N, typename T, typename RandomVector>
+void test_unit(const std::string& name, int count, std::mt19937_64& random_engine, const RandomVector& random_vector)
+{
+        LOG("Test unit " + name + " in " + space_name(N) + ", " + to_string_digit_groups(count) + ", "
+            + type_name<T>());
+
+        for (int i = 0; i < count; ++i)
+        {
+                Vector<N, T> normal = random_on_sphere<N, T>(random_engine);
+
+                T normal_norm = normal.norm();
+                if (!(normal_norm >= T(0.999) && normal_norm <= T(1.001)))
+                {
+                        error("Random on sphere normal is not unit " + to_string(normal_norm));
+                }
+
+                T norm = random_vector(normal).norm();
+                if (!(norm >= T(0.999) && norm <= T(1.001)))
+                {
+                        error(name + " normal is not unit " + to_string(norm));
+                }
+        }
 }
 
 template <std::size_t N, typename T, typename RandomVector, typename PDF>
@@ -102,11 +134,11 @@ void test_distribution(
 
         std::map<T, Sum> buckets;
 
-        const Vector<N, T> normal = random_on_sphere<N, T>(random_engine);
+        const Vector<N, T> normal = random_on_sphere<N, T>(random_engine).normalized();
 
         for (int i = 0; i < count; ++i)
         {
-                Vector<N, T> v = random_vector(normal);
+                Vector<N, T> v = random_vector(normal).normalized();
                 T cosine = dot(v, normal);
                 cosine = std::clamp(cosine, T(0), T(1));
                 T degrees = to_round_degrees(std::acos(cosine));
@@ -115,7 +147,7 @@ void test_distribution(
 
         for (int i = 0; i < count; ++i)
         {
-                Vector<N, T> v = random_on_sphere<N, T>(random_engine);
+                Vector<N, T> v = random_on_sphere<N, T>(random_engine).normalized();
                 T cosine = dot(v, normal);
                 if (cosine < 0)
                 {
@@ -141,10 +173,14 @@ void test_distribution(
                         continue;
                 }
 
-                T discrepancy = pdf_value - distribution_value;
-                discrepancy /= (pdf_value != 0) ? pdf_value : distribution_value;
+                T discrepancy_abs = pdf_value - distribution_value;
+                if (std::abs(discrepancy_abs) < T(0.05))
+                {
+                        continue;
+                }
 
-                if (!(std::abs(discrepancy) <= T(0.1)))
+                T discrepancy_rel = discrepancy_abs / (pdf_value != 0 ? pdf_value : distribution_value);
+                if (!(std::abs(discrepancy_rel) <= T(0.05)))
                 {
                         error("Angle = " + to_string(angle, 5) + ", distribution = " + to_string(distribution_value, 5)
                               + ", PDF = " + to_string(pdf_value, 5));
@@ -177,8 +213,19 @@ void test_cosine_on_hemisphere(int count)
 {
         std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
 
+        std::string name;
+
+        name = "cosine_weighted";
+
+        test_unit<N, T>(
+                name, count, random_engine,
+                [&](const Vector<N, T>& normal)
+                {
+                        return random_cosine_weighted_on_hemisphere(random_engine, normal);
+                });
+
         test_distribution<N, T>(
-                "cosine_weighted", count, random_engine,
+                name, count, random_engine,
                 [&](const Vector<N, T>& normal)
                 {
                         return random_cosine_weighted_on_hemisphere(random_engine, normal);
@@ -189,7 +236,7 @@ void test_cosine_on_hemisphere(int count)
                 });
 
         test_speed<N, T>(
-                "cosine_weighted", count, random_engine,
+                name, count, random_engine,
                 [&](const Vector<N, T>& normal)
                 {
                         return random_cosine_weighted_on_hemisphere(random_engine, normal);
