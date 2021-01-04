@@ -220,7 +220,7 @@ void test_performance()
 }
 }
 
-void write_samples_to_files_and_test_performance()
+void test_samplers()
 {
         write_samples_to_files<std::mt19937_64>();
 

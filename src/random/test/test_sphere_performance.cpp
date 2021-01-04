@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_on_sphere.h"
+#include "test_sphere_performance.h"
 
 #include "../sphere.h"
 
@@ -193,7 +193,7 @@ void test_performance()
 }
 }
 
-void test_on_sphere()
+void test_sphere_performance()
 {
         write_samples_to_files<std::mt19937_64>();
 

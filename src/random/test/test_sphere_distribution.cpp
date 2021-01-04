@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_cosine_on_hemisphere.h"
+#include "test_sphere_distribution.h"
 
 #include "../sphere.h"
 
@@ -438,7 +438,7 @@ void test_distribution()
 }
 }
 
-void test_distribution_on_sphere()
+void test_sphere_distribution()
 {
         test_distribution<float>();
         LOG("");
