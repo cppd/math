@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-namespace ns::painter
+namespace ns::random
 {
-void test_cosine_sphere_coefficient();
+void test_sphere_surface();
 }

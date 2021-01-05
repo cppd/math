@@ -15,23 +15,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_cosine_sphere.h"
+#include "test_sphere_surface.h"
 
-#include "../cosine_sphere.h"
+#include "../sphere.h"
+#include "../sphere_surface.h"
 
 #include <src/com/log.h>
 #include <src/com/random/engine.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/numerical/vec.h>
-#include <src/random/sphere.h>
 
 #include <cmath>
 #include <random>
 #include <sstream>
 #include <version>
 
-namespace ns::painter
+namespace ns::random
 {
 namespace
 {
@@ -54,7 +54,7 @@ long double betal(long double x, long double y)
 }
 #endif
 
-void test_compare_with_beta(unsigned n)
+void compare_with_beta(unsigned n)
 {
         long double beta = betal(0.5L, (n - 1) / 2.0L) / betal(1.0L, (n - 1) / 2.0L);
         long double function = cosine_sphere_coefficient(n);
@@ -76,18 +76,18 @@ void test_compare_with_beta(unsigned n)
         }
 }
 
-void test_compare_with_beta()
+void compare_with_beta()
 {
         LOG("Compare with beta");
 
         for (unsigned n = 2; n < 10000; ++n)
         {
-                test_compare_with_beta(n);
+                compare_with_beta(n);
         }
 
         for (unsigned n = 10000; n <= 1'000'000; (n & 1) == 0 ? ++n : n += 999)
         {
-                test_compare_with_beta(n);
+                compare_with_beta(n);
         }
 
         LOG("Check passed");
@@ -108,7 +108,7 @@ void test()
         {
                 Vector<N, T> v;
                 T length_square;
-                random::random_in_sphere(engine, v, length_square);
+                random_in_sphere(engine, v, length_square);
 
                 // косинус угла между вектором и последней координатной осью
                 T c = v[N - 1] / std::sqrt(length_square);
@@ -152,9 +152,9 @@ void test()
 }
 }
 
-void test_cosine_sphere_coefficient()
+void test_sphere_surface()
 {
-        test_compare_with_beta();
+        compare_with_beta();
         LOG("");
         test<float>();
         LOG("");

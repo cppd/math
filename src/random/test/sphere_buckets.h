@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../sphere_surface.h"
+
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
@@ -32,78 +34,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::random
 {
-namespace sphere_buckets_implementation
-{
-template <std::size_t N, typename T>
-T sphere_surface_area(std::type_identity_t<T> a, std::type_identity_t<T> b)
-{
-        static_assert(std::is_floating_point_v<T>);
-        static_assert(N >= 2);
-
-        // Assuming[Element[n,Integers]&&n>=0,Integrate[Sin[x]^n,x]]
-        // -Cos[x] Hypergeometric2F1[1/2,(1-n)/2,3/2,Cos[x]^2] Sin[x]^(1+n) (Sin[x]^2)^(1/2 (-1-n))
-        // For[i=2,i<=10,++i,f=Integrate[Sin[x]^(i-2),{x, a, b}];Print[i];Print[f]]
-        // For[i=2,i<=10,++i,f=Simplify[Integrate[Sin[x]^(i-2),x]];Print[i];Print[f]]
-
-        if constexpr (N == 2)
-        {
-                return b - a;
-        }
-        if constexpr (N == 3)
-        {
-                return std::cos(a) - std::cos(b);
-        }
-        if constexpr (N == 4)
-        {
-                return (2 * b - 2 * a - std::sin(2 * b) + std::sin(2 * a)) / 4;
-        }
-        if constexpr (N == 5)
-        {
-                return (9 * std::cos(a) - std::cos(3 * a) - 9 * std::cos(b) + std::cos(3 * b)) / 12;
-        }
-        if constexpr (N == 6)
-        {
-                return (-12 * a + 12 * b + 8 * std::sin(2 * a) - std::sin(4 * a) - 8 * std::sin(2 * b)
-                        + std::sin(4 * b))
-                       / 32;
-        }
-        if constexpr (N == 7)
-        {
-                return (150 * std::cos(a) - 25 * std::cos(3 * a) + 3 * std::cos(5 * a) - 150 * std::cos(b)
-                        + 25 * std::cos(3 * b) - 3 * std::cos(5 * b))
-                       / 240;
-        }
-        if constexpr (N == 8)
-        {
-                return (-60 * a + 60 * b + 45 * std::sin(2 * a) - 9 * std::sin(4 * a) + std::sin(6 * a)
-                        - 45 * std::sin(2 * b) + 9 * std::sin(4 * b) - std::sin(6 * b))
-                       / 192;
-        }
-        if constexpr (N == 9)
-        {
-                return (1225 * std::cos(a) - 245 * std::cos(3 * a) + 49 * std::cos(5 * a) - 5 * std::cos(7 * a)
-                        - 1225 * std::cos(b) + 245 * std::cos(3 * b) - 49 * std::cos(5 * b) + 5 * std::cos(7 * b))
-                       / 2240;
-        }
-        if constexpr (N == 10)
-        {
-                return (-840 * a + 840 * b + 672 * std::sin(2 * a) - 168 * std::sin(4 * a) + 32 * std::sin(6 * a)
-                        - 3 * std::sin(8 * a) - 672 * std::sin(2 * b) + 168 * std::sin(4 * b) - 32 * std::sin(6 * b)
-                        + 3 * std::sin(8 * b))
-                       / 3072;
-        }
-        if constexpr (N > 10)
-        {
-                return integrate<T>(
-                        [](T x)
-                        {
-                                return std::pow(std::sin(x), N - 2);
-                        },
-                        a, b, /*count*/ 100);
-        }
-}
-}
-
 template <std::size_t N, typename T>
 class SphereBuckets
 {
@@ -167,8 +97,6 @@ public:
 
         void normalize()
         {
-                namespace impl = sphere_buckets_implementation;
-
                 m_distribution.clear();
 
                 std::vector<T> distribution_values;
@@ -176,12 +104,12 @@ public:
 
                 for (auto& [angle, bucket] : m_buckets)
                 {
-                        T bucket_surface_area = impl::sphere_surface_area<N, T>(bucket.angle_from, bucket.angle_to);
+                        T bucket_area = sphere_relative_area<N, T>(bucket.angle_from, bucket.angle_to);
 
                         Distribution& d = m_distribution.emplace_back();
                         d.angle_from = bucket.angle_from;
                         d.angle_to = bucket.angle_to;
-                        d.distribution = bucket.sample_count / bucket_surface_area;
+                        d.distribution = bucket.sample_count / bucket_area;
 
                         distribution_values.push_back(d.distribution);
                 }
