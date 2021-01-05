@@ -266,10 +266,10 @@ T sphere_relative_area(std::type_identity_t<T> a, std::type_identity_t<T> b)
         }
         if constexpr (N > 10)
         {
-                return integrate<T>(
+                return ns::numerical::integrate<T>(
                         [](T x)
                         {
-                                return std::pow(std::sin(x), N - 2);
+                                return std::pow(std::sin(x), T(N - 2));
                         },
                         a, b, /*count*/ 100);
         }
