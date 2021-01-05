@@ -19,5 +19,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::random
 {
-void test_sphere_surface();
+void test_sphere_surface(bool all_test);
 }
