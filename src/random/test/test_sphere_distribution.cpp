@@ -26,12 +26,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/random/engine.h>
+#include <src/com/thread.h>
 #include <src/com/time.h>
 #include <src/com/type/name.h>
 
 #include <cmath>
+#include <future>
 #include <random>
 #include <string>
+#include <thread>
 
 namespace ns::random
 {
@@ -79,42 +82,57 @@ T pdf_power_cosine(std::type_identity_t<T> angle, std::type_identity_t<T> power)
 }
 
 template <std::size_t N, typename T, typename RandomVector>
-void test_unit(
-        const std::string& name,
-        long long count,
-        RandomEngine<T>& random_engine,
-        const RandomVector& random_vector)
+void test_unit(const std::string& name, long long count, const RandomVector& random_vector)
 {
         LOG(name + "\n  test unit in " + space_name(N) + ", " + to_string_digit_groups(count) + ", " + type_name<T>());
 
-        for (long long i = 0; i < count; ++i)
+        const Vector<N, T> normal = []()
         {
-                Vector<N, T> normal = random_on_sphere<N, T>(random_engine);
+                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+                return random_on_sphere<N, T>(random_engine).normalized();
+        }();
 
-                T normal_norm = normal.norm();
-                if (!(normal_norm >= T(0.999) && normal_norm <= T(1.001)))
-                {
-                        error("Random on sphere normal is not unit " + to_string(normal_norm));
-                }
+        const int thread_count = hardware_concurrency();
+        const long long count_per_thread = (count + thread_count - 1) / thread_count;
 
-                T norm = random_vector(normal).norm();
-                if (!(norm >= T(0.999) && norm <= T(1.001)))
+        const auto f = [&]()
+        {
+                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+                for (long long i = 0; i < count_per_thread; ++i)
                 {
-                        error(name + " normal is not unit " + to_string(norm));
+                        T v_norm = random_vector(random_engine, normal).norm();
+                        if (!(v_norm >= T(0.999) && v_norm <= T(1.001)))
+                        {
+                                error(name + " vector is not unit " + to_string(v_norm));
+                        }
                 }
+        };
+
+        std::vector<std::future<void>> futures;
+        std::vector<std::thread> threads;
+        for (int i = 0; i < thread_count; ++i)
+        {
+                std::packaged_task<void()> task(f);
+                futures.emplace_back(task.get_future());
+                threads.emplace_back(std::move(task));
+        }
+        for (std::thread& thread : threads)
+        {
+                thread.join();
+        }
+        for (std::future<void>& future : futures)
+        {
+                future.get();
         }
 }
 
 template <std::size_t N, typename T, typename RandomVector, typename PDF>
-void test_distribution(
-        const std::string& name,
-        long long count,
-        RandomEngine<T>& random_engine,
-        const RandomVector& random_vector,
-        const PDF& pdf)
+void test_distribution(const std::string& name, long long count, const RandomVector& random_vector, const PDF& pdf)
 {
         LOG(name + "\n  test distribution in " + space_name(N) + ", " + to_string_digit_groups(count) + ", "
             + type_name<T>());
+
+        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
 
         SphereBuckets<N, T> buckets;
 
@@ -122,7 +140,7 @@ void test_distribution(
 
         for (long long i = 0; i < count; ++i)
         {
-                Vector<N, T> v = random_vector(normal).normalized();
+                Vector<N, T> v = random_vector(random_engine, normal).normalized();
                 T cosine = dot(v, normal);
                 cosine = std::clamp(cosine, T(-1), T(1));
                 buckets.add(std::acos(cosine));
@@ -134,45 +152,39 @@ void test_distribution(
 }
 
 template <std::size_t N, typename T, typename RandomVector>
-void test_speed(
-        const std::string& name,
-        long long count,
-        RandomEngine<T>& random_engine,
-        const RandomVector& random_vector)
+void test_performance(const std::string& name, long long count, const RandomVector& random_vector)
 {
-        LOG(name + "\n  test speed in " + space_name(N) + ", " + to_string_digit_groups(count) + ", " + type_name<T>());
+        LOG(name + "\n  test performance in " + space_name(N) + ", " + to_string_digit_groups(count) + ", "
+            + type_name<T>());
 
-        static Vector<N, T> sink;
+        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
 
         const Vector<N, T> normal = random_on_sphere<N, T>(random_engine);
 
+        static Vector<N, T> sink;
         TimePoint start_time = time();
-
         for (long long i = 0; i < count; ++i)
         {
-                sink = random_vector(normal);
+                sink = random_vector(random_engine, normal);
         }
-
         LOG("  " + to_string_digit_groups(std::lround(count / duration_from(start_time))) + " per second");
 }
 
 template <std::size_t N, typename T>
-void test_uniform_on_sphere(long long count)
+void test_uniform_on_sphere(long long unit_count, long long distribution_count, long long performance_count)
 {
-        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-
-        const std::string name = "uniform";
+        const std::string NAME = "uniform";
 
         test_unit<N, T>(
-                name, count, random_engine,
-                [&](const Vector<N, T>& /*normal*/)
+                NAME, unit_count,
+                [&](RandomEngine<T>& random_engine, const Vector<N, T>& /*normal*/)
                 {
                         return random_on_sphere<N, T>(random_engine);
                 });
 
         test_distribution<N, T>(
-                name, count, random_engine,
-                [&](const Vector<N, T>& /*normal*/)
+                NAME, distribution_count,
+                [&](RandomEngine<T>& random_engine, const Vector<N, T>& /*normal*/)
                 {
                         return random_on_sphere<N, T>(random_engine);
                 },
@@ -181,31 +193,29 @@ void test_uniform_on_sphere(long long count)
                         return pdf_uniform<T>(angle);
                 });
 
-        test_speed<N, T>(
-                name, count, random_engine,
-                [&](const Vector<N, T>& /*normal*/)
+        test_performance<N, T>(
+                NAME, performance_count,
+                [&](RandomEngine<T>& random_engine, const Vector<N, T>& /*normal*/)
                 {
                         return random_on_sphere<N, T>(random_engine);
                 });
 }
 
 template <std::size_t N, typename T>
-void test_cosine_on_hemisphere(long long count)
+void test_cosine_on_hemisphere(long long unit_count, long long distribution_count, long long performance_count)
 {
-        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-
-        const std::string name = "cosine_weighted";
+        const std::string NAME = "cosine_weighted";
 
         test_unit<N, T>(
-                name, count, random_engine,
-                [&](const Vector<N, T>& normal)
+                NAME, unit_count,
+                [&](RandomEngine<T>& random_engine, const Vector<N, T>& normal)
                 {
                         return random_cosine_weighted_on_hemisphere(random_engine, normal);
                 });
 
         test_distribution<N, T>(
-                name, count, random_engine,
-                [&](const Vector<N, T>& normal)
+                NAME, distribution_count,
+                [&](RandomEngine<T>& random_engine, const Vector<N, T>& normal)
                 {
                         return random_cosine_weighted_on_hemisphere(random_engine, normal);
                 },
@@ -214,33 +224,35 @@ void test_cosine_on_hemisphere(long long count)
                         return pdf_cosine<T>(angle);
                 });
 
-        test_speed<N, T>(
-                name, count, random_engine,
-                [&](const Vector<N, T>& normal)
+        test_performance<N, T>(
+                NAME, performance_count,
+                [&](RandomEngine<T>& random_engine, const Vector<N, T>& normal)
                 {
                         return random_cosine_weighted_on_hemisphere(random_engine, normal);
                 });
 }
 
 template <std::size_t N, typename T>
-void test_power_cosine_on_hemisphere(long long count)
+void test_power_cosine_on_hemisphere(long long unit_count, long long distribution_count, long long performance_count)
 {
-        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+        const T POWER = []()
+        {
+                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+                return std::uniform_real_distribution<T>(1, 100)(random_engine);
+        }();
 
-        const T POWER = std::uniform_real_distribution<T>(1, 100)(random_engine);
-
-        const std::string name = "power_" + to_string_fixed(POWER, 1) + "_cosine_weighted";
+        const std::string NAME = "power_" + to_string_fixed(POWER, 1) + "_cosine_weighted";
 
         test_unit<N, T>(
-                name, count, random_engine,
-                [&](const Vector<N, T>& normal)
+                NAME, unit_count,
+                [&](RandomEngine<T>& random_engine, const Vector<N, T>& normal)
                 {
                         return random_power_cosine_weighted_on_hemisphere(random_engine, normal, POWER);
                 });
 
         test_distribution<N, T>(
-                name, count, random_engine,
-                [&](const Vector<N, T>& normal)
+                NAME, distribution_count,
+                [&](RandomEngine<T>& random_engine, const Vector<N, T>& normal)
                 {
                         return random_power_cosine_weighted_on_hemisphere(random_engine, normal, POWER);
                 },
@@ -249,24 +261,27 @@ void test_power_cosine_on_hemisphere(long long count)
                         return pdf_power_cosine<T>(angle, POWER);
                 });
 
-        test_speed<N, T>(
-                name, count, random_engine,
-                [&](const Vector<N, T>& normal)
+        test_performance<N, T>(
+                NAME, performance_count,
+                [&](RandomEngine<T>& random_engine, const Vector<N, T>& normal)
                 {
                         return random_power_cosine_weighted_on_hemisphere(random_engine, normal, POWER);
                 });
 }
 
 template <std::size_t N, typename T>
-void test_distribution(long long count)
+void test_distribution(long long distribution_count)
 {
-        test_uniform_on_sphere<N, T>(count);
+        constexpr int UNIT_COUNT = 10'000'000;
+        constexpr int PERFORMANCE_COUNT = 10'000'000;
+
+        test_uniform_on_sphere<N, T>(UNIT_COUNT, distribution_count, PERFORMANCE_COUNT);
         LOG("");
-        test_cosine_on_hemisphere<N, T>(count);
+        test_cosine_on_hemisphere<N, T>(UNIT_COUNT, distribution_count, PERFORMANCE_COUNT);
         LOG("");
         if constexpr (N == 3)
         {
-                test_power_cosine_on_hemisphere<N, T>(count);
+                test_power_cosine_on_hemisphere<N, T>(UNIT_COUNT, distribution_count, PERFORMANCE_COUNT);
                 LOG("");
         }
 }
