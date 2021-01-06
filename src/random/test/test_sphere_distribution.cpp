@@ -132,18 +132,48 @@ void test_distribution(const std::string& name, long long count, const RandomVec
         LOG(name + "\n  test distribution in " + space_name(N) + ", " + to_string_digit_groups(count) + ", "
             + type_name<T>());
 
-        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+        const Vector<N, T> normal = []()
+        {
+                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+                return random_on_sphere<N, T>(random_engine).normalized();
+        }();
+
+        const int thread_count = hardware_concurrency();
+        const long long count_per_thread = (count + thread_count - 1) / thread_count;
+
+        const auto f = [&]()
+        {
+                SphereBuckets<N, T> buckets;
+                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+                for (long long i = 0; i < count_per_thread; ++i)
+                {
+                        Vector<N, T> v = random_vector(random_engine, normal).normalized();
+                        T cosine = dot(v, normal);
+                        cosine = std::clamp(cosine, T(-1), T(1));
+                        buckets.add(std::acos(cosine));
+                }
+                return buckets;
+        };
 
         SphereBuckets<N, T> buckets;
 
-        const Vector<N, T> normal = random_on_sphere<N, T>(random_engine).normalized();
-
-        for (long long i = 0; i < count; ++i)
         {
-                Vector<N, T> v = random_vector(random_engine, normal).normalized();
-                T cosine = dot(v, normal);
-                cosine = std::clamp(cosine, T(-1), T(1));
-                buckets.add(std::acos(cosine));
+                std::vector<std::future<SphereBuckets<N, T>>> futures;
+                std::vector<std::thread> threads;
+                for (int i = 0; i < thread_count; ++i)
+                {
+                        std::packaged_task<SphereBuckets<N, T>()> task(f);
+                        futures.emplace_back(task.get_future());
+                        threads.emplace_back(std::move(task));
+                }
+                for (std::thread& thread : threads)
+                {
+                        thread.join();
+                }
+                for (std::future<SphereBuckets<N, T>>& future : futures)
+                {
+                        buckets.merge(future.get());
+                }
         }
 
         buckets.compute_distribution();
@@ -270,18 +300,31 @@ void test_power_cosine_on_hemisphere(long long unit_count, long long distributio
 }
 
 template <std::size_t N, typename T>
-void test_distribution(long long distribution_count)
+long long compute_distribution_count()
 {
-        constexpr int UNIT_COUNT = 10'000'000;
-        constexpr int PERFORMANCE_COUNT = 10'000'000;
+        const double bucket_size = SphereBuckets<N, T>::bucket_size();
+        const double s_all = sphere_relative_area<N, long double>(0, PI<long double>);
+        const double s_bucket = sphere_relative_area<N, long double>(0, bucket_size);
+        const double uniform_min_count = 1000;
+        const double count = s_all / s_bucket * uniform_min_count;
+        const double round_to = std::pow(10, std::round(std::log10(count)) - 2);
+        return std::ceil(count / round_to) * round_to;
+}
 
-        test_uniform_on_sphere<N, T>(UNIT_COUNT, distribution_count, PERFORMANCE_COUNT);
+template <std::size_t N, typename T>
+void test_distribution()
+{
+        const long long unit_count = 10'000'000;
+        const long long distribution_count = compute_distribution_count<N, T>();
+        const long long performance_count = 10'000'000;
+
+        test_uniform_on_sphere<N, T>(unit_count, distribution_count, performance_count);
         LOG("");
-        test_cosine_on_hemisphere<N, T>(UNIT_COUNT, distribution_count, PERFORMANCE_COUNT);
+        test_cosine_on_hemisphere<N, T>(unit_count, distribution_count, performance_count);
         LOG("");
         if constexpr (N == 3)
         {
-                test_power_cosine_on_hemisphere<N, T>(UNIT_COUNT, distribution_count, PERFORMANCE_COUNT);
+                test_power_cosine_on_hemisphere<N, T>(unit_count, distribution_count, performance_count);
                 LOG("");
         }
 }
@@ -289,10 +332,9 @@ void test_distribution(long long distribution_count)
 template <typename T>
 void test_distribution()
 {
-        test_distribution<3, T>(50'000'000);
-        test_distribution<4, T>(100'000'000);
-        test_distribution<5, T>(200'000'000);
-        test_distribution<6, T>(300'000'000);
+        test_distribution<3, T>();
+        test_distribution<4, T>();
+        test_distribution<5, T>();
 }
 }
 

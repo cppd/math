@@ -29,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <iomanip>
 #include <sstream>
-#include <unordered_map>
 #include <vector>
 
 namespace ns::random
@@ -57,9 +56,23 @@ class SphereBuckets
         std::vector<Distribution> m_distribution;
 
 public:
+        static T bucket_size()
+        {
+                return BUCKET_SIZE;
+        }
+
         SphereBuckets()
         {
                 m_buckets.resize(BUCKET_COUNT, 0);
+        }
+
+        void merge(const SphereBuckets& other)
+        {
+                ASSERT(m_buckets.size() == other.m_buckets.size());
+                for (unsigned i = 0; i < m_buckets.size(); ++i)
+                {
+                        m_buckets[i] += other.m_buckets[i];
+                }
         }
 
         void add(T angle)
@@ -83,7 +96,7 @@ public:
                         d.angle_from = bucket * BUCKET_SIZE;
                         d.angle_to = (bucket + 1) * BUCKET_SIZE;
 
-                        T bucket_area = sphere_relative_area<N, T>(d.angle_from, d.angle_to);
+                        long double bucket_area = sphere_relative_area<N, long double>(d.angle_from, d.angle_to);
                         d.distribution = m_buckets[bucket] / bucket_area;
 
                         distribution_values.push_back(d.distribution);
@@ -130,6 +143,12 @@ public:
                 bool new_line = false;
                 for (const Distribution& d : m_distribution)
                 {
+                        if (!(d.distribution >= 0))
+                        {
+                                error("Number is not positive and not zero: distribution = "
+                                      + to_string(d.distribution, 5));
+                        }
+
                         if (new_line)
                         {
                                 oss << '\n';
