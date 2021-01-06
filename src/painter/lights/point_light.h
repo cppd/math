@@ -39,7 +39,7 @@ class PointLight final : public LightSource<N, T>
 
 public:
         PointLight(const Vector<N, T>& location, const Color& color, T unit_intensity_distance)
-                : m_location(location), m_color(color), m_coef(std::pow(unit_intensity_distance, N - 1))
+                : m_location(location), m_color(color), m_coef(std::pow(unit_intensity_distance, T(N - 1)))
         {
         }
 
