@@ -37,84 +37,57 @@ namespace ns::random
 template <std::size_t N, typename T>
 class SphereBuckets
 {
-        static constexpr unsigned SIZE = 2;
-        static_assert(90 % SIZE == 0);
-
-        static T to_bucket_angle(T angle)
-        {
-                angle = std::floor(angle * (180 / PI<T>) / SIZE) * SIZE;
-                angle = std::clamp(angle, T(0), T(180 - SIZE));
-                return angle;
-        }
-
-        static T to_radians(T angle)
-        {
-                return angle * (PI<T> / 180);
-        }
+        static constexpr int BUCKET_COUNT = 90;
+        static constexpr T BUCKET_SIZE = PI<T> / BUCKET_COUNT;
+        static constexpr T BUCKETS_PER_RADIAN = BUCKET_COUNT / PI<T>;
 
         static T to_degrees(T angle)
         {
                 return angle * (180 / PI<T>);
         }
 
-        struct Bucket
-        {
-                T angle_from;
-                T angle_to;
-                long long sample_count;
-        };
-
         struct Distribution
         {
                 T angle_from;
                 T angle_to;
                 T distribution;
-
-                T bucket_angle() const
-                {
-                        return to_bucket_angle((angle_from + angle_to) / 2);
-                }
         };
 
-        std::unordered_map<T, Bucket> m_buckets;
+        std::vector<long long> m_buckets;
         std::vector<Distribution> m_distribution;
 
 public:
-        void add(T angle)
+        SphereBuckets()
         {
-                T bucket_angle = to_bucket_angle(angle);
-                auto iter = m_buckets.find(bucket_angle);
-                if (iter != m_buckets.end())
-                {
-                        ++iter->second.sample_count;
-                        return;
-                }
-                Bucket& s = m_buckets.try_emplace(bucket_angle).first->second;
-                s.angle_from = to_radians(bucket_angle);
-                s.angle_to = to_radians(bucket_angle + SIZE);
-                s.sample_count = 1;
+                m_buckets.resize(BUCKET_COUNT, 0);
         }
 
-        void normalize()
+        void add(T angle)
+        {
+                int bucket = angle * BUCKETS_PER_RADIAN;
+                bucket = std::clamp(bucket, 0, BUCKET_COUNT - 1);
+                ++m_buckets[bucket];
+        }
+
+        void compute_distribution()
         {
                 m_distribution.clear();
 
                 std::vector<T> distribution_values;
                 distribution_values.reserve(m_buckets.size());
 
-                for (auto& [angle, bucket] : m_buckets)
+                for (unsigned bucket = 0; bucket < m_buckets.size(); ++bucket)
                 {
-                        T bucket_area = sphere_relative_area<N, T>(bucket.angle_from, bucket.angle_to);
-
                         Distribution& d = m_distribution.emplace_back();
-                        d.angle_from = bucket.angle_from;
-                        d.angle_to = bucket.angle_to;
-                        d.distribution = bucket.sample_count / bucket_area;
+
+                        d.angle_from = bucket * BUCKET_SIZE;
+                        d.angle_to = (bucket + 1) * BUCKET_SIZE;
+
+                        T bucket_area = sphere_relative_area<N, T>(d.angle_from, d.angle_to);
+                        d.distribution = m_buckets[bucket] / bucket_area;
 
                         distribution_values.push_back(d.distribution);
                 }
-
-                m_buckets.clear();
 
                 std::sort(distribution_values.begin(), distribution_values.end());
                 T sum = 0;
@@ -122,18 +95,18 @@ public:
                 {
                         sum += d;
                 }
-                sum *= to_radians(SIZE);
+                sum *= BUCKET_SIZE;
                 for (Distribution& d : m_distribution)
                 {
                         d.distribution /= sum;
                 }
 
-                std::sort(
+                ASSERT(std::is_sorted(
                         m_distribution.begin(), m_distribution.end(),
                         [](const Distribution& d1, const Distribution& d2)
                         {
                                 return d1.angle_from < d2.angle_from;
-                        });
+                        }));
         }
 
         std::string histogram() const
@@ -141,15 +114,20 @@ public:
                 constexpr int BAR_SIZE = 100;
                 constexpr int DIVISION_SIZE = 10;
 
-                std::ostringstream oss;
-                oss << std::fixed;
+                if (m_distribution.empty())
+                {
+                        error("There is no distribution");
+                }
 
-                bool new_line = false;
                 T max = limits<T>::lowest();
                 for (const Distribution& d : m_distribution)
                 {
                         max = std::max(max, d.distribution);
                 }
+
+                std::ostringstream oss;
+
+                bool new_line = false;
                 for (const Distribution& d : m_distribution)
                 {
                         if (new_line)
@@ -160,8 +138,12 @@ public:
                         {
                                 new_line = true;
                         }
-                        oss << std::setprecision(1) << std::setw(5) << d.bucket_angle();
-                        oss << ": " << std::setprecision(2) << std::setw(5) << d.distribution << ") ";
+
+                        oss << std::fixed << std::setprecision(1) << std::setw(5) << to_degrees(d.angle_from);
+                        oss << ": ";
+                        oss << std::scientific << std::setprecision(2) << d.distribution;
+                        oss << " ";
+
                         int count = std::round(d.distribution / max * BAR_SIZE);
                         for (int i = 0; i < count; i += DIVISION_SIZE)
                         {
@@ -172,6 +154,7 @@ public:
                                 }
                         }
                 }
+
                 return oss.str();
         }
 

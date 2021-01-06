@@ -128,7 +128,7 @@ void test_distribution(
                 buckets.add(std::acos(cosine));
         }
 
-        buckets.normalize();
+        buckets.compute_distribution();
         LOG(buckets.histogram());
         buckets.compare_with_pdf(pdf);
 }
