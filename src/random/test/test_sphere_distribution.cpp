@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sphere_buckets.h"
 
 #include "../sphere_cosine.h"
+#include "../sphere_pdf.h"
 #include "../sphere_uniform.h"
 
 #include <src/com/constant.h>
@@ -43,44 +44,6 @@ namespace
 {
 template <typename T>
 using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
-
-template <typename T>
-T pdf_uniform(std::type_identity_t<T> angle)
-{
-        // ProbabilityDistribution[1, {x, 0, Pi},  Method -> "Normalize"]
-        if (angle >= 0 && angle < (PI<T>))
-        {
-                return 1 / PI<T>;
-        }
-        return 0;
-}
-
-template <typename T>
-T pdf_cosine(std::type_identity_t<T> angle)
-{
-        // ProbabilityDistribution[Cos[x], {x, 0, Pi/2}, Method -> "Normalize"]
-        if (angle >= 0 && angle < (PI<T> / 2))
-        {
-                return std::cos(angle);
-        }
-        return 0;
-}
-
-template <typename T>
-T pdf_power_cosine(std::type_identity_t<T> angle, std::type_identity_t<T> power)
-{
-        // Assuming[n >= 0,
-        //   ProbabilityDistribution[Cos[x]^n, {x, 0, Pi/2},
-        //   Method -> "Normalize"]]
-        if (angle >= 0 && angle < (PI<T> / 2))
-        {
-                T norm = 2 / std::sqrt(PI<T>);
-                norm *= std::exp(std::lgamma((2 + power) / 2) - std::lgamma((1 + power) / 2));
-                T v = norm * std::pow(std::cos(angle), power);
-                return v;
-        }
-        return 0;
-}
 
 template <std::size_t N, typename T, typename RandomVector>
 void test_unit(const std::string& name, long long count, const RandomVector& random_vector)
@@ -221,7 +184,7 @@ void test_uniform_on_sphere(long long unit_count, long long distribution_count, 
                 },
                 [](T angle)
                 {
-                        return pdf_uniform<T>(angle);
+                        return pdf_sphere_uniform<T>(angle);
                 });
 
         test_performance<N, T>(
@@ -252,7 +215,7 @@ void test_cosine_on_hemisphere(long long unit_count, long long distribution_coun
                 },
                 [](T angle)
                 {
-                        return pdf_cosine<T>(angle);
+                        return pdf_sphere_cosine<T>(angle);
                 });
 
         test_performance<N, T>(
@@ -289,7 +252,7 @@ void test_power_cosine_on_hemisphere(long long unit_count, long long distributio
                 },
                 [&](T angle)
                 {
-                        return pdf_power_cosine<T>(angle, POWER);
+                        return pdf_sphere_power_cosine<T>(angle, POWER);
                 });
 
         test_performance<N, T>(
