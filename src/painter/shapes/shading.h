@@ -27,7 +27,7 @@ Vector<N, T> surface_ray_direction(const Vector<N, T>& normal, RandomEngine& eng
 {
         // Распределение случайного луча с вероятностью по косинусу
         // угла между нормалью и случайным вектором.
-        return sampling::random_cosine_weighted_on_hemisphere(engine, normal);
+        return sampling::cosine_weighted_on_hemisphere(engine, normal);
 }
 
 template <std::size_t N, typename T>

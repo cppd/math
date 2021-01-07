@@ -57,7 +57,7 @@ std::vector<Vector<N, T>> generate_random_points_on_sphere(const Vector<N, T>& c
 
         for (int i = 0; i < count; ++i)
         {
-                sampling::random_in_sphere(random_engine, v, length_square);
+                sampling::uniform_in_sphere(random_engine, v, length_square);
                 v /= std::sqrt(length_square);
                 points[i] = v * radius + center;
         }

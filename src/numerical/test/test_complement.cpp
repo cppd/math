@@ -73,7 +73,7 @@ std::vector<Vector<N, T>> random_vectors(int count)
         res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
-                res.push_back(sampling::random_on_sphere<N, T>(random_engine));
+                res.push_back(sampling::uniform_on_sphere<N, T>(random_engine));
         }
         return res;
 }

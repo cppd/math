@@ -43,7 +43,7 @@ std::vector<Vector<N, T>> random_data(int count, std::mt19937_64& engine)
         data.reserve(count);
         for (int i = 0; i < count; ++i)
         {
-                data.push_back(sampling::random_on_sphere<N, T>(engine));
+                data.push_back(sampling::uniform_on_sphere<N, T>(engine));
         }
         return data;
 }
@@ -87,7 +87,7 @@ void test_optics_performance()
 
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
-        const Vector<N, T> normal = sampling::random_on_sphere<N, T>(engine);
+        const Vector<N, T> normal = sampling::uniform_on_sphere<N, T>(engine);
         const std::vector<Vector<N, T>> data = random_data<N, T>(DATA_SIZE, engine);
 
         test("  reflect  ", data,

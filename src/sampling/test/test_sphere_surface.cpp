@@ -108,7 +108,7 @@ void test_cosine()
         {
                 Vector<N, T> v;
                 T length_square;
-                random_in_sphere(engine, v, length_square);
+                uniform_in_sphere(engine, v, length_square);
 
                 // косинус угла между вектором и последней координатной осью
                 T c = v[N - 1] / std::sqrt(length_square);

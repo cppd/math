@@ -60,7 +60,7 @@ std::vector<Ray<N, T>> generate_random_rays_for_sphere(const Vector<N, TS>& cent
 
         for (int i = 0; i < count; ++i)
         {
-                sampling::random_in_sphere(random_engine, v, length_square);
+                sampling::uniform_in_sphere(random_engine, v, length_square);
                 v /= std::sqrt(length_square);
 
                 rays[i] = Ray<N, T>(T(radius) * v + to_vector<T>(center), -v);

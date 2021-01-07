@@ -35,14 +35,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::sampling
 {
 template <typename RandomEngine, std::size_t N, typename T>
-Vector<N, T> random_cosine_weighted_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal)
+Vector<N, T> cosine_weighted_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal)
 {
         static_assert(N > 2);
 
         Vector<N - 1, T> v;
         T v_length_square;
 
-        random_in_sphere(random_engine, v, v_length_square);
+        uniform_in_sphere(random_engine, v, v_length_square);
 
         T v_length = std::sqrt(v_length_square);
         T n = std::sqrt((1 - v_length) * (1 + v_length));
@@ -60,10 +60,7 @@ Vector<N, T> random_cosine_weighted_on_hemisphere(RandomEngine& random_engine, c
 }
 
 template <typename RandomEngine, typename T>
-Vector<3, T> random_power_cosine_weighted_on_hemisphere(
-        RandomEngine& random_engine,
-        const Vector<3, T>& normal,
-        T power)
+Vector<3, T> power_cosine_weighted_on_hemisphere(RandomEngine& random_engine, const Vector<3, T>& normal, T power)
 {
         constexpr unsigned N = 3;
 
@@ -89,7 +86,7 @@ Vector<3, T> random_power_cosine_weighted_on_hemisphere(
         Vector<N - 1, T> v;
         T v_length_square;
 
-        random_in_sphere(random_engine, v, v_length_square);
+        uniform_in_sphere(random_engine, v, v_length_square);
 
         T n = std::pow(v_length_square, 1 / (1 + power));
         T new_length_squared = (1 - n) * (1 + n);

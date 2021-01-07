@@ -86,7 +86,7 @@ void test_performance_rejection(int count, RandomEngine& random_engine)
 
         for (int i = 0; i < count; ++i)
         {
-                v = impl::random_on_sphere_by_rejection<N, T>(random_engine);
+                v = impl::uniform_on_sphere_by_rejection<N, T>(random_engine);
         }
 
         LOG("Rejection: time = " + to_string_fixed(duration_from(start_time), 5)
@@ -102,7 +102,7 @@ void test_performance_normal_distribution(int count, RandomEngine& random_engine
 
         for (int i = 0; i < count; ++i)
         {
-                v = impl::random_on_sphere_by_normal_distribution<N, T>(random_engine);
+                v = impl::uniform_on_sphere_by_normal_distribution<N, T>(random_engine);
         }
 
         LOG("Normal distribution: time = " + to_string_fixed(duration_from(start_time), 5)
@@ -122,14 +122,14 @@ void write_samples_to_files()
                 "rejection", count,
                 [&]()
                 {
-                        return impl::random_on_sphere_by_rejection<N, T>(random_engine);
+                        return impl::uniform_on_sphere_by_rejection<N, T>(random_engine);
                 });
 
         write_samples_to_file<N, T>(
                 "normal distribution", count,
                 [&]()
                 {
-                        return impl::random_on_sphere_by_normal_distribution<N, T>(random_engine);
+                        return impl::uniform_on_sphere_by_normal_distribution<N, T>(random_engine);
                 });
 }
 

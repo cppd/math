@@ -66,12 +66,12 @@ Vector<N, T> random_on_sphere(RandomEngine& engine, bool bound)
 {
         if (!bound)
         {
-                return sampling::random_on_sphere<N, T>(engine);
+                return sampling::uniform_on_sphere<N, T>(engine);
         }
         Vector<N, T> v;
         do
         {
-                v = sampling::random_on_sphere<N, T>(engine);
+                v = sampling::uniform_on_sphere<N, T>(engine);
         } while (dot(v, LAST_AXIS<N, T>) < COS_FOR_BOUND);
         return v;
 }
