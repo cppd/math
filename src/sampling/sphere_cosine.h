@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <random>
 
-namespace ns::random
+namespace ns::sampling
 {
 template <typename RandomEngine, std::size_t N, typename T>
 Vector<N, T> random_cosine_weighted_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal)

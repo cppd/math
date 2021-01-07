@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
-#include <src/random/sphere_uniform.h>
+#include <src/sampling/sphere_uniform.h>
 
 #include <random>
 
@@ -73,7 +73,7 @@ std::vector<Vector<N, T>> random_vectors(int count)
         res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
-                res.push_back(random::random_on_sphere<N, T>(random_engine));
+                res.push_back(sampling::random_on_sphere<N, T>(random_engine));
         }
         return res;
 }

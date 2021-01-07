@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-namespace ns::random
+namespace ns::sampling
 {
-void test_samplers();
+void test_erf();
 }

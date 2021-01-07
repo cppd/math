@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
-#include <src/random/sj_sampler.h>
+#include <src/sampling/sj_sampler.h>
 
 #include <optional>
 #include <random>
@@ -45,7 +45,7 @@ constexpr int MAX_RECURSION_LEVEL = 100;
 constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
 
 template <std::size_t N, typename T>
-using PainterSampler = random::StratifiedJitteredSampler<N, T>;
+using PainterSampler = sampling::StratifiedJitteredSampler<N, T>;
 // using PainterSampler = LatinHypercubeSampler<N, T>;
 
 static_assert(std::is_floating_point_v<Color::DataType>);

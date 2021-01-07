@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <numeric>
 
-namespace ns::random
+namespace ns::sampling
 {
 /*
  Определение отношения интегралов

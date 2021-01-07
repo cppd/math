@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/model/mesh_utility.h>
 #include <src/numerical/quaternion.h>
-#include <src/random/sphere_uniform.h>
+#include <src/sampling/sphere_uniform.h>
 
 #include <functional>
 #include <map>
@@ -142,12 +142,12 @@ Vector<N, T> random_on_sphere(RandomEngine& engine, bool bound)
 {
         if (!bound)
         {
-                return random::random_on_sphere<N, T>(engine);
+                return sampling::random_on_sphere<N, T>(engine);
         }
         Vector<N, T> v;
         do
         {
-                v = random::random_on_sphere<N, T>(engine);
+                v = sampling::random_on_sphere<N, T>(engine);
         } while (dot(v, LAST_AXIS<N, T>) < COS_FOR_BOUND);
         return v;
 }
@@ -280,7 +280,7 @@ Vector<N, T> torus_point(Engine& engine)
                 Vector<N, T> ortho(0);
                 ortho[n] = v_length;
 
-                Vector<2, T> s = random::random_on_sphere<2, T>(engine);
+                Vector<2, T> s = sampling::random_on_sphere<2, T>(engine);
                 Vector<N, T> vn = T(0.5) * (s[0] * v + s[1] * ortho);
                 sum += vn;
 

@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <vector>
 
-namespace ns::random
+namespace ns::sampling
 {
 template <std::size_t N, typename T>
 class SphereBuckets

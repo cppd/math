@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/numerical/vec.h>
-#include <src/random/sphere_cosine.h>
+#include <src/sampling/sphere_cosine.h>
 
 namespace ns::painter
 {
@@ -27,7 +27,7 @@ Vector<N, T> surface_ray_direction(const Vector<N, T>& normal, RandomEngine& eng
 {
         // Распределение случайного луча с вероятностью по косинусу
         // угла между нормалью и случайным вектором.
-        return random::random_cosine_weighted_on_hemisphere(engine, normal);
+        return sampling::random_cosine_weighted_on_hemisphere(engine, normal);
 }
 
 template <std::size_t N, typename T>

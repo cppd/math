@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/test/test_simplex.h>
 #include <src/painter/shapes/test/test_mesh.h>
 #include <src/painter/space/test/test_parallelotope.h>
-#include <src/random/test/test_sphere_surface.h>
+#include <src/sampling/test/test_sphere_surface.h>
 
 namespace ns::test
 {
@@ -51,7 +51,7 @@ void self_test_essential(ProgressRatios* progress_ratios)
                 {
                         ProgressRatio progress(progress_ratios, s);
                         progress.set(0);
-                        random::test_sphere_surface(false);
+                        sampling::test_sphere_surface(false);
                 });
 
         s = "Self-Test, Complement";

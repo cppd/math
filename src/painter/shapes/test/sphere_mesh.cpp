@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/geometry/core/convex_hull.h>
 #include <src/model/mesh_utility.h>
-#include <src/random/sphere_uniform.h>
+#include <src/sampling/sphere_uniform.h>
 
 #include <array>
 #include <random>
@@ -57,7 +57,7 @@ std::vector<Vector<N, T>> generate_random_points_on_sphere(const Vector<N, T>& c
 
         for (int i = 0; i < count; ++i)
         {
-                random::random_in_sphere(random_engine, v, length_square);
+                sampling::random_in_sphere(random_engine, v, length_square);
                 v /= std::sqrt(length_square);
                 points[i] = v * radius + center;
         }

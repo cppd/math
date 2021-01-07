@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace ns::random
+namespace ns::sampling
 {
 template <typename T>
 T pdf_sphere_uniform(std::type_identity_t<T> angle)

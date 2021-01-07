@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/math.h>
 #include <src/com/type/limit.h>
 
-namespace ns::random
+namespace ns::sampling
 {
 namespace
 {
