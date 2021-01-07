@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/model/mesh_utility.h>
 #include <src/numerical/quaternion.h>
-#include <src/random/sphere.h>
+#include <src/random/sphere_uniform.h>
 
 #include <functional>
 #include <map>

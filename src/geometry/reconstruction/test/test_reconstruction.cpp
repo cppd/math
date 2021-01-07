@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/com/time.h>
 #include <src/model/mesh_utility.h>
-#include <src/random/sphere.h>
+#include <src/random/sphere_uniform.h>
 
 #include <cmath>
 #include <filesystem>

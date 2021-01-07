@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/numerical/vec.h>
-#include <src/random/sphere.h>
+#include <src/random/sphere_uniform.h>
 
 #include <random>
 #include <vector>

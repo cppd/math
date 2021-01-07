@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_sphere_surface.h"
 
-#include "../sphere.h"
 #include "../sphere_surface.h"
+#include "../sphere_uniform.h"
 
 #include <src/com/log.h>
 #include <src/com/random/engine.h>

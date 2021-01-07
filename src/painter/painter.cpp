@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
 #include <src/random/sj_sampler.h>
-#include <src/random/sphere.h>
 
 #include <optional>
 #include <random>

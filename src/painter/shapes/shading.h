@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/numerical/vec.h>
-#include <src/random/sphere.h>
+#include <src/random/sphere_cosine.h>
 
 namespace ns::painter
 {

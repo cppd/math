@@ -32,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/numerical/complement.h>
 #include <src/numerical/vec.h>
 
 #include <cmath>
@@ -159,79 +158,6 @@ Vector<N, T> random_on_sphere(RandomEngine& random_engine)
         {
                 return impl::random_on_sphere_by_normal_distribution<N, T>(random_engine);
         }
-}
-
-template <typename RandomEngine, std::size_t N, typename T>
-Vector<N, T> random_cosine_weighted_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal)
-{
-        static_assert(N > 2);
-
-        Vector<N - 1, T> v;
-        T v_length_square;
-
-        random_in_sphere(random_engine, v, v_length_square);
-
-        T v_length = std::sqrt(v_length_square);
-        T n = std::sqrt((1 - v_length) * (1 + v_length));
-
-        std::array<Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
-
-        Vector<N, T> res = n * normal;
-
-        for (unsigned i = 0; i < N - 1; ++i)
-        {
-                res += v[i] * basis[i];
-        }
-
-        return res;
-}
-
-template <typename RandomEngine, typename T>
-Vector<3, T> random_power_cosine_weighted_on_hemisphere(
-        RandomEngine& random_engine,
-        const Vector<3, T>& normal,
-        T power)
-{
-        constexpr unsigned N = 3;
-
-        // 3-space only
-        //
-        // angle = ∠(vector, normal)
-        // PDF = cos(angle)^n * sin(angle), 0 <= angle <= PI/2
-        //
-        // d = Assuming[n >= 0,
-        //   ProbabilityDistribution[(Cos[x]^n) * Sin[x], {x, 0, Pi/2}, Method -> "Normalize"]];
-        // PDF[d, x]
-        // CDF[d, x]
-        //
-        // CDF = 1 - cos(angle)^(1 + n)
-        // Inverse CDF = acos((1 - CDF)^(1 / (1 + n)))
-        // Inverse CDF = acos(x^(1 / (1 + n)))
-        // Projection on normal = cos(acos(x^(1 / (1 + n))))
-        // Projection on normal = x^(1 / (1 + n))
-        //
-        // uniform x = length_of_random_vector_in_2_sphere ^ 2
-        // Projection on normal = squared_length_of_random_vector_in_2_sphere ^ (1 / (1 + n))
-
-        Vector<N - 1, T> v;
-        T v_length_square;
-
-        random_in_sphere(random_engine, v, v_length_square);
-
-        T n = std::pow(v_length_square, 1 / (1 + power));
-        T new_length_squared = (1 - n) * (1 + n);
-        v *= std::sqrt(new_length_squared / v_length_square);
-
-        std::array<Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
-
-        Vector<N, T> res = n * normal;
-
-        for (unsigned i = 0; i < N - 1; ++i)
-        {
-                res += v[i] * basis[i];
-        }
-
-        return res;
 }
 
 // Вариант алгоритма для равномерных точек на диске.

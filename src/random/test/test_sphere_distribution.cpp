@@ -19,7 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sphere_buckets.h"
 
-#include "../sphere.h"
+#include "../sphere_cosine.h"
+#include "../sphere_uniform.h"
 
 #include <src/com/constant.h>
 #include <src/com/error.h>
