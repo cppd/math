@@ -286,11 +286,8 @@ void test_distribution()
         LOG("");
         test_cosine_on_hemisphere<N, T>(unit_count, distribution_count, performance_count);
         LOG("");
-        if constexpr (N == 3)
-        {
-                test_power_cosine_on_hemisphere<N, T>(unit_count, distribution_count, performance_count);
-                LOG("");
-        }
+        test_power_cosine_on_hemisphere<N, T>(unit_count, distribution_count, performance_count);
+        LOG("");
 }
 
 template <typename T>
