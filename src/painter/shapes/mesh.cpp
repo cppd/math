@@ -228,16 +228,19 @@ void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
                 }
         }
 
-        const Color::DataType diffuse = std::clamp(mesh_object.diffuse(), Color::DataType(0), Color::DataType(1));
+        std::tie(m_diffuse, m_specular, m_specular_power) =
+                prepare_shading_parameters(mesh_object.diffuse(), mesh_object.specular(), mesh_object.specular_power());
+        m_alpha = std::clamp(mesh_object.alpha(), Color::DataType(0), Color::DataType(1));
+
         for (const typename mesh::Mesh<N>::Material& m : mesh.materials)
         {
                 int map_Kd = m.map_Kd < 0 ? -1 : (images_offset + m.map_Kd);
-                m_materials.emplace_back(m.Kd, diffuse, map_Kd, mesh_object.alpha());
+                m_materials.emplace_back(m.Kd, map_Kd);
         }
         if (facets_without_material)
         {
                 ASSERT(materials_offset + default_material_index == static_cast<int>(m_materials.size()));
-                m_materials.emplace_back(mesh_object.color(), diffuse, -1, mesh_object.alpha());
+                m_materials.emplace_back(mesh_object.color(), -1);
         }
 
         for (const image::Image<N - 1>& image : mesh.images)
@@ -376,12 +379,7 @@ SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& p, const void
 
         s.set_geometric_normal(facet->geometric_normal());
         s.set_shading_normal(facet->shading_normal(p));
-
-        ASSERT(facet->material() >= 0);
-
-        const Material& m = m_materials[facet->material()];
-
-        s.set_alpha(m.alpha);
+        s.set_alpha(m_alpha);
 
         return s;
 }
@@ -391,7 +389,7 @@ Color Mesh<N, T>::direct_lighting(
         const Vector<N, T>& p,
         const void* intersection_data,
         const Vector<N, T>& shading_normal,
-        const Vector<N, T>& dir_to_point,
+        const Vector<N, T>& dir_reflection,
         const Vector<N, T>& dir_to_light) const
 {
         const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
@@ -401,17 +399,17 @@ Color Mesh<N, T>::direct_lighting(
         const Material& m = m_materials[facet->material()];
 
         Color color;
-
         if (facet->has_texcoord() && m.map_Kd >= 0)
         {
-                color = m.diffuse * m_images[m.map_Kd].color(facet->texcoord(p));
+                color = m_images[m.map_Kd].color(facet->texcoord(p));
         }
         else
         {
-                color = m.diffuse * m.Kd;
+                color = m.Kd;
         }
 
-        return color * surface_lighting(shading_normal, dir_to_point, dir_to_light);
+        return surface_lighting(
+                dir_to_light, shading_normal, dir_reflection, color, m_diffuse, m_specular, m_specular_power);
 }
 
 template <std::size_t N, typename T>
@@ -419,6 +417,7 @@ SurfaceReflection<N, T> Mesh<N, T>::reflection(
         const Vector<N, T>& p,
         const void* intersection_data,
         const Vector<N, T>& shading_normal,
+        const Vector<N, T>& dir_reflection,
         RandomEngine<T>& random_engine) const
 {
         const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
@@ -428,17 +427,16 @@ SurfaceReflection<N, T> Mesh<N, T>::reflection(
         const Material& m = m_materials[facet->material()];
 
         Color color;
-
         if (facet->has_texcoord() && m.map_Kd >= 0)
         {
-                color = m.diffuse * m_images[m.map_Kd].color(facet->texcoord(p));
+                color = m_images[m.map_Kd].color(facet->texcoord(p));
         }
         else
         {
-                color = m.diffuse * m.Kd;
+                color = m.Kd;
         }
 
-        return {color, surface_ray_direction(shading_normal, random_engine)};
+        return surface_ray_direction(shading_normal, dir_reflection, color, m_diffuse, m_specular_power, random_engine);
 }
 
 template <std::size_t N, typename T>

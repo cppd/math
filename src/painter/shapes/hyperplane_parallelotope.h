@@ -32,18 +32,27 @@ class HyperplaneParallelotope final : public Shape<N, T>, public Surface<N, T>
         painter::HyperplaneParallelotope<N, T> m_hyperplane_parallelotope;
         SurfaceProperties<N, T> m_surface_properties;
         Color m_color;
+        T m_diffuse;
+        T m_specular;
+        T m_specular_power;
 
 public:
         template <typename... V>
         HyperplaneParallelotope(
                 const Color& color,
-                const Color::DataType& diffuse,
-                const Color::DataType& alpha,
+                Color::DataType diffuse,
+                Color::DataType specular,
+                Color::DataType specular_power,
+                Color::DataType alpha,
                 const Vector<N, T>& org,
                 const V&... e)
-                : m_hyperplane_parallelotope(org, e...),
-                  m_color(color * std::clamp(diffuse, Color::DataType(0), Color::DataType(1)))
+                : m_hyperplane_parallelotope(org, e...)
         {
+                m_color = color;
+
+                std::tie(m_diffuse, m_specular, m_specular_power) =
+                        prepare_shading_parameters(diffuse, specular, specular_power);
+
                 m_surface_properties.set_alpha(alpha);
         }
 
@@ -82,19 +91,22 @@ public:
                 const Vector<N, T>& /*p*/,
                 const void* /*intersection_data*/,
                 const Vector<N, T>& shading_normal,
-                const Vector<N, T>& dir_to_point,
+                const Vector<N, T>& dir_reflection,
                 const Vector<N, T>& dir_to_light) const override
         {
-                return m_color * surface_lighting(shading_normal, dir_to_point, dir_to_light);
+                return surface_lighting(
+                        dir_to_light, shading_normal, dir_reflection, m_color, m_diffuse, m_specular, m_specular_power);
         }
 
         SurfaceReflection<N, T> reflection(
                 const Vector<N, T>& /*p*/,
                 const void* /*intersection_data*/,
                 const Vector<N, T>& shading_normal,
+                const Vector<N, T>& dir_reflection,
                 RandomEngine<T>& random_engine) const override
         {
-                return {m_color, surface_ray_direction(shading_normal, random_engine)};
+                return surface_ray_direction(
+                        shading_normal, dir_reflection, m_color, m_diffuse, m_specular_power, random_engine);
         }
 
         BoundingBox<N, T> bounding_box() const override

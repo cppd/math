@@ -17,22 +17,72 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../objects.h"
+
+#include <src/color/color.h>
 #include <src/numerical/vec.h>
 #include <src/sampling/sphere_cosine.h>
 
 namespace ns::painter
 {
-template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> surface_ray_direction(const Vector<N, T>& normal, RandomEngine& engine)
+inline std::tuple<Color::DataType, Color::DataType, Color::DataType> prepare_shading_parameters(
+        Color::DataType diffuse,
+        Color::DataType specular,
+        Color::DataType specular_power)
 {
-        // Распределение случайного луча с вероятностью по косинусу
-        // угла между нормалью и случайным вектором.
-        return sampling::cosine_weighted_on_hemisphere(engine, normal);
+        diffuse = std::max(Color::DataType(0), diffuse);
+        specular = std::max(Color::DataType(0), specular);
+        const Color::DataType sum = diffuse + specular;
+        if (sum != 0)
+        {
+                diffuse /= sum;
+                specular /= sum;
+        }
+        else
+        {
+                diffuse = 0.5;
+                specular = 0.5;
+        }
+
+        specular_power = std::max(Color::DataType(1), specular_power);
+
+        return {diffuse, specular, specular_power};
 }
 
 template <std::size_t N, typename T>
-T surface_lighting(const Vector<N, T>& normal, const Vector<N, T>& /*dir_to_point*/, const Vector<N, T>& dir_to_light)
+Color surface_lighting(
+        const Vector<N, T>& dir_to_light,
+        const Vector<N, T>& normal,
+        const Vector<N, T>& dir_reflection,
+        const Color& color,
+        T diffuse,
+        T specular,
+        T specular_power)
 {
-        return dot(normal, dir_to_light);
+        Color c = (diffuse * dot(normal, dir_to_light)) * color;
+
+        T specular_dot = dot(dir_reflection, dir_to_light);
+        if (specular_dot > 0)
+        {
+                c += Color(specular * std::pow(std::min(specular_dot, T(1)), specular_power));
+        }
+
+        return c;
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+SurfaceReflection<N, T> surface_ray_direction(
+        const Vector<N, T>& normal,
+        const Vector<N, T>& dir_reflection,
+        const Color& color,
+        T diffuse,
+        T specular_power,
+        RandomEngine& engine)
+{
+        if (std::uniform_real_distribution<T>(0, 1)(engine) < diffuse)
+        {
+                return {color, sampling::cosine_weighted_on_hemisphere(engine, normal)};
+        }
+        return {Color(1), sampling::power_cosine_weighted_on_hemisphere(engine, dir_reflection, specular_power)};
 }
 }

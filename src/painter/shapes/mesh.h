@@ -42,11 +42,8 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
         struct Material
         {
                 Color Kd;
-                Color::DataType diffuse;
                 int map_Kd;
-                Color::DataType alpha;
-                Material(const Color& Kd, Color::DataType diffuse, int map_Kd, Color::DataType alpha)
-                        : Kd(Kd), diffuse(diffuse), map_Kd(map_Kd), alpha(alpha)
+                Material(const Color& Kd, int map_Kd) : Kd(Kd), map_Kd(map_Kd)
                 {
                 }
         };
@@ -60,6 +57,11 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
 
         SpatialSubdivisionTree<TreeParallelotope> m_tree;
         BoundingBox<N, T> m_bounding_box;
+
+        T m_diffuse;
+        T m_specular;
+        T m_specular_power;
+        Color::DataType m_alpha;
 
         void create(const mesh::Reading<N>& mesh_object);
         void create(const std::vector<mesh::Reading<N>>& mesh_objects);
@@ -84,13 +86,14 @@ public:
                 const Vector<N, T>& p,
                 const void* intersection_data,
                 const Vector<N, T>& shading_normal,
-                const Vector<N, T>& dir_to_point,
+                const Vector<N, T>& dir_reflection,
                 const Vector<N, T>& dir_to_light) const override;
 
         SurfaceReflection<N, T> reflection(
                 const Vector<N, T>& p,
                 const void* intersection_data,
                 const Vector<N, T>& shading_normal,
+                const Vector<N, T>& dir_reflection,
                 RandomEngine<T>& random_engine) const override;
 
         BoundingBox<N, T> bounding_box() const override;
