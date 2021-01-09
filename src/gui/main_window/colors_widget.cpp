@@ -36,7 +36,9 @@ constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(50, 150, 50);
 constexpr QRgb DFT_BACKGROUND_COLOR = qRgb(0, 0, 50);
 constexpr QRgb DFT_COLOR = qRgb(150, 200, 250);
 
-constexpr double MAXIMUM_LIGHTING_INTENSITY = 3.0;
+constexpr double DEFAULT_LIGHTING_INTENSITY = 1.0;
+constexpr double MAXIMUM_LIGHTING_INTENSITY = 20.0;
+static_assert(DEFAULT_LIGHTING_INTENSITY > 0 && DEFAULT_LIGHTING_INTENSITY <= MAXIMUM_LIGHTING_INTENSITY);
 }
 
 ColorsWidget::ColorsWidget() : QWidget(nullptr)
@@ -45,7 +47,8 @@ ColorsWidget::ColorsWidget() : QWidget(nullptr)
 
         // Должно быть точное среднее положение
         ASSERT(((ui.slider_lighting_intensity->maximum() - ui.slider_lighting_intensity->minimum()) & 1) == 0);
-        set_slider_to_middle(ui.slider_lighting_intensity);
+
+        reset_lighting_intensity();
 
         set_background_color(BACKGROUND_COLOR);
         set_specular_color(SPECULAR_COLOR);
@@ -79,6 +82,13 @@ void ColorsWidget::set_view(view::View* view)
         m_view = view;
 }
 
+void ColorsWidget::reset_lighting_intensity()
+{
+        double position = std::log(DEFAULT_LIGHTING_INTENSITY) / std::log(MAXIMUM_LIGHTING_INTENSITY);
+        position = (position + 1) / 2;
+        set_slider_position(ui.slider_lighting_intensity, position);
+}
+
 void ColorsWidget::on_reset_lighting_clicked()
 {
         std::optional<bool> yes = dialog::message_question_default_yes("Reset lighting?");
@@ -87,7 +97,7 @@ void ColorsWidget::on_reset_lighting_clicked()
                 return;
         }
 
-        set_slider_to_middle(ui.slider_lighting_intensity);
+        reset_lighting_intensity();
 }
 
 void ColorsWidget::on_lighting_intensity_changed(int)
@@ -314,7 +324,7 @@ Color ColorsWidget::dft_color() const
 
 double ColorsWidget::lighting_intensity() const
 {
-        double v = 2.0 * slider_position(ui.slider_lighting_intensity);
-        return (v <= 1.0) ? v : interpolation(1.0, MAXIMUM_LIGHTING_INTENSITY, v - 1.0);
+        double v = 2.0 * slider_position(ui.slider_lighting_intensity) - 1;
+        return std::pow(MAXIMUM_LIGHTING_INTENSITY, v);
 }
 }

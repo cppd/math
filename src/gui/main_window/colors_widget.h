@@ -61,6 +61,8 @@ private:
         void set_dft_background_color(const QColor& c);
         void set_dft_color(const QColor& c);
 
+        void reset_lighting_intensity();
+
 public:
         ColorsWidget();
 
