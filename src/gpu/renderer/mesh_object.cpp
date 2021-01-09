@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_object.h"
 
+#include "shading.h"
+
 #include "shaders/buffers.h"
 #include "shaders/descriptors.h"
 #include "shaders/triangles.h"
@@ -524,10 +526,8 @@ class Impl final : public MeshObject
 
         void buffer_set_lighting(float ambient, float diffuse, float specular, float specular_power) const
         {
-                ambient = std::max(0.0f, ambient);
-                diffuse = std::max(0.0f, diffuse);
-                specular = std::max(0.0f, specular);
-                specular_power = std::max(1.0f, specular_power);
+                std::tie(ambient, diffuse, specular, specular_power) =
+                        prepare_shading_parameters(ambient, diffuse, specular, specular_power);
 
                 m_mesh_buffer.set_lighting(ambient, diffuse, specular, specular_power);
         }
