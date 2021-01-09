@@ -100,7 +100,7 @@ class PowerCosineHemisphere
         std::uniform_real_distribution<T> m_urd;
 
 public:
-        PowerCosineHemisphere(std::type_identity_t<T> power)
+        explicit PowerCosineHemisphere(std::type_identity_t<T> power)
         {
                 if (!(power >= 1))
                 {
