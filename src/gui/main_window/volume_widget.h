@@ -35,7 +35,6 @@ class VolumeWidget final : public QWidget
 private:
         const std::thread::id m_thread_id = std::this_thread::get_id();
         const double m_maximum_specular_power;
-        const double m_maximum_model_lighting;
 
         Ui::VolumeWidget ui;
 
@@ -64,7 +63,7 @@ private:
         void set_enabled(bool enabled) const;
 
 public:
-        VolumeWidget(double maximum_specular_power, double maximum_model_lighting);
+        VolumeWidget(double maximum_specular_power);
 
         void set_model_tree(ModelTree* model_tree);
 };

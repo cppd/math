@@ -28,10 +28,8 @@ namespace
 constexpr double VOLUME_ALPHA_COEFFICIENT = 50;
 }
 
-VolumeWidget::VolumeWidget(double maximum_specular_power, double maximum_model_lighting)
-        : QWidget(nullptr),
-          m_maximum_specular_power(maximum_specular_power),
-          m_maximum_model_lighting(maximum_model_lighting)
+VolumeWidget::VolumeWidget(double maximum_specular_power)
+        : QWidget(nullptr), m_maximum_specular_power(maximum_specular_power)
 {
         ui.setupUi(this);
 
@@ -237,7 +235,7 @@ void VolumeWidget::on_ambient_changed(int)
                 return;
         }
 
-        double ambient = m_maximum_model_lighting * slider_position(ui.slider_ambient);
+        double ambient = slider_position(ui.slider_ambient);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
@@ -258,7 +256,7 @@ void VolumeWidget::on_diffuse_changed(int)
                 return;
         }
 
-        double diffuse = m_maximum_model_lighting * slider_position(ui.slider_diffuse);
+        double diffuse = slider_position(ui.slider_diffuse);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
@@ -279,7 +277,7 @@ void VolumeWidget::on_specular_changed(int)
                 return;
         }
 
-        double specular = m_maximum_model_lighting * slider_position(ui.slider_specular);
+        double specular = slider_position(ui.slider_specular);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
@@ -450,17 +448,17 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                                 set_widget_color(ui.widget_color, color);
                         }
                         {
-                                double position = ambient / m_maximum_model_lighting;
+                                double position = ambient;
                                 QSignalBlocker blocker(ui.slider_ambient);
                                 set_slider_position(ui.slider_ambient, position);
                         }
                         {
-                                double position = diffuse / m_maximum_model_lighting;
+                                double position = diffuse;
                                 QSignalBlocker blocker(ui.slider_diffuse);
                                 set_slider_position(ui.slider_diffuse, position);
                         }
                         {
-                                double position = specular / m_maximum_model_lighting;
+                                double position = specular;
                                 QSignalBlocker blocker(ui.slider_specular);
                                 set_slider_position(ui.slider_specular, position);
                         }

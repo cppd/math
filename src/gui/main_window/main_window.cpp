@@ -47,7 +47,6 @@ constexpr std::chrono::milliseconds UPDATE_INTERVAL{200};
 constexpr std::chrono::milliseconds WINDOW_SHOW_DELAY{50};
 
 constexpr double MAXIMUM_SPECULAR_POWER = 1000.0;
-constexpr double MAXIMUM_MODEL_LIGHTING = 2.0;
 }
 
 MainWindow::MainWindow()
@@ -107,10 +106,10 @@ void MainWindow::constructor_objects()
         m_view_widget = std::make_unique<ViewWidget>();
         add_widget(ui.tab_view, m_view_widget.get());
 
-        m_mesh_widget = std::make_unique<MeshWidget>(MAXIMUM_SPECULAR_POWER, MAXIMUM_MODEL_LIGHTING);
+        m_mesh_widget = std::make_unique<MeshWidget>(MAXIMUM_SPECULAR_POWER);
         add_widget(ui.tab_mesh, m_mesh_widget.get());
 
-        m_volume_widget = std::make_unique<VolumeWidget>(MAXIMUM_SPECULAR_POWER, MAXIMUM_MODEL_LIGHTING);
+        m_volume_widget = std::make_unique<VolumeWidget>(MAXIMUM_SPECULAR_POWER);
         add_widget(ui.tab_volume, m_volume_widget.get());
 
         //
