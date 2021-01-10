@@ -28,7 +28,6 @@ namespace ns::gui::main_window
 namespace
 {
 constexpr QRgb BACKGROUND_COLOR = qRgb(50, 100, 150);
-constexpr QRgb SPECULAR_COLOR = qRgb(255, 255, 255);
 constexpr QRgb WIREFRAME_COLOR = qRgb(255, 255, 255);
 constexpr QRgb CLIP_PLANE_COLOR = qRgb(250, 230, 150);
 constexpr QRgb NORMAL_COLOR_POSITIVE = qRgb(200, 200, 0);
@@ -51,7 +50,6 @@ ColorsWidget::ColorsWidget() : QWidget(nullptr)
         reset_lighting_intensity();
 
         set_background_color(BACKGROUND_COLOR);
-        set_specular_color(SPECULAR_COLOR);
         set_wireframe_color(WIREFRAME_COLOR);
         set_clip_plane_color(CLIP_PLANE_COLOR);
         set_normal_color_positive(NORMAL_COLOR_POSITIVE);
@@ -213,15 +211,6 @@ void ColorsWidget::set_background_color(const QColor& c)
         set_widget_color(ui.widget_background_color, c);
 }
 
-void ColorsWidget::set_specular_color(const QColor& c)
-{
-        m_specular_color = c;
-        if (m_view)
-        {
-                m_view->send(view::command::SetSpecularColor(qcolor_to_rgb(c)));
-        }
-}
-
 void ColorsWidget::set_wireframe_color(const QColor& c)
 {
         m_wireframe_color = c;
@@ -285,11 +274,6 @@ void ColorsWidget::set_dft_color(const QColor& c)
 Color ColorsWidget::background_color() const
 {
         return qcolor_to_rgb(m_background_color);
-}
-
-Color ColorsWidget::specular_color() const
-{
-        return qcolor_to_rgb(m_specular_color);
 }
 
 Color ColorsWidget::wireframe_color() const

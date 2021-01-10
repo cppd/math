@@ -93,14 +93,6 @@ struct SetBackgroundColor final
         }
 };
 
-struct SetSpecularColor final
-{
-        Color value;
-        explicit SetSpecularColor(const Color& value) : value(value)
-        {
-        }
-};
-
 struct SetWireframeColor final
 {
         Color value;
@@ -358,7 +350,6 @@ struct Command final
                 command::SetNormalColorPositive,
                 command::SetNormalLength,
                 command::SetShadowZoom,
-                command::SetSpecularColor,
                 command::SetVerticalSync,
                 command::SetWireframeColor,
                 command::ShowConvexHull2D,

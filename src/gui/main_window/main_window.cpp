@@ -135,7 +135,6 @@ void MainWindow::constructor_objects()
 std::vector<view::Command> MainWindow::view_initial_commands() const
 {
         return {view::command::SetBackgroundColor(m_colors_widget->background_color()),
-                view::command::SetSpecularColor(m_colors_widget->specular_color()),
                 view::command::SetWireframeColor(m_colors_widget->wireframe_color()),
                 view::command::SetClipPlaneColor(m_colors_widget->clip_plane_color()),
                 view::command::SetNormalLength(m_view_widget->normal_length()),

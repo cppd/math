@@ -42,7 +42,6 @@ class ShaderBuffers
 
         struct Drawing
         {
-                alignas(sizeof(vec4f)) vec3f specular_color;
                 alignas(sizeof(vec4f)) vec3f wireframe_color;
                 alignas(sizeof(vec4f)) vec3f background_color;
                 float normal_length;
@@ -91,7 +90,6 @@ public:
 
         void set_clip_plane(const vec4& equation, bool enabled) const;
         void set_viewport(const vec2& center, const vec2& factor) const;
-        void set_specular_color(const Color& color) const;
         void set_wireframe_color(const Color& color) const;
         void set_background_color(const Color& color) const;
         void set_clip_plane_color(const Color& color) const;
@@ -146,8 +144,7 @@ class MeshBuffer final
                 alignas(sizeof(vec4f)) vec3f color;
                 float alpha;
                 float ambient;
-                float diffuse;
-                float specular;
+                float metalness;
                 float specular_power;
         };
 
@@ -159,7 +156,7 @@ public:
         void set_coordinates(const mat4& model_matrix, const mat3& normal_matrix) const;
         void set_color(const Color& color) const;
         void set_alpha(float alpha) const;
-        void set_lighting(float ambient, float diffuse, float specular, float specular_power) const;
+        void set_lighting(float ambient, float metalness, float specular_power) const;
 };
 
 class VolumeBuffer final
@@ -187,8 +184,7 @@ class VolumeBuffer final
                 alignas(sizeof(vec4f)) vec3f color;
                 uint32_t color_volume;
                 float ambient;
-                float diffuse;
-                float specular;
+                float metalness;
                 float specular_power;
         };
 
@@ -228,8 +224,7 @@ public:
                 const vulkan::CommandPool& command_pool,
                 const vulkan::Queue& queue,
                 float ambient,
-                float diffuse,
-                float specular,
+                float metalness,
                 float specular_power) const;
 };
 

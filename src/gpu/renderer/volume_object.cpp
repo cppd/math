@@ -224,11 +224,10 @@ class Impl final : public VolumeObject
 
         void buffer_set_lighting(float ambient, float diffuse, float specular, float specular_power) const
         {
-                std::tie(ambient, diffuse, specular, specular_power) =
-                        prepare_shading_parameters(ambient, diffuse, specular, specular_power);
+                ShadingParameters p = shading_parameters(ambient, diffuse, specular, specular_power);
 
                 m_buffer.set_lighting(
-                        m_graphics_command_pool, m_graphics_queue, ambient, diffuse, specular, specular_power);
+                        m_graphics_command_pool, m_graphics_queue, p.ambient, p.metalness, p.specular_power);
         }
 
         void buffer_set_coordinates() const

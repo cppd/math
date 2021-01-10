@@ -526,10 +526,9 @@ class Impl final : public MeshObject
 
         void buffer_set_lighting(float ambient, float diffuse, float specular, float specular_power) const
         {
-                std::tie(ambient, diffuse, specular, specular_power) =
-                        prepare_shading_parameters(ambient, diffuse, specular, specular_power);
+                ShadingParameters p = shading_parameters(ambient, diffuse, specular, specular_power);
 
-                m_mesh_buffer.set_lighting(ambient, diffuse, specular, specular_power);
+                m_mesh_buffer.set_lighting(p.ambient, p.metalness, p.specular_power);
         }
 
         void buffer_set_color(const Color& color)

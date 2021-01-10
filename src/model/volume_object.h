@@ -140,8 +140,8 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         bool m_isosurface = false;
         float m_isovalue = 0.5f;
 
-        Color m_color = Color(Srgb8(150, 170, 150));
-        float m_ambient = 1;
+        Color m_color = Color(Srgb8(210, 240, 210));
+        float m_ambient = 0.2;
         float m_diffuse = 1;
         float m_specular = 1;
         float m_specular_power = 50;

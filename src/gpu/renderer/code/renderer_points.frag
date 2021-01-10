@@ -37,7 +37,7 @@ vec3 fog(vec3 fog_color, vec3 fragment_color)
 
 void main(void)
 {
-        vec3 color = mesh.color * (mesh.ambient + mesh.diffuse * drawing.lighting_intensity);
+        vec3 color = mesh.color * mix(drawing.lighting_intensity, 1, mesh.ambient);
 
         set_fragment_color(drawing.show_fog ? fog(drawing.background_color, color) : color);
 }

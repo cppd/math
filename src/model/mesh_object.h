@@ -128,8 +128,8 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
         ObjectId m_id;
 
         float m_alpha = 1;
-        Color m_color = Color(Srgb8(150, 170, 150));
-        float m_ambient = 1;
+        Color m_color = Color(Srgb8(210, 240, 210));
+        float m_ambient = 0.2;
         float m_diffuse = 1;
         float m_specular = 1;
         float m_specular_power = 50;

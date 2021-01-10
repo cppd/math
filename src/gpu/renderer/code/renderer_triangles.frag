@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #extension GL_GOOGLE_include_directive : enable
 #include "common.glsl"
+#include "shading.glsl"
 
 // Для каждой группы треугольников с одним материалом отдельно задаётся этот материал и его текстуры
 layout(set = 2, binding = 0, std140) uniform Material
@@ -85,49 +86,41 @@ float edge_factor()
 
 vec3 shade()
 {
-        //
-
-        vec3 mtl_a, mtl_d, mtl_s;
-        float ns;
+        vec3 mtl_color;
+        float mtl_specular_power;
 
         if (!mtl.use_material || !drawing.show_materials)
         {
-                mtl_a = mesh.color;
-                mtl_d = mesh.color;
-                mtl_s = drawing.specular_color;
-                ns = mesh.specular_power;
+                mtl_color = mesh.color;
+                mtl_specular_power = mesh.specular_power;
         }
-        else if (!has_texture_coordinates())
+        else if (!has_texture_coordinates() || !mtl.use_texture_Kd)
         {
-                mtl_a = mtl.Ka;
-                mtl_d = mtl.Kd;
-                mtl_s = mtl.Ks;
-                ns = mtl.Ns;
+                mtl_color = mtl.Kd;
+                mtl_specular_power = mtl.Ns;
         }
         else
         {
-                mtl_a = mtl.use_texture_Ka ? texture_Ka_color(gs.texture_coordinates).rgb : mtl.Ka;
-                mtl_d = mtl.use_texture_Kd ? texture_Kd_color(gs.texture_coordinates).rgb : mtl.Kd;
-                mtl_s = mtl.use_texture_Ks ? texture_Ks_color(gs.texture_coordinates).rgb : mtl.Ks;
-                ns = mtl.Ns;
+                mtl_color = texture_Kd_color(gs.texture_coordinates).rgb;
+                mtl_specular_power = mtl.Ns;
         }
 
-        vec3 color = mtl_a * mesh.ambient;
-
+        vec3 color = vec3(0);
         if (!drawing.show_shadow || !shadow(gs.shadow_position))
         {
                 vec3 N = normalize(gs.world_normal);
                 vec3 L = drawing.direction_to_light;
                 vec3 V = drawing.direction_to_camera;
 
-                float diffuse = max(0, dot(N, L));
-                if (diffuse > 0)
+                float dot_NL = dot(N, L);
+                if (dot_NL > 0)
                 {
-                        float specular = pow(max(0, dot(V, reflect(-L, N))), ns);
-                        color += (diffuse * mesh.diffuse * drawing.lighting_intensity) * mtl_d;
-                        color += (specular * mesh.specular * drawing.lighting_intensity) * mtl_s;
+                        color = drawing.lighting_intensity
+                                * compute_color(mesh.metalness, mtl_specular_power, mtl_color, N, L, V, dot_NL);
                 }
         }
+
+        color = mix(color, mtl_color, mesh.ambient);
 
         if (drawing.show_wireframe)
         {

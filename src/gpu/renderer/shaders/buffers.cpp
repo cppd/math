@@ -164,12 +164,6 @@ void ShaderBuffers::set_viewport(const vec2& center, const vec2& factor) const
         map.write(sizeof(viewport_center), viewport_factor);
 }
 
-void ShaderBuffers::set_specular_color(const Color& color) const
-{
-        decltype(Drawing().specular_color) c = color.to_rgb_vector<float>();
-        copy_to_drawing_buffer(offsetof(Drawing, specular_color), c);
-}
-
 void ShaderBuffers::set_wireframe_color(const Color& color) const
 {
         decltype(Drawing().wireframe_color) c = color.to_rgb_vector<float>();
@@ -322,9 +316,9 @@ void MeshBuffer::set_alpha(float alpha) const
         vulkan::map_and_write_to_buffer(m_uniform_buffer, offsetof(Mesh, alpha), a);
 }
 
-void MeshBuffer::set_lighting(float ambient, float diffuse, float specular, float specular_power) const
+void MeshBuffer::set_lighting(float ambient, float metalness, float specular_power) const
 {
-        static_assert(offsetof(Mesh, specular_power) - offsetof(Mesh, ambient) == 3 * sizeof(float));
+        static_assert(offsetof(Mesh, specular_power) - offsetof(Mesh, ambient) == 2 * sizeof(float));
 
         constexpr std::size_t offset = offsetof(Mesh, ambient);
         constexpr std::size_t size = offsetof(Mesh, specular_power) + sizeof(Mesh::specular_power) - offset;
@@ -333,8 +327,7 @@ void MeshBuffer::set_lighting(float ambient, float diffuse, float specular, floa
 
         Mesh mesh;
         mesh.ambient = ambient;
-        mesh.diffuse = diffuse;
-        mesh.specular = specular;
+        mesh.metalness = metalness;
         mesh.specular_power = specular_power;
 
         map.write(0, size, reinterpret_cast<const char*>(&mesh) + offset);
@@ -451,11 +444,10 @@ void VolumeBuffer::set_lighting(
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
         float ambient,
-        float diffuse,
-        float specular,
+        float metalness,
         float specular_power) const
 {
-        static_assert(offsetof(Volume, specular_power) - offsetof(Volume, ambient) == 3 * sizeof(float));
+        static_assert(offsetof(Volume, specular_power) - offsetof(Volume, ambient) == 2 * sizeof(float));
 
         constexpr std::size_t offset = offsetof(Volume, ambient);
         constexpr std::size_t size = offsetof(Volume, specular_power) + sizeof(Volume::specular_power) - offset;
@@ -463,8 +455,7 @@ void VolumeBuffer::set_lighting(
         Volume volume;
 
         volume.ambient = ambient;
-        volume.diffuse = diffuse;
-        volume.specular = specular;
+        volume.metalness = metalness;
         volume.specular_power = specular_power;
 
         m_uniform_buffer_volume.write(

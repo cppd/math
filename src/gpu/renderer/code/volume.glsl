@@ -40,6 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #extension GL_GOOGLE_include_directive : enable
+#include "shading.glsl"
 #include "transparency.glsl"
 
 const float MIN_TRANSPARENCY = 1.0 / 256;
@@ -49,7 +50,6 @@ const uint TRANSPARENCY_NULL_POINTER = 0xffffffff;
 
 layout(set = 0, binding = 0, std140) uniform Drawing
 {
-        vec3 specular_color;
         vec3 wireframe_color;
         vec3 background_color;
         float normal_length;
@@ -103,8 +103,7 @@ layout(set = 1, binding = 1, std140) uniform Volume
         vec3 color;
         bool color_volume;
         float ambient;
-        float diffuse;
-        float specular;
+        float metalness;
         float specular_power;
 }
 volume;
@@ -287,7 +286,8 @@ vec4 volume_color(vec3 p)
         }
         float value = scalar_volume_value(p);
         // vec4 color = texture(transfer_function, value);
-        vec4 color = vec4(volume.color * (volume.ambient + volume.diffuse * drawing.lighting_intensity), value);
+        vec3 color3 = volume.color * mix(drawing.lighting_intensity, 1, volume.ambient);
+        vec4 color = vec4(color3, value);
         color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
         return color;
 }
@@ -442,22 +442,19 @@ vec4 find_isosurface(vec4 a, vec4 b, float sign_a)
 
 vec3 shade(vec3 p)
 {
-        vec3 color = volume.color * volume.ambient;
-
         vec3 N = world_normal(p);
         N = faceforward(N, -drawing.direction_to_camera, N);
         vec3 L = drawing.direction_to_light;
         vec3 V = drawing.direction_to_camera;
 
-        float diffuse = max(0, dot(N, L));
-        if (diffuse > 0)
+        vec3 color = vec3(0);
+        float dot_NL = dot(N, L);
+        if (dot_NL > 0)
         {
-                float specular = pow(max(0, dot(V, reflect(-L, N))), volume.specular_power);
-                color += (diffuse * volume.diffuse * drawing.lighting_intensity) * volume.color;
-                color += (specular * volume.specular * drawing.lighting_intensity) * drawing.specular_color;
+                color = drawing.lighting_intensity
+                        * compute_color(volume.metalness, volume.specular_power, volume.color, N, L, V, dot_NL);
         }
-
-        return color;
+        return mix(color, volume.color, volume.ambient);
 }
 
 vec4 isosurface_color(vec3 p)

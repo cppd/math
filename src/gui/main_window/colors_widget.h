@@ -34,7 +34,6 @@ private:
         view::View* m_view = nullptr;
 
         QColor m_background_color;
-        QColor m_specular_color;
         QColor m_wireframe_color;
         QColor m_clip_plane_color;
         QColor m_normal_color_positive;
@@ -53,7 +52,6 @@ private:
         void on_dft_color_clicked();
 
         void set_background_color(const QColor& c);
-        void set_specular_color(const QColor& c);
         void set_wireframe_color(const QColor& c);
         void set_clip_plane_color(const QColor& c);
         void set_normal_color_positive(const QColor& c);
@@ -69,7 +67,6 @@ public:
         void set_view(view::View* view);
 
         Color background_color() const;
-        Color specular_color() const;
         Color wireframe_color() const;
         Color clip_plane_color() const;
         Color normal_color_positive() const;

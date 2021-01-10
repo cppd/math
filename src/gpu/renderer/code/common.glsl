@@ -31,7 +31,6 @@ matrices;
 
 layout(set = 0, binding = 1, std140) uniform Drawing
 {
-        vec3 specular_color;
         vec3 wireframe_color;
         vec3 background_color;
         float normal_length;
@@ -80,8 +79,7 @@ layout(set = 1, binding = 0, std140) uniform Mesh
         vec3 color;
         float alpha;
         float ambient;
-        float diffuse;
-        float specular;
+        float metalness;
         float specular_power;
 }
 mesh;

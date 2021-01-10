@@ -354,11 +354,6 @@ class Impl final
                 m_text->set_color(background_is_dark ? Color(1) : Color(0));
         }
 
-        void command(const command::SetSpecularColor& d)
-        {
-                m_renderer->set_specular_color(d.value);
-        }
-
         void command(const command::SetWireframeColor& d)
         {
                 m_renderer->set_wireframe_color(d.value);
