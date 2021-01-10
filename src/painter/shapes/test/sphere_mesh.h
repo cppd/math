@@ -28,7 +28,7 @@ namespace ns::painter::shapes
 template <std::size_t N, typename T>
 std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_random_sphere(
         const Color& color,
-        const Color::DataType& diffuse,
+        const Color::DataType& metalness,
         int point_count,
         ProgressRatio* progress);
 }

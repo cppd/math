@@ -40,8 +40,7 @@ public:
         template <typename... V>
         HyperplaneParallelotope(
                 const Color& color,
-                Color::DataType diffuse,
-                Color::DataType specular,
+                Color::DataType metalness,
                 Color::DataType specular_power,
                 Color::DataType alpha,
                 const Vector<N, T>& org,
@@ -51,7 +50,7 @@ public:
                 m_color = color;
 
                 std::tie(m_diffuse, m_specular, m_specular_power) =
-                        prepare_shading_parameters(diffuse, specular, specular_power);
+                        prepare_shading_parameters(metalness, specular_power);
 
                 m_surface_properties.set_alpha(alpha);
         }

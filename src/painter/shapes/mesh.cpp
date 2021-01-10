@@ -229,7 +229,7 @@ void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
         }
 
         std::tie(m_diffuse, m_specular, m_specular_power) =
-                prepare_shading_parameters(mesh_object.diffuse(), mesh_object.specular(), mesh_object.specular_power());
+                prepare_shading_parameters(mesh_object.metalness(), mesh_object.specular_power());
         m_alpha = std::clamp(mesh_object.alpha(), Color::DataType(0), Color::DataType(1));
 
         for (const typename mesh::Mesh<N>::Material& m : mesh.materials)

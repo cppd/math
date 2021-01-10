@@ -48,9 +48,8 @@ VolumeWidget::VolumeWidget(double maximum_specular_power)
                 &VolumeWidget::on_isosurface_transparency_changed);
         connect(ui.slider_isovalue, &QSlider::valueChanged, this, &VolumeWidget::on_isovalue_changed);
         connect(ui.slider_ambient, &QSlider::valueChanged, this, &VolumeWidget::on_ambient_changed);
-        connect(ui.slider_diffuse, &QSlider::valueChanged, this, &VolumeWidget::on_diffuse_changed);
+        connect(ui.slider_metalness, &QSlider::valueChanged, this, &VolumeWidget::on_metalness_changed);
         connect(ui.slider_specular_power, &QSlider::valueChanged, this, &VolumeWidget::on_specular_power_changed);
-        connect(ui.slider_specular, &QSlider::valueChanged, this, &VolumeWidget::on_specular_changed);
         connect(ui.slider_transparency, &QSlider::valueChanged, this, &VolumeWidget::on_transparency_changed);
         connect(ui.toolButton_color, &QToolButton::clicked, this, &VolumeWidget::on_color_clicked);
         connect(m_slider_levels.get(), &RangeSlider::changed, this, &VolumeWidget::on_levels_changed);
@@ -246,7 +245,7 @@ void VolumeWidget::on_ambient_changed(int)
                 *object_opt);
 }
 
-void VolumeWidget::on_diffuse_changed(int)
+void VolumeWidget::on_metalness_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -256,34 +255,13 @@ void VolumeWidget::on_diffuse_changed(int)
                 return;
         }
 
-        double diffuse = slider_position(ui.slider_diffuse);
+        double metalness = slider_position(ui.slider_metalness);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
                 {
                         volume::Writing writing(object.get());
-                        writing.set_diffuse(diffuse);
-                },
-                *object_opt);
-}
-
-void VolumeWidget::on_specular_changed(int)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::VolumeObject> object_opt = m_model_tree->current_volume();
-        if (!object_opt)
-        {
-                return;
-        }
-
-        double specular = slider_position(ui.slider_specular);
-
-        std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
-                {
-                        volume::Writing writing(object.get());
-                        writing.set_specular(specular);
+                        writing.set_metalness(metalness);
                 },
                 *object_opt);
 }
@@ -366,12 +344,8 @@ void VolumeWidget::ui_disable()
                 set_slider_to_middle(ui.slider_ambient);
         }
         {
-                QSignalBlocker blocker(ui.slider_diffuse);
-                set_slider_to_middle(ui.slider_diffuse);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_specular);
-                set_slider_to_middle(ui.slider_specular);
+                QSignalBlocker blocker(ui.slider_metalness);
+                set_slider_to_middle(ui.slider_metalness);
         }
         {
                 QSignalBlocker blocker(ui.slider_specular_power);
@@ -396,8 +370,7 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                         float isovalue;
                         Color color;
                         double ambient;
-                        double diffuse;
-                        double specular;
+                        double metalness;
                         double specular_power;
                         {
                                 volume::Reading reading(*volume_object);
@@ -409,8 +382,7 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                                 isovalue = reading.isovalue();
                                 color = reading.color();
                                 ambient = reading.ambient();
-                                diffuse = reading.diffuse();
-                                specular = reading.specular();
+                                metalness = reading.metalness();
                                 specular_power = reading.specular_power();
                         }
                         {
@@ -453,14 +425,9 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                                 set_slider_position(ui.slider_ambient, position);
                         }
                         {
-                                double position = diffuse;
-                                QSignalBlocker blocker(ui.slider_diffuse);
-                                set_slider_position(ui.slider_diffuse, position);
-                        }
-                        {
-                                double position = specular;
-                                QSignalBlocker blocker(ui.slider_specular);
-                                set_slider_position(ui.slider_specular, position);
+                                double position = metalness;
+                                QSignalBlocker blocker(ui.slider_metalness);
+                                set_slider_position(ui.slider_metalness, position);
                         }
                         {
                                 double position = std::log(std::clamp(specular_power, 1.0, m_maximum_specular_power))

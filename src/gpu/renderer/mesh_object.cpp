@@ -518,15 +518,14 @@ class Impl final : public MeshObject
         {
                 mesh::Update::Flags flags;
                 flags.set(mesh::Update::Ambient);
-                flags.set(mesh::Update::Diffuse);
-                flags.set(mesh::Update::Specular);
+                flags.set(mesh::Update::Metalness);
                 flags.set(mesh::Update::SpecularPower);
                 return flags;
         }();
 
-        void buffer_set_lighting(float ambient, float diffuse, float specular, float specular_power) const
+        void buffer_set_lighting(float ambient, float metalness, float specular_power) const
         {
-                ShadingParameters p = shading_parameters(ambient, diffuse, specular, specular_power);
+                ShadingParameters p = shading_parameters(ambient, metalness, specular_power);
 
                 m_mesh_buffer.set_lighting(p.ambient, p.metalness, p.specular_power);
         }
@@ -810,7 +809,7 @@ class Impl final : public MeshObject
                 ASSERT(!mesh_object.mesh().facets.empty() || !mesh_object.mesh().lines.empty()
                        || !mesh_object.mesh().points.empty());
 
-                static_assert(mesh::Update::Flags().size() == 8);
+                static_assert(mesh::Update::Flags().size() == 7);
 
                 bool update_mesh = updates[mesh::Update::Mesh];
                 bool update_matrix = updates[mesh::Update::Matrix];
@@ -843,8 +842,7 @@ class Impl final : public MeshObject
                 if (update_lighting)
                 {
                         buffer_set_lighting(
-                                mesh_object.ambient(), mesh_object.diffuse(), mesh_object.specular(),
-                                mesh_object.specular_power());
+                                mesh_object.ambient(), mesh_object.metalness(), mesh_object.specular_power());
                 }
 
                 if (update_mesh)

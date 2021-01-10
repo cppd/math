@@ -42,8 +42,7 @@ private:
         ModelTree* m_model_tree = nullptr;
 
         void on_ambient_changed(int);
-        void on_diffuse_changed(int);
-        void on_specular_changed(int);
+        void on_metalness_changed(int);
         void on_specular_power_changed(int);
         void on_transparency_changed(int);
         void on_color_clicked();

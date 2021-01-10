@@ -41,7 +41,7 @@ namespace
 {
 constexpr Color BACKGROUND_COLOR = Color(Srgb8(50, 100, 150));
 constexpr Color DEFAULT_COLOR = Color(Srgb8(150, 170, 150));
-constexpr Color::DataType DIFFUSE = 1;
+constexpr Color::DataType METALNESS = 0;
 constexpr Color::DataType LIGHTING_INTENSITY = 1;
 
 template <std::size_t N>
@@ -140,7 +140,7 @@ std::unique_ptr<const shapes::Mesh<N, T>> sphere_mesh(int point_count, ProgressR
 {
         LOG("Creating mesh...");
 
-        return shapes::simplex_mesh_of_random_sphere<N, T>(DEFAULT_COLOR, DIFFUSE, point_count, progress);
+        return shapes::simplex_mesh_of_random_sphere<N, T>(DEFAULT_COLOR, METALNESS, point_count, progress);
 }
 
 template <std::size_t N, typename T>
@@ -154,7 +154,7 @@ std::unique_ptr<const shapes::Mesh<N, T>> file_mesh(const std::string& file_name
         {
                 mesh::Writing writing(&mesh_object);
                 writing.set_color(DEFAULT_COLOR);
-                writing.set_diffuse(DIFFUSE);
+                writing.set_metalness(METALNESS);
         }
 
         std::vector<const mesh::MeshObject<N>*> meshes;

@@ -26,27 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 inline std::tuple<Color::DataType, Color::DataType, Color::DataType> prepare_shading_parameters(
-        Color::DataType diffuse,
-        Color::DataType specular,
+        Color::DataType metalness,
         Color::DataType specular_power)
 {
-        diffuse = std::max(Color::DataType(0), diffuse);
-        specular = std::max(Color::DataType(0), specular);
-        const Color::DataType sum = diffuse + specular;
-        if (sum != 0)
-        {
-                diffuse /= sum;
-                specular /= sum;
-        }
-        else
-        {
-                diffuse = 0.5;
-                specular = 0.5;
-        }
-
+        metalness = std::clamp(metalness, Color::DataType(0), Color::DataType(1));
         specular_power = std::max(Color::DataType(1), specular_power);
 
-        return {diffuse, specular, specular_power};
+        return {1 - metalness, metalness, specular_power};
 }
 
 template <std::size_t N, typename T>

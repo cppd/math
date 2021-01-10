@@ -49,9 +49,8 @@ private:
         void on_isovalue_changed(int value);
         void on_ambient_changed(int value);
         void on_color_clicked();
-        void on_diffuse_changed(int value);
+        void on_metalness_changed(int value);
         void on_levels_changed(double, double);
-        void on_specular_changed(int value);
         void on_specular_power_changed(int value);
         void on_transparency_changed(int value);
 

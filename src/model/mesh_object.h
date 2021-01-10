@@ -100,8 +100,7 @@ enum Flag
         Matrix,
         Color,
         Ambient,
-        Diffuse,
-        Specular,
+        Metalness,
         SpecularPower
 };
 using Flags = std::bitset<Flag::SpecularPower + 1>;
@@ -130,8 +129,7 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
         float m_alpha = 1;
         Color m_color = Color(Srgb8(210, 240, 210));
         float m_ambient = 0.2;
-        float m_diffuse = 1;
-        float m_specular = 1;
+        float m_metalness = 0.5;
         float m_specular_power = 50;
 
         bool m_visible = false;
@@ -204,24 +202,14 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
                 m_ambient = ambient;
         }
 
-        float diffuse() const
+        float metalness() const
         {
-                return m_diffuse;
+                return m_metalness;
         }
 
-        void set_diffuse(float diffuse)
+        void set_metalness(float metalness)
         {
-                m_diffuse = diffuse;
-        }
-
-        float specular() const
-        {
-                return m_specular;
-        }
-
-        void set_specular(float specular)
-        {
-                m_specular = specular;
+                m_metalness = metalness;
         }
 
         float specular_power() const
@@ -408,26 +396,15 @@ public:
                 m_object->set_ambient(ambient);
         }
 
-        float diffuse() const
+        float metalness() const
         {
-                return m_object->diffuse();
+                return m_object->metalness();
         }
 
-        void set_diffuse(float diffuse)
+        void set_metalness(float metalness)
         {
-                m_updates.set(Update::Diffuse);
-                m_object->set_diffuse(diffuse);
-        }
-
-        float specular() const
-        {
-                return m_object->specular();
-        }
-
-        void set_specular(float specular)
-        {
-                m_updates.set(Update::Specular);
-                m_object->set_specular(specular);
+                m_updates.set(Update::Metalness);
+                m_object->set_metalness(metalness);
         }
 
         float specular_power() const
@@ -493,14 +470,9 @@ public:
                 return m_object->ambient();
         }
 
-        float diffuse() const
+        float metalness() const
         {
-                return m_object->diffuse();
-        }
-
-        float specular() const
-        {
-                return m_object->specular();
+                return m_object->metalness();
         }
 
         float specular_power() const

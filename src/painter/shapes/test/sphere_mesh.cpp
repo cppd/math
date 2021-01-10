@@ -95,7 +95,7 @@ void create_spherical_convex_hull(
 template <std::size_t N, typename T>
 std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_sphere(
         const Color& color,
-        const Color::DataType& diffuse,
+        const Color::DataType& metalness,
         const Vector<N, float>& center,
         float radius,
         int point_count,
@@ -120,7 +120,7 @@ std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_sphere(
         {
                 mesh::Writing writing(&mesh_object);
                 writing.set_color(color);
-                writing.set_diffuse(diffuse);
+                writing.set_metalness(metalness);
         }
         std::vector<const mesh::MeshObject<N>*> meshes;
         meshes.push_back(&mesh_object);
@@ -131,7 +131,7 @@ std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_sphere(
 template <std::size_t N, typename T>
 std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_random_sphere(
         const Color& color,
-        const Color::DataType& diffuse,
+        const Color::DataType& metalness,
         int point_count,
         ProgressRatio* progress)
 {
@@ -162,7 +162,7 @@ std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_random_sphere(
         LOG("mesh radius = " + to_string(radius));
         LOG("mesh center = " + to_string(center));
 
-        return simplex_mesh_of_sphere<N, T>(color, diffuse, center, radius, point_count, progress);
+        return simplex_mesh_of_sphere<N, T>(color, metalness, center, radius, point_count, progress);
 }
 
 template std::unique_ptr<const Mesh<3, float>> simplex_mesh_of_random_sphere(

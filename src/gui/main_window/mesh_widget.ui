@@ -138,6 +138,13 @@
    </item>
    <item>
     <layout class="QFormLayout" name="formLayout_5">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_18">
+       <property name="text">
+        <string>Ambient:</string>
+       </property>
+      </widget>
+     </item>
      <item row="0" column="1">
       <widget class="QSlider" name="slider_ambient">
        <property name="maximum">
@@ -151,8 +158,15 @@
        </property>
       </widget>
      </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_16">
+       <property name="text">
+        <string>Metalness:</string>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="1">
-      <widget class="QSlider" name="slider_diffuse">
+      <widget class="QSlider" name="slider_metalness">
        <property name="maximum">
         <number>2000</number>
        </property>
@@ -161,23 +175,20 @@
        </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="toolTip">
+        <string>Specular Power</string>
+       </property>
+       <property name="text">
+        <string>S. Power:</string>
        </property>
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QSlider" name="slider_specular">
-       <property name="maximum">
-        <number>2000</number>
-       </property>
-       <property name="value">
-        <number>1000</number>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
       <widget class="QSlider" name="slider_specular_power">
        <property name="minimum">
         <number>0</number>
@@ -190,37 +201,6 @@
        </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="toolTip">
-        <string>Specular Power</string>
-       </property>
-       <property name="text">
-        <string>S. Power:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_16">
-       <property name="text">
-        <string>Specular:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_17">
-       <property name="text">
-        <string>Diffuse:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_18">
-       <property name="text">
-        <string>Ambient:</string>
        </property>
       </widget>
      </item>

@@ -28,19 +28,12 @@ struct ShadingParameters
         float specular_power;
 };
 
-inline ShadingParameters shading_parameters(float ambient, float diffuse, float specular, float specular_power)
+inline ShadingParameters shading_parameters(float ambient, float metalness, float specular_power)
 {
         ShadingParameters p;
-
         p.ambient = std::clamp(ambient, float(0), float(1));
-
-        diffuse = std::max(float(0), diffuse);
-        specular = std::max(float(0), specular);
-        const float sum = diffuse + specular;
-        p.metalness = (sum != 0) ? specular / sum : float(0.5);
-
+        p.metalness = std::clamp(metalness, float(0), float(1));
         p.specular_power = std::max(float(1), specular_power);
-
         return p;
 }
 }

@@ -38,9 +38,8 @@ MeshWidget::MeshWidget(double maximum_specular_power)
         set_model_tree(nullptr);
 
         connect(ui.slider_ambient, &QSlider::valueChanged, this, &MeshWidget::on_ambient_changed);
-        connect(ui.slider_diffuse, &QSlider::valueChanged, this, &MeshWidget::on_diffuse_changed);
+        connect(ui.slider_metalness, &QSlider::valueChanged, this, &MeshWidget::on_metalness_changed);
         connect(ui.slider_specular_power, &QSlider::valueChanged, this, &MeshWidget::on_specular_power_changed);
-        connect(ui.slider_specular, &QSlider::valueChanged, this, &MeshWidget::on_specular_changed);
         connect(ui.slider_transparency, &QSlider::valueChanged, this, &MeshWidget::on_transparency_changed);
         connect(ui.toolButton_color, &QToolButton::clicked, this, &MeshWidget::on_color_clicked);
 }
@@ -91,7 +90,7 @@ void MeshWidget::on_ambient_changed(int)
                 *object_opt);
 }
 
-void MeshWidget::on_diffuse_changed(int)
+void MeshWidget::on_metalness_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -101,34 +100,13 @@ void MeshWidget::on_diffuse_changed(int)
                 return;
         }
 
-        double diffuse = slider_position(ui.slider_diffuse);
+        double metalness = slider_position(ui.slider_metalness);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
                 {
                         mesh::Writing writing(object.get());
-                        writing.set_diffuse(diffuse);
-                },
-                *object_opt);
-}
-
-void MeshWidget::on_specular_changed(int)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
-        if (!object_opt)
-        {
-                return;
-        }
-
-        double specular = slider_position(ui.slider_specular);
-
-        std::visit(
-                [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
-                {
-                        mesh::Writing writing(object.get());
-                        writing.set_specular(specular);
+                        writing.set_metalness(metalness);
                 },
                 *object_opt);
 }
@@ -255,12 +233,8 @@ void MeshWidget::ui_disable()
                 set_slider_to_middle(ui.slider_ambient);
         }
         {
-                QSignalBlocker blocker(ui.slider_diffuse);
-                set_slider_to_middle(ui.slider_diffuse);
-        }
-        {
-                QSignalBlocker blocker(ui.slider_specular);
-                set_slider_to_middle(ui.slider_specular);
+                QSignalBlocker blocker(ui.slider_metalness);
+                set_slider_to_middle(ui.slider_metalness);
         }
         {
                 QSignalBlocker blocker(ui.slider_specular_power);
@@ -280,16 +254,14 @@ void MeshWidget::ui_set(const storage::MeshObjectConst& object)
                         double alpha;
                         Color color;
                         double ambient;
-                        double diffuse;
-                        double specular;
+                        double metalness;
                         double specular_power;
                         {
                                 mesh::Reading reading(*mesh_object);
                                 alpha = reading.alpha();
                                 color = reading.color();
                                 ambient = reading.ambient();
-                                diffuse = reading.diffuse();
-                                specular = reading.specular();
+                                metalness = reading.metalness();
                                 specular_power = reading.specular_power();
                         }
                         {
@@ -307,14 +279,9 @@ void MeshWidget::ui_set(const storage::MeshObjectConst& object)
                                 set_slider_position(ui.slider_ambient, position);
                         }
                         {
-                                double position = diffuse;
-                                QSignalBlocker blocker(ui.slider_diffuse);
-                                set_slider_position(ui.slider_diffuse, position);
-                        }
-                        {
-                                double position = specular;
-                                QSignalBlocker blocker(ui.slider_specular);
-                                set_slider_position(ui.slider_specular, position);
+                                double position = metalness;
+                                QSignalBlocker blocker(ui.slider_metalness);
+                                set_slider_position(ui.slider_metalness, position);
                         }
                         {
                                 double position = std::log(std::clamp(specular_power, 1.0, m_maximum_specular_power))

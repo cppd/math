@@ -193,8 +193,7 @@ class Impl final : public VolumeObject
         {
                 volume::Update::Flags flags;
                 flags.set(volume::Update::Ambient);
-                flags.set(volume::Update::Diffuse);
-                flags.set(volume::Update::Specular);
+                flags.set(volume::Update::Metalness);
                 flags.set(volume::Update::SpecularPower);
                 return flags;
         }();
@@ -222,9 +221,9 @@ class Impl final : public VolumeObject
                         isosurface_alpha, isosurface, isovalue, color);
         }
 
-        void buffer_set_lighting(float ambient, float diffuse, float specular, float specular_power) const
+        void buffer_set_lighting(float ambient, float metalness, float specular_power) const
         {
-                ShadingParameters p = shading_parameters(ambient, diffuse, specular, specular_power);
+                ShadingParameters p = shading_parameters(ambient, metalness, specular_power);
 
                 m_buffer.set_lighting(
                         m_graphics_command_pool, m_graphics_queue, p.ambient, p.metalness, p.specular_power);
@@ -372,7 +371,7 @@ class Impl final : public VolumeObject
                         return update_changes;
                 }
 
-                static_assert(volume::Update::Flags().size() == 12);
+                static_assert(volume::Update::Flags().size() == 11);
 
                 bool update_image = updates[volume::Update::Image];
                 bool update_matrices = updates[volume::Update::Matrices];
@@ -403,8 +402,7 @@ class Impl final : public VolumeObject
                 if (update_ligthing)
                 {
                         buffer_set_lighting(
-                                volume_object.ambient(), volume_object.diffuse(), volume_object.specular(),
-                                volume_object.specular_power());
+                                volume_object.ambient(), volume_object.metalness(), volume_object.specular_power());
                 }
 
                 if (update_matrices)
