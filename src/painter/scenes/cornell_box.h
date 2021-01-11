@@ -47,6 +47,7 @@ std::unique_ptr<const Scene<N, T>> cornell_box_scene(
         constexpr T LAMP_SIZE = 0.2;
         constexpr T BOX_SIZE = 0.16;
         constexpr T BOX_SPACE = 0.08;
+        constexpr T CAMERA = 0.9;
         constexpr T NEAR = 0.7;
         constexpr T DEPTH = NEAR + 0.5 + BOX_SIZE + 2 * BOX_SPACE;
 
@@ -139,7 +140,7 @@ std::unique_ptr<const Scene<N, T>> cornell_box_scene(
         std::unique_ptr<Projector<N, T>> projector;
         {
                 const std::array<Vector<N, T>, N - 1> screen_axes = del_elem(camera, N - 1);
-                const Vector<N, T> view_point = center - camera[N - 1];
+                const Vector<N, T> view_point = center - CAMERA * camera[N - 1];
                 projector = std::make_unique<PerspectiveProjector<N, T>>(
                         view_point, camera[N - 1], screen_axes, 70, screen_sizes);
                 // projector = std::make_unique<SphericalProjector<N, T>>(
