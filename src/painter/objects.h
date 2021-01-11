@@ -108,14 +108,12 @@ public:
                 const Vector<N, T>& p,
                 const void* intersection_data,
                 const Vector<N, T>& shading_normal,
-                const Vector<N, T>& dir_reflection,
                 const Vector<N, T>& dir_to_light) const = 0;
 
         virtual SurfaceReflection<N, T> reflection(
                 const Vector<N, T>& p,
                 const void* intersection_data,
                 const Vector<N, T>& shading_normal,
-                const Vector<N, T>& dir_reflection,
                 RandomEngine<T>& random_engine) const = 0;
 };
 

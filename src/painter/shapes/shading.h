@@ -25,50 +25,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-inline std::tuple<Color::DataType, Color::DataType, Color::DataType> prepare_shading_parameters(
-        Color::DataType metalness,
-        Color::DataType specular_power)
-{
-        metalness = std::clamp(metalness, Color::DataType(0), Color::DataType(1));
-        specular_power = std::max(Color::DataType(1), specular_power);
-
-        return {1 - metalness, metalness, specular_power};
-}
-
 template <std::size_t N, typename T>
-Color surface_lighting(
-        const Vector<N, T>& dir_to_light,
-        const Vector<N, T>& normal,
-        const Vector<N, T>& dir_reflection,
-        const Color& color,
-        T diffuse,
-        T specular,
-        T specular_power)
+Color surface_direct_lighting(const Vector<N, T>& dir_to_light, const Vector<N, T>& normal, const Color& color)
 {
-        Color c = (diffuse * dot(normal, dir_to_light)) * color;
-
-        T specular_dot = dot(dir_reflection, dir_to_light);
-        if (specular_dot > 0)
-        {
-                c += Color(specular * std::pow(std::min(specular_dot, T(1)), specular_power));
-        }
-
-        return c;
+        return dot(normal, dir_to_light) * color;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-SurfaceReflection<N, T> surface_ray_direction(
-        const Vector<N, T>& normal,
-        const Vector<N, T>& dir_reflection,
-        const Color& color,
-        T diffuse,
-        T specular_power,
-        RandomEngine& engine)
+SurfaceReflection<N, T> surface_reflection(const Vector<N, T>& normal, const Color& color, RandomEngine& engine)
 {
-        if (std::uniform_real_distribution<T>(0, 1)(engine) < diffuse)
-        {
-                return {color, sampling::cosine_weighted_on_hemisphere(engine, normal)};
-        }
-        return {Color(1), sampling::power_cosine_weighted_on_hemisphere(engine, dir_reflection, specular_power)};
+        return {color, sampling::cosine_weighted_on_hemisphere(engine, normal)};
 }
 }

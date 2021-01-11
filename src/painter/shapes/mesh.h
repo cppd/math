@@ -58,9 +58,6 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
         SpatialSubdivisionTree<TreeParallelotope> m_tree;
         BoundingBox<N, T> m_bounding_box;
 
-        T m_diffuse;
-        T m_specular;
-        T m_specular_power;
         Color::DataType m_alpha;
 
         void create(const mesh::Reading<N>& mesh_object);
@@ -86,14 +83,12 @@ public:
                 const Vector<N, T>& p,
                 const void* intersection_data,
                 const Vector<N, T>& shading_normal,
-                const Vector<N, T>& dir_reflection,
                 const Vector<N, T>& dir_to_light) const override;
 
         SurfaceReflection<N, T> reflection(
                 const Vector<N, T>& p,
                 const void* intersection_data,
                 const Vector<N, T>& shading_normal,
-                const Vector<N, T>& dir_reflection,
                 RandomEngine<T>& random_engine) const override;
 
         BoundingBox<N, T> bounding_box() const override;

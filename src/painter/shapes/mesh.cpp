@@ -228,8 +228,6 @@ void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
                 }
         }
 
-        std::tie(m_diffuse, m_specular, m_specular_power) =
-                prepare_shading_parameters(mesh_object.metalness(), mesh_object.specular_power());
         m_alpha = std::clamp(mesh_object.alpha(), Color::DataType(0), Color::DataType(1));
 
         for (const typename mesh::Mesh<N>::Material& m : mesh.materials)
@@ -389,7 +387,6 @@ Color Mesh<N, T>::direct_lighting(
         const Vector<N, T>& p,
         const void* intersection_data,
         const Vector<N, T>& shading_normal,
-        const Vector<N, T>& dir_reflection,
         const Vector<N, T>& dir_to_light) const
 {
         const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
@@ -408,8 +405,7 @@ Color Mesh<N, T>::direct_lighting(
                 color = m.Kd;
         }
 
-        return surface_lighting(
-                dir_to_light, shading_normal, dir_reflection, color, m_diffuse, m_specular, m_specular_power);
+        return surface_direct_lighting(dir_to_light, shading_normal, color);
 }
 
 template <std::size_t N, typename T>
@@ -417,7 +413,6 @@ SurfaceReflection<N, T> Mesh<N, T>::reflection(
         const Vector<N, T>& p,
         const void* intersection_data,
         const Vector<N, T>& shading_normal,
-        const Vector<N, T>& dir_reflection,
         RandomEngine<T>& random_engine) const
 {
         const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
@@ -436,7 +431,7 @@ SurfaceReflection<N, T> Mesh<N, T>::reflection(
                 color = m.Kd;
         }
 
-        return surface_ray_direction(shading_normal, dir_reflection, color, m_diffuse, m_specular_power, random_engine);
+        return surface_reflection(shading_normal, color, random_engine);
 }
 
 template <std::size_t N, typename T>

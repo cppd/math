@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter.h"
 
-#include "painter/optics.h"
 #include "painter/pixels.h"
 
 #include <src/color/color.h>
@@ -236,8 +235,6 @@ std::optional<Color> trace_path(
         Color::DataType reflection = surface_properties.alpha();
         if (reflection > 0)
         {
-                const Vector<N, T> dir_reflection = reflect(ray.dir(), shading_normal);
-
                 thread_local std::vector<Light<N, T>> lights;
                 find_visible_lights(
                         ray_count, paint_data, point, geometric_normal, shading_normal, use_smooth_normal, &lights);
@@ -248,8 +245,7 @@ std::optional<Color> trace_path(
                         {
                                 direct += light.color
                                           * intersection->surface->direct_lighting(
-                                                  point, intersection->data, shading_normal, dir_reflection,
-                                                  light.dir_to);
+                                                  point, intersection->data, shading_normal, light.dir_to);
                         }
                         color += reflection * direct;
                 }
@@ -258,8 +254,8 @@ std::optional<Color> trace_path(
                 // Если получившийся случайный вектор отражения показывает
                 // в другую сторону от поверхности, то освещения нет.
 
-                const SurfaceReflection<N, T> surface_ray = intersection->surface->reflection(
-                        point, intersection->data, shading_normal, dir_reflection, random_engine);
+                const SurfaceReflection<N, T> surface_ray =
+                        intersection->surface->reflection(point, intersection->data, shading_normal, random_engine);
 
                 Color surface_color = reflection * surface_ray.color;
                 Color::DataType new_color_level = color_level * surface_color.max_element();
