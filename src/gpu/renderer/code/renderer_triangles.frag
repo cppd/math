@@ -65,6 +65,7 @@ vec4 texture_Ks_color(vec2 c)
 {
         return texture(texture_Ks, c);
 }
+
 bool shadow(vec4 shadow_position)
 {
         float dist = texture(shadow_texture, shadow_position.xy).r;
@@ -82,6 +83,21 @@ float edge_factor()
         vec3 d = fwidth(gs.baricentric);
         vec3 a = smoothstep(vec3(0), d, gs.baricentric);
         return min(min(a.x, a.y), a.z);
+}
+
+vec3 shade_material(vec3 mtl_color, float mtl_specular_power)
+{
+        vec3 N = normalize(gs.world_normal);
+        vec3 L = drawing.direction_to_light;
+        vec3 V = drawing.direction_to_camera;
+
+        float dot_NL = dot(N, L);
+        if (dot_NL > 0)
+        {
+                return drawing.lighting_intensity
+                       * compute_color(mesh.metalness, mtl_specular_power, mtl_color, N, L, V, dot_NL);
+        }
+        return vec3(0);
 }
 
 vec3 shade()
@@ -105,19 +121,15 @@ vec3 shade()
                 mtl_specular_power = mtl.Ns;
         }
 
-        vec3 color = vec3(0);
-        if (!drawing.show_shadow || !shadow(gs.shadow_position))
+        vec3 color;
+        if (!drawing.show_shadow)
         {
-                vec3 N = normalize(gs.world_normal);
-                vec3 L = drawing.direction_to_light;
-                vec3 V = drawing.direction_to_camera;
-
-                float dot_NL = dot(N, L);
-                if (dot_NL > 0)
-                {
-                        color = drawing.lighting_intensity
-                                * compute_color(mesh.metalness, mtl_specular_power, mtl_color, N, L, V, dot_NL);
-                }
+                color = shade_material(mtl_color, mtl_specular_power);
+        }
+        else
+        {
+                bool s = shadow(gs.shadow_position);
+                color = !s ? shade_material(mtl_color, mtl_specular_power) : vec3(0);
         }
 
         color = mix(color, mtl_color, mesh.ambient);
