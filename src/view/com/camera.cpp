@@ -55,7 +55,7 @@ void Camera::set_vectors(const vec3& right, const vec3& up)
         vec3 light_right = rotate_vector_degree(m_camera_up, -45, m_camera_right);
         m_light_up = rotate_vector_degree(light_right, -45, m_camera_up);
 
-        m_light_direction = cross(m_light_up, light_right);
+        m_light_direction = cross(m_light_up, light_right).normalized();
 }
 
 gpu::renderer::CameraInfo::Volume Camera::main_volume() const
