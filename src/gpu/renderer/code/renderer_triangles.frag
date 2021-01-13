@@ -85,7 +85,7 @@ float edge_factor()
         return min(min(a.x, a.y), a.z);
 }
 
-vec3 shade_material(vec3 mtl_color, float mtl_specular_power)
+vec3 shade_material(vec3 color)
 {
         vec3 N = normalize(gs.world_normal);
         vec3 L = drawing.direction_to_light;
@@ -95,7 +95,7 @@ vec3 shade_material(vec3 mtl_color, float mtl_specular_power)
         if (dot_NL > 0)
         {
                 return drawing.lighting_intensity
-                       * compute_color(mesh.metalness, mtl_specular_power, mtl_color, N, L, V, dot_NL);
+                       * compute_color(mesh.metalness, mesh.roughness, color, N, L, V, dot_NL);
         }
         return vec3(0);
 }
@@ -103,33 +103,29 @@ vec3 shade_material(vec3 mtl_color, float mtl_specular_power)
 vec3 shade()
 {
         vec3 mtl_color;
-        float mtl_specular_power;
 
         if (!mtl.use_material || !drawing.show_materials)
         {
                 mtl_color = mesh.color;
-                mtl_specular_power = mesh.specular_power;
         }
         else if (!has_texture_coordinates() || !mtl.use_texture_Kd)
         {
                 mtl_color = mtl.Kd;
-                mtl_specular_power = mtl.Ns;
         }
         else
         {
                 mtl_color = texture_Kd_color(gs.texture_coordinates).rgb;
-                mtl_specular_power = mtl.Ns;
         }
 
         vec3 color;
         if (!drawing.show_shadow)
         {
-                color = shade_material(mtl_color, mtl_specular_power);
+                color = shade_material(mtl_color);
         }
         else
         {
                 bool s = shadow(gs.shadow_position);
-                color = !s ? shade_material(mtl_color, mtl_specular_power) : vec3(0);
+                color = !s ? shade_material(mtl_color) : vec3(0);
         }
 
         color = mix(color, mtl_color, mesh.ambient);

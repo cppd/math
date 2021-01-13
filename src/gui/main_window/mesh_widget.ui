@@ -180,16 +180,13 @@
      </item>
      <item row="2" column="0">
       <widget class="QLabel" name="label_2">
-       <property name="toolTip">
-        <string>Specular Power</string>
-       </property>
        <property name="text">
-        <string>S. Power:</string>
+        <string>Roughness:</string>
        </property>
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QSlider" name="slider_specular_power">
+      <widget class="QSlider" name="slider_roughness">
        <property name="minimum">
         <number>0</number>
        </property>

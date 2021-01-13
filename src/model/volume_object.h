@@ -105,9 +105,9 @@ enum Flag
         Color,
         Ambient,
         Metalness,
-        SpecularPower
+        Roughness
 };
-using Flags = std::bitset<Flag::SpecularPower + 1>;
+using Flags = std::bitset<Flag::Roughness + 1>;
 }
 
 template <std::size_t N>
@@ -139,10 +139,10 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         bool m_isosurface = false;
         float m_isovalue = 0.5f;
 
-        Color m_color = Color(Srgb8(210, 240, 210));
+        Color m_color = Color(Srgb8(225, 255, 225));
         float m_ambient = 0.2;
-        float m_metalness = 0.5;
-        float m_specular_power = 50;
+        float m_metalness = 0.1;
+        float m_roughness = 0.3;
 
         bool m_visible = false;
         bool m_inserted = false;
@@ -270,14 +270,14 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
                 m_metalness = metalness;
         }
 
-        float specular_power() const
+        float roughness() const
         {
-                return m_specular_power;
+                return m_roughness;
         }
 
-        void set_specular_power(float specular_power)
+        void set_roughness(float roughness)
         {
-                m_specular_power = specular_power;
+                m_roughness = roughness;
         }
 
         void updates(std::optional<int>* version, Update::Flags* updates) const
@@ -507,15 +507,15 @@ public:
                 m_object->set_metalness(metalness);
         }
 
-        float specular_power() const
+        float roughness() const
         {
-                return m_object->specular_power();
+                return m_object->roughness();
         }
 
-        void set_specular_power(float specular_power)
+        void set_roughness(float roughness)
         {
-                m_updates.set(Update::SpecularPower);
-                m_object->set_specular_power(specular_power);
+                m_updates.set(Update::Roughness);
+                m_object->set_roughness(roughness);
         }
 };
 
@@ -590,9 +590,9 @@ public:
                 return m_object->metalness();
         }
 
-        float specular_power() const
+        float roughness() const
         {
-                return m_object->specular_power();
+                return m_object->roughness();
         }
 };
 }

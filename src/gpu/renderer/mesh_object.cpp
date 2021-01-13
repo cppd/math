@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_object.h"
 
-#include "shading.h"
+#include "shading_parameters.h"
 
 #include "shaders/buffers.h"
 #include "shaders/descriptors.h"
@@ -519,15 +519,15 @@ class Impl final : public MeshObject
                 mesh::Update::Flags flags;
                 flags.set(mesh::Update::Ambient);
                 flags.set(mesh::Update::Metalness);
-                flags.set(mesh::Update::SpecularPower);
+                flags.set(mesh::Update::Roughness);
                 return flags;
         }();
 
-        void buffer_set_lighting(float ambient, float metalness, float specular_power) const
+        void buffer_set_lighting(float ambient, float metalness, float roughness) const
         {
-                ShadingParameters p = shading_parameters(ambient, metalness, specular_power);
+                std::tie(ambient, metalness, roughness) = clean_shading_parameters(ambient, metalness, roughness);
 
-                m_mesh_buffer.set_lighting(p.ambient, p.metalness, p.specular_power);
+                m_mesh_buffer.set_lighting(ambient, metalness, roughness);
         }
 
         void buffer_set_color(const Color& color)
@@ -841,8 +841,7 @@ class Impl final : public MeshObject
 
                 if (update_lighting)
                 {
-                        buffer_set_lighting(
-                                mesh_object.ambient(), mesh_object.metalness(), mesh_object.specular_power());
+                        buffer_set_lighting(mesh_object.ambient(), mesh_object.metalness(), mesh_object.roughness());
                 }
 
                 if (update_mesh)

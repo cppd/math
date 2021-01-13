@@ -80,7 +80,7 @@ layout(set = 1, binding = 0, std140) uniform Mesh
         float alpha;
         float ambient;
         float metalness;
-        float specular_power;
+        float roughness;
 }
 mesh;
 

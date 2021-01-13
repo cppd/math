@@ -24,8 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::main_window
 {
-MeshWidget::MeshWidget(double maximum_specular_power)
-        : QWidget(nullptr), m_maximum_specular_power(maximum_specular_power)
+MeshWidget::MeshWidget() : QWidget(nullptr)
 {
         ui.setupUi(this);
 
@@ -39,7 +38,7 @@ MeshWidget::MeshWidget(double maximum_specular_power)
 
         connect(ui.slider_ambient, &QSlider::valueChanged, this, &MeshWidget::on_ambient_changed);
         connect(ui.slider_metalness, &QSlider::valueChanged, this, &MeshWidget::on_metalness_changed);
-        connect(ui.slider_specular_power, &QSlider::valueChanged, this, &MeshWidget::on_specular_power_changed);
+        connect(ui.slider_roughness, &QSlider::valueChanged, this, &MeshWidget::on_roughness_changed);
         connect(ui.slider_transparency, &QSlider::valueChanged, this, &MeshWidget::on_transparency_changed);
         connect(ui.toolButton_color, &QToolButton::clicked, this, &MeshWidget::on_color_clicked);
 }
@@ -111,7 +110,7 @@ void MeshWidget::on_metalness_changed(int)
                 *object_opt);
 }
 
-void MeshWidget::on_specular_power_changed(int)
+void MeshWidget::on_roughness_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -121,13 +120,13 @@ void MeshWidget::on_specular_power_changed(int)
                 return;
         }
 
-        double specular_power = std::pow(m_maximum_specular_power, slider_position(ui.slider_specular_power));
+        double roughness = slider_position(ui.slider_roughness);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
                 {
                         mesh::Writing writing(object.get());
-                        writing.set_specular_power(specular_power);
+                        writing.set_roughness(roughness);
                 },
                 *object_opt);
 }
@@ -237,8 +236,8 @@ void MeshWidget::ui_disable()
                 set_slider_to_middle(ui.slider_metalness);
         }
         {
-                QSignalBlocker blocker(ui.slider_specular_power);
-                set_slider_to_middle(ui.slider_specular_power);
+                QSignalBlocker blocker(ui.slider_roughness);
+                set_slider_to_middle(ui.slider_roughness);
         }
 }
 
@@ -255,14 +254,14 @@ void MeshWidget::ui_set(const storage::MeshObjectConst& object)
                         Color color;
                         double ambient;
                         double metalness;
-                        double specular_power;
+                        double roughness;
                         {
                                 mesh::Reading reading(*mesh_object);
                                 alpha = reading.alpha();
                                 color = reading.color();
                                 ambient = reading.ambient();
                                 metalness = reading.metalness();
-                                specular_power = reading.specular_power();
+                                roughness = reading.roughness();
                         }
                         {
                                 double position = 1.0 - alpha;
@@ -284,10 +283,9 @@ void MeshWidget::ui_set(const storage::MeshObjectConst& object)
                                 set_slider_position(ui.slider_metalness, position);
                         }
                         {
-                                double position = std::log(std::clamp(specular_power, 1.0, m_maximum_specular_power))
-                                                  / std::log(m_maximum_specular_power);
-                                QSignalBlocker blocker(ui.slider_specular_power);
-                                set_slider_position(ui.slider_specular_power, position);
+                                double position = roughness;
+                                QSignalBlocker blocker(ui.slider_roughness);
+                                set_slider_position(ui.slider_roughness, position);
                         }
                 },
                 object);

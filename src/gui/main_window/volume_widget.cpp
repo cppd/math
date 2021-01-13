@@ -28,8 +28,7 @@ namespace
 constexpr double VOLUME_ALPHA_COEFFICIENT = 50;
 }
 
-VolumeWidget::VolumeWidget(double maximum_specular_power)
-        : QWidget(nullptr), m_maximum_specular_power(maximum_specular_power)
+VolumeWidget::VolumeWidget() : QWidget(nullptr)
 {
         ui.setupUi(this);
 
@@ -49,7 +48,7 @@ VolumeWidget::VolumeWidget(double maximum_specular_power)
         connect(ui.slider_isovalue, &QSlider::valueChanged, this, &VolumeWidget::on_isovalue_changed);
         connect(ui.slider_ambient, &QSlider::valueChanged, this, &VolumeWidget::on_ambient_changed);
         connect(ui.slider_metalness, &QSlider::valueChanged, this, &VolumeWidget::on_metalness_changed);
-        connect(ui.slider_specular_power, &QSlider::valueChanged, this, &VolumeWidget::on_specular_power_changed);
+        connect(ui.slider_roughness, &QSlider::valueChanged, this, &VolumeWidget::on_roughness_changed);
         connect(ui.slider_transparency, &QSlider::valueChanged, this, &VolumeWidget::on_transparency_changed);
         connect(ui.toolButton_color, &QToolButton::clicked, this, &VolumeWidget::on_color_clicked);
         connect(m_slider_levels.get(), &RangeSlider::changed, this, &VolumeWidget::on_levels_changed);
@@ -266,7 +265,7 @@ void VolumeWidget::on_metalness_changed(int)
                 *object_opt);
 }
 
-void VolumeWidget::on_specular_power_changed(int)
+void VolumeWidget::on_roughness_changed(int)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -276,13 +275,13 @@ void VolumeWidget::on_specular_power_changed(int)
                 return;
         }
 
-        double specular_power = std::pow(m_maximum_specular_power, slider_position(ui.slider_specular_power));
+        double roughness = slider_position(ui.slider_roughness);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
                 {
                         volume::Writing writing(object.get());
-                        writing.set_specular_power(specular_power);
+                        writing.set_roughness(roughness);
                 },
                 *object_opt);
 }
@@ -348,8 +347,8 @@ void VolumeWidget::ui_disable()
                 set_slider_to_middle(ui.slider_metalness);
         }
         {
-                QSignalBlocker blocker(ui.slider_specular_power);
-                set_slider_to_middle(ui.slider_specular_power);
+                QSignalBlocker blocker(ui.slider_roughness);
+                set_slider_to_middle(ui.slider_roughness);
         }
 }
 
@@ -371,7 +370,7 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                         Color color;
                         double ambient;
                         double metalness;
-                        double specular_power;
+                        double roughness;
                         {
                                 volume::Reading reading(*volume_object);
                                 min = reading.level_min();
@@ -383,7 +382,7 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                                 color = reading.color();
                                 ambient = reading.ambient();
                                 metalness = reading.metalness();
-                                specular_power = reading.specular_power();
+                                roughness = reading.roughness();
                         }
                         {
                                 QSignalBlocker blocker(m_slider_levels.get());
@@ -430,10 +429,9 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                                 set_slider_position(ui.slider_metalness, position);
                         }
                         {
-                                double position = std::log(std::clamp(specular_power, 1.0, m_maximum_specular_power))
-                                                  / std::log(m_maximum_specular_power);
-                                QSignalBlocker blocker(ui.slider_specular_power);
-                                set_slider_position(ui.slider_specular_power, position);
+                                double position = roughness;
+                                QSignalBlocker blocker(ui.slider_roughness);
+                                set_slider_position(ui.slider_roughness, position);
                         }
                 },
                 object);

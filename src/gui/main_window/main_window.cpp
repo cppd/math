@@ -45,8 +45,6 @@ constexpr bool WINDOW_SIZE_GRAPHICS = true;
 
 constexpr std::chrono::milliseconds UPDATE_INTERVAL{200};
 constexpr std::chrono::milliseconds WINDOW_SHOW_DELAY{50};
-
-constexpr double MAXIMUM_SPECULAR_POWER = 1000.0;
 }
 
 MainWindow::MainWindow()
@@ -106,10 +104,10 @@ void MainWindow::constructor_objects()
         m_view_widget = std::make_unique<ViewWidget>();
         add_widget(ui.tab_view, m_view_widget.get());
 
-        m_mesh_widget = std::make_unique<MeshWidget>(MAXIMUM_SPECULAR_POWER);
+        m_mesh_widget = std::make_unique<MeshWidget>();
         add_widget(ui.tab_mesh, m_mesh_widget.get());
 
-        m_volume_widget = std::make_unique<VolumeWidget>(MAXIMUM_SPECULAR_POWER);
+        m_volume_widget = std::make_unique<VolumeWidget>();
         add_widget(ui.tab_volume, m_volume_widget.get());
 
         //

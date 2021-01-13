@@ -34,24 +34,21 @@ class VolumeWidget final : public QWidget
 
 private:
         const std::thread::id m_thread_id = std::this_thread::get_id();
-        const double m_maximum_specular_power;
 
         Ui::VolumeWidget ui;
 
         std::unique_ptr<RangeSlider> m_slider_levels;
-
         std::vector<QPointer<QWidget>> m_widgets;
-
         ModelTree* m_model_tree = nullptr;
 
         void on_isosurface_clicked();
         void on_isosurface_transparency_changed(int value);
         void on_isovalue_changed(int value);
-        void on_ambient_changed(int value);
         void on_color_clicked();
+        void on_ambient_changed(int value);
         void on_metalness_changed(int value);
+        void on_roughness_changed(int value);
         void on_levels_changed(double, double);
-        void on_specular_power_changed(int value);
         void on_transparency_changed(int value);
 
         void on_model_tree_item_update();
@@ -62,7 +59,7 @@ private:
         void set_enabled(bool enabled) const;
 
 public:
-        VolumeWidget(double maximum_specular_power);
+        VolumeWidget();
 
         void set_model_tree(ModelTree* model_tree);
 };

@@ -316,19 +316,19 @@ void MeshBuffer::set_alpha(float alpha) const
         vulkan::map_and_write_to_buffer(m_uniform_buffer, offsetof(Mesh, alpha), a);
 }
 
-void MeshBuffer::set_lighting(float ambient, float metalness, float specular_power) const
+void MeshBuffer::set_lighting(float ambient, float metalness, float roughness) const
 {
-        static_assert(offsetof(Mesh, specular_power) - offsetof(Mesh, ambient) == 2 * sizeof(float));
+        static_assert(offsetof(Mesh, roughness) - offsetof(Mesh, ambient) == 2 * sizeof(float));
 
         constexpr std::size_t offset = offsetof(Mesh, ambient);
-        constexpr std::size_t size = offsetof(Mesh, specular_power) + sizeof(Mesh::specular_power) - offset;
+        constexpr std::size_t size = offsetof(Mesh, roughness) + sizeof(Mesh::roughness) - offset;
 
         vulkan::BufferMapper map(m_uniform_buffer, offset, size);
 
         Mesh mesh;
         mesh.ambient = ambient;
         mesh.metalness = metalness;
-        mesh.specular_power = specular_power;
+        mesh.roughness = roughness;
 
         map.write(0, size, reinterpret_cast<const char*>(&mesh) + offset);
 }
@@ -445,18 +445,18 @@ void VolumeBuffer::set_lighting(
         const vulkan::Queue& queue,
         float ambient,
         float metalness,
-        float specular_power) const
+        float roughness) const
 {
-        static_assert(offsetof(Volume, specular_power) - offsetof(Volume, ambient) == 2 * sizeof(float));
+        static_assert(offsetof(Volume, roughness) - offsetof(Volume, ambient) == 2 * sizeof(float));
 
         constexpr std::size_t offset = offsetof(Volume, ambient);
-        constexpr std::size_t size = offsetof(Volume, specular_power) + sizeof(Volume::specular_power) - offset;
+        constexpr std::size_t size = offsetof(Volume, roughness) + sizeof(Volume::roughness) - offset;
 
         Volume volume;
 
         volume.ambient = ambient;
         volume.metalness = metalness;
-        volume.specular_power = specular_power;
+        volume.roughness = roughness;
 
         m_uniform_buffer_volume.write(
                 command_pool, queue, offset, size, reinterpret_cast<const char*>(&volume) + offset);

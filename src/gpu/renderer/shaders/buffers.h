@@ -145,7 +145,7 @@ class MeshBuffer final
                 float alpha;
                 float ambient;
                 float metalness;
-                float specular_power;
+                float roughness;
         };
 
 public:
@@ -156,7 +156,7 @@ public:
         void set_coordinates(const mat4& model_matrix, const mat3& normal_matrix) const;
         void set_color(const Color& color) const;
         void set_alpha(float alpha) const;
-        void set_lighting(float ambient, float metalness, float specular_power) const;
+        void set_lighting(float ambient, float metalness, float roughness) const;
 };
 
 class VolumeBuffer final
@@ -185,7 +185,7 @@ class VolumeBuffer final
                 uint32_t color_volume;
                 float ambient;
                 float metalness;
-                float specular_power;
+                float roughness;
         };
 
 public:
@@ -225,7 +225,7 @@ public:
                 const vulkan::Queue& queue,
                 float ambient,
                 float metalness,
-                float specular_power) const;
+                float roughness) const;
 };
 
 class TransparencyBuffers

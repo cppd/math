@@ -87,9 +87,8 @@ vec3 s_diffuse_disney(vec3 diffuse_color, float roughness, float N_L, float N_V,
         return diffuse_color * (N_L * N_V * f_d * (1 / PI));
 }
 
-vec3 compute_color(float metalness, float specular_power, vec3 color, vec3 N, vec3 L, vec3 V, float N_L)
+vec3 compute_color(float metalness, float roughness, vec3 color, vec3 N, vec3 L, vec3 V, float N_L)
 {
-        const float roughness = 0.2;
         const float alpha = sqr(roughness);
         const float alpha_2 = sqr(alpha);
 

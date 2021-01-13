@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "volume_object.h"
 
-#include "shading.h"
+#include "shading_parameters.h"
 
 #include "shaders/buffers.h"
 #include "shaders/volume.h"
@@ -194,7 +194,7 @@ class Impl final : public VolumeObject
                 volume::Update::Flags flags;
                 flags.set(volume::Update::Ambient);
                 flags.set(volume::Update::Metalness);
-                flags.set(volume::Update::SpecularPower);
+                flags.set(volume::Update::Roughness);
                 return flags;
         }();
 
@@ -221,12 +221,11 @@ class Impl final : public VolumeObject
                         isosurface_alpha, isosurface, isovalue, color);
         }
 
-        void buffer_set_lighting(float ambient, float metalness, float specular_power) const
+        void buffer_set_lighting(float ambient, float metalness, float roughness) const
         {
-                ShadingParameters p = shading_parameters(ambient, metalness, specular_power);
+                std::tie(ambient, metalness, roughness) = clean_shading_parameters(ambient, metalness, roughness);
 
-                m_buffer.set_lighting(
-                        m_graphics_command_pool, m_graphics_queue, p.ambient, p.metalness, p.specular_power);
+                m_buffer.set_lighting(m_graphics_command_pool, m_graphics_queue, ambient, metalness, roughness);
         }
 
         void buffer_set_coordinates() const
@@ -402,7 +401,7 @@ class Impl final : public VolumeObject
                 if (update_ligthing)
                 {
                         buffer_set_lighting(
-                                volume_object.ambient(), volume_object.metalness(), volume_object.specular_power());
+                                volume_object.ambient(), volume_object.metalness(), volume_object.roughness());
                 }
 
                 if (update_matrices)

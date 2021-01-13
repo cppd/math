@@ -104,7 +104,7 @@ layout(set = 1, binding = 1, std140) uniform Volume
         bool color_volume;
         float ambient;
         float metalness;
-        float specular_power;
+        float roughness;
 }
 volume;
 
@@ -452,7 +452,7 @@ vec3 shade(vec3 p)
         if (dot_NL > 0)
         {
                 color = drawing.lighting_intensity
-                        * compute_color(volume.metalness, volume.specular_power, volume.color, N, L, V, dot_NL);
+                        * compute_color(volume.metalness, volume.roughness, volume.color, N, L, V, dot_NL);
         }
         return mix(color, volume.color, volume.ambient);
 }
