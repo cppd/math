@@ -447,19 +447,14 @@ vec3 shade(vec3 p)
         vec3 L = drawing.direction_to_light;
         vec3 V = drawing.direction_to_camera;
 
-        vec3 color = vec3(0);
-        float dot_NL = dot(N, L);
-        if (dot_NL > 0)
-        {
-                color = drawing.lighting_intensity
-                        * compute_color(volume.metalness, volume.roughness, volume.color, N, L, V, dot_NL);
-        }
-        return mix(color, volume.color, volume.ambient);
+        return shade(drawing.lighting_intensity, volume.metalness, volume.roughness, volume.color, N, L, V);
 }
 
 vec4 isosurface_color(vec3 p)
 {
-        return vec4(shade(p), volume.isosurface_alpha);
+        vec3 color = volume.ambient * volume.color;
+        color += shade(p);
+        return vec4(color, volume.isosurface_alpha);
 }
 
 void draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir, float depth_org)

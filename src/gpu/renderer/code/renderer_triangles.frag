@@ -85,19 +85,13 @@ float edge_factor()
         return min(min(a.x, a.y), a.z);
 }
 
-vec3 shade_material(vec3 color)
+vec3 shade(vec3 color)
 {
         vec3 N = normalize(gs.world_normal);
         vec3 L = drawing.direction_to_light;
         vec3 V = drawing.direction_to_camera;
 
-        float dot_NL = dot(N, L);
-        if (dot_NL > 0)
-        {
-                return drawing.lighting_intensity
-                       * compute_color(mesh.metalness, mesh.roughness, color, N, L, V, dot_NL);
-        }
-        return vec3(0);
+        return shade(drawing.lighting_intensity, mesh.metalness, mesh.roughness, color, N, L, V);
 }
 
 vec3 shade()
@@ -117,18 +111,19 @@ vec3 shade()
                 mtl_color = texture_Kd_color(gs.texture_coordinates).rgb;
         }
 
-        vec3 color;
+        vec3 color = mesh.ambient * mtl_color;
         if (!drawing.show_shadow)
         {
-                color = shade_material(mtl_color);
+                color += shade(mtl_color);
         }
         else
         {
                 bool s = shadow(gs.shadow_position);
-                color = !s ? shade_material(mtl_color) : vec3(0);
+                if (!s)
+                {
+                        color += shade(mtl_color);
+                }
         }
-
-        color = mix(color, mtl_color, mesh.ambient);
 
         if (drawing.show_wireframe)
         {

@@ -87,8 +87,14 @@ vec3 s_diffuse_disney(vec3 diffuse_color, float roughness, float N_L, float N_V,
         return diffuse_color * (N_L * N_V * f_d * (1 / PI));
 }
 
-vec3 compute_color(float metalness, float roughness, vec3 color, vec3 N, vec3 L, vec3 V, float N_L)
+vec3 shade(float intensity, float metalness, float roughness, vec3 color, vec3 N, vec3 L, vec3 V)
 {
+        float N_L = dot(N, L);
+        if (N_L <= 0)
+        {
+                return vec3(0);
+        }
+
         const float alpha = sqr(roughness);
         const float alpha_2 = sqr(alpha);
 
@@ -103,5 +109,5 @@ vec3 compute_color(float metalness, float roughness, vec3 color, vec3 N, vec3 L,
         vec3 spec = s_fresnel(f0, H_L) * s_g2_combined(alpha_2, N_L, N_V) * s_d(alpha_2, N_H);
         vec3 diff = s_diffuse_disney(diffuse_color, roughness, N_L, N_V, H_L);
 
-        return spec + diff;
+        return intensity * (spec + diff);
 }
