@@ -129,9 +129,9 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
         float m_alpha = 1;
 
         Color m_color = Color(Srgb8(225, 255, 225));
-        float m_ambient = 0.2;
+        float m_ambient = 0.3;
         float m_metalness = 0.1;
-        float m_roughness = 0.3;
+        float m_roughness = 0.2;
 
         bool m_visible = false;
         bool m_inserted = false;
