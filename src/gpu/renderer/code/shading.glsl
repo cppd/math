@@ -70,22 +70,35 @@ float s_g2_combined(float alpha_2, float N_L, float N_V)
 }
 
 // (9.64)
-//vec3 s_diffuse(vec3 f0, vec3 diffuse_color, float N_L, float N_V)
+//vec3 s_diffuse(vec3 f0, vec3 color, float N_L, float N_V)
 //{
 //        float l = (1 - pow(1 - N_L, 5));
 //        float v = (1 - pow(1 - N_V, 5));
-//        return (1 - f0) * diffuse_color * ((21 / (20 * PI)) * l * v);
+//        return (1 - f0) * color * ((21 / (20 * PI)) * l * v);
 //}
 
 // (9.66), (9.67) without the subsurface term
-vec3 s_diffuse_disney(vec3 diffuse_color, float roughness, float N_L, float N_V, float H_L)
+vec3 s_diffuse_disney_without_subsurface(vec3 color, float roughness, float N_L, float N_V, float H_L)
 {
         float l = pow(1 - N_L, 5);
         float v = pow(1 - N_V, 5);
         float d_90 = 0.5 + 2 * roughness * sqr(H_L);
         float f_d = mix(1, d_90, l) * mix(1, d_90, v);
-        return diffuse_color * (N_L * N_V * f_d * (1 / PI));
+        return color * (N_L * N_V * (1 / PI) * f_d);
 }
+
+// (9.66), (9.67)
+//vec3 s_diffuse_disney(vec3 color, float roughness, float N_L, float N_V, float H_L, float k_ss)
+//{
+//        float l = pow(1 - N_L, 5);
+//        float v = pow(1 - N_V, 5);
+//        float ss_90 = roughness * sqr(H_L);
+//        float d_90 = 0.5 + 2 * ss_90;
+//        float f_d = mix(1, d_90, l) * mix(1, d_90, v);
+//        float f_ss = mix(1, ss_90, l) * mix(1, ss_90, v);
+//        f_ss = (1/(N_L * N_V) - 0.5)*f_ss + 0.5;
+//        return color * (N_L * N_V * (1 / PI) * mix(f_d, 1.25*f_ss, k_ss));
+//}
 
 vec3 shade(float intensity, float metalness, float roughness, vec3 color, vec3 N, vec3 L, vec3 V)
 {
@@ -95,10 +108,12 @@ vec3 shade(float intensity, float metalness, float roughness, vec3 color, vec3 N
                 return vec3(0);
         }
 
+        const float F0 = 0.05;
+
         const float alpha = sqr(roughness);
         const float alpha_2 = sqr(alpha);
 
-        vec3 f0 = mix(vec3(0.05), color, metalness);
+        vec3 f0 = mix(vec3(F0), color, metalness);
         vec3 diffuse_color = mix(color, vec3(0), metalness);
 
         vec3 H = normalize(L + V);
@@ -107,7 +122,7 @@ vec3 shade(float intensity, float metalness, float roughness, vec3 color, vec3 N
         float N_H = dot(N, H);
 
         vec3 spec = s_fresnel(f0, H_L) * s_g2_combined(alpha_2, N_L, N_V) * s_d(alpha_2, N_H);
-        vec3 diff = s_diffuse_disney(diffuse_color, roughness, N_L, N_V, H_L);
+        vec3 diff = s_diffuse_disney_without_subsurface(diffuse_color, roughness, N_L, N_V, H_L);
 
         return intensity * (spec + diff);
 }
