@@ -41,7 +41,6 @@ private:
         QColor m_dft_background_color;
         QColor m_dft_color;
 
-        void on_reset_lighting_clicked();
         void on_lighting_intensity_changed(int);
         void on_background_color_clicked();
         void on_wireframe_color_clicked();
@@ -58,8 +57,7 @@ private:
         void set_normal_color_negative(const QColor& c);
         void set_dft_background_color(const QColor& c);
         void set_dft_color(const QColor& c);
-
-        void reset_lighting_intensity();
+        void set_lighting_intensity(double intensity, bool set_slider);
 
 public:
         ColorsWidget();

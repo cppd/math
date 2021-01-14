@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dialogs/color_dialog.h"
 #include "../dialogs/message.h"
 
-#include <src/com/error.h>
+#include <sstream>
 
 namespace ns::gui::main_window
 {
@@ -35,19 +35,19 @@ constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(50, 150, 50);
 constexpr QRgb DFT_BACKGROUND_COLOR = qRgb(0, 0, 50);
 constexpr QRgb DFT_COLOR = qRgb(150, 200, 250);
 
-constexpr double DEFAULT_LIGHTING_INTENSITY = 1.0;
+constexpr double DEFAULT_LIGHTING_INTENSITY = 2.0;
 constexpr double MAXIMUM_LIGHTING_INTENSITY = 20.0;
-static_assert(DEFAULT_LIGHTING_INTENSITY > 0 && DEFAULT_LIGHTING_INTENSITY <= MAXIMUM_LIGHTING_INTENSITY);
+static_assert(MAXIMUM_LIGHTING_INTENSITY > 1);
 }
 
 ColorsWidget::ColorsWidget() : QWidget(nullptr)
 {
         ui.setupUi(this);
 
-        // Должно быть точное среднее положение
-        ASSERT(((ui.slider_lighting_intensity->maximum() - ui.slider_lighting_intensity->minimum()) & 1) == 0);
+        ui.slider_lighting_intensity->setMinimum(0);
+        ui.slider_lighting_intensity->setMaximum(1000);
 
-        reset_lighting_intensity();
+        set_lighting_intensity(DEFAULT_LIGHTING_INTENSITY, true /*set_slider*/);
 
         set_background_color(BACKGROUND_COLOR);
         set_wireframe_color(WIREFRAME_COLOR);
@@ -57,7 +57,6 @@ ColorsWidget::ColorsWidget() : QWidget(nullptr)
         set_dft_background_color(DFT_BACKGROUND_COLOR);
         set_dft_color(DFT_COLOR);
 
-        connect(ui.pushButton_reset_lighting, &QPushButton::clicked, this, &ColorsWidget::on_reset_lighting_clicked);
         connect(ui.slider_lighting_intensity, &QSlider::valueChanged, this,
                 &ColorsWidget::on_lighting_intensity_changed);
 
@@ -80,27 +79,33 @@ void ColorsWidget::set_view(view::View* view)
         m_view = view;
 }
 
-void ColorsWidget::reset_lighting_intensity()
+void ColorsWidget::set_lighting_intensity(double intensity, bool set_slider)
 {
-        double position = std::log(DEFAULT_LIGHTING_INTENSITY) / std::log(MAXIMUM_LIGHTING_INTENSITY);
-        position = (position + 1) / 2;
-        set_slider_position(ui.slider_lighting_intensity, position);
-}
+        intensity = std::clamp(intensity, 1 / MAXIMUM_LIGHTING_INTENSITY, MAXIMUM_LIGHTING_INTENSITY);
 
-void ColorsWidget::on_reset_lighting_clicked()
-{
-        std::optional<bool> yes = dialog::message_question_default_yes("Reset lighting?");
-        if (!yes || !*yes)
+        if (set_slider)
         {
-                return;
+                double position = std::log(intensity) / std::log(MAXIMUM_LIGHTING_INTENSITY);
+                position = (position + 1) / 2;
+                QSignalBlocker blocker(ui.slider_lighting_intensity);
+                set_slider_position(ui.slider_lighting_intensity, position);
+
+                intensity = lighting_intensity();
         }
 
-        reset_lighting_intensity();
+        if (m_view)
+        {
+                m_view->send(view::command::SetLightingIntensity(intensity));
+        }
+
+        std::ostringstream oss;
+        oss << std::setprecision(2) << std::fixed << intensity;
+        ui.label_lighting_intensity->setText(QString::fromStdString(oss.str()));
 }
 
 void ColorsWidget::on_lighting_intensity_changed(int)
 {
-        m_view->send(view::command::SetLightingIntensity(lighting_intensity()));
+        set_lighting_intensity(lighting_intensity(), false /*set_slider*/);
 }
 
 void ColorsWidget::on_background_color_clicked()
