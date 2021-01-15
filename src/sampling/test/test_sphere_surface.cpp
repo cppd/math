@@ -55,32 +55,56 @@ static_assert(!compare(1, 10000.100000002, 10000.100000001));
 template <unsigned N>
 constexpr long double pi_pow = power<N>(PI<long double>);
 
-static_assert(cosine_sphere_coefficient(2) == PI<long double> / 2);
-static_assert(cosine_sphere_coefficient(3) == 2.0L);
-static_assert(cosine_sphere_coefficient(4) == 3 * PI<long double> / 4);
-static_assert(cosine_sphere_coefficient(5) == 8.0L / 3);
-static_assert(cosine_sphere_coefficient(6) == 15 * PI<long double> / 16);
-static_assert(cosine_sphere_coefficient(7) == 16.0L / 5);
-static_assert(cosine_sphere_coefficient(8) == 35 * PI<long double> / 32);
-static_assert(cosine_sphere_coefficient(9) == 128.0L / 35);
-static_assert(cosine_sphere_coefficient(10) == 315 * PI<long double> / 256);
-static_assert(cosine_sphere_coefficient(15) == 2048.0L / 429);
-static_assert(cosine_sphere_coefficient(20) == 230945 * PI<long double> / 131072);
-static_assert(cosine_sphere_coefficient(25) == 4194304.0L / 676039);
-static_assert(cosine_sphere_coefficient(30) == 145422675 * PI<long double> / 67108864);
-static_assert(cosine_sphere_coefficient(35) == 4294967296.0L / 583401555);
-static_assert(cosine_sphere_coefficient(40) == 172308161025 * PI<long double> / 68719476736);
-static_assert(cosine_sphere_coefficient(45) == 2199023255552.0L / 263012370465);
-static_assert(cosine_sphere_coefficient(50) == 395033145117975 * PI<long double> / 140737488355328);
+static_assert(sphere_unit_integral_over_cosine_integral(2) == PI<long double> / 2);
+static_assert(sphere_unit_integral_over_cosine_integral(3) == 2.0L);
+static_assert(sphere_unit_integral_over_cosine_integral(4) == 3 * PI<long double> / 4);
+static_assert(sphere_unit_integral_over_cosine_integral(5) == 8.0L / 3);
+static_assert(sphere_unit_integral_over_cosine_integral(6) == 15 * PI<long double> / 16);
+static_assert(sphere_unit_integral_over_cosine_integral(7) == 16.0L / 5);
+static_assert(sphere_unit_integral_over_cosine_integral(8) == 35 * PI<long double> / 32);
+static_assert(sphere_unit_integral_over_cosine_integral(9) == 128.0L / 35);
+static_assert(sphere_unit_integral_over_cosine_integral(10) == 315 * PI<long double> / 256);
+static_assert(sphere_unit_integral_over_cosine_integral(15) == 2048.0L / 429);
+static_assert(sphere_unit_integral_over_cosine_integral(20) == 230945 * PI<long double> / 131072);
+static_assert(sphere_unit_integral_over_cosine_integral(25) == 4194304.0L / 676039);
+static_assert(sphere_unit_integral_over_cosine_integral(30) == 145422675 * PI<long double> / 67108864);
+static_assert(sphere_unit_integral_over_cosine_integral(35) == 4294967296.0L / 583401555);
+static_assert(sphere_unit_integral_over_cosine_integral(40) == 172308161025 * PI<long double> / 68719476736);
+static_assert(sphere_unit_integral_over_cosine_integral(45) == 2199023255552.0L / 263012370465);
+static_assert(sphere_unit_integral_over_cosine_integral(50) == 395033145117975 * PI<long double> / 140737488355328);
 
-static_assert(compare(100, cosine_sphere_coefficient(100), 12.501848174018745379275573489380728033040074896079L));
-static_assert(compare(100, cosine_sphere_coefficient(111), 13.174777832962239058614925399585148625028896951069L));
-static_assert(compare(100, cosine_sphere_coefficient(1000), 39.623365897903642007708353245685137074363243183299L));
-static_assert(compare(100, cosine_sphere_coefficient(1111), 41.765649734171325590236939525014997796257742486580L));
-static_assert(compare(100, cosine_sphere_coefficient(10000), 125.32828048537769879104381707556904854866773242018L));
-static_assert(compare(100, cosine_sphere_coefficient(11111), 132.10727688710841589303636622242392351328925358716L));
-static_assert(compare(100, cosine_sphere_coefficient(100000), 396.33173893001525509395803345305504249366537658804L));
-static_assert(compare(100, cosine_sphere_coefficient(111111), 417.77023023440949387785892293393789130459621662998L));
+static_assert(
+        compare(100,
+                sphere_unit_integral_over_cosine_integral(100),
+                12.501848174018745379275573489380728033040074896079L));
+static_assert(
+        compare(100,
+                sphere_unit_integral_over_cosine_integral(111),
+                13.174777832962239058614925399585148625028896951069L));
+static_assert(
+        compare(100,
+                sphere_unit_integral_over_cosine_integral(1000),
+                39.623365897903642007708353245685137074363243183299L));
+static_assert(
+        compare(100,
+                sphere_unit_integral_over_cosine_integral(1111),
+                41.765649734171325590236939525014997796257742486580L));
+static_assert(
+        compare(100,
+                sphere_unit_integral_over_cosine_integral(10000),
+                125.32828048537769879104381707556904854866773242018L));
+static_assert(
+        compare(100,
+                sphere_unit_integral_over_cosine_integral(11111),
+                132.10727688710841589303636622242392351328925358716L));
+static_assert(
+        compare(100,
+                sphere_unit_integral_over_cosine_integral(100000),
+                396.33173893001525509395803345305504249366537658804L));
+static_assert(
+        compare(100,
+                sphere_unit_integral_over_cosine_integral(111111),
+                417.77023023440949387785892293393789130459621662998L));
 
 static_assert(compare(10, sphere_area(2), 2 * pi_pow<1>));
 static_assert(compare(10, sphere_area(3), 4 * pi_pow<1>));
@@ -102,6 +126,21 @@ static_assert(compare(10, sphere_area(45), 1.28769867625986521696109272304420522
 static_assert(compare(10, sphere_area(50), 8.6510962291805538057726365290958840196659212205551e-12L));
 static_assert(compare(10, sphere_area(100), 2.3682021018828339613111743245754170110390710827884e-38L));
 static_assert(compare(10, sphere_area(111), 4.5744152213753183840687985785233817617533382664144e-45L));
+
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(2), 2.0L));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(3), pi_pow<1>));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(4), 4 * pi_pow<1> / 3));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(5), pi_pow<2> / 2));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(6), 8 * pi_pow<2> / 15));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(7), pi_pow<3> / 6));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(8), 16 * pi_pow<3> / 105));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(9), pi_pow<4> / 24));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(10), 32 * pi_pow<4> / 945));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(15), pi_pow<7> / 5040));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(20), 1024 * pi_pow<9> / 654729075));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(25), pi_pow<12> / 479001600));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(30), 32768 * pi_pow<14> / 6190283353629375));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(35), pi_pow<17> / 355687428096000));
 
 template <typename T>
 void compare(T v1, T v2, T precision)
@@ -201,7 +240,7 @@ T beta(std::type_identity_t<T> x, std::type_identity_t<T> y)
 void compare_with_beta(unsigned n)
 {
         long double v_beta = beta<long double>(0.5L, (n - 1) / 2.0L) / beta<long double>(1.0L, (n - 1) / 2.0L);
-        long double v_function = cosine_sphere_coefficient(n);
+        long double v_function = sphere_unit_integral_over_cosine_integral(n);
         long double discrepancy_percent = std::abs((v_beta - v_function) / v_function) * 100;
 
         if (!(discrepancy_percent <= 1e-10))
@@ -257,7 +296,7 @@ void test_cosine()
         }
 
         long double data = static_cast<long double>(count) / sum;
-        long double function = cosine_sphere_coefficient(N);
+        long double function = sphere_unit_integral_over_cosine_integral(N);
         long double discrepancy_percent = std::abs((data - function) / function) * 100;
 
         std::ostringstream oss;

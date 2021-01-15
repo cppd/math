@@ -101,7 +101,7 @@ namespace ns::sampling
  676. Примеры
 */
 
-constexpr long double cosine_sphere_coefficient(const unsigned N)
+constexpr long double sphere_unit_integral_over_cosine_integral(unsigned N)
 {
         ASSERT(N >= 2);
 
@@ -204,6 +204,13 @@ constexpr long double sphere_area(unsigned N)
                 res *= PI<long double>;
         }
         return res;
+}
+
+// cos^1 -> pow(π,(n - 1)/2) / gamma((n + 1)/2)
+// cos^k -> pow(π,(n - 1)/2) * gamma((k + 1)/2)) / gamma((n + k)/2)
+constexpr long double sphere_integrate_cosine_factor_over_hemisphere(unsigned N)
+{
+        return sphere_area(N) / sphere_unit_integral_over_cosine_integral(N) / 2;
 }
 
 template <unsigned N, typename T>
