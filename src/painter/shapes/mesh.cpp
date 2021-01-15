@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh.h"
 
-#include "shading.h"
-
 #include "../space/shape_intersection.h"
 #include "../space/shape_wrapper.h"
 
@@ -405,7 +403,7 @@ Color Mesh<N, T>::direct_lighting(
                 color = m.Kd;
         }
 
-        return surface_direct_lighting(dir_to_light, shading_normal, color);
+        return m_shading.direct_lighting(dir_to_light, shading_normal, color);
 }
 
 template <std::size_t N, typename T>
@@ -431,7 +429,7 @@ SurfaceReflection<N, T> Mesh<N, T>::reflection(
                 color = m.Kd;
         }
 
-        return surface_reflection(shading_normal, color, random_engine);
+        return m_shading.reflection(shading_normal, color, random_engine);
 }
 
 template <std::size_t N, typename T>

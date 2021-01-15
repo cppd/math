@@ -22,18 +22,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/numerical/vec.h>
 #include <src/sampling/sphere_cosine.h>
+#include <src/sampling/sphere_surface.h>
 
 namespace ns::painter
 {
 template <std::size_t N, typename T>
-Color surface_direct_lighting(const Vector<N, T>& dir_to_light, const Vector<N, T>& normal, const Color& color)
+class Shading
 {
-        return dot(normal, dir_to_light) * color;
-}
+        static constexpr T DIFFUSE_REFLECTANCE = T(1) / sampling::sphere_integrate_cosine_factor_over_hemisphere(N);
 
-template <std::size_t N, typename T, typename RandomEngine>
-SurfaceReflection<N, T> surface_reflection(const Vector<N, T>& normal, const Color& color, RandomEngine& engine)
-{
-        return {color, sampling::cosine_weighted_on_hemisphere(engine, normal)};
-}
+public:
+        Color direct_lighting(const Vector<N, T>& dir_to_light, const Vector<N, T>& normal, const Color& color) const
+        {
+                return DIFFUSE_REFLECTANCE * dot(normal, dir_to_light) * color;
+        }
+
+        template <typename RandomEngine>
+        SurfaceReflection<N, T> reflection(const Vector<N, T>& normal, const Color& color, RandomEngine& engine) const
+        {
+                return {DIFFUSE_REFLECTANCE * color, sampling::cosine_weighted_on_hemisphere(engine, normal)};
+        }
+};
 }

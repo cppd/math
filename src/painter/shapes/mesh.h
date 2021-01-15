@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_facet.h"
 #include "mesh_texture.h"
+#include "shading.h"
 #include "shape.h"
 
 #include "../objects.h"
@@ -59,6 +60,8 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
         BoundingBox<N, T> m_bounding_box;
 
         Color::DataType m_alpha;
+
+        Shading<N, T> m_shading;
 
         void create(const mesh::Reading<N>& mesh_object);
         void create(const std::vector<mesh::Reading<N>>& mesh_objects);

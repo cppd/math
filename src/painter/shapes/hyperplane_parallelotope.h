@@ -32,6 +32,7 @@ class HyperplaneParallelotope final : public Shape<N, T>, public Surface<N, T>
         painter::HyperplaneParallelotope<N, T> m_hyperplane_parallelotope;
         SurfaceProperties<N, T> m_surface_properties;
         Color m_color;
+        Shading<N, T> m_shading;
 
 public:
         template <typename... V>
@@ -86,7 +87,7 @@ public:
                 const Vector<N, T>& shading_normal,
                 const Vector<N, T>& dir_to_light) const override
         {
-                return surface_direct_lighting(dir_to_light, shading_normal, m_color);
+                return m_shading.direct_lighting(dir_to_light, shading_normal, m_color);
         }
 
         SurfaceReflection<N, T> reflection(
@@ -95,7 +96,7 @@ public:
                 const Vector<N, T>& shading_normal,
                 RandomEngine<T>& random_engine) const override
         {
-                return surface_reflection(shading_normal, m_color, random_engine);
+                return m_shading.reflection(shading_normal, m_color, random_engine);
         }
 
         BoundingBox<N, T> bounding_box() const override
