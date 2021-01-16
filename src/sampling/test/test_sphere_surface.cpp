@@ -143,11 +143,11 @@ static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(30), 32
 static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(35), pi_pow<17> / 355687428096000));
 
 template <typename T>
-void compare(T v1, T v2, T precision)
+void compare(const char* name, T v1, T v2, T precision)
 {
         if (!(is_finite(v1) && is_finite(v2) && ((v1 == v2) || std::abs((v1 - v2) / std::max(v1, v2)) < precision)))
         {
-                error("Numbers are not equal " + to_string(v1) + " and " + to_string(v2));
+                error(std::string(name) + ": numbers are not equal " + to_string(v1) + " and " + to_string(v2));
         }
 }
 
@@ -158,7 +158,7 @@ void test_sphere_relative_area_1(T precision)
 
         const auto cmp = [&](T v1, T v2)
         {
-                compare(v1, v2, precision);
+                compare("Test sphere relative area 1", v1, v2, precision);
         };
 
         // For[i=2,i<=15,++i,s=N[Integrate[Sin[x]^(i-2),{x,0,2/100}],50];Print[s]]
@@ -190,7 +190,7 @@ void test_sphere_relative_area_2(T precision)
 
         const auto cmp = [&](T v1, T v2)
         {
-                compare(v1, v2, precision);
+                compare("Test sphere relative area 2", v1, v2, precision);
         };
 
         // For[i=2,i<=15,++i,s=N[Integrate[Sin[x]^(i-2),{x,1/2,1}],50];Print[s]]
@@ -211,6 +211,64 @@ void test_sphere_relative_area_2(T precision)
         cmp(sphere_relative_area<13, T>(a, b), T(0.017009720583937844245155790468162021432350290550126L));
         cmp(sphere_relative_area<14, T>(a, b), T(0.013313970393473262087067334544828366956211559294135L));
         cmp(sphere_relative_area<15, T>(a, b), T(0.010473262061717212781929422559521292732168015614157L));
+
+        LOG("Check passed");
+}
+
+template <typename T>
+void test_integrate_power_cosine(T precision)
+{
+        LOG(std::string("Test integrate power cosine, ") + type_name<T>());
+
+        const auto cmp = [&]<std::size_t N>(std::in_place_index_t<N>, T v1, T v2)
+        {
+                compare("Test integrate power cosine", sphere_integrate_power_cosine_factor_over_hemisphere<N, T>(v1),
+                        v2, precision);
+        };
+
+        // hemisphereArea[n_]:=Power[\[Pi],n/2]/Gamma[n/2];
+        // unitIntegral[n_]:=Integrate[Sin[x]^(n-2),{x,0,Pi/2}];
+        // cosineIntegral[n_,k_]:=Integrate[(Sin[x]^(n-2))*(Cos[x]^k),{x,0,Pi/2}];
+        // func[n_,k_]:=hemisphereArea[n]*(cosineIntegral[n,k]/unitIntegral[n]);
+        // For[n=2,n<=10,++n,For[k=0,k<=3,++k,v=func[n,10^k];
+        //   Print[StringTemplate["cmp(std::in_place_index<``>, 1e``, ``L);"][n,k,N[v, 50]]]]]
+
+        cmp(std::in_place_index<2>, 1e0, 2.0L);
+        cmp(std::in_place_index<2>, 1e1, 0.77312631709436317977791614510394016290789715687747L);
+        cmp(std::in_place_index<2>, 1e2, 0.25003696348037490758551146978761456066080149792158L);
+        cmp(std::in_place_index<2>, 1e3, 0.079246731795807284015416706491370274148726486366598L);
+        cmp(std::in_place_index<3>, 1e0, 3.1415926535897932384626433832795028841971693993751L);
+        cmp(std::in_place_index<3>, 1e1, 0.57119866428905331608411697877809143349039443625002L);
+        cmp(std::in_place_index<3>, 1e2, 0.062209755516629569078468185807514908597963750482675L);
+        cmp(std::in_place_index<3>, 1e3, 0.0062769083987808056712540327338251805878065322664837L);
+        cmp(std::in_place_index<4>, 1e0, 4.1887902047863909846168578443726705122628925325001L);
+        cmp(std::in_place_index<4>, 1e1, 0.40480799301343072460063341991679526140935095225011L);
+        cmp(std::in_place_index<4>, 1e2, 0.015402240933251867250640251287456962737692424806669L);
+        cmp(std::in_place_index<4>, 1e3, 0.00049692804477187394461107220124159712495436671990011L);
+        cmp(std::in_place_index<5>, 1e0, 4.9348022005446793094172454999380755676568497036204L);
+        cmp(std::in_place_index<5>, 1e1, 0.27607285038012191940795779020632590588290068272002L);
+        cmp(std::in_place_index<5>, 1e2, 0.0037949070080128265380503666249643953226237429230956L);
+        cmp(std::in_place_index<5>, 1e3, 0.000039321015578994718616715252842376571127033283395531L);
+        cmp(std::in_place_index<6>, 1e0, 5.2637890139143245967117285332672806055006396838618L);
+        cmp(std::in_place_index<6>, 1e1, 0.18167740242363175884068153359629723751303880019073L);
+        cmp(std::in_place_index<6>, 1e2, 0.00093053013393700129062975439425952977673536370279759L);
+        cmp(std::in_place_index<6>, 1e3, 0.0000031098515833029064666159090575156652922335669169073L);
+        cmp(std::in_place_index<7>, 1e0, 5.1677127800499700292460525111835658670375480943142L);
+        cmp(std::in_place_index<7>, 1e1, 0.11564112514797135729781376248802385157007100630633L);
+        cmp(std::in_place_index<7>, 1e2, 0.00022708670433199082810710328113850964384614539627038L);
+        cmp(std::in_place_index<7>, 1e3, 0.00000024583206701424799651751305250139528444532289338027L);
+        cmp(std::in_place_index<8>, 1e0, 4.7247659703314011695963908673678316498629011148015L);
+        cmp(std::in_place_index<8>, 1e1, 0.071344549097169753835283446793485188903609071537611L);
+        cmp(std::in_place_index<8>, 1e2, 0.000055157483636234143408976140317340552215126256404544L);
+        cmp(std::in_place_index<8>, 1e3, 0.000000019423234369500989792288528560159602123737218994805L);
+        cmp(std::in_place_index<9>, 1e0, 4.0587121264167682181850138620293796354053160696952L);
+        cmp(std::in_place_index<9>, 1e1, 0.042740859907967612663733589003682484025658614308596L);
+        cmp(std::in_place_index<9>, 1e2, 0.000013334839664622427312232434090139618843436747588113L);
+        cmp(std::in_place_index<9>, 1e3, 0.0000000015338713321723043557133813083875444267582961447094L);
+        cmp(std::in_place_index<10>, 1e0, 3.2985089027387068693821065037445117036944790915618L);
+        cmp(std::in_place_index<10>, 1e1, 0.024903945701927201600157984215774382037784888234707L);
+        cmp(std::in_place_index<10>, 1e2, 0.0000032089323218906003781602335385785508268283638231843L);
+        cmp(std::in_place_index<10>, 1e3, 0.00000000012107121111939898632517568543157447062530555860635L);
 
         LOG("Check passed");
 }
@@ -332,6 +390,10 @@ void test_cosine()
 
 void test_sphere_surface(bool all_tests)
 {
+        test_integrate_power_cosine<float>(1e-3);
+        test_integrate_power_cosine<double>(1e-12);
+        test_integrate_power_cosine<long double>(1e-16);
+
         test_sphere_relative_area_1<double>(0.02);
         test_sphere_relative_area_1<long double>(0.002);
 
