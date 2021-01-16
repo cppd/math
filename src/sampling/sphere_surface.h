@@ -206,11 +206,38 @@ constexpr long double sphere_area(unsigned N)
         return res;
 }
 
-// cos^1 -> pow(π,(n - 1)/2) / gamma((n + 1)/2)
-// cos^k -> pow(π,(n - 1)/2) * gamma((k + 1)/2)) / gamma((n + k)/2)
 constexpr long double sphere_integrate_cosine_factor_over_hemisphere(unsigned N)
 {
         return sphere_area(N) / sphere_unit_integral_over_cosine_integral(N) / 2;
+}
+
+template <unsigned N, typename T>
+T sphere_integrate_power_cosine_factor_over_hemisphere(std::type_identity_t<T> k)
+{
+        static_assert(std::is_floating_point_v<T>);
+        static_assert(N >= 2);
+
+        // hemisphereArea[n_]:=Power[\[Pi],n/2]/Gamma[n/2];
+        // unitIntegral[n_]:=Integrate[Sin[x]^(n-2),{x,0,Pi/2}];
+        // cosineIntegral[n_,k_]:=Integrate[(Sin[x]^(n-2))*(Cos[x]^k),{x,0,Pi/2}];
+        // Assuming[Element[n,Integers]&&n>=2&&k>=1,hemisphereArea[n]*(cosineIntegral[n,k]/unitIntegral[n])]
+        // (pow(π,(n - 1) / 2) * gamma((k + 1) / 2)) / gamma((k + n) / 2)
+        // For[n=2,n<=11,++n,f=Assuming[k>=1,
+        //   hemisphereArea[n]*(cosineIntegral[n,k]/unitIntegral[n])];Print[n];Print[f]]
+
+        if constexpr (N == 3)
+        {
+                return std::pow(2 * PI<T>, T(N / 2)) / (1 + k);
+        }
+        if constexpr (N == 5)
+        {
+                return std::pow(2 * PI<T>, T(N / 2)) / ((1 + k) * (3 + k));
+        }
+        if constexpr (N == 7)
+        {
+                return std::pow(2 * PI<T>, T(N / 2)) / ((1 + k) * (3 + k) * (5 + k));
+        }
+        return std::pow(PI<T>, (N - 1) / T(2)) * std::exp(std::lgamma((k + 1) / 2) - std::lgamma((k + N) / 2));
 }
 
 template <unsigned N, typename T>
