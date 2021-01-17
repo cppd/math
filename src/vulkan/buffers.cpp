@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "queue.h"
 #include "sync.h"
 
+#include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/image/conversion.h>
@@ -707,18 +708,45 @@ VkFormatFeatureFlags format_features_for_depth_image_usage(VkImageUsageFlags usa
         return format_features_for_image_usage(usage, true /*depth*/);
 }
 
-bool is_depth_formats(const std::vector<VkFormat>& formats)
+template <typename T>
+std::string formats_to_sorted_string(const T& formats, const std::string_view& separator)
+{
+        static_assert(std::is_same_v<VkFormat, typename T::value_type>);
+        if (formats.empty())
+        {
+                return {};
+        }
+        std::vector<std::string> v;
+        v.reserve(formats.size());
+        for (VkFormat format : formats)
+        {
+                v.push_back(format_to_string(format));
+        }
+        sort_and_unique(&v);
+        auto iter = v.cbegin();
+        std::string s = *iter;
+        while (++iter != v.cend())
+        {
+                s += separator;
+                s += *iter;
+        }
+        return s;
+}
+
+void check_depth_formats(const std::vector<VkFormat>& formats)
 {
         const std::unordered_set<VkFormat> depth_formats{
                 VK_FORMAT_D16_UNORM, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT,
                 VK_FORMAT_D32_SFLOAT_S8_UINT};
 
-        return std::all_of(
-                formats.cbegin(), formats.cend(),
-                [&](VkFormat format)
+        for (VkFormat format : formats)
+        {
+                if (!depth_formats.contains(format))
                 {
-                        return depth_formats.contains(format);
-                });
+                        error("Not depth format " + format_to_string(format) + ", depth formats "
+                              + formats_to_sorted_string(depth_formats, ", "));
+                }
+        }
 }
 }
 
@@ -998,7 +1026,7 @@ DepthImageWithMemory::DepthImageWithMemory(
                 error("Depth attachment size error");
         }
 
-        ASSERT(is_depth_formats(formats));
+        check_depth_formats(formats);
 
         constexpr VkImageTiling TILING = VK_IMAGE_TILING_OPTIMAL;
 
