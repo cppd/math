@@ -330,10 +330,7 @@ void conv_r32_to_r8_srgb(const std::vector<float>& floats, const std::span<std::
 {
         using To = uint8_t;
 
-        unsigned component_count = floats.size();
-        ASSERT((component_count % 1) == 0);
-
-        ASSERT(bytes.size() == component_count * sizeof(To));
+        ASSERT(bytes.size() == floats.size() * sizeof(To));
 
         const float* from = floats.data();
         const float* end = from + floats.size();
@@ -351,10 +348,7 @@ void conv_r32_to_r16(const std::vector<float>& floats, const std::span<std::byte
 {
         using To = uint16_t;
 
-        unsigned component_count = floats.size();
-        ASSERT((component_count % 1) == 0);
-
-        ASSERT(bytes.size() == component_count * sizeof(To));
+        ASSERT(bytes.size() == floats.size() * sizeof(To));
 
         const float* from = floats.data();
         const float* end = from + floats.size();
@@ -372,10 +366,8 @@ void conv_r32g32b32_to_r8g8b8_srgb(const std::vector<float>& floats, const std::
 {
         using To = uint8_t;
 
-        unsigned component_count = floats.size();
-        ASSERT((component_count % 3) == 0);
-
-        ASSERT(bytes.size() == component_count * sizeof(To));
+        ASSERT((floats.size() % 3) == 0);
+        ASSERT(bytes.size() == floats.size() * sizeof(To));
 
         const float* from = floats.data();
         const float* end = from + floats.size();
@@ -401,10 +393,8 @@ void conv_r32g32b32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const std
 {
         using To = uint8_t;
 
-        unsigned component_count = floats.size();
-        ASSERT((component_count % 3) == 0);
-
-        ASSERT(bytes.size() == (component_count / 3) * 4 * sizeof(To));
+        ASSERT((floats.size() % 3) == 0);
+        ASSERT(bytes.size() == (floats.size() / 3) * 4 * sizeof(To));
 
         const float* from = floats.data();
         const float* end = from + floats.size();
@@ -434,10 +424,8 @@ void conv_r32g32b32_to_r16g16b16(const std::vector<float>& floats, const std::sp
 {
         using To = uint16_t;
 
-        unsigned component_count = floats.size();
-        ASSERT((component_count % 3) == 0);
-
-        ASSERT(bytes.size() == component_count * sizeof(To));
+        ASSERT((floats.size() % 3) == 0);
+        ASSERT(bytes.size() == floats.size() * sizeof(To));
 
         const float* from = floats.data();
         const float* end = from + floats.size();
@@ -463,10 +451,8 @@ void conv_r32g32b32_to_r16g16b16a16(const std::vector<float>& floats, const std:
 {
         using To = uint16_t;
 
-        unsigned component_count = floats.size();
-        ASSERT((component_count % 3) == 0);
-
-        ASSERT(bytes.size() == (component_count / 3) * 4 * sizeof(To));
+        ASSERT((floats.size() % 3) == 0);
+        ASSERT(bytes.size() == (floats.size() / 3) * 4 * sizeof(To));
 
         const float* from = floats.data();
         const float* end = from + floats.size();
@@ -496,10 +482,8 @@ void conv_r32g32b32_to_r32g32b32a32(const std::vector<float>& floats, const std:
 {
         using To = float;
 
-        unsigned component_count = floats.size();
-        ASSERT((component_count % 3) == 0);
-
-        ASSERT(bytes.size() == (component_count / 3) * 4 * sizeof(To));
+        ASSERT((floats.size() % 3) == 0);
+        ASSERT(bytes.size() == (floats.size() / 3) * 4 * sizeof(To));
 
         const float* from = floats.data();
         const float* end = from + floats.size();
@@ -521,10 +505,8 @@ void conv_r32g32b32a32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const 
 {
         using To = uint8_t;
 
-        unsigned component_count = floats.size();
-        ASSERT((component_count % 4) == 0);
-
-        ASSERT(bytes.size() == component_count * sizeof(To));
+        ASSERT((floats.size() % 4) == 0);
+        ASSERT(bytes.size() == floats.size() * sizeof(To));
 
         const float* from = floats.data();
         const float* end = from + floats.size();
@@ -554,10 +536,8 @@ void conv_r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, const s
 {
         using To = uint16_t;
 
-        unsigned component_count = floats.size();
-        ASSERT((component_count % 4) == 0);
-
-        ASSERT(bytes.size() == component_count * sizeof(To));
+        ASSERT((floats.size() % 4) == 0);
+        ASSERT(bytes.size() == floats.size() * sizeof(To));
 
         const float* from = floats.data();
         const float* end = from + floats.size();
@@ -585,9 +565,6 @@ void conv_r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, const s
 
 void conv_copy(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
-        unsigned component_count = floats.size();
-        ASSERT(bytes.size() == (component_count * sizeof(float)));
-
         ASSERT(bytes.size() == data_size(floats));
         std::memcpy(bytes.data(), floats.data(), bytes.size());
 }

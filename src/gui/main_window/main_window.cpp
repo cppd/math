@@ -65,7 +65,10 @@ void MainWindow::constructor_graphics_widget()
         m_graphics_widget = new GraphicsWidget(this);
 
         QWidget* w = splitter->replaceWidget(splitter->indexOf(ui.graphics_widget), m_graphics_widget);
-        ASSERT(w == ui.graphics_widget);
+        if (w != ui.graphics_widget)
+        {
+                error_fatal("Failed to replace graphics widget");
+        }
         delete ui.graphics_widget;
         ui.graphics_widget = nullptr;
 

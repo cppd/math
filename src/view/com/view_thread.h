@@ -149,7 +149,7 @@ class ViewThread final : public View
         {
                 try
                 {
-                        const std::thread::id thread_id = std::this_thread::get_id();
+                        [[maybe_unused]] const std::thread::id thread_id = std::this_thread::get_id();
 
                         T view(parent_window, parent_window_ppi);
 
