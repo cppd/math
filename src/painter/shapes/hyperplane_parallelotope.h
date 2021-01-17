@@ -36,13 +36,7 @@ class HyperplaneParallelotope final : public Shape<N, T>, public Surface<N, T>
 
 public:
         template <typename... V>
-        HyperplaneParallelotope(
-                const Color& color,
-                Color::DataType /*metalness*/,
-                Color::DataType /*specular_power*/,
-                Color::DataType alpha,
-                const Vector<N, T>& org,
-                const V&... e)
+        HyperplaneParallelotope(const Color& color, Color::DataType alpha, const Vector<N, T>& org, const V&... e)
                 : m_hyperplane_parallelotope(org, e...)
         {
                 m_color = color;
