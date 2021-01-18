@@ -205,7 +205,7 @@ class Impl final : public VolumeObject
                 float isosurface_alpha,
                 bool isosurface,
                 float isovalue,
-                const Color& color) const
+                Color color) const
         {
                 constexpr float eps = 1e-10f;
                 window_min = std::min(std::max(0.0f, window_min), 1 - eps);
@@ -215,6 +215,8 @@ class Impl final : public VolumeObject
 
                 isovalue = std::clamp(isovalue, 0.0f, 1.0f);
                 isosurface_alpha = std::clamp(isosurface_alpha, 0.0f, 1.0f);
+
+                color.clamp();
 
                 m_buffer.set_parameters(
                         m_graphics_command_pool, m_graphics_queue, window_offset, window_scale, volume_alpha_coeficient,
