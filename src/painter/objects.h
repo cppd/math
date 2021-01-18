@@ -104,17 +104,19 @@ protected:
 public:
         virtual SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const = 0;
 
-        virtual Color direct_lighting(
+        virtual Color lighting(
                 const Vector<N, T>& p,
                 const void* intersection_data,
-                const Vector<N, T>& shading_normal,
-                const Vector<N, T>& dir_to_light) const = 0;
+                const Vector<N, T>& n,
+                const Vector<N, T>& v,
+                const Vector<N, T>& l) const = 0;
 
         virtual SurfaceReflection<N, T> reflection(
+                RandomEngine<T>& random_engine,
                 const Vector<N, T>& p,
                 const void* intersection_data,
-                const Vector<N, T>& shading_normal,
-                RandomEngine<T>& random_engine) const = 0;
+                const Vector<N, T>& n,
+                const Vector<N, T>& v) const = 0;
 };
 
 //

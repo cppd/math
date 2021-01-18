@@ -227,14 +227,15 @@ std::optional<Color> trace_path(
 
         Color color(0);
 
-        if (surface_properties.light_source_color())
+        if (surface_properties.alpha() > 0)
         {
-                color += *surface_properties.light_source_color() * surface_properties.alpha();
-        }
+                if (surface_properties.light_source_color())
+                {
+                        color = *surface_properties.light_source_color() * surface_properties.alpha();
+                }
 
-        Color::DataType reflection = surface_properties.alpha();
-        if (reflection > 0)
-        {
+                const Vector<N, T> v = -ray.dir();
+
                 thread_local std::vector<Light<N, T>> lights;
                 find_visible_lights(
                         ray_count, paint_data, point, geometric_normal, shading_normal, use_smooth_normal, &lights);
@@ -244,25 +245,25 @@ std::optional<Color> trace_path(
                         for (const Light<N, T>& light : lights)
                         {
                                 direct += light.color
-                                          * intersection->surface->direct_lighting(
-                                                  point, intersection->data, shading_normal, light.dir_to);
+                                          * intersection->surface->lighting(
+                                                  point, intersection->data, shading_normal, v, light.dir_to);
                         }
-                        color += reflection * direct;
+                        color += surface_properties.alpha() * direct;
                 }
 
                 // Случайный вектор отражения надо определять от видимой нормали.
                 // Если получившийся случайный вектор отражения показывает
                 // в другую сторону от поверхности, то освещения нет.
 
-                const SurfaceReflection<N, T> surface_ray =
-                        intersection->surface->reflection(point, intersection->data, shading_normal, random_engine);
+                const SurfaceReflection<N, T> surface_reflection =
+                        intersection->surface->reflection(random_engine, point, intersection->data, shading_normal, v);
 
-                Color surface_color = reflection * surface_ray.color;
+                Color surface_color = surface_properties.alpha() * surface_reflection.color;
                 Color::DataType new_color_level = color_level * surface_color.max_element();
                 if (new_color_level >= MIN_COLOR_LEVEL
-                    && dot(surface_ray.direction, geometric_normal) > DOT_PRODUCT_EPSILON<T>)
+                    && dot(surface_reflection.direction, geometric_normal) > DOT_PRODUCT_EPSILON<T>)
                 {
-                        Ray<N, T> new_ray = Ray<N, T>(point, surface_ray.direction);
+                        Ray<N, T> new_ray = Ray<N, T>(point, surface_reflection.direction);
 
                         new_ray.move_along_dir(paint_data.ray_offset);
 
@@ -273,8 +274,7 @@ std::optional<Color> trace_path(
                 }
         }
 
-        Color::DataType transmission = 1 - surface_properties.alpha();
-        if (transmission > 0)
+        if (Color::DataType transmission = 1 - surface_properties.alpha(); transmission > 0)
         {
                 Color::DataType new_color_level = color_level * transmission;
                 if (new_color_level >= MIN_COLOR_LEVEL)

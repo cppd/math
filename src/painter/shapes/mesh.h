@@ -42,9 +42,15 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
 
         struct Material
         {
+                T metalness;
+                T roughness;
                 Color Kd;
                 int map_Kd;
-                Material(const Color& Kd, int map_Kd) : Kd(Kd), map_Kd(map_Kd)
+                Material(T metalness, T roughness, const Color& Kd, int map_Kd)
+                        : metalness(std::clamp(metalness, T(0), T(1))),
+                          roughness(std::clamp(roughness, T(0), T(1))),
+                          Kd(Kd),
+                          map_Kd(map_Kd)
                 {
                 }
         };
@@ -82,17 +88,19 @@ public:
 
         SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const override;
 
-        Color direct_lighting(
+        Color lighting(
                 const Vector<N, T>& p,
                 const void* intersection_data,
-                const Vector<N, T>& shading_normal,
-                const Vector<N, T>& dir_to_light) const override;
+                const Vector<N, T>& n,
+                const Vector<N, T>& v,
+                const Vector<N, T>& l) const override;
 
         SurfaceReflection<N, T> reflection(
+                RandomEngine<T>& random_engine,
                 const Vector<N, T>& p,
                 const void* intersection_data,
-                const Vector<N, T>& shading_normal,
-                RandomEngine<T>& random_engine) const override;
+                const Vector<N, T>& n,
+                const Vector<N, T>& v) const override;
 
         BoundingBox<N, T> bounding_box() const override;
         std::function<bool(const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>&)> intersection_function()

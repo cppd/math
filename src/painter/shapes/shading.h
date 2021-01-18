@@ -32,15 +32,28 @@ class Shading
         static constexpr T DIFFUSE_REFLECTANCE = T(1) / sampling::sphere_integrate_cosine_factor_over_hemisphere(N);
 
 public:
-        Color direct_lighting(const Vector<N, T>& dir_to_light, const Vector<N, T>& normal, const Color& color) const
+        Color lighting(
+                T /*metalness*/,
+                T /*roughness*/,
+                const Color& color,
+                const Vector<N, T>& n,
+                const Vector<N, T>& /*v*/,
+                const Vector<N, T>& l) const
         {
-                return DIFFUSE_REFLECTANCE * dot(normal, dir_to_light) * color;
+                return DIFFUSE_REFLECTANCE * dot(n, l) * color;
         }
 
         template <typename RandomEngine>
-        SurfaceReflection<N, T> reflection(const Vector<N, T>& normal, const Color& color, RandomEngine& engine) const
+        SurfaceReflection<N, T> reflection(
+                RandomEngine& random_engine,
+                T /*metalness*/,
+                T /*roughness*/,
+                const Color& color,
+                const Vector<N, T>& n,
+                const Vector<N, T>& /*v*/) const
         {
-                return {DIFFUSE_REFLECTANCE * color, sampling::cosine_weighted_on_hemisphere(engine, normal)};
+                Vector<N, T> v = sampling::cosine_weighted_on_hemisphere(random_engine, n);
+                return {DIFFUSE_REFLECTANCE * color, v};
         }
 };
 }

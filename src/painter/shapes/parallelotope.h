@@ -31,16 +31,25 @@ class Parallelotope final : public Shape<N, T>, public Surface<N, T>
 {
         painter::Parallelotope<N, T> m_parallelotope;
         SurfaceProperties<N, T> m_surface_properties;
+        T m_metalness;
+        T m_roughness;
         Color m_color;
         Shading<N, T> m_shading;
 
 public:
         template <typename... V>
-        Parallelotope(const Color& color, Color::DataType alpha, const Vector<N, T>& org, const V&... e)
-                : m_parallelotope(org, e...)
+        Parallelotope(
+                T metalness,
+                T roughness,
+                const Color& color,
+                Color::DataType alpha,
+                const Vector<N, T>& org,
+                const V&... e)
+                : m_parallelotope(org, e...),
+                  m_metalness(std::clamp(metalness, T(0), T(1))),
+                  m_roughness(std::clamp(roughness, T(0), T(1))),
+                  m_color(color)
         {
-                m_color = color;
-
                 m_surface_properties.set_alpha(alpha);
         }
 
@@ -75,22 +84,24 @@ public:
                 return s;
         }
 
-        Color direct_lighting(
+        Color lighting(
                 const Vector<N, T>& /*p*/,
                 const void* /*intersection_data*/,
-                const Vector<N, T>& shading_normal,
-                const Vector<N, T>& dir_to_light) const override
+                const Vector<N, T>& n,
+                const Vector<N, T>& v,
+                const Vector<N, T>& l) const override
         {
-                return m_shading.direct_lighting(dir_to_light, shading_normal, m_color);
+                return m_shading.lighting(m_metalness, m_roughness, m_color, n, v, l);
         }
 
         SurfaceReflection<N, T> reflection(
+                RandomEngine<T>& random_engine,
                 const Vector<N, T>& /*p*/,
                 const void* /*intersection_data*/,
-                const Vector<N, T>& shading_normal,
-                RandomEngine<T>& random_engine) const override
+                const Vector<N, T>& n,
+                const Vector<N, T>& v) const override
         {
-                return m_shading.reflection(shading_normal, m_color, random_engine);
+                return m_shading.reflection(random_engine, m_metalness, m_roughness, m_color, n, v);
         }
 
         BoundingBox<N, T> bounding_box() const override

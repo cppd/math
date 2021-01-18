@@ -231,12 +231,12 @@ void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
         for (const typename mesh::Mesh<N>::Material& m : mesh.materials)
         {
                 int map_Kd = m.map_Kd < 0 ? -1 : (images_offset + m.map_Kd);
-                m_materials.emplace_back(m.Kd, map_Kd);
+                m_materials.emplace_back(mesh_object.metalness(), mesh_object.roughness(), m.Kd, map_Kd);
         }
         if (facets_without_material)
         {
                 ASSERT(materials_offset + default_material_index == static_cast<int>(m_materials.size()));
-                m_materials.emplace_back(mesh_object.color(), -1);
+                m_materials.emplace_back(mesh_object.metalness(), mesh_object.roughness(), mesh_object.color(), -1);
         }
 
         for (const image::Image<N - 1>& image : mesh.images)
@@ -381,11 +381,12 @@ SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& p, const void
 }
 
 template <std::size_t N, typename T>
-Color Mesh<N, T>::direct_lighting(
+Color Mesh<N, T>::lighting(
         const Vector<N, T>& p,
         const void* intersection_data,
-        const Vector<N, T>& shading_normal,
-        const Vector<N, T>& dir_to_light) const
+        const Vector<N, T>& n,
+        const Vector<N, T>& v,
+        const Vector<N, T>& l) const
 {
         const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
 
@@ -403,15 +404,16 @@ Color Mesh<N, T>::direct_lighting(
                 color = m.Kd;
         }
 
-        return m_shading.direct_lighting(dir_to_light, shading_normal, color);
+        return m_shading.lighting(m.metalness, m.roughness, color, n, v, l);
 }
 
 template <std::size_t N, typename T>
 SurfaceReflection<N, T> Mesh<N, T>::reflection(
+        RandomEngine<T>& random_engine,
         const Vector<N, T>& p,
         const void* intersection_data,
-        const Vector<N, T>& shading_normal,
-        RandomEngine<T>& random_engine) const
+        const Vector<N, T>& n,
+        const Vector<N, T>& v) const
 {
         const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
 
@@ -429,7 +431,7 @@ SurfaceReflection<N, T> Mesh<N, T>::reflection(
                 color = m.Kd;
         }
 
-        return m_shading.reflection(shading_normal, color, random_engine);
+        return m_shading.reflection(random_engine, m.metalness, m.roughness, color, n, v);
 }
 
 template <std::size_t N, typename T>
