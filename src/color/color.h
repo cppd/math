@@ -48,7 +48,9 @@ class Color
 public:
         using DataType = T;
 
-        Color() = default;
+        Color()
+        {
+        }
 
         constexpr explicit Color(T grayscale) : m_data(grayscale)
         {
@@ -133,6 +135,24 @@ public:
         bool operator==(const Color& c) const
         {
                 return m_data == c.m_data;
+        }
+
+        void clamp()
+        {
+                for (unsigned i = 0; i < 3; ++i)
+                {
+                        m_data[i] = std::clamp(m_data[i], T(0), T(1));
+                }
+        }
+
+        [[nodiscard]] Color clamped() const
+        {
+                Color c;
+                for (unsigned i = 0; i < 3; ++i)
+                {
+                        c.m_data[i] = std::clamp(m_data[i], T(0), T(1));
+                }
+                return c;
         }
 };
 
