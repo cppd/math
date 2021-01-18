@@ -74,6 +74,11 @@ public:
                 image::format_conversion(
                         image.color_format, image.pixels, image::ColorFormat::R32G32B32,
                         std::as_writable_bytes(std::span(m_data.data(), m_data.size())));
+
+                for (Color& c : m_data)
+                {
+                        c.clamp();
+                }
         }
 
         template <typename T>

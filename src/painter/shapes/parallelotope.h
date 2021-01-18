@@ -48,7 +48,7 @@ public:
                 : m_parallelotope(org, e...),
                   m_metalness(std::clamp(metalness, T(0), T(1))),
                   m_roughness(std::clamp(roughness, T(0), T(1))),
-                  m_color(color)
+                  m_color(color.clamped())
         {
                 m_surface_properties.set_alpha(alpha);
         }

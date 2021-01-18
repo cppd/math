@@ -49,7 +49,7 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
                 Material(T metalness, T roughness, const Color& Kd, int map_Kd)
                         : metalness(std::clamp(metalness, T(0), T(1))),
                           roughness(std::clamp(roughness, T(0), T(1))),
-                          Kd(Kd),
+                          Kd(Kd.clamped()),
                           map_Kd(map_Kd)
                 {
                 }
