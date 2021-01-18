@@ -45,6 +45,7 @@ Chapter 13: FFTs for Arbitrary N.
 
 #include "compute.h"
 
+#include "buffer.h"
 #include "function.h"
 
 #include "../com/groups.h"
@@ -122,61 +123,6 @@ void end_commands(VkQueue queue, VkCommandBuffer command_buffer)
         vulkan::queue_submit(command_buffer, queue);
         vulkan::queue_wait_idle(queue);
 }
-
-class DeviceMemory final
-{
-        static constexpr VkDeviceSize COMPLEX_SIZE = 2 * sizeof(float);
-
-        unsigned m_size;
-        vulkan::BufferWithMemory m_buffer;
-
-public:
-        DeviceMemory(
-                const vulkan::Device& device,
-                const std::unordered_set<uint32_t>& family_indices,
-                unsigned size,
-                vulkan::BufferMemoryType memory_type = vulkan::BufferMemoryType::DeviceLocal)
-                : m_size(size),
-                  m_buffer(memory_type, device, family_indices, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, size * COMPLEX_SIZE)
-        {
-        }
-
-        DeviceMemory(
-                const vulkan::Device& device,
-                const vulkan::CommandPool& transfer_command_pool,
-                const vulkan::Queue& transfer_queue,
-                const std::unordered_set<uint32_t>& family_indices,
-                const std::vector<std::complex<double>>& data)
-                : m_size(data.size()),
-                  m_buffer(
-                          vulkan::BufferMemoryType::DeviceLocal,
-                          device,
-                          family_indices,
-                          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                          data.size() * COMPLEX_SIZE)
-        {
-                const std::vector<std::complex<float>>& float_data = conv<float>(data);
-                m_buffer.write(transfer_command_pool, transfer_queue, data_size(float_data), data_pointer(float_data));
-        }
-
-        unsigned size() const
-        {
-                return m_size;
-        }
-
-        operator const vulkan::BufferWithMemory&() const&
-        {
-                return m_buffer;
-        }
-
-        operator VkBuffer() const&
-        {
-                return m_buffer;
-        }
-
-        operator const vulkan::BufferWithMemory&() const&& = delete;
-        operator VkBuffer() const&& = delete;
-};
 
 void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer)
 {
@@ -370,7 +316,7 @@ public:
                 ASSERT(m_n == (m_n_shared << m_fft_g_memory.size()));
         }
 
-        void set_data(const DeviceMemory& data)
+        void set_data(const ComplexNumberBuffer& data)
         {
                 if (m_n == 1)
                 {
@@ -414,7 +360,12 @@ public:
                 commands_fft_g(command_buffer, inverse);
         }
 
-        void run_for_data(bool inverse, const DeviceMemory& data, VkDevice device, VkCommandPool pool, VkQueue queue)
+        void run_for_data(
+                bool inverse,
+                const ComplexNumberBuffer& data,
+                VkDevice device,
+                VkCommandPool pool,
+                VkQueue queue)
         {
                 if (m_n == 1)
                 {
@@ -471,12 +422,12 @@ class Dft final
         int m_m1 = -1;
         int m_m2 = -1;
 
-        std::optional<DeviceMemory> m_d1_fwd;
-        std::optional<DeviceMemory> m_d1_inv;
-        std::optional<DeviceMemory> m_d2_fwd;
-        std::optional<DeviceMemory> m_d2_inv;
-        std::optional<DeviceMemory> m_x_d;
-        std::optional<DeviceMemory> m_buffer;
+        std::optional<ComplexNumberBuffer> m_d1_fwd;
+        std::optional<ComplexNumberBuffer> m_d1_inv;
+        std::optional<ComplexNumberBuffer> m_d2_fwd;
+        std::optional<ComplexNumberBuffer> m_d2_inv;
+        std::optional<ComplexNumberBuffer> m_x_d;
+        std::optional<ComplexNumberBuffer> m_buffer;
 
         void rows_to_buffer(VkCommandBuffer command_buffer, bool inverse) const
         {
@@ -612,7 +563,9 @@ public:
                 const std::unordered_set<uint32_t> family_indices = {family_index};
 
                 m_x_d.emplace(m_device, family_indices, m_n1 * m_n2, m_buffer_memory_type);
-                m_buffer.emplace(m_device, family_indices, std::max(m_m1 * m_n2, m_m2 * m_n1));
+                m_buffer.emplace(
+                        m_device, family_indices, std::max(m_m1 * m_n2, m_m2 * m_n1),
+                        vulkan::BufferMemoryType::DeviceLocal);
 
                 m_fft_n2_m1.emplace(m_instance.device(), family_indices, m_n2, m_m1);
                 m_fft_n2_m1->set_data(*m_buffer);
