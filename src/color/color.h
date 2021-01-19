@@ -185,6 +185,11 @@ inline Color operator+(const Color& a, const Color& b)
         return Color(a.data() + b.data());
 }
 
+inline Color operator-(const Color& a, const Color& b)
+{
+        return Color(a.data() - b.data());
+}
+
 inline Color operator*(const Color& a, const Color& b)
 {
         return Color(a.data() * b.data());
