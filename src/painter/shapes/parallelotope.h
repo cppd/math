@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "shading.h"
 #include "shape.h"
 
 #include "../objects.h"
+#include "../shading/shading.h"
 #include "../space/parallelotope.h"
 #include "../space/shape_intersection.h"
 

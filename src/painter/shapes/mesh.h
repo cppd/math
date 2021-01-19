@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_facet.h"
 #include "mesh_texture.h"
-#include "shading.h"
 #include "shape.h"
 
 #include "../objects.h"
+#include "../shading/shading.h"
 #include "../space/parallelotope_aa.h"
 #include "../space/tree.h"
 
