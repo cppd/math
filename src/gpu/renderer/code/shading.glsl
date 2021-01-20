@@ -70,25 +70,25 @@ float s_g2_combined(float alpha_2, float n_l, float n_v)
 }
 
 // (9.64)
-//vec3 s_diffuse(vec3 f0, vec3 color, float n_l, float n_v)
+//vec3 s_diffuse(vec3 f0, vec3 rho_ss, float n_l, float n_v)
 //{
 //        float l = (1 - pow(1 - n_l, 5));
 //        float v = (1 - pow(1 - n_v, 5));
-//        return (1 - f0) * color * ((21 / (20 * PI)) * l * v);
+//        return (1 - f0) * rho_ss * ((21 / (20 * PI)) * l * v);
 //}
 
 // (9.66), (9.67) without the subsurface term
-vec3 s_diffuse_disney_without_subsurface(vec3 color, float roughness, float n_l, float n_v, float h_l)
+vec3 s_diffuse_disney_without_subsurface(vec3 rho_ss, float roughness, float n_l, float n_v, float h_l)
 {
         float l = pow(1 - n_l, 5);
         float v = pow(1 - n_v, 5);
         float d_90 = 0.5 + 2 * roughness * sqr(h_l);
         float f_d = mix(1, d_90, l) * mix(1, d_90, v);
-        return color * (n_l * n_v * (1 / PI) * f_d);
+        return rho_ss * (n_l * n_v * (1 / PI) * f_d);
 }
 
 // (9.66), (9.67)
-//vec3 s_diffuse_disney(vec3 color, float roughness, float n_l, float n_v, float h_l, float k_ss)
+//vec3 s_diffuse_disney(vec3 rho_ss, float roughness, float n_l, float n_v, float h_l, float k_ss)
 //{
 //        float l = pow(1 - n_l, 5);
 //        float v = pow(1 - n_v, 5);
@@ -96,10 +96,10 @@ vec3 s_diffuse_disney_without_subsurface(vec3 color, float roughness, float n_l,
 //        float d_90 = 0.5 + 2 * ss_90;
 //        float f_d = mix(1, d_90, l) * mix(1, d_90, v);
 //        float f_ss = (1 / (n_l * n_v) - 0.5) * mix(1, ss_90, l) * mix(1, ss_90, v) + 0.5;
-//        return color * (n_l * n_v * (1 / PI) * mix(f_d, 1.25 * f_ss, k_ss));
+//        return rho_ss * (n_l * n_v * (1 / PI) * mix(f_d, 1.25 * f_ss, k_ss));
 //}
 
-vec3 shade(float intensity, float metalness, float roughness, vec3 color, vec3 n, vec3 l, vec3 v)
+vec3 shade(float intensity, float metalness, float roughness, vec3 surface_color, vec3 n, vec3 l, vec3 v)
 {
         float n_l = dot(n, l);
         if (n_l <= 0)
@@ -112,8 +112,8 @@ vec3 shade(float intensity, float metalness, float roughness, vec3 color, vec3 n
         float alpha = sqr(roughness);
         float alpha_2 = sqr(alpha);
 
-        vec3 f0 = mix(vec3(F0), color, metalness);
-        vec3 rho_ss = mix(color, vec3(0), metalness);
+        vec3 f0 = mix(vec3(F0), surface_color, metalness);
+        vec3 rho_ss = mix(surface_color, vec3(0), metalness);
 
         vec3 h = normalize(l + v);
 
