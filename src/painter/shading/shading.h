@@ -86,7 +86,10 @@ class Shading<3, T>
 {
         static constexpr std::size_t N = 3;
 
-        inline static auto mix = [](const auto&... v)
+        using vec3 = Vector<3, T>;
+        static_assert(std::is_same_v<T, std::remove_cvref_t<decltype(std::declval<vec3>()[0])>>);
+
+        inline static const auto mix = [](const auto&... v)
         {
                 return interpolation(v...);
         };
@@ -98,14 +101,14 @@ class Shading<3, T>
 
         // (9.16)
         // Schlick approximation of Fresnel reflectance
-        static Color fresnel(const Color& f0, T h_l)
+        static vec3 fresnel(const vec3& f0, T h_l)
         {
-                return mix(f0, Color(1), std::pow(1 - h_l, T(5)));
+                return mix(f0, vec3(1), std::pow(1 - h_l, T(5)));
         }
 
         // (9.41)
         // GGX distribution
-        static T d(T alpha_2, T n_h)
+        static T ggx(T alpha_2, T n_h)
         {
                 T v = 1 + sqr(n_h) * (alpha_2 - 1);
                 return n_h * alpha_2 / (PI<T> * sqr(v));
@@ -125,40 +128,39 @@ class Shading<3, T>
         }
 
         // (9.64)
-        Color diffuse(const Color& f0, const Color& color, T n_l, T n_v)
+        vec3 diffuse(const vec3& f0, const vec3& rho_ss, T n_l, T n_v)
         {
                 T l = (1 - std::pow(1 - n_l, T(5)));
                 T v = (1 - std::pow(1 - n_v, T(5)));
-                return (Color(1) - f0) * color * ((21 / (20 * PI<T>)) * l * v);
+                return (vec3(1) - f0) * rho_ss * ((21 / (20 * PI<T>)) * l * v);
         }
 
         // (9.66), (9.67) without the subsurface term
-        static Color diffuse_disney_without_subsurface(const Color& color, T roughness, T n_l, T n_v, T h_l)
+        static vec3 diffuse_disney_without_subsurface(const vec3& rho_ss, T roughness, T n_l, T n_v, T h_l)
         {
                 T l = std::pow(1 - n_l, T(5));
                 T v = std::pow(1 - n_v, T(5));
                 T d_90 = T(0.5) + 2 * roughness * sqr(h_l);
                 T f_d = mix(T(1), d_90, l) * mix(T(1), d_90, v);
-                return color * (n_l * n_v * (1 / PI<T>)*f_d);
+                return rho_ss * (n_l * n_v * (1 / PI<T>)*f_d);
         }
 
         // (9.66), (9.67)
-        static Color diffuse_disney(const Color& color, T roughness, T n_l, T n_v, T h_l, T k_ss)
+        static vec3 diffuse_disney(const vec3& rho_ss, T roughness, T n_l, T n_v, T h_l, T k_ss)
         {
                 T l = std::pow(1 - n_l, T(5));
                 T v = std::pow(1 - n_v, T(5));
                 T ss_90 = roughness * sqr(h_l);
                 T d_90 = T(0.5) + 2 * ss_90;
                 T f_d = mix(T(1), d_90, l) * mix(T(1), d_90, v);
-                T f_ss = mix(T(1), ss_90, l) * mix(T(1), ss_90, v);
-                f_ss = (1 / (n_l * n_v) - T(0.5)) * f_ss + T(0.5);
-                return color * (n_l * n_v * (1 / PI<T>)*mix(f_d, T(1.25) * f_ss, k_ss));
+                T f_ss = (1 / (n_l * n_v) - T(0.5)) * mix(T(1), ss_90, l) * mix(T(1), ss_90, v) + T(0.5);
+                return rho_ss * (n_l * n_v * (1 / PI<T>)*mix(f_d, T(1.25) * f_ss, k_ss));
         }
 
         static Color shade(
                 T metalness,
                 T roughness,
-                const Color& color,
+                const Color& surface_color,
                 const Vector<N, T>& n,
                 const Vector<N, T>& l,
                 const Vector<N, T>& v)
@@ -169,23 +171,28 @@ class Shading<3, T>
                         return Color(0);
                 }
 
+                const vec3& surface_color_v = surface_color.to_rgb_vector<T>();
+
                 constexpr T F0 = 0.05;
 
-                const T alpha = sqr(roughness);
-                const T alpha_2 = sqr(alpha);
+                T alpha = sqr(roughness);
+                T alpha_2 = sqr(alpha);
 
-                Color f0 = mix(Color(F0), color, metalness);
-                Color diffuse_color = mix(color, Color(0), metalness);
+                vec3 f0 = mix(vec3(F0), surface_color_v, metalness);
+                vec3 rho_ss = mix(surface_color_v, vec3(0), metalness);
 
                 Vector<N, T> h = (l + v).normalized();
+
                 T h_l = dot(h, l);
                 T n_v = dot(n, v);
                 T n_h = dot(n, h);
 
-                Color spec = fresnel(f0, h_l) * g2_combined(alpha_2, n_l, n_v) * d(alpha_2, n_h);
-                Color diff = diffuse_disney_without_subsurface(diffuse_color, roughness, n_l, n_v, h_l);
+                vec3 spec = fresnel(f0, h_l) * g2_combined(alpha_2, n_l, n_v) * ggx(alpha_2, n_h);
+                vec3 diff = diffuse_disney_without_subsurface(rho_ss, roughness, n_l, n_v, h_l);
 
-                return spec + diff;
+                vec3 s = n_l * (spec + diff);
+
+                return Color(to_vector<Color::DataType>(s));
         }
 
 public:
