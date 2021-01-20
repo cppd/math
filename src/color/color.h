@@ -56,7 +56,7 @@ public:
         {
         }
 
-        constexpr explicit Color(Vector<3, T>&& rgb) : m_data(rgb)
+        constexpr explicit Color(const Vector<3, T>& rgb) : m_data(rgb)
         {
         }
 
