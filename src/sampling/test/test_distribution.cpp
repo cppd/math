@@ -15,12 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_sphere_distribution.h"
+#include "test_distribution.h"
 
 #include "sphere_buckets.h"
 
 #include "../sphere_cosine.h"
-#include "../sphere_pdf.h"
 #include "../sphere_uniform.h"
 
 #include <src/com/constant.h>
@@ -299,7 +298,7 @@ void test_distribution()
 }
 }
 
-void test_sphere_distribution()
+void test_distribution()
 {
         test_distribution<float>();
         test_distribution<double>();

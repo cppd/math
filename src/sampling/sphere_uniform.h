@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/constant.h>
 #include <src/numerical/vec.h>
 
 #include <cmath>
@@ -158,6 +159,17 @@ Vector<N, T> uniform_on_sphere(RandomEngine& random_engine)
         {
                 return impl::uniform_on_sphere_by_normal_distribution<N, T>(random_engine);
         }
+}
+
+template <typename T>
+T pdf_sphere_uniform(std::type_identity_t<T> angle)
+{
+        // ProbabilityDistribution[1, {x, 0, Pi},  Method -> "Normalize"]
+        if (angle >= 0 && angle < (PI<T>))
+        {
+                return 1 / PI<T>;
+        }
+        return 0;
 }
 
 // Вариант алгоритма для равномерных точек на диске.

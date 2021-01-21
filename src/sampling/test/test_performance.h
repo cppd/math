@@ -19,5 +19,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::sampling
 {
-void test_sphere_performance();
+void test_performance();
 }
