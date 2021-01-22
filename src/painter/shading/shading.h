@@ -53,10 +53,11 @@ class Shading
 {
         static_assert(N >= 4);
 
-        static constexpr T DIFFUSE_REFLECTANCE = T(1) / sampling::sphere_integrate_cosine_factor_over_hemisphere(N);
+        static constexpr T CONSTANT_REFLECTANCE_FACTOR =
+                T(1) / sampling::sphere_integrate_cosine_factor_over_hemisphere(N);
 
 public:
-        static Color lighting(
+        static Color direct_lighting(
                 T /*metalness*/,
                 T /*roughness*/,
                 const Color& color,
@@ -64,7 +65,11 @@ public:
                 const Vector<N, T>& /*v*/,
                 const Vector<N, T>& l)
         {
-                return DIFFUSE_REFLECTANCE * dot(n, l) * color;
+                // f = color / (integrate dot(n,l) over hemisphere)
+                // pdf = 1
+                // s = f / pdf * dot(n,l)
+                // s = color / (integrate dot(n,l) over hemisphere) * dot(n,l)
+                return CONSTANT_REFLECTANCE_FACTOR * dot(n, l) * color;
         }
 
         template <typename RandomEngine>
@@ -77,7 +82,13 @@ public:
                 const Vector<N, T>& /*v*/)
         {
                 Vector<N, T> v = sampling::cosine_weighted_on_hemisphere(random_engine, n);
-                return {DIFFUSE_REFLECTANCE * color, v};
+                // f = color / (integrate dot(n,l) over hemisphere)
+                // pdf = dot(n,l) / (integrate dot(n,l) over hemisphere)
+                // s = f / pdf * dot(n,l)
+                // s = color / (integrate dot(n,l) over hemisphere) /
+                //     (dot(n,l) / (integrate dot(n,l) over hemisphere)) * dot(n,l)
+                // s = color
+                return {color, v};
         }
 };
 
@@ -157,29 +168,22 @@ class Shading<3, T>
                 return rho_ss * (n_l * n_v * (1 / PI<T>)*mix(f_d, T(1.25) * f_ss, k_ss));
         }
 
-        static Color shade(
+        static vec3 f(
                 T metalness,
                 T roughness,
-                const Color& surface_color,
+                const vec3& surface_color,
+                T n_l,
                 const Vector<N, T>& n,
                 const Vector<N, T>& l,
                 const Vector<N, T>& v)
         {
-                T n_l = dot(n, l);
-                if (n_l <= 0)
-                {
-                        return Color(0);
-                }
-
-                const vec3& surface_color_v = surface_color.to_rgb_vector<T>();
-
                 constexpr T F0 = 0.05;
 
                 T alpha = sqr(roughness);
                 T alpha_2 = sqr(alpha);
 
-                vec3 f0 = mix(vec3(F0), surface_color_v, metalness);
-                vec3 rho_ss = mix(surface_color_v, vec3(0), metalness);
+                vec3 f0 = mix(vec3(F0), surface_color, metalness);
+                vec3 rho_ss = mix(surface_color, vec3(0), metalness);
 
                 Vector<N, T> h = (l + v).normalized();
 
@@ -190,13 +194,11 @@ class Shading<3, T>
                 vec3 spec = fresnel(f0, h_l) * g2_combined(alpha_2, n_l, n_v) * ggx(alpha_2, n_h);
                 vec3 diff = diffuse_disney_without_subsurface(rho_ss, roughness, n_l, n_v, h_l);
 
-                vec3 s = n_l * (spec + diff);
-
-                return Color(to_vector<Color::DataType>(s));
+                return spec + diff;
         }
 
 public:
-        static Color lighting(
+        static Color direct_lighting(
                 T metalness,
                 T roughness,
                 const Color& color,
@@ -204,7 +206,16 @@ public:
                 const Vector<N, T>& v,
                 const Vector<N, T>& l)
         {
-                return shade(metalness, roughness, color, n, l, v);
+                T n_l = dot(n, l);
+                if (n_l <= 0)
+                {
+                        return Color(0);
+                }
+                // pdf = 1
+                // s = f / pdf * dot(n,l)
+                // s = f * dot(n,l)
+                vec3 s = n_l * f(metalness, roughness, color.to_rgb_vector<T>(), n_l, n, l, v);
+                return Color(to_vector<Color::DataType>(s));
         }
 
         template <typename RandomEngine>
@@ -216,12 +227,15 @@ public:
                 const Vector<N, T>& n,
                 const Vector<N, T>& v)
         {
-                Vector<N, T> l = sampling::uniform_on_sphere<N, T>(random_engine);
-                if (dot(n, l) < 0)
-                {
-                        l = -l;
-                }
-                return {shade(metalness, roughness, color, n, l, v), l};
+                Vector<N, T> l = sampling::cosine_weighted_on_hemisphere(random_engine, n);
+                T n_l = dot(n, l);
+                // pdf = dot(n,l) / (integrate dot(n,l) over 2-hemisphere)
+                // pdf = dot(n,l) / PI
+                // s = f / pdf * dot(n,l)
+                // s = f / (dot(n,l) / PI) * dot(n,l)
+                // s = f * PI
+                vec3 s = PI<T> * f(metalness, roughness, color.to_rgb_vector<T>(), n_l, n, l, v);
+                return {Color(to_vector<Color::DataType>(s)), l};
         }
 };
 }

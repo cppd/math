@@ -404,7 +404,7 @@ Color Mesh<N, T>::lighting(
                 color = m.Kd;
         }
 
-        return m_shading.lighting(m.metalness, m.roughness, color, n, v, l);
+        return m_shading.direct_lighting(m.metalness, m.roughness, color, n, v, l);
 }
 
 template <std::size_t N, typename T>

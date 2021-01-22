@@ -91,7 +91,7 @@ public:
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const override
         {
-                return m_shading.lighting(m_metalness, m_roughness, m_color, n, v, l);
+                return m_shading.direct_lighting(m_metalness, m_roughness, m_color, n, v, l);
         }
 
         SurfaceReflection<N, T> reflection(
