@@ -19,6 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  Eric Heitz.
  Sampling the GGX Distribution of Visible Normals.
  Journal of Computer Graphics Techniques (JCGT), vol. 7, no. 4, 1–13, 2018.
+
+ Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
+ Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
+ Real-Time Rendering. Fourth Edition.
+ CRC Press, 2018.
 */
 
 #pragma once
@@ -93,5 +98,50 @@ Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& normal, con
                 res += ne[i] * basis[i];
         }
         return res;
+}
+
+// (9.42)
+template <typename T>
+T ggx_g1_lambda(T alpha)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        return T(0.5) * (std::sqrt(1 + 1 / square(alpha)) - 1);
+}
+
+// (9.24)
+template <typename T>
+T ggx_g1(T h_v, T alpha)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        return h_v / (1 + ggx_g1_lambda<T>(alpha));
+}
+
+// (9.41)
+template <typename T>
+T ggx_df(T n_h, T alpha)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        T alpha_2 = square(alpha);
+        T v = 1 + square(n_h) * (alpha_2 - 1);
+        return n_h * alpha_2 / (PI<T> * square(v));
+}
+
+// (2), (3)
+template <typename T>
+T ggx_vndf(T n_v, T n_h, T h_v, T alpha)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        return ggx_g1(h_v, alpha) * ggx_df(n_h, alpha) / n_v;
+}
+
+// (17)
+template <typename T>
+T pdf_ggx_reflected(T n_v, T n_h, T h_v, T alpha)
+{
+        return ggx_vndf(n_v, n_h, h_v, alpha) / (4 * h_v);
 }
 }
