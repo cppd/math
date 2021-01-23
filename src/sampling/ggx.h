@@ -100,22 +100,24 @@ Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& normal, con
         return res;
 }
 
-// (9.42)
+// (9.37) (9.42)
 template <typename T>
-T ggx_g1_lambda(T alpha)
+T ggx_g1_lambda(T n_v, T alpha)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        return T(0.5) * (std::sqrt(1 + 1 / square(alpha)) - 1);
+        T a_square = square(n_v / alpha) / (1 - square(n_v));
+
+        return T(0.5) * (std::sqrt(1 + 1 / a_square) - 1);
 }
 
 // (9.24)
 template <typename T>
-T ggx_g1(T h_v, T alpha)
+T ggx_g1(T n_v, T h_v, T alpha)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        return h_v / (1 + ggx_g1_lambda<T>(alpha));
+        return h_v / (1 + ggx_g1_lambda(n_v, alpha));
 }
 
 // (9.41)
@@ -135,7 +137,7 @@ T ggx_vndf(T n_v, T n_h, T h_v, T alpha)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        return ggx_g1(h_v, alpha) * ggx_df(n_h, alpha) / n_v;
+        return ggx_g1(n_v, h_v, alpha) * ggx_df(n_h, alpha) / n_v;
 }
 
 // (17)
