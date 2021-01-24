@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "sphere_surface.h"
 #include "sphere_uniform.h"
 
 #include <src/com/constant.h>
@@ -216,29 +217,24 @@ Vector<3, T> power_cosine_weighted_on_hemisphere(RandomEngine& random_engine, co
         return res;
 }
 
-template <typename T>
+template <std::size_t N, typename T>
 T pdf_sphere_cosine(std::type_identity_t<T> angle)
 {
-        // ProbabilityDistribution[Cos[x], {x, 0, Pi/2}, Method -> "Normalize"]
         if (angle >= 0 && angle < (PI<T> / 2))
         {
-                return std::cos(angle);
+                static constexpr T n = 1 / sphere_integrate_cosine_factor_over_hemisphere(N);
+                return std::cos(angle) * n;
         }
         return 0;
 }
 
-template <typename T>
+template <std::size_t N, typename T>
 T pdf_sphere_power_cosine(std::type_identity_t<T> angle, std::type_identity_t<T> power)
 {
-        // Assuming[n >= 0,
-        //   ProbabilityDistribution[Cos[x]^n, {x, 0, Pi/2},
-        //   Method -> "Normalize"]]
         if (angle >= 0 && angle < (PI<T> / 2))
         {
-                T norm = 2 / std::sqrt(PI<T>);
-                norm *= std::exp(std::lgamma((2 + power) / 2) - std::lgamma((1 + power) / 2));
-                T v = norm * std::pow(std::cos(angle), power);
-                return v;
+                const T n = sphere_integrate_power_cosine_factor_over_hemisphere<N, T>(power);
+                return std::pow(std::cos(angle), power) / n;
         }
         return 0;
 }

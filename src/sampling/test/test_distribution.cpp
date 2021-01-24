@@ -181,7 +181,7 @@ void test_uniform_on_sphere(long long unit_count, long long distribution_count, 
                 },
                 [](T angle)
                 {
-                        return pdf_sphere_uniform<T>(angle);
+                        return pdf_sphere_uniform<N, T>(angle);
                 });
 
         test_performance<N, T>(
@@ -218,7 +218,7 @@ void test_cosine_on_hemisphere(long long unit_count, long long distribution_coun
                 },
                 [](T angle)
                 {
-                        return pdf_sphere_cosine<T>(angle);
+                        return pdf_sphere_cosine<N, T>(angle);
                 });
 
         test_performance<N, T>(
@@ -261,7 +261,7 @@ void test_power_cosine_on_hemisphere(long long unit_count, long long distributio
                 },
                 [&](T angle)
                 {
-                        return pdf_sphere_power_cosine<T>(angle, POWER);
+                        return pdf_sphere_power_cosine<N, T>(angle, POWER);
                 });
 
         test_performance<N, T>(

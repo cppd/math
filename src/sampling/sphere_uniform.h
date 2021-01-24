@@ -32,6 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "sphere_surface.h"
+
 #include <src/com/constant.h>
 #include <src/numerical/vec.h>
 
@@ -161,13 +163,13 @@ Vector<N, T> uniform_on_sphere(RandomEngine& random_engine)
         }
 }
 
-template <typename T>
+template <std::size_t N, typename T>
 T pdf_sphere_uniform(std::type_identity_t<T> angle)
 {
-        // ProbabilityDistribution[1, {x, 0, Pi},  Method -> "Normalize"]
         if (angle >= 0 && angle < (PI<T>))
         {
-                return 1 / PI<T>;
+                static constexpr T n = 1 / sphere_area(N);
+                return n;
         }
         return 0;
 }

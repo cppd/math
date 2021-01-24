@@ -89,29 +89,27 @@ public:
                 std::vector<T> distribution_values;
                 distribution_values.reserve(m_buckets.size());
 
+                const long double SPHERE_K = sphere_area(N) / sphere_relative_area<N, long double>(0, PI<T>);
+                long long cnt = 0;
                 for (unsigned bucket = 0; bucket < m_buckets.size(); ++bucket)
                 {
                         Distribution& d = m_distribution.emplace_back();
 
+                        cnt += m_buckets[bucket];
+
                         d.angle_from = bucket * BUCKET_SIZE;
                         d.angle_to = (bucket + 1) * BUCKET_SIZE;
 
-                        long double bucket_area = sphere_relative_area<N, long double>(d.angle_from, d.angle_to);
+                        long double bucket_area =
+                                SPHERE_K * sphere_relative_area<N, long double>(d.angle_from, d.angle_to);
                         d.distribution = m_buckets[bucket] / bucket_area;
 
                         distribution_values.push_back(d.distribution);
                 }
 
-                std::sort(distribution_values.begin(), distribution_values.end());
-                T sum = 0;
-                for (T d : distribution_values)
-                {
-                        sum += d;
-                }
-                sum *= BUCKET_SIZE;
                 for (Distribution& d : m_distribution)
                 {
-                        d.distribution /= sum;
+                        d.distribution /= cnt;
                 }
 
                 ASSERT(std::is_sorted(
