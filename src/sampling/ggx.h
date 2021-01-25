@@ -37,6 +37,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::sampling
 {
+namespace ggx_implementation
+{
 template <typename T, typename RandomEngine>
 Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& ve, T alpha)
 {
@@ -79,6 +81,7 @@ Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& ve, T alpha
 
         return ne;
 }
+}
 
 template <typename T, typename RandomEngine>
 Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& normal, const Vector<3, T>& v, T alpha)
@@ -90,7 +93,7 @@ Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& normal, con
         ve[1] = dot(v, basis[1]);
         ve[2] = dot(v, normal);
 
-        Vector<3, T> ne = ggx_vn(random_engine, ve, alpha);
+        Vector<3, T> ne = ggx_implementation::ggx_vn(random_engine, ve, alpha);
 
         Vector<3, T> res = ne[2] * normal;
         for (unsigned i = 0; i < 2; ++i)
@@ -128,7 +131,7 @@ T ggx_df(T n_h, T alpha)
 
         T alpha_2 = square(alpha);
         T v = 1 + square(n_h) * (alpha_2 - 1);
-        return n_h * alpha_2 / (PI<T> * square(v));
+        return std::max(T(0), n_h) * alpha_2 / (PI<T> * square(v));
 }
 
 // (2), (3)

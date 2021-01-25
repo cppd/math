@@ -273,12 +273,12 @@ void test_power_cosine_on_hemisphere(long long unit_count, long long distributio
 }
 
 template <std::size_t N, typename T>
-std::enable_if_t<N == 3> test_ggx(long long unit_count, long long /*distribution_count*/, long long performance_count)
+std::enable_if_t<N == 3> test_ggx(long long unit_count, long long distribution_count, long long performance_count)
 {
         const T ALPHA = []()
         {
                 RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-                return std::uniform_real_distribution<T>(0, 1)(random_engine);
+                return std::uniform_real_distribution<T>(0.1, 1)(random_engine);
         }();
 
         const std::string NAME = "ggx_alpha_" + to_string_fixed(ALPHA, 2);
@@ -299,6 +299,17 @@ std::enable_if_t<N == 3> test_ggx(long long unit_count, long long /*distribution
                                 v = -v;
                         }
                         return ggx_vn(random_engine, NORMAL, v, ALPHA);
+                });
+
+        test_distribution<N, T>(
+                NAME, distribution_count, NORMAL,
+                [&](RandomEngine<T>& random_engine)
+                {
+                        return ggx_vn(random_engine, NORMAL, NORMAL, ALPHA);
+                },
+                [&](T angle)
+                {
+                        return ggx_df(std::cos(angle), ALPHA);
                 });
 
         const Vector<N, T> V = [&]()
