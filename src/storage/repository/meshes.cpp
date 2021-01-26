@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/constant.h>
 #include <src/com/error.h>
+#include <src/geometry/objects/sphere.h>
 #include <src/model/mesh_utility.h>
 #include <src/numerical/quaternion.h>
 #include <src/sampling/sphere_uniform.h>
@@ -318,44 +319,52 @@ std::vector<Vector<N, float>> generate_points_torus(unsigned point_count, bool b
 //
 
 template <std::size_t N>
-std::vector<Vector<N, float>> ellipsoid(unsigned point_count)
+std::unique_ptr<mesh::Mesh<N>> ellipsoid(unsigned point_count)
 {
-        return generate_points_ellipsoid<N>(point_count, false);
+        return mesh::create_mesh_for_points(generate_points_ellipsoid<N>(point_count, false));
 }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> ellipsoid_bound(unsigned point_count)
+std::unique_ptr<mesh::Mesh<N>> ellipsoid_bound(unsigned point_count)
 {
-        return generate_points_ellipsoid<N>(point_count, true);
+        return mesh::create_mesh_for_points(generate_points_ellipsoid<N>(point_count, true));
 }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> sphere_with_notch(unsigned point_count)
+std::unique_ptr<mesh::Mesh<N>> sphere_with_notch(unsigned point_count)
 {
-        return generate_points_sphere_with_notch<N>(point_count, false);
+        return mesh::create_mesh_for_points(generate_points_sphere_with_notch<N>(point_count, false));
 }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> sphere_with_notch_bound(unsigned point_count)
+std::unique_ptr<mesh::Mesh<N>> sphere_with_notch_bound(unsigned point_count)
 {
-        return generate_points_sphere_with_notch<N>(point_count, true);
+        return mesh::create_mesh_for_points(generate_points_sphere_with_notch<N>(point_count, true));
 }
 
-std::vector<Vector<3, float>> mobius_strip(unsigned point_count)
+std::unique_ptr<mesh::Mesh<3>> mobius_strip(unsigned point_count)
 {
-        return generate_points_mobius_strip(point_count);
-}
-
-template <std::size_t N>
-std::vector<Vector<N, float>> torus(unsigned point_count)
-{
-        return generate_points_torus<N>(point_count, false);
+        return mesh::create_mesh_for_points(generate_points_mobius_strip(point_count));
 }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> torus_bound(unsigned point_count)
+std::unique_ptr<mesh::Mesh<N>> torus(unsigned point_count)
 {
-        return generate_points_torus<N>(point_count, true);
+        return mesh::create_mesh_for_points(generate_points_torus<N>(point_count, false));
+}
+
+template <std::size_t N>
+std::unique_ptr<mesh::Mesh<N>> torus_bound(unsigned point_count)
+{
+        return mesh::create_mesh_for_points(generate_points_torus<N>(point_count, true));
+}
+
+std::unique_ptr<mesh::Mesh<3>> sphere(unsigned facet_count)
+{
+        std::vector<Vector<3, float>> points;
+        std::vector<std::array<int, 3>> facets;
+        geometry::make_sphere(facet_count, &points, &facets);
+        return mesh::create_mesh_for_facets(points, facets);
 }
 
 //
@@ -377,7 +386,7 @@ std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 template <std::size_t N>
 class Impl final : public MeshObjectRepository<N>
 {
-        std::map<std::string, std::function<std::vector<Vector<N, float>>(unsigned)>> m_map;
+        std::map<std::string, std::function<std::unique_ptr<mesh::Mesh<N>>(unsigned)>> m_map;
 
         std::vector<std::string> object_names() const override
         {
@@ -389,7 +398,7 @@ class Impl final : public MeshObjectRepository<N>
                 auto iter = m_map.find(object_name);
                 if (iter != m_map.cend())
                 {
-                        return mesh::create_mesh_for_points(iter->second(point_count));
+                        return iter->second(point_count);
                 }
                 error("Object not found in repository: " + object_name);
         }
@@ -406,6 +415,7 @@ public:
                 if constexpr (N == 3)
                 {
                         m_map.emplace(reinterpret_cast<const char*>(u8"Möbius strip"), mobius_strip);
+                        m_map.emplace("Sphere", sphere);
                 }
 
                 if constexpr (N >= 3)
