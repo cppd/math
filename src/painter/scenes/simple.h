@@ -53,7 +53,7 @@ std::unique_ptr<const Scene<N, T>> simple_scene(
                       + ", max = " + to_string(max_screen_size));
         }
 
-        const BoundingBox<N, T> bb = shape->bounding_box();
+        const geometry::BoundingBox<N, T> bb = shape->bounding_box();
         const Vector<N, T> object_size = bb.max - bb.min;
         const Vector<N, T> center = bb.min + object_size / T(2);
 

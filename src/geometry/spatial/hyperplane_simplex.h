@@ -37,7 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cmath>
 
-namespace ns::painter
+namespace ns::geometry
 {
 template <std::size_t N, typename T>
 class HyperplaneSimplex final

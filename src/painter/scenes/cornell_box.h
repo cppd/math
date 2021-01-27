@@ -161,7 +161,7 @@ std::unique_ptr<const Scene<3, T>> cornell_box_scene(
 {
         namespace impl = cornell_box_scene_implementation;
 
-        const BoundingBox bb = shape->bounding_box();
+        const geometry::BoundingBox bb = shape->bounding_box();
         const T size = (bb.max - bb.min).norm() * T(1.1);
         const Vector<3, T> center = (bb.max + bb.min) * T(0.5);
 
@@ -177,7 +177,7 @@ std::unique_ptr<const Scene<N, T>> cornell_box_scene(int screen_size, std::uniqu
 {
         namespace impl = cornell_box_scene_implementation;
 
-        const BoundingBox bb = shape->bounding_box();
+        const geometry::BoundingBox bb = shape->bounding_box();
         const T size = (bb.max - bb.min).norm() * T(1.1);
         const Vector<N, T> center = (bb.max + bb.min) * T(0.5);
 

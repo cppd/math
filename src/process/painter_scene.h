@@ -87,7 +87,7 @@ std::unique_ptr<const painter::Scene<3, T>> create_scene(
         const Color& background_color,
         const Color::DataType& lighting_intensity)
 {
-        const painter::BoundingBox<3, T> bb = shape->bounding_box();
+        const geometry::BoundingBox<3, T> bb = shape->bounding_box();
         const T scene_size = (bb.max - bb.min).norm();
 
         std::vector<std::unique_ptr<const painter::LightSource<3, T>>> light_sources;

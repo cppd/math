@@ -83,7 +83,7 @@ T max_coordinate_modulus(const Vector<N, T>& a, const Vector<N, T>& b)
 template <std::size_t N, typename T>
 void offset_and_rays_for_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, T* offset, std::vector<Ray<N, T>>* rays)
 {
-        const BoundingBox<N, T> bb = mesh.bounding_box();
+        const geometry::BoundingBox<N, T> bb = mesh.bounding_box();
 
         *offset = max_coordinate_modulus(bb.min, bb.max) * (100 * limits<T>::epsilon());
 

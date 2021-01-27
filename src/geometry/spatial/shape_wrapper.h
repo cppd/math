@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <utility>
 
-namespace ns::painter
+namespace ns::geometry
 {
 template <typename Shape, typename = void>
 class ShapeWrapperForIntersection final

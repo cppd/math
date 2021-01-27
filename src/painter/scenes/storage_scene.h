@@ -19,14 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 #include "../shapes/shape.h"
-#include "../space/parallelotope_aa.h"
-#include "../space/shape_intersection.h"
-#include "../space/shape_wrapper.h"
-#include "../space/tree.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
+#include <src/geometry/spatial/parallelotope_aa.h>
+#include <src/geometry/spatial/shape_intersection.h>
+#include <src/geometry/spatial/shape_wrapper.h>
+#include <src/geometry/spatial/tree.h>
 
 #include <algorithm>
 #include <memory>
@@ -78,12 +78,12 @@ std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
 }
 
 template <std::size_t N, typename T>
-BoundingBox<N, T> compute_bounding_box(const std::vector<const Shape<N, T>*>& shapes)
+geometry::BoundingBox<N, T> compute_bounding_box(const std::vector<const Shape<N, T>*>& shapes)
 {
-        BoundingBox<N, T> bb = shapes[0]->bounding_box();
+        geometry::BoundingBox<N, T> bb = shapes[0]->bounding_box();
         for (std::size_t i = 1; i < shapes.size(); ++i)
         {
-                BoundingBox<N, T> shape_bb = shapes[i]->bounding_box();
+                geometry::BoundingBox<N, T> shape_bb = shapes[i]->bounding_box();
                 bb.min = min_vector(bb.min, shape_bb.min);
                 bb.max = max_vector(bb.max, shape_bb.max);
         }
@@ -172,11 +172,12 @@ std::optional<Intersection<N, T>> ray_intersect(
 template <std::size_t N, typename T>
 void create_tree(
         const std::vector<const Shape<N, T>*>& shapes,
-        const BoundingBox<N, T>& bounding_box,
-        SpatialSubdivisionTree<ParallelotopeAA<N, T>>* tree,
+        const geometry::BoundingBox<N, T>& bounding_box,
+        geometry::SpatialSubdivisionTree<geometry::ParallelotopeAA<N, T>>* tree,
         ProgressRatio* progress)
 {
-        std::vector<std::function<bool(const ShapeWrapperForIntersection<ParallelotopeAA<N, T>>&)>> wrappers;
+        std::vector<std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)>>
+                wrappers;
         wrappers.reserve(shapes.size());
         for (const Shape<N, T>* s : shapes)
         {
@@ -185,9 +186,9 @@ void create_tree(
 
         const auto shape_intersections =
                 [w = std::as_const(wrappers)](
-                        const ParallelotopeAA<N, T>& parallelotope, const std::vector<int>& indices)
+                        const geometry::ParallelotopeAA<N, T>& parallelotope, const std::vector<int>& indices)
         {
-                ShapeWrapperForIntersection p(parallelotope);
+                geometry::ShapeWrapperForIntersection p(parallelotope);
                 std::vector<int> intersections;
                 intersections.reserve(indices.size());
                 for (int object_index : indices)
@@ -224,7 +225,7 @@ class StorageScene final : public Scene<N, T>
 
         T m_size;
 
-        SpatialSubdivisionTree<ParallelotopeAA<N, T>> m_tree;
+        geometry::SpatialSubdivisionTree<geometry::ParallelotopeAA<N, T>> m_tree;
 
         T size() const override
         {
@@ -301,7 +302,8 @@ public:
         {
                 ASSERT(m_projector);
 
-                const BoundingBox<N, T> bounding_box = scene_implementation::compute_bounding_box(m_shape_pointers);
+                const geometry::BoundingBox<N, T> bounding_box =
+                        scene_implementation::compute_bounding_box(m_shape_pointers);
 
                 m_size = (bounding_box.max - bounding_box.min).norm();
 

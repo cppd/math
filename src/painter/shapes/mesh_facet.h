@@ -17,11 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../space/constraint.h"
-#include "../space/hyperplane_simplex.h"
-
 #include <src/com/alg.h>
 #include <src/com/error.h>
+#include <src/geometry/spatial/constraint.h>
+#include <src/geometry/spatial/hyperplane_simplex.h>
 #include <src/numerical/orthogonal.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
@@ -89,7 +88,7 @@ class MeshFacet
 
         Vector<N, T> m_normal;
 
-        HyperplaneSimplex<N, T> m_geometry;
+        geometry::HyperplaneSimplex<N, T> m_geometry;
 
         enum class NormalType : char
         {
@@ -271,7 +270,7 @@ public:
                 return mesh_facet_implementation::vertices_to_array(m_vertices, m_v);
         }
 
-        Constraints<N, T, N, 1> constraints() const
+        geometry::Constraints<N, T, N, 1> constraints() const
         {
                 return m_geometry.constraints(m_normal, mesh_facet_implementation::vertices_to_array(m_vertices, m_v));
         }

@@ -17,27 +17,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/type/limit.h>
-#include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
-#include <optional>
+#include <array>
 
-namespace ns::painter
+namespace ns::geometry
 {
 template <std::size_t N, typename T>
-std::optional<T> hyperplane_intersect(
-        const Ray<N, T>& ray,
-        const Vector<N, T>& plane_point,
-        const Vector<N, T>& plane_normal)
+struct BoundingBox final
 {
-        T s = dot(plane_normal, ray.dir());
-        T t = dot(plane_point - ray.org(), plane_normal) / s;
+        Vector<N, T> min;
+        Vector<N, T> max;
 
-        if (t > T(0) && t <= limits<T>::max())
+        BoundingBox() = default;
+
+        BoundingBox(const Vector<N, T>& min, const Vector<N, T>& max) : min(min), max(max)
         {
-                return t;
         }
-        return std::nullopt;
-}
+
+        template <std::size_t Size>
+        explicit BoundingBox(const std::array<Vector<N, T>, Size>& points)
+        {
+                static_assert(Size > 0);
+                min = points[0];
+                max = points[0];
+                for (std::size_t i = 1; i < Size; ++i)
+                {
+                        min = min_vector(points[i], min);
+                        max = max_vector(points[i], max);
+                }
+        }
+};
 }

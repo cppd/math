@@ -17,13 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh.h"
 
-#include "../space/shape_intersection.h"
-#include "../space/shape_wrapper.h"
-
 #include <src/com/log.h>
 #include <src/com/thread.h>
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
+#include <src/geometry/spatial/shape_intersection.h>
+#include <src/geometry/spatial/shape_wrapper.h>
 #include <src/numerical/transform.h>
 #include <src/numerical/vec.h>
 
@@ -125,13 +124,13 @@ std::optional<Intersection<N, T>> ray_intersection(
 template <std::size_t N, typename T, typename TreeParallelotope>
 void create_tree(
         const std::vector<MeshFacet<N, T>>& facets,
-        const BoundingBox<N, T>& bounding_box,
-        SpatialSubdivisionTree<TreeParallelotope>* tree,
+        const geometry::BoundingBox<N, T>& bounding_box,
+        geometry::SpatialSubdivisionTree<TreeParallelotope>* tree,
         ProgressRatio* progress)
 {
         progress->set_text(to_string(1 << N) + "-tree: %v of %m");
 
-        std::vector<ShapeWrapperForIntersection<MeshFacet<N, T>>> wrappers;
+        std::vector<geometry::ShapeWrapperForIntersection<MeshFacet<N, T>>> wrappers;
         wrappers.reserve(facets.size());
         for (const MeshFacet<N, T>& t : facets)
         {
@@ -141,7 +140,7 @@ void create_tree(
         const auto facet_intersections =
                 [w = std::as_const(wrappers)](const TreeParallelotope& parallelotope, const std::vector<int>& indices)
         {
-                ShapeWrapperForIntersection p(parallelotope);
+                geometry::ShapeWrapperForIntersection p(parallelotope);
                 std::vector<int> intersections;
                 intersections.reserve(indices.size());
                 for (int object_index : indices)
@@ -435,19 +434,19 @@ SurfaceReflection<N, T> Mesh<N, T>::reflection(
 }
 
 template <std::size_t N, typename T>
-BoundingBox<N, T> Mesh<N, T>::bounding_box() const
+geometry::BoundingBox<N, T> Mesh<N, T>::bounding_box() const
 {
         return m_bounding_box;
 }
 
 template <std::size_t N, typename T>
-std::function<bool(const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>&)> Mesh<N, T>::
+std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)> Mesh<N, T>::
         intersection_function() const
 {
-        return [w = ShapeWrapperForIntersection(m_tree.root())](
-                       const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>& p)
+        return [w = geometry::ShapeWrapperForIntersection(m_tree.root())](
+                       const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>& p)
         {
-                return shape_intersection(w, p);
+                return geometry::shape_intersection(w, p);
         };
 }
 

@@ -19,33 +19,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vec.h>
 
-#include <array>
-
-namespace ns::painter
+namespace ns::geometry
 {
+// a * x + b
 template <std::size_t N, typename T>
-struct BoundingBox final
+struct Constraint final
 {
-        Vector<N, T> min;
-        Vector<N, T> max;
+        Vector<N, T> a;
+        T b;
+};
 
-        BoundingBox() = default;
+template <std::size_t N, typename T, std::size_t Count, std::size_t CountEq>
+struct Constraints final
+{
+        std::array<Constraint<N, T>, Count> c;
+        std::array<Constraint<N, T>, CountEq> c_eq;
+};
 
-        BoundingBox(const Vector<N, T>& min, const Vector<N, T>& max) : min(min), max(max)
-        {
-        }
-
-        template <std::size_t Size>
-        explicit BoundingBox(const std::array<Vector<N, T>, Size>& points)
-        {
-                static_assert(Size > 0);
-                min = points[0];
-                max = points[0];
-                for (std::size_t i = 1; i < Size; ++i)
-                {
-                        min = min_vector(points[i], min);
-                        max = max_vector(points[i], max);
-                }
-        }
+template <std::size_t N, typename T, std::size_t Count>
+struct Constraints<N, T, Count, 0> final
+{
+        std::array<Constraint<N, T>, Count> c;
 };
 }

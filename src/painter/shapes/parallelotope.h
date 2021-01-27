@@ -21,15 +21,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 #include "../shading/shading.h"
-#include "../space/parallelotope.h"
-#include "../space/shape_intersection.h"
+
+#include <src/geometry/spatial/parallelotope.h>
+#include <src/geometry/spatial/shape_intersection.h>
 
 namespace ns::painter::shapes
 {
 template <std::size_t N, typename T>
 class Parallelotope final : public Shape<N, T>, public Surface<N, T>
 {
-        painter::Parallelotope<N, T> m_parallelotope;
+        geometry::Parallelotope<N, T> m_parallelotope;
         SurfaceProperties<N, T> m_surface_properties;
         T m_metalness;
         T m_roughness;
@@ -104,18 +105,18 @@ public:
                 return m_shading.reflection(random_engine, m_metalness, m_roughness, m_color, n, v);
         }
 
-        BoundingBox<N, T> bounding_box() const override
+        geometry::BoundingBox<N, T> bounding_box() const override
         {
-                return BoundingBox<N, T>(m_parallelotope.vertices());
+                return geometry::BoundingBox<N, T>(m_parallelotope.vertices());
         }
 
-        std::function<bool(const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>&)> intersection_function()
-                const override
+        std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)>
+                intersection_function() const override
         {
-                return [w = ShapeWrapperForIntersection(m_parallelotope)](
-                               const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>& p)
+                return [w = geometry::ShapeWrapperForIntersection(m_parallelotope)](
+                               const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>& p)
                 {
-                        return shape_intersection(w, p);
+                        return geometry::shape_intersection(w, p);
                 };
         }
 };

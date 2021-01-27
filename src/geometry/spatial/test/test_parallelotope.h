@@ -17,28 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/numerical/vec.h>
-
-namespace ns::painter
+namespace ns::geometry
 {
-// a * x + b
-template <std::size_t N, typename T>
-struct Constraint final
-{
-        Vector<N, T> a;
-        T b;
-};
-
-template <std::size_t N, typename T, std::size_t Count, std::size_t CountEq>
-struct Constraints final
-{
-        std::array<Constraint<N, T>, Count> c;
-        std::array<Constraint<N, T>, CountEq> c_eq;
-};
-
-template <std::size_t N, typename T, std::size_t Count>
-struct Constraints<N, T, Count, 0> final
-{
-        std::array<Constraint<N, T>, Count> c;
-};
+void test_parallelotope(int number_of_dimensions);
 }

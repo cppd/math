@@ -37,7 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <utility>
 
-namespace ns::painter
+namespace ns::geometry
 {
 namespace
 {

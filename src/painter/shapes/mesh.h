@@ -23,10 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 #include "../shading/shading.h"
-#include "../space/parallelotope_aa.h"
-#include "../space/tree.h"
 
 #include <src/color/color.h>
+#include <src/geometry/spatial/parallelotope_aa.h>
+#include <src/geometry/spatial/tree.h>
 #include <src/model/mesh_object.h>
 #include <src/numerical/matrix.h>
 #include <src/progress/progress.h>
@@ -38,7 +38,7 @@ namespace ns::painter::shapes
 template <std::size_t N, typename T>
 class Mesh final : public Shape<N, T>, public Surface<N, T>
 {
-        using TreeParallelotope = ParallelotopeAA<N, T>;
+        using TreeParallelotope = geometry::ParallelotopeAA<N, T>;
 
         struct Material
         {
@@ -62,8 +62,8 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
         std::vector<MeshTexture<N - 1>> m_images;
         std::vector<MeshFacet<N, T>> m_facets;
 
-        SpatialSubdivisionTree<TreeParallelotope> m_tree;
-        BoundingBox<N, T> m_bounding_box;
+        geometry::SpatialSubdivisionTree<TreeParallelotope> m_tree;
+        geometry::BoundingBox<N, T> m_bounding_box;
 
         Color::DataType m_alpha;
 
@@ -102,8 +102,8 @@ public:
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const override;
 
-        BoundingBox<N, T> bounding_box() const override;
-        std::function<bool(const ShapeWrapperForIntersection<painter::ParallelotopeAA<N, T>>&)> intersection_function()
-                const override;
+        geometry::BoundingBox<N, T> bounding_box() const override;
+        std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)>
+                intersection_function() const override;
 };
 }

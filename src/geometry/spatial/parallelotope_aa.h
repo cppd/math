@@ -37,7 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <utility>
 
-namespace ns::painter
+namespace ns::geometry
 {
 namespace parallelotope_aa_implementation
 {
@@ -550,7 +550,7 @@ Vector<N, T> ParallelotopeAA<N, T>::max() const
 namespace ns
 {
 template <std::size_t N, typename T>
-std::string to_string(const painter::ParallelotopeAA<N, T>& p)
+std::string to_string(const geometry::ParallelotopeAA<N, T>& p)
 {
         std::string s;
         s += "org = " + to_string(p.org()) + "\n";

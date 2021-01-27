@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <utility>
 
-namespace ns::painter
+namespace ns::geometry
 {
 namespace shape_intersection_implementation
 {

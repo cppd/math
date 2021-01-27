@@ -39,7 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <utility>
 
-namespace ns::painter
+namespace ns::geometry
 {
 namespace parallelotope_implementation
 {
@@ -562,7 +562,7 @@ const Vector<N, T>& Parallelotope<N, T>::e(unsigned n) const
 namespace ns
 {
 template <std::size_t N, typename T>
-std::string to_string(const painter::Parallelotope<N, T>& p)
+std::string to_string(const geometry::Parallelotope<N, T>& p)
 {
         std::string s;
         s += "org = " + to_string(p.org()) + "\n";

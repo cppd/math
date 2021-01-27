@@ -22,13 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/str.h>
 #include <src/geometry/core/test/test_convex_hull.h>
 #include <src/geometry/reconstruction/test/test_reconstruction.h>
+#include <src/geometry/spatial/test/test_parallelotope.h>
 #include <src/gpu/dft/test/test_dft.h>
 #include <src/numerical/test/test_complement.h>
 #include <src/numerical/test/test_eigen.h>
 #include <src/numerical/test/test_normal.h>
 #include <src/numerical/test/test_simplex.h>
 #include <src/painter/shapes/test/test_mesh.h>
-#include <src/painter/space/test/test_parallelotope.h>
 #include <src/sampling/test/test_sphere_surface.h>
 
 namespace ns::test
@@ -106,7 +106,7 @@ void self_test_essential(ProgressRatios* progress_ratios)
                 {
                         ProgressRatio progress(progress_ratios, s);
                         progress.set(0);
-                        painter::test_parallelotope(2);
+                        geometry::test_parallelotope(2);
                 });
 
         s = "Self-Test, Parallelotope in " + space_name_upper(3);
@@ -116,7 +116,7 @@ void self_test_essential(ProgressRatios* progress_ratios)
                 {
                         ProgressRatio progress(progress_ratios, s);
                         progress.set(0);
-                        painter::test_parallelotope(3);
+                        geometry::test_parallelotope(3);
                 });
 
         s = "Self-Test, Parallelotope in " + space_name_upper(4);
@@ -126,7 +126,7 @@ void self_test_essential(ProgressRatios* progress_ratios)
                 {
                         ProgressRatio progress(progress_ratios, s);
                         progress.set(0);
-                        painter::test_parallelotope(4);
+                        geometry::test_parallelotope(4);
                 });
 
         s = "Self-Test, Mesh in " + space_name_upper(3);
