@@ -77,14 +77,14 @@ std::unique_ptr<const Scene<N, T>> cornell_box_scene(
 
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        shapes.push_back(std::make_unique<shapes::HyperplaneParallelotope<N, T>>(
+                        shapes.push_back(std::make_unique<HyperplaneParallelotope<N, T>>(
                                 METALNESS, ROUGHNESS, (i >= 1) ? colors::WHITE : colors::RED, ALPHA, org,
                                 del_elem(walls_vectors, i)));
-                        shapes.push_back(std::make_unique<shapes::HyperplaneParallelotope<N, T>>(
+                        shapes.push_back(std::make_unique<HyperplaneParallelotope<N, T>>(
                                 METALNESS, ROUGHNESS, (i >= 1) ? colors::WHITE : colors::GREEN, ALPHA,
                                 org + walls_vectors[i], del_elem(walls_vectors, i)));
                 }
-                shapes.push_back(std::make_unique<shapes::HyperplaneParallelotope<N, T>>(
+                shapes.push_back(std::make_unique<HyperplaneParallelotope<N, T>>(
                         METALNESS, ROUGHNESS, colors::WHITE, ALPHA, org + walls_vectors[N - 1],
                         del_elem(walls_vectors, N - 1)));
         }
@@ -107,7 +107,7 @@ std::unique_ptr<const Scene<N, T>> cornell_box_scene(
                 box_vectors[N - 2] = (1 - 2 * BOX_SPACE) * camera[N - 2];
                 box_vectors[N - 1] = BOX_SIZE * camera[N - 1];
 
-                shapes.push_back(std::make_unique<shapes::Parallelotope<N, T>>(
+                shapes.push_back(std::make_unique<Parallelotope<N, T>>(
                         METALNESS, ROUGHNESS, colors::MAGENTA, ALPHA, box_org, box_vectors));
         }
 
@@ -128,9 +128,8 @@ std::unique_ptr<const Scene<N, T>> cornell_box_scene(
                 }
                 lamp_vectors[N - 2] = LAMP_SIZE * camera[N - 1];
 
-                std::unique_ptr<shapes::HyperplaneParallelotope<N, T>> lamp =
-                        std::make_unique<shapes::HyperplaneParallelotope<N, T>>(
-                                METALNESS, ROUGHNESS, colors::WHITE, ALPHA, lamp_org, lamp_vectors);
+                std::unique_ptr<HyperplaneParallelotope<N, T>> lamp = std::make_unique<HyperplaneParallelotope<N, T>>(
+                        METALNESS, ROUGHNESS, colors::WHITE, ALPHA, lamp_org, lamp_vectors);
                 lamp->set_light_source(Color(50));
 
                 shapes.push_back(std::move(lamp));

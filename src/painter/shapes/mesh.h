@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace ns::painter::shapes
+namespace ns::painter
 {
 template <std::size_t N, typename T>
 class Mesh final : public Shape<N, T>, public Surface<N, T>

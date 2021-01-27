@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vector>
 
-namespace ns::painter::shapes
+namespace ns::painter
 {
 template <std::size_t N>
 class MeshTexture

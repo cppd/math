@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress.h>
 
-namespace ns::painter::shapes
+namespace ns::painter
 {
 void test_mesh(int number_of_dimensions, ProgressRatio* progress);
 }

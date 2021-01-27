@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/spatial/parallelotope.h>
 #include <src/geometry/spatial/shape_intersection.h>
 
-namespace ns::painter::shapes
+namespace ns::painter
 {
 template <std::size_t N, typename T>
 class Parallelotope final : public Shape<N, T>, public Surface<N, T>

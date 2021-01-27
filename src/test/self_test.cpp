@@ -135,7 +135,7 @@ void self_test_essential(ProgressRatios* progress_ratios)
                 [&]()
                 {
                         ProgressRatio progress(progress_ratios, s);
-                        painter::shapes::test_mesh(3, &progress);
+                        painter::test_mesh(3, &progress);
                 });
 
         s = "Self-Test, Mesh in " + space_name_upper(4);
@@ -144,7 +144,7 @@ void self_test_essential(ProgressRatios* progress_ratios)
                 [&]()
                 {
                         ProgressRatio progress(progress_ratios, s);
-                        painter::shapes::test_mesh(4, &progress);
+                        painter::test_mesh(4, &progress);
                 });
 
         s = "Self-Test, Convex Hull in " + space_name_upper(2);
@@ -212,7 +212,7 @@ void self_test_extended(ProgressRatios* progress_ratios)
                 [&]()
                 {
                         ProgressRatio progress(progress_ratios, s);
-                        painter::shapes::test_mesh(5, &progress);
+                        painter::test_mesh(5, &progress);
                 });
 
         s = "Self-Test, Mesh in " + space_name_upper(6);
@@ -221,7 +221,7 @@ void self_test_extended(ProgressRatios* progress_ratios)
                 [&]()
                 {
                         ProgressRatio progress(progress_ratios, s);
-                        painter::shapes::test_mesh(6, &progress);
+                        painter::test_mesh(6, &progress);
                 });
 
         s = "Self-Test, 3-Manifold Reconstruction in " + space_name_upper(4);

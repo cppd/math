@@ -129,7 +129,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                                 meshes.push_back(mesh_object.get());
                         }
                         ProgressRatio progress(progress_list);
-                        shape = std::make_unique<painter::shapes::Mesh<N, T>>(meshes, &progress);
+                        shape = std::make_unique<painter::Mesh<N, T>>(meshes, &progress);
                 }
 
                 if (!shape)

@@ -136,15 +136,15 @@ void check_application_instance()
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<const shapes::Mesh<N, T>> sphere_mesh(int point_count, ProgressRatio* progress)
+std::unique_ptr<const Mesh<N, T>> sphere_mesh(int point_count, ProgressRatio* progress)
 {
         LOG("Creating mesh...");
 
-        return shapes::simplex_mesh_of_random_sphere<N, T>(DEFAULT_COLOR, METALNESS, point_count, progress);
+        return simplex_mesh_of_random_sphere<N, T>(DEFAULT_COLOR, METALNESS, point_count, progress);
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<const shapes::Mesh<N, T>> file_mesh(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<const Mesh<N, T>> file_mesh(const std::string& file_name, ProgressRatio* progress)
 {
         LOG("Loading geometry from file...");
         std::unique_ptr<const mesh::Mesh<N>> mesh = mesh::load<N>(file_name, progress);
@@ -159,7 +159,7 @@ std::unique_ptr<const shapes::Mesh<N, T>> file_mesh(const std::string& file_name
 
         std::vector<const mesh::MeshObject<N>*> meshes;
         meshes.push_back(&mesh_object);
-        return std::make_unique<const shapes::Mesh<N, T>>(meshes, progress);
+        return std::make_unique<const Mesh<N, T>>(meshes, progress);
 }
 
 template <std::size_t N, typename T>

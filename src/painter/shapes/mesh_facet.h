@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace ns::painter::shapes
+namespace ns::painter
 {
 namespace mesh_facet_implementation
 {
