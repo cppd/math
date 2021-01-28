@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "test_distribution.h"
 
 #include "sphere_buckets.h"
+#include "surface_buckets.h"
 
 #include "../ggx.h"
 #include "../sphere_cosine.h"
@@ -136,6 +137,52 @@ void test_distribution(
         buckets.compute_distribution();
         LOG(buckets.histogram());
         buckets.compare_with_pdf(pdf);
+}
+
+template <std::size_t N, typename T, typename RandomVector, typename PDF>
+void test_distribution_surface(
+        const std::string& name,
+        long long count,
+        const RandomVector& random_vector,
+        const PDF& /*pdf*/)
+{
+        LOG(name + "\n  test distribution in " + space_name(N) + ", " + to_string_digit_groups(count) + ", "
+            + type_name<T>());
+
+        const int thread_count = hardware_concurrency();
+        const long long count_per_thread = (count + thread_count - 1) / thread_count;
+
+        const auto f = [&]()
+        {
+                SurfaceBuckets<N, T> buckets;
+                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+                for (long long i = 0; i < count_per_thread; ++i)
+                {
+                        buckets.add(random_vector(random_engine));
+                }
+                return buckets;
+        };
+
+        SurfaceBuckets<N, T> buckets;
+
+        {
+                std::vector<std::future<SurfaceBuckets<N, T>>> futures;
+                std::vector<std::thread> threads;
+                for (int i = 0; i < thread_count; ++i)
+                {
+                        std::packaged_task<SurfaceBuckets<N, T>()> task(f);
+                        futures.emplace_back(task.get_future());
+                        threads.emplace_back(std::move(task));
+                }
+                for (std::thread& thread : threads)
+                {
+                        thread.join();
+                }
+                for (std::future<SurfaceBuckets<N, T>>& future : futures)
+                {
+                        buckets.merge(future.get());
+                }
+        }
 }
 
 template <std::size_t N, typename T, typename RandomVector>
@@ -311,6 +358,20 @@ std::enable_if_t<N == 3> test_ggx(long long unit_count, long long distribution_c
                 {
                         return ggx_df(std::cos(angle), ALPHA);
                 });
+
+        if ((false))
+        {
+                test_distribution_surface<N, T>(
+                        NAME, distribution_count,
+                        [&](RandomEngine<T>& random_engine)
+                        {
+                                return ggx_vn(random_engine, NORMAL, NORMAL, ALPHA);
+                        },
+                        [&](const Vector<N, T>& v)
+                        {
+                                return ggx_df(dot(v, NORMAL), ALPHA);
+                        });
+        }
 
         const Vector<N, T> V = [&]()
         {
