@@ -37,8 +37,6 @@ namespace ns::painter
 template <std::size_t N, typename T>
 class Mesh final : public Shape<N, T>, public Surface<N, T>
 {
-        using TreeParallelotope = geometry::ParallelotopeAA<N, T>;
-
         struct Material
         {
                 T metalness;

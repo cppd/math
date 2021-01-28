@@ -121,11 +121,6 @@ class ObjectTree final
         SpatialSubdivisionTree<TreeParallelotope> m_tree;
 
 public:
-        ObjectTree(const ObjectTree&) = delete;
-        ObjectTree(ObjectTree&&) = delete;
-        ObjectTree& operator=(const ObjectTree&) = delete;
-        ObjectTree& operator=(ObjectTree&&) = delete;
-
         ObjectTree(const std::vector<Object>& objects, int max_depth, int min_objects_per_box, ProgressRatio* progress)
                 : m_objects(objects)
         {
