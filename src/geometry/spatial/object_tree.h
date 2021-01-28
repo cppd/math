@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "parallelotope_aa.h"
+#include "shape_intersection.h"
 #include "shape_wrapper.h"
 #include "tree.h"
 
