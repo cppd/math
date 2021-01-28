@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::sampling
 {
 template <std::size_t N, typename T>
-class MeshFacet final
+class MeshFacet
 {
         static std::array<Vector<N, T>, N> vertices_to_array(
                 const std::vector<Vector<N, T>>& vertices,
@@ -49,16 +49,23 @@ class MeshFacet final
         static constexpr int VERTEX_RIDGE_COUNT = (N * (N - 1)) / 2;
 
         const std::vector<Vector<N, T>>& m_vertices;
-        std::array<int, N> m_v;
+        const std::array<int, N> m_v;
         Vector<N, T> m_normal;
         geometry::HyperplaneSimplex<N, T> m_geometry;
 
+protected:
+        ~MeshFacet() = default;
+
 public:
+        static constexpr std::size_t SPACE_DIMENSION = N;
+        static constexpr std::size_t SHAPE_DIMENSION = N - 1;
+
+        using DataType = T;
+
         MeshFacet(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& vertex_indices)
-                : m_vertices(vertices)
+                : m_vertices(vertices), m_v(vertex_indices)
         {
                 m_normal = numerical::ortho_nn(m_vertices, m_v).normalized();
-
                 if (!is_finite(m_normal))
                 {
                         error("Facet normal is not finite, facet vertices\n"
