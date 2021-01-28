@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/spatial/shape_intersection.h>
-#include <src/geometry/spatial/shape_wrapper.h>
 #include <src/numerical/transform.h>
 #include <src/numerical/vec.h>
 
@@ -80,6 +79,7 @@ std::array<int, N> add_offset(const std::array<int, N>& src, int offset, bool ad
         }
         return r;
 }
+
 template <std::size_t N>
 std::array<int, N> add_offset(const std::array<int, N>& src, int offset)
 {
@@ -89,75 +89,6 @@ std::array<int, N> add_offset(const std::array<int, N>& src, int offset)
                 r[i] = offset + src[i];
         }
         return r;
-}
-
-template <std::size_t N, typename T>
-std::optional<Intersection<N, T>> ray_intersection(
-        const std::vector<MeshFacet<N, T>>& facets,
-        const std::vector<int>& indices,
-        const Ray<N, T>& ray)
-{
-        T min = limits<T>::max();
-        const MeshFacet<N, T>* facet = nullptr;
-
-        for (int index : indices)
-        {
-                std::optional<T> distance = facets[index].intersect(ray);
-                if (distance && *distance < min)
-                {
-                        min = *distance;
-                        facet = &facets[index];
-                }
-        }
-
-        if (facet)
-        {
-                std::optional<Intersection<N, T>> result(std::in_place);
-                result->distance = min;
-                result->data = facet;
-                return result;
-        }
-
-        return std::nullopt;
-}
-
-template <std::size_t N, typename T, typename TreeParallelotope>
-void create_tree(
-        const std::vector<MeshFacet<N, T>>& facets,
-        const geometry::BoundingBox<N, T>& bounding_box,
-        geometry::SpatialSubdivisionTree<TreeParallelotope>* tree,
-        ProgressRatio* progress)
-{
-        progress->set_text(to_string(1 << N) + "-tree: %v of %m");
-
-        std::vector<geometry::ShapeWrapperForIntersection<MeshFacet<N, T>>> wrappers;
-        wrappers.reserve(facets.size());
-        for (const MeshFacet<N, T>& t : facets)
-        {
-                wrappers.emplace_back(t);
-        }
-
-        const auto facet_intersections =
-                [w = std::as_const(wrappers)](const TreeParallelotope& parallelotope, const std::vector<int>& indices)
-        {
-                geometry::ShapeWrapperForIntersection p(parallelotope);
-                std::vector<int> intersections;
-                intersections.reserve(indices.size());
-                for (int object_index : indices)
-                {
-                        if (shape_intersection(p, w[object_index]))
-                        {
-                                intersections.push_back(object_index);
-                        }
-                }
-                return intersections;
-        };
-
-        const unsigned thread_count = hardware_concurrency();
-
-        tree->decompose(
-                tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, facets.size(), bounding_box, facet_intersections,
-                thread_count, progress);
 }
 }
 
@@ -217,12 +148,6 @@ void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
                 m_facets.emplace_back(
                         m_vertices, m_normals, m_texcoords, vertices, facet.has_normal, normals, facet.has_texcoord,
                         texcoords, material);
-
-                for (int index : vertices)
-                {
-                        m_bounding_box.min = min_vector(m_bounding_box.min, m_vertices[index]);
-                        m_bounding_box.max = max_vector(m_bounding_box.max, m_vertices[index]);
-                }
         }
 
         m_alpha = std::clamp(mesh_object.alpha(), Color::DataType(0), Color::DataType(1));
@@ -289,9 +214,6 @@ void Mesh<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
         m_images.reserve(image_count);
         m_facets.reserve(facet_count);
 
-        m_bounding_box.min = Vector<N, T>(limits<T>::max());
-        m_bounding_box.max = Vector<N, T>(limits<T>::lowest());
-
         for (const mesh::Reading<N>& mesh_object : mesh_objects)
         {
                 create(mesh_object);
@@ -329,7 +251,9 @@ Mesh<N, T>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, Pr
                 create(reading);
         }
 
-        create_tree(m_facets, m_bounding_box, &m_tree, progress);
+        progress->set_text(to_string(1 << N) + "-tree: %v of %m");
+
+        m_tree.emplace(m_facets, tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, progress);
 
         LOG("Painter mesh object created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 }
@@ -337,32 +261,22 @@ Mesh<N, T>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, Pr
 template <std::size_t N, typename T>
 std::optional<T> Mesh<N, T>::intersect_bounding(const Ray<N, T>& r) const
 {
-        return m_tree.intersect_root(r);
+        return m_tree->intersect_root(r);
 }
 
 template <std::size_t N, typename T>
 std::optional<Intersection<N, T>> Mesh<N, T>::intersect(const Ray<N, T>& ray, T bounding_distance) const
 {
-        std::optional<Intersection<N, T>> intersection;
-
-        // Пересечение луча с набором граней ячейки дерева
-        auto f = [&](const std::vector<int>& facet_indices) -> std::optional<Vector<N, T>>
+        std::optional<std::tuple<T, const MeshFacet<N, T>*>> v = m_tree->intersect(ray, bounding_distance);
+        if (!v)
         {
-                intersection = ray_intersection(m_facets, facet_indices, ray);
-                if (intersection)
-                {
-                        return ray.point(intersection->distance);
-                }
                 return std::nullopt;
-        };
-
-        if (m_tree.trace_ray(ray, bounding_distance, f))
-        {
-                intersection->surface = this;
-                return intersection;
         }
-
-        return std::nullopt;
+        Intersection<N, T> result;
+        result.distance = std::get<0>(*v);
+        result.data = std::get<1>(*v);
+        result.surface = this;
+        return result;
 }
 
 template <std::size_t N, typename T>
@@ -436,14 +350,14 @@ SurfaceReflection<N, T> Mesh<N, T>::reflection(
 template <std::size_t N, typename T>
 geometry::BoundingBox<N, T> Mesh<N, T>::bounding_box() const
 {
-        return m_bounding_box;
+        return m_tree->bounding_box();
 }
 
 template <std::size_t N, typename T>
 std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)> Mesh<N, T>::
         intersection_function() const
 {
-        return [w = geometry::ShapeWrapperForIntersection(m_tree.root())](
+        return [w = geometry::ShapeWrapperForIntersection(m_tree->root())](
                        const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>& p)
         {
                 return geometry::shape_intersection(w, p);
