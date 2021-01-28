@@ -27,20 +27,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-template <std::size_t N, typename T, typename Object>
+template <typename Object>
 class ObjectTree final
 {
+        static constexpr std::size_t N = Object::SPACE_DIMENSION;
+        using T = typename Object::DataType;
+
         using TreeParallelotope = ParallelotopeAA<N, T>;
 
+        static BoundingBox<N, T> bounding_box(const std::vector<Object>& objects)
+        {
+                BoundingBox<N, T> bb;
+                bb.min = Vector<N, T>(limits<T>::max());
+                bb.max = Vector<N, T>(limits<T>::lowest());
+                for (const Object& object : objects)
+                {
+                        for (const Vector<N, T>& v : object.vertices())
+                        {
+                                bb.min = min_vector(bb.min, v);
+                                bb.max = max_vector(bb.max, v);
+                        }
+                }
+                return bb;
+        }
+
         static void create_tree(
+                int max_depth,
                 int min_objects_per_box,
                 const std::vector<Object>& objects,
                 const BoundingBox<N, T>& bounding_box,
                 SpatialSubdivisionTree<TreeParallelotope>* tree,
                 ProgressRatio* progress)
         {
-                progress->set_text(to_string(1 << N) + "-tree: %v of %m");
-
                 std::vector<ShapeWrapperForIntersection<Object>> wrappers;
                 wrappers.reserve(objects.size());
                 for (const Object& t : objects)
@@ -49,7 +67,7 @@ class ObjectTree final
                 }
 
                 const auto object_intersections =
-                        [w = std::as_const(wrappers)](
+                        [&w = std::as_const(wrappers)](
                                 const TreeParallelotope& parallelotope, const std::vector<int>& indices)
                 {
                         ShapeWrapperForIntersection p(parallelotope);
@@ -68,11 +86,11 @@ class ObjectTree final
                 const unsigned thread_count = hardware_concurrency();
 
                 tree->decompose(
-                        tree_max_depth<N>(), min_objects_per_box, objects.size(), bounding_box, object_intersections,
+                        max_depth, min_objects_per_box, objects.size(), bounding_box, object_intersections,
                         thread_count, progress);
         }
 
-        static std::optional<std::tuple<T, Object*>> ray_intersection(
+        static std::optional<std::tuple<T, const Object*>> ray_intersection(
                 const std::vector<Object>& objects,
                 const std::vector<int>& indices,
                 const Ray<N, T>& ray)
@@ -92,53 +110,49 @@ class ObjectTree final
 
                 if (object)
                 {
-                        std::optional<std::tuple<T, Object*>> result(std::in_place);
-                        std::get<0>(result) = min;
-                        std::get<1>(result) = object;
-                        return result;
+                        return std::make_tuple(min, object);
                 }
 
                 return std::nullopt;
         }
 
         const std::vector<Object>& m_objects;
+        BoundingBox<N, T> m_bounding_box;
         SpatialSubdivisionTree<TreeParallelotope> m_tree;
 
 public:
-        ObjectTree(const std::vector<Object>& objects, int min_objects_per_box, ProgressRatio* progress)
-                : m_objects(objects)
-        {
-                BoundingBox<N, T> bounding_box;
-                bounding_box.min = Vector<N, T>(limits<T>::max());
-                bounding_box.max = Vector<N, T>(limits<T>::lowest());
-
-                for (const Object& object : objects)
-                {
-                        for (const Vector<N, T>& v : object.vertices())
-                        {
-                                bounding_box.min = min_vector(bounding_box.min, v);
-                                bounding_box.max = max_vector(bounding_box.max, v);
-                        }
-                }
-
-                create_tree(min_objects_per_box, m_objects, bounding_box, &m_tree, progress);
-        }
-
         ObjectTree(const ObjectTree&) = delete;
         ObjectTree(ObjectTree&&) = delete;
         ObjectTree& operator=(const ObjectTree&) = delete;
         ObjectTree& operator=(ObjectTree&&) = delete;
+
+        ObjectTree(const std::vector<Object>& objects, int max_depth, int min_objects_per_box, ProgressRatio* progress)
+                : m_objects(objects)
+        {
+                m_bounding_box = bounding_box(objects);
+                create_tree(max_depth, min_objects_per_box, m_objects, m_bounding_box, &m_tree, progress);
+        }
+
+        const BoundingBox<N, T>& bounding_box() const
+        {
+                return m_bounding_box;
+        }
+
+        const TreeParallelotope& root() const
+        {
+                return m_tree.root();
+        }
 
         std::optional<T> intersect_root(const Ray<N, T>& ray) const
         {
                 return m_tree.intersect_root(ray);
         }
 
-        std::optional<std::tuple<T, Object*>> intersect(const Ray<N, T>& ray, T root_distance) const
+        std::optional<std::tuple<T, const Object*>> intersect(const Ray<N, T>& ray, T root_distance) const
         {
-                std::optional<std::tuple<T, Object*>> intersection;
+                std::optional<std::tuple<T, const Object*>> intersection;
 
-                auto f = [&](const std::vector<int>& object_indices) -> std::optional<Vector<N, T>>
+                const auto f = [&](const std::vector<int>& object_indices) -> std::optional<Vector<N, T>>
                 {
                         intersection = ray_intersection(m_objects, object_indices, ray);
                         if (intersection)
