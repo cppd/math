@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/alg.h>
 #include <src/com/constant.h>
 #include <src/com/error.h>
-#include <src/numerical/complement.h>
+#include <src/geometry/shapes/sphere_surface.h>
 #include <src/numerical/normal.h>
 #include <src/numerical/orthogonal.h>
 
@@ -36,87 +36,11 @@ namespace ns::mesh
 {
 namespace
 {
-template <typename T>
-T spherical_triangle_area(const std::array<Vector<3, T>, 3>& vectors)
-{
-        static_assert(std::is_floating_point_v<T>);
-
-        std::array<Vector<3, T>, 2> v;
-
-        v[0] = vectors[0];
-        v[1] = vectors[1];
-        Vector<3, T> facet_01_normal = numerical::ortho_nn(v);
-        {
-                T norm = facet_01_normal.norm();
-                if (norm == 0)
-                {
-                        return 0;
-                }
-                facet_01_normal /= norm;
-        }
-
-        v[0] = vectors[1];
-        v[1] = vectors[2];
-        Vector<3, T> facet_12_normal = numerical::ortho_nn(v);
-        {
-                T norm = facet_12_normal.norm();
-                if (norm == 0)
-                {
-                        return 0;
-                }
-                facet_12_normal /= norm;
-        }
-
-        v[0] = vectors[2];
-        v[1] = vectors[0];
-        Vector<3, T> facet_20_normal = numerical::ortho_nn(v);
-        {
-                T norm = facet_20_normal.norm();
-                if (norm == 0)
-                {
-                        return 0;
-                }
-                facet_20_normal /= norm;
-        }
-
-        T dihedral_cosine_0 = -dot(facet_01_normal, facet_20_normal);
-        T dihedral_cosine_1 = -dot(facet_01_normal, facet_12_normal);
-        T dihedral_cosine_2 = -dot(facet_20_normal, facet_12_normal);
-
-        T dihedral_0 = std::acos(std::clamp<T>(dihedral_cosine_0, -1, 1));
-        T dihedral_1 = std::acos(std::clamp<T>(dihedral_cosine_1, -1, 1));
-        T dihedral_2 = std::acos(std::clamp<T>(dihedral_cosine_2, -1, 1));
-
-        T area = dihedral_0 + dihedral_1 + dihedral_2 - PI<T>;
-
-        return std::max<T>(0, area);
-}
-
-template <std::size_t N, typename T>
-std::array<Vector<N - 1, T>, N - 1> facet_vectors_in_facet_plane(
-        const std::array<Vector<N, T>, N - 1>& vectors,
-        const Vector<N, T>& facet_normal)
-{
-        std::array<Vector<N, T>, N - 1> facet_basis = numerical::orthogonal_complement_of_unit_vector(facet_normal);
-
-        std::array<Vector<N - 1, T>, N - 1> facet_vectors;
-        for (unsigned i = 0; i < N - 1; ++i)
-        {
-                for (unsigned b = 0; b < N - 1; ++b)
-                {
-                        facet_vectors[i][b] = dot(vectors[i], facet_basis[b]);
-                }
-        }
-
-        return facet_vectors;
-}
-
 template <std::size_t N, typename T>
 T facet_normat_weight_at_vertex(
         const std::vector<Vector<N, T>>& points,
         const std::array<int, N>& facet,
-        int facet_vertex_index,
-        const Vector<N, T>& facet_normal)
+        int facet_vertex_index)
 {
         if constexpr (N >= 5)
         {
@@ -136,7 +60,7 @@ T facet_normat_weight_at_vertex(
 
                 if constexpr (N == 4)
                 {
-                        return spherical_triangle_area(facet_vectors_in_facet_plane(vectors, facet_normal));
+                        return geometry::sphere_triangle_area(vectors);
                 }
                 if constexpr (N == 3)
                 {
@@ -198,8 +122,7 @@ Vector<N, T> compute_normal(
         for (const VertexFacet& f : vertex_facets)
         {
                 const std::array<int, N>& facet_vertices = mesh_facets[f.facet_index].vertices;
-                T weight = facet_normat_weight_at_vertex(
-                        vertices, facet_vertices, f.facet_vertex, facet_normals[f.facet_index]);
+                T weight = facet_normat_weight_at_vertex(vertices, facet_vertices, f.facet_vertex);
                 weighted_normals.push_back(weight * facet_normals[f.facet_index]);
 
                 for (unsigned fv = 0; fv < f.facet_vertex; ++fv)
