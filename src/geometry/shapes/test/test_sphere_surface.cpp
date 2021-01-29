@@ -216,6 +216,22 @@ void test_sphere_relative_area_2(T precision)
 }
 
 template <typename T>
+void test_sphere_triangle_area(T precision)
+{
+        LOG(std::string("Test sphere triangle area, ") + type_name<T>());
+
+        const auto cmp = [&](T v1, T v2)
+        {
+                compare("Test sphere triangle area", v1, v2, precision);
+        };
+
+        cmp(sphere_triangle_area<4, T>({{{1, 0, 0, 0}, {0, 2, 0, 0}, {0, 0, 3, 0}}}), PI<T> / 2);
+        cmp(sphere_triangle_area<4, T>({{{1, 1, 0, 0}, {-2, 2, 0, 0}, {0, 0, 3, 0}}}), PI<T> / 2);
+        cmp(sphere_triangle_area<4, T>({{{1, 1, 0, 0}, {0, 0, 3, 0}, {-2, 2, 0, 0}}}), PI<T> / 2);
+        cmp(sphere_triangle_area<4, T>({{{1, 1, 0, 0}, {0, 0, 3, 0}, {0, 2, 0, 0}}}), PI<T> / 4);
+}
+
+template <typename T>
 void test_integrate_power_cosine(T precision)
 {
         LOG(std::string("Test integrate power cosine, ") + type_name<T>());
@@ -400,6 +416,10 @@ void test_sphere_surface(bool all_tests)
         test_sphere_relative_area_2<float>(2e-4);
         test_sphere_relative_area_2<double>(2e-4);
         test_sphere_relative_area_2<long double>(2e-4);
+
+        test_sphere_triangle_area<float>(1e-7);
+        test_sphere_triangle_area<double>(0);
+        test_sphere_triangle_area<long double>(1e-19);
 
         if (!all_tests)
         {

@@ -20,7 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/numerical/integrate.h>
+#include <src/numerical/orthogonal.h>
 
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <numeric>
 
@@ -308,4 +311,111 @@ T sphere_relative_area(std::type_identity_t<T> a, std::type_identity_t<T> b)
                         a, b, /*count*/ 100);
         }
 }
+
+#if 0
+
+template <typename T>
+T sphere_triangle_area(const std::array<Vector<3, T>, 3>& vectors)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        std::array<Vector<3, T>, 2> v;
+
+        v[0] = vectors[0];
+        v[1] = vectors[1];
+        Vector<3, T> facet_01_normal = numerical::ortho_nn(v);
+        {
+                T norm = facet_01_normal.norm();
+                if (norm == 0)
+                {
+                        return 0;
+                }
+                facet_01_normal /= norm;
+        }
+
+        v[0] = vectors[1];
+        v[1] = vectors[2];
+        Vector<3, T> facet_12_normal = numerical::ortho_nn(v);
+        {
+                T norm = facet_12_normal.norm();
+                if (norm == 0)
+                {
+                        return 0;
+                }
+                facet_12_normal /= norm;
+        }
+
+        v[0] = vectors[2];
+        v[1] = vectors[0];
+        Vector<3, T> facet_20_normal = numerical::ortho_nn(v);
+        {
+                T norm = facet_20_normal.norm();
+                if (norm == 0)
+                {
+                        return 0;
+                }
+                facet_20_normal /= norm;
+        }
+
+        T dihedral_cosine_0 = -dot(facet_01_normal, facet_20_normal);
+        T dihedral_cosine_1 = -dot(facet_01_normal, facet_12_normal);
+        T dihedral_cosine_2 = -dot(facet_20_normal, facet_12_normal);
+
+        T dihedral_0 = std::acos(std::clamp<T>(dihedral_cosine_0, -1, 1));
+        T dihedral_1 = std::acos(std::clamp<T>(dihedral_cosine_1, -1, 1));
+        T dihedral_2 = std::acos(std::clamp<T>(dihedral_cosine_2, -1, 1));
+
+        T area = dihedral_0 + dihedral_1 + dihedral_2 - PI<T>;
+
+        return std::max<T>(0, area);
+}
+
+#else
+
+template <std::size_t N, typename T>
+T sphere_triangle_area(const std::array<Vector<N, T>, 3>& vectors)
+{
+        static_assert(N >= 3);
+        static_assert(std::is_floating_point_v<T>);
+
+        T norm_0 = vectors[0].norm();
+        if (norm_0 == 0)
+        {
+                return 0;
+        }
+
+        T norm_1 = vectors[1].norm();
+        if (norm_1 == 0)
+        {
+                return 0;
+        }
+
+        T norm_2 = vectors[2].norm();
+        if (norm_2 == 0)
+        {
+                return 0;
+        }
+
+        Vector<N, T> a = vectors[0] / norm_0;
+        Vector<N, T> b = vectors[1] / norm_1;
+        Vector<N, T> c = vectors[2] / norm_2;
+
+        T a_b = dot(a, b);
+        T a_c = dot(a, c);
+        T b_c = dot(b, c);
+
+        T dihedral_cosine_a = b_c - a_b * a_c;
+        T dihedral_cosine_b = a_c - b_c * a_b;
+        T dihedral_cosine_c = a_b - a_c * b_c;
+
+        T dihedral_a = std::acos(std::clamp<T>(dihedral_cosine_a, -1, 1));
+        T dihedral_b = std::acos(std::clamp<T>(dihedral_cosine_b, -1, 1));
+        T dihedral_c = std::acos(std::clamp<T>(dihedral_cosine_c, -1, 1));
+
+        T area = dihedral_a + dihedral_b + dihedral_c - PI<T>;
+
+        return std::max<T>(0, area);
+}
+
+#endif
 }
