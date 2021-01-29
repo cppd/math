@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/alg.h>
 #include <src/com/constant.h>
 #include <src/com/error.h>
+#include <src/numerical/complement.h>
 #include <src/numerical/normal.h>
 #include <src/numerical/orthogonal.h>
 
@@ -35,83 +36,98 @@ namespace ns::mesh
 {
 namespace
 {
-template <std::size_t N>
-Vector<N, double> facet_normal(const std::vector<Vector<N, double>>& points, const std::array<int, N>& facet)
+template <typename T>
+T spherical_triangle_area(const std::array<Vector<3, T>, 3>& vectors)
 {
-        return numerical::ortho_nn(points, facet).normalized();
-}
+        static_assert(std::is_floating_point_v<T>);
 
-double spherical_triangle_area(const std::array<Vector<4, double>, 3>& vectors, const Vector<4, double>& normal)
-{
-        std::array<Vector<4, double>, 3> v;
-        v[2] = normal;
+        std::array<Vector<3, T>, 2> v;
 
         v[0] = vectors[0];
         v[1] = vectors[1];
-        Vector<4, double> ridge_01_normal = numerical::ortho_nn(v);
+        Vector<3, T> facet_01_normal = numerical::ortho_nn(v);
         {
-                double norm = ridge_01_normal.norm();
+                T norm = facet_01_normal.norm();
                 if (norm == 0)
                 {
                         return 0;
                 }
-                ridge_01_normal /= norm;
+                facet_01_normal /= norm;
         }
 
         v[0] = vectors[1];
         v[1] = vectors[2];
-        Vector<4, double> ridge_12_normal = numerical::ortho_nn(v);
+        Vector<3, T> facet_12_normal = numerical::ortho_nn(v);
         {
-                double norm = ridge_12_normal.norm();
+                T norm = facet_12_normal.norm();
                 if (norm == 0)
                 {
                         return 0;
                 }
-                ridge_12_normal /= norm;
+                facet_12_normal /= norm;
         }
 
         v[0] = vectors[2];
         v[1] = vectors[0];
-        Vector<4, double> ridge_20_normal = numerical::ortho_nn(v);
+        Vector<3, T> facet_20_normal = numerical::ortho_nn(v);
         {
-                double norm = ridge_20_normal.norm();
+                T norm = facet_20_normal.norm();
                 if (norm == 0)
                 {
                         return 0;
                 }
-                ridge_20_normal /= norm;
+                facet_20_normal /= norm;
         }
 
-        double dihedral_cosine_0 = -dot(ridge_01_normal, ridge_20_normal);
-        double dihedral_cosine_1 = -dot(ridge_01_normal, ridge_12_normal);
-        double dihedral_cosine_2 = -dot(ridge_20_normal, ridge_12_normal);
+        T dihedral_cosine_0 = -dot(facet_01_normal, facet_20_normal);
+        T dihedral_cosine_1 = -dot(facet_01_normal, facet_12_normal);
+        T dihedral_cosine_2 = -dot(facet_20_normal, facet_12_normal);
 
-        double dihedral_0 = std::acos(std::clamp(dihedral_cosine_0, -1.0, 1.0));
-        double dihedral_1 = std::acos(std::clamp(dihedral_cosine_1, -1.0, 1.0));
-        double dihedral_2 = std::acos(std::clamp(dihedral_cosine_2, -1.0, 1.0));
+        T dihedral_0 = std::acos(std::clamp<T>(dihedral_cosine_0, -1, 1));
+        T dihedral_1 = std::acos(std::clamp<T>(dihedral_cosine_1, -1, 1));
+        T dihedral_2 = std::acos(std::clamp<T>(dihedral_cosine_2, -1, 1));
 
-        double area = dihedral_0 + dihedral_1 + dihedral_2 - PI<double>;
+        T area = dihedral_0 + dihedral_1 + dihedral_2 - PI<T>;
 
-        return std::max(0.0, area);
+        return std::max<T>(0, area);
 }
 
-template <std::size_t N>
-double facet_normat_weight_at_vertex(
-        const std::vector<Vector<N, double>>& points,
+template <std::size_t N, typename T>
+std::array<Vector<N - 1, T>, N - 1> facet_vectors_in_facet_plane(
+        const std::array<Vector<N, T>, N - 1>& vectors,
+        const Vector<N, T>& facet_normal)
+{
+        std::array<Vector<N, T>, N - 1> facet_basis = numerical::orthogonal_complement_of_unit_vector(facet_normal);
+
+        std::array<Vector<N - 1, T>, N - 1> facet_vectors;
+        for (unsigned i = 0; i < N - 1; ++i)
+        {
+                for (unsigned b = 0; b < N - 1; ++b)
+                {
+                        facet_vectors[i][b] = dot(vectors[i], facet_basis[b]);
+                }
+        }
+
+        return facet_vectors;
+}
+
+template <std::size_t N, typename T>
+T facet_normat_weight_at_vertex(
+        const std::vector<Vector<N, T>>& points,
         const std::array<int, N>& facet,
         int facet_vertex_index,
-        const Vector<N, double>& facet_normal)
+        const Vector<N, T>& facet_normal)
 {
         if constexpr (N >= 5)
         {
-                return 1.0;
+                return 1;
         }
 
         if constexpr (N == 4 || N == 3)
         {
                 ASSERT(facet_vertex_index >= 0 && facet_vertex_index < static_cast<int>(N));
 
-                std::array<Vector<N, double>, N - 1> vectors;
+                std::array<Vector<N, T>, N - 1> vectors;
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
                         int index = (facet_vertex_index + 1 + i) % N;
@@ -120,21 +136,21 @@ double facet_normat_weight_at_vertex(
 
                 if constexpr (N == 4)
                 {
-                        return spherical_triangle_area(vectors, facet_normal);
+                        return spherical_triangle_area(facet_vectors_in_facet_plane(vectors, facet_normal));
                 }
                 if constexpr (N == 3)
                 {
-                        for (Vector<N, double>& v : vectors)
+                        for (Vector<N, T>& v : vectors)
                         {
-                                double norm = v.norm();
+                                T norm = v.norm();
                                 if (norm == 0)
                                 {
                                         return 0;
                                 }
                                 v /= norm;
                         }
-                        double cosine = dot(vectors[0], vectors[1]);
-                        return std::acos(std::clamp(cosine, -1.0, 1.0));
+                        T cosine = dot(vectors[0], vectors[1]);
+                        return std::acos(std::clamp<T>(cosine, -1, 1));
                 }
         }
 }
@@ -163,17 +179,17 @@ struct VertexFacet
         unsigned facet_vertex; // [0, N)
 };
 
-template <std::size_t N>
-Vector<N, double> compute_normal(
-        const std::vector<Vector<N, double>>& vertices,
-        const std::vector<Vector<N, double>>& facet_normals,
+template <std::size_t N, typename T>
+Vector<N, T> compute_normal(
+        const std::vector<Vector<N, T>>& vertices,
+        const std::vector<Vector<N, T>>& facet_normals,
         const std::vector<typename Mesh<N>::Facet>& mesh_facets,
         std::size_t vertex_index,
         const std::vector<VertexFacet>& vertex_facets)
 {
         thread_local std::vector<int> vicinity_int;
-        thread_local std::vector<Vector<N, double>> vicinity;
-        thread_local std::vector<Vector<N, double>> weighted_normals;
+        thread_local std::vector<Vector<N, T>> vicinity;
+        thread_local std::vector<Vector<N, T>> weighted_normals;
 
         vicinity_int.clear();
         vicinity.clear();
@@ -182,7 +198,7 @@ Vector<N, double> compute_normal(
         for (const VertexFacet& f : vertex_facets)
         {
                 const std::array<int, N>& facet_vertices = mesh_facets[f.facet_index].vertices;
-                double weight = facet_normat_weight_at_vertex(
+                T weight = facet_normat_weight_at_vertex(
                         vertices, facet_vertices, f.facet_vertex, facet_normals[f.facet_index]);
                 weighted_normals.push_back(weight * facet_normals[f.facet_index]);
 
@@ -209,7 +225,7 @@ Vector<N, double> compute_normal(
                 vicinity.push_back(vertices[vi]);
         }
 
-        Vector<N, double> point_normal = numerical::point_normal(vicinity);
+        Vector<N, T> point_normal = numerical::point_normal(vicinity);
 
         return average_of_normals(point_normal, weighted_normals);
 }
@@ -218,6 +234,8 @@ Vector<N, double> compute_normal(
 template <std::size_t N>
 void compute_normals(Mesh<N>* mesh)
 {
+        using ComputeType = double;
+
         if (mesh->facets.empty())
         {
                 mesh->normals.clear();
@@ -225,15 +243,15 @@ void compute_normals(Mesh<N>* mesh)
         }
         mesh->normals.resize(mesh->vertices.size());
 
-        const std::vector<Vector<N, double>> vertices = to_vector<double>(mesh->vertices);
+        const std::vector<Vector<N, ComputeType>> vertices = to_vector<ComputeType>(mesh->vertices);
 
-        std::vector<Vector<N, double>> facet_normals(mesh->facets.size());
+        std::vector<Vector<N, ComputeType>> facet_normals(mesh->facets.size());
         std::vector<std::vector<VertexFacet>> vertex_facets(mesh->vertices.size());
         for (std::size_t f = 0; f < mesh->facets.size(); ++f)
         {
                 const typename Mesh<N>::Facet& facet = mesh->facets[f];
 
-                facet_normals[f] = facet_normal(vertices, facet.vertices);
+                facet_normals[f] = numerical::ortho_nn(vertices, facet.vertices).normalized();
 
                 for (unsigned i = 0; i < N; ++i)
                 {
