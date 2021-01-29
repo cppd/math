@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_facet.h"
 
 #include <src/com/error.h>
-#include <src/geometry/objects/sphere.h>
+#include <src/geometry/shapes/sphere_create.h>
 #include <src/geometry/spatial/object_tree.h>
 #include <src/numerical/vec.h>
 
@@ -83,7 +83,7 @@ public:
 
                 std::vector<std::array<int, N>> facets;
 
-                geometry::make_sphere(BUCKET_COUNT, &m_vertices, &facets);
+                geometry::create_sphere(BUCKET_COUNT, &m_vertices, &facets);
 
                 m_buckets.reserve(facets.size());
                 for (const std::array<int, N>& vertex_indices : facets)

@@ -125,7 +125,7 @@ std::vector<Facet<N, T>> divide_facets(unsigned count, std::vector<Facet<N, T>> 
 }
 
 template <std::size_t N, typename T>
-std::enable_if_t<N == 3, std::vector<Facet<N, T>>> make_sphere(unsigned count)
+std::enable_if_t<N == 3, std::vector<Facet<N, T>>> create_sphere(unsigned count)
 {
         static_assert(N == 3);
 
@@ -168,11 +168,11 @@ std::enable_if_t<N == 3, std::vector<Facet<N, T>>> make_sphere(unsigned count)
 }
 
 template <std::size_t N, typename T>
-void make_sphere(unsigned facet_count, std::vector<Vector<N, T>>* points, std::vector<std::array<int, N>>* facets)
+void create_sphere(unsigned facet_count, std::vector<Vector<N, T>>* points, std::vector<std::array<int, N>>* facets)
 {
         namespace impl = sphere_implementation;
 
-        std::vector<impl::Facet<N, T>> impl_facets = impl::make_sphere<N, T>(facet_count);
+        std::vector<impl::Facet<N, T>> impl_facets = impl::create_sphere<N, T>(facet_count);
 
         points->clear();
 

@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "test_sphere_surface.h"
 
 #include "../sphere_surface.h"
-#include "../sphere_uniform.h"
 
 #include <src/com/log.h>
 #include <src/com/math.h>
@@ -26,13 +25,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/numerical/vec.h>
+#include <src/sampling/sphere_uniform.h>
 
 #include <cmath>
 #include <random>
 #include <sstream>
 #include <version>
 
-namespace ns::sampling
+namespace ns::geometry
 {
 namespace
 {
@@ -347,7 +347,7 @@ void test_cosine()
         {
                 Vector<N, T> v;
                 T length_square;
-                uniform_in_sphere(engine, v, length_square);
+                sampling::uniform_in_sphere(engine, v, length_square);
                 // косинус угла между вектором и последней координатной осью
                 T c = v[N - 1] / std::sqrt(length_square);
                 sum += std::abs(c);

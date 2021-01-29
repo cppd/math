@@ -17,12 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../sphere_surface.h"
-
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
+#include <src/geometry/shapes/sphere_surface.h>
 #include <src/numerical/integrate.h>
 
 #include <algorithm>
@@ -89,7 +88,8 @@ public:
                 std::vector<T> distribution_values;
                 distribution_values.reserve(m_buckets.size());
 
-                const long double SPHERE_K = sphere_area(N) / sphere_relative_area<N, long double>(0, PI<T>);
+                const long double SPHERE_K =
+                        geometry::sphere_area(N) / geometry::sphere_relative_area<N, long double>(0, PI<T>);
                 long long cnt = 0;
                 for (unsigned bucket = 0; bucket < m_buckets.size(); ++bucket)
                 {
@@ -101,7 +101,7 @@ public:
                         d.angle_to = (bucket + 1) * BUCKET_SIZE;
 
                         long double bucket_area =
-                                SPHERE_K * sphere_relative_area<N, long double>(d.angle_from, d.angle_to);
+                                SPHERE_K * geometry::sphere_relative_area<N, long double>(d.angle_from, d.angle_to);
                         d.distribution = m_buckets[bucket] / bucket_area;
 
                         distribution_values.push_back(d.distribution);

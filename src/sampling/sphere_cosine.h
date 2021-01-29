@@ -25,12 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "sphere_surface.h"
 #include "sphere_uniform.h"
 
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/math.h>
+#include <src/geometry/shapes/sphere_surface.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/vec.h>
 
@@ -222,7 +222,7 @@ T pdf_sphere_cosine(std::type_identity_t<T> angle)
 {
         if (angle >= 0 && angle < (PI<T> / 2))
         {
-                static constexpr T n = 1 / sphere_integrate_cosine_factor_over_hemisphere(N);
+                static constexpr T n = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
                 return std::cos(angle) * n;
         }
         return 0;
@@ -233,7 +233,7 @@ T pdf_sphere_power_cosine(std::type_identity_t<T> angle, std::type_identity_t<T>
 {
         if (angle >= 0 && angle < (PI<T> / 2))
         {
-                const T n = sphere_integrate_power_cosine_factor_over_hemisphere<N, T>(power);
+                const T n = geometry::sphere_integrate_power_cosine_factor_over_hemisphere<N, T>(power);
                 return std::pow(std::cos(angle), power) / n;
         }
         return 0;

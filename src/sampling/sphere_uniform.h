@@ -32,9 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "sphere_surface.h"
-
 #include <src/com/constant.h>
+#include <src/geometry/shapes/sphere_surface.h>
 #include <src/numerical/vec.h>
 
 #include <cmath>
@@ -168,7 +167,7 @@ T pdf_sphere_uniform(std::type_identity_t<T> angle)
 {
         if (angle >= 0 && angle < (PI<T>))
         {
-                static constexpr T n = 1 / sphere_area(N);
+                static constexpr T n = 1 / geometry::sphere_area(N);
                 return n;
         }
         return 0;

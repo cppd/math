@@ -395,8 +395,8 @@ template <std::size_t N, typename T>
 long long compute_distribution_count()
 {
         const double bucket_size = SphereBuckets<N, T>::bucket_size();
-        const double s_all = sphere_relative_area<N, long double>(0, PI<long double>);
-        const double s_bucket = sphere_relative_area<N, long double>(0, bucket_size);
+        const double s_all = geometry::sphere_relative_area<N, long double>(0, PI<long double>);
+        const double s_bucket = geometry::sphere_relative_area<N, long double>(0, bucket_size);
         const double uniform_min_count = 1000;
         const double count = s_all / s_bucket * uniform_min_count;
         const double round_to = std::pow(10, std::round(std::log10(count)) - 2);

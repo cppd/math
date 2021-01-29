@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/str.h>
 #include <src/geometry/core/test/test_convex_hull.h>
 #include <src/geometry/reconstruction/test/test_reconstruction.h>
+#include <src/geometry/shapes/test/test_sphere_surface.h>
 #include <src/geometry/spatial/test/test_parallelotope.h>
 #include <src/gpu/dft/test/test_dft.h>
 #include <src/numerical/test/test_complement.h>
@@ -29,7 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/test/test_normal.h>
 #include <src/numerical/test/test_simplex.h>
 #include <src/painter/shapes/test/test_mesh.h>
-#include <src/sampling/test/test_sphere_surface.h>
 
 namespace ns::test
 {
@@ -51,7 +51,7 @@ void self_test_essential(ProgressRatios* progress_ratios)
                 {
                         ProgressRatio progress(progress_ratios, s);
                         progress.set(0);
-                        sampling::test_sphere_surface(false);
+                        geometry::test_sphere_surface(false);
                 });
 
         s = "Self-Test, Complement";

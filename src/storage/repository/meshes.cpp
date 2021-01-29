@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/constant.h>
 #include <src/com/error.h>
-#include <src/geometry/objects/sphere.h>
+#include <src/geometry/shapes/sphere_create.h>
 #include <src/model/mesh_utility.h>
 #include <src/numerical/quaternion.h>
 #include <src/sampling/sphere_uniform.h>
@@ -363,7 +363,7 @@ std::unique_ptr<mesh::Mesh<3>> sphere(unsigned facet_count)
 {
         std::vector<Vector<3, float>> points;
         std::vector<std::array<int, 3>> facets;
-        geometry::make_sphere(facet_count, &points, &facets);
+        geometry::create_sphere(facet_count, &points, &facets);
         return mesh::create_mesh_for_facets(points, facets);
 }
 

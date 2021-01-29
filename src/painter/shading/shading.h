@@ -41,9 +41,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/constant.h>
 #include <src/com/interpolation.h>
+#include <src/geometry/shapes/sphere_surface.h>
 #include <src/numerical/vec.h>
 #include <src/sampling/sphere_cosine.h>
-#include <src/sampling/sphere_surface.h>
 #include <src/sampling/sphere_uniform.h>
 
 namespace ns::painter
@@ -54,7 +54,7 @@ class Shading
         static_assert(N >= 4);
 
         static constexpr T CONSTANT_REFLECTANCE_FACTOR =
-                T(1) / sampling::sphere_integrate_cosine_factor_over_hemisphere(N);
+                T(1) / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
 
 public:
         static Color direct_lighting(
