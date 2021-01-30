@@ -423,13 +423,17 @@ T sphere_simplex_area(const std::array<Vector<N, T>, 3>& vectors)
         Vector<N, T> b = vectors[1] / norm_1;
         Vector<N, T> c = vectors[2] / norm_2;
 
-        T a_b = dot(a, b);
-        T a_c = dot(a, c);
-        T b_c = dot(b, c);
+        T cos_a = dot(b, c);
+        T cos_b = dot(a, c);
+        T cos_c = dot(a, b);
 
-        T dihedral_cosine_a = b_c - a_b * a_c;
-        T dihedral_cosine_b = a_c - b_c * a_b;
-        T dihedral_cosine_c = a_b - a_c * b_c;
+        T sin_a_2 = T(1) - square(cos_a);
+        T sin_b_2 = T(1) - square(cos_b);
+        T sin_c_2 = T(1) - square(cos_c);
+
+        T dihedral_cosine_a = (cos_a - cos_b * cos_c) / std::sqrt(sin_b_2 * sin_c_2);
+        T dihedral_cosine_b = (cos_b - cos_a * cos_c) / std::sqrt(sin_a_2 * sin_c_2);
+        T dihedral_cosine_c = (cos_c - cos_a * cos_b) / std::sqrt(sin_a_2 * sin_b_2);
 
         T dihedral_a = std::acos(std::clamp<T>(dihedral_cosine_a, -1, 1));
         T dihedral_b = std::acos(std::clamp<T>(dihedral_cosine_b, -1, 1));

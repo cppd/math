@@ -257,6 +257,10 @@ void test_sphere_simplex_area(T precision)
                 v[1] = {0, 0, 3, 0};
                 v[2] = {0, 2, 0, 0};
                 cmp(sphere_simplex_area(v), PI<T> / 4);
+                v[0] = {0, 1.1, 1.1, 1.2};
+                v[1] = {0, 1.1, 1.3, 1.4};
+                v[2] = {0, 1.1, 1.3, 1.5};
+                cmp(sphere_simplex_area(v), 0.00112117953229062968477L);
         }
 }
 
@@ -446,8 +450,8 @@ void test_sphere_surface(bool all_tests)
         test_sphere_relative_area_2<double>(2e-4);
         test_sphere_relative_area_2<long double>(2e-4);
 
-        test_sphere_simplex_area<float>(1e-7);
-        test_sphere_simplex_area<double>(1e-15);
+        test_sphere_simplex_area<float>(1e-4);
+        test_sphere_simplex_area<double>(1e-13);
         test_sphere_simplex_area<long double>(1e-19);
 
         if (!all_tests)
