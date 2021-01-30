@@ -222,10 +222,17 @@ T pdf_sphere_cosine(std::type_identity_t<T> angle)
 {
         if (angle >= 0 && angle < (PI<T> / 2))
         {
-                static constexpr T n = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
-                return std::cos(angle) * n;
+                static constexpr T k = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
+                return std::cos(angle) * k;
         }
         return 0;
+}
+
+template <std::size_t N, typename T>
+T pdf_sphere_cosine(const Vector<N, T>& n, const Vector<N, T>& v)
+{
+        static constexpr T k = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
+        return std::max(T(0), dot(n, v)) * k;
 }
 
 template <std::size_t N, typename T>
@@ -233,9 +240,16 @@ T pdf_sphere_power_cosine(std::type_identity_t<T> angle, std::type_identity_t<T>
 {
         if (angle >= 0 && angle < (PI<T> / 2))
         {
-                const T n = geometry::sphere_integrate_power_cosine_factor_over_hemisphere<N, T>(power);
-                return std::pow(std::cos(angle), power) / n;
+                const T k = geometry::sphere_integrate_power_cosine_factor_over_hemisphere<N, T>(power);
+                return std::pow(std::cos(angle), power) / k;
         }
         return 0;
+}
+
+template <std::size_t N, typename T>
+T pdf_sphere_power_cosine(const Vector<N, T>& n, const Vector<N, T>& v, std::type_identity_t<T> power)
+{
+        const T k = geometry::sphere_integrate_power_cosine_factor_over_hemisphere<N, T>(power);
+        return std::pow(std::max(T(0), dot(n, v)), power) / k;
 }
 }

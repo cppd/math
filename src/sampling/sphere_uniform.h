@@ -173,6 +173,13 @@ T pdf_sphere_uniform(std::type_identity_t<T> angle)
         return 0;
 }
 
+template <std::size_t N, typename T>
+T pdf_sphere_uniform(const Vector<N, T>& /*v*/)
+{
+        static constexpr T n = 1 / geometry::sphere_area(N);
+        return n;
+}
+
 // Вариант алгоритма для равномерных точек на диске.
 // Работает медленнее алгоритма с выбрасыванием значений.
 //   std::uniform_real_distribution<T> urd(0, 1);
