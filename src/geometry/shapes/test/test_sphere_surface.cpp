@@ -216,19 +216,48 @@ void test_sphere_relative_area_2(T precision)
 }
 
 template <typename T>
-void test_sphere_triangle_area(T precision)
+void test_sphere_simplex_area(T precision)
 {
-        LOG(std::string("Test sphere triangle area, ") + type_name<T>());
+        LOG(std::string("Test sphere simplex area, ") + type_name<T>());
 
         const auto cmp = [&](T v1, T v2)
         {
-                compare("Test sphere triangle area", v1, v2, precision);
+                compare("Test sphere simplex area", v1, v2, precision);
         };
 
-        cmp(sphere_triangle_area<4, T>({{{1, 0, 0, 0}, {0, 2, 0, 0}, {0, 0, 3, 0}}}), PI<T> / 2);
-        cmp(sphere_triangle_area<4, T>({{{1, 1, 0, 0}, {-2, 2, 0, 0}, {0, 0, 3, 0}}}), PI<T> / 2);
-        cmp(sphere_triangle_area<4, T>({{{1, 1, 0, 0}, {0, 0, 3, 0}, {-2, 2, 0, 0}}}), PI<T> / 2);
-        cmp(sphere_triangle_area<4, T>({{{1, 1, 0, 0}, {0, 0, 3, 0}, {0, 2, 0, 0}}}), PI<T> / 4);
+        {
+                std::array<Vector<4, T>, 2> v;
+
+                v[0] = {1, 0, 0, 0};
+                v[1] = {0, 2, 0, 0};
+                cmp(sphere_simplex_area(v), PI<T> / 2);
+                v[0] = {0, 1, 1, 0};
+                v[1] = {0, -2, 2, 0};
+                cmp(sphere_simplex_area(v), PI<T> / 2);
+                v[0] = {0, 0, 1, 1};
+                v[1] = {0, 0, 0, 3};
+                cmp(sphere_simplex_area(v), PI<T> / 4);
+        }
+        {
+                std::array<Vector<4, T>, 3> v;
+
+                v[0] = {1, 0, 0, 0};
+                v[1] = {0, 2, 0, 0};
+                v[2] = {0, 0, 3, 0};
+                cmp(sphere_simplex_area(v), PI<T> / 2);
+                v[0] = {1, 1, 0, 0};
+                v[1] = {-2, 2, 0, 0};
+                v[2] = {0, 0, 3, 0};
+                cmp(sphere_simplex_area(v), PI<T> / 2);
+                v[0] = {1, 1, 0, 0};
+                v[1] = {0, 0, 3, 0};
+                v[2] = {-2, 2, 0, 0};
+                cmp(sphere_simplex_area(v), PI<T> / 2);
+                v[0] = {1, 1, 0, 0};
+                v[1] = {0, 0, 3, 0};
+                v[2] = {0, 2, 0, 0};
+                cmp(sphere_simplex_area(v), PI<T> / 4);
+        }
 }
 
 template <typename T>
@@ -417,9 +446,9 @@ void test_sphere_surface(bool all_tests)
         test_sphere_relative_area_2<double>(2e-4);
         test_sphere_relative_area_2<long double>(2e-4);
 
-        test_sphere_triangle_area<float>(1e-7);
-        test_sphere_triangle_area<double>(0);
-        test_sphere_triangle_area<long double>(1e-19);
+        test_sphere_simplex_area<float>(1e-7);
+        test_sphere_simplex_area<double>(1e-15);
+        test_sphere_simplex_area<long double>(1e-19);
 
         if (!all_tests)
         {

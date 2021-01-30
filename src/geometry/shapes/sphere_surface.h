@@ -315,7 +315,7 @@ T sphere_relative_area(std::type_identity_t<T> a, std::type_identity_t<T> b)
 #if 0
 
 template <typename T>
-T sphere_triangle_area(const std::array<Vector<3, T>, 3>& vectors)
+T sphere_simplex_area(const std::array<Vector<3, T>, 3>& vectors)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -373,7 +373,30 @@ T sphere_triangle_area(const std::array<Vector<3, T>, 3>& vectors)
 #else
 
 template <std::size_t N, typename T>
-T sphere_triangle_area(const std::array<Vector<N, T>, 3>& vectors)
+T sphere_simplex_area(const std::array<Vector<N, T>, 2>& vectors)
+{
+        static_assert(N >= 3);
+        static_assert(std::is_floating_point_v<T>);
+
+        T norm_0 = vectors[0].norm();
+        if (norm_0 == 0)
+        {
+                return 0;
+        }
+
+        T norm_1 = vectors[1].norm();
+        if (norm_1 == 0)
+        {
+                return 0;
+        }
+
+        T cosine = dot(vectors[0] / norm_0, vectors[1] / norm_1);
+
+        return std::acos(std::clamp<T>(cosine, -1, 1));
+}
+
+template <std::size_t N, typename T>
+T sphere_simplex_area(const std::array<Vector<N, T>, 3>& vectors)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);

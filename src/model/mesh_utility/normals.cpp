@@ -58,24 +58,7 @@ T facet_normat_weight_at_vertex(
                         vectors[i] = points[facet[index]] - points[facet[facet_vertex_index]];
                 }
 
-                if constexpr (N == 4)
-                {
-                        return geometry::sphere_triangle_area(vectors);
-                }
-                if constexpr (N == 3)
-                {
-                        for (Vector<N, T>& v : vectors)
-                        {
-                                T norm = v.norm();
-                                if (norm == 0)
-                                {
-                                        return 0;
-                                }
-                                v /= norm;
-                        }
-                        T cosine = dot(vectors[0], vectors[1]);
-                        return std::acos(std::clamp<T>(cosine, -1, 1));
-                }
+                return geometry::sphere_simplex_area(vectors);
         }
 }
 
