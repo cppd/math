@@ -176,7 +176,7 @@ public:
 
                 std::mt19937 random_engine = create_engine<std::mt19937>();
 
-                const T MIN_DISTRIBUTION = T(0.2) / m_buckets.size();
+                const T MIN_DISTRIBUTION = T(0.5) / m_buckets.size();
 
                 for (const Bucket& bucket : m_buckets)
                 {
