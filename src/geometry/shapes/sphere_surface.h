@@ -375,7 +375,7 @@ T sphere_simplex_area(const std::array<Vector<3, T>, 3>& vectors)
 template <std::size_t N, typename T>
 T sphere_simplex_area(const std::array<Vector<N, T>, 2>& vectors)
 {
-        static_assert(N >= 3);
+        static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
         T norm_0 = vectors[0].norm();
