@@ -120,7 +120,11 @@ T ggx_g1(T n_v, T h_v, T alpha)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        return h_v / (1 + ggx_g1_lambda(n_v, alpha));
+        if (h_v > 0)
+        {
+                return h_v / (1 + ggx_g1_lambda(n_v, alpha));
+        }
+        return 0;
 }
 
 // (9.41)
@@ -144,7 +148,11 @@ T ggx_vn_pdf(T n_v, T n_h, T h_v, T alpha)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        return ggx_g1(n_v, h_v, alpha) * ggx_pdf(n_h, alpha) / n_v;
+        if (n_v > 0 && n_h > 0)
+        {
+                return ggx_g1(n_v, h_v, alpha) * ggx_pdf(n_h, alpha) / (n_v * n_h);
+        }
+        return 0;
 }
 
 // (17)
