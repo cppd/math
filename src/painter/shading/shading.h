@@ -81,7 +81,7 @@ public:
                 const Vector<N, T>& n,
                 const Vector<N, T>& /*v*/)
         {
-                Vector<N, T> v = sampling::cosine_weighted_on_hemisphere(random_engine, n);
+                Vector<N, T> v = sampling::cosine_on_hemisphere(random_engine, n);
                 // f = color / (integrate dot(n,l) over hemisphere)
                 // pdf = dot(n,l) / (integrate dot(n,l) over hemisphere)
                 // s = f / pdf * dot(n,l)
@@ -227,7 +227,7 @@ public:
                 const Vector<N, T>& n,
                 const Vector<N, T>& v)
         {
-                Vector<N, T> l = sampling::cosine_weighted_on_hemisphere(random_engine, n);
+                Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
                 T n_l = dot(n, l);
                 // pdf = dot(n,l) / (integrate dot(n,l) over 2-hemisphere)
                 // pdf = dot(n,l) / PI

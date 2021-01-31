@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::sampling
 {
 template <std::size_t N, typename T>
-class SphereBuckets
+class AngleBuckets
 {
         static constexpr int BUCKET_COUNT = 90;
         static constexpr T BUCKET_SIZE = PI<T> / BUCKET_COUNT;
@@ -60,12 +60,12 @@ public:
                 return BUCKET_SIZE;
         }
 
-        SphereBuckets()
+        AngleBuckets()
         {
                 m_buckets.resize(BUCKET_COUNT, 0);
         }
 
-        void merge(const SphereBuckets& other)
+        void merge(const AngleBuckets& other)
         {
                 ASSERT(m_buckets.size() == other.m_buckets.size());
                 for (unsigned i = 0; i < m_buckets.size(); ++i)

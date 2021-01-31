@@ -125,28 +125,32 @@ T ggx_g1(T n_v, T h_v, T alpha)
 
 // (9.41)
 template <typename T>
-T ggx_df(T n_h, T alpha)
+T ggx_pdf(T n_h, T alpha)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        T alpha_2 = square(alpha);
-        T v = 1 + square(n_h) * (alpha_2 - 1);
-        return std::max(T(0), n_h) * alpha_2 / (PI<T> * square(v));
+        if (n_h > 0)
+        {
+                T alpha_2 = square(alpha);
+                T v = 1 + square(n_h) * (alpha_2 - 1);
+                return n_h * alpha_2 / (PI<T> * square(v));
+        }
+        return 0;
 }
 
 // (2), (3)
 template <typename T>
-T ggx_vndf(T n_v, T n_h, T h_v, T alpha)
+T ggx_vn_pdf(T n_v, T n_h, T h_v, T alpha)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        return ggx_g1(n_v, h_v, alpha) * ggx_df(n_h, alpha) / n_v;
+        return ggx_g1(n_v, h_v, alpha) * ggx_pdf(n_h, alpha) / n_v;
 }
 
 // (17)
 template <typename T>
-T pdf_ggx_reflected(T n_v, T n_h, T h_v, T alpha)
+T ggx_reflected_pdf(T n_v, T n_h, T h_v, T alpha)
 {
-        return ggx_vndf(n_v, n_h, h_v, alpha) / (4 * h_v);
+        return ggx_vn_pdf(n_v, n_h, h_v, alpha) / (4 * h_v);
 }
 }

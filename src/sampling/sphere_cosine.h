@@ -41,7 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::sampling
 {
 template <typename RandomEngine, std::size_t N, typename T>
-Vector<N, T> cosine_weighted_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal)
+Vector<N, T> cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal)
 {
         static_assert(N > 2);
 
@@ -89,7 +89,7 @@ Vector<N, T> cosine_weighted_on_hemisphere(RandomEngine& random_engine, const Ve
  N[Integrate[Cos[x]^n*Sin[x]^p/c,{x,0,Pi/2}]]
 */
 template <std::size_t N, typename T>
-class PowerCosineHemisphere
+class PowerCosineOnHemisphere
 {
         static_assert(N > 3);
 
@@ -101,7 +101,7 @@ class PowerCosineHemisphere
         std::uniform_real_distribution<T> m_urd;
 
 public:
-        explicit PowerCosineHemisphere(std::type_identity_t<T> power)
+        explicit PowerCosineOnHemisphere(std::type_identity_t<T> power)
         {
                 if (!(power >= 1))
                 {
@@ -157,17 +157,17 @@ public:
 };
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> power_cosine_weighted_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal, T power)
+Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal, T power)
 {
         static_assert(N > 3);
 
-        thread_local std::unordered_map<T, PowerCosineHemisphere<N, T>> map;
+        thread_local std::unordered_map<T, PowerCosineOnHemisphere<N, T>> map;
         auto iter = map.find(power);
         if (iter != map.end())
         {
                 return iter->second.sample(random_engine, normal);
         }
-        return map.emplace(power, PowerCosineHemisphere<N, T>(power)).first->second.sample(random_engine, normal);
+        return map.emplace(power, PowerCosineOnHemisphere<N, T>(power)).first->second.sample(random_engine, normal);
 }
 
 /*
@@ -192,7 +192,7 @@ Vector<N, T> power_cosine_weighted_on_hemisphere(RandomEngine& random_engine, co
  Projection on normal = squared_length_of_random_vector_in_2_sphere ^ (1 / (1 + n))
 */
 template <typename T, typename RandomEngine>
-Vector<3, T> power_cosine_weighted_on_hemisphere(RandomEngine& random_engine, const Vector<3, T>& normal, T power)
+Vector<3, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const Vector<3, T>& normal, T power)
 {
         constexpr unsigned N = 3;
 
@@ -218,38 +218,24 @@ Vector<3, T> power_cosine_weighted_on_hemisphere(RandomEngine& random_engine, co
 }
 
 template <std::size_t N, typename T>
-T pdf_sphere_cosine(std::type_identity_t<T> angle)
+T cosine_on_hemisphere_pdf(T n_v)
 {
-        if (angle >= 0 && angle < (PI<T> / 2))
+        if (n_v > 0)
         {
                 static constexpr T k = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
-                return std::cos(angle) * k;
+                return n_v * k;
         }
         return 0;
 }
 
 template <std::size_t N, typename T>
-T pdf_sphere_cosine(const Vector<N, T>& n, const Vector<N, T>& v)
+T power_cosine_on_hemisphere_pdf(T n_v, std::type_identity_t<T> power)
 {
-        static constexpr T k = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
-        return std::max(T(0), dot(n, v)) * k;
-}
-
-template <std::size_t N, typename T>
-T pdf_sphere_power_cosine(std::type_identity_t<T> angle, std::type_identity_t<T> power)
-{
-        if (angle >= 0 && angle < (PI<T> / 2))
+        if (n_v > 0)
         {
                 const T k = geometry::sphere_integrate_power_cosine_factor_over_hemisphere<N, T>(power);
-                return std::pow(std::cos(angle), power) / k;
+                return std::pow(n_v, power) / k;
         }
         return 0;
-}
-
-template <std::size_t N, typename T>
-T pdf_sphere_power_cosine(const Vector<N, T>& n, const Vector<N, T>& v, std::type_identity_t<T> power)
-{
-        const T k = geometry::sphere_integrate_power_cosine_factor_over_hemisphere<N, T>(power);
-        return std::pow(std::max(T(0), dot(n, v)), power) / k;
 }
 }

@@ -163,18 +163,7 @@ Vector<N, T> uniform_on_sphere(RandomEngine& random_engine)
 }
 
 template <std::size_t N, typename T>
-T pdf_sphere_uniform(std::type_identity_t<T> angle)
-{
-        if (angle >= 0 && angle < (PI<T>))
-        {
-                static constexpr T n = 1 / geometry::sphere_area(N);
-                return n;
-        }
-        return 0;
-}
-
-template <std::size_t N, typename T>
-T pdf_sphere_uniform(const Vector<N, T>& /*v*/)
+T uniform_on_sphere_pdf()
 {
         static constexpr T n = 1 / geometry::sphere_area(N);
         return n;
