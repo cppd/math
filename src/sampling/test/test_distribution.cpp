@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/com/time.h>
 #include <src/com/type/name.h>
+#include <src/numerical/optics.h>
 
 #include <cmath>
 #include <future>
@@ -454,6 +455,21 @@ std::enable_if_t<N == 3> test_ggx(
                         const T n_h = dot(NORMAL, h);
                         const T h_v = dot(h, V);
                         return ggx_vn_pdf(N_V, n_h, h_v, ALPHA);
+                });
+
+        test_distribution_surface<N, T>(
+                NAME + ", Visible Normals, Reflected", surface_distribution_count,
+                [&](RandomEngine<T>& random_engine)
+                {
+                        const Vector<N, T> h = ggx_vn(random_engine, NORMAL, V, ALPHA);
+                        return numerical::reflect_vn(V, h);
+                },
+                [&](const Vector<N, T>& l)
+                {
+                        const Vector<N, T> h = (l + V).normalized();
+                        const T n_h = dot(NORMAL, h);
+                        const T h_v = dot(h, V);
+                        return ggx_vn_reflected_pdf(N_V, n_h, h_v, ALPHA);
                 });
 
         test_performance<N, T>(

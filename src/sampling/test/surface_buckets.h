@@ -176,16 +176,11 @@ public:
 
                 std::mt19937 random_engine = create_engine<std::mt19937>();
 
-                const T MIN_DISTRIBUTION = T(0.5) / m_buckets.size();
+                const T MIN_P = T(0.5) / geometry::sphere_area(N);
 
                 for (const Bucket& bucket : m_buckets)
                 {
                         T distribution = T(bucket.counter) / sample_count;
-
-                        if (distribution < MIN_DISTRIBUTION)
-                        {
-                                continue;
-                        }
 
                         std::array<Vector<N, T>, N> vertices = bucket.vertices();
                         T bucket_area = geometry::sphere_simplex_area(vertices);
@@ -196,6 +191,11 @@ public:
                         ASSERT(bucket_pdf >= 0);
 
                         if (bucket_pdf == bucket_p)
+                        {
+                                continue;
+                        }
+
+                        if (bucket_pdf < MIN_P)
                         {
                                 continue;
                         }
