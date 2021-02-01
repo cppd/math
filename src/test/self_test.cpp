@@ -28,8 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/test/test_complement.h>
 #include <src/numerical/test/test_eigen.h>
 #include <src/numerical/test/test_normal.h>
+#include <src/numerical/test/test_optics.h>
 #include <src/numerical/test/test_simplex.h>
-#include <src/painter/painter/test/test_optics.h>
 #include <src/painter/shapes/test/test_mesh.h>
 
 namespace ns::test
@@ -52,7 +52,7 @@ void self_test_essential(ProgressRatios* progress_ratios)
                 {
                         ProgressRatio progress(progress_ratios, s);
                         progress.set(0);
-                        painter::test_optics();
+                        numerical::test_optics();
                 });
 
         s = "Self-Test, Sphere area";

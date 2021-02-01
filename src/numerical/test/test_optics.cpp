@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <span>
 #include <vector>
 
-namespace ns::painter
+namespace ns::numerical
 {
 namespace
 {
@@ -75,13 +75,18 @@ void test(std::string text, const std::vector<Vector<N, T>> data, const F& f)
 }
 
 template <std::size_t N, typename T>
+bool cmp(const Vector<N, T>& v1, const Vector<N, T>& v2, T precision)
+{
+        return (v1 - v2).norm() <= precision;
+}
+
+template <std::size_t N, typename T>
 void test_optics_performance()
 {
         constexpr int DATA_SIZE = 10'000'000;
         constexpr T N_1 = 1;
         constexpr T N_2 = 1.5;
         constexpr T ETA = N_1 / N_2;
-        constexpr T K = T(0.5);
 
         LOG(space_name(N) + ", <" + type_name<T>() + ">");
 
@@ -106,18 +111,6 @@ void test_optics_performance()
              {
                      return refract2(v, normal, ETA);
              });
-
-        test("  fresnel d", data,
-             [&](const Vector<N, T>& v)
-             {
-                     return fresnel_dielectric(v, normal, N_1, N_2);
-             });
-
-        test("  fresnel c", data,
-             [&](const Vector<N, T>& v)
-             {
-                     return fresnel_conductor(v, normal, ETA, K);
-             });
 }
 
 template <std::size_t N>
@@ -125,12 +118,6 @@ void test_optics_performance()
 {
         test_optics_performance<N, float>();
         test_optics_performance<N, double>();
-}
-
-template <std::size_t N, typename T>
-bool cmp(const Vector<N, T>& v1, const Vector<N, T>& v2, T precision)
-{
-        return (v1 - v2).norm() <= precision;
 }
 
 template <typename T>

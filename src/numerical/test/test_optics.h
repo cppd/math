@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-namespace ns::painter
+namespace ns::numerical
 {
 void test_optics();
 void test_optics_performance();
