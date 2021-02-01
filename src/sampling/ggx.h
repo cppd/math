@@ -157,7 +157,7 @@ T ggx_vn_pdf(T n_v, T n_h, T h_v, T alpha)
 
 // (17)
 template <typename T>
-T ggx_reflected_pdf(T n_v, T n_h, T h_v, T alpha)
+T ggx_vn_reflected_pdf(T n_v, T n_h, T h_v, T alpha)
 {
         return ggx_vn_pdf(n_v, n_h, h_v, alpha) / (4 * h_v);
 }
