@@ -126,6 +126,77 @@ void test_optics_performance()
         test_optics_performance<N, float>();
         test_optics_performance<N, double>();
 }
+
+template <std::size_t N, typename T>
+bool cmp(const Vector<N, T>& v1, const Vector<N, T>& v2, T precision)
+{
+        return (v1 - v2).norm() <= precision;
+}
+
+template <typename T>
+void test_optics(T precision)
+{
+        LOG(std::string("Test optics, <") + type_name<T>() + ">");
+
+        constexpr T ETA = 0.5;
+        constexpr T ETA_MIRROR = 2;
+        const Vector<2, T> v = Vector<2, T>(2, -1).normalized();
+        const Vector<2, T> n = Vector<2, T>(0, 1).normalized();
+        const Vector<2, T> reflected = Vector<2, T>(2, 1).normalized();
+        const T sin2 = ETA * v[0];
+        const Vector<2, T> refracted = Vector<2, T>(sin2, -std::sqrt(1 - square(sin2))).normalized();
+
+        {
+                Vector<2, T> r = reflect(v, n);
+                if (!cmp(r, reflected, precision))
+                {
+                        error("Error reflecting 1, " + to_string(r));
+                }
+        }
+        {
+                Vector<2, T> r = reflect_vn(-v, n);
+                if (!cmp(r, reflected, precision))
+                {
+                        error("Error reflecting 2, " + to_string(r));
+                }
+        }
+        {
+                std::optional<Vector<2, T>> r = refract(v, n, ETA);
+                if (!r)
+                {
+                        error("Error refracting 1, not refracted");
+                }
+                if (!cmp(*r, refracted, precision))
+                {
+                        error("Error refracting 1, " + to_string(*r));
+                }
+        }
+        {
+                std::optional<Vector<2, T>> r = refract2(v, n, ETA);
+                if (!r)
+                {
+                        error("Error refracting 2, not refracted");
+                }
+                if (!cmp(*r, refracted, precision))
+                {
+                        error("Error refracting 2, " + to_string(*r));
+                }
+        }
+        if (refract(v, n, ETA_MIRROR))
+        {
+                error("Error refracting 1, refracted");
+        }
+        if (refract2(v, n, ETA_MIRROR))
+        {
+                error("Error refracting 2, refracted");
+        }
+}
+}
+
+void test_optics()
+{
+        test_optics<float>(1e-7);
+        test_optics<double>(1e-15);
 }
 
 void test_optics_performance()

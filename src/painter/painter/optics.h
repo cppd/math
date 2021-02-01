@@ -40,23 +40,6 @@ namespace ns::painter
 namespace optics_implementation
 {
 template <std::size_t N, typename T>
-std::optional<T> cos2(const Vector<N, T>& v, const Vector<N, T>& normal, T eta)
-{
-        T dot1 = dot(normal, v);
-
-        // sin2 = eta * sin1
-        T cos2_square = 1 - square(eta) * (1 - square(dot1));
-
-        if (cos2_square > 0)
-        {
-                return std::sqrt(cos2_square);
-        }
-
-        // полное внутреннее отражение
-        return std::nullopt;
-}
-
-template <std::size_t N, typename T>
 std::optional<std::array<T, 2>> cos1_cos2(const Vector<N, T>& v, const Vector<N, T>& normal, T eta)
 {
         T dot1 = dot(normal, v);
@@ -79,7 +62,15 @@ Vector<N, T> reflect(const Vector<N, T>& v, const Vector<N, T>& normal)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        return v - 2 * dot(v, normal) * normal;
+        return v - (2 * dot(v, normal)) * normal;
+}
+
+template <std::size_t N, typename T>
+Vector<N, T> reflect_vn(const Vector<N, T>& v, const Vector<N, T>& normal)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        return (2 * dot(v, normal)) * normal - v;
 }
 
 // The OpenGL® Shading Language, Geometric Functions, Description.
@@ -88,13 +79,13 @@ std::optional<Vector<N, T>> refract(const Vector<N, T>& v, const Vector<N, T>& n
 {
         static_assert(std::is_floating_point_v<T>);
 
-        namespace impl = optics_implementation;
-
-        std::optional<T> cos2 = impl::cos2(v, normal, eta);
-        if (cos2)
+        T cos1 = dot(normal, v);
+        // sin2 = eta * sin1
+        T cos2_squared = 1 - square(eta) * (1 - square(cos1));
+        if (cos2_squared > 0)
         {
-                return v * eta - normal * (eta * dot(v, normal) + *cos2);
-                // return eta * (v  - normal * dot(v, normal)) - normal * *cos2;
+                return v * eta - normal * (eta * cos1 + std::sqrt(cos2_squared));
+                // return eta * (v  - normal * dot(v, normal)) - normal * std::sqrt(cos2_squared);
         }
         return std::nullopt;
 }
