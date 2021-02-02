@@ -42,7 +42,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/constant.h>
 #include <src/com/interpolation.h>
 #include <src/geometry/shapes/sphere_surface.h>
+#include <src/numerical/optics.h>
 #include <src/numerical/vec.h>
+#include <src/sampling/ggx.h>
 #include <src/sampling/sphere_cosine.h>
 #include <src/sampling/sphere_uniform.h>
 
@@ -67,8 +69,8 @@ public:
         {
                 // f = color / (integrate dot(n,l) over hemisphere)
                 // pdf = 1
-                // s = f / pdf * dot(n,l)
-                // s = color / (integrate dot(n,l) over hemisphere) * dot(n,l)
+                // s = f / pdf * cos(n,l)
+                // s = color / (integrate cos(n,l) over hemisphere) * cos(n,l)
                 return CONSTANT_REFLECTANCE_FACTOR * dot(n, l) * color;
         }
 
@@ -82,11 +84,11 @@ public:
                 const Vector<N, T>& /*v*/)
         {
                 Vector<N, T> v = sampling::cosine_on_hemisphere(random_engine, n);
-                // f = color / (integrate dot(n,l) over hemisphere)
-                // pdf = dot(n,l) / (integrate dot(n,l) over hemisphere)
-                // s = f / pdf * dot(n,l)
-                // s = color / (integrate dot(n,l) over hemisphere) /
-                //     (dot(n,l) / (integrate dot(n,l) over hemisphere)) * dot(n,l)
+                // f = color / (integrate cos(n,l) over hemisphere)
+                // pdf = cos(n,l) / (integrate cos(n,l) over hemisphere)
+                // s = f / pdf * cos(n,l)
+                // s = color / (integrate cos(n,l) over hemisphere) /
+                //     (cos(n,l) / (integrate cos(n,l) over hemisphere)) * cos(n,l)
                 // s = color
                 return {color, v};
         }
@@ -172,10 +174,9 @@ class Shading<3, T>
                 T metalness,
                 T roughness,
                 const vec3& surface_color,
-                T n_l,
                 const Vector<N, T>& n,
-                const Vector<N, T>& l,
-                const Vector<N, T>& v)
+                const Vector<N, T>& v,
+                const Vector<N, T>& l)
         {
                 constexpr T F0 = 0.05;
 
@@ -187,6 +188,7 @@ class Shading<3, T>
 
                 Vector<N, T> h = (l + v).normalized();
 
+                T n_l = dot(n, l);
                 T h_l = dot(h, l);
                 T n_v = dot(n, v);
                 T n_h = dot(n, h);
@@ -212,9 +214,9 @@ public:
                         return Color(0);
                 }
                 // pdf = 1
-                // s = f / pdf * dot(n,l)
-                // s = f * dot(n,l)
-                vec3 s = n_l * f(metalness, roughness, color.to_rgb_vector<T>(), n_l, n, l, v);
+                // s = f / pdf * cos(n,l)
+                // s = f * cos(n,l)
+                vec3 s = n_l * f(metalness, roughness, color.to_rgb_vector<T>(), n, v, l);
                 return Color(to_vector<Color::DataType>(s));
         }
 
@@ -227,15 +229,42 @@ public:
                 const Vector<N, T>& n,
                 const Vector<N, T>& v)
         {
+#if 0
                 Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
-                T n_l = dot(n, l);
-                // pdf = dot(n,l) / (integrate dot(n,l) over 2-hemisphere)
-                // pdf = dot(n,l) / PI
-                // s = f / pdf * dot(n,l)
-                // s = f / (dot(n,l) / PI) * dot(n,l)
+                // pdf = cos(n,l) / (integrate cos(n,l) over 2-hemisphere)
+                // pdf = cos(n,l) / PI
+                // s = f / pdf * cos(n,l)
+                // s = f / (cos(n,l) / PI) * cos(n,l)
                 // s = f * PI
-                vec3 s = PI<T> * f(metalness, roughness, color.to_rgb_vector<T>(), n_l, n, l, v);
+                vec3 s = PI<T> * f(metalness, roughness, color.to_rgb_vector<T>(), n, v, l);
                 return {Color(to_vector<Color::DataType>(s)), l};
+#else
+                Vector<N, T> l;
+                T pdf;
+                if (std::uniform_real_distribution<T>(0, 1)(random_engine) < T(0.5))
+                {
+                        l = sampling::cosine_on_hemisphere(random_engine, n);
+                        pdf = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
+                }
+                else
+                {
+                        T alpha = square(roughness);
+                        Vector<N, T> h = sampling::ggx_vn(random_engine, n, v, alpha);
+                        l = numerical::reflect_vn(v, h);
+                        if (dot(n, l) <= 0)
+                        {
+                                return {Color(0), l};
+                        }
+                        pdf = sampling::ggx_vn_reflected_pdf(dot(n, v), dot(n, h), dot(h, l), alpha);
+                }
+                if (pdf == 0)
+                {
+                        return {Color(0), l};
+                }
+                // s = f / pdf * cos(n, l)
+                vec3 s = (dot(n, l) / pdf) * f(metalness, roughness, color.to_rgb_vector<T>(), n, v, l);
+                return {Color(to_vector<Color::DataType>(s)), l};
+#endif
         }
 };
 }
