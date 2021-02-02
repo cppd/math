@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  Sampling the GGX Distribution of Visible Normals.
  Journal of Computer Graphics Techniques (JCGT), vol. 7, no. 4, 1–13, 2018.
 
- Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
- Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
+ Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
+ Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
  Real-Time Rendering. Fourth Edition.
  CRC Press, 2018.
 */

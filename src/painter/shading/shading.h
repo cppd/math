@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
- Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
+ Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
+ Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
  Real-Time Rendering. Fourth Edition.
  CRC Press, 2018.
 
