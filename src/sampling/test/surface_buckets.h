@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_facet.h"
 
 #include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/geometry/shapes/sphere_surface.h>
@@ -28,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 #include <random>
+#include <sstream>
 #include <vector>
 
 namespace ns::sampling
@@ -168,48 +170,84 @@ public:
         template <typename PDF>
         void compare_with_pdf(const PDF& pdf) const
         {
-                long long sample_count = 0;
-                for (const Bucket& bucket : m_buckets)
+                constexpr T UNIFORM_DENSITY = T(1) / geometry::sphere_area(N);
+
+                const long long sample_count = [&]()
                 {
-                        sample_count += bucket.counter;
-                }
+                        long long s = 0;
+                        for (const Bucket& bucket : m_buckets)
+                        {
+                                s += bucket.counter;
+                        }
+                        return s;
+                }();
 
                 std::mt19937 random_engine = create_engine<std::mt19937>();
 
-                const T MIN_P = T(0.5) / geometry::sphere_area(N);
+                T sum_sampled = 0;
+                T sum_expected = 0;
+                T sum_error = 0;
 
                 for (const Bucket& bucket : m_buckets)
                 {
-                        T distribution = T(bucket.counter) / sample_count;
-
                         std::array<Vector<N, T>, N> vertices = bucket.vertices();
                         T bucket_area = geometry::sphere_simplex_area(vertices);
-                        T bucket_p = distribution / bucket_area;
-                        T bucket_pdf = pdf_for_bucket(vertices, pdf, random_engine);
 
-                        ASSERT(bucket_p >= 0);
-                        ASSERT(bucket_pdf >= 0);
+                        T sampled_distribution = T(bucket.counter) / sample_count;
+                        T sampled_density = sampled_distribution / bucket_area;
+                        T expected_density = pdf_for_bucket(vertices, pdf, random_engine);
+                        T expected_distribution = expected_density * bucket_area;
 
-                        if (bucket_pdf == bucket_p)
+                        ASSERT(sampled_density >= 0);
+                        ASSERT(sampled_distribution >= 0);
+                        if (!(expected_density >= 0))
+                        {
+                                error("PDF " + to_string(expected_density) + " is not positive and not zero");
+                        }
+                        ASSERT(expected_distribution >= 0);
+
+                        sum_sampled += sampled_distribution;
+                        sum_expected += expected_distribution;
+                        sum_error += std::abs(sampled_distribution - expected_distribution);
+
+                        if (expected_density == sampled_density)
                         {
                                 continue;
                         }
 
-                        if (bucket_pdf < MIN_P)
+                        if (expected_density < UNIFORM_DENSITY / 2)
                         {
                                 continue;
                         }
 
-                        T discrepancy = std::abs(bucket_p - bucket_pdf) / std::max(bucket_p, bucket_pdf);
-                        if (discrepancy <= T(0.3))
+                        T relative_error = std::abs(sampled_density - expected_density)
+                                           / std::max(sampled_density, expected_density);
+
+                        if (relative_error <= T(0.3))
                         {
                                 continue;
                         }
 
-                        error("distribution = " + to_string(distribution) + "\narea = " + to_string(bucket_area, 5)
-                              + "\ncounter = " + to_string(bucket.counter)
-                              + "\nsample count = " + to_string(sample_count) + "\np = " + to_string(bucket_p, 5)
-                              + "\npdf = " + to_string(bucket_pdf, 5));
+                        std::ostringstream oss;
+                        oss << "sampled distribution = " << sampled_distribution << '\n';
+                        oss << "expected distribution = " << expected_distribution << '\n';
+                        oss << "sampled density = " << sampled_density << '\n';
+                        oss << "expected density = " << expected_density << '\n';
+                        oss << "bucket area = " << bucket_area << '\n';
+                        oss << "bucket counter = " << bucket.counter << '\n';
+                        oss << "sample count = " << sample_count;
+                        error(oss.str());
+                }
+
+                ASSERT(std::abs(sum_sampled - 1) < T(0.01));
+                if (!(std::abs(sum_expected - 1) < T(0.02)))
+                {
+                        error("PDF integral " + to_string(sum_expected) + " is not equal to 1");
+                }
+
+                if (!(sum_error < T(0.03)))
+                {
+                        error("Absolute error " + to_string(sum_error));
                 }
         }
 };
