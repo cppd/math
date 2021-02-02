@@ -87,11 +87,11 @@ float edge_factor()
 
 vec3 shade(vec3 color)
 {
-        vec3 N = normalize(gs.world_normal);
-        vec3 L = drawing.direction_to_light;
-        vec3 V = drawing.direction_to_camera;
+        vec3 n = normalize(gs.world_normal);
+        vec3 v = drawing.direction_to_camera;
+        vec3 l = drawing.direction_to_light;
 
-        return shade(drawing.lighting_intensity, mesh.metalness, mesh.roughness, color, N, L, V);
+        return shade(drawing.lighting_intensity, mesh.metalness, mesh.roughness, color, n, v, l);
 }
 
 vec3 shade()
