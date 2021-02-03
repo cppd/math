@@ -20,4 +20,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::sampling
 {
 void test_erf();
+void test_erf_performance();
 }

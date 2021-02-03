@@ -17,19 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "self_test.h"
 
+#include "test.h"
+
 #include <src/com/exception.h>
 #include <src/com/names.h>
 #include <src/com/string/str.h>
 #include <src/geometry/core/test/test_convex_hull.h>
 #include <src/geometry/reconstruction/test/test_reconstruction.h>
-#include <src/geometry/shapes/test/test_sphere_surface.h>
 #include <src/geometry/spatial/test/test_parallelotope.h>
-#include <src/gpu/dft/test/test_dft.h>
-#include <src/numerical/test/test_complement.h>
-#include <src/numerical/test/test_eigen.h>
-#include <src/numerical/test/test_normal.h>
-#include <src/numerical/test/test_optics.h>
-#include <src/numerical/test/test_simplex.h>
 #include <src/painter/shapes/test/test_mesh.h>
 
 namespace ns::test
@@ -43,72 +38,9 @@ std::string space_name_upper(int d)
 
 void self_test_essential(ProgressRatios* progress_ratios)
 {
+        Tests::instance().run(progress_ratios);
+
         std::string s;
-
-        s = "Self-Test, Optics";
-        catch_all(
-                s,
-                [&]()
-                {
-                        ProgressRatio progress(progress_ratios, s);
-                        progress.set(0);
-                        numerical::test_optics();
-                });
-
-        s = "Self-Test, Sphere area";
-        catch_all(
-                s,
-                [&]()
-                {
-                        ProgressRatio progress(progress_ratios, s);
-                        progress.set(0);
-                        geometry::test_sphere_surface(false);
-                });
-
-        s = "Self-Test, Complement";
-        catch_all(
-                s,
-                [&]()
-                {
-                        ProgressRatio progress(progress_ratios, s);
-                        numerical::test_complement(&progress);
-                });
-
-        s = "Self-Test, Eigen";
-        catch_all(
-                s,
-                [&]()
-                {
-                        ProgressRatio progress(progress_ratios, s);
-                        numerical::test_eigen(&progress);
-                });
-
-        s = "Self-Test, Normal";
-        catch_all(
-                s,
-                [&]()
-                {
-                        ProgressRatio progress(progress_ratios, s);
-                        numerical::test_normal(&progress);
-                });
-
-        s = "Self-Test, Simplex";
-        catch_all(
-                s,
-                [&]()
-                {
-                        ProgressRatio progress(progress_ratios, s);
-                        numerical::test_simplex(&progress);
-                });
-
-        s = "Self-Test, DFT in " + space_name_upper(2);
-        catch_all(
-                s,
-                [&]()
-                {
-                        ProgressRatio progress(progress_ratios, s);
-                        gpu::dft::test(&progress);
-                });
 
         s = "Self-Test, Parallelotope in " + space_name_upper(2);
         catch_all(

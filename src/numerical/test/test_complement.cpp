@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/sampling/sphere_uniform.h>
+#include <src/test/test.h>
 
 #include <random>
 
@@ -205,4 +206,10 @@ void test_complement(ProgressRatio* progress)
         test_complement<long double>(VECTOR_COUNT / 100);
         progress->set(3, 3);
 }
+
+TEST("Complement",
+     [](ProgressRatio* progress)
+     {
+             test_complement(progress);
+     })
 }

@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/com/type/name.h>
 #include <src/sampling/sphere_uniform.h>
+#include <src/test/test.h>
 
 #include <cstddef>
 #include <random>
@@ -193,4 +194,10 @@ void test_optics_performance()
         test_optics_performance<4>();
         test_optics_performance<5>();
 }
+
+TEST("Optics",
+     [](ProgressRatio* /*progress*/)
+     {
+             test_optics();
+     })
 }

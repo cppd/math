@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/time.h>
+#include <src/test/test.h>
 
 #include <array>
 #include <cmath>
@@ -439,4 +440,10 @@ void test(ProgressRatio* progress)
         const std::array<int, 2> dimensions = find_dimensions(test_size);
         random_data_test(dft.get(), dimensions, progress);
 }
+
+TEST("DFT in 2-space",
+     [](ProgressRatio* progress)
+     {
+             test(progress);
+     })
 }

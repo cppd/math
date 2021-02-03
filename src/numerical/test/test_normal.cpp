@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/sampling/sphere_uniform.h>
+#include <src/test/test.h>
 
 #include <random>
 
@@ -161,4 +162,10 @@ void test_normal(ProgressRatio* progress)
 
         LOG("Test point normals passed");
 }
+
+TEST("Normal",
+     [](ProgressRatio* progress)
+     {
+             test_normal(progress);
+     })
 }

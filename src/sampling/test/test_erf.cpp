@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/com/time.h>
 #include <src/com/type/name.h>
+#include <src/test/test.h>
 
 #include <limits>
 #include <random>
@@ -220,7 +221,7 @@ void test_erf_inv_from_array(std::type_identity_t<T> precision)
 }
 
 template <typename T>
-void test_speed()
+void test_performance()
 {
         constexpr int COUNT = 1000000;
 
@@ -257,11 +258,19 @@ void test_erf()
         test_erf_inv<double>(0.005, 200);
         test_erf_inv<long double>(0.005, 200);
 
-        LOG("Test erf_inv speed");
-        test_speed<float>();
-        test_speed<double>();
-        test_speed<long double>();
-
         LOG("Test erf_inv passed");
 }
+
+void test_erf_performance()
+{
+        test_performance<float>();
+        test_performance<double>();
+        test_performance<long double>();
+}
+
+TEST("Erf",
+     [](ProgressRatio* /*progress*/)
+     {
+             test_erf();
+     })
 }

@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
+#include <src/test/test.h>
 
 #include <random>
 
@@ -190,4 +191,10 @@ void test_eigen(ProgressRatio* progress)
 
         LOG("Test eigenvalues and eigenvectors passed");
 }
+
+TEST("Eigen",
+     [](ProgressRatio* progress)
+     {
+             test_eigen(progress);
+     })
 }

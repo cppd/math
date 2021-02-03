@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/numerical/vec.h>
 #include <src/sampling/sphere_uniform.h>
+#include <src/test/test.h>
 
 #include <cmath>
 #include <random>
@@ -569,4 +570,10 @@ void test_sphere_surface(bool all_tests)
         LOG("");
         test_cosine<double>();
 }
+
+TEST("Sphere Area",
+     [](ProgressRatio* /*progress*/)
+     {
+             test_sphere_surface(false);
+     })
 }
