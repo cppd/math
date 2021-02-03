@@ -80,7 +80,7 @@ bool has_texture_coordinates()
 
 float edge_factor()
 {
-        vec3 d = fwidth(gs.baricentric);
+        vec3 d = 0.5 * fwidth(gs.baricentric);
         vec3 a = smoothstep(vec3(0), d, gs.baricentric);
         return min(min(a.x, a.y), a.z);
 }
@@ -119,33 +119,32 @@ vec3 shade(vec3 color)
 
 vec3 shade()
 {
-        vec3 mtl_color;
+        vec3 color;
 
         if (!mtl.use_material || !drawing.show_materials)
         {
-                mtl_color = mesh.color;
+                color = mesh.color;
         }
         else if (!has_texture_coordinates() || !mtl.use_texture_Kd)
         {
-                mtl_color = mtl.Kd;
+                color = mtl.Kd;
         }
         else
         {
-                mtl_color = texture_Kd_color(gs.texture_coordinates).rgb;
+                color = texture_Kd_color(gs.texture_coordinates).rgb;
         }
 
-        vec3 color = drawing.lighting_intensity * shade(mtl_color);
-        color += mesh.ambient * mtl_color;
+        return drawing.lighting_intensity * shade(color) + mesh.ambient * color;
+}
+
+void main()
+{
+        vec3 color = shade();
 
         if (drawing.show_wireframe)
         {
                 color = mix(drawing.wireframe_color, color, edge_factor());
         }
 
-        return color;
-}
-
-void main()
-{
-        set_fragment_color(shade());
+        set_fragment_color(color);
 }
