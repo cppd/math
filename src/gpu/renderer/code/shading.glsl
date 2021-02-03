@@ -99,7 +99,7 @@ vec3 s_diffuse_disney_without_subsurface(vec3 rho_ss, float roughness, float n_l
 //        return rho_ss * (n_l * n_v * (1 / PI) * mix(f_d, 1.25 * f_ss, k_ss));
 //}
 
-vec3 shade(float intensity, float metalness, float roughness, vec3 surface_color, vec3 n, vec3 v, vec3 l)
+vec3 shade(float metalness, float roughness, vec3 surface_color, vec3 n, vec3 v, vec3 l)
 {
         float n_l = dot(n, l);
         if (n_l <= 0)
@@ -124,5 +124,5 @@ vec3 shade(float intensity, float metalness, float roughness, vec3 surface_color
         vec3 spec = s_fresnel(f0, h_l) * s_g2_combined(alpha_2, n_l, n_v) * s_ggx(alpha_2, n_h);
         vec3 diff = s_diffuse_disney_without_subsurface(rho_ss, roughness, n_l, n_v, h_l);
 
-        return intensity * n_l * (spec + diff);
+        return n_l * (spec + diff);
 }

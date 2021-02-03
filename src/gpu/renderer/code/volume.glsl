@@ -443,11 +443,14 @@ vec4 find_isosurface(vec4 a, vec4 b, float sign_a)
 vec3 shade(vec3 p)
 {
         vec3 wn = world_normal(p);
+
         vec3 n = faceforward(wn, -drawing.direction_to_camera, wn);
         vec3 v = drawing.direction_to_camera;
         vec3 l = drawing.direction_to_light;
 
-        return shade(drawing.lighting_intensity, volume.metalness, volume.roughness, volume.color, n, v, l);
+        vec3 s = shade(volume.metalness, volume.roughness, volume.color, n, v, l);
+
+        return drawing.lighting_intensity * s;
 }
 
 vec4 isosurface_color(vec3 p)
