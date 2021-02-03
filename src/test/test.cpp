@@ -17,7 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test.h"
 
+#include <src/com/error.h>
 #include <src/com/exception.h>
+#include <src/com/random/engine.h>
+#include <src/com/variant.h>
+
+#include <random>
 
 namespace ns::test
 {
@@ -27,24 +32,47 @@ Tests& Tests::instance()
         return tests;
 }
 
-void Tests::add(const char* name, std::function<void(ProgressRatio* progress)> function)
+void Tests::run(const Test& test, ProgressRatios* progress_ratios)
 {
-        m_tests.emplace_back(name, std::move(function));
+        std::string name = "Self-Test, ";
+        name += test.name;
+        auto f1 = [](const std::function<void()>& f)
+        {
+                f();
+        };
+        auto f2 = [&](const std::function<void(ProgressRatio*)>& f)
+        {
+                ProgressRatio progress(progress_ratios, name);
+                f(&progress);
+        };
+        catch_all(
+                name,
+                [&]()
+                {
+                        std::visit(Visitors{f1, f2}, test.function);
+                });
 }
 
 void Tests::run(ProgressRatios* progress_ratios) const
 {
-        const std::string s = "Self-Test, ";
+        std::vector<Test> tests(m_tests);
+        std::shuffle(tests.begin(), tests.end(), create_engine<std::mt19937>());
+        for (const Test& test : tests)
+        {
+                run(test, progress_ratios);
+        }
+}
 
+void Tests::run(const std::string_view& name, ProgressRatios* progress_ratios) const
+{
         for (const Test& test : m_tests)
         {
-                catch_all(
-                        s + test.name,
-                        [&]()
-                        {
-                                ProgressRatio progress(progress_ratios, s + test.name);
-                                test.function(&progress);
-                        });
+                if (name == test.name)
+                {
+                        run(test, progress_ratios);
+                        return;
+                }
         }
+        error("Test not found " + std::string(name));
 }
 }

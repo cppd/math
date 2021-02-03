@@ -20,33 +20,43 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/progress/progress.h>
 
 #include <functional>
-#include <string>
+#include <string_view>
+#include <variant>
 #include <vector>
 
 namespace ns::test
 {
 class Tests final
 {
+        friend struct AddTest;
+
         struct Test final
         {
                 const char* name;
-                std::function<void(ProgressRatio* progress)> function;
-                Test(const char* name, std::function<void(ProgressRatio* progress)> function)
-                        : name(name), function(std::move(function))
+                std::variant<std::function<void()>, std::function<void(ProgressRatio*)>> function;
+                template <typename T>
+                Test(const char* name, T&& function) : name(name), function(std::forward<T>(function))
                 {
                 }
         };
+
+        static void run(const Test& test, ProgressRatios* progress_ratios);
 
         std::vector<Test> m_tests;
 
         Tests() = default;
 
+        template <typename T>
+        void add(const char* name, T&& function)
+        {
+                m_tests.emplace_back(name, std::forward<T>(function));
+        }
+
 public:
         static Tests& instance();
 
-        void add(const char* name, std::function<void(ProgressRatio* progress)> function);
-
         void run(ProgressRatios* progress_ratios) const;
+        void run(const std::string_view& name, ProgressRatios* progress_ratios) const;
 };
 
 struct AddTest final
