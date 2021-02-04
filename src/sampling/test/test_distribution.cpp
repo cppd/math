@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_distribution.h"
-
 #include "angle_buckets.h"
 #include "surface_buckets.h"
 
@@ -33,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/com/type/name.h>
 #include <src/numerical/optics.h>
+#include <src/test/test.h>
 
 #include <cmath>
 #include <future>
@@ -537,12 +536,22 @@ void test_distribution()
         test_distribution<N, float>();
         test_distribution<N, double>();
 }
-}
 
-void test_distribution()
+void test_distribution_3()
 {
         test_distribution<3>();
+}
+void test_distribution_4()
+{
         test_distribution<4>();
+}
+void test_distribution_5()
+{
         test_distribution<5>();
+}
+
+TEST_LARGE("Sample Distribution 3-Space", test_distribution_3)
+TEST_LARGE("Sample Distribution 4-Space", test_distribution_4)
+TEST_LARGE("Sample Distribution 5-Space", test_distribution_5)
 }
 }

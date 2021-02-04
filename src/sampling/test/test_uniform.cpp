@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_performance.h"
-
 #include "../sphere_uniform.h"
 
 #include <src/com/file/path.h>
@@ -25,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/com/time.h>
 #include <src/com/type/name.h>
+#include <src/test/test.h>
 
 #include <fstream>
 #include <random>
@@ -32,10 +31,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::sampling
 {
-namespace impl = sphere_implementation;
-
 namespace
 {
+namespace impl = sphere_implementation;
+
 std::string replace_space(const std::string_view& s)
 {
         std::string r;
@@ -191,9 +190,8 @@ void test_performance()
         LOG("");
         test_performance<T, std::mt19937_64>();
 }
-}
 
-void test_performance()
+void test()
 {
         write_samples_to_files<std::mt19937_64>();
 
@@ -203,5 +201,8 @@ void test_performance()
         test_performance<double>();
         LOG("");
         test_performance<long double>();
+}
+
+TEST_PERFORMANCE("Uniform Sphere Samples", test)
 }
 }

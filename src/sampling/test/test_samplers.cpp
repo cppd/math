@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_samplers.h"
-
 #include "../lh_sampler.h"
 #include "../sj_sampler.h"
 
@@ -26,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/com/time.h>
 #include <src/com/type/name.h>
+#include <src/test/test.h>
 
 #include <cctype>
 #include <filesystem>
@@ -218,9 +217,8 @@ void test_performance()
         LOG("");
         test_performance<T, std::mt19937_64>();
 }
-}
 
-void test_samplers()
+void test()
 {
         write_samples_to_files<std::mt19937_64>();
 
@@ -230,5 +228,8 @@ void test_samplers()
         test_performance<double>();
         LOG("");
         test_performance<long double>();
+}
+
+TEST_PERFORMANCE("Samplers", test)
 }
 }

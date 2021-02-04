@@ -265,7 +265,7 @@ void test_erf_performance()
         test_performance<long double>();
 }
 
-TEST_SMALL("Erf", test_erf)
-TEST_PERFORMANCE("Erf Performance", test_erf_performance)
+TEST_SMALL("Erf Inverse", test_erf)
+TEST_PERFORMANCE("Erf Inverse", test_erf_performance)
 }
 }
