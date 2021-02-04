@@ -565,7 +565,7 @@ void test_sphere_surface_large()
         test_cosine<double>();
 }
 
-TEST_SMALL("Sphere Surface, Small", test_sphere_surface_small)
-TEST_LARGE("Sphere Surface, Large", test_sphere_surface_large)
+TEST_SMALL("Sphere Surface", test_sphere_surface_small)
+TEST_LARGE("Sphere Surface", test_sphere_surface_large)
 }
 }

@@ -249,6 +249,6 @@ TEST_SMALL("Convex Hull in 3-Space", test_convex_hull_3)
 TEST_SMALL("Convex Hull in 4-Space", test_convex_hull_4)
 TEST_LARGE("Convex Hull in 5-Space", test_convex_hull_5)
 
-TEST_PERFORMANCE("Convex Hull Performance", test_convex_hull_performance)
+TEST_PERFORMANCE("Convex Hull", test_convex_hull_performance)
 }
 }

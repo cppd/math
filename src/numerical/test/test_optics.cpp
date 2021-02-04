@@ -193,6 +193,6 @@ void test_performance()
 }
 
 TEST_SMALL("Optics", test_optics)
-TEST_PERFORMANCE("Optics Performance", test_performance)
+TEST_PERFORMANCE("Optics", test_performance)
 }
 }
