@@ -109,48 +109,54 @@ struct AddPerformanceTest final
 #define TEST_UNIQUE_NAME_2(n) test_name_##n
 #define TEST_UNIQUE_NAME(n) TEST_UNIQUE_NAME_2(n)
 
-// clang-format off
 #if defined(__clang__)
-#define TEST_SMALL(name, f)                                                             \
-        _Pragma("GCC diagnostic push")                                                  \
-        _Pragma("GCC diagnostic ignored \"-Wglobal-constructors\"")                     \
-        namespace                                                                       \
-        {                                                                               \
-                const ::ns::test::AddSmallTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
-        }                                                                               \
-        _Pragma("GCC diagnostic pop")
-#define TEST_LARGE(name, f)                                                             \
-        _Pragma("GCC diagnostic push")                                                  \
-        _Pragma("GCC diagnostic ignored \"-Wglobal-constructors\"")                     \
-        namespace                                                                       \
-        {                                                                               \
-                const ::ns::test::AddLargeTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
-        }                                                                               \
-        _Pragma("GCC diagnostic pop")
-#define TEST_PERFORMANCE(name, f)                                                             \
-        _Pragma("GCC diagnostic push")                                                        \
-        _Pragma("GCC diagnostic ignored \"-Wglobal-constructors\"")                           \
-        namespace                                                                             \
-        {                                                                                     \
-                const ::ns::test::AddPerformanceTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
-        }                                                                                     \
-        _Pragma("GCC diagnostic pop")
+
+#define TEST_SMALL(name, f)                                                     \
+        namespace                                                               \
+        {                                                                       \
+        _Pragma("GCC diagnostic push");                                         \
+        _Pragma("GCC diagnostic ignored \"-Wglobal-constructors\"");            \
+        const ::ns::test::AddSmallTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
+        _Pragma("GCC diagnostic pop");                                          \
+        }
+
+#define TEST_LARGE(name, f)                                                     \
+        namespace                                                               \
+        {                                                                       \
+        _Pragma("GCC diagnostic push");                                         \
+        _Pragma("GCC diagnostic ignored \"-Wglobal-constructors\"");            \
+        const ::ns::test::AddLargeTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
+        _Pragma("GCC diagnostic pop");                                          \
+        }
+
+#define TEST_PERFORMANCE(name, f)                                                     \
+        namespace                                                                     \
+        {                                                                             \
+        _Pragma("GCC diagnostic push");                                               \
+        _Pragma("GCC diagnostic ignored \"-Wglobal-constructors\"");                  \
+        const ::ns::test::AddPerformanceTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
+        _Pragma("GCC diagnostic pop");                                                \
+        }
+
 #else
-#define TEST_SMALL(name, f)                                                             \
-        namespace                                                                       \
-        {                                                                               \
-                const ::ns::test::AddSmallTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
+
+#define TEST_SMALL(name, f)                                                     \
+        namespace                                                               \
+        {                                                                       \
+        const ::ns::test::AddSmallTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
         }
-#define TEST_LARGE(name, f)                                                             \
-        namespace                                                                       \
-        {                                                                               \
-                const ::ns::test::AddLargeTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
+
+#define TEST_LARGE(name, f)                                                     \
+        namespace                                                               \
+        {                                                                       \
+        const ::ns::test::AddLargeTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
         }
-#define TEST_PERFORMANCE(name, f)                                                             \
-        namespace                                                                             \
-        {                                                                                     \
-                const ::ns::test::AddPerformanceTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
+
+#define TEST_PERFORMANCE(name, f)                                                     \
+        namespace                                                                     \
+        {                                                                             \
+        const ::ns::test::AddPerformanceTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
         }
+
 #endif
-// clang-format on
 }
