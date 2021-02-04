@@ -26,15 +26,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::test
 {
+namespace
+{
+constexpr const char* SMALL = "Small";
+constexpr const char* LARGE = "Large";
+constexpr const char* PERFORMANCE = "Performance";
+}
+
 Tests& Tests::instance()
 {
         static Tests tests;
         return tests;
 }
 
-void Tests::run(const Test& test, ProgressRatios* progress_ratios)
+void Tests::run(const Test& test, const char* type, ProgressRatios* progress_ratios)
 {
-        const std::string name = std::string("Self-Test, ") + test.name;
+        const std::string name = std::string("Self-Test, ") + type + ", " + test.name;
         ProgressRatio progress(progress_ratios, name);
         auto f1 = [&](void (*f)())
         {
@@ -53,63 +60,81 @@ void Tests::run(const Test& test, ProgressRatios* progress_ratios)
                 });
 }
 
-void Tests::run(std::vector<Test> tests, ProgressRatios* progress_ratios)
+void Tests::run(std::vector<Test> tests, const char* type, ProgressRatios* progress_ratios)
 {
         std::shuffle(tests.begin(), tests.end(), create_engine<std::mt19937>());
         for (const Test& test : tests)
         {
-                run(test, progress_ratios);
+                run(test, type, progress_ratios);
         }
 }
 
 void Tests::run_small(ProgressRatios* progress_ratios) const
 {
-        run(m_small_tests, progress_ratios);
+        run(m_small_tests, SMALL, progress_ratios);
 }
 
 void Tests::run_large(ProgressRatios* progress_ratios) const
 {
-        run(m_large_tests, progress_ratios);
+        run(m_large_tests, LARGE, progress_ratios);
 }
 
 void Tests::run_performance(ProgressRatios* progress_ratios) const
 {
-        run(m_performance_tests, progress_ratios);
+        run(m_performance_tests, PERFORMANCE, progress_ratios);
 }
 
-void Tests::run(const std::string_view& name, ProgressRatios* progress_ratios) const
+void Tests::run_small(const std::string_view& name, ProgressRatios* progress_ratios) const
 {
         bool found = false;
         for (const Test& test : m_small_tests)
         {
                 if (name == test.name)
                 {
-                        run(test, progress_ratios);
-                        found = true;
-                        continue;
-                }
-        }
-        for (const Test& test : m_large_tests)
-        {
-                if (name == test.name)
-                {
-                        run(test, progress_ratios);
-                        found = true;
-                        continue;
-                }
-        }
-        for (const Test& test : m_performance_tests)
-        {
-                if (name == test.name)
-                {
-                        run(test, progress_ratios);
+                        run(test, SMALL, progress_ratios);
                         found = true;
                         continue;
                 }
         }
         if (!found)
         {
-                error("Test not found " + std::string(name));
+                error(std::string(SMALL) + " test not found " + std::string(name));
+        }
+}
+
+void Tests::run_large(const std::string_view& name, ProgressRatios* progress_ratios) const
+{
+        bool found = false;
+        for (const Test& test : m_large_tests)
+        {
+                if (name == test.name)
+                {
+                        run(test, LARGE, progress_ratios);
+                        found = true;
+                        continue;
+                }
+        }
+        if (!found)
+        {
+                error(std::string(LARGE) + " test not found " + std::string(name));
+        }
+}
+
+void Tests::run_performance(const std::string_view& name, ProgressRatios* progress_ratios) const
+{
+        bool found = false;
+        for (const Test& test : m_performance_tests)
+        {
+                if (name == test.name)
+                {
+                        run(test, PERFORMANCE, progress_ratios);
+                        found = true;
+                        continue;
+                }
+        }
+        if (!found)
+        {
+                error(std::string(PERFORMANCE) + " test not found " + std::string(name));
         }
 }
 }

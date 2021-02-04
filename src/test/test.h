@@ -42,8 +42,8 @@ class Tests final
                 }
         };
 
-        static void run(const Test& test, ProgressRatios* progress_ratios);
-        static void run(std::vector<Test> tests, ProgressRatios* progress_ratios);
+        static void run(const Test& test, const char* type, ProgressRatios* progress_ratios);
+        static void run(std::vector<Test> tests, const char* type, ProgressRatios* progress_ratios);
 
         std::vector<Test> m_small_tests;
         std::vector<Test> m_large_tests;
@@ -76,7 +76,9 @@ public:
         void run_large(ProgressRatios* progress_ratios) const;
         void run_performance(ProgressRatios* progress_ratios) const;
 
-        void run(const std::string_view& name, ProgressRatios* progress_ratios) const;
+        void run_small(const std::string_view& name, ProgressRatios* progress_ratios) const;
+        void run_large(const std::string_view& name, ProgressRatios* progress_ratios) const;
+        void run_performance(const std::string_view& name, ProgressRatios* progress_ratios) const;
 };
 
 struct AddSmallTest final
