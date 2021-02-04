@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress.h>
 
-#include <functional>
 #include <string_view>
 #include <variant>
 #include <vector>
@@ -28,59 +27,130 @@ namespace ns::test
 {
 class Tests final
 {
-        friend struct AddTest;
+        friend struct AddSmallTest;
+        friend struct AddLargeTest;
+        friend struct AddPerformanceTest;
 
         struct Test final
         {
                 const char* name;
-                std::variant<std::function<void()>, std::function<void(ProgressRatio*)>> function;
+                std::variant<void (*)(), void (*)(ProgressRatio*)> function;
                 template <typename T>
-                Test(const char* name, T&& function) : name(name), function(std::forward<T>(function))
+                Test(const char* name, T* function) : name(name), function(function)
                 {
+                        static_assert(std::is_function_v<T>);
                 }
         };
 
         static void run(const Test& test, ProgressRatios* progress_ratios);
+        static void run(std::vector<Test> tests, ProgressRatios* progress_ratios);
 
-        std::vector<Test> m_tests;
+        std::vector<Test> m_small_tests;
+        std::vector<Test> m_large_tests;
+        std::vector<Test> m_performance_tests;
 
         Tests() = default;
 
         template <typename T>
-        void add(const char* name, T&& function)
+        void add_small(const char* name, T* function)
         {
-                m_tests.emplace_back(name, std::forward<T>(function));
+                m_small_tests.emplace_back(name, function);
+        }
+
+        template <typename T>
+        void add_large(const char* name, T* function)
+        {
+                m_large_tests.emplace_back(name, function);
+        }
+
+        template <typename T>
+        void add_performance(const char* name, T* function)
+        {
+                m_performance_tests.emplace_back(name, function);
         }
 
 public:
         static Tests& instance();
 
-        void run(ProgressRatios* progress_ratios) const;
+        void run_small(ProgressRatios* progress_ratios) const;
+        void run_large(ProgressRatios* progress_ratios) const;
+        void run_performance(ProgressRatios* progress_ratios) const;
+
         void run(const std::string_view& name, ProgressRatios* progress_ratios) const;
 };
 
-struct AddTest final
+struct AddSmallTest final
 {
         template <typename T>
-        AddTest(const char* name, T&& function) noexcept
+        AddSmallTest(const char* name, T* function) noexcept
         {
-                Tests::instance().add(name, std::forward<T>(function));
+                Tests::instance().add_small(name, function);
         }
 };
 
-#define TEST_UNIQUE_NAME_2(n) test_##n
+struct AddLargeTest final
+{
+        template <typename T>
+        AddLargeTest(const char* name, T* function) noexcept
+        {
+                Tests::instance().add_large(name, function);
+        }
+};
+
+struct AddPerformanceTest final
+{
+        template <typename T>
+        AddPerformanceTest(const char* name, T* function) noexcept
+        {
+                Tests::instance().add_performance(name, function);
+        }
+};
+
+#define TEST_UNIQUE_NAME_2(n) test_name_##n
 #define TEST_UNIQUE_NAME(n) TEST_UNIQUE_NAME_2(n)
 
-#undef TEST
 // clang-format off
 #if defined(__clang__)
-#define TEST(name, f)                                                             \
-        _Pragma("GCC diagnostic push")                                            \
-        _Pragma("GCC diagnostic ignored \"-Wglobal-constructors\"")               \
-        static const ::ns::test::AddTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
+#define TEST_SMALL(name, f)                                                             \
+        _Pragma("GCC diagnostic push")                                                  \
+        _Pragma("GCC diagnostic ignored \"-Wglobal-constructors\"")                     \
+        namespace                                                                       \
+        {                                                                               \
+                const ::ns::test::AddSmallTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
+        }                                                                               \
+        _Pragma("GCC diagnostic pop")
+#define TEST_LARGE(name, f)                                                             \
+        _Pragma("GCC diagnostic push")                                                  \
+        _Pragma("GCC diagnostic ignored \"-Wglobal-constructors\"")                     \
+        namespace                                                                       \
+        {                                                                               \
+                const ::ns::test::AddLargeTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
+        }                                                                               \
+        _Pragma("GCC diagnostic pop")
+#define TEST_PERFORMANCE(name, f)                                                             \
+        _Pragma("GCC diagnostic push")                                                        \
+        _Pragma("GCC diagnostic ignored \"-Wglobal-constructors\"")                           \
+        namespace                                                                             \
+        {                                                                                     \
+                const ::ns::test::AddPerformanceTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
+        }                                                                                     \
         _Pragma("GCC diagnostic pop")
 #else
-#define TEST(name, f) static const ::ns::test::AddTest TEST_UNIQUE_NAME(__LINE__)((name), (f));
+#define TEST_SMALL(name, f)                                                             \
+        namespace                                                                       \
+        {                                                                               \
+                const ::ns::test::AddSmallTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
+        }
+#define TEST_LARGE(name, f)                                                             \
+        namespace                                                                       \
+        {                                                                               \
+                const ::ns::test::AddLargeTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
+        }
+#define TEST_PERFORMANCE(name, f)                                                             \
+        namespace                                                                             \
+        {                                                                                     \
+                const ::ns::test::AddPerformanceTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
+        }
 #endif
 // clang-format on
 }

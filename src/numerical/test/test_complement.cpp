@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_complement.h"
-
 #include "../complement.h"
 #include "../orthogonal.h"
 
@@ -192,9 +190,8 @@ void test_complement(int vector_count)
         LOG("---");
         test_complement<6, T>(vector_count);
 }
-}
 
-void test_complement(ProgressRatio* progress)
+void test(ProgressRatio* progress)
 {
         progress->set(0);
         test_complement<float>(VECTOR_COUNT);
@@ -207,9 +204,6 @@ void test_complement(ProgressRatio* progress)
         progress->set(3, 3);
 }
 
-TEST("Complement",
-     [](ProgressRatio* progress)
-     {
-             test_complement(progress);
-     })
+TEST_SMALL("Complement", test)
+}
 }

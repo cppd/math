@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_dft.h"
-
 #if defined(CUDA_FOUND)
 #include <src/dft/cufft.h>
 #endif
@@ -424,7 +422,6 @@ std::array<int, 2> find_dimensions(TestSize test_size)
         }
         error_fatal("Unknown DFT test size");
 }
-}
 
 void test(ProgressRatio* progress)
 {
@@ -441,9 +438,6 @@ void test(ProgressRatio* progress)
         random_data_test(dft.get(), dimensions, progress);
 }
 
-TEST("DFT in 2-space",
-     [](ProgressRatio* progress)
-     {
-             test(progress);
-     })
+TEST_SMALL("DFT in 2-space", test)
+}
 }

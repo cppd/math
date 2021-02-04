@@ -34,15 +34,15 @@ Tests& Tests::instance()
 
 void Tests::run(const Test& test, ProgressRatios* progress_ratios)
 {
-        std::string name = "Self-Test, ";
-        name += test.name;
-        auto f1 = [](const std::function<void()>& f)
+        const std::string name = std::string("Self-Test, ") + test.name;
+        ProgressRatio progress(progress_ratios, name);
+        auto f1 = [&](void (*f)())
         {
+                progress.set(0);
                 f();
         };
-        auto f2 = [&](const std::function<void(ProgressRatio*)>& f)
+        auto f2 = [&](void (*f)(ProgressRatio*))
         {
-                ProgressRatio progress(progress_ratios, name);
                 f(&progress);
         };
         catch_all(
@@ -53,9 +53,8 @@ void Tests::run(const Test& test, ProgressRatios* progress_ratios)
                 });
 }
 
-void Tests::run(ProgressRatios* progress_ratios) const
+void Tests::run(std::vector<Test> tests, ProgressRatios* progress_ratios)
 {
-        std::vector<Test> tests(m_tests);
         std::shuffle(tests.begin(), tests.end(), create_engine<std::mt19937>());
         for (const Test& test : tests)
         {
@@ -63,16 +62,54 @@ void Tests::run(ProgressRatios* progress_ratios) const
         }
 }
 
+void Tests::run_small(ProgressRatios* progress_ratios) const
+{
+        run(m_small_tests, progress_ratios);
+}
+
+void Tests::run_large(ProgressRatios* progress_ratios) const
+{
+        run(m_large_tests, progress_ratios);
+}
+
+void Tests::run_performance(ProgressRatios* progress_ratios) const
+{
+        run(m_performance_tests, progress_ratios);
+}
+
 void Tests::run(const std::string_view& name, ProgressRatios* progress_ratios) const
 {
-        for (const Test& test : m_tests)
+        bool found = false;
+        for (const Test& test : m_small_tests)
         {
                 if (name == test.name)
                 {
                         run(test, progress_ratios);
-                        return;
+                        found = true;
+                        continue;
                 }
         }
-        error("Test not found " + std::string(name));
+        for (const Test& test : m_large_tests)
+        {
+                if (name == test.name)
+                {
+                        run(test, progress_ratios);
+                        found = true;
+                        continue;
+                }
+        }
+        for (const Test& test : m_performance_tests)
+        {
+                if (name == test.name)
+                {
+                        run(test, progress_ratios);
+                        found = true;
+                        continue;
+                }
+        }
+        if (!found)
+        {
+                error("Test not found " + std::string(name));
+        }
 }
 }

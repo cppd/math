@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_erf.h"
-
 #include "../erf.h"
 
 #include <src/com/error.h>
@@ -244,7 +242,6 @@ void test_performance()
         LOG(std::string("erf_inv<") + type_name<T>() + "> "
             + to_string_digit_groups(std::lround(data.size() / duration)) + " per second");
 }
-}
 
 void test_erf()
 {
@@ -268,9 +265,7 @@ void test_erf_performance()
         test_performance<long double>();
 }
 
-TEST("Erf",
-     [](ProgressRatio* /*progress*/)
-     {
-             test_erf();
-     })
+TEST_SMALL("Erf", test_erf)
+TEST_PERFORMANCE("Erf Performance", test_erf_performance)
+}
 }

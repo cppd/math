@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_optics.h"
-
 #include "../optics.h"
 
 #include <src/com/error.h>
@@ -122,7 +120,7 @@ void test_optics_performance()
 }
 
 template <typename T>
-void test_optics(T precision)
+void test_optics_impl(T precision)
 {
         LOG(std::string("Test optics, <") + type_name<T>() + ">");
 
@@ -179,15 +177,14 @@ void test_optics(T precision)
                 error("Error refracting 2, refracted");
         }
 }
-}
 
 void test_optics()
 {
-        test_optics<float>(1e-7);
-        test_optics<double>(1e-15);
+        test_optics_impl<float>(1e-7);
+        test_optics_impl<double>(1e-15);
 }
 
-void test_optics_performance()
+void test_performance()
 {
         test_optics_performance<2>();
         test_optics_performance<3>();
@@ -195,9 +192,7 @@ void test_optics_performance()
         test_optics_performance<5>();
 }
 
-TEST("Optics",
-     [](ProgressRatio* /*progress*/)
-     {
-             test_optics();
-     })
+TEST_SMALL("Optics", test_optics)
+TEST_PERFORMANCE("Optics Performance", test_performance)
+}
 }

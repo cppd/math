@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_simplex.h"
-
 #include "../simplex.h"
 
 #include <src/com/log.h>
@@ -140,7 +138,6 @@ void test_feasible()
         LOG("");
         test_feasible<long double>();
 }
-}
 
 void test_simplex(ProgressRatio* progress)
 {
@@ -154,9 +151,6 @@ void test_simplex(ProgressRatio* progress)
         progress->set(2, 2);
 }
 
-TEST("Simplex",
-     [](ProgressRatio* progress)
-     {
-             test_simplex(progress);
-     })
+TEST_SMALL("Simplex", test_simplex)
+}
 }

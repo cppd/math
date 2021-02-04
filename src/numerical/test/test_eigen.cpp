@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_eigen.h"
-
 #include "../eigen.h"
 
 #include <src/com/error.h>
@@ -172,7 +170,6 @@ void test_eigen_random(unsigned count)
         test_eigen_random<4, T>(count);
         test_eigen_random<5, T>(count);
 }
-}
 
 void test_eigen(ProgressRatio* progress)
 {
@@ -192,9 +189,6 @@ void test_eigen(ProgressRatio* progress)
         LOG("Test eigenvalues and eigenvectors passed");
 }
 
-TEST("Eigen",
-     [](ProgressRatio* progress)
-     {
-             test_eigen(progress);
-     })
+TEST_SMALL("Eigen", test_eigen)
+}
 }

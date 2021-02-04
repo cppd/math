@@ -38,7 +38,7 @@ std::string space_name_upper(int d)
 
 void self_test_essential(ProgressRatios* progress_ratios)
 {
-        Tests::instance().run(progress_ratios);
+        Tests::instance().run_small(progress_ratios);
 
         std::string s;
 

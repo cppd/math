@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_normal.h"
-
 #include "../complement.h"
 #include "../normal.h"
 
@@ -139,7 +137,6 @@ void test_normal_random(unsigned test_count)
         test_normal_random<9, T>(test_count);
         test_normal_random<10, T>(test_count);
 }
-}
 
 void test_normal(ProgressRatio* progress)
 {
@@ -163,9 +160,6 @@ void test_normal(ProgressRatio* progress)
         LOG("Test point normals passed");
 }
 
-TEST("Normal",
-     [](ProgressRatio* progress)
-     {
-             test_normal(progress);
-     })
+TEST_SMALL("Normal", test_normal)
+}
 }

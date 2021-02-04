@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_sphere_surface.h"
-
 #include "../sphere_surface.h"
 
 #include <src/com/log.h>
@@ -539,9 +537,8 @@ void test_cosine()
 
         LOG("Check passed");
 }
-}
 
-void test_sphere_surface(bool all_tests)
+void test_sphere_surface_small()
 {
         test_integrate_power_cosine<float>(1e-3);
         test_integrate_power_cosine<double>(1e-12);
@@ -557,13 +554,10 @@ void test_sphere_surface(bool all_tests)
         test_sphere_simplex_area<float>(1e-3);
         test_sphere_simplex_area<double>(1e-12);
         test_sphere_simplex_area<long double>(1e-16);
+}
 
-        if (!all_tests)
-        {
-                return;
-        }
-
-        LOG("");
+void test_sphere_surface_large()
+{
         compare_with_beta();
         LOG("");
         test_cosine<float>();
@@ -571,9 +565,7 @@ void test_sphere_surface(bool all_tests)
         test_cosine<double>();
 }
 
-TEST("Sphere Area",
-     [](ProgressRatio* /*progress*/)
-     {
-             test_sphere_surface(false);
-     })
+TEST_SMALL("Sphere Surface, Small", test_sphere_surface_small)
+TEST_LARGE("Sphere Surface, Large", test_sphere_surface_large)
+}
 }
