@@ -18,10 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "testing.h"
 
 #include <src/gui/dialogs/message.h>
+#include <src/test/test.h>
 
 namespace ns::process
 {
-std::function<void(ProgressRatioList*)> action_self_test(test::SelfTestType test_type, bool with_confirmation)
+std::function<void(ProgressRatioList*)> action_self_test(TestType test_type, bool with_confirmation)
 {
         if (with_confirmation)
         {
@@ -34,7 +35,17 @@ std::function<void(ProgressRatioList*)> action_self_test(test::SelfTestType test
 
         return [=](ProgressRatioList* progress_list)
         {
-                test::self_test(test_type, progress_list);
+                switch (test_type)
+                {
+                case TestType::Small:
+                        test::Tests::instance().run_small(progress_list);
+                        return;
+                case TestType::SmallAndLarge:
+                        test::Tests::instance().run_small(progress_list);
+                        test::Tests::instance().run_large(progress_list);
+                        return;
+                }
+                error_fatal("Unknown test type " + std::to_string(static_cast<long long>(test_type)));
         };
 }
 }

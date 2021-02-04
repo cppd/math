@@ -18,11 +18,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/progress/progress_list.h>
-#include <src/test/self_test.h>
 
 #include <functional>
 
 namespace ns::process
 {
-std::function<void(ProgressRatioList*)> action_self_test(test::SelfTestType test_type, bool with_confirmation);
+enum class TestType
+{
+        Small,
+        SmallAndLarge
+};
+
+std::function<void(ProgressRatioList*)> action_self_test(TestType test_type, bool with_confirmation);
 }
