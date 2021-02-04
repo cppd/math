@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_fresnel.h"
-
 #include "../fresnel.h"
 
 #include <src/com/log.h>
@@ -25,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/com/type/name.h>
 #include <src/sampling/sphere_uniform.h>
+#include <src/test/test.h>
 
 #include <cstddef>
 #include <random>
@@ -108,13 +107,15 @@ void test_fresnel_performance()
         test_fresnel_performance<N, float>();
         test_fresnel_performance<N, double>();
 }
-}
 
-void test_fresnel_performance()
+void test_fresnel()
 {
         test_fresnel_performance<2>();
         test_fresnel_performance<3>();
         test_fresnel_performance<4>();
         test_fresnel_performance<5>();
+}
+
+TEST_PERFORMANCE("Fresnel", test_fresnel)
 }
 }
