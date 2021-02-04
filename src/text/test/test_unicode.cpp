@@ -15,13 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_unicode.h"
-
 #include "../unicode.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/test/test.h>
 
 namespace ns::text
 {
@@ -157,7 +156,6 @@ void test_utf8_to_utf32()
                 error("Error UTF-8 to UTF-32");
         }
 }
-}
 
 void test_unicode()
 {
@@ -166,5 +164,8 @@ void test_unicode()
         test_utf8_replacement_character_and_self_synchronizing();
         test_utf32_to_utf8();
         test_utf8_to_utf32();
+}
+
+TEST_SMALL("Unicode", test_unicode)
 }
 }
