@@ -15,23 +15,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "benchmark_types.h"
-
 #include <src/com/log.h>
 #include <src/com/math.h>
 #include <src/com/print.h>
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
+#include <src/test/test.h>
 
 #include <gmpxx.h>
 #include <vector>
 
 namespace ns
 {
-constexpr int N = 1 << 27;
-
 namespace
 {
+constexpr int N = 1 << 27;
+
 template <typename T>
 __attribute__((noinline)) double computation(std::vector<T>* v)
 {
@@ -45,6 +44,7 @@ __attribute__((noinline)) double computation(std::vector<T>* v)
         }
         return duration_from(start_time);
 }
+
 __attribute__((noinline)) double computation(std::vector<mpz_class>* v)
 {
         const mpz_class add = 20;
@@ -62,6 +62,7 @@ __attribute__((noinline)) double computation(std::vector<mpz_class>* v)
         }
         return duration_from(start_time);
 }
+
 __attribute__((noinline)) double computation(std::vector<mpf_class>* v)
 {
         const mpf_class add = 20;
@@ -79,9 +80,8 @@ __attribute__((noinline)) double computation(std::vector<mpf_class>* v)
         }
         return duration_from(start_time);
 }
-}
 
-void benchmark_types()
+void compare_types()
 {
         {
                 std::vector<mpz_class> v(N, 1e16);
@@ -128,5 +128,8 @@ void benchmark_types()
                 std::vector<unsigned __int128> v(N, 1e16);
                 LOG("unsigned __int128 " + to_string(computation(&v)));
         }
+}
+
+TEST_PERFORMANCE("Compare arithmetic types", compare_types)
 }
 }
