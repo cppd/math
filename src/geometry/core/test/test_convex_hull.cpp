@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_convex_hull.h"
-
 #include "../convex_hull.h"
 #include "../ridge.h"
 
@@ -24,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/random/engine.h>
 #include <src/com/time.h>
+#include <src/test/test.h>
 
 #include <random>
 #include <unordered_map>
@@ -200,9 +199,8 @@ void test(std::size_t low, std::size_t high, ProgressRatio* progress)
                 create_convex_hull(points, true, progress);
         }
 }
-}
 
-void test_convex_hull_speed()
+void test_convex_hull_performance()
 {
         // При N=4, параллельно, 100000 точек, внутри сферы, примерное время: 1.7 сек, 0.4 сек.
 
@@ -226,26 +224,31 @@ void test_convex_hull_speed()
         create_convex_hull(points, false, &progress);
 }
 
-void test_convex_hull(int number_of_dimensions, ProgressRatio* progress)
+void test_convex_hull_2(ProgressRatio* progress)
 {
-        ASSERT(progress);
+        test<2>(1000, 2000, progress);
+}
 
-        switch (number_of_dimensions)
-        {
-        case 2:
-                test<2>(1000, 2000, progress);
-                break;
-        case 3:
-                test<3>(1000, 2000, progress);
-                break;
-        case 4:
-                test<4>(1000, 2000, progress);
-                break;
-        case 5:
-                test<5>(1000, 2000, progress);
-                break;
-        default:
-                error("Error convex hull test number of dimensions " + to_string(number_of_dimensions));
-        }
+void test_convex_hull_3(ProgressRatio* progress)
+{
+        test<3>(1000, 2000, progress);
+}
+
+void test_convex_hull_4(ProgressRatio* progress)
+{
+        test<4>(1000, 2000, progress);
+}
+
+void test_convex_hull_5(ProgressRatio* progress)
+{
+        test<5>(1000, 2000, progress);
+}
+
+TEST_SMALL("Convex Hull in 2-Space", test_convex_hull_2)
+TEST_SMALL("Convex Hull in 3-Space", test_convex_hull_3)
+TEST_SMALL("Convex Hull in 4-Space", test_convex_hull_4)
+TEST_LARGE("Convex Hull in 5-Space", test_convex_hull_5)
+
+TEST_PERFORMANCE("Convex Hull Performance", test_convex_hull_performance)
 }
 }

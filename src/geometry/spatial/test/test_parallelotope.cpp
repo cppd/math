@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_parallelotope.h"
-
 #include "../hyperplane_parallelotope.h"
 #include "../parallelotope.h"
 #include "../parallelotope_aa.h"
@@ -31,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
+#include <src/test/test.h>
 
 #include <algorithm>
 #include <memory>
@@ -899,23 +898,22 @@ void all_tests(int point_count)
         test_intersections<N, T>();
         test_intersections_hyperplane<N, T>();
 }
+
+void test_parallelotope_2()
+{
+        all_tests<2, double>(POINT_COUNT);
+}
+void test_parallelotope_3()
+{
+        all_tests<3, double>(POINT_COUNT);
+}
+void test_parallelotope_4()
+{
+        all_tests<4, double>(POINT_COUNT);
 }
 
-void test_parallelotope(int number_of_dimensions)
-{
-        switch (number_of_dimensions)
-        {
-        case 2:
-                all_tests<2, double>(POINT_COUNT);
-                break;
-        case 3:
-                all_tests<3, double>(POINT_COUNT);
-                break;
-        case 4:
-                all_tests<4, double>(POINT_COUNT);
-                break;
-        default:
-                error("Error parallelotope test number of dimensions " + to_string(number_of_dimensions));
-        }
+TEST_SMALL("2-Parallelotope", test_parallelotope_2)
+TEST_SMALL("3-Parallelotope", test_parallelotope_3)
+TEST_SMALL("4-Parallelotope", test_parallelotope_4)
 }
 }

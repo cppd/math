@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_reconstruction.h"
-
 #include "../cocone.h"
 
 #include <src/com/error.h>
@@ -29,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/model/mesh_utility.h>
 #include <src/sampling/sphere_uniform.h>
+#include <src/test/test.h>
 
 #include <cmath>
 #include <filesystem>
@@ -437,25 +436,24 @@ void test(int low, int high, ProgressRatio* progress)
                 std::unordered_set<Algorithms>{Algorithms::BoundCocone}, points_sphere_with_notch<N>(point_count, true),
                 progress);
 }
+
+void test_reconstruction_2(ProgressRatio* progress)
+{
+        test<2>(100, 1000, progress);
 }
 
-void test_reconstruction(int number_of_dimensions, ProgressRatio* progress)
+void test_reconstruction_3(ProgressRatio* progress)
 {
-        ASSERT(progress);
+        test<3>(2000, 3000, progress);
+}
 
-        switch (number_of_dimensions)
-        {
-        case 2:
-                test<2>(100, 1000, progress);
-                break;
-        case 3:
-                test<3>(2000, 3000, progress);
-                break;
-        case 4:
-                test<4>(20000, 25000, progress);
-                break;
-        default:
-                error("Error manifold reconstruction test number of dimensions " + to_string(number_of_dimensions));
-        }
+void test_reconstruction_4(ProgressRatio* progress)
+{
+        test<4>(20000, 25000, progress);
+}
+
+TEST_SMALL("1-Manifold Reconstruction in 2-Space", test_reconstruction_2)
+TEST_SMALL("2-Manifold Reconstruction in 3-Space", test_reconstruction_3)
+TEST_LARGE("3-Manifold Reconstruction in 4-Space", test_reconstruction_4)
 }
 }

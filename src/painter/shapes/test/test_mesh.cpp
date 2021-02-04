@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_mesh.h"
-
 #include "sphere_mesh.h"
 
 #include <src/com/error.h>
@@ -29,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/numerical/vec.h>
 #include <src/sampling/sphere_uniform.h>
+#include <src/test/test.h>
 
 #include <random>
 #include <vector>
@@ -236,20 +235,13 @@ void test_sphere_mesh(
                 error("Too many errors");
         }
 }
-}
 
-namespace
-{
 template <std::size_t N, typename T>
-void test_mesh(
-        int point_low,
-        int point_high,
-        int ray_low,
-        int ray_high,
-        bool with_ray_log,
-        bool with_error_log,
-        ProgressRatio* progress)
+void test_mesh(int point_low, int point_high, int ray_low, int ray_high, ProgressRatio* progress)
 {
+        constexpr bool with_ray_log = false;
+        constexpr bool with_error_log = false;
+
         LOG("----------- " + space_name(N) + ", " + type_name<T>() + " -----------");
 
         int point_count;
@@ -266,35 +258,31 @@ void test_mesh(
 
         test_sphere_mesh(*mesh, ray_count, with_ray_log, with_error_log, progress);
 }
+
+void test_mesh_3(ProgressRatio* progress)
+{
+        test_mesh<3, float>(500, 1000, 90'000, 110'000, progress);
+        test_mesh<3, double>(500, 1000, 90'000, 110'000, progress);
+}
+void test_mesh_4(ProgressRatio* progress)
+{
+        test_mesh<4, float>(500, 1000, 90'000, 110'000, progress);
+        test_mesh<4, double>(500, 1000, 90'000, 110'000, progress);
+}
+void test_mesh_5(ProgressRatio* progress)
+{
+        test_mesh<5, float>(1000, 2000, 90'000, 110'000, progress);
+        test_mesh<5, double>(1000, 2000, 90'000, 110'000, progress);
+}
+void test_mesh_6(ProgressRatio* progress)
+{
+        test_mesh<6, float>(1000, 2000, 90'000, 110'000, progress);
+        test_mesh<6, double>(1000, 2000, 90'000, 110'000, progress);
 }
 
-void test_mesh(int number_of_dimensions, ProgressRatio* progress)
-{
-        ASSERT(progress);
-
-        bool with_ray_log = false;
-        bool with_error_log = false;
-
-        switch (number_of_dimensions)
-        {
-        case 3:
-                test_mesh<3, float>(500, 1000, 90'000, 110'000, with_ray_log, with_error_log, progress);
-                test_mesh<3, double>(500, 1000, 90'000, 110'000, with_ray_log, with_error_log, progress);
-                break;
-        case 4:
-                test_mesh<4, float>(500, 1000, 90'000, 110'000, with_ray_log, with_error_log, progress);
-                test_mesh<4, double>(500, 1000, 90'000, 110'000, with_ray_log, with_error_log, progress);
-                break;
-        case 5:
-                test_mesh<5, float>(1000, 2000, 90'000, 110'000, with_ray_log, with_error_log, progress);
-                test_mesh<5, double>(1000, 2000, 90'000, 110'000, with_ray_log, with_error_log, progress);
-                break;
-        case 6:
-                test_mesh<6, float>(1000, 2000, 90'000, 110'000, with_ray_log, with_error_log, progress);
-                test_mesh<6, double>(1000, 2000, 90'000, 110'000, with_ray_log, with_error_log, progress);
-                break;
-        default:
-                error("Error mesh test number of dimensions " + to_string(number_of_dimensions));
-        }
+TEST_SMALL("Mesh in 3-Space", test_mesh_3)
+TEST_SMALL("Mesh in 4-Space", test_mesh_4)
+TEST_LARGE("Mesh in 5-Space", test_mesh_5)
+TEST_LARGE("Mesh in 6-Space", test_mesh_6)
 }
 }
