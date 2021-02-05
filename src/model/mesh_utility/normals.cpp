@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/alg.h>
 #include <src/com/constant.h>
 #include <src/com/error.h>
-#include <src/geometry/shapes/sphere_surface.h>
+#include <src/geometry/shapes/sphere_simplex.h>
 #include <src/numerical/normal.h>
 #include <src/numerical/orthogonal.h>
 
