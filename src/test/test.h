@@ -108,57 +108,26 @@ struct AddPerformanceTest final
         }
 };
 
-#define TEST_UNIQUE_NAME_2(n) test_name_##n
-#define TEST_UNIQUE_NAME(n) TEST_UNIQUE_NAME_2(n)
-
 #if defined(__clang__)
-
-#define TEST_SMALL(name, f)                                                     \
-        namespace                                                               \
-        {                                                                       \
-        _Pragma("GCC diagnostic push");                                         \
-        _Pragma("GCC diagnostic ignored \"-Wglobal-constructors\"");            \
-        const ::ns::test::AddSmallTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
-        _Pragma("GCC diagnostic pop");                                          \
-        }
-
-#define TEST_LARGE(name, f)                                                     \
-        namespace                                                               \
-        {                                                                       \
-        _Pragma("GCC diagnostic push");                                         \
-        _Pragma("GCC diagnostic ignored \"-Wglobal-constructors\"");            \
-        const ::ns::test::AddLargeTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
-        _Pragma("GCC diagnostic pop");                                          \
-        }
-
-#define TEST_PERFORMANCE(name, f)                                                     \
-        namespace                                                                     \
-        {                                                                             \
-        _Pragma("GCC diagnostic push");                                               \
-        _Pragma("GCC diagnostic ignored \"-Wglobal-constructors\"");                  \
-        const ::ns::test::AddPerformanceTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
-        _Pragma("GCC diagnostic pop");                                                \
-        }
-
+#define TEST_IMPL_PRAGMA_PUSH _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wglobal-constructors\"")
+#define TEST_IMPL_PRAGMA_POP _Pragma("GCC diagnostic pop")
 #else
-
-#define TEST_SMALL(name, f)                                                     \
-        namespace                                                               \
-        {                                                                       \
-        const ::ns::test::AddSmallTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
-        }
-
-#define TEST_LARGE(name, f)                                                     \
-        namespace                                                               \
-        {                                                                       \
-        const ::ns::test::AddLargeTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
-        }
-
-#define TEST_PERFORMANCE(name, f)                                                     \
-        namespace                                                                     \
-        {                                                                             \
-        const ::ns::test::AddPerformanceTest TEST_UNIQUE_NAME(__LINE__)((name), (f)); \
-        }
-
+#define TEST_IMPL_PRAGMA_PUSH
+#define TEST_IMPL_PRAGMA_POP
 #endif
+
+#define TEST_IMPL_UNIQUE_NAME_2(n) test_name_##n
+#define TEST_IMPL_UNIQUE_NAME(n) TEST_IMPL_UNIQUE_NAME_2(n)
+
+#define TEST_IMPL_INSERT(type, name, f)                                      \
+        namespace                                                            \
+        {                                                                    \
+        TEST_IMPL_PRAGMA_PUSH                                                \
+        const ::ns::test::type TEST_IMPL_UNIQUE_NAME(__LINE__)((name), (f)); \
+        TEST_IMPL_PRAGMA_POP                                                 \
+        }
+
+#define TEST_SMALL(name, f) TEST_IMPL_INSERT(AddSmallTest, (name), (f))
+#define TEST_LARGE(name, f) TEST_IMPL_INSERT(AddLargeTest, (name), (f))
+#define TEST_PERFORMANCE(name, f) TEST_IMPL_INSERT(AddPerformanceTest, (name), (f))
 }
