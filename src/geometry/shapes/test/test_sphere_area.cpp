@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compare.h"
 
-#include "../sphere_surface.h"
+#include "../sphere_area.h"
 
 #include <src/com/constant.h>
 #include <src/com/log.h>

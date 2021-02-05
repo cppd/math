@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/com/time.h>
 #include <src/com/type/name.h>
+#include <src/geometry/shapes/sphere_area.h>
 #include <src/numerical/optics.h>
 #include <src/test/test.h>
 

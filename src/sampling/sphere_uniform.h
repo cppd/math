@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/constant.h>
-#include <src/geometry/shapes/sphere_surface.h>
+#include <src/geometry/shapes/sphere_area.h>
 #include <src/numerical/vec.h>
 
 #include <cmath>

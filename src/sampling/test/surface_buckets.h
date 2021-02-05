@@ -22,9 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
+#include <src/geometry/shapes/sphere_area.h>
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/geometry/shapes/sphere_simplex.h>
-#include <src/geometry/shapes/sphere_surface.h>
 #include <src/geometry/spatial/object_tree.h>
 #include <src/numerical/vec.h>
 
