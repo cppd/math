@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compare.h"
 
-#include "../sphere_surface.h"
+#include "../sphere_integral.h"
 
 #include <src/com/constant.h>
 #include <src/com/log.h>
@@ -281,14 +281,14 @@ void test_cosine()
         LOG("Check passed");
 }
 
-void test_sphere_surface_small()
+void test_sphere_integral_small()
 {
         test_integrate_power_cosine<float>(1e-3);
         test_integrate_power_cosine<double>(1e-12);
         test_integrate_power_cosine<long double>(1e-16);
 }
 
-void test_sphere_surface_large()
+void test_sphere_integral_large()
 {
         compare_with_beta();
         LOG("");
@@ -297,7 +297,7 @@ void test_sphere_surface_large()
         test_cosine<double>();
 }
 
-TEST_SMALL("Sphere Surface", test_sphere_surface_small)
-TEST_LARGE("Sphere Surface", test_sphere_surface_large)
+TEST_SMALL("Sphere Integral", test_sphere_integral_small)
+TEST_LARGE("Sphere Integral", test_sphere_integral_large)
 }
 }
