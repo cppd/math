@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "compare.h"
+
 #include "../sphere_simplex.h"
 
 #include <src/com/error.h>
@@ -30,14 +32,7 @@ namespace ns::geometry
 {
 namespace
 {
-template <typename T>
-void compare(const char* name, T v1, T v2, T precision)
-{
-        if (!(is_finite(v1) && is_finite(v2) && ((v1 == v2) || std::abs((v1 - v2) / std::max(v1, v2)) < precision)))
-        {
-                error(std::string(name) + ": numbers are not equal " + to_string(v1) + " and " + to_string(v2));
-        }
-}
+using shapes::test::compare;
 
 template <std::size_t N, typename T, typename RandomEngine>
 std::array<Vector<N + 1, T>, N> add_dimension(const std::array<Vector<N, T>, N>& a, RandomEngine& random_engine)
