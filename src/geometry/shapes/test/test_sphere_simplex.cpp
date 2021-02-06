@@ -17,22 +17,123 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compare.h"
 
+#include "../sphere_area.h"
 #include "../sphere_simplex.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/random/engine.h>
 #include <src/com/type/name.h>
+#include <src/geometry/spatial/hyperplane_simplex.h>
+#include <src/numerical/orthogonal.h>
+#include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
 #include <cmath>
 #include <random>
+#include <sstream>
 
 namespace ns::geometry
 {
 namespace
 {
 using shapes::test::compare;
+
+template <std::size_t N, typename T>
+void test_integrate(ProgressRatio* progress, double progress_min, double progress_max)
+{
+        static_assert(std::is_floating_point_v<T>);
+        using RandomEngine = std::conditional_t<std::is_same_v<T, float>, std::mt19937, std::mt19937_64>;
+
+        LOG(std::string("Test sphere " + to_string(N - 1) + "-simplex, integrate, ") + type_name<T>());
+
+        constexpr unsigned RAY_COUNT = 10'000'000;
+        constexpr T RELATIVE_PRECISION = 0.01;
+        constexpr T MIN_RELATIVE_AREA = 0.01;
+
+        RandomEngine random_engine = create_engine<RandomEngine>();
+
+        const std::array<Vector<N, T>, N> simplex_vertices = [&]()
+        {
+                std::array<Vector<N, T>, N> result;
+                for (Vector<N, T>& v : result)
+                {
+                        v = sampling::uniform_on_sphere<N, T>(random_engine);
+                }
+                return result;
+        }();
+
+        const T area = sphere_area(N);
+        const T simplex_area = sphere_simplex_area(simplex_vertices);
+        const T relative_area = simplex_area / area;
+
+        if (!is_finite(relative_area))
+        {
+                error("Relative area " + to_string(relative_area) + " is not finite, sphere area = " + to_string(area)
+                      + ", simplex area = " + to_string(simplex_area));
+        }
+        if (!(relative_area > 0))
+        {
+                error("Relative area " + to_string(relative_area) + " is not positive, sphere area = " + to_string(area)
+                      + ", simplex area = " + to_string(simplex_area));
+        }
+
+        const std::array<Vector<N, T>, N - 1> simplex_vectors = [&]()
+        {
+                std::array<Vector<N, T>, N - 1> result;
+                for (unsigned i = 0; i < N - 1; ++i)
+                {
+                        result[i] = simplex_vertices[i + 1] - simplex_vertices[0];
+                }
+                return result;
+        }();
+
+        const Vector<N, T> simplex_normal = numerical::ortho_nn(simplex_vectors);
+
+        const HyperplaneSimplex<N, T> simplex = [&]()
+        {
+                HyperplaneSimplex<N, T> result;
+                result.set_data(simplex_normal, simplex_vertices);
+                return result;
+        }();
+
+        constexpr double count_r = 1.0 / RAY_COUNT;
+        unsigned intersect_count = 0;
+        progress->set(progress_min);
+        for (unsigned i = 0; i < RAY_COUNT; ++i)
+        {
+                if ((i & 0xfff) == 0xfff)
+                {
+                        progress->set(std::lerp(progress_min, progress_max, i * count_r));
+                }
+                const Ray<N, T> ray(Vector<N, T>(0), sampling::uniform_on_sphere<N, T>(random_engine));
+                if (simplex.intersect(ray, simplex_vertices[0], simplex_normal))
+                {
+                        ++intersect_count;
+                }
+        }
+
+        const T coverage_area = T(intersect_count) / RAY_COUNT;
+
+        if (coverage_area < MIN_RELATIVE_AREA && relative_area < MIN_RELATIVE_AREA)
+        {
+                return;
+        }
+
+        const T relative_error = std::abs(relative_area - coverage_area) / std::max(relative_area, coverage_area);
+        if (relative_error < RELATIVE_PRECISION)
+        {
+                return;
+        }
+
+        std::ostringstream oss;
+        oss << "Sphere area = " << area << '\n';
+        oss << "Simplex area = " << simplex_area << '\n';
+        oss << "Relative area = " << relative_area << '\n';
+        oss << "Coverage area = " << coverage_area << '\n';
+        oss << "Relative error = " << relative_error;
+        error(oss.str());
+}
 
 template <std::size_t N, typename T, typename RandomEngine>
 std::array<Vector<N + 1, T>, N> add_dimension(const std::array<Vector<N, T>, N>& a, RandomEngine& random_engine)
@@ -222,7 +323,22 @@ void test_2()
         test_sphere_2_simplex<long double>(1e-16);
 }
 
+void test_integrate_1_simplex(ProgressRatio* progress)
+{
+        test_integrate<2, float>(progress, 0, 0.5);
+        test_integrate<2, double>(progress, 0.5, 1.0);
+}
+
+void test_integrate_2_simplex(ProgressRatio* progress)
+{
+        test_integrate<3, float>(progress, 0, 0.5);
+        test_integrate<3, double>(progress, 0.5, 1);
+}
+
 TEST_SMALL("Sphere 1-Simplex", test_1)
 TEST_SMALL("Sphere 2-Simplex", test_2)
+
+TEST_SMALL("Sphere 1-Simplex, Integrate", test_integrate_1_simplex)
+TEST_SMALL("Sphere 2-Simplex, Integrate", test_integrate_2_simplex)
 }
 }
