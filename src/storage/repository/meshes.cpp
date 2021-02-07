@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/geometry/shapes/sphere_create.h>
+#include <src/geometry/shapes/torus.h>
 #include <src/model/mesh_utility.h>
 #include <src/numerical/quaternion.h>
 #include <src/sampling/sphere_uniform.h>
@@ -256,41 +257,6 @@ std::vector<Vector<3, float>> generate_points_mobius_strip(unsigned point_count)
         return points.release();
 }
 
-/*
- Sasho Kalajdzievski.
- An Illustrated Introduction to Topology and Homotopy.
- CRC Press, 2015.
-
- 5.1 Finite Products of Spaces.
- 14.4 Regarding Classification of CW-Complexes and Higher Dimensional Manifolds.
-*/
-template <std::size_t N, typename T, typename Engine>
-Vector<N, T> torus_point(Engine& engine)
-{
-        static_assert(N >= 3);
-
-        Vector<N, T> v(0);
-        T v_length;
-        Vector<N, T> sum(0);
-
-        v[0] = 2;
-        v_length = 2;
-
-        for (std::size_t n = 1; n < N; ++n)
-        {
-                Vector<N, T> ortho(0);
-                ortho[n] = v_length;
-
-                Vector<2, T> s = sampling::uniform_on_sphere<2, T>(engine);
-                Vector<N, T> vn = T(0.5) * (s[0] * v + s[1] * ortho);
-                sum += vn;
-
-                v = vn;
-                v_length *= 0.5;
-        }
-        return sum;
-}
-
 // Точки на торе без равномерного распределения по его поверхности
 template <std::size_t N>
 std::vector<Vector<N, float>> generate_points_torus(unsigned point_count, bool bound)
@@ -303,13 +269,11 @@ std::vector<Vector<N, float>> generate_points_torus(unsigned point_count, bool b
 
         while (points.size() < point_count)
         {
-                Vector<N, double> v = torus_point<N, double>(engine);
-
+                Vector<N, double> v = geometry::torus_point<N, double>(engine);
                 if (bound && dot(v, LAST_AXIS<N, double>) < COS_FOR_BOUND)
                 {
                         continue;
                 }
-
                 points.add(v);
         }
 
