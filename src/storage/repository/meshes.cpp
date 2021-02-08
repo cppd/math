@@ -350,42 +350,58 @@ std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 template <std::size_t N>
 class Impl final : public MeshObjectRepository<N>
 {
-        std::map<std::string, std::function<std::unique_ptr<mesh::Mesh<N>>(unsigned)>> m_map;
+        std::map<std::string, std::function<std::unique_ptr<mesh::Mesh<N>>(unsigned)>> m_map_point;
+        std::map<std::string, std::function<std::unique_ptr<mesh::Mesh<N>>(unsigned)>> m_map_facet;
 
-        std::vector<std::string> object_names() const override
+        std::vector<std::string> point_object_names() const override
         {
-                return names_of_map(m_map);
+                return names_of_map(m_map_point);
         }
 
-        std::unique_ptr<mesh::Mesh<N>> object(const std::string& object_name, unsigned point_count) const override
+        std::vector<std::string> facet_object_names() const override
         {
-                auto iter = m_map.find(object_name);
-                if (iter != m_map.cend())
+                return names_of_map(m_map_facet);
+        }
+
+        std::unique_ptr<mesh::Mesh<N>> point_object(const std::string& object_name, unsigned point_count) const override
+        {
+                auto iter = m_map_point.find(object_name);
+                if (iter != m_map_point.cend())
                 {
                         return iter->second(point_count);
                 }
-                error("Object not found in repository: " + object_name);
+                error("Point object not found in repository: " + object_name);
+        }
+
+        std::unique_ptr<mesh::Mesh<N>> facet_object(const std::string& object_name, unsigned facet_count) const override
+        {
+                auto iter = m_map_facet.find(object_name);
+                if (iter != m_map_facet.cend())
+                {
+                        return iter->second(facet_count);
+                }
+                error("Facet object not found in repository: " + object_name);
         }
 
 public:
         Impl()
         {
-                m_map.emplace("Ellipsoid", ellipsoid<N>);
-                m_map.emplace("Ellipsoid, bound", ellipsoid_bound<N>);
+                m_map_point.emplace("Ellipsoid", ellipsoid<N>);
+                m_map_point.emplace("Ellipsoid, bound", ellipsoid_bound<N>);
 
-                m_map.emplace("Sphere with a notch", sphere_with_notch<N>);
-                m_map.emplace("Sphere with a notch, bound", sphere_with_notch_bound<N>);
+                m_map_point.emplace("Sphere with a notch", sphere_with_notch<N>);
+                m_map_point.emplace("Sphere with a notch, bound", sphere_with_notch_bound<N>);
 
                 if constexpr (N == 3)
                 {
-                        m_map.emplace(reinterpret_cast<const char*>(u8"Möbius strip"), mobius_strip);
-                        m_map.emplace("Sphere", sphere);
+                        m_map_point.emplace(reinterpret_cast<const char*>(u8"Möbius strip"), mobius_strip);
+                        m_map_facet.emplace("Sphere", sphere);
                 }
 
                 if constexpr (N >= 3)
                 {
-                        m_map.emplace("Torus", torus<N>);
-                        m_map.emplace("Torus, bound", torus_bound<N>);
+                        m_map_point.emplace("Torus", torus<N>);
+                        m_map_point.emplace("Torus, bound", torus_bound<N>);
                 }
         }
 };

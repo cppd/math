@@ -30,8 +30,13 @@ struct MeshObjectRepository
 {
         virtual ~MeshObjectRepository() = default;
 
-        virtual std::vector<std::string> object_names() const = 0;
-        virtual std::unique_ptr<mesh::Mesh<N>> object(const std::string& object_name, unsigned point_count) const = 0;
+        virtual std::vector<std::string> point_object_names() const = 0;
+        virtual std::vector<std::string> facet_object_names() const = 0;
+
+        virtual std::unique_ptr<mesh::Mesh<N>> point_object(const std::string& object_name, unsigned point_count)
+                const = 0;
+        virtual std::unique_ptr<mesh::Mesh<N>> facet_object(const std::string& object_name, unsigned facet_count)
+                const = 0;
 };
 
 template <std::size_t N>

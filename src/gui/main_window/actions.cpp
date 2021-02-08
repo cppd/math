@@ -44,7 +44,7 @@ std::string action_name(const QAction* action)
         return s;
 }
 
-void load_mesh(
+void load_point_mesh(
         WorkerThreads* threads,
         const storage::Repository* repository,
         int dimension,
@@ -55,7 +55,25 @@ void load_mesh(
                 WORKER_THREAD_ID, action,
                 [&]()
                 {
-                        WorkerThreads::Function f = process::action_load_mesh(repository, dimension, object_name);
+                        WorkerThreads::Function f = process::action_load_point_mesh(repository, dimension, object_name);
+                        //model_tree->clear();
+                        //view->send(view::command::ResetView());
+                        return f;
+                });
+}
+
+void load_facet_mesh(
+        WorkerThreads* threads,
+        const storage::Repository* repository,
+        int dimension,
+        const std::string& object_name,
+        const std::string& action)
+{
+        threads->terminate_and_start(
+                WORKER_THREAD_ID, action,
+                [&]()
+                {
+                        WorkerThreads::Function f = process::action_load_facet_mesh(repository, dimension, object_name);
                         //model_tree->clear();
                         //view->send(view::command::ResetView());
                         return f;
@@ -256,23 +274,60 @@ Actions::Actions(
 
                 QMenu* sub_menu = menu_create->addMenu(QString::fromStdString(space_name(dimension)));
 
-                std::sort(objects.mesh_names.begin(), objects.mesh_names.end());
-                for (const std::string& object_name : objects.mesh_names)
+                if (!objects.point_mesh_names.empty())
                 {
-                        ASSERT(!object_name.empty());
+                        if (!sub_menu->actions().isEmpty())
+                        {
+                                sub_menu->addSeparator();
+                        }
 
-                        QAction* action = sub_menu->addAction(QString::fromStdString(object_name + "..."));
-                        m_connections.emplace_back(QObject::connect(
-                                action, &QAction::triggered,
-                                [=]()
-                                {
-                                        load_mesh(threads, repository, dimension, object_name, action_name(action));
-                                }));
+                        std::sort(objects.point_mesh_names.begin(), objects.point_mesh_names.end());
+                        for (const std::string& object_name : objects.point_mesh_names)
+                        {
+                                ASSERT(!object_name.empty());
+
+                                QAction* action = sub_menu->addAction(QString::fromStdString(object_name + "..."));
+                                m_connections.emplace_back(QObject::connect(
+                                        action, &QAction::triggered,
+                                        [=]()
+                                        {
+                                                load_point_mesh(
+                                                        threads, repository, dimension, object_name,
+                                                        action_name(action));
+                                        }));
+                        }
                 }
 
-                if (dimension == 3)
+                if (!objects.facet_mesh_names.empty())
                 {
-                        sub_menu->addSeparator();
+                        if (!sub_menu->actions().isEmpty())
+                        {
+                                sub_menu->addSeparator();
+                        }
+
+                        std::sort(objects.facet_mesh_names.begin(), objects.facet_mesh_names.end());
+                        for (const std::string& object_name : objects.facet_mesh_names)
+                        {
+                                ASSERT(!object_name.empty());
+
+                                QAction* action = sub_menu->addAction(QString::fromStdString(object_name + "..."));
+                                m_connections.emplace_back(QObject::connect(
+                                        action, &QAction::triggered,
+                                        [=]()
+                                        {
+                                                load_facet_mesh(
+                                                        threads, repository, dimension, object_name,
+                                                        action_name(action));
+                                        }));
+                        }
+                }
+
+                if (!objects.volume_names.empty() && dimension == 3)
+                {
+                        if (!sub_menu->actions().isEmpty())
+                        {
+                                sub_menu->addSeparator();
+                        }
 
                         std::sort(objects.volume_names.begin(), objects.volume_names.end());
                         for (const std::string& object_name : objects.volume_names)

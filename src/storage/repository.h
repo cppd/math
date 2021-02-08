@@ -51,7 +51,8 @@ public:
         struct ObjectNames
         {
                 int dimension;
-                std::vector<std::string> mesh_names;
+                std::vector<std::string> point_mesh_names;
+                std::vector<std::string> facet_mesh_names;
                 std::vector<std::string> volume_names;
         };
 
@@ -67,7 +68,8 @@ public:
                                         {
                                                 names.resize(names.size() + 1);
                                                 names.back().dimension = N;
-                                                names.back().mesh_names = v.meshes->object_names();
+                                                names.back().point_mesh_names = v.meshes->point_object_names();
+                                                names.back().facet_mesh_names = v.meshes->facet_object_names();
                                                 names.back().volume_names = v.volumes->object_names();
                                         }(),
                                         ...);
@@ -78,9 +80,15 @@ public:
         }
 
         template <std::size_t N>
-        std::unique_ptr<mesh::Mesh<N>> mesh(const std::string& name, unsigned point_count) const
+        std::unique_ptr<mesh::Mesh<N>> point_mesh(const std::string& name, unsigned point_count) const
         {
-                return std::get<Repositories<N>>(m_data).meshes->object(name, point_count);
+                return std::get<Repositories<N>>(m_data).meshes->point_object(name, point_count);
+        }
+
+        template <std::size_t N>
+        std::unique_ptr<mesh::Mesh<N>> facet_mesh(const std::string& name, unsigned facet_count) const
+        {
+                return std::get<Repositories<N>>(m_data).meshes->facet_object(name, facet_count);
         }
 
         template <std::size_t N>

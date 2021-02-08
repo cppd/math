@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/file/path.h>
 #include <src/com/message.h>
 #include <src/gui/dialogs/bound_cocone.h>
+#include <src/gui/dialogs/facet_object.h>
 #include <src/gui/dialogs/file_dialog.h>
 #include <src/gui/dialogs/object_selection.h>
 #include <src/gui/dialogs/point_object.h>
@@ -36,8 +37,13 @@ namespace
 {
 // Количество точек для готовых объектов.
 constexpr int POINT_COUNT_MINIMUM = 100;
-constexpr int POINT_COUNT_DEFAULT = 10000;
-constexpr int POINT_COUNT_MAXIMUM = 1000000;
+constexpr int POINT_COUNT_DEFAULT = 10'000;
+constexpr int POINT_COUNT_MAXIMUM = 1'000'000;
+
+// Количество граней для готовых объектов.
+constexpr int FACET_COUNT_MINIMUM = 1;
+constexpr int FACET_COUNT_DEFAULT = 10'000;
+constexpr int FACET_COUNT_MAXIMUM = 100'000'000;
 
 // Размер изображений по одному измерению для готовых объёмов.
 constexpr int VOLUME_IMAGE_SIZE_MINIMUM = 10;
@@ -108,7 +114,7 @@ std::function<void(ProgressRatioList*)> action_load_mesh(std::filesystem::path p
         };
 }
 
-std::function<void(ProgressRatioList*)> action_load_mesh(
+std::function<void(ProgressRatioList*)> action_load_point_mesh(
         const storage::Repository* repository,
         int dimension,
         const std::string& object_name)
@@ -143,8 +149,54 @@ std::function<void(ProgressRatioList*)> action_load_mesh(
                         dimension,
                         [&]<std::size_t N>(const Dimension<N>&)
                         {
-                                std::shared_ptr<mesh::MeshObject<N>> mesh =
-                                        load_mesh<N>(object_name, point_object_parameters->point_count, *repository);
+                                std::shared_ptr<mesh::MeshObject<N>> mesh = load_point_mesh<N>(
+                                        object_name, point_object_parameters->point_count, *repository);
+
+                                compute<N>(
+                                        progress_list, selection_parameters->convex_hull, selection_parameters->cocone,
+                                        selection_parameters->bound_cocone, selection_parameters->mst, *mesh,
+                                        bound_cocone_parameters.rho, bound_cocone_parameters.alpha);
+                        });
+        };
+}
+
+std::function<void(ProgressRatioList*)> action_load_facet_mesh(
+        const storage::Repository* repository,
+        int dimension,
+        const std::string& object_name)
+{
+        if (object_name.empty())
+        {
+                MESSAGE_ERROR("Empty mesh repository object name");
+                return nullptr;
+        }
+
+        std::optional<gui::dialog::FacetObjectParameters> facet_object_parameters =
+                gui::dialog::FacetObjectParametersDialog::show(
+                        dimension, object_name, FACET_COUNT_DEFAULT, FACET_COUNT_MINIMUM, FACET_COUNT_MAXIMUM);
+        if (!facet_object_parameters)
+        {
+                return nullptr;
+        }
+
+        std::optional<gui::dialog::ObjectSelectionParameters> selection_parameters =
+                gui::dialog::ObjectSelectionParametersDialog::show();
+        if (!selection_parameters)
+        {
+                return nullptr;
+        }
+
+        gui::dialog::BoundCoconeParameters bound_cocone_parameters =
+                gui::dialog::BoundCoconeParametersDialog::current();
+
+        return [=](ProgressRatioList* progress_list)
+        {
+                apply_for_dimension(
+                        dimension,
+                        [&]<std::size_t N>(const Dimension<N>&)
+                        {
+                                std::shared_ptr<mesh::MeshObject<N>> mesh = load_facet_mesh<N>(
+                                        object_name, facet_object_parameters->facet_count, *repository);
 
                                 compute<N>(
                                         progress_list, selection_parameters->convex_hull, selection_parameters->cocone,

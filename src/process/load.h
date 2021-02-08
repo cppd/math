@@ -62,12 +62,29 @@ std::shared_ptr<mesh::MeshObject<N>> load_mesh(
 }
 
 template <std::size_t N>
-std::shared_ptr<mesh::MeshObject<N>> load_mesh(
+std::shared_ptr<mesh::MeshObject<N>> load_point_mesh(
         const std::string& object_name,
         int point_count,
         const storage::Repository& repository)
 {
-        std::unique_ptr<mesh::Mesh<N>> mesh = repository.mesh<N>(object_name, point_count);
+        std::unique_ptr<mesh::Mesh<N>> mesh = repository.point_mesh<N>(object_name, point_count);
+
+        std::shared_ptr<mesh::MeshObject<N>> mesh_object = std::make_shared<mesh::MeshObject<N>>(
+                std::move(mesh), mesh::model_matrix_for_size_and_position(*mesh, SCENE_SIZE, SCENE_CENTER<N, double>),
+                object_name);
+
+        mesh_object->insert();
+
+        return mesh_object;
+}
+
+template <std::size_t N>
+std::shared_ptr<mesh::MeshObject<N>> load_facet_mesh(
+        const std::string& object_name,
+        int facet_count,
+        const storage::Repository& repository)
+{
+        std::unique_ptr<mesh::Mesh<N>> mesh = repository.facet_mesh<N>(object_name, facet_count);
 
         std::shared_ptr<mesh::MeshObject<N>> mesh_object = std::make_shared<mesh::MeshObject<N>>(
                 std::move(mesh), mesh::model_matrix_for_size_and_position(*mesh, SCENE_SIZE, SCENE_CENTER<N, double>),
