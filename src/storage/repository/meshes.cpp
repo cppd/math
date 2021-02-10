@@ -323,10 +323,11 @@ std::unique_ptr<mesh::Mesh<N>> torus_bound(unsigned point_count)
         return mesh::create_mesh_for_points(generate_points_torus<N>(point_count, true));
 }
 
-std::unique_ptr<mesh::Mesh<3>> sphere(unsigned facet_count)
+template <std::size_t N>
+std::unique_ptr<mesh::Mesh<N>> sphere(unsigned facet_count)
 {
-        std::vector<Vector<3, float>> points;
-        std::vector<std::array<int, 3>> facets;
+        std::vector<Vector<N, float>> points;
+        std::vector<std::array<int, N>> facets;
         geometry::create_sphere(facet_count, &points, &facets);
         return mesh::create_mesh_for_facets(points, facets);
 }
@@ -395,7 +396,11 @@ public:
                 if constexpr (N == 3)
                 {
                         m_map_point.emplace(reinterpret_cast<const char*>(u8"Möbius strip"), mobius_strip);
-                        m_map_facet.emplace("Sphere", sphere);
+                }
+
+                if constexpr (N == 3 || N == 4)
+                {
+                        m_map_facet.emplace("Sphere", sphere<N>);
                 }
 
                 if constexpr (N >= 3)
