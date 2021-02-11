@@ -398,16 +398,10 @@ public:
                         m_map_point.emplace(reinterpret_cast<const char*>(u8"Möbius strip"), mobius_strip);
                 }
 
-                if constexpr (N == 3 || N == 4)
-                {
-                        m_map_facet.emplace("Sphere", sphere<N>);
-                }
+                m_map_point.emplace("Torus", torus<N>);
+                m_map_point.emplace("Torus, bound", torus_bound<N>);
 
-                if constexpr (N >= 3)
-                {
-                        m_map_point.emplace("Torus", torus<N>);
-                        m_map_point.emplace("Torus, bound", torus_bound<N>);
-                }
+                m_map_facet.emplace("Sphere", sphere<N>);
         }
 };
 }
