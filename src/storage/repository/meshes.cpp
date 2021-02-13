@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/constant.h>
 #include <src/com/error.h>
+#include <src/geometry/shapes/mobius_strip.h>
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/geometry/shapes/torus.h>
 #include <src/model/mesh_utility.h>
-#include <src/numerical/quaternion.h>
 #include <src/sampling/sphere_uniform.h>
 
 #include <functional>
@@ -220,37 +220,15 @@ std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_c
         return points.release();
 }
 
-// На входе от 0 до 2 * PI, на выходе от 0 до PI
-double mobius_curve(double x)
-{
-        x = x / (2 * PI<double>);
-
-        x = 2 * x - 1;
-        x = std::copysign(std::pow(std::abs(x), 5), x);
-        x = (x + 1) / 2;
-
-        return PI<double> * x;
-}
-
 std::vector<Vector<3, float>> generate_points_mobius_strip(unsigned point_count)
 {
         DiscretePoints<3> points(point_count);
 
         std::mt19937_64 engine(point_count);
 
-        std::uniform_real_distribution<double> urd_line(-MOBIUS_STRIP_WIDTH / 2, MOBIUS_STRIP_WIDTH / 2);
-        std::uniform_real_distribution<double> urd_alpha(0, 2 * PI<double>);
-
         while (points.size() < point_count)
         {
-                double alpha = urd_alpha(engine);
-
-                // Случайная точка вдоль Z, вращение вокруг Y, смещение по X и вращение вокруг Z
-                Vector<3, double> v(0, 0, urd_line(engine));
-                v = rotate_vector(Vector<3, double>(0, 1, 0), PI<double> / 2 - mobius_curve(alpha), v);
-                v += Vector<3, double>(1, 0, 0);
-                v = rotate_vector(Vector<3, double>(0, 0, 1), alpha, v);
-
+                Vector<3, double> v = geometry::mobius_strip_point<double>(MOBIUS_STRIP_WIDTH, engine);
                 points.add(v);
         }
 
