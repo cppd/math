@@ -99,8 +99,7 @@ class DiscretePoints
         template <typename T>
         static bool points_are_unique(const std::vector<T>& points)
         {
-                std::unordered_set<T> check_set(points.cbegin(), points.cend());
-                return points.size() == check_set.size();
+                return points.size() == std::unordered_set<T>(points.cbegin(), points.cend()).size();
         }
 
 public:
@@ -133,9 +132,7 @@ public:
 
                 m_integer_points.clear();
 
-                std::vector<Vector<N, float>> points = std::move(m_points);
-
-                return points;
+                return std::move(m_points);
         }
 };
 
@@ -235,7 +232,6 @@ std::vector<Vector<3, float>> generate_points_mobius_strip(unsigned point_count)
         return points.release();
 }
 
-// Точки на торе без равномерного распределения по его поверхности
 template <std::size_t N>
 std::vector<Vector<N, float>> generate_points_torus(unsigned point_count, bool bound)
 {

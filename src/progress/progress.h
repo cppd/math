@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 // Для работы в потоках расчётов
-class ProgressRatio
+class ProgressRatio final
 {
         class Impl;
         std::unique_ptr<Impl> m_progress;
