@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "simplex.h"
-
 #include "../core/convex_hull.h"
 
 #include <src/com/arrays.h>
@@ -82,64 +80,53 @@ class SimplexSubdivision
 public:
         SimplexSubdivision()
         {
-                std::array<Vector<N, float>, N + 1> vertices = create_origin_centered_simplex<N, float>();
+                std::vector<Vector<N + 1, float>> vertices;
 
-                std::vector<Vector<N, float>> midpoints;
-
-                std::unordered_map<unsigned, std::vector<unsigned>> vertex_midpoints;
-                for (unsigned i = 0; i < vertices.size(); ++i)
+                for (unsigned i = 0; i < N + 1; ++i)
                 {
-                        for (unsigned j = i + 1; j < vertices.size(); ++j)
-                        {
-                                midpoints.push_back((vertices[i] + vertices[j]) / 2.0f);
+                        vertices.emplace_back(0);
+                        vertices.back()[i] = 1;
+                }
 
-                                vertex_midpoints[i].push_back(m_midpoints.size());
-                                vertex_midpoints[j].push_back(m_midpoints.size());
+                for (unsigned i = 0; i < N + 1; ++i)
+                {
+                        for (unsigned j = i + 1; j < N + 1; ++j)
+                        {
+                                vertices.push_back((vertices[i] + vertices[j]).normalized());
                                 m_midpoints.push_back({static_cast<int>(i), static_cast<int>(j)});
                         }
                 }
 
-                for (unsigned i = 0; i < vertices.size(); ++i)
+                vertices.emplace_back(0);
+
+                auto plane_facet = [&](const std::array<int, N + 1>& facet_vertices)
                 {
-                        std::array<int, N + 1>& simplex = m_simplices.emplace_back();
-
-                        simplex[0] = i;
-
-                        ASSERT(vertex_midpoints[i].size() == N);
-                        for (unsigned j = 0; j < N; ++j)
+                        Vector<N + 1, float> sum(0);
+                        for (unsigned i : facet_vertices)
                         {
-                                simplex[j + 1] = vertices.size() + vertex_midpoints[i][j];
+                                ASSERT(i < vertices.size());
+                                sum += vertices[i];
                         }
-                }
-
-                ASSERT(m_simplices.size() == N + 1);
-
-                if (N == 2)
-                {
-                        ASSERT(m_midpoints.size() == N + 1);
-                        m_simplices.push_back({vertices.size(), vertices.size() + 1, vertices.size() + 2});
-                }
-                else
-                {
-                        ASSERT(m_midpoints.size() > N + 1);
-
-                        std::vector<vec<N>> points;
-                        std::vector<DelaunaySimplex<N>> delaunay_simplices;
-                        ProgressRatio progress(nullptr);
-
-                        compute_delaunay(midpoints, &points, &delaunay_simplices, &progress);
-
-                        ASSERT(midpoints.size() == points.size());
-
-                        ASSERT(N != 3 || delaunay_simplices.size() == 4);
-
-                        for (const DelaunaySimplex<N>& delaunay_simplex : delaunay_simplices)
+                        for (unsigned i = 0; i < N + 1; ++i)
                         {
-                                m_simplices.push_back(delaunay_simplex.vertices());
-                                for (int& i : m_simplices.back())
+                                if (sum[i] == 0)
                                 {
-                                        i += vertices.size();
+                                        return true;
                                 }
+                        }
+                        return false;
+                };
+
+                std::vector<ConvexHullFacet<N + 1>> facets;
+                ProgressRatio progress(nullptr);
+
+                compute_convex_hull(vertices, &facets, &progress);
+
+                for (const ConvexHullFacet<N + 1>& facet : facets)
+                {
+                        if (!plane_facet(facet.vertices()))
+                        {
+                                m_simplices.push_back(facet.vertices());
                         }
                 }
         }
