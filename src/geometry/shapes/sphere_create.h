@@ -21,7 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/arrays.h>
 #include <src/com/error.h>
+#include <src/com/hash.h>
+#include <src/com/log.h>
 #include <src/com/math.h>
+#include <src/com/sort.h>
 #include <src/numerical/vec.h>
 
 #include <array>
@@ -72,26 +75,63 @@ bool equal_distance_from_origin(const std::array<Vector<N, T>, N>& vertices)
 }
 
 template <std::size_t N>
-class SimplexSubdivision
+class FacetSubdivision
 {
         std::vector<std::array<int, 2>> m_midpoints;
-        std::vector<std::array<int, N + 1>> m_simplices;
+        std::vector<std::array<int, N>> m_facets;
+
+        std::string subdivision_string() const
+        {
+                if (N >= 10)
+                {
+                        return {};
+                }
+                std::string result;
+                for (std::array<int, N> vertices : m_facets)
+                {
+                        if (!result.empty())
+                        {
+                                result += '\n';
+                        }
+                        std::sort(vertices.begin(), vertices.end());
+                        std::string s;
+                        for (unsigned v : vertices)
+                        {
+                                if (!s.empty())
+                                {
+                                        s += ", ";
+                                }
+                                if (v < N)
+                                {
+                                        s += to_string(v);
+                                }
+                                else
+                                {
+                                        s += to_string(m_midpoints[v - N][0]);
+                                        s += to_string(m_midpoints[v - N][1]);
+                                }
+                        }
+                        result += s;
+                }
+                return result;
+        }
 
 public:
-        SimplexSubdivision()
+        FacetSubdivision()
         {
-                std::vector<Vector<N + 1, float>> vertices;
+                std::vector<Vector<N, float>> vertices;
 
-                for (unsigned i = 0; i < N + 1; ++i)
+                for (unsigned i = 0; i < N; ++i)
                 {
                         vertices.emplace_back(0);
                         vertices.back()[i] = 1;
                 }
 
-                for (unsigned i = 0; i < N + 1; ++i)
+                for (unsigned i = 0; i < N; ++i)
                 {
-                        for (unsigned j = i + 1; j < N + 1; ++j)
+                        for (unsigned j = i + 1; j < N; ++j)
                         {
+                                LOG(to_string(vertices.size()) + ": " + to_string(i) + ", " + to_string(j));
                                 vertices.push_back((vertices[i] + vertices[j]).normalized());
                                 m_midpoints.push_back({static_cast<int>(i), static_cast<int>(j)});
                         }
@@ -99,15 +139,15 @@ public:
 
                 vertices.emplace_back(0);
 
-                auto plane_facet = [&](const std::array<int, N + 1>& facet_vertices)
+                auto plane_facet = [&](const std::array<int, N>& facet_vertices)
                 {
-                        Vector<N + 1, float> sum(0);
+                        Vector<N, float> sum(0);
                         for (unsigned i : facet_vertices)
                         {
                                 ASSERT(i < vertices.size());
                                 sum += vertices[i];
                         }
-                        for (unsigned i = 0; i < N + 1; ++i)
+                        for (unsigned i = 0; i < N; ++i)
                         {
                                 if (sum[i] == 0)
                                 {
@@ -117,18 +157,20 @@ public:
                         return false;
                 };
 
-                std::vector<ConvexHullFacet<N + 1>> facets;
+                std::vector<ConvexHullFacet<N>> facets;
                 ProgressRatio progress(nullptr);
 
                 compute_convex_hull(vertices, &facets, &progress);
 
-                for (const ConvexHullFacet<N + 1>& facet : facets)
+                for (const ConvexHullFacet<N>& facet : facets)
                 {
                         if (!plane_facet(facet.vertices()))
                         {
-                                m_simplices.push_back(facet.vertices());
+                                m_facets.push_back(facet.vertices());
                         }
                 }
+
+                LOG("Facet subdivision\n" + subdivision_string());
         }
 
         const std::vector<std::array<int, 2>>& midpoints() const
@@ -136,9 +178,9 @@ public:
                 return m_midpoints;
         }
 
-        const std::vector<std::array<int, N + 1>>& simplices() const
+        const std::vector<std::array<int, N>>& facets() const
         {
-                return m_simplices;
+                return m_facets;
         }
 };
 
@@ -203,7 +245,7 @@ struct Simplex
 template <std::size_t N, typename T>
 std::vector<Simplex<N, T>> divide_simplices(
         unsigned min_count,
-        const SimplexSubdivision<N - 1>& simplex_subdivision,
+        const FacetSubdivision<N>& facet_subdivision,
         std::vector<Simplex<N, T>> simplices)
 {
         if (simplices.empty())
@@ -211,30 +253,30 @@ std::vector<Simplex<N, T>> divide_simplices(
                 return {};
         }
 
-        std::vector<Vector<N, T>> points(N + simplex_subdivision.midpoints().size());
+        std::vector<Vector<N, T>> points;
 
         while (simplices.size() < min_count)
         {
                 std::vector<Simplex<N, T>> tmp;
-                tmp.reserve(simplices.size() * simplex_subdivision.simplices().size());
+                tmp.reserve(simplices.size() * facet_subdivision.facets().size());
 
                 for (const Simplex<N, T>& simplex : simplices)
                 {
-                        for (unsigned i = 0; i < N; ++i)
+                        points.clear();
+                        for (const Vector<N, T>& v : simplex.vertices)
                         {
-                                points[i] = simplex.vertices[i];
+                                points.push_back(v);
                         }
-                        for (unsigned i = 0; i < simplex_subdivision.midpoints().size(); ++i)
+                        for (const std::array<int, 2>& m : facet_subdivision.midpoints())
                         {
-                                int v0 = simplex_subdivision.midpoints()[i][0];
-                                int v1 = simplex_subdivision.midpoints()[i][1];
-                                points[N + i] = (simplex.vertices[v0] + simplex.vertices[v1]).normalized();
+                                points.push_back((simplex.vertices[m[0]] + simplex.vertices[m[1]]).normalized());
                         }
-                        for (const std::array<int, N>& indices : simplex_subdivision.simplices())
+                        for (const std::array<int, N>& indices : facet_subdivision.facets())
                         {
                                 Simplex<N, T>& s = tmp.emplace_back();
                                 for (unsigned i = 0; i < N; ++i)
                                 {
+                                        ASSERT(indices[i] < static_cast<int>(points.size()));
                                         s.vertices[i] = points[indices[i]];
                                 }
                         }
@@ -349,7 +391,36 @@ std::vector<Simplex<N, T>> create_sphere(unsigned facet_min_count)
                 }
         }
 
-        return divide_simplices(facet_min_count, SimplexSubdivision<N - 1>(), std::move(simplices));
+        return divide_simplices(facet_min_count, FacetSubdivision<N>(), std::move(simplices));
+}
+
+template <std::size_t N>
+void check_manifold(const std::vector<std::array<int, N>>& facets)
+{
+        struct Hash
+        {
+                std::size_t operator()(const std::array<int, N - 1>& v) const
+                {
+                        return array_hash(v);
+                }
+        };
+        std::unordered_map<std::array<int, N - 1>, int, Hash> ridges;
+        for (const std::array<int, N>& facet : facets)
+        {
+                for (unsigned r = 0; r < N; ++r)
+                {
+                        std::array<int, N - 1> ridge = sort(del_elem(facet, r));
+                        ++ridges[ridge];
+                }
+        }
+        for (const auto& [ridge, count] : ridges)
+        {
+                if (count != 2)
+                {
+                        error("Error creating sphere: facet count " + to_string(count) + " is not equal to 2 for ridge "
+                              + to_string(ridge));
+                }
+        }
 }
 
 template <std::size_t N, typename T>
@@ -393,5 +464,9 @@ void create_sphere(
         std::vector<impl::Simplex<N, T>> simplices = impl::create_sphere<N, T>(facet_min_count);
 
         impl::create_mesh_for_simplices(simplices, vertices, facets);
+
+        impl::check_manifold(*facets);
+
+        LOG("Sphere: vertex count = " + to_string(vertices->size()) + ", facet count = " + to_string(facets->size()));
 }
 }
