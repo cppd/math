@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "error.h"
 #include "overview.h"
 #include "query.h"
+#include "settings.h"
 #include "surface.h"
 
 #include <src/com/alg.h>
@@ -29,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/vector.h>
 
 #include <algorithm>
+#include <sstream>
 
 namespace ns::vulkan
 {
@@ -364,11 +366,80 @@ void make_enabled_device_features(
 }
 }
 
+std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
+{
+        VkResult result;
+
+        uint32_t device_count;
+        result = vkEnumeratePhysicalDevices(instance, &device_count, nullptr);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEnumeratePhysicalDevices", result);
+        }
+        if (device_count < 1)
+        {
+                error("No Vulkan device found");
+        }
+
+        std::vector<VkPhysicalDevice> all_devices(device_count);
+        result = vkEnumeratePhysicalDevices(instance, &device_count, all_devices.data());
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEnumeratePhysicalDevices", result);
+        }
+
+        std::vector<VkPhysicalDevice> devices;
+        for (const VkPhysicalDevice& d : all_devices)
+        {
+                VkPhysicalDeviceProperties properties;
+                vkGetPhysicalDeviceProperties(d, &properties);
+                if (properties.apiVersion < API_VERSION)
+                {
+                        continue;
+                }
+                devices.push_back(d);
+        }
+
+        if (!devices.empty())
+        {
+                return devices;
+        }
+
+        std::ostringstream oss;
+        oss << "No Vulkan physical devices found with minimum supported version ";
+        oss << API_VERSION_MAJOR << "." << API_VERSION_MINOR;
+        oss << '\n';
+        oss << "Found " << (all_devices.size() > 1 ? "devices" : "device");
+        for (const VkPhysicalDevice& d : all_devices)
+        {
+                VkPhysicalDeviceProperties properties;
+                vkGetPhysicalDeviceProperties(d, &properties);
+                oss << "\n";
+                oss << properties.deviceName << "\n  API version " << VK_VERSION_MAJOR(properties.apiVersion) << "."
+                    << VK_VERSION_MINOR(properties.apiVersion);
+        }
+        error(oss.str());
+}
+
 PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
         : m_physical_device(physical_device)
 {
         ASSERT(physical_device != VK_NULL_HANDLE);
 
+        {
+                VkPhysicalDeviceProperties properties;
+                vkGetPhysicalDeviceProperties(physical_device, &properties);
+                if (properties.apiVersion < API_VERSION)
+                {
+                        std::ostringstream oss;
+                        oss << "Vulkan physical device version ";
+                        oss << VK_VERSION_MAJOR(properties.apiVersion) << "."
+                            << VK_VERSION_MINOR(properties.apiVersion);
+                        oss << " is not supported, minimum version is ";
+                        oss << API_VERSION_MAJOR << "." << API_VERSION_MINOR;
+                        error(oss.str());
+                }
+        }
         {
                 VkPhysicalDeviceVulkan12Properties vulkan_12_properties = {};
                 vulkan_12_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
@@ -483,44 +554,13 @@ bool PhysicalDevice::queue_family_supports_presentation(uint32_t index) const
 
 //
 
-std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
-{
-        uint32_t device_count;
-        VkResult result;
-
-        result = vkEnumeratePhysicalDevices(instance, &device_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumeratePhysicalDevices", result);
-        }
-
-        if (device_count < 1)
-        {
-                error("No Vulkan device found");
-        }
-
-        std::vector<VkPhysicalDevice> devices(device_count);
-
-        result = vkEnumeratePhysicalDevices(instance, &device_count, devices.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumeratePhysicalDevices", result);
-        }
-
-        return devices;
-}
-
 PhysicalDevice create_physical_device(
         VkInstance instance,
         VkSurfaceKHR surface,
-        int api_version_major,
-        int api_version_minor,
         const std::vector<std::string>& required_extensions,
         const std::vector<PhysicalDeviceFeatures>& required_features)
 {
         LOG(overview_physical_devices(instance, surface));
-
-        const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
 
         for (const VkPhysicalDevice& d : physical_devices(instance))
         {
@@ -530,11 +570,6 @@ PhysicalDevice create_physical_device(
                     && physical_device.properties().properties_10.deviceType != VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU
                     && physical_device.properties().properties_10.deviceType != VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU
                     && physical_device.properties().properties_10.deviceType != VK_PHYSICAL_DEVICE_TYPE_CPU)
-                {
-                        continue;
-                }
-
-                if (required_api_version > physical_device.properties().properties_10.apiVersion)
                 {
                         continue;
                 }

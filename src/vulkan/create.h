@@ -40,11 +40,7 @@ PipelineLayout create_pipeline_layout(
 CommandPool create_command_pool(VkDevice device, uint32_t queue_family_index);
 CommandPool create_transient_command_pool(VkDevice device, uint32_t queue_family_index);
 
-Instance create_instance(
-        int api_version_major,
-        int api_version_minor,
-        std::vector<std::string> required_extensions,
-        const std::vector<std::string>& required_validation_layers);
+Instance create_instance(std::vector<std::string> required_extensions);
 
 Framebuffer create_framebuffer(
         VkDevice device,

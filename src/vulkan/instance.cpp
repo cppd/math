@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "create.h"
 #include "debug.h"
 #include "error.h"
-#include "settings.h"
 
 #include <src/com/alg.h>
 #include <src/com/log.h>
@@ -63,11 +62,7 @@ VulkanInstance::VulkanInstance(
         const std::vector<PhysicalDeviceFeatures>& required_features,
         const std::vector<PhysicalDeviceFeatures>& optional_features,
         const std::optional<std::function<VkSurfaceKHR(VkInstance)>>& create_surface)
-        : m_instance(create_instance(
-                API_VERSION_MAJOR,
-                API_VERSION_MINOR,
-                required_instance_extensions,
-                string_vector(VALIDATION_LAYERS))),
+        : m_instance(create_instance(required_instance_extensions)),
           m_callback(
                   m_instance.validation_layers_enabled() ? std::make_optional(create_debug_report_callback(m_instance))
                                                          : std::nullopt),
@@ -77,9 +72,6 @@ VulkanInstance::VulkanInstance(
                   m_instance,
                   //
                   (create_surface ? static_cast<VkSurfaceKHR>(*m_surface) : VK_NULL_HANDLE),
-                  //
-                  API_VERSION_MAJOR,
-                  API_VERSION_MINOR,
                   //
                   merge_required_device_extensions(create_surface.has_value(), required_device_extensions),
                   //

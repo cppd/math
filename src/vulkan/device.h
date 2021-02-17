@@ -146,6 +146,8 @@ enum class PhysicalDeviceFeatures
         vulkanMemoryModelDeviceScope
 };
 
+std::vector<VkPhysicalDevice> physical_devices(VkInstance instance);
+
 class PhysicalDevice final
 {
         VkPhysicalDevice m_physical_device;
@@ -172,13 +174,9 @@ public:
         bool queue_family_supports_presentation(uint32_t index) const;
 };
 
-std::vector<VkPhysicalDevice> physical_devices(VkInstance instance);
-
 PhysicalDevice create_physical_device(
         VkInstance instance,
         VkSurfaceKHR surface,
-        int api_version_major,
-        int api_version_minor,
         const std::vector<std::string>& required_extensions,
         const std::vector<PhysicalDeviceFeatures>& required_features);
 

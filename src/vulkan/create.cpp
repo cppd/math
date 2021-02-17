@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "overview.h"
 #include "print.h"
 #include "query.h"
+#include "settings.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -112,24 +113,23 @@ CommandPool create_transient_command_pool(VkDevice device, uint32_t queue_family
 
 //
 
-Instance create_instance(
-        int api_version_major,
-        int api_version_minor,
-        std::vector<std::string> required_extensions,
-        const std::vector<std::string>& required_validation_layers)
+Instance create_instance(std::vector<std::string> required_extensions)
 {
         LOG(overview());
 
-        const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
+        check_api_version(API_VERSION);
 
-        if (!required_validation_layers.empty())
+        if (!VALIDATION_LAYERS.empty())
         {
                 required_extensions.emplace_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
         }
 
-        check_api_version(required_api_version);
         check_instance_extension_support(required_extensions);
-        check_validation_layer_support(required_validation_layers);
+
+        if (!VALIDATION_LAYERS.empty())
+        {
+                check_validation_layer_support({VALIDATION_LAYERS.cbegin(), VALIDATION_LAYERS.cend()});
+        }
 
         VkApplicationInfo app_info = {};
         app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -137,7 +137,7 @@ Instance create_instance(
         app_info.applicationVersion = 1;
         app_info.pEngineName = nullptr;
         app_info.engineVersion = 0;
-        app_info.apiVersion = required_api_version;
+        app_info.apiVersion = API_VERSION;
 
         VkInstanceCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -150,11 +150,10 @@ Instance create_instance(
                 create_info.ppEnabledExtensionNames = extensions.data();
         }
 
-        const std::vector<const char*> validation_layers = const_char_pointer_vector(required_validation_layers);
-        if (!validation_layers.empty())
+        if (!VALIDATION_LAYERS.empty())
         {
-                create_info.enabledLayerCount = validation_layers.size();
-                create_info.ppEnabledLayerNames = validation_layers.data();
+                create_info.enabledLayerCount = VALIDATION_LAYERS.size();
+                create_info.ppEnabledLayerNames = VALIDATION_LAYERS.data();
         }
 
         Instance instance(create_info);
