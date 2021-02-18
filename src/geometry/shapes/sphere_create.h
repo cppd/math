@@ -74,9 +74,29 @@ bool equal_distance_from_origin(const std::array<Vector<N, T>, N>& vertices)
         return true;
 }
 
+template <std::size_t N, typename T>
+struct Facet
+{
+        std::array<Vector<N, T>, N> vertices;
+
+        Facet()
+        {
+        }
+
+        template <typename... Ts>
+        explicit Facet(Ts... vertices) : vertices{vertices...}
+        {
+                static_assert(sizeof...(Ts) == N);
+        }
+};
+
 template <std::size_t N>
 class FacetSubdivision
 {
+        static_assert(N >= 4);
+
+        static constexpr std::size_t MIDPOINT_COUNT = (N * (N - 1)) / 2;
+
         std::vector<std::array<int, 2>> m_midpoints;
         std::vector<std::array<int, N>> m_facets;
 
@@ -136,8 +156,11 @@ public:
                                 m_midpoints.push_back({static_cast<int>(i), static_cast<int>(j)});
                         }
                 }
+                ASSERT(m_midpoints.size() == MIDPOINT_COUNT);
 
                 vertices.emplace_back(0);
+
+                ASSERT(vertices.size() == N + MIDPOINT_COUNT + 1);
 
                 auto plane_facet = [&](const std::array<int, N>& facet_vertices)
                 {
@@ -173,160 +196,125 @@ public:
                 LOG("Facet subdivision\n" + subdivision_string());
         }
 
-        const std::vector<std::array<int, 2>>& midpoints() const
+        std::size_t facet_count() const
         {
-                return m_midpoints;
+                return m_facets.size();
         }
 
-        const std::vector<std::array<int, N>>& facets() const
+        template <typename T>
+        void divide(const Facet<N, T>& facet, std::vector<Facet<N, T>>* facets) const
         {
-                return m_facets;
-        }
-};
+                std::array<Vector<N, T>, N + MIDPOINT_COUNT> points;
 
-template <std::size_t N, typename T>
-struct Simplex
-{
-        std::array<Vector<N, T>, N> vertices;
-
-        Simplex()
-        {
-        }
-
-        explicit Simplex(const std::array<Vector<N, T>, N>& vertices) : vertices(vertices)
-        {
-        }
-
-        template <typename... Ts>
-        explicit Simplex(Ts... vertices) : vertices{vertices...}
-        {
-                static_assert(sizeof...(Ts) == N);
-        }
-};
-
-//template <typename T>
-//void divide_simplex(const Simplex<3, T>& simplex, std::vector<Simplex<3, T>>* simplices)
-//{
-//        const Vector<3, T>& v0 = simplex.vertices[0];
-//        const Vector<3, T>& v1 = simplex.vertices[1];
-//        const Vector<3, T>& v2 = simplex.vertices[2];
-//        Vector<3, T> p01 = (v0 + v1).normalized();
-//        Vector<3, T> p12 = (v1 + v2).normalized();
-//        Vector<3, T> p20 = (v2 + v0).normalized();
-//        simplices->emplace_back(v0, p01, p20);
-//        simplices->emplace_back(v1, p12, p01);
-//        simplices->emplace_back(v2, p20, p12);
-//        simplices->emplace_back(p01, p12, p20);
-//}
-
-//template <typename T>
-//void divide_simplex(const Simplex<4, T>& simplex, std::vector<Simplex<4, T>>* simplices)
-//{
-//        const Vector<4, T>& v0 = simplex.vertices[0];
-//        const Vector<4, T>& v1 = simplex.vertices[1];
-//        const Vector<4, T>& v2 = simplex.vertices[2];
-//        const Vector<4, T>& v3 = simplex.vertices[3];
-//        const Vector<4, T>& p01 = (v0 + v1).normalized();
-//        const Vector<4, T>& p02 = (v0 + v2).normalized();
-//        const Vector<4, T>& p03 = (v0 + v3).normalized();
-//        const Vector<4, T>& p12 = (v1 + v2).normalized();
-//        const Vector<4, T>& p13 = (v1 + v3).normalized();
-//        const Vector<4, T>& p23 = (v2 + v3).normalized();
-//        simplices->emplace_back(v0, p01, p02, p03);
-//        simplices->emplace_back(v1, p01, p12, p13);
-//        simplices->emplace_back(v2, p02, p12, p23);
-//        simplices->emplace_back(v3, p03, p13, p23);
-//        simplices->emplace_back(p01, p23, p02, p03);
-//        simplices->emplace_back(p01, p23, p12, p13);
-//        simplices->emplace_back(p01, p23, p02, p12);
-//        simplices->emplace_back(p01, p23, p13, p03);
-//}
-
-template <std::size_t N, typename T>
-std::vector<Simplex<N, T>> divide_simplices(
-        unsigned min_count,
-        const FacetSubdivision<N>& facet_subdivision,
-        std::vector<Simplex<N, T>> simplices)
-{
-        if (simplices.empty())
-        {
-                return {};
-        }
-
-        std::vector<Vector<N, T>> points;
-
-        while (simplices.size() < min_count)
-        {
-                std::vector<Simplex<N, T>> tmp;
-                tmp.reserve(simplices.size() * facet_subdivision.facets().size());
-
-                for (const Simplex<N, T>& simplex : simplices)
+                for (unsigned i = 0; i < N; ++i)
                 {
-                        points.clear();
-                        for (const Vector<N, T>& v : simplex.vertices)
+                        points[i] = facet.vertices[i];
+                }
+                for (unsigned i = 0; i < m_midpoints.size(); ++i)
+                {
+                        int m0 = m_midpoints[i][0];
+                        int m1 = m_midpoints[i][1];
+                        points[N + i] = (facet.vertices[m0] + facet.vertices[m1]).normalized();
+                }
+                for (const std::array<int, N>& indices : m_facets)
+                {
+                        Facet<N, T>& f = facets->emplace_back();
+                        for (unsigned i = 0; i < N; ++i)
                         {
-                                points.push_back(v);
-                        }
-                        for (const std::array<int, 2>& m : facet_subdivision.midpoints())
-                        {
-                                points.push_back((simplex.vertices[m[0]] + simplex.vertices[m[1]]).normalized());
-                        }
-                        for (const std::array<int, N>& indices : facet_subdivision.facets())
-                        {
-                                Simplex<N, T>& s = tmp.emplace_back();
-                                for (unsigned i = 0; i < N; ++i)
-                                {
-                                        ASSERT(indices[i] < static_cast<int>(points.size()));
-                                        s.vertices[i] = points[indices[i]];
-                                }
+                                ASSERT(indices[i] < static_cast<int>(points.size()));
+                                f.vertices[i] = points[indices[i]];
                         }
                 }
-                simplices = std::move(tmp);
         }
-        return simplices;
+};
+
+template <>
+class FacetSubdivision<3>
+{
+public:
+        std::size_t facet_count() const
+        {
+                return 4;
+        }
+
+        template <typename T>
+        void divide(const Facet<3, T>& facet, std::vector<Facet<3, T>>* facets) const
+        {
+                const Vector<3, T>& v0 = facet.vertices[0];
+                const Vector<3, T>& v1 = facet.vertices[1];
+                const Vector<3, T>& v2 = facet.vertices[2];
+                Vector<3, T> p01 = (v0 + v1).normalized();
+                Vector<3, T> p12 = (v1 + v2).normalized();
+                Vector<3, T> p20 = (v2 + v0).normalized();
+                facets->emplace_back(v0, p01, p20);
+                facets->emplace_back(v1, p12, p01);
+                facets->emplace_back(v2, p20, p12);
+                facets->emplace_back(p01, p12, p20);
+        }
+};
+
+template <std::size_t N, typename T>
+std::vector<Facet<N, T>> divide_facets(
+        unsigned min_count,
+        const FacetSubdivision<N>& facet_subdivision,
+        std::vector<Facet<N, T>> facets)
+{
+        if (facets.empty())
+        {
+                return facets;
+        }
+
+        while (facets.size() < min_count)
+        {
+                std::vector<Facet<N, T>> tmp;
+                tmp.reserve(facets.size() * facet_subdivision.facet_count());
+                for (const Facet<N, T>& facet : facets)
+                {
+                        facet_subdivision.divide(facet, &tmp);
+                }
+                facets = std::move(tmp);
+        }
+
+        return facets;
 }
 
 template <unsigned I, std::size_t N, typename T>
-void create_simplices(Vector<N, T>* point, std::vector<Simplex<N, T>>* simplices)
+void create_facets(Vector<N, T>* point, std::vector<Facet<N, T>>* facets)
 {
         static_assert(I <= N);
         if constexpr (I == N)
         {
-                std::array<Vector<N, T>, N> vertices;
-                for (Vector<N, T>& v : vertices)
-                {
-                        v = Vector<N, T>(0);
-                }
+                Facet<N, T>& facet = facets->emplace_back();
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        vertices[i][i] = (*point)[i];
+                        facet.vertices[i] = Vector<N, T>(0);
+                        facet.vertices[i][i] = (*point)[i];
                 }
-                simplices->emplace_back(vertices);
         }
         else
         {
                 (*point)[I] = -1;
-                create_simplices<I + 1>(point, simplices);
+                create_facets<I + 1>(point, facets);
                 (*point)[I] = 1;
-                create_simplices<I + 1>(point, simplices);
+                create_facets<I + 1>(point, facets);
         }
 }
 
 template <std::size_t N, typename T>
-std::enable_if_t<N >= 4, std::vector<Simplex<N, T>>> create_initial_shape()
+std::enable_if_t<N >= 4, std::vector<Facet<N, T>>> create_initial_shape()
 {
         // Cross-polytope
 
-        std::vector<Simplex<N, T>> simplices;
-        simplices.reserve(power<N>(2));
+        std::vector<Facet<N, T>> facets;
+        facets.reserve(power<N>(2));
         Vector<N, T> point;
-        create_simplices<0>(&point, &simplices);
-        ASSERT(simplices.size() == power<N>(2));
-        return simplices;
+        create_facets<0>(&point, &facets);
+        ASSERT(facets.size() == power<N>(2));
+        return facets;
 }
 
 template <std::size_t N, typename T>
-std::enable_if_t<N == 3, std::vector<Simplex<N, T>>> create_initial_shape()
+std::enable_if_t<N == 3, std::vector<Facet<N, T>>> create_initial_shape()
 {
         // Regular icosahedron
 
@@ -352,7 +340,7 @@ std::enable_if_t<N == 3, std::vector<Simplex<N, T>>> create_initial_shape()
                 v.normalize();
         }
 
-        std::vector<Simplex<N, T>> facets;
+        std::vector<Facet<N, T>> facets;
 
         facets.emplace_back(vertices[0], vertices[1], vertices[7]);
         facets.emplace_back(vertices[0], vertices[5], vertices[1]);
@@ -379,19 +367,19 @@ std::enable_if_t<N == 3, std::vector<Simplex<N, T>>> create_initial_shape()
 }
 
 template <std::size_t N, typename T>
-std::vector<Simplex<N, T>> create_sphere(unsigned facet_min_count)
+std::vector<Facet<N, T>> create_sphere(unsigned facet_min_count)
 {
-        std::vector<Simplex<N, T>> simplices = create_initial_shape<N, T>();
+        std::vector<Facet<N, T>> facets = create_initial_shape<N, T>();
 
-        for (Simplex<N, T>& s : simplices)
+        for (Facet<N, T>& facet : facets)
         {
-                if (!(equal_distances(s.vertices) && equal_distance_from_origin(s.vertices)))
+                if (!(equal_distances(facet.vertices) && equal_distance_from_origin(facet.vertices)))
                 {
                         error("Error creating initial shape");
                 }
         }
 
-        return divide_simplices(facet_min_count, FacetSubdivision<N>(), std::move(simplices));
+        return divide_facets(facet_min_count, FacetSubdivision<N>(), std::move(facets));
 }
 
 template <std::size_t N>
@@ -424,30 +412,30 @@ void check_manifold(const std::vector<std::array<int, N>>& facets)
 }
 
 template <std::size_t N, typename T>
-void create_mesh_for_simplices(
-        const std::vector<Simplex<N, T>>& simplices,
-        std::vector<Vector<N, T>>* vertices,
-        std::vector<std::array<int, N>>* facets)
+void create_mesh(
+        const std::vector<Facet<N, T>>& facets,
+        std::vector<Vector<N, T>>* mesh_vertices,
+        std::vector<std::array<int, N>>* mesh_facets)
 {
-        vertices->clear();
-        facets->clear();
-        facets->reserve(simplices.size());
+        mesh_vertices->clear();
+        mesh_facets->clear();
+        mesh_facets->reserve(facets.size());
 
         std::unordered_map<Vector<N, T>, unsigned> map;
-        map.reserve(N * simplices.size());
+        map.reserve(N * facets.size());
 
-        for (const Simplex<N, T>& simplex : simplices)
+        for (const Facet<N, T>& facet : facets)
         {
-                std::array<int, N>& facet = facets->emplace_back();
+                std::array<int, N>& mesh_facet = mesh_facets->emplace_back();
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        auto iter = map.find(simplex.vertices[i]);
+                        auto iter = map.find(facet.vertices[i]);
                         if (iter == map.cend())
                         {
-                                iter = map.emplace(simplex.vertices[i], vertices->size()).first;
-                                vertices->push_back(simplex.vertices[i]);
+                                iter = map.emplace(facet.vertices[i], mesh_vertices->size()).first;
+                                mesh_vertices->push_back(facet.vertices[i]);
                         }
-                        facet[i] = iter->second;
+                        mesh_facet[i] = iter->second;
                 }
         }
 }
@@ -461,9 +449,9 @@ void create_sphere(
 {
         namespace impl = sphere_implementation;
 
-        std::vector<impl::Simplex<N, T>> simplices = impl::create_sphere<N, T>(facet_min_count);
+        std::vector<impl::Facet<N, T>> vertex_facets = impl::create_sphere<N, T>(facet_min_count);
 
-        impl::create_mesh_for_simplices(simplices, vertices, facets);
+        impl::create_mesh(vertex_facets, vertices, facets);
 
         impl::check_manifold(*facets);
 
