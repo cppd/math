@@ -27,7 +27,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/sort.h>
 #include <src/numerical/vec.h>
 
+#include <algorithm>
 #include <array>
+#include <map>
+#include <sstream>
 #include <unordered_map>
 #include <vector>
 
@@ -75,7 +78,7 @@ bool equal_distance_from_origin(const std::array<Vector<N, T>, N>& vertices)
 }
 
 template <std::size_t N, typename T>
-struct Facet
+struct Facet final
 {
         std::array<Vector<N, T>, N> vertices;
 
@@ -91,7 +94,7 @@ struct Facet
 };
 
 template <std::size_t N>
-class FacetSubdivision
+class FacetSubdivision final
 {
         static_assert(N >= 4);
 
@@ -100,40 +103,114 @@ class FacetSubdivision
         std::vector<std::array<int, 2>> m_midpoints;
         std::vector<std::array<int, N>> m_facets;
 
-        std::string subdivision_string() const
+        template <std::size_t M>
+        static bool on_plane(const std::array<int, M>& object_indices, const std::vector<Vector<N, float>>& vertices)
         {
-                if (N >= 10)
+                Vector<N, float> sum(0);
+                for (unsigned i : object_indices)
                 {
-                        return {};
+                        ASSERT(i < vertices.size());
+                        sum += vertices[i];
                 }
-                std::string result;
-                for (std::array<int, N> vertices : m_facets)
+                for (unsigned i = 0; i < N; ++i)
                 {
-                        if (!result.empty())
+                        if (sum[i] == 0)
                         {
-                                result += '\n';
+                                return true;
                         }
-                        std::sort(vertices.begin(), vertices.end());
-                        std::string s;
-                        for (unsigned v : vertices)
+                }
+                return false;
+        }
+
+        template <std::size_t M>
+        std::string indices_to_string(std::array<int, M> indices) const
+        {
+                std::sort(indices.begin(), indices.end());
+                std::string s;
+                for (unsigned v : indices)
+                {
+                        if (!s.empty())
                         {
-                                if (!s.empty())
+                                s += ", ";
+                        }
+                        if (v < N)
+                        {
+                                s += to_string(v);
+                        }
+                        else
+                        {
+                                s += to_string(m_midpoints[v - N][0]);
+                                if (N >= 10)
                                 {
-                                        s += ", ";
+                                        s += '-';
                                 }
-                                if (v < N)
+                                s += to_string(m_midpoints[v - N][1]);
+                        }
+                }
+                return s;
+        }
+
+        void check(const std::vector<Vector<N, float>>& vertices) const
+        {
+                ASSERT(vertices.size() == N + MIDPOINT_COUNT);
+
+                std::vector<std::array<int, N>> facets = m_facets;
+                for (std::array<int, N>& facet : facets)
+                {
+                        std::sort(facet.begin(), facet.end());
+                }
+                std::sort(facets.begin(), facets.end());
+
+                std::map<std::array<int, N - 1>, int> boundary_ridges;
+                std::map<std::array<int, N - 1>, int> internal_ridges;
+                std::map<std::array<int, N - 1>, int> ridges;
+
+                for (const std::array<int, N>& facet : facets)
+                {
+                        for (unsigned r = 0; r < N; ++r)
+                        {
+                                ASSERT(facet[r] < static_cast<int>(vertices.size()));
+                                std::array<int, N - 1> ridge = sort(del_elem(facet, r));
+                                if (on_plane(ridge, vertices))
                                 {
-                                        s += to_string(v);
+                                        ++boundary_ridges[ridge];
                                 }
                                 else
                                 {
-                                        s += to_string(m_midpoints[v - N][0]);
-                                        s += to_string(m_midpoints[v - N][1]);
+                                        ++internal_ridges[ridge];
                                 }
+                                ++ridges[ridge];
+                                ASSERT(ridges[ridge] <= 2);
                         }
-                        result += s;
                 }
-                return result;
+
+                ASSERT(boundary_ridges.size() % N == 0);
+                ASSERT(boundary_ridges.size() > N * (N - 1));
+                ASSERT((boundary_ridges.size() - N * (N - 1)) % N == 0);
+
+                std::ostringstream oss;
+
+                oss << "Facet subdivisions " << facets.size();
+                for (const std::array<int, N>& facet : facets)
+                {
+                        oss << '\n' << indices_to_string(facet);
+                }
+
+                oss << '\n' << "Boundary ridges " << boundary_ridges.size();
+                for (const auto& [ridge, count] : boundary_ridges)
+                {
+                        ASSERT(count == 1);
+                        oss << '\n' << indices_to_string(ridge);
+                }
+
+                oss << '\n' << "Internal ridges " << internal_ridges.size();
+                for (const auto& [ridge, count] : internal_ridges)
+                {
+                        ASSERT(count == 2);
+                        oss << '\n' << indices_to_string(ridge);
+                }
+
+                LOG(oss.str());
         }
 
 public:
@@ -151,7 +228,6 @@ public:
                 {
                         for (unsigned j = i + 1; j < N; ++j)
                         {
-                                LOG(to_string(vertices.size()) + ": " + to_string(i) + ", " + to_string(j));
                                 vertices.push_back((vertices[i] + vertices[j]).normalized());
                                 m_midpoints.push_back({static_cast<int>(i), static_cast<int>(j)});
                         }
@@ -162,24 +238,6 @@ public:
 
                 ASSERT(vertices.size() == N + MIDPOINT_COUNT + 1);
 
-                auto plane_facet = [&](const std::array<int, N>& facet_vertices)
-                {
-                        Vector<N, float> sum(0);
-                        for (unsigned i : facet_vertices)
-                        {
-                                ASSERT(i < vertices.size());
-                                sum += vertices[i];
-                        }
-                        for (unsigned i = 0; i < N; ++i)
-                        {
-                                if (sum[i] == 0)
-                                {
-                                        return true;
-                                }
-                        }
-                        return false;
-                };
-
                 std::vector<ConvexHullFacet<N>> facets;
                 ProgressRatio progress(nullptr);
 
@@ -187,13 +245,15 @@ public:
 
                 for (const ConvexHullFacet<N>& facet : facets)
                 {
-                        if (!plane_facet(facet.vertices()))
+                        if (!on_plane(facet.vertices(), vertices))
                         {
                                 m_facets.push_back(facet.vertices());
                         }
                 }
 
-                LOG("Facet subdivision\n" + subdivision_string());
+                vertices.resize(vertices.size() - 1);
+
+                check(vertices);
         }
 
         std::size_t facet_count() const
@@ -229,7 +289,7 @@ public:
 };
 
 template <>
-class FacetSubdivision<3>
+class FacetSubdivision<3> final
 {
 public:
         std::size_t facet_count() const
