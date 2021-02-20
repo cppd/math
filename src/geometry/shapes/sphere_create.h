@@ -100,7 +100,6 @@ class FacetSubdivision final
 
         static constexpr std::size_t MIDPOINT_COUNT = (N * (N - 1)) / 2;
 
-        std::vector<std::array<int, 2>> m_midpoints;
         std::vector<std::array<int, N>> m_facets;
 
         template <std::size_t M>
@@ -123,38 +122,30 @@ class FacetSubdivision final
         }
 
         template <std::size_t M>
-        std::string indices_to_string(std::array<int, M> indices) const
+        static std::string vertex_indices_to_string(
+                std::array<int, M> vertex_indices,
+                const std::vector<std::string>& vertex_names)
         {
-                std::sort(indices.begin(), indices.end());
+                std::sort(vertex_indices.begin(), vertex_indices.end());
                 std::string s;
-                for (unsigned v : indices)
+                for (unsigned v : vertex_indices)
                 {
                         if (!s.empty())
                         {
                                 s += ", ";
                         }
-                        if (v < N)
-                        {
-                                s += to_string(v);
-                        }
-                        else
-                        {
-                                s += to_string(m_midpoints[v - N][0]);
-                                if (N >= 10)
-                                {
-                                        s += '-';
-                                }
-                                s += to_string(m_midpoints[v - N][1]);
-                        }
+                        s += vertex_names[v];
                 }
                 return s;
         }
 
-        void check(const std::vector<Vector<N, float>>& vertices) const
+        static void check(
+                std::vector<std::array<int, N>> facets,
+                const std::vector<Vector<N, float>>& vertices,
+                const std::vector<std::string>& vertex_names)
         {
                 ASSERT(vertices.size() == N + MIDPOINT_COUNT);
 
-                std::vector<std::array<int, N>> facets = m_facets;
                 for (std::array<int, N>& facet : facets)
                 {
                         std::sort(facet.begin(), facet.end());
@@ -193,21 +184,21 @@ class FacetSubdivision final
                 oss << "Facet subdivisions " << facets.size();
                 for (const std::array<int, N>& facet : facets)
                 {
-                        oss << '\n' << indices_to_string(facet);
+                        oss << '\n' << vertex_indices_to_string(facet, vertex_names);
                 }
 
                 oss << '\n' << "Boundary ridges " << boundary_ridges.size();
                 for (const auto& [ridge, count] : boundary_ridges)
                 {
                         ASSERT(count == 1);
-                        oss << '\n' << indices_to_string(ridge);
+                        oss << '\n' << vertex_indices_to_string(ridge, vertex_names);
                 }
 
                 oss << '\n' << "Internal ridges " << internal_ridges.size();
                 for (const auto& [ridge, count] : internal_ridges)
                 {
                         ASSERT(count == 2);
-                        oss << '\n' << indices_to_string(ridge);
+                        oss << '\n' << vertex_indices_to_string(ridge, vertex_names);
                 }
 
                 LOG(oss.str());
@@ -217,22 +208,22 @@ public:
         FacetSubdivision()
         {
                 std::vector<Vector<N, float>> vertices;
+                std::vector<std::string> vertex_names;
 
                 for (unsigned i = 0; i < N; ++i)
                 {
                         vertices.emplace_back(0);
                         vertices.back()[i] = 1;
+                        vertex_names.push_back(to_string(i));
                 }
-
                 for (unsigned i = 0; i < N; ++i)
                 {
                         for (unsigned j = i + 1; j < N; ++j)
                         {
                                 vertices.push_back((vertices[i] + vertices[j]).normalized());
-                                m_midpoints.push_back({static_cast<int>(i), static_cast<int>(j)});
+                                vertex_names.push_back(to_string(i) + (N <= 10 ? "" : "_") + to_string(j));
                         }
                 }
-                ASSERT(m_midpoints.size() == MIDPOINT_COUNT);
 
                 vertices.emplace_back(0);
 
@@ -253,7 +244,7 @@ public:
 
                 vertices.resize(vertices.size() - 1);
 
-                check(vertices);
+                check(m_facets, vertices, vertex_names);
         }
 
         std::size_t facet_count() const
@@ -266,16 +257,19 @@ public:
         {
                 std::array<Vector<N, T>, N + MIDPOINT_COUNT> points;
 
+                unsigned index = 0;
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        points[i] = facet.vertices[i];
+                        points[index++] = facet.vertices[i];
                 }
-                for (unsigned i = 0; i < m_midpoints.size(); ++i)
+                for (unsigned i = 0; i < N; ++i)
                 {
-                        int m0 = m_midpoints[i][0];
-                        int m1 = m_midpoints[i][1];
-                        points[N + i] = (facet.vertices[m0] + facet.vertices[m1]).normalized();
+                        for (unsigned j = i + 1; j < N; ++j)
+                        {
+                                points[index++] = (points[i] + points[j]).normalized();
+                        }
                 }
+                ASSERT(index == points.size());
                 for (const std::array<int, N>& indices : m_facets)
                 {
                         Facet<N, T>& f = facets->emplace_back();
