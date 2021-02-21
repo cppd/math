@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <sstream>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace ns::geometry
@@ -308,24 +309,80 @@ public:
 };
 
 template <std::size_t N, typename T>
-std::vector<Facet<N, T>> divide_facets(
-        unsigned min_count,
-        const FacetSubdivision<N>& facet_subdivision,
+std::enable_if_t<N <= 4, std::vector<Facet<N, T>>> divide_facets(
+        unsigned min_facet_count,
         std::vector<Facet<N, T>> facets)
 {
-        if (facets.empty())
-        {
-                return facets;
-        }
+        ASSERT(facets.size() >= (1 << N));
 
-        while (facets.size() < min_count)
+        const FacetSubdivision<N> facet_subdivision;
+
+        while (facets.size() < min_facet_count)
         {
                 std::vector<Facet<N, T>> tmp;
                 tmp.reserve(facets.size() * facet_subdivision.facet_count());
+
                 for (const Facet<N, T>& facet : facets)
                 {
                         facet_subdivision.divide(facet, &tmp);
                 }
+
+                ASSERT(tmp.size() / facets.size() > 1);
+                facets = std::move(tmp);
+        }
+
+        return facets;
+}
+
+template <std::size_t N, typename T>
+std::enable_if_t<N >= 5, std::vector<Facet<N, T>>> divide_facets(
+        unsigned min_facet_count,
+        std::vector<Facet<N, T>> facets)
+{
+        ASSERT(facets.size() >= (1 << N));
+
+        std::unordered_set<Vector<N, float>> vertex_set;
+        std::vector<Vector<N, float>> vertices;
+
+        while (facets.size() < min_facet_count)
+        {
+                std::vector<Facet<N, T>> tmp;
+
+                vertex_set.clear();
+                for (const Facet<N, T>& facet : facets)
+                {
+                        for (unsigned i = 0; i < N; ++i)
+                        {
+                                vertex_set.insert(to_vector<float>(facet.vertices[i]));
+                        }
+                        for (unsigned i = 0; i < N; ++i)
+                        {
+                                for (unsigned j = i + 1; j < N; ++j)
+                                {
+                                        vertex_set.insert(
+                                                to_vector<float>((facet.vertices[i] + facet.vertices[j]).normalized()));
+                                }
+                        }
+                }
+                vertices.clear();
+                vertices.insert(vertices.cend(), vertex_set.cbegin(), vertex_set.cend());
+
+                std::vector<ConvexHullFacet<N>> ch_facets;
+                ProgressRatio progress(nullptr);
+
+                compute_convex_hull(vertices, &ch_facets, &progress);
+
+                for (const ConvexHullFacet<N>& ch_facet : ch_facets)
+                {
+                        Facet<N, T>& f = tmp.emplace_back();
+                        for (unsigned i = 0; i < N; ++i)
+                        {
+                                int vertex_index = ch_facet.vertices()[i];
+                                f.vertices[i] = vertices[vertex_index];
+                        }
+                }
+
+                ASSERT(tmp.size() / facets.size() > 1);
                 facets = std::move(tmp);
         }
 
@@ -433,7 +490,7 @@ std::vector<Facet<N, T>> create_sphere(unsigned facet_min_count)
                 }
         }
 
-        return divide_facets(facet_min_count, FacetSubdivision<N>(), std::move(facets));
+        return divide_facets(facet_min_count, std::move(facets));
 }
 
 template <std::size_t N>
