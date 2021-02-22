@@ -94,240 +94,219 @@ struct Facet final
         }
 };
 
-template <std::size_t N>
-class FacetSubdivision final
+//template <std::size_t N>
+//class FacetSubdivision final
+//{
+//        static_assert(N >= 4);
+//
+//        static constexpr std::size_t MIDPOINT_COUNT = (N * (N - 1)) / 2;
+//
+//        std::vector<std::array<int, N>> m_facets;
+//
+//        template <std::size_t M>
+//        static bool on_plane(const std::array<int, M>& object_indices, const std::vector<Vector<N, float>>& vertices)
+//        {
+//                Vector<N, float> sum(0);
+//                for (unsigned i : object_indices)
+//                {
+//                        ASSERT(i < vertices.size());
+//                        sum += vertices[i];
+//                }
+//                for (unsigned i = 0; i < N; ++i)
+//                {
+//                        if (sum[i] == 0)
+//                        {
+//                                return true;
+//                        }
+//                }
+//                return false;
+//        }
+//
+//        template <std::size_t M>
+//        static std::string vertex_indices_to_string(
+//                std::array<int, M> vertex_indices,
+//                const std::vector<std::string>& vertex_names)
+//        {
+//                std::sort(vertex_indices.begin(), vertex_indices.end());
+//                std::string s;
+//                for (unsigned v : vertex_indices)
+//                {
+//                        if (!s.empty())
+//                        {
+//                                s += ", ";
+//                        }
+//                        s += vertex_names[v];
+//                }
+//                return s;
+//        }
+//
+//        static void check(
+//                std::vector<std::array<int, N>> facets,
+//                const std::vector<Vector<N, float>>& vertices,
+//                const std::vector<std::string>& vertex_names)
+//        {
+//                ASSERT(vertices.size() == N + MIDPOINT_COUNT);
+//
+//                for (std::array<int, N>& facet : facets)
+//                {
+//                        std::sort(facet.begin(), facet.end());
+//                }
+//                std::sort(facets.begin(), facets.end());
+//
+//                std::map<std::array<int, N - 1>, int> boundary_ridges;
+//                std::map<std::array<int, N - 1>, int> internal_ridges;
+//                std::map<std::array<int, N - 1>, int> ridges;
+//
+//                for (const std::array<int, N>& facet : facets)
+//                {
+//                        for (unsigned r = 0; r < N; ++r)
+//                        {
+//                                ASSERT(facet[r] < static_cast<int>(vertices.size()));
+//                                std::array<int, N - 1> ridge = sort(del_elem(facet, r));
+//                                if (on_plane(ridge, vertices))
+//                                {
+//                                        ++boundary_ridges[ridge];
+//                                }
+//                                else
+//                                {
+//                                        ++internal_ridges[ridge];
+//                                }
+//                                ++ridges[ridge];
+//                                ASSERT(ridges[ridge] <= 2);
+//                        }
+//                }
+//
+//                ASSERT(boundary_ridges.size() % N == 0);
+//                ASSERT(boundary_ridges.size() > N * (N - 1));
+//                ASSERT((boundary_ridges.size() - N * (N - 1)) % N == 0);
+//
+//                std::ostringstream oss;
+//
+//                oss << "Facet subdivisions " << facets.size();
+//                for (const std::array<int, N>& facet : facets)
+//                {
+//                        oss << '\n' << vertex_indices_to_string(facet, vertex_names);
+//                }
+//
+//                oss << '\n' << "Boundary ridges " << boundary_ridges.size();
+//                for (const auto& [ridge, count] : boundary_ridges)
+//                {
+//                        ASSERT(count == 1);
+//                        oss << '\n' << vertex_indices_to_string(ridge, vertex_names);
+//                }
+//
+//                oss << '\n' << "Internal ridges " << internal_ridges.size();
+//                for (const auto& [ridge, count] : internal_ridges)
+//                {
+//                        ASSERT(count == 2);
+//                        oss << '\n' << vertex_indices_to_string(ridge, vertex_names);
+//                }
+//
+//                LOG(oss.str());
+//        }
+//
+//public:
+//        FacetSubdivision()
+//        {
+//                std::vector<Vector<N, float>> vertices;
+//                std::vector<std::string> vertex_names;
+//
+//                for (unsigned i = 0; i < N; ++i)
+//                {
+//                        vertices.emplace_back(0);
+//                        vertices.back()[i] = 1;
+//                        vertex_names.push_back(to_string(i));
+//                }
+//                for (unsigned i = 0; i < N; ++i)
+//                {
+//                        for (unsigned j = i + 1; j < N; ++j)
+//                        {
+//                                vertices.push_back((vertices[i] + vertices[j]).normalized());
+//                                vertex_names.push_back(to_string(i) + (N <= 10 ? "" : "_") + to_string(j));
+//                        }
+//                }
+//
+//                vertices.emplace_back(0);
+//
+//                ASSERT(vertices.size() == N + MIDPOINT_COUNT + 1);
+//
+//                std::vector<ConvexHullFacet<N>> facets;
+//                ProgressRatio progress(nullptr);
+//
+//                compute_convex_hull(vertices, &facets, &progress);
+//
+//                for (const ConvexHullFacet<N>& facet : facets)
+//                {
+//                        if (!on_plane(facet.vertices(), vertices))
+//                        {
+//                                m_facets.push_back(facet.vertices());
+//                        }
+//                }
+//
+//                vertices.resize(vertices.size() - 1);
+//
+//                check(m_facets, vertices, vertex_names);
+//        }
+//
+//        std::size_t facet_count() const
+//        {
+//                return m_facets.size();
+//        }
+//
+//        template <typename T>
+//        void divide(const Facet<N, T>& facet, std::vector<Facet<N, T>>* facets) const
+//        {
+//                std::array<Vector<N, T>, N + MIDPOINT_COUNT> points;
+//
+//                unsigned index = 0;
+//                for (unsigned i = 0; i < N; ++i)
+//                {
+//                        points[index++] = facet.vertices[i];
+//                }
+//                for (unsigned i = 0; i < N; ++i)
+//                {
+//                        for (unsigned j = i + 1; j < N; ++j)
+//                        {
+//                                points[index++] = (points[i] + points[j]).normalized();
+//                        }
+//                }
+//                ASSERT(index == points.size());
+//                for (const std::array<int, N>& indices : m_facets)
+//                {
+//                        Facet<N, T>& f = facets->emplace_back();
+//                        for (unsigned i = 0; i < N; ++i)
+//                        {
+//                                ASSERT(indices[i] < static_cast<int>(points.size()));
+//                                f.vertices[i] = points[indices[i]];
+//                        }
+//                }
+//        }
+//};
+
+template <typename T>
+std::vector<Facet<3, T>> divide_facets(unsigned min_facet_count, std::vector<Facet<3, T>> facets)
 {
-        static_assert(N >= 4);
-
-        static constexpr std::size_t MIDPOINT_COUNT = (N * (N - 1)) / 2;
-
-        std::vector<std::array<int, N>> m_facets;
-
-        template <std::size_t M>
-        static bool on_plane(const std::array<int, M>& object_indices, const std::vector<Vector<N, float>>& vertices)
-        {
-                Vector<N, float> sum(0);
-                for (unsigned i : object_indices)
-                {
-                        ASSERT(i < vertices.size());
-                        sum += vertices[i];
-                }
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        if (sum[i] == 0)
-                        {
-                                return true;
-                        }
-                }
-                return false;
-        }
-
-        template <std::size_t M>
-        static std::string vertex_indices_to_string(
-                std::array<int, M> vertex_indices,
-                const std::vector<std::string>& vertex_names)
-        {
-                std::sort(vertex_indices.begin(), vertex_indices.end());
-                std::string s;
-                for (unsigned v : vertex_indices)
-                {
-                        if (!s.empty())
-                        {
-                                s += ", ";
-                        }
-                        s += vertex_names[v];
-                }
-                return s;
-        }
-
-        static void check(
-                std::vector<std::array<int, N>> facets,
-                const std::vector<Vector<N, float>>& vertices,
-                const std::vector<std::string>& vertex_names)
-        {
-                ASSERT(vertices.size() == N + MIDPOINT_COUNT);
-
-                for (std::array<int, N>& facet : facets)
-                {
-                        std::sort(facet.begin(), facet.end());
-                }
-                std::sort(facets.begin(), facets.end());
-
-                std::map<std::array<int, N - 1>, int> boundary_ridges;
-                std::map<std::array<int, N - 1>, int> internal_ridges;
-                std::map<std::array<int, N - 1>, int> ridges;
-
-                for (const std::array<int, N>& facet : facets)
-                {
-                        for (unsigned r = 0; r < N; ++r)
-                        {
-                                ASSERT(facet[r] < static_cast<int>(vertices.size()));
-                                std::array<int, N - 1> ridge = sort(del_elem(facet, r));
-                                if (on_plane(ridge, vertices))
-                                {
-                                        ++boundary_ridges[ridge];
-                                }
-                                else
-                                {
-                                        ++internal_ridges[ridge];
-                                }
-                                ++ridges[ridge];
-                                ASSERT(ridges[ridge] <= 2);
-                        }
-                }
-
-                ASSERT(boundary_ridges.size() % N == 0);
-                ASSERT(boundary_ridges.size() > N * (N - 1));
-                ASSERT((boundary_ridges.size() - N * (N - 1)) % N == 0);
-
-                std::ostringstream oss;
-
-                oss << "Facet subdivisions " << facets.size();
-                for (const std::array<int, N>& facet : facets)
-                {
-                        oss << '\n' << vertex_indices_to_string(facet, vertex_names);
-                }
-
-                oss << '\n' << "Boundary ridges " << boundary_ridges.size();
-                for (const auto& [ridge, count] : boundary_ridges)
-                {
-                        ASSERT(count == 1);
-                        oss << '\n' << vertex_indices_to_string(ridge, vertex_names);
-                }
-
-                oss << '\n' << "Internal ridges " << internal_ridges.size();
-                for (const auto& [ridge, count] : internal_ridges)
-                {
-                        ASSERT(count == 2);
-                        oss << '\n' << vertex_indices_to_string(ridge, vertex_names);
-                }
-
-                LOG(oss.str());
-        }
-
-public:
-        FacetSubdivision()
-        {
-                std::vector<Vector<N, float>> vertices;
-                std::vector<std::string> vertex_names;
-
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        vertices.emplace_back(0);
-                        vertices.back()[i] = 1;
-                        vertex_names.push_back(to_string(i));
-                }
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        for (unsigned j = i + 1; j < N; ++j)
-                        {
-                                vertices.push_back((vertices[i] + vertices[j]).normalized());
-                                vertex_names.push_back(to_string(i) + (N <= 10 ? "" : "_") + to_string(j));
-                        }
-                }
-
-                vertices.emplace_back(0);
-
-                ASSERT(vertices.size() == N + MIDPOINT_COUNT + 1);
-
-                std::vector<ConvexHullFacet<N>> facets;
-                ProgressRatio progress(nullptr);
-
-                compute_convex_hull(vertices, &facets, &progress);
-
-                for (const ConvexHullFacet<N>& facet : facets)
-                {
-                        if (!on_plane(facet.vertices(), vertices))
-                        {
-                                m_facets.push_back(facet.vertices());
-                        }
-                }
-
-                vertices.resize(vertices.size() - 1);
-
-                check(m_facets, vertices, vertex_names);
-        }
-
-        std::size_t facet_count() const
-        {
-                return m_facets.size();
-        }
-
-        template <typename T>
-        void divide(const Facet<N, T>& facet, std::vector<Facet<N, T>>* facets) const
-        {
-                std::array<Vector<N, T>, N + MIDPOINT_COUNT> points;
-
-                unsigned index = 0;
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        points[index++] = facet.vertices[i];
-                }
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        for (unsigned j = i + 1; j < N; ++j)
-                        {
-                                points[index++] = (points[i] + points[j]).normalized();
-                        }
-                }
-                ASSERT(index == points.size());
-                for (const std::array<int, N>& indices : m_facets)
-                {
-                        Facet<N, T>& f = facets->emplace_back();
-                        for (unsigned i = 0; i < N; ++i)
-                        {
-                                ASSERT(indices[i] < static_cast<int>(points.size()));
-                                f.vertices[i] = points[indices[i]];
-                        }
-                }
-        }
-};
-
-template <>
-class FacetSubdivision<3> final
-{
-public:
-        std::size_t facet_count() const
-        {
-                return 4;
-        }
-
-        template <typename T>
-        void divide(const Facet<3, T>& facet, std::vector<Facet<3, T>>* facets) const
-        {
-                const Vector<3, T>& v0 = facet.vertices[0];
-                const Vector<3, T>& v1 = facet.vertices[1];
-                const Vector<3, T>& v2 = facet.vertices[2];
-                Vector<3, T> p01 = (v0 + v1).normalized();
-                Vector<3, T> p12 = (v1 + v2).normalized();
-                Vector<3, T> p20 = (v2 + v0).normalized();
-                facets->emplace_back(v0, p01, p20);
-                facets->emplace_back(v1, p12, p01);
-                facets->emplace_back(v2, p20, p12);
-                facets->emplace_back(p01, p12, p20);
-        }
-};
-
-template <std::size_t N, typename T>
-std::enable_if_t<N <= 4, std::vector<Facet<N, T>>> divide_facets(
-        unsigned min_facet_count,
-        std::vector<Facet<N, T>> facets)
-{
-        ASSERT(facets.size() >= (1 << N));
-
-        const FacetSubdivision<N> facet_subdivision;
+        ASSERT(facets.size() >= (1 << 3));
 
         while (facets.size() < min_facet_count)
         {
-                std::vector<Facet<N, T>> tmp;
-                tmp.reserve(facets.size() * facet_subdivision.facet_count());
+                std::vector<Facet<3, T>> tmp;
+                tmp.reserve(4 * facets.size());
 
-                for (const Facet<N, T>& facet : facets)
+                for (const Facet<3, T>& facet : facets)
                 {
-                        facet_subdivision.divide(facet, &tmp);
+                        const Vector<3, T>& v0 = facet.vertices[0];
+                        const Vector<3, T>& v1 = facet.vertices[1];
+                        const Vector<3, T>& v2 = facet.vertices[2];
+                        Vector<3, T> p01 = (v0 + v1).normalized();
+                        Vector<3, T> p12 = (v1 + v2).normalized();
+                        Vector<3, T> p20 = (v2 + v0).normalized();
+                        tmp.emplace_back(v0, p01, p20);
+                        tmp.emplace_back(v1, p12, p01);
+                        tmp.emplace_back(v2, p20, p12);
+                        tmp.emplace_back(p01, p12, p20);
                 }
 
-                ASSERT(tmp.size() / facets.size() > 1);
                 facets = std::move(tmp);
         }
 
@@ -335,7 +314,7 @@ std::enable_if_t<N <= 4, std::vector<Facet<N, T>>> divide_facets(
 }
 
 template <std::size_t N, typename T>
-std::enable_if_t<N >= 5, std::vector<Facet<N, T>>> divide_facets(
+std::enable_if_t<N >= 4, std::vector<Facet<N, T>>> divide_facets(
         unsigned min_facet_count,
         std::vector<Facet<N, T>> facets)
 {
@@ -344,9 +323,12 @@ std::enable_if_t<N >= 5, std::vector<Facet<N, T>>> divide_facets(
         std::unordered_set<Vector<N, float>> vertex_set;
         std::vector<Vector<N, float>> vertices;
 
+        unsigned subdivision_count = 0;
+
         while (facets.size() < min_facet_count)
         {
                 std::vector<Facet<N, T>> tmp;
+                tmp.reserve(subdivision_count * facets.size());
 
                 vertex_set.clear();
                 for (const Facet<N, T>& facet : facets)
@@ -378,11 +360,11 @@ std::enable_if_t<N >= 5, std::vector<Facet<N, T>>> divide_facets(
                         for (unsigned i = 0; i < N; ++i)
                         {
                                 int vertex_index = ch_facet.vertices()[i];
-                                f.vertices[i] = vertices[vertex_index];
+                                f.vertices[i] = to_vector<T>(vertices[vertex_index]);
                         }
                 }
 
-                ASSERT(tmp.size() / facets.size() > 1);
+                subdivision_count = tmp.size() / facets.size();
                 facets = std::move(tmp);
         }
 
