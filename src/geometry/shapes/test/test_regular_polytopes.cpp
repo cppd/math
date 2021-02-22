@@ -18,12 +18,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../regular_polytopes.h"
 
 #include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/names.h>
+#include <src/com/print.h>
+#include <src/com/type/limit.h>
+#include <src/com/type/name.h>
 #include <src/test/test.h>
+
+#include <unordered_set>
 
 namespace ns::geometry
 {
 namespace
 {
+template <typename T>
+constexpr T ABS_ERROR = 10 * limits<T>::epsilon();
+
 template <std::size_t N, typename T>
 void test_simplex(const std::array<Vector<N, T>, N + 1>& vertices)
 {
@@ -31,9 +41,9 @@ void test_simplex(const std::array<Vector<N, T>, N + 1>& vertices)
 
         for (const Vector<N, T>& v : vertices)
         {
-                if (std::abs(1 - v.norm()) > T(1e-3))
+                if (!(std::abs(1 - v.norm()) < ABS_ERROR<T>))
                 {
-                        error("Simplex is not origin-centered");
+                        error("Regular simplex is not origin-centered");
                 }
         }
 
@@ -42,37 +52,148 @@ void test_simplex(const std::array<Vector<N, T>, N + 1>& vertices)
         {
                 for (unsigned j = i + 1; j < vertices.size(); ++j)
                 {
-                        if (std::abs(distance - (vertices[i] - vertices[j]).norm()) > T(1e-3))
+                        if (!(std::abs(distance - (vertices[i] - vertices[j]).norm()) < ABS_ERROR<T>))
                         {
-                                error("Simplex vertices are not equidistant");
+                                error("Regular simplex vertices are not equidistant");
                         }
                 }
         }
 }
 
 template <std::size_t N, typename T>
-void test_simplex()
+void test_facet_equal_distances(const std::string& name, const std::vector<std::array<Vector<N, T>, N>>& facets)
 {
-        std::array<Vector<N, T>, N + 1> simplex = create_origin_centered_simplex<N, T>();
-        test_simplex(simplex);
+        static_assert(N >= 2);
+
+        for (const std::array<Vector<N, T>, N>& vertices : facets)
+        {
+                const T d = (vertices[0] - vertices[1]).norm();
+                for (unsigned i = 0; i < vertices.size(); ++i)
+                {
+                        for (unsigned j = i + 1; j < vertices.size(); ++j)
+                        {
+                                if (!(std::abs(d - (vertices[j] - vertices[i]).norm()) < ABS_ERROR<T>))
+                                {
+                                        error(name + " facet is not a simplex with equidistant vertices");
+                                }
+                        }
+                }
+        }
+}
+
+template <std::size_t N, typename T>
+void test_unit_distance_from_origin(const std::string& name, const std::vector<std::array<Vector<N, T>, N>>& facets)
+{
+        for (const std::array<Vector<N, T>, N>& vertices : facets)
+        {
+                for (const Vector<N, T>& v : vertices)
+                {
+                        if (!(std::abs(1 - v.norm()) < ABS_ERROR<T>))
+                        {
+                                error(name + " is not origin-centered");
+                        }
+                }
+        }
+}
+
+template <std::size_t N, typename T>
+void test_facet_count(
+        const std::string& name,
+        const std::vector<std::array<Vector<N, T>, N>>& facets,
+        unsigned facet_count)
+{
+        if (facets.size() != facet_count)
+        {
+                error(name + " facet count " + to_string(facets.size()) + " is not equal to " + to_string(facet_count));
+        }
+}
+
+template <std::size_t N, typename T>
+void test_vertex_count(
+        const std::string& name,
+        const std::vector<std::array<Vector<N, T>, N>>& facets,
+        unsigned vertex_count)
+{
+        std::unordered_set<Vector<N, T>> vertex_set;
+        for (const std::array<Vector<N, T>, N>& vertices : facets)
+        {
+                std::unordered_set<Vector<N, T>> facet_vertex_set;
+                for (const Vector<N, T>& v : vertices)
+                {
+                        vertex_set.insert(v);
+                        facet_vertex_set.insert(v);
+                }
+                if (facet_vertex_set.size() != N)
+                {
+                        error(name + " facet vertex count " + to_string(facet_vertex_set.size()) + " is not equal to "
+                              + to_string(N));
+                }
+        }
+        if (vertex_set.size() != vertex_count)
+        {
+                error(name + " vertex count " + to_string(vertex_set.size()) + " is not equal to "
+                      + to_string(vertex_count));
+        }
+}
+
+template <std::size_t N, typename T>
+void test_polytope(
+        const std::string& name,
+        const std::vector<std::array<Vector<N, T>, N>>& facets,
+        unsigned facet_count,
+        unsigned vertex_count)
+{
+        test_facet_count(name, facets, facet_count);
+        test_vertex_count(name, facets, vertex_count);
+        test_facet_equal_distances(name, facets);
+        test_unit_distance_from_origin(name, facets);
+}
+
+template <std::size_t N, typename T>
+void test_polytopes()
+{
+        LOG("Test regular polytopes in " + space_name(N) + ", " + type_name<T>());
+        {
+                std::array<Vector<N, T>, N + 1> simplex = create_simplex<N, T>();
+                test_simplex(simplex);
+        }
+        {
+                const std::string NAME = "Regular cross-polytope";
+                constexpr unsigned FACET_COUNT = 1 << N;
+                constexpr unsigned VERTEX_COUNT = 2 * N;
+                std::vector<std::array<Vector<N, T>, N>> facets = create_cross_polytope<N, T>();
+                test_polytope(NAME, facets, FACET_COUNT, VERTEX_COUNT);
+        }
+        if constexpr (N == 3)
+        {
+                const std::string NAME = "Regular icosahedron";
+                constexpr unsigned FACET_COUNT = 20;
+                constexpr unsigned VERTEX_COUNT = 12;
+                std::vector<std::array<Vector<3, T>, 3>> facets = create_icosahedron<T>();
+                test_polytope(NAME, facets, FACET_COUNT, VERTEX_COUNT);
+        }
 }
 
 template <std::size_t N>
-void test_simplex()
+void test_polytopes()
 {
-        test_simplex<N, float>();
-        test_simplex<N, double>();
-        test_simplex<N, long double>();
+        test_polytopes<N, float>();
+        test_polytopes<N, double>();
+        test_polytopes<N, long double>();
 }
 
 void test()
 {
-        test_simplex<2>();
-        test_simplex<3>();
-        test_simplex<4>();
-        test_simplex<5>();
+        test_polytopes<2>();
+        test_polytopes<3>();
+        test_polytopes<4>();
+        test_polytopes<5>();
+        test_polytopes<6>();
+        test_polytopes<7>();
+        test_polytopes<8>();
+        test_polytopes<9>();
 }
 
-TEST_SMALL("Test simplex", test)
+TEST_SMALL("Test regular polytopes", test)
 }
 }
