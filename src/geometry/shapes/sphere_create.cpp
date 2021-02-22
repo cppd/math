@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sphere_create.h"
 
+#include "regular_polytopes.h"
+
 #include "../core/convex_hull.h"
 
 #include <src/com/arrays.h>
@@ -37,50 +39,15 @@ namespace ns::geometry
 namespace
 {
 template <std::size_t N, typename T>
-bool equal_distances(const std::array<Vector<N, T>, N>& vertices)
-{
-        if (vertices.size() < 2)
-        {
-                return true;
-        }
-        const T d = (vertices[0] - vertices[1]).norm();
-        for (unsigned i = 0; i < vertices.size(); ++i)
-        {
-                for (unsigned j = i + 1; j < vertices.size(); ++j)
-                {
-                        if (std::abs(d - (vertices[j] - vertices[i]).norm()) > T(1e-3))
-                        {
-                                return false;
-                        }
-                }
-        }
-        return true;
-}
-
-template <std::size_t N, typename T>
-bool equal_distance_from_origin(const std::array<Vector<N, T>, N>& vertices)
-{
-        if (vertices.empty())
-        {
-                return true;
-        }
-        const T d = vertices[0].norm();
-        for (unsigned i = 1; i < vertices.size(); ++i)
-        {
-                if (std::abs(d - vertices[i].norm()) > T(1e-3))
-                {
-                        return false;
-                }
-        }
-        return true;
-}
-
-template <std::size_t N, typename T>
 struct Facet final
 {
         std::array<Vector<N, T>, N> vertices;
 
         Facet()
+        {
+        }
+
+        explicit Facet(const std::array<Vector<N, T>, N>& vertices) : vertices(vertices)
         {
         }
 
@@ -368,108 +335,19 @@ std::enable_if_t<N >= 4, std::vector<Facet<N, T>>> divide_facets(
         return facets;
 }
 
-template <unsigned I, std::size_t N, typename T>
-void create_facets(Vector<N, T>* point, std::vector<Facet<N, T>>* facets)
-{
-        static_assert(I <= N);
-        if constexpr (I == N)
-        {
-                Facet<N, T>& facet = facets->emplace_back();
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        facet.vertices[i] = Vector<N, T>(0);
-                        facet.vertices[i][i] = (*point)[i];
-                }
-        }
-        else
-        {
-                (*point)[I] = -1;
-                create_facets<I + 1>(point, facets);
-                (*point)[I] = 1;
-                create_facets<I + 1>(point, facets);
-        }
-}
-
-template <std::size_t N, typename T>
-std::enable_if_t<N >= 4, std::vector<Facet<N, T>>> create_initial_shape()
-{
-        // Cross-polytope
-
-        std::vector<Facet<N, T>> facets;
-        facets.reserve(power<N>(2));
-        Vector<N, T> point;
-        create_facets<0>(&point, &facets);
-        ASSERT(facets.size() == power<N>(2));
-        return facets;
-}
-
-template <std::size_t N, typename T>
-std::enable_if_t<N == 3, std::vector<Facet<N, T>>> create_initial_shape()
-{
-        // Regular icosahedron
-
-        const T p = (1 + std::sqrt(T(5))) / 2;
-
-        std::vector<Vector<N, T>> vertices;
-
-        vertices.emplace_back(-1, p, 0);
-        vertices.emplace_back(1, p, 0);
-        vertices.emplace_back(-1, -p, 0);
-        vertices.emplace_back(1, -p, 0);
-        vertices.emplace_back(0, -1, p);
-        vertices.emplace_back(0, 1, p);
-        vertices.emplace_back(0, -1, -p);
-        vertices.emplace_back(0, 1, -p);
-        vertices.emplace_back(p, 0, -1);
-        vertices.emplace_back(p, 0, 1);
-        vertices.emplace_back(-p, 0, -1);
-        vertices.emplace_back(-p, 0, 1);
-
-        for (Vector<N, T>& v : vertices)
-        {
-                v.normalize();
-        }
-
-        std::vector<Facet<N, T>> facets;
-
-        facets.emplace_back(vertices[0], vertices[1], vertices[7]);
-        facets.emplace_back(vertices[0], vertices[5], vertices[1]);
-        facets.emplace_back(vertices[0], vertices[7], vertices[10]);
-        facets.emplace_back(vertices[0], vertices[10], vertices[11]);
-        facets.emplace_back(vertices[0], vertices[11], vertices[5]);
-        facets.emplace_back(vertices[1], vertices[5], vertices[9]);
-        facets.emplace_back(vertices[2], vertices[4], vertices[11]);
-        facets.emplace_back(vertices[3], vertices[2], vertices[6]);
-        facets.emplace_back(vertices[3], vertices[4], vertices[2]);
-        facets.emplace_back(vertices[3], vertices[6], vertices[8]);
-        facets.emplace_back(vertices[3], vertices[8], vertices[9]);
-        facets.emplace_back(vertices[3], vertices[9], vertices[4]);
-        facets.emplace_back(vertices[4], vertices[9], vertices[5]);
-        facets.emplace_back(vertices[5], vertices[11], vertices[4]);
-        facets.emplace_back(vertices[6], vertices[2], vertices[10]);
-        facets.emplace_back(vertices[7], vertices[1], vertices[8]);
-        facets.emplace_back(vertices[8], vertices[6], vertices[7]);
-        facets.emplace_back(vertices[9], vertices[8], vertices[1]);
-        facets.emplace_back(vertices[10], vertices[7], vertices[6]);
-        facets.emplace_back(vertices[11], vertices[10], vertices[2]);
-
-        return facets;
-}
-
 template <std::size_t N, typename T>
 std::vector<Facet<N, T>> create_sphere(unsigned facet_min_count)
 {
-        std::vector<Facet<N, T>> facets = create_initial_shape<N, T>();
-
-        for (Facet<N, T>& facet : facets)
+        std::vector<std::array<Vector<N, T>, N>> facets;
+        if constexpr (N >= 4)
         {
-                if (!(equal_distances(facet.vertices) && equal_distance_from_origin(facet.vertices)))
-                {
-                        error("Error creating initial shape");
-                }
+                facets = create_cross_polytope<N, T>();
         }
-
-        return divide_facets(facet_min_count, std::move(facets));
+        else
+        {
+                facets = create_icosahedron<T>();
+        }
+        return divide_facets(facet_min_count, std::vector<Facet<N, T>>(facets.begin(), facets.end()));
 }
 
 template <std::size_t N>
