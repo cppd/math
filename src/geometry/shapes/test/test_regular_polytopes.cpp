@@ -194,6 +194,6 @@ void test()
         test_polytopes<9>();
 }
 
-TEST_SMALL("Test regular polytopes", test)
+TEST_SMALL("Regular Polytopes", test)
 }
 }
