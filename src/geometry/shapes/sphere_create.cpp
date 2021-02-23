@@ -247,10 +247,48 @@ struct Facet final
 //        }
 //};
 
-template <typename T>
-std::vector<Facet<3, T>> divide_facets(unsigned min_facet_count, std::vector<Facet<3, T>> facets)
+template <std::size_t N, typename T>
+void create_mesh(
+        const std::vector<Facet<N, T>>& facets,
+        std::vector<Vector<N, T>>* mesh_vertices,
+        std::vector<std::array<int, N>>* mesh_facets)
 {
-        ASSERT(facets.size() >= (1 << 3));
+        mesh_vertices->clear();
+        mesh_facets->clear();
+        mesh_facets->reserve(facets.size());
+
+        std::unordered_map<Vector<N, T>, unsigned> map;
+        map.reserve(N * facets.size());
+
+        for (const Facet<N, T>& facet : facets)
+        {
+                std::array<int, N>& mesh_facet = mesh_facets->emplace_back();
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        auto iter = map.find(facet.vertices[i]);
+                        if (iter == map.cend())
+                        {
+                                iter = map.emplace(facet.vertices[i], mesh_vertices->size()).first;
+                                mesh_vertices->push_back(facet.vertices[i]);
+                        }
+                        mesh_facet[i] = iter->second;
+                }
+        }
+}
+
+template <typename T>
+void divide_facets(
+        unsigned min_facet_count,
+        std::vector<Facet<3, T>> facets,
+        std::vector<Vector<3, T>>* mesh_vertices,
+        std::vector<std::array<int, 3>>* mesh_facets)
+{
+        for (Facet<3, T>& facet : facets)
+        {
+                facet.vertices[0].normalize();
+                facet.vertices[1].normalize();
+                facet.vertices[2].normalize();
+        }
 
         while (facets.size() < min_facet_count)
         {
@@ -274,69 +312,92 @@ std::vector<Facet<3, T>> divide_facets(unsigned min_facet_count, std::vector<Fac
                 facets = std::move(tmp);
         }
 
-        return facets;
+        create_mesh(facets, mesh_vertices, mesh_facets);
 }
 
 template <std::size_t N, typename T>
-std::enable_if_t<N >= 4, std::vector<Facet<N, T>>> divide_facets(
+std::enable_if_t<N >= 4> divide_facets(
         unsigned min_facet_count,
-        std::vector<Facet<N, T>> facets)
+        const std::vector<Facet<N, T>>& facets,
+        std::vector<Vector<N, T>>* mesh_vertices,
+        std::vector<std::array<int, N>>* mesh_facets)
 {
-        ASSERT(facets.size() >= (1 << N));
+        if (facets.size() >= min_facet_count)
+        {
+                create_mesh(facets, mesh_vertices, mesh_facets);
+                return;
+        }
 
         std::unordered_set<Vector<N, float>> vertex_set;
-        std::vector<Vector<N, float>> vertices;
 
-        unsigned subdivision_count = 0;
-
-        while (facets.size() < min_facet_count)
+        for (const Facet<N, T>& facet : facets)
         {
-                std::vector<Facet<N, T>> tmp;
-                tmp.reserve(subdivision_count * facets.size());
-
-                vertex_set.clear();
-                for (const Facet<N, T>& facet : facets)
+                for (unsigned i = 0; i < N; ++i)
                 {
-                        for (unsigned i = 0; i < N; ++i)
+                        vertex_set.insert(to_vector<float>(facet.vertices[i].normalized()));
+                }
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        for (unsigned j = i + 1; j < N; ++j)
                         {
-                                vertex_set.insert(to_vector<float>(facet.vertices[i]));
+                                const Vector<N, T>& v1 = facet.vertices[i];
+                                const Vector<N, T>& v2 = facet.vertices[j];
+                                vertex_set.insert(to_vector<float>((v1 + v2).normalized()));
                         }
+                }
+        }
+
+        std::vector<Vector<N, float>> ch_vertices;
+        std::vector<ConvexHullFacet<N>> ch_facets;
+
+        ch_vertices.insert(ch_vertices.cend(), vertex_set.cbegin(), vertex_set.cend());
+
+        while (true)
+        {
+                ProgressRatio progress(nullptr);
+
+                compute_convex_hull(ch_vertices, &ch_facets, &progress);
+
+                if (ch_facets.size() >= min_facet_count)
+                {
+                        break;
+                }
+
+                for (const ConvexHullFacet<N>& ch_facet : ch_facets)
+                {
                         for (unsigned i = 0; i < N; ++i)
                         {
                                 for (unsigned j = i + 1; j < N; ++j)
                                 {
-                                        vertex_set.insert(
-                                                to_vector<float>((facet.vertices[i] + facet.vertices[j]).normalized()));
+                                        const Vector<N, float>& v1 = ch_vertices[ch_facet.vertices()[i]];
+                                        const Vector<N, float>& v2 = ch_vertices[ch_facet.vertices()[j]];
+                                        Vector<N, float> v = (v1 + v2).normalized();
+                                        if (vertex_set.insert(v).second)
+                                        {
+                                                ch_vertices.push_back(v);
+                                        }
                                 }
                         }
                 }
-                vertices.clear();
-                vertices.insert(vertices.cend(), vertex_set.cbegin(), vertex_set.cend());
-
-                std::vector<ConvexHullFacet<N>> ch_facets;
-                ProgressRatio progress(nullptr);
-
-                compute_convex_hull(vertices, &ch_facets, &progress);
-
-                for (const ConvexHullFacet<N>& ch_facet : ch_facets)
-                {
-                        Facet<N, T>& f = tmp.emplace_back();
-                        for (unsigned i = 0; i < N; ++i)
-                        {
-                                int vertex_index = ch_facet.vertices()[i];
-                                f.vertices[i] = to_vector<T>(vertices[vertex_index]);
-                        }
-                }
-
-                subdivision_count = tmp.size() / facets.size();
-                facets = std::move(tmp);
         }
 
-        return facets;
+        mesh_vertices->clear();
+        mesh_vertices->reserve(ch_vertices.size());
+        for (const Vector<N, float>& v : ch_vertices)
+        {
+                mesh_vertices->push_back(to_vector<T>(v));
+        }
+
+        mesh_facets->clear();
+        mesh_facets->reserve(ch_facets.size());
+        for (const ConvexHullFacet<N>& ch_facet : ch_facets)
+        {
+                mesh_facets->push_back(ch_facet.vertices());
+        }
 }
 
 template <std::size_t N, typename T>
-std::vector<Facet<N, T>> create_sphere(unsigned facet_min_count)
+std::vector<Facet<N, T>> create_initial_facets()
 {
         std::vector<std::array<Vector<N, T>, N>> facets;
         if constexpr (N >= 4)
@@ -347,7 +408,7 @@ std::vector<Facet<N, T>> create_sphere(unsigned facet_min_count)
         {
                 facets = create_icosahedron<T>();
         }
-        return divide_facets(facet_min_count, std::vector<Facet<N, T>>(facets.begin(), facets.end()));
+        return {facets.cbegin(), facets.cend()};
 }
 
 template <std::size_t N>
@@ -378,35 +439,6 @@ void check_manifold(const std::vector<std::array<int, N>>& facets)
                 }
         }
 }
-
-template <std::size_t N, typename T>
-void create_mesh(
-        const std::vector<Facet<N, T>>& facets,
-        std::vector<Vector<N, T>>* mesh_vertices,
-        std::vector<std::array<int, N>>* mesh_facets)
-{
-        mesh_vertices->clear();
-        mesh_facets->clear();
-        mesh_facets->reserve(facets.size());
-
-        std::unordered_map<Vector<N, T>, unsigned> map;
-        map.reserve(N * facets.size());
-
-        for (const Facet<N, T>& facet : facets)
-        {
-                std::array<int, N>& mesh_facet = mesh_facets->emplace_back();
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        auto iter = map.find(facet.vertices[i]);
-                        if (iter == map.cend())
-                        {
-                                iter = map.emplace(facet.vertices[i], mesh_vertices->size()).first;
-                                mesh_vertices->push_back(facet.vertices[i]);
-                        }
-                        mesh_facet[i] = iter->second;
-                }
-        }
-}
 }
 
 template <std::size_t N, typename T>
@@ -415,9 +447,7 @@ void create_sphere(
         std::vector<Vector<N, T>>* vertices,
         std::vector<std::array<int, N>>* facets)
 {
-        std::vector<Facet<N, T>> vertex_facets = create_sphere<N, T>(facet_min_count);
-
-        create_mesh(vertex_facets, vertices, facets);
+        divide_facets(facet_min_count, create_initial_facets<N, T>(), vertices, facets);
 
         check_manifold(*facets);
 
