@@ -20,8 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/arrays.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/sort.h>
+#include <src/com/type/name.h>
+#include <src/geometry/core/euler_characteristic.h>
 #include <src/numerical/orthogonal.h>
 #include <src/test/test.h>
 
@@ -32,73 +35,103 @@ namespace ns::geometry
 {
 namespace
 {
+template <std::size_t N>
+void check_euler_characteristic(const std::vector<std::array<int, N>>& facets)
+{
+        constexpr int EXPECTED_EULER_CHARACTERISTIC = (N & 1) ? 2 : 0;
+
+        const int computed_euler_characteristic = euler_characteristic(facets);
+
+        if (computed_euler_characteristic == EXPECTED_EULER_CHARACTERISTIC)
+        {
+                return;
+        }
+
+        std::ostringstream oss;
+
+        oss << (N - 1) << "-sphere Euler characteristic (" << computed_euler_characteristic << ")";
+        oss << " is not equal to " << EXPECTED_EULER_CHARACTERISTIC;
+
+        std::array<long long, N> counts = simplex_counts(facets);
+        for (unsigned i = 0; i < N; ++i)
+        {
+                oss << '\n' << i << "-simplex count = " << counts[i];
+        }
+
+        error(oss.str());
+}
+
 template <std::size_t N, typename T>
-struct Hash
+void check_manifold(const std::vector<Vector<N, T>>& vertices, const std::vector<std::array<int, N>>& facets)
 {
-        std::size_t operator()(const std::array<T, N>& v) const
+        struct Hash
         {
-                return array_hash(v);
-        }
-};
+                std::size_t operator()(const std::array<int, N - 1>& v) const
+                {
+                        return array_hash(v);
+                }
+        };
 
-template <typename T>
-void test_creating_sphere()
-{
-        constexpr unsigned FACE_COUNT = 1000;
+        std::unordered_map<std::array<int, N - 1>, int, Hash> ridges;
 
-        std::vector<Vector<3, T>> vertices;
-        std::vector<std::array<int, 3>> faces;
-
-        create_sphere(FACE_COUNT, &vertices, &faces);
-
-        if (faces.size() < FACE_COUNT)
+        for (const std::array<int, N>& facet : facets)
         {
-                error("Face count " + to_string(faces.size()) + " is less than required minimum "
-                      + to_string(FACE_COUNT));
-        }
-
-        std::unordered_map<std::array<int, 2>, int, Hash<2, int>> edges;
-
-        for (const std::array<int, 3>& face : faces)
-        {
-                Vector<3, T> n = numerical::ortho_nn(vertices, face).normalized();
+                Vector<N, T> n = numerical::ortho_nn(vertices, facet).normalized();
                 if (!is_finite(n))
                 {
-                        error("Face normal " + to_string(n) + " is not finite");
+                        error("Facet normal " + to_string(n) + " is not finite");
                 }
-                for (unsigned r = 0; r < 3; ++r)
+
+                for (unsigned r = 0; r < N; ++r)
                 {
-                        std::array<int, 2> edge = sort(del_elem(face, r));
-                        ++edges[edge];
+                        std::array<int, N - 1> ridge = sort(del_elem(facet, r));
+                        ++ridges[ridge];
                 }
         }
 
-        for (const auto& [edge, count] : edges)
+        for (const auto& [ridge, count] : ridges)
         {
                 if (count != 2)
                 {
-                        error("Edge face count " + to_string(count) + " is not equal to 2");
+                        error("Facet count " + to_string(count) + " is not equal to 2 for ridge " + to_string(ridge));
                 }
         }
+}
 
-        int euler_characteristic = std::ssize(vertices) - std::ssize(edges) + std::ssize(faces);
-        if (euler_characteristic != 2)
+template <std::size_t N, typename T>
+void test_sphere_creation()
+{
+        LOG("Test sphere creation in " + space_name(N) + ", " + type_name<T>());
+
+        constexpr unsigned FACET_COUNT = 1000;
+
+        std::vector<Vector<N, T>> vertices;
+        std::vector<std::array<int, N>> facets;
+
+        create_sphere(FACET_COUNT, &vertices, &facets);
+
+        if (facets.size() < FACET_COUNT)
         {
-                std::ostringstream oss;
-                oss << "Euler characteristic " << euler_characteristic << " is not equal to 2 for 2-sphere" << '\n';
-                oss << "Vertex count = " << vertices.size();
-                oss << "Edge count = " << edges.size();
-                oss << "Face count = " << faces.size();
-                error(oss.str());
+                error("Facet count " + to_string(facets.size()) + " is less than required minimum "
+                      + to_string(FACET_COUNT));
         }
+
+        check_manifold(vertices, facets);
+        check_euler_characteristic(facets);
+}
+
+template <std::size_t N>
+void test_sphere_creation()
+{
+        test_sphere_creation<N, float>();
+        test_sphere_creation<N, double>();
 }
 
 void test()
 {
-        LOG("Test Sphere Creation");
-
-        test_creating_sphere<float>();
-        test_creating_sphere<double>();
+        test_sphere_creation<3>();
+        test_sphere_creation<4>();
+        test_sphere_creation<5>();
 }
 
 TEST_SMALL("Sphere Creation", test)
