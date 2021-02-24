@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/sort.h>
 #include <src/com/type/name.h>
-#include <src/geometry/core/euler_characteristic.h>
+#include <src/geometry/core/euler.h>
 #include <src/numerical/orthogonal.h>
 #include <src/test/test.h>
 
