@@ -97,4 +97,10 @@ std::array<long long, N> simplex_counts(const std::vector<std::array<int, N>>& f
 
         return impl::simplex_counts(facets, std::make_integer_sequence<std::size_t, N>());
 }
+
+template <std::size_t N>
+constexpr int euler_characteristic_for_convex_polytope()
+{
+        return (N & 1) ? 2 : 0;
+}
 }
