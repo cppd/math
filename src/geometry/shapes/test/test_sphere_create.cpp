@@ -38,7 +38,7 @@ namespace
 template <std::size_t N>
 void check_euler_characteristic(const std::vector<std::array<int, N>>& facets)
 {
-        constexpr int EXPECTED_EULER_CHARACTERISTIC = (N & 1) ? 2 : 0;
+        constexpr int EXPECTED_EULER_CHARACTERISTIC = euler_characteristic_for_convex_polytope<N>();
 
         const int computed_euler_characteristic = euler_characteristic(facets);
 

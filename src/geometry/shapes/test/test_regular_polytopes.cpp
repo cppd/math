@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../mesh.h"
 #include "../regular_polytopes.h"
 
 #include <src/com/error.h>
@@ -23,8 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
+#include <src/geometry/core/euler.h>
 #include <src/test/test.h>
 
+#include <sstream>
 #include <unordered_set>
 
 namespace ns::geometry
@@ -137,6 +140,40 @@ void test_vertex_count(
 }
 
 template <std::size_t N, typename T>
+void test_euler_characteristic(const std::string& name, const std::vector<std::array<Vector<N, T>, N>>& facets)
+{
+        const std::vector<std::array<int, N>> mesh_facets = [&facets]()
+        {
+                std::vector<Vector<N, T>> tmp_vertices;
+                std::vector<std::array<int, N>> tmp_facets;
+                create_mesh(facets, &tmp_vertices, &tmp_facets);
+                return tmp_facets;
+        }();
+
+        constexpr int EXPECTED_EULER_CHARACTERISTIC = euler_characteristic_for_convex_polytope<N>();
+
+        const int computed_euler_characteristic = euler_characteristic(mesh_facets);
+
+        if (computed_euler_characteristic == EXPECTED_EULER_CHARACTERISTIC)
+        {
+                return;
+        }
+
+        std::ostringstream oss;
+
+        oss << name << " Euler characteristic (" << computed_euler_characteristic << ")";
+        oss << " is not equal to " << EXPECTED_EULER_CHARACTERISTIC;
+
+        std::array<long long, N> counts = simplex_counts(mesh_facets);
+        for (unsigned i = 0; i < N; ++i)
+        {
+                oss << '\n' << i << "-simplex count = " << counts[i];
+        }
+
+        error(oss.str());
+}
+
+template <std::size_t N, typename T>
 void test_polytope(
         const std::string& name,
         const std::vector<std::array<Vector<N, T>, N>>& facets,
@@ -147,6 +184,7 @@ void test_polytope(
         test_vertex_count(name, facets, vertex_count);
         test_facet_equal_distances(name, facets);
         test_unit_distance_from_origin(name, facets);
+        test_euler_characteristic(name, facets);
 }
 
 template <std::size_t N, typename T>
