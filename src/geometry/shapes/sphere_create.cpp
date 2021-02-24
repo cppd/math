@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/arrays.h>
 #include <src/com/error.h>
-#include <src/com/hash.h>
 #include <src/com/log.h>
 #include <src/com/math.h>
 #include <src/com/sort.h>
@@ -379,35 +378,6 @@ std::vector<std::array<Vector<N, T>, N>> create_initial_facets()
                 return create_icosahedron<T>();
         }
 }
-
-template <std::size_t N>
-void check_manifold(const std::vector<std::array<int, N>>& facets)
-{
-        struct Hash
-        {
-                std::size_t operator()(const std::array<int, N - 1>& v) const
-                {
-                        return array_hash(v);
-                }
-        };
-        std::unordered_map<std::array<int, N - 1>, int, Hash> ridges;
-        for (const std::array<int, N>& facet : facets)
-        {
-                for (unsigned r = 0; r < N; ++r)
-                {
-                        std::array<int, N - 1> ridge = sort(del_elem(facet, r));
-                        ++ridges[ridge];
-                }
-        }
-        for (const auto& [ridge, count] : ridges)
-        {
-                if (count != 2)
-                {
-                        error("Error creating sphere: facet count " + to_string(count) + " is not equal to 2 for ridge "
-                              + to_string(ridge));
-                }
-        }
-}
 }
 
 template <std::size_t N, typename T>
@@ -417,8 +387,6 @@ void create_sphere(
         std::vector<std::array<int, N>>* facets)
 {
         divide_facets(facet_min_count, create_initial_facets<N, T>(), vertices, facets);
-
-        check_manifold(*facets);
 
         LOG("Sphere: vertex count = " + to_string(vertices->size()) + ", facet count = " + to_string(facets->size()));
 }
