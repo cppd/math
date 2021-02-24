@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sphere_create.h"
 
+#include "mesh.h"
 #include "regular_polytopes.h"
 
 #include "../core/convex_hull.h"
@@ -31,33 +32,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <map>
 #include <sstream>
-#include <unordered_map>
 #include <unordered_set>
 
 namespace ns::geometry
 {
 namespace
 {
-template <std::size_t N, typename T>
-struct Facet final
-{
-        std::array<Vector<N, T>, N> vertices;
-
-        Facet()
-        {
-        }
-
-        explicit Facet(const std::array<Vector<N, T>, N>& vertices) : vertices(vertices)
-        {
-        }
-
-        template <typename... Ts>
-        explicit Facet(Ts... vertices) : vertices{vertices...}
-        {
-                static_assert(sizeof...(Ts) == N);
-        }
-};
-
+//template <std::size_t N, typename T>
+//struct Facet final
+//{
+//        std::array<Vector<N, T>, N> vertices;
+//
+//        Facet()
+//        {
+//        }
+//
+//        explicit Facet(const std::array<Vector<N, T>, N>& vertices) : vertices(vertices)
+//        {
+//        }
+//
+//        template <typename... Ts>
+//        explicit Facet(Ts... vertices) : vertices{vertices...}
+//        {
+//                static_assert(sizeof...(Ts) == N);
+//        }
+//};
+//
 //template <std::size_t N>
 //class FacetSubdivision final
 //{
@@ -247,66 +247,37 @@ struct Facet final
 //        }
 //};
 
-template <std::size_t N, typename T>
-void create_mesh(
-        const std::vector<Facet<N, T>>& facets,
-        std::vector<Vector<N, T>>* mesh_vertices,
-        std::vector<std::array<int, N>>* mesh_facets)
-{
-        mesh_vertices->clear();
-        mesh_facets->clear();
-        mesh_facets->reserve(facets.size());
-
-        std::unordered_map<Vector<N, T>, unsigned> map;
-        map.reserve(N * facets.size());
-
-        for (const Facet<N, T>& facet : facets)
-        {
-                std::array<int, N>& mesh_facet = mesh_facets->emplace_back();
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        auto iter = map.find(facet.vertices[i]);
-                        if (iter == map.cend())
-                        {
-                                iter = map.emplace(facet.vertices[i], mesh_vertices->size()).first;
-                                mesh_vertices->push_back(facet.vertices[i]);
-                        }
-                        mesh_facet[i] = iter->second;
-                }
-        }
-}
-
 template <typename T>
 void divide_facets(
         unsigned min_facet_count,
-        std::vector<Facet<3, T>> facets,
+        std::vector<std::array<Vector<3, T>, 3>> facets,
         std::vector<Vector<3, T>>* mesh_vertices,
         std::vector<std::array<int, 3>>* mesh_facets)
 {
-        for (Facet<3, T>& facet : facets)
+        for (std::array<Vector<3, T>, 3>& vertices : facets)
         {
-                facet.vertices[0].normalize();
-                facet.vertices[1].normalize();
-                facet.vertices[2].normalize();
+                vertices[0].normalize();
+                vertices[1].normalize();
+                vertices[2].normalize();
         }
 
         while (facets.size() < min_facet_count)
         {
-                std::vector<Facet<3, T>> tmp;
+                std::vector<std::array<Vector<3, T>, 3>> tmp;
                 tmp.reserve(4 * facets.size());
 
-                for (const Facet<3, T>& facet : facets)
+                for (const std::array<Vector<3, T>, 3>& vertices : facets)
                 {
-                        const Vector<3, T>& v0 = facet.vertices[0];
-                        const Vector<3, T>& v1 = facet.vertices[1];
-                        const Vector<3, T>& v2 = facet.vertices[2];
+                        const Vector<3, T>& v0 = vertices[0];
+                        const Vector<3, T>& v1 = vertices[1];
+                        const Vector<3, T>& v2 = vertices[2];
                         Vector<3, T> p01 = (v0 + v1).normalized();
                         Vector<3, T> p12 = (v1 + v2).normalized();
                         Vector<3, T> p20 = (v2 + v0).normalized();
-                        tmp.emplace_back(v0, p01, p20);
-                        tmp.emplace_back(v1, p12, p01);
-                        tmp.emplace_back(v2, p20, p12);
-                        tmp.emplace_back(p01, p12, p20);
+                        tmp.push_back({v0, p01, p20});
+                        tmp.push_back({v1, p12, p01});
+                        tmp.push_back({v2, p20, p12});
+                        tmp.push_back({p01, p12, p20});
                 }
 
                 facets = std::move(tmp);
@@ -318,7 +289,7 @@ void divide_facets(
 template <std::size_t N, typename T>
 std::enable_if_t<N >= 4> divide_facets(
         unsigned min_facet_count,
-        const std::vector<Facet<N, T>>& facets,
+        const std::vector<std::array<Vector<N, T>, N>>& facets,
         std::vector<Vector<N, T>>* mesh_vertices,
         std::vector<std::array<int, N>>* mesh_facets)
 {
@@ -330,18 +301,18 @@ std::enable_if_t<N >= 4> divide_facets(
 
         std::unordered_set<Vector<N, float>> vertex_set;
 
-        for (const Facet<N, T>& facet : facets)
+        for (const std::array<Vector<N, T>, N>& vertices : facets)
         {
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        vertex_set.insert(to_vector<float>(facet.vertices[i].normalized()));
+                        vertex_set.insert(to_vector<float>(vertices[i].normalized()));
                 }
                 for (unsigned i = 0; i < N; ++i)
                 {
                         for (unsigned j = i + 1; j < N; ++j)
                         {
-                                const Vector<N, T>& v1 = facet.vertices[i];
-                                const Vector<N, T>& v2 = facet.vertices[j];
+                                const Vector<N, T>& v1 = vertices[i];
+                                const Vector<N, T>& v2 = vertices[j];
                                 vertex_set.insert(to_vector<float>((v1 + v2).normalized()));
                         }
                 }
@@ -397,18 +368,16 @@ std::enable_if_t<N >= 4> divide_facets(
 }
 
 template <std::size_t N, typename T>
-std::vector<Facet<N, T>> create_initial_facets()
+std::vector<std::array<Vector<N, T>, N>> create_initial_facets()
 {
-        std::vector<std::array<Vector<N, T>, N>> facets;
         if constexpr (N >= 4)
         {
-                facets = create_cross_polytope<N, T>();
+                return create_cross_polytope<N, T>();
         }
         else
         {
-                facets = create_icosahedron<T>();
+                return create_icosahedron<T>();
         }
-        return {facets.cbegin(), facets.cend()};
 }
 
 template <std::size_t N>
