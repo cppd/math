@@ -29,23 +29,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <random>
 #include <tuple>
-#include <unordered_set>
 
 namespace ns::geometry
 {
 namespace
 {
-// Для BoundCocone
-constexpr double RHO = 0.3;
-constexpr double ALPHA = 0.14;
+constexpr double BOUND_COCONE_RHO = 0.3;
+constexpr double BOUND_COCONE_ALPHA = 0.14;
 
 constexpr double COS_FOR_BOUND = -0.3;
-
-enum class Algorithms
-{
-        Cocone,
-        BoundCocone
-};
 
 template <typename T, std::size_t... I, typename V>
 constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_sequence<std::size_t, I...>&&)
@@ -97,6 +89,39 @@ std::vector<Vector<N, float>> points_sphere_with_notch(unsigned point_count, boo
 }
 
 template <std::size_t N>
+std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& points, unsigned clone_count)
+{
+        ASSERT(clone_count > 1 && clone_count <= (1 << N));
+
+        // Объект находится в начале координат и имеет размеры не более 1 по каждой координате
+        // в обе стороны, поэтому достаточно смещение на 3 для отсутствия пересечений объектов
+        constexpr float SHIFT = 3;
+
+        unsigned all_object_count = (1 + clone_count);
+
+        std::vector<Vector<N, float>> clones(points.begin(), points.end());
+
+        clones.reserve(points.size() * all_object_count);
+
+        for (unsigned clone = 0; clone < clone_count; ++clone)
+        {
+                Vector<N, float> vec_shift;
+                for (unsigned n = 0; n < N; ++n)
+                {
+                        vec_shift[n] = ((1 << n) & clone) ? SHIFT : -SHIFT;
+                }
+                for (unsigned i = 0; i < points.size(); ++i)
+                {
+                        clones.push_back(points[i] + vec_shift);
+                }
+        }
+
+        ASSERT(clones.size() == points.size() * all_object_count);
+
+        return clones;
+}
+
+template <std::size_t N>
 constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
 {
         static_assert(2 <= N && N <= 4);
@@ -132,74 +157,48 @@ constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
         }
 }
 
-template <std::size_t N>
-std::vector<Vector<N, float>> clone_object(
-        const std::vector<Vector<N, float>>& points,
-        unsigned new_object_count,
-        float shift)
+template <typename T>
+std::string min_max_to_string(T min, T max)
 {
-        ASSERT(new_object_count > 1 && new_object_count <= (1 << N));
-
-        unsigned all_object_count = (1 + new_object_count);
-
-        std::vector<Vector<N, float>> clones(points.begin(), points.end());
-
-        clones.reserve(points.size() * all_object_count);
-
-        for (unsigned new_object = 0; new_object < new_object_count; ++new_object)
+        if (min == max)
         {
-                Vector<N, float> vec_shift;
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        vec_shift[n] = ((1 << n) & new_object) ? shift : -shift;
-                }
-                for (unsigned i = 0; i < points.size(); ++i)
-                {
-                        clones.push_back(points[i] + vec_shift);
-                }
+                return to_string(min);
         }
-
-        ASSERT(clones.size() == points.size() * all_object_count);
-
-        return clones;
+        return "[" + to_string(min) + ", " + to_string(max) + "]";
 }
 
 template <std::size_t N>
 void test_algorithms(
-        const std::unordered_set<Algorithms>& algorithms,
-        double rho,
-        double alpha,
+        bool bounded_object,
+        unsigned object_count,
         const std::vector<Vector<N, float>>& points,
-        unsigned expected_facets_min,
-        unsigned expected_facets_max,
-        unsigned expected_bound_facets_min,
-        unsigned expected_bound_facets_max,
         ProgressRatio* progress)
 {
         ASSERT(points.size() > N);
-        ASSERT(expected_facets_min > 0 && expected_facets_max > 0 && expected_bound_facets_min > 0
-               && expected_bound_facets_max > 0);
+        ASSERT(object_count > 0);
+        ASSERT(points.size() % object_count == 0);
+
+        const auto [FACETS_MIN, FACETS_MAX] = facet_count<N>(points.size() / object_count);
 
         TimePoint start_time = time();
 
         LOG("Point count: " + to_string(points.size()));
 
-        std::unique_ptr<ManifoldConstructor<N>> sr = create_manifold_constructor(points, progress);
+        std::unique_ptr<ManifoldConstructor<N>> constructor = create_manifold_constructor(points, progress);
 
-        if (algorithms.count(Algorithms::Cocone))
+        if (!bounded_object)
         {
                 // Задать размер для проверки очистки массивов
                 std::vector<Vector<N, double>> normals(10000);
                 std::vector<std::array<int, N>> facets(10000);
 
-                std::string facet_count_str =
-                        (expected_facets_min == expected_facets_max)
-                                ? to_string(expected_facets_min)
-                                : "[" + to_string(expected_facets_min) + ", " + to_string(expected_facets_max) + "]";
+                unsigned expected_facets_min = FACETS_MIN * object_count;
+                unsigned expected_facets_max = FACETS_MAX * object_count;
+                std::string facet_count_str = min_max_to_string(expected_facets_min, expected_facets_max);
 
-                LOG("Expected facet count: " + facet_count_str);
+                LOG("Cocone expected facet count: " + facet_count_str);
 
-                sr->cocone(&normals, &facets, progress);
+                constructor->cocone(&normals, &facets, progress);
 
                 LOG("Cocone facet count: " + to_string(facets.size()));
                 if (!(expected_facets_min <= facets.size() && facets.size() <= expected_facets_max))
@@ -209,25 +208,25 @@ void test_algorithms(
                 }
         }
 
-        if (algorithms.count(Algorithms::BoundCocone))
         {
                 // Задать размер для проверки очистки массивов
                 std::vector<Vector<N, double>> normals(10000);
                 std::vector<std::array<int, N>> facets(10000);
 
-                std::string bound_facet_count_str = (expected_bound_facets_min == expected_bound_facets_max)
-                                                            ? to_string(expected_bound_facets_min)
-                                                            : "[" + to_string(expected_bound_facets_min) + ", "
-                                                                      + to_string(expected_bound_facets_max) + "]";
+                // BoundCocone может давать разные результаты в зависимости от точек и параметров,
+                // поэтому надо проверять попадание в интервал, а не равенство
+                unsigned expected_facets_min = std::lround(0.9 * FACETS_MIN * object_count);
+                unsigned expected_facets_max = std::lround(1.1 * FACETS_MAX * object_count);
+                std::string facet_count_str = min_max_to_string(expected_facets_min, expected_facets_max);
 
-                LOG("Expected bound facet count: " + bound_facet_count_str);
+                LOG("BoundCocone expected facet count: " + facet_count_str);
 
-                sr->bound_cocone(rho, alpha, &normals, &facets, progress);
+                constructor->bound_cocone(BOUND_COCONE_RHO, BOUND_COCONE_ALPHA, &normals, &facets, progress);
 
                 LOG("BoundCocone facet count: " + to_string(facets.size()));
-                if (!(expected_bound_facets_min <= facets.size() && facets.size() <= expected_bound_facets_max))
+                if (!(expected_facets_min <= facets.size() && facets.size() <= expected_facets_max))
                 {
-                        error("Error bound facet count: expected " + bound_facet_count_str + ", BoundCocone computed "
+                        error("Error facet count: expected " + facet_count_str + ", BoundCocone computed "
                               + to_string(facets.size()));
                 }
         }
@@ -237,69 +236,36 @@ void test_algorithms(
 }
 
 template <std::size_t N>
-void all_tests(
-        const std::unordered_set<Algorithms>& algorithms,
-        std::vector<Vector<N, float>>&& points,
-        ProgressRatio* progress)
+void all_tests(bool bounded_object, std::vector<Vector<N, float>>&& points, ProgressRatio* progress)
 {
         static_assert(2 <= N && N <= 4);
 
-        // BoundCocone может давать разные результаты в зависимости от точек и параметров,
-        // поэтому надо проверять попадание в интервал, а не равенство
-        constexpr double bound_low_coef = 0.9;
-        constexpr double bound_high_coef = 1.1;
-
-        // Объект находится в начале координат и имеет размеры не более 1 по каждой координате
-        // в обе стороны, поэтому достаточно смещение на 3 для отсутствия пересечений объектов
-        constexpr float shift = 3;
-
-        auto [facets_min, facets_max] = facet_count<N>(points.size());
-        unsigned bound_facets_min = std::lround(bound_low_coef * facets_min);
-        unsigned bound_facets_max = std::lround(bound_high_coef * facets_max);
-
         LOG("------- " + space_name(N) + ", 1 object -------");
-
-        test_algorithms(
-                algorithms, RHO, ALPHA, points, facets_min, facets_max, bound_facets_min, bound_facets_max, progress);
+        test_algorithms(bounded_object, 1, points, progress);
 
         LOG("");
 
-        // Разместить вокруг объекта другие такие же объекты по каждой координате в обе стороны
-
-        constexpr unsigned new_object_count = 1 << N;
-        constexpr unsigned all_object_count = (1 + new_object_count);
-
-        LOG("------- " + space_name(N) + ", " + to_string(all_object_count) + " objects -------");
-
-        points = clone_object(points, new_object_count, shift);
-
-        facets_min *= all_object_count;
-        facets_max *= all_object_count;
-        bound_facets_min *= all_object_count;
-        bound_facets_max *= all_object_count;
-
-        test_algorithms(
-                algorithms, RHO, ALPHA, points, facets_min, facets_max, bound_facets_min, bound_facets_max, progress);
+        // Размещение вокруг объекта других таких же объектов по каждой координате в обе стороны
+        constexpr unsigned CLONE_COUNT = 1 << N;
+        constexpr unsigned OBJECT_COUNT = (1 + CLONE_COUNT);
+        LOG("------- " + space_name(N) + ", " + to_string(OBJECT_COUNT) + " objects -------");
+        test_algorithms(bounded_object, OBJECT_COUNT, clone_object(points, CLONE_COUNT), progress);
 }
 
 template <std::size_t N>
 void test(int low, int high, ProgressRatio* progress)
 {
-        const int point_count = [&]()
+        const int POINT_COUNT = [&]()
         {
                 std::mt19937 engine = create_engine<std::mt19937>();
                 return std::uniform_int_distribution<int>(low, high)(engine);
         }();
 
         LOG("\n--- Unbound " + to_string(N - 1) + "-manifold reconstructions in " + space_name(N) + " ---\n");
-        all_tests<N>(
-                std::unordered_set<Algorithms>{Algorithms::Cocone, Algorithms::BoundCocone},
-                points_sphere_with_notch<N>(point_count, false), progress);
+        all_tests<N>(false, points_sphere_with_notch<N>(POINT_COUNT, false), progress);
 
         LOG("\n--- Bound " + to_string(N - 1) + "-manifold reconstructions in " + space_name(N) + " ---\n");
-        all_tests<N>(
-                std::unordered_set<Algorithms>{Algorithms::BoundCocone}, points_sphere_with_notch<N>(point_count, true),
-                progress);
+        all_tests<N>(true, points_sphere_with_notch<N>(POINT_COUNT, true), progress);
 }
 
 void test_reconstruction_2(ProgressRatio* progress)
