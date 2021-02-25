@@ -170,6 +170,8 @@ void test_geometry_files()
         geometry::create_sphere(FACET_COUNT, &vertices, &facets);
 
         test_geometry_files(to_string(N - 1) + "-sphere", vertices, facets, &progress);
+
+        LOG("Test passed");
 }
 
 void test_3()
