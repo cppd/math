@@ -18,19 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../cocone.h"
 
 #include <src/com/error.h>
-#include <src/com/file/path.h>
 #include <src/com/log.h>
-#include <src/com/math.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/time.h>
-#include <src/model/mesh_utility.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
 #include <cmath>
-#include <filesystem>
 #include <random>
 #include <tuple>
 #include <unordered_set>
@@ -137,129 +133,6 @@ constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
 }
 
 template <std::size_t N>
-void test_obj_file(
-        const mesh::Mesh<N>& mesh,
-        std::filesystem::path file_name,
-        const std::string& comment,
-        ProgressRatio* progress)
-{
-        LOG("saving to OBJ...");
-
-        file_name.replace_extension(path_from_utf8(mesh::obj_file_extension(N)));
-        std::filesystem::path saved_file = mesh::save_to_obj(mesh, file_name, comment);
-
-        LOG("loading from OBJ...");
-
-        std::unique_ptr<const mesh::Mesh<N>> file_mesh = mesh::load<N>(saved_file, progress);
-
-        LOG("comparing meshes...");
-
-        if (mesh.vertices.size() != file_mesh->vertices.size())
-        {
-                error("Error writing and reading OBJ files (vertices)");
-        }
-        if (mesh.normals.size() != file_mesh->normals.size())
-        {
-                error("Error writing and reading OBJ files (normals)");
-        }
-        if (mesh.texcoords.size() != file_mesh->texcoords.size())
-        {
-                error("Error writing and reading OBJ files (texture)");
-        }
-        if (mesh.facets.size() != file_mesh->facets.size())
-        {
-                error("Error writing and reading OBJ files (facets)");
-        }
-        if (mesh.points.size() != file_mesh->points.size())
-        {
-                error("Error writing and reading OBJ files (points)");
-        }
-        if (mesh.lines.size() != file_mesh->lines.size())
-        {
-                error("Error writing and reading OBJ files (lines)");
-        }
-        if (mesh.materials.size() != file_mesh->materials.size())
-        {
-                error("Error writing and reading OBJ files (materials)");
-        }
-        if (mesh.images.size() != file_mesh->images.size())
-        {
-                error("Error writing and reading OBJ files (images)");
-        }
-}
-
-template <std::size_t N>
-void test_stl_file(
-        const mesh::Mesh<N>& mesh,
-        std::filesystem::path file_name,
-        const std::string& comment,
-        ProgressRatio* progress,
-        bool ascii_format)
-{
-        const std::string type_name = ascii_format ? "ASCII" : "binary";
-
-        LOG("saving to " + type_name + " STL...");
-
-        file_name.replace_extension(path_from_utf8(mesh::stl_file_extension(N)));
-        std::filesystem::path saved_file = mesh::save_to_stl(mesh, file_name, comment, ascii_format);
-
-        LOG("loading from " + type_name + " STL...");
-
-        std::unique_ptr<const mesh::Mesh<N>> file_mesh = mesh::load<N>(saved_file, progress);
-
-        LOG("comparing meshes...");
-
-        if (mesh.vertices.size() != file_mesh->vertices.size())
-        {
-                error("Error writing and reading STL files (vertices)");
-        }
-        if (mesh.facets.size() != file_mesh->facets.size())
-        {
-                error("Error writing and reading STL files (facets)");
-        }
-}
-
-template <std::size_t N>
-void test_geometry_files(
-        const std::string& name,
-        const std::vector<Vector<N, float>>& points,
-        const std::vector<Vector<N, double>>& /*normals*/,
-        const std::vector<std::array<int, N>>& facets,
-        ProgressRatio* progress)
-{
-        static_assert(N >= 3);
-
-        LOG("Test saving and loading");
-
-        std::filesystem::path file_name = std::filesystem::temp_directory_path() / name;
-
-        LOG("creating mesh for facets...");
-        std::unique_ptr<const mesh::Mesh<N>> mesh = mesh::create_mesh_for_facets(points, facets);
-
-        std::string comment;
-        comment += "Manifold Reconstruction\n";
-        comment += name + "\n";
-        comment += "vertices = " + to_string(mesh->vertices.size()) + "\n";
-        comment += "normals = " + to_string(mesh->normals.size()) + "\n";
-        comment += "facets = " + to_string(mesh->facets.size());
-
-        test_obj_file(*mesh, file_name, comment, progress);
-
-        test_stl_file(*mesh, file_name, comment, progress, true /*ascii_format*/);
-        test_stl_file(*mesh, file_name, comment, progress, false /*ascii_format*/);
-}
-
-// Файлы не поддерживают двухмерные объекты
-void test_geometry_files(
-        const std::string&,
-        const std::vector<Vector<2, float>>&,
-        const std::vector<Vector<2, double>>&,
-        const std::vector<std::array<int, 2>>&,
-        ProgressRatio*)
-{
-}
-
-template <std::size_t N>
 std::vector<Vector<N, float>> clone_object(
         const std::vector<Vector<N, float>>& points,
         unsigned new_object_count,
@@ -293,7 +166,6 @@ std::vector<Vector<N, float>> clone_object(
 
 template <std::size_t N>
 void test_algorithms(
-        const std::string& name,
         const std::unordered_set<Algorithms>& algorithms,
         double rho,
         double alpha,
@@ -335,8 +207,6 @@ void test_algorithms(
                         error("Error facet count: expected " + facet_count_str + ", Cocone computed "
                               + to_string(facets.size()));
                 }
-
-                test_geometry_files(name + ", Cocone", points, normals, facets, progress);
         }
 
         if (algorithms.count(Algorithms::BoundCocone))
@@ -360,8 +230,6 @@ void test_algorithms(
                         error("Error bound facet count: expected " + bound_facet_count_str + ", BoundCocone computed "
                               + to_string(facets.size()));
                 }
-
-                test_geometry_files(name + ", BoundCocone", points, normals, facets, progress);
         }
 
         LOG("Time: " + to_string_fixed(duration_from(start_time), 5) + " s");
@@ -370,7 +238,6 @@ void test_algorithms(
 
 template <std::size_t N>
 void all_tests(
-        const std::string& name,
         const std::unordered_set<Algorithms>& algorithms,
         std::vector<Vector<N, float>>&& points,
         ProgressRatio* progress)
@@ -393,8 +260,7 @@ void all_tests(
         LOG("------- " + space_name(N) + ", 1 object -------");
 
         test_algorithms(
-                name + ", 1 object", algorithms, RHO, ALPHA, points, facets_min, facets_max, bound_facets_min,
-                bound_facets_max, progress);
+                algorithms, RHO, ALPHA, points, facets_min, facets_max, bound_facets_min, bound_facets_max, progress);
 
         LOG("");
 
@@ -413,26 +279,25 @@ void all_tests(
         bound_facets_max *= all_object_count;
 
         test_algorithms(
-                name + ", " + to_string(all_object_count) + " objects", algorithms, RHO, ALPHA, points, facets_min,
-                facets_max, bound_facets_min, bound_facets_max, progress);
+                algorithms, RHO, ALPHA, points, facets_min, facets_max, bound_facets_min, bound_facets_max, progress);
 }
 
 template <std::size_t N>
 void test(int low, int high, ProgressRatio* progress)
 {
-        thread_local std::mt19937_64 engine = create_engine<std::mt19937_64>();
-
-        int point_count = std::uniform_int_distribution<int>(low, high)(engine);
+        const int point_count = [&]()
+        {
+                std::mt19937 engine = create_engine<std::mt19937>();
+                return std::uniform_int_distribution<int>(low, high)(engine);
+        }();
 
         LOG("\n--- Unbound " + to_string(N - 1) + "-manifold reconstructions in " + space_name(N) + " ---\n");
         all_tests<N>(
-                space_name(N) + ", unbounded " + to_string(N - 1) + "-manifold",
                 std::unordered_set<Algorithms>{Algorithms::Cocone, Algorithms::BoundCocone},
                 points_sphere_with_notch<N>(point_count, false), progress);
 
         LOG("\n--- Bound " + to_string(N - 1) + "-manifold reconstructions in " + space_name(N) + " ---\n");
         all_tests<N>(
-                space_name(N) + ", bounded " + to_string(N - 1) + "-manifold",
                 std::unordered_set<Algorithms>{Algorithms::BoundCocone}, points_sphere_with_notch<N>(point_count, true),
                 progress);
 }
