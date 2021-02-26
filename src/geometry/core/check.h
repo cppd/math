@@ -17,12 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "euler.h"
+
 #include <src/com/arrays.h>
 #include <src/com/error.h>
 #include <src/com/hash.h>
 #include <src/com/print.h>
 #include <src/com/sort.h>
-#include <src/geometry/core/euler.h>
 #include <src/numerical/orthogonal.h>
 #include <src/numerical/vec.h>
 
@@ -32,7 +33,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace ns::geometry::shapes::test
+namespace ns::geometry
+{
+namespace check_implementation
 {
 template <std::size_t N, typename T>
 void check_facet_dimension(
@@ -50,8 +53,8 @@ void check_facet_dimension(
                 }
                 if (facet_vertex_set.size() != N)
                 {
-                        error(name + " facet vertex count " + to_string(facet_vertex_set.size()) + " is not equal to "
-                              + to_string(N));
+                        error(name + " facet unique vertex count " + to_string(facet_vertex_set.size())
+                              + " is not equal to " + to_string(N));
                 }
 
                 Vector<N, T> n = numerical::ortho_nn(vertices, facet).normalized();
@@ -63,7 +66,7 @@ void check_facet_dimension(
 }
 
 template <std::size_t N>
-void check_manifoldness(const std::string& name, const std::vector<std::array<int, N>>& facets)
+void check_manifoldness(const std::string& name, const std::vector<std::array<int, N>>& facets, bool has_boundary)
 {
         struct Hash
         {
@@ -83,31 +86,45 @@ void check_manifoldness(const std::string& name, const std::vector<std::array<in
                 }
         }
 
-        for (const auto& [ridge, count] : ridges)
+        if (!has_boundary)
         {
-                if (count != 2)
+                for (const auto& [ridge, count] : ridges)
                 {
-                        error(name + " ridge facet count " + to_string(count) + " is not equal to 2");
+                        if (count != 2)
+                        {
+                                error(name + " ridge facet count " + to_string(count) + " is not equal to 2");
+                        }
+                }
+        }
+        else
+        {
+                for (const auto& [ridge, count] : ridges)
+                {
+                        if (count > 2)
+                        {
+                                error(name + " ridge facet count " + to_string(count) + " is greater than 2");
+                        }
                 }
         }
 }
 
 template <std::size_t N>
-void check_euler_characteristic(const std::string& name, const std::vector<std::array<int, N>>& facets)
+void check_euler_characteristic(
+        const std::string& name,
+        const std::vector<std::array<int, N>>& facets,
+        int expected_euler_characteristic)
 {
-        constexpr int EXPECTED_EULER_CHARACTERISTIC = euler_characteristic_for_convex_polytope<N>();
+        const int mesh_euler_characteristic = euler_characteristic(facets);
 
-        const int computed_euler_characteristic = euler_characteristic(facets);
-
-        if (computed_euler_characteristic == EXPECTED_EULER_CHARACTERISTIC)
+        if (mesh_euler_characteristic == expected_euler_characteristic)
         {
                 return;
         }
 
         std::ostringstream oss;
 
-        oss << name << " Euler characteristic (" << computed_euler_characteristic << ")";
-        oss << " is not equal to " << EXPECTED_EULER_CHARACTERISTIC;
+        oss << name << " Euler characteristic (" << mesh_euler_characteristic << ")";
+        oss << " is not equal to " << expected_euler_characteristic;
 
         std::array<long long, N> counts = simplex_counts(facets);
         for (unsigned i = 0; i < N; ++i)
@@ -116,5 +133,26 @@ void check_euler_characteristic(const std::string& name, const std::vector<std::
         }
 
         error(oss.str());
+}
+}
+
+template <std::size_t N, typename T>
+void check_mesh(
+        const std::string& name,
+        const std::vector<Vector<N, T>>& vertices,
+        const std::vector<std::array<int, N>>& facets,
+        bool has_boundary,
+        const std::optional<int>& expected_euler_characteristic)
+{
+        namespace impl = check_implementation;
+
+        impl::check_facet_dimension(name, vertices, facets);
+
+        impl::check_manifoldness(name, facets, has_boundary);
+
+        if (expected_euler_characteristic)
+        {
+                impl::check_euler_characteristic(name, facets, *expected_euler_characteristic);
+        }
 }
 }

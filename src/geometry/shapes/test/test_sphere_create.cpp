@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "checks.h"
-
 #include "../sphere_create.h"
 
 #include <src/com/error.h>
@@ -24,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/type/name.h>
+#include <src/geometry/core/check.h>
+#include <src/geometry/core/euler.h>
 #include <src/test/test.h>
 
 namespace ns::geometry
@@ -50,9 +50,8 @@ void test_sphere_creation()
                       + to_string(FACET_COUNT));
         }
 
-        shapes::test::check_facet_dimension(name, vertices, facets);
-        shapes::test::check_manifoldness(name, facets);
-        shapes::test::check_euler_characteristic(name, facets);
+        constexpr bool has_boundary = false;
+        check_mesh(name, vertices, facets, has_boundary, euler_characteristic_for_convex_polytope<N>());
 }
 
 template <std::size_t N>

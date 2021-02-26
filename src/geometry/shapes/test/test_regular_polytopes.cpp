@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "checks.h"
-
 #include "../mesh.h"
 #include "../regular_polytopes.h"
 
@@ -26,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
+#include <src/geometry/core/check.h>
+#include <src/geometry/core/euler.h>
 #include <src/test/test.h>
 
 #include <unordered_set>
@@ -148,9 +148,8 @@ void test_polytope(
         std::vector<std::array<int, N>> mesh_facets;
         create_mesh(facets, &mesh_vertices, &mesh_facets);
 
-        shapes::test::check_facet_dimension(name, mesh_vertices, mesh_facets);
-        shapes::test::check_manifoldness(name, mesh_facets);
-        shapes::test::check_euler_characteristic(name, mesh_facets);
+        constexpr bool has_boundary = false;
+        check_mesh(name, mesh_vertices, mesh_facets, has_boundary, euler_characteristic_for_convex_polytope<N>());
 }
 
 template <std::size_t N, typename T>
