@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/time.h>
+#include <src/geometry/core/check.h>
+#include <src/geometry/core/euler.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
@@ -206,6 +208,10 @@ void test_algorithms(
                         error("Error facet count: expected " + facet_count_str + ", Cocone computed "
                               + to_string(facets.size()));
                 }
+
+                constexpr bool has_boundary = false;
+                const int euler_characteristic = object_count * euler_characteristic_for_convex_polytope<N>();
+                check_mesh("Cocone reconstruction", points, facets, has_boundary, euler_characteristic);
         }
 
         {
