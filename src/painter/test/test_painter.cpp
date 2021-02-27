@@ -21,19 +21,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../painter.h"
 #include "../scenes/simple.h"
 #include "../shapes/mesh.h"
-#include "../shapes/test/sphere_mesh.h"
 
 #include <src/com/file/path.h>
 #include <src/com/global_index.h>
 #include <src/com/names.h>
+#include <src/com/random/engine.h>
 #include <src/com/string/str.h>
 #include <src/com/time.h>
+#include <src/geometry/shapes/sphere_create.h>
 #include <src/gui/com/support.h>
 #include <src/gui/painter_window/painter_window.h>
 #include <src/model/mesh_utility.h>
 #include <src/model/volume_utility.h>
 
+#include <array>
+#include <cmath>
 #include <filesystem>
+#include <random>
 
 namespace ns::painter
 {
@@ -135,31 +139,49 @@ void check_application_instance()
         }
 }
 
-template <std::size_t N, typename T>
-std::unique_ptr<const Mesh<N, T>> sphere_mesh(int point_count, ProgressRatio* progress)
+template <std::size_t N>
+float random_radius()
 {
-        LOG("Creating mesh...");
+        static constexpr std::array EXPONENTS =
+                std::to_array<std::array<int, 2>>({{-7, 10}, {-4, 6}, {-3, 5}, {-2, 3}});
 
-        return simplex_mesh_of_random_sphere<N, T>(DEFAULT_COLOR, METALNESS, point_count, progress);
+        static_assert(N >= 3 && N < 3 + EXPONENTS.size());
+        static constexpr std::array<int, 2> MIN_MAX = EXPONENTS[N - 3];
+
+        std::mt19937 random_engine = create_engine<std::mt19937>();
+        float exponent = std::uniform_real_distribution<float>(MIN_MAX[0], MIN_MAX[1])(random_engine);
+        return std::pow(10.0f, exponent);
 }
 
-template <std::size_t N, typename T>
-std::unique_ptr<const Mesh<N, T>> file_mesh(const std::string& file_name, ProgressRatio* progress)
+template <std::size_t N>
+std::unique_ptr<const mesh::Mesh<N>> sphere_mesh(int facet_count)
 {
-        LOG("Loading geometry from file...");
-        std::unique_ptr<const mesh::Mesh<N>> mesh = mesh::load<N>(file_name, progress);
+        LOG("creating sphere in " + space_name(N) + "...");
+        std::vector<Vector<N, float>> vertices;
+        std::vector<std::array<int, N>> facets;
+        geometry::create_sphere(facet_count, &vertices, &facets);
 
-        LOG("Creating mesh...");
-        mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
+        const float radius = random_radius<N>();
+        const Vector<N, float> center(-radius / 2);
+
+        LOG("mesh radius = " + to_string(radius));
+        LOG("mesh center = " + to_string(center));
+        LOG("facet count " + to_string(facets.size()));
+
+        for (Vector<N, float>& v : vertices)
         {
-                mesh::Writing writing(&mesh_object);
-                writing.set_color(DEFAULT_COLOR);
-                writing.set_metalness(METALNESS);
+                v = radius * v + center;
         }
 
-        std::vector<const mesh::MeshObject<N>*> meshes;
-        meshes.push_back(&mesh_object);
-        return std::make_unique<const Mesh<N, T>>(meshes, progress);
+        LOG("creating mesh...");
+        return mesh::create_mesh_for_facets(vertices, facets);
+}
+
+template <std::size_t N>
+std::unique_ptr<const mesh::Mesh<N>> file_mesh(const std::string& file_name, ProgressRatio* progress)
+{
+        LOG("Loading geometry from file...");
+        return mesh::load<N>(file_name, progress);
 }
 
 template <std::size_t N, typename T>
@@ -209,14 +231,28 @@ enum class PainterTestOutputType
 
 template <PainterTestOutputType type, std::size_t N, typename T>
 void test_painter(
-        std::unique_ptr<const Shape<N, T>>&& shape,
+        std::unique_ptr<const mesh::Mesh<N>>&& mesh,
+        ProgressRatio* progress,
         int min_screen_size,
         int max_screen_size,
         int samples_per_pixel,
         int thread_count)
 {
-        std::unique_ptr<const Scene<N, T>> scene =
-                simple_scene(BACKGROUND_COLOR, LIGHTING_INTENSITY, min_screen_size, max_screen_size, std::move(shape));
+        std::unique_ptr<const Shape<N, T>> painter_mesh;
+        {
+                mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
+                {
+                        mesh::Writing writing(&mesh_object);
+                        writing.set_color(DEFAULT_COLOR);
+                        writing.set_metalness(METALNESS);
+                }
+                std::vector<const mesh::MeshObject<N>*> mesh_objects;
+                mesh_objects.push_back(&mesh_object);
+                painter_mesh = std::make_unique<const Mesh<N, T>>(mesh_objects, progress);
+        }
+
+        std::unique_ptr<const Scene<N, T>> scene = simple_scene(
+                BACKGROUND_COLOR, LIGHTING_INTENSITY, min_screen_size, max_screen_size, std::move(painter_mesh));
 
         static_assert(type == PainterTestOutputType::File || type == PainterTestOutputType::Window);
 
@@ -232,14 +268,15 @@ void test_painter(
 }
 
 template <std::size_t N, typename T, PainterTestOutputType type>
-void test_painter(int samples_per_pixel, int point_count, int min_screen_size, int max_screen_size)
+void test_painter(int samples_per_pixel, int facet_count, int min_screen_size, int max_screen_size)
 {
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
 
-        std::unique_ptr<const Shape<N, T>> mesh = sphere_mesh<N, T>(point_count, &progress);
+        std::unique_ptr<const mesh::Mesh<N>> mesh = sphere_mesh<N>(facet_count);
 
-        test_painter<type>(std::move(mesh), min_screen_size, max_screen_size, samples_per_pixel, thread_count);
+        test_painter<type, N, T>(
+                std::move(mesh), &progress, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
 }
 
 template <std::size_t N, typename T, PainterTestOutputType type>
@@ -248,9 +285,10 @@ void test_painter(int samples_per_pixel, const std::string& file_name, int min_s
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
 
-        std::unique_ptr<const Shape<N, T>> mesh = file_mesh<N, T>(file_name, &progress);
+        std::unique_ptr<const mesh::Mesh<N>> mesh = file_mesh<N>(file_name, &progress);
 
-        test_painter<type>(std::move(mesh), min_screen_size, max_screen_size, samples_per_pixel, thread_count);
+        test_painter<type, N, T>(
+                std::move(mesh), &progress, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
 }
 }
 
