@@ -29,65 +29,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
+#include <algorithm>
 #include <random>
+#include <tuple>
 #include <vector>
 
 namespace ns::painter
 {
 namespace
 {
-template <typename T, typename RandomEngine>
-T random_integer(RandomEngine& random_engine, T low, T high)
-{
-        static_assert(std::is_integral_v<T>);
-        ASSERT(low <= high);
-
-        return std::uniform_int_distribution<T>(low, high)(random_engine);
-}
-
-template <std::size_t N, typename T, typename TS>
-std::vector<Ray<N, T>> generate_random_rays_for_sphere(const Vector<N, TS>& center, TS radius, int count)
-{
-        LOG("random rays...");
-
-        std::mt19937_64 random_engine(count);
-
-        std::vector<Ray<N, T>> rays(count);
-
-        Vector<N, T> v;
-        T length_square;
-
-        for (int i = 0; i < count; ++i)
-        {
-                sampling::uniform_in_sphere(random_engine, v, length_square);
-                v /= std::sqrt(length_square);
-
-                rays[i] = Ray<N, T>(T(radius) * v + to_vector<T>(center), -v);
-        }
-
-        return rays;
-}
+constexpr bool WITH_RAY_LOG = false;
+constexpr bool WITH_ERROR_LOG = false;
 
 template <std::size_t N, typename T>
-T max_coordinate_modulus(const Vector<N, T>& a, const Vector<N, T>& b)
+std::vector<Ray<N, T>> create_rays(const geometry::BoundingBox<N, T>& bb, int ray_count)
 {
-        T all_max = limits<T>::lowest();
-        for (unsigned i = 0; i < N; ++i)
-        {
-                all_max = std::max(all_max, std::max(std::abs(a[i]), std::abs(b[i])));
-        }
-        return all_max;
-}
-
-template <std::size_t N, typename T>
-void offset_and_rays_for_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, T* offset, std::vector<Ray<N, T>>* rays)
-{
-        const geometry::BoundingBox<N, T> bb = mesh.bounding_box();
-
-        *offset = max_coordinate_modulus(bb.min, bb.max) * (100 * limits<T>::epsilon());
-
-        LOG("ray offset = " + to_string(*offset));
-
         Vector<N, T> center = bb.min + (bb.max - bb.min) / T(2);
         // Немного сместить центр, чтобы лучи не проходили через центр дерева
         center *= 0.99;
@@ -100,21 +56,26 @@ void offset_and_rays_for_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, T* o
         LOG("ray center = " + to_string(center));
         LOG("ray radius = " + to_string(radius));
 
-        *rays = generate_random_rays_for_sphere<N, T>(center, radius, ray_count);
+        std::mt19937_64 random_engine(ray_count);
+        std::vector<Ray<N, T>> rays;
+        rays.resize(ray_count);
+        for (Ray<N, T>& ray : rays)
+        {
+                Vector<N, T> v = sampling::uniform_on_sphere<N, T>(random_engine);
+                ray = Ray<N, T>(radius * v + center, -v);
+        }
+        return rays;
 }
 
 template <std::size_t N, typename T>
-void test_sphere_mesh(
-        const Mesh<N, T>& mesh,
-        int ray_count,
-        bool with_ray_log,
-        bool with_error_log,
-        ProgressRatio* progress)
+void test_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, ProgressRatio* progress)
 {
-        T ray_offset;
-        std::vector<Ray<N, T>> rays;
+        const geometry::BoundingBox<N, T> bb = mesh.bounding_box();
 
-        offset_and_rays_for_sphere_mesh(mesh, ray_count, &ray_offset, &rays);
+        const T ray_offset = std::max(bb.min.norm_infinity(), bb.max.norm_infinity()) * (100 * limits<T>::epsilon());
+        LOG("ray offset = " + to_string(ray_offset));
+
+        const std::vector<Ray<N, T>> rays = create_rays(bb, ray_count);
 
         int error_count = 0;
 
@@ -132,7 +93,7 @@ void test_sphere_mesh(
 
                 Ray<N, T> ray = rays[i - 1];
 
-                if (with_ray_log)
+                if (WITH_RAY_LOG)
                 {
                         LOG("");
                         LOG("ray #" + to_string(i) + " in " + space_name(N));
@@ -144,7 +105,7 @@ void test_sphere_mesh(
                 bounding_distance = mesh.intersect_bounding(ray);
                 if (!bounding_distance)
                 {
-                        if (with_error_log)
+                        if (WITH_ERROR_LOG)
                         {
                                 LOG("No the first bounding intersection with ray #" + to_string(i) + "\n"
                                     + to_string(ray));
@@ -152,7 +113,7 @@ void test_sphere_mesh(
                         ++error_count;
                         continue;
                 }
-                if (with_ray_log)
+                if (WITH_RAY_LOG)
                 {
                         LOG("t1_a == " + to_string(*bounding_distance));
                 }
@@ -160,7 +121,7 @@ void test_sphere_mesh(
                 intersection = mesh.intersect(ray, *bounding_distance);
                 if (!intersection)
                 {
-                        if (with_error_log)
+                        if (WITH_ERROR_LOG)
                         {
                                 LOG("No the first intersection with ray #" + to_string(i) + "\n" + "bounding distance "
                                     + to_string(*bounding_distance) + "\n" + to_string(ray));
@@ -168,7 +129,7 @@ void test_sphere_mesh(
                         ++error_count;
                         continue;
                 }
-                if (with_ray_log)
+                if (WITH_RAY_LOG)
                 {
                         LOG("t1_p == " + to_string(intersection->distance));
                 }
@@ -178,7 +139,7 @@ void test_sphere_mesh(
                 bounding_distance = mesh.intersect_bounding(ray);
                 if (!bounding_distance)
                 {
-                        if (with_error_log)
+                        if (WITH_ERROR_LOG)
                         {
                                 LOG("No the second bounding intersection with ray #" + to_string(i) + "\n"
                                     + to_string(ray));
@@ -186,7 +147,7 @@ void test_sphere_mesh(
                         ++error_count;
                         continue;
                 }
-                if (with_ray_log)
+                if (WITH_RAY_LOG)
                 {
                         LOG("t2_a == " + to_string(*bounding_distance));
                 }
@@ -194,7 +155,7 @@ void test_sphere_mesh(
                 intersection = mesh.intersect(ray, *bounding_distance);
                 if (!intersection)
                 {
-                        if (with_error_log)
+                        if (WITH_ERROR_LOG)
                         {
                                 LOG("No the second intersection with ray #" + to_string(i) + "\n" + "bounding "
                                     + to_string(*bounding_distance) + "\n" + to_string(ray));
@@ -202,7 +163,7 @@ void test_sphere_mesh(
                         ++error_count;
                         continue;
                 }
-                if (with_ray_log)
+                if (WITH_RAY_LOG)
                 {
                         LOG("t2_p == " + to_string(intersection->distance));
                 }
@@ -212,7 +173,7 @@ void test_sphere_mesh(
                 if ((bounding_distance = mesh.intersect_bounding(ray))
                     && (intersection = mesh.intersect(ray, *bounding_distance)))
                 {
-                        if (with_error_log)
+                        if (WITH_ERROR_LOG)
                         {
                                 LOG("The third intersection with ray #" + to_string(i) + "\n" + to_string(ray) + "\n"
                                     + "at point " + to_string(intersection->distance));
@@ -239,24 +200,23 @@ void test_sphere_mesh(
 template <std::size_t N, typename T>
 void test_mesh(int point_low, int point_high, int ray_low, int ray_high, ProgressRatio* progress)
 {
-        constexpr bool with_ray_log = false;
-        constexpr bool with_error_log = false;
+        ASSERT(point_low <= point_high);
+        ASSERT(ray_low <= ray_high);
 
         LOG("----------- " + space_name(N) + ", " + type_name<T>() + " -----------");
 
-        int point_count;
-        int ray_count;
-
+        const auto [point_count, ray_count] = [&]()
         {
-                std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
-                point_count = random_integer(random_engine, point_low, point_high);
-                ray_count = random_integer(random_engine, ray_low, ray_high);
-        }
+                std::mt19937 random_engine = create_engine<std::mt19937>();
+                return std::make_tuple(
+                        std::uniform_int_distribution<int>(point_low, point_high)(random_engine),
+                        std::uniform_int_distribution<int>(ray_low, ray_high)(random_engine));
+        }();
 
         constexpr Color::DataType METALNESS = 0;
         std::unique_ptr mesh = simplex_mesh_of_random_sphere<N, T>(Color(1), METALNESS, point_count, progress);
 
-        test_sphere_mesh(*mesh, ray_count, with_ray_log, with_error_log, progress);
+        test_sphere_mesh(*mesh, ray_count, progress);
 }
 
 void test_mesh_3(ProgressRatio* progress)
