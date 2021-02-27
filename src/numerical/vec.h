@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <std::size_t N, typename T>
-class Vector
+class Vector final
 {
         static_assert(N > 0);
 
