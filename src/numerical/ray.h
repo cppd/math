@@ -26,13 +26,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <std::size_t N, typename T>
-class Ray
+class Ray final
 {
         Vector<N, T> m_org;
         Vector<N, T> m_dir;
 
 public:
-        Ray() = default;
+        Ray()
+        {
+        }
 
         Ray(const Vector<N, T>& org, const Vector<N, T>& dir) : m_org(org), m_dir(dir.normalized())
         {
