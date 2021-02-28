@@ -334,6 +334,8 @@ class SpatialSubdivisionTree final
 
         static constexpr int BOX_COUNT_LIMIT = (1u << 31) - 1;
 
+        static constexpr int RAY_OFFSET_IN_EPSILONS = 10;
+
         static constexpr int BOX_COUNT_SUBDIVISION = spatial_subdivision_tree_implementation::BOX_COUNT<N>;
 
         // Первым элементом массива является только 0.
@@ -341,7 +343,7 @@ class SpatialSubdivisionTree final
 
         std::vector<Box> m_boxes;
 
-        Vector<N, T> m_distance_from_facet;
+        T m_ray_offset;
 
         const Box* find_box_for_point(const Box& box, const Vector<N, T>& p) const
         {
@@ -411,13 +413,8 @@ public:
                 const Vector<N, T> guard_region(GUARD_REGION_SIZE * (bounding_box.max - bounding_box.min).norm());
                 const BoundingBox<N, T> root(bounding_box.min - guard_region, bounding_box.max + guard_region);
 
-                // Максимальное разделение по одной координате
-                const int max_divisions = 1u << (max_depth - 1);
-
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        m_distance_from_facet[i] = (root.max[i] - root.min[i]) / max_divisions / 2;
-                }
+                m_ray_offset = std::max(root.max.norm_infinity(), root.min.norm_infinity())
+                               * (RAY_OFFSET_IN_EPSILONS * limits<T>::epsilon() * std::sqrt(T(N)));
 
                 const int max_box_count = std::lround(impl::maximum_box_count(BOX_COUNT_SUBDIVISION, max_depth));
 
@@ -466,8 +463,7 @@ public:
                 box = find_box_for_point(point);
                 if (!box)
                 {
-                        box = find_box_for_point(
-                                point - m_distance_from_facet * m_boxes[ROOT_BOX].parallelotope().normal(point));
+                        box = find_box_for_point(ray.point(m_ray_offset));
                         if (!box)
                         {
                                 return false;
@@ -488,15 +484,28 @@ public:
                         std::optional<T> next = box->parallelotope().intersect_farthest(ray);
                         if (!next)
                         {
-                                return false;
+                                next = 0;
                         }
 
-                        point = ray.point(*next);
-                        ray.set_org(point);
-                        box = find_box_for_point(point + m_distance_from_facet * box->parallelotope().normal(point));
-                        if (!box)
+                        ray.set_org(ray.point(*next));
+                        for (T i = 1, offset = m_ray_offset;; i *= 2, offset = i * m_ray_offset)
                         {
-                                return false;
+                                point = ray.point(offset);
+                                const Box* next_box = find_box_for_point(point);
+                                if (!next_box)
+                                {
+                                        return false;
+                                }
+                                if (next_box != box)
+                                {
+                                        box = next_box;
+                                        ray.set_org(point);
+                                        break;
+                                }
+                                if (i >= T(1e10))
+                                {
+                                        return false;
+                                }
                         }
                 }
         }
