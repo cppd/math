@@ -50,9 +50,7 @@ constexpr bool WITH_ERROR_LOG = false;
 template <std::size_t N, typename T>
 std::vector<Ray<N, T>> create_rays(const geometry::BoundingBox<N, T>& bb, int ray_count)
 {
-        Vector<N, T> center = bb.min + (bb.max - bb.min) / T(2);
-        // Немного сместить центр, чтобы лучи не проходили через центр дерева
-        center *= 0.99;
+        Vector<N, T> center = (bb.max + bb.min) / T(2);
 
         T radius = ((bb.max - bb.min) / T(2)).norm_infinity();
         // При работе со сферой, чтобы начала лучей точно находились вне сферы,
@@ -197,7 +195,7 @@ void test_spherical_mesh(const Mesh<N, T>& mesh, int ray_count, ProgressRatio* p
             + to_string_fixed(error_percent, 5) + "%");
         LOG("");
 
-        if (!(error_percent < 0.01))
+        if (!(error_percent < 0.005))
         {
                 error("Too many errors, " + to_string_fixed(error_percent, 5) + "%");
         }
