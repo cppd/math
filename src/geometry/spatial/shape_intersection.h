@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/math.h>
-#include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/simplex.h>
 #include <src/numerical/vec.h>
@@ -57,46 +56,6 @@ template <typename T>
 constexpr std::size_t size()
 {
         return std::tuple_size_v<T>;
-}
-
-template <typename Shape>
-constexpr std::enable_if_t<(size<decltype(std::declval<Shape>().constraints().c_eq)>() >= 0), std::size_t>
-        constraint_count()
-{
-        static_assert(size<decltype(std::declval<Shape>().constraints().c)>() > 0);
-        static_assert(size<decltype(std::declval<Shape>().constraints().c_eq)>() > 0);
-        static_assert(
-                Shape::SHAPE_DIMENSION + size<decltype(std::declval<Shape>().constraints().c_eq)>()
-                == Shape::SPACE_DIMENSION);
-        return size<decltype(std::declval<Shape>().constraints().c)>()
-               + size<decltype(std::declval<Shape>().constraints().c_eq)>();
-}
-
-template <typename Shape>
-constexpr std::enable_if_t<Shape::SPACE_DIMENSION == Shape::SHAPE_DIMENSION, std::size_t> constraint_count()
-{
-        static_assert(size<decltype(std::declval<Shape>().constraints().c)>() > 0);
-        return size<decltype(std::declval<Shape>().constraints().c)>();
-}
-
-template <typename Shape1, typename Shape2>
-const Constraint<Shape1::SPACE_DIMENSION, typename Shape1::DataType>& constraint_eq(
-        const Shape1& shape_1,
-        const Shape2& shape_2)
-{
-        static_assert(
-                (size<decltype(std::declval<Shape1>().constraints().c)>() == constraint_count<Shape1>())
-                != (size<decltype(std::declval<Shape2>().constraints().c)>() == constraint_count<Shape2>()));
-        if constexpr (size<decltype(std::declval<Shape1>().constraints().c)>() == constraint_count<Shape1>())
-        {
-                static_assert(std::is_reference_v<decltype(shape_2.constraints())>);
-                return shape_2.constraints().c_eq[0];
-        }
-        if constexpr (size<decltype(std::declval<Shape2>().constraints().c)>() == constraint_count<Shape2>())
-        {
-                static_assert(std::is_reference_v<decltype(shape_1.constraints())>);
-                return shape_1.constraints().c_eq[0];
-        }
 }
 
 template <typename Shape1, typename Shape2>
@@ -171,7 +130,7 @@ bool all_vertices_are_on_negative_side(const std::array<Vector<N, T>, V>& vertic
 {
         for (const Vector<N, T>& v : vertices)
         {
-                if (dot(v, c.a) + c.b > 0)
+                if (dot(v, c.a) + c.b >= 0)
                 {
                         return false;
                 }
@@ -180,19 +139,19 @@ bool all_vertices_are_on_negative_side(const std::array<Vector<N, T>, V>& vertic
 }
 
 template <std::size_t N, std::size_t V, typename T>
-bool all_vertices_are_on_the_same_side(const std::array<Vector<N, T>, V>& vertices, const Constraint<N, T>& c)
+bool all_vertices_are_only_on_one_side(const std::array<Vector<N, T>, V>& vertices, const Constraint<N, T>& c)
 {
-        bool negative = false;
-        bool positive = false;
+        bool non_positive = false;
+        bool non_negative = false;
         for (const Vector<N, T>& v : vertices)
         {
                 T p = dot(v, c.a) + c.b;
-                if ((p > 0 && negative) || (p < 0 && positive))
+                non_positive = non_positive || p <= 0;
+                non_negative = non_negative || p >= 0;
+                if (non_negative && non_positive)
                 {
                         return false;
                 }
-                negative = p < 0;
-                positive = p > 0;
         }
         return true;
 }
@@ -223,7 +182,7 @@ bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2
         {
                 for (const Constraint<N, T>& constraint_eq : shape_1.constraints().c_eq)
                 {
-                        if (all_vertices_are_on_the_same_side(shape_2.vertices(), constraint_eq))
+                        if (all_vertices_are_only_on_one_side(shape_2.vertices(), constraint_eq))
                         {
                                 return true;
                         }
@@ -234,7 +193,7 @@ bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2
         {
                 for (const Constraint<N, T>& constraint_eq : shape_2.constraints().c_eq)
                 {
-                        if (all_vertices_are_on_the_same_side(shape_1.vertices(), constraint_eq))
+                        if (all_vertices_are_only_on_one_side(shape_1.vertices(), constraint_eq))
                         {
                                 return true;
                         }
@@ -244,78 +203,118 @@ bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2
         return false;
 }
 
-template <typename Shape1, typename Shape2>
-bool shapes_intersect_by_spaces(const Shape1& shape_1, const Shape2& shape_2)
-{
-        constexpr std::size_t N = Shape1::SPACE_DIMENSION;
-        using T = typename Shape1::DataType;
+//template <typename Shape>
+//constexpr std::enable_if_t<(size<decltype(std::declval<Shape>().constraints().c_eq)>() >= 0), std::size_t>
+//        constraint_count()
+//{
+//        static_assert(size<decltype(std::declval<Shape>().constraints().c)>() > 0);
+//        static_assert(size<decltype(std::declval<Shape>().constraints().c_eq)>() > 0);
+//        static_assert(
+//                Shape::SHAPE_DIMENSION + size<decltype(std::declval<Shape>().constraints().c_eq)>()
+//                == Shape::SPACE_DIMENSION);
+//        return size<decltype(std::declval<Shape>().constraints().c)>()
+//               + size<decltype(std::declval<Shape>().constraints().c_eq)>();
+//}
 
-        static_assert(size<decltype(shape_1.constraints().c)>() > 0);
-        static_assert(size<decltype(shape_2.constraints().c)>() > 0);
+//template <typename Shape>
+//constexpr std::enable_if_t<Shape::SPACE_DIMENSION == Shape::SHAPE_DIMENSION, std::size_t> constraint_count()
+//{
+//        static_assert(size<decltype(std::declval<Shape>().constraints().c)>() > 0);
+//        return size<decltype(std::declval<Shape>().constraints().c)>();
+//}
 
-        constexpr std::size_t CONSTRAINT_COUNT = constraint_count<Shape1>() + constraint_count<Shape2>();
+//template <typename Shape1, typename Shape2>
+//const Constraint<Shape1::SPACE_DIMENSION, typename Shape1::DataType>& constraint_eq(
+//        const Shape1& shape_1,
+//        const Shape2& shape_2)
+//{
+//        static_assert(
+//                (size<decltype(std::declval<Shape1>().constraints().c)>() == constraint_count<Shape1>())
+//                != (size<decltype(std::declval<Shape2>().constraints().c)>() == constraint_count<Shape2>()));
+//        if constexpr (size<decltype(std::declval<Shape1>().constraints().c)>() == constraint_count<Shape1>())
+//        {
+//                static_assert(std::is_reference_v<decltype(shape_2.constraints())>);
+//                return shape_2.constraints().c_eq[0];
+//        }
+//        if constexpr (size<decltype(std::declval<Shape2>().constraints().c)>() == constraint_count<Shape2>())
+//        {
+//                static_assert(std::is_reference_v<decltype(shape_1.constraints())>);
+//                return shape_1.constraints().c_eq[0];
+//        }
+//}
 
-        const Vector<N, T> min = min_vector(shape_1.min(), shape_2.min());
-
-        std::array<Vector<N, T>, CONSTRAINT_COUNT> a;
-        std::array<T, CONSTRAINT_COUNT> b;
-
-        // Со смещением минимума к нулю для всех ограничений,
-        // чтобы работа была с положительными числами
-        // x_new = x_old - min
-        // x_old = x_new + min
-        // a ⋅ (x_new + min) + b  ->  a ⋅ x_new + a ⋅ min + b  ->  a ⋅ x_new + (a ⋅ min + b)
-
-        int i = 0;
-
-        for (const Constraint<N, T>& c : shape_1.constraints().c)
-        {
-                a[i] = c.a;
-                b[i] = dot(c.a, min) + c.b;
-                ++i;
-        }
-        for (const Constraint<N, T>& c : shape_2.constraints().c)
-        {
-                a[i] = c.a;
-                b[i] = dot(c.a, min) + c.b;
-                ++i;
-        }
-
-        static_assert(
-                CONSTRAINT_COUNT
-                <= 1 + size<decltype(shape_1.constraints().c)>() + size<decltype(shape_2.constraints().c)>());
-
-        if constexpr (
-                CONSTRAINT_COUNT
-                == size<decltype(shape_1.constraints().c)>() + size<decltype(shape_2.constraints().c)>())
-        {
-                ASSERT(i == CONSTRAINT_COUNT);
-
-                return (numerical::solve_constraints(a, b) == numerical::ConstraintSolution::Feasible);
-        }
-
-        if constexpr (
-                CONSTRAINT_COUNT
-                == 1 + size<decltype(shape_1.constraints().c)>() + size<decltype(shape_2.constraints().c)>())
-        {
-                ASSERT(i + 1 == CONSTRAINT_COUNT);
-
-                const Constraint<N, T>& c = constraint_eq(shape_1, shape_2);
-
-                const Vector<N, T> a_v = c.a;
-                const T b_v = dot(c.a, min) + c.b;
-
-                a[i] = a_v;
-                b[i] = b_v;
-                if (numerical::solve_constraints(a, b) != numerical::ConstraintSolution::Feasible)
-                {
-                        return false;
-                }
-                a[i] = -a_v;
-                b[i] = -b_v;
-                return (numerical::solve_constraints(a, b) == numerical::ConstraintSolution::Feasible);
-        }
-}
+//template <typename Shape1, typename Shape2>
+//bool shapes_intersect_by_spaces(const Shape1& shape_1, const Shape2& shape_2)
+//{
+//        constexpr std::size_t N = Shape1::SPACE_DIMENSION;
+//        using T = typename Shape1::DataType;
+//
+//        static_assert(size<decltype(shape_1.constraints().c)>() > 0);
+//        static_assert(size<decltype(shape_2.constraints().c)>() > 0);
+//
+//        constexpr std::size_t CONSTRAINT_COUNT = constraint_count<Shape1>() + constraint_count<Shape2>();
+//
+//        const Vector<N, T> min = min_vector(shape_1.min(), shape_2.min());
+//
+//        std::array<Vector<N, T>, CONSTRAINT_COUNT> a;
+//        std::array<T, CONSTRAINT_COUNT> b;
+//
+//        // Со смещением минимума к нулю для всех ограничений,
+//        // чтобы работа была с положительными числами
+//        // x_new = x_old - min
+//        // x_old = x_new + min
+//        // a ⋅ (x_new + min) + b  ->  a ⋅ x_new + a ⋅ min + b  ->  a ⋅ x_new + (a ⋅ min + b)
+//
+//        int i = 0;
+//
+//        for (const Constraint<N, T>& c : shape_1.constraints().c)
+//        {
+//                a[i] = c.a;
+//                b[i] = dot(c.a, min) + c.b;
+//                ++i;
+//        }
+//        for (const Constraint<N, T>& c : shape_2.constraints().c)
+//        {
+//                a[i] = c.a;
+//                b[i] = dot(c.a, min) + c.b;
+//                ++i;
+//        }
+//
+//        static_assert(
+//                CONSTRAINT_COUNT
+//                <= 1 + size<decltype(shape_1.constraints().c)>() + size<decltype(shape_2.constraints().c)>());
+//
+//        if constexpr (
+//                CONSTRAINT_COUNT
+//                == size<decltype(shape_1.constraints().c)>() + size<decltype(shape_2.constraints().c)>())
+//        {
+//                ASSERT(i == CONSTRAINT_COUNT);
+//
+//                return (numerical::solve_constraints(a, b) == numerical::ConstraintSolution::Feasible);
+//        }
+//
+//        if constexpr (
+//                CONSTRAINT_COUNT
+//                == 1 + size<decltype(shape_1.constraints().c)>() + size<decltype(shape_2.constraints().c)>())
+//        {
+//                ASSERT(i + 1 == CONSTRAINT_COUNT);
+//
+//                const Constraint<N, T>& c = constraint_eq(shape_1, shape_2);
+//
+//                const Vector<N, T> a_v = c.a;
+//                const T b_v = dot(c.a, min) + c.b;
+//
+//                a[i] = a_v;
+//                b[i] = b_v;
+//                if (numerical::solve_constraints(a, b) != numerical::ConstraintSolution::Feasible)
+//                {
+//                        return false;
+//                }
+//                a[i] = -a_v;
+//                b[i] = -b_v;
+//                return (numerical::solve_constraints(a, b) == numerical::ConstraintSolution::Feasible);
+//        }
+//}
 
 template <typename Shape1, typename Shape2>
 void static_checks(const Shape1& shape_1, const Shape2& shape_2)
@@ -349,17 +348,10 @@ void static_checks(const Shape1& shape_1, const Shape2& shape_2)
 //     Любая вершина одного объекта находится внутри другого объекта.
 // * Достаточное условие отсутствия пересечения:
 //     Все вершины одного объекта находятся по одну сторону от другого объекта.
-// * Необходимое и достаточное условие пересечения (по определению пересечения):
+// * Необходимое и достаточное условие пересечения:
 //     Система неравенств объектов имеет решение.
-//
-//   Два достаточных условия используются для ускорения поиска пересечения,
-// чтобы реже решать систему неравенств.
-//
-//   Для двухмерных и трёхмерных пространств можно обойтись без поиска решения
-// системы неравенств. Объекты в трёхмерном пересекаются, если любая вершина
-// одного объекта находится внутри другого объекта или ребро одного объекта
-// пересекает другой объект. За исключением частных случаев, когда, например,
-// объекты совпадают, но здесь эти случаи не учитываются.
+// Объекты в 2D и 3D пересекаются, если любая вершина одного объекта находится
+// внутри другого объекта или ребро одного объекта пересекает другой объект.
 template <typename Shape1, typename Shape2>
 bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2)
 {
@@ -376,17 +368,17 @@ bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2)
 
         if constexpr (N <= 3)
         {
-                return (impl::shapes_intersect_by_edges(shape_1, shape_2));
+                return impl::shapes_intersect_by_edges(shape_1, shape_2);
         }
-
-        if constexpr (N >= 4)
+        else
         {
-                if (impl::shapes_not_intersect_by_planes(shape_1, shape_2))
-                {
-                        return false;
-                }
-
-                return (impl::shapes_intersect_by_spaces(shape_1, shape_2));
+                return !impl::shapes_not_intersect_by_planes(shape_1, shape_2);
+                //if (impl::shapes_not_intersect_by_planes(shape_1, shape_2))
+                //{
+                //        return false;
+                //}
+                //
+                //return (impl::shapes_intersect_by_spaces(shape_1, shape_2));
         }
 }
 }

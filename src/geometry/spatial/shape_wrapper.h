@@ -40,19 +40,19 @@ class ShapeWrapperForIntersection final
         const Shape& m_shape;
         Vertices m_vertices;
         Constraints m_constraints;
-        Vector<N, T> m_min;
+        //Vector<N, T> m_min;
 
-        template <std::size_t ArraySize, typename T, std::size_t N>
-        static Vector<N, T> find_min_vector(const std::array<Vector<N, T>, ArraySize>& vectors)
-        {
-                static_assert(ArraySize > 0);
-                Vector<N, T> min = vectors[0];
-                for (std::size_t i = 1; i < ArraySize; ++i)
-                {
-                        min = min_vector(vectors[i], min);
-                }
-                return min;
-        }
+        //template <std::size_t ArraySize, typename T, std::size_t N>
+        //static Vector<N, T> find_min_vector(const std::array<Vector<N, T>, ArraySize>& vectors)
+        //{
+        //        static_assert(ArraySize > 0);
+        //        Vector<N, T> min = vectors[0];
+        //        for (std::size_t i = 1; i < ArraySize; ++i)
+        //        {
+        //                min = min_vector(vectors[i], min);
+        //        }
+        //        return min;
+        //}
 
 public:
         static constexpr std::size_t SPACE_DIMENSION = Shape::SPACE_DIMENSION;
@@ -60,11 +60,9 @@ public:
         using DataType = T;
 
         explicit ShapeWrapperForIntersection(const Shape& s)
-                : m_shape(s),
-                  m_vertices(s.vertices()),
-                  m_constraints(m_shape.constraints()),
-                  m_min(find_min_vector(m_vertices))
+                : m_shape(s), m_vertices(s.vertices()), m_constraints(m_shape.constraints())
         {
+                //m_min = find_min_vector(m_vertices);
         }
 
         bool inside(const Vector<N, T>& p) const
@@ -82,10 +80,10 @@ public:
                 return m_constraints;
         }
 
-        const Vector<N, T>& min() const
-        {
-                return m_min;
-        }
+        //const Vector<N, T>& min() const
+        //{
+        //        return m_min;
+        //}
 };
 
 template <typename Shape>
