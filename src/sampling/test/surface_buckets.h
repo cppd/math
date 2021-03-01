@@ -101,6 +101,21 @@ class SurfaceBuckets final
                 return bucket_pdf / COUNT;
         }
 
+        static void check_bucket_intersection(long long missed_intersection_count, long long intersection_count)
+        {
+                const long long sample_count = missed_intersection_count + intersection_count;
+                if (sample_count < 1'000'000)
+                {
+                        error("Too few samples " + to_string(sample_count));
+                }
+                const long long max_missed_count = std::ceil(sample_count * 1e-6);
+                if (missed_intersection_count >= max_missed_count)
+                {
+                        error("Too many missed intersections " + to_string(missed_intersection_count) + ", all samples "
+                              + to_string(sample_count));
+                }
+        }
+
         struct Bucket final : public MeshFacet<N, T>
         {
                 long long counter = 0;
@@ -114,6 +129,8 @@ class SurfaceBuckets final
         std::vector<Bucket> m_buckets;
 
         std::optional<geometry::ObjectTree<Bucket>> m_tree;
+
+        long long m_missed_intersection_count = 0;
 
 public:
         std::size_t bucket_count() const
@@ -144,16 +161,18 @@ public:
 
         void merge(const SurfaceBuckets<N, T>& other)
         {
+                ASSERT(m_vertices == other.m_vertices);
                 ASSERT(m_buckets.size() == other.m_buckets.size());
                 for (unsigned i = 0; i < m_buckets.size(); ++i)
                 {
                         m_buckets[i].counter += other.m_buckets[i].counter;
                 }
+                m_missed_intersection_count += other.m_missed_intersection_count;
         }
 
         void add(const Vector<N, T>& direction)
         {
-                Ray<N, T> ray(Vector<N, T>(1e-4), direction);
+                Ray<N, T> ray(Vector<N, T>(0), direction);
 
                 std::optional<T> root_distance = m_tree->intersect_root(ray);
                 ASSERT(root_distance && *root_distance == 0);
@@ -161,11 +180,11 @@ public:
                 std::optional<std::tuple<T, const Bucket*>> v = m_tree->intersect(ray, *root_distance);
                 if (!v)
                 {
-                        //error("No intersection found for direction " + to_string(ray.dir()));
+                        ++m_missed_intersection_count;
                         return;
                 }
 
-                ++const_cast<Bucket*>(std::get<1>(*v))->counter;
+                ++(const_cast<Bucket*>(std::get<1>(*v))->counter);
         }
 
         template <typename PDF>
@@ -182,6 +201,8 @@ public:
                         }
                         return s;
                 }();
+
+                check_bucket_intersection(m_missed_intersection_count, sample_count);
 
                 std::mt19937 random_engine = create_engine<std::mt19937>();
 
