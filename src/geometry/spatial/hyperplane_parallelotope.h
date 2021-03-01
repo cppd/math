@@ -36,7 +36,7 @@ class HyperplaneParallelotope final
         static constexpr int VERTEX_COUNT = 1 << (N - 1);
         // Количество вершин 2 ^ (N-1) умножить на количество измерений (N-1) у каждой вершины
         // и для уникальности разделить на 2 = ((2 ^ (N-1)) * (N-1)) / 2 = (2 ^ (N-2)) * (N-1)
-        static constexpr int VERTEX_RIDGE_COUNT = (1 << (N - 2)) * (N - 1);
+        static constexpr int EDGE_COUNT = (1 << (N - 2)) * (N - 1);
 
         struct Planes
         {
@@ -53,7 +53,7 @@ class HyperplaneParallelotope final
         void vertices_impl(const Vector<N, T>& p, const F& f) const;
 
         template <int INDEX, typename F>
-        void vertex_ridges_impl(const Vector<N, T>& p, std::array<bool, N - 1>* dimensions, const F& f) const;
+        void edges_impl(const Vector<N, T>& p, std::array<bool, N - 1>* dimensions, const F& f) const;
 
 public:
         static constexpr std::size_t SPACE_DIMENSION = N;
@@ -74,7 +74,7 @@ public:
 
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
 
-        std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> vertex_ridges() const;
+        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> edges() const;
 
         const Vector<N, T>& org() const;
         const Vector<N, T>& e(unsigned n) const;
@@ -211,18 +211,18 @@ std::array<Vector<N, T>, HyperplaneParallelotope<N, T>::VERTEX_COUNT> Hyperplane
 
 template <std::size_t N, typename T>
 template <int INDEX, typename F>
-void HyperplaneParallelotope<N, T>::vertex_ridges_impl(
-        const Vector<N, T>& p,
-        std::array<bool, N - 1>* dimensions,
-        const F& f) const
+void HyperplaneParallelotope<N, T>::edges_impl(const Vector<N, T>& p, std::array<bool, N - 1>* dimensions, const F& f)
+        const
 {
+        static_assert(N <= 3);
+
         if constexpr (INDEX >= 0)
         {
                 (*dimensions)[INDEX] = true;
-                vertex_ridges_impl<INDEX - 1>(p, dimensions, f);
+                edges_impl<INDEX - 1>(p, dimensions, f);
 
                 (*dimensions)[INDEX] = false;
-                vertex_ridges_impl<INDEX - 1>(p + m_vectors[INDEX], dimensions, f);
+                edges_impl<INDEX - 1>(p + m_vectors[INDEX], dimensions, f);
         }
         else
         {
@@ -231,11 +231,12 @@ void HyperplaneParallelotope<N, T>::vertex_ridges_impl(
 }
 
 template <std::size_t N, typename T>
-std::array<std::array<Vector<N, T>, 2>, HyperplaneParallelotope<N, T>::VERTEX_RIDGE_COUNT> HyperplaneParallelotope<
-        N,
-        T>::vertex_ridges() const
+std::array<std::array<Vector<N, T>, 2>, HyperplaneParallelotope<N, T>::EDGE_COUNT> HyperplaneParallelotope<N, T>::
+        edges() const
 {
-        std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> result;
+        static_assert(N <= 3);
+
+        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> result;
 
         unsigned count = 0;
         std::array<bool, N - 1> dimensions;
@@ -256,7 +257,7 @@ std::array<std::array<Vector<N, T>, 2>, HyperplaneParallelotope<N, T>::VERTEX_RI
         // Смещаться по каждому измерению для перехода к другой вершине.
         // Добавлять к массиву рёбер пары, состоящие из вершины и векторов
         // измерений, по которым не смещались для перехода к этой вершине.
-        vertex_ridges_impl<N - 2>(m_org, &dimensions, f);
+        edges_impl<N - 2>(m_org, &dimensions, f);
 
         ASSERT(count == result.size());
 

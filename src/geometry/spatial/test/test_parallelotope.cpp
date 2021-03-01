@@ -670,11 +670,14 @@ void test_algorithms(const Parallelotope& p)
                 print_message(to_string(v));
         }
 
-        print_separator();
-        print_message("vertex ridges");
-        for (auto vr : p.vertex_ridges())
+        if constexpr (Parallelotope::SPACE_DIMENSION <= 3)
         {
-                print_message(to_string(vr));
+                print_separator();
+                print_message("edges");
+                for (auto edge : p.edges())
+                {
+                        print_message(to_string(edge));
+                }
         }
 }
 

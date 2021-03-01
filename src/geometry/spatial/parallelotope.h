@@ -76,7 +76,7 @@ class Parallelotope final
 
         // Количество вершин 2 ^ N умножить на количество измерений N у каждой вершины
         // и для уникальности разделить на 2 = ((2 ^ N) * N) / 2 = (2 ^ (N - 1)) * N
-        static constexpr int VERTEX_RIDGE_COUNT = (1 << (N - 1)) * N;
+        static constexpr int EDGE_COUNT = (1 << (N - 1)) * N;
 
         struct Planes
         {
@@ -105,7 +105,7 @@ class Parallelotope final
         void vertices_impl(const Vector<N, T>& p, const F& f) const;
 
         template <int INDEX, typename F>
-        void vertex_ridges_impl(const Vector<N, T>& p, std::array<bool, N>* dimensions, const F& f) const;
+        void edges_impl(const Vector<N, T>& p, std::array<bool, N>* dimensions, const F& f) const;
 
         template <int INDEX, typename F>
         void length_impl(const Vector<N, T>& sum, const F& f) const;
@@ -137,7 +137,7 @@ public:
 
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
 
-        std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> vertex_ridges() const;
+        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> edges() const;
 
         T length() const;
 
@@ -457,15 +457,17 @@ std::array<Vector<N, T>, Parallelotope<N, T>::VERTEX_COUNT> Parallelotope<N, T>:
 
 template <std::size_t N, typename T>
 template <int INDEX, typename F>
-void Parallelotope<N, T>::vertex_ridges_impl(const Vector<N, T>& p, std::array<bool, N>* dimensions, const F& f) const
+void Parallelotope<N, T>::edges_impl(const Vector<N, T>& p, std::array<bool, N>* dimensions, const F& f) const
 {
+        static_assert(N <= 3);
+
         if constexpr (INDEX >= 0)
         {
                 (*dimensions)[INDEX] = true;
-                vertex_ridges_impl<INDEX - 1>(p, dimensions, f);
+                edges_impl<INDEX - 1>(p, dimensions, f);
 
                 (*dimensions)[INDEX] = false;
-                vertex_ridges_impl<INDEX - 1>(p + m_vectors[INDEX], dimensions, f);
+                edges_impl<INDEX - 1>(p + m_vectors[INDEX], dimensions, f);
         }
         else
         {
@@ -474,10 +476,11 @@ void Parallelotope<N, T>::vertex_ridges_impl(const Vector<N, T>& p, std::array<b
 }
 
 template <std::size_t N, typename T>
-std::array<std::array<Vector<N, T>, 2>, Parallelotope<N, T>::VERTEX_RIDGE_COUNT> Parallelotope<N, T>::vertex_ridges()
-        const
+std::array<std::array<Vector<N, T>, 2>, Parallelotope<N, T>::EDGE_COUNT> Parallelotope<N, T>::edges() const
 {
-        std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> result;
+        static_assert(N <= 3);
+
+        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> result;
 
         unsigned count = 0;
         std::array<bool, N> dimensions;
@@ -498,7 +501,7 @@ std::array<std::array<Vector<N, T>, 2>, Parallelotope<N, T>::VERTEX_RIDGE_COUNT>
         // Смещаться по каждому измерению для перехода к другой вершине.
         // Добавлять к массиву рёбер пары, состоящие из вершины и векторов
         // измерений, по которым не смещались для перехода к этой вершине.
-        vertex_ridges_impl<N - 1>(m_org, &dimensions, f);
+        edges_impl<N - 1>(m_org, &dimensions, f);
 
         ASSERT(count == result.size());
 

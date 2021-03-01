@@ -46,7 +46,7 @@ class MeshFacet
 
         // Количество сочетаний по 2 из N
         // N! / ((N - 2)! * 2!) = (N * (N - 1)) / 2
-        static constexpr int VERTEX_RIDGE_COUNT = (N * (N - 1)) / 2;
+        static constexpr int EDGE_COUNT = (N * (N - 1)) / 2;
 
         const std::vector<Vector<N, T>>& m_vertices;
         const std::array<int, N> m_v;
@@ -90,9 +90,11 @@ public:
                 return m_geometry.constraints(m_normal, vertices_to_array(m_vertices, m_v));
         }
 
-        std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> vertex_ridges() const
+        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> edges() const
         {
-                std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> result;
+                static_assert(N <= 3);
+
+                std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> result;
                 unsigned n = 0;
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
@@ -101,7 +103,7 @@ public:
                                 result[n++] = {m_vertices[m_v[i]], m_vertices[m_v[j]] - m_vertices[m_v[i]]};
                         }
                 }
-                ASSERT(n == VERTEX_RIDGE_COUNT);
+                ASSERT(n == EDGE_COUNT);
                 return result;
         }
 };

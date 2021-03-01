@@ -142,22 +142,22 @@ bool line_segment_intersects_shape(const Vector<N, T>& org, const Vector<N, T>& 
 }
 
 template <typename Shape1, typename Shape2>
-bool shapes_intersect_by_vertex_ridges(const Shape1& shape_1, const Shape2& shape_2)
+bool shapes_intersect_by_edges(const Shape1& shape_1, const Shape2& shape_2)
 {
         constexpr std::size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
 
-        for (const std::array<Vector<N, T>, 2>& ridge : shape_1.vertex_ridges())
+        for (const std::array<Vector<N, T>, 2>& edge : shape_1.edges())
         {
-                if (line_segment_intersects_shape(ridge[0], ridge[1], shape_2))
+                if (line_segment_intersects_shape(edge[0], edge[1], shape_2))
                 {
                         return true;
                 }
         }
 
-        for (const std::array<Vector<N, T>, 2>& ridge : shape_2.vertex_ridges())
+        for (const std::array<Vector<N, T>, 2>& edge : shape_2.edges())
         {
-                if (line_segment_intersects_shape(ridge[0], ridge[1], shape_1))
+                if (line_segment_intersects_shape(edge[0], edge[1], shape_1))
                 {
                         return true;
                 }
@@ -376,7 +376,7 @@ bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2)
 
         if constexpr (N <= 3)
         {
-                return (impl::shapes_intersect_by_vertex_ridges(shape_1, shape_2));
+                return (impl::shapes_intersect_by_edges(shape_1, shape_2));
         }
 
         if constexpr (N >= 4)

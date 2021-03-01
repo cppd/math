@@ -110,7 +110,7 @@ class ParallelotopeAA final
 
         // Количество вершин 2 ^ N умножить на количество измерений N у каждой вершины
         // и для уникальности разделить на 2 = ((2 ^ N) * N) / 2 = (2 ^ (N - 1)) * N
-        static constexpr int VERTEX_RIDGE_COUNT = (1 << (N - 1)) * N;
+        static constexpr int EDGE_COUNT = (1 << (N - 1)) * N;
 
         struct Planes
         {
@@ -158,7 +158,7 @@ public:
 
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
 
-        std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> vertex_ridges() const;
+        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> edges() const;
 
         T length() const;
 
@@ -461,10 +461,11 @@ std::array<Vector<N, T>, ParallelotopeAA<N, T>::VERTEX_COUNT> ParallelotopeAA<N,
 }
 
 template <std::size_t N, typename T>
-std::array<std::array<Vector<N, T>, 2>, ParallelotopeAA<N, T>::VERTEX_RIDGE_COUNT> ParallelotopeAA<N, T>::
-        vertex_ridges() const
+std::array<std::array<Vector<N, T>, 2>, ParallelotopeAA<N, T>::EDGE_COUNT> ParallelotopeAA<N, T>::edges() const
 {
-        std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT> result;
+        static_assert(N <= 3);
+
+        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> result;
 
         std::array<Vector<N, T>, N> vectors;
         for (unsigned i = 0; i < N; ++i)

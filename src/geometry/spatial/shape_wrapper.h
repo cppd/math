@@ -98,19 +98,18 @@ class ShapeWrapperForIntersection<Shape, std::enable_if_t<Shape::SPACE_DIMENSION
 
         using T = typename Shape::DataType;
         using Vertices = decltype(std::declval<Shape>().vertices());
-        using VertexRidges = decltype(std::declval<Shape>().vertex_ridges());
+        using Edges = decltype(std::declval<Shape>().edges());
 
         const Shape& m_shape;
         Vertices m_vertices;
-        VertexRidges m_vertex_ridges;
+        Edges m_edges;
 
 public:
         static constexpr std::size_t SPACE_DIMENSION = Shape::SPACE_DIMENSION;
         static constexpr std::size_t SHAPE_DIMENSION = Shape::SHAPE_DIMENSION;
         using DataType = T;
 
-        explicit ShapeWrapperForIntersection(const Shape& s)
-                : m_shape(s), m_vertices(s.vertices()), m_vertex_ridges(s.vertex_ridges())
+        explicit ShapeWrapperForIntersection(const Shape& s) : m_shape(s), m_vertices(s.vertices()), m_edges(s.edges())
         {
         }
 
@@ -129,9 +128,9 @@ public:
                 return m_vertices;
         }
 
-        const VertexRidges& vertex_ridges() const
+        const Edges& edges() const
         {
-                return m_vertex_ridges;
+                return m_edges;
         }
 };
 }
