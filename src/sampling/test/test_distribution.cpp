@@ -165,11 +165,7 @@ std::enable_if_t<N == 3> test_distribution_surface(
         const auto f = [&]()
         {
                 SurfaceBuckets<N, T> buckets;
-                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-                for (long long i = 0; i < count_per_thread; ++i)
-                {
-                        buckets.add(random_vector(random_engine));
-                }
+                buckets.add(random_vector, count_per_thread);
                 buckets.compute_bucket_info(pdf);
                 return buckets;
         };
