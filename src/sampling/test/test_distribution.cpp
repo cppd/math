@@ -170,6 +170,7 @@ std::enable_if_t<N == 3> test_distribution_surface(
                 {
                         buckets.add(random_vector(random_engine));
                 }
+                buckets.compute_bucket_info(pdf);
                 return buckets;
         };
 
@@ -194,7 +195,7 @@ std::enable_if_t<N == 3> test_distribution_surface(
                 }
         }
 
-        buckets.compare_with_pdf(pdf);
+        buckets.compare();
 }
 
 template <std::size_t N, typename T, typename RandomVector>

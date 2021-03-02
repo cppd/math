@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_facet.h"
 
+#include "../sphere_uniform.h"
+
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
@@ -28,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/spatial/object_tree.h>
 #include <src/numerical/vec.h>
 
+#include <cmath>
 #include <optional>
 #include <random>
 #include <sstream>
@@ -63,69 +66,73 @@ int tree_max_depth()
                 return std::max(2.0, std::floor(n));
         }
 }
+
+inline void check_bucket_intersection(long long missed_intersection_count, long long intersection_count)
+{
+        const long long sample_count = missed_intersection_count + intersection_count;
+        if (sample_count < 1'000'000)
+        {
+                error("Too few samples " + to_string(sample_count));
+        }
+        const long long max_missed_count = std::ceil(sample_count * 2e-6);
+        if (missed_intersection_count >= max_missed_count)
+        {
+                error("Too many missed intersections " + to_string(missed_intersection_count) + ", all samples "
+                      + to_string(sample_count));
+        }
+}
 }
 
 template <std::size_t N, typename T>
 class SurfaceBuckets final
 {
-        template <typename PDF, typename RandomEngine>
-        static T pdf_for_bucket(
-                const std::array<Vector<N, T>, N>& vertices,
-                const PDF& pdf,
-                RandomEngine& random_engine)
+        class Bucket final : public MeshFacet<N, T>
         {
-                std::uniform_real_distribution<T> urd(0, 1);
-                constexpr int COUNT = 100;
-                T bucket_pdf = 0;
-                for (int i = 0; i < COUNT; ++i)
-                {
-                        Vector<N, T> v;
-                        while (true)
-                        {
-                                v = Vector<N, T>(0);
-                                T sum = 0;
-                                for (unsigned n = 0; n < N - 1; ++n)
-                                {
-                                        T rnd = urd(random_engine);
-                                        sum += rnd;
-                                        v += vertices[n] * rnd;
-                                }
-                                if (sum < 1)
-                                {
-                                        v += vertices[N - 1] * (1 - sum);
-                                        break;
-                                }
-                        }
-                        bucket_pdf += pdf(v.normalized());
-                }
-                return bucket_pdf / COUNT;
-        }
+                long long m_sample_count = 0;
 
-        static void check_bucket_intersection(long long missed_intersection_count, long long intersection_count)
-        {
-                const long long sample_count = missed_intersection_count + intersection_count;
-                if (sample_count < 1'000'000)
-                {
-                        error("Too few samples " + to_string(sample_count));
-                }
-                const long long max_missed_count = std::ceil(sample_count * 1e-6);
-                if (missed_intersection_count >= max_missed_count)
-                {
-                        error("Too many missed intersections " + to_string(missed_intersection_count) + ", all samples "
-                              + to_string(sample_count));
-                }
-        }
+                long long m_pdf_count = 0;
+                double m_pdf_sum = 0;
 
-        struct Bucket final : public MeshFacet<N, T>
-        {
-                long long counter = 0;
-
+        public:
                 using MeshFacet<N, T>::MeshFacet;
+
+                void add_sample()
+                {
+                        ++m_sample_count;
+                }
+
+                long long sample_count() const
+                {
+                        return m_sample_count;
+                }
+
+                void add_pdf(double pdf)
+                {
+                        m_pdf_count += 1;
+                        m_pdf_sum += pdf;
+                }
+
+                double pdf() const
+                {
+                        if (!(m_pdf_count > 0))
+                        {
+                                error("Bucket PDF not computed");
+                        }
+                        return m_pdf_sum / m_pdf_count;
+                }
+
+                void merge(const Bucket& bucket)
+                {
+                        m_sample_count += bucket.m_sample_count;
+                        m_pdf_count += bucket.m_pdf_count;
+                        m_pdf_sum += bucket.m_pdf_sum;
+                }
         };
 
-        static constexpr unsigned BUCKET_MIN_COUNT = 1000;
+        static constexpr unsigned BUCKET_MIN_COUNT = 100 * (1 << N);
 
         std::vector<Vector<N, T>> m_vertices;
+        std::vector<std::array<int, N>> m_facets;
         std::vector<Bucket> m_buckets;
 
         std::optional<geometry::ObjectTree<Bucket>> m_tree;
@@ -133,21 +140,14 @@ class SurfaceBuckets final
         long long m_missed_intersection_count = 0;
 
 public:
-        std::size_t bucket_count() const
-        {
-                return m_buckets.size();
-        }
-
         SurfaceBuckets()
         {
                 namespace impl = surface_buckets_implementation;
 
-                std::vector<std::array<int, N>> facets;
+                geometry::create_sphere(BUCKET_MIN_COUNT, &m_vertices, &m_facets);
 
-                geometry::create_sphere(BUCKET_MIN_COUNT, &m_vertices, &facets);
-
-                m_buckets.reserve(facets.size());
-                for (const std::array<int, N>& vertex_indices : facets)
+                m_buckets.reserve(m_facets.size());
+                for (const std::array<int, N>& vertex_indices : m_facets)
                 {
                         m_buckets.emplace_back(m_vertices, vertex_indices);
                 }
@@ -159,37 +159,72 @@ public:
                 ASSERT(m_buckets.size() >= BUCKET_MIN_COUNT);
         }
 
-        void merge(const SurfaceBuckets<N, T>& other)
+        std::size_t bucket_count() const
         {
-                ASSERT(m_vertices == other.m_vertices);
-                ASSERT(m_buckets.size() == other.m_buckets.size());
-                for (unsigned i = 0; i < m_buckets.size(); ++i)
-                {
-                        m_buckets[i].counter += other.m_buckets[i].counter;
-                }
-                m_missed_intersection_count += other.m_missed_intersection_count;
+                return m_buckets.size();
         }
 
         void add(const Vector<N, T>& direction)
         {
-                Ray<N, T> ray(Vector<N, T>(0), direction);
+                const Ray<N, T> ray(Vector<N, T>(0), direction);
 
-                std::optional<T> root_distance = m_tree->intersect_root(ray);
+                const std::optional<T> root_distance = m_tree->intersect_root(ray);
                 ASSERT(root_distance && *root_distance == 0);
 
-                std::optional<std::tuple<T, const Bucket*>> v = m_tree->intersect(ray, *root_distance);
+                const std::optional<std::tuple<T, const Bucket*>> v = m_tree->intersect(ray, *root_distance);
                 if (!v)
                 {
                         ++m_missed_intersection_count;
                         return;
                 }
 
-                ++(const_cast<Bucket*>(std::get<1>(*v))->counter);
+                const_cast<Bucket*>(std::get<1>(*v))->add_sample();
         }
 
         template <typename PDF>
-        void compare_with_pdf(const PDF& pdf) const
+        void compute_bucket_info(const PDF& pdf)
         {
+                namespace impl = surface_buckets_implementation;
+
+                const long long RAY_COUNT = std::max<long long>(2'000'000, 1000 * m_buckets.size());
+                std::mt19937 random_engine = create_engine<std::mt19937>();
+                long long missed_intersection_count = 0;
+                for (long long i = 0; i < RAY_COUNT; ++i)
+                {
+                        const Ray<N, T> ray(Vector<N, T>(0), uniform_on_sphere<N, T>(random_engine));
+
+                        const std::optional<T> root_distance = m_tree->intersect_root(ray);
+                        ASSERT(root_distance && *root_distance == 0);
+
+                        const std::optional<std::tuple<T, const Bucket*>> v = m_tree->intersect(ray, *root_distance);
+                        if (!v)
+                        {
+                                ++missed_intersection_count;
+                                continue;
+                        }
+
+                        const_cast<Bucket*>(std::get<1>(*v))->add_pdf(pdf(ray.dir()));
+                }
+                impl::check_bucket_intersection(missed_intersection_count, RAY_COUNT - missed_intersection_count);
+        }
+
+        void merge(const SurfaceBuckets<N, T>& other)
+        {
+                ASSERT(m_vertices == other.m_vertices);
+                ASSERT(m_facets == other.m_facets);
+                ASSERT(m_buckets.size() == other.m_buckets.size());
+
+                for (unsigned i = 0; i < m_buckets.size(); ++i)
+                {
+                        m_buckets[i].merge(other.m_buckets[i]);
+                }
+                m_missed_intersection_count += other.m_missed_intersection_count;
+        }
+
+        void compare() const
+        {
+                namespace impl = surface_buckets_implementation;
+
                 constexpr T UNIFORM_DENSITY = T(1) / geometry::sphere_area(N);
 
                 const long long sample_count = [&]()
@@ -197,14 +232,12 @@ public:
                         long long s = 0;
                         for (const Bucket& bucket : m_buckets)
                         {
-                                s += bucket.counter;
+                                s += bucket.sample_count();
                         }
                         return s;
                 }();
 
-                check_bucket_intersection(m_missed_intersection_count, sample_count);
-
-                std::mt19937 random_engine = create_engine<std::mt19937>();
+                impl::check_bucket_intersection(m_missed_intersection_count, sample_count);
 
                 T sum_sampled = 0;
                 T sum_expected = 0;
@@ -215,9 +248,9 @@ public:
                         std::array<Vector<N, T>, N> vertices = bucket.vertices();
                         T bucket_area = geometry::sphere_simplex_area(vertices);
 
-                        T sampled_distribution = T(bucket.counter) / sample_count;
+                        T sampled_distribution = T(bucket.sample_count()) / sample_count;
                         T sampled_density = sampled_distribution / bucket_area;
-                        T expected_density = pdf_for_bucket(vertices, pdf, random_engine);
+                        T expected_density = bucket.pdf();
                         T expected_distribution = expected_density * bucket_area;
 
                         ASSERT(sampled_density >= 0);
@@ -256,7 +289,7 @@ public:
                         oss << "sampled density = " << sampled_density << '\n';
                         oss << "expected density = " << expected_density << '\n';
                         oss << "bucket area = " << bucket_area << '\n';
-                        oss << "bucket counter = " << bucket.counter << '\n';
+                        oss << "bucket counter = " << bucket.sample_count() << '\n';
                         oss << "sample count = " << sample_count;
                         error(oss.str());
                 }
