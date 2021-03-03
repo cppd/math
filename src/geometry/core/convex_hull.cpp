@@ -77,6 +77,7 @@ Chapman & Hall/CRC, 2004.
 #include <cstdint>
 #include <map>
 #include <random>
+#include <sstream>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -851,15 +852,25 @@ void paraboloid_convex_hull(
         const std::vector<Vector<N, long long>>& points,
         const std::vector<int>& points_map,
         std::vector<DelaunaySimplex<N>>* simplices,
-        ProgressRatio* progress)
+        ProgressRatio* progress,
+        bool write_log)
 {
         using FacetCH = Facet<N + 1, DataTypeParaboloid<N + 1>, ComputeTypeParaboloid<N + 1>>;
         using PointCH = Vector<N + 1, DataTypeParaboloid<N + 1>>;
 
-        LOG("Paraboloid " + space_name(N + 1) + ". Max: " + to_string(PARABOLOID_BITS) + ". Data: "
-            + type_str<DataTypeParaboloid<N + 1>>() + ". Compute: " + type_str<ComputeTypeParaboloid<N + 1>>() + ". "
-            + space_name(N) + ". Data: " + type_str<DataTypeAfterParaboloid<N>>()
-            + "; Compute: " + type_str<ComputeTypeAfterParaboloid<N>>());
+        if (write_log)
+        {
+                std::ostringstream oss;
+                oss << "Convex hull" << '\n';
+                oss << "  Paraboloid " << space_name(N + 1) << '\n';
+                oss << "    Max: " << PARABOLOID_BITS << '\n';
+                oss << "    Data: " << type_str<DataTypeParaboloid<N + 1>>() << '\n';
+                oss << "    Compute: " << type_str<ComputeTypeParaboloid<N + 1>>() << '\n';
+                oss << "  " << space_name(N) << '\n';
+                oss << "    Data: " << type_str<DataTypeAfterParaboloid<N>>() << '\n';
+                oss << "    Compute: " << type_str<ComputeTypeAfterParaboloid<N>>();
+                LOG(oss.str());
+        }
 
         // Рассчитать Делоне на основе нижней части выпуклой оболочки параболоида размерности N + 1
 
@@ -928,13 +939,21 @@ void ordinary_convex_hull(
         const std::vector<Vector<N, long long>>& points,
         const std::vector<int>& points_map,
         std::vector<ConvexHullFacet<N>>* ch_facets,
-        ProgressRatio* progress)
+        ProgressRatio* progress,
+        bool write_log)
 {
         using Facet = Facet<N, DataTypeOrdinary<N>, ComputeTypeOrdinary<N>>;
         using Point = Vector<N, DataTypeOrdinary<N>>;
 
-        LOG(space_name(N) + ".  Max: " + to_string(ORDINARY_BITS) + ". Data: " + type_str<DataTypeOrdinary<N>>()
-            + ". Compute: " + type_str<ComputeTypeOrdinary<N>>());
+        if (write_log)
+        {
+                std::ostringstream oss;
+                oss << "Convex hull " << space_name(N) << '\n';
+                oss << "  Max: " << to_string(ORDINARY_BITS) << '\n';
+                oss << "  Data: " << type_str<DataTypeOrdinary<N>>() << '\n';
+                oss << "  Compute: " << type_str<ComputeTypeOrdinary<N>>();
+                LOG(oss.str());
+        }
 
         std::vector<Point> data(points.size());
 
@@ -967,9 +986,13 @@ void delaunay_integer(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<vec<N>>* points,
         std::vector<DelaunaySimplex<N>>* simplices,
-        ProgressRatio* progress)
+        ProgressRatio* progress,
+        bool write_log)
 {
-        LOG("convex hull paraboloid in " + space_name(N + 1) + " integer");
+        if (write_log)
+        {
+                LOG("Convex hull paraboloid in " + space_name(N + 1) + " integer");
+        }
 
         std::vector<Vector<N, long long>> convex_hull_points;
         std::vector<int> points_map;
@@ -978,7 +1001,7 @@ void delaunay_integer(
 
         shuffle_and_convert_to_unique_integer(source_points, MAX, &convex_hull_points, &points_map);
 
-        paraboloid_convex_hull(convex_hull_points, points_map, simplices, progress);
+        paraboloid_convex_hull(convex_hull_points, points_map, simplices, progress, write_log);
 
         points->clear();
         points->resize(source_points.size(), vec<N>(0));
@@ -987,16 +1010,23 @@ void delaunay_integer(
                 (*points)[points_map[i]] = to_vector<double>(convex_hull_points[i]);
         }
 
-        LOG("convex hull paraboloid in " + space_name(N + 1) + " integer done");
+        if (write_log)
+        {
+                LOG("Convex hull paraboloid in " + space_name(N + 1) + " integer done");
+        }
 }
 
 template <std::size_t N>
 void convex_hull_integer(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<ConvexHullFacet<N>>* facets,
-        ProgressRatio* progress)
+        ProgressRatio* progress,
+        bool write_log)
 {
-        LOG("convex hull in " + space_name(N) + " integer");
+        if (write_log)
+        {
+                LOG("Convex hull in " + space_name(N) + " integer");
+        }
 
         std::vector<int> points_map;
         std::vector<Vector<N, long long>> convex_hull_points;
@@ -1005,9 +1035,12 @@ void convex_hull_integer(
 
         shuffle_and_convert_to_unique_integer(source_points, MAX, &convex_hull_points, &points_map);
 
-        ordinary_convex_hull(convex_hull_points, points_map, facets, progress);
+        ordinary_convex_hull(convex_hull_points, points_map, facets, progress, write_log);
 
-        LOG("convex hull in " + space_name(N) + " integer done");
+        if (write_log)
+        {
+                LOG("Convex hull in " + space_name(N) + " integer done");
+        }
 }
 }
 
@@ -1016,28 +1049,30 @@ void compute_delaunay(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<vec<N>>* points,
         std::vector<DelaunaySimplex<N>>* simplices,
-        ProgressRatio* progress)
+        ProgressRatio* progress,
+        bool write_log)
 {
         if (source_points.empty())
         {
-                error("no points for convex hull");
+                error("No points for compute delaunay");
         }
 
-        delaunay_integer(source_points, points, simplices, progress);
+        delaunay_integer(source_points, points, simplices, progress, write_log);
 }
 
 template <std::size_t N>
 void compute_convex_hull(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<ConvexHullFacet<N>>* ch_facets,
-        ProgressRatio* progress)
+        ProgressRatio* progress,
+        bool write_log)
 {
         if (source_points.empty())
         {
-                error("no points for convex hull");
+                error("No points for compute convex hull");
         }
 
-        convex_hull_integer(source_points, ch_facets, progress);
+        convex_hull_integer(source_points, ch_facets, progress, write_log);
 }
 
 //
@@ -1046,41 +1081,50 @@ template void compute_delaunay(
         const std::vector<Vector<2, float>>& source_points,
         std::vector<vec<2>>* points,
         std::vector<DelaunaySimplex<2>>* simplices,
-        ProgressRatio* progress);
+        ProgressRatio* progress,
+        bool write_log);
 template void compute_delaunay(
         const std::vector<Vector<3, float>>& source_points,
         std::vector<vec<3>>* points,
         std::vector<DelaunaySimplex<3>>* simplices,
-        ProgressRatio* progress);
+        ProgressRatio* progress,
+        bool write_log);
 template void compute_delaunay(
         const std::vector<Vector<4, float>>& source_points,
         std::vector<vec<4>>* points,
         std::vector<DelaunaySimplex<4>>* simplices,
-        ProgressRatio* progress);
+        ProgressRatio* progress,
+        bool write_log);
 template void compute_delaunay(
         const std::vector<Vector<5, float>>& source_points,
         std::vector<vec<5>>* points,
         std::vector<DelaunaySimplex<5>>* simplices,
-        ProgressRatio* progress);
+        ProgressRatio* progress,
+        bool write_log);
 
 template void compute_convex_hull(
         const std::vector<Vector<2, float>>& source_points,
         std::vector<ConvexHullFacet<2>>* ch_facets,
-        ProgressRatio* progress);
+        ProgressRatio* progress,
+        bool write_log);
 template void compute_convex_hull(
         const std::vector<Vector<3, float>>& source_points,
         std::vector<ConvexHullFacet<3>>* ch_facets,
-        ProgressRatio* progress);
+        ProgressRatio* progress,
+        bool write_log);
 template void compute_convex_hull(
         const std::vector<Vector<4, float>>& source_points,
         std::vector<ConvexHullFacet<4>>* ch_facets,
-        ProgressRatio* progress);
+        ProgressRatio* progress,
+        bool write_log);
 template void compute_convex_hull(
         const std::vector<Vector<5, float>>& source_points,
         std::vector<ConvexHullFacet<5>>* ch_facets,
-        ProgressRatio* progress);
+        ProgressRatio* progress,
+        bool write_log);
 template void compute_convex_hull(
         const std::vector<Vector<6, float>>& source_points,
         std::vector<ConvexHullFacet<6>>* ch_facets,
-        ProgressRatio* progress);
+        ProgressRatio* progress,
+        bool write_log);
 }

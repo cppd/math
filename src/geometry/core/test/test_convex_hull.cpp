@@ -170,7 +170,7 @@ std::vector<ConvexHullFacet<N>> create_convex_hull(std::vector<Vector<N, float>>
         LOG("Convex hull...");
         TimePoint start_time = time();
 
-        compute_convex_hull(points, &facets, progress);
+        compute_convex_hull(points, &facets, progress, true);
 
         LOG("Convex hull created, " + to_string_fixed(duration_from(start_time), 5) + " s");
         LOG("Point count " + to_string(point_count(facets)) + ", facet count " + to_string(facets.size()));

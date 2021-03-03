@@ -71,7 +71,7 @@ std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh,
 
         TimePoint start_time = time();
 
-        geometry::compute_convex_hull(points, &convex_hull_facets, progress);
+        geometry::compute_convex_hull(points, &convex_hull_facets, progress, true);
 
         LOG("Convex hull created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 

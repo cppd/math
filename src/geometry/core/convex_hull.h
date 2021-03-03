@@ -73,10 +73,12 @@ void compute_delaunay(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<vec<N>>* points,
         std::vector<DelaunaySimplex<N>>* simplices,
-        ProgressRatio* progress);
+        ProgressRatio* progress,
+        bool write_log);
 template <std::size_t N>
 void compute_convex_hull(
         const std::vector<Vector<N, float>>& source_points,
         std::vector<ConvexHullFacet<N>>* ch_facets,
-        ProgressRatio* progress);
+        ProgressRatio* progress,
+        bool write_log);
 }

@@ -274,7 +274,7 @@ void create_voronoi_delaunay(
 {
         std::vector<DelaunaySimplex<N>> delaunay_simplices;
         LOG("compute delaunay...");
-        compute_delaunay(source_points, points, &delaunay_simplices, progress);
+        compute_delaunay(source_points, points, &delaunay_simplices, progress, true);
 
         LOG("creating delaunay objects and facets and voronoi vertices...");
         create_delaunay_objects_and_facets(*points, delaunay_simplices, delaunay_objects, delaunay_facets);

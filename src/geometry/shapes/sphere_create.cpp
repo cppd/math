@@ -196,7 +196,7 @@ namespace
 //                std::vector<ConvexHullFacet<N>> facets;
 //                ProgressRatio progress(nullptr);
 //
-//                compute_convex_hull(vertices, &facets, &progress);
+//                compute_convex_hull(vertices, &facets, &progress, false);
 //
 //                for (const ConvexHullFacet<N>& facet : facets)
 //                {
@@ -326,7 +326,7 @@ std::enable_if_t<N >= 4> divide_facets(
         {
                 ProgressRatio progress(nullptr);
 
-                compute_convex_hull(ch_vertices, &ch_facets, &progress);
+                compute_convex_hull(ch_vertices, &ch_facets, &progress, false);
 
                 if (ch_facets.size() >= min_facet_count)
                 {

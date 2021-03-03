@@ -219,7 +219,7 @@ void create_spherical_mesh(
 
         progress->set_text("Data: %v of %m");
         std::vector<geometry::ConvexHullFacet<N>> ch_facets;
-        geometry::compute_convex_hull(*points, &ch_facets, progress);
+        geometry::compute_convex_hull(*points, &ch_facets, progress, true);
 
         facets->clear();
         facets->reserve(ch_facets.size());
