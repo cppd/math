@@ -94,6 +94,11 @@ void test_distribution_angle(
         const RandomVector& random_vector,
         const PDF& pdf)
 {
+        if (!(count > 0))
+        {
+                return;
+        }
+
         LOG(name + "\n  test angle distribution in " + space_name(N) + ", " + to_string_digit_groups(count) + ", "
             + type_name<T>());
 
@@ -141,21 +146,17 @@ void test_distribution_angle(
 }
 
 template <std::size_t N, typename T, typename RandomVector, typename PDF>
-std::enable_if_t<(N > 3)> test_distribution_surface(
-        const std::string& /*name*/,
-        long long /*count*/,
-        const RandomVector& /*random_vector*/,
-        const PDF& /*pdf*/)
-{
-}
-
-template <std::size_t N, typename T, typename RandomVector, typename PDF>
-std::enable_if_t<N == 3> test_distribution_surface(
+void test_distribution_surface(
         const std::string& name,
         long long count,
         const RandomVector& random_vector,
         const PDF& pdf)
 {
+        if (!(count > 0))
+        {
+                return;
+        }
+
         SurfaceBuckets<N, T> buckets;
 
         LOG(name + "\n  test surface distribution in " + space_name(N) + ", " + type_name<T>() + "\n  bucket count "
@@ -492,13 +493,9 @@ long long compute_angle_distribution_count()
 template <std::size_t N, typename T>
 long long compute_surface_distribution_count()
 {
-        if constexpr (N == 3)
-        {
-                const double count = 20'000 * SurfaceBuckets<N, T>().bucket_count();
-                const double round_to = std::pow(10, std::round(std::log10(count)) - 2);
-                return std::ceil(count / round_to) * round_to;
-        }
-        return 0;
+        const double count = 20'000 * SurfaceBuckets<N, T>().bucket_count();
+        const double round_to = std::pow(10, std::round(std::log10(count)) - 2);
+        return std::ceil(count / round_to) * round_to;
 }
 
 template <std::size_t N, typename T>
