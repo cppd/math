@@ -156,20 +156,21 @@ std::enable_if_t<N == 3> test_distribution_surface(
         const RandomVector& random_vector,
         const PDF& pdf)
 {
-        LOG(name + "\n  test surface distribution in " + space_name(N) + ", " + to_string_digit_groups(count) + ", "
-            + type_name<T>());
+        SurfaceBuckets<N, T> buckets;
+
+        LOG(name + "\n  test surface distribution in " + space_name(N) + ", " + type_name<T>() + "\n  bucket count "
+            + to_string_digit_groups(buckets.bucket_count()) + ", ray count " + to_string_digit_groups(count));
 
         const int thread_count = hardware_concurrency();
         const long long count_per_thread = (count + thread_count - 1) / thread_count;
 
         const auto f = [&]()
         {
-                SurfaceBuckets<N, T> buckets;
-                buckets.compute(count_per_thread, random_vector, pdf);
-                return buckets;
+                SurfaceBuckets<N, T> thread_buckets;
+                ASSERT(thread_buckets.bucket_count() == buckets.bucket_count());
+                thread_buckets.compute(count_per_thread, random_vector, pdf);
+                return thread_buckets;
         };
-
-        SurfaceBuckets<N, T> buckets;
 
         {
                 std::vector<std::future<SurfaceBuckets<N, T>>> futures;

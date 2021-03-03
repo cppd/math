@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vec.h>
 
 #include <cmath>
+#include <memory>
 #include <optional>
 #include <random>
 #include <sstream>
@@ -165,11 +166,9 @@ class SurfaceBuckets final
 
         static constexpr unsigned BUCKET_MIN_COUNT = 100 * (1 << N);
 
-        std::vector<Vector<N, T>> m_vertices;
+        std::unique_ptr<std::vector<Vector<N, T>>> m_vertices;
         std::vector<std::array<int, N>> m_facets;
         std::vector<Bucket> m_buckets;
-
-        std::optional<geometry::ObjectTree<Bucket>> m_tree;
 
         long long m_missed_intersection_count = 0;
         long long m_intersection_count = 0;
@@ -237,19 +236,15 @@ class SurfaceBuckets final
 public:
         SurfaceBuckets()
         {
-                namespace impl = surface_buckets_implementation;
+                m_vertices = std::make_unique<std::vector<Vector<N, T>>>();
 
-                geometry::create_sphere(BUCKET_MIN_COUNT, &m_vertices, &m_facets);
+                geometry::create_sphere(BUCKET_MIN_COUNT, m_vertices.get(), &m_facets);
 
                 m_buckets.reserve(m_facets.size());
                 for (const std::array<int, N>& vertex_indices : m_facets)
                 {
-                        m_buckets.emplace_back(m_vertices, vertex_indices);
+                        m_buckets.emplace_back(*m_vertices, vertex_indices);
                 }
-
-                ProgressRatio progress(nullptr);
-
-                m_tree.emplace(m_buckets, impl::tree_max_depth<N>(), impl::TREE_MIN_OBJECTS_PER_BOX, &progress);
 
                 ASSERT(m_buckets.size() >= BUCKET_MIN_COUNT);
         }
@@ -262,6 +257,14 @@ public:
         template <typename RandomVector, typename PDF>
         void compute(long long ray_count, const RandomVector& random_vector, const PDF& pdf)
         {
+                namespace impl = surface_buckets_implementation;
+
+                std::optional<geometry::ObjectTree<Bucket>> tree;
+                {
+                        ProgressRatio progress(nullptr);
+                        tree.emplace(m_buckets, impl::tree_max_depth<N>(), impl::TREE_MIN_OBJECTS_PER_BOX, &progress);
+                }
+
                 RandomEngine random_engine = create_engine<RandomEngine>();
 
                 for (Bucket& bucket : m_buckets)
@@ -276,10 +279,10 @@ public:
                 {
                         const Ray<N, T> ray(Vector<N, T>(0), random_vector(random_engine));
 
-                        const std::optional<T> root_distance = m_tree->intersect_root(ray);
+                        const std::optional<T> root_distance = tree->intersect_root(ray);
                         ASSERT(root_distance && *root_distance == 0);
 
-                        const std::optional<std::tuple<T, const Bucket*>> v = m_tree->intersect(ray, *root_distance);
+                        const std::optional<std::tuple<T, const Bucket*>> v = tree->intersect(ray, *root_distance);
                         if (!v)
                         {
                                 ++m_missed_intersection_count;
@@ -295,10 +298,10 @@ public:
                 {
                         const Ray<N, T> ray(Vector<N, T>(0), uniform_on_sphere<N, T>(random_engine));
 
-                        const std::optional<T> root_distance = m_tree->intersect_root(ray);
+                        const std::optional<T> root_distance = tree->intersect_root(ray);
                         ASSERT(root_distance && *root_distance == 0);
 
-                        const std::optional<std::tuple<T, const Bucket*>> v = m_tree->intersect(ray, *root_distance);
+                        const std::optional<std::tuple<T, const Bucket*>> v = tree->intersect(ray, *root_distance);
                         if (!v)
                         {
                                 ++m_missed_intersection_count;
@@ -316,7 +319,7 @@ public:
 
         void merge(const SurfaceBuckets<N, T>& other)
         {
-                ASSERT(m_vertices == other.m_vertices);
+                ASSERT(*m_vertices == *other.m_vertices);
                 ASSERT(m_facets == other.m_facets);
                 ASSERT(m_buckets.size() == other.m_buckets.size());
 
