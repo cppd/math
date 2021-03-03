@@ -165,8 +165,7 @@ std::enable_if_t<N == 3> test_distribution_surface(
         const auto f = [&]()
         {
                 SurfaceBuckets<N, T> buckets;
-                buckets.add(random_vector, count_per_thread);
-                buckets.compute_bucket_info(pdf);
+                buckets.compute(count_per_thread, random_vector, pdf);
                 return buckets;
         };
 
