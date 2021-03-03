@@ -387,8 +387,6 @@ void create_sphere(
         std::vector<std::array<int, N>>* facets)
 {
         divide_facets(facet_min_count, create_initial_facets<N, T>(), vertices, facets);
-
-        LOG("Sphere: vertex count = " + to_string(vertices->size()) + ", facet count = " + to_string(facets->size()));
 }
 
 template void create_sphere(unsigned, std::vector<Vector<3, float>>*, std::vector<std::array<int, 3>>*);

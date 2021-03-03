@@ -43,6 +43,7 @@ void test_sphere_creation()
         std::vector<std::array<int, N>> facets;
 
         create_sphere(FACET_COUNT, &vertices, &facets);
+        LOG(name + ": vertex count = " + to_string(vertices.size()) + ", facet count = " + to_string(facets.size()));
 
         if (facets.size() < FACET_COUNT)
         {
