@@ -61,9 +61,10 @@ class LatinHypercubeSampler
 
         std::vector<Vector<N, T>> m_offsets;
         T m_reciprocal_sample_count;
+        bool m_shuffle;
 
 public:
-        explicit LatinHypercubeSampler(int sample_count)
+        explicit LatinHypercubeSampler(int sample_count, bool shuffle)
         {
                 if (sample_count < 1)
                 {
@@ -77,6 +78,12 @@ public:
                         m_offsets.emplace_back(static_cast<T>(i) / sample_count);
                 }
                 m_reciprocal_sample_count = static_cast<T>(1) / sample_count;
+                m_shuffle = shuffle;
+        }
+
+        bool shuffled() const
+        {
+                return m_shuffle;
         }
 
         template <typename RandomEngine>
@@ -93,8 +100,8 @@ public:
                         }
                 }
 
-                // Достаточно со второго измерения
-                for (std::size_t i = 1; i < N; ++i)
+                std::size_t shuffle_from_dimension = m_shuffle ? 0 : 1;
+                for (std::size_t i = shuffle_from_dimension; i < N; ++i)
                 {
                         shuffle_one_dimension(random_engine, i, samples);
                 }

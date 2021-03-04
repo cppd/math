@@ -90,8 +90,8 @@ template <template <std::size_t, typename> typename S, std::size_t N, typename T
 std::filesystem::path sampler_file_name(const S<N, T>& sampler)
 {
         return path_from_utf8(
-                "samples_" + std::string(short_sampler_name(sampler)) + "_" + to_string(N) + "d_"
-                + replace_space(type_name<T>()) + ".txt");
+                "samples_" + std::string(short_sampler_name(sampler)) + "_" + (sampler.shuffled() ? "shuffled_" : "")
+                + to_string(N) + "d_" + replace_space(type_name<T>()) + ".txt");
 }
 
 template <std::size_t N>
@@ -114,7 +114,7 @@ constexpr int sample_count()
 }
 
 template <std::size_t N, typename T, typename Sampler, typename RandomEngine>
-void write_samples_to_file(RandomEngine& random_engine, const Sampler& sampler, int pass_count)
+void write_to_file(RandomEngine& random_engine, const Sampler& sampler, int pass_count)
 {
         std::ofstream file(std::filesystem::temp_directory_path() / sampler_file_name(sampler));
 
@@ -151,39 +151,54 @@ void test_performance(RandomEngine& random_engine, const Sampler& sampler, int i
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-void write_samples_to_files()
+void write_to_files(bool shuffle)
 {
         RandomEngine random_engine = create_engine<RandomEngine>();
 
         constexpr int pass_count = 10;
 
-        LOG("Writing samples " + to_string(N) + "D");
-        write_samples_to_file<N, T>(random_engine, StratifiedJitteredSampler<N, T>(sample_count<N>()), pass_count);
-        write_samples_to_file<N, T>(random_engine, LatinHypercubeSampler<N, T>(sample_count<N>()), pass_count);
+        LOG(std::string("Writing samples, ") + (shuffle ? "shuffle, " : "") + to_string(N) + "D");
+        write_to_file<N, T>(random_engine, StratifiedJitteredSampler<N, T>(sample_count<N>(), shuffle), pass_count);
+        write_to_file<N, T>(random_engine, LatinHypercubeSampler<N, T>(sample_count<N>(), shuffle), pass_count);
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-void test_performance()
+void write_to_files()
+{
+        write_to_files<N, T, RandomEngine>(false);
+        write_to_files<N, T, RandomEngine>(true);
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+void test_performance(bool shuffle)
 {
         RandomEngine random_engine = create_engine<RandomEngine>();
 
         constexpr int iter_count = 1e6;
 
-        LOG("Testing performance " + to_string(N) + "D");
-        test_performance<N, T>(random_engine, StratifiedJitteredSampler<N, T>(sample_count<N>()), iter_count);
-        test_performance<N, T>(random_engine, LatinHypercubeSampler<N, T>(sample_count<N>()), iter_count);
+        LOG(std::string("Testing performance, ") + (shuffle ? "shuffle, " : "") + to_string(N) + "D");
+        test_performance<N, T>(random_engine, StratifiedJitteredSampler<N, T>(sample_count<N>(), shuffle), iter_count);
+        test_performance<N, T>(random_engine, LatinHypercubeSampler<N, T>(sample_count<N>(), shuffle), iter_count);
+        LOG("");
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+void test_performance()
+{
+        test_performance<N, T, RandomEngine>(false);
+        test_performance<N, T, RandomEngine>(true);
 }
 
 template <typename T, typename RandomEngine>
-void write_samples_to_files()
+void write_to_files()
 {
         static_assert(std::is_floating_point_v<T>);
 
         LOG(std::string("Files <") + type_name<T>() + ", " + random_engine_name<RandomEngine>() + ">");
 
-        write_samples_to_files<2, T, RandomEngine>();
-        write_samples_to_files<3, T, RandomEngine>();
-        write_samples_to_files<4, T, RandomEngine>();
+        write_to_files<2, T, RandomEngine>();
+        write_to_files<3, T, RandomEngine>();
+        write_to_files<4, T, RandomEngine>();
 }
 
 template <typename T, typename RandomEngine>
@@ -192,6 +207,7 @@ void test_performance()
         static_assert(std::is_floating_point_v<T>);
 
         LOG(std::string("Performance <") + type_name<T>() + ", " + random_engine_name<RandomEngine>() + ">");
+        LOG("");
 
         test_performance<2, T, RandomEngine>();
         test_performance<3, T, RandomEngine>();
@@ -201,13 +217,13 @@ void test_performance()
 }
 
 template <typename RandomEngine>
-void write_samples_to_files()
+void write_to_files()
 {
-        write_samples_to_files<float, RandomEngine>();
+        write_to_files<float, RandomEngine>();
         LOG("");
-        write_samples_to_files<double, RandomEngine>();
+        write_to_files<double, RandomEngine>();
         LOG("");
-        write_samples_to_files<long double, RandomEngine>();
+        write_to_files<long double, RandomEngine>();
 }
 
 template <typename T>
@@ -220,7 +236,7 @@ void test_performance()
 
 void test()
 {
-        write_samples_to_files<std::mt19937_64>();
+        write_to_files<std::mt19937_64>();
 
         LOG("");
         test_performance<float>();

@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/numerical/vec.h>
 
+#include <algorithm>
 #include <cmath>
 #include <random>
 #include <vector>
@@ -96,9 +97,10 @@ class StratifiedJitteredSampler
 
         std::vector<Vector<N, T>> m_offsets;
         T m_reciprocal_1d_sample_count;
+        bool m_shuffle;
 
 public:
-        explicit StratifiedJitteredSampler(int sample_count)
+        explicit StratifiedJitteredSampler(int sample_count, bool shuffle)
         {
                 int one_dimension_sample_count = one_dimension_size(sample_count);
 
@@ -117,6 +119,12 @@ public:
 
                 m_offsets = product(values);
                 m_reciprocal_1d_sample_count = static_cast<T>(1) / one_dimension_sample_count;
+                m_shuffle = shuffle;
+        }
+
+        bool shuffled() const
+        {
+                return m_shuffle;
         }
 
         template <typename RandomEngine>
@@ -131,6 +139,10 @@ public:
                         {
                                 (*samples)[i][n] = m_offsets[i][n] + urd(random_engine);
                         }
+                }
+                if (m_shuffle)
+                {
+                        std::shuffle(samples->begin(), samples->end(), random_engine);
                 }
         }
 };
