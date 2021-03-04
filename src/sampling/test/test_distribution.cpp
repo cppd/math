@@ -40,7 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <thread>
 
-namespace ns::sampling
+namespace ns::sampling::test
 {
 namespace
 {

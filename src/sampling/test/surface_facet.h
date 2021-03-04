@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vector>
 
-namespace ns::sampling
+namespace ns::sampling::test
 {
 template <std::size_t N, typename T>
 class SurfaceFacet

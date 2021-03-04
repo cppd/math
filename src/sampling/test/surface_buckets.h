@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "surface_facet.h"
+#include "surface_bucket.h"
 
 #include "../sphere_uniform.h"
 
@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/geometry/shapes/sphere_create.h>
-#include <src/geometry/shapes/sphere_simplex.h>
 #include <src/geometry/spatial/object_tree.h>
 #include <src/numerical/vec.h>
 
@@ -37,130 +36,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <vector>
 
-namespace ns::sampling
+namespace ns::sampling::test
 {
-namespace surface_buckets_implementation
-{
-constexpr int TREE_MIN_OBJECTS_PER_BOX = 5;
-
-template <std::size_t N>
-int tree_max_depth()
-{
-        static_assert(N >= 3);
-
-        switch (N)
-        {
-        case 3:
-                return 10;
-        case 4:
-                return 8;
-        case 5:
-                return 6;
-        case 6:
-                return 5;
-        default:
-                // Сумма геометрической прогрессии s = (pow(r, n) - 1) / (r - 1).
-                // Для s и r найти n = log(s * (r - 1) + 1) / log(r).
-                double s = 1e9;
-                double r = std::pow(2, N);
-                double n = std::log(s * (r - 1) + 1) / std::log(r);
-                return std::max(2.0, std::floor(n));
-        }
-}
-}
-
 template <std::size_t N, typename T>
 class SurfaceBuckets final
 {
-        class Bucket final : public SurfaceFacet<N, T>
+        static constexpr int TREE_MIN_OBJECTS_PER_BOX = 5;
+
+        static int tree_max_depth()
         {
-                long long m_sample_count;
-                long long m_uniform_count;
-                long long m_pdf_count;
-                double m_pdf_sum;
+                static_assert(N >= 3);
 
-        public:
-                Bucket(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& vertex_indices)
-                        : SurfaceFacet<N, T>(vertices, vertex_indices)
+                switch (N)
                 {
-                        clear();
+                case 3:
+                        return 10;
+                case 4:
+                        return 8;
+                case 5:
+                        return 6;
+                case 6:
+                        return 5;
+                default:
+                        // Сумма геометрической прогрессии s = (pow(r, n) - 1) / (r - 1).
+                        // Для s и r найти n = log(s * (r - 1) + 1) / log(r).
+                        double s = 1e9;
+                        double r = std::pow(2, N);
+                        double n = std::log(s * (r - 1) + 1) / std::log(r);
+                        return std::max(2.0, std::floor(n));
                 }
+        }
 
-                void clear()
-                {
-                        m_sample_count = 0;
-                        m_uniform_count = 0;
-                        m_pdf_count = 0;
-                        m_pdf_sum = 0;
-                }
-
-                void add_sample()
-                {
-                        ++m_sample_count;
-                }
-
-                long long sample_count() const
-                {
-                        return m_sample_count;
-                }
-
-                void add_uniform()
-                {
-                        ++m_uniform_count;
-                }
-
-                long long uniform_count() const
-                {
-                        return m_uniform_count;
-                }
-
-                double area(long long all_uniform_count) const
-                {
-                        static constexpr double SPHERE_AREA = geometry::sphere_area(N);
-                        double bucket_area = double(m_uniform_count) / all_uniform_count * SPHERE_AREA;
-                        if constexpr (N == 3)
-                        {
-                                double geometry_bucket_area = geometry::sphere_simplex_area(this->vertices());
-                                double relative_error = std::abs(bucket_area - geometry_bucket_area)
-                                                        / std::max(geometry_bucket_area, bucket_area);
-                                if (!(relative_error < 0.02))
-                                {
-                                        std::ostringstream oss;
-                                        oss << "bucket area relative error = " << relative_error << '\n';
-                                        oss << "bucket area = " << bucket_area << '\n';
-                                        oss << "geometry bucket area = " << geometry_bucket_area << '\n';
-                                        oss << "uniform count = " << m_uniform_count << '\n';
-                                        oss << "all uniform count = " << all_uniform_count;
-                                        error(oss.str());
-                                }
-                                bucket_area = geometry_bucket_area;
-                        }
-                        return bucket_area;
-                }
-
-                void add_pdf(double pdf)
-                {
-                        m_pdf_count += 1;
-                        m_pdf_sum += pdf;
-                }
-
-                double pdf() const
-                {
-                        if (!(m_pdf_count > 0))
-                        {
-                                error("Bucket PDF not computed");
-                        }
-                        return m_pdf_sum / m_pdf_count;
-                }
-
-                void merge(const Bucket& bucket)
-                {
-                        m_sample_count += bucket.m_sample_count;
-                        m_uniform_count += bucket.m_uniform_count;
-                        m_pdf_count += bucket.m_pdf_count;
-                        m_pdf_sum += bucket.m_pdf_sum;
-                }
-        };
+        //
 
         using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
 
@@ -168,7 +75,7 @@ class SurfaceBuckets final
 
         std::unique_ptr<std::vector<Vector<N, T>>> m_vertices;
         std::vector<std::array<int, N>> m_facets;
-        std::vector<Bucket> m_buckets;
+        std::vector<Bucket<N, T>> m_buckets;
 
         long long m_missed_intersection_count = 0;
         long long m_intersection_count = 0;
@@ -176,7 +83,7 @@ class SurfaceBuckets final
         long long buckets_sample_count() const
         {
                 long long s = 0;
-                for (const Bucket& bucket : m_buckets)
+                for (const Bucket<N, T>& bucket : m_buckets)
                 {
                         s += bucket.sample_count();
                 }
@@ -186,7 +93,7 @@ class SurfaceBuckets final
         long long buckets_uniform_count() const
         {
                 long long s = 0;
-                for (const Bucket& bucket : m_buckets)
+                for (const Bucket<N, T>& bucket : m_buckets)
                 {
                         s += bucket.uniform_count();
                 }
@@ -217,7 +124,7 @@ class SurfaceBuckets final
                 ASSERT(!m_buckets.empty());
                 long long min = limits<long long>::max();
                 long long max = limits<long long>::lowest();
-                for (const Bucket& bucket : m_buckets)
+                for (const Bucket<N, T>& bucket : m_buckets)
                 {
                         min = std::min(min, bucket.uniform_count());
                         max = std::max(max, bucket.uniform_count());
@@ -259,17 +166,15 @@ public:
         template <typename RandomVector, typename PDF>
         void compute(long long ray_count, const RandomVector& random_vector, const PDF& pdf)
         {
-                namespace impl = surface_buckets_implementation;
-
-                std::optional<geometry::ObjectTree<Bucket>> tree;
+                std::optional<geometry::ObjectTree<Bucket<N, T>>> tree;
                 {
                         ProgressRatio progress(nullptr);
-                        tree.emplace(m_buckets, impl::tree_max_depth<N>(), impl::TREE_MIN_OBJECTS_PER_BOX, &progress);
+                        tree.emplace(m_buckets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, &progress);
                 }
 
                 RandomEngine random_engine = create_engine<RandomEngine>();
 
-                for (Bucket& bucket : m_buckets)
+                for (Bucket<N, T>& bucket : m_buckets)
                 {
                         bucket.clear();
                 }
@@ -284,7 +189,8 @@ public:
                         const std::optional<T> root_distance = tree->intersect_root(ray);
                         ASSERT(root_distance && *root_distance == 0);
 
-                        const std::optional<std::tuple<T, const Bucket*>> v = tree->intersect(ray, *root_distance);
+                        const std::optional<std::tuple<T, const Bucket<N, T>*>> v =
+                                tree->intersect(ray, *root_distance);
                         if (!v)
                         {
                                 ++m_missed_intersection_count;
@@ -292,7 +198,8 @@ public:
                         }
                         ++m_intersection_count;
 
-                        const_cast<Bucket*>(std::get<1>(*v))->add_sample();
+                        Bucket<N, T>& bucket = *const_cast<Bucket<N, T>*>(std::get<1>(*v));
+                        bucket.add_sample();
                 }
 
                 ray_count *= 4;
@@ -303,7 +210,8 @@ public:
                         const std::optional<T> root_distance = tree->intersect_root(ray);
                         ASSERT(root_distance && *root_distance == 0);
 
-                        const std::optional<std::tuple<T, const Bucket*>> v = tree->intersect(ray, *root_distance);
+                        const std::optional<std::tuple<T, const Bucket<N, T>*>> v =
+                                tree->intersect(ray, *root_distance);
                         if (!v)
                         {
                                 ++m_missed_intersection_count;
@@ -311,11 +219,12 @@ public:
                         }
                         ++m_intersection_count;
 
+                        Bucket<N, T>& bucket = *const_cast<Bucket<N, T>*>(std::get<1>(*v));
                         if ((m_intersection_count & 0b11) == 0b11)
                         {
-                                const_cast<Bucket*>(std::get<1>(*v))->add_pdf(pdf(ray.dir()));
+                                bucket.add_pdf(pdf(ray.dir()));
                         }
-                        const_cast<Bucket*>(std::get<1>(*v))->add_uniform();
+                        bucket.add_uniform();
                 }
         }
 
@@ -348,7 +257,7 @@ public:
                 T sum_expected = 0;
                 T sum_error = 0;
 
-                for (const Bucket& bucket : m_buckets)
+                for (const Bucket<N, T>& bucket : m_buckets)
                 {
                         T bucket_area = bucket.area(uniform_count);
                         T sampled_distribution = T(bucket.sample_count()) / sample_count;
