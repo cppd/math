@@ -375,7 +375,7 @@ void test_power_cosine_on_hemisphere(
 }
 
 template <std::size_t N, typename T>
-std::enable_if_t<N == 3> test_ggx(
+void test_ggx(
         long long unit_count,
         long long angle_distribution_count,
         long long surface_distribution_count,
@@ -487,13 +487,14 @@ long long compute_angle_distribution_count()
         const double uniform_min_count = 1000;
         const double count = s_all / s_bucket * uniform_min_count;
         const double round_to = std::pow(10, std::round(std::log10(count)) - 2);
-        return std::ceil(count / round_to) * round_to;
+        const double rounded_count = std::ceil(count / round_to) * round_to;
+        return (rounded_count <= 1e9 ? rounded_count : 0);
 }
 
 template <std::size_t N, typename T>
 long long compute_surface_distribution_count()
 {
-        const double count = 20'000 * SurfaceBuckets<N, T>().bucket_count();
+        const double count = 10'000 * SurfaceBuckets<N, T>().bucket_count();
         const double round_to = std::pow(10, std::round(std::log10(count)) - 2);
         return std::ceil(count / round_to) * round_to;
 }

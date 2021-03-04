@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "mesh_facet.h"
+#include "surface_facet.h"
 
 #include "../sphere_uniform.h"
 
@@ -72,7 +72,7 @@ int tree_max_depth()
 template <std::size_t N, typename T>
 class SurfaceBuckets final
 {
-        class Bucket final : public MeshFacet<N, T>
+        class Bucket final : public SurfaceFacet<N, T>
         {
                 long long m_sample_count;
                 long long m_uniform_count;
@@ -81,7 +81,7 @@ class SurfaceBuckets final
 
         public:
                 Bucket(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& vertex_indices)
-                        : MeshFacet<N, T>(vertices, vertex_indices)
+                        : SurfaceFacet<N, T>(vertices, vertex_indices)
                 {
                         clear();
                 }
@@ -222,15 +222,17 @@ class SurfaceBuckets final
                         min = std::min(min, bucket.uniform_count());
                         max = std::max(max, bucket.uniform_count());
                 }
-                if (!((max > 0) && (min > 0) && (max < 3 * min)))
+                long long maximum_max_min_ratio = N < 5 ? 3 : 10;
+                if (max > 0 && min > 0 && max < maximum_max_min_ratio * min)
                 {
-                        std::ostringstream oss;
-                        oss << "Buckets max/min is too large" << '\n';
-                        oss << "max = " << max << '\n';
-                        oss << "min = " << min << '\n';
-                        oss << "max/min = " << (T(max) / min);
-                        error(oss.str());
+                        return;
                 }
+                std::ostringstream oss;
+                oss << "Buckets max/min is too large" << '\n';
+                oss << "max = " << max << '\n';
+                oss << "min = " << min << '\n';
+                oss << "max/min = " << (T(max) / min);
+                error(oss.str());
         }
 
 public:

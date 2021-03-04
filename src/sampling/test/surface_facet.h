@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::sampling
 {
 template <std::size_t N, typename T>
-class MeshFacet
+class SurfaceFacet
 {
         static std::array<Vector<N, T>, N> vertices_to_array(
                 const std::vector<Vector<N, T>>& vertices,
@@ -54,7 +54,7 @@ class MeshFacet
         geometry::HyperplaneSimplex<N, T> m_geometry;
 
 protected:
-        ~MeshFacet() = default;
+        ~SurfaceFacet() = default;
 
 public:
         static constexpr std::size_t SPACE_DIMENSION = N;
@@ -62,7 +62,7 @@ public:
 
         using DataType = T;
 
-        MeshFacet(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& vertex_indices)
+        SurfaceFacet(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& vertex_indices)
                 : m_vertices(vertices), m_v(vertex_indices)
         {
                 m_normal = numerical::ortho_nn(m_vertices, m_v).normalized();
