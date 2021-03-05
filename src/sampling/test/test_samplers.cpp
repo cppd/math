@@ -158,7 +158,8 @@ void write_to_files(bool shuffle)
         constexpr int pass_count = 10;
 
         LOG(std::string("Writing samples, ") + (shuffle ? "shuffle, " : "") + to_string(N) + "D");
-        write_to_file<N, T>(random_engine, StratifiedJitteredSampler<N, T>(sample_count<N>(), shuffle), pass_count);
+        write_to_file<N, T>(
+                random_engine, StratifiedJitteredSampler<N, T>(0, 1, sample_count<N>(), shuffle), pass_count);
         write_to_file<N, T>(random_engine, LatinHypercubeSampler<N, T>(sample_count<N>(), shuffle), pass_count);
 }
 
@@ -177,7 +178,8 @@ void test_performance(bool shuffle)
         constexpr int iter_count = 1e6;
 
         LOG(std::string("Testing performance, ") + (shuffle ? "shuffle, " : "") + to_string(N) + "D");
-        test_performance<N, T>(random_engine, StratifiedJitteredSampler<N, T>(sample_count<N>(), shuffle), iter_count);
+        test_performance<N, T>(
+                random_engine, StratifiedJitteredSampler<N, T>(0, 1, sample_count<N>(), shuffle), iter_count);
         test_performance<N, T>(random_engine, LatinHypercubeSampler<N, T>(sample_count<N>(), shuffle), iter_count);
         LOG("");
 }

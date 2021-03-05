@@ -442,7 +442,7 @@ void paint_threads(
                       + ") are not equal to the projector size (" + to_string(scene.projector().screen_size()) + ")");
         }
 
-        const PainterSampler<N - 1, T> sampler(samples_per_pixel, false);
+        const PainterSampler<N - 1, T> sampler(0, 1, samples_per_pixel, false);
 
         const PaintData paint_data(scene, smooth_normal);
 

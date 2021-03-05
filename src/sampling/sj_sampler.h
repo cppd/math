@@ -68,42 +68,57 @@ class StratifiedJitteredSampler
         }
 
         template <std::size_t M>
-        static void product(const std::vector<T>& values, Vector<N, T>* tuple, std::vector<Vector<N, T>>* result)
+        static void product(
+                const std::vector<T>& values,
+                std::array<Vector<N, T>, 2>* min_max,
+                std::vector<std::array<Vector<N, T>, 2>>* result)
         {
                 static_assert(N > 0 && M >= 0 && M < N);
 
-                for (T v : values)
+                for (std::size_t i = 0; i + 1 < values.size(); ++i)
                 {
-                        (*tuple)[M] = v;
+                        (*min_max)[0][M] = values[i];
+                        (*min_max)[1][M] = values[i + 1];
                         if constexpr (M == 0)
                         {
-                                result->push_back(*tuple);
+                                result->push_back(*min_max);
                         }
                         else
                         {
-                                product<M - 1>(values, tuple, result);
+                                product<M - 1>(values, min_max, result);
                         }
                 }
         }
 
-        static std::vector<Vector<N, T>> product(const std::vector<T>& values)
+        static std::vector<std::array<Vector<N, T>, 2>> product(const std::vector<T>& values)
         {
-                std::vector<Vector<N, T>> result;
-                Vector<N, T> tuple;
-                product<N - 1>(values, &tuple, &result);
-                ASSERT(result.size() == std::pow(values.size(), N));
+                ASSERT(values.size() >= 2);
+
+                std::vector<std::array<Vector<N, T>, 2>> result;
+                std::array<Vector<N, T>, 2> min_max;
+
+                product<N - 1>(values, &min_max, &result);
+                ASSERT(result.size() == std::pow(values.size() - 1, N));
+
                 return result;
         }
 
-        std::vector<Vector<N, T>> m_offsets;
-        T m_reciprocal_1d_sample_count;
+        std::vector<std::array<Vector<N, T>, 2>> m_offsets;
         bool m_shuffle;
 
 public:
-        explicit StratifiedJitteredSampler(int sample_count, bool shuffle)
+        StratifiedJitteredSampler(
+                std::type_identity_t<T> min,
+                std::type_identity_t<T> max,
+                int sample_count,
+                bool shuffle)
         {
-                int one_dimension_sample_count = one_dimension_size(sample_count);
+                if (!(min < max))
+                {
+                        error("Sampler min " + to_string(min) + " must be greater than max " + to_string(max));
+                }
 
+                const int one_dimension_sample_count = one_dimension_size(sample_count);
                 if (one_dimension_sample_count < 1)
                 {
                         error("Stratified jittered sampler: one dimension sample count ("
@@ -111,14 +126,26 @@ public:
                 }
 
                 std::vector<T> values;
-                values.reserve(one_dimension_sample_count);
-                for (int i = 0; i < one_dimension_sample_count; ++i)
+                values.reserve(one_dimension_sample_count + 1);
+
+                const T size = (max - min) / one_dimension_sample_count;
+                values.push_back(min);
+                for (int i = 1; i < one_dimension_sample_count; ++i)
                 {
-                        values.push_back(static_cast<T>(i) / one_dimension_sample_count);
+                        values.push_back(min + i * size);
+                }
+                values.push_back(max);
+
+                for (std::size_t i = 1; i < values.size(); ++i)
+                {
+                        if (!(values[i - 1] < values[i]))
+                        {
+                                error("Error creating values for sampler: " + to_string(values[i - 1]) + ", "
+                                      + to_string(values[i]));
+                        }
                 }
 
                 m_offsets = product(values);
-                m_reciprocal_1d_sample_count = static_cast<T>(1) / one_dimension_sample_count;
                 m_shuffle = shuffle;
         }
 
@@ -130,14 +157,15 @@ public:
         template <typename RandomEngine>
         void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* samples) const
         {
-                std::uniform_real_distribution<T> urd(0, m_reciprocal_1d_sample_count);
-
                 samples->resize(m_offsets.size());
                 for (std::size_t i = 0; i < m_offsets.size(); ++i)
                 {
+                        const Vector<N, T>& min = m_offsets[i][0];
+                        const Vector<N, T>& max = m_offsets[i][1];
+                        Vector<N, T>& sample = (*samples)[i];
                         for (std::size_t n = 0; n < N; ++n)
                         {
-                                (*samples)[i][n] = m_offsets[i][n] + urd(random_engine);
+                                sample[n] = std::uniform_real_distribution<T>(min[n], max[n])(random_engine);
                         }
                 }
                 if (m_shuffle)
