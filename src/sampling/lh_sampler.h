@@ -61,6 +61,18 @@ class LatinHypercubeSampler
 
         static std::vector<T> make_offsets(T min, T max, int sample_count)
         {
+                if (!(min < max))
+                {
+                        error("Latin hypercube sampler: min " + to_string(min) + " must be greater than max "
+                              + to_string(max));
+                }
+
+                if (sample_count < 1)
+                {
+                        error("Latin hypercube sampler: sample count (" + to_string(sample_count)
+                              + ") is not a positive integer");
+                }
+
                 std::vector<T> offsets;
                 offsets.reserve(sample_count + 1);
 
@@ -88,31 +100,18 @@ class LatinHypercubeSampler
                 return offsets;
         }
 
-        bool m_shuffle;
+        std::vector<T> m_offsets;
         std::size_t m_initial_shuffle_dimension;
         std::size_t m_sample_count;
-
-        std::vector<T> m_offsets;
+        bool m_shuffle;
 
 public:
         LatinHypercubeSampler(std::type_identity_t<T> min, std::type_identity_t<T> max, int sample_count, bool shuffle)
+                : m_offsets(make_offsets(min, max, sample_count)),
+                  m_initial_shuffle_dimension(shuffle ? 0 : 1),
+                  m_sample_count(sample_count),
+                  m_shuffle(shuffle)
         {
-                if (!(min < max))
-                {
-                        error("Latin hypercube sampler: min " + to_string(min) + " must be greater than max "
-                              + to_string(max));
-                }
-
-                if (sample_count < 1)
-                {
-                        error("Latin hypercube sampler: sample count (" + to_string(sample_count)
-                              + ") is not a positive integer");
-                }
-
-                m_shuffle = shuffle;
-                m_initial_shuffle_dimension = shuffle ? 0 : 1;
-                m_sample_count = sample_count;
-                m_offsets = make_offsets(min, max, sample_count);
         }
 
         bool shuffled() const
