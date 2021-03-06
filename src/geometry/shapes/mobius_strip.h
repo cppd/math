@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/constant.h>
-#include <src/numerical/quaternion.h>
 #include <src/numerical/vec.h>
 
 #include <cmath>
@@ -47,16 +46,20 @@ Vector<3, T> mobius_strip_point(T width, RandomEngine& random_engine)
 {
         namespace impl = mobius_strip_implementation;
 
-        std::uniform_real_distribution<T> urd_alpha(0, 2 * PI<T>);
-        std::uniform_real_distribution<T> urd_line(-width / 2, width / 2);
+        const T alpha = std::uniform_real_distribution<T>(0, 2 * PI<T>)(random_engine);
+        const T curve_angle = PI<T> / 2 - impl::curve(alpha);
 
-        T alpha = urd_alpha(random_engine);
+        // Случайная точка вдоль Z
+        Vector<3, T> v(0, 0, std::uniform_real_distribution<T>(-width / 2, width / 2)(random_engine));
 
-        // Случайная точка вдоль Z, вращение вокруг Y, смещение по X и вращение вокруг Z
-        Vector<3, T> v(0, 0, urd_line(random_engine));
-        v = rotate_vector(Vector<3, T>(0, 1, 0), PI<T> / 2 - impl::curve(alpha), v);
-        v += Vector<3, T>(1, 0, 0);
-        v = rotate_vector(Vector<3, T>(0, 0, 1), alpha, v);
+        // Вращение вокруг Y
+        v = Vector<3, T>(v[2] * std::sin(curve_angle), 0, v[2] * std::cos(curve_angle));
+
+        // Смещение по X
+        v = Vector<3, T>(v[0] + 1, 0, v[2]);
+
+        // Вращение вокруг Z
+        v = Vector<3, T>(v[0] * std::cos(alpha), v[0] * std::sin(alpha), v[2]);
 
         return v;
 }
