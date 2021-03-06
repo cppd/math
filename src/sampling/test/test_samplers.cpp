@@ -160,7 +160,7 @@ void write_to_files(bool shuffle)
         LOG(std::string("Writing samples, ") + (shuffle ? "shuffle, " : "") + to_string(N) + "D");
         write_to_file<N, T>(
                 random_engine, StratifiedJitteredSampler<N, T>(0, 1, sample_count<N>(), shuffle), pass_count);
-        write_to_file<N, T>(random_engine, LatinHypercubeSampler<N, T>(sample_count<N>(), shuffle), pass_count);
+        write_to_file<N, T>(random_engine, LatinHypercubeSampler<N, T>(0, 1, sample_count<N>(), shuffle), pass_count);
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -180,7 +180,8 @@ void test_performance(bool shuffle)
         LOG(std::string("Testing performance, ") + (shuffle ? "shuffle, " : "") + to_string(N) + "D");
         test_performance<N, T>(
                 random_engine, StratifiedJitteredSampler<N, T>(0, 1, sample_count<N>(), shuffle), iter_count);
-        test_performance<N, T>(random_engine, LatinHypercubeSampler<N, T>(sample_count<N>(), shuffle), iter_count);
+        test_performance<N, T>(
+                random_engine, LatinHypercubeSampler<N, T>(0, 1, sample_count<N>(), shuffle), iter_count);
         LOG("");
 }
 

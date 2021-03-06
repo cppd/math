@@ -59,26 +59,60 @@ class LatinHypercubeSampler
                 }
         }
 
-        std::vector<Vector<N, T>> m_offsets;
-        T m_reciprocal_sample_count;
+        static std::vector<T> make_offsets(T min, T max, int sample_count)
+        {
+                std::vector<T> offsets;
+                offsets.reserve(sample_count + 1);
+
+                const T offset_size = (max - min) / sample_count;
+                offsets.push_back(min);
+                for (int i = 1; i < sample_count; ++i)
+                {
+                        offsets.push_back(min + i * offset_size);
+                }
+                offsets.push_back(max);
+
+                ASSERT(offsets.size() == 1 + static_cast<std::size_t>(sample_count));
+
+                for (std::size_t i = 1; i < offsets.size(); ++i)
+                {
+                        T prev = offsets[i - 1];
+                        T next = offsets[i];
+                        if (!(prev < next))
+                        {
+                                error("Latin hypercube sampler: error creating offset values " + to_string(prev)
+                                      + " and " + to_string(next));
+                        }
+                }
+
+                return offsets;
+        }
+
         bool m_shuffle;
+        std::size_t m_initial_shuffle_dimension;
+        std::size_t m_sample_count;
+
+        std::vector<T> m_offsets;
 
 public:
-        explicit LatinHypercubeSampler(int sample_count, bool shuffle)
+        LatinHypercubeSampler(std::type_identity_t<T> min, std::type_identity_t<T> max, int sample_count, bool shuffle)
         {
+                if (!(min < max))
+                {
+                        error("Latin hypercube sampler: min " + to_string(min) + " must be greater than max "
+                              + to_string(max));
+                }
+
                 if (sample_count < 1)
                 {
                         error("Latin hypercube sampler: sample count (" + to_string(sample_count)
                               + ") is not a positive integer");
                 }
 
-                m_offsets.reserve(sample_count);
-                for (int i = 0; i < sample_count; ++i)
-                {
-                        m_offsets.emplace_back(static_cast<T>(i) / sample_count);
-                }
-                m_reciprocal_sample_count = static_cast<T>(1) / sample_count;
                 m_shuffle = shuffle;
+                m_initial_shuffle_dimension = shuffle ? 0 : 1;
+                m_sample_count = sample_count;
+                m_offsets = make_offsets(min, max, sample_count);
         }
 
         bool shuffled() const
@@ -89,19 +123,19 @@ public:
         template <typename RandomEngine>
         void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* samples) const
         {
-                std::uniform_real_distribution<T> urd(0, m_reciprocal_sample_count);
+                samples->resize(m_sample_count);
 
-                samples->resize(m_offsets.size());
-                for (std::size_t i = 0; i < m_offsets.size(); ++i)
+                for (std::size_t i = 0; i < m_sample_count; ++i)
                 {
+                        std::uniform_real_distribution<T> urd(m_offsets[i], m_offsets[i + 1]);
+                        Vector<N, T>& sample = (*samples)[i];
                         for (std::size_t n = 0; n < N; ++n)
                         {
-                                (*samples)[i][n] = m_offsets[i][n] + urd(random_engine);
+                                sample[n] = urd(random_engine);
                         }
                 }
 
-                std::size_t shuffle_from_dimension = m_shuffle ? 0 : 1;
-                for (std::size_t i = shuffle_from_dimension; i < N; ++i)
+                for (std::size_t i = m_initial_shuffle_dimension; i < N; ++i)
                 {
                         shuffle_one_dimension(random_engine, i, samples);
                 }
