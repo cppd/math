@@ -115,7 +115,8 @@ public:
         {
                 if (!(min < max))
                 {
-                        error("Sampler min " + to_string(min) + " must be greater than max " + to_string(max));
+                        error("Stratified jittered sampler: min " + to_string(min) + " must be greater than max "
+                              + to_string(max));
                 }
 
                 const int one_dimension_sample_count = one_dimension_size(sample_count);
@@ -138,10 +139,12 @@ public:
 
                 for (std::size_t i = 1; i < values.size(); ++i)
                 {
-                        if (!(values[i - 1] < values[i]))
+                        T prev = values[i - 1];
+                        T next = values[i];
+                        if (!(prev < next))
                         {
-                                error("Error creating values for sampler: " + to_string(values[i - 1]) + ", "
-                                      + to_string(values[i]));
+                                error("Stratified jittered sampler: error creating offset values " + to_string(prev)
+                                      + " and " + to_string(next));
                         }
                 }
 
@@ -158,6 +161,7 @@ public:
         void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* samples) const
         {
                 samples->resize(m_offsets.size());
+
                 for (std::size_t i = 0; i < m_offsets.size(); ++i)
                 {
                         const Vector<N, T>& min = m_offsets[i][0];
@@ -168,6 +172,7 @@ public:
                                 sample[n] = std::uniform_real_distribution<T>(min[n], max[n])(random_engine);
                         }
                 }
+
                 if (m_shuffle)
                 {
                         std::shuffle(samples->begin(), samples->end(), random_engine);
