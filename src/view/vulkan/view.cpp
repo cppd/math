@@ -170,7 +170,7 @@ class Impl final
 
         //
 
-        std::optional<mat4> m_clip_plane_view_matrix;
+        std::optional<mat4d> m_clip_plane_view_matrix;
 
         //
 

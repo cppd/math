@@ -117,13 +117,13 @@ class Impl final : public Renderer
 {
         // Для получения текстуры для тени результат рисования находится в интервалах x(-1, 1) y(-1, 1) z(0, 1).
         // Для работы с этой текстурой надо преобразовать в интервалы x(0, 1) y(0, 1) z(0, 1).
-        const mat4 SHADOW_TEXTURE_MATRIX = matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
+        const mat4d SHADOW_TEXTURE_MATRIX = matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
 
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
-        mat4 m_main_vp_matrix = mat4(1);
-        mat4 m_shadow_vp_matrix = mat4(1);
-        mat4 m_shadow_vp_texture_matrix = mat4(1);
+        mat4d m_main_vp_matrix = mat4d(1);
+        mat4d m_shadow_vp_matrix = mat4d(1);
+        mat4d m_shadow_vp_texture_matrix = mat4d(1);
 
         Color m_clear_color = Color(0);
         double m_shadow_zoom = 1;
@@ -264,10 +264,10 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                const mat4& shadow_projection_matrix = matrix::ortho_vulkan<double>(
+                const mat4d& shadow_projection_matrix = matrix::ortho_vulkan<double>(
                         c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom, c.shadow_volume.top,
                         c.shadow_volume.near, c.shadow_volume.far);
-                const mat4& main_projection_matrix = matrix::ortho_vulkan<double>(
+                const mat4d& main_projection_matrix = matrix::ortho_vulkan<double>(
                         c.main_volume.left, c.main_volume.right, c.main_volume.bottom, c.main_volume.top,
                         c.main_volume.near, c.main_volume.far);
 

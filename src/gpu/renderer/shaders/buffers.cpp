@@ -104,9 +104,9 @@ void ShaderBuffers::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) c
 }
 
 void ShaderBuffers::set_matrices(
-        const mat4& main_vp_matrix,
-        const mat4& shadow_vp_matrix,
-        const mat4& shadow_vp_texture_matrix) const
+        const mat4d& main_vp_matrix,
+        const mat4d& shadow_vp_matrix,
+        const mat4d& shadow_vp_texture_matrix) const
 {
         {
                 Matrices matrices;
@@ -288,7 +288,7 @@ const vulkan::Buffer& MeshBuffer::buffer() const
         return m_uniform_buffer.buffer();
 }
 
-void MeshBuffer::set_coordinates(const mat4& model_matrix, const mat3& normal_matrix) const
+void MeshBuffer::set_coordinates(const mat4d& model_matrix, const mat3d& normal_matrix) const
 {
         static_assert(offsetof(Mesh, model_matrix) + sizeof(Mesh::model_matrix) == offsetof(Mesh, normal_matrix));
 
@@ -372,11 +372,11 @@ VkDeviceSize VolumeBuffer::buffer_volume_size() const
 }
 
 void VolumeBuffer::set_coordinates(
-        const mat4& inverse_mvp_matrix,
+        const mat4d& inverse_mvp_matrix,
         const vec4d& third_row_of_mvp,
         const vec4d& clip_plane_equation,
         const vec3d& gradient_h,
-        const mat3& normal_matrix) const
+        const mat3d& normal_matrix) const
 {
         Coordinates coordinates;
         coordinates.inverse_mvp_matrix = mat4_std140<float>(inverse_mvp_matrix);

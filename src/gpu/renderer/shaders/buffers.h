@@ -82,9 +82,9 @@ public:
         const vulkan::Buffer& drawing_buffer() const;
 
         void set_matrices(
-                const mat4& main_vp_matrix,
-                const mat4& shadow_vp_matrix,
-                const mat4& shadow_vp_texture_matrix) const;
+                const mat4d& main_vp_matrix,
+                const mat4d& shadow_vp_matrix,
+                const mat4d& shadow_vp_texture_matrix) const;
 
         void set_transparency_max_node_count(uint32_t count) const;
 
@@ -153,7 +153,7 @@ public:
 
         const vulkan::Buffer& buffer() const;
 
-        void set_coordinates(const mat4& model_matrix, const mat3& normal_matrix) const;
+        void set_coordinates(const mat4d& model_matrix, const mat3d& normal_matrix) const;
         void set_color(const Color& color) const;
         void set_alpha(float alpha) const;
         void set_lighting(float ambient, float metalness, float roughness) const;
@@ -198,11 +198,11 @@ public:
         VkDeviceSize buffer_volume_size() const;
 
         void set_coordinates(
-                const mat4& inverse_mvp_matrix,
+                const mat4d& inverse_mvp_matrix,
                 const vec4d& third_row_of_mvp,
                 const vec4d& clip_plane_equation,
                 const vec3d& gradient_h,
-                const mat3& normal_matrix) const;
+                const mat3d& normal_matrix) const;
 
         void set_clip_plane(const vec4d& clip_plane_equation) const;
 

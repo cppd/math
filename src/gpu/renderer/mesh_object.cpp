@@ -543,7 +543,7 @@ class Impl final : public MeshObject
                 m_mesh_buffer.set_alpha(alpha);
         }
 
-        void buffer_set_coordinates(const mat4& model_matrix)
+        void buffer_set_coordinates(const mat4d& model_matrix)
         {
                 m_mesh_buffer.set_coordinates(model_matrix, model_matrix.top_left<3, 3>().inverse().transpose());
         }

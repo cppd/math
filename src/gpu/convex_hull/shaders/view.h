@@ -69,7 +69,7 @@ public:
 
         //
 
-        void set_matrix(const mat4& matrix) const;
+        void set_matrix(const mat4d& matrix) const;
         void set_brightness(float brightness) const;
         void set_points(const vulkan::BufferWithMemory& buffer) const;
 };

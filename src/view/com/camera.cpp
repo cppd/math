@@ -88,12 +88,12 @@ gpu::renderer::CameraInfo::Volume Camera::shadow_volume() const
         return volume;
 }
 
-mat4 Camera::main_view_matrix() const
+mat4d Camera::main_view_matrix() const
 {
         return matrix::look_at<double>(vec3d(0, 0, 0), m_camera_direction, m_camera_up);
 }
 
-mat4 Camera::shadow_view_matrix() const
+mat4d Camera::shadow_view_matrix() const
 {
         return matrix::look_at(vec3d(0, 0, 0), m_light_direction, m_light_up);
 }

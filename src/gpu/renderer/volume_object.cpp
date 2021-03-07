@@ -104,7 +104,7 @@ image::Image<1> transfer_function()
         return image;
 }
 
-vec4d image_clip_plane(const vec4d& world_clip_plane, const mat4& model)
+vec4d image_clip_plane(const vec4d& world_clip_plane, const mat4d& model)
 {
         vec4d p = world_clip_plane * model;
 
@@ -115,7 +115,7 @@ vec4d image_clip_plane(const vec4d& world_clip_plane, const mat4& model)
         return p / -n.norm();
 }
 
-vec3d world_volume_size(const mat4& texture_to_world_matrix)
+vec3d world_volume_size(const mat4d& texture_to_world_matrix)
 {
         // Например, для x: texture_to_world_matrix * vec4(1, 0, 0, 1) -> vec3 -> length
         vec3d size;
@@ -128,7 +128,7 @@ vec3d world_volume_size(const mat4& texture_to_world_matrix)
 }
 
 // В текстурных координатах
-vec3d gradient_h(const mat4& texture_to_world_matrix, const vulkan::ImageWithMemory& image)
+vec3d gradient_h(const mat4d& texture_to_world_matrix, const vulkan::ImageWithMemory& image)
 {
         vec3d texture_pixel_size(1.0 / image.width(), 1.0 / image.height(), 1.0 / image.depth());
 
@@ -157,11 +157,11 @@ class Impl final : public VolumeObject
         const vulkan::CommandPool& m_graphics_command_pool;
         const vulkan::Queue& m_graphics_queue;
 
-        mat4 m_vp_matrix = mat4(1);
+        mat4d m_vp_matrix = mat4d(1);
         std::optional<vec4d> m_world_clip_plane_equation;
 
-        mat3 m_object_normal_to_world_normal_matrix;
-        mat4 m_texture_to_world_matrix;
+        mat3d m_object_normal_to_world_normal_matrix;
+        mat4d m_texture_to_world_matrix;
         vec3d m_gradient_h;
 
         VolumeBuffer m_buffer;
@@ -232,7 +232,7 @@ class Impl final : public VolumeObject
 
         void buffer_set_coordinates() const
         {
-                const mat4& mvp = m_vp_matrix * m_texture_to_world_matrix;
+                const mat4d& mvp = m_vp_matrix * m_texture_to_world_matrix;
                 const vec4d& clip_plane =
                         m_world_clip_plane_equation
                                 ? image_clip_plane(*m_world_clip_plane_equation, m_texture_to_world_matrix)
@@ -347,7 +347,7 @@ class Impl final : public VolumeObject
                 return iter->second.descriptor_set(0);
         }
 
-        void set_matrix_and_clip_plane(const mat4& vp_matrix, const std::optional<vec4d>& world_clip_plane_equation)
+        void set_matrix_and_clip_plane(const mat4d& vp_matrix, const std::optional<vec4d>& world_clip_plane_equation)
                 override
         {
                 m_vp_matrix = vp_matrix;

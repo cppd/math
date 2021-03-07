@@ -135,7 +135,7 @@ void Memory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
 }
 
-void Memory::set_matrix(const mat4& matrix) const
+void Memory::set_matrix(const mat4d& matrix) const
 {
         decltype(Matrices().matrix) m = to_matrix<float>(matrix).transpose();
         copy_to_matrices_buffer(offsetof(Matrices, matrix), m);

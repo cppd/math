@@ -88,7 +88,7 @@ const VkDescriptorSet& ViewMemory::descriptor_set() const
         return m_descriptors.descriptor_set(0);
 }
 
-void ViewMemory::set_matrix(const mat4& matrix) const
+void ViewMemory::set_matrix(const mat4d& matrix) const
 {
         decltype(Data().matrix) m = to_matrix<float>(matrix).transpose();
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_data_buffer_index], offsetof(Data, matrix), m);

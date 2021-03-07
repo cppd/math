@@ -49,8 +49,8 @@ class Camera final
 
         gpu::renderer::CameraInfo::Volume main_volume() const;
         gpu::renderer::CameraInfo::Volume shadow_volume() const;
-        mat4 main_view_matrix() const;
-        mat4 shadow_view_matrix() const;
+        mat4d main_view_matrix() const;
+        mat4d shadow_view_matrix() const;
 
 public:
         void reset(const vec3d& right, const vec3d& up, double scale, const vec2d& window_center);

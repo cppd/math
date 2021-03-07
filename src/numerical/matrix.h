@@ -299,9 +299,8 @@ std::string to_string(const Matrix<Rows, Columns, T>& m)
         return s;
 }
 
-// Не менять эти типы.
-using mat3 = Matrix<3, 3, double>;
+using mat3d = Matrix<3, 3, double>;
 using mat3f = Matrix<3, 3, float>;
-using mat4 = Matrix<4, 4, double>;
+using mat4d = Matrix<4, 4, double>;
 using mat4f = Matrix<4, 4, float>;
 }
