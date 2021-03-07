@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <cmath>
+#include <functional>
+#include <tuple>
 
 namespace ns
 {
@@ -452,12 +454,17 @@ using vec4i = Vector<4, int>;
 
 namespace std
 {
-template <std::size_t N, typename T>
+template <size_t N, typename T>
 struct hash<::ns::Vector<N, T>>
 {
-        std::size_t operator()(const ::ns::Vector<N, T>& v) const
+        size_t operator()(const ::ns::Vector<N, T>& v) const
         {
                 return v.hash();
         }
+};
+
+template <size_t N, typename T>
+struct tuple_size<::ns::Vector<N, T>> : integral_constant<size_t, N>
+{
 };
 }
