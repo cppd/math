@@ -36,7 +36,7 @@ struct ManifoldConstructorCocone
         virtual std::vector<std::array<int, N + 1>> delaunay_objects() const = 0;
 
         virtual void cocone(
-                std::vector<vec<N>>* vertex_normals,
+                std::vector<Vector<N, double>>* vertex_normals,
                 std::vector<std::array<int, N>>* cocone_triangles,
                 ProgressRatio* progress) const = 0;
 };
@@ -51,13 +51,13 @@ struct ManifoldConstructor
         virtual std::vector<std::array<int, N + 1>> delaunay_objects() const = 0;
 
         virtual void cocone(
-                std::vector<vec<N>>* normals,
+                std::vector<Vector<N, double>>* normals,
                 std::vector<std::array<int, N>>* facets,
                 ProgressRatio* progress) const = 0;
         virtual void bound_cocone(
                 double RHO,
                 double ALPHA,
-                std::vector<vec<N>>* normals,
+                std::vector<Vector<N, double>>* normals,
                 std::vector<std::array<int, N>>* facets,
                 ProgressRatio* progress) const = 0;
 };

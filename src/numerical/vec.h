@@ -435,11 +435,6 @@ Vector<3, T> cross(const Vector<3, T>& v0, const Vector<3, T>& v1)
         return res;
 }
 
-// vec - это только Vector<N, double>.
-// Не менять.
-template <std::size_t N>
-using vec = Vector<N, double>;
-
 // Не менять эти типы.
 using vec2 = Vector<2, double>;
 using vec3 = Vector<3, double>;

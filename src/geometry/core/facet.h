@@ -215,7 +215,7 @@ public:
                 return visible(points, from_point) > 0;
         }
 
-        vec<N> double_ortho() const
+        Vector<N, double> double_ortho() const
         {
                 return to_vector<double>(m_ortho).normalized();
         }
@@ -276,7 +276,7 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
                 }
         }
 
-        static vec<N> normalized_double_vector(const Vector<N, mpz_class>& mpz_vec)
+        static Vector<N, double> normalized_double_vector(const Vector<N, mpz_class>& mpz_vec)
         {
                 static constexpr int FLOAT_BIT_PRECISION = 128;
 
@@ -289,7 +289,7 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
                 length = dot_product;
                 mpf_sqrt(length.get_mpf_t(), length.get_mpf_t());
 
-                vec<N> res;
+                Vector<N, double> res;
                 for (unsigned n = 0; n < N; ++n)
                 {
                         ortho_coord = mpz_vec[n];
@@ -401,7 +401,7 @@ public:
                 return visible(points, from_point) > 0;
         }
 
-        vec<N> double_ortho() const
+        Vector<N, double> double_ortho() const
         {
                 return normalized_double_vector(m_ortho);
         }

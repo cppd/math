@@ -233,7 +233,7 @@ void create_normals_and_facets(
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         const std::vector<bool>& cocone_facets,
         const std::vector<ManifoldVertex<N>>& vertex_data,
-        std::vector<vec<N>>* normals,
+        std::vector<Vector<N, double>>* normals,
         std::vector<std::array<int, N>>* facets)
 {
         std::unordered_set<int> used_points;
@@ -256,7 +256,7 @@ void create_normals_and_facets(
         }
 
         normals->clear();
-        normals->resize(vertex_data.size(), vec<N>(0));
+        normals->resize(vertex_data.size(), Vector<N, double>(0));
 
         for (int p : used_points)
         {
@@ -267,7 +267,7 @@ void create_normals_and_facets(
 template <std::size_t N>
 void create_voronoi_delaunay(
         const std::vector<Vector<N, float>>& source_points,
-        std::vector<vec<N>>* points,
+        std::vector<Vector<N, double>>* points,
         std::vector<DelaunayObject<N>>* delaunay_objects,
         std::vector<DelaunayFacet<N>>* delaunay_facets,
         ProgressRatio* progress)
@@ -300,7 +300,7 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
         const bool m_cocone_only;
 
         std::vector<Vector<N, float>> m_source_points;
-        std::vector<vec<N>> m_points;
+        std::vector<Vector<N, double>> m_points;
         std::vector<DelaunayObject<N>> m_delaunay_objects;
         std::vector<DelaunayFacet<N>> m_delaunay_facets;
         std::vector<ManifoldVertex<N>> m_vertex_data;
@@ -309,7 +309,7 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
         void common_computation(
                 const std::vector<bool>& interior_vertices,
                 std::vector<bool>&& cocone_facets,
-                std::vector<vec<N>>* normals,
+                std::vector<Vector<N, double>>* normals,
                 std::vector<std::array<int, N>>* facets,
                 ProgressRatio* progress) const
         {
@@ -341,8 +341,10 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 ASSERT(normals->size() == m_points.size());
         }
 
-        void cocone(std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets, ProgressRatio* progress)
-                const override
+        void cocone(
+                std::vector<Vector<N, double>>* normals,
+                std::vector<std::array<int, N>>* facets,
+                ProgressRatio* progress) const override
         {
                 progress->set_text("Cocone reconstruction: %v of %m");
 
@@ -367,7 +369,7 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
         void bound_cocone(
                 double rho,
                 double alpha,
-                std::vector<vec<N>>* normals,
+                std::vector<Vector<N, double>>* normals,
                 std::vector<std::array<int, N>>* facets,
                 ProgressRatio* progress) const override
         {

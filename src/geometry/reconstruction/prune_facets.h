@@ -84,7 +84,7 @@ bool boundary_ridge(const std::vector<bool>& interior_vertices, const Ridge<N>& 
 
 template <std::size_t N>
 bool sharp_ridge(
-        const std::vector<vec<N>>& points,
+        const std::vector<Vector<N, double>>& points,
         const std::vector<bool>& interior_vertices,
         const Ridge<N>& ridge,
         const RidgeData<N>& ridge_data)
@@ -103,13 +103,13 @@ bool sharp_ridge(
         }
 
         // Ортонормированный базис размерности 2 в ортогональном дополнении ребра ridge
-        vec<N> e0;
-        vec<N> e1;
+        Vector<N, double> e0;
+        Vector<N, double> e1;
         ortho_e0_e1(points, ridge.vertices(), ridge_data.cbegin()->point(), &e0, &e1);
 
         // Координаты вектора первой грани при проецировании в пространство базиса e0, e1.
-        vec<N> base_vec = points[ridge_data.cbegin()->point()] - points[ridge.vertices()[0]];
-        vec<2> base = vec<2>(dot(e0, base_vec), dot(e1, base_vec)).normalized();
+        Vector<N, double> base_vec = points[ridge_data.cbegin()->point()] - points[ridge.vertices()[0]];
+        Vector<2, double> base = Vector<2, double>(dot(e0, base_vec), dot(e1, base_vec)).normalized();
         ASSERT(is_finite(base));
 
         double cos_plus = 1;
@@ -121,8 +121,8 @@ bool sharp_ridge(
         // граней от первой грани по обе стороны.
         for (auto ridge_facet = std::next(ridge_data.cbegin()); ridge_facet != ridge_data.cend(); ++ridge_facet)
         {
-                vec<N> facet_vec = points[ridge_facet->point()] - points[ridge.vertices()[0]];
-                vec<2> v = vec<2>(dot(e0, facet_vec), dot(e1, facet_vec)).normalized();
+                Vector<N, double> facet_vec = points[ridge_facet->point()] - points[ridge.vertices()[0]];
+                Vector<2, double> v = Vector<2, double>(dot(e0, facet_vec), dot(e1, facet_vec)).normalized();
                 ASSERT(is_finite(v));
 
                 double sine = cross(base, v);
@@ -172,7 +172,7 @@ bool sharp_ridge(
 // острым. Образующиеся после удаления грани новые острые рёбра тоже должны обрабатываться.
 template <std::size_t N>
 void prune_facets_incident_to_sharp_ridges(
-        const std::vector<vec<N>>& points,
+        const std::vector<Vector<N, double>>& points,
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         const std::vector<bool>& interior_vertices,
         std::vector<bool>* cocone_facets)

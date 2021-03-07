@@ -30,17 +30,18 @@ template <std::size_t N>
 class ConvexHullFacet
 {
         const std::array<int, N> m_indices;
-        const vec<N> m_ortho;
+        const Vector<N, double> m_ortho;
 
 public:
-        ConvexHullFacet(const std::array<int, N>& indices, const vec<N>& ortho) : m_indices(indices), m_ortho(ortho)
+        ConvexHullFacet(const std::array<int, N>& indices, const Vector<N, double>& ortho)
+                : m_indices(indices), m_ortho(ortho)
         {
         }
         const std::array<int, N>& vertices() const
         {
                 return m_indices;
         }
-        const vec<N>& ortho() const
+        const Vector<N, double>& ortho() const
         {
                 return m_ortho;
         }
@@ -50,10 +51,10 @@ template <std::size_t N>
 class DelaunaySimplex
 {
         const std::array<int, N + 1> m_indices;
-        const std::array<vec<N>, N + 1> m_orthos;
+        const std::array<Vector<N, double>, N + 1> m_orthos;
 
 public:
-        DelaunaySimplex(const std::array<int, N + 1>& indices, const std::array<vec<N>, N + 1>& orthos)
+        DelaunaySimplex(const std::array<int, N + 1>& indices, const std::array<Vector<N, double>, N + 1>& orthos)
                 : m_indices(indices), m_orthos(orthos)
         {
         }
@@ -61,7 +62,7 @@ public:
         {
                 return m_indices;
         }
-        const vec<N>& ortho(unsigned i) const
+        const Vector<N, double>& ortho(unsigned i) const
         {
                 ASSERT(i < m_orthos.size());
                 return m_orthos[i];
@@ -71,7 +72,7 @@ public:
 template <std::size_t N>
 void compute_delaunay(
         const std::vector<Vector<N, float>>& source_points,
-        std::vector<vec<N>>* points,
+        std::vector<Vector<N, double>>* points,
         std::vector<DelaunaySimplex<N>>* simplices,
         ProgressRatio* progress,
         bool write_log);

@@ -36,12 +36,12 @@ class DelaunayFacet
         // Для пространства размерности N грань имеет N вершин
         const std::array<int, N> m_indices;
         // Если грань имеет только 1 объект Делоне, то вектор направлен наружу
-        const vec<N> m_ortho;
+        const Vector<N, double> m_ortho;
         // второй элемент равен -1, если грань имеет только 1 объект Делоне
         const std::array<int, 2> m_delaunay;
 
 public:
-        DelaunayFacet(const std::array<int, N>& indices, const vec<N>& ortho, int delaunay_0, int delaunay_1)
+        DelaunayFacet(const std::array<int, N>& indices, const Vector<N, double>& ortho, int delaunay_0, int delaunay_1)
                 : m_indices(indices), m_ortho(ortho), m_delaunay{delaunay_0, delaunay_1}
         {
         }
@@ -53,7 +53,7 @@ public:
         {
                 return m_indices;
         }
-        const vec<N>& ortho() const
+        const Vector<N, double>& ortho() const
         {
                 return m_ortho;
         }
@@ -69,17 +69,17 @@ class DelaunayObject
 {
         // Для пространства размерности N объект имеет N + 1 вершин
         const std::array<int, N + 1> m_indices;
-        const vec<N> m_voronoi_vertex;
+        const Vector<N, double> m_voronoi_vertex;
 
 public:
-        DelaunayObject(const std::array<int, N + 1>& i, const vec<N>& v) : m_indices(i), m_voronoi_vertex(v)
+        DelaunayObject(const std::array<int, N + 1>& i, const Vector<N, double>& v) : m_indices(i), m_voronoi_vertex(v)
         {
         }
         const std::array<int, N + 1>& vertices() const
         {
                 return m_indices;
         }
-        const vec<N>& voronoi_vertex() const
+        const Vector<N, double>& voronoi_vertex() const
         {
                 return m_voronoi_vertex;
         }
@@ -87,7 +87,7 @@ public:
 
 template <std::size_t N>
 void create_delaunay_objects_and_facets(
-        const std::vector<vec<N>>& points,
+        const std::vector<Vector<N, double>>& points,
         const std::vector<DelaunaySimplex<N>>& simplices,
         std::vector<DelaunayObject<N>>* delaunay_objects,
         std::vector<DelaunayFacet<N>>* delaunay_facets)
@@ -127,7 +127,7 @@ void create_delaunay_objects_and_facets(
                 {
                         int index = facet_data[0].facet() ? 0 : 1;
                         const DelaunaySimplex<N>* simplex = facet_data[index].facet();
-                        vec<N> facet_ortho = simplex->ortho(facet_data[index].vertex_index());
+                        Vector<N, double> facet_ortho = simplex->ortho(facet_data[index].vertex_index());
 
                         // Индекс объекта Делоне, соответствующий симплексу Делоне
                         auto delaunay_i = simplex_map.find(simplex);
@@ -141,7 +141,7 @@ void create_delaunay_objects_and_facets(
                         const DelaunaySimplex<N>* simplex_0 = facet_data[0].facet();
                         const DelaunaySimplex<N>* simplex_1 = facet_data[1].facet();
 
-                        vec<N> facet_ortho = simplex_0->ortho(facet_data[0].vertex_index());
+                        Vector<N, double> facet_ortho = simplex_0->ortho(facet_data[0].vertex_index());
 
                         ASSERT(facet_ortho == -simplex_1->ortho(facet_data[1].vertex_index()));
 

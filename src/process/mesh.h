@@ -120,7 +120,7 @@ void cocone(
 
                 TimePoint start_time = time();
 
-                std::vector<vec<N>> normals;
+                std::vector<Vector<N, double>> normals;
                 std::vector<std::array<int, N>> facets;
 
                 constructor.cocone(&normals, &facets, &progress);
@@ -155,7 +155,7 @@ void bound_cocone(
 
                 TimePoint start_time = time();
 
-                std::vector<vec<N>> normals;
+                std::vector<Vector<N, double>> normals;
                 std::vector<std::array<int, N>> facets;
 
                 constructor.bound_cocone(rho, alpha, &normals, &facets, &progress);

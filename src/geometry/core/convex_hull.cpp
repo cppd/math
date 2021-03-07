@@ -923,7 +923,7 @@ void paraboloid_convex_hull(
 
                 const std::array<int, N + 1>& vertices = facet.vertices();
 
-                std::array<vec<N>, N + 1> orthos;
+                std::array<Vector<N, double>, N + 1> orthos;
                 for (unsigned r = 0; r < N + 1; ++r)
                 {
                         // Перпендикуляр к грани наружу от симплекса Делоне
@@ -984,7 +984,7 @@ void ordinary_convex_hull(
 template <std::size_t N>
 void delaunay_integer(
         const std::vector<Vector<N, float>>& source_points,
-        std::vector<vec<N>>* points,
+        std::vector<Vector<N, double>>* points,
         std::vector<DelaunaySimplex<N>>* simplices,
         ProgressRatio* progress,
         bool write_log)
@@ -1004,7 +1004,7 @@ void delaunay_integer(
         paraboloid_convex_hull(convex_hull_points, points_map, simplices, progress, write_log);
 
         points->clear();
-        points->resize(source_points.size(), vec<N>(0));
+        points->resize(source_points.size(), Vector<N, double>(0));
         for (unsigned i = 0; i < convex_hull_points.size(); ++i)
         {
                 (*points)[points_map[i]] = to_vector<double>(convex_hull_points[i]);
@@ -1047,7 +1047,7 @@ void convex_hull_integer(
 template <std::size_t N>
 void compute_delaunay(
         const std::vector<Vector<N, float>>& source_points,
-        std::vector<vec<N>>* points,
+        std::vector<Vector<N, double>>* points,
         std::vector<DelaunaySimplex<N>>* simplices,
         ProgressRatio* progress,
         bool write_log)
@@ -1079,25 +1079,25 @@ void compute_convex_hull(
 
 template void compute_delaunay(
         const std::vector<Vector<2, float>>& source_points,
-        std::vector<vec<2>>* points,
+        std::vector<Vector<2, double>>* points,
         std::vector<DelaunaySimplex<2>>* simplices,
         ProgressRatio* progress,
         bool write_log);
 template void compute_delaunay(
         const std::vector<Vector<3, float>>& source_points,
-        std::vector<vec<3>>* points,
+        std::vector<Vector<3, double>>* points,
         std::vector<DelaunaySimplex<3>>* simplices,
         ProgressRatio* progress,
         bool write_log);
 template void compute_delaunay(
         const std::vector<Vector<4, float>>& source_points,
-        std::vector<vec<4>>* points,
+        std::vector<Vector<4, double>>* points,
         std::vector<DelaunaySimplex<4>>* simplices,
         ProgressRatio* progress,
         bool write_log);
 template void compute_delaunay(
         const std::vector<Vector<5, float>>& source_points,
-        std::vector<vec<5>>* points,
+        std::vector<Vector<5, double>>* points,
         std::vector<DelaunaySimplex<5>>* simplices,
         ProgressRatio* progress,
         bool write_log);

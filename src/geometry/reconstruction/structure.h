@@ -29,13 +29,13 @@ namespace ns::geometry
 template <std::size_t N>
 struct ManifoldVertex
 {
-        const vec<N> positive_norm;
-        // const vec<N> negative_pole;
+        const Vector<N, double> positive_norm;
+        // const Vector<N, double> negative_pole;
         const double height;
         const double radius;
         std::vector<int> cocone_neighbors;
 
-        ManifoldVertex(const vec<N>& positive_norm, double height, double radius)
+        ManifoldVertex(const Vector<N, double>& positive_norm, double height, double radius)
                 : positive_norm(positive_norm), height(height), radius(radius)
         {
         }
@@ -54,7 +54,7 @@ struct ManifoldFacet
 template <std::size_t N>
 void vertex_and_facet_data(
         bool find_all_vertex_data,
-        const std::vector<vec<N>>& points,
+        const std::vector<Vector<N, double>>& points,
         const std::vector<DelaunayObject<N>>& delaunay_objects,
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         std::vector<ManifoldVertex<N>>* vertex_data,
