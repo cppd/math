@@ -77,11 +77,6 @@ void load_data(const std::filesystem::path& file_name, int* n1, int* n2, std::ve
 template <typename T>
 void save_data(const std::filesystem::path& file_name, const std::vector<std::complex<T>>& x)
 {
-        if (x.size() < 10)
-        {
-                LOG("Data: " + to_string(x));
-        }
-
         std::ofstream file(file_name);
 
         file << std::scientific;

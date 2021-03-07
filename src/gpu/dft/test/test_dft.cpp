@@ -91,6 +91,27 @@ std::string time_string(const std::string& name, const TimePoint& start_time)
         return name + " time: " + to_string_fixed(1000.0 * duration_from(start_time), 5) + " ms";
 }
 
+void log_data(const std::vector<complex>& data)
+{
+        if (data.size() > 10)
+        {
+                return;
+        }
+        std::string s = "Data:";
+        if (!data.empty())
+        {
+                for (const complex& c : data)
+                {
+                        s += "\n  " + to_string(c);
+                }
+        }
+        else
+        {
+                s += " empty";
+        }
+        LOG(s);
+}
+
 void compute_vulkan(ComputeVector* dft, bool inverse, int n1, int n2, std::vector<complex>* data)
 {
         if (inverse)
@@ -187,15 +208,19 @@ DftData run_vulkan(
 {
         DftData dft_data;
 
-        dft_data.forward = source_data;
-        compute_vulkan(dft, false, n1, n2, &dft_data.forward);
-        save_data(make_path(test_name + "_dft_output_forward_vulkan.txt"), dft_data.forward);
+        std::vector<complex> data(source_data);
+
+        compute_vulkan(dft, false, n1, n2, &data);
+        log_data(data);
+        save_data(make_path(test_name + "_dft_output_forward_vulkan.txt"), data);
+        dft_data.forward = data;
 
         progress->set(++(*computation), computation_count);
 
-        dft_data.inverse = dft_data.forward;
-        compute_vulkan(dft, true, n1, n2, &dft_data.inverse);
-        save_data(make_path(test_name + "_dft_output_inverse_vulkan.txt"), dft_data.inverse);
+        compute_vulkan(dft, true, n1, n2, &data);
+        log_data(data);
+        save_data(make_path(test_name + "_dft_output_inverse_vulkan.txt"), data);
+        dft_data.inverse = data;
 
         progress->set(++(*computation), computation_count);
 
@@ -230,6 +255,7 @@ void run_cuda(
                 return;
         }
 
+        log_data(data);
         save_data(make_path(test_name + "_dft_output_forward_cuda.txt"), data);
         compare("Vulkan", "cuFFT", vulkan_data.forward, data);
 
@@ -250,6 +276,7 @@ void run_cuda(
                 return;
         }
 
+        log_data(data);
         save_data(make_path(test_name + "_dft_output_inverse_cuda.txt"), data);
         compare("Vulkan", "cuFFT", vulkan_data.inverse, data);
 
@@ -285,6 +312,7 @@ void run_fftw(
                 return;
         }
 
+        log_data(data);
         save_data(make_path(test_name + "_dft_output_forward_fftw.txt"), data);
         compare("Vulkan", "FFTW", vulkan_data.forward, data);
 
@@ -305,6 +333,7 @@ void run_fftw(
                 return;
         }
 
+        log_data(data);
         save_data(make_path(test_name + "_dft_output_inverse_fftw.txt"), data);
         compare("Vulkan", "FFTW", vulkan_data.inverse, data);
 
@@ -358,7 +387,7 @@ void constant_data_test(ComputeVector* dft, ProgressRatio* progress)
         const int N = source_data.size() / 3;
         const int K = source_data.size() / N;
 
-        LOG("--- Source Data ---\n" + to_string(source_data));
+        log_data(source_data);
 
         dft_test("constant", dft, N, K, source_data, progress);
 
@@ -399,8 +428,8 @@ enum class TestSize
 TestSize find_test_size()
 {
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
-        std::uniform_int_distribution<int> uid(1, 10);
-        return (uid(engine) != 1) ? TestSize::Small : TestSize::Big;
+        std::bernoulli_distribution small_test(0.9);
+        return small_test(engine) ? TestSize::Small : TestSize::Big;
 }
 
 std::array<int, 2> find_dimensions(TestSize test_size)
