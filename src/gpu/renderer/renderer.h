@@ -47,8 +47,8 @@ struct CameraInfo final
         Volume shadow_volume;
         mat4 main_view_matrix;
         mat4 shadow_view_matrix;
-        vec3 light_direction;
-        vec3 camera_direction;
+        vec3d light_direction;
+        vec3d camera_direction;
 };
 
 struct Renderer
@@ -72,7 +72,7 @@ struct Renderer
         virtual void set_show_normals(bool show) = 0;
         virtual void set_shadow_zoom(double zoom) = 0;
         virtual void set_camera(const CameraInfo& c) = 0;
-        virtual void set_clip_plane(const std::optional<vec4>& plane) = 0;
+        virtual void set_clip_plane(const std::optional<vec4d>& plane) = 0;
 
         virtual void object_update(const mesh::MeshObject<3>& object) = 0;
         virtual void object_update(const volume::VolumeObject<3>& object) = 0;

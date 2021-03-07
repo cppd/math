@@ -30,14 +30,14 @@ class Camera final
 {
         mutable SpinLock m_lock;
 
-        vec3 m_camera_right{0};
-        vec3 m_camera_up{0};
-        vec3 m_camera_direction{0}; // от камеры на объект
+        vec3d m_camera_right{0};
+        vec3d m_camera_up{0};
+        vec3d m_camera_direction{0}; // от камеры на объект
 
-        vec3 m_light_up{0};
-        vec3 m_light_direction{0}; // от источника света на объект
+        vec3d m_light_up{0};
+        vec3d m_light_direction{0}; // от источника света на объект
 
-        vec2 m_window_center{0};
+        vec2d m_window_center{0};
 
         int m_width = -1;
         int m_height = -1;
@@ -45,7 +45,7 @@ class Camera final
         double m_scale_exponent{0};
         double m_default_scale{1};
 
-        void set_vectors(const vec3& right, const vec3& up);
+        void set_vectors(const vec3d& right, const vec3d& up);
 
         gpu::renderer::CameraInfo::Volume main_volume() const;
         gpu::renderer::CameraInfo::Volume shadow_volume() const;
@@ -53,10 +53,10 @@ class Camera final
         mat4 shadow_view_matrix() const;
 
 public:
-        void reset(const vec3& right, const vec3& up, double scale, const vec2& window_center);
+        void reset(const vec3d& right, const vec3d& up, double scale, const vec2d& window_center);
         void scale(double x, double y, double delta);
         void rotate(double around_up_axis, double around_right_axis);
-        void move(const vec2& delta);
+        void move(const vec2d& delta);
         void resize(int width, int height);
 
         info::Camera view_info() const;

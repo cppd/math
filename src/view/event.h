@@ -384,10 +384,10 @@ namespace info
 {
 struct Camera final
 {
-        vec3 up;
-        vec3 forward;
-        vec3 lighting;
-        vec3 view_center;
+        vec3d up;
+        vec3d forward;
+        vec3d lighting;
+        vec3d view_center;
         double view_width;
         int width;
         int height;

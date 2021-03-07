@@ -114,7 +114,7 @@ class Impl final : public View
                 double near = 1;
                 double far = -1;
                 mat4 p = matrix::ortho_vulkan<double>(left, right, bottom, top, near, far);
-                mat4 t = matrix::translate(vec3(0.5, 0.5, 0));
+                mat4 t = matrix::translate(vec3d(0.5, 0.5, 0));
                 m_memory.set_matrix(p * t);
 
                 m_pipeline = m_program.create_pipeline(

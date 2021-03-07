@@ -33,9 +33,9 @@ struct VolumeObject
 
         virtual void set_matrix_and_clip_plane(
                 const mat4& vp_matrix,
-                const std::optional<vec4>& world_clip_plane_equation) = 0;
+                const std::optional<vec4d>& world_clip_plane_equation) = 0;
 
-        virtual void set_clip_plane(const vec4& world_clip_plane_equation) = 0;
+        virtual void set_clip_plane(const vec4d& world_clip_plane_equation) = 0;
 
         struct UpdateChanges
         {

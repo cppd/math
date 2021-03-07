@@ -128,7 +128,7 @@ void ShaderBuffers::set_transparency_max_node_count(uint32_t count) const
         copy_to_drawing_buffer(offsetof(Drawing, transparency_max_node_count), c);
 }
 
-void ShaderBuffers::set_clip_plane(const vec4& equation, bool enabled) const
+void ShaderBuffers::set_clip_plane(const vec4d& equation, bool enabled) const
 {
         static_assert(
                 offsetof(Drawing, clip_plane_equation) + sizeof(Drawing::clip_plane_equation)
@@ -146,7 +146,7 @@ void ShaderBuffers::set_clip_plane(const vec4& equation, bool enabled) const
         map.write(sizeof(clip_plane_equation), clip_plane_enabled);
 }
 
-void ShaderBuffers::set_viewport(const vec2& center, const vec2& factor) const
+void ShaderBuffers::set_viewport(const vec2d& center, const vec2d& factor) const
 {
         static_assert(
                 offsetof(Drawing, viewport_center) + sizeof(Drawing::viewport_factor)
@@ -373,9 +373,9 @@ VkDeviceSize VolumeBuffer::buffer_volume_size() const
 
 void VolumeBuffer::set_coordinates(
         const mat4& inverse_mvp_matrix,
-        const vec4& third_row_of_mvp,
-        const vec4& clip_plane_equation,
-        const vec3& gradient_h,
+        const vec4d& third_row_of_mvp,
+        const vec4d& clip_plane_equation,
+        const vec3d& gradient_h,
         const mat3& normal_matrix) const
 {
         Coordinates coordinates;
@@ -387,7 +387,7 @@ void VolumeBuffer::set_coordinates(
         vulkan::map_and_write_to_buffer(m_uniform_buffer_coordinates, 0, coordinates);
 }
 
-void VolumeBuffer::set_clip_plane(const vec4& clip_plane_equation) const
+void VolumeBuffer::set_clip_plane(const vec4d& clip_plane_equation) const
 {
         decltype(Coordinates().clip_plane_equation) clip_plane = to_vector<float>(clip_plane_equation);
         vulkan::map_and_write_to_buffer(

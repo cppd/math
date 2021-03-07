@@ -59,16 +59,16 @@ constexpr uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
 struct ViewportTransform
 {
         // device_coordinates = (framebuffer_coordinates - center) * factor
-        vec2 center;
-        vec2 factor;
+        vec2d center;
+        vec2d factor;
 };
 ViewportTransform viewport_transform(const Region<2, int>& viewport)
 {
-        const vec2 offset = to_vector<double>(viewport.from());
-        const vec2 extent = to_vector<double>(viewport.extent());
+        const vec2d offset = to_vector<double>(viewport.from());
+        const vec2d extent = to_vector<double>(viewport.extent());
         ViewportTransform t;
         t.center = offset + 0.5 * extent;
-        t.factor = vec2(2.0 / extent[0], 2.0 / extent[1]);
+        t.factor = vec2d(2.0 / extent[0], 2.0 / extent[1]);
         return t;
 }
 
@@ -129,7 +129,7 @@ class Impl final : public Renderer
         double m_shadow_zoom = 1;
         bool m_show_shadow = false;
         Region<2, int> m_viewport;
-        std::optional<vec4> m_clip_plane;
+        std::optional<vec4d> m_clip_plane;
         bool m_show_normals = false;
 
         const vulkan::VulkanInstance& m_instance;
@@ -281,7 +281,7 @@ class Impl final : public Renderer
                 set_matrices();
         }
 
-        void set_clip_plane(const std::optional<vec4>& plane) override
+        void set_clip_plane(const std::optional<vec4d>& plane) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -297,7 +297,7 @@ class Impl final : public Renderer
                 }
                 else
                 {
-                        m_shader_buffers.set_clip_plane(vec4(0), false);
+                        m_shader_buffers.set_clip_plane(vec4d(0), false);
                 }
                 create_mesh_render_command_buffers();
         }

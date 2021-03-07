@@ -88,8 +88,8 @@ public:
 
         void set_transparency_max_node_count(uint32_t count) const;
 
-        void set_clip_plane(const vec4& equation, bool enabled) const;
-        void set_viewport(const vec2& center, const vec2& factor) const;
+        void set_clip_plane(const vec4d& equation, bool enabled) const;
+        void set_viewport(const vec2d& center, const vec2d& factor) const;
         void set_wireframe_color(const Color& color) const;
         void set_background_color(const Color& color) const;
         void set_clip_plane_color(const Color& color) const;
@@ -199,12 +199,12 @@ public:
 
         void set_coordinates(
                 const mat4& inverse_mvp_matrix,
-                const vec4& third_row_of_mvp,
-                const vec4& clip_plane_equation,
-                const vec3& gradient_h,
+                const vec4d& third_row_of_mvp,
+                const vec4d& clip_plane_equation,
+                const vec3d& gradient_h,
                 const mat3& normal_matrix) const;
 
-        void set_clip_plane(const vec4& clip_plane_equation) const;
+        void set_clip_plane(const vec4d& clip_plane_equation) const;
 
         void set_parameters(
                 const vulkan::CommandPool& command_pool,

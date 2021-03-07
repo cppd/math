@@ -217,9 +217,9 @@ class Impl final
                 // -z = 0 или (0, 0, -1, 0).
                 // Уравнение плоскости для исходных координат
                 // (0, 0, -1, 0) * view matrix.
-                vec4 plane = -m_clip_plane_view_matrix->row(2);
+                vec4d plane = -m_clip_plane_view_matrix->row(2);
 
-                vec3 n(plane[0], plane[1], plane[2]);
+                vec3d n(plane[0], plane[1], plane[2]);
                 double d = n.norm_1();
 
                 // Уравнение плоскости со смещением
@@ -266,7 +266,7 @@ class Impl final
                 if (left.pressed && m_draw_rectangle.is_inside(left.pressed_x, left.pressed_y)
                     && (left.delta_x != 0 || left.delta_y != 0))
                 {
-                        m_camera.move(vec2(-left.delta_x, left.delta_y));
+                        m_camera.move(vec2d(-left.delta_x, left.delta_y));
                         changed = true;
                 }
 
@@ -282,7 +282,7 @@ class Impl final
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_camera.reset(vec3(1, 0, 0), vec3(0, 1, 0), 1, vec2(0, 0));
+                m_camera.reset(vec3d(1, 0, 0), vec3d(0, 1, 0), 1, vec2d(0, 0));
 
                 m_renderer->set_camera(m_camera.renderer_info());
         }
