@@ -297,11 +297,12 @@ void load_vertices(
         //
 
         std::ostringstream oss;
-        oss << "create = " << time_string(create_duration);
-        oss << ", map = " << time_string(map_duration);
-        oss << ", load = " << time_string(load_duration);
-        oss << ", vertices = " << vertices.size() << " (" << data_size(vertices) << " bytes)";
-        oss << ", faces = " << indices.size() / 3 << " (" << data_size(indices) << " bytes)";
+        oss << "Mesh info" << '\n';
+        oss << "  create  : " << time_string(create_duration) << '\n';
+        oss << "  map     : " << time_string(map_duration) << '\n';
+        oss << "  load    : " << time_string(load_duration) << '\n';
+        oss << "  vertices: " << vertices.size() << " (" << data_size(vertices) << " bytes)" << '\n';
+        oss << "  faces   : " << indices.size() / 3 << " (" << data_size(indices) << " bytes)";
         LOG(oss.str());
 }
 
