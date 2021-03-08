@@ -142,6 +142,8 @@ class StratifiedJitteredSampler
 
         std::vector<T> m_offsets;
         std::vector<std::array<int, N>> m_indices;
+        T m_min;
+        T m_max;
         bool m_shuffle;
 
 public:
@@ -152,6 +154,8 @@ public:
                 bool shuffle)
                 : m_offsets(make_offsets(min, max, one_dimension_size(sample_count))),
                   m_indices(product(m_offsets.size() - 1)),
+                  m_min(min),
+                  m_max(max),
                   m_shuffle(shuffle)
         {
         }
@@ -159,6 +163,16 @@ public:
         bool shuffled() const
         {
                 return m_shuffle;
+        }
+
+        T min() const
+        {
+                return m_min;
+        }
+
+        T max() const
+        {
+                return m_max;
         }
 
         template <typename RandomEngine>

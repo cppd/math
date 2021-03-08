@@ -85,6 +85,8 @@ class LatinHypercubeSampler
         std::vector<T> m_offsets;
         std::size_t m_initial_shuffle_dimension;
         std::size_t m_sample_count;
+        T m_min;
+        T m_max;
         bool m_shuffle;
 
 public:
@@ -92,6 +94,8 @@ public:
                 : m_offsets(make_offsets(min, max, sample_count)),
                   m_initial_shuffle_dimension(shuffle ? 0 : 1),
                   m_sample_count(sample_count),
+                  m_min(min),
+                  m_max(max),
                   m_shuffle(shuffle)
         {
         }
@@ -99,6 +103,16 @@ public:
         bool shuffled() const
         {
                 return m_shuffle;
+        }
+
+        T min() const
+        {
+                return m_min;
+        }
+
+        T max() const
+        {
+                return m_max;
         }
 
         template <typename RandomEngine>
