@@ -1,0 +1,148 @@
+/*
+Copyright (C) 2017-2021 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/print.h>
+#include <src/com/type/limit.h>
+#include <src/numerical/vec.h>
+
+#include <random>
+#include <vector>
+
+namespace ns::sampling::test
+{
+template <std::size_t N, typename T>
+class PointSearch
+{
+        static bool inside(const Vector<N, T>& p, const std::array<std::array<T, 2>, N>& box)
+        {
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        if (!(p[i] >= box[i][0] && p[i] < box[i][1]))
+                        {
+                                return false;
+                        }
+                }
+                return true;
+        }
+
+        std::vector<Vector<N, T>> m_points;
+
+public:
+        PointSearch(std::vector<Vector<N, T>> points)
+        {
+                m_points = std::move(points);
+        }
+
+        int count_points(const std::array<std::array<T, 2>, N>& box) const
+        {
+                int point_count = 0;
+                for (const Vector<N, T>& p : m_points)
+                {
+                        if (inside(p, box))
+                        {
+                                ++point_count;
+                        }
+                }
+                return point_count;
+        }
+};
+
+template <std::size_t N, typename T>
+void check_point_range(const Vector<N, T>& p, std::type_identity_t<T> min, std::type_identity_t<T> max)
+{
+        for (unsigned i = 0; i < N; ++i)
+        {
+                if (!(p[i] >= min && p[i] < max))
+                {
+                        error("Point " + to_string(p) + " is not in the range [" + to_string(min) + ", "
+                              + to_string(max) + ")");
+                }
+        }
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+std::array<std::array<T, 2>, N> make_random_box(
+        std::type_identity_t<T> min,
+        std::type_identity_t<T> max,
+        RandomEngine& random_engine)
+{
+        std::array<std::array<T, 2>, N> box;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                T v0;
+                T v1;
+                do
+                {
+                        v0 = std::uniform_real_distribution<T>(min, max)(random_engine);
+                        v1 = std::uniform_real_distribution<T>(v0, max)(random_engine);
+                } while (!(v1 > v0));
+                box[i][0] = v0;
+                box[i][1] = v1;
+        }
+        return box;
+}
+
+template <std::size_t N, typename T>
+T compute_box_volume(const std::array<std::array<T, 2>, N>& box)
+{
+        T volume = 1;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                ASSERT(box[i][1] > box[i][0]);
+                volume *= box[i][1] - box[i][0];
+        }
+        return volume;
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+T compute_discrepancy(
+        std::type_identity_t<T> min,
+        std::type_identity_t<T> max,
+        const std::vector<Vector<N, T>>& points,
+        int box_count,
+        RandomEngine& random_engine)
+{
+        if (!(max > min))
+        {
+                error("Max " + to_string(max) + " must be greater than min " + to_string(min));
+        }
+
+        for (const Vector<N, T>& p : points)
+        {
+                check_point_range(p, min, max);
+        }
+
+        PointSearch<N, T> point_search(points);
+
+        const T VOLUME = std::pow(max - min, T(N));
+        T max_discrepancy = limits<T>::lowest();
+        for (int i = 0; i < box_count; ++i)
+        {
+                const std::array<std::array<T, 2>, N> box = make_random_box<N, T>(min, max, random_engine);
+                const T box_volume = compute_box_volume(box);
+                const int point_count = point_search.count_points(box);
+                const T discrepancy = std::abs(box_volume / VOLUME - static_cast<T>(point_count) / points.size());
+                max_discrepancy = std::max(discrepancy, max_discrepancy);
+        }
+
+        return max_discrepancy;
+}
+}

@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "discrepancy.h"
+
 #include "../lh_sampler.h"
 #include "../sj_sampler.h"
 
@@ -237,7 +239,7 @@ void test_performance()
         test_performance<T, std::mt19937_64>();
 }
 
-void test()
+void test_sampler_performance()
 {
         write_to_files<std::mt19937_64>();
 
@@ -249,6 +251,59 @@ void test()
         test_performance<long double>();
 }
 
-TEST_PERFORMANCE("Samplers", test)
+template <std::size_t N, typename T, typename Sampler, typename RandomEngine>
+void test_discrepancy(const Sampler& sampler, T discrepancy_limit, RandomEngine& random_engine)
+{
+        LOG(std::string(sampler_name(sampler)) + ", " + to_string(N) + "d, " + type_name<T>());
+
+        std::vector<Vector<N, T>> data;
+        sampler.generate(random_engine, &data);
+
+        const int BOX_COUNT = 10000;
+
+        T discrepancy = compute_discrepancy(sampler.min(), sampler.max(), data, BOX_COUNT, random_engine);
+        LOG("discrepancy = " + to_string(discrepancy));
+        if (!(discrepancy < discrepancy_limit))
+        {
+                error(std::string(sampler_name(sampler)) + " discrepancy " + to_string(discrepancy)
+                      + " is out of discrepancy limit " + to_string(discrepancy_limit));
+        }
+}
+
+template <std::size_t N, typename T>
+void test_discrepancy(int sample_count, T discrepancy_limit)
+{
+        std::mt19937 engine = create_engine<std::mt19937>();
+
+        const T min = std::uniform_real_distribution<T>(-10, 10)(engine);
+        const T max = std::uniform_real_distribution<T>(min + 0.1, min + 10)(engine);
+
+        {
+                StratifiedJitteredSampler<N, T> sampler(min, max, sample_count, true);
+                test_discrepancy<N, T>(sampler, discrepancy_limit, engine);
+        }
+        {
+                LatinHypercubeSampler<N, T> sampler(min, max, sample_count, true);
+                test_discrepancy<N, T>(sampler, discrepancy_limit, engine);
+        }
+}
+
+template <std::size_t N>
+void test_discrepancy(int sample_count, double discrepancy_limit)
+{
+        test_discrepancy<N, float>(sample_count, discrepancy_limit);
+        test_discrepancy<N, double>(sample_count, discrepancy_limit);
+}
+
+void test_sampler_discrepancy()
+{
+        LOG("Test sampler discrepancy");
+        test_discrepancy<2>(power<2>(10), 0.12);
+        test_discrepancy<3>(power<3>(10), 0.04);
+        test_discrepancy<4>(power<4>(10), 0.01);
+}
+
+TEST_SMALL("Sampler discrepancy", test_sampler_discrepancy)
+TEST_PERFORMANCE("Samplers", test_sampler_performance)
 }
 }
