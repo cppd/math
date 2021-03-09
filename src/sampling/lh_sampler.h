@@ -118,15 +118,23 @@ public:
         template <typename RandomEngine>
         void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* samples) const
         {
+                constexpr bool IS_FLOAT = std::is_same_v<std::remove_cvref_t<T>, float>;
+
                 samples->resize(m_sample_count);
 
                 for (std::size_t i = 0; i < m_sample_count; ++i)
                 {
-                        std::uniform_real_distribution<T> urd(m_offsets[i], m_offsets[i + 1]);
+                        T min = m_offsets[i];
+                        T max = m_offsets[i + 1];
+                        std::uniform_real_distribution<T> urd(min, max);
                         Vector<N, T>& sample = (*samples)[i];
                         for (std::size_t n = 0; n < N; ++n)
                         {
-                                sample[n] = urd(random_engine);
+                                // Distribution may return max if T is float
+                                do
+                                {
+                                        sample[n] = urd(random_engine);
+                                } while (IS_FLOAT && sample[n] >= max);
                         }
                 }
 
