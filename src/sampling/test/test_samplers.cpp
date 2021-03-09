@@ -270,13 +270,36 @@ void test_discrepancy(const Sampler& sampler, T discrepancy_limit, RandomEngine&
         }
 }
 
+template <typename T, typename RandomEngine>
+std::array<T, 2> min_max_for_samplers(RandomEngine& random_engine)
+{
+        T min;
+        T max;
+        if (std::bernoulli_distribution(0.5)(random_engine))
+        {
+                min = std::uniform_real_distribution<T>(-10, 10)(random_engine);
+                max = std::uniform_real_distribution<T>(min + 0.1, min + 10)(random_engine);
+        }
+        else if (std::bernoulli_distribution(0.5)(random_engine))
+        {
+                min = 0;
+                max = 1;
+        }
+        else
+        {
+                min = -1;
+                max = 1;
+        }
+        return {min, max};
+}
+
 template <std::size_t N, typename T>
 void test_discrepancy(int sample_count, T discrepancy_limit)
 {
         std::mt19937 engine = create_engine<std::mt19937>();
 
-        const T min = std::uniform_real_distribution<T>(-10, 10)(engine);
-        const T max = std::uniform_real_distribution<T>(min + 0.1, min + 10)(engine);
+        const auto [min, max] = min_max_for_samplers<T>(engine);
+        LOG("Sampler min = " + to_string(min) + ", max = " + to_string(max));
 
         {
                 StratifiedJitteredSampler<N, T> sampler(min, max, sample_count, true);
@@ -298,9 +321,10 @@ void test_discrepancy(int sample_count, double discrepancy_limit)
 void test_sampler_discrepancy()
 {
         LOG("Test sampler discrepancy");
-        test_discrepancy<2>(power<2>(10), 0.12);
+
+        test_discrepancy<2>(power<2>(10), 0.13);
         test_discrepancy<3>(power<3>(10), 0.04);
-        test_discrepancy<4>(power<4>(10), 0.01);
+        test_discrepancy<4>(power<4>(10), 0.012);
 }
 
 TEST_SMALL("Sampler discrepancy", test_sampler_discrepancy)
