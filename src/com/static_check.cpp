@@ -21,10 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-static_assert(__GNUC__);
-static_assert(__cplusplus >= 201703L);
-static_assert(__STDC_HOSTED__ == 1);
-
 static_assert(std::numeric_limits<int>::max() >= (1ull << 31) - 1);
 static_assert(std::numeric_limits<unsigned>::max() >= (1ull << 32) - 1);
 
