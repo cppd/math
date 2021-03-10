@@ -25,20 +25,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "type/number.h"
+
+#include <algorithm>
 #include <type_traits>
 
 namespace ns
 {
-template <unsigned Base, typename R>
-constexpr R radical_inverse(unsigned long long v)
+template <unsigned Base, typename Result>
+constexpr Result radical_inverse(unsigned long long v)
 {
         static_assert(Base >= 2);
-        static_assert(std::is_floating_point_v<R>);
+        static_assert(std::is_floating_point_v<Result>);
 
-        constexpr R BASE_FLOAT = Base;
+        constexpr Result BASE_FLOAT = Base;
 
         unsigned long long reverse = 0;
-        R base = 1;
+        Result base = 1;
         while (v)
         {
                 unsigned long long next = v / Base;
@@ -47,6 +50,6 @@ constexpr R radical_inverse(unsigned long long v)
                 reverse = reverse * Base + digit;
                 base *= BASE_FLOAT;
         }
-        return reverse / base;
+        return std::min(reverse / base, PREVIOUS_BEFORE_ONE<Result>);
 }
 }

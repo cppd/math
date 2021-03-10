@@ -21,25 +21,54 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-static_assert(321.0f / 1000 == radical_inverse<10, float>(123));
-static_assert(321.0 / 1000 == radical_inverse<10, double>(123));
+namespace
+{
+template <typename Result, unsigned Base, typename T>
+constexpr bool compare(T v, T v1, T v2)
+{
+        return static_cast<Result>(v1) / v2 == radical_inverse<Base, Result>(v);
+}
 
-static_assert(static_cast<float>(0b101) / 0b10000 == radical_inverse<2, float>(0b1010));
-static_assert(static_cast<double>(0b101) / 0b10000 == radical_inverse<2, double>(0b1010));
+template <unsigned Base, typename T>
+constexpr bool compare(T v, T v1, T v2)
+{
+        return compare<float, Base>(v, v1, v2) && compare<double, Base>(v, v1, v2)
+               && compare<long double, Base>(v, v1, v2);
+}
 
-static_assert(static_cast<float>(0101) / 010000 == radical_inverse<8, float>(01010));
-static_assert(static_cast<double>(0101) / 010000 == radical_inverse<8, double>(01010));
+static_assert(compare<2>(0b101011, 0b110101, 0b1000000));
+static_assert(compare<5>(1 * (5 * 5) + 2 * (5) + 3, 3 * (5 * 5) + 2 * (5) + 1, 5 * 5 * 5));
+static_assert(compare<8>(0'1020'3040, 0'0403'0201, 01'0000'0000));
+static_assert(compare<10>(123, 321, 1000));
+static_assert(compare<11>(1 * (11 * 11) + 2 * (11) + 3, 3 * (11 * 11) + 2 * (11) + 1, 11 * 11 * 11));
+static_assert(compare<16>(0x123456789F, 0xF987654321, 0x1'00'0000'0000));
 
-static_assert(static_cast<float>(0x321) / 0x1000 == radical_inverse<16, float>(0x123));
-static_assert(static_cast<double>(0x321) / 0x1000 == radical_inverse<16, double>(0x123));
+//
 
-static_assert(1 > radical_inverse<2, float>(limits<unsigned long long>::max() - 1));
-static_assert(1 > radical_inverse<3, float>(limits<unsigned long long>::max() - 1));
-static_assert(1 > radical_inverse<4, float>(limits<unsigned long long>::max() - 1));
-static_assert(1 > radical_inverse<5, float>(limits<unsigned long long>::max() - 1));
+template <unsigned Base, typename Result, typename T>
+constexpr bool check_max()
+{
+        return 1 > radical_inverse<Base, Result>(limits<T>::max());
+}
 
-static_assert(1 > radical_inverse<2, double>(limits<unsigned long long>::max() - 1));
-static_assert(1 > radical_inverse<3, double>(limits<unsigned long long>::max() - 1));
-static_assert(1 > radical_inverse<4, double>(limits<unsigned long long>::max() - 1));
-static_assert(1 > radical_inverse<5, double>(limits<unsigned long long>::max() - 1));
+template <unsigned Base, typename T>
+constexpr bool check_max()
+{
+        return check_max<Base, float, T>() && check_max<Base, double, T>() && check_max<Base, long double, T>();
+}
+
+template <unsigned Base>
+constexpr bool check_max()
+{
+        return check_max<Base, int>() && check_max<Base, unsigned>() && check_max<Base, long long>()
+               && check_max<Base, unsigned long long>();
+}
+
+static_assert(check_max<2>());
+static_assert(check_max<3>());
+static_assert(check_max<4>());
+static_assert(check_max<5>());
+static_assert(check_max<7>());
+static_assert(check_max<111>());
+}
 }
