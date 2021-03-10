@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "limit.h"
+#include "../limit.h"
 
 namespace ns
 {
@@ -25,10 +25,10 @@ static_assert(binary_epsilon<float>() == std::numeric_limits<float>::epsilon());
 static_assert(binary_epsilon<double>() == std::numeric_limits<double>::epsilon());
 static_assert(binary_epsilon<long double>() == std::numeric_limits<long double>::epsilon());
 
-static_assert((1 + binary_epsilon<float>() != 1) && (1 + binary_epsilon<float>() / 2 == 1));
-static_assert((1 + binary_epsilon<double>() != 1) && (1 + binary_epsilon<double>() / 2 == 1));
-static_assert((1 + binary_epsilon<long double>() != 1) && (1 + binary_epsilon<long double>() / 2 == 1));
-static_assert((1 + binary_epsilon<__float128>() != 1) && (1 + binary_epsilon<__float128>() / 2 == 1));
+static_assert((1 + binary_epsilon<float>() > 1) && (1 + binary_epsilon<float>() / 2 == 1));
+static_assert((1 + binary_epsilon<double>() > 1) && (1 + binary_epsilon<double>() / 2 == 1));
+static_assert((1 + binary_epsilon<long double>() > 1) && (1 + binary_epsilon<long double>() / 2 == 1));
+static_assert((1 + binary_epsilon<__float128>() > 1) && (1 + binary_epsilon<__float128>() / 2 == 1));
 
 static_assert(2 - binary_epsilon<float>() == max_binary_fraction<float>());
 static_assert(2 - binary_epsilon<double>() == max_binary_fraction<double>());

@@ -29,13 +29,11 @@ constexpr T binary_epsilon()
 {
         T prev_e = 1;
         T e = 1;
-        T s = 1;
         do
         {
                 prev_e = e;
                 e /= 2;
-                s = 1 + e;
-        } while (s != 1);
+        } while (1 + e != 1);
         return prev_e;
 }
 
