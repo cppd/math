@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "discrepancy.h"
 
+#include "../halton_sampler.h"
 #include "../lh_sampler.h"
 #include "../sj_sampler.h"
 
@@ -32,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <filesystem>
 #include <fstream>
 #include <random>
+#include <sstream>
 #include <string_view>
 
 namespace ns::sampling::test
@@ -61,39 +63,56 @@ constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, std::mt19937_64>,
 }
 
 template <std::size_t N, typename T>
-const std::string_view& sampler_name(const StratifiedJitteredSampler<N, T>&)
+std::string sampler_name(const StratifiedJitteredSampler<N, T>&)
 {
-        static constexpr std::string_view s = "Stratified Jittered Sampler";
-        return s;
+        return "Stratified Jittered Sampler";
 }
 
 template <std::size_t N, typename T>
-const std::string_view& sampler_name(const LatinHypercubeSampler<N, T>&)
+std::string sampler_name(const LatinHypercubeSampler<N, T>&)
 {
-        static constexpr std::string_view s = "Latin Hypercube Sampler";
-        return s;
+        return "Latin Hypercube Sampler";
 }
 
 template <std::size_t N, typename T>
-const std::string_view& short_sampler_name(const StratifiedJitteredSampler<N, T>&)
+std::string sampler_name(const HaltonSampler<N, T>&)
 {
-        static constexpr std::string_view s = "sjs";
-        return s;
+        return "Halton Sampler";
 }
 
 template <std::size_t N, typename T>
-const std::string_view& short_sampler_name(const LatinHypercubeSampler<N, T>&)
+std::filesystem::path sampler_file_name(const StratifiedJitteredSampler<N, T>& sampler)
 {
-        static constexpr std::string_view s = "lhc";
-        return s;
+        std::ostringstream oss;
+        oss << "sampler_sjs_";
+        if (sampler.shuffled())
+        {
+                oss << "shuffled_";
+        }
+        oss << to_string(N) << "d_" << replace_space(type_name<T>()) << ".txt";
+        return path_from_utf8(oss.str());
 }
 
-template <template <std::size_t, typename> typename S, std::size_t N, typename T>
-std::filesystem::path sampler_file_name(const S<N, T>& sampler)
+template <std::size_t N, typename T>
+std::filesystem::path sampler_file_name(const LatinHypercubeSampler<N, T>& sampler)
 {
-        return path_from_utf8(
-                "samples_" + std::string(short_sampler_name(sampler)) + "_" + (sampler.shuffled() ? "shuffled_" : "")
-                + to_string(N) + "d_" + replace_space(type_name<T>()) + ".txt");
+        std::ostringstream oss;
+        oss << "sampler_lhc_";
+        if (sampler.shuffled())
+        {
+                oss << "shuffled_";
+        }
+        oss << to_string(N) << "d_" << replace_space(type_name<T>()) << ".txt";
+        return path_from_utf8(oss.str());
+}
+
+template <std::size_t N, typename T>
+std::filesystem::path sampler_file_name(const HaltonSampler<N, T>&)
+{
+        std::ostringstream oss;
+        oss << "sampler_halton_";
+        oss << to_string(N) << "d_" << replace_space(type_name<T>()) << ".txt";
+        return path_from_utf8(oss.str());
 }
 
 template <std::size_t N>
@@ -115,54 +134,70 @@ constexpr int sample_count()
         }
 }
 
-template <std::size_t N, typename T, typename Sampler, typename RandomEngine>
-void write_to_file(RandomEngine& random_engine, const Sampler& sampler, int pass_count)
+template <std::size_t N, typename T>
+void write_to_file(
+        const std::string& name,
+        const std::filesystem::path& file_name,
+        int grid,
+        const std::vector<Vector<N, T>>& data)
 {
-        std::ofstream file(std::filesystem::temp_directory_path() / sampler_file_name(sampler));
+        std::ofstream file(std::filesystem::temp_directory_path() / file_name);
 
-        file << sampler_name(sampler) << "\n";
-        file << "Pass count: " << to_string(pass_count) << "\n";
+        file << "Name: " << name << "\n";
+        file << "Grid: " << grid << "\n";
 
-        std::vector<Vector<N, T>> data;
-
-        for (int i = 0; i < pass_count; ++i)
+        for (const Vector<N, T>& v : data)
         {
-                sampler.generate(random_engine, &data);
-
-                for (const Vector<N, T>& v : data)
-                {
-                        file << to_string(v) << "\n";
-                }
+                file << to_string(v) << "\n";
         }
-}
-
-template <std::size_t N, typename T, typename Sampler, typename RandomEngine>
-void test_performance(RandomEngine& random_engine, const Sampler& sampler, int iter_count)
-{
-        std::vector<Vector<N, T>> data;
-
-        TimePoint start_time = time();
-
-        for (int i = 0; i < iter_count; ++i)
-        {
-                sampler.generate(random_engine, &data);
-        }
-
-        LOG(std::string(sampler_name(sampler)) + ": time = " + to_string_fixed(duration_from(start_time), 5)
-            + " seconds, size = " + to_string(data.size()));
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
 void write_to_files(bool shuffle)
 {
+        static_assert(std::is_floating_point_v<T>);
+
         RandomEngine random_engine = create_engine<RandomEngine>();
 
-        constexpr int pass_count = 10;
+        constexpr int PASS_COUNT = 10;
+        constexpr int SAMPLE_COUNT = sample_count<N>();
 
-        LOG(std::string("Writing samples, ") + (shuffle ? "shuffle, " : "") + to_string(N) + "D");
-        write_to_file<N, T>(
-                random_engine, StratifiedJitteredSampler<N, T>(0, 1, sample_count<N>(), shuffle), pass_count);
-        write_to_file<N, T>(random_engine, LatinHypercubeSampler<N, T>(0, 1, sample_count<N>(), shuffle), pass_count);
+        LOG(std::string("Writing samples, ") + (shuffle ? "shuffle, " : "") + type_name<T>() + ", " + to_string(N)
+            + "D");
+
+        {
+                StratifiedJitteredSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
+                std::vector<Vector<N, T>> data;
+                std::vector<Vector<N, T>> tmp;
+                for (int i = 0; i < PASS_COUNT; ++i)
+                {
+                        sampler.generate(random_engine, &tmp);
+                        data.insert(data.cend(), tmp.cbegin(), tmp.cend());
+                }
+                int size = std::lround(std::pow(SAMPLE_COUNT, T(1) / N));
+                ASSERT(SAMPLE_COUNT == power<N>(size));
+                write_to_file(sampler_name(sampler), sampler_file_name(sampler), size, data);
+        }
+        {
+                LatinHypercubeSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
+                std::vector<Vector<N, T>> data;
+                std::vector<Vector<N, T>> tmp;
+                for (int i = 0; i < PASS_COUNT; ++i)
+                {
+                        sampler.generate(random_engine, &tmp);
+                        data.insert(data.cend(), tmp.cbegin(), tmp.cend());
+                }
+                write_to_file(sampler_name(sampler), sampler_file_name(sampler), SAMPLE_COUNT, data);
+        }
+        {
+                HaltonSampler<N, T> sampler;
+                std::vector<Vector<N, T>> data(PASS_COUNT * SAMPLE_COUNT);
+                for (Vector<N, T>& v : data)
+                {
+                        v = sampler.generate();
+                }
+                write_to_file(sampler_name(sampler), sampler_file_name(sampler), 8, data);
+        }
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -172,19 +207,68 @@ void write_to_files()
         write_to_files<N, T, RandomEngine>(true);
 }
 
+template <typename T, typename RandomEngine>
+void write_to_files()
+{
+        write_to_files<2, T, RandomEngine>();
+        write_to_files<3, T, RandomEngine>();
+}
+
+void write_to_files()
+{
+        write_to_files<float, std::mt19937_64>();
+        LOG("");
+        write_to_files<double, std::mt19937_64>();
+        LOG("");
+        write_to_files<long double, std::mt19937_64>();
+}
+
 template <std::size_t N, typename T, typename RandomEngine>
 void test_performance(bool shuffle)
 {
         RandomEngine random_engine = create_engine<RandomEngine>();
 
-        constexpr int iter_count = 1e6;
+        constexpr int ITER_COUNT = 1'000'000;
+        constexpr int SAMPLE_COUNT = sample_count<N>();
+
+        std::vector<Vector<N, T>> data;
 
         LOG(std::string("Testing performance, ") + (shuffle ? "shuffle, " : "") + to_string(N) + "D");
-        test_performance<N, T>(
-                random_engine, StratifiedJitteredSampler<N, T>(0, 1, sample_count<N>(), shuffle), iter_count);
-        test_performance<N, T>(
-                random_engine, LatinHypercubeSampler<N, T>(0, 1, sample_count<N>(), shuffle), iter_count);
-        LOG("");
+
+        {
+                StratifiedJitteredSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
+                TimePoint start_time = time();
+                for (int i = 0; i < ITER_COUNT; ++i)
+                {
+                        sampler.generate(random_engine, &data);
+                }
+                LOG(sampler_name(sampler) + ": time = " + to_string_fixed(duration_from(start_time), 5)
+                    + " seconds, size = " + to_string(data.size()));
+        }
+        {
+                LatinHypercubeSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
+                TimePoint start_time = time();
+                for (int i = 0; i < ITER_COUNT; ++i)
+                {
+                        sampler.generate(random_engine, &data);
+                }
+                LOG(sampler_name(sampler) + ": time = " + to_string_fixed(duration_from(start_time), 5)
+                    + " seconds, size = " + to_string(data.size()));
+        }
+        {
+                HaltonSampler<N, T> sampler;
+                TimePoint start_time = time();
+                data.resize(SAMPLE_COUNT);
+                for (int i = 0; i < ITER_COUNT; ++i)
+                {
+                        for (int j = 0; j < SAMPLE_COUNT; ++j)
+                        {
+                                data[j] = sampler.generate();
+                        }
+                }
+                LOG(sampler_name(sampler) + ": time = " + to_string_fixed(duration_from(start_time), 5)
+                    + " seconds, size = " + to_string(data.size()));
+        }
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -192,18 +276,6 @@ void test_performance()
 {
         test_performance<N, T, RandomEngine>(false);
         test_performance<N, T, RandomEngine>(true);
-}
-
-template <typename T, typename RandomEngine>
-void write_to_files()
-{
-        static_assert(std::is_floating_point_v<T>);
-
-        LOG(std::string("Files <") + type_name<T>() + ", " + random_engine_name<RandomEngine>() + ">");
-
-        write_to_files<2, T, RandomEngine>();
-        write_to_files<3, T, RandomEngine>();
-        write_to_files<4, T, RandomEngine>();
 }
 
 template <typename T, typename RandomEngine>
@@ -221,16 +293,6 @@ void test_performance()
         test_performance<6, T, RandomEngine>();
 }
 
-template <typename RandomEngine>
-void write_to_files()
-{
-        write_to_files<float, RandomEngine>();
-        LOG("");
-        write_to_files<double, RandomEngine>();
-        LOG("");
-        write_to_files<long double, RandomEngine>();
-}
-
 template <typename T>
 void test_performance()
 {
@@ -241,33 +303,11 @@ void test_performance()
 
 void test_sampler_performance()
 {
-        write_to_files<std::mt19937_64>();
-
-        LOG("");
         test_performance<float>();
         LOG("");
         test_performance<double>();
         LOG("");
         test_performance<long double>();
-}
-
-template <std::size_t N, typename T, typename Sampler, typename RandomEngine>
-void test_discrepancy(const Sampler& sampler, T discrepancy_limit, RandomEngine& random_engine)
-{
-        LOG(std::string(sampler_name(sampler)) + ", " + to_string(N) + "d, " + type_name<T>());
-
-        std::vector<Vector<N, T>> data;
-        sampler.generate(random_engine, &data);
-
-        const int BOX_COUNT = 10000;
-
-        T discrepancy = compute_discrepancy(sampler.min(), sampler.max(), data, BOX_COUNT, random_engine);
-        LOG("discrepancy = " + to_string(discrepancy));
-        if (!(discrepancy < discrepancy_limit))
-        {
-                error(std::string(sampler_name(sampler)) + " discrepancy " + to_string(discrepancy)
-                      + " is out of discrepancy limit " + to_string(discrepancy_limit));
-        }
 }
 
 template <typename T, typename RandomEngine>
@@ -293,38 +333,78 @@ std::array<T, 2> min_max_for_samplers(RandomEngine& random_engine)
         return {min, max};
 }
 
+template <std::size_t N, typename T, typename RandomEngine>
+void test_discrepancy(
+        const std::string& sampler_name,
+        T min,
+        T max,
+        const std::vector<Vector<N, T>>& data,
+        T discrepancy_limit,
+        RandomEngine& random_engine)
+{
+        LOG(sampler_name + ", " + to_string(N) + "d, " + type_name<T>() + ", [" + to_string(min) + ", " + to_string(max)
+            + ")");
+
+        constexpr int BOX_COUNT = 10000;
+
+        T discrepancy = compute_discrepancy(min, max, data, BOX_COUNT, random_engine);
+        LOG("discrepancy = " + to_string(discrepancy));
+
+        if (!(discrepancy < discrepancy_limit))
+        {
+                error(sampler_name + " discrepancy " + to_string(discrepancy) + " is out of discrepancy limit "
+                      + to_string(discrepancy_limit));
+        }
+}
+
 template <std::size_t N, typename T>
-void test_discrepancy(int sample_count, T discrepancy_limit)
+void test_discrepancy(int sample_count, T limit_sj, T limit_lhc, T limit_h)
 {
         std::mt19937 engine = create_engine<std::mt19937>();
 
         const auto [min, max] = min_max_for_samplers<T>(engine);
-        LOG("Sampler min = " + to_string(min) + ", max = " + to_string(max));
 
         {
                 StratifiedJitteredSampler<N, T> sampler(min, max, sample_count, true);
-                test_discrepancy<N, T>(sampler, discrepancy_limit, engine);
+                std::vector<Vector<N, T>> data;
+                sampler.generate(engine, &data);
+                test_discrepancy(sampler_name(sampler), min, max, data, limit_sj, engine);
         }
         {
                 LatinHypercubeSampler<N, T> sampler(min, max, sample_count, true);
-                test_discrepancy<N, T>(sampler, discrepancy_limit, engine);
+                std::vector<Vector<N, T>> data;
+                sampler.generate(engine, &data);
+                test_discrepancy(sampler_name(sampler), min, max, data, limit_lhc, engine);
+        }
+        {
+                HaltonSampler<N, T> sampler;
+                std::vector<Vector<N, T>> data(sample_count);
+                for (Vector<N, T>& v : data)
+                {
+                        v = sampler.generate();
+                }
+                test_discrepancy(sampler_name(sampler), T(0), T(1), data, limit_h, engine);
         }
 }
 
 template <std::size_t N>
-void test_discrepancy(int sample_count, double discrepancy_limit)
+void test_discrepancy(int sample_count, double limit_sj, double limit_lhc, double limit_h)
 {
-        test_discrepancy<N, float>(sample_count, discrepancy_limit);
-        test_discrepancy<N, double>(sample_count, discrepancy_limit);
+        test_discrepancy<N, float>(sample_count, limit_sj, limit_lhc, limit_h);
+        test_discrepancy<N, double>(sample_count, limit_sj, limit_lhc, limit_h);
 }
 
 void test_sampler_discrepancy()
 {
         LOG("Test sampler discrepancy");
 
-        test_discrepancy<2>(power<2>(10), 0.13);
-        test_discrepancy<3>(power<3>(10), 0.04);
-        test_discrepancy<4>(power<4>(10), 0.012);
+        write_to_files();
+
+        LOG("");
+
+        test_discrepancy<2>(power<2>(10), 0.11, 0.13, 0.06);
+        test_discrepancy<3>(power<3>(10), 0.03, 0.04, 0.012);
+        test_discrepancy<4>(power<4>(10), 0.008, 0.012, 0.003);
 }
 
 TEST_SMALL("Sampler discrepancy", test_sampler_discrepancy)
