@@ -54,7 +54,7 @@ class PointSearch
         std::vector<Vector<N, T>> m_points;
 
 public:
-        PointSearch(std::vector<Vector<N, T>> points)
+        explicit PointSearch(std::vector<Vector<N, T>> points)
         {
                 m_points = std::move(points);
         }
@@ -86,6 +86,22 @@ void check_point_range(const Vector<N, T>& p, std::type_identity_t<T> min, std::
         }
 }
 
+template <typename T, typename RandomEngine>
+std::array<T, 2> make_box_coordinates(
+        std::type_identity_t<T> min,
+        std::type_identity_t<T> max,
+        RandomEngine& random_engine)
+{
+        T v0;
+        T v1;
+        do
+        {
+                v0 = std::uniform_real_distribution<T>(min, max)(random_engine);
+                v1 = std::uniform_real_distribution<T>(v0, max)(random_engine);
+        } while (!(v1 > v0));
+        return {v0, v1};
+}
+
 template <std::size_t N, typename T, typename RandomEngine>
 std::array<std::array<T, 2>, N> make_random_box(
         std::type_identity_t<T> min,
@@ -93,18 +109,26 @@ std::array<std::array<T, 2>, N> make_random_box(
         RandomEngine& random_engine)
 {
         std::array<std::array<T, 2>, N> box;
-        for (unsigned i = 0; i < N; ++i)
+
+        if (std::bernoulli_distribution(0.9)(random_engine))
         {
-                T v0;
-                T v1;
-                do
+                for (unsigned i = 0; i < N; ++i)
                 {
-                        v0 = std::uniform_real_distribution<T>(min, max)(random_engine);
-                        v1 = std::uniform_real_distribution<T>(v0, max)(random_engine);
-                } while (!(v1 > v0));
-                box[i][0] = v0;
-                box[i][1] = v1;
+                        const auto [v0, v1] = make_box_coordinates<T>(min, max, random_engine);
+                        box[i][0] = v0;
+                        box[i][1] = v1;
+                }
         }
+        else
+        {
+                const auto [v0, v1] = make_box_coordinates<T>(min, max, random_engine);
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        box[i][0] = v0;
+                        box[i][1] = v1;
+                }
+        }
+
         return box;
 }
 
@@ -138,16 +162,19 @@ T compute_discrepancy(
                 check_point_range(p, min, max);
         }
 
+        const T BOX_MIN = min;
+        const T BOX_MAX = std::nextafter(max, limits<T>::max());
+        const T BOX_VOLUME = std::pow(BOX_MAX - BOX_MIN, T(N));
+
         PointSearch<N, T> point_search(points);
 
-        const T VOLUME = std::pow(max - min, T(N));
         T max_discrepancy = limits<T>::lowest();
         for (int i = 0; i < box_count; ++i)
         {
-                const std::array<std::array<T, 2>, N> box = make_random_box<N, T>(min, max, random_engine);
+                const std::array<std::array<T, 2>, N> box = make_random_box<N, T>(BOX_MIN, BOX_MAX, random_engine);
                 const T box_volume = compute_box_volume(box);
                 const int point_count = point_search.count_points(box);
-                const T discrepancy = std::abs(box_volume / VOLUME - static_cast<T>(point_count) / points.size());
+                const T discrepancy = std::abs(box_volume / BOX_VOLUME - static_cast<T>(point_count) / points.size());
                 max_discrepancy = std::max(discrepancy, max_discrepancy);
         }
 

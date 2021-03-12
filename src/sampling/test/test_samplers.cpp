@@ -116,21 +116,21 @@ std::filesystem::path sampler_file_name(const HaltonSampler<N, T>&)
 }
 
 template <std::size_t N>
-constexpr int sample_count()
+constexpr int one_dimension_sample_count()
 {
         static_assert(N >= 2);
         switch (N)
         {
         case 2:
         case 3:
-                return power<N>(5u);
+                return 5u;
         case 4:
-                return power<N>(4u);
+                return 4u;
         case 5:
         case 6:
-                return power<N>(3u);
+                return 3u;
         default:
-                return power<N>(2u);
+                return 2u;
         }
 }
 
@@ -138,13 +138,13 @@ template <std::size_t N, typename T>
 void write_to_file(
         const std::string& name,
         const std::filesystem::path& file_name,
-        int grid,
+        int grid_size,
         const std::vector<Vector<N, T>>& data)
 {
         std::ofstream file(std::filesystem::temp_directory_path() / file_name);
 
         file << "Name: " << name << "\n";
-        file << "Grid: " << grid << "\n";
+        file << "Grid: " << grid_size << "\n";
 
         for (const Vector<N, T>& v : data)
         {
@@ -160,7 +160,9 @@ void write_to_files(bool shuffle)
         RandomEngine random_engine = create_engine<RandomEngine>();
 
         constexpr int PASS_COUNT = 10;
-        constexpr int SAMPLE_COUNT = sample_count<N>();
+
+        constexpr int ONE_DIMENSION_SAMPLE_COUNT = one_dimension_sample_count<N>();
+        constexpr int SAMPLE_COUNT = power<N>(ONE_DIMENSION_SAMPLE_COUNT);
 
         LOG(std::string("Writing samples, ") + (shuffle ? "shuffle, " : "") + type_name<T>() + ", " + to_string(N)
             + "D");
@@ -174,9 +176,8 @@ void write_to_files(bool shuffle)
                         sampler.generate(random_engine, &tmp);
                         data.insert(data.cend(), tmp.cbegin(), tmp.cend());
                 }
-                int size = std::lround(std::pow(SAMPLE_COUNT, T(1) / N));
-                ASSERT(SAMPLE_COUNT == power<N>(size));
-                write_to_file(sampler_name(sampler), sampler_file_name(sampler), size, data);
+                constexpr int GRID_SIZE = ONE_DIMENSION_SAMPLE_COUNT;
+                write_to_file(sampler_name(sampler), sampler_file_name(sampler), GRID_SIZE, data);
         }
         {
                 LatinHypercubeSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
@@ -187,7 +188,8 @@ void write_to_files(bool shuffle)
                         sampler.generate(random_engine, &tmp);
                         data.insert(data.cend(), tmp.cbegin(), tmp.cend());
                 }
-                write_to_file(sampler_name(sampler), sampler_file_name(sampler), SAMPLE_COUNT, data);
+                constexpr int GRID_SIZE = SAMPLE_COUNT;
+                write_to_file(sampler_name(sampler), sampler_file_name(sampler), GRID_SIZE, data);
         }
         {
                 HaltonSampler<N, T> sampler;
@@ -196,7 +198,8 @@ void write_to_files(bool shuffle)
                 {
                         v = sampler.generate();
                 }
-                write_to_file(sampler_name(sampler), sampler_file_name(sampler), 8, data);
+                constexpr int GRID_SIZE = ONE_DIMENSION_SAMPLE_COUNT;
+                write_to_file(sampler_name(sampler), sampler_file_name(sampler), GRID_SIZE, data);
         }
 }
 
@@ -229,7 +232,7 @@ void test_performance(bool shuffle)
         RandomEngine random_engine = create_engine<RandomEngine>();
 
         constexpr int ITER_COUNT = 1'000'000;
-        constexpr int SAMPLE_COUNT = sample_count<N>();
+        constexpr int SAMPLE_COUNT = power<N>(one_dimension_sample_count<N>());
 
         std::vector<Vector<N, T>> data;
 
@@ -311,7 +314,7 @@ void test_sampler_performance()
 }
 
 template <typename T, typename RandomEngine>
-std::array<T, 2> min_max_for_samplers(RandomEngine& random_engine)
+std::array<T, 2> min_max_for_sampler(RandomEngine& random_engine)
 {
         T min;
         T max;
@@ -334,7 +337,7 @@ std::array<T, 2> min_max_for_samplers(RandomEngine& random_engine)
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-void test_discrepancy(
+T test_discrepancy(
         const std::string& sampler_name,
         T min,
         T max,
@@ -345,7 +348,7 @@ void test_discrepancy(
         LOG(sampler_name + ", " + to_string(N) + "d, " + type_name<T>() + ", [" + to_string(min) + ", " + to_string(max)
             + ")");
 
-        constexpr int BOX_COUNT = 10000;
+        constexpr int BOX_COUNT = 10'000;
 
         T discrepancy = compute_discrepancy(min, max, data, BOX_COUNT, random_engine);
         LOG("discrepancy = " + to_string(discrepancy));
@@ -355,43 +358,72 @@ void test_discrepancy(
                 error(sampler_name + " discrepancy " + to_string(discrepancy) + " is out of discrepancy limit "
                       + to_string(discrepancy_limit));
         }
+
+        return discrepancy;
 }
 
 template <std::size_t N, typename T>
-void test_discrepancy(int sample_count, T limit_sj, T limit_lhc, T limit_h)
+T test_discrepancy_stratified_jittered_type(int sample_count, std::type_identity_t<T> max_discrepancy)
 {
-        std::mt19937 engine = create_engine<std::mt19937>();
+        std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
-        const auto [min, max] = min_max_for_samplers<T>(engine);
+        const auto [min, max] = min_max_for_sampler<T>(engine);
 
+        StratifiedJitteredSampler<N, T> sampler(min, max, sample_count, true);
+        std::vector<Vector<N, T>> data;
+        sampler.generate(engine, &data);
+        return test_discrepancy(sampler_name(sampler), min, max, data, max_discrepancy, engine);
+}
+
+template <std::size_t N, typename T>
+T test_discrepancy_latin_hypercube_type(int sample_count, std::type_identity_t<T> max_discrepancy)
+{
+        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+
+        const auto [min, max] = min_max_for_sampler<T>(engine);
+
+        LatinHypercubeSampler<N, T> sampler(min, max, sample_count, true);
+        std::vector<Vector<N, T>> data;
+        sampler.generate(engine, &data);
+        return test_discrepancy(sampler_name(sampler), min, max, data, max_discrepancy, engine);
+}
+
+template <std::size_t N, typename T>
+T test_discrepancy_halton_type(int sample_count, std::type_identity_t<T> max_discrepancy)
+{
+        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+
+        HaltonSampler<N, T> sampler;
+        std::vector<Vector<N, T>> data(sample_count);
+        for (Vector<N, T>& v : data)
         {
-                StratifiedJitteredSampler<N, T> sampler(min, max, sample_count, true);
-                std::vector<Vector<N, T>> data;
-                sampler.generate(engine, &data);
-                test_discrepancy(sampler_name(sampler), min, max, data, limit_sj, engine);
+                v = sampler.generate();
         }
-        {
-                LatinHypercubeSampler<N, T> sampler(min, max, sample_count, true);
-                std::vector<Vector<N, T>> data;
-                sampler.generate(engine, &data);
-                test_discrepancy(sampler_name(sampler), min, max, data, limit_lhc, engine);
-        }
-        {
-                HaltonSampler<N, T> sampler;
-                std::vector<Vector<N, T>> data(sample_count);
-                for (Vector<N, T>& v : data)
-                {
-                        v = sampler.generate();
-                }
-                test_discrepancy(sampler_name(sampler), T(0), T(1), data, limit_h, engine);
-        }
+        return test_discrepancy(sampler_name(sampler), T(0), T(1), data, max_discrepancy, engine);
 }
 
 template <std::size_t N>
-void test_discrepancy(int sample_count, double limit_sj, double limit_lhc, double limit_h)
+double test_discrepancy_stratified_jittered(int sample_count, double max_discrepancy)
 {
-        test_discrepancy<N, float>(sample_count, limit_sj, limit_lhc, limit_h);
-        test_discrepancy<N, double>(sample_count, limit_sj, limit_lhc, limit_h);
+        double f = test_discrepancy_stratified_jittered_type<N, float>(sample_count, max_discrepancy);
+        double d = test_discrepancy_stratified_jittered_type<N, double>(sample_count, max_discrepancy);
+        return std::max(f, d);
+}
+
+template <std::size_t N>
+double test_discrepancy_latin_hypercube(int sample_count, double max_discrepancy)
+{
+        double f = test_discrepancy_latin_hypercube_type<N, float>(sample_count, max_discrepancy);
+        double d = test_discrepancy_latin_hypercube_type<N, double>(sample_count, max_discrepancy);
+        return std::max(f, d);
+}
+
+template <std::size_t N>
+double test_discrepancy_halton(int sample_count, double max_discrepancy)
+{
+        double f = test_discrepancy_halton_type<N, float>(sample_count, max_discrepancy);
+        double d = test_discrepancy_halton_type<N, double>(sample_count, max_discrepancy);
+        return std::max(f, d);
 }
 
 void test_sampler_discrepancy()
@@ -402,9 +434,30 @@ void test_sampler_discrepancy()
 
         LOG("");
 
-        test_discrepancy<2>(power<2>(10), 0.11, 0.13, 0.06);
-        test_discrepancy<3>(power<3>(10), 0.03, 0.04, 0.012);
-        test_discrepancy<4>(power<4>(10), 0.008, 0.012, 0.003);
+        {
+                constexpr unsigned N = 2;
+                constexpr int SAMPLE_COUNT = power<N>(10);
+
+                test_discrepancy_stratified_jittered<N>(SAMPLE_COUNT, 0.135);
+                test_discrepancy_latin_hypercube<N>(SAMPLE_COUNT, 0.135);
+                test_discrepancy_halton<N>(SAMPLE_COUNT, 0.06);
+        }
+        {
+                constexpr unsigned N = 3;
+                constexpr int SAMPLE_COUNT = power<N>(10);
+
+                test_discrepancy_stratified_jittered<N>(SAMPLE_COUNT, 0.042);
+                test_discrepancy_latin_hypercube<N>(SAMPLE_COUNT, 0.046);
+                test_discrepancy_halton<N>(SAMPLE_COUNT, 0.015);
+        }
+        {
+                constexpr unsigned N = 4;
+                constexpr int SAMPLE_COUNT = power<N>(10);
+
+                test_discrepancy_stratified_jittered<N>(SAMPLE_COUNT, 0.012);
+                test_discrepancy_latin_hypercube<N>(SAMPLE_COUNT, 0.012);
+                test_discrepancy_halton<N>(SAMPLE_COUNT, 0.003);
+        }
 }
 
 TEST_SMALL("Sampler discrepancy", test_sampler_discrepancy)
