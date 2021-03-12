@@ -36,6 +36,18 @@ constexpr bool compare(T v, T v1, T v2)
                && compare<long double, Base>(v, v1, v2);
 }
 
+static_assert(compare<2>(0, 0, 1));
+static_assert(compare<2>(1, 1, 2));
+
+static_assert(compare<3>(0, 0, 1));
+static_assert(compare<3>(2, 2, 3));
+
+static_assert(compare<4>(0, 0, 1));
+static_assert(compare<4>(3, 3, 4));
+
+static_assert(compare<5>(0, 0, 1));
+static_assert(compare<5>(4, 4, 5));
+
 static_assert(compare<2>(0b101011, 0b110101, 0b1000000));
 static_assert(compare<5>(1 * (5 * 5) + 2 * (5) + 3, 3 * (5 * 5) + 2 * (5) + 1, 5 * 5 * 5));
 static_assert(compare<8>(0'1020'3040, 0'0403'0201, 01'0000'0000));
