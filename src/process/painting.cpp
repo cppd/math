@@ -32,10 +32,10 @@ namespace ns::process
 {
 namespace
 {
-// Количество лучей на один пиксель в одном проходе
-constexpr int PAINTER_DEFAULT_SAMPLE_COUNT = 25;
 template <std::size_t N>
-constexpr int PAINTER_MAXIMUM_SAMPLE_COUNT = power<N - 1>(10u);
+constexpr int PAINTER_DEFAULT_SAMPLES_PER_PIXEL = (N == 3) ? 25 : 1;
+template <std::size_t N>
+constexpr int PAINTER_MAXIMUM_SAMPLES_PER_PIXEL = power<N - 1>(10u);
 
 // Максимальный размер экрана в пикселях для 3 измерений
 constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_3D = 10000;
@@ -83,7 +83,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                 std::optional<gui::dialog::Painter3dParameters> parameters =
                         gui::dialog::Painter3dParametersDialog::show(
                                 hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
-                                PAINTER_DEFAULT_SAMPLE_COUNT, PAINTER_MAXIMUM_SAMPLE_COUNT<N>);
+                                PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
                 if (!parameters)
                 {
                         return nullptr;
@@ -103,7 +103,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                         gui::dialog::PainterNdParametersDialog::show(
                                 N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND,
                                 PAINTER_MINIMUM_SCREEN_SIZE_ND, PAINTER_MAXIMUM_SCREEN_SIZE_ND,
-                                PAINTER_DEFAULT_SAMPLE_COUNT, PAINTER_MAXIMUM_SAMPLE_COUNT<N>);
+                                PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
                 if (!parameters)
                 {
                         return nullptr;
