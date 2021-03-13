@@ -22,11 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/alg.h>
 #include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/thread.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
-#include <src/sampling/sj_sampler.h>
+#include <src/sampling/halton_sampler.h>
 
 #include <optional>
 #include <random>
@@ -45,6 +46,44 @@ constexpr int MAX_RECURSION_LEVEL = 100;
 constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
 
 static_assert(std::is_floating_point_v<Color::DataType>);
+
+template <std::size_t N, typename T>
+class Sampler final
+{
+        sampling::HaltonSampler<N, T> m_sampler;
+        std::vector<Vector<N, T>> m_samples;
+        const int m_samples_per_pixel;
+
+        void generate_samples()
+        {
+                m_samples.clear();
+                for (int i = 0; i < m_samples_per_pixel; ++i)
+                {
+                        m_samples.push_back(m_sampler.generate());
+                }
+        }
+
+public:
+        explicit Sampler(int samples_per_pixel) : m_samples_per_pixel(samples_per_pixel)
+        {
+                if (samples_per_pixel <= 0)
+                {
+                        error("Painter samples per pixel " + to_string(samples_per_pixel) + " is negative");
+                }
+
+                generate_samples();
+        }
+
+        void generate(std::vector<Vector<N, T>>* samples) const
+        {
+                *samples = m_samples;
+        }
+
+        void next_pass()
+        {
+                generate_samples();
+        }
+};
 
 template <std::size_t N, typename T>
 struct PaintData final
@@ -68,7 +107,7 @@ class PixelData final
         std::atomic_bool m_stop_painting = false;
 
         const Projector<N, T>& m_projector;
-        const sampling::StratifiedJitteredSampler<N - 1, T> m_sampler;
+        Sampler<N - 1, T> m_sampler;
         Pixels<N - 1> m_pixels;
         PainterNotifier<N - 1>* const m_notifier;
         Paintbrush<N - 1>* const m_paintbrush;
@@ -82,7 +121,7 @@ public:
                 std::atomic_bool* stop)
                 : m_stop(stop),
                   m_projector(projector),
-                  m_sampler(0, 1, samples_per_pixel, false),
+                  m_sampler(samples_per_pixel),
                   m_pixels(projector.screen_size()),
                   m_notifier(painter_notifier),
                   m_paintbrush(paintbrush)
@@ -109,7 +148,7 @@ public:
                 return m_projector;
         }
 
-        const sampling::StratifiedJitteredSampler<N - 1, T>& sampler() const
+        Sampler<N - 1, T>& sampler()
         {
                 return m_sampler;
         }
@@ -383,7 +422,7 @@ void paint_pixels(unsigned thread_number, const PaintData<N, T>& paint_data, Pix
 
                 pixel_data->notifier().painter_pixel_before(thread_number, *pixel);
 
-                pixel_data->sampler().generate(random_engine, &samples);
+                pixel_data->sampler().generate(&samples);
                 ray_count = 0;
 
                 Vector<N - 1, T> screen_point = to_vector<T>(*pixel);
@@ -424,6 +463,7 @@ void prepare_next_pass(unsigned thread_number, PixelData<N, T>* pixel_data)
         {
                 pixel_data->set_stop();
         }
+        pixel_data->sampler().next_pass();
 }
 
 template <std::size_t N, typename T>
