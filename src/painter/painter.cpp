@@ -297,6 +297,7 @@ template <std::size_t N, typename T>
 void paint_pixels(
         unsigned thread_number,
         std::atomic_bool* stop,
+        std::atomic_bool* stop_painting,
         const Projector<N, T>& projector,
         const PaintData<N, T>& paint_data,
         PainterNotifier<N - 1>* painter_notifier,
@@ -307,13 +308,29 @@ void paint_pixels(
         thread_local RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
         thread_local std::vector<Vector<N - 1, T>> samples;
 
-        std::optional<std::array<int_least16_t, N - 1>> pixel;
-
         samples.clear();
         int ray_count = 0;
 
-        while (!(*stop) && (pixel = paintbrush->next_pixel(ray_count, samples.size())))
+        while (true)
         {
+                if (*stop)
+                {
+                        *stop_painting = true;
+                        return;
+                }
+
+                if (*stop_painting)
+                {
+                        return;
+                }
+
+                std::optional<std::array<int_least16_t, N - 1>> pixel =
+                        paintbrush->next_pixel(ray_count, samples.size());
+                if (!pixel)
+                {
+                        return;
+                }
+
                 painter_notifier->painter_pixel_before(thread_number, *pixel);
 
                 sampler.generate(random_engine, &samples);
@@ -347,78 +364,80 @@ void paint_pixels(
 }
 
 template <std::size_t N, typename T>
+void prepare_next_pass(unsigned thread_number, std::atomic_bool* stop_painting, Paintbrush<N - 1>* paintbrush)
+{
+        if (thread_number != 0)
+        {
+                return;
+        }
+        if (!paintbrush->next_pass())
+        {
+                *stop_painting = true;
+        }
+}
+
+template <std::size_t N, typename T>
 void work_thread(
         unsigned thread_number,
         ThreadBarrier* barrier,
         std::atomic_bool* stop,
-        std::atomic_bool* error_caught,
         std::atomic_bool* stop_painting,
         const Projector<N, T>& projector,
         const PaintData<N, T>& paint_data,
         PainterNotifier<N - 1>* painter_notifier,
         Paintbrush<N - 1>* paintbrush,
         const PainterSampler<N - 1, T>& sampler,
-        Pixels<N - 1>* pixels) noexcept
+        Pixels<N - 1>* pixels)
 {
-        try
+        while (true)
         {
                 try
                 {
-                        while (true)
-                        {
-                                paint_pixels(
-                                        thread_number, stop, projector, paint_data, painter_notifier, paintbrush,
-                                        sampler, pixels);
-
-                                barrier->wait();
-
-                                // Здесь может пройти только часть потоков из-за исключений в других
-                                // потоках. Переменная *error_caught поменяться не может в других потоках,
-                                // так как она в них может меняться только до барьера.
-                                if (*error_caught)
-                                {
-                                        return;
-                                }
-
-                                // Здесь проходят все потоки
-
-                                if (thread_number == 0)
-                                {
-                                        if (*stop || !paintbrush->next_pass())
-                                        {
-                                                *stop_painting = true;
-                                        }
-                                }
-
-                                barrier->wait();
-
-                                // Здесь проходят все потоки, а переменная *stop_painting поменяться не может
-                                // в других потоках, так как она в них может меняться только до барьера.
-
-                                if (*stop_painting)
-                                {
-                                        return;
-                                }
-                        }
+                        paint_pixels(
+                                thread_number, stop, stop_painting, projector, paint_data, painter_notifier, paintbrush,
+                                sampler, pixels);
+                        barrier->wait();
                 }
                 catch (const std::exception& e)
                 {
-                        *stop = true;
-                        *error_caught = true;
+                        *stop_painting = true;
                         painter_notifier->painter_error_message(std::string("Painter error:\n") + e.what());
                         barrier->wait();
                 }
                 catch (...)
                 {
-                        *stop = true;
-                        *error_caught = true;
+                        *stop_painting = true;
                         painter_notifier->painter_error_message("Unknown painter error");
                         barrier->wait();
                 }
-        }
-        catch (...)
-        {
-                error_fatal("Exception in painter exception handlers");
+
+                if (*stop || *stop_painting)
+                {
+                        return;
+                }
+
+                try
+                {
+                        prepare_next_pass<N, T>(thread_number, stop_painting, paintbrush);
+                        barrier->wait();
+                }
+                catch (const std::exception& e)
+                {
+                        *stop_painting = true;
+                        painter_notifier->painter_error_message(std::string("Painter error:\n") + e.what());
+                        barrier->wait();
+                }
+                catch (...)
+                {
+                        *stop_painting = true;
+                        painter_notifier->painter_error_message("Unknown painter error");
+                        barrier->wait();
+                }
+
+                if (*stop || *stop_painting)
+                {
+                        return;
+                }
         }
 }
 
@@ -450,20 +469,27 @@ void paint_threads(
 
         ThreadBarrier barrier(thread_count);
         std::vector<std::thread> threads(thread_count);
-        std::atomic_bool error_caught = false;
         std::atomic_bool stop_painting = false;
 
         paintbrush->first_pass();
 
+        const auto thread_function = [&](unsigned thread_number) noexcept
+        {
+                try
+                {
+                        work_thread(
+                                thread_number, &barrier, stop, &stop_painting, scene.projector(), paint_data,
+                                painter_notifier, paintbrush, sampler, &pixels);
+                }
+                catch (...)
+                {
+                        error_fatal("Exception in painter function");
+                }
+        };
+
         for (unsigned i = 0; i < threads.size(); ++i)
         {
-                threads[i] = std::thread(
-                        [&, i]()
-                        {
-                                work_thread(
-                                        i, &barrier, stop, &error_caught, &stop_painting, scene.projector(), paint_data,
-                                        painter_notifier, paintbrush, sampler, &pixels);
-                        });
+                threads[i] = std::thread(thread_function, i);
         }
 
         for (std::thread& t : threads)
