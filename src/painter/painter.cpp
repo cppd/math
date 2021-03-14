@@ -309,69 +309,18 @@ void paint(
         }
 }
 
-template void paint(
-        PainterNotifier<2>* painter_notifier,
-        int samples_per_pixel,
-        const Scene<3, float>& scene,
-        Paintbrush<2>* paintbrush,
-        int thread_count,
-        std::atomic_bool* stop,
-        bool smooth_normal) noexcept;
-template void paint(
-        PainterNotifier<3>* painter_notifier,
-        int samples_per_pixel,
-        const Scene<4, float>& scene,
-        Paintbrush<3>* paintbrush,
-        int thread_count,
-        std::atomic_bool* stop,
-        bool smooth_normal) noexcept;
-template void paint(
-        PainterNotifier<4>* painter_notifier,
-        int samples_per_pixel,
-        const Scene<5, float>& scene,
-        Paintbrush<4>* paintbrush,
-        int thread_count,
-        std::atomic_bool* stop,
-        bool smooth_normal) noexcept;
-template void paint(
-        PainterNotifier<5>* painter_notifier,
-        int samples_per_pixel,
-        const Scene<6, float>& scene,
-        Paintbrush<5>* paintbrush,
-        int thread_count,
-        std::atomic_bool* stop,
-        bool smooth_normal) noexcept;
+#define PAINT_INSTANTIATION(dimension, type)                                                                           \
+        template void paint<dimension, type>(                                                                          \
+                PainterNotifier<(dimension - 1)>*, int, const Scene<(dimension), type>&, Paintbrush<(dimension - 1)>*, \
+                int, std::atomic_bool*, bool) noexcept;
 
-template void paint(
-        PainterNotifier<2>* painter_notifier,
-        int samples_per_pixel,
-        const Scene<3, double>& scene,
-        Paintbrush<2>* paintbrush,
-        int thread_count,
-        std::atomic_bool* stop,
-        bool smooth_normal) noexcept;
-template void paint(
-        PainterNotifier<3>* painter_notifier,
-        int samples_per_pixel,
-        const Scene<4, double>& scene,
-        Paintbrush<3>* paintbrush,
-        int thread_count,
-        std::atomic_bool* stop,
-        bool smooth_normal) noexcept;
-template void paint(
-        PainterNotifier<4>* painter_notifier,
-        int samples_per_pixel,
-        const Scene<5, double>& scene,
-        Paintbrush<4>* paintbrush,
-        int thread_count,
-        std::atomic_bool* stop,
-        bool smooth_normal) noexcept;
-template void paint(
-        PainterNotifier<5>* painter_notifier,
-        int samples_per_pixel,
-        const Scene<6, double>& scene,
-        Paintbrush<5>* paintbrush,
-        int thread_count,
-        std::atomic_bool* stop,
-        bool smooth_normal) noexcept;
+PAINT_INSTANTIATION(3, float)
+PAINT_INSTANTIATION(4, float)
+PAINT_INSTANTIATION(5, float)
+PAINT_INSTANTIATION(6, float)
+
+PAINT_INSTANTIATION(3, double)
+PAINT_INSTANTIATION(4, double)
+PAINT_INSTANTIATION(5, double)
+PAINT_INSTANTIATION(6, double)
 }
