@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter.h"
 
 #include "painter/pixels.h"
+#include "painter/sampler.h"
 
 #include <src/color/color.h>
 #include <src/com/alg.h>
@@ -27,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
-#include <src/sampling/halton_sampler.h>
 
 #include <optional>
 #include <random>
@@ -46,44 +46,6 @@ constexpr int MAX_RECURSION_LEVEL = 100;
 constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
 
 static_assert(std::is_floating_point_v<Color::DataType>);
-
-template <std::size_t N, typename T>
-class Sampler final
-{
-        sampling::HaltonSampler<N, T> m_sampler;
-        std::vector<Vector<N, T>> m_samples;
-        const int m_samples_per_pixel;
-
-        void generate_samples()
-        {
-                m_samples.clear();
-                for (int i = 0; i < m_samples_per_pixel; ++i)
-                {
-                        m_samples.push_back(m_sampler.generate());
-                }
-        }
-
-public:
-        explicit Sampler(int samples_per_pixel) : m_samples_per_pixel(samples_per_pixel)
-        {
-                if (samples_per_pixel <= 0)
-                {
-                        error("Painter samples per pixel " + to_string(samples_per_pixel) + " is negative");
-                }
-
-                generate_samples();
-        }
-
-        void generate(std::vector<Vector<N, T>>* samples) const
-        {
-                *samples = m_samples;
-        }
-
-        void next_pass()
-        {
-                generate_samples();
-        }
-};
 
 template <std::size_t N, typename T>
 struct PaintData final
